@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="15702" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="7k9-ck-zh0">
+    <device id="retina4_7" orientation="portrait" appearance="light"/>
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="15704"/>
+        <capability name="Safe area layout guides" minToolsVersion="9.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <scenes>
+        <!--Protected Data Unavailable View Controller-->
+        <scene sceneID="ht4-NA-HBF">
+            <objects>
+                <viewController id="7k9-ck-zh0" customClass="ProtectedDataUnavailableViewController" customModule="Threema" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="G9a-uW-1Nd" customClass="WizardBackgroundView" customModule="ThreemaFramework">
+                        <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="2j5-me-z63">
+                                <rect key="frame" x="47" y="581" width="281" height="36"/>
+                                <color key="backgroundColor" red="0.2470588235" green="0.90196078430000004" blue="0.41176470590000003" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                <fontDescription key="fontDescription" name="HelveticaNeue-Light" family="Helvetica Neue" pointSize="20"/>
+                                <state key="normal" title="Exit">
+                                    <color key="titleColor" red="0.13725490200000001" green="0.0" blue="0.1019607843" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                </state>
+                                <connections>
+                                    <action selector="exitButtonPressed:" destination="7k9-ck-zh0" eventType="touchUpInside" id="Ogg-DH-RMd"/>
+                                </connections>
+                            </button>
+                            <imageView userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="Threema" translatesAutoresizingMaskIntoConstraints="NO" id="tWv-Ux-XWT">
+                                <rect key="frame" x="0.0" y="0.0" width="375" height="8.5"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="8.5" id="Pc3-Pl-WSB"/>
+                                    <constraint firstAttribute="width" constant="375" id="SaP-23-rHR"/>
+                                </constraints>
+                            </imageView>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Protected data is currently unavailable. Please exit the app and try again." textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="deJ-0E-T1D">
+                                <rect key="frame" x="15" y="313" width="345" height="41"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                <color key="textColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                        </subviews>
+                        <color key="backgroundColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                        <constraints>
+                            <constraint firstItem="deJ-0E-T1D" firstAttribute="leading" secondItem="MTc-QP-Qvl" secondAttribute="leading" constant="15" id="7Qy-6u-Vah"/>
+                            <constraint firstItem="MTc-QP-Qvl" firstAttribute="trailing" secondItem="2j5-me-z63" secondAttribute="trailing" constant="47" id="D6U-ra-UkV"/>
+                            <constraint firstItem="tWv-Ux-XWT" firstAttribute="leading" secondItem="MTc-QP-Qvl" secondAttribute="leading" id="OxG-lb-bZH"/>
+                            <constraint firstItem="MTc-QP-Qvl" firstAttribute="trailing" secondItem="tWv-Ux-XWT" secondAttribute="trailing" id="UVi-Fs-zRa"/>
+                            <constraint firstItem="2j5-me-z63" firstAttribute="leading" secondItem="MTc-QP-Qvl" secondAttribute="leading" constant="47" id="VfM-JZ-HhA"/>
+                            <constraint firstItem="MTc-QP-Qvl" firstAttribute="trailing" secondItem="deJ-0E-T1D" secondAttribute="trailing" constant="15" id="Wut-xw-lOD"/>
+                            <constraint firstItem="MTc-QP-Qvl" firstAttribute="bottom" secondItem="2j5-me-z63" secondAttribute="bottom" constant="50" id="fIE-nR-UOc"/>
+                            <constraint firstItem="tWv-Ux-XWT" firstAttribute="centerX" secondItem="G9a-uW-1Nd" secondAttribute="centerX" id="qU8-ft-E2n"/>
+                            <constraint firstItem="deJ-0E-T1D" firstAttribute="centerY" secondItem="G9a-uW-1Nd" secondAttribute="centerY" id="sJ1-aM-h7R"/>
+                            <constraint firstItem="tWv-Ux-XWT" firstAttribute="top" secondItem="MTc-QP-Qvl" secondAttribute="top" id="yjf-3X-mqG"/>
+                        </constraints>
+                        <viewLayoutGuide key="safeArea" id="MTc-QP-Qvl"/>
+                    </view>
+                    <nil key="simulatedStatusBarMetrics"/>
+                    <nil key="simulatedTopBarMetrics"/>
+                    <nil key="simulatedBottomBarMetrics"/>
+                    <connections>
+                        <outlet property="errorTextLabel" destination="deJ-0E-T1D" id="i6l-Pl-TEz"/>
+                        <outlet property="exitButton" destination="2j5-me-z63" id="fRh-7e-VGU"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="ugu-dj-2Ql" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="-399.19999999999999" y="-2485.0074962518743"/>
+        </scene>
+    </scenes>
+    <resources>
+        <image name="Threema" width="993" height="180"/>
+    </resources>
+</document>

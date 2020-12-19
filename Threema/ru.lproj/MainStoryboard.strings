@@ -1,0 +1,348 @@
+
+/* Class = "UIBarButtonItem"; title = "Send"; ObjectID = "25C-Te-sfW"; */
+"25C-Te-sfW.title" = "Послать";
+
+/* Class = "UILabel"; text = "Key Fingerprint"; ObjectID = "3r3-TQ-lzw"; */
+"3r3-TQ-lzw.text" = "Контрольная сумма ключа";
+
+/* Class = "UILabel"; text = "Threema ID"; ObjectID = "3zz-BI-IiZ"; */
+"3zz-BI-IiZ.text" = "Threema ID";
+
+/* Class = "UILabel"; text = "The ID and public key of this contact have been verified."; ObjectID = "4Js-Fh-l8T"; */
+"4Js-Fh-l8T.text" = "ID и публичный ключ этого контакта проверены.";
+
+/* Class = "UILabel"; text = "Message preview"; ObjectID = "4a3-95-oYU"; */
+"4a3-95-oYU.text" = "Просмотр сообщения";
+
+/* Class = "UILabel"; text = "Detail"; ObjectID = "5Ca-aK-dv0"; */
+"5Ca-aK-dv0.text" = "Подробно";
+
+/* Class = "UILabel"; text = "Threema Call"; ObjectID = "5Ea-OE-GRI"; */
+"5Ea-OE-GRI.text" = "Звонок Threema";
+
+/* Class = "UITabBarItem"; title = "My Profile"; ObjectID = "5lj-oy-IYs"; */
+"5lj-oy-IYs.title" = "Мой профиль";
+
+/* Class = "UILabel"; text = "XXXXXXXX"; ObjectID = "6GC-h6-PJ3"; */
+"6GC-h6-PJ3.text" = "XXXXXXXX";
+
+/* Class = "UILabel"; text = "Detail"; ObjectID = "6On-uo-xuU"; */
+"6On-uo-xuU.text" = "Подробно";
+
+/* Class = "UILabel"; text = "Clone group"; ObjectID = "6Z4-do-02L"; */
+"6Z4-do-02L.text" = "Клонировать группу";
+
+/* Class = "UILabel"; text = "Detail"; ObjectID = "6bQ-Vj-jcf"; */
+"6bQ-Vj-jcf.text" = "Подробно";
+
+/* Class = "UILabel"; text = "Leave Group"; ObjectID = "74M-ip-a37"; */
+"74M-ip-a37.text" = "Выйти из группы";
+
+/* Class = "UISegmentedControl"; 77n-al-llJ.segmentTitles[0] = "Contacts"; ObjectID = "77n-al-llJ"; */
+"77n-al-llJ.segmentTitles[0]" = "Контакты";
+
+/* Class = "UISegmentedControl"; 77n-al-llJ.segmentTitles[1] = "Groups"; ObjectID = "77n-al-llJ"; */
+"77n-al-llJ.segmentTitles[1]" = "Группы";
+
+/* Class = "UILabel"; text = "Detail"; ObjectID = "8GS-Yt-ab7"; */
+"8GS-Yt-ab7.text" = "Подробно";
+
+/* Class = "UILabel"; text = "00000000000000000000000000000000"; ObjectID = "8S8-W1-o1S"; */
+"8S8-W1-o1S.text" = "00000000000000000000000000000000";
+
+/* Class = "UILabel"; text = "# members"; ObjectID = "9H6-Np-ifa"; */
+"9H6-Np-ifa.text" = "# участника(-ов)";
+
+/* Class = "UISegmentedControl"; 9mW-FX-ba3.segmentTitles[0] = "Single"; ObjectID = "9mW-FX-ba3"; */
+"9mW-FX-ba3.segmentTitles[0]" = "Одиночный";
+
+/* Class = "UISegmentedControl"; 9mW-FX-ba3.segmentTitles[1] = "Group"; ObjectID = "9mW-FX-ba3"; */
+"9mW-FX-ba3.segmentTitles[1]" = "Группа";
+
+/* Class = "UILabel"; text = "Edit Members..."; ObjectID = "AHX-FD-Cmx"; */
+"AHX-FD-Cmx.text" = "Изменить членов...";
+
+/* Class = "UILabel"; text = "Detail"; ObjectID = "AyW-jc-MkD"; */
+"AyW-jc-MkD.text" = "Подробно";
+
+/* Class = "UINavigationItem"; title = "New Contact"; ObjectID = "BAB-op-TwI"; */
+"BAB-op-TwI.title" = "Новый контакт";
+
+/* Class = "UILabel"; text = "Message-ID"; ObjectID = "CyG-aF-qUX"; */
+"CyG-aF-qUX.text" = "Message-ID";
+
+/* Class = "UILabel"; text = "Detail"; ObjectID = "D8z-NN-iT9"; */
+"D8z-NN-iT9.text" = "Подробно";
+
+/* Class = "UILabel"; text = "First Last"; ObjectID = "DfM-u6-9Pl"; */
+"DfM-u6-9Pl.text" = "Имя Фамилия";
+
+/* Class = "UILabel"; text = "Nickname"; ObjectID = "EpZ-nu-d7H"; */
+"EpZ-nu-d7H.text" = "Публичный ник";
+
+/* Class = "UINavigationItem"; title = "Add Contact"; ObjectID = "Eq0-ED-f11"; */
+"Eq0-ED-f11.title" = "Добавить контакт";
+
+/* Class = "UILabel"; text = "Group creator"; ObjectID = "FaC-iq-fy4"; */
+"FaC-iq-fy4.text" = "Создатель группы";
+
+/* Class = "UILabel"; text = "No push notifications"; ObjectID = "Fji-Pc-2Te"; */
+"Fji-Pc-2Te.text" = "Нет Push-уведомлений";
+
+/* Class = "UILabel"; text = "# members"; ObjectID = "I8P-9o-uIi"; */
+"I8P-9o-uIi.text" = "# участника(-ов)";
+
+/* Class = "UILabel"; text = "Send Message"; ObjectID = "IpT-Hm-dLe"; */
+"IpT-Hm-dLe.text" = "Отправить сообщение";
+
+/* Class = "UILabel"; text = "Create new group"; ObjectID = "JLU-Sq-XK3"; */
+"JLU-Sq-XK3.text" = "Создать новую группу";
+
+/* Class = "UILabel"; text = "Group Name"; ObjectID = "Jri-Jp-Hpu"; */
+"Jri-Jp-Hpu.text" = "Имя группы";
+
+/* Class = "UILabel"; text = "Group creator"; ObjectID = "KRl-DY-AIA"; */
+"KRl-DY-AIA.text" = "Создатель группы";
+
+/* Class = "UILabel"; text = "Verification Level"; ObjectID = "LID-K1-9a6"; */
+"LID-K1-9a6.text" = "Уровень проверки";
+
+/* Class = "UINavigationItem"; title = "Edit Contact"; ObjectID = "Leg-Pw-PQ8"; */
+"Leg-Pw-PQ8.title" = "Изменить контакт";
+
+/* Class = "UILabel"; text = "Threema ID"; ObjectID = "Li7-m2-jkf"; */
+"Li7-m2-jkf.text" = "Threema ID";
+
+/* Class = "UINavigationItem"; title = "Contacts"; ObjectID = "Ll3-Ew-izw"; */
+"Ll3-Ew-izw.title" = "Контакты";
+
+/* Class = "UINavigationItem"; title = "Message Details"; ObjectID = "LsJ-Ts-xZd"; */
+"LsJ-Ts-xZd.title" = "Подробности сообщения";
+
+/* Class = "UISegmentedControl"; M1P-ix-V2L.segmentTitles[0] = "Standard"; ObjectID = "M1P-ix-V2L"; */
+"M1P-ix-V2L.segmentTitles[0]" = "Стандарт";
+
+/* Class = "UISegmentedControl"; M1P-ix-V2L.segmentTitles[1] = "Hybrid"; ObjectID = "M1P-ix-V2L"; */
+"M1P-ix-V2L.segmentTitles[1]" = "Гибрид";
+
+/* Class = "UISegmentedControl"; M1P-ix-V2L.segmentTitles[2] = "Satellite"; ObjectID = "M1P-ix-V2L"; */
+"M1P-ix-V2L.segmentTitles[2]" = "Спутник";
+
+/* Class = "UILabel"; text = "Synchronize group"; ObjectID = "MEa-Te-wbA"; */
+"MEa-Te-wbA.text" = "Синхронизизация членов";
+
+/* Class = "UILabel"; text = "IDENTITY"; ObjectID = "NFg-lg-c4C"; */
+"NFg-lg-c4C.text" = "ЛИЧНОСТЬ";
+
+/* Class = "UILabel"; text = "Creator name"; ObjectID = "NUe-Ut-5hr"; */
+"NUe-Ut-5hr.text" = "Имя создателя";
+
+/* Class = "UILabel"; text = "No contacts"; ObjectID = "Ofe-BC-uXe"; */
+"Ofe-BC-uXe.text" = "Нет контактов";
+
+/* Class = "UILabel"; text = "Verification Level"; ObjectID = "Pfs-mu-Rfj"; */
+"Pfs-mu-Rfj.text" = "Уровень проверки";
+
+/* Class = "UINavigationItem"; title = "Verification Level"; ObjectID = "RYr-oG-d5j"; */
+"RYr-oG-d5j.title" = "Уровень проверки";
+
+/* Class = "UILabel"; text = "XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX"; ObjectID = "UbM-As-itV"; */
+"UbM-As-itV.text" = "XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX";
+
+/* Class = "UILabel"; text = "Group Name"; ObjectID = "VFn-jg-cfh"; */
+"VFn-jg-cfh.text" = "Имя группы";
+
+/* Class = "UILabel"; text = "Acknowledged"; ObjectID = "VRy-nm-s0X"; */
+"VRy-nm-s0X.text" = "Подтвержден";
+
+/* Class = "UINavigationItem"; title = "First Last"; ObjectID = "Wsn-z9-eRi"; */
+"Wsn-z9-eRi.title" = "Имя Фамилия";
+
+/* Class = "UIButton"; normalTitle = "Load Earlier Messages"; ObjectID = "WuX-yK-0RJ"; */
+"WuX-yK-0RJ.normalTitle" = "Загрузить предыдущие сообщения";
+
+/* Class = "UILabel"; text = "Date"; ObjectID = "XTa-xS-cOR"; */
+"XTa-xS-cOR.text" = "Дата";
+
+/* Class = "UILabel"; text = "Group Name"; ObjectID = "Y4G-EW-Gux"; */
+"Y4G-EW-Gux.text" = "Имя группы";
+
+/* Class = "UILabel"; text = "Scan an ID"; ObjectID = "YPC-ic-pTa"; */
+"YPC-ic-pTa.text" = "Сканировать ID";
+
+/* Class = "UITextField"; placeholder = "ID"; ObjectID = "YoS-Np-Z37"; */
+"YoS-Np-Z37.placeholder" = "ID";
+
+/* Class = "UILabel"; text = "Your ID backup"; ObjectID = "ZIq-dn-JdH"; */
+"ZIq-dn-JdH.text" = "Копия вашего ID";
+
+/* Class = "UILabel"; text = "Read"; ObjectID = "Zrm-eG-ewD"; */
+"Zrm-eG-ewD.text" = "Прочитано";
+
+/* Class = "UILabel"; text = "Key Fingerprint"; ObjectID = "aGy-xg-eRi"; */
+"aGy-xg-eRi.text" = "Контрольная сумма ключа";
+
+/* Class = "UIBarButtonItem"; title = "Send"; ObjectID = "aQb-a9-JtU"; */
+"aQb-a9-JtU.title" = "Отправить";
+
+/* Class = "UILabel"; text = "Name"; ObjectID = "aU9-dp-bDt"; */
+"aU9-dp-bDt.text" = "Имя";
+
+/* Class = "UITabBarItem"; title = "Settings"; ObjectID = "b04-Gg-ZdB"; */
+"b04-Gg-ZdB.title" = "Настройки";
+
+/* Class = "UILabel"; text = "Scan ID"; ObjectID = "b4I-LV-xkG"; */
+"b4I-LV-xkG.text" = "Сканировать ID";
+
+/* Class = "UILabel"; text = "Export Conversation"; ObjectID = "bFb-Sh-rtO"; */
+"bFb-Sh-rtO.text" = "Экспортировать беседу";
+
+/* Class = "UILabel"; text = "MacBook Office 10 7"; ObjectID = "bsh-sy-Xwu"; */
+"bsh-sy-Xwu.text" = "MacBook Office 10 7";
+
+/* Class = "UILabel"; text = "00000000000000000000000000000000"; ObjectID = "bt1-G0-NzZ"; */
+"bt1-G0-NzZ.text" = "00000000000000000000000000000000";
+
+/* Class = "UILabel"; text = "Send Message"; ObjectID = "cHE-Oc-08d"; */
+"cHE-Oc-08d.text" = "Отправить сообщение";
+
+/* Class = "UILabel"; text = "Creator: Name"; ObjectID = "cNf-3j-eOO"; */
+"cNf-3j-eOO.text" = "Создатель: имя";
+
+/* Class = "UINavigationItem"; title = "Choose contact"; ObjectID = "cNq-Pt-Uma"; */
+"cNq-Pt-Uma.title" = "Выбор контакта";
+
+/* Class = "UILabel"; text = "Include in phone backup"; ObjectID = "d2g-FC-ibo"; */
+"d2g-FC-ibo.text" = "Включить в резервной копии устройства";
+
+/* Class = "UITableViewSection"; footerTitle = "#do not translate#This data, along with the password that you have chosen, can be used to restore your ID on another device. You can copy & paste it to a suitable location, email it to yourself or scan the QR code using another device."; ObjectID = "dgK-0J-UrZ"; */
+"dgK-0J-UrZ.footerTitle" = "Эти данные и выбранный вами пароль могут использоваться для восстановления вашего ID на другом устройстве. Вы можете скопировать и вставить их в нужное место, отправить их на свою электронную почту или отсканировать QR-код с помощью другого устройства.";
+
+/* Class = "UILabel"; text = "Group Name"; ObjectID = "ds7-P9-imN"; */
+"ds7-P9-imN.text" = "Имя группы";
+
+/* Class = "UITableViewSection"; footerTitle = "#do not translate#The encrypted ID backup will be included when you back up your phone via iTunes or iCloud."; ObjectID = "eEV-l3-MXP"; */
+"eEV-l3-MXP.footerTitle" = "#do not translate#The encrypted ID backup will be included when you back up your phone via iTunes or iCloud.";
+
+/* Class = "UILabel"; text = "Detail"; ObjectID = "eK9-D8-pFP"; */
+"eK9-D8-pFP.text" = "Подробно";
+
+/* Class = "UINavigationItem"; title = "Location"; ObjectID = "eXF-nx-MbG"; */
+"eXF-nx-MbG.title" = "Местоположение";
+
+/* Class = "UILabel"; text = "John Doe"; ObjectID = "g8r-Dc-Sp0"; */
+"g8r-Dc-Sp0.text" = "Иван Петров";
+
+/* Class = "UILabel"; text = "Label"; ObjectID = "gsp-ed-V8R"; */
+"gsp-ed-V8R.text" = "Метка";
+
+/* Class = "UILabel"; text = "John Doe"; ObjectID = "iJa-K2-2uc"; */
+"iJa-K2-2uc.text" = "Иван Петров";
+
+/* Class = "UILabel"; text = "No places found in current location"; ObjectID = "jSK-DO-xV2"; */
+"jSK-DO-xV2.text" = "В текущем местоположении не найдено мест";
+
+/* Class = "UILabel"; text = "Draft"; ObjectID = "jlK-CM-mIS"; */
+"jlK-CM-mIS.text" = "Проект";
+
+/* Class = "UILabel"; text = "Phone call"; ObjectID = "k8z-Fl-qML"; */
+"k8z-Fl-qML.text" = "Телефонный звонок";
+
+/* Class = "UILabel"; text = "Detail"; ObjectID = "kaj-lV-4MC"; */
+"kaj-lV-4MC.text" = "Подробно";
+
+/* Class = "UILabel"; text = "Verification Level"; ObjectID = "lH9-a1-MBS"; */
+"lH9-a1-MBS.text" = "Уровень проверки";
+
+/* Class = "UILabel"; text = "MacBook Office 10 7"; ObjectID = "lrl-UM-94p"; */
+"lrl-UM-94p.text" = "MacBook Office 10 7";
+
+/* Class = "UILabel"; text = "IDENTITY"; ObjectID = "n7x-y4-2CM"; */
+"n7x-y4-2CM.text" = "ЛИЧНОСТЬ";
+
+/* Class = "UITabBarItem"; title = "Messages"; ObjectID = "nZg-gf-uED"; */
+"nZg-gf-uED.title" = "Сообщения";
+
+/* Class = "UITabBarItem"; title = "Contacts"; ObjectID = "JXW-2V-ftV"; */
+"JXW-2V-ftV.title" = "Контакты";
+
+/* Class = "UINavigationItem"; title = "Group details"; ObjectID = "oEX-1h-I2a"; */
+"oEX-1h-I2a.title" = "Информация группы";
+
+/* Class = "UILabel"; text = "Link to Contact"; ObjectID = "otC-iO-wzt"; */
+"otC-iO-wzt.text" = "Привязать к контакту";
+
+/* Class = "UILabel"; text = "Nickname"; ObjectID = "p0V-dq-HkU"; */
+"p0V-dq-HkU.text" = "Публичный ник";
+
+/* Class = "UILabel"; text = "Label"; ObjectID = "pVJ-rQ-2qD"; */
+"pVJ-rQ-2qD.text" = "Метка";
+
+/* Class = "UILabel"; text = "# members"; ObjectID = "pk3-Z5-GK7"; */
+"pk3-Z5-GK7.text" = "# участника(-ов)";
+
+/* Class = "UILabel"; text = "Delivered"; ObjectID = "qNO-eF-kmI"; */
+"qNO-eF-kmI.text" = "Доставлено";
+
+/* Class = "UILabel"; text = "Threema ID"; ObjectID = "sJF-Ib-o6C"; */
+"sJF-Ib-o6C.text" = "Threema ID";
+
+/* Class = "UILabel"; text = "00000000000000000000000000000000"; ObjectID = "sVW-vw-h0n"; */
+"sVW-vw-h0n.text" = "00000000000000000000000000000000";
+
+/* Class = "UINavigationItem"; title = "ID Verified"; ObjectID = "sik-yL-35n"; */
+"sik-yL-35n.title" = "ID проверен";
+
+/* Class = "UINavigationItem"; title = "Backup"; ObjectID = "tUV-iz-VQc"; */
+"tUV-iz-VQc.title" = "Экспорт ID";
+
+/* Class = "UILabel"; text = "Nickname"; ObjectID = "tr2-Ia-imu"; */
+"tr2-Ia-imu.text" = "Публичный ник";
+
+/* Class = "UINavigationItem"; title = "Location"; ObjectID = "uA6-FU-2ms"; */
+"uA6-FU-2ms.title" = "Местоположение";
+
+/* Class = "UILabel"; text = "X contacts"; ObjectID = "uT9-uH-vrD"; */
+"uT9-uH-vrD.text" = "X Контакты";
+
+/* Class = "UITextField"; placeholder = "First name"; ObjectID = "uv8-Zw-8w0"; */
+"uv8-Zw-8w0.placeholder" = "Имя";
+
+/* Class = "UILabel"; text = "First Last"; ObjectID = "vVr-Sj-fJm"; */
+"vVr-Sj-fJm.text" = "Имя Фамилия";
+
+/* Class = "UINavigationItem"; title = "Messages"; ObjectID = "vkp-6o-Lct"; */
+"vkp-6o-Lct.title" = "Сообщения";
+
+/* Class = "UILabel"; text = "Company Name"; ObjectID = "wLS-iM-q79"; */
+"wLS-iM-q79.text" = "Название компании";
+
+/* Class = "UINavigationItem"; title = "Preview"; ObjectID = "wPu-F7-kf1"; */
+"wPu-F7-kf1.title" = "Просмотр";
+
+/* Class = "UILabel"; text = "First Last"; ObjectID = "wV3-0n-mKm"; */
+"wV3-0n-mKm.text" = "Имя Фамилия";
+
+/* Class = "UILabel"; text = "Detail"; ObjectID = "wVo-z6-Ml9"; */
+"wVo-z6-Ml9.text" = "Подробно";
+
+/* Class = "UILabel"; text = "XXXXXXXX"; ObjectID = "wXd-jf-kGm"; */
+"wXd-jf-kGm.text" = "XXXXXXXX";
+
+/* Class = "UITextField"; placeholder = "Last name"; ObjectID = "wpY-cw-D2O"; */
+"wpY-cw-D2O.placeholder" = "Фамилия";
+
+/* Class = "UILabel"; text = "Invite a Friend"; ObjectID = "xRZ-tM-3dS"; */
+"xRZ-tM-3dS.text" = "Пригласить друга";
+
+/* Class = "UILabel"; text = "Sent"; ObjectID = "yWO-wH-mIW"; */
+"yWO-wH-mIW.text" = "Отправлено";
+
+/* Class = "UILabel"; text = "You don't have any contacts. Turn on synchronization, or add contacts manually using the + button."; ObjectID = "zFq-Zo-ECJ"; */
+"zFq-Zo-ECJ.text" = "У вас нет контактов. Включите синхронизацию или добавьте контакты вручную, нажав кнопку +.";
+
+/* Class = "UILabel"; text = "Enter ID manually"; ObjectID = "zYA-qz-iwe"; */
+"zYA-qz-iwe.text" = "Ввести ID вручную";
+
+/* Class = "UILabel"; text = "Enter a query to search for places"; ObjectID = "oXh-5e-M7J"; */
+"oXh-5e-M7J.text" = "Введите запрос для поиска объектов инфраструктуры";

@@ -1,0 +1,981 @@
+/*
+ Localizable.strings
+ Threema
+ 
+ Copyright (c) 2012 Threema GmbH. All rights reserved.
+ */
+"use_dynamic_font_size" = "Systeemlettergrootte";
+
+"SortOrder_Firstname" = "Voornaam, Achternaam";
+"SortOrder_Lastname" = "Achternaam, Voornaam";
+
+"segmentcontrol_contacts" = "Contactpersonen";
+"segmentcontrol_groups" = "Groepen";
+"segmentcontrol_work_contacts" = "Work";
+
+/* WebRTC diagnostics */
+"webrtc_diagnostics.title" = "WebRTC-diagnose";
+"webrtc_diagnostics.description" = "Start deze tool om problemen op te sporen met het opzetten van een spraakverbinding.\nDruk op de knop 'Start' om de test te starten.";
+"webrtc_diagnostics.start" = "Start";
+"webrtc_diagnostics.copyToClipboard" = "Naar klembord kopiëren";
+"webrtc_diagnostics.copy" = "Naar klembord gekopieerd";
+"webrtc_diagnostics.done" = "Klaar. Als je problemen hebt bij het opzetten van je oproepverbinding, stuur deze uitvoer dan naar de ondersteuning van Threema.";
+
+/* Privacy Policy */
+"privacy_poliy_url" = "https://threema.ch/en/privacy";
+
+/* MWPhotoBrowser */
+"mwphotobrowser_select" = "Selecteren";
+"mwphotobrowser_select_all" = "Alles selecteren";
+"mwphotobrowser_deselect_all" = "Selectie opheffen";
+"profileimage_setting_all_footer" = "Alle contactpersonen ontvangen je profielafbeelding als je hen een bericht zendt.";
+"profileimage_setting_contacts_footer" = "De geselecteerde contactpersonen in deze lijst ontvangen je profielafbeelding als je hen een bericht zendt.";
+
+
+"status_disconnected" = "Verbinding verbroken";
+"status_connecting" = "Verbinden";
+"status_connected" = "Verbinden";    /* note: this is intentional; don't want to bother user with protocol details */
+"status_loggedin" = "Verbonden";
+"status_disconnecting" = "Verbinding verbroken";
+
+"cannot_connect_title" = "Geen verbinding";
+"cannot_connect_message" = "Geen verbinding, controleer je internetverbinding.";
+
+"delete_identity_warning" = "Als u uw ID verwijdert, worden zowel uw sleutelpaar als uw appgegevens verwijderd. Als u geen back-up hebt gemaakt, kunt u in de toekomst met dit ID geen berichten meer versturen of ontvangen.\n\nAls u dit ID niet meer wilt gebruiken, bevelen we aan om het van alle gekoppelde e-mailadressen/telefoonnummers te ontkoppelen voordat u het verwijdert.";
+"delete_identity_warning2" = "Laatste waarschuwing: weet u zeker dat u uw gegevens en ID wilt verwijderen?";
+"delete_identity_passcode_title" = "Beveiligingscode ingeschakeld";
+"delete_identity_passcode_message" = "Schakel de beveiligingscode uit voordat je je ID verwijdert.";
+"delete_identity_title" = "Appgegevens verwijderd";
+"delete_identity_description" = "Alle appgegevens zijn verwijderd. Herstart de app om Threema te configureren.";
+"delete_identity_app_close" = "App sluiten";
+
+"delete_contact_warn_title" = "Bestaand gesprek";
+"delete_contact_warn_message" = "Er bestaat nog een gesprek met deze contactpersoon. Als je deze contactpersoon verwijdert, wordt het gesprek (inclusief gespreksgeschiedenis) ook verwijderd.";
+
+/* JKLockScreenViewController */
+"cancel" = "Annuleren";
+"continue" = "Doorgaan";
+"ok" = "Oké";
+"no" = "Nee";
+"yes" = "Ja";
+"delete" = "Verwijderen";
+"messages" = "Berichten";
+"bar_messages_x" = "Berichten (%d)";
+"try_again" = "Opnieuw";
+"delete_identity" = "Gegevens en ID verwijderen";
+"copy" = "Kopiëren";
+"save" = "Opslaan";
+"share" = "Delen";
+"details" = "Details";
+"acknowledge" = "Accepteren";
+"decline" = "Niet accepteren";
+"quote" = "Citeren";
+"speak" = "Spreken";
+"send" = "Versturen";
+"image" = "Afbeelding";
+"sticker" = "Sticker";
+"gif" = "GIF";
+"video" = "Video";
+"audio" = "Audio";
+"file" = "Bestand";
+"location" = "Locatie";
+"locating" = "Zoeken...";
+"unknown_location" = "onbekende locatie";
+"open" = "Openen";
+"call" = "Bellen";
+"Info" = "Info";
+"error_abort" = "Onherstelbare fout";
+"qr_code" = "QR-code";
+"forward" = "Doorsturen";
+"showNext" = "Meer opties";
+"showPrevious" = "Vorige opties";
+"read" = "Gelezen";
+"unread" = "Ongelezen";
+"settings" = "Instellingen";
+"loadMore" = "Meer laden";
+"all" = "Alles";
+"myIdentity" = "Mijn profiel";
+"share_id" = "Uw Threema ID delen";
+
+"show_in_maps" = "Tonen in kaarten";
+"calculate_route" = "Route berekenen";
+
+/* Chat export */
+"conversation_log_subject" = "Threema-gesprekslog met %@";
+"conversation_log_group_subject" = "Threema groepsgesprekslog";
+"conversation_log_body" = "Het versleutelde gesprekslog is bijgevoegd bij %@.\nEen modern ZIP-programma met AES-ondersteuning is vereist om het bestand uit te pakken, bijv. http://www.7-zip.org of https://itunes.apple.com/us/app/the-unarchiver/id425424353";
+"conversation_log_group_body" = "Het versleutelde groepsgesprekslog is bijgevoegd bij %@.\nEen modern ZIP-programma met AES-ondersteuning is vereist om het bestand uit te pakken, bijv. http://www.7-zip.org of https://itunes.apple.com/us/app/the-unarchiver/id425424353";
+"not_enough_storage_title" = "Er is niet genoeg beschikbare ruimte om dit chatgesprek te exporteren.";
+"amount_of_free_storage_needed" = "%@ is vereist om dit gesprek te exporteren. Momenteel is er %@ beschikbaar.";
+"chat_export_failed_title" = "Het chatgesprek is niet geëxporteerd.";
+"chat_export_failed_message" = "Het chatgesprek is niet geëxporteerd: Foutcode %d.";
+"cancelling_export" = "Export annuleren…";
+"export_progress_label" = "%li / %li berichten geëxporteerd";
+"caption" = "Onderschrift";
+"fileNotDownloaded" = "Het bestand is niet gedownload of is verwijderd.";
+"include_media_title" = "Media (afbeeldingen, video's) bijsluiten als bijlagen? Grote chatgesprekken worden in meerdere bestanden gesplitst.\n\nEen modern ZIP-programma met AES-ondersteuning is vereist om het bestand uit te pakken, bijv. 7-Zip of The Unarchiver (Mac).";
+
+
+/* image sizes */
+"original" = "Origineel";
+"small" = "Klein";
+"medium" = "Gemiddeld";
+"large" = "Groot";
+"xlarge" = "Extra groot";
+"max_x_by_x_pixels" = "Max. %@ x %@ pixels";
+"images are not scaled" = "Afbeeldingen niet op maat";
+"image_resize_share_extension" = "Vanwege het beperkte geheugen worden afbeeldingen die via de Share Extension worden verzonden, verkleind naar max. 1600 x 1600 pixels.";
+
+/* video sizes */
+"low" = "Laag";
+"high" = "Hoog";
+"max_1_minute" = "Max. 1 minuut";
+"max_x_minutes" = "Max. %d minuten";
+
+/* Sound names */
+"sound_none" = "Geen geluid";
+"sound_default" = "Standaard";
+"sound_bamboo" = "Bamboe";
+"sound_drum" = "Drums";
+"sound_glass" = "Glas";
+"sound_incoming_message" = "Inkomend bericht";
+"sound_input" = "Invoer";
+"sound_marimba1" = "Marimba 1";
+"sound_marimba2" = "Marimba 2";
+"sound_music_box" = "Muziekdoos";
+"sound_pulse" = "Puls";
+"sound_sms" = "SMS";
+"sound_received_message" = "Threema";
+"sound_synth" = "Synth";
+"sound_trill" = "Triller";
+"sound_whoop" = "Whoop";
+
+"sound_threema_best" = "Threema";
+"sound_threema_incom" = "Game";
+"sound_threema_xylo" = "XYLO";
+"sound_threema_goody" = "Remix";
+"sound_threema_alphorn" = "Alphorn";
+
+"font_point" = "pt";
+"bigger_single_emojis" = "Grotere losse emojis";
+"identity_none" = "geen";
+"scan_identity" = "ID scannen";
+"(none)" = "(geen)";
+"(pending)" = "(in afwachting)";
+"enter_code" = "Code invoeren";
+"unlink_contact" = "Contact ontkoppelen";
+"choose_new_contact" = "Nieuwe contactpersoon kiezen";
+"export_chat" = "Gesprek exporteren";
+"send_profile_picture" = "Profielafbeelding verzenden";
+"linked_contact" = "Gekoppelde contactpersoon";
+"key_fingerprint" = "Vingerafdruksleutel";
+"block_contact" = "Contactpersoon blokkeren";
+"profile_picture_recipient" = "Ontvangers profielafbeeldingen";
+"member_in_groups" = "Lid in groepen";
+
+"no_nickname_title" = "Geen nickname ingesteld";
+"no_nickname_message" = "Weet je zeker dat je wil doorgaan zonder nickname in te stellen. Op die manier is het lastig voor anderen om je berichten te herkennen voordat ze de app opstarten.";
+
+"server_message_title" = "Serverbericht";
+
+"no_preview_available" = "Geen voorbeeld beschikbaar";
+
+"bad_phone_number_format_title" = "Nummer niet herkend";
+"bad_phone_number_format_message" = "Het telefoonnummer dat je hebt ingevoerd, werd niet herkend. Voor het opnieuw in met het landnummer.";
+
+"confirm_phone_number_title" = "Nummer bevestigen";
+"confirm_phone_number_x" = "We sturen een SMS naar:\n\n%@\n\nIs dit nummer juist?";
+
+"abort_verification" = "Verificatie afbreken";
+"abort_verification_message" = "Het aantal pogingen is beperkt. Wacht ten minste 30 minuten om te zien of de SMS aankomt of probeer de oproepoptie.";
+"call_me_title" = "Informatie over oproep";
+"call_me_message" = "Als je doorgaat, zullen we je onmiddellijk proberen te bellen. Je verificatiecode wordt twee keer voor je opgelezen. Let op: we maken deze oproep maar één keer, dus zorg ervoor dat je gereed bent om hem te ontvangen voordat je doorgaat.";
+"number" = "Nummer";
+
+"mobileno_linked_title" = "Telefoonnummer gekoppeld";
+"mobileno_linked_message" = "Je telefoonnummer is gekoppeld aan je ID.";
+
+"link_email_sent_title" = "Verificatie-e-mail verstuurd";
+"link_email_sent_message" = "Een verificatielink is via e-mail verstuurd naar %@.";
+
+"public_key_mismatch_title" = "Mismatch publieke sleutel";
+"public_key_mismatch_message" = "Er bestaat al een contactpersoon met deze ID, maar de publieke sleutel komt niet overeen! Dit kan betekenen dat iemand probeert je berichten naar de verkeerde ontvanger te versturen.\nDe nieuwe publieke sleutel is niet opgeslagen; als je zeker weet dat dit klopt, verwijder je de bestaande contactpersoon en probeer je het opnieuw.";
+
+"public_key_server_mismatch_title" = "Mismatch publieke sleutel";
+"public_key_server_mismatch_message" = "De publieke sleutel die je hebt gescand, komt niet overeen met de sleutel die door de server voor die ID is verstuurd. Dit betekent dat iemand de code die je hebt gescand met kwade opzet heeft aangepast en dat je de sleutel in dit geval niet kunt vertrouwen. Meld dit incident a.u.b. aan security@threema.ch en geef indien mogelijk details over het ID en de omstandigheden.";
+
+"password_again" = "Wachtwoord opnieuw invoeren";
+"password_too_short_title" = "Wachtwoord te kort";
+"password_too_short_message" = "Het wachtwoord is te kort. Voer ten minste 8 lettertekens in.";
+"password_mismatch_title" = "Wachtwoord komt niet overeen";
+"password_mismatch_message" = "De wachtwoorden die je hebt ingevoerd, komen niet overeen. Ga terug en probeer het opnieuw.";
+"password_description_backup" = "Je privésleutel wordt versleuteld met het wachtwoord dat je hier invoert. Minimaal 8 lettertekens (mix van letters, cijfers en symbolen wordt aanbevolen).";
+"password_description_export" = "De gespreksgegevens worden gezipt en versleuteld met het wachtwoord dat je hier invoert. Minimaal 8 lettertekens (mix van letters, cijfers en symbolen wordt aanbevolen).";
+
+"revocation_password" = "Wachtwoord ID intrekken";
+"revocation_password_description" = "Met dit wachtwoord kun je je Threema-ID intrekken via https://myid.threema.ch/revoke. Minimaal 8 lettertekens (mix van letters, cijfers en symbolen wordt aanbevolen).";
+"revocation_request_success" = "Wachtwoord ID intrekken bijgewerkt";
+"revocation_request_failed" = "Bijwerken Wachtwoord ID intrekken mislukt";
+"revocation_password_not_set" = "niet ingesteld";
+"conversations_delete_all_confirm" = "Weet je zeker dat je alle gesprekken wil verwijderen? Let op: groepsgesprekken worden niet verwijderd.";
+"revocation_check_failed" = "controle mislukt";
+
+"messages_delete_all_confirm" = "Weet je zeker dat je alle berichten in dit gesprek wil verwijderen?";
+"messages_delete_selected_confirm" = "Weet je zeker dat je de geselecteerde berichten wil verwijderen?";
+"conversation_delete_confirm" = "Weet u zeker dat u dit gesprek wilt verwijderen?";
+"group_delete_confirm" = "Weet je zeker dat je deze groep wil verlaten?";
+"group_admin_delete_confirm" = "Weet je zeker dat je deze groep wil verlaten. Aangezien je de groepsbeheerder bent, kan de groep daarna niet meer worden aangepast.";
+"delete_contact_group_exists_title" = "Contactpersoon zit nog in een groepschat";
+"delete_contact_group_exists_message" = "Deze contactpersoon is nog lid van van een groepsgesprek en kan daarom niet worden verwijderd. Verwijder de contactpersoon uit alle groepsgesprekken of verwijder alle groepsgesprekken waar deze contacpersoon lid van uitmaakt en probeer het opnieuw.";
+"delete_all" = "Alles verwijderen";
+"delete_n" = "Verwijderen (%d)";
+"message_cannot_play_movie" = "Kan film niet afspelen";
+
+"identity_not_found_title" = "ID niet gevonden";
+"identity_not_found_message" = "Het ID kon niet worden gevonden. Controleer dat je het correct hebt ingevoerd en probeer het opnieuw.";
+
+"message_too_long_title" = "Bericht te lang";
+"message_too_long_message" = "De maximale berichtlengte is %d bytes.";
+
+"scanned_identity_mismatch_title" = "ID mismatch";
+"scanned_identity_mismatch_message" = "De ID die je hebt gescand komt niet overeen met de contactpersoon die je hebt opgeslagen.";
+
+"scanned_own_identity_title" = "Je hebt je eigen ID gescand.";
+
+"scan_code_expired_title" = "Code verlopen";
+"scan_code_expired_message" = "Deze code is verlopen. Scan hem opnieuw rechtstreeks van de app van de andere gebruiker.";
+
+"take_photo_or_video" = "Foto nemen of video opnemen";
+"take_photo" = "Foto nemen";
+"choose_existing" = "Bestaande kiezen";
+"edit_photos" = "Geselecteerde bestanden bewerken";
+"delete_photo" = "Foto verwijderen";
+"delete_video" = "Video verwijderen";
+"delete_file" = "Bestand verwijderen";
+"share_location" = "Locatie delen";
+"record_audio" = "Audio opnemen";
+"scan_qr" = "QR-code scannen";
+"share_file" = "Bestand delen";
+"send_item_photo" = "Voorbeeld foto";
+"send_item_video" = "Voorbeeld video";
+"send_items" = "Voorbeeld %d foto's/video's";
+"send_items_photo" = "Voorbeeld %d foto's";
+"send_items_video" = "Voorbeeld %d video's";
+
+"record" = "Opnemen";
+"play" = "Spelen";
+"pause" = "Pauzeren";
+"stop" = "Stoppen";
+"voice message" = "Stembericht";
+"quit" = "Stoppen";
+"record_cancel_title" = "Opname annuleren";
+"record_cancel_message" = "Weet u zeker dat u de opname wilt annuleren?";
+"record_cancel_button_discard" = "Opname annuleren";
+
+"send_file_title" = "Bestand versturen";
+"camera_disabled_title" = "Toegang geweigerd";
+"send_file_message" = "Bestand: %@\nnaar\n%@";
+
+"quote_not_found" = "Geciteerd bericht niet gevonden.";
+
+"camera_disabled_message" = "Threema heeft geen toegang tot je camera. Geef toegang via Instellingen > Privacy > Camera.";
+
+"location_disabled_title" = "Toegang geweigerd";
+"location_disabled_message" = "Threema heeft geen toegang tot je locatie. Geef toegang via Instellingen > Privacy > Locatiediensten.";
+
+"microphone_disabled_title" = "Geen toegang tot microfoon";
+"microphone_disabled_message" = "Threema heeft geen toegang tot je microfoon. Geef toegang via Instellingen > Privacy > Microfoon.";
+
+
+"include_media" = "Media bijsluiten";
+"without_media" = "Zonder media";
+"media_overview" = "Media";
+
+"save_photo_failed_title" = "Foto opslaan mislukt";
+"save_photo_failed_message" = "Controleer of Threema toegang heeft tot je foto's via de privacy-instellingen van je apparaat.";
+"save_video_failed_title" = "Video opslaan mislukt";
+"save_video_failed_message" = "Controleer of Threema toegang heeft tot je foto's via de privacy-instellingen van je apparaat.";
+
+"members" = "Leden";
+"too_many_members_title" = "Te veel groepsleden";
+"too_many_members_message" = "Het maximum aantal groepsleden is %d.";
+"add_member" = "Lid toevoegen";
+"no_more_members" = "Deze groep heeft geen leden meer.";
+"group_different_identity" = "Deze groep is aangemaakt terwijl je een ander Threema-ID gebruikte. Je kunt er geen berichten naar sturen met je huidige ID.";
+"group_is_not_member" = "Je kunt geen berichten naar deze groep sturen omdat je geen lid meer bent.";
+"contact_blocked_cannot_send" = "Je kunt geen bericht naar deze contactpersoon sturen omdat je bent geblokkeerd.";
+"contact_invalid_cannot_send" = "Je kunt geen bericht naar deze contactpersoon sturen omdat hij ongeldig is.";
+"group_sync_title" = "Groep gesynchroniseerd";
+"group_sync_message" = "Huidige groepsgegevens zijn aan alle leden verstuurd.";
+"group_clone_title" = "Groep klonen";
+"group_clone_message" = "Dit kloont deze groep met u als administrator. Doorgaan?";
+
+"group name" = "Groepsnaam";
+"existing groups" = "Bestaande groepen";
+"new group" = "Nieuwe groep";
+"edit group" = "Groep bewerken";
+"pick image" = "Afbeelding\nkiezen";
+"create" = "Aanmaken";
+"search" = "Zoeken";
+"leave" = "Verlaten";
+"you are not a member" = "Mezelf (verwijderd)";
+"groups" = "Groepen";
+
+"choose_recipient" = "Ontvanger kiezen";
+
+"msg_unknown_group_request_sync_x_title" = "Bericht ontvangen in onbekende groep";
+"msg_unknown_group_request_sync_x_message" = "Er is een bericht ontvangen in een onbekende groep. De groepsinformatie is aangevraagd bij de aanmaker van de groep (%@). De groep verschijnt zodra de aanmaker weer online is.";
+
+"chat_search_label_format" = "%ld van %ld berichten";
+"load_earlier_messages" = "Eerdere berichten laden";
+"tap_to_cancel" = "Tikken om te annuleren";
+"previous" = "Vorige";
+"tap_to_change" = "Tikken om te wijzigen";
+"next" = "Volgende";
+"unread_messages" = "Ongelezen berichten";
+
+/* Verification level popovers in chat view */
+"verification_level_title" = "Verificatieniveau";
+/* Verification level popovers in chat view */
+"verification_level_text" = "De gekleurde stippen geven het verificatieniveau van een contactpersoon aan.";
+"level0_title" = "Laagste verificatieniveau";
+/* Verification level section title */
+"verification_level_section_work" = "Contacten in uw organisatie";
+"verification_level_section_other" = "Andere contacten";
+/* Verification level popovers in chat view */
+"level1_title" = "Gemiddeld verificatieniveau";
+"level2_title" = "Hoogste verificatieniveau";
+"level3_title" = "Gemiddeld werkverificatieniveau";
+"level4_title" = "Hoogste werkverificatieniveau";
+"level0_explanation" = "Onbekende contactpersoon; deze contactpersoon heeft geen telefoonnummer of e-mailadres aan zijn/haar ID gekoppeld, of je adresboek bevat de contactgegevens niet.";
+"level1_explanation" = "Contactpersoon met een telefoonnummer en/of e-mailadres in je adresboek.";
+"level2_explanation" = "Contactpersoon wiens identiteit en openbare sleutel je persoonlijk hebt geverifieerd door zijn/haar QR-code te scannen.";
+"level3_explanation" = "Interne contactpersoon, ingevoerd door je organisatie.";
+"level4_explanation" = "Interne contactpersoon wiens identiteit en openbare sleutel je persoonlijk hebt geverifieerd door zijn/haar QR-code te scannen.";
+
+/* Invalid country code alert */
+"invalid_country_code_title" = "Ongeldige regiocode";
+"invalid_country_code_message" = "Zo te zien heeft de regiocode van je apparaat een ongeldige waarde. Open de Instellingen, ga naar Algemeen > Internationaal en kies een nieuwe Regiocode om problemen met het matchen van telefoonnummers te voorkomen.";
+
+/* Settings */
+"block_unknown_on" = "Alleen mensen op je lijst van contactpersonen kunnen je een bericht sturen.";
+"block_unknown_off" = "Iedereen kan je een bericht sturen. Nieuwe contactpersonen worden automatisch toegevoegd als hun eerste bericht aankomt.";
+"show_stale_contacts_on" = "Inactieve Threema ID's (d.w.z. ID's die al meer dan 3 maanden niet zijn gebruikt) en ingetrokken ID's worden verborgen.";
+"show_stale_contacts_off" = "Alle Threema ID's worden weergegeven in de lijst met contactpersonen.";
+"hide_voip_call_ip_off" = "Een directe verbinding maken, indien mogelijk, en oproepen naar niet-geverifieerde contactpersonen alleen doorschakelen via Threema-servers. Dit kan uw IP-adres kenbaar maken.";
+"hide_voip_call_ip_on" = "Alle oproepen geforceerd doorschakelen via Threema-servers om je IP-adres te beschermen. Dit kan de kwaliteit beïnvloeden.";
+"voip_callkit_off" = "Pushmeldingen worden gebruikt als melding voor ontvangen oproepen.";
+"voip_callkit_on" = "Oproepen worden weergegeven in het vergrendelingsscherm en weergegeven in de oproeplijst van de telefoonapp. Als iCloud Drive is geactiveerd, wordt de oproeplijst van de telefoonapp gesynchroniseerd via Apple-servers.";
+
+"backgrounding_on" = "De app-verbinding blijft tot 30 seconden actief wanneer de app naar de achtergrond wordt verplaatst.";
+"backgrounding_off" = "De app-verbinding wordt onmiddellijk verbroken wanneer de app naar de achtergrond wordt verplaatst.";
+"proximity_monitoring_off" = "Het scherm wordt niet uitgeschakeld wanneer de nabijheidssensor wordt bedekt.";
+"proximity_monitoring_on" = "Tijdens actieve gesprekken en wanneer gesproken berichten worden opgenomen of afgespeeld, schakelt het scherm zichzelf uit wanneer de nabijheidssensor is bedekt.";
+"validation_logging_expl" = "Het debugging-logbestand kan worden gebruikt om de end-to-end versleuteling van Threema onafhankelijk te verifiëren.\nDetails: https://threema.ch/validation";
+
+"validation_log_clear" = "Log leegmaken";
+"validation_log_subject" = "Debugging-logbestand voor Threema";
+"validation_log_body" = "Het logbestand is bijgevoegd.";
+"log_empty_message" = "Het debugging-logbestand is leeg.";
+"cannot_send_mail_message" = "Er is geen e-mailaccount op dit apparaat geconfigureerd.";
+
+"preview_limit" = "Limiet:\n%.0f miniaturen";
+
+/* Backup identity */
+"backup_mail_subject" = "Threema ID exportbestand voor %@";
+"backup_found_message" = "Er is een Threema ID-exportbestand op uw apparaat gevonden. Wil u het herstellen?";
+"backup_include" = "De versleutelde ID exportbestand wordt opgenomen als u een back-up van uw telefoon maakt via iTunes of iCloud.";
+"backup_found_title" = "ID-exportbestand gevonden";
+"backup_footer" = "Deze gegevens, samen met het gekozen wachtwoord, kunnen worden gebruikt om je ID op een ander apparaat te herstellen. Je kunt het naar een geschikte locatie knippen & plakken, naar jezelf e-mailen of de QR-code met een ander apparaat scannen.";
+
+/* Restore identity */
+"scan_backup" = "ID-export scannen";
+"backup_exclude" = "Het ID-exportbestand wordt niet opgenomen als u een back-up van uw telefoon maakt via iTunes of iCloud. Sla het exportbestand handmatig op om het te bewaren.";
+/* Contacts */
+"pull_to_sync" = "Vegen om te synchroniseren...";
+"bad_identity_backup" = "De gegevens van het ID-exportbestand zijn ongeldig of u hebt het verkeerde wachtwoord ingevoerd. Gebruik het wachtwoord dat u koos toen u het exportbestand uitvoerde om uw Threema ID te herstellen. Controleer de invoer en probeer het opnieuw.";
+
+"synchronizing" = "Synchroniseren...";
+
+"no_contacts_syncon" = "Je hebt nog niet genoeg contactpersonen. Synchroniseren is ingeschakeld, maar zo te zien gebruikt niemand in je adresboek Threema (nodig ze uit!).";
+"no_contacts" = "Geen contactpersonen";
+"no_groups" = "Geen groepen";
+"no_groups_message" = "Je hebt nog geen groepen. Voeg groepen handmatig toe met de +-knop.";
+"no_work_contacts" = "Threema Work-gebruikers";
+"no_work_contacts_message" = "Geen door administrator geverifieerde Threema Work-contactpersonen gevonden.";
+
+"no_contacts_permission_title" = "Geen toegang tot contactpersonen";
+"no_contacts_syncoff" = "Je hebt nog geen contactpersonen. Schakel synchronisatie in (Instellingen > Privacy), of voeg contactpersonen handmatig toe met de +-knop.";
+"no_contacts_permission_message" = "Threema heeft geen toegang tot je contactpersonen. Ga naar de privacy-instellingen van je apparaat en geef Threema toegang tot je contactpersonen.";
+
+"contact_added_to_profilepicture_list" = "Deze contactpersoon ontvangt je profielafbeelding als je hem een bericht zendt.";
+"contact_removed_from_profilepicture_list" = "Deze contactpersoon ontvangt niet langer je profiel.";
+"contact_send_profilepicture_success" = "Je profielafbeelding is naar de contactpersoon verzonden.";
+"contact_send_profilepicture_error" = "Je profielafbeelding kan niet worden verzonden. Probeer het later opnieuw.";
+
+"setup_threema_work" = "Threema Work instellen";
+
+"sync_group" = "Groep synchroniseren";
+
+"contact_threema_work_title" = "Threema Work";
+"contact_threema_work_info" = "Het koffertje geeft aan dat een contactpersoon de zakelijke app \"Threema Work\" gebruikt.";
+"contact_threema_title" = "Threema";
+"contact_threema_info" = "Het huisje geeft aan dat een contactpersoon de privéversie van Threema gebruikt en niet Threema Work.";
+"contact_threema_work_conversation_info" = "Dit contact maakt gebruik van Threema Work.";
+"contact_threema_conversation_info" = "Deze contactpersoon gebruikt de privéversie van Threema.";
+
+/* create id */
+"lets_get_started" = "Aan de slag";
+"welcome_work" = "Welkom bij\nThreema Work";
+"setup_threema" = "Threema instellen";
+"restore_id" = "Herstellen van back-up";
+"restore_id_export" = "Geëxporteerd ID herstellen";
+"id_exists" = "De Threema ID dat eerder op dit apparaat (%@) is gebruikt, is nog aanwezig. Wilt u deze ID herstellen?";
+
+"welcome" = "Welkom bij Threema";
+"move_your_finger" = "Beweeg je vinger over het scherm.";
+"more_information" = "Meer informatie";
+"more_information_link_id_work" = "Als je je e-mailadres en telefoonnummer geeft, kunnen we je contactpersonen helpen je automatisch op Threema te vinden. Deze informatie wordt veilig en anoniem opgeslagen. Als je deze stap overslaat, kun je Threema volledig anoniem gebruiken.";
+"more_information_pick_nickname" = "De nickname wordt gebruikt in de pushberichten op sommige apparaten of als aanvullende identificatiemanier voor gebruikers bij wie je nog niet in het adresboek staat. We raden aan alleen je voornaam te gebruiken. Als je geen nickname instelt, gebruiken we standaard je Threema ID.";
+"more_information_sync_contacts" = "Als je deze optie inschakelt, versleutelt Threema het e-mailadres en de telefoonnummers met eenzijdige versleuteling (hashing) voordat we ze naar de server versturen om te controleren of er passende contactpersonen zijn. We slaan je adresboekgegevens niet op.";
+"more_information_random_seed" = "Door je vingers te bewegen, maak je willekeurige gegevens aan (entropisch) die worden gebruik om een sleutelpaar te genenereren dat wordt gekoppeld aan je nieuwe, unieke Threema ID.";
+"id_confirm_description_work" = "Je Threema ID werkt net als een telefoonnummer. Je contactpersonen kunnen je via dit ID bereiken.";
+"more_information_link_id" = "Door ons je telefoonnummer te geven, kunnen we je vrienden je automatisch op Threema te vinden. Deze informatie wordt veilig en anoniem opgeslagen. Als je deze stap overslaat, kun je Threema volledig anoniem gebruiken.";
+"more_information_confirm_id" = "Je hebt ook een sleutelpaar aangemaakt. De publieke sleutel is veilig verstuurd naar onze servers. De privésleutel blijft altijd op je apparaat. Dit garandeert dat niemand je berichten kan lezen.";
+
+"id_confirm_description" = "Je Threema ID werkt net als een telefoonnummer. Je vrienden kunnen je via dit ID bereiken.";
+"id_pick_nickname_description_work" = "Je contactpersonen zien je nickname wanneer ze een bericht ontvangen.";
+"id_confirm_your_id" = "Dit is je Threema ID:";
+
+"id_pick_nickname_title" = "Nickname kiezen";
+"id_pick_nickname_description" = "Je vrienden zien je nickname wanneer ze een bericht ontvangen.";
+"id_link_title_work" = "Help je contactpersonen je te vinden";
+"id_pick_nickname_question" = "Wil je je Threema ID gebruiken als nickname?";
+"id_enter_nickname" = "Nickname invoeren";
+
+"id_link_no_input_work" = "Je hebt geen telefoonnummer of e-mailadres aan je Threema ID gekoppeld. Je zult niet in adresboeken verschijnen. Wil je Threema echt volledig anoniem gebruiken?";
+"id_link_title" = "Help je vrienden je te vinden";
+"id_link_description_work" = "Koppel je telefoonnummer en/of e-mailadres aan je Threema ID.";
+"id_link_description" = "Koppel je telefoonnummer aan je Threema ID.";
+"id_link_no_input" = "Je hebt geen telefoonnummer aan je Threema ID gekoppeld. Je zult niet in de adresboeken van je vrienden verschijnen. Wil je Threema echt volledig anoniem gebruiken?";
+"id_sync_title_work" = "Je contactpersonen vinden op Threema Work";
+"id_sync_description_work" = "Inschakelen om te zien wie van je contactpersonen Threema gebruiken.";
+"id_enter_email" = "E-mailadres (optioneel)";
+
+"id_sync_title" = "Vind je vrienden op Threema";
+"id_sync_description" = "Inschakelen om te zien wie van je vrienden Threema gebruiken.";
+"id_sync_contacts" = "Contactpersonen synchroniseren";
+
+"id_completed_title" = "Klaar! Is alles correct?";
+"id_completed_nickname" = "Je nickname";
+"id_completed_linked_to" = "Gekoppeld aan";
+"id_completed_sync_contacts" = "Contactpersonen synchroniseren";
+"finish" = "Gereed";
+
+"linking_email" = "E-mailadres koppelen";
+"syncing_contacts" = "Contactpersonen synchroniseren";
+"linking_phone" = "Telefoonnummer koppelen";
+"(linked)" = "(gekoppeld)";
+"linking_phone_sms_sent" = "SMS versturen ter verificatie";
+
+"Password" = "Wachtwoord";
+"(optional)" = "(optioneel)";
+"scan_id_backup" = "Geëxporteerde QR-code scannen";
+"phone number" = "Telefoonnummer";
+"id_backup" = "Geëxporteerde ID";
+"id_backup_placeholder" = "Voer de tekststring van de geëxporteerde ID in of plak deze om te herstellen";
+"username" = "Gebruikersnaam";
+
+"country_code" = "Landcode";
+"send_message" = "Bericht versturen";
+"enter_license_password_placeholder" = "Wachtwoord";
+"leave_group" = "Groep verlaten";
+
+/* License Key */
+"enter_license_title" = "Gegevens invoeren";
+/* MWPhotoBrowser */
+"Done" = "Klaar";
+"enter_license_description" = "Voer de gegevens in die u van uw bedrijf of organisatie heeft ontvangen.";
+"Save" = "Opslaan";
+"enter_license_username_placeholder" = "Gebruikersnaam";
+"of" = "van";
+"Cancel" = "Annuleren";
+"enter_license_checking" = "Gegevens controleren";
+"confirm" = "Bevestigen";
+"enter_license_info" = "Voor privégebruikers";
+"enter_license_info_link" = "Voor privégebruikers";
+
+"Copy" = "Kopiëren";
+"Email" = "E-mail";
+"Saving" = "Opslaan";
+"Failed" = "Mislukt";
+"Saved" = "Opgeslagen";
+"Copying" = "Kopiëren";
+"Copied" = "Gekopieerd";
+"Preparing" = "Voorbereiden";
+"photo" = "Foto";
+"Dismiss" = "Afwijzen";
+"photos" = "Foto's";
+
+/* invite messages */
+"invite_email_body" = "Hallo,\n\nIk gebruik Threema, de veilige instant messenger die de privacy van haar gebruikers beschermt.\n\nMy Threema ID: https://threema.id/%@\n\nLaten we voortaan communiceren via Threema!\n\nGroetjes,\n";
+"invite_email_subject" = "Threema. De veilige messenger die onze privacy beschermt";
+"invite_sms_body" = "Hallo! Laten we Threema gebruiken om te communiceren in een beveiligde omgeving die de privacy beschermt! Mijn Threema-ID is: https://threema.id/%@";
+"invite_facebook_text" = "Ik gebruik Threema, de veilige instant messenger-app die de privacy van haar gebruikers beschermt. Mijn Threema-ID: https://threema.id/%@";
+"invite_twitter_text" = "Ik gebruik Threema, een veilige instant messenger-app die de privacy van haar gebruikers beschermt. My Threema-ID: https://threema.id/%@";
+"invite_using" = "Een vriend uitnodigen via...";
+"sms" = "Tekstbericht";
+
+/* Notifications Text */
+"new_message" = "Bericht";
+/* Notifications Text */
+"new_message_from_x" = "Bericht van %@";
+"new_group_message" = "Groepsbericht";
+"new_group_message_from_x" = "Groepsbericht van %@";
+"new_message_cant_load" = "Open Threema om het bericht te laden.";
+"new_group_message_cant_load" = "Open Threema om het groepsbericht te laden.";
+"new_message_no_access_title" = "Nieuwe berichten";
+"new_message_no_access_message" = "Open Threema om binnenkomende berichten op te halen.";
+
+/* reminder messages */
+"push_reminder_title" = "Pushberichten niet ingeschakeld";
+"push_reminder_message" = "Zo te zien heeft Threema geen toestemming je pushberichten te sturen. Als je berichten ontvangt wanneer Threema is afgesloten, word je niet gewaarschuwd. Ga naar iOS Instellingen > Berichten en schakel berichten voor Threema in zodat je niets mist.";
+"not_now" = "Niet nu";
+"set_now" = "Instellen";
+
+"updating_database" = "Database bijwerken...\n\nOnderbreek deze handeling niet! Als de database erg groot is, kan kan het een paar minuten.";
+"database_migration_error_hints" = "Zorg ervoor dat je genoeg vrije opslagruimte op je apparaat hebt, herstart je apparaat en probeer het opnieuw.";
+"database_migration_storage_warning_title" = "Niet genoeg beschikbare opslagruimte";
+"database_migration_storage_warning_message" = "Het bijwerken van de database kost tijdelijk ten minste %.1f GB aan beschikbare opslagruimte. Je apparaat heeft momenteel slechts %.1f GB beschikbaar. Maak meer opslagruimte vrij door zaken te verwijderen via Gebruiksinstellingen en probeer het opnieuw.";
+
+"sync_exclusion_footer" = "De weergegeven ID's worden genegeerd wanneer je contactpersonen synchroniseerd.";
+"enter_id_to_exclude" = "Voer de ID in die je wilt uitsluiten van synchronisatie:";
+"exclude_deleted_id_title" = "Wil je de ID van de contactpersoon die je zojuist hebt verwijderd uitsluiten van toekomstige synchronisaties?";
+"exclude_deleted_id_message" = "Je kunt de uitsluitingen beheren via de privacy-instellingen.";
+
+"group_renamed_to_x" = "Groepsnaam veranderd in \"%@\"";
+"group_member_x_left" = "%@ heeft de groep verlaten";
+"group_member_x_added" = "%@ is aan de groep toegevoegd";
+"group_member_x_forced_leave" = "%@ is uit de groep verwijderd";
+"group_member_self_added" = "Je bent aan de groep toegevoegd.";
+"group_member_self_removed" = "Je bent uit de groep verwijderd.";
+"group_member_self_left" = "Je hebt de groep verlaten.";
+
+/* accessibility labels */
+"send_media_or_location" = "Media of locatie versturen";
+"my_profilepicture" = "Je profielafbeelding";
+"my_threema_id" = "Je Threema ID";
+"edit_profile" = "Nickname en profielafbeelding bewerken";
+"edit_contact" = "Contactpersoon en -afbeelding bewerken";
+
+"from" = "van";
+"at" = "op";
+"seconds" = "seconden";
+"duration" = "duur";
+"current_position" = "positie";
+"in_reply_to" = "in antwoord op";
+"go_to_position" = "op";
+"draft" = "Ontwerp";
+"new_message_accessibility" = "Nieuw bericht: ";
+"scoll_down_text" = "Scroll down";
+
+/* TTOpenInAppActivity */
+"Open in ..." = "Openen in...";
+
+/* VoiceOver long labels */
+"restore" = "Herstellen";
+
+/* PullToRefresh */
+"pull_to_refresh" = "Vegen om te verversen...";
+"refreshing" = "Laden...";
+
+/* Threema Channel */
+"threema_channel_intro" = "Threema Channel geeft je alle Threema-nieuwtjes. Wil je Threema Channel toevoegen aan je contactpersonen?";
+
+/* Push decryption */
+"decryption_push_title" = "Wilt u een voorbeeld van het bericht zien in de pushmeldingen?";
+"decryption_push_text" = "Als voorbeelden zijn uitgeschakeld, moet u Threema openen om de inhoud van nieuwe berichten te bekijken.";
+"decryption_push_activate" = "Voorbeeld inschakelen";
+"decryption_push_deactivate" = "Voorbeeld uitschakelen";
+"decryption_push_reply" = "Antwoorden";
+"decryption_push_placeholder" = "Antwoorden...";
+"decryption_push_agree" = "Akkoord";
+"decryption_push_disagree" = "Niet akkoord";
+
+"send_notification_message_error_title" = "Bericht versturen";
+"send_notification_message_error_failed" = "Het bericht kon niet worden verzonden.";
+"send_notification_message_error_no_connection" = "Het bericht kon niet worden verzonden. Open Threema om het opnieuw te proberen.";
+"send_notification_message_error_agree" = "Accorderen mislukt.";
+"send_notification_message_error_disagree" = "Niet-accorderen mislukt.";
+
+/* Device policy */
+"disabled_by_device_policy" = "Sommige instellingen zijn uitgeschakeld door het apparaatbeleid";
+
+/* Edit profile */
+"send_profileimage_off" = "Niemand";
+"send_profileimage_on" = "Iedereen die je schrijft";
+"send_profileimage_contacts" = "Geselecteerde contactpersonen";
+"edit_profile_footer" = "De nickname wordt opgenomen in de pushberichten voor berichten die je verstuurd. We raden aan alleen je voornaam of een pseudoniem te gebruiken.";
+
+/* DKImagePickerView */
+"gallery_moments" = "Momenten";
+
+/* VoIP Call */
+"call_mute" = "Dempen";
+"call_speaker" = "Luidspreker";
+"call_end" = "Ophangen";
+"call_camera_activate_button" = "Camera inschakelen";
+"call_camera_deactivate_button" = "Camera uitschakelen";
+"call_camera_switch_to_front_button" = "Wisselen naar camera voor";
+"call_camera_switch_to_back_button" = "Wisselen naar camera achter";
+
+"call_rejected" = "Oproep afgewezen";
+"call_rejected_busy" = "Bezig";
+"call_rejected_timeout" = "De ontvanger is niet beschikbaar";
+"call_rejected_disabled" = "Threema oproepen zijn uitgeschakeld door de ontvanger";
+"call_rejected_unknown" = "Oproep afgewezen";
+"call_missed" = "Oproep gemist";
+"call_incoming_ended" = "Ontvangen oproep";
+"call_outgoing_ended" = "Uitgaande oproep";
+"call_duration" = "Duur: %@";
+"call_canceled" = "Oproep afgebroken";
+"call_back" = "Terugbellen";
+"call_accept" = "Accepteren";
+"call_reject" = "Afwijzen";
+"call_hide_call" = "Oproep verbergen";
+
+"call_threema_title" = "Threema-Oproep starten";
+"call_callkit_button_title" = "Threema";
+"call_voip_not_supported_title" = "Threema-Oproep";
+"call_voip_not_supported_text" = "Deze contactpersoon kan nog geen oproepen via Threema ontvangen.";
+"call_microphone_permission_title" = "Toegang tot microfoon geweigerd";
+"call_microphone_permission_text" = "U moet via de Instellingen toegang geven tot de microfoon";
+"call_contact_alert" = "Wil je %@ bellen?";
+"call_contact_not_reachable" = "Contactpersoon is niet bereikbaar…";
+
+"call_status_idle" = "Klaar";
+"call_status_wait_ringing" = "Initialiseren";
+"call_status_ringing" = "Bellen";
+"call_status_incom_ringing" = "Threema-Oproep";
+"call_status_initializing" = "Verbinden";
+"call_status_calling" = "Verbonden";
+"call_status_reconnecting" = "Verbinden";
+"call_status_unknown" = "Onbekend";
+"call_status_failed_title" = "Threema-Oproep";
+"call_status_failed_connected_message" = "Verbinding verbroken";
+"call_status_failed_initializing_message" = "Er kon geen verbinding worden gemaakt";
+"call_status_failed_sdp_patch_message" = "Threema-Oproep niet aangemaakt";
+
+"call_threema_initiator_video_info" = "Tik hier om de camera in te schakelen";
+"call_threema_remote_video_activated_info_title" = "Video-oproep";
+"call_threema_remote_video_activated_info" = "De andere partij heeft een video-oproep gestart. Tik hier om je camera in te schakelen.";
+"call_threema_speaker_info" = "Tik hier om de luidspreker in te schakelen";
+"call_threema_camera_disabled_info" = "Deze contactpersoon heeft geen bijgewerkte Threema-versie of staat geen video-oproepen toe.";
+
+"call_threema_video_in_chat_info_title" = "Nieuw: Video-oproepen";
+"call_threema_video_in_chat_info_description" = "Naast beveiligde oproepen biedt Threema nu ook end-to-end-versleutelde video-oproepen.";
+
+/* Privacy Policy */
+"privacy_policy_about" = "Threema beschermt je privacy beter dan welke messenger dan ook. Raadpleeg voor meer informatie naar ons Privacybeleid.";
+"privacy_policy_about_work" = "Threema Work beschermt je privacy beter dan welke messenger dan ook. Raadpleeg voor meer informatie naar ons Privacybeleid.";
+"privacy_policy_about_link" = "Privacybeleid";
+"accept_privacy_policy" = "Privacybeleid accepteren";
+"privacy_policy_switch" = "Knop Privacybeleid";
+"privacy_policy_alert_text" = "Accepteer het privacybeleid om Threema te gebruiken.\n\n(Vereist door Verordening (EU) 2016/679)";
+"privacy_policy_alert_text_work" = "Accepteer het privacybeleid om Threema Work te gebruiken.\n\n(Vereist door Verordening (EU) 2016/679)";
+
+/* Conversation */
+"pin" = "Markeren";
+"unpin" = "Wissen";
+"pinned_conversation" = "Gemarkeerd gesprek";
+
+"pushSetting_title" = "Meldingsinstellingen";
+"doNotDisturb_title" = "Niet storen";
+"doNotDisturb_header" = "Melden";
+"doNotDisturb_mention" = "Melden wanneer ik word genoemd";
+"doNotDisturb_mention_footer_off" = "U ontvangt geen meldingen, zelfs niet als u wordt genoemd.";
+"doNotDisturb_mention_footer_on" = "U ontvangt een melding wanneer u wordt genoemd.";
+
+"doNotDisturb_off" = "Uit";
+"doNotDisturb_on" = "Aan";
+"doNotDisturb_onPeriod" = "Aan voor een bepaalde periode";
+"doNotDisturb_onPeriod_time" = "Tot:";
+"doNotDisturb_onPeriod_1Hour" = "1 uur";
+"doNotDisturb_onPeriod_2Hours" = "2 uur";
+"doNotDisturb_onPeriod_3Hours" = "3 uur";
+"doNotDisturb_onPeriod_4Hours" = "4 uur";
+"doNotDisturb_onPeriod_8Hours" = "8 uur";
+"doNotDisturb_onPeriod_1day" = "1 dag";
+"doNotDisturb_onPeriod_1week" = "1 week";
+
+"notification_sound_header" = "Meldingsgeluid";
+"notification_sound_title" = "Meldingsgeluid afspelen";
+
+/* WebClient */
+"webClientSession_title" = "Threema Web";
+"webClientSession_add" = "Nieuwe sessie starten";
+"webClientSession_add_wrong_qr_title" = "Threema Web";
+"webClientSession_add_wrong_qr_message" = "Dit is geen QR-code voor Threema Web. Open https://web.threema.ch/ en scan de QR-code die daar wordt weergegeven.";
+"webClientSession_add_footer" = "Open https://web.threema.ch/ op uw pc/Mac. Tik daarna op het camerapictogram rechtsboven in dit scherm en scan de QR-code op uw computer.";
+"webClientSession_sessions_header" = "Sessies";
+"webClientSession_unnamed" = "Sessie zonder titel";
+"webClientSession_lastUse" = "Laatst gebruikt";
+"webClientSession_saved" = "Opgeslagen";
+"webClientSession_notSaved" = "Niet opgeslagen";
+"webClientSession_sessionName" = "Sessienaam";
+"webClientSession_actionSheetTitle" = "Sessie bewerken";
+"webClientSession_actionSheet_stopSession" = "Sessie stoppen";
+"webClientSession_actionSheet_startSession" = "Sessie starten";
+"webClientSession_actionSheet_renameSession" = "Sessie hernoemen";
+"webClientSession_actionSheet_deleteSession" = "Sessie verwijderen";
+"webClientSession_error_updateApp_title" = "Threema Web";
+"webClientSession_error_updateApp_message" = "Verkeerde protocolversie van Threema Web. Werk uw app bij.";
+"webClientSession_error_updateServer_title" = "Threema Web";
+"webClientSession_error_updateServer_message" = "Verkeerde protocolversie van Threema Web. Vraag uw administrator om de web client bij te werken.";
+"webClientSession_error_wrongVersion_title" = "Threema Web";
+"webClientSession_error_wrongVersion_message" = "Deze appversie ondersteunt het protocol voor de web client voor Threema Web niet.";
+
+"webClient_scan_error_title" = "Threema Web";
+"webClient_scan_error_message" = "Dit is een QR-code voor Threema Web. Gebruik de scanner via Instellingen > Threema Web.";
+
+"webClient_scan_error_mdm_host_title" = "Threema Web-sessie kan niet worden gestart";
+"webClient_scan_error_mdm_host_message" = "De server is niet goedgekeurd door de administrator.";
+
+
+/* ProtectedDataUnavailable */
+"protectedDataUnavailable_error_text" = "Beschermde gegevens is momenteel niet beschikbaar. Sluit de app en start hem opnieuw op.";
+"protectedDataUnavailable_exitbutton" = "Afsluiten";
+
+/* Photo Browser */
+"media_delete_all_confirm" = "Weet u zeker dat u alle mediabestanden wilt verwijderen?";
+"media_delete_selected_confirm" = "Weet u zeker dat u de geselecteerde mediabestanden wilt verwijderen?";
+
+/* Threema Safe */
+"deactivate" = "Deactiveren";
+"invalid_threema_id" = "Ongeldige Threema ID";
+"number_of_days" = "%d dagen";
+
+"safe_enable_explain_short" = "Threema Safe inschakelen om automatisch veilige en anonieme back-ups van al uw belangrijke gegevens te maken.";
+"safe_enable_explain" = "Alles wat u nodig hebt om te chatten wordt alleen op uw apparaat opgeslagen. U hebt geen account bij ons en we kunnen u niet helpen als u uw telefoon verliest of per ongeluk uw gegevens verwijdert.\n\nThreema Safe maakt automatisch back-ups aan van alle belangrijke gegevens zoals uw sleutelcodes, uw lijst contactpersonen en uw groepslidmaatschappen, anoniem op een beveiligde server naar keuze.";
+
+"safe_server_authentication" = "Authenticatie (optioneel)";
+"safe_server_name" = "Servernaam";
+"safe_max_backup_size" = "Max. back-upformaat";
+"safe_retention" = "Back-up vasthouden";
+"safe_last_backup" = "Laatste back-up";
+"safe_size" = "Formaat back-up";
+"safe_result" = "Resultaat back-up";
+"safe_successful" = "Geslaagd";
+"safe_unsuccessful" = "Mislukt";
+"safe_upload_failed" = "Uploaden mislukt";
+"safe_upload_size_exceeded" = "Uploadformaat voor server overschreden";
+"safe_change_password" = "Wachtwoord wijzigen";
+"safe_backup_now" = "Back-up maken";
+"safe_deactivate" = "Threema Safe uitschakelen";
+"safe_deactivate_explain" = "Als u Threema Safe uitschakelt, worden bestaande back-ups van de server verwijderd. Doorgaan?";
+"safe_disable_confirm" = "Wilt u echt doorgaan zonder Threema Safe in te schakelen?";
+
+"safe_setup_backup_title" = "Threema Safe";
+"safe_setup_backup_description" = "Kies een wachtwoord. U hebt dit wachtwoord nodig om uw back-upbestanden van Threema Safe te herstellen.";
+"safe_advanced_options" = "Expertinstellingen";
+"safe_configure_choose_server" = "Kies een Threema Safe-server";
+"safe_configure_server_explain" = "U kunt een server van Threema gebruiken of, indien gewenst, een externe back-upserver opgeven.";
+"safe_use_default_server" = "Standaardserver gebruiken";
+"safe_restore" = "Threema Safe herstellen";
+"safe_restore_enter_id" = "Voer het Threema ID in dat u wilt herstellen";
+"safe_forgot_your_id" = "Uw ID vergeten?";
+"safe_threema_id" = "Uw Threema ID";
+"safe_search_id_title" = "Voer het mobiele nummer of het e-mailadres in dat aan uw ID is gekoppeld";
+"safe_linked_mobile" = "Mobiel nummer";
+"safe_linked_email" = "E-mailadres";
+"safe_no_id_found" = "Geen Threema ID gevonden";
+"safe_select_id" = "Meerdere Threema IDs gevonden. Selecteer het ID dat u wilt gebruiken:";
+"safe_enter_password" = "Voer uw Threema Safe-wachtwoord in";
+"safe_restore_failed" = "Herstel mislukt";
+"safe_no_backup_found" = "Geen back-up gevonden op de server. Controleer het ID en het wachtwoord.";
+"safe_preparing" = "Threema Safe voorbereiden";
+"safe_error_preparing" = "Fout bij voorbereiden Threema Safe back-up";
+"safe_configure_choose_password_title" = "Kies een wachtwoord";
+"safe_configure_choose_password" = "Kies een wachtwoord. U hebt dit wachtwoord nodig om uw back-upbestanden van Threema Safe te herstellen.";
+"safe_configure_choose_password_mdm" = "Uw administrator heeft uw apparaat toestemming gegeven Threema Safe te gebruiken.";
+"safe_version_mismatch" = "De versie van deze back-up is hoger dan de ondersteunde versie. Werk de app bij naar de laatste versie.";
+"safe_intro_title" = "Nieuw: Threema Safe";
+"safe_intro_description" = "Verlies uw Threema ID of uw contactpersonen en groepen nooit meer!";
+"safe_intro_explain" = "Threema Safe maakt regelmatig versleutelde en anonieme back-ups van uw belangrijkste gegevens en slaat deze op op de Threema-server of een andere server van uw keuze.";
+"safe_intro_enable" = "Inschakelen";
+"safe_intro_cancel" = "Niet meer weergeven";
+"safe_failed_notification" = "Back-up van Threema Safe is al %.0f dagen op rij mislukt. Tik hier om te controleren.";
+"safe_expired_notification" = "Uw back-up van Threema Safe kan zijn verlopen en wordt binnenkort misschien verwijderd. Controleer de instellingen voor Threema Safe en zorg ervoor dat een nieuw back-upbestand voor Threema Safe kan worden aangemaakt.";
+"safe_test_server" = "Server testen";
+"safe_test_server_invalid_url" = "Voer een geldig HTTPS-adres in.";
+"safe_restore_error" = "Herstel van Threema Safe back-up is mislukt. Probeer het opnieuw.";
+"safe_activation_failed" = "Threema Safe kon niet worden geactiveerd na het herstel van de back-up.";
+
+"password_bad" = "Zwak wachtwoord";
+"password_bad_explain" = "Het geselecteerde wachtwoord voor Threema Safe is niet veilig en kan gemakkelijk worden geraden. Voer een ander wachtwoord in. Hint: gebruik een wachtwoord dat u meerdere woorden bestaat.";
+"password_bad_guidelines" = "Het ingevoerde wachtwoord voldoet niet aan de richtlijnen.";
+"password_bad_regex" = "Ongeldige definitie (regex) voor wachtwoordvereisten. Neem contact op met uw Threema Work administrator.";
+
+"continue_anyway" = "Doorgaan";
+
+"restore_option_title" = "Een back-up herstellen";
+"restore_option_id_title" = "ID herstellen van back-up";
+"restore_option_description" = "Wat voor soort back-up wilt u herstellen?";
+"restore_option_safe" = "Herstel uw ID, contactpersonen en groepen";
+"restore_option_safe_keep_data" = "Alleen het ID van Threema Safe herstellen en de gegevens (chatgesprekken, contactpersonen, groepen, enz) op dit apparaat behouden.";
+"restore_option_id" = "Alleen uw ID herstellen";
+"restore_option_id_keep_data" = "Herstel uw geëxporteerde Threema ID en behoud de gegevens (chatgesprekken, groepen, enz) die al op dit apparaat zijn opgeslagen";
+
+"restore_option_data_description" = "Threema-gegevens (chatgesprekken, contactpersonen, groepen, enz.) zijn op dit apparaat aanwezig.";
+"restore_option_data_keep_data" = "Lokale gegevens bewaren";
+"restore_option_data_keep_data_description" = "Alleen het Threema-ID herstellen (via Threema Safe of een ID-exportbestand) en de lokale gegevens bewaren";
+"restore_option_data_delete_data" = "Lokale gegevens verwijderen";
+"restore_option_data_delete_data_description" = "Een Threema Safe back-upbestand herstellen (bevat uw ID, contactpersonen en groepen) of een ID-exportbestand (bevat alleen uw Threema-ID) na het verwijderen van de lokale gegevens";
+"restore_option_data_delete_data_explain" = "Om een volledige Threema Safe back-up the herstellen, moet u Threema opnieuw installeren. Verwijder de app en download hem opnieuw via de App Store.";
+
+// Company Directory
+"companydirectory_description" = "Interne contactpersonen vinden";
+"companydirectory_placeholder" = "Directory doorzoeken";
+"companydirectory_noentries_title" = "Geen gegevens gevonden";
+"companydirectory_noentries_description" = "Voer ten minste 3 tekens in om te zoeken";
+
+"already_licensed" = "Al gelicentieerd";
+
+// IDNSafetyHelper
+"url_warning_title" = "Phishing-waarschuwing";
+"url_warning_body" = "De hostnaam van de link die je wilt openen, is verdacht:\n\nWeergegeven hostnaam: %@\nEchte hostnaam: %@\n\nDit kan een poging zijn om je een nepsite te laten openen.\n\nWil je toch doorgaan?";
+
+// Storage Management
+"storage_management" = "Opslagbeheer";
+"storage_total" = "Totale opslagruimte";
+"storage_total_in_use" = "In gebruik";
+"storage_total_free" = "Beschikbaar";
+"storage_threema" = "Gebruikt door Threema";
+"delete_explain" = "Verwijder oude media en bestanden om opslagruimte vrij te maken. Let op: berichten worden niet automatisch verwijderd; alleen wanneer je op de respectievelijke knop Verwijderen tikt.";
+"delete_media_older_than" = "Media en bestanden verwijderen die ouder zijn dan";
+"delete_media" = "Media en bestanden verwijderen";
+"delete_media_confirm" = "Wil je permanent alle media en bestanden verwijderen die ouder zijn dan %@?";
+"delete_media_confirm_all" = "Wil je permanent alle media en bestanden verwijderen?";
+"delete_media_explain" = "Miniaturen blijven bewaard.";
+"delete_messages_older_than" = "Berichten verwijderen die ouder zijn dan";
+"delete_messages" = "Berichten verwijderen";
+"delete_messages_confirm" = "Wil je permanent alle berichten verwijderen die ouder zijn dan %@?";
+"delete_messages_confirm_all" = "Wil je permanent alle berichten verwijderen?";
+"delete_messages_explain" = "Dit omvat alle berichtsoorten (tekst- en spraakberichten, media, bestanden, polls, enz. worden verwijderd).";
+"one_year_title" = "1 jaar";
+"one_year" = "1 jaar";
+"six_months_title" = "6 maanden";
+"six_months" = "6 maanden";
+"three_months_title" = "3 maanden";
+"three_months" = "3 maanden";
+"one_month_title" = "1 maand";
+"one_month" = "1 maand";
+"one_week_title" = "1 week";
+"one_week" = "1 week";
+"everything" = "Alles verwijderen";
+"media_file_not_found" = "Kon het mediabestand niet openen. Het was verwijderd of niet van de server gedownload.";
+"older_than" = "Ouder dan";
+
+// Settings
+"settings_privacy" = "Privacy";
+"settings_appearance" = "Verschijning";
+"settings_notification" = "Berichten";
+"settings_chat" = "Chatten";
+"settings_media" = "Media";
+"settings_storage_management" = "Opslagbeheer";
+"settings_passcode_lock" = "Veiligheidscode";
+"settings_threema_calls" = "Threema Oproepen";
+"settings_threema_web" = "Threema Web";
+"settings_network_status" = "Netwerkstatus";
+"settings_version" = "Versie";
+"settings_license_username" = "Gebruikersnaam licentie";
+"settings_invite_a_friend" = "Een vriend uitnodigen";
+"settings_threema_channel" = "Threema-kanaal";
+"settings_support" = "Ondersteuning";
+"settings_privacy_policy" = "Privacybeleid";
+"settings_license" = "Licentie";
+"settings_advanced" = "Geavanceerd";
+"settings_threema_work" = "Threema Work";
+"settings_dev_mode" = "Dev Mode";
+
+"settings_advanced_flush_message_queue" = "Berichtenwachtrij leegmaken";
+
+// Dev Mode
+"settings_devmode_quote_v2" = "Quote V2";
+
+// Appearance
+"settings_appearance_theme_section" = "Thema ontwerpen";
+"settings_appearance_light_theme" = "Licht";
+"settings_appearance_dark_theme" = "Donker";
+"settings_appearance_system_theme" = "Systeem";
+"settings_appearance_theme_selected" = "%@-thema actief";
+"settings_appearance_theme_active" = "Actief";
+"settings_appearance_hide_stale_contacts" = "Inactieve ID's verbergen";
+"settings_appearance_show_profile_pictures" = "Profielafbeeldingen weergeven";
+"settings_appearance_display_order" = "Geef weer";
+"settings_appearance_show_gallery_preview" = "Albumvoorbeelden weergeven";
+
+// Sentry
+"sentry_crash_send_title" = "%@ is onverwacht afgesloten";
+"sentry_crash_send_description" = "Je kunt een anoniem crashrapport verzenden. Uitleg over wat de crash heeft veroorzaakt, zal helpen om het onderliggende probleem op te lossen.";
+"sentry_crash_send_yes" = "Anoniem rapport verzenden";
+"sentry_crash_send_no" = "Verstuur niet";
+"sentry_crash_comment_placeholder" = "Crashrapport";
+
+// My profile
+"profile_share_id_text" = "Mijn Threema ID";
+
+// File message
+"optional_caption" = "Optioneel onderschrift";
+"send_as_file" = "Versturen als bestand";
+
+// Notification settings
+"settings_notifications_inapp_section" = "In app";
+"settings_notifications_inapp_sounds" = "Geluiden";
+"settings_notifications_inapp_vibrate" = "Trillen";
+"settings_notifications_inapp_preview" = "Voorbeeld";
+"settings_notifications_push_section" = "Pushberichten";
+"settings_notifications_push_sound" = "Geluid";
+"settings_notifications_push_groupsound" = "Geluid groep";
+"settings_notifications_push_preview" = "Voorbeeld";
+"settings_notifications_push_showNickname" = "Nickname tonen";
+"settings_notifications_call_section" = "Threema Oproepen";
+"settings_notifications_call_sound" = "Geluid";
+"settings_notifications_masterDnd_section_header" = "Buiten bedrijfstijden";
+"settings_notifications_masterDnd" = "Niet storen buiten werktijden";
+"settings_notifications_masterDnd_section_footer" = "Meldingen uitschakelen en oproepen buiten kantooruren afwijzen.";
+"settings_notifications_masterDnd_workingDays" = "Werkdagen";
+"settings_notifications_masterDnd_startTime" = "Start van kantooruren";
+"settings_notifications_masterDnd_endTime" = "Einde van kantooruren";
+"settings_notifications_masterDnd_info" = "Actief buiten kantooruren";
+
+// Threema calls settings
+"settings_threema_calls_enable_calls" = "Threema oproepen inschakelen";
+"settings_threema_calls_always_relay_calls" = "Oproep altijd doorschakelen";
+"settings_threema_calls_callkit" = "Oproepen integreren in iOS";
+"settings_threema_calls_video_section" = "Video-oproepen";
+"settings_threema_calls_allow_video_calls" = "Video-oproepen toestaan";
+"settings_threema_calls_video_quality_profile" = "Gewenste beeldkwaliteit";
+"settings_threema_calls_video_quality_profile_low" = "Laag dataverbruik";
+"settings_threema_calls_video_quality_profile_max" = "Maximale kwaliteit";
+"settings_threema_calls_video_quality_profile_auto" = "Gebalanceerd (Aanbevolen)";
+"settings_threema_calls_video_quality_profile_low_description" = "Lagere beeldkwaliteit voor lager dataverbruik";
+"settings_threema_calls_video_quality_profile_max_description" = "Let op: dit kan een hoog dataverbruik opleveren, ook in mobiele netwerken!";
+"settings_threema_calls_video_quality_profile_auto_description" = "Hoge beeldkwaliteit over WLAN, verminderd dataverbruik in het mobiele netwerk";
+"settings_threema_calls_video_quality_profile_footer" = "De effectieve beeldkwaliteit is afhankelijk van het netwerk en de instellingen van de persoon met wie je praat.";
+
+// Media Preview
+"loading_video_failed" = "De video kon niet worden geladen. Herstart de app en probeer het opnieuw.";
+"loading_image" = "Foto laden…";
+"loading_video" = "Video laden…";
+"selected_media_list" = "Lijst met geselecteerde media";
+"media_item_of" = "Media-item %@ van %@";
+"video_date" = "Video opgenomen op %@";
+"imagedate_date" = "Foto genomen op %@";
+"send_as_file_description" = "Verstuur foto's als bestand of als inline-foto. Alle metadata van bestanden zoals locatiegegevens worden behouden en worden weergegeven met een kleinere miniatuur.";
+"more_options" = "Meer opties";
+"add_caption_to_image" = "Onderschrift toevoegen…";
+"add_more_images" = "Meer foto's toevoegen";
+"back_to_media_selection" = "Terug naar scherm voor mediaselectie";
+"remove_current_image_from_selected_images" = "Huidig item uit selectie verwijderen";
+"send_options" = "Meer opties";

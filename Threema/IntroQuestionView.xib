@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="14460.31" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" colorMatched="YES">
+    <device id="retina4_7" orientation="portrait">
+        <adaptation id="fullscreen"/>
+    </device>
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="14460.20"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <view contentMode="scaleToFill" id="iN0-l3-epB" customClass="IntroQuestionView">
+            <rect key="frame" x="0.0" y="0.0" width="280" height="240"/>
+            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+            <subviews>
+                <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" distribution="equalSpacing" alignment="center" spacing="20" translatesAutoresizingMaskIntoConstraints="NO" id="e5b-59-gAm">
+                    <rect key="frame" x="0.0" y="0.0" width="280" height="95.5"/>
+                    <subviews>
+                        <label hidden="YES" opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Title" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="w6J-q5-6Fm">
+                            <rect key="frame" x="124.5" y="0.0" width="31.5" height="0.0"/>
+                            <fontDescription key="fontDescription" type="system" pointSize="16"/>
+                            <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                            <nil key="highlightedColor"/>
+                        </label>
+                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="9" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="dap-UA-sWC">
+                            <rect key="frame" x="120.5" y="0.0" width="39" height="19.5"/>
+                            <fontDescription key="fontDescription" type="system" weight="light" pointSize="16"/>
+                            <color key="textColor" red="0.9825797033" green="0.9825797033" blue="0.9825797033" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                            <nil key="highlightedColor"/>
+                        </label>
+                        <stackView opaque="NO" contentMode="scaleToFill" alignment="bottom" translatesAutoresizingMaskIntoConstraints="NO" id="dBm-71-NIq">
+                            <rect key="frame" x="140" y="39.5" width="0.0" height="0.0"/>
+                            <subviews>
+                                <button hidden="YES" opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="ngu-Xf-qec">
+                                    <rect key="frame" x="0.0" y="0.0" width="110" height="36"/>
+                                    <color key="backgroundColor" red="0.2470588235" green="0.90196078430000004" blue="0.41176470590000003" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                    <constraints>
+                                        <constraint firstAttribute="width" constant="110" id="GoJ-nS-Hn7"/>
+                                        <constraint firstAttribute="height" constant="36" id="d8H-eI-PrD"/>
+                                    </constraints>
+                                    <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                                    <state key="normal" title="Ok">
+                                        <color key="titleColor" red="0.13725490200000001" green="0.0" blue="0.1019607843" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                    </state>
+                                    <connections>
+                                        <action selector="okAction:" destination="iN0-l3-epB" eventType="touchUpInside" id="pb3-ad-zhF"/>
+                                    </connections>
+                                </button>
+                            </subviews>
+                        </stackView>
+                        <stackView opaque="NO" contentMode="scaleToFill" spacing="20" translatesAutoresizingMaskIntoConstraints="NO" id="abM-yq-iUt">
+                            <rect key="frame" x="10" y="59.5" width="260" height="36"/>
+                            <subviews>
+                                <button opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="249" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="7ze-Fm-pK3">
+                                    <rect key="frame" x="0.0" y="0.0" width="120" height="36"/>
+                                    <color key="backgroundColor" red="0.0" green="0.0" blue="0.0" alpha="0.0" colorSpace="custom" customColorSpace="sRGB"/>
+                                    <constraints>
+                                        <constraint firstAttribute="height" constant="36" id="V2q-Ar-r25"/>
+                                        <constraint firstAttribute="width" constant="120" id="flD-ki-DsZ"/>
+                                    </constraints>
+                                    <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                                    <state key="normal" title="NO">
+                                        <color key="titleColor" red="0.2470588235" green="0.90196078430000004" blue="0.41176470590000003" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                    </state>
+                                    <connections>
+                                        <action selector="noAction:" destination="iN0-l3-epB" eventType="touchUpInside" id="ibs-R3-aFA"/>
+                                    </connections>
+                                </button>
+                                <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="erc-tA-HdO">
+                                    <rect key="frame" x="140" y="0.0" width="120" height="36"/>
+                                    <color key="backgroundColor" red="0.2470588235" green="0.90196078430000004" blue="0.41176470590000003" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                    <constraints>
+                                        <constraint firstAttribute="height" constant="36" id="RgA-7e-9wi"/>
+                                        <constraint firstAttribute="width" constant="120" id="sSk-fY-jy4"/>
+                                    </constraints>
+                                    <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                                    <state key="normal" title="YES">
+                                        <color key="titleColor" red="0.13725490200000001" green="0.0" blue="0.1019607843" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                    </state>
+                                    <connections>
+                                        <action selector="yesAction:" destination="iN0-l3-epB" eventType="touchUpInside" id="wR5-2X-G4q"/>
+                                    </connections>
+                                </button>
+                            </subviews>
+                        </stackView>
+                    </subviews>
+                </stackView>
+            </subviews>
+            <color key="backgroundColor" red="0.3333333432674408" green="0.3333333432674408" blue="0.3333333432674408" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+            <constraints>
+                <constraint firstItem="e5b-59-gAm" firstAttribute="top" secondItem="iN0-l3-epB" secondAttribute="top" id="5mD-NH-92L"/>
+                <constraint firstAttribute="bottom" relation="greaterThanOrEqual" secondItem="e5b-59-gAm" secondAttribute="bottom" id="Ppp-Xf-crx"/>
+                <constraint firstItem="e5b-59-gAm" firstAttribute="leading" secondItem="iN0-l3-epB" secondAttribute="leading" id="QfK-Ta-u3Q"/>
+                <constraint firstAttribute="trailing" secondItem="e5b-59-gAm" secondAttribute="trailing" id="a4R-k9-HpK"/>
+            </constraints>
+            <nil key="simulatedStatusBarMetrics"/>
+            <nil key="simulatedTopBarMetrics"/>
+            <nil key="simulatedBottomBarMetrics"/>
+            <freeformSimulatedSizeMetrics key="simulatedDestinationMetrics"/>
+            <connections>
+                <outlet property="alertPane" destination="dBm-71-NIq" id="jlG-mc-VfK"/>
+                <outlet property="confirmPane" destination="abM-yq-iUt" id="clY-fE-3xA"/>
+                <outlet property="noButton" destination="7ze-Fm-pK3" id="a9a-1m-JgV"/>
+                <outlet property="okButton" destination="ngu-Xf-qec" id="OXh-d6-aSw"/>
+                <outlet property="questionLabel" destination="dap-UA-sWC" id="9ys-Gt-cUs"/>
+                <outlet property="questionTitle" destination="w6J-q5-6Fm" id="8Li-js-EnA"/>
+                <outlet property="yesButton" destination="erc-tA-HdO" id="e1Y-BL-vJQ"/>
+            </connections>
+            <point key="canvasLocation" x="462" y="436"/>
+        </view>
+    </objects>
+</document>

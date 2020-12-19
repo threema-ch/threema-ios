@@ -1,0 +1,9 @@
+//
+// Prefix header for all source files of the 'MWPhotoBrowser' target in the 'MWPhotoBrowser' project
+//
+
+#ifdef __OBJC__
+    #import <Foundation/Foundation.h>
+    #import <UIKit/UIKit.h>
+    #import "MWPreprocessor.h"
+#endif

@@ -1,0 +1,114 @@
+
+/* Class = "UILabel"; text = "Nickname"; ObjectID = "2jc-3N-31S"; */
+"2jc-3N-31S.text" = "Takma ad";
+
+/* Class = "UITableViewSection"; footerTitle = "Number: +41 79 123 45 67"; ObjectID = "5HP-W8-nFp"; */
+"5HP-W8-nFp.footerTitle" = "Numarası: +41 79123 45 67";
+
+/* Class = "UITextField"; placeholder = "your email address"; ObjectID = "5bh-L5-CVm"; */
+"5bh-L5-CVm.placeholder" = "E-Posta Adresiniz";
+
+/* Class = "UINavigationItem"; title = "My Profile"; ObjectID = "8Pu-jd-SHn"; */
+"8Pu-jd-SHn.title" = "Profiliniz";
+
+/* Class = "UILabel"; text = "Key Fingerprint"; ObjectID = "sJA-2q-zE2"; */
+"sJA-2q-zE2.text" = "Anahtar Parmak İzi";
+
+/* Class = "UINavigationItem"; title = "Link Number"; ObjectID = "ELz-zT-AmB"; */
+"ELz-zT-AmB.title" = "Bağlantı Numarası";
+
+/* Class = "UILabel"; text = "Detail"; ObjectID = "FIY-Hl-kwh"; */
+"FIY-Hl-kwh.text" = "Detay";
+
+/* Class = "UITextField"; placeholder = "your phone number"; ObjectID = "FRl-f2-pIa"; */
+"FRl-f2-pIa.placeholder" = "Telefon Numaran";
+
+/* Class = "UILabel"; text = "Detail"; ObjectID = "H7W-RZ-gej"; */
+"H7W-RZ-gej.text" = "Detay";
+
+/* Class = "UILabel"; text = "Delete ID"; ObjectID = "ISb-ca-Ste"; */
+"ISb-ca-Ste.text" = "Kimliği Sil";
+
+/* Class = "UILabel"; text = "Email address"; ObjectID = "JRY-UB-2Zx"; */
+"JRY-UB-2Zx.text" = "E-Posta Adresiniz";
+
+/* Class = "UITextField"; placeholder = "code"; ObjectID = "KTz-4x-SnC"; */
+"KTz-4x-SnC.placeholder" = "Kod";
+
+/* Class = "UILabel"; text = "Nickname"; ObjectID = "NLA-jz-irZ"; */
+"NLA-jz-irZ.text" = "Takma Ad";
+
+/* Class = "UITableViewSection"; footerTitle = "Linking your email address or phone number to your ID lets other people find you on Threema automatically if they have you in their address book."; ObjectID = "NUr-0t-zng"; */
+"NUr-0t-zng.footerTitle" = "E-posta adresinizi veya telefon numaranızı kimliğinize bağlamak, diğer kişilerin sizi adres defterlerinde varsa Threema'da otomatik olarak bulmasını sağlar.";
+
+/* Class = "UILabel"; text = "Threema ID"; ObjectID = "PG7-5d-WL5"; */
+"PG7-5d-WL5.text" = "Threema Kimliği";
+
+/* Class = "UILabel"; text = "Profile picture recipients"; ObjectID = "PqJ-0p-bkD"; */
+"PqJ-0p-bkD.text" = "Profil Resmi Alıcıları";
+
+/* Class = "UILabel"; text = "Phone Number"; ObjectID = "QCC-2k-HfZ"; */
+"QCC-2k-HfZ.text" = "Telefon Numarası";
+
+/* Class = "UILabel"; text = "Linked Email"; ObjectID = "Re1-k2-FsT"; */
+"Re1-k2-FsT.text" = "Bağlantılı E-posta";
+
+/* Class = "UILabel"; text = "XXXXXXXX"; ObjectID = "RjP-ON-gaW"; */
+"RjP-ON-gaW.text" = "XXXXXXXX";
+
+/* Class = "UILabel"; text = "Request Call"; ObjectID = "RvX-Ht-6JQ"; */
+"RvX-Ht-6JQ.text" = "Çağrı İste";
+
+/* Class = "UILabel"; text = "Linked Number"; ObjectID = "UWU-JO-PcU"; */
+"UWU-JO-PcU.text" = "Bağlantılı Numara";
+
+/* Class = "UILabel"; text = "ID Revocation Password"; ObjectID = "XOE-qz-Fzh"; */
+"XOE-qz-Fzh.text" = "Kimlik İptal Parolası";
+
+/* Class = "UINavigationItem"; title = "Release profile picture to"; ObjectID = "aX3-NQ-eU7"; */
+"aX3-NQ-eU7.title" = "Profil Resmini Serbest Bırak";
+
+/* Class = "UILabel"; text = "Nickname"; ObjectID = "bL4-qe-Mh9"; */
+"bL4-qe-Mh9.text" = "Takma Ad";
+
+/* Class = "UILabel"; text = "Backup"; ObjectID = "eS1-Gf-A4o"; */
+"eS1-Gf-A4o.text" = "Kimlik Dışa Aktarma";
+
+/* Class = "UILabel"; text = "..."; ObjectID = "gan-4f-TrM"; */
+"gan-4f-TrM.text" = "...";
+
+/* Class = "UINavigationItem"; title = "Edit Profile"; ObjectID = "jni-2G-zzz"; */
+"jni-2G-zzz.title" = "Profili Düzenle";
+
+/* Class = "UITextField"; placeholder = "Nickname"; ObjectID = "o3l-bU-add"; */
+"o3l-bU-add.placeholder" = "Takma Ad";
+
+/* Class = "UITableViewSection"; footerTitle = "Linking your email address to your ID lets other people find you on Threema automatically if they have your email in their address book."; ObjectID = "qQD-Gd-ca9"; */
+"qQD-Gd-ca9.footerTitle" = "E-posta adresinizi kimliğinize bağlamak, e-postanız adres defterlerinde varsa diğer kişilerin sizi Threema'da otomatik olarak bulmasını sağlar.";
+
+/* Class = "UINavigationItem"; title = "Enter code"; ObjectID = "tGC-WP-fBC"; */
+"tGC-WP-fBC.title" = "Kodu girin";
+
+/* Class = "UILabel"; text = "Release profile picture to"; ObjectID = "vvJ-Em-VJ0"; */
+"vvJ-Em-VJ0.text" = "Profil Resmini Serbest Bırak";
+
+/* Class = "UINavigationItem"; title = "Link Email"; ObjectID = "uEL-Yh-Kca"; */
+"uEL-Yh-Kca.title" = "Bağlantı E-postası";
+
+/* Class = "UILabel"; text = "Abort Verification"; ObjectID = "wJP-Jf-Pgx"; */
+"wJP-Jf-Pgx.text" = "Doğrulamayı İptal Et";
+
+/* Class = "UILabel"; text = "05:00"; ObjectID = "xdM-Ja-eNy"; */
+"xdM-Ja-eNy.text" = "05:00";
+
+/* Class = "UILabel"; text = "Enter code"; ObjectID = "xih-kT-hBC"; */
+"xih-kT-hBC.text" = "Kodu girin";
+
+/* Class = "UILabel"; text = "Detail"; ObjectID = "yaz-xj-2bb"; */
+"yaz-xj-2bb.text" = "Detay";
+
+/* Class = "UITableViewSection"; footerTitle = "Linking your phone number to your ID lets other people find you on Threema automatically if they have your phone number in their address book."; ObjectID = "z3E-MB-Mey"; */
+"z3E-MB-Mey.footerTitle" = "Telefon numaranızı kimliğinize bağlamak, telefon numaranız adres defterinde varsa diğer kişilerin sizi Threema'da otomatik olarak bulmasını sağlar.";
+
+/* Class = "UILabel"; text = "00000000000000000000000000000000"; ObjectID = "z90-JB-13a"; */
+"z90-JB-13a.text" = "00000000000000000000000000000000";

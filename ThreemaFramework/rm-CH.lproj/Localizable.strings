@@ -1,0 +1,75 @@
+/* 
+  Localizable.strings
+  Threema
+
+  Copyright (c) 2015 Threema GmbH. All rights reserved.
+*//* JKLockScreenViewController */
+"cancel" = "Interrumper";
+"delete" = "Stizzar";
+
+/* Mentions */
+"mentions_all" = "Tuts";
+
+
+"me" = "Jau";
+"nobody" = "Nagin";
+"(unknown)" = "(nunenconuschent)";
+"invalid" = "nunvalaivel";
+"inactive" = "inactiv";
+
+"status_acknowledged" = "Confermà";
+"status_read" = "Legì";
+"status_delivered" = "Consegnà";
+"status_sent" = "Tramess";
+"status_sending" = "Vegn tramess";
+"status_failed" = "Betg reussì";
+"status_declined" = "Refusà";
+"blocked" = "Bloccà";
+
+"contacts" = "Contacts";
+"groups" = "Gruppas";
+"recent" = "Dacurt";
+"work" = "Work";
+"creator" = "Creatur";
+"%d members" = "%d commembers";
+
+"ok" = "OK";
+
+"send" = "Trametter";
+"addText" = "Agiuntar in text";
+"hide" = "Zuppentar";
+
+"error_sending_failed" = "Betg reussì da trametter";
+"error_constraints_failed" = "La datoteca na vegn betg sustegnida";
+"error_message_file_too_big" = "La datoteca è memia gronda, ella dastga esser maximalmain 50MB.";
+"error_message_invalid_file" = "La datoteca na po betg vegnir legida.";
+"error_message_generic" = "Betg reussì da chargiar si.";
+
+"error_title_feature_level" = "Remartgescha p.pl.";
+"error_message_feature_level" = "Insaquants dals destinaturs han ina versiun da Threema che na sustegna anc betg messadis cun datotecas: %@";
+"error_message_none_feature_level" = "Nagins dals destinaturs han ina versiun da Threema che sustegna messadis cun datotecas %@";
+
+"video_too_long_title" = "Video memia lung";
+"video_too_long_message" = "Quest video è memia lung per trametter. La lunghezza maximala lubida per la configuraziun da qualitad actuala è %.0f secundas.";
+
+/* KKPasscodeLock */
+"On" = "Activà";
+"Off" = "Deactivà";
+"all_data_deleted_title" = "Stizzà tut las datas";
+"all_data_deleted_message" = "Ti has endatà memia savens in code fallà. Tut las datas en questa app èn vegnidas stizzadas.";
+"to_unlock_passcode" = "Per debloccar Threema";    // Touch ID
+
+/* Notifications Text */
+"new_message" = "Messadi";
+/* Notifications Text */
+"new_message_from_x" = "Messadi da %@";
+"new_group_message" = "Messadi da gruppa";
+"new_group_message_from_x" = "Messadi da gruppa da %@";
+"new_image_message" = "Maletg";
+"new_video_message" = "Video";
+"new_location_message" = "Lieu";
+"new_audio_message" = "Audio";
+"new_ballot_create_message" = "Enquista: %@";
+"new_ballot_closed_message" = "Enquista: Resultats a disposiziun";
+"new_file_message" = "Datoteca: %@";
+

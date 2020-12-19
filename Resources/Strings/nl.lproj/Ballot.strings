@@ -1,0 +1,51 @@
+/*
+  Ballot.strings
+  Threema
+
+  Copyright (c) 2014 Threema GmbH. All rights reserved.
+*/
+
+/* Ballot */
+"ballot" = "Poll";
+"ballots" = "Polls";
+"ballot_results" = "Resultaten poll";
+"ballot_validation_error_title" = "Ongeldige instelling voor poll";
+"ballot_validation_not_enough_choices" = "Definieer ten minste twee keuzes.";
+"ballot_validation_title_missing" = "Geef een titel voor de poll op.";
+
+"ballot_options" = "Opties poll";
+"ballot_intermediate_results" = "Tijdelijke resultaten";
+"ballot_show_intermediate_results" = "Tijdelijke resultaten tonen";
+"ballot_multiple_choice" = "Meerkeuze";
+"ballot_clone" = "Bestaande poll kopiëren";
+"ballot_clone_warning_title" = "Let op";
+"ballot_clone_warning_message" = "Alle bestaande invoer wordt overschreven.";
+"ballot_feature_level_warning_title" = "Let op";
+"ballot_feature_level_warning_message" = "Sommige deelnemers gebruiken een versie van de app die nog geen polls ondersteunt: %@";
+"ballot_feature_level_error_message" = "Geen van de deelnemers gebruikt een versie van de app die polls ondersteunt: %@";
+
+"ballot_add_choice" = "Keuze toevoegen";
+"ballot_create" = "Poll aanmaken";
+"ballot_placeholder_title" = "Titel, bijv. Waar wil je vandaag naartoe?";
+"ballot_placeholder_choice" = "Keuze";
+"ballot_date_button" = "Datum";
+"ballot_allDay_switch" = "Hele dag";
+
+"ballot_choose_title" = "Poll kiezen";
+"ballot_closed_cell_title" = "Resultaten poll";
+"ballot_new_cell_title" = "Nieuwe poll";
+"ballot_description_intermediate" = "Inschakelen om de cumulatieve resultaten van inkomende stemmen voor alle deelnemers zichtbaar te maken. Anders blijven de resultaten geheim totdat de poll is gesloten.";
+"ballot_description_multiplechoice" = "Kies of deelnemers één of meerdere keuzes kan maken.";
+
+"ballot_vote" = "Stemmen";
+"ballot_votes_count" = "%@ stemmen";
+"ballot_vote_selected" = "Geselecteerd";
+"ballot_vote_not_selected" = "Niet geselecteerd";
+"ballot_close" = "Poll sluiten";
+"ballot_close_ack" = "Wil je de poll sluiten en de resultaten beschikbaar maken?";
+"ballot_got_votes_count" = "%1$i van %2$i stemmen ontvangen.";
+"ballot_vote_ballot_closed_title" = "Sorry, te laat";
+"ballot_vote_ballot_closed_message" = "De poll is ondertussen gesloten.";
+
+"ballot_open_ballots" = "Open polls";
+"ballot_closed_ballots" = "Gesloten polls";

@@ -1,0 +1,14 @@
+github "specta/specta" ~> 1.0
+github "specta/expecta" "master"
+github "jonreid/OCMockito" ~> 5.1
+github "hamcrest/OCHamcrest" ~> 7.1
+github "malcommac/SwiftMsgPack" ~> 1.0.0
+github "1024jp/GzipSwift" ~> 5.0.0
+github "gumob/PunycodeSwift" ~> 1.0
+github "CocoaLumberjack/CocoaLumberjack" ~> 3.6
+github "threema-ch/sentry-cocoa" "feature/privatemode"
+github "cbpowell/MarqueeLabel" ~> 4.0.0
+github "SnapKit/SnapKit" ~> 5.0.0
+github "apple/swift-protobuf" ~> 1.8
+github "ZipArchive/ZipArchive" "master"
+github "mxcl/PromiseKit" ~> 6.8

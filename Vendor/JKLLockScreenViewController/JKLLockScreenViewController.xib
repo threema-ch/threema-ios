@@ -1,0 +1,512 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="15702" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" colorMatched="YES">
+    <device id="retina4_0" orientation="landscape" appearance="light"/>
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="15704"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="JKLLockScreenViewController">
+            <connections>
+                <outlet property="cancelButton" destination="FQY-YJ-s13" id="LvN-XY-WGN"/>
+                <outlet property="deleteButton" destination="EID-AK-YAo" id="o0y-rh-UmM"/>
+                <outlet property="eraseDataButton" destination="9Lx-LO-us6" id="CdB-a5-jxE"/>
+                <outlet property="pincodeView" destination="m9L-6k-5Ek" id="v93-vK-MtE"/>
+                <outlet property="subtitleLabel" destination="ZQY-Kh-0Rp" id="eaC-Se-F9d"/>
+                <outlet property="textField" destination="Jo8-On-uDn" id="HWa-Np-z64"/>
+                <outlet property="threemaLogo" destination="ms9-2P-WWb" id="3Iy-dl-qgn"/>
+                <outlet property="titleLabel" destination="GYn-QP-Hxd" id="UhZ-Yw-5xe"/>
+                <outlet property="view" destination="o8q-oj-x0p" id="u2N-9Y-KK0"/>
+                <outletCollection property="numberButtons" destination="ffV-HS-hDe" id="x8W-KR-Gjf"/>
+                <outletCollection property="numberButtons" destination="TNC-na-sgE" id="dvO-7q-pWp"/>
+                <outletCollection property="numberButtons" destination="Oxe-eA-Ykl" id="9Oc-Dk-gVd"/>
+                <outletCollection property="numberButtons" destination="gme-Zb-pEh" id="eTi-EA-TSF"/>
+                <outletCollection property="numberButtons" destination="QyS-VR-dPm" id="Q2r-yS-66D"/>
+                <outletCollection property="numberButtons" destination="5Hq-Q0-bjD" id="AC3-6x-E4O"/>
+                <outletCollection property="numberButtons" destination="SBg-pK-9tk" id="tVA-jY-yyy"/>
+                <outletCollection property="numberButtons" destination="hGX-eA-C4O" id="UfD-bz-nrO"/>
+                <outletCollection property="numberButtons" destination="kpd-rI-jSQ" id="Iol-ay-LSV"/>
+                <outletCollection property="numberButtons" destination="wvV-SJ-V7g" id="NcG-hy-AtM"/>
+            </connections>
+        </placeholder>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <view contentMode="scaleToFill" id="o8q-oj-x0p">
+            <rect key="frame" x="0.0" y="0.0" width="568" height="320"/>
+            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+            <subviews>
+                <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="gmR-Dh-EuU" customClass="WizardBackgroundView" customModule="ThreemaFramework" customModuleProvider="target">
+                    <rect key="frame" x="0.0" y="0.0" width="568" height="320"/>
+                    <color key="backgroundColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                </view>
+                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Pincode Subtitle" textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="2" baselineAdjustment="alignBaselines" minimumScaleFactor="0.5" adjustsLetterSpacingToFitWidth="YES" translatesAutoresizingMaskIntoConstraints="NO" id="ZQY-Kh-0Rp">
+                    <rect key="frame" x="140" y="89" width="288" height="30"/>
+                    <constraints>
+                        <constraint firstAttribute="width" constant="288" id="8YM-1Y-xeB"/>
+                        <constraint firstAttribute="height" constant="40" id="pWt-rd-QtS">
+                            <variation key="heightClass=compact-widthClass=compact" constant="30"/>
+                        </constraint>
+                    </constraints>
+                    <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                    <nil key="highlightedColor"/>
+                    <variation key="heightClass=compact-widthClass=compact">
+                        <fontDescription key="fontDescription" type="system" pointSize="12"/>
+                    </variation>
+                </label>
+                <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="m9L-6k-5Ek" customClass="JKLLockScreenPincodeView">
+                    <rect key="frame" x="246.5" y="75" width="75" height="10"/>
+                    <color key="backgroundColor" red="0.0" green="0.0" blue="0.0" alpha="0.0" colorSpace="custom" customColorSpace="sRGB"/>
+                    <constraints>
+                        <constraint firstAttribute="width" constant="150" id="6OE-6L-50c">
+                            <variation key="heightClass=compact-widthClass=compact" constant="75"/>
+                        </constraint>
+                        <constraint firstAttribute="height" constant="20" id="mBp-ys-R4f">
+                            <variation key="heightClass=compact-widthClass=compact" constant="10"/>
+                        </constraint>
+                    </constraints>
+                    <userDefinedRuntimeAttributes>
+                        <userDefinedRuntimeAttribute type="color" keyPath="pincodeColor">
+                            <color key="value" red="0.97548896074295044" green="0.74974584579467773" blue="0.14482325315475464" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                        </userDefinedRuntimeAttribute>
+                    </userDefinedRuntimeAttributes>
+                    <connections>
+                        <outlet property="delegate" destination="-1" id="dmk-uk-HBz"/>
+                    </connections>
+                </view>
+                <button opaque="NO" tag="1" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="hGX-eA-C4O" customClass="JKLLockScreenNumber">
+                    <rect key="frame" x="215.5" y="123" width="39" height="39"/>
+                    <color key="backgroundColor" red="0.0" green="0.0" blue="0.0" alpha="0.0" colorSpace="custom" customColorSpace="sRGB"/>
+                    <fontDescription key="fontDescription" name="HelveticaNeue-Thin" family="Helvetica Neue" pointSize="35"/>
+                    <color key="tintColor" red="0.97548896074295044" green="0.74974584579467773" blue="0.14482325315475464" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                    <state key="normal" title="1">
+                        <color key="titleColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                        <color key="titleShadowColor" red="0.5" green="0.5" blue="0.5" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                    </state>
+                    <state key="highlighted">
+                        <color key="titleColor" white="0.33333333333333331" alpha="1" colorSpace="calibratedWhite"/>
+                    </state>
+                    <variation key="heightClass=compact-widthClass=compact">
+                        <fontDescription key="fontDescription" name="HelveticaNeue-Thin" family="Helvetica Neue" pointSize="20"/>
+                    </variation>
+                    <variation key="heightClass=compact-widthClass=regular">
+                        <fontDescription key="fontDescription" name="HelveticaNeue-Thin" family="Helvetica Neue" pointSize="20"/>
+                    </variation>
+                    <connections>
+                        <action selector="onNumberClicked:" destination="-1" eventType="touchUpInside" id="v0h-2A-mu8"/>
+                    </connections>
+                </button>
+                <button opaque="NO" tag="2" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="SBg-pK-9tk" customClass="JKLLockScreenNumber">
+                    <rect key="frame" x="264.5" y="123" width="39" height="39"/>
+                    <color key="backgroundColor" red="0.0" green="0.0" blue="0.0" alpha="0.0" colorSpace="custom" customColorSpace="sRGB"/>
+                    <constraints>
+                        <constraint firstAttribute="width" secondItem="SBg-pK-9tk" secondAttribute="height" multiplier="1:1" id="E5d-D1-fr7"/>
+                    </constraints>
+                    <fontDescription key="fontDescription" name="HelveticaNeue-Thin" family="Helvetica Neue" pointSize="35"/>
+                    <color key="tintColor" red="0.97548896074295044" green="0.74974584579467773" blue="0.14482325315475464" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                    <state key="normal" title="2">
+                        <color key="titleColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                        <color key="titleShadowColor" red="0.5" green="0.5" blue="0.5" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                    </state>
+                    <state key="highlighted">
+                        <color key="titleColor" white="0.33333333333333331" alpha="1" colorSpace="calibratedWhite"/>
+                    </state>
+                    <variation key="default">
+                        <mask key="constraints">
+                            <exclude reference="E5d-D1-fr7"/>
+                        </mask>
+                    </variation>
+                    <variation key="heightClass=compact-widthClass=compact">
+                        <fontDescription key="fontDescription" name="HelveticaNeue-Thin" family="Helvetica Neue" pointSize="20"/>
+                    </variation>
+                    <variation key="heightClass=compact-widthClass=regular">
+                        <fontDescription key="fontDescription" name="HelveticaNeue-Thin" family="Helvetica Neue" pointSize="20"/>
+                    </variation>
+                    <connections>
+                        <action selector="onNumberClicked:" destination="-1" eventType="touchUpInside" id="0bB-UD-Lrr"/>
+                    </connections>
+                </button>
+                <button opaque="NO" tag="3" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="5Hq-Q0-bjD" customClass="JKLLockScreenNumber">
+                    <rect key="frame" x="313.5" y="123" width="39" height="39"/>
+                    <color key="backgroundColor" red="0.0" green="0.0" blue="0.0" alpha="0.0" colorSpace="custom" customColorSpace="sRGB"/>
+                    <fontDescription key="fontDescription" name="HelveticaNeue-Thin" family="Helvetica Neue" pointSize="35"/>
+                    <color key="tintColor" red="0.97548896074295044" green="0.74974584579467773" blue="0.14482325315475464" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                    <state key="normal" title="3">
+                        <color key="titleColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                        <color key="titleShadowColor" red="0.5" green="0.5" blue="0.5" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                    </state>
+                    <state key="highlighted">
+                        <color key="titleColor" white="0.33333333333333331" alpha="1" colorSpace="calibratedWhite"/>
+                    </state>
+                    <variation key="heightClass=compact-widthClass=compact">
+                        <fontDescription key="fontDescription" name="HelveticaNeue-Thin" family="Helvetica Neue" pointSize="20"/>
+                    </variation>
+                    <variation key="heightClass=compact-widthClass=regular">
+                        <fontDescription key="fontDescription" name="HelveticaNeue-Thin" family="Helvetica Neue" pointSize="20"/>
+                    </variation>
+                    <connections>
+                        <action selector="onNumberClicked:" destination="-1" eventType="touchUpInside" id="6e1-n2-XJX"/>
+                    </connections>
+                </button>
+                <button opaque="NO" tag="4" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="QyS-VR-dPm" customClass="JKLLockScreenNumber">
+                    <rect key="frame" x="215.5" y="172" width="39" height="39"/>
+                    <color key="backgroundColor" red="0.0" green="0.0" blue="0.0" alpha="0.0" colorSpace="custom" customColorSpace="sRGB"/>
+                    <fontDescription key="fontDescription" name="HelveticaNeue-Thin" family="Helvetica Neue" pointSize="35"/>
+                    <color key="tintColor" red="0.97548896074295044" green="0.74974584579467773" blue="0.14482325315475464" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                    <state key="normal" title="4">
+                        <color key="titleColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                        <color key="titleShadowColor" red="0.5" green="0.5" blue="0.5" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                    </state>
+                    <state key="highlighted">
+                        <color key="titleColor" white="0.33333333333333331" alpha="1" colorSpace="calibratedWhite"/>
+                    </state>
+                    <variation key="heightClass=compact-widthClass=compact">
+                        <fontDescription key="fontDescription" name="HelveticaNeue-Thin" family="Helvetica Neue" pointSize="20"/>
+                    </variation>
+                    <variation key="heightClass=compact-widthClass=regular">
+                        <fontDescription key="fontDescription" name="HelveticaNeue-Thin" family="Helvetica Neue" pointSize="20"/>
+                    </variation>
+                    <connections>
+                        <action selector="onNumberClicked:" destination="-1" eventType="touchUpInside" id="vpa-vZ-BYm"/>
+                    </connections>
+                </button>
+                <button opaque="NO" tag="5" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="wvV-SJ-V7g" customClass="JKLLockScreenNumber">
+                    <rect key="frame" x="264.5" y="172" width="39" height="39"/>
+                    <color key="backgroundColor" red="0.0" green="0.0" blue="0.0" alpha="0.0" colorSpace="custom" customColorSpace="sRGB"/>
+                    <constraints>
+                        <constraint firstAttribute="width" constant="75" id="E1U-d5-GZG">
+                            <variation key="heightClass=compact-widthClass=compact" constant="39"/>
+                            <variation key="heightClass=compact-widthClass=regular" constant="45"/>
+                        </constraint>
+                        <constraint firstAttribute="width" secondItem="wvV-SJ-V7g" secondAttribute="height" multiplier="1:1" id="s7m-FO-Gkm"/>
+                    </constraints>
+                    <fontDescription key="fontDescription" name="HelveticaNeue-Thin" family="Helvetica Neue" pointSize="35"/>
+                    <color key="tintColor" red="0.97548896074295044" green="0.74974584579467773" blue="0.14482325315475464" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                    <state key="normal" title="5">
+                        <color key="titleColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                        <color key="titleShadowColor" red="0.5" green="0.5" blue="0.5" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                    </state>
+                    <state key="highlighted">
+                        <color key="titleColor" white="0.33333333333333331" alpha="1" colorSpace="calibratedWhite"/>
+                    </state>
+                    <variation key="heightClass=compact-widthClass=compact">
+                        <fontDescription key="fontDescription" name="HelveticaNeue-Thin" family="Helvetica Neue" pointSize="20"/>
+                    </variation>
+                    <variation key="heightClass=compact-widthClass=regular">
+                        <fontDescription key="fontDescription" name="HelveticaNeue-Thin" family="Helvetica Neue" pointSize="20"/>
+                    </variation>
+                    <connections>
+                        <action selector="onNumberClicked:" destination="-1" eventType="touchUpInside" id="7o3-xu-8p3"/>
+                    </connections>
+                </button>
+                <button opaque="NO" tag="6" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="kpd-rI-jSQ" customClass="JKLLockScreenNumber">
+                    <rect key="frame" x="313.5" y="172" width="39" height="39"/>
+                    <color key="backgroundColor" red="0.0" green="0.0" blue="0.0" alpha="0.0" colorSpace="custom" customColorSpace="sRGB"/>
+                    <fontDescription key="fontDescription" name="HelveticaNeue-Thin" family="Helvetica Neue" pointSize="35"/>
+                    <color key="tintColor" red="0.97548896074295044" green="0.74974584579467773" blue="0.14482325315475464" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                    <state key="normal" title="6">
+                        <color key="titleColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                        <color key="titleShadowColor" red="0.5" green="0.5" blue="0.5" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                    </state>
+                    <state key="highlighted">
+                        <color key="titleColor" white="0.33333333333333331" alpha="1" colorSpace="calibratedWhite"/>
+                    </state>
+                    <variation key="heightClass=compact-widthClass=compact">
+                        <fontDescription key="fontDescription" name="HelveticaNeue-Thin" family="Helvetica Neue" pointSize="20"/>
+                    </variation>
+                    <variation key="heightClass=compact-widthClass=regular">
+                        <fontDescription key="fontDescription" name="HelveticaNeue-Thin" family="Helvetica Neue" pointSize="20"/>
+                    </variation>
+                    <connections>
+                        <action selector="onNumberClicked:" destination="-1" eventType="touchUpInside" id="fWT-2o-olr"/>
+                    </connections>
+                </button>
+                <button opaque="NO" tag="7" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="gme-Zb-pEh" customClass="JKLLockScreenNumber">
+                    <rect key="frame" x="215.5" y="221" width="39" height="39"/>
+                    <color key="backgroundColor" red="0.0" green="0.0" blue="0.0" alpha="0.0" colorSpace="custom" customColorSpace="sRGB"/>
+                    <fontDescription key="fontDescription" name="HelveticaNeue-Thin" family="Helvetica Neue" pointSize="35"/>
+                    <color key="tintColor" red="0.97548896074295044" green="0.74974584579467773" blue="0.14482325315475464" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                    <state key="normal" title="7">
+                        <color key="titleColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                        <color key="titleShadowColor" red="0.5" green="0.5" blue="0.5" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                    </state>
+                    <state key="highlighted">
+                        <color key="titleColor" white="0.33333333333333331" alpha="1" colorSpace="calibratedWhite"/>
+                    </state>
+                    <variation key="heightClass=compact-widthClass=compact">
+                        <fontDescription key="fontDescription" name="HelveticaNeue-Thin" family="Helvetica Neue" pointSize="20"/>
+                    </variation>
+                    <variation key="heightClass=compact-widthClass=regular">
+                        <fontDescription key="fontDescription" name="HelveticaNeue-Thin" family="Helvetica Neue" pointSize="20"/>
+                    </variation>
+                    <connections>
+                        <action selector="onNumberClicked:" destination="-1" eventType="touchUpInside" id="DM1-gN-Avb"/>
+                    </connections>
+                </button>
+                <button opaque="NO" tag="9" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="TNC-na-sgE" customClass="JKLLockScreenNumber">
+                    <rect key="frame" x="313.5" y="221" width="39" height="39"/>
+                    <color key="backgroundColor" red="0.0" green="0.0" blue="0.0" alpha="0.0" colorSpace="custom" customColorSpace="sRGB"/>
+                    <fontDescription key="fontDescription" name="HelveticaNeue-Thin" family="Helvetica Neue" pointSize="35"/>
+                    <color key="tintColor" red="0.97548896074295044" green="0.74974584579467773" blue="0.14482325315475464" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                    <state key="normal" title="9">
+                        <color key="titleColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                        <color key="titleShadowColor" red="0.5" green="0.5" blue="0.5" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                    </state>
+                    <state key="highlighted">
+                        <color key="titleColor" white="0.33333333333333331" alpha="1" colorSpace="calibratedWhite"/>
+                    </state>
+                    <variation key="heightClass=compact-widthClass=compact">
+                        <fontDescription key="fontDescription" name="HelveticaNeue-Thin" family="Helvetica Neue" pointSize="20"/>
+                    </variation>
+                    <variation key="heightClass=compact-widthClass=regular">
+                        <fontDescription key="fontDescription" name="HelveticaNeue-Thin" family="Helvetica Neue" pointSize="20"/>
+                    </variation>
+                    <connections>
+                        <action selector="onNumberClicked:" destination="-1" eventType="touchUpInside" id="iE9-br-9n0"/>
+                    </connections>
+                </button>
+                <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="ffV-HS-hDe" customClass="JKLLockScreenNumber">
+                    <rect key="frame" x="264.5" y="270" width="39" height="39"/>
+                    <color key="backgroundColor" red="0.0" green="0.0" blue="0.0" alpha="0.0" colorSpace="custom" customColorSpace="sRGB"/>
+                    <fontDescription key="fontDescription" name="HelveticaNeue-Thin" family="Helvetica Neue" pointSize="35"/>
+                    <color key="tintColor" red="0.97548896074295044" green="0.74974584579467773" blue="0.14482325315475464" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                    <state key="normal" title="0">
+                        <color key="titleColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                        <color key="titleShadowColor" red="0.5" green="0.5" blue="0.5" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                    </state>
+                    <state key="highlighted">
+                        <color key="titleColor" white="0.33333333333333331" alpha="1" colorSpace="calibratedWhite"/>
+                    </state>
+                    <variation key="heightClass=compact-widthClass=compact">
+                        <fontDescription key="fontDescription" name="HelveticaNeue-Thin" family="Helvetica Neue" pointSize="20"/>
+                    </variation>
+                    <variation key="heightClass=compact-widthClass=regular">
+                        <fontDescription key="fontDescription" name="HelveticaNeue-Thin" family="Helvetica Neue" pointSize="20"/>
+                    </variation>
+                    <connections>
+                        <action selector="onNumberClicked:" destination="-1" eventType="touchUpInside" id="f8M-Lx-7gW"/>
+                    </connections>
+                </button>
+                <button opaque="NO" contentMode="scaleAspectFit" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="clip" translatesAutoresizingMaskIntoConstraints="NO" id="FQY-YJ-s13">
+                    <rect key="frame" x="159.5" y="271" width="85" height="39"/>
+                    <color key="backgroundColor" red="0.0" green="0.0" blue="0.0" alpha="0.0" colorSpace="custom" customColorSpace="sRGB"/>
+                    <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                    <color key="tintColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                    <state key="normal" title="Abbrechen">
+                        <color key="titleColor" red="0.97548896074295044" green="0.74974584579467773" blue="0.14482325315475464" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                        <color key="titleShadowColor" red="0.5" green="0.5" blue="0.5" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                    </state>
+                    <connections>
+                        <action selector="onCancelClicked:" destination="-1" eventType="touchUpInside" id="hbH-HJ-4fa"/>
+                    </connections>
+                </button>
+                <button opaque="NO" contentMode="scaleAspectFit" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="clip" translatesAutoresizingMaskIntoConstraints="NO" id="EID-AK-YAo">
+                    <rect key="frame" x="323.5" y="271" width="85" height="39"/>
+                    <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                    <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                    <color key="tintColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                    <state key="normal" title="Delete">
+                        <color key="titleColor" red="0.97548896074295044" green="0.74974584579467773" blue="0.14482325315475464" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                        <color key="titleShadowColor" red="0.5" green="0.5" blue="0.5" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                    </state>
+                    <connections>
+                        <action selector="onDeleteClicked:" destination="-1" eventType="touchUpInside" id="brk-LG-abu"/>
+                    </connections>
+                </button>
+                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Pincode Title" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumScaleFactor="0.5" adjustsLetterSpacingToFitWidth="YES" translatesAutoresizingMaskIntoConstraints="NO" id="GYn-QP-Hxd">
+                    <rect key="frame" x="140" y="44" width="288" height="24"/>
+                    <constraints>
+                        <constraint firstAttribute="height" constant="24" id="2p4-8U-278"/>
+                        <constraint firstAttribute="width" constant="288" id="8yC-pK-VPb"/>
+                    </constraints>
+                    <fontDescription key="fontDescription" type="system" pointSize="18"/>
+                    <nil key="highlightedColor"/>
+                    <variation key="heightClass=compact-widthClass=compact">
+                        <fontDescription key="fontDescription" type="system" pointSize="15"/>
+                    </variation>
+                </label>
+                <button opaque="NO" tag="8" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Oxe-eA-Ykl" customClass="JKLLockScreenNumber">
+                    <rect key="frame" x="264.5" y="221" width="39" height="39"/>
+                    <color key="backgroundColor" red="0.0" green="0.0" blue="0.0" alpha="0.0" colorSpace="custom" customColorSpace="sRGB"/>
+                    <fontDescription key="fontDescription" name="HelveticaNeue-Thin" family="Helvetica Neue" pointSize="35"/>
+                    <color key="tintColor" red="0.97548896074295044" green="0.74974584579467773" blue="0.14482325315475464" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                    <state key="normal" title="8">
+                        <color key="titleColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                        <color key="titleShadowColor" red="0.5" green="0.5" blue="0.5" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                    </state>
+                    <variation key="heightClass=compact-widthClass=compact">
+                        <fontDescription key="fontDescription" name="HelveticaNeue-Thin" family="Helvetica Neue" pointSize="20"/>
+                    </variation>
+                    <variation key="heightClass=compact-widthClass=regular">
+                        <fontDescription key="fontDescription" name="HelveticaNeue-Thin" family="Helvetica Neue" pointSize="20"/>
+                    </variation>
+                    <connections>
+                        <action selector="onNumberClicked:" destination="-1" eventType="touchUpInside" id="tHO-CB-9Yw"/>
+                    </connections>
+                </button>
+                <textField opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="Jo8-On-uDn">
+                    <rect key="frame" x="284" y="290.5" width="0.0" height="0.0"/>
+                    <constraints>
+                        <constraint firstAttribute="height" id="aNz-E0-z9i"/>
+                        <constraint firstAttribute="width" id="fe1-Ll-Q7k"/>
+                    </constraints>
+                    <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                    <textInputTraits key="textInputTraits"/>
+                    <connections>
+                        <outlet property="delegate" destination="-1" id="lBh-cO-38t"/>
+                    </connections>
+                </textField>
+                <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="ThreemaLogo.png" translatesAutoresizingMaskIntoConstraints="NO" id="ms9-2P-WWb">
+                    <rect key="frame" x="266.5" y="5" width="35" height="35"/>
+                    <constraints>
+                        <constraint firstAttribute="width" secondItem="ms9-2P-WWb" secondAttribute="height" multiplier="1:1" id="BBT-pB-c16"/>
+                        <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="35" id="CzU-Rb-wIu"/>
+                        <constraint firstAttribute="width" relation="lessThanOrEqual" constant="50" id="S6a-ZW-kxX">
+                            <variation key="heightClass=compact-widthClass=compact" constant="35"/>
+                        </constraint>
+                        <constraint firstAttribute="height" relation="greaterThanOrEqual" constant="35" id="dtX-IH-hZC"/>
+                        <constraint firstAttribute="height" relation="lessThanOrEqual" constant="50" id="myl-xI-P5j"/>
+                    </constraints>
+                </imageView>
+                <button opaque="NO" contentMode="scaleAspectFit" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="clip" translatesAutoresizingMaskIntoConstraints="NO" id="9Lx-LO-us6">
+                    <rect key="frame" x="134.5" y="271" width="110" height="39"/>
+                    <color key="backgroundColor" red="0.0" green="0.0" blue="0.0" alpha="0.0" colorSpace="custom" customColorSpace="sRGB"/>
+                    <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                    <color key="tintColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                    <state key="normal" title="Daten löschen">
+                        <color key="titleColor" red="0.97548896070000002" green="0.74974584580000003" blue="0.1448232532" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                        <color key="titleShadowColor" red="0.5" green="0.5" blue="0.5" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                    </state>
+                    <connections>
+                        <action selector="onEraseDataClicked:" destination="-1" eventType="touchUpInside" id="GVh-vI-Xzd"/>
+                    </connections>
+                </button>
+            </subviews>
+            <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+            <constraints>
+                <constraint firstItem="TNC-na-sgE" firstAttribute="centerY" secondItem="Oxe-eA-Ykl" secondAttribute="centerY" id="0zX-pf-0pk"/>
+                <constraint firstAttribute="bottom" secondItem="gmR-Dh-EuU" secondAttribute="bottom" id="1bG-hH-2NX"/>
+                <constraint firstItem="9Lx-LO-us6" firstAttribute="width" relation="greaterThanOrEqual" secondItem="ffV-HS-hDe" secondAttribute="width" id="2BD-Be-A0k"/>
+                <constraint firstItem="wvV-SJ-V7g" firstAttribute="leading" secondItem="QyS-VR-dPm" secondAttribute="trailing" constant="20" id="3n2-Fh-tQs">
+                    <variation key="heightClass=compact-widthClass=compact" constant="10"/>
+                </constraint>
+                <constraint firstItem="SBg-pK-9tk" firstAttribute="height" secondItem="TNC-na-sgE" secondAttribute="height" id="5Jz-uD-Wvq"/>
+                <constraint firstItem="kpd-rI-jSQ" firstAttribute="centerY" secondItem="wvV-SJ-V7g" secondAttribute="centerY" id="5Lx-x3-7dn"/>
+                <constraint firstItem="wvV-SJ-V7g" firstAttribute="top" secondItem="SBg-pK-9tk" secondAttribute="bottom" constant="10" id="6P8-On-WHf">
+                    <variation key="heightClass=compact-widthClass=compact" constant="10"/>
+                </constraint>
+                <constraint firstItem="SBg-pK-9tk" firstAttribute="height" secondItem="ffV-HS-hDe" secondAttribute="height" id="7Ga-Kf-lsr"/>
+                <constraint firstItem="QyS-VR-dPm" firstAttribute="leading" secondItem="o8q-oj-x0p" secondAttribute="leading" constant="20" id="8E0-40-i7d"/>
+                <constraint firstItem="ffV-HS-hDe" firstAttribute="leading" secondItem="9Lx-LO-us6" secondAttribute="trailing" constant="20" id="9Bh-JC-V7U"/>
+                <constraint firstAttribute="centerX" secondItem="m9L-6k-5Ek" secondAttribute="centerX" id="BKS-0q-HYd"/>
+                <constraint firstItem="SBg-pK-9tk" firstAttribute="width" secondItem="ffV-HS-hDe" secondAttribute="width" id="CAJ-W5-tqb"/>
+                <constraint firstItem="FQY-YJ-s13" firstAttribute="height" secondItem="ffV-HS-hDe" secondAttribute="height" id="Cf3-IE-D5H"/>
+                <constraint firstItem="SBg-pK-9tk" firstAttribute="height" secondItem="hGX-eA-C4O" secondAttribute="height" id="EPU-VP-sap"/>
+                <constraint firstItem="SBg-pK-9tk" firstAttribute="height" secondItem="QyS-VR-dPm" secondAttribute="height" id="Fv2-hT-XDe"/>
+                <constraint firstItem="ffV-HS-hDe" firstAttribute="top" secondItem="Oxe-eA-Ykl" secondAttribute="bottom" constant="10" id="Fxf-ha-6VI"/>
+                <constraint firstItem="TNC-na-sgE" firstAttribute="leading" secondItem="Oxe-eA-Ykl" secondAttribute="trailing" constant="20" id="JBH-xy-Yus">
+                    <variation key="heightClass=compact-widthClass=compact" constant="10"/>
+                </constraint>
+                <constraint firstItem="5Hq-Q0-bjD" firstAttribute="centerY" secondItem="SBg-pK-9tk" secondAttribute="centerY" id="JBN-dG-41P"/>
+                <constraint firstItem="SBg-pK-9tk" firstAttribute="leading" secondItem="hGX-eA-C4O" secondAttribute="trailing" constant="20" id="JqK-Yi-YmH">
+                    <variation key="heightClass=compact-widthClass=compact" constant="10"/>
+                </constraint>
+                <constraint firstItem="m9L-6k-5Ek" firstAttribute="top" secondItem="GYn-QP-Hxd" secondAttribute="bottom" constant="15" id="KPh-np-TPf">
+                    <variation key="heightClass=compact-widthClass=compact" constant="7"/>
+                </constraint>
+                <constraint firstItem="gmR-Dh-EuU" firstAttribute="leading" secondItem="o8q-oj-x0p" secondAttribute="leading" id="Kbb-ao-aCV"/>
+                <constraint firstItem="kpd-rI-jSQ" firstAttribute="centerY" secondItem="QyS-VR-dPm" secondAttribute="centerY" id="L3E-8e-shN"/>
+                <constraint firstItem="wvV-SJ-V7g" firstAttribute="top" secondItem="o8q-oj-x0p" secondAttribute="top" constant="255" id="LYd-0K-sFt"/>
+                <constraint firstItem="ffV-HS-hDe" firstAttribute="leading" secondItem="FQY-YJ-s13" secondAttribute="trailing" constant="20" id="LyH-xr-ant"/>
+                <constraint firstAttribute="centerX" secondItem="Oxe-eA-Ykl" secondAttribute="centerX" id="RxI-uA-7UW"/>
+                <constraint firstAttribute="centerX" secondItem="ffV-HS-hDe" secondAttribute="centerX" id="TbW-WJ-CJ7"/>
+                <constraint firstItem="SBg-pK-9tk" firstAttribute="height" secondItem="wvV-SJ-V7g" secondAttribute="height" id="TtS-LL-KBm"/>
+                <constraint firstItem="wvV-SJ-V7g" firstAttribute="centerX" secondItem="Oxe-eA-Ykl" secondAttribute="centerX" id="U7Q-Dx-w1n"/>
+                <constraint firstItem="SBg-pK-9tk" firstAttribute="top" secondItem="ZQY-Kh-0Rp" secondAttribute="bottom" constant="10" id="UXt-Ij-zpm">
+                    <variation key="heightClass=compact-widthClass=compact" constant="4"/>
+                    <variation key="heightClass=compact-widthClass=regular" constant="4"/>
+                </constraint>
+                <constraint firstItem="SBg-pK-9tk" firstAttribute="width" secondItem="kpd-rI-jSQ" secondAttribute="width" id="Ux9-ua-JFQ"/>
+                <constraint firstItem="FQY-YJ-s13" firstAttribute="top" relation="greaterThanOrEqual" secondItem="ffV-HS-hDe" secondAttribute="top" id="VAf-k3-x9h"/>
+                <constraint firstItem="GYn-QP-Hxd" firstAttribute="top" secondItem="ms9-2P-WWb" secondAttribute="bottom" constant="8" id="VBV-NR-Thn">
+                    <variation key="heightClass=compact-widthClass=compact" constant="4"/>
+                </constraint>
+                <constraint firstItem="SBg-pK-9tk" firstAttribute="height" secondItem="Oxe-eA-Ykl" secondAttribute="height" id="VIK-V2-EUe"/>
+                <constraint firstItem="SBg-pK-9tk" firstAttribute="height" secondItem="gme-Zb-pEh" secondAttribute="height" id="VLY-5e-GmN"/>
+                <constraint firstItem="Jo8-On-uDn" firstAttribute="centerY" secondItem="EID-AK-YAo" secondAttribute="centerY" id="XJf-is-VjX"/>
+                <constraint firstItem="SBg-pK-9tk" firstAttribute="height" secondItem="5Hq-Q0-bjD" secondAttribute="height" id="Ykr-Tv-5W4"/>
+                <constraint firstItem="SBg-pK-9tk" firstAttribute="width" secondItem="wvV-SJ-V7g" secondAttribute="width" id="YyA-2d-dMs"/>
+                <constraint firstItem="wvV-SJ-V7g" firstAttribute="top" secondItem="ZQY-Kh-0Rp" secondAttribute="bottom" constant="10" id="Z1h-3e-kqY"/>
+                <constraint firstAttribute="centerY" secondItem="wvV-SJ-V7g" secondAttribute="centerY" priority="750" id="ZHG-hv-s2O"/>
+                <constraint firstItem="SBg-pK-9tk" firstAttribute="width" secondItem="5Hq-Q0-bjD" secondAttribute="width" id="b7v-2k-ym7"/>
+                <constraint firstItem="SBg-pK-9tk" firstAttribute="width" secondItem="QyS-VR-dPm" secondAttribute="width" id="ba0-5Y-DLy"/>
+                <constraint firstItem="EID-AK-YAo" firstAttribute="top" secondItem="FQY-YJ-s13" secondAttribute="top" id="ceE-We-29W"/>
+                <constraint firstItem="ms9-2P-WWb" firstAttribute="top" relation="greaterThanOrEqual" secondItem="o8q-oj-x0p" secondAttribute="top" constant="25" id="di0-R9-8Da">
+                    <variation key="heightClass=compact-widthClass=compact" constant="5"/>
+                </constraint>
+                <constraint firstItem="QyS-VR-dPm" firstAttribute="centerY" secondItem="wvV-SJ-V7g" secondAttribute="centerY" id="f5a-PD-hKT"/>
+                <constraint firstAttribute="centerX" secondItem="wvV-SJ-V7g" secondAttribute="centerX" id="fC7-g7-0SX"/>
+                <constraint firstAttribute="bottom" secondItem="FQY-YJ-s13" secondAttribute="bottom" constant="10" id="g4s-63-oCH"/>
+                <constraint firstItem="FQY-YJ-s13" firstAttribute="width" secondItem="EID-AK-YAo" secondAttribute="width" id="g7I-lK-rZW"/>
+                <constraint firstAttribute="bottom" secondItem="EID-AK-YAo" secondAttribute="bottom" constant="10" id="gIH-6K-vHM"/>
+                <constraint firstItem="Oxe-eA-Ykl" firstAttribute="top" secondItem="wvV-SJ-V7g" secondAttribute="bottom" constant="10" id="gf3-Iy-oBO"/>
+                <constraint firstItem="ms9-2P-WWb" firstAttribute="centerX" secondItem="o8q-oj-x0p" secondAttribute="centerX" id="iEc-Zl-VAJ"/>
+                <constraint firstItem="wvV-SJ-V7g" firstAttribute="centerX" secondItem="SBg-pK-9tk" secondAttribute="centerX" id="iN5-b0-mmU"/>
+                <constraint firstItem="5Hq-Q0-bjD" firstAttribute="leading" secondItem="SBg-pK-9tk" secondAttribute="trailing" constant="20" id="ifz-Z8-bhc">
+                    <variation key="heightClass=compact-widthClass=compact" constant="10"/>
+                </constraint>
+                <constraint firstItem="wvV-SJ-V7g" firstAttribute="centerX" secondItem="ffV-HS-hDe" secondAttribute="centerX" id="k2s-W2-IrV"/>
+                <constraint firstItem="EID-AK-YAo" firstAttribute="height" secondItem="ffV-HS-hDe" secondAttribute="height" id="llc-rd-b3O"/>
+                <constraint firstItem="SBg-pK-9tk" firstAttribute="width" secondItem="hGX-eA-C4O" secondAttribute="width" id="mJ9-nM-eKy"/>
+                <constraint firstItem="9Lx-LO-us6" firstAttribute="height" secondItem="ffV-HS-hDe" secondAttribute="height" id="mQ8-5j-2G6"/>
+                <constraint firstItem="kpd-rI-jSQ" firstAttribute="leading" secondItem="wvV-SJ-V7g" secondAttribute="trailing" constant="20" id="oJh-cD-e9e">
+                    <variation key="heightClass=compact-widthClass=compact" constant="10"/>
+                </constraint>
+                <constraint firstItem="FQY-YJ-s13" firstAttribute="centerY" secondItem="EID-AK-YAo" secondAttribute="centerY" id="oLW-rY-oix"/>
+                <constraint firstAttribute="centerX" secondItem="SBg-pK-9tk" secondAttribute="centerX" id="pUa-fy-Ftq"/>
+                <constraint firstItem="TNC-na-sgE" firstAttribute="centerY" secondItem="gme-Zb-pEh" secondAttribute="centerY" id="pbB-8Q-Qd4"/>
+                <constraint firstItem="SBg-pK-9tk" firstAttribute="width" secondItem="gme-Zb-pEh" secondAttribute="width" id="pcf-Lh-wJq"/>
+                <constraint firstAttribute="centerX" secondItem="ZQY-Kh-0Rp" secondAttribute="centerX" id="q1Q-zJ-RJQ"/>
+                <constraint firstItem="EID-AK-YAo" firstAttribute="leading" secondItem="ffV-HS-hDe" secondAttribute="trailing" constant="20" id="qyT-F4-RF6"/>
+                <constraint firstItem="SBg-pK-9tk" firstAttribute="height" secondItem="kpd-rI-jSQ" secondAttribute="height" id="r5M-V9-hEV"/>
+                <constraint firstAttribute="bottom" secondItem="9Lx-LO-us6" secondAttribute="bottom" constant="10" id="rcZ-pa-Px5"/>
+                <constraint firstItem="Oxe-eA-Ykl" firstAttribute="leading" secondItem="gme-Zb-pEh" secondAttribute="trailing" constant="20" id="rw0-6S-CxG">
+                    <variation key="heightClass=compact-widthClass=compact" constant="10"/>
+                </constraint>
+                <constraint firstItem="SBg-pK-9tk" firstAttribute="width" secondItem="TNC-na-sgE" secondAttribute="width" id="s6s-Vv-PSY"/>
+                <constraint firstItem="Jo8-On-uDn" firstAttribute="centerX" secondItem="ffV-HS-hDe" secondAttribute="centerX" id="sqN-4g-HPC"/>
+                <constraint firstAttribute="centerX" secondItem="GYn-QP-Hxd" secondAttribute="centerX" id="tae-X2-HoM"/>
+                <constraint firstItem="wvV-SJ-V7g" firstAttribute="top" secondItem="m9L-6k-5Ek" secondAttribute="bottom" constant="97" id="u5B-Rd-psk"/>
+                <constraint firstAttribute="trailing" secondItem="gmR-Dh-EuU" secondAttribute="trailing" id="uCm-xv-XLh"/>
+                <constraint firstItem="5Hq-Q0-bjD" firstAttribute="centerY" secondItem="hGX-eA-C4O" secondAttribute="centerY" id="ucU-LF-Cre"/>
+                <constraint firstItem="SBg-pK-9tk" firstAttribute="width" secondItem="Oxe-eA-Ykl" secondAttribute="width" id="vtN-GH-wsn"/>
+                <constraint firstItem="FQY-YJ-s13" firstAttribute="centerY" secondItem="ffV-HS-hDe" secondAttribute="centerY" id="wWc-El-O4w"/>
+                <constraint firstItem="ZQY-Kh-0Rp" firstAttribute="top" secondItem="m9L-6k-5Ek" secondAttribute="bottom" constant="15" id="wzx-1D-1XH">
+                    <variation key="heightClass=compact-widthClass=compact" constant="4"/>
+                    <variation key="heightClass=compact-widthClass=regular" constant="4"/>
+                </constraint>
+                <constraint firstItem="9Lx-LO-us6" firstAttribute="width" relation="greaterThanOrEqual" secondItem="EID-AK-YAo" secondAttribute="width" id="xmK-G6-w0C"/>
+                <constraint firstItem="FQY-YJ-s13" firstAttribute="width" relation="greaterThanOrEqual" secondItem="ffV-HS-hDe" secondAttribute="width" id="ygv-4w-abM"/>
+                <constraint firstItem="9Lx-LO-us6" firstAttribute="top" secondItem="FQY-YJ-s13" secondAttribute="top" id="yqC-Zh-fqq"/>
+                <constraint firstItem="gmR-Dh-EuU" firstAttribute="top" secondItem="o8q-oj-x0p" secondAttribute="top" id="znW-r8-Rw9"/>
+            </constraints>
+            <variation key="default">
+                <mask key="constraints">
+                    <exclude reference="8E0-40-i7d"/>
+                    <exclude reference="f5a-PD-hKT"/>
+                    <exclude reference="oLW-rY-oix"/>
+                    <exclude reference="wWc-El-O4w"/>
+                    <exclude reference="LYd-0K-sFt"/>
+                    <exclude reference="U7Q-Dx-w1n"/>
+                    <exclude reference="Z1h-3e-kqY"/>
+                    <exclude reference="iN5-b0-mmU"/>
+                    <exclude reference="k2s-W2-IrV"/>
+                    <exclude reference="u5B-Rd-psk"/>
+                </mask>
+            </variation>
+            <point key="canvasLocation" x="578.39999999999998" y="632.83358320839591"/>
+        </view>
+    </objects>
+    <resources>
+        <image name="ThreemaLogo.png" width="50" height="50"/>
+    </resources>
+</document>

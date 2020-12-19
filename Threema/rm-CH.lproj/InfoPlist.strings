@@ -1,0 +1,14 @@
+/* Localized versions of Info.plist keys */
+
+"New message" = "Nov messadi";
+"Scan QR code" = "Scannar il code QR";
+"My ID" = "Mes profil";
+
+"NSCameraUsageDescription" = "La camera vegn duvrada per far fotos/videos e trametter en in chat e per scannar codes QR.";
+"NSContactsUsageDescription" = "Ils contacts vegnan duvrads per chattar auters utilisaders da Threema, sche la sincronisaziun è activada.";
+"NSLocationWhenInUseUsageDescription" = "Il lieu vegn duvrà, sche ti al tramettas en in chat e per mussar tia atgna posiziun sin la charta.";
+"NSMicrophoneUsageDescription" = "Il microfon vegn duvrà per registrar messadis discurrids.";
+"NSPhotoLibraryUsageDescription" = "L'access a las fotos vegn duvrà per tscherner in maletg ed al trametter en in chat.";
+/* Explanation why Threema needs the iOS permission to save photos to the "camera roll" (in the user's photo library). */
+"NSPhotoLibraryAddUsageDescription" = "Threema po memorisar automaticamain las medias che entran en las registraziuns.";
+"NSFaceIDUsageDescription" = "Ti pos duvrar Face ID per debloccar Threema senza endatar tes code.";

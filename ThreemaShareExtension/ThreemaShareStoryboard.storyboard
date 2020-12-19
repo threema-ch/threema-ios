@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="15702" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="PlI-zG-6ML">
+    <device id="retina4_7" orientation="portrait" appearance="light"/>
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="15704"/>
+        <capability name="Safe area layout guides" minToolsVersion="9.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <scenes>
+        <!--View Controller-->
+        <scene sceneID="n96-jh-IY8">
+            <objects>
+                <viewController id="jUr-QF-s9U" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="SM0-Kt-C0g">
+                        <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <color key="backgroundColor" red="0.0" green="0.0" blue="0.0" alpha="0.0" colorSpace="custom" customColorSpace="sRGB"/>
+                        <viewLayoutGuide key="safeArea" id="KoK-fP-9Ui"/>
+                    </view>
+                    <navigationItem key="navigationItem" id="bPt-1g-DTw"/>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="3MT-r2-FsF" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="1069" y="469"/>
+        </scene>
+        <!--Root Navigation Controller-->
+        <scene sceneID="tjp-DD-UHP">
+            <objects>
+                <navigationController id="PlI-zG-6ML" customClass="RootNavigationController" sceneMemberID="viewController">
+                    <navigationBar key="navigationBar" contentMode="scaleToFill" id="3eU-Xc-Xxm">
+                        <rect key="frame" x="0.0" y="0.0" width="375" height="44"/>
+                        <autoresizingMask key="autoresizingMask"/>
+                    </navigationBar>
+                    <connections>
+                        <segue destination="jUr-QF-s9U" kind="relationship" relationship="rootViewController" id="UDm-Uh-kf7"/>
+                    </connections>
+                </navigationController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="LVp-Dl-VSF" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="268" y="469"/>
+        </scene>
+        <!--Progress View Controller-->
+        <scene sceneID="SfS-oM-cJX">
+            <objects>
+                <viewController storyboardIdentifier="ProgressViewController" id="1g1-T0-HaN" customClass="ProgressViewController" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="Ep5-ud-z4P">
+                        <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <visualEffectView opaque="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="DNP-Jn-Ees">
+                                <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
+                                <view key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" id="kwd-dj-wdN">
+                                    <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
+                                    <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                    <subviews>
+                                        <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="wCW-AV-vd5">
+                                            <rect key="frame" x="37.5" y="258.5" width="300" height="150"/>
+                                            <subviews>
+                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Label" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="PO9-0a-8GW">
+                                                    <rect key="frame" x="34" y="27" width="215" height="21"/>
+                                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                                    <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                                    <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
+                                                    <nil key="highlightedColor"/>
+                                                </label>
+                                                <progressView opaque="NO" contentMode="scaleToFill" verticalHuggingPriority="750" fixedFrame="YES" progress="0.5" translatesAutoresizingMaskIntoConstraints="NO" id="lf0-yi-Qfg">
+                                                    <rect key="frame" x="34" y="70" width="233" height="2"/>
+                                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                                </progressView>
+                                                <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="9Ws-Li-364">
+                                                    <rect key="frame" x="79" y="95" width="124" height="30"/>
+                                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                                    <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                                    <state key="normal" title="Cancel"/>
+                                                    <connections>
+                                                        <action selector="didCancel:" destination="1g1-T0-HaN" eventType="touchUpInside" id="qur-r4-46K"/>
+                                                    </connections>
+                                                </button>
+                                            </subviews>
+                                            <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                            <constraints>
+                                                <constraint firstAttribute="width" constant="300" id="FqO-2d-pUq"/>
+                                                <constraint firstAttribute="height" constant="150" id="Vmd-fB-Am1"/>
+                                            </constraints>
+                                        </view>
+                                    </subviews>
+                                    <constraints>
+                                        <constraint firstAttribute="centerX" secondItem="wCW-AV-vd5" secondAttribute="centerX" id="DJO-TD-dDQ"/>
+                                        <constraint firstAttribute="centerY" secondItem="wCW-AV-vd5" secondAttribute="centerY" id="rEZ-58-IKz"/>
+                                    </constraints>
+                                </view>
+                                <color key="backgroundColor" red="0.0" green="0.0" blue="0.0" alpha="0.0" colorSpace="custom" customColorSpace="sRGB"/>
+                                <blurEffect style="light"/>
+                            </visualEffectView>
+                        </subviews>
+                        <color key="backgroundColor" red="0.0" green="0.0" blue="0.0" alpha="0.0" colorSpace="custom" customColorSpace="sRGB"/>
+                        <constraints>
+                            <constraint firstItem="VfH-jk-DOe" firstAttribute="centerX" secondItem="DNP-Jn-Ees" secondAttribute="centerX" id="8wx-cX-St1"/>
+                            <constraint firstItem="DNP-Jn-Ees" firstAttribute="width" secondItem="Ep5-ud-z4P" secondAttribute="width" id="Fmc-dt-YwR"/>
+                            <constraint firstAttribute="centerY" secondItem="DNP-Jn-Ees" secondAttribute="centerY" id="N4d-cK-xy5"/>
+                            <constraint firstItem="DNP-Jn-Ees" firstAttribute="height" secondItem="Ep5-ud-z4P" secondAttribute="height" id="ohl-go-s1t"/>
+                        </constraints>
+                        <viewLayoutGuide key="safeArea" id="VfH-jk-DOe"/>
+                    </view>
+                    <nil key="simulatedTopBarMetrics"/>
+                    <connections>
+                        <outlet property="cancelButton" destination="9Ws-Li-364" id="KWK-d5-8Bz"/>
+                        <outlet property="contentView" destination="wCW-AV-vd5" id="V5J-VK-kNZ"/>
+                        <outlet property="label" destination="PO9-0a-8GW" id="ekc-ek-32Y"/>
+                        <outlet property="progressView" destination="lf0-yi-Qfg" id="MCe-yY-fZP"/>
+                        <outlet property="visualEffectsView" destination="DNP-Jn-Ees" id="7uN-cl-ena"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="eMF-Sh-nZr" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="553" y="1198"/>
+        </scene>
+    </scenes>
+</document>

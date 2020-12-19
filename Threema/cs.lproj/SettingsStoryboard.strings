@@ -1,0 +1,222 @@
+
+/* Class = "UILabel"; text = "Detail"; ObjectID = "2Ve-Rz-Jab"; */
+"2Ve-Rz-Jab.text" = "Podrobnosti";
+
+/* Class = "UILabel"; text = "0.0 (000)"; ObjectID = "2a3-K6-cFL"; */
+"2a3-K6-cFL.text" = "0.0 (000)";
+
+/* Class = "UINavigationItem"; title = "Font Size"; ObjectID = "3OC-m7-GmD"; */
+"3OC-m7-GmD.title" = "Velikost písma";
+
+/* Class = "UILabel"; text = "Exclusion List"; ObjectID = "5hd-D5-keA"; */
+"5hd-D5-keA.text" = "Seznam vyřazených";
+
+/* Class = "UILabel"; text = "0 KB"; ObjectID = "67x-OC-XxU"; */
+"67x-OC-XxU.text" = "0 kB";
+
+/* Class = "UILabel"; text = "Return Key = Send"; ObjectID = "7C7-0j-j2r"; */
+"7C7-0j-j2r.text" = "Enter = odeslat";
+
+/* Class = "UILabel"; text = "Connected"; ObjectID = "8hI-GF-46C"; */
+"8hI-GF-46C.text" = "Připojeno";
+
+/* Class = "UITableViewSection"; headerTitle = "Threema Call"; ObjectID = "9Jg-qG-CuX"; */
+"9Jg-qG-CuX.headerTitle" = "Hovory Threema";
+
+/* Class = "UILabel"; text = "Sound name"; ObjectID = "9WQ-EZ-toz"; */
+"9WQ-EZ-toz.text" = "Název zvuku";
+
+/* Class = "UILabel"; text = "Sound name"; ObjectID = "B1c-wM-V4d"; */
+"B1c-wM-V4d.text" = "Název zvuku";
+
+/* Class = "UINavigationItem"; title = "Privacy"; ObjectID = "BH4-Z9-imt"; */
+"BH4-Z9-imt.title" = "Soukromí";
+
+/* Class = "UILabel"; text = "Proximity monitoring"; ObjectID = "BK0-LJ-WwY"; */
+"BK0-LJ-WwY.text" = "Sledování přiblížení";
+
+/* Class = "UILabel"; text = "Hide Stale Contacts"; ObjectID = "C7N-a6-E8Y"; */
+"C7N-a6-E8Y.text" = "Skrýt neaktivní kontakty";
+
+/* Class = "UINavigationItem"; title = "License"; ObjectID = "Cuk-M6-y9N"; */
+"Cuk-M6-y9N.title" = "Licence";
+
+/* Class = "UINavigationItem"; title = "Display Order"; ObjectID = "DWN-sS-DbE"; */
+"DWN-sS-DbE.title" = "Pořadí zobrazení";
+
+/* Class = "UILabel"; text = "Subtitle"; ObjectID = "F51-gk-IFX"; */
+"F51-gk-IFX.text" = "Podtitul";
+
+/* Class = "UILabel"; text = "Detail"; ObjectID = "GCE-65-OPQ"; */
+"GCE-65-OPQ.text" = "Podrobnosti";
+
+/* Class = "UILabel"; text = "Push Token"; ObjectID = "HoL-yt-ghu"; */
+"HoL-yt-ghu.text" = "Příznak oznámení";
+
+/* Class = "UILabel"; text = "Detail"; ObjectID = "IzO-Nl-ekz"; */
+"IzO-Nl-ekz.text" = "Podrobnosti";
+
+/* Class = "UILabel"; text = "Title"; ObjectID = "JeY-ke-mv9"; */
+"JeY-ke-mv9.text" = "Název";
+
+/* Class = "UILabel"; text = "Clear Log"; ObjectID = "KvG-gM-I5I"; */
+"KvG-gM-I5I.text" = "Smazat záznam";
+
+/* Class = "UILabel"; text = "First, last"; ObjectID = "L3v-Ts-9T0"; */
+"L3v-Ts-9T0.text" = "Jméno, příjmení";
+
+/* Class = "UITableViewSection"; headerTitle = "Sensor"; ObjectID = "N0M-ec-m5Y"; */
+"N0M-ec-m5Y.headerTitle" = "Senzor";
+
+/* Class = "UILabel"; text = "Send Typing Indicator"; ObjectID = "O7I-2W-NWv"; */
+"O7I-2W-NWv.text" = "Ukazatel psaní odesílané zprávy";
+
+/* Class = "UINavigationItem"; title = "Exclusion List"; ObjectID = "OfE-jH-kl6"; */
+"OfE-jH-kl6.title" = "Seznam vyřazených";
+
+/* Class = "UINavigationItem"; title = "Video Quality"; ObjectID = "Oji-5c-VQi"; */
+"Oji-5c-VQi.title" = "Kvalita videa";
+
+/* Class = "UILabel"; text = "Title"; ObjectID = "PX2-6n-WIX"; */
+"PX2-6n-WIX.text" = "Název";
+
+/* Class = "UINavigationItem"; title = "Notifications"; ObjectID = "QQx-aC-ygX"; */
+"QQx-aC-ygX.title" = "Oznámení";
+
+/* Class = "UILabel"; text = "Detail"; ObjectID = "Qpp-gz-gkC"; */
+"Qpp-gz-gkC.text" = "Podrobnosti";
+
+/* Class = "UITableViewSection"; headerTitle = "Chat"; ObjectID = "R1G-2w-yDd"; */
+"R1G-2w-yDd.headerTitle" = "Chat";
+
+/* Class = "UILabel"; text = "Reset Wallpaper"; ObjectID = "Rfg-a6-EB2"; */
+"Rfg-a6-EB2.text" = "Resetovat tapetu";
+
+/* Class = "UINavigationItem"; title = "Privacy Policy"; ObjectID = "SQX-77-CzT"; */
+"SQX-77-CzT.title" = "Zásady ochrany osobních údajů";
+
+/* Class = "UILabel"; text = "Add exclusion..."; ObjectID = "Sow-GN-gms"; */
+"Sow-GN-gms.text" = "Nové vyřazení...";
+
+/* Class = "UILabel"; text = "Show gallery preview"; ObjectID = "TyO-Dl-3LV"; */
+"TyO-Dl-3LV.text" = "Zobrazovat náhled galerie";
+
+/* Class = "UINavigationItem"; title = "Media"; ObjectID = "U7Q-cL-ZiA"; */
+"U7Q-cL-ZiA.title" = "Média";
+
+/* Class = "UINavigationItem"; title = "Advanced"; ObjectID = "UsC-dS-qae"; */
+"UsC-dS-qae.title" = "Pokročilé";
+
+/* Class = "UITableViewSection"; headerTitle = "Validation logging"; ObjectID = "VzU-Hf-fg5"; */
+"VzU-Hf-fg5.headerTitle" = "Záznam pro hledání chyb";
+
+/* Class = "UILabel"; text = "Sync Contacts"; ObjectID = "Wdo-iP-Jy2"; */
+"Wdo-iP-Jy2.text" = "Synchronizovat kontakty";
+
+/* Class = "UILabel"; text = "Validation Logging"; ObjectID = "WeM-6s-Xpj"; */
+"WeM-6s-Xpj.text" = "Záznam pro hledání chyb";
+
+/* Class = "UILabel"; text = "Group Notifications"; ObjectID = "XNU-cf-XDO"; */
+"XNU-cf-XDO.text" = "Skupinová oznámení";
+
+/* Class = "UILabel"; text = "Save Media to Camera Roll"; ObjectID = "XgJ-Fv-QL5"; */
+"XgJ-Fv-QL5.text" = "Automaticky ukládat média do aplikace „Fotografie“";
+
+/* Class = "UINavigationItem"; title = "Support"; ObjectID = "Yb8-8D-YgU"; */
+"Yb8-8D-YgU.title" = "Podpora";
+
+/* Class = "UINavigationItem"; title = "Settings"; ObjectID = "Z1n-S1-DAp"; */
+"Z1n-S1-DAp.title" = "Nastavení";
+
+/* Class = "UINavigationItem"; title = "Appearance"; ObjectID = "ZYa-QO-V4r"; */
+"ZYa-QO-V4r.title" = "Vzhled";
+
+/* Class = "UITableViewSection"; headerTitle = "Support information"; ObjectID = "bGr-LK-G1Y"; */
+"bGr-LK-G1Y.headerTitle" = "Informace pro podporu";
+
+/* Class = "UILabel"; text = "WebRTC Diagnostics"; ObjectID = "eN8-vV-OIw"; */
+"eN8-vV-OIw.text" = "Diagnostika WebRTC";
+
+/* Class = "UILabel"; text = "xx pt"; ObjectID = "eXp-kk-t9y"; */
+"eXp-kk-t9y.text" = "xx b.";
+
+/* Class = "UILabel"; text = "Received Message Time"; ObjectID = "HDn-EN-rtP"; */
+"HDn-EN-rtP.text" = "Čas přijetí zprávy";
+
+/* Class = "UINavigationItem"; title = "Push Group Sound"; ObjectID = "ezY-mc-1PI"; */
+"ezY-mc-1PI.title" = "Zvuk skupinových oznámení";
+
+/* Class = "UILabel"; text = "Size"; ObjectID = "f2r-1x-GtL"; */
+"f2r-1x-GtL.text" = "Velikost";
+
+/* Class = "UILabel"; text = "Detail"; ObjectID = "iDF-6E-SQr"; */
+"iDF-6E-SQr.text" = "Podrobnosti";
+
+/* Class = "UILabel"; text = "Video Quality"; ObjectID = "icP-dl-OGv"; */
+"icP-dl-OGv.text" = "Kvalita videa";
+
+/* Class = "UILabel"; text = "max. 640 x 640 pixels"; ObjectID = "ij7-I7-TzW"; */
+"ij7-I7-TzW.text" = "max. 640 x 640 pixelů";
+
+/* Class = "UINavigationItem"; title = "Chat"; ObjectID = "jI2-1V-LmF"; */
+"jI2-1V-LmF.title" = "Chat";
+
+/* Class = "UILabel"; text = "IPv6"; ObjectID = "jKP-qh-haK"; */
+"jKP-qh-haK.text" = "IPv6";
+
+/* Class = "UILabel"; text = "Detail"; ObjectID = "jrN-Cn-NEr"; */
+"jrN-Cn-NEr.text" = "Podrobnosti";
+
+/* Class = "UILabel"; text = "Log Size"; ObjectID = "k9C-Wp-8hl"; */
+"k9C-Wp-8hl.text" = "Velikost záznamu";
+
+/* Class = "UILabel"; text = "Email Log"; ObjectID = "m9f-E9-TK7"; */
+"m9f-E9-TK7.text" = "Sdílet záznam";
+
+/* Class = "UILabel"; text = "Choose POIs"; ObjectID = "mWM-cJ-vcw"; */
+"mWM-cJ-vcw.text" = "Vybrat body zájmu";
+
+/* Class = "UILabel"; text = "Font Size"; ObjectID = "oTH-CS-y8U"; */
+"oTH-CS-y8U.text" = "Velikost písma";
+
+/* Class = "UINavigationItem"; title = "Image Size"; ObjectID = "owJ-3Q-Phk"; */
+"owJ-3Q-Phk.title" = "Velikost obrázku";
+
+/* Class = "UILabel"; text = "Send Read Receipts"; ObjectID = "pd4-eC-QZk"; */
+"pd4-eC-QZk.text" = "Posílat potvrzení o přečtení";
+
+/* Class = "UILabel"; text = "Detail"; ObjectID = "qCc-Eb-8rc"; */
+"qCc-Eb-8rc.text" = "Podrobnosti";
+
+/* Class = "UILabel"; text = "Sound name"; ObjectID = "qT1-va-5Fb"; */
+"qT1-va-5Fb.text" = "Název zvuku";
+
+/* Class = "UITableViewSection"; headerTitle = "Wallpaper"; ObjectID = "ri0-wl-hNq"; */
+"ri0-wl-hNq.headerTitle" = "Tapeta";
+
+/* Class = "UILabel"; text = "Push Token"; ObjectID = "sC4-2F-pcW"; */
+"sC4-2F-pcW.text" = "Příznak oznámení";
+
+/* Class = "UILabel"; text = "Block Unknown"; ObjectID = "t3A-s5-ui3"; */
+"t3A-s5-ui3.text" = "Blokovat neznámé";
+
+/* Class = "UITableViewSection"; headerTitle = "Networking"; ObjectID = "ukQ-aK-GUe"; */
+"ukQ-aK-GUe.headerTitle" = "Práce v síti";
+
+/* Class = "UITableViewSection"; footerTitle = "Anybody can send you a message. New contacts will be added automatically when their first message arrives."; ObjectID = "vhK-tc-aH5"; */
+"vhK-tc-aH5.footerTitle" = "Zprávy vám může posílat kdokoliv. Nové kontakty budou přidávány automaticky poté, co od nich obdržíte první zprávu.";
+
+/* Class = "UITableViewSection"; headerTitle = "Contacts"; ObjectID = "vhK-tc-aH5"; */
+"vhK-tc-aH5.headerTitle" = "Kontakty";
+
+/* Class = "UINavigationItem"; title = "Push Sound"; ObjectID = "wii-ly-S2S"; */
+"wii-ly-S2S.title" = "Zvuk oznámení";
+
+/* Class = "UILabel"; text = "Image Size"; ObjectID = "xhX-4h-CHj"; */
+"xhX-4h-CHj.text" = "Velikost obrázku";
+
+/* Class = "UILabel"; text = "Detail"; ObjectID = "yFW-ty-9QR"; */
+"yFW-ty-9QR.text" = "Podrobnosti";
+
+/* Class = "UINavigationItem"; title = "Threema Call Sound"; ObjectID = "yts-q5-Yzc"; */
+"yts-q5-Yzc.title" = "Zvuk hovoru Threema";

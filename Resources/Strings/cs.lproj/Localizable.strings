@@ -1,0 +1,981 @@
+/*
+ Localizable.strings
+ Threema
+ 
+ Copyright (c) 2012 Threema GmbH. All rights reserved.
+ */
+"use_dynamic_font_size" = "Velikost textu";
+
+"SortOrder_Firstname" = "Jméno Příjmení";
+"SortOrder_Lastname" = "Příjmení Jméno";
+
+"segmentcontrol_contacts" = "Kontakty";
+"segmentcontrol_groups" = "Skupiny";
+"segmentcontrol_work_contacts" = "Práce";
+
+/* WebRTC diagnostics */
+"webrtc_diagnostics.title" = "Diagnostika WebRTC";
+"webrtc_diagnostics.description" = "Spusťte tento nástroj pro odhalení problémů s nastavením hlasového volání\n\nStiskněte \"Start\" pro zahájení testu.";
+"webrtc_diagnostics.start" = "Start";
+"webrtc_diagnostics.copyToClipboard" = "Zkopírovat do schránky";
+"webrtc_diagnostics.copy" = "Zkopírováno do schránky.";
+"webrtc_diagnostics.done" = "Hotovo. Vyskytnou-li se problémy s navázáním hovoru, pošlete tento výstup podpoře Threema.";
+
+/* Privacy Policy */
+"privacy_poliy_url" = "https://threema.ch/en/privacy";
+
+/* MWPhotoBrowser */
+"mwphotobrowser_select" = "Vyberte";
+"mwphotobrowser_select_all" = "Vybrat vše";
+"mwphotobrowser_deselect_all" = "Odznačit vše";
+"profileimage_setting_all_footer" = "Všechny kontakty obdrží váš profilový obrázek, když jim pošlete zprávu.";
+"profileimage_setting_contacts_footer" = "Kontakty zvolené v tomto seznamu obdrží váš profilový obrázek, když jim pošlete zprávu.";
+
+
+"status_disconnected" = "Odpojeno";
+"status_connecting" = "Spojuji";
+"status_connected" = "Spojuji";    /* note: this is intentional; don't want to bother user with protocol details */
+"status_loggedin" = "Spojeno";
+"status_disconnecting" = "Přerušeno";
+
+"cannot_connect_title" = "Není spojení";
+"cannot_connect_message" = "Nefunkční připojení k Internetu, proveďte nápravu, prosím.";
+
+"delete_identity_warning" = "Smažete-li svoje ID, dojde k odstranění vašeho páru klíčů i dat aplikace. Pokud jste si nevytvořili zálohu, nebudete už moci prostřednictvím tohoto ID posílat ani přijímat zprávy.\n\nJestliže už nechcete toto ID používat, je vhodné od něj nejprve odpojit případnou e-mailovou adresu nebo telefonní číslo a teprve poté jej smazat.";
+"delete_identity_warning2" = "Poslední upozornění: Opravdu chcete smazat svoje data a ID?";
+"delete_identity_passcode_title" = "Přístupový kód je aktivní";
+"delete_identity_passcode_message" = "Před smazáním svého ID prosím deaktivuje přístupový kód.";
+"delete_identity_title" = "Data aplikace byla smazána";
+"delete_identity_description" = "Veškerá data aplikace byla smazána. Restartujte prosím aplikaci Threema a nastavte ji.";
+"delete_identity_app_close" = "Zavřít aplikaci";
+
+"delete_contact_warn_title" = "Dostupná konverzace";
+"delete_contact_warn_message" = "U tohoto kontaktu se stále nachází konverzace. Pokud tento kontakt smažete, dojde zároveň k odstranění konverzace (včetně historie chatu).";
+
+/* JKLockScreenViewController */
+"cancel" = "Zrušit";
+"continue" = "Pokračovat";
+"ok" = "OK";
+"no" = "Ne";
+"yes" = "Ano";
+"delete" = "Smazat";
+"messages" = "Zprávy";
+"bar_messages_x" = "Zprávy (%d)";
+"try_again" = "Další pokus";
+"delete_identity" = "Smazat data a ID";
+"copy" = "Zkopírovat";
+"save" = "Uložit";
+"share" = "Sdílet";
+"details" = "Podrobnosti";
+"acknowledge" = "Souhlasím";
+"decline" = "Nesouhlasím";
+"quote" = "Citace";
+"speak" = "Mluvte";
+"send" = "Odeslat";
+"image" = "Obraz";
+"sticker" = "Nálepka";
+"gif" = "GIF";
+"video" = "Video";
+"audio" = "Zvuk";
+"file" = "Soubor";
+"location" = "Poloha";
+"locating" = "Zaměřování...";
+"unknown_location" = "neznámá poloha";
+"open" = "Otevřít";
+"call" = "Volání";
+"Info" = "Info";
+"error_abort" = "Neopravitelná chyba";
+"qr_code" = "QR kód";
+"forward" = "Přeposlat";
+"showNext" = "Více možností";
+"showPrevious" = "Předchozí možnosti";
+"read" = "Přečteno";
+"unread" = "Nepřečteno";
+"settings" = "Nastavení";
+"loadMore" = "Načíst další";
+"all" = "Vše";
+"myIdentity" = "Můj profil";
+"share_id" = "Sdílejte své Threema ID";
+
+"show_in_maps" = "Zobrazit v mapách";
+"calculate_route" = "Vypočítat cestu";
+
+/* Chat export */
+"conversation_log_subject" = "Záznam konverzace Threema s %@";
+"conversation_log_group_subject" = "Záznam skupinové konverzace Threema";
+"conversation_log_body" = "Šifrovaný záznam konverzace je připojený v %@.\nK rozbalení souboru je zapotřebí moderní komprimační nástroj s podporou AES, např. http://www.7-zip.org nebo https://itunes.apple.com/us/app/the-unarchiver/id425424353";
+"conversation_log_group_body" = "Šifrovaný záznam skupinové konverzace je připojený v %@.\nK rozbalení souboru je zapotřebí moderní komprimační nástroj s podporou AES, např. http://www.7-zip.org nebo https://itunes.apple.com/us/app/the-unarchiver/id425424353";
+"not_enough_storage_title" = "Pro export tohoto chatu není dostatek volného místa.";
+"amount_of_free_storage_needed" = "K exportu tohoto chatu je třeba %@. Aktuálně je volné %@.";
+"chat_export_failed_title" = "Export chatu se nezdařil.";
+"chat_export_failed_message" = "Export chatu se nezdařil. Kód chyby %d.";
+"cancelling_export" = "Ruší se export";
+"export_progress_label" = "%li / %li zpráv exportováno";
+"caption" = "Titulek";
+"fileNotDownloaded" = "Soubor nebyl stažen nebo byl smazán.";
+"include_media_title" = "Zahrnout média (obrázky, videa) jako přílohy? Velké chaty jsou rozděleny do několika souborů.\n\nK rozbalení souboru je zapotřebí moderní komprimační nástroj s podporou AES, např. 7-Zip nebo The Unarchiver (Mac).";
+
+
+/* image sizes */
+"original" = "Původní";
+"small" = "Malý";
+"medium" = "Střední";
+"large" = "Velký";
+"xlarge" = "Extra velký";
+"max_x_by_x_pixels" = "Max. %@ × %@ pixelů";
+"images are not scaled" = "Obrázkům se nemění velikost";
+"image_resize_share_extension" = "Vzhledem k omezené dostupné paměti jsou obrázky, které posíláte přes rozhraní pro sdílení, zmenšeny na maximálně 1600 x 1600 pixelů.";
+
+/* video sizes */
+"low" = "Nižší";
+"high" = "Vyšší";
+"max_1_minute" = "Max. 1 minuta";
+"max_x_minutes" = "Max. %d min.";
+
+/* Sound names */
+"sound_none" = "Žádný zvuk";
+"sound_default" = "Výchozí";
+"sound_bamboo" = "Bambus";
+"sound_drum" = "Buben";
+"sound_glass" = "Sklo";
+"sound_incoming_message" = "Příchozí zpráva";
+"sound_input" = "Vstup";
+"sound_marimba1" = "Marimba 1";
+"sound_marimba2" = "Marimba 2";
+"sound_music_box" = "Hudební skříňka";
+"sound_pulse" = "Pulz";
+"sound_sms" = "SMS";
+"sound_received_message" = "Threema";
+"sound_synth" = "Syntezátor";
+"sound_trill" = "Trylek";
+"sound_whoop" = "Zavýsknutí";
+
+"sound_threema_best" = "Threema";
+"sound_threema_incom" = "Hra";
+"sound_threema_xylo" = "XYLO";
+"sound_threema_goody" = "Remix";
+"sound_threema_alphorn" = "Alpský roh";
+
+"font_point" = "b.";
+"bigger_single_emojis" = "Větší jednoduchá emoji";
+"identity_none" = "žádná";
+"scan_identity" = "Naskenovat ID";
+"(none)" = "(žádný)";
+"(pending)" = "(nevyřízeno)";
+"enter_code" = "Zadejte kód";
+"unlink_contact" = "Odpojit kontakt";
+"choose_new_contact" = "Vyberte nový kontakt";
+"export_chat" = "Exportovat konverzaci";
+"send_profile_picture" = "Poslat profilový obrázek";
+"linked_contact" = "Propojený kontakt";
+"key_fingerprint" = "Otisk klíče";
+"block_contact" = "Blokovat kontakt";
+"profile_picture_recipient" = "Příjemce profilového obrázku";
+"member_in_groups" = "Členové ve skupině";
+
+"no_nickname_title" = "Přezdívka nebyla nastavena";
+"no_nickname_message" = "Opravdu chcete pokračovat bez nastavení přezdívky? Pro ostatní lidi bude obtížné rozpoznat vaše zprávy, dokud nezačnou aplikaci sami používat.";
+
+"server_message_title" = "Zpráva ze serveru";
+
+"no_preview_available" = "Náhled není k dispozici";
+
+"bad_phone_number_format_title" = "Číslo nebylo rozeznáno";
+"bad_phone_number_format_message" = "Vámi zadané telefonní číslo nebylo rozeznáno. Zkuste jej uvést v mezinárodním formátu.";
+
+"confirm_phone_number_title" = "Potvrzení čísla";
+"confirm_phone_number_x" = "Pošleme SMS na:\n\n%@\n\nJe toto číslo správné?";
+
+"abort_verification" = "Zrušit ověření";
+"abort_verification_message" = "Počet pokusů je omezený. Počkejte na doručení SMS alespoň 30 minut nebo zkuste možnost hovoru.";
+"call_me_title" = "Informace o hovoru";
+"call_me_message" = "Budete-li pokračovat, pokusíme se vám neprodleně zavolat. Ověřovací kód vám dvakrát přečteme. Mějte na paměti, že tato akce proběhne jen jednou, takže než budete pokračovat, ujistěte se, že jste náležitě připraveni.";
+"number" = "Číslo";
+
+"mobileno_linked_title" = "Telefonní číslo bylo propojeno";
+"mobileno_linked_message" = "Propojení telefonního čísla s vaším ID proběhlo úspěšně.";
+
+"link_email_sent_title" = "Ověřovací e-mail byl odeslán";
+"link_email_sent_message" = "Ověřovací odkaz byl odeslán e-mailem na adresu %@.";
+
+"public_key_mismatch_title" = "Veřejný klíč se neshoduje";
+"public_key_mismatch_message" = "Kontakt s tímto ID již existuje, jeho veřejný klíč však nesouhlasí! To může poukazovat na pokus o podvod s cílem přimět vás posílat zprávy jinému příjemci.\nNový veřejný klíč nebyl uložen. Pokud bezpečně víte, že je správný, smažte stávající kontakt a zkuste to znovu.";
+
+"public_key_server_mismatch_title" = "Veřejný klíč se neshoduje";
+"public_key_server_mismatch_message" = "Veřejný klíč, který jste naskenovali, se neshoduje s klíčem, jejž poslal server k tomuto ID. To znamená, že vámi naskenovaný kód někdo zákeřně upravil, tudíž byste danému klíči neměli za žádných okolností důvěřovat. Nahlaste prosím tento incident na adresu security@threema.ch, a je-li to možné, uveďte podrobnosti k ID a okolnostem, za nichž k celé události došlo.";
+
+"password_again" = "Zadejte heslo znovu";
+"password_too_short_title" = "Heslo je krátké";
+"password_too_short_message" = "Heslo je příliš krátké. Zadejte prosím alespoň 8 znaků.";
+"password_mismatch_title" = "Heslo se neshoduje";
+"password_mismatch_message" = "Zadaná hesla se neshodují. Vraťte se prosím zpět a zkuste to znovu.";
+"password_description_backup" = "Váš soukromý klíč bude zašifrován heslem, které zde zadáte. Je zapotřebí alespoň 8 znaků (doporučuje se použít kombinaci písmen, číslic a symbolů).";
+"password_description_export" = "Data konverzace budou zabalena a zašifrována heslem, které zde zadáte. Je zapotřebí alespoň 8 znaků (doporučuje se použít kombinaci písmen, číslic a symbolů).";
+
+"revocation_password" = "Heslo ke zrušení ID";
+"revocation_password_description" = "Prostřednictvím tohoto hesla můžete trvale zrušit svoje Threema ID, a to na stránce https://myid.threema.ch/revoke. Je zapotřebí alespoň 8 znaků (doporučuje se použít kombinaci písmen, číslic a symbolů).";
+"revocation_request_success" = "Heslo ke zrušení ID byl aktualizováno";
+"revocation_request_failed" = "Aktualizace hesla ke zrušení ID se nezdařila";
+"revocation_password_not_set" = "nenastaveno";
+"conversations_delete_all_confirm" = "Opravdu chcete smazat všechny konverze?\nPoznámka: Skupinové konverzace nebudou ovlivněny.";
+"revocation_check_failed" = "kontrola se nezdařila";
+
+"messages_delete_all_confirm" = "Opravdu chcete smazat všechny zprávy z této konverze?";
+"messages_delete_selected_confirm" = "Opravdu chcete smazat zvolené zprávy?";
+"conversation_delete_confirm" = "Opravdu chcete smazat tuto konverzaci?";
+"group_delete_confirm" = "Opravdu chcete opustit tuto skupinu?";
+"group_admin_delete_confirm" = "Opravdu chcete opustit tuto skupinu? Jelikož jste správcem skupiny, nebude už pak možné skupinu upravovat.";
+"delete_contact_group_exists_title" = "Kontakt je stále ve skupinovém chatu";
+"delete_contact_group_exists_message" = "Tento kontakt je stále členem skupinové konverzace, nelze jej tedy smazat. Odstraňte kontakt ze všech skupinových konverzací nebo smažte skupinové konverzace, jichž se tento kontakt účastní, a zkuste to znovu.";
+"delete_all" = "Smazat vše";
+"delete_n" = "Smazat (%d)";
+"message_cannot_play_movie" = "Video nelze přehrát.";
+
+"identity_not_found_title" = "ID nebylo nalezeno";
+"identity_not_found_message" = "Nalezení ID se nezdařilo. Zkontrolujte, zda jste jej zadali správně, a zkuste to znovu.";
+
+"message_too_long_title" = "Zpráva je příliš dlouhá";
+"message_too_long_message" = "Maximální délka zprávy je %d bytů.";
+
+"scanned_identity_mismatch_title" = "ID nesouhlasí";
+"scanned_identity_mismatch_message" = "Naskenované ID neodpovídá kontaktu, který máte uložený.";
+
+"scanned_own_identity_title" = "Naskenovali jste své vlastní ID.";
+
+"scan_code_expired_title" = "Platnost kódu skončila.";
+"scan_code_expired_message" = "Platnost tohoto kódu skončila. Naskenujte jej znovu přímo z aplikace druhého uživatele.";
+
+"take_photo_or_video" = "Pořídit fotografii nebo video";
+"take_photo" = "Pořídit fotografii";
+"choose_existing" = "Zvolit stávající";
+"edit_photos" = "Upravit zvolené soubory";
+"delete_photo" = "Smazat fotografii";
+"delete_video" = "Smazat video";
+"delete_file" = "Smazat soubor";
+"share_location" = "Sdílet polohu";
+"record_audio" = "Nahrát zvuk";
+"scan_qr" = "Naskenovat QR kód";
+"share_file" = "Sdílet soubor";
+"send_item_photo" = "Náhled fotografie";
+"send_item_video" = "Náhled videa";
+"send_items" = "Náhled %d fotografií/videí";
+"send_items_photo" = "Náhled %d fotografie(í)";
+"send_items_video" = "Náhled %d videa(í)";
+
+"record" = "Nahrát";
+"play" = "Spustit";
+"pause" = "Pozastavit";
+"stop" = "Zastavit";
+"voice message" = "Hlasová zpráva";
+"quit" = "Dokončit";
+"record_cancel_title" = "Zrušit nahrávání";
+"record_cancel_message" = "Opravdu chcete zrušit nahrávání?";
+"record_cancel_button_discard" = "Zrušit nahrávání";
+
+"send_file_title" = "Poslat soubor";
+"camera_disabled_title" = "Přístup byl odepřen";
+"send_file_message" = "Soubor: %@ \n pro \n%@";
+
+"quote_not_found" = "Citovaná zpráva nebyla nalezena.";
+
+"camera_disabled_message" = "Threema nemá přístup k vaší kameře. Udělte jí prosím oprávnění v nabídce Nastavení > Soukromí > Kamera.";
+
+"location_disabled_title" = "Přístup byl odepřen";
+"location_disabled_message" = "Threema nemá přístup k vaší poloze. Udělte jí prosím oprávnění v nabídce Nastavení > Soukromí > Služby pro zjišťování polohy.";
+
+"microphone_disabled_title" = "Chybí přístup k mikrofonu";
+"microphone_disabled_message" = "Threema nemá přístup k mikrofonu. Udělte jí prosím oprávnění v nabídce Nastavení > Soukromí > Mikrofon.";
+
+
+"include_media" = "Přidat média";
+"without_media" = "Bez médií";
+"media_overview" = "Média";
+
+"save_photo_failed_title" = "Uložení fotografie se nezdařilo";
+"save_photo_failed_message" = "Zkontrolujte prosím v nastavení soukromí svého zařízení, zda má Threema přístup k vašim fotografiím.";
+"save_video_failed_title" = "Uložení videa se nezdařilo";
+"save_video_failed_message" = "Zkontrolujte prosím v nastavení soukromí svého zařízení, zda má Threema přístup k vašim fotografiím.";
+
+"members" = "Členové";
+"too_many_members_title" = "Příliš mnoho členů ve skupině";
+"too_many_members_message" = "Maximální počet členů ve skupině je %d.";
+"add_member" = "Přidat člena";
+"no_more_members" = "V této skupině nejsou žádní další členové.";
+"group_different_identity" = "V době vytvoření této skupiny jste používali jiné Threema ID. Se svým současným ID do ní nemůžete poslat žádnou zprávu.";
+"group_is_not_member" = "Do této skupiny nemůžete posílat zprávy, jelikož už nejste jejím členem.";
+"contact_blocked_cannot_send" = "Tomuto kontaktu nemůžete poslat žádnou zprávu, protože je zablokovaný.";
+"contact_invalid_cannot_send" = "Tomuto kontaktu nemůžete poslat žádnou zprávu, protože je neplatný.";
+"group_sync_title" = "Skupina byla synchronizována";
+"group_sync_message" = "Aktuální data skupiny byla odeslána všem členům.";
+"group_clone_title" = "Klonovat skupinu";
+"group_clone_message" = "Tímto vytvoříte klon dané skupiny a budete jejím správcem. Chcete pokračovat?";
+
+"group name" = "Jméno skupiny";
+"existing groups" = "Stávající skupiny";
+"new group" = "Nová skupina";
+"edit group" = "Upravit skupinu";
+"pick image" = "Vybrat\nobrázek";
+"create" = "Vytvořit";
+"search" = "Hledat";
+"leave" = "Odejít";
+"you are not a member" = "Já (odstraněno)";
+"groups" = "Skupiny";
+
+"choose_recipient" = "Vyberte příjemce";
+
+"msg_unknown_group_request_sync_x_title" = "Přijetí zprávy v neznámé skupině";
+"msg_unknown_group_request_sync_x_message" = "Zpráva v neznámé skupině byla přijata. Od tvůrce skupiny (%@) byly vyžádány informace o skupině. Skupina se zobrazí, jakmile bude její tvůrce opět online.";
+
+"chat_search_label_format" = "%ld z %ld zpráv";
+"load_earlier_messages" = "Načítání dřívějších zpráv";
+"tap_to_cancel" = "Klepnutím zrušit";
+"previous" = "Předchozí";
+"tap_to_change" = "Klepnutím změnit";
+"next" = "Další";
+"unread_messages" = "Nepřečtené zprávy";
+
+/* Verification level popovers in chat view */
+"verification_level_title" = "Úroveň ověření";
+/* Verification level popovers in chat view */
+"verification_level_text" = "Barevné tečky označují úroveň ověření kontaktu.";
+"level0_title" = "Nejnižší úroveň ověření";
+/* Verification level section title */
+"verification_level_section_work" = "Kontakty ve vaší organizaci";
+"verification_level_section_other" = "Další kontakty";
+/* Verification level popovers in chat view */
+"level1_title" = "Střední úroveň ověření";
+"level2_title" = "Nejvyšší úroveň ověření";
+"level3_title" = "Střední úroveň ověření";
+"level4_title" = "Nejvyšší úroveň ověření";
+"level0_explanation" = "Neznámý kontakt; buď tento kontakt nepřipojil telefonní číslo ani e-mailovou adresu ke svému ID, nebo váš adresář údaje o tomto kontaktu neobsahuje.";
+"level1_explanation" = "Kontakt, jehož telefonní číslo nebo e-mailová adresa je ve vašem adresáři.";
+"level2_explanation" = "Kontakt, jehož identitu a veřejný klíč jste osobně ověřili naskenováním jejich QR kódu.";
+"level3_explanation" = "Interní kontakt, předem obsazený vaší organizací.";
+"level4_explanation" = "Interní kontakt, jehož identitu a veřejný klíč jste osobně ověřili naskenováním jejich QR kódu.";
+
+/* Invalid country code alert */
+"invalid_country_code_title" = "Neplatný formát regionu";
+"invalid_country_code_message" = "Zdá se, že formát regionu na vašem zařízení je nastavený na neplatnou hodnotu. Otevřete nabídku nastavení aplikace, přejděte do sekce Všeobecné > Mezinárodní a zvolte formát regionu znovu, abyste tak předešli problémům s přiřazováním telefonního čísla.";
+
+/* Settings */
+"block_unknown_on" = "Zprávy vám mohou posílat pouze lidé z vašeho seznamu kontaktů.";
+"block_unknown_off" = "Zprávy vám může posílat kdokoliv. Nové kontakty budou přidávány automaticky poté, co od nich obdržíte první zprávu.";
+"show_stale_contacts_on" = "Neaktivní Threema ID (tj. ID, která nebyla použita alespoň tři měsíce) a zrušená ID jsou skrytá.";
+"show_stale_contacts_off" = "V seznamu kontaktů jsou uvedena všechna Threema ID.";
+"hide_voip_call_ip_off" = "Navazovat přímé spojení, je-li to možné, a přes servery Threema směrovat pouze hovory s neověřenými kontakty. Může dojít k zobrazení vaší IP adresy.";
+"hide_voip_call_ip_on" = "Vynutit směrování hovorů přes servery Threema a chránit tak vaši IP adresu. Nastavení může ovlivnit kvalitu hovorů.";
+"voip_callkit_off" = "Nabízená oznámení slouží pro upozornění na příchozí hovory.";
+"voip_callkit_on" = "Hovory se zobrazují na zamčené obrazovce a vypisují se v seznamu hovorů v příslušné aplikaci telefonu. Je-li zapnutý iCloud Drive, synchronizuje se seznam hovorů z aplikace telefonu přes servery Apple.";
+
+"backgrounding_on" = "Aplikace zůstane připojená až 30 sekund od okamžiku jejího přesunutí na pozadí.";
+"backgrounding_off" = "Aplikace se odpojí okamžitě po přesunutí na pozadí.";
+"proximity_monitoring_off" = "Obrazovka se při zakrytí senzoru přiblížení nevypne.";
+"proximity_monitoring_on" = "Pokud dojde k zakrytí senzoru přiblížení během probíhajícího hovoru nebo záznamu či přehrávání hlasových zpráv, obrazovka se vypne.";
+"validation_logging_expl" = "Záznam pro hledání chyb lze využít k nezávislému ověření šifrování aplikace Threema mezi dvěma koncovými body.\nPodrobnosti: https://threema.ch/validation";
+
+"validation_log_clear" = "Smazat záznam";
+"validation_log_subject" = "Záznam Threema pro hledání chyb";
+"validation_log_body" = "Soubor se záznamem je přiložený.";
+"log_empty_message" = "Záznam pro hledání chyb je prázdný.";
+"cannot_send_mail_message" = "Na tomto zařízení není nastavený žádný e-mailový účet.";
+
+"preview_limit" = "Limit:\n%.0f náhledů";
+
+/* Backup identity */
+"backup_mail_subject" = "Export Threema ID pro %@";
+"backup_found_message" = "Na vašem zařízení bylo nalezeno exportované Threema ID. Chcete jej obnovit?";
+"backup_include" = "Když zazálohujete svůj telefon přes iTunes nebo iCloud, bude součástí těchto dat také šifrovaný export ID.";
+"backup_found_title" = "Export ID byl nalezen";
+"backup_footer" = "Tato data v kombinaci s vámi zvoleným heslem lze využít k obnovení vašeho ID na jiném zařízení. Můžete si je zkopírovat a vložit, kam uznáte za vhodné, poslat si je e-mailem nebo naskenovat QR kód jiným zařízením.";
+
+/* Restore identity */
+"scan_backup" = "Naskenovat export ID";
+"backup_exclude" = "Když zazálohujete svůj telefon přes iTunes nebo iCloud, nebude součástí těchto dat export ID. Nechcete-li o své ID přijít, uložte si export ID ručně.";
+/* Contacts */
+"pull_to_sync" = "Potažením dolů provedete synchronizaci...";
+"bad_identity_backup" = "Data exportu ID jsou neplatná nebo jste zadali špatné heslo. Chcete-li obnovit své Threema ID, použijte heslo zvolené při vytváření exportu. Zkontrolujte, zda jste vše zadali správně, a zkuste to znovu.";
+
+"synchronizing" = "Synchronizace...";
+
+"no_contacts_syncon" = "Zatím nemáte žádné kontakty. Synchronizace je zapnutá, ale nikdo z vašeho adresáře zřejmě službu Threema nepoužívá (pozvěte je!).";
+"no_contacts" = "Žádné kontakty";
+"no_groups" = "Žádné skupiny";
+"no_groups_message" = "Zatím nemáte žádné skupiny. Přidejte skupiny ručně pomocí tlačítka +.";
+"no_work_contacts" = "Uživatelé Threema Work";
+"no_work_contacts_message" = "Nebyly nalezeny žádné správcem ověřené kontakty Threema Work.";
+
+"no_contacts_permission_title" = "Chybí oprávnění pro přístup ke kontaktům";
+"no_contacts_syncoff" = "Zatím nemáte žádné kontakty. Zapněte synchronizaci (Nastavení > Soukromí) nebo přidejte kontakty ručně pomocí tlačítka +.";
+"no_contacts_permission_message" = "Threema nemá přístup k vašim kontaktům. Přejděte ve svém zařízení do nastavení soukromí a povolte aplikaci Threema přístup ke kontaktům.";
+
+"contact_added_to_profilepicture_list" = "Tento kontakt obdrží váš profilový obrázek, když mu napíšete.";
+"contact_removed_from_profilepicture_list" = "Tento kontakt již nebude příjemcem vašeho profilu.";
+"contact_send_profilepicture_success" = "Odeslání vašeho profilového obrázku kontaktu proběhlo úspěšně.";
+"contact_send_profilepicture_error" = "Odeslání vašeho profilového obrázku se nezdařilo. Zkuste to později.";
+
+"setup_threema_work" = "Nastavení Threema Work";
+
+"sync_group" = "Synchronizovat skupinu";
+
+"contact_threema_work_title" = "Threema Work";
+"contact_threema_work_info" = "Ikonka aktovky značí, že uživatel používí obchodní aplikaci \"Threema Work\".";
+"contact_threema_title" = "Threema";
+"contact_threema_info" = "Ikonka domu značí, že uživatel používá běžnou verzi Threema a ne Threema Work.";
+"contact_threema_work_conversation_info" = "Tento kontakt používá Threema Work.";
+"contact_threema_conversation_info" = "Tento kontakt používí běznou verzi Threema.";
+
+/* create id */
+"lets_get_started" = "Pojďme na to";
+"welcome_work" = "Vítejte v\nThreema Work";
+"setup_threema" = "Nastavit aplikaci Threema";
+"restore_id" = "Obnovit ze zálohy";
+"restore_id_export" = "Obnovit exportované ID";
+"id_exists" = "Stále je přítomno Threema ID, které bylo na tomto zařízení dříve používáno (%@). Chcete toto ID obnovit?";
+
+"welcome" = "Vítá vás Threema";
+"move_your_finger" = "Pohybujte prstem po obrazovce.";
+"more_information" = "Více informací";
+"more_information_link_id_work" = "Když nám poskytnete svoje telefonní číslo a e-mailovou adresu, budou pak mít vaše kontakty možnost vás v síti Threema automaticky vyhledat. Tyto údaje budou uloženy bezpečným a anonymním způsobem. Pokud tento krok přeskočíte, budete používat aplikaci Threema naprosto anonymně.";
+"more_information_pick_nickname" = "Přezdívka je na některých zařízeních používána v nabízených oznámeních nebo jako dodatečná pomůcka pro vaši identifikaci ze strany uživatelů, kteří vás zatím nemají ve svém adresáři. Doporučujeme uvést jen křestní jméno nebo pseudonym. Pokud si žádnou přezdívku nenastavíte, budeme standardně používat vaše Threema ID.";
+"more_information_sync_contacts" = "Pokud tuto možnost zapnete, Threema jednorázově zašifruje („zahashuje“) e-mailové adresy a telefonní čísla, načež je odešle na server za účelem vyhledání odpovídajících kontaktů. Neuchováváme žádné údaje z adresářů.";
+"more_information_random_seed" = "Pohybem prstů vytvoříte náhodná data (tzv. „entropie“), která slouží k vygenerování páru klíčů spojených s vaším novým unikátním Threema ID.";
+"id_confirm_description_work" = "Vaše Threema ID funguje stejně jako telefonní číslo. Prostřednictvím tohoto ID se s vámi mohou spojit vaše kontakty.";
+"more_information_link_id" = "Když nám poskytnete svoje telefonní číslo, budou pak mít vaši přátelé možnost vás v síti Threema automaticky vyhledat. Tyto údaje budou uloženy bezpečným a anonymním způsobem. Pokud tento krok přeskočíte, budete používat aplikaci Threema naprosto anonymně.";
+"more_information_confirm_id" = "Také jste vytvořili pár klíčů. Veřejný klíč byl zabezpečeným způsobem přenesen na naše servery. Soukromý klíč nikdy neopustí vaše zařízení. Díky tomu nemůže vaše zprávy přečíst nikdo cizí.";
+
+"id_confirm_description" = "Vaše Threema ID funguje stejně jako telefonní číslo. Prostřednictvím tohoto ID vás mohou kontaktovat vaši přátelé.";
+"id_pick_nickname_description_work" = "Přezdívka se zobrazí vašim kontaktům, když od vás obdrží zprávu.";
+"id_confirm_your_id" = "Toto je vaše Threema ID:";
+
+"id_pick_nickname_title" = "Vyberte si přezdívku";
+"id_pick_nickname_description" = "Přezdívka se zobrazí vašim přátelům, když od vás obdrží zprávu.";
+"id_link_title_work" = "Pomozte svým kontaktům vás najít";
+"id_pick_nickname_question" = "Chcete jako přezdívku použít svoje Threema ID?";
+"id_enter_nickname" = "Zadejte přezdívku";
+
+"id_link_no_input_work" = "Nezadali jste telefonní číslo ani e-mailovou adresu pro propojení svého Threema ID. Nebudete se zobrazovat v seznamech kontaktů. Opravdu chcete aplikaci Threema používat tímto zcela anonymním způsobem?";
+"id_link_title" = "Pomozte přátelům vás najít";
+"id_link_description_work" = "Propojte vaše telefoní číslo a/nebo email se svým Threema ID";
+"id_link_description" = "Propojte své telefonní číslo se svým Threema ID.";
+"id_link_no_input" = "Nezadali jste telefonní číslo pro propojení svého Threema ID. Nebudete se zobrazovat v seznamech kontaktů svých přátel. Opravdu chcete aplikaci Threema používat tímto zcela anonymním způsobem?";
+"id_sync_title_work" = "Vyhledejte svoje kontakty v Threema Work";
+"id_sync_description_work" = "Aktivací zjistíte, kdo z vašich kontaktů používá aplikaci Threema.";
+"id_enter_email" = "E-mail (nepovinný)";
+
+"id_sync_title" = "Vyhledejte svoje přátele v síti Threema";
+"id_sync_description" = "Aktivací zjistíte, kteří vaši přátelé používají aplikaci Threema.";
+"id_sync_contacts" = "Synchronizovat kontakty";
+
+"id_completed_title" = "Hotovo! Je vše v pořádku?";
+"id_completed_nickname" = "Vaše přezdívka";
+"id_completed_linked_to" = "Propojeno s";
+"id_completed_sync_contacts" = "Synchronizovat kontakty";
+"finish" = "Dokončit";
+
+"linking_email" = "Propojování e-mailu";
+"syncing_contacts" = "Synchronizace kontaktů";
+"linking_phone" = "Propojování telefonního čísla";
+"(linked)" = "(propojeno)";
+"linking_phone_sms_sent" = "Ověřovací SMS byla odeslána";
+
+"Password" = "Heslo";
+"(optional)" = "(nepovinné)";
+"scan_id_backup" = "Naskenujte exportovaný QR kód";
+"phone number" = "Telefonní číslo";
+"id_backup" = "Exportované ID";
+"id_backup_placeholder" = "Zadejte nebo vložte textový řetězec obnovovaného exportu ID";
+"username" = "Uživatelské jméno";
+
+"country_code" = "Mezinárodní předvolba";
+"send_message" = "Poslat zprávu";
+"enter_license_password_placeholder" = "Heslo";
+"leave_group" = "Opustit skupinu";
+
+/* License Key */
+"enter_license_title" = "Zadejte přihlašovací údaje";
+/* MWPhotoBrowser */
+"Done" = "Hotovo";
+"enter_license_description" = "Zadejte přihlašovací údaje, které vám poskytla vaše společnost nebo organizace.";
+"Save" = "Uložit";
+"enter_license_username_placeholder" = "Uživatelské jméno";
+"of" = "z";
+"Cancel" = "Zrušit";
+"enter_license_checking" = "Kontrola přihlašovacích údajů";
+"confirm" = "Potvrdit";
+"enter_license_info" = "Pokud jste soukromý uživatel, stáhněte si aplikaci Threema klepnutím sem.";
+"enter_license_info_link" = "klepněte sem";
+
+"Copy" = "Kopírovat";
+"Email" = "E-mail";
+"Saving" = "Ukládání";
+"Failed" = "Neúspěch";
+"Saved" = "Uloženo";
+"Copying" = "Kopírování";
+"Copied" = "Zkopírováno";
+"Preparing" = "Příprava";
+"photo" = "Fotografie";
+"Dismiss" = "Zavřít";
+"photos" = "Fotky";
+
+/* invite messages */
+"invite_email_body" = "Ahoj,\n\npoužívám aplikaci Threema – bezpečný komunikátor, který chrání soukromí svých uživatelů.\n\nMoje Threema ID: https://threema.id/%@\n\nBuďme v kontaktu přes Threema!\n\nMěj se\n";
+"invite_email_subject" = "Threema. Bezpečný komunikační nástroj, který chrání naše soukromí.";
+"invite_sms_body" = "Ahoj! Pojďme používat aplikaci Threema, ať můžeme komunikovat bezpečným způsobem, který myslí na soukromí! Moje Threema ID: https://threema.id/%@";
+"invite_facebook_text" = "Používám aplikaci Threema – bezpečný komunikátor, který chrání soukromí svých uživatelů. Moje Threema ID: https://threema.id/%@";
+"invite_twitter_text" = "Používám aplikaci Threema – bezpečný komunikátor, který chrání soukromí svých uživatelů. Moje Threema ID: https://threema.id/%@";
+"invite_using" = "Pozvat přítele přes...";
+"sms" = "Textová zpráva";
+
+/* Notifications Text */
+"new_message" = "Zpráva";
+/* Notifications Text */
+"new_message_from_x" = "Zpráva od %@";
+"new_group_message" = "Skupinová zpráva";
+"new_group_message_from_x" = "Skupinová zpráva od %@";
+"new_message_cant_load" = "Otevřete aplikaci Threema a načtěte zprávu.";
+"new_group_message_cant_load" = "Otevřete aplikaci Threema a načtěte skupinovou zprávu.";
+"new_message_no_access_title" = "Nové zprávy";
+"new_message_no_access_message" = "Otevřete aplikaci Threema a stáhněte si příchozí zprávy.";
+
+/* reminder messages */
+"push_reminder_title" = "Nabízená oznámení nejsou povolená";
+"push_reminder_message" = "Zdá se, že Threema nemá oprávnění k posílání nabízených oznámení. Když aplikaci Threema zavřete, nebudete dostávat informace o nových zprávách. Přejděte do nabídky Nastavení iOS > Oznámení a povolte oznámení pro aplikaci Threema, ať nepropásnete žádné zprávy.";
+"not_now" = "Teď ne";
+"set_now" = "Nastavit";
+
+"updating_database" = "Aktualizace databáze...\n\nNepřerušujte prosím tuto operaci! U velkých databází zpráv může trvat i několik minut.";
+"database_migration_error_hints" = "Zkontrolujte, zda máte na zařízení dostatek volného místa, restartujte zařízení a zkuste to znovu.";
+"database_migration_storage_warning_title" = "Nedostatek místa na úložišti";
+"database_migration_storage_warning_message" = "Aktualizace databáze dočasně potřebuje alespoň %.1f GB volného místa na úložišti. Na vašem zařízení je k dispozici jen %.1f GB. Uvolněte prosím místo smazáním položek v nabídce Nastavení využití a zkuste to znovu.";
+
+"sync_exclusion_footer" = "Zde uvedená ID budou při synchronizaci kontaktů ignorována.";
+"enter_id_to_exclude" = "Zadejte ID, které má být vyřazeno ze synchronizace:";
+"exclude_deleted_id_title" = "Chcete vyřadit ID právě smazaného kontaktu z budoucích synchronizací?";
+"exclude_deleted_id_message" = "Vyřazení můžete spravovat v nastavení soukromí.";
+
+"group_renamed_to_x" = "Skupina byla přejmenována na „%@“";
+"group_member_x_left" = "Uživatel %@ opustil skupinu";
+"group_member_x_added" = "Uživatel %@ byl přidán do skupiny";
+"group_member_x_forced_leave" = "Uživatel %@ byl odstraněn ze skupiny";
+"group_member_self_added" = "Došlo k vašemu přidání do skupiny.";
+"group_member_self_removed" = "Došlo k vašemu odstranění ze skupiny.";
+"group_member_self_left" = "Opustili jste skupinu.";
+
+/* accessibility labels */
+"send_media_or_location" = "Poslat médium nebo lokaci";
+"my_profilepicture" = "Váš profilový obrázek";
+"my_threema_id" = "Vaše Threema ID";
+"edit_profile" = "Upravit přezdívku a profilový obrázek";
+"edit_contact" = "Upravit kontakt a obrázek kontaktu";
+
+"from" = "od";
+"at" = "v";
+"seconds" = "sek.";
+"duration" = "trvání";
+"current_position" = "pozice";
+"in_reply_to" = "v odpovědi na";
+"go_to_position" = "v";
+"draft" = "Koncept";
+"new_message_accessibility" = "Nová zpráva: ";
+"scoll_down_text" = "Sjeďte dolů";
+
+/* TTOpenInAppActivity */
+"Open in ..." = "Otevřít v...";
+
+/* VoiceOver long labels */
+"restore" = "Obnovit";
+
+/* PullToRefresh */
+"pull_to_refresh" = "Potažením dolů obnovíte...";
+"refreshing" = "Načítání...";
+
+/* Threema Channel */
+"threema_channel_intro" = "Informační kanál Threemy nabízí zprávy o všech novinkách. Chcete se přihlásit k odběru kanálu a přidat jej do svých kontaktů?";
+
+/* Push decryption */
+"decryption_push_title" = "Chcete v nabízených oznámeních zobrazovat náhled obsahu zprávy?";
+"decryption_push_text" = "Pokud náhledy deaktivujete, budete muset k zobrazení obsahu nových zpráv otevřít aplikaci Threema.";
+"decryption_push_activate" = "Aktivovat náhled";
+"decryption_push_deactivate" = "Deaktivovat náhled";
+"decryption_push_reply" = "Odpovědět";
+"decryption_push_placeholder" = "Odpovědět...";
+"decryption_push_agree" = "Souhlasit";
+"decryption_push_disagree" = "Nesouhlasit";
+
+"send_notification_message_error_title" = "Poslat zprávu";
+"send_notification_message_error_failed" = "Odeslání zprávy se nezdařilo.";
+"send_notification_message_error_no_connection" = "Odeslání zprávy se nezdařilo. Otevřete aplikaci Threema a zkuste to znovu.";
+"send_notification_message_error_agree" = "Vyjádření souhlasu se nezdařilo.";
+"send_notification_message_error_disagree" = "Vyjádření nesouhlasu se nezdařilo.";
+
+/* Device policy */
+"disabled_by_device_policy" = "Některá nastavení byla deaktivována nastavením soukromí na zařízení";
+
+/* Edit profile */
+"send_profileimage_off" = "Nikdo";
+"send_profileimage_on" = "Každý, komu napíšete";
+"send_profileimage_contacts" = "Zvolené kontakty";
+"edit_profile_footer" = "Přezdívka se zobrazuje v nabízených oznámeních ke zprávám, které odešlete. Doporučujeme používat jen křestní jméno nebo pseudonym.";
+
+/* DKImagePickerView */
+"gallery_moments" = "Okamžiky";
+
+/* VoIP Call */
+"call_mute" = "Ztišit";
+"call_speaker" = "Reproduktor";
+"call_end" = "Zavěsit";
+"call_camera_activate_button" = "Aktivovat kameru";
+"call_camera_deactivate_button" = "Vypnout kameru";
+"call_camera_switch_to_front_button" = "Přepnout na přední kameru";
+"call_camera_switch_to_back_button" = "Přepnout na zadní kameru";
+
+"call_rejected" = "Hovor byl odmítnut";
+"call_rejected_busy" = "Zaneprázdněn";
+"call_rejected_timeout" = "Příjemce hovoru není k dispozici";
+"call_rejected_disabled" = "Hovory Threema byly příjemcem deaktivovány";
+"call_rejected_unknown" = "Hovor byl odmítnut";
+"call_missed" = "Zmeškaný hovor";
+"call_incoming_ended" = "Příchozí hovor";
+"call_outgoing_ended" = "Odchozí hovor";
+"call_duration" = "Trvání: %@";
+"call_canceled" = "Hovor byl zrušen";
+"call_back" = "Volat zpět";
+"call_accept" = "Přijmout";
+"call_reject" = "Zamítnout";
+"call_hide_call" = "Skrýt hovor";
+
+"call_threema_title" = "Začít Threema hovor";
+"call_callkit_button_title" = "Threema";
+"call_voip_not_supported_title" = "Hovor Threema";
+"call_voip_not_supported_text" = "Váš kontakt nepodporuje funkci Hovor Threema";
+"call_microphone_permission_title" = "Přístup k mikrofonu byl zamítnut";
+"call_microphone_permission_text" = "Musíte v nabídce Nastavení povolit přístup k mikrofonu";
+"call_contact_alert" = "Chcete zavolat uživateli %@?";
+"call_contact_not_reachable" = "S kontaktem se nelze spojit.";
+
+"call_status_idle" = "Připraveno";
+"call_status_wait_ringing" = "Inicializovat";
+"call_status_ringing" = "Vyzvánění";
+"call_status_incom_ringing" = "Hovor Threema";
+"call_status_initializing" = "Připojování...";
+"call_status_calling" = "Připojeno";
+"call_status_reconnecting" = "Připojování...";
+"call_status_unknown" = "Není známo";
+"call_status_failed_title" = "Hovor Threema";
+"call_status_failed_connected_message" = "Ztráta spojení";
+"call_status_failed_initializing_message" = "Spojení nebylo navázáno";
+"call_status_failed_sdp_patch_message" = "Threema volání nelze vytvořit";
+
+"call_threema_initiator_video_info" = "Klepnutím sem, zapnete kameru";
+"call_threema_remote_video_activated_info_title" = "Videohovor";
+"call_threema_remote_video_activated_info" = "Druhá strana zahájila videohovor. Klepnutím sem, zapnete kameru.";
+"call_threema_speaker_info" = "Klepnutím sem, zapnete hlasitý poslech";
+"call_threema_camera_disabled_info" = "Tento kontakt nepoužívá aktuální verzi Threema nebo má vypnuté videohovory.";
+
+"call_threema_video_in_chat_info_title" = "Novinka: videohovory";
+"call_threema_video_in_chat_info_description" = "Kromě hlasových volání odolných proti odposlechu nyní Threema nabízí i videohovory šifrované  end-to-end.";
+
+/* Privacy Policy */
+"privacy_policy_about" = "Threema chrání vaše soukromí pečlivěji než kterákoliv jiná komunikační aplikace. Podrobnější informace najdete v našich Zásadách ochrany osobních údajů.";
+"privacy_policy_about_work" = "Threema Work chrání vaše soukromí pečlivěji než kterákoliv jiná komunikační aplikace. Podrobnější informace najdete v našich Zásadách ochrany osobních údajů.";
+"privacy_policy_about_link" = "Zásady ochrany osobních údajů";
+"accept_privacy_policy" = "Přijmout Zásady ochrany soukromí";
+"privacy_policy_switch" = "Přepnutí Zásad ochrany osobních údajů";
+"privacy_policy_alert_text" = "Chcete-li používat aplikaci Threema, musíte přijmout Zásady ochrany osobních údajů.\n\n(Vyžadováno předpisem EU 2016/679)";
+"privacy_policy_alert_text_work" = "Chcete-li používat aplikaci Threema Work, musíte přijmout Zásady ochrany osobních údajů.\n\n(Vyžadováno předpisem EU 2016/679)";
+
+/* Conversation */
+"pin" = "Připíchnout";
+"unpin" = "Uvolnit";
+"pinned_conversation" = "Připíchnutá konverzace";
+
+"pushSetting_title" = "Nastavení oznámení";
+"doNotDisturb_title" = "Nerušit";
+"doNotDisturb_header" = "Oznámení";
+"doNotDisturb_mention" = "Oznámit při zmínce";
+"doNotDisturb_mention_footer_off" = "Nebudete dostávat žádná oznámení, a to ani v případech, kdy vás někdo zmíní.";
+"doNotDisturb_mention_footer_on" = "Budete dostávat oznámení, pokud vás někdo zmíní.";
+
+"doNotDisturb_off" = "Vypnuto";
+"doNotDisturb_on" = "Zapnuto";
+"doNotDisturb_onPeriod" = "Zapnuto na nastavenou dobu";
+"doNotDisturb_onPeriod_time" = "Do:";
+"doNotDisturb_onPeriod_1Hour" = "1 hodina";
+"doNotDisturb_onPeriod_2Hours" = "2 hodiny";
+"doNotDisturb_onPeriod_3Hours" = "3 hodiny";
+"doNotDisturb_onPeriod_4Hours" = "4 hodiny";
+"doNotDisturb_onPeriod_8Hours" = "8 hodin";
+"doNotDisturb_onPeriod_1day" = "1 den";
+"doNotDisturb_onPeriod_1week" = "1 týden";
+
+"notification_sound_header" = "Zvuk oznámení";
+"notification_sound_title" = "Přehrát zvuk oznámení";
+
+/* WebClient */
+"webClientSession_title" = "Threema Web";
+"webClientSession_add" = "Spustit novou relaci";
+"webClientSession_add_wrong_qr_title" = "Threema Web";
+"webClientSession_add_wrong_qr_message" = "Toto není QR kód pro Threema Web. Otevřete stránku https://web.threema.ch/ a naskenujte QR kód, který se na ní nachází.";
+"webClientSession_add_footer" = "Nejprve na svém PC/Macu otevřete stránku https://web.threema.ch/. Poté klepněte v pravém horním rohu obrazovky na ikonu kamery a naskenujte na počítači QR kód.";
+"webClientSession_sessions_header" = "Relace";
+"webClientSession_unnamed" = "Nepojmenovaná relace";
+"webClientSession_lastUse" = "Naposledy použito";
+"webClientSession_saved" = "Uloženo";
+"webClientSession_notSaved" = "Neuloženo";
+"webClientSession_sessionName" = "Název relace";
+"webClientSession_actionSheetTitle" = "Upravit relaci";
+"webClientSession_actionSheet_stopSession" = "Zastavit relaci";
+"webClientSession_actionSheet_startSession" = "Spustit relaci";
+"webClientSession_actionSheet_renameSession" = "Přejmenovat relaci";
+"webClientSession_actionSheet_deleteSession" = "Smazat relaci";
+"webClientSession_error_updateApp_title" = "Threema Web";
+"webClientSession_error_updateApp_message" = "Špatná verze protokolu Threema Web, aktualizujte prosím svou aplikaci.";
+"webClientSession_error_updateServer_title" = "Threema Web";
+"webClientSession_error_updateServer_message" = "Špatná verze protokolu Threema Web, požádejte prosím správce o aktualizaci webového klienta.";
+"webClientSession_error_wrongVersion_title" = "Threema Web";
+"webClientSession_error_wrongVersion_message" = "Tato verze aplikace nepodporuje protokol webového klienta Threema Web.";
+
+"webClient_scan_error_title" = "Threema Web";
+"webClient_scan_error_message" = "Toto je QR kód pro Threema Web. Použijte skener v nabídce Nastavení > Threema Web.";
+
+"webClient_scan_error_mdm_host_title" = "Spuštění relace Threema Web se nezdařilo";
+"webClient_scan_error_mdm_host_message" = "Server není schválený správcem.";
+
+
+/* ProtectedDataUnavailable */
+"protectedDataUnavailable_error_text" = "Chráněná data jsou momentálně nedostupná. Odejděte prosím z aplikace a zkuste to znovu.";
+"protectedDataUnavailable_exitbutton" = "Odejít";
+
+/* Photo Browser */
+"media_delete_all_confirm" = "Opravdu chcete smazat všechny soubory médií?";
+"media_delete_selected_confirm" = "Opravdu chcete smazat zvolené soubory médií?";
+
+/* Threema Safe */
+"deactivate" = "Deaktivovat";
+"invalid_threema_id" = "Neplatné Threema ID";
+"number_of_days" = "%d dny(í)";
+
+"safe_enable_explain_short" = "Povolte Trezoru Threema vytvářet automatické zabezpečené a anonymní zálohy všech vašich importovaných dat.";
+"safe_enable_explain" = "Vše, co potřebujete k chatování, je ukládáno pouze na vašem zařízení. Nemáte u nás žádný účet a nemáme vám jak pomoci, pokud ztratíte svůj telefon nebo omylem smažete svá data.\n\nTrezor Threema vytváří automatické zálohy všech importovaných dat včetně vašich klíčů, seznamu kontaktů a členství ve skupinách, zálohy jsou ukládány anonymně na vámi zvoleném zabezpečeném serveru.";
+
+"safe_server_authentication" = "Ověření (nepovinné)";
+"safe_server_name" = "Název serveru";
+"safe_max_backup_size" = "Maximální velikost zálohy";
+"safe_retention" = "Zachování zálohy";
+"safe_last_backup" = "Poslední zálohování";
+"safe_size" = "Velikost zálohy";
+"safe_result" = "Výsledek zálohování";
+"safe_successful" = "Úspěch";
+"safe_unsuccessful" = "Neúspěch";
+"safe_upload_failed" = "Odeslání se nezdařilo";
+"safe_upload_size_exceeded" = "Velikost odesílaných dat překročila limit serveru";
+"safe_change_password" = "Změnit heslo";
+"safe_backup_now" = "Zálohovat";
+"safe_deactivate" = "Vypnout Trezor Threema";
+"safe_deactivate_explain" = "Pokud Trezor Threema deaktivujete, všechny stávající zálohy budou ze serveru smazány. Chcete pokračovat?";
+"safe_disable_confirm" = "Opravdu chcete pokračovat bez zapnutí Trezoru Threema?";
+
+"safe_setup_backup_title" = "Trezor Threema";
+"safe_setup_backup_description" = "Zvolte si silné heslo. To bude zapotřebí k obnovení vaší zálohy z Trezoru Threema.";
+"safe_advanced_options" = "Nastavení pro experty";
+"safe_configure_choose_server" = "Zvolte si server pro Trezor Threema";
+"safe_configure_server_explain" = "Můžete použít server Threema nebo místo něj určit zálohovací server jiného provozovatele.";
+"safe_use_default_server" = "Použít výchozí server";
+"safe_restore" = "Obnovit Trezor Threema";
+"safe_restore_enter_id" = "Zadejte Threema ID, které chcete obnovit";
+"safe_forgot_your_id" = "Nepamatujete si své ID?";
+"safe_threema_id" = "Vaše Threema ID";
+"safe_search_id_title" = "Zadejte číslo mobilního telefonu nebo e-mailovou adresu, s nimiž je vaše ID propojeno";
+"safe_linked_mobile" = "Mobilní telefon";
+"safe_linked_email" = "E-mail";
+"safe_no_id_found" = "Nebylo nalezeno žádné Threema ID";
+"safe_select_id" = "Bylo nalezeno několik Threema ID. Vyberte ID, které chcete použít:";
+"safe_enter_password" = "Zadejte své heslo k Trezoru Threema";
+"safe_restore_failed" = "Obnovení se nezdařilo";
+"safe_no_backup_found" = "Na serveru nebyla nalezena žádná záloha. Zkontrolujte své ID a heslo.";
+"safe_preparing" = "Příprava Trezoru Threema";
+"safe_error_preparing" = "Během přípravy zálohy v Trezoru Threema se vyskytla chyba";
+"safe_configure_choose_password_title" = "Zvolte si heslo";
+"safe_configure_choose_password" = "Zvolte si prosím heslo. To bude zapotřebí k obnovení vaší zálohy z Trezoru Threema.";
+"safe_configure_choose_password_mdm" = "Váš správce aktivoval na vašem zařízení Trezor Threema.";
+"safe_version_mismatch" = "Verze této zálohy je vyšší než podporovaná verze. Aktualizujte si prosím aplikaci na nejnovější verzi.";
+"safe_intro_title" = "Představení Trezoru Threema";
+"safe_intro_description" = "Už nikdy neztraťte své Threema ID, kontakty, skupiny a nastavení!";
+"safe_intro_explain" = "Trezor Threema pravidelně vytváří šifrované, anonymní zálohy vašich nejdůležitějších dat a ukládá je na server Threema nebo jiný, vámi zvolený server.";
+"safe_intro_enable" = "Aktivovat";
+"safe_intro_cancel" = "Příště nezobrazovat";
+"safe_failed_notification" = "Zálohování Trezoru Threema se nezdařilo %.0f dny(í) po sobě. Zkontrolujte nastavení Trezoru Threema.";
+"safe_expired_notification" = "Platnost vaší zálohy v Trezoru Threema může být zastaralá a  brzdy může být odstraněna ze serveru. Zkontrolujte nastavení Threema Safe a ujistěte se, že lze vytvořit zálohu Threema Safe.";
+"safe_test_server" = "Otestovat server";
+"safe_test_server_invalid_url" = "Zadejte platnou adresu HTTPS.";
+"safe_restore_error" = "Obnovení zálohy z Trezoru Threema se nezdařilo, zkuste to znovu.";
+"safe_activation_failed" = "Aktivace Trezoru Threema po obnovení zálohy se nezdařila.";
+
+"password_bad" = "Slabé heslo";
+"password_bad_explain" = "Zvolené heslo pro Trezor Threema není bezpečné a útočníci jej mohou snadno uhodnout. Vyberte si prosím jiné. Tip: Použijte heslo složené z několika samostatných slov.";
+"password_bad_guidelines" = "Zadané heslo není v souladu s příslušnými zásadami.";
+"password_bad_regex" = "Neplatná definice (regex) požadavků na heslo. Obraťte se prosím na svého správce Threema Work.";
+
+"continue_anyway" = "Přesto pokračovat";
+
+"restore_option_title" = "Obnovit zálohu";
+"restore_option_id_title" = "Obnovit ID ze zálohy";
+"restore_option_description" = "Jaký typ zálohy chcete obnovit?";
+"restore_option_safe" = "Obnovit ID, kontakty a skupiny";
+"restore_option_safe_keep_data" = "Obnovit z Trezoru Threema pouze ID a zachovat data (chaty, kontakty, skupiny apod.) uložená na tomto zařízení";
+"restore_option_id" = "Obnovit pouze ID";
+"restore_option_id_keep_data" = "Obnovit exportované Threema ID a zachovat data (chaty, kontakty, skupiny apod.) uložená na tomto zařízení";
+
+"restore_option_data_description" = "Na tomto zařízení se nacházejí data Threema (chaty, kontakty, skupiny apod.).";
+"restore_option_data_keep_data" = "Ponechat lokální data";
+"restore_option_data_keep_data_description" = "Obnovit pouze Threema ID (z Trezoru Threema nebo exportu ID) a ponechat lokální data";
+"restore_option_data_delete_data" = "Smazat lokální data";
+"restore_option_data_delete_data_description" = "Obnovit zálohu z Trezoru Threema (obsahuje vaše ID, kontakty a skupiny) nebo exportu ID (obsahuje pouze Threema ID) a odstranit lokální data";
+"restore_option_data_delete_data_explain" = "Chcete-li provést plné obnovení zálohy z Trezoru Threema, musíte aplikaci Threema přeinstalovat: smažte aplikaci a poté si ji znovu stáhněte z obchodu App Store.";
+
+// Company Directory
+"companydirectory_description" = "Vyhledat interní kontakty";
+"companydirectory_placeholder" = "Prohledat adresář";
+"companydirectory_noentries_title" = "Nebyly nalezeny žádné záznamy";
+"companydirectory_noentries_description" = "Zadejte prosím alespoň 3 hledané znaky";
+
+"already_licensed" = "Již licencováno";
+
+// IDNSafetyHelper
+"url_warning_title" = "Varování před phishingem";
+"url_warning_body" = "Název hostitele v odkazu, který se chystáte otevřít, je podezřelý:\n\nZobrazený název hostitele: %@\nSkutečný název hostitele: %@\n\nMůže se jednat o pokus přimět vás podvodem k otevření stránky, která se vydává za nějakou jinou.\n\nChcete přesto pokračovat?";
+
+// Storage Management
+"storage_management" = "Správa úložiště";
+"storage_total" = "Celkové místo v interním úložišti";
+"storage_total_in_use" = "Použito";
+"storage_total_free" = "Volné místo";
+"storage_threema" = "Použito aplikací Threema";
+"delete_explain" = "Chcete-li uvolnit místo na disku, odstraňte stará média a soubory. Upozornění: Zprávy se neodstraňují automaticky, ale pouze po klepnutí na příslušné tlačítko \"Smazat\".";
+"delete_media_older_than" = "Smazat média a soubory starší než:";
+"delete_media" = "Smazat soubory";
+"delete_media_confirm" = "Chcete trvale smazat všechna média a soubory starší než %@?";
+"delete_media_confirm_all" = "Opravdu si přejete trvale smazat všechny soubory, fotky i videa?";
+"delete_media_explain" = "Náhledy fotografií nebudou smazány.";
+"delete_messages_older_than" = "Smazat zprávy starší než:";
+"delete_messages" = "Smazat zprávy";
+"delete_messages_confirm" = "Chcete trvale smazat všechny zprávy starší než %@?";
+"delete_messages_confirm_all" = "Opravdu si přejete trvale smazat všechny zprávy?";
+"delete_messages_explain" = "Zprávy jakéhokoli druhu budou smazány: textové a hlasové zprávy, média, soubory, hlasování atd.";
+"one_year_title" = "1 rok";
+"one_year" = "1 rok";
+"six_months_title" = "6 měsíců";
+"six_months" = "6 měsíců";
+"three_months_title" = "3 měsíce";
+"three_months" = "3 měsíce";
+"one_month_title" = "1 měsíc";
+"one_month" = "1 měsíc";
+"one_week_title" = "1 týden";
+"one_week" = "1 týden";
+"everything" = "Smazat vše";
+"media_file_not_found" = "Otevření souboru média se nezdařilo. Buď byl smazán, nebo neproběhlo jeho stažení ze serveru.";
+"older_than" = "Starší než:";
+
+// Settings
+"settings_privacy" = "Soukromí";
+"settings_appearance" = "Vzhled";
+"settings_notification" = "Oznámení";
+"settings_chat" = "Chat";
+"settings_media" = "Média";
+"settings_storage_management" = "Správa úložiště";
+"settings_passcode_lock" = "Zamykání přístupovým kódem";
+"settings_threema_calls" = "Hovory Threema";
+"settings_threema_web" = "Threema Web";
+"settings_network_status" = "Stav sítě";
+"settings_version" = "Verze";
+"settings_license_username" = "Uživatelské jméno licence";
+"settings_invite_a_friend" = "Pozvat přítele";
+"settings_threema_channel" = "Kanál Threema";
+"settings_support" = "Podpora";
+"settings_privacy_policy" = "Zásady ochrany osobních údajů";
+"settings_license" = "Licence";
+"settings_advanced" = "Pokročilé";
+"settings_threema_work" = "Threema Work";
+"settings_dev_mode" = "Dev Mode";
+
+"settings_advanced_flush_message_queue" = "Pročistit frontu zpráv";
+
+// Dev Mode
+"settings_devmode_quote_v2" = "Quote V2";
+
+// Appearance
+"settings_appearance_theme_section" = "Vizuální motiv";
+"settings_appearance_light_theme" = "Světlý";
+"settings_appearance_dark_theme" = "Temný";
+"settings_appearance_system_theme" = "Systém";
+"settings_appearance_theme_selected" = "Téma %@ je aktivní";
+"settings_appearance_theme_active" = "Aktivní";
+"settings_appearance_hide_stale_contacts" = "Skrýt neaktivní ID";
+"settings_appearance_show_profile_pictures" = "Zobrazovat profilové obrázky";
+"settings_appearance_display_order" = "Pořadí zobrazení";
+"settings_appearance_show_gallery_preview" = "Zobrazovat náhled galerie";
+
+// Sentry
+"sentry_crash_send_title" = "%@ – Neočekávané ukončení";
+"sentry_crash_send_description" = "Chcete odeslat anonymní zprávu o selhání programu? Podrobnosti vysvětlující, co vede k havárii, pomohou odhalit příčinu  problému.";
+"sentry_crash_send_yes" = "Odeslat anonymní hlášení";
+"sentry_crash_send_no" = "Neposílat";
+"sentry_crash_comment_placeholder" = "Chybová zpráva";
+
+// My profile
+"profile_share_id_text" = "Moje Threema ID";
+
+// File message
+"optional_caption" = "Volitelný popisek";
+"send_as_file" = "Odeslat jako soubor";
+
+// Notification settings
+"settings_notifications_inapp_section" = "V aplikaci";
+"settings_notifications_inapp_sounds" = "Zvuky";
+"settings_notifications_inapp_vibrate" = "Vibrovat";
+"settings_notifications_inapp_preview" = "Náhled";
+"settings_notifications_push_section" = "Nabízená oznámení";
+"settings_notifications_push_sound" = "Zvuk";
+"settings_notifications_push_groupsound" = "Zvuk skupiny";
+"settings_notifications_push_preview" = "Náhled";
+"settings_notifications_push_showNickname" = "Zobrazovat přezdívku";
+"settings_notifications_call_section" = "Hovory Threema";
+"settings_notifications_call_sound" = "Zvuk";
+"settings_notifications_masterDnd_section_header" = "Volba po pracovní době";
+"settings_notifications_masterDnd" = "Nerušit mimo pracovní dobu";
+"settings_notifications_masterDnd_section_footer" = "Deaktivovat oznámení a odmítat hovory mimo pracovní dobu.";
+"settings_notifications_masterDnd_workingDays" = "Pracovní dny";
+"settings_notifications_masterDnd_startTime" = "Začátek pracovní doby";
+"settings_notifications_masterDnd_endTime" = "Konec pracovní doby";
+"settings_notifications_masterDnd_info" = "Aktivní po pracovní době";
+
+// Threema calls settings
+"settings_threema_calls_enable_calls" = "Povolit hovory Threema";
+"settings_threema_calls_always_relay_calls" = "Vždy přesměrovávat hovory";
+"settings_threema_calls_callkit" = "Integrovat hovory do iOS";
+"settings_threema_calls_video_section" = "Videohovory";
+"settings_threema_calls_allow_video_calls" = "Povolit videohovory";
+"settings_threema_calls_video_quality_profile" = "Upřednostňovaná kvalita obrazu";
+"settings_threema_calls_video_quality_profile_low" = "Nízká spotřeba dat";
+"settings_threema_calls_video_quality_profile_max" = "Maximální kvalita";
+"settings_threema_calls_video_quality_profile_auto" = "Vyvážená (doporučeno)";
+"settings_threema_calls_video_quality_profile_low_description" = "Snížená kvalita obrazu pro nižší spotřebu dat";
+"settings_threema_calls_video_quality_profile_max_description" = "Pozor: Při provozu v mobilní síti může docházet k vysoké spotřebě dat!";
+"settings_threema_calls_video_quality_profile_auto_description" = "Vysoká kvalita obrazu na WLAN, snížená spotřeba dat v mobilní síti";
+"settings_threema_calls_video_quality_profile_footer" = "Použitá kvalita obrazu se odvíjí od sítě a nastavení osoby, se kterou hovoříte.";
+
+// Media Preview
+"loading_video_failed" = "Video se nepodařilo načíst. Restartujte aplikaci a zkuste to znovu.";
+"loading_image" = "Načítání obrázku";
+"loading_video" = "Načítání videa";
+"selected_media_list" = "Seznam vybraných médií";
+"media_item_of" = "Mediální položka %@ z %@";
+"video_date" = "Video pořízeno %@";
+"imagedate_date" = "Fotografie pořízena %@";
+"send_as_file_description" = "Odešlete obrázky jako soubor nebo jako vloženou fotografii. Soubory si zachovají všechna metadata, jako jsou údaje o poloze. Ve zprávě bude i jejich náhled.";
+"more_options" = "Více možností";
+"add_caption_to_image" = "Přidat titulek ...";
+"add_more_images" = "Přidat další obrázky";
+"back_to_media_selection" = "Zpět na obrazovku výběru médií";
+"remove_current_image_from_selected_images" = "Odebrat aktuální položku z výběru";
+"send_options" = "Více možností";

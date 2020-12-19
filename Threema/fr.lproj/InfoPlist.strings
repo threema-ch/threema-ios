@@ -1,0 +1,14 @@
+/* Localized versions of Info.plist keys */
+
+"New message" = "Nouveau message";
+"Scan QR code" = "Scanner le code QR";
+"My ID" = "Mon profil";
+
+"NSCameraUsageDescription" = "Votre appareil photo est utilisé lorsque vous prenez une photo ou une vidéo et que vous l'envoyez dans une conversation, et pour scanner des codes QR.";
+"NSContactsUsageDescription" = "Les contacts sont utilisés pour trouver d'autres utilisateurs Threema lorsque la synchronisation est activée. À cette fin, les numéros de téléphone et les adresses e-mail seront transférés sous forme hachée sur un serveur Threema. Ces informations ne sont pas conservées sur les serveurs.";
+"NSLocationWhenInUseUsageDescription" = "Votre emplacement est utilisé quand vous l'envoyez dans une conversation et pour afficher votre propre emplacement sur une carte.";
+"NSMicrophoneUsageDescription" = "Le microphone est utilisé pour enregistrer des messages audio.";
+"NSPhotoLibraryUsageDescription" = "Votre bibliothèque photo est utilisée quand vous y choisissez une image et que vous l'envoyez dans une conversation.";
+/* Explanation why Threema needs the iOS permission to save photos to the "camera roll" (in the user's photo library). */
+"NSPhotoLibraryAddUsageDescription" = "Threema peut sauvegarder automatiquement les fichiers médias reçus dans l'application Photos.";
+"NSFaceIDUsageDescription" = "Vous pouvez utiliser Face ID pour déverrouiller Threema sans entrer votre code.";

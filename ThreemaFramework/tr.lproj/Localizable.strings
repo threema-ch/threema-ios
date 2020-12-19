@@ -1,0 +1,75 @@
+/*
+  Localizable.strings
+  Threema
+
+  Copyright (c) 2015 Threema GmbH. All rights reserved.
+*//* JKLockScreenViewController */
+"cancel" = "İptal etmek";
+"delete" = "Sil";
+
+/* Mentions */
+"mentions_all" = "Herşey";
+
+
+"me" = "Ben";
+"nobody" = "Kimse";
+"(unknown)" = "(Bilinmeyen)";
+"invalid" = "Geçersiz!";
+"inactive" = "Pasif";
+
+"status_acknowledged" = "Kabul Edildi";
+"status_read" = "Okundu";
+"status_delivered" = "Teslim edildi";
+"status_sent" = "Gönderildi";
+"status_sending" = "Gönderme";
+"status_failed" = "başarısız oldu";
+"status_declined" = "aynı fikirde";
+"blocked" = "Bloke Edildmiş";
+
+"contacts" = "İletişim";
+"groups" = "Gruplar";
+"recent" = "Son";
+"work" = "İş";
+"creator" = "Tasarımcı";
+"%d members" = "%d üye";
+
+"ok" = "Tamam";
+
+"send" = "Gönder";
+"addText" = "Yazı ekle";
+"hide" = "Saklamak";
+
+"error_sending_failed" = "Gönderim başarısız oldu";
+"error_constraints_failed" = "Desteklenmeyen dosya";
+"error_message_file_too_big" = "Dosya çok büyük, maksimum dosya boyutu 50 MB.";
+"error_message_invalid_file" = "Dosya okunurken hata oluştu.";
+"error_message_generic" = "Yükleme başarısız.";
+
+"error_title_feature_level" = "Lütfen aklınızda bulundurun";
+"error_message_feature_level" = "Bazı alıcıların henüz dosya mesajlarını desteklemeyen bir uygulama sürümü var: %@";
+"error_message_none_feature_level" = "Hiçbir alıcının dosya mesajlarını destekleyen bir uygulama sürümü yok: %@";
+
+"video_too_long_title" = "Video çok uzun";
+"video_too_long_message" = "Bu video gönderilemeyecek kadar uzun. Geçerli kalite ayarında izin verilen maksimum uzunluk %.0f saniyedir.";
+
+/* KKPasscodeLock */
+"On" = "Açık";
+"Off" = "Kapalı";
+"all_data_deleted_title" = "Tüm Verileri Sil";
+"all_data_deleted_message" = "Çok fazla yanlış şifre girdiniz. Bu uygulamadaki tüm veriler silindi.";
+"to_unlock_passcode" = "Threema kilidini açmak için";    // Touch ID
+
+/* Notifications Text */
+"new_message" = "İleti";
+/* Notifications Text */
+"new_message_from_x" = "%@ 'dan Mesaj";
+"new_group_message" = "Grup mesajı";
+"new_group_message_from_x" = "%@ 'dan gelen grup mesajı";
+"new_image_message" = "Görüntü";
+"new_video_message" = "Video";
+"new_location_message" = "Yer";
+"new_audio_message" = "Ses";
+"new_ballot_create_message" = "Anket: %@";
+"new_ballot_closed_message" = "Anket: Mevcut Sonuç";
+"new_file_message" = "Dosya: %@";
+

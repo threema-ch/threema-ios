@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="13196" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" colorMatched="YES" initialViewController="F0h-EV-d2k">
+    <device id="retina4_7" orientation="portrait">
+        <adaptation id="fullscreen"/>
+    </device>
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="13173"/>
+        <capability name="Constraints to layout margins" minToolsVersion="6.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <scenes>
+        <!--Call Diagnostic View Controller-->
+        <scene sceneID="MgA-J1-bat">
+            <objects>
+                <viewController id="F0h-EV-d2k" customClass="CallDiagnosticViewController" customModule="Threema" customModuleProvider="target" sceneMemberID="viewController">
+                    <layoutGuides>
+                        <viewControllerLayoutGuide type="top" id="vCT-Ic-0Z2"/>
+                        <viewControllerLayoutGuide type="bottom" id="zZh-4J-azl"/>
+                    </layoutGuides>
+                    <view key="view" contentMode="scaleToFill" id="KbW-Gj-Lp3">
+                        <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Start this tool to debug problems with setting up a voice call connection" textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontForContentSizeCategory="YES" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Sxb-PJ-fL2">
+                                <rect key="frame" x="16" y="35" width="343" height="20.5"/>
+                                <fontDescription key="fontDescription" style="UICTFontTextStyleBody"/>
+                                <nil key="textColor"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="YU3-O2-gA5">
+                                <rect key="frame" x="147.5" y="63.5" width="80" height="40"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="80" id="gB4-lr-Pz4"/>
+                                    <constraint firstAttribute="height" relation="greaterThanOrEqual" constant="40" id="uL7-EC-ZNh"/>
+                                </constraints>
+                                <fontDescription key="fontDescription" style="UICTFontTextStyleBody"/>
+                                <state key="normal" title="Start">
+                                    <color key="titleColor" cocoaTouchSystemColor="darkTextColor"/>
+                                </state>
+                                <connections>
+                                    <action selector="startButtonTapped:" destination="F0h-EV-d2k" eventType="touchUpInside" id="kxm-VV-WLX"/>
+                                </connections>
+                            </button>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontForContentSizeCategory="YES" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="ZQZ-aX-dQr">
+                                <rect key="frame" x="16" y="521.5" width="343" height="64.5"/>
+                                <string key="text">Done. If you experience problems with call connection build-up, please send a screen-shot of this screen to the Threema support.</string>
+                                <fontDescription key="fontDescription" style="UICTFontTextStyleBody"/>
+                                <nil key="textColor"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" editable="NO" textAlignment="natural" adjustsFontForContentSizeCategory="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Wnj-9X-sCt">
+                                <rect key="frame" x="16" y="104.5" width="343" height="404"/>
+                                <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                <fontDescription key="fontDescription" style="UICTFontTextStyleCaption1"/>
+                                <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
+                            </textView>
+                            <activityIndicatorView opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" style="gray" translatesAutoresizingMaskIntoConstraints="NO" id="jRs-HZ-ZPJ">
+                                <rect key="frame" x="177.5" y="73.5" width="20" height="20"/>
+                            </activityIndicatorView>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="04y-3J-IpG">
+                                <rect key="frame" x="97.5" y="601" width="180" height="40"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" relation="greaterThanOrEqual" constant="40" id="DCz-Tp-Gtk"/>
+                                    <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="180" id="wwj-GL-e2b"/>
+                                </constraints>
+                                <fontDescription key="fontDescription" style="UICTFontTextStyleBody"/>
+                                <state key="normal" title="Copy to clipboard">
+                                    <color key="titleColor" cocoaTouchSystemColor="darkTextColor"/>
+                                </state>
+                                <connections>
+                                    <action selector="copyButtonTapped:" destination="F0h-EV-d2k" eventType="touchUpInside" id="QMK-j8-Zdz"/>
+                                </connections>
+                            </button>
+                        </subviews>
+                        <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                        <constraints>
+                            <constraint firstItem="04y-3J-IpG" firstAttribute="top" secondItem="ZQZ-aX-dQr" secondAttribute="bottom" constant="15" id="4YZ-9x-z67"/>
+                            <constraint firstItem="Sxb-PJ-fL2" firstAttribute="top" secondItem="vCT-Ic-0Z2" secondAttribute="bottom" constant="15" id="4fb-iO-UKl"/>
+                            <constraint firstItem="Sxb-PJ-fL2" firstAttribute="leading" secondItem="KbW-Gj-Lp3" secondAttribute="leadingMargin" id="5nf-gB-yFu"/>
+                            <constraint firstItem="ZQZ-aX-dQr" firstAttribute="top" secondItem="Wnj-9X-sCt" secondAttribute="bottom" constant="13" id="6Hz-re-JlF"/>
+                            <constraint firstItem="ZQZ-aX-dQr" firstAttribute="leading" secondItem="KbW-Gj-Lp3" secondAttribute="leadingMargin" id="Bk8-DF-Qwn"/>
+                            <constraint firstAttribute="leadingMargin" secondItem="Wnj-9X-sCt" secondAttribute="leading" id="GW5-gS-KKE"/>
+                            <constraint firstItem="YU3-O2-gA5" firstAttribute="centerX" secondItem="KbW-Gj-Lp3" secondAttribute="centerX" id="HGh-Ya-Vj7"/>
+                            <constraint firstItem="Wnj-9X-sCt" firstAttribute="centerX" secondItem="KbW-Gj-Lp3" secondAttribute="centerX" id="KhK-a1-AEC"/>
+                            <constraint firstItem="Wnj-9X-sCt" firstAttribute="top" secondItem="YU3-O2-gA5" secondAttribute="bottom" constant="1" id="Pgu-31-g1I"/>
+                            <constraint firstItem="ZQZ-aX-dQr" firstAttribute="trailing" secondItem="KbW-Gj-Lp3" secondAttribute="trailingMargin" id="T0v-l1-kzp"/>
+                            <constraint firstItem="jRs-HZ-ZPJ" firstAttribute="centerX" secondItem="KbW-Gj-Lp3" secondAttribute="centerX" id="aAJ-hn-glc"/>
+                            <constraint firstItem="zZh-4J-azl" firstAttribute="top" secondItem="04y-3J-IpG" secondAttribute="bottom" constant="26" id="lh7-n2-79a"/>
+                            <constraint firstAttribute="trailingMargin" secondItem="Wnj-9X-sCt" secondAttribute="trailing" id="n1k-WL-bw5"/>
+                            <constraint firstItem="jRs-HZ-ZPJ" firstAttribute="centerY" secondItem="YU3-O2-gA5" secondAttribute="centerY" id="ptC-M5-nmK"/>
+                            <constraint firstItem="YU3-O2-gA5" firstAttribute="top" secondItem="Sxb-PJ-fL2" secondAttribute="bottom" constant="8" id="rDP-tn-VvU"/>
+                            <constraint firstItem="Sxb-PJ-fL2" firstAttribute="trailing" secondItem="KbW-Gj-Lp3" secondAttribute="trailingMargin" id="wEB-nF-YXR"/>
+                            <constraint firstItem="04y-3J-IpG" firstAttribute="centerX" secondItem="KbW-Gj-Lp3" secondAttribute="centerX" id="xgb-nD-ljo"/>
+                        </constraints>
+                    </view>
+                    <connections>
+                        <outlet property="activityIndicator" destination="jRs-HZ-ZPJ" id="aPi-BF-Ski"/>
+                        <outlet property="copyButton" destination="04y-3J-IpG" id="IUU-Cu-pJH"/>
+                        <outlet property="descriptionLabel" destination="Sxb-PJ-fL2" id="dGS-WM-oM3"/>
+                        <outlet property="diagnosticTextView" destination="Wnj-9X-sCt" id="Gdn-Jq-CYv"/>
+                        <outlet property="finishLabel" destination="ZQZ-aX-dQr" id="Wcd-uX-UFC"/>
+                        <outlet property="startButton" destination="YU3-O2-gA5" id="MhZ-jw-YKq"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="rLP-SG-oCI" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="552.79999999999995" y="362.96851574212894"/>
+        </scene>
+    </scenes>
+</document>

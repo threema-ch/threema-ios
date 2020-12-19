@@ -1,0 +1,75 @@
+/*
+  Localizable.strings
+  Threema
+
+  Copyright (c) 2015 Threema GmbH. All rights reserved.
+*//* JKLockScreenViewController */
+"cancel" = "Cancelar";
+"delete" = "excluir";
+
+/* Mentions */
+"mentions_all" = "Tudo";
+
+
+"me" = "Mim";
+"nobody" = "ninguém";
+"(unknown)" = "(desconhecido)";
+"invalid" = "inválido";
+"inactive" = "inativo";
+
+"status_acknowledged" = "concordo";
+"status_read" = "lido";
+"status_delivered" = "entregue";
+"status_sent" = "enviado";
+"status_sending" = "sending";
+"status_failed" = "failed";
+"status_declined" = "não concordo";
+"blocked" = "bloqueado";
+
+"contacts" = "Contatos";
+"groups" = "Grupos";
+"recent" = "Recente";
+"work" = "Work";
+"creator" = "Criador";
+"%d members" = "%d membros";
+
+"ok" = "OK";
+
+"send" = "Enviar";
+"addText" = "Adicionar texto";
+"hide" = "Ocultar";
+
+"error_sending_failed" = "Falha ao enviar";
+"error_constraints_failed" = "Arquivo não suportado";
+"error_message_file_too_big" = "Arquivo muito grande, o tamanho máximo permitido é 50 MB.";
+"error_message_invalid_file" = "Erro ao ler arquivo.";
+"error_message_generic" = "Falha ao carregar.";
+
+"error_title_feature_level" = "Observação";
+"error_message_feature_level" = "Alguns destinatários têm uma versão do app que ainda não suporta mensagens de arquivo: %@";
+"error_message_none_feature_level" = "Nenhum dos destinatários têm uma versão do app que suporta mensagens de arquivo: %@";
+
+"video_too_long_title" = "Vídeo muito longo";
+"video_too_long_message" = "Este vídeo é muito longo para ser enviado. A duração máxima permitida é de %.0f minutos.";
+
+/* KKPasscodeLock */
+"On" = "Ligado";
+"Off" = "Desligado";
+"all_data_deleted_title" = "Todos os dados foram excluídos";
+"all_data_deleted_message" = "Você digitou uma senha incorreta muitas vezes. Todos os dados deste aplicativo foram excluídos.";
+"to_unlock_passcode" = "Para desbloquear o Threema";    // Touch ID
+
+/* Notifications Text */
+"new_message" = "Mensagem";
+/* Notifications Text */
+"new_message_from_x" = "Mensagem de %@";
+"new_group_message" = "Mensagem de grupo";
+"new_group_message_from_x" = "Mensagem de grupo de %@";
+"new_image_message" = "Imagem";
+"new_video_message" = "Vídeo";
+"new_location_message" = "Localização";
+"new_audio_message" = "Áudio";
+"new_ballot_create_message" = "Enquete: %@";
+"new_ballot_closed_message" = "Enquete: Resultados disponíveis";
+"new_file_message" = "Arquivo: %@";
+

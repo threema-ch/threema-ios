@@ -1,0 +1,19 @@
+/* 
+  Localizable.strings
+  Threema
+
+  Copyright (c) 2015 Threema GmbH. All rights reserved.
+*/
+
+"need_to_start_app_first_title" = "Threema non è ancora pronto";
+"need_to_start_app_first_message" = "Per prima cosa avvia l'app Threema.";
+
+"cannot_connect_title" = "Nessuna connessione";
+"cannot_connect_message" = "Impossibile connettersi, controlla la tua connessione a Internet.";
+
+"sending_count" = "Invio... (%1$ld / %2$ld)";
+
+"error_message_no_items_title" = "Contenuto non valido";
+"error_message_no_items_message" = "Non sono stati trovati elementi supportati.";
+
+"send_as_file" = "Invia come file";

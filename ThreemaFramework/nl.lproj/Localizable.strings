@@ -1,0 +1,75 @@
+/*
+  Localizable.strings
+  Threema
+
+  Copyright (c) 2015 Threema GmbH. All rights reserved.
+*//* JKLockScreenViewController */
+"cancel" = "Annuleren";
+"delete" = "Verwijderen";
+
+/* Mentions */
+"mentions_all" = "Alles";
+
+
+"me" = "Mezelf";
+"nobody" = "niemand";
+"(unknown)" = "(onbekend)";
+"invalid" = "ongeldig";
+"inactive" = "niet actief";
+
+"status_acknowledged" = "akkoord";
+"status_read" = "gelezen";
+"status_delivered" = "afgeleverd";
+"status_sent" = "verstuurd";
+"status_sending" = "versturen";
+"status_failed" = "mislukt";
+"status_declined" = "niet akkoord";
+"blocked" = "geblokkeerd";
+
+"contacts" = "Contactpersonen";
+"groups" = "Groepen";
+"recent" = "Recent";
+"work" = "Work";
+"creator" = "Aanmaker";
+"%d members" = "%d leden";
+
+"ok" = "Oké";
+
+"send" = "Versturen";
+"addText" = "Tekst toevoegen";
+"hide" = "Verbergen";
+
+"error_sending_failed" = "Versturen mislukt";
+"error_constraints_failed" = "Bestand niet ondersteund";
+"error_message_file_too_big" = "Bestand te groot. Max. bestandsgrootte is 50MB.";
+"error_message_invalid_file" = "Fout bij lezen van bestand.";
+"error_message_generic" = "Uploaden mislukt.";
+
+"error_title_feature_level" = "Let op";
+"error_message_feature_level" = "Sommige ontvangers gebruiken een versie van de app die berichten met bestanden nog niet ondersteunt: %@";
+"error_message_none_feature_level" = "Geen van de ontvangers gebruiken een versie van de app die berichten met bestanden ondersteunt: %@";
+
+"video_too_long_title" = "Video te lang";
+"video_too_long_message" = "Deze video is te lang om te worden verstuurd. De maximum lengte is %.0f minuten.";
+
+/* KKPasscodeLock */
+"On" = "Ingeschakeld";
+"Off" = "Uitgeschakeld";
+"all_data_deleted_title" = "Alle gegevens verwijderd";
+"all_data_deleted_message" = "Je hebt te vaak een onjuist wachtwoord ingevoerd. Alle gegevens in deze app zijn verwijderd.";
+"to_unlock_passcode" = "Om Threema vrij te geven";    // Touch ID
+
+/* Notifications Text */
+"new_message" = "Bericht";
+/* Notifications Text */
+"new_message_from_x" = "Bericht van %@";
+"new_group_message" = "Groepsbericht";
+"new_group_message_from_x" = "Groepsbericht van %@";
+"new_image_message" = "Afbeelding";
+"new_video_message" = "Video";
+"new_location_message" = "Locatie";
+"new_audio_message" = "Audio";
+"new_ballot_create_message" = "Poll: %@";
+"new_ballot_closed_message" = "Poll: Resultaten beschikbaar";
+"new_file_message" = "Bestand: %@";
+

@@ -33,7 +33,7 @@
 #else
   static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 #endif
-@interface BlobUploader ()
+@interface BlobUploader () <NSURLConnectionDataDelegate>
 
 @property NSMutableData *receivedData;
 @property NSURLConnection *uploadConnection;

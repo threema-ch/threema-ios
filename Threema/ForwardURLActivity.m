@@ -22,7 +22,6 @@
 #import "ContactGroupPickerViewController.h"
 #import "MessageSender.h"
 #import "ModalNavigationController.h"
-#import "FeatureMaskChecker.h"
 #import "UTIConverter.h"
 #import "FileMessageSender.h"
 
@@ -96,17 +95,11 @@
 #pragma mark - ContactPickerDelegate
 
 - (void)contactPicker:(ContactGroupPickerViewController*)contactPicker didPickConversations:(NSSet *)conversations renderType:(NSNumber *)renderType sendAsFile:(BOOL)sendAsFile {
-    FeatureMaskChecker *featureMaskChecker = [[FeatureMaskChecker alloc] init];
+    for (Conversation *conversation in conversations) {
+        [URLSender sendUrl:_url asFile:sendAsFile caption:contactPicker.additionalTextToSend conversation:conversation];
+    }
     
-    [featureMaskChecker checkFileTransferFor:conversations presentAlarmOn:contactPicker onSuccess:^{
-        for (Conversation *conversation in conversations) {
-            [URLSender sendUrl:_url asFile:sendAsFile caption:contactPicker.additionalTextToSend conversation:conversation];
-        }
-        
-        [contactPicker dismissViewControllerAnimated:YES completion:nil];
-    } onFailure:^{
-        [contactPicker dismissViewControllerAnimated:YES completion:nil];
-    }];
+    [contactPicker dismissViewControllerAnimated:YES completion:nil];
 }
 
 - (void)contactPickerDidCancel:(ContactGroupPickerViewController*)contactPicker {

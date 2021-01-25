@@ -22,7 +22,6 @@
 #import "AudioMessage.h"
 #import "AudioData.h"
 #import "ChatDefines.h"
-#import "AudioMessageSender.h"
 #import "UserSettings.h"
 #import "Utils.h"
 #import "UIImage+ColoredImage.h"
@@ -211,9 +210,7 @@
 }
 
 - (void)resendMessage:(UIMenuController*)menuController {
-    AudioMessage *audioMessage = (AudioMessage*)self.message;
-    AudioMessageSender *sender = [[AudioMessageSender alloc] init];
-    [sender retryWithAudioMessage:audioMessage];
+    DDLogError(@"AudioMessages can not be resent anymore.");
 }
 
 + (NSString*)displayTextForAudioMessage:(AudioMessage*)audioMessage {

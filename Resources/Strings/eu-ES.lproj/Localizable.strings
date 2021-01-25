@@ -113,7 +113,7 @@
 "export_progress_label" = "%li / %li mezu esportatuta";
 "caption" = "Kaptura";
 "fileNotDownloaded" = "Fitxategia ez da deskargatu edo ezabatu egin da.";
-"include_media_title" = "Multimedia (irudiak, bideoak) eranskin gisa sartu nahi dituzu? Txat handiak fitxategi anitzetan banatzen dira.\n\nAES euskarria duen ZIP tresna modernoa behar da fitxategia deskonprimitzeko, adibidez. 7-Zip edo The Unarchiver (Mac).";
+"include_media_title" = "Multimedia (irudiak, bideoak) eranskin gisa sartu nahi dituzu?\n\nAES euskarria duen ZIP tresna modernoa behar da fitxategia deskonprimitzeko, adibidez. 7-Zip edo The Unarchiver (Mac).";
 
 
 /* image sizes */
@@ -133,8 +133,9 @@
 "max_x_minutes" = "Gehi. %d minutu";
 
 /* Sound names */
-"sound_none" = "Soinurik ez";
+"sound_none" = "Bat ere ez";
 "sound_default" = "Lehenetsia";
+"sound_silent" = "Bibrazioa bakarrik";
 "sound_bamboo" = "Bambú";
 "sound_drum" = "Danborra";
 "sound_glass" = "Kristala";
@@ -165,10 +166,10 @@
 "enter_code" = "Sartu Kodea";
 "unlink_contact" = "Lotu gabeko kontaktua";
 "choose_new_contact" = "Aukeratu kontaktu berria";
-"export_chat" = "Esportatu elkarrizketa";
-"send_profile_picture" = "Bidali profil argazkia orain";
-"linked_contact" = "Kontaktua elkartuta";
-"key_fingerprint" = "Hatz-marka digitala";
+"export_chat" = "Elkarrizketa esportatu";
+"send_profile_picture" = "Profil argazkia bidali orain";
+"linked_contact" = "Kontaktua lotuta";
+"key_fingerprint" = "Hatz-marka gako digitala";
 "block_contact" = "Kontaktua blokeatu";
 "profile_picture_recipient" = "Profileko argazki hartzaileak";
 "member_in_groups" = "Taldeetako kidea";
@@ -256,11 +257,13 @@
 "record_audio" = "Audio-grabazioa";
 "scan_qr" = "QR kodea eskaneatu";
 "share_file" = "Partekatu fitxategia";
-"send_item_photo" = "Argazkia aurreikusi";
-"send_item_video" = "Bideoa aurreikusi";
-"send_items" = "%d argazkiak/bideoak aurreikusi";
-"send_items_photo" = "%d argazkiak aurreikusi";
-"send_items_video" = "%d bideoak aurreikusi";
+"add_item_caption" = "Azpititulua gehitu";
+"add_items_caption" = "Azpitituluak gehitu";
+"send_item_immediately_photo" = "Argazkia bidali";
+"send_item_immediately_video" = "Bideoa bidali";
+"send_items_immediately" = "%d argazki/bideo bidali";
+"send_items_immediately_photo" = "%d argazki bidali";
+"send_items_immediately_video" = "%d bideo bidali";
 
 "record" = "Grabatu";
 "play" = "Erreproduzitu";
@@ -340,7 +343,7 @@
 "verification_level_text" = "Koloretako puntuek kontaktuaren egiaztapen maila adierazten dute.";
 "level0_title" = "Egiaztapen maila baxuena";
 /* Verification level section title */
-"verification_level_section_work" = "Kontaktuak zure erakundean";
+"verification_level_section_work" = "Zure erakundetako kontaktuak";
 "verification_level_section_other" = "Bestelako kontaktuak";
 /* Verification level popovers in chat view */
 "level1_title" = "Segurtasun-maila ertaina";
@@ -622,7 +625,9 @@
 
 /* VoIP Call */
 "call_mute" = "Soinurik ez";
+"call_unmute" = "Soinua gaitu";
 "call_speaker" = "Bozgorailu";
+"call_earpiece" = "Entzungailua";
 "call_end" = "Eskegi";
 "call_camera_activate_button" = "Aktibatu kamera";
 "call_camera_deactivate_button" = "Desaktibatu kamera";
@@ -643,6 +648,7 @@
 "call_accept" = "Onartu";
 "call_reject" = "Ezeztatu";
 "call_hide_call" = "Deia ezkutatu";
+"call_no_wifi" = "Sare mugikorraren bidez deitu. Informazio gehiago...";
 
 "call_threema_title" = "Threema Deia Hasi";
 "call_callkit_button_title" = "Threema";
@@ -674,6 +680,9 @@
 
 "call_threema_video_in_chat_info_title" = "Berria: bideo-deiak";
 "call_threema_video_in_chat_info_description" = "Nahi gabe dei bat egitearen babesa edukiaz gain, Threemak muturretik muturrerako bideo-dei zifratuak eskaintzen ditu orain.";
+
+"call_threema_cellular_instead_of_wifi_title" = "Sare mugikorraren bidez deitzea";
+"call_threema_cellular_instead_of_wifi_text" = "Oharra: dei honek sare mugikorrean datu-transferentzia eragiten du.";
 
 /* Privacy Policy */
 "privacy_policy_about" = "Threemak beste edozein mezularitza-aplikaziok baino zorroztasun handiagoz babesten du zure pribatutasuna. Ikusi gehiago gure pribatutasun-politikan.";
@@ -896,9 +905,10 @@
 "settings_license" = "Lizentzia";
 "settings_advanced" = "Hobetua";
 "settings_threema_work" = "Threema Work";
-"settings_dev_mode" = "Dev Mode";
+"settings_dev_mode" = "Dev modua";
 
 "settings_advanced_flush_message_queue" = "Mezu ilara hustu";
+"settings_advanced_orphaned_files_cleanup" = "Artxibo bakartiak ezabatu";
 
 // Dev Mode
 "settings_devmode_quote_v2" = "Quote V2";
@@ -949,6 +959,25 @@
 "settings_notifications_masterDnd_endTime" = "Lanorduen amaiera";
 "settings_notifications_masterDnd_info" = "Ordutegi aktibotik kanpo";
 
+// Orphaned files delete
+"settings_orphaned_files_description" = "Threemaren aurreko bertsioen biltegiratze-kudeaketan datuak ezabatzean, gerta daiteke fitxategi batzuk (multimedia) ondo ez ezabatzea, baina Threematik bai ezabatuko dira.
+
+Sortu lehenago iTunes-en segurtasun-kopia bat. Datuak gal daitezke!";
+"settings_orphaned_files_title" = "BAKARKO ARTXIBOAK";
+"settings_orphaned_files_button" = "Zakarrontzira eraman";
+"settings_orphaned_files_footer" = "%@ artxibotik %@ bakartiak dira
+
+Fitxategi bakartiak zakarrontzira mugitu, eta Threemako fitxategirik (multimedia) ez faltatzea saiatu zaitez.";
+"settings_orphaned_files_footer_no_files" = "Ez daude bakarkako artxiborik.";
+"settings_orphaned_files_bin_title" = "ZAKARRONTZIA";
+"settings_orphaned_files_bin_restore_button" = "Zakarrontziaren edukiak berrezartu";
+"settings_orphaned_files_bin_delete_button" = "Zakarrontziko edukiak ezabatu";
+"settings_orphaned_files_bin_footer" = "Zakarrontzian  (%@) %@ fitxategi daude.
+
+Threeman artxiborik (multimedia) faltatzen ez badira, hustu zakarrontzia, fitxategi bakartiak betiko ezabatzeko.";
+"settings_orphaned_files_bin_footer_no_files" = "Zakarrontzia utzik dago.";
+"settings_orphaned_files_bin_delete_conformation" = "Ziur zaude fitxategi bakartiak betiko ezabatu nahi dituzula? Ekintza hau ezin da desegin.";
+
 // Threema calls settings
 "settings_threema_calls_enable_calls" = "Threema ahotsa aktibatu";
 "settings_threema_calls_always_relay_calls" = "Transmititu deia beti";
@@ -979,3 +1008,15 @@
 "back_to_media_selection" = "Multimedia aukeraketa pantailara itzuli";
 "remove_current_image_from_selected_images" = "Kendu uneko elementua hautapenetik";
 "send_options" = "Aukera Gehiago";
+"multiple_media_items" = "%d Items";
+"media_item" = "Item bat";
+"could_not_add_items_title" = "Ezin izan da elementua gehitu";
+"could_not_add_all_items_title" = "Ezin izan dira elementuak gehitu";
+"one_media_item_could_not_be_processed" = "Elementu bat ezin izan da prozesatu eta saltatu egin da.";
+"multiple_media_items_could_not_be_processed" = "ezin izan dira prozesatu %d elementuak eta saltatu egin dira.";
+"processing_items_progress" = "%d/%d item prozesatzen ";
+"item_too_large_title" = "Elementua handiegia da";
+"maximum_file_size_exceeded" = "Onartutako gehieneko tamaina %@ da. Fitxategi hau %@ da. Jarraitu ahal izateko, kendu fitxategia.";
+"back" = "Atzera";
+"sending_item" = "Itema bidaltzen";
+"send_as_file_title" = "Bidaltzeko era";

@@ -20,6 +20,7 @@
 
 import UIKit
 import CocoaLumberjackSwift
+import MBProgressHUD
 
 class MediaPreviewViewController: UIViewController, UIGestureRecognizerDelegate {
     
@@ -288,9 +289,8 @@ class MediaPreviewViewController: UIViewController, UIGestureRecognizerDelegate 
     
     func incrementProgress() {
         DispatchQueue.main.async(execute: {
-            guard let hud = MBProgressHUD(for: self.view) else {
-                return
-            }
+            let hud = MBProgressHUD(view: self.view)
+            
             if hud.progressObject != nil {
                 guard let po = hud.progressObject else {
                     return
@@ -525,7 +525,7 @@ class MediaPreviewViewController: UIViewController, UIGestureRecognizerDelegate 
     }
     
     @objc func updateLayoutForKeyboard(notification: NSNotification) {
-        let prevConst = self.bottomLayoutConstraint?.constant
+        _ = self.bottomLayoutConstraint?.constant
         if let userInfo = notification.userInfo {
             let endFrame = (userInfo[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue
             let endFrameY = endFrame?.origin.y ?? 0
@@ -549,27 +549,16 @@ class MediaPreviewViewController: UIViewController, UIGestureRecognizerDelegate 
                 }
                 
             }
-            
-            let layout = UICollectionViewFlowLayout()
-            layout.minimumLineSpacing = 0.0
-            layout.minimumInteritemSpacing = 0.0
-            layout.scrollDirection = .horizontal
-            layout.itemSize = self.largeCollectionView.frame.size
-            if self.bottomLayoutConstraint.constant != 0.0 {
-                layout.itemSize.height = self.largeCollectionView.frame.height + self.bottomLayoutConstraint.constant
-            } else {
-                layout.itemSize.height = self.largeCollectionView.frame.height - (prevConst ?? 0.0)
-            }
-            
-            
+
             UIView.animate(withDuration: duration,
                            delay: TimeInterval(0),
                            options: animationCurve,
                            animations: {
                             self.view.layoutIfNeeded()
-                            self.largeCollectionView.setCollectionViewLayout(layout, animated: false)
                            },
-                           completion:nil)
+                           completion: {_ in 
+                            self.largeCollectionView.scrollToItem(at: self.getCurrentlyVisibleItem()!, at: .centeredHorizontally, animated: false)
+                           })
         }
     }
 }

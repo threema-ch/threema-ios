@@ -101,6 +101,14 @@ class VoIPCallService: NSObject {
             }
         }
     }
+    private var shouldShowCellularCallWarning: Bool = false {
+        didSet {
+            if let callViewController = callViewController {
+                print("Threema call: Should show cellular warning -> \(self.shouldShowCellularCallWarning)")
+                callViewController.shouldShowCellularCallWarning = self.shouldShowCellularCallWarning
+            }
+        }
+    }
     
     private var initCallTimeoutTimer: Timer?
     private var incomingCallTimeoutTimer: Timer?
@@ -138,10 +146,13 @@ class VoIPCallService: NSObject {
         return a || b || c
     }
     
+    private var audioRouteChangeObserver: NSObjectProtocol?
+    
     required override init() {
         super.init()
         
-        NotificationCenter.default.addObserver(forName: AVAudioSession.routeChangeNotification, object: nil, queue: nil) { (n) in
+        audioRouteChangeObserver = NotificationCenter.default.addObserver(forName: AVAudioSession.routeChangeNotification, object: nil, queue: nil) { [weak self] n in
+            guard let self = self else { return }
             if self.state != .idle {
                 var isBluetoothAvailable = false
                 if let inputs = AVAudioSession.sharedInstance().availableInputs {
@@ -191,6 +202,12 @@ class VoIPCallService: NSObject {
                 default: break
                 }
             }
+        }
+    }
+    
+    deinit {
+        if let observer = audioRouteChangeObserver {
+            NotificationCenter.default.removeObserver(observer)
         }
     }
 }
@@ -1045,11 +1062,12 @@ extension VoIPCallService {
             self.peerConnectionClient = nil
             let forceTurn: Bool = Int(truncating: self.contact!.verificationLevel) == kVerificationLevelUnverified || UserSettings.shared()?.alwaysRelayCalls == true
             let peerConnectionParameters = VoIPCallPeerConnectionClient.PeerConnectionParameters(isVideoCallAvailable: self.threemaVideoCallAvailable, videoCodecHwAcceleration: self.threemaVideoCallAvailable, forceTurn: forceTurn, gatherContinually: true, allowIpv6: UserSettings.shared().enableIPv6, isDataChannelAvailable: false)
-            
-            VoIPCallPeerConnectionClient.instantiate(contact: self.contact!, peerConnectionParameters: peerConnectionParameters) { (result) in               
+            self.callId = VoIPCallId.generate()
+            VoIPCallPeerConnectionClient.instantiate(contact: self.contact!, callId: self.callId, peerConnectionParameters: peerConnectionParameters) { (result) in
                 do {
                     self.peerConnectionClient = try result.get()
                 } catch let error {
+                    self.callId = nil
                     self.callCantCreateOffer(error: error)
                     return
                 }
@@ -1064,14 +1082,16 @@ extension VoIPCallService {
                 }
                 self.peerConnectionClient?.offer(completion: { (sdp, sdpError) in
                     if let error = sdpError {
+                        self.callId = nil;
                         self.callCantCreateOffer(error: error)
                         return
                     }
                     guard let sdp = sdp  else {
+                        self.callId = nil;
                         self.callCantCreateOffer(error: nil)
                         return
                     }
-                    self.callId = VoIPCallId.generate()
+
                     let offerMessage = VoIPCallOfferMessage.init(offer: sdp, contact: self.contact!, features: nil, isVideoAvailable: self.threemaVideoCallAvailable, callId: self.callId!, completion: nil)
                     VoIPCallSender.sendVoIPCall(offer: offerMessage)
                     self.state = .sendOffer
@@ -1134,7 +1154,7 @@ extension VoIPCallService {
             let forceTurn = Int(truncating: contact.verificationLevel) == kVerificationLevelUnverified || UserSettings.shared().alwaysRelayCalls
             let peerConnectionParameters = VoIPCallPeerConnectionClient.PeerConnectionParameters(isVideoCallAvailable: self.threemaVideoCallAvailable, videoCodecHwAcceleration: self.threemaVideoCallAvailable, forceTurn: forceTurn, gatherContinually: true, allowIpv6: UserSettings.shared().enableIPv6, isDataChannelAvailable: false)
             
-            VoIPCallPeerConnectionClient.instantiate(contact: contact, peerConnectionParameters: peerConnectionParameters) { (result) in
+            VoIPCallPeerConnectionClient.instantiate(contact: contact, callId: offer.callId, peerConnectionParameters: peerConnectionParameters) { (result) in
                 do {
                     self.peerConnectionClient = try result.get()
                 } catch let error {
@@ -1231,28 +1251,36 @@ extension VoIPCallService {
                         return
                     }
                 }
-                if UIApplication.shared.applicationState == .active
-                    && !self.callViewController!.isBeingPresented
-                    && !self.isModal {
-                    self.callViewController!.viewWasHidden = viewWasHidden
-                    self.callViewController!.voIPCallStatusChanged(state: self.state, oldState: self.state)
-                    self.callViewController!.contact = contact
-                    self.callViewController!.alreadyAccepted = alreadyAccepted
-                    self.callViewController!.isCallInitiator = isCallInitiator
-                    self.callViewController!.threemaVideoCallAvailable = isThreemaVideoCallAvailable
-                    self.callViewController!.isLocalVideoActive = videoActive
-                    self.callViewController!.isReceivingRemoteVideo = receivingVideo
-                    if UserDefaults.standard.bool(forKey: "FASTLANE_SNAPSHOT") {
-                        self.callViewController!.isTesting = true
-                    }
-                    self.callViewController!.modalPresentationStyle = .overFullScreen
-                    presentingVC?.present(self.callViewController!, animated: false, completion: {
-                        if completion != nil {
-                            completion!()
-                        }
-                    })
-                }
+                self.showCallViewIfActive(presentingVC: presentingVC, viewWasHidden: viewWasHidden, isCallInitiator: isCallInitiator, isThreemaVideoCallAvailable: isThreemaVideoCallAvailable, receivingVideo: receivingVideo, completion: completion)
             }
+        }
+    }
+    
+    private func showCallViewIfActive(presentingVC: UIViewController?, viewWasHidden: Bool, isCallInitiator: Bool, isThreemaVideoCallAvailable: Bool, receivingVideo: Bool, completion: (() -> Void)? = nil) {
+        if UIApplication.shared.applicationState == .active
+            && !self.callViewController!.isBeingPresented
+            && !self.isModal {
+            self.callViewController!.viewWasHidden = viewWasHidden
+            self.callViewController!.voIPCallStatusChanged(state: self.state, oldState: self.state)
+            self.callViewController!.contact = contact
+            self.callViewController!.alreadyAccepted = alreadyAccepted
+            self.callViewController!.isCallInitiator = isCallInitiator
+            self.callViewController!.threemaVideoCallAvailable = isThreemaVideoCallAvailable
+            self.callViewController!.isLocalVideoActive = videoActive
+            self.callViewController!.isReceivingRemoteVideo = receivingVideo
+            if UserDefaults.standard.bool(forKey: "FASTLANE_SNAPSHOT") {
+                self.callViewController!.isTesting = true
+            }
+            self.callViewController!.modalPresentationStyle = .overFullScreen
+            presentingVC?.present(self.callViewController!, animated: false, completion: {
+                // need to check is fresh start, then we have to set isReceivingRemotVideo again to show the video of the remote
+                if !viewWasHidden && !isCallInitiator {
+                    self.callViewController!.isReceivingRemoteVideo = receivingVideo
+                }
+                if completion != nil {
+                    completion!()
+                }
+            })
         }
     }
     
@@ -2052,6 +2080,10 @@ extension VoIPCallService: VoIPCallPeerConnectionClientDelegate {
         if self.isReceivingVideo != receivingVideo {
             self.isReceivingVideo = receivingVideo
         }
+    }
+    
+    func peerConnectionClient(_ client: VoIPCallPeerConnectionClient, shouldShowCellularCallWarning: Bool) {
+        self.shouldShowCellularCallWarning = shouldShowCellularCallWarning
     }
     
     func peerConnectionClient(_ client: VoIPCallPeerConnectionClient, didChangeConnectionState state: RTCIceConnectionState) {

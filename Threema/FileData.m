@@ -19,10 +19,16 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import "FileData.h"
-
+#import "ThreemaFramework/ThreemaFramework-Swift.h"
 
 @implementation FileData
 
 @dynamic data;
+
+#pragma mark ExternalStorageInfo
+
+- (NSString *)getFilename {
+    return self.data != nil ? [ExternalStorage getFilenameWithData:self.data] : nil;
+}
 
 @end

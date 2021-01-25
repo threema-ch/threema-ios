@@ -84,7 +84,7 @@ class ZipFileContainer: NSObject {
         
         let path = ZipFileContainer.getZipFilePath(name: fileName)
         let fileManager = FileManager.default
-        
+
         do {
             try fileManager.moveItem(atPath: self.zipFilePath, toPath: path)
             return NSURL.fileURL(withPath: path)

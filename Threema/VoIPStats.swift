@@ -184,6 +184,10 @@ internal enum CodecMimeTypePrimary {
             }
             return result
         }
+        
+        public func usesCellular() -> Bool {
+            return network == "cellular"
+        }
     }
     
     internal class CandidatePair: VoIPStatsRepresentation {
@@ -225,11 +229,7 @@ internal enum CodecMimeTypePrimary {
             self.id = candidatePairId(statsId: entry.id)
             
             // Priority
-            if let p = entry.values["priority"] as? NSNumber {
-                self.priority = UInt64(truncating: p)
-            } else {
-                self.priority = 0
-            }
+            self.priority = CandidatePair.priority(entry)
             
             // Candidates
             let localCandidateId = entry.values["localCandidateId"] as? String
@@ -238,22 +238,10 @@ internal enum CodecMimeTypePrimary {
                 localCandidateId: localCandidateId, remoteCandidateId: remoteCandidateId, report: report)
             
             // Nominated
-            if let n = entry.values["nominated"] as? NSNumber {
-                self.nominated = Bool(truncating: n)
-            } else {
-                self.nominated = nil
-            }
-            
+            self.nominated = CandidatePair.nominated(entry)
+        
             // State
-            if let s = entry.values["state"] as? String {
-                if let newState = State.init(rawValue: s) {
-                    self.state = newState
-                } else {
-                    self.state = .unknown
-                }
-            } else {
-                self.state = .unknown
-            }
+            self.state = CandidatePair.state(entry)
             
             // Bytes transferred
             self.bytesTransferred = BytesTransferred(entry)
@@ -262,22 +250,10 @@ internal enum CodecMimeTypePrimary {
             self.roundTripTime = RoundTripTime(entry)
             
             // Available bitrate
-            if let aOB = entry.values["availableOutgoingBitrate"] as? NSNumber {
-                self.availableOutgoingBitrate = Double(truncating: aOB)
-            } else {
-                self.availableOutgoingBitrate = nil
-            }
+            self.availableOutgoingBitrate = CandidatePair.availableOutgoingBitrate(entry)
                         
             // Check use relay
-            if self.local != nil, self.local?.type == "relay" {
-                self.usesRelay = true
-            }
-            else if self.remote != nil, self.remote?.type == "relay" {
-                self.usesRelay = true
-            }
-            else {
-                self.usesRelay = false
-            }
+            self.usesRelay = CandidatePair.usesRelay(entry, local: local, remote: remote)
         }
         
         static internal func lookupCandidates(localCandidateId: String?, remoteCandidateId: String?, report: RTCStatisticsReport)
@@ -297,6 +273,45 @@ internal enum CodecMimeTypePrimary {
             return (localCandidate, remoteCandidate)
         }
         
+        static private func priority(_ entry: RTCStatistics) -> UInt64 {
+            if let p = entry.values["priority"] as? NSNumber {
+                return UInt64(truncating: p)
+            }
+            return 0
+        }
+        
+        static private func nominated(_ entry: RTCStatistics) -> Bool? {
+            if let n = entry.values["nominated"] as? NSNumber {
+                return Bool(truncating: n)
+            }
+            return nil
+        }
+        
+        static private func state(_ entry: RTCStatistics) -> State {
+            if let s = entry.values["state"] as? String,
+               let newState = State.init(rawValue: s) {
+                return newState
+            }
+            return .unknown
+        }
+        
+        static private func availableOutgoingBitrate(_ entry: RTCStatistics) -> Double? {
+            if let aOB = entry.values["availableOutgoingBitrate"] as? NSNumber {
+                return Double(truncating: aOB)
+            }
+            return nil
+        }
+        
+        static private func usesRelay(_ entry: RTCStatistics, local: Candidate?, remote: Candidate?) -> Bool {
+            if let local = local, local.type == "relay" {
+                return true
+            }
+            else if let remote = remote, remote.type == "relay" {
+                return true
+            }
+            return false
+        }
+            
         public func getShortRepresentation() -> String {
             var result = "pair=\(self.state) "
             if let nominated = self.nominated, nominated == true {
@@ -1238,6 +1253,13 @@ internal enum CodecMimeTypePrimary {
             if diff != 0 {
                 return true
             }
+        }
+        return false
+    }
+    
+    public func isSelectedCandidatePairCellular() -> Bool {
+        if let candidatePair = selectedCandidatePair, let local = candidatePair.local {
+            return local.usesCellular()
         }
         return false
     }

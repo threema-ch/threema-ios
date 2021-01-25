@@ -100,7 +100,7 @@ public func DDLogNotice(_ message: @autoclosure () -> String,
     }
     
     @objc public static func deleteLogFile(_ logFile: URL?) {
-        FileUtility.delete(fileUrl: logFile)
+        FileUtility.delete(at: logFile)
     }
     
     @objc public static func logFileSize(_ logFile: URL?) -> Int64 {

@@ -1,0 +1,231 @@
+
+/* Class = "UILabel"; text = "Detail"; ObjectID = "2Ve-Rz-Jab"; */
+"2Ve-Rz-Jab.text" = "Szczegół";
+
+/* Class = "UILabel"; text = "0.0 (000)"; ObjectID = "2a3-K6-cFL"; */
+"2a3-K6-cFL.text" = "0.0 (000)";
+
+/* Class = "UINavigationItem"; title = "Font Size"; ObjectID = "3OC-m7-GmD"; */
+"3OC-m7-GmD.title" = "Rozmiar Czcionki";
+
+/* Class = "UILabel"; text = "Exclusion List"; ObjectID = "5hd-D5-keA"; */
+"5hd-D5-keA.text" = "Lista Wykluczeń";
+
+/* Class = "UILabel"; text = "0 KB"; ObjectID = "67x-OC-XxU"; */
+"67x-OC-XxU.text" = "0 KB";
+
+/* Class = "UILabel"; text = "Return Key = Send"; ObjectID = "7C7-0j-j2r"; */
+"7C7-0j-j2r.text" = "Return Key = Wyślij";
+
+/* Class = "UILabel"; text = "Connected"; ObjectID = "8hI-GF-46C"; */
+"8hI-GF-46C.text" = "Połączony";
+
+/* Class = "UITableViewSection"; headerTitle = "Threema Call"; ObjectID = "9Jg-qG-CuX"; */
+"9Jg-qG-CuX.headerTitle" = "Połączenia Threema";
+
+/* Class = "UILabel"; text = "Sound name"; ObjectID = "9WQ-EZ-toz"; */
+"9WQ-EZ-toz.text" = "Nazwa dźwięku";
+
+/* Class = "UILabel"; text = "Sound name"; ObjectID = "B1c-wM-V4d"; */
+"B1c-wM-V4d.text" = "Nazwa dźwięku";
+
+/* Class = "UINavigationItem"; title = "Privacy"; ObjectID = "BH4-Z9-imt"; */
+"BH4-Z9-imt.title" = "Prywatność";
+
+/* Class = "UILabel"; text = "Proximity monitoring"; ObjectID = "BK0-LJ-WwY"; */
+"BK0-LJ-WwY.text" = "Monitorowanie Dostępności";
+
+/* Class = "UILabel"; text = "Hide Stale Contacts"; ObjectID = "C7N-a6-E8Y"; */
+"C7N-a6-E8Y.text" = "Ukryj Stare Kontakty";
+
+/* Class = "UINavigationItem"; title = "License"; ObjectID = "Cuk-M6-y9N"; */
+"Cuk-M6-y9N.title" = "Licencja";
+
+/* Class = "UINavigationItem"; title = "Display Order"; ObjectID = "DWN-sS-DbE"; */
+"DWN-sS-DbE.title" = "Kolejność Wyświetlania";
+
+/* Class = "UILabel"; text = "Subtitle"; ObjectID = "F51-gk-IFX"; */
+"F51-gk-IFX.text" = "Podtytuł";
+
+/* Class = "UILabel"; text = "Detail"; ObjectID = "GCE-65-OPQ"; */
+"GCE-65-OPQ.text" = "Szczegół";
+
+/* Class = "UILabel"; text = "Push Token"; ObjectID = "HoL-yt-ghu"; */
+"HoL-yt-ghu.text" = "Push Token";
+
+/* Class = "UILabel"; text = "Detail"; ObjectID = "IzO-Nl-ekz"; */
+"IzO-Nl-ekz.text" = "Szczegół";
+
+/* Class = "UILabel"; text = "Title"; ObjectID = "JeY-ke-mv9"; */
+"JeY-ke-mv9.text" = "Tytuł";
+
+/* Class = "UILabel"; text = "Clear Log"; ObjectID = "KvG-gM-I5I"; */
+"KvG-gM-I5I.text" = "Wyczyść Dziennik";
+
+/* Class = "UILabel"; text = "First, last"; ObjectID = "L3v-Ts-9T0"; */
+"L3v-Ts-9T0.text" = "Pierwsza, ostatnia";
+
+/* Class = "UITableViewSection"; headerTitle = "Sensor"; ObjectID = "N0M-ec-m5Y"; */
+"N0M-ec-m5Y.headerTitle" = "Sensor";
+
+/* Class = "UILabel"; text = "Send Typing Indicator"; ObjectID = "O7I-2W-NWv"; */
+"O7I-2W-NWv.text" = "Wyślij Indykator Pisania";
+
+/* Class = "UINavigationItem"; title = "Exclusion List"; ObjectID = "OfE-jH-kl6"; */
+"OfE-jH-kl6.title" = "Lista Wykluczeń";
+
+/* Class = "UINavigationItem"; title = "Video Quality"; ObjectID = "Oji-5c-VQi"; */
+"Oji-5c-VQi.title" = "Jakość Wideo";
+
+/* Class = "UILabel"; text = "Title"; ObjectID = "PX2-6n-WIX"; */
+"PX2-6n-WIX.text" = "Tytuł";
+
+/* Class = "UINavigationItem"; title = "Notifications"; ObjectID = "QQx-aC-ygX"; */
+"QQx-aC-ygX.title" = "Powiadomienia";
+
+/* Class = "UILabel"; text = "Detail"; ObjectID = "Qpp-gz-gkC"; */
+"Qpp-gz-gkC.text" = "Szczegół";
+
+/* Class = "UITableViewSection"; headerTitle = "Chat"; ObjectID = "R1G-2w-yDd"; */
+"R1G-2w-yDd.headerTitle" = "Czat";
+
+/* Class = "UILabel"; text = "Reset Wallpaper"; ObjectID = "Rfg-a6-EB2"; */
+"Rfg-a6-EB2.text" = "Resetuj Tapetę";
+
+/* Class = "UINavigationItem"; title = "Privacy Policy"; ObjectID = "SQX-77-CzT"; */
+"SQX-77-CzT.title" = "Polityka Prywatności";
+
+/* Class = "UILabel"; text = "Add exclusion..."; ObjectID = "Sow-GN-gms"; */
+"Sow-GN-gms.text" = "Dodaj wykluczenie...";
+
+/* Class = "UILabel"; text = "Show gallery preview"; ObjectID = "TyO-Dl-3LV"; */
+"TyO-Dl-3LV.text" = "Pokaż Podgląd Galerii";
+
+/* Class = "UINavigationItem"; title = "Media"; ObjectID = "U7Q-cL-ZiA"; */
+"U7Q-cL-ZiA.title" = "Media";
+
+/* Class = "UINavigationItem"; title = "Advanced"; ObjectID = "UsC-dS-qae"; */
+"UsC-dS-qae.title" = "Zaawansowane";
+
+/* Class = "UITableViewSection"; headerTitle = "Validation logging"; ObjectID = "VzU-Hf-fg5"; */
+"VzU-Hf-fg5.headerTitle" = "Dziennik Debugowania";
+
+/* Class = "UILabel"; text = "Sync Contacts"; ObjectID = "Wdo-iP-Jy2"; */
+"Wdo-iP-Jy2.text" = "Synchronizacja Kontaktów";
+
+/* Class = "UILabel"; text = "Validation Logging"; ObjectID = "WeM-6s-Xpj"; */
+"WeM-6s-Xpj.text" = "Dziennik Debugowania";
+
+/* Class = "UILabel"; text = "Group Notifications"; ObjectID = "XNU-cf-XDO"; */
+"XNU-cf-XDO.text" = "Powiadomienia Grupy";
+
+/* Class = "UILabel"; text = "Save Media to Camera Roll"; ObjectID = "XgJ-Fv-QL5"; */
+"XgJ-Fv-QL5.text" = "Automatycznie Zapisuj Media w App \"Zdjęcia\"";
+
+/* Class = "UINavigationItem"; title = "Support"; ObjectID = "Yb8-8D-YgU"; */
+"Yb8-8D-YgU.title" = "Wsparcie";
+
+/* Class = "UINavigationItem"; title = "Settings"; ObjectID = "Z1n-S1-DAp"; */
+"Z1n-S1-DAp.title" = "Ustawienia";
+
+/* Class = "UINavigationItem"; title = "Appearance"; ObjectID = "ZYa-QO-V4r"; */
+"ZYa-QO-V4r.title" = "Wygląd";
+
+/* Class = "UITableViewSection"; headerTitle = "Support information"; ObjectID = "bGr-LK-G1Y"; */
+"bGr-LK-G1Y.headerTitle" = "Informacja o Pomocy Technicznej";
+
+/* Class = "UILabel"; text = "WebRTC Diagnostics"; ObjectID = "eN8-vV-OIw"; */
+"eN8-vV-OIw.text" = "Diagnostyka WebRTC";
+
+/* Class = "UILabel"; text = "xx pt"; ObjectID = "eXp-kk-t9y"; */
+"eXp-kk-t9y.text" = "xx pt";
+
+/* Class = "UILabel"; text = "Received Message Time"; ObjectID = "HDn-EN-rtP"; */
+"HDn-EN-rtP.text" = "Czas Odebrania Wiadomości";
+
+/* Class = "UINavigationItem"; title = "Push Group Sound"; ObjectID = "ezY-mc-1PI"; */
+"ezY-mc-1PI.title" = "Dźwięk Grupy Push";
+
+/* Class = "UILabel"; text = "Size"; ObjectID = "f2r-1x-GtL"; */
+"f2r-1x-GtL.text" = "Rozmiar";
+
+/* Class = "UILabel"; text = "Enable Threema Call"; ObjectID = "ffR-oW-QMI"; */
+"ffR-oW-QMI.text" = "Włącz Połączenia Threema";
+
+/* Class = "UILabel"; text = "Integrate calls into iOS"; ObjectID = "gbG-Cf-QPK"; */
+"gbG-Cf-QPK.text" = "Integruj połączenia z iOS";
+
+/* Class = "UILabel"; text = "Detail"; ObjectID = "iDF-6E-SQr"; */
+"iDF-6E-SQr.text" = "Szczegół";
+
+/* Class = "UILabel"; text = "Video Quality"; ObjectID = "icP-dl-OGv"; */
+"icP-dl-OGv.text" = "Jakość Wideo";
+
+/* Class = "UILabel"; text = "max. 640 x 640 pixels"; ObjectID = "ij7-I7-TzW"; */
+"ij7-I7-TzW.text" = "max. 640 x 640 pikseli";
+
+/* Class = "UINavigationItem"; title = "Chat"; ObjectID = "jI2-1V-LmF"; */
+"jI2-1V-LmF.title" = "Czat";
+
+/* Class = "UILabel"; text = "IPv6"; ObjectID = "jKP-qh-haK"; */
+"jKP-qh-haK.text" = "IPv6";
+
+/* Class = "UILabel"; text = "Detail"; ObjectID = "jrN-Cn-NEr"; */
+"jrN-Cn-NEr.text" = "Szczegół";
+
+/* Class = "UILabel"; text = "Log Size"; ObjectID = "k9C-Wp-8hl"; */
+"k9C-Wp-8hl.text" = "Rozmiar Dziennika";
+
+/* Class = "UILabel"; text = "Always relay calls"; ObjectID = "m29-az-gFj"; */
+"m29-az-gFj.text" = "Zawsze Przekazuj Połączenia";
+
+/* Class = "UILabel"; text = "Email Log"; ObjectID = "m9f-E9-TK7"; */
+"m9f-E9-TK7.text" = "Udostępnij Dziennik";
+
+/* Class = "UILabel"; text = "Choose POIs"; ObjectID = "mWM-cJ-vcw"; */
+"mWM-cJ-vcw.text" = "Wybierz POIs";
+
+/* Class = "UILabel"; text = "Font Size"; ObjectID = "oTH-CS-y8U"; */
+"oTH-CS-y8U.text" = "Rozmiar Czcionki";
+
+/* Class = "UINavigationItem"; title = "Image Size"; ObjectID = "owJ-3Q-Phk"; */
+"owJ-3Q-Phk.title" = "Rozmiar Obrazu";
+
+/* Class = "UILabel"; text = "Send Read Receipts"; ObjectID = "pd4-eC-QZk"; */
+"pd4-eC-QZk.text" = "Wyślij Potwierdzenia Odczytu";
+
+/* Class = "UILabel"; text = "Detail"; ObjectID = "qCc-Eb-8rc"; */
+"qCc-Eb-8rc.text" = "Szczegół";
+
+/* Class = "UILabel"; text = "Sound name"; ObjectID = "qT1-va-5Fb"; */
+"qT1-va-5Fb.text" = "Nazwa dźwięku";
+
+/* Class = "UITableViewSection"; headerTitle = "Wallpaper"; ObjectID = "ri0-wl-hNq"; */
+"ri0-wl-hNq.headerTitle" = "Tapeta";
+
+/* Class = "UILabel"; text = "Push Token"; ObjectID = "sC4-2F-pcW"; */
+"sC4-2F-pcW.text" = "Push Token";
+
+/* Class = "UILabel"; text = "Block Unknown"; ObjectID = "t3A-s5-ui3"; */
+"t3A-s5-ui3.text" = "Nieznane Blokowanie";
+
+/* Class = "UITableViewSection"; headerTitle = "Networking"; ObjectID = "ukQ-aK-GUe"; */
+"ukQ-aK-GUe.headerTitle" = "Sieci";
+
+/* Class = "UITableViewSection"; footerTitle = "Anybody can send you a message. New contacts will be added automatically when their first message arrives."; ObjectID = "vhK-tc-aH5"; */
+"vhK-tc-aH5.footerTitle" = "Każdy może wysłać Tobie wiadomość. Nowe kontakty zostaną dodane automatycznie, po odebraniu pierwszej wiadomości.";
+
+/* Class = "UITableViewSection"; headerTitle = "Contacts"; ObjectID = "vhK-tc-aH5"; */
+"vhK-tc-aH5.headerTitle" = "Kontakty";
+
+/* Class = "UINavigationItem"; title = "Push Sound"; ObjectID = "wii-ly-S2S"; */
+"wii-ly-S2S.title" = "Dźwięk Push";
+
+/* Class = "UILabel"; text = "Image Size"; ObjectID = "xhX-4h-CHj"; */
+"xhX-4h-CHj.text" = "Rozmiar Obrazu";
+
+/* Class = "UILabel"; text = "Detail"; ObjectID = "yFW-ty-9QR"; */
+"yFW-ty-9QR.text" = "Szczegół";
+
+/* Class = "UINavigationItem"; title = "Threema Call Sound"; ObjectID = "yts-q5-Yzc"; */
+"yts-q5-Yzc.title" = "Dźwięk Połączenia Threema";

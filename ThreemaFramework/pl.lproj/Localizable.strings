@@ -1,0 +1,75 @@
+/* 
+  Localizable.strings
+  Threema
+
+  Copyright (c) 2015 Threema GmbH. All rights reserved.
+*//* JKLockScreenViewController */
+"cancel" = "Anuluj";
+"delete" = "Usuń";
+
+/* Mentions */
+"mentions_all" = "Wszystko";
+
+
+"me" = "Ja";
+"nobody" = "nikt";
+"(unknown)" = "(nieznany)";
+"invalid" = "nieprawidłowy";
+"inactive" = "nieaktywny";
+
+"status_acknowledged" = "aprobata";
+"status_read" = "odczyt";
+"status_delivered" = "dostarczono";
+"status_sent" = "wysłano";
+"status_sending" = "wysyłanie";
+"status_failed" = "niepowodzenie";
+"status_declined" = "sprzeciw";
+"blocked" = "zablokowano";
+
+"contacts" = "Kontakty";
+"groups" = "Grupy";
+"recent" = "Ostatni";
+"work" = "Work";
+"creator" = "Kreator";
+"%d members" = "%d członków";
+
+"ok" = "OK";
+
+"send" = "Wyślij";
+"addText" = "Dodaj Tekst";
+"hide" = "Ukryj";
+
+"error_sending_failed" = "Wysyłanie nie powiodło się";
+"error_constraints_failed" = "Nie obsługiwany plik";
+"error_message_file_too_big" = "Plik zbyt duży, maksymalny rozmiar pliku wynosi 50 MB.";
+"error_message_invalid_file" = "Błąd odczytu pliku.";
+"error_message_generic" = "Przesyłanie nie powiodło się.";
+
+"error_title_feature_level" = "Proszę o uwagę";
+"error_message_feature_level" = "Niektórzy odbiorcy mają wersję aplikacji, która jeszcze nie obsługuje wiadomości w postaci plików: %@";
+"error_message_none_feature_level" = "Żaden z uczestników nie ma wersji aplikacji obsługującej ankiety: %@";
+
+"video_too_long_title" = "Wideo jest za długie";
+"video_too_long_message" = "Wideo jest zbyt długie, by go wysłać. Maksymalna dozwolona długość wynosi %.0f minut.";
+
+/* KKPasscodeLock */
+"On" = "Wł";
+"Off" = "Wył.";
+"all_data_deleted_title" = "Wszystkie Dane Usunięte";
+"all_data_deleted_message" = "Zbyt wiele razy wprowadzono niepoprawny kod dostępu. Wszystkie dane w tej aplikacji zostały usunięte.";
+"to_unlock_passcode" = "Aby odblokować Threema";    // Touch ID
+
+/* Notifications Text */
+"new_message" = "Wiadomość";
+/* Notifications Text */
+"new_message_from_x" = "Wiadomość od %@";
+"new_group_message" = "Wiadomość grupowa";
+"new_group_message_from_x" = "Wiadomość grupowa od %@";
+"new_image_message" = "Obraz";
+"new_video_message" = "Wideo";
+"new_location_message" = "Lokalizacja";
+"new_audio_message" = "Audio";
+"new_ballot_create_message" = "Ankieta: %@";
+"new_ballot_closed_message" = "Ankieta: Wynik dostępny";
+"new_file_message" = "Plik: %@";
+

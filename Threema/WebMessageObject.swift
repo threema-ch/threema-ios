@@ -223,13 +223,37 @@ class WebMessageObject: NSObject {
         thumbnail = nil
         caption = nil
         statusType = "text"
-        
-        var quotedIdentity: NSString?
         var remainingBody: NSString?
-        let quotedText = QuoteParser.parseQuote(fromMessage: textMessage.text, quotedIdentity: &quotedIdentity, remainingBody: &remainingBody)
-        if quotedText != nil {
-            quote = ["identity": quotedIdentity!, "text": quotedText!]
-            body = remainingBody as String?
+        var quotedIdentity: String = MyIdentityStore.shared().identity
+        if let quotedMessageId = textMessage.quotedMessageId {
+            let entityManager = EntityManager()
+            if let quotedMessage = entityManager.entityFetcher.message(withId: quotedMessageId, conversation: textMessage.conversation) {
+                var quotedText = quotedMessage.previewText() ?? ""
+                
+                if let sender = textMessage.sender, !quotedMessage.isOwn.boolValue {
+                    quotedIdentity = sender.identity
+                }
+                else if let contact = quotedMessage.conversation.contact, !quotedMessage.isOwn.boolValue {
+                    quotedIdentity = contact.identity
+                }
+
+                if let quotedPreviewText = quotedMessage.quotePreviewText(), !quotedPreviewText.isEmpty, quotedPreviewText != quotedText {
+                    quotedText.append(": \(quotedPreviewText)")
+                }
+                
+                quote = ["identity": quotedIdentity, "text": quotedText, "messageId": quotedMessageId.hexEncodedString()]
+                body = textMessage.text
+            } else {
+                quote = ["identity": "", "text": BundleUtil.localizedString(forKey: "quote_not_found")!, "messageId": quotedMessageId.hexEncodedString()]
+                body = textMessage.text
+            }
+        } else {
+            var quotedIdentity: NSString?
+            
+            if let quotedText = QuoteParser.parseQuote(fromMessage: textMessage.text, quotedIdentity: &quotedIdentity, remainingBody: &remainingBody) {
+                quote = ["identity": quotedIdentity!, "text": quotedText]
+                body = remainingBody as String?
+            }
         }
     }
     
@@ -316,13 +340,13 @@ class WebMessageObject: NSObject {
         thumbnail = nil
         
         if let fileThumbnail = fileMessage.thumbnail, fileThumbnail.data != nil {
-            if fileMessage.blobThumbnailId != nil {
-                if !session.requestedThumbnails(contains: fileMessage.blobThumbnailId) {
+            if let thumbnailID = fileMessage.blobThumbnailId {
+                if !session.requestedThumbnails(contains: thumbnailID) {
                     let webThumbnail = WebThumbnail.init(fileMessage, onlyThumbnail: true)
                     thumbnail = webThumbnail.objectDict()
                     
                     if !forConversationsRequest {
-                        session.addRequestedThumbnail(messageId: fileMessage.blobThumbnailId)
+                        session.addRequestedThumbnail(messageId: thumbnailID)
                     }
                 }
             } else {
@@ -331,7 +355,7 @@ class WebMessageObject: NSObject {
             }
         }
         
-        if let fileCaption = fileMessage.getCaption() {
+        if let fileCaption = fileMessage.caption {
             caption = fileCaption
         }
         statusType = "text"
@@ -476,11 +500,11 @@ struct WebBlob {
     }
     
     init(fileMessage: FileMessage) {
-        if fileMessage.data.data != nil {
-            blob = fileMessage.data.data
+        if let fileMessageData = fileMessage.data {
+            blob = fileMessageData.data
         }
         name = fileMessage.blobGetWebFilename()
-        type = fileMessage.mimeType
+        type = fileMessage.mimeType ?? "application/octet-stream"
     }
     
     func objectDict() -> [String: Any] {
@@ -557,10 +581,10 @@ struct WebThumbnail {
     }
     
     init(_ fileMessage: FileMessage, onlyThumbnail: Bool) {
-        let size = MediaConverter.getWebThumbnailSize(forImageData: fileMessage.thumbnail.data)
-        height = Int(size.height)
-        width = Int(size.width)
-        if let tmpPreview = MediaConverter.getWebPreviewData(fileMessage.thumbnail.data) {
+        if let thumbnail = fileMessage.thumbnail, let thumbnailData = thumbnail.data, let tmpPreview = MediaConverter.getWebPreviewData(thumbnailData) {
+            let size = MediaConverter.getWebThumbnailSize(forImageData: thumbnailData)
+            height = Int(size.height)
+            width = Int(size.width)
             preview = tmpPreview
         } else {
             height = Int(44)
@@ -568,8 +592,8 @@ struct WebThumbnail {
             preview = UIImage.init(named: "Thumbnail")!.pngData()!
         }
         
-        if !onlyThumbnail {
-            image = MediaConverter.getWebThumbnailData(fileMessage.thumbnail.data)
+        if !onlyThumbnail, let thumbnail = fileMessage.thumbnail, let thumbnailData = thumbnail.data {
+            image = MediaConverter.getWebThumbnailData(thumbnailData)
         }
     }
     
@@ -652,9 +676,9 @@ struct WebFile {
     var inApp: Bool
     
     init(_ fileMessage: FileMessage) {
-        name = fileMessage.fileName
-        size = fileMessage.fileSize.intValue
-        type = fileMessage.mimeType
+        name = fileMessage.fileName!
+        size = fileMessage.fileSize!.intValue
+        type = fileMessage.mimeType!
         inApp = false
     }
     

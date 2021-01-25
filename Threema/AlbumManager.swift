@@ -217,8 +217,18 @@ import CocoaLumberjackSwift
     }
     
     @objc func saveMovieFromURL(movieURL: URL) {
-        if UIVideoAtPathIsCompatibleWithSavedPhotosAlbum(movieURL.absoluteString) {
-            UISaveVideoAtPathToSavedPhotosAlbum(movieURL.absoluteString, self, #selector(self.savedImage), nil)
+        PHPhotoLibrary.shared().performChanges({
+            PHAssetCreationRequest.creationRequestForAssetFromVideo(atFileURL: movieURL)
+        }) { success, error in
+            if success {
+                DDLogInfo(self.successMessage)
+            } else {
+                guard let err = error else {
+                    DDLogError(self.generalError)
+                    return
+                }
+                DDLogError(self.writeErrorMessage + "\(err.localizedDescription)")
+            }
         }
     }
     

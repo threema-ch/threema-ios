@@ -113,7 +113,7 @@
 "export_progress_label" = "%li / %li Messages exported";
 "caption" = "Caption";
 "fileNotDownloaded" = "File has not been downloaded or has been deleted.";
-"include_media_title" = "Include media (images, videos) as attachments? Large chats are split into multiple files.\n\nA modern ZIP tool with AES support is needed in order to unzip the file, e.g. 7-Zip or The Unarchiver (Mac).";
+"include_media_title" = "Include media (images, videos) as attachments?\n\nA modern ZIP tool with AES support is needed in order to unzip the file, e.g. 7-Zip or The Unarchiver (Mac).";
 
 
 /* image sizes */
@@ -133,17 +133,17 @@
 "max_x_minutes" = "Max. %d minutes";
 
 /* Sound names */
-"sound_none" = "No sound";
+"sound_none" = "None";
 "sound_default" = "Default";
-"sound_silent" = "Vibrate only";
+"sound_silent" = "Vibrate Only";
 "sound_bamboo" = "Bamboo";
 "sound_drum" = "Drum";
 "sound_glass" = "Glass";
-"sound_incoming_message" = "Incoming message";
+"sound_incoming_message" = "Incoming Message";
 "sound_input" = "Input";
 "sound_marimba1" = "Marimba 1";
 "sound_marimba2" = "Marimba 2";
-"sound_music_box" = "Music box";
+"sound_music_box" = "Music Box";
 "sound_pulse" = "Pulse";
 "sound_sms" = "SMS";
 "sound_received_message" = "Threema";
@@ -257,11 +257,13 @@
 "record_audio" = "Record Audio";
 "scan_qr" = "Scan QR code";
 "share_file" = "Share File";
-"send_item_photo" = "Preview Photo";
-"send_item_video" = "Preview Video";
-"send_items" = "Preview %d Photos/Videos";
-"send_items_photo" = "Preview %d Photos";
-"send_items_video" = "Preview %d Videos";
+"add_item_caption" = "Add Caption";
+"add_items_caption" = "Add Captions";
+"send_item_immediately_photo" = "Send Photo";
+"send_item_immediately_video" = "Send Video";
+"send_items_immediately" = "Send %d Photos/Videos";
+"send_items_immediately_photo" = "Send %d Photos";
+"send_items_immediately_video" = "Send %d Videos";
 
 "record" = "Record";
 "play" = "Play";
@@ -623,7 +625,9 @@
 
 /* VoIP Call */
 "call_mute" = "Mute";
+"call_unmute" = "Unmute";
 "call_speaker" = "Speaker";
+"call_earpiece" = "Earpiece";
 "call_end" = "Hang up";
 "call_camera_activate_button" = "Activate camera";
 "call_camera_deactivate_button" = "Deactivate camera";
@@ -644,6 +648,7 @@
 "call_accept" = "Accept";
 "call_reject" = "Reject";
 "call_hide_call" = "Hide call";
+"call_no_wifi" = "Call via cellular network. Learn more…";
 
 "call_threema_title" = "Start Threema Call";
 "call_callkit_button_title" = "Threema";
@@ -675,6 +680,9 @@
 
 "call_threema_video_in_chat_info_title" = "New: Video Calls";
 "call_threema_video_in_chat_info_description" = "In addition to tap-proof voice calls, Threema now offers end-to-end encrypted video calls.";
+
+"call_threema_cellular_instead_of_wifi_title" = "Call via Cellular Network";
+"call_threema_cellular_instead_of_wifi_text" = "Warning: This call causes data transfer in the cellular network.";
 
 /* Privacy Policy */
 "privacy_policy_about" = "Threema protects your privacy more rigorously than any other messenger. Find out more in our Privacy Policy.";
@@ -900,6 +908,7 @@
 "settings_dev_mode" = "Dev Mode";
 
 "settings_advanced_flush_message_queue" = "Flush Message Queue";
+"settings_advanced_orphaned_files_cleanup" = "Delete Orphaned Files";
 
 // Dev Mode
 "settings_devmode_quote_v2" = "Quote V2";
@@ -949,6 +958,25 @@
 "settings_notifications_masterDnd_startTime" = "Start of Working Hours";
 "settings_notifications_masterDnd_endTime" = "End of Working Hours";
 "settings_notifications_masterDnd_info" = "Off-Hours Active";
+
+// Orphaned files delete
+"settings_orphaned_files_description" = "When deleting data in the Storage Management in previous Threema versions, it could happen in rare cases that (media) files were not deleted correctly but removed in Threema.
+
+Create an iTunes backup first; data loss may occur!";
+"settings_orphaned_files_title" = "ORPHANED FILES";
+"settings_orphaned_files_button" = "Move to Trash Bin";
+"settings_orphaned_files_footer" = "%@ of %@ files are orphaned.
+
+Move the orphaned files to the trash bin, and ensure that no (media) files are missing in Threema.";
+"settings_orphaned_files_footer_no_files" = "There are no orphaned files.";
+"settings_orphaned_files_bin_title" = "TRASH BIN";
+"settings_orphaned_files_bin_restore_button" = "Restore Contents of Trash Bin";
+"settings_orphaned_files_bin_delete_button" = "Delete Contents of Trash Bin";
+"settings_orphaned_files_bin_footer" = "There are %@ files (%@) in the trash bin.
+
+If there are no (media) files missing in Threema, empty the trash bin to permanently delete the orphaned files.";
+"settings_orphaned_files_bin_footer_no_files" = "The trash bin is empty.";
+"settings_orphaned_files_bin_delete_conformation" = "Would you like to permanently delete the orphaned files? This action cannot be undone.";
 
 // Threema calls settings
 "settings_threema_calls_enable_calls" = "Enable Threema Calls";

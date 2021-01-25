@@ -88,7 +88,7 @@
         return nil;
     }
     
-    NSString *fileName = [_message getFilename];
+    NSString *fileName = [[_message video] getFilename];
     if (fileName == nil) {
         fileName = tmpFileName;
     }
@@ -111,9 +111,15 @@
 - (void)loadUnderlyingImageAndNotify {
     // loaded already
     if (_message.video != nil) {
+        if (_message.thumbnail != nil) {
+            if (_message.thumbnail.data != nil) {
+                _image = [[UIImage alloc] initWithData:_message.thumbnail.data];
+                [self postCompleteNotification];
+            }
+        }
         return;
     }
-    
+
     // loading
     if (_message.progress != nil) {
         return;

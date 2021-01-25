@@ -1,10 +1,10 @@
-/*
+/* 
   Localizable.strings
   Threema
 
   Copyright (c) 2015 Threema GmbH. All rights reserved.
 *//* JKLockScreenViewController */
-"cancel" = "İptal etmek";
+"cancel" = "İptal Et";
 "delete" = "Sil";
 
 /* Mentions */
@@ -50,7 +50,7 @@
 "error_message_none_feature_level" = "Hiçbir alıcının dosya mesajlarını destekleyen bir uygulama sürümü yok: %@";
 
 "video_too_long_title" = "Video çok uzun";
-"video_too_long_message" = "Bu video gönderilemeyecek kadar uzun. Geçerli kalite ayarında izin verilen maksimum uzunluk %.0f saniyedir.";
+"video_too_long_message" = "Bu video gönderilemeyecek kadar uzun. İzin verilen maksimum uzunluk %.0f Dakikadır .";
 
 /* KKPasscodeLock */
 "On" = "Açık";

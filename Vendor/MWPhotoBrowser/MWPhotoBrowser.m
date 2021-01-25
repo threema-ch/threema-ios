@@ -26,7 +26,7 @@
 #import "Threema-Swift.h"
 #import "ActivityUtil.h"
 #import "ContactGroupPickerViewController.h"
-#import "FeatureMaskChecker.h"
+#import "MediaBrowserFile.h"
 ///***** END THREEMA MODIFICATION: Add AppGroup and utils *********/
 
 #define PADDING                  10
@@ -694,11 +694,13 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
 	_pageIndexBeforeRotation = _currentPageIndex;
 	_rotating = YES;
     
+    /***** BEGIN THREEMA MODIFICATION: Remove this code, its not needed anymore *********/
     // In iOS 7 the nav bar gets shown after rotation, but might as well do this for everything!
-    if ([self areControlsHidden]) {
-        // Force hidden
-        self.navigationController.navigationBarHidden = YES;
-    }
+//    if ([self areControlsHidden]) {
+//        // Force hidden
+//        self.navigationController.navigationBarHidden = YES;
+//    }
+    /***** END THREEMA MODIFICATION: Remove this code, its not needed anymore 8.0 *********/
 	
 }
 
@@ -1578,6 +1580,16 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
     if (![self numberOfPhotos] || _gridController || _alwaysShowControls)
         hidden = NO;
     
+    /***** BEGIN THREEMA MODIFICATION: Hide toolbar only when it's a image *********/
+    id currentFile = [self photoAtIndex:_currentPageIndex];
+    if ([currentFile isKindOfClass:[MediaBrowserFile class]]) {
+        MediaBrowserFile *mediaBrowserFile = (MediaBrowserFile *)currentFile;
+        if (![mediaBrowserFile canHideToolBar]) {
+            hidden = NO;
+        }
+    }
+    /***** END THREEMA MODIFICATION: Hide toolbar only when it's a image *********/
+    
     // Cancel any timers
     [self cancelControlHiding];
     
@@ -1885,6 +1897,16 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
            [defaults synchronize];
            
            [self.activityViewController setCompletionWithItemsHandler:^(UIActivityType  _Nullable activityType, BOOL completed, NSArray * _Nullable returnedItems, NSError * _Nullable activityError) {
+               
+               // Fix: iOS 13 close modal view after save image to photos
+               if (@available(iOS 13.0, *)) {
+                   if (activityType == UIActivityTypeSaveToCameraRoll && completed){
+                       // do nothing
+                   } else {
+                       [weakSelf dismissViewControllerAnimated:NO completion:nil];
+                   }
+               }
+               
                weakSelf.activityViewController = nil;
                [weakSelf hideControlsAfterDelay];
                [weakSelf hideProgressHUD:YES];
@@ -2023,7 +2045,7 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
         // Fix: iOS 13 close modal view after save image to photos
         UIViewController *fakeVC=[[UIViewController alloc] init];
 
-        if (@available(iOS 13.0, *)) {
+        if (@available(iOS 13.0, *) && !@available(iOS 14.3, *)) {
             [self presentViewController:fakeVC animated:NO completion:^{
                 [fakeVC presentViewController:self.activityViewController animated:YES completion:nil];
             }];
@@ -2045,21 +2067,15 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
 #pragma mark - Contact picker delegate
 
 - (void)contactPicker:(ContactGroupPickerViewController*)contactPicker didPickConversations:(NSSet *)conversations renderType:(NSNumber *)renderType sendAsFile:(BOOL)sendAsFile {
-    FeatureMaskChecker *featureMaskChecker = [[FeatureMaskChecker alloc] init];
-    
     id <MWPhoto> photo = [self photoAtIndex:_currentPageIndex];
     if ([self numberOfPhotos] > 0 && [photo underlyingImage]) {
         NSString *filename = [FileUtility getTemporarySendableFileNameWithBase:@"image"];
         NSURL *photoUrl = [photo urlForExportData:filename];
-    
-        [featureMaskChecker checkFileTransferFor:conversations presentAlarmOn:contactPicker onSuccess:^{
-            for (Conversation *conversation in conversations) {
-                [URLSender sendUrl:photoUrl asFile:sendAsFile caption:contactPicker.additionalTextToSend conversation:conversation];
-            }
-            [contactPicker dismissViewControllerAnimated:YES completion:nil];
-        } onFailure:^{
-            [contactPicker dismissViewControllerAnimated:YES completion:nil];
-        }];
+        
+        for (Conversation *conversation in conversations) {
+            [URLSender sendUrl:photoUrl asFile:sendAsFile caption:contactPicker.additionalTextToSend conversation:conversation];
+        }
+        [contactPicker dismissViewControllerAnimated:YES completion:nil];
     } else {
         [contactPicker dismissViewControllerAnimated:YES completion:nil];
     }

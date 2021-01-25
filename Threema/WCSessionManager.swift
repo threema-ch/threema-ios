@@ -569,11 +569,11 @@ extension WCSessionManager {
         for managedObject in updatedObjects {
             switch managedObject {
             case is Contact:
-                self.updateContact(managedObject as! Contact)
+                updateContact(managedObject as! Contact)
             case is BaseMessage:
-                self.updateBaseMessage(managedObject as! BaseMessage)
+                updateBaseMessage(managedObject as! BaseMessage)
             case is Conversation:
-                self.updateConversation(managedObject as! Conversation)
+                updateConversation(managedObject as! Conversation)
             default:
                 break
             }
@@ -581,29 +581,35 @@ extension WCSessionManager {
     }
     
     private func handleInsertedObjects(insertedObjects: Set<NSManagedObject>) {
-        let backgroundKey = kAppAckBackgroundTask + SwiftUtils.pseudoRandomString(length: 10)
-        BackgroundTaskManager.shared.newBackgroundTask(key: backgroundKey, timeout: Int(kAppCoreDataProcessMessageBackgroundTaskTime)) {
-            for managedObject in insertedObjects {
-                switch managedObject {
-                case is Contact:
-                    let contact = managedObject as! Contact
-                    if contact.identity != nil && contact.publicKey != nil {
-                        let objectMode: WebReceiverUpdate.ObjectMode = .new
-                        self.responseUpdateContact(contact: contact, objectMode: objectMode)
-                    }
-                case is BaseMessage:
-                    self.insertBaseMessage(managedObject as! BaseMessage)
-                case is Conversation:
-                    self.insertConversation(managedObject as! Conversation)
-                default:
-                    break
-                }
+        for managedObject in insertedObjects {
+            switch managedObject {
+            case is Contact:
+                insertContact(managedObject as! Contact)
+            case is BaseMessage:
+                insertBaseMessage(managedObject as! BaseMessage)
+            case is Conversation:
+                insertConversation(managedObject as! Conversation)
+            default:
+                break
             }
-            
-            BackgroundTaskManager.shared.cancelBackgroundTask(key: backgroundKey)
         }
     }
     
+    private func handleDeletedObjects(deletedObjects: Set<NSManagedObject>) {
+        for managedObject in deletedObjects {
+            switch managedObject {
+            case is Contact:
+                deleteContact(managedObject as! Contact)
+            case is BaseMessage:
+                deleteBaseMessage(managedObject as! BaseMessage)
+            case is Conversation:
+                deleteConversation(managedObject as! Conversation)
+            default:
+                break
+            }
+        }
+    }
+        
     private func updateContact(_ contact: Contact) {
         let changedValues = contact.changedValues()
         
@@ -697,45 +703,114 @@ extension WCSessionManager {
         }
     }
     
-    private func insertConversation(_ conversation: Conversation) {
-        if conversation.isGroup() {
-            let receiverObjectMode: WebReceiverUpdate.ObjectMode = .new
-            let groupProxy = GroupProxy.init(for: conversation)
-            self.responseUpdateGroup(group: groupProxy!, objectMode: receiverObjectMode)
+    private func insertContact(_ contact: Contact) {
+        let backgroundKey = kAppAckBackgroundTask + SwiftUtils.pseudoRandomString(length: 10)
+        BackgroundTaskManager.shared.newBackgroundTask(key: backgroundKey, timeout: Int(kAppCoreDataProcessMessageBackgroundTaskTime)) {
+            if contact.identity != nil && contact.publicKey != nil {
+                let objectMode: WebReceiverUpdate.ObjectMode = .new
+                self.responseUpdateContact(contact: contact, objectMode: objectMode)
+            }
+            BackgroundTaskManager.shared.cancelBackgroundTask(key: backgroundKey)
         }
-        
-        let objectMode: WebConversationUpdate.ObjectMode = .new
-        self.responseUpdateConversation(conversation: conversation, objectMode: objectMode)
+    }
+    
+    private func insertConversation(_ conversation: Conversation) {
+        let backgroundKey = kAppAckBackgroundTask + SwiftUtils.pseudoRandomString(length: 10)
+        BackgroundTaskManager.shared.newBackgroundTask(key: backgroundKey, timeout: Int(kAppCoreDataProcessMessageBackgroundTaskTime)) {
+            if conversation.isGroup() {
+                let receiverObjectMode: WebReceiverUpdate.ObjectMode = .new
+                let groupProxy = GroupProxy.init(for: conversation)
+                self.responseUpdateGroup(group: groupProxy!, objectMode: receiverObjectMode)
+            }
+            
+            let objectMode: WebConversationUpdate.ObjectMode = .new
+            self.responseUpdateConversation(conversation: conversation, objectMode: objectMode)
+            BackgroundTaskManager.shared.cancelBackgroundTask(key: backgroundKey)
+        }
     }
     
     private func insertBaseMessage(_ baseMessage: BaseMessage) {
-        if let conversation = baseMessage.conversation {
-            var id: String
-            if conversation.isGroup() {
-                id = conversation.groupId.hexEncodedString()
-            } else {
-                if let sender = baseMessage.sender {
-                    id = sender.identity
+        let backgroundKey = kAppAckBackgroundTask + SwiftUtils.pseudoRandomString(length: 10)
+        BackgroundTaskManager.shared.newBackgroundTask(key: backgroundKey, timeout: Int(kAppCoreDataProcessMessageBackgroundTaskTime)) {
+            if let conversation = baseMessage.conversation {
+                var id: String
+                if conversation.isGroup() {
+                    id = conversation.groupId.hexEncodedString()
                 } else {
-                    if let contact = conversation.contact {
-                        id = contact.identity
+                    if let sender = baseMessage.sender {
+                        id = sender.identity
                     } else {
-                        id = MyIdentityStore.shared().identity
+                        if let contact = conversation.contact {
+                            id = contact.identity
+                        } else {
+                            id = MyIdentityStore.shared().identity
+                        }
                     }
+                }
+                
+                switch baseMessage {
+                case is TextMessage:
+                    self.processTextMessageResponse(baseMessage, id)
+                case is SystemMessage:
+                    self.processSystemMessageResponse(baseMessage, id)
+                case is FileMessage, is ImageMessage, is VideoMessage, is AudioMessage:
+                    self.processFileMessageResponse(baseMessage, id)
+                default:
+                    break
+                }
+            }
+            BackgroundTaskManager.shared.cancelBackgroundTask(key: backgroundKey)
+        }
+    }
+    
+    private func deleteContact(_ contact: Contact) {
+        if contact.identity != nil && contact.publicKey != nil {
+            let objectMode: WebReceiverUpdate.ObjectMode = .removed
+            self.responseUpdateContact(contact: contact, objectMode: objectMode)
+        }
+    }
+    
+    private func deleteBaseMessage(_ baseMessage: BaseMessage) {
+        let changedValues = baseMessage.changedValues()
+        let changedValuesForCurrentEvent = baseMessage.changedValuesForCurrentEvent()
+        let identity: String?
+        var conversation: Conversation? = nil
+        
+        if changedValues.keys.contains("conversation") && changedValuesForCurrentEvent["conversation"] != nil {
+            conversation = changedValuesForCurrentEvent["conversation"] as? Conversation
+        }
+        if let conv = baseMessage.conversation {
+            conversation = conv
+        }
+        
+        if let conv = conversation {
+            if let sender = baseMessage.sender {
+                identity = sender.identity
+            } else {
+                if let contact = conv.contact {
+                    identity = contact.identity
+                }
+                else {
+                    identity = MyIdentityStore.shared().identity
                 }
             }
             
-            switch baseMessage {
-            case is TextMessage:
-                self.processTextMessageResponse(baseMessage, id)
-            case is SystemMessage:
-                self.processSystemMessageResponse(baseMessage, id)
-            case is FileMessage, is ImageMessage, is VideoMessage, is AudioMessage:
-                self.processFileMessageResponse(baseMessage, id)
-            default:
-                break
+            if conv.isGroup() {
+                let objectMode: WebMessagesUpdate.ObjectMode = .removed
+                self.responseUpdateMessage(with: conv.groupId.hexEncodedString(), message: baseMessage, conversation: conv, objectMode: objectMode)
+            }
+            if let identity = identity, !conv.isGroup() {
+                    let objectMode: WebMessagesUpdate.ObjectMode = .removed
+                    self.responseUpdateMessage(with: identity, message: baseMessage, conversation: conv, objectMode: objectMode)
             }
         }
+    }
+    
+    private func deleteConversation(_ conversation: Conversation) {
+        let changedValuesForCurrentEvent = conversation.changedValuesForCurrentEvent()
+        let objectMode: WebConversationUpdate.ObjectMode = .removed
+        let contact: Contact? = changedValuesForCurrentEvent["contact"] as? Contact
+        self.responseUpdateDeletedConversation(conversation: conversation, contact: contact, objectMode: objectMode)
     }
     
     private func processTextMessageResponse(_ baseMessage: BaseMessage, _ id: String) {
@@ -803,64 +878,6 @@ extension WCSessionManager {
         }
     }
     
-    private func handleDeletedObjects(deletedObjects: Set<NSManagedObject>) {
-        let backgroundKey = kAppAckBackgroundTask + SwiftUtils.pseudoRandomString(length: 10)
-        BackgroundTaskManager.shared.newBackgroundTask(key: backgroundKey, timeout: Int(kAppCoreDataProcessMessageBackgroundTaskTime)) {
-            for managedObject in deletedObjects {
-                if managedObject is Conversation {
-                    let conversation = managedObject as! Conversation
-                    let objectMode: WebConversationUpdate.ObjectMode = .removed
-                    let contact: Contact? = conversation.changedValuesForCurrentEvent()["contact"] as? Contact
-                    self.responseUpdateDeletedConversation(conversation: conversation, contact: contact, objectMode: objectMode)
-                }
-                else if managedObject is Contact {
-                    let contact = managedObject as! Contact
-                    if contact.identity != nil && contact.publicKey != nil {
-                        let objectMode: WebReceiverUpdate.ObjectMode = .removed
-                        self.responseUpdateContact(contact: contact, objectMode: objectMode)
-                    }
-                }
-                else if managedObject is BaseMessage {
-                    let baseMessage = managedObject as! BaseMessage
-                    let identity: String?
-                    var conversation: Conversation? = nil
-                    
-                    if baseMessage.changedValues().keys.contains("conversation") && baseMessage.changedValuesForCurrentEvent()["conversation"] != nil {
-                        conversation = baseMessage.changedValuesForCurrentEvent()["conversation"] as? Conversation
-                    }
-                    if baseMessage.conversation != nil {
-                        conversation = baseMessage.conversation
-                    }
-                    
-                    if conversation != nil {
-                        if baseMessage.sender != nil {
-                            identity = baseMessage.sender.identity
-                        } else {
-                            if conversation!.contact != nil {
-                                identity = conversation!.contact.identity
-                            }
-                            else {
-                                identity = MyIdentityStore.shared().identity
-                            }
-                        }
-                        
-                        if conversation!.isGroup() {
-                            let objectMode: WebMessagesUpdate.ObjectMode = .removed
-                            self.responseUpdateMessage(with: conversation!.groupId.hexEncodedString(), message: baseMessage, conversation: conversation!, objectMode: objectMode)
-                        }
-                        if identity != nil {
-                            if !conversation!.isGroup() {
-                                let objectMode: WebMessagesUpdate.ObjectMode = .removed
-                                self.responseUpdateMessage(with: identity!, message: baseMessage, conversation: conversation!, objectMode: objectMode)
-                            }
-                        }
-                    }
-                }
-            }
-            BackgroundTaskManager.shared.cancelBackgroundTask(key: backgroundKey)
-        }
-    }
-    
     private func baseMessageIdentity(_ baseMessage: BaseMessage) -> String {
         if let sender = baseMessage.sender {
             return sender.identity
@@ -871,7 +888,7 @@ extension WCSessionManager {
         }
         
         return MyIdentityStore.shared().identity
-    }    
+    }
 }
 
 extension WCSessionManager {

@@ -22,14 +22,14 @@
                                 <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <prototypes>
                                     <tableViewCell contentMode="scaleToFill" selectionStyle="blue" hidesAccessoryWhenEditing="NO" indentationLevel="1" indentationWidth="0.0" reuseIdentifier="PickerContactCell" id="BdT-9C-WjF" customClass="PickerContactCell">
-                                        <rect key="frame" x="0.0" y="28" width="375" height="49.5"/>
+                                        <rect key="frame" x="0.0" y="28" width="375" height="49"/>
                                         <autoresizingMask key="autoresizingMask"/>
                                         <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="BdT-9C-WjF" id="BvR-1a-fJO">
-                                            <rect key="frame" x="0.0" y="0.0" width="375" height="49.5"/>
+                                            <rect key="frame" x="0.0" y="0.0" width="375" height="49"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                             <subviews>
                                                 <imageView userInteractionEnabled="NO" contentMode="scaleToFill" image="UnknownPerson" translatesAutoresizingMaskIntoConstraints="NO" id="Dlj-6f-UB6">
-                                                    <rect key="frame" x="16" y="5" width="40" height="40"/>
+                                                    <rect key="frame" x="16" y="4.5" width="40" height="40"/>
                                                     <constraints>
                                                         <constraint firstAttribute="width" constant="40" id="QXH-AW-ejj"/>
                                                         <constraint firstAttribute="height" constant="40" id="wyb-47-eY1"/>
@@ -37,7 +37,7 @@
                                                     <inset key="insetFor6xAndEarlier" minX="5" minY="0.0" maxX="-5" maxY="0.0"/>
                                                 </imageView>
                                                 <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="249" verticalHuggingPriority="251" horizontalCompressionResistancePriority="749" verticalCompressionResistancePriority="751" text="MacBook Office 10 7" lineBreakMode="tailTruncation" numberOfLines="2" baselineAdjustment="alignBaselines" adjustsFontForContentSizeCategory="YES" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="h1y-ik-9t4" customClass="ContactNameLabel">
-                                                    <rect key="frame" x="64" y="12" width="163.5" height="25.5"/>
+                                                    <rect key="frame" x="64" y="12" width="163.5" height="25"/>
                                                     <inset key="insetFor6xAndEarlier" minX="5" minY="0.0" maxX="5" maxY="0.0"/>
                                                     <fontDescription key="fontDescription" style="UICTFontTextStyleHeadline"/>
                                                     <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
@@ -52,14 +52,14 @@
                                                     <inset key="insetFor6xAndEarlier" minX="-5" minY="0.0" maxX="5" maxY="0.0"/>
                                                 </imageView>
                                                 <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="253" horizontalCompressionResistancePriority="753" text="IDENTITY" textAlignment="right" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontForContentSizeCategory="YES" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="fni-cN-6SR">
-                                                    <rect key="frame" x="308.5" y="24" width="50.5" height="14.5"/>
+                                                    <rect key="frame" x="308.5" y="24" width="50.5" height="14"/>
                                                     <inset key="insetFor6xAndEarlier" minX="-5" minY="0.0" maxX="5" maxY="0.0"/>
                                                     <fontDescription key="fontDescription" style="UICTFontTextStyleCaption2"/>
                                                     <color key="textColor" red="0.49803921569999998" green="0.49803921569999998" blue="0.49803921569999998" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                                     <color key="highlightedColor" red="0.50196078430000002" green="0.49803921569999998" blue="0.49803921569999998" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                                 </label>
                                                 <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="WorkContact.png" translatesAutoresizingMaskIntoConstraints="NO" id="U2a-La-OXg">
-                                                    <rect key="frame" x="16" y="31" width="14" height="14"/>
+                                                    <rect key="frame" x="16" y="30.5" width="14" height="14"/>
                                                     <constraints>
                                                         <constraint firstAttribute="height" constant="14" id="4P3-WQ-pfb"/>
                                                         <constraint firstAttribute="width" constant="14" id="xwK-aC-HS3"/>
@@ -95,7 +95,7 @@
                                         </connections>
                                     </tableViewCell>
                                     <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" selectionStyle="blue" hidesAccessoryWhenEditing="NO" indentationLevel="1" indentationWidth="0.0" reuseIdentifier="PickerGroupCell" id="ax5-57-nt5" customClass="PickerGroupCell">
-                                        <rect key="frame" x="0.0" y="77.5" width="375" height="68"/>
+                                        <rect key="frame" x="0.0" y="77" width="375" height="68"/>
                                         <autoresizingMask key="autoresizingMask"/>
                                         <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="ax5-57-nt5" id="JCX-Ka-fbS">
                                             <rect key="frame" x="0.0" y="0.0" width="375" height="68"/>

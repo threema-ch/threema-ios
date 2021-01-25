@@ -53,7 +53,7 @@
 "delete_contact_warn_message" = "Bu kişi için hala aktif bir görüşme var. Bu kişiyi silerseniz, konuşma (sohbet geçmişi dahil) de silinir.";
 
 /* JKLockScreenViewController */
-"cancel" = "İptal etmek";
+"cancel" = "İptal Et";
 "continue" = "Devam et";
 "ok" = "Tamam";
 "no" = "Hayır";
@@ -113,7 +113,7 @@
 "export_progress_label" = "%li / %li Dışa aktarılan mesajlar";
 "caption" = "Başlık";
 "fileNotDownloaded" = "Dosya indirilmedi veya silinmiş.";
-"include_media_title" = "Medya (resimler, videolar) ek olarak dahil edilsin mi? Sınır %d MB; gerekirse eski medya atlanır.\n\n7-Zip veya The Unarchiver (Mac) gibi dosyayı açmak için AES destekli modern bir ZIP aracı veya uygulama gereklidir.";
+"include_media_title" = "Medya (resimler, videolar) ek olarak dahil edilsin mi?\n\n7-Zip veya The Unarchiver (Mac) gibi dosyayı açmak için AES destekli modern bir ZIP aracı veya uygulama gereklidir.";
 
 
 /* image sizes */
@@ -133,13 +133,13 @@
 "max_x_minutes" = "En Fazla %d Dakika";
 
 /* Sound names */
-"sound_none" = "Ses Yok";
+"sound_none" = "Yok";
 "sound_default" = "Varsayılan";
-"sound_silent" = "Sadece Titreşim";
+"sound_silent" = "Yalnızca Titret";
 "sound_bamboo" = "Bambu";
 "sound_drum" = "Davul Sesi";
 "sound_glass" = "Bardak Sesi";
-"sound_incoming_message" = "Beklenmeyen Mesaj";
+"sound_incoming_message" = "Gelen Mesaj";
 "sound_input" = "Giriş";
 "sound_marimba1" = "Marimba 1";
 "sound_marimba2" = "Marimba 2";
@@ -248,20 +248,20 @@
 
 "take_photo_or_video" = "Fotoğraf veya Video Çekin";
 "take_photo" = "Fotoğraf çek";
-"choose_existing" = "Var olanlardan seç";
+"choose_existing" = "Galeriden Seç";
 "edit_photos" = "Seçilenleri düzenleyin";
 "delete_photo" = "Fotoğrafı Sil";
 "delete_video" = "Videoyu Sil";
 "delete_file" = "Dosyayı Sil";
-"share_location" = "Konumu paylaşın";
+"share_location" = "Konum Paylaşın";
 "record_audio" = "Ses Kaydı";
 "scan_qr" = "QR kodunu tara";
 "share_file" = "Dosya Paylaş";
-"send_item_photo" = "Fotoğraf Gönder";
-"send_item_video" = "Video Gönder";
-"send_items" = "%d Fotoğraf / Video Gönder";
-"send_items_photo" = "%d Fotoğraf Gönder";
-"send_items_video" = "%d Video Gönder";
+"send_item_immediately_photo" = "Resim Gönder";
+"send_item_immediately_video" = "Video Gönder";
+"send_items_immediately" = "%d Fotoğraf / Video Gönder";
+"send_items_immediately_photo" = "%d Fotoğraf Gönder";
+"send_items_immediately_video" = "%d Video Gönder";
 
 "record" = "Kayıt";
 "play" = "Oynat";
@@ -500,7 +500,7 @@
 "Save" = "Kayıt etmek";
 "enter_license_username_placeholder" = "Kullanıcı adı";
 "of" = "den-dan";
-"Cancel" = "İptal etmek";
+"Cancel" = "İptal Et";
 "enter_license_checking" = "Kimlik bilgilerini kontrol etme";
 "confirm" = "Onaylamak";
 "enter_license_info" = "Özel bir kullanıcıysanız, Threema indirmek için lütfen buraya dokunun.";
@@ -623,7 +623,9 @@
 
 /* VoIP Call */
 "call_mute" = "Sessiz";
+"call_unmute" = "Sesi Aç";
 "call_speaker" = "Konuşmacı";
+"call_earpiece" = "Kulaklık";
 "call_end" = "Telefonu kapatmak";
 "call_camera_activate_button" = "Kamerayı etkinleştir";
 "call_camera_deactivate_button" = "Kamerayı devre dışı bırak";
@@ -644,6 +646,7 @@
 "call_accept" = "Kabul etmek";
 "call_reject" = "Reddetmek";
 "call_hide_call" = "Aramayı gizle";
+"call_no_wifi" = "Hücresel ağ üzerinden arayın. Daha fazla bilgi edin…";
 
 "call_threema_title" = "Threema ile Çağrı Başlat";
 "call_callkit_button_title" = "Threema";
@@ -675,6 +678,9 @@
 
 "call_threema_video_in_chat_info_title" = "Yeni: Video Görüşmeleri";
 "call_threema_video_in_chat_info_description" = "Dokunmaya dayanıklı sesli aramalara ek olarak, Threema artık uçtan uca şifreli video görüşmeleri sunuyor.";
+
+"call_threema_cellular_instead_of_wifi_title" = "Hücresel Ağ üzerinden ara";
+"call_threema_cellular_instead_of_wifi_text" = "Uyarı: Bu arama hücresel şebekede veri aktarımına neden olur.";
 
 /* Privacy Policy */
 "privacy_policy_about" = "Threema gizliliğinizi diğer uygulamalardan daha titiz bir şekilde korur. Gizlilik Politikamızda daha fazla bilgi edinin.";
@@ -900,6 +906,7 @@
 "settings_dev_mode" = "Geliştirici Modu";
 
 "settings_advanced_flush_message_queue" = "İleti Sırasını Temizle";
+"settings_advanced_orphaned_files_cleanup" = "Belirsiz Dosyaları Sil";
 
 // Dev Mode
 "settings_devmode_quote_v2" = "Alıntı V2";
@@ -950,6 +957,25 @@
 "settings_notifications_masterDnd_endTime" = "Çalışma Saatleri Sonu";
 "settings_notifications_masterDnd_info" = "Çalışma Saatleri Aktif";
 
+// Orphaned files delete
+"settings_orphaned_files_description" = "Önceki Threema sürümlerindeki Depolama Yönetimi'ndeki verileri silerken, nadir durumlarda (medya) dosyalarının doğru şekilde silinmediği, ancak Threema'da kaldırıldığı durumlar olabilir.
+
+Veri kaybı olabileceği için önce bir iTunes Yedeklemesi oluşturmanız önemle tavsiye edilir!";
+"settings_orphaned_files_title" = "BELİRSİZ/YANLIZ KALMIŞ DOSYALAR";
+"settings_orphaned_files_button" = "Çöp Kutusuna Taşı";
+"settings_orphaned_files_footer" = "%@ dosyalarının %@ 'si artık kaldı.
+
+Belirsiz kalan dosyaları çöp kutusuna taşıyın ve Threema'da eksik (medya) dosyası olmadığından emin olun.";
+"settings_orphaned_files_footer_no_files" = "Artık dosya yok.";
+"settings_orphaned_files_bin_title" = "ÇÖP KUTUSU";
+"settings_orphaned_files_bin_restore_button" = "Çöp Kutusu İçeriğini Geri Yükleme";
+"settings_orphaned_files_bin_delete_button" = "Çöp Kutusunun İçeriğini Silin";
+"settings_orphaned_files_bin_footer" = "Orada %@ dosya ( %@ çöp kutusu içinde).
+
+Threema'da eksik (medya) dosyası yoksa, artık dosyaları kalıcı olarak silmek için çöp kutusunu boşaltın.";
+"settings_orphaned_files_bin_footer_no_files" = "Çöp kutusu boş.";
+"settings_orphaned_files_bin_delete_conformation" = "Sahipsiz dosyaları kalıcı olarak silmek istiyor musunuz? Bu eylem geri alınamaz.";
+
 // Threema calls settings
 "settings_threema_calls_enable_calls" = "Threema Çağrılarını Etkinleştir";
 "settings_threema_calls_always_relay_calls" = "Çağrıları Her Zaman Aktar";
@@ -975,7 +1001,7 @@
 "imagedate_date" = "%@ Tarihinde çekilen fotoğraf";
 "send_as_file_description" = "Görüntüleri dosya veya satır içi fotoğraf olarak gönderin. Dosyalar, konum verileri gibi tüm meta verileri koruyacak ve daha küçük bir küçük resimle görüntülenecektir.";
 "more_options" = "Daha fazla seçenek";
-"add_caption_to_image" = "Altyazı ekle ...";
+"add_caption_to_image" = "ekleyin ... ekleyin...";
 "add_more_images" = "Daha fazla resim ekleyin";
 "back_to_media_selection" = "Medya seçim ekranına dön";
 "remove_current_image_from_selected_images" = "Mevcut öğeyi seçimden kaldır";

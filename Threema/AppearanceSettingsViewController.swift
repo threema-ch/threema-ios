@@ -45,10 +45,19 @@ class AppearanceSettingsViewController: ThemedTableViewController {
     
     @IBOutlet weak var themeCell: UITableViewCell!
     
+    private var colorThemeObserver: NSObjectProtocol?
+    
+    deinit {
+        if let observer = colorThemeObserver {
+            NotificationCenter.default.removeObserver(observer)
+        }
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        NotificationCenter.default.addObserver(forName: Notification.Name(kNotificationColorThemeChanged), object: nil, queue: nil) { (notification) in
+        colorThemeObserver = NotificationCenter.default.addObserver(forName: Notification.Name(kNotificationColorThemeChanged), object: nil, queue: nil) { [weak self] notification in
+            guard let self = self else { return }
             switch Colors.getTheme() {
             case ColorThemeDark, ColorThemeDarkWork:
                 self.systemThemeButton.layer.shadowColor = Colors.white()?.cgColor

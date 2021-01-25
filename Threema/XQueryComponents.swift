@@ -46,9 +46,11 @@ import CocoaLumberjackSwift
             var results = queryComponents[key] as? [AnyHashable]
             if results == nil {
                 results = [AnyHashable]()
+                results?.append(value)
                 queryComponents[key] = results
+            } else {
+                results?.append(value)
             }
-            results?.append(value)
         }
         return queryComponents
     }

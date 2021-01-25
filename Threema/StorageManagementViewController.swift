@@ -187,7 +187,7 @@ class StorageManagementViewController: ThemedTableViewController {
             UIAlertTemplate.showConfirm(owner: self, popOverSource: self.mediaDeleteButtonLabel!, title: deleteMediaConfirmationSentence(for: mediaOlderThanOption), message: nil, titleOk: BundleUtil.localizedString(forKey: "delete_media"), actionOk: { (action) in
                 
                 self.startMediaDelete()
-                
+                self.cleanTemporaryDirectory()
             }, titleCancel: BundleUtil.localizedString(forKey: "cancel"))
         }
         else if namedSection == .deleteMessage && indexPath.row == 1 {
@@ -195,8 +195,17 @@ class StorageManagementViewController: ThemedTableViewController {
             UIAlertTemplate.showConfirm(owner: self, popOverSource: self.messageDeleteButtonLabel!, title: deleteMessageConfirmationSentence(for: messageOlderThanOption), message: nil, titleOk: BundleUtil.localizedString(forKey: "delete_messages"), actionOk: { (action) in
                 
                 self.startMessageDelete()
+                self.cleanTemporaryDirectory()
                 
             }, titleCancel: BundleUtil.localizedString(forKey: "cancel"))
+        }
+    }
+    
+    private func cleanTemporaryDirectory() {
+        if self.mediaOlderThanOption == .everything {
+            FileUtility.cleanTemporaryDirectory(olderThan: Date())
+        } else {
+            FileUtility.cleanTemporaryDirectory(olderThan: nil)
         }
     }
         
@@ -231,6 +240,7 @@ class StorageManagementViewController: ThemedTableViewController {
                 DDLogInfo("DB size \(ByteCountFormatter.string(fromByteCount: dbSize, countStyle: ByteCountFormatter.CountStyle.file))")
                 
                 FileUtility.pathSizeInBytes(pathUrl: appDataUrl, size: &appSize)
+                FileUtility.pathSizeInBytes(pathUrl: FileManager.default.temporaryDirectory, size: &appSize)
                 DDLogInfo("APP size \(ByteCountFormatter.string(fromByteCount: appSize, countStyle: ByteCountFormatter.CountStyle.file))")
             }
             

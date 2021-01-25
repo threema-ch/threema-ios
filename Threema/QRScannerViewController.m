@@ -20,7 +20,7 @@
 
 #import "QRScannerViewController.h"
 #import <AVFoundation/AVFoundation.h>
-#import "MBProgressHUD.h"
+#import <MBProgressHUD/MBProgressHUD.h>
 #import "Threema-Swift.h"
 
 #ifdef DEBUG

@@ -12,3 +12,4 @@
 /* Explanation why Threema needs the iOS permission to save photos to the "camera roll" (in the user's photo library). */
 "NSPhotoLibraryAddUsageDescription" = "O Threema pode salvar automaticamente os arquivos de mídia recebidos no aplicativo de Fotos.";
 "NSFaceIDUsageDescription" = "Você pode usar o seu Face ID para desbloquear o Threema sem inserir o seu código.";
+"NSLocalNetworkUsageDescription" = "O Threema usa a rede local para fazer ligações.";

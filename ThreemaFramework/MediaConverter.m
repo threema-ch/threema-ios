@@ -71,9 +71,9 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 
 + (UIImage*)scaleImage:(UIImage*)orig toMaxSize:(CGFloat)maxSize {
     // Check if we need to scale this image at all
-    if (orig.size.width <= maxSize && orig.size.height <= maxSize) {
+    if (orig.size.width * orig.scale <= maxSize && orig.size.height * orig.scale <= maxSize) {
         // to rotate the image to the correct orientation
-        return [orig resizedImage:CGSizeMake(orig.size.width, orig.size.height) interpolationQuality:kCGInterpolationLow];
+        return [orig resizedImage:CGSizeMake(orig.size.width * orig.scale, orig.size.height * orig.scale) interpolationQuality:kCGInterpolationLow];
     }
     UIImage *scaled = [orig resizedImageWithContentMode:UIViewContentModeScaleAspectFit bounds:CGSizeMake(maxSize, maxSize) interpolationQuality:kCGInterpolationLow];
     return scaled;
@@ -158,7 +158,8 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     return @[[NSNumber numberWithInt:lowMaxDuration], [NSNumber numberWithInt:highMaxDuration]];
 }
 
-+ (NSTimeInterval)videoMaxDurationAtCurrentQuality {
+/// Returns the maximum duration for a video at the lowest possible quality in minutes.
++ (double)videoMaxDurationAtCurrentQuality {
     long long lowMaxDuration = [VideoConversionHelper getMaxdurationForVideoBitrate:kVideoBitrateLow audioBitrate:kAudioBitrateLow];
     
     return lowMaxDuration;

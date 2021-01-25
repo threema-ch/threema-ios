@@ -95,7 +95,7 @@
 }
 
 -(NSURL *)urlForExportData:(NSString *)tmpFileName {
-    NSString *fileName = [self.imageMessage getFilename];
+    NSString *fileName = [[self.imageMessage image] getFilename];
     if (fileName == nil) {
         fileName = tmpFileName;
     }

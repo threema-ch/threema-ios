@@ -39,7 +39,7 @@
 - (UIImage *)avatarForFirstName:(NSString *)firstName lastName:(NSString *)lastName size:(CGFloat)size;
 
 - (UIImage*)maskedProfilePicture:(UIImage *)image size:(CGFloat)size;
-- (UIImage *)callBackgroundForContact:(Contact *)contact;
+- (nullable UIImage *)callBackgroundForContact:(nonnull Contact *)contact;
 
 - (UIImage *)companyImage;
 - (UIImage *)unknownPersonImage;

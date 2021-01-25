@@ -118,6 +118,43 @@ import Foundation
         }
         return nil
     }
+    
+    class open func calculateCaptionHeight(scaledSize: CGSize, fileMessage: FileMessage) -> CGFloat {
+        let imageInsets = UIEdgeInsets.init(top: 5, left: 5, bottom: 5, right: 5)
+        
+        if let caption = fileMessage.caption, caption.count > 0 {
+            let x: CGFloat = 30.0
+            
+            let maxSize = CGSize.init(width: scaledSize.width - x, height: CGFloat.greatestFiniteMagnitude)
+            var textSize: CGSize?
+            let captionTextNSString = NSString.init(string: caption)
+            
+            if UserSettings.shared().disableBigEmojis && captionTextNSString.isOnlyEmojisMaxCount(3) {
+                var dummyLabelEmoji: ZSWTappableLabel? = nil
+                if dummyLabelEmoji == nil {
+                    dummyLabelEmoji = ChatTextMessageCell.makeAttributedLabel(withFrame: CGRect.init(x: (x/2), y: 0.0, width: maxSize.width, height: maxSize.height))
+                }
+                dummyLabelEmoji!.font = ChatTextMessageCell.emojiFont()
+                dummyLabelEmoji?.attributedText = NSAttributedString.init(string: caption, attributes: [NSAttributedString.Key.font: ChatMessageCell.emojiFont()!])
+                textSize = dummyLabelEmoji?.sizeThatFits(maxSize)
+                textSize!.height = textSize!.height + 23.0
+            } else {
+                var dummyLabel: ZSWTappableLabel? = nil
+                if dummyLabel == nil {
+                    dummyLabel = ChatTextMessageCell.makeAttributedLabel(withFrame: CGRect.init(x: (x/2), y: 0.0, width: maxSize.width, height: maxSize.height))
+                }
+                dummyLabel!.font = ChatTextMessageCell.textFont()
+                let attributed = TextStyleUtils.makeAttributedString(from: caption, with: dummyLabel!.font, textColor: Colors.fontNormal(), isOwn: true, application: UIApplication.shared)
+                let formattedAttributeString = NSMutableAttributedString.init(attributedString: (dummyLabel!.applyMarkup(for: attributed))!)
+                dummyLabel?.attributedText = TextStyleUtils.makeMentionsAttributedString(for: formattedAttributeString, textFont: dummyLabel!.font!, at: dummyLabel!.textColor.withAlphaComponent(0.4), messageInfo: Int32(fileMessage.isOwn!.intValue), application: UIApplication.shared)
+                textSize = dummyLabel?.sizeThatFits(maxSize)
+                textSize!.height = textSize!.height + 23.0
+            }
+            return textSize!.height
+        } else {
+            return imageInsets.top + imageInsets.bottom
+        }
+    }
 }
 
 extension ChatBlobTextMessageCell {

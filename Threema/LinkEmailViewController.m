@@ -21,7 +21,7 @@
 #import "LinkEmailViewController.h"
 #import "MyIdentityStore.h"
 #import "ServerAPIConnector.h"
-#import "MBProgressHUD.h"
+#import <MBProgressHUD/MBProgressHUD.h>
 #import "MDMSetup.h"
 
 @interface LinkEmailViewController ()

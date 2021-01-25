@@ -23,7 +23,7 @@
 
 typedef enum : NSUInteger {
     MediaPickerChooseExisting,
-    MediaPickerTakePhoto,
+    MediaPickerTakePhoto
 } MediaPickerType;
 
 @interface SendMediaAction : ChatViewControllerAction
@@ -31,5 +31,6 @@ typedef enum : NSUInteger {
 @property MediaPickerType mediaPickerType;
 
 - (void)showPreviewForAssets:(NSArray *)assets;
+- (void)sendAssets:(NSArray *)assets asFile:(bool)sendAsFile withCaptions:(NSArray *)captions;
 
 @end

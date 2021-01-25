@@ -92,16 +92,16 @@
     }
     
     NSMutableDictionary *metaDict = [NSMutableDictionary dictionary];
-    if (message.duration > 0) {
+    if ([message.duration intValue] > 0) {
         NSNumber *duration = [[NSNumber alloc] initWithFloat:message.duration.floatValue];
         [metaDict setObject:duration forKey:JSON_FILE_KEY_METADATA_DURATION];
     }
     
-    if (message.height > 0) {
+    if ([message.height intValue] > 0) {
         [metaDict setObject:message.height forKey:JSON_FILE_KEY_METADATA_HEIGHT];
     }
     
-    if (message.width > 0) {
+    if ([message.width intValue] > 0) {
         [metaDict setObject:message.width forKey:JSON_FILE_KEY_METADATA_WIDTH];
     }
     

@@ -305,12 +305,16 @@ import CocoaLumberjackSwift
                 maxSize = ImageURLSenderItemCreator.kImageSizeXLarge
             case "original":
                 if let image = image {
-                    maxSize = max(image.size.width, image.size.height)
+                    maxSize = max(image.size.width, image.size.height) * image.scale
                 } else {
                     maxSize = 0
                 }
             default:
                 maxSize = ImageURLSenderItemCreator.kImageSizeMedium
+        }
+        
+        if maxSize > ImageURLSenderItemCreator.kImageSizeLarge && AppGroup.getCurrentType() == AppGroupTypeShareExtension {
+                maxSize = ImageURLSenderItemCreator.kImageSizeLarge
         }
         
         return maxSize

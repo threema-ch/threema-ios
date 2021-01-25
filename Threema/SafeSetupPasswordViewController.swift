@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import UIKit
+import MBProgressHUD
 
 class SafeSetupPasswordViewController: ThemedTableViewController {
     
@@ -315,5 +316,17 @@ extension SafeSetupPasswordViewController {
             self.serverField.text = "https://"
         }
         self.serverField.becomeFirstResponder()
+    }
+}
+
+extension SafeSetupPasswordViewController {
+    override func dismissKeyboard() {
+        super.dismissKeyboard()
+        
+        passwordField.resignFirstResponder()
+        passwordAgainField.resignFirstResponder()
+        serverField.resignFirstResponder()
+        serverUserNameField.resignFirstResponder()
+        serverPasswordField.resignFirstResponder()
     }
 }

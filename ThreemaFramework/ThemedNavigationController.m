@@ -25,6 +25,8 @@
 @implementation ThemedNavigationController
 
 - (void)viewDidLoad {
+    [super viewDidLoad];
+    
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(colorThemeChanged:) name:kNotificationColorThemeChanged object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(callInBackground:) name:kNotificationCallInBackground object:nil];
     

@@ -100,61 +100,28 @@ extension ChatFileVideoMessageCell {
         let fileMessage = message as! FileMessage
         
         var cellHeight: CGFloat = 40.0
-        let imageInsets = UIEdgeInsets.init(top: 5, left: 5, bottom: 5, right: 5)
         var scaledSize = CGSize.init()
-        if fileMessage.thumbnail != nil {
-            if fileMessage.thumbnail.data != nil && fileMessage.thumbnail.height.floatValue > 0 {
-                let width: CGFloat = CGFloat(fileMessage.thumbnail.width.floatValue)
-                let height: CGFloat = CGFloat(fileMessage.thumbnail.height.floatValue)
-                let size: CGSize = CGSize.init(width: width, height: height)
-                scaledSize = ChatFileVideoMessageCell.scaleImageSize(toCell: size, forTableWidth: tableWidth)
-                if scaledSize.height != scaledSize.height || scaledSize.height < 0 {
-                    scaledSize.height = 120.0
-                }
-                cellHeight = scaledSize.height - 17.0
+        if let thumbnail = fileMessage.thumbnail, thumbnail.data != nil && thumbnail.height.floatValue > 0 {
+            let width: CGFloat = CGFloat(thumbnail.width.floatValue)
+            let height: CGFloat = CGFloat(thumbnail.height.floatValue)
+            let size: CGSize = CGSize.init(width: width, height: height)
+            scaledSize = ChatFileVideoMessageCell.scaleImageSize(toCell: size, forTableWidth: tableWidth)
+            if scaledSize.height != scaledSize.height || scaledSize.height < 0 {
+                scaledSize.height = 120.0
             }
+            cellHeight = scaledSize.height - 17.0
         }
                 
-        if let caption = fileMessage.getCaption(), caption.count > 0 {
-            let x: CGFloat = 30.0
-            let maxSize = CGSize.init(width: scaledSize.width - x, height: CGFloat.greatestFiniteMagnitude)
-            var textSize: CGSize?
-            let captionTextNSString = NSString.init(string: caption)
-
-            if UserSettings.shared().disableBigEmojis && captionTextNSString.isOnlyEmojisMaxCount(3) {
-                var dummyLabelEmoji: ZSWTappableLabel? = nil
-                if dummyLabelEmoji == nil {
-                    dummyLabelEmoji = ChatTextMessageCell.makeAttributedLabel(withFrame: CGRect.init(x: (x/2), y: 0.0, width: maxSize.width, height: maxSize.height))
-                }
-                dummyLabelEmoji!.font = ChatTextMessageCell.emojiFont()
-                dummyLabelEmoji?.attributedText = NSAttributedString.init(string: caption, attributes: [NSAttributedString.Key.font: ChatMessageCell.emojiFont()!])
-                textSize = dummyLabelEmoji?.sizeThatFits(maxSize)
-                textSize!.height = textSize!.height + 18.0
-            } else {
-                var dummyLabel: ZSWTappableLabel? = nil
-                if dummyLabel == nil {
-                    dummyLabel = ChatTextMessageCell.makeAttributedLabel(withFrame: CGRect.init(x: (x/2), y: 0.0, width: maxSize.width, height: maxSize.height))
-                }
-                dummyLabel!.font = ChatTextMessageCell.textFont()
-                let attributed = TextStyleUtils.makeAttributedString(from: caption, with: dummyLabel!.font, textColor: Colors.fontNormal(), isOwn: true, application: UIApplication.shared)
-                let formattedAttributeString = NSMutableAttributedString.init(attributedString: (dummyLabel!.applyMarkup(for: attributed))!)
-                dummyLabel?.attributedText = TextStyleUtils.makeMentionsAttributedString(for: formattedAttributeString, textFont: dummyLabel!.font!, at: dummyLabel!.textColor.withAlphaComponent(0.4), messageInfo: Int32(message.isOwn!.intValue), application: UIApplication.shared)
-                textSize = dummyLabel?.sizeThatFits(maxSize)
-                textSize!.height = textSize!.height + 18.0
-            }
-            cellHeight = cellHeight + textSize!.height
-        } else {
-            cellHeight += imageInsets.top + imageInsets.bottom
-        }
+        cellHeight = cellHeight + ChatBlobTextMessageCell.calculateCaptionHeight(scaledSize: scaledSize, fileMessage: fileMessage)
         
         return cellHeight
     }
-        
+            
     override public func layoutSubviews() {
         let fileMessage = message as! FileMessage
         let imageInsets = UIEdgeInsets.init(top: 5, left: 5, bottom: 5, right: 5)
-        if (fileMessage.thumbnail != nil) {
-            var size = CGSize.init(width: CGFloat(fileMessage.thumbnail.width.floatValue), height: CGFloat(fileMessage.thumbnail.height.floatValue))
+        if let thumbnail = fileMessage.thumbnail {
+            var size = CGSize.init(width: CGFloat(thumbnail.width.floatValue), height: CGFloat(thumbnail.height.floatValue))
             var textSize: CGSize = CGSize.init(width: 0.0, height: 0.0)
             let x: CGFloat = 30.0
             
@@ -167,7 +134,7 @@ extension ChatFileVideoMessageCell {
                 size.width = 120.0
             }
             
-            if let caption = fileMessage.getCaption(), caption.count > 0 {
+            if let caption = fileMessage.caption, caption.count > 0 {
                 textSize = _captionLabel!.sizeThatFits(CGSize.init(width: size.width - x, height: CGFloat.greatestFiniteMagnitude))
                 textSize.height = textSize.height + 12.0
             }
@@ -210,7 +177,7 @@ extension ChatFileVideoMessageCell {
             let size = CGSize.init(width: 80.0, height: 40.0)
             let x: CGFloat = 30.0
             
-            if let caption = fileMessage.getCaption(), caption.count > 0 {
+            if let caption = fileMessage.caption, caption.count > 0 {
                 textSize = _captionLabel!.sizeThatFits(CGSize.init(width: size.width - x, height: CGFloat.greatestFiniteMagnitude))
                 textSize.height = textSize.height + 12.0
             }
@@ -232,7 +199,7 @@ extension ChatFileVideoMessageCell {
     override open func accessibilityLabelForContent() -> String! {
         let fileMessage = message as! FileMessage
         
-        let preText = "\(BundleUtil.localizedString(forKey: "video")!), \(fileMessage.getDuration()?.intValue ?? 0) \(BundleUtil.localizedString(forKey: "seconds")!)"
+        let preText = "\(BundleUtil.localizedString(forKey: "video")!), \(fileMessage.duration?.intValue ?? 0) \(BundleUtil.localizedString(forKey: "seconds")!)"
         if _captionLabel?.text != nil {
             return "\(preText). \(_captionLabel!.text!))"
         }
@@ -283,8 +250,8 @@ extension ChatFileVideoMessageCell {
     
     @objc override open func copyMessage(_ menuController: UIMenuController!) {
         let fileMessage = message as! FileMessage
-        if let caption = fileMessage.getCaption(), caption.count > 0 {
-            UIPasteboard.general.string = fileMessage.getCaption()
+        if let caption = fileMessage.caption, caption.count > 0 {
+            UIPasteboard.general.string = fileMessage.caption
         }
     }
             
@@ -322,8 +289,8 @@ extension ChatFileVideoMessageCell {
 
         
         let fileMessage = message as! FileMessage
-        if fileMessage.data != nil {
-            if fileMessage.data.data != nil {
+        if let fileMessageData = fileMessage.data {
+            if let fileMessageDataData = fileMessageData.data {
                 let conf = UIContextMenuConfiguration.init(identifier: indexPath as NSIndexPath, previewProvider: { () -> UIViewController? in
                     return self.previewViewController()
                 }) { (suggestedActions) -> UIMenu? in
@@ -333,7 +300,7 @@ extension ChatFileVideoMessageCell {
                         let fileName = String.init(format: "%f.%@", Date().timeIntervalSinceReferenceDate, MEDIA_EXTENSION_VIDEO)
                         let tmpurl = URL.init(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(fileName)
                         do {
-                            try fileMessage.data.data.write(to: tmpurl)
+                            try fileMessageDataData.write(to: tmpurl)
                             AlbumManager.shared.saveMovieToLibrary(movieURL: tmpurl) { (success) in
                                 do {
                                     try FileManager.default.removeItem(atPath: tmpurl.path)
@@ -383,8 +350,8 @@ extension ChatFileVideoMessageCell {
             message.addObserver(self, forKeyPath: "data", options: [], context: nil)
         }
 
-        if fileMessage.thumbnail != nil, let thumb = fileMessage.thumbnail.uiImage {
-            _thumbnailView?.image = thumb
+        if let thumbnail = fileMessage.thumbnail, let thumbnailUiImage = thumbnail.uiImage {
+            _thumbnailView?.image = thumbnailUiImage
         }
         
         var autoresizingMask: AutoresizingMask = .flexibleRightMargin
@@ -397,7 +364,7 @@ extension ChatFileVideoMessageCell {
         _downloadBackground?.autoresizingMask = autoresizingMask
         _downloadSizeLabel?.autoresizingMask = autoresizingMask
 
-        if let seconds = fileMessage.getDuration()?.intValue {
+        if let seconds = fileMessage.duration?.intValue {
             _durationLabel?.text = DateFormatter.timeFormatted(seconds)
         } else {
             _durationLabel?.text = nil
@@ -407,7 +374,7 @@ extension ChatFileVideoMessageCell {
         
         updateDownloadSize()
         
-        if let captionText = fileMessage.getCaption(), captionText.count > 0, fileMessage.shouldShowCaption() {
+        if let captionText = fileMessage.caption, captionText.count > 0, fileMessage.shouldShowCaption() {
             let attributed = TextStyleUtils.makeAttributedString(from: captionText, with: _captionLabel!.font, textColor: Colors.fontNormal(), isOwn: true, application: UIApplication.shared)
             let formattedAttributeString = NSMutableAttributedString.init(attributedString: (_captionLabel!.applyMarkup(for: attributed))!)
             _captionLabel?.attributedText = TextStyleUtils.makeMentionsAttributedString(for: formattedAttributeString, textFont: _captionLabel!.font!, at: _captionLabel!.textColor.withAlphaComponent(0.4), messageInfo: Int32(message.isOwn!.intValue), application: UIApplication.shared)

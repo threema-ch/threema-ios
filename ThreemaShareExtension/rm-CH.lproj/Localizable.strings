@@ -1,9 +1,9 @@
-/* 
-  Localizable.strings
-  Threema
-
-  Copyright (c) 2015 Threema GmbH. All rights reserved.
-*/
+/*
+ Localizable.strings
+ Threema
+ 
+ Copyright (c) 2015 Threema GmbH. All rights reserved.
+ */
 
 "need_to_start_app_first_title" = "Threema n'è betg pront";
 "need_to_start_app_first_message" = "P.pl. l'emprim aviar l'applicaziun da Threema";

@@ -57,7 +57,10 @@
     NSURLRequest *request = [NSURLRequest requestWithURL:imageBlobUrl cachePolicy:NSURLRequestReloadIgnoringLocalAndRemoteCacheData timeoutInterval:kBlobLoadTimeout];
     
     receivedData = [NSMutableData data];
-    NSURLSession *session = [NSURLSession sessionWithConfiguration:[NSURLSessionConfiguration defaultSessionConfiguration] delegate:self delegateQueue:[NSOperationQueue mainQueue]];
+    NSURLSessionConfiguration *conf = [NSURLSessionConfiguration defaultSessionConfiguration];
+    conf.requestCachePolicy = NSURLRequestReloadIgnoringLocalAndRemoteCacheData;
+    conf.URLCache = nil;
+    NSURLSession *session = [NSURLSession sessionWithConfiguration:conf delegate:self delegateQueue:[NSOperationQueue mainQueue]];
     
     downloadConnection = [session dataTaskWithRequest:request completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
         [receivedData setLength:0];

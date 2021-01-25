@@ -3,7 +3,7 @@
     <device id="retina4_7" orientation="portrait" appearance="light"/>
     <dependencies>
         <deployment identifier="iOS"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="17125"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="17126"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
         <capability name="System colors in document resources" minToolsVersion="11.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
@@ -29,17 +29,17 @@
                                         <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                     </view>
                                     <view userInteractionEnabled="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="9qt-9z-Jej">
-                                        <rect key="frame" x="0.0" y="0.0" width="375" height="214"/>
+                                        <rect key="frame" x="0.0" y="-114" width="375" height="457"/>
                                         <color key="backgroundColor" systemColor="labelColor"/>
                                     </view>
                                     <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" distribution="equalSpacing" alignment="top" spacing="10" translatesAutoresizingMaskIntoConstraints="NO" id="hdG-rd-kVi">
-                                        <rect key="frame" x="16" y="16" width="343" height="198"/>
+                                        <rect key="frame" x="16" y="16" width="343" height="197"/>
                                         <subviews>
-                                            <stackView opaque="NO" contentMode="scaleToFill" distribution="equalSpacing" alignment="center" spacing="115" translatesAutoresizingMaskIntoConstraints="NO" id="WBc-Wz-Q0y">
+                                            <stackView opaque="NO" contentMode="scaleToFill" distribution="equalSpacing" alignment="center" spacing="20" translatesAutoresizingMaskIntoConstraints="NO" id="WBc-Wz-Q0y">
                                                 <rect key="frame" x="0.0" y="0.0" width="343" height="45"/>
                                                 <subviews>
-                                                    <button opaque="NO" contentMode="scaleAspectFit" contentHorizontalAlignment="left" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="T5Q-Ll-URe">
-                                                        <rect key="frame" x="0.0" y="4.5" width="50" height="36"/>
+                                                    <button opaque="NO" contentMode="scaleAspectFit" misplaced="YES" contentHorizontalAlignment="left" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="T5Q-Ll-URe">
+                                                        <rect key="frame" x="0.0" y="0.0" width="50" height="36"/>
                                                         <accessibility key="accessibilityConfiguration" identifier="HideButton"/>
                                                         <constraints>
                                                             <constraint firstAttribute="width" constant="50" id="Htc-cO-pTz"/>
@@ -53,10 +53,21 @@
                                                         </connections>
                                                     </button>
                                                     <stackView opaque="NO" contentMode="scaleToFill" spacing="30" translatesAutoresizingMaskIntoConstraints="NO" id="Dfg-Oq-K2J">
-                                                        <rect key="frame" x="223" y="0.0" width="120" height="45"/>
+                                                        <rect key="frame" x="148" y="0.0" width="195" height="45"/>
                                                         <subviews>
-                                                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="T1H-fT-Fu9">
+                                                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Kd0-TW-yNC">
                                                                 <rect key="frame" x="0.0" y="0.0" width="45" height="45"/>
+                                                                <constraints>
+                                                                    <constraint firstAttribute="width" constant="45" id="2g4-Ik-oTm"/>
+                                                                    <constraint firstAttribute="height" constant="45" id="EDE-et-brU"/>
+                                                                </constraints>
+                                                                <state key="normal" image="CellularWarning"/>
+                                                                <connections>
+                                                                    <action selector="showCellularWarningAction" destination="AQ2-Ik-2Xo" eventType="touchUpInside" id="KSn-IY-UeY"/>
+                                                                </connections>
+                                                            </button>
+                                                            <button opaque="NO" contentMode="scaleToFill" misplaced="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="T1H-fT-Fu9">
+                                                                <rect key="frame" x="75" y="0.0" width="45" height="45"/>
                                                                 <constraints>
                                                                     <constraint firstAttribute="width" constant="45" id="Tjv-SM-67g"/>
                                                                     <constraint firstAttribute="height" constant="45" id="wg2-6d-mgJ"/>
@@ -66,8 +77,8 @@
                                                                     <action selector="switchCameraAction:forEvent:" destination="AQ2-Ik-2Xo" eventType="touchUpInside" id="sm0-V1-o1O"/>
                                                                 </connections>
                                                             </button>
-                                                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="AxK-1x-RHZ">
-                                                                <rect key="frame" x="75" y="0.0" width="45" height="45"/>
+                                                            <button opaque="NO" contentMode="scaleToFill" misplaced="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="AxK-1x-RHZ">
+                                                                <rect key="frame" x="150" y="0.0" width="45" height="45"/>
                                                                 <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                                 <accessibility key="accessibilityConfiguration" identifier="VideoButton"/>
                                                                 <constraints>
@@ -80,11 +91,14 @@
                                                                 </connections>
                                                             </button>
                                                         </subviews>
+                                                        <constraints>
+                                                            <constraint firstAttribute="height" constant="45" id="6Gr-wm-Cdw"/>
+                                                        </constraints>
                                                     </stackView>
                                                 </subviews>
                                             </stackView>
                                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Test Voip User Name" lineBreakMode="tailTruncation" numberOfLines="2" baselineAdjustment="alignBaselines" adjustsFontForContentSizeCategory="YES" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="ite-cu-S0V">
-                                                <rect key="frame" x="0.0" y="55" width="199.5" height="35"/>
+                                                <rect key="frame" x="0.0" y="55" width="198.5" height="35"/>
                                                 <constraints>
                                                     <constraint firstAttribute="height" constant="35" id="Jzt-Hf-vKw"/>
                                                 </constraints>
@@ -102,7 +116,7 @@
                                                 </constraints>
                                             </imageView>
                                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Threema-Anrufe sind auf dem Zielgerät deaktiviert" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontForContentSizeCategory="YES" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="gSm-UY-ZcI">
-                                                <rect key="frame" x="0.0" y="122" width="269" height="50"/>
+                                                <rect key="frame" x="0.0" y="122" width="268" height="49"/>
                                                 <constraints>
                                                     <constraint firstAttribute="height" relation="greaterThanOrEqual" constant="26" id="ZiX-pT-rpY"/>
                                                 </constraints>
@@ -113,7 +127,7 @@
                                                 <size key="shadowOffset" width="0.0" height="0.0"/>
                                             </label>
                                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Tud-Fn-H4o">
-                                                <rect key="frame" x="0.0" y="182" width="33" height="16"/>
+                                                <rect key="frame" x="0.0" y="181" width="33" height="16"/>
                                                 <color key="backgroundColor" white="0.0" alpha="0.19764019690000001" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                 <fontDescription key="fontDescription" type="system" pointSize="13"/>
                                                 <color key="textColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
@@ -127,8 +141,8 @@
                                     <stackView opaque="NO" contentMode="scaleToFill" distribution="equalSpacing" alignment="center" spacing="80" translatesAutoresizingMaskIntoConstraints="NO" id="7Te-44-N6n">
                                         <rect key="frame" x="77.5" y="499" width="220" height="80"/>
                                         <subviews>
-                                            <button opaque="NO" contentMode="scaleToFill" misplaced="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="KGy-Z7-7VF">
-                                                <rect key="frame" x="0.0" y="6" width="70" height="70"/>
+                                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="KGy-Z7-7VF">
+                                                <rect key="frame" x="0.0" y="5" width="70" height="70"/>
                                                 <constraints>
                                                     <constraint firstAttribute="height" constant="70" id="0kB-Ve-sLq"/>
                                                     <constraint firstAttribute="width" constant="70" id="ZaT-km-57U"/>
@@ -139,8 +153,8 @@
                                                     <action selector="rejectAction:forEvent:" destination="AQ2-Ik-2Xo" eventType="touchUpInside" id="yct-J8-cD1"/>
                                                 </connections>
                                             </button>
-                                            <button opaque="NO" contentMode="scaleToFill" misplaced="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="w7z-PM-OGJ">
-                                                <rect key="frame" x="150" y="6" width="70" height="70"/>
+                                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="w7z-PM-OGJ">
+                                                <rect key="frame" x="150" y="5" width="70" height="70"/>
                                                 <constraints>
                                                     <constraint firstAttribute="width" constant="70" id="79V-7o-wiJ"/>
                                                     <constraint firstAttribute="height" constant="70" id="TJO-3c-ZTM"/>
@@ -157,7 +171,7 @@
                                         </constraints>
                                     </stackView>
                                     <view userInteractionEnabled="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="iI2-uL-Xfp">
-                                        <rect key="frame" x="0.0" y="579" width="375" height="88"/>
+                                        <rect key="frame" x="0.0" y="559" width="375" height="150"/>
                                         <color key="backgroundColor" systemColor="labelColor"/>
                                     </view>
                                     <stackView opaque="NO" contentMode="scaleToFill" preservesSuperviewLayoutMargins="YES" distribution="equalSpacing" alignment="center" spacing="25" translatesAutoresizingMaskIntoConstraints="NO" id="9Vd-Lz-hNH">
@@ -276,7 +290,9 @@
                         <outlet property="callInfoStackViewTopConstraint" destination="MyU-3e-pCa" id="o9B-vV-jGJ"/>
                         <outlet property="cameraButton" destination="AxK-1x-RHZ" id="jhG-VQ-YBP"/>
                         <outlet property="cameraSwitchButton" destination="T1H-fT-Fu9" id="INU-0c-r16"/>
+                        <outlet property="cellularWarningButton" destination="Kd0-TW-yNC" id="7sc-DE-UYa"/>
                         <outlet property="contactLabel" destination="ite-cu-S0V" id="luS-mz-zW6"/>
+                        <outlet property="contentView" destination="zah-8U-vLZ" id="n1m-XN-CxO"/>
                         <outlet property="debugLabel" destination="Tud-Fn-H4o" id="9OV-WW-9W5"/>
                         <outlet property="endButton" destination="mQM-IK-Y2i" id="Jms-qu-uBE"/>
                         <outlet property="hideButton" destination="T5Q-Ll-URe" id="D9D-ps-DXk"/>
@@ -310,6 +326,7 @@
         <image name="AcceptCall" width="80" height="80"/>
         <image name="ArrowPrevious" width="36" height="36"/>
         <image name="CallBackground" width="80" height="80"/>
+        <image name="CellularWarning" width="74" height="74"/>
         <image name="MuteInactive" width="74" height="74"/>
         <image name="RejectCall" width="80" height="80"/>
         <image name="SpeakerInactive" width="74" height="74"/>

@@ -53,7 +53,6 @@
 @property BOOL isNewBallot;
 @property Ballot *ballot;
 @property Conversation *conversation;
-@property BOOL didShowFeatureMaskAlert;
 @property (nonatomic, strong) NSIndexPath *indexPathForPicker;
 @property (nonatomic, strong) NSDate *lastSelectedDate;
 @property (nonatomic) BOOL lastPickerWithoutTime;
@@ -89,7 +88,6 @@
     BallotCreateViewController *viewController = (BallotCreateViewController *) [storyboard instantiateViewControllerWithIdentifier:@"BallotCreateViewController"];
     
     viewController.entityManager = [[EntityManager alloc] init];
-    viewController.didShowFeatureMaskAlert = NO;
     
     return viewController;
 }
@@ -102,14 +100,13 @@
     [super viewWillDisappear:animated];
     
     [self dismissPicker];
-    
-    if (![[AppDelegate sharedAppDelegate] active]) {
-        [_entityManager rollback];
-    }
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 
 - (void)viewDidLoad {
     [super viewDidLoad];
+    
+    [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(applicationDidEnterBackground:) name: UIApplicationDidEnterBackgroundNotification object: nil];
     
     _cancelButton.target = self;
     _cancelButton.action = @selector(cancelPressed);
@@ -160,9 +157,7 @@
      
 - (void)viewWillAppear:(BOOL)animated {
     [self updateContent];
-    
-    [self checkFeatureMasks];
-    
+        
     _indexPathForPicker = nil;
     
     [super viewWillAppear:animated];
@@ -263,38 +258,9 @@
     return YES;
 }
 
-- (void)checkFeatureMasks {
-    [FeatureMask checkFeatureMask:FEATURE_MASK_BALLOT forContacts:_ballot.participants onCompletion:^(NSArray *unsupportedContacts) {
-        if ([unsupportedContacts count] > 0) {
-            [self showFeatureMaskAlertForContacts: unsupportedContacts];
-        }
-    }];
-}
-
 - (void)showAlert:(NSString *)message {
     NSString *title = NSLocalizedStringFromTable(@"ballot_validation_error_title", @"Ballot", nil);
     [UIAlertTemplate showAlertWithOwner:self title:title message:message actionOk:nil];
-}
-
-- (void)showFeatureMaskAlertForContacts:(NSArray *)contacts {
-    NSString *messageFormat;
-    if ([contacts count] == [_ballot.participants count]) {
-        messageFormat = NSLocalizedStringFromTable(@"ballot_feature_level_error_message", @"Ballot", nil);
-    } else {
-        // show warning only once
-        if (_didShowFeatureMaskAlert) {
-            return;
-        }
-        
-        messageFormat = NSLocalizedStringFromTable(@"ballot_feature_level_warning_message", @"Ballot", nil);
-    }
-    
-    NSString *participantNames = [Utils stringFromContacts:contacts];
-    NSString *message = [NSString stringWithFormat:messageFormat, participantNames];
-    
-    NSString *title = NSLocalizedStringFromTable(@"ballot_feature_level_warning_title", @"Ballot", nil);
-    [UIAlertTemplate showAlertWithOwner:self title:title message:message actionOk:nil];    
-    _didShowFeatureMaskAlert = YES;
 }
 
 - (Ballot *)newBallot {
@@ -543,7 +509,6 @@
         if (@available(iOS 14.0, *)) {
             if (!lastCell.choiceTextField.isFirstResponder) {
                 [_choiceTableView scrollToRowAtIndexPath:_indexPathForPicker atScrollPosition:UITableViewScrollPositionBottom animated:true];
-                return;
             }
         }
         [lastCell showDatePicker:nil];
@@ -566,5 +531,12 @@
         controller.ballot = _ballot;
     }
 }
+
+- (void)applicationDidEnterBackground:(UIApplication *)application {
+    if ([[KKPasscodeLock sharedLock] isPasscodeRequired]) {
+        [_entityManager rollback];
+    }
+}
+
 
 @end

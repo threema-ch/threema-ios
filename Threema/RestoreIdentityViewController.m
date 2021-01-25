@@ -20,7 +20,7 @@
 
 #import "RestoreIdentityViewController.h"
 #import "UIDefines.h"
-#import "MBProgressHUD.h"
+#import <MBProgressHUD/MBProgressHUD.h>
 #import "MyIdentityStore.h"
 #import "NSData+Base32.h"
 #import "ScanBackupController.h"
@@ -215,6 +215,7 @@
 }
 
 - (IBAction)cancelAction:(id)sender {
+    _passwordTextField.text = nil;
     if ([_delegate respondsToSelector:@selector(restoreIdentityCancelled)]) {
         [_delegate restoreIdentityCancelled];
     }
@@ -227,7 +228,7 @@
     
     MyIdentityStore *myIdentityStore = [MyIdentityStore sharedMyIdentityStore];
     [myIdentityStore restoreFromBackup:_backupTextView.text withPassword:_passwordTextField.text onCompletion:^{
-        
+        _passwordTextField.text = nil;
         ServerAPIConnector *apiConnector = [[ServerAPIConnector alloc] init];
         /* Obtain server group from server */
         [apiConnector updateMyIdentityStore:myIdentityStore onCompletion:^{

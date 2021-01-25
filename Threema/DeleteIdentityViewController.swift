@@ -48,8 +48,7 @@ class DeleteIdentityViewController: UIViewController {
         if let items = FileUtility.dir(pathUrl: FileUtility.appDataDirectory) {
             for item in items {
                 let itemUrl = URL(fileURLWithPath: String(format: "%@/%@", FileUtility.appDataDirectory!.path, item))
-                print(itemUrl)
-                FileUtility.delete(fileUrl: itemUrl)
+                FileUtility.delete(at: itemUrl)
             }
         }
     }

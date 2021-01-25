@@ -161,3 +161,13 @@ extension SafeServerViewController {
         }
     }
 }
+
+extension SafeServerViewController {
+    override func dismissKeyboard() {
+        super.dismissKeyboard()
+        
+        serverField.resignFirstResponder()
+        serverUsernameField.resignFirstResponder()
+        serverPasswordField.resignFirstResponder()
+    }
+}

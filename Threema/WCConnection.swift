@@ -145,8 +145,13 @@ extension WCConnection {
             let loop = salty_event_loop_new()
             let remote = salty_event_loop_get_remote(loop)
             
-            let initiatorPermanentPublicKey = self.delegate.currentWebClientSession()!.initiatorPermanentPublicKey
-            let ippk: UnsafePointer<UInt8> = initiatorPermanentPublicKey!.withUnsafeBytes {
+            guard let initiatorPermanentPublicKey = self.delegate.currentWebClientSession()!.initiatorPermanentPublicKey else {
+                DDLogError("InitiatorPermanentPublicKey is nil. Can not start web session.")
+                self.delegate.currentWebClientSession()?.isConnecting = false
+                WCSessionManager.shared.removeWCSessionFromRunning(self.delegate.currentWCSession())
+                return
+            }
+            let ippk: UnsafePointer<UInt8> = initiatorPermanentPublicKey.withUnsafeBytes {
                 $0.bindMemory(to: UInt8.self).baseAddress!
             }
             

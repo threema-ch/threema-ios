@@ -8,7 +8,7 @@
 /* Ballot */
 "ballot" = "Sondage";
 "ballots" = "Sondages";
-"ballot_results" = "Résultats du sondage";
+"ballot_results" = "Hello";
 "ballot_validation_error_title" = "Configuration non valide du sondage";
 "ballot_validation_not_enough_choices" = "Veuillez définir au moins deux choix.";
 "ballot_validation_title_missing" = "Veuillez définir un titre pour le sondage.";

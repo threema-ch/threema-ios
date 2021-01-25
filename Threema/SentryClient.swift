@@ -36,7 +36,7 @@ import Sentry
      - Parameters:
         - rootViewController: Parent view controller
     */
-    @objc func start(rootViewController: UIViewController?) {
+    @objc func start() {
         guard SentryClient.isEnabled(),
             let sentryDsn = BundleUtil.object(forInfoDictionaryKey: "SentryClientDsn") as? String else {
                 
@@ -80,13 +80,12 @@ import Sentry
                         dispatch.leave()
                     }))
 
-                    if let vc = rootViewController {
-                        DispatchQueue.main.async {
+                    DispatchQueue.main.async {
+                        if let vc = AppDelegate.shared()?.currentTopViewController() {
                             vc.present(confirm, animated: true, completion: nil)
+                        } else {
+                            dispatch.leave()
                         }
-                    }
-                    else {
-                        dispatch.leave()
                     }
                 }
                 

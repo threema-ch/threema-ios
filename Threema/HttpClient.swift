@@ -62,7 +62,7 @@ public class HttpClient: NSObject {
     
     func delete(url: URL, completionHandler: @escaping (Data?, URLResponse?, Error?) -> Swift.Void) {
         let request = getRequest(url: url, httpMethod: "DELETE")
-        let task = getSession(delegate: self.authenticationMethod != NSURLAuthenticationMethodHTTPBasic ? nil : self, background: false).dataTask(with: request, completionHandler: completionHandler)
+        let task = getSession(delegate: self, background: false).dataTask(with: request, completionHandler: completionHandler)
         task.resume()
     }
 
@@ -70,7 +70,7 @@ public class HttpClient: NSObject {
         var request = getRequest(url: url, httpMethod: "GET")
         request.setValue(contentType.propertyValue(), forHTTPHeaderField: "Accept")
         
-        let task = getSession(delegate: self.authenticationMethod != NSURLAuthenticationMethodHTTPBasic ? nil : self, background: false).dataTask(with: request, completionHandler: completionHandler)
+        let task = getSession(delegate: self, background: false).dataTask(with: request, completionHandler: completionHandler)
         task.resume()
     }
 
@@ -86,7 +86,7 @@ public class HttpClient: NSObject {
         var request = getRequest(url: url, httpMethod: "PUT")
         request.setValue(ContentType.octetStream.propertyValue(), forHTTPHeaderField: "Content-Type")
         
-        let task = getSession(delegate: self.authenticationMethod != NSURLAuthenticationMethodHTTPBasic ? nil : self, background: false).uploadTask(with: request, from: data, completionHandler: completionHandler)
+        let task = getSession(delegate: self, background: false).uploadTask(with: request, from: data, completionHandler: completionHandler)
         task.resume()
     }
     
@@ -171,4 +171,8 @@ extension HttpClient: URLSessionTaskDelegate {
         }
     }
     
+    public func urlSession(_ session: URLSession, didReceive challenge: URLAuthenticationChallenge, completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
+        
+        SSLCAHelper.session(session, didReceive: challenge, completion: completionHandler)
+    }
 }

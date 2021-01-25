@@ -22,7 +22,6 @@
 #import "ContactGroupPickerViewController.h"
 #import "MessageSender.h"
 #import "ModalNavigationController.h"
-#import "FeatureMaskChecker.h"
 
 @interface ForwardMultipleURLActivity () <ContactGroupPickerDelegate, ModalNavigationControllerDelegate>
 
@@ -105,19 +104,13 @@
 #pragma mark - ContactPickerDelegate
 
 - (void)contactPicker:(ContactGroupPickerViewController*)contactPicker didPickConversations:(NSSet *)conversations renderType:(NSNumber *)renderType sendAsFile:(BOOL)sendAsFile {
-    FeatureMaskChecker *featureMaskChecker = [[FeatureMaskChecker alloc] init];
-    
     for (NSDictionary *object in _objects) {
         NSURL *url = object[@"url"];
-        
-        [featureMaskChecker checkFileTransferFor:conversations presentAlarmOn:contactPicker onSuccess:^{
-            for (Conversation *conversation in conversations) {
-                [URLSender sendUrl:url asFile:sendAsFile caption:contactPicker.additionalTextToSend conversation:conversation];
-            }
-            [contactPicker dismissViewControllerAnimated:YES completion:nil];
-        } onFailure:^{
-            [contactPicker dismissViewControllerAnimated:YES completion:nil];
-        }];
+
+        for (Conversation *conversation in conversations) {
+            [URLSender sendUrl:url asFile:sendAsFile caption:contactPicker.additionalTextToSend conversation:conversation];
+        }
+        [contactPicker dismissViewControllerAnimated:YES completion:nil];
     }
 }
 

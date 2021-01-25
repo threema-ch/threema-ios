@@ -20,9 +20,9 @@
 
 #import <Foundation/Foundation.h>
 #import <CoreData/CoreData.h>
+#import "ExternalStorageInfo.h"
 
-
-@interface AudioData : NSManagedObject
+@interface AudioData : NSManagedObject <ExternalStorageInfo>
 
 @property (nonatomic, retain) NSData * data;
 

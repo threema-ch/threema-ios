@@ -21,8 +21,8 @@
 #import <Foundation/Foundation.h>
 
 @protocol ExternalStorageInfo
+
 - (NSString *)getFilename;
-@optional
-- (NSString *)getThumbnailname;
+
 @end
 

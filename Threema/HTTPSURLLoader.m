@@ -122,7 +122,13 @@
 }
 
 - (NSCachedURLResponse *)connection:(NSURLConnection *)connection willCacheResponse:(NSCachedURLResponse *)cachedResponse {
-    return nil;
+    switch (connection.currentRequest.cachePolicy) {
+        case NSURLRequestReloadIgnoringLocalCacheData:
+        case NSURLRequestReloadIgnoringLocalAndRemoteCacheData:
+            return nil;
+        default:
+            return cachedResponse;
+    }
 }
 
 @end

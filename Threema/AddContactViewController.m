@@ -24,7 +24,7 @@
 #import "ContactStore.h"
 #import "Contact.h"
 #import "InviteController.h"
-#import "MBProgressHUD.h"
+#import <MBProgressHUD/MBProgressHUD.h>
 #import "NewScannedContactViewController.h"
 #import "AppDelegate.h"
 #import "GatewayAvatarMaker.h"

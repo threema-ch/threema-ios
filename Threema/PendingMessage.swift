@@ -35,6 +35,19 @@ import CocoaLumberjackSwift
     private var abstractMessage: AbstractMessage?
     private var baseMessage: BaseMessage?
     private var processed: Bool
+    private var removeAll : Bool = false
+    
+    private static let removalQueue = DispatchQueue(label: "NotificationRemovalQueue", qos: .userInteractive)
+    private static let addQueue = DispatchQueue(label: "NotificationAddQueue", qos: .userInteractive)
+    
+    enum NotificationStage : String, CaseIterable {
+        case initial
+        case abstract
+        case base
+        case final
+    }
+    
+    private var currRemove : Set<String> = Set()
     
     // MARK: Public Functions
     
@@ -88,40 +101,59 @@ import CocoaLumberjackSwift
     
     // First roundtrip when a new message is received
     func startInitialTimedNotification() {
-         ValidationLogger.shared()?.logString("Push: start initial timed notification for message \(messageId)")
-        startTimedNotification(setFireDate: true)
+        ValidationLogger.shared()?.logString("Push: start initial timed notification for message \(messageId)")
+        startTimedNotification(setFireDate: true, stage: .initial)
     }
     
     // Second roundtrip when a new message is received
     @objc func addAbstractMessage(message: AbstractMessage) {
-         ValidationLogger.shared()?.logString("Push: add abstract message for message \(messageId)")
+        ValidationLogger.shared()?.logString("Push: add abstract message for message \(messageId)")
         abstractMessage = message
-        startTimedNotification(setFireDate: true)
+        PendingMessage.removalQueue.sync {
+            self.removeNotifications(stages: [.initial])
+        }
+        startTimedNotification(setFireDate: true, stage: .abstract)
+    }
+    
+    private func removeAllMyNotifications() {
+        PendingMessage.removalQueue.sync {
+            self.removeAll = true
+            self.removeNotifications(stages: [.initial, .abstract, .base, .final])
+            self.removeNotifications()
+        }
     }
     
     // Third roundtrip when a new message is received
     @objc func addBaseMessage(message: BaseMessage) {
-         ValidationLogger.shared()?.logString("Push: add basemessage for message \(messageId)")
+        ValidationLogger.shared()?.logString("Push: add basemessage for message \(messageId)")
         baseMessage = message
-        startTimedNotification(setFireDate: true)
+        PendingMessage.removalQueue.sync {
+            self.removeNotifications(stages: [.initial, .abstract])
+        }
+        startTimedNotification(setFireDate: true, stage: .base)
     }
     
     // Final roundrip when a new message is recieved
     @objc func finishedProcessing() {
-         ValidationLogger.shared()?.logString("Push: finished processing for message \(messageId)")
+        PendingMessage.removalQueue.sync {
+            self.removeNotifications(stages: [.initial, .abstract, .base])
+        }
+        
+        ValidationLogger.shared()?.logString("Push: finished processing for message \(messageId)")
         if isPendingGroupMessages == true {
-            removeNotification()
+            self.removeAllMyNotifications()
             completionHandler?()
             return
         }
         
         guard processed == false else {
+            self.removeAllMyNotifications()
             return
         }
         
         processed = true
         
-        startTimedNotification(setFireDate: false)
+        startTimedNotification(setFireDate: false, stage: .final)
         
         if let currentBaseMessage = baseMessage {
             /* Broadcast a notification, just in case we're currently in another chat within the app */
@@ -170,7 +202,10 @@ import CocoaLumberjackSwift
         
         let notificationRequest = UNNotificationRequest(identifier: "PushTest", content: notification, trigger: nil)
         let center = UNUserNotificationCenter.current()
-        center.add(notificationRequest) { _ in
+        center.add(notificationRequest) { error in
+            if let err = error {
+                ValidationLogger.shared()?.logString("Error while adding test push notification: \(err)")
+            }
             completion()
         }
     }
@@ -178,12 +213,10 @@ import CocoaLumberjackSwift
     
     // MARK: Private Functions
     
-    private func startTimedNotification(setFireDate: Bool) {
-        
-        removeNotification()
-        
+    private func startTimedNotification(setFireDate: Bool, stage : NotificationStage) {
         if PendingMessagesManager.canMasterDndSendPush() == false {
             NotificationManager.sharedInstance().updateUnreadMessagesCount(false)
+            self.removeAllMyNotifications()
             return
         }
         
@@ -198,6 +231,7 @@ import CocoaLumberjackSwift
                 if AppDelegate.shared().isAppInBackground() == false && self.abstractMessage?.receivedAfterInitialQueueSend == true && processed == true {
                     threemaNewMessageReceived()
                 }
+                self.removeAllMyNotifications()
                 return
             }
         } else {
@@ -210,20 +244,23 @@ import CocoaLumberjackSwift
                     if AppDelegate.shared().isAppInBackground() == false && self.abstractMessage?.receivedAfterInitialQueueSend == true && processed == true {
                         threemaNewMessageReceived()
                     }
+                    self.removeAllMyNotifications()
                     return
                 }
             }
         }
         
         if let localAbstractMessage = abstractMessage,
-            localAbstractMessage.shouldPush() == false || (localAbstractMessage.shouldPush() == true && localAbstractMessage.isVoIP() == true) {
+           localAbstractMessage.shouldPush() == false || (localAbstractMessage.shouldPush() == true && localAbstractMessage.isVoIP() == true) {
             // dont show notification for this message
+            self.removeAllMyNotifications()
             return
         }
         
         // Don't scheudle messages for incoming voip calls
         if let localThreemaPushNotification = threemaPushNotification, localThreemaPushNotification.voip == true {
             DDLogDebug("Did not scheudle message for incoming voip call")
+            self.removeAllMyNotifications()
             return
         }
         
@@ -286,7 +323,9 @@ import CocoaLumberjackSwift
                         }
                         do {
                             attachmentUrl = URL(fileURLWithPath: path)
-                            try imageData!.data.write(to:attachmentUrl! , options: .completeFileProtectionUntilFirstUserAuthentication)
+                            if let imageData = imageData, let imageDataData = imageData.data {
+                                try imageDataData.write(to:attachmentUrl! , options: .completeFileProtectionUntilFirstUserAuthentication)
+                            }
                         }
                         catch {
                             // can't write file, no image preview
@@ -345,7 +384,9 @@ import CocoaLumberjackSwift
                             if FileManager.default.fileExists(atPath: path) == true {
                                 try FileManager.default.removeItem(at: attachmentUrl!)
                             }
-                            try imageData!.data.write(to:attachmentUrl! , options: .completeFileProtectionUntilFirstUserAuthentication)
+                            if let imageData = imageData, let imageDataData = imageData.data {
+                                try imageDataData.write(to:attachmentUrl! , options: .completeFileProtectionUntilFirstUserAuthentication)
+                            }
                         }
                         catch {
                             // can't write file, no image preview
@@ -437,16 +478,34 @@ import CocoaLumberjackSwift
         if pushSetting != nil {
             silent = pushSetting!.silent
         }
-        
-        createNotification(title: title, body: body, attachmentName: attachmentName, attachmentUrl: attachmentUrl, cmd: cmd!, categoryIdentifier: categoryIdentifier!, silent: silent, setFireDate: setFireDate, groupId: groupId, fromName: fromName)
+        DispatchQueue.main.async {
+            self.createNotification(title: title, body: body, attachmentName: attachmentName, attachmentUrl: attachmentUrl, cmd: cmd!, categoryIdentifier: categoryIdentifier!, silent: silent, setFireDate: setFireDate, groupId: groupId, fromName: fromName, stage: stage)
+        }
     }
     
     /// Remove notification if is there already one
-    private func removeNotification() {
-        UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: [key])
+    /// This function must be called on the removalQueue
+    private func removeNotifications(stages: [NotificationStage]? = nil, except: String? = nil) {
+        if let stages = stages {
+            ValidationLogger.shared()?.logString("Push: Adding stages as removable \(stages)")
+            for stage in stages {
+                let currKey = self.key.appending("-\(stage)")
+                currRemove.insert(currKey)
+            }
+        } else {
+            var currRemoveArr = [String](currRemove)
+            if except != nil && !removeAll {
+                currRemoveArr.removeAll(where: {$0 == except})
+            }
+            
+            DispatchQueue.main.async {
+                ValidationLogger.shared()?.logString("Push: Remove notifications with key \(self.currRemove) for message \(self.messageId)")
+                UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: currRemoveArr)
+            }
+        }
     }
     
-    private func createNotification(title: String?, body: String?, attachmentName: String?, attachmentUrl: URL?, cmd: String, categoryIdentifier: String, silent: Bool, setFireDate: Bool, groupId: String?, fromName: String?) {
+    private func createNotification(title: String?, body: String?, attachmentName: String?, attachmentUrl: URL?, cmd: String, categoryIdentifier: String, silent: Bool, setFireDate: Bool, groupId: String?, fromName: String?, stage : NotificationStage) {
         var pushSound = UserSettings.shared().pushSound
         if categoryIdentifier == "GROUP" {
             pushSound = UserSettings.shared().pushGroupSound
@@ -466,7 +525,7 @@ import CocoaLumberjackSwift
             }
         }
         
-        if let attachmentName = attachmentName, let attachmentUrl = attachmentUrl, processed {
+        if stage == .final, let attachmentName = attachmentName, let attachmentUrl = attachmentUrl, processed {
             do {
                 let attachment = try UNNotificationAttachment(identifier: attachmentName, url: attachmentUrl, options: nil)
                 notification.attachments = [attachment]
@@ -514,10 +573,18 @@ import CocoaLumberjackSwift
             }
         }
         
-        let notificationRequest = UNNotificationRequest(identifier: self.key, content: notification, trigger: trigger)
+        let currKey = self.key.appending("-\(stage)")
+        let notificationRequest = UNNotificationRequest(identifier: currKey, content: notification, trigger: trigger)
         let center = UNUserNotificationCenter.current()
-        center.add(notificationRequest, withCompletionHandler: { _ in
-            ValidationLogger.shared().logString("Push: Added message \(self.messageId) to notification center with trigger \(trigger?.timeInterval ?? 0)s")
+        center.add(notificationRequest, withCompletionHandler: { error in
+            if let error = error {
+                ValidationLogger.shared()?.logString("Push: Adding notification for message \(self.messageId) was not successful. Error: \(error.localizedDescription)")
+            } else {
+                ValidationLogger.shared().logString("Push: Added message \(self.messageId) to notification center with trigger \(trigger?.timeInterval ?? 0)s and identifier \(notificationRequest.identifier)")
+                PendingMessage.removalQueue.sync {
+                    self.removeNotifications(except: notificationRequest.identifier)
+                }
+            }
         })
     }
     
@@ -537,17 +604,19 @@ import CocoaLumberjackSwift
     // MARK: NSCoding
     
     public convenience required init?(coder aDecoder: NSCoder) {
-        let dSenderId = aDecoder.decodeObject(forKey: "senderId") as! String
-        let dMessageId = aDecoder.decodeObject(forKey: "messageId") as! String
-        let dAbstractMessage = aDecoder.decodeObject(forKey: "abstractMessage") as? AbstractMessage
-        
+        guard let dSenderId = aDecoder.decodeObject(forKey: "senderId") as? String else {
+            return nil
+        }
+        guard let dMessageId = aDecoder.decodeObject(forKey: "messageId") as? String else {
+            return nil
+        }
         let dGenericThreemaDict = aDecoder.decodeObject(forKey: "threemaDict")
         
-        if dAbstractMessage != nil {
-            if dAbstractMessage!.fromIdentity == nil {
-                dAbstractMessage!.fromIdentity = dSenderId
+        if let dAbstractMessage = aDecoder.decodeObject(forKey: "abstractMessage") as? AbstractMessage {
+            if dAbstractMessage.fromIdentity == nil {
+                dAbstractMessage.fromIdentity = dSenderId
             }
-            self.init(receivedAbstractMessage: dAbstractMessage!)
+            self.init(receivedAbstractMessage: dAbstractMessage)
         } else {
             if let dThreemaPush = dGenericThreemaDict as? ThreemaPushNotification {
                 self.init(senderIdentity: dSenderId, messageIdentity: dMessageId, threemaPush: dThreemaPush)
@@ -561,6 +630,10 @@ import CocoaLumberjackSwift
         
         self.fireDate = aDecoder.decodeObject(forKey: "fireDate") as? Date
         self.processed = aDecoder.decodeBool(forKey: "processed")
+        self.removeAll = aDecoder.decodeBool(forKey: "removeAll")
+        if let c = aDecoder.decodeObject(forKey: "currRemove") as? Set<String> {
+            self.currRemove = c
+        }
     }
     
     func encode(with aCoder: NSCoder) {
@@ -570,6 +643,8 @@ import CocoaLumberjackSwift
         aCoder.encode(self.threemaPushNotification, forKey: "threemaDict")
         aCoder.encode(self.processed, forKey: "processed")
         aCoder.encode(self.fireDate, forKey: "fireDate")
+        aCoder.encode(self.removeAll, forKey: "removeAll")
+        aCoder.encode(self.currRemove, forKey: "currRemove")
     }
     
 }

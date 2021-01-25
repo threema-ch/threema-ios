@@ -113,7 +113,7 @@
 "export_progress_label" = "%li / %li сообщений экспортировано";
 "caption" = "Заголовок";
 "fileNotDownloaded" = "Файл не был скачан или был удален.";
-"include_media_title" = "Включать мультимедиа (изображения, видео) в качестве приложений? Крупные чаты разбиваются на несколько файлов.\n\nЧтобы распаковать файл, нужно современное ZIP приложение с поддержкой AES, н.п. 7-Zip или The Unarchiver (Mac).";
+"include_media_title" = "Включать мультимедиа (изображения, видео) в качестве приложений?\n\nЧтобы распаковать файл, нужно современное ZIP приложение с поддержкой AES, напр., 7-Zip или The Unarchiver (Mac).";
 
 
 /* image sizes */
@@ -133,8 +133,9 @@
 "max_x_minutes" = "Макс. %d мин.";
 
 /* Sound names */
-"sound_none" = "Без звука";
+"sound_none" = "Нет";
 "sound_default" = "По умолчанию";
+"sound_silent" = "Только вибрация";
 "sound_bamboo" = "Бамбук";
 "sound_drum" = "Барабан";
 "sound_glass" = "Стекло";
@@ -256,11 +257,13 @@
 "record_audio" = "Записать звук";
 "scan_qr" = "Сканировать QR-код";
 "share_file" = "Поделиться файлом";
-"send_item_photo" = "Просмотр фото";
-"send_item_video" = "Просмотр видео";
-"send_items" = "Просмотр фото/видео (%d)";
-"send_items_photo" = "Просмотр фото (%d)";
-"send_items_video" = "Просмотр видео (%d)";
+"add_item_caption" = "Добавить заголовок";
+"add_items_caption" = "Добавить заголовки";
+"send_item_immediately_photo" = "Отправить фото";
+"send_item_immediately_video" = "Отправить видео";
+"send_items_immediately" = "Отправить %d фото/видео";
+"send_items_immediately_photo" = "Отправить %d фото";
+"send_items_immediately_video" = "Отправить %d видео";
 
 "record" = "Записать";
 "play" = "Воспроизвести";
@@ -622,7 +625,9 @@
 
 /* VoIP Call */
 "call_mute" = "Выкл. звук";
+"call_unmute" = "Включить звук";
 "call_speaker" = "Динамик";
+"call_earpiece" = "Наушник";
 "call_end" = "Завершить";
 "call_camera_activate_button" = "Активировать камеру";
 "call_camera_deactivate_button" = "Отключить камеру";
@@ -643,6 +648,7 @@
 "call_accept" = "Принять";
 "call_reject" = "Отклонить";
 "call_hide_call" = "Скрыть звонок";
+"call_no_wifi" = "Звоните через мобильную сеть. Подробнее...";
 
 "call_threema_title" = "Начать звонок Threema";
 "call_callkit_button_title" = "Threema";
@@ -674,6 +680,9 @@
 
 "call_threema_video_in_chat_info_title" = "Новинка: видеозвонки";
 "call_threema_video_in_chat_info_description" = "Помимо голосовых звонков, защищенных от прослушки, Threema теперь предлагает видеозвонки со сквозным шифрованием.";
+
+"call_threema_cellular_instead_of_wifi_title" = "Звоните через мобильную сеть";
+"call_threema_cellular_instead_of_wifi_text" = "Внимание: при звонке происходит передача данных через мобильную сеть.";
 
 /* Privacy Policy */
 "privacy_policy_about" = "Threema защищает вашу конфиденциальность тщательнее, чем любой другой мессенджер. Подробнее см в нашей Политика конфиденциальности.";
@@ -896,9 +905,10 @@
 "settings_license" = "Лицензия";
 "settings_advanced" = "Расширенный";
 "settings_threema_work" = "Threema Work";
-"settings_dev_mode" = "Dev Mode";
+"settings_dev_mode" = "Режим разработчика";
 
 "settings_advanced_flush_message_queue" = "Очистить очередь сообщений";
+"settings_advanced_orphaned_files_cleanup" = "Удалить потерянные файлы";
 
 // Dev Mode
 "settings_devmode_quote_v2" = "Quote V2";
@@ -949,6 +959,25 @@
 "settings_notifications_masterDnd_endTime" = "Конец рабочего времени";
 "settings_notifications_masterDnd_info" = "Сейчас нерабочее время";
 
+// Orphaned files delete
+"settings_orphaned_files_description" = "При удалении данных во время управления хранилищем данных в предыдущих версиях Threema иногда возникает ситуация, когда мультимедийные файлы удаляются не полностью, но исключаются из списков Threema.
+
+Сначала создайте резервную копию данных в iTunes, поскольку возможна утрата данных!";
+"settings_orphaned_files_title" = "ПОТЕРЯННЫЕ ФАЙЛЫ";
+"settings_orphaned_files_button" = "Переместить в корзину";
+"settings_orphaned_files_footer" = "%@ из %@ являются потерянными.
+
+Переместите потерянные файлы в корзину, чтобы гарантировать отсутствие недостающих мультимедийных файлов в Threema.";
+"settings_orphaned_files_footer_no_files" = "Потерянных файлов нет.";
+"settings_orphaned_files_bin_title" = "КОРЗИНА";
+"settings_orphaned_files_bin_restore_button" = "Восстановить содержимое корзины";
+"settings_orphaned_files_bin_delete_button" = "Удалить содержимое корзины";
+"settings_orphaned_files_bin_footer" = "В корзине %@ файлов (%@).
+
+Если в Threema нет недостающих мультимедийных файлов, очистите корзину, чтобы окончательно удалить потерянные файлы.";
+"settings_orphaned_files_bin_footer_no_files" = "Корзина пуста.";
+"settings_orphaned_files_bin_delete_conformation" = "Хотите окончательно удалить потерянные файлы? Это действие нельзя отменить.";
+
 // Threema calls settings
 "settings_threema_calls_enable_calls" = "Включить звонки Threema";
 "settings_threema_calls_always_relay_calls" = "Всегда ретранслир. звонки";
@@ -979,3 +1008,15 @@
 "back_to_media_selection" = "Возврат на экран выбора мультимедиа";
 "remove_current_image_from_selected_images" = "Удалить текущий элемент из выбора";
 "send_options" = "Больше настроек";
+"multiple_media_items" = "%d элем.";
+"media_item" = "1 элемент";
+"could_not_add_items_title" = "Не удалось добавить элемент";
+"could_not_add_all_items_title" = "Не удалось добавить все элементы";
+"one_media_item_could_not_be_processed" = "1 элемент не удалось обработать, мы пропустили его.";
+"multiple_media_items_could_not_be_processed" = "%d  элем. не удалось обработать, мы пропустили их.";
+"processing_items_progress" = "Выполняется обработка элемента %d/%d";
+"item_too_large_title" = "Слишком крупный элемент";
+"maximum_file_size_exceeded" = "Максимальный допустимый размер файла: %@. Размер этого файла составляет %@. Для продолжения удалите файл.";
+"back" = "Назад";
+"sending_item" = "Выполняется отправка элемента";
+"send_as_file_title" = "Режим отправки";

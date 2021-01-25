@@ -20,6 +20,7 @@
 
 #import "ImageData.h"
 #import <ImageIO/ImageIO.h>
+#import "ThreemaFramework/ThreemaFramework-Swift.h"
 
 @implementation ImageData
 
@@ -98,6 +99,12 @@
     }
     
     return imageData;
+}
+
+#pragma mark ExternalStorageInfo
+
+- (NSString *)getFilename {
+    return self.data != nil ? [ExternalStorage getFilenameWithData:self.data] : nil;
 }
 
 @end

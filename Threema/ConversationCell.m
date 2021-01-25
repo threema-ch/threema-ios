@@ -258,7 +258,9 @@
         }
     }
     
-    NSString *draftMessage = [MessageDraftStore loadDraftForConversation:self.conversation];
+    NSString *orgDraftMessage = [MessageDraftStore loadDraftForConversation:self.conversation];
+    int maxLength = MIN((int)orgDraftMessage.length - 1, 100);
+    NSString *draftMessage = [orgDraftMessage substringToIndex:NSMaxRange([orgDraftMessage rangeOfComposedCharacterSequenceAtIndex:maxLength])];
     NSAttributedString *attributedString;
     if (draftMessage) {
         self.dateLabel.hidden = YES;

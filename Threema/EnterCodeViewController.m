@@ -21,7 +21,7 @@
 #import "EnterCodeViewController.h"
 #import "MyIdentityStore.h"
 #import "ServerAPIConnector.h"
-#import "MBProgressHUD.h"
+#import <MBProgressHUD/MBProgressHUD.h>
 #import "PhoneNumberNormalizer.h"
 #import "BundleUtil.h"
 #import "UIImage+ColoredImage.h"

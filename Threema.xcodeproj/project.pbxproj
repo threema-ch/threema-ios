@@ -213,7 +213,6 @@
 		0A3864B81C63439B00924A29 /* GroupVideoMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D4B10E817A4211D003CCA1C /* GroupVideoMessage.m */; };
 		0A3864B91C63439B00924A29 /* TypingIndicatorMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D627299165553360048F332 /* TypingIndicatorMessage.m */; };
 		0A3864BA1C63439B00924A29 /* UnknownTypeMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = 0ACDF1A819B4AE9A006AC645 /* UnknownTypeMessage.m */; };
-		0A3864BB1C6343BD00924A29 /* AudioMessageSender.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D6A0D5F19505B3F00B722CC /* AudioMessageSender.m */; };
 		0A3864BC1C6343BD00924A29 /* BlobMessageSender.m in Sources */ = {isa = PBXBuildFile; fileRef = 0A9F237F1B416F2C0046865C /* BlobMessageSender.m */; };
 		0A3864BD1C6343BD00924A29 /* BlobUploader.m in Sources */ = {isa = PBXBuildFile; fileRef = 0ADCEA1C1B0CCCF1006BD786 /* BlobUploader.m */; };
 		0A3864BE1C6343BD00924A29 /* FileMessageSender.m in Sources */ = {isa = PBXBuildFile; fileRef = 0A6E62B01B2AD78D003DDB5A /* FileMessageSender.m */; };
@@ -367,7 +366,6 @@
 		0A7DF7401C9FDBDE002D4DC3 /* FileMessagePreviewUnsupportedTypeView.m in Sources */ = {isa = PBXBuildFile; fileRef = 0A868E261B45BB7900A5B755 /* FileMessagePreviewUnsupportedTypeView.m */; };
 		0A7DF7411C9FDBDE002D4DC3 /* ScanIdentityController.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4D6893731647F698000DE62D /* ScanIdentityController.mm */; };
 		0A7DF7421C9FDBDE002D4DC3 /* AddContactViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D68937A1647FEA8000DE62D /* AddContactViewController.m */; };
-		0A7DF7431C9FDBDE002D4DC3 /* MBProgressHUD.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D68937E16480D79000DE62D /* MBProgressHUD.m */; };
 		0A7DF7441C9FDBDE002D4DC3 /* SDWebImageDownloader.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D8B817318D38C490079014F /* SDWebImageDownloader.m */; };
 		0A7DF7461C9FDBDE002D4DC3 /* MKNumberBadgeView.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D736B4116487C2A00D70AD9 /* MKNumberBadgeView.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		0A7DF7481C9FDBDE002D4DC3 /* QBPopupMenuPagenatorView.m in Sources */ = {isa = PBXBuildFile; fileRef = 0A50CFD81C49153A00991088 /* QBPopupMenuPagenatorView.m */; };
@@ -676,6 +674,7 @@
 		2D40B77E21A5486F001D9E0B /* IntroQuestionViewHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D40B77B21A5486F001D9E0B /* IntroQuestionViewHelper.swift */; };
 		2D460EB3232F677D005827E4 /* DeleteIdentityViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D460EB2232F677D005827E4 /* DeleteIdentityViewController.swift */; };
 		2D460EB4232F677D005827E4 /* DeleteIdentityViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D460EB2232F677D005827E4 /* DeleteIdentityViewController.swift */; };
+		2D4CA145256D3986002BC063 /* SSLCAHelper.h in Headers */ = {isa = PBXBuildFile; fileRef = 4D237C8F17B3C56D0058AB05 /* SSLCAHelper.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		2D5523E32303DA8600A21671 /* AppSetupState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D5523E22303DA8600A21671 /* AppSetupState.swift */; };
 		2D55A84F23851E9300613425 /* TestLoggerMock.m in Sources */ = {isa = PBXBuildFile; fileRef = 2D55A84E23851E9300613425 /* TestLoggerMock.m */; };
 		2D55A85123851EAE00613425 /* TestLoggerMock.h in Headers */ = {isa = PBXBuildFile; fileRef = 2D55A85023851EAE00613425 /* TestLoggerMock.h */; };
@@ -727,6 +726,7 @@
 		2DB25E35212D46410072C51E /* SafeApiService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DB25E34212D46410072C51E /* SafeApiService.swift */; };
 		2DB51C0F2123057900946C20 /* HttpClientUploadSafeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DB51C0E2123057900946C20 /* HttpClientUploadSafeTests.swift */; };
 		2DB51C1821230B3E00946C20 /* HttpClientDownloadSafeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DB51C1721230B3E00946C20 /* HttpClientDownloadSafeTests.swift */; };
+		2DC01E842570D8E20069E595 /* ExternalStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DC01E832570D8E20069E595 /* ExternalStorage.swift */; };
 		2DC17A4D216F17EF0036151A /* RestoreOptionBackupViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DC17A4C216F17EF0036151A /* RestoreOptionBackupViewController.swift */; };
 		2DC17A4F216F17EF0036151A /* RestoreOptionBackupViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DC17A4C216F17EF0036151A /* RestoreOptionBackupViewController.swift */; };
 		2DC271F5217703D400F269CB /* SafeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DC271F4217703D400F269CB /* SafeManager.swift */; };
@@ -738,6 +738,7 @@
 		2DC9B95C2181E3B600747457 /* SafeSetupPasswordViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DC9B9592181E3B600747457 /* SafeSetupPasswordViewController.swift */; };
 		2DCF125F2153DC7100E465E6 /* RestoreSafePasswordViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DCF12572153DC7100E465E6 /* RestoreSafePasswordViewController.swift */; };
 		2DD16B6F2242719A00AFFC35 /* SafeSetupWork.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DD16B6E2242719900AFFC35 /* SafeSetupWork.swift */; };
+		2DD5DFF1256E31E300145102 /* TrustKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2DD5DFEF256E31E300145102 /* TrustKit.framework */; };
 		2DD5E80D22C33095008EFA6D /* DbLoadTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DD5E80C22C33095008EFA6D /* DbLoadTests.swift */; };
 		2DD8F68524501387009485A2 /* CocoaLumberjackSwift.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2D22A40C234CA4980029C209 /* CocoaLumberjackSwift.framework */; };
 		2DD8F6872450138A009485A2 /* CocoaLumberjack.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2D22A40D234CA4980029C209 /* CocoaLumberjack.framework */; };
@@ -774,6 +775,7 @@
 		2DF30FA6217DC94400093371 /* SafeServerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DFEF8B8212AC48E00CAD36E /* SafeServerViewController.swift */; };
 		2DF30FA8217DC94800093371 /* SafeSetupViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DC5028E212577EC00B1D317 /* SafeSetupViewController.swift */; };
 		2DF30FAA217DC95100093371 /* SafeDeactivatedViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DAD8944215CC6F600B9EA0B /* SafeDeactivatedViewController.swift */; };
+		2DFA05342575022B0020E14F /* OrphanedFilesCleanupViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DFA05332575022B0020E14F /* OrphanedFilesCleanupViewController.swift */; };
 		2DFEF8B9212AC48E00CAD36E /* SafeServerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DFEF8B8212AC48E00CAD36E /* SafeServerViewController.swift */; };
 		2DFF7D2322A6473E000DD4FA /* FileUtility.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DFF7D2222A6473E000DD4FA /* FileUtility.swift */; };
 		2DFF7D2C22A66884000DD4FA /* MediaSettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DFF7D2B22A66884000DD4FA /* MediaSettingsViewController.swift */; };
@@ -849,14 +851,12 @@
 		4A5E4016256BDA5600CE9FE6 /* CopyLabel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A95B8FE256BD8E600C3D938 /* CopyLabel.swift */; };
 		4A5FA5EE2509386100D13DD2 /* URLSenderItemCreator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A5FA5ED2509386100D13DD2 /* URLSenderItemCreator.swift */; };
 		4A5FA5F5250A18B900D13DD2 /* URLSender.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A5FA5F4250A18B900D13DD2 /* URLSender.swift */; };
-		4A63CCA02566857C00E73381 /* Reachability.h in Headers */ = {isa = PBXBuildFile; fileRef = 4A63CC9F2566857B00E73381 /* Reachability.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		4A63CCA8256686F100E73381 /* JKLLockScreenNumber.h in Headers */ = {isa = PBXBuildFile; fileRef = 4A63CCA1256686F000E73381 /* JKLLockScreenNumber.h */; };
 		4A63CCA9256686F100E73381 /* JKLLockScreenPincodeView.m in Sources */ = {isa = PBXBuildFile; fileRef = 4A63CCA2256686F000E73381 /* JKLLockScreenPincodeView.m */; };
 		4A63CCAA256686F100E73381 /* JKLLockScreenPincodeView.h in Headers */ = {isa = PBXBuildFile; fileRef = 4A63CCA3256686F000E73381 /* JKLLockScreenPincodeView.h */; };
 		4A63CCAB256686F100E73381 /* JKLLockScreenViewController.h in Headers */ = {isa = PBXBuildFile; fileRef = 4A63CCA4256686F000E73381 /* JKLLockScreenViewController.h */; };
 		4A63CCAC256686F100E73381 /* JKLLockScreenNumber.m in Sources */ = {isa = PBXBuildFile; fileRef = 4A63CCA5256686F100E73381 /* JKLLockScreenNumber.m */; };
 		4A63CCAD256686F100E73381 /* JKLLockScreenViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 4A63CCA6256686F100E73381 /* JKLLockScreenViewController.xib */; };
-		4A63CCAE256686F100E73381 /* JKLLockScreenViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4A63CCA7256686F100E73381 /* JKLLockScreenViewController.m */; };
 		4A63F93624F7FC1600DD629B /* FileMessageSender.h in Headers */ = {isa = PBXBuildFile; fileRef = 0A6E62AF1B2AD78D003DDB5A /* FileMessageSender.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		4A63F93724F7FC7500DD629B /* URLSenderItem.h in Headers */ = {isa = PBXBuildFile; fileRef = 0A336B991B02302A002D9809 /* URLSenderItem.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		4A63F93824F7FC7F00DD629B /* BlobMessageSender.h in Headers */ = {isa = PBXBuildFile; fileRef = 0A9F237E1B416F2C0046865C /* BlobMessageSender.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -870,6 +870,8 @@
 		4A7EC4F224F6566D009C79E2 /* PhotosRightsHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AED21F724D94D0700F897A6 /* PhotosRightsHelper.swift */; };
 		4A8C93D9247BC06A00FEB1B7 /* ZipArchive.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4A8C93D7247BC06A00FEB1B7 /* ZipArchive.framework */; };
 		4A8C93DB247BC2EA00FEB1B7 /* ZipArchive.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4A8C93D7247BC06A00FEB1B7 /* ZipArchive.framework */; };
+		4A91C82E256D27C700FFE82A /* MBProgressHUD.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4A91C82D256D27C700FFE82A /* MBProgressHUD.framework */; };
+		4A91C82F256D27F400FFE82A /* MBProgressHUD.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4A91C82D256D27C700FFE82A /* MBProgressHUD.framework */; };
 		4A95B8FF256BD8E600C3D938 /* CopyLabel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A95B8FE256BD8E600C3D938 /* CopyLabel.swift */; };
 		4AA784D4250661FA00882E72 /* ImageURLSenderItemCreator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AA784D3250661F900882E72 /* ImageURLSenderItemCreator.swift */; };
 		4AA784D625066BE700882E72 /* VideoURLSenderItemCreatorTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AA784D525066BE700882E72 /* VideoURLSenderItemCreatorTest.swift */; };
@@ -966,7 +968,6 @@
 		4D6893711647ECB8000DE62D /* IdentityVerifiedViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D6893701647ECB8000DE62D /* IdentityVerifiedViewController.m */; };
 		4D6893741647F698000DE62D /* ScanIdentityController.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4D6893731647F698000DE62D /* ScanIdentityController.mm */; };
 		4D68937B1647FEA8000DE62D /* AddContactViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D68937A1647FEA8000DE62D /* AddContactViewController.m */; };
-		4D68937F16480D79000DE62D /* MBProgressHUD.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D68937E16480D79000DE62D /* MBProgressHUD.m */; };
 		4D6C847C1651934800657260 /* LinkEmailViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D6C847B1651934800657260 /* LinkEmailViewController.m */; };
 		4D6C84FB1652F38C00657260 /* LinkMobileNoViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D6C84FA1652F38C00657260 /* LinkMobileNoViewController.m */; };
 		4D6CF597164573C3003D7DCC /* NewScannedContactViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D6CF596164573C3003D7DCC /* NewScannedContactViewController.m */; };
@@ -1212,6 +1213,7 @@
 		CE2A42B42018D73600C314DA /* WebCreateTextMessageResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE2A42B12018D73600C314DA /* WebCreateTextMessageResponse.swift */; };
 		CE3014021EBB2F0D00068754 /* UIImage+MWPhotoBrowser.m in Sources */ = {isa = PBXBuildFile; fileRef = CE3014011EBB2F0D00068754 /* UIImage+MWPhotoBrowser.m */; };
 		CE337CBF1FBB59DF002265DC /* SDStatusBarOverriderPost11_0.m in Sources */ = {isa = PBXBuildFile; fileRef = CE0A24BF1FB313C400E37E24 /* SDStatusBarOverriderPost11_0.m */; };
+		CE3AAB32258CC55700854649 /* JKLLockScreenViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 4A63CCA6256686F100E73381 /* JKLLockScreenViewController.xib */; };
 		CE3AB52023102EA5001AF17C /* Icons.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = CE3AB51F23102EA5001AF17C /* Icons.xcassets */; };
 		CE3AB52123102EA5001AF17C /* Icons.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = CE3AB51F23102EA5001AF17C /* Icons.xcassets */; };
 		CE3AB52B23103192001AF17C /* ContactsNavigationController.m in Sources */ = {isa = PBXBuildFile; fileRef = CE3AB52A23103192001AF17C /* ContactsNavigationController.m */; };
@@ -1490,9 +1492,7 @@
 		CE8B6B701EFBEB8A00293643 /* VoIPCallMessageDecoder.m in Sources */ = {isa = PBXBuildFile; fileRef = CE02116D1ED5B4750022D04F /* VoIPCallMessageDecoder.m */; };
 		CE8B6B9A1EFD09EE00293643 /* FeatureMask.h in Headers */ = {isa = PBXBuildFile; fileRef = CE8B6B981EFD09EE00293643 /* FeatureMask.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		CE8B6B9B1EFD09EE00293643 /* FeatureMask.m in Sources */ = {isa = PBXBuildFile; fileRef = CE8B6B991EFD09EE00293643 /* FeatureMask.m */; };
-		CE8B6BA51EFD0AE000293643 /* FeatureMaskChecker.m in Sources */ = {isa = PBXBuildFile; fileRef = CE8B6BA41EFD0AE000293643 /* FeatureMaskChecker.m */; };
 		CE8B6BB91F00EF2500293643 /* UIImage+MWPhotoBrowser.m in Sources */ = {isa = PBXBuildFile; fileRef = CE3014011EBB2F0D00068754 /* UIImage+MWPhotoBrowser.m */; };
-		CE8B6BCC1F00F08C00293643 /* FeatureMaskChecker.m in Sources */ = {isa = PBXBuildFile; fileRef = CE8B6BA41EFD0AE000293643 /* FeatureMaskChecker.m */; };
 		CE8B6C5E1F0A851000293643 /* GroupCloneCell.m in Sources */ = {isa = PBXBuildFile; fileRef = CE8B6C5D1F0A851000293643 /* GroupCloneCell.m */; };
 		CE8B6C5F1F0A851000293643 /* GroupCloneCell.m in Sources */ = {isa = PBXBuildFile; fileRef = CE8B6C5D1F0A851000293643 /* GroupCloneCell.m */; };
 		CE8B6C761F0AA53700293643 /* ChatCallMessageCell.m in Sources */ = {isa = PBXBuildFile; fileRef = CE8B6C2D1F03FEEE00293643 /* ChatCallMessageCell.m */; };
@@ -1548,54 +1548,7 @@
 		CEB34DF120937533005B5D6C /* DoNotDisturbViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEB34DEE20937533005B5D6C /* DoNotDisturbViewController.swift */; };
 		CEB34DF420971AF9005B5D6C /* NotificationManager.m in Sources */ = {isa = PBXBuildFile; fileRef = CEB34DF320971AF9005B5D6C /* NotificationManager.m */; };
 		CEB34DF620971AF9005B5D6C /* NotificationManager.m in Sources */ = {isa = PBXBuildFile; fileRef = CEB34DF320971AF9005B5D6C /* NotificationManager.m */; };
-		CEB637CD2374084900188924 /* TSKTrustKitConfig.h in Headers */ = {isa = PBXBuildFile; fileRef = CEB637922374084900188924 /* TSKTrustKitConfig.h */; };
-		CEB637CE2374084900188924 /* vendor_identifier.h in Headers */ = {isa = PBXBuildFile; fileRef = CEB637942374084900188924 /* vendor_identifier.h */; };
-		CEB637CF2374084900188924 /* TSKBackgroundReporter.m in Sources */ = {isa = PBXBuildFile; fileRef = CEB637952374084900188924 /* TSKBackgroundReporter.m */; };
-		CEB637D02374084900188924 /* TSKReportsRateLimiter.h in Headers */ = {isa = PBXBuildFile; fileRef = CEB637962374084900188924 /* TSKReportsRateLimiter.h */; };
-		CEB637D12374084900188924 /* TSKPinFailureReport.m in Sources */ = {isa = PBXBuildFile; fileRef = CEB637972374084900188924 /* TSKPinFailureReport.m */; };
-		CEB637D22374084900188924 /* reporting_utils.h in Headers */ = {isa = PBXBuildFile; fileRef = CEB637982374084900188924 /* reporting_utils.h */; };
-		CEB637D32374084900188924 /* vendor_identifier.m in Sources */ = {isa = PBXBuildFile; fileRef = CEB637992374084900188924 /* vendor_identifier.m */; };
-		CEB637D42374084900188924 /* TSKPinFailureReport.h in Headers */ = {isa = PBXBuildFile; fileRef = CEB6379A2374084900188924 /* TSKPinFailureReport.h */; };
-		CEB637D52374084900188924 /* TSKReportsRateLimiter.m in Sources */ = {isa = PBXBuildFile; fileRef = CEB6379B2374084900188924 /* TSKReportsRateLimiter.m */; };
-		CEB637D62374084900188924 /* TSKBackgroundReporter.h in Headers */ = {isa = PBXBuildFile; fileRef = CEB6379C2374084900188924 /* TSKBackgroundReporter.h */; };
-		CEB637D72374084900188924 /* reporting_utils.m in Sources */ = {isa = PBXBuildFile; fileRef = CEB6379D2374084900188924 /* reporting_utils.m */; };
-		CEB637D82374084900188924 /* TSKTrustDecision.h in Headers */ = {isa = PBXBuildFile; fileRef = CEB6379E2374084900188924 /* TSKTrustDecision.h */; };
-		CEB637D92374084900188924 /* TSKPinningValidatorResult.h in Headers */ = {isa = PBXBuildFile; fileRef = CEB6379F2374084900188924 /* TSKPinningValidatorResult.h */; };
-		CEB637DB2374084900188924 /* TSKLog.h in Headers */ = {isa = PBXBuildFile; fileRef = CEB637A22374084900188924 /* TSKLog.h */; };
-		CEB637DC2374084900188924 /* configuration_utils.m in Sources */ = {isa = PBXBuildFile; fileRef = CEB637A32374084900188924 /* configuration_utils.m */; };
-		CEB637DD2374084900188924 /* domain_registry.h in Headers */ = {isa = PBXBuildFile; fileRef = CEB637A62374084900188924 /* domain_registry.h */; };
-		CEB637DE2374084900188924 /* registry_tables.h in Headers */ = {isa = PBXBuildFile; fileRef = CEB637A82374084900188924 /* registry_tables.h */; };
-		CEB637DF2374084900188924 /* trie_search.c in Sources */ = {isa = PBXBuildFile; fileRef = CEB637AA2374084900188924 /* trie_search.c */; };
-		CEB637E02374084900188924 /* tsk_assert.h in Headers */ = {isa = PBXBuildFile; fileRef = CEB637AB2374084900188924 /* tsk_assert.h */; };
-		CEB637E12374084900188924 /* string_util.h in Headers */ = {isa = PBXBuildFile; fileRef = CEB637AC2374084900188924 /* string_util.h */; };
-		CEB637E22374084900188924 /* trie_search.h in Headers */ = {isa = PBXBuildFile; fileRef = CEB637AD2374084900188924 /* trie_search.h */; };
-		CEB637E32374084900188924 /* tsk_assert.c in Sources */ = {isa = PBXBuildFile; fileRef = CEB637AE2374084900188924 /* tsk_assert.c */; };
-		CEB637E42374084900188924 /* registry_types.h in Headers */ = {isa = PBXBuildFile; fileRef = CEB637AF2374084900188924 /* registry_types.h */; };
-		CEB637E52374084900188924 /* registry_search.c in Sources */ = {isa = PBXBuildFile; fileRef = CEB637B02374084900188924 /* registry_search.c */; };
-		CEB637E62374084900188924 /* init_registry_tables.c in Sources */ = {isa = PBXBuildFile; fileRef = CEB637B12374084900188924 /* init_registry_tables.c */; };
-		CEB637E72374084900188924 /* trie_node.h in Headers */ = {isa = PBXBuildFile; fileRef = CEB637B22374084900188924 /* trie_node.h */; };
-		CEB637E82374084900188924 /* RSSwizzle.h in Headers */ = {isa = PBXBuildFile; fileRef = CEB637B42374084900188924 /* RSSwizzle.h */; };
-		CEB637E92374084900188924 /* RSSwizzle.m in Sources */ = {isa = PBXBuildFile; fileRef = CEB637B52374084900188924 /* RSSwizzle.m */; };
-		CEB637EB2374084900188924 /* parse_configuration.m in Sources */ = {isa = PBXBuildFile; fileRef = CEB637B72374084900188924 /* parse_configuration.m */; };
-		CEB637EC2374084900188924 /* TrustKit.h in Headers */ = {isa = PBXBuildFile; fileRef = CEB637B82374084900188924 /* TrustKit.h */; };
-		CEB637ED2374084900188924 /* TSKPinningValidator.h in Headers */ = {isa = PBXBuildFile; fileRef = CEB637B92374084900188924 /* TSKPinningValidator.h */; };
-		CEB637EE2374084900188924 /* TSKTrustKitConfig.m in Sources */ = {isa = PBXBuildFile; fileRef = CEB637BA2374084900188924 /* TSKTrustKitConfig.m */; };
-		CEB637EF2374084900188924 /* TSKNSURLSessionDelegateProxy.h in Headers */ = {isa = PBXBuildFile; fileRef = CEB637BC2374084900188924 /* TSKNSURLSessionDelegateProxy.h */; };
-		CEB637F02374084900188924 /* TSKNSURLConnectionDelegateProxy.h in Headers */ = {isa = PBXBuildFile; fileRef = CEB637BD2374084900188924 /* TSKNSURLConnectionDelegateProxy.h */; };
-		CEB637F12374084900188924 /* TSKNSURLSessionDelegateProxy.m in Sources */ = {isa = PBXBuildFile; fileRef = CEB637BE2374084900188924 /* TSKNSURLSessionDelegateProxy.m */; };
-		CEB637F22374084900188924 /* TSKNSURLConnectionDelegateProxy.m in Sources */ = {isa = PBXBuildFile; fileRef = CEB637BF2374084900188924 /* TSKNSURLConnectionDelegateProxy.m */; };
-		CEB637F32374084900188924 /* TSKPinningValidatorResult.m in Sources */ = {isa = PBXBuildFile; fileRef = CEB637C02374084900188924 /* TSKPinningValidatorResult.m */; };
-		CEB637F42374084900188924 /* TSKPinningValidator_Private.h in Headers */ = {isa = PBXBuildFile; fileRef = CEB637C12374084900188924 /* TSKPinningValidator_Private.h */; };
-		CEB637F52374084900188924 /* TSKPublicKeyAlgorithm.h in Headers */ = {isa = PBXBuildFile; fileRef = CEB637C32374084900188924 /* TSKPublicKeyAlgorithm.h */; };
-		CEB637F62374084900188924 /* TSKSPKIHashCache.h in Headers */ = {isa = PBXBuildFile; fileRef = CEB637C42374084900188924 /* TSKSPKIHashCache.h */; };
-		CEB637F72374084900188924 /* ssl_pin_verifier.m in Sources */ = {isa = PBXBuildFile; fileRef = CEB637C52374084900188924 /* ssl_pin_verifier.m */; };
-		CEB637F82374084900188924 /* ssl_pin_verifier.h in Headers */ = {isa = PBXBuildFile; fileRef = CEB637C62374084900188924 /* ssl_pin_verifier.h */; };
-		CEB637F92374084900188924 /* TSKSPKIHashCache.m in Sources */ = {isa = PBXBuildFile; fileRef = CEB637C72374084900188924 /* TSKSPKIHashCache.m */; };
-		CEB637FA2374084900188924 /* configuration_utils.h in Headers */ = {isa = PBXBuildFile; fileRef = CEB637C82374084900188924 /* configuration_utils.h */; };
-		CEB637FB2374084900188924 /* TSKPinningValidatorCallback.h in Headers */ = {isa = PBXBuildFile; fileRef = CEB637C92374084900188924 /* TSKPinningValidatorCallback.h */; };
-		CEB637FC2374084900188924 /* TSKPinningValidator.m in Sources */ = {isa = PBXBuildFile; fileRef = CEB637CA2374084900188924 /* TSKPinningValidator.m */; };
-		CEB637FD2374084900188924 /* TrustKit.m in Sources */ = {isa = PBXBuildFile; fileRef = CEB637CB2374084900188924 /* TrustKit.m */; };
-		CEB637FE2374084900188924 /* parse_configuration.h in Headers */ = {isa = PBXBuildFile; fileRef = CEB637CC2374084900188924 /* parse_configuration.h */; };
+		CEB637E12374084900188924 /* (null) in Headers */ = {isa = PBXBuildFile; };
 		CEB63E7D20AD709100DF1EE2 /* ChunkedDc.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEB63E7320AD709100DF1EE2 /* ChunkedDc.swift */; };
 		CEB63E7F20AD709100DF1EE2 /* ChunkedDc.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEB63E7320AD709100DF1EE2 /* ChunkedDc.swift */; };
 		CEB63E8020AD709100DF1EE2 /* Unchunker.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEB63E7420AD709100DF1EE2 /* Unchunker.swift */; };
@@ -1719,6 +1672,9 @@
 		CEE93D9720AB1EE8002C1304 /* ThreemaWebSettingCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEE93D9620AB1EE8002C1304 /* ThreemaWebSettingCell.swift */; };
 		CEE93D9920AB1EE8002C1304 /* ThreemaWebSettingCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEE93D9620AB1EE8002C1304 /* ThreemaWebSettingCell.swift */; };
 		CEF0B7052199CF9700D29638 /* NotificationResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = CED3F000218999B500729D83 /* NotificationResponse.swift */; };
+		CEF10B33258B360E00EFB10C /* ExternalStorageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DC01E962570E1100069E595 /* ExternalStorageTests.swift */; };
+		CEF10B37258B36EA00EFB10C /* Reachability.h in Headers */ = {isa = PBXBuildFile; fileRef = 4A63CC9F2566857B00E73381 /* Reachability.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		CEF10B39258B373600EFB10C /* JKLLockScreenViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4A63CCA7256686F100E73381 /* JKLLockScreenViewController.m */; };
 		CEF162B022A7B93E00885A38 /* VoIPCallKitManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEF162AF22A7B93E00885A38 /* VoIPCallKitManager.swift */; };
 		CEF162B122A7B93E00885A38 /* VoIPCallKitManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEF162AF22A7B93E00885A38 /* VoIPCallKitManager.swift */; };
 		CEF3BD5C223BDBFC00898821 /* OEMentions.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEF3BD5B223BDBFC00898821 /* OEMentions.swift */; };
@@ -2457,6 +2413,8 @@
 		2DB25E34212D46410072C51E /* SafeApiService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafeApiService.swift; sourceTree = "<group>"; };
 		2DB51C0E2123057900946C20 /* HttpClientUploadSafeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HttpClientUploadSafeTests.swift; sourceTree = "<group>"; };
 		2DB51C1721230B3E00946C20 /* HttpClientDownloadSafeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HttpClientDownloadSafeTests.swift; sourceTree = "<group>"; };
+		2DC01E832570D8E20069E595 /* ExternalStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ExternalStorage.swift; path = ThreemaFramework/ExternalStorage.swift; sourceTree = SOURCE_ROOT; };
+		2DC01E962570E1100069E595 /* ExternalStorageTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExternalStorageTests.swift; sourceTree = "<group>"; };
 		2DC17A4C216F17EF0036151A /* RestoreOptionBackupViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RestoreOptionBackupViewController.swift; sourceTree = "<group>"; };
 		2DC271F4217703D400F269CB /* SafeManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafeManager.swift; sourceTree = "<group>"; };
 		2DC5028E212577EC00B1D317 /* SafeSetupViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafeSetupViewController.swift; sourceTree = "<group>"; };
@@ -2465,6 +2423,7 @@
 		2DC9B9592181E3B600747457 /* SafeSetupPasswordViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafeSetupPasswordViewController.swift; sourceTree = "<group>"; };
 		2DCF12572153DC7100E465E6 /* RestoreSafePasswordViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RestoreSafePasswordViewController.swift; sourceTree = "<group>"; };
 		2DD16B6E2242719900AFFC35 /* SafeSetupWork.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SafeSetupWork.swift; sourceTree = "<group>"; };
+		2DD5DFEF256E31E300145102 /* TrustKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = TrustKit.framework; path = Carthage/Build/iOS/TrustKit.framework; sourceTree = "<group>"; };
 		2DD5E80C22C33095008EFA6D /* DbLoadTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DbLoadTests.swift; sourceTree = "<group>"; };
 		2DD8F68A245014EC009485A2 /* common.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = common.pb.swift; sourceTree = "<group>"; };
 		2DD8F68B245014EC009485A2 /* call-signaling.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "call-signaling.pb.swift"; sourceTree = "<group>"; };
@@ -2495,6 +2454,7 @@
 		2DEC10662397AFDD00921AC0 /* StorageManagementOlderThanViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageManagementOlderThanViewController.swift; sourceTree = "<group>"; };
 		2DEE58A824500ECB0007FAC1 /* SwiftProtobuf.framework.dSYM */ = {isa = PBXFileReference; lastKnownFileType = wrapper.dsym; name = SwiftProtobuf.framework.dSYM; path = Carthage/Build/iOS/SwiftProtobuf.framework.dSYM; sourceTree = "<group>"; };
 		2DEE58AA24500F060007FAC1 /* SwiftProtobuf.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftProtobuf.framework; path = Carthage/Build/iOS/SwiftProtobuf.framework; sourceTree = "<group>"; };
+		2DFA05332575022B0020E14F /* OrphanedFilesCleanupViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrphanedFilesCleanupViewController.swift; sourceTree = "<group>"; };
 		2DFEF8B8212AC48E00CAD36E /* SafeServerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafeServerViewController.swift; sourceTree = "<group>"; };
 		2DFF7D2222A6473E000DD4FA /* FileUtility.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileUtility.swift; sourceTree = "<group>"; };
 		2DFF7D2B22A66884000DD4FA /* MediaSettingsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaSettingsViewController.swift; sourceTree = "<group>"; };
@@ -2563,6 +2523,7 @@
 		4A7EC4ED24F6554B009C79E2 /* PhotosRightsHelperTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotosRightsHelperTest.swift; sourceTree = "<group>"; };
 		4A7EC4F024F65593009C79E2 /* PhotosRightsHelperMock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotosRightsHelperMock.swift; sourceTree = "<group>"; };
 		4A8C93D7247BC06A00FEB1B7 /* ZipArchive.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ZipArchive.framework; path = Carthage/Build/iOS/ZipArchive.framework; sourceTree = "<group>"; };
+		4A91C82D256D27C700FFE82A /* MBProgressHUD.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MBProgressHUD.framework; path = Carthage/Build/iOS/MBProgressHUD.framework; sourceTree = "<group>"; };
 		4A95B8FE256BD8E600C3D938 /* CopyLabel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CopyLabel.swift; sourceTree = "<group>"; };
 		4AA784D3250661F900882E72 /* ImageURLSenderItemCreator.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = ImageURLSenderItemCreator.swift; path = ThreemaFramework/Core/MessageSending/ImageURLSenderItemCreator.swift; sourceTree = SOURCE_ROOT; };
 		4AA784D525066BE700882E72 /* VideoURLSenderItemCreatorTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoURLSenderItemCreatorTest.swift; sourceTree = "<group>"; };
@@ -2729,14 +2690,10 @@
 		4D6893731647F698000DE62D /* ScanIdentityController.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; lineEnding = 0; path = ScanIdentityController.mm; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		4D6893791647FEA8000DE62D /* AddContactViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AddContactViewController.h; sourceTree = "<group>"; };
 		4D68937A1647FEA8000DE62D /* AddContactViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AddContactViewController.m; sourceTree = "<group>"; };
-		4D68937D16480D79000DE62D /* MBProgressHUD.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MBProgressHUD.h; sourceTree = "<group>"; };
-		4D68937E16480D79000DE62D /* MBProgressHUD.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MBProgressHUD.m; sourceTree = "<group>"; };
 		4D690F6419F1B4A60007E300 /* UIView+WebCacheOperation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UIView+WebCacheOperation.h"; sourceTree = "<group>"; };
 		4D690F6519F1B4A60007E300 /* UIView+WebCacheOperation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UIView+WebCacheOperation.m"; sourceTree = "<group>"; };
 		4D690F6D19F1B4AC0007E300 /* UIImageView+HighlightedWebCache.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UIImageView+HighlightedWebCache.h"; sourceTree = "<group>"; };
 		4D690F6E19F1B4AC0007E300 /* UIImageView+HighlightedWebCache.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UIImageView+HighlightedWebCache.m"; sourceTree = "<group>"; };
-		4D6A0D5E19505B3F00B722CC /* AudioMessageSender.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AudioMessageSender.h; sourceTree = "<group>"; };
-		4D6A0D5F19505B3F00B722CC /* AudioMessageSender.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; lineEnding = 0; path = AudioMessageSender.m; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objc; };
 		4D6A7FFF209B659D00784B4F /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/MainStoryboard.strings; sourceTree = "<group>"; };
 		4D6C847A1651934800657260 /* LinkEmailViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LinkEmailViewController.h; sourceTree = "<group>"; };
 		4D6C847B1651934800657260 /* LinkEmailViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LinkEmailViewController.m; sourceTree = "<group>"; };
@@ -3430,8 +3387,6 @@
 		CE8A2B2E1EB38270004973D5 /* DKPermissionView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DKPermissionView.swift; sourceTree = "<group>"; };
 		CE8B6B981EFD09EE00293643 /* FeatureMask.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FeatureMask.h; sourceTree = "<group>"; };
 		CE8B6B991EFD09EE00293643 /* FeatureMask.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FeatureMask.m; sourceTree = "<group>"; };
-		CE8B6BA31EFD0AE000293643 /* FeatureMaskChecker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FeatureMaskChecker.h; sourceTree = "<group>"; };
-		CE8B6BA41EFD0AE000293643 /* FeatureMaskChecker.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FeatureMaskChecker.m; sourceTree = "<group>"; };
 		CE8B6C2C1F03FEEE00293643 /* ChatCallMessageCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ChatCallMessageCell.h; sourceTree = "<group>"; };
 		CE8B6C2D1F03FEEE00293643 /* ChatCallMessageCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ChatCallMessageCell.m; sourceTree = "<group>"; };
 		CE8B6C3A1F051DBA00293643 /* ImageUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ImageUtils.h; sourceTree = "<group>"; };
@@ -3479,56 +3434,6 @@
 		CEB34DEE20937533005B5D6C /* DoNotDisturbViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoNotDisturbViewController.swift; sourceTree = "<group>"; };
 		CEB34DF220971AF9005B5D6C /* NotificationManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NotificationManager.h; sourceTree = "<group>"; };
 		CEB34DF320971AF9005B5D6C /* NotificationManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NotificationManager.m; sourceTree = "<group>"; };
-		CEB637922374084900188924 /* TSKTrustKitConfig.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TSKTrustKitConfig.h; sourceTree = "<group>"; };
-		CEB637942374084900188924 /* vendor_identifier.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = vendor_identifier.h; sourceTree = "<group>"; };
-		CEB637952374084900188924 /* TSKBackgroundReporter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TSKBackgroundReporter.m; sourceTree = "<group>"; };
-		CEB637962374084900188924 /* TSKReportsRateLimiter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TSKReportsRateLimiter.h; sourceTree = "<group>"; };
-		CEB637972374084900188924 /* TSKPinFailureReport.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TSKPinFailureReport.m; sourceTree = "<group>"; };
-		CEB637982374084900188924 /* reporting_utils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = reporting_utils.h; sourceTree = "<group>"; };
-		CEB637992374084900188924 /* vendor_identifier.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = vendor_identifier.m; sourceTree = "<group>"; };
-		CEB6379A2374084900188924 /* TSKPinFailureReport.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TSKPinFailureReport.h; sourceTree = "<group>"; };
-		CEB6379B2374084900188924 /* TSKReportsRateLimiter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TSKReportsRateLimiter.m; sourceTree = "<group>"; };
-		CEB6379C2374084900188924 /* TSKBackgroundReporter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TSKBackgroundReporter.h; sourceTree = "<group>"; };
-		CEB6379D2374084900188924 /* reporting_utils.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = reporting_utils.m; sourceTree = "<group>"; };
-		CEB6379E2374084900188924 /* TSKTrustDecision.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TSKTrustDecision.h; sourceTree = "<group>"; };
-		CEB6379F2374084900188924 /* TSKPinningValidatorResult.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TSKPinningValidatorResult.h; sourceTree = "<group>"; };
-		CEB637A12374084900188924 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		CEB637A22374084900188924 /* TSKLog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TSKLog.h; sourceTree = "<group>"; };
-		CEB637A32374084900188924 /* configuration_utils.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = configuration_utils.m; sourceTree = "<group>"; };
-		CEB637A62374084900188924 /* domain_registry.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = domain_registry.h; sourceTree = "<group>"; };
-		CEB637A82374084900188924 /* registry_tables.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = registry_tables.h; sourceTree = "<group>"; };
-		CEB637AA2374084900188924 /* trie_search.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = trie_search.c; sourceTree = "<group>"; };
-		CEB637AB2374084900188924 /* tsk_assert.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = tsk_assert.h; sourceTree = "<group>"; };
-		CEB637AC2374084900188924 /* string_util.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = string_util.h; sourceTree = "<group>"; };
-		CEB637AD2374084900188924 /* trie_search.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = trie_search.h; sourceTree = "<group>"; };
-		CEB637AE2374084900188924 /* tsk_assert.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = tsk_assert.c; sourceTree = "<group>"; };
-		CEB637AF2374084900188924 /* registry_types.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = registry_types.h; sourceTree = "<group>"; };
-		CEB637B02374084900188924 /* registry_search.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = registry_search.c; sourceTree = "<group>"; };
-		CEB637B12374084900188924 /* init_registry_tables.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = init_registry_tables.c; sourceTree = "<group>"; };
-		CEB637B22374084900188924 /* trie_node.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = trie_node.h; sourceTree = "<group>"; };
-		CEB637B42374084900188924 /* RSSwizzle.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RSSwizzle.h; sourceTree = "<group>"; };
-		CEB637B52374084900188924 /* RSSwizzle.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RSSwizzle.m; sourceTree = "<group>"; };
-		CEB637B62374084900188924 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
-		CEB637B72374084900188924 /* parse_configuration.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = parse_configuration.m; sourceTree = "<group>"; };
-		CEB637B82374084900188924 /* TrustKit.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TrustKit.h; sourceTree = "<group>"; };
-		CEB637B92374084900188924 /* TSKPinningValidator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TSKPinningValidator.h; sourceTree = "<group>"; };
-		CEB637BA2374084900188924 /* TSKTrustKitConfig.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TSKTrustKitConfig.m; sourceTree = "<group>"; };
-		CEB637BC2374084900188924 /* TSKNSURLSessionDelegateProxy.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TSKNSURLSessionDelegateProxy.h; sourceTree = "<group>"; };
-		CEB637BD2374084900188924 /* TSKNSURLConnectionDelegateProxy.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TSKNSURLConnectionDelegateProxy.h; sourceTree = "<group>"; };
-		CEB637BE2374084900188924 /* TSKNSURLSessionDelegateProxy.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TSKNSURLSessionDelegateProxy.m; sourceTree = "<group>"; };
-		CEB637BF2374084900188924 /* TSKNSURLConnectionDelegateProxy.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TSKNSURLConnectionDelegateProxy.m; sourceTree = "<group>"; };
-		CEB637C02374084900188924 /* TSKPinningValidatorResult.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TSKPinningValidatorResult.m; sourceTree = "<group>"; };
-		CEB637C12374084900188924 /* TSKPinningValidator_Private.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TSKPinningValidator_Private.h; sourceTree = "<group>"; };
-		CEB637C32374084900188924 /* TSKPublicKeyAlgorithm.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TSKPublicKeyAlgorithm.h; sourceTree = "<group>"; };
-		CEB637C42374084900188924 /* TSKSPKIHashCache.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TSKSPKIHashCache.h; sourceTree = "<group>"; };
-		CEB637C52374084900188924 /* ssl_pin_verifier.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ssl_pin_verifier.m; sourceTree = "<group>"; };
-		CEB637C62374084900188924 /* ssl_pin_verifier.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ssl_pin_verifier.h; sourceTree = "<group>"; };
-		CEB637C72374084900188924 /* TSKSPKIHashCache.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TSKSPKIHashCache.m; sourceTree = "<group>"; };
-		CEB637C82374084900188924 /* configuration_utils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = configuration_utils.h; sourceTree = "<group>"; };
-		CEB637C92374084900188924 /* TSKPinningValidatorCallback.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TSKPinningValidatorCallback.h; sourceTree = "<group>"; };
-		CEB637CA2374084900188924 /* TSKPinningValidator.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TSKPinningValidator.m; sourceTree = "<group>"; };
-		CEB637CB2374084900188924 /* TrustKit.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TrustKit.m; sourceTree = "<group>"; };
-		CEB637CC2374084900188924 /* parse_configuration.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = parse_configuration.h; sourceTree = "<group>"; };
 		CEB63E7320AD709100DF1EE2 /* ChunkedDc.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChunkedDc.swift; sourceTree = "<group>"; };
 		CEB63E7420AD709100DF1EE2 /* Unchunker.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Unchunker.swift; sourceTree = "<group>"; };
 		CEB63E7520AD709100DF1EE2 /* Chunker.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Chunker.swift; sourceTree = "<group>"; };
@@ -3552,6 +3457,15 @@
 		CEBBB9E7205922BC00130885 /* WebReadRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebReadRequest.swift; sourceTree = "<group>"; };
 		CEBF6E0E210789AB003FC0EC /* BackgroundTaskManagerProxy.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BackgroundTaskManagerProxy.h; sourceTree = "<group>"; };
 		CEBF6E0F210789AB003FC0EC /* BackgroundTaskManagerProxy.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BackgroundTaskManagerProxy.m; sourceTree = "<group>"; };
+		CEC0440625AC5BF2002C484A /* pl */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = pl; path = pl.lproj/Localizable.strings; sourceTree = "<group>"; };
+		CEC0440725AC5BF2002C484A /* pl */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = pl; path = pl.lproj/Ballot.strings; sourceTree = "<group>"; };
+		CEC0440825AC5BF2002C484A /* pl */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = pl; path = pl.lproj/Localizable.strings; sourceTree = "<group>"; };
+		CEC0440925AC5BF3002C484A /* pl */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = pl; path = pl.lproj/MainStoryboard.strings; sourceTree = "<group>"; };
+		CEC0440A25AC5BF3002C484A /* pl */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = pl; path = pl.lproj/CreatePassword.strings; sourceTree = "<group>"; };
+		CEC0440B25AC5BF3002C484A /* pl */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = pl; path = pl.lproj/MyIdentityStoryboard.strings; sourceTree = "<group>"; };
+		CEC0440C25AC5BF3002C484A /* pl */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = pl; path = pl.lproj/SettingsStoryboard.strings; sourceTree = "<group>"; };
+		CEC0440D25AC5BF3002C484A /* pl */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = pl; path = pl.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		CEC0440F25AC5BF3002C484A /* pl */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = pl; path = pl.lproj/Localizable.strings; sourceTree = "<group>"; };
 		CEC42C85228BF61F004D267B /* VoIPIceCandidatesMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoIPIceCandidatesMessage.swift; sourceTree = "<group>"; };
 		CEC42C89228BFFA6004D267B /* VoIPCallAnswerMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoIPCallAnswerMessage.swift; sourceTree = "<group>"; };
 		CEC42C8C228C03E0004D267B /* RTCSessionDescriptionJson.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RTCSessionDescriptionJson.swift; sourceTree = "<group>"; };
@@ -3701,6 +3615,7 @@
 				2DD8F68524501387009485A2 /* CocoaLumberjackSwift.framework in Frameworks */,
 				CE45F764245C8BC500356540 /* SwiftProtobuf.framework in Frameworks */,
 				2DD8F6872450138A009485A2 /* CocoaLumberjack.framework in Frameworks */,
+				2DD5DFF1256E31E300145102 /* TrustKit.framework in Frameworks */,
 				0AC9EF2D1C99AE1700555E62 /* AVFoundation.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -3726,6 +3641,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4A91C82F256D27F400FFE82A /* MBProgressHUD.framework in Frameworks */,
 				4AA784DA2506703700882E72 /* PromiseKit.framework in Frameworks */,
 				2DA27383235F009C00833621 /* Sentry.framework in Frameworks */,
 				2D5B8FB421BF8F6400788B2E /* Gzip.framework in Frameworks */,
@@ -3812,6 +3728,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4A91C82E256D27C700FFE82A /* MBProgressHUD.framework in Frameworks */,
 				4A2AA6ED24FCEDB90045A1AB /* PromiseKit.framework in Frameworks */,
 				2DA27382235EF7A800833621 /* Sentry.framework in Frameworks */,
 				2DE1BED9210F372E0058D7FF /* Gzip.framework in Frameworks */,
@@ -4163,7 +4080,6 @@
 				CEC6E2BB1F176F8F00B23EAE /* JKLLockScreenViewController */,
 				4DC16F12168CA5C300AD243E /* KKPasscodeLock */,
 				4DAAD793182F944800873B67 /* libPhoneNumber-iOS */,
-				CEB637912374084900188924 /* TrustKit */,
 				4DCC11611663F81800CAE538 /* UIImageCategories */,
 			);
 			name = Vendor;
@@ -4334,6 +4250,7 @@
 		0A677B911C6250CA0019B361 /* ThreemaFrameworkTests */ = {
 			isa = PBXGroup;
 			children = (
+				2DC01E962570E1100069E595 /* ExternalStorageTests.swift */,
 				4A2B487824FE70140073E29F /* ImageURLSenderItemCreatorTest.swift */,
 				4A6DA9E5250A73290088C282 /* UTIConverterTests.swift */,
 				4A6DAA0C250A83940088C282 /* URLSenderItemCreatorTests.swift */,
@@ -4357,7 +4274,6 @@
 				4D6638E417E0C26300D03144 /* HPGrowingTextView */,
 				CED3DDDF1F324668007F7FCA /* MGSwipeTableCell */,
 				4D736B3F16487C2A00D70AD9 /* MKNumberBadgeView */,
-				4D68937C16480D78000DE62D /* MBProgressHUD */,
 				4DE93ECA1664F66000954B1D /* MWPhotoBrowser */,
 				CE825058210B628F005FAA5F /* OrderedDictionary */,
 				4DEFAE59166FB79100C150F4 /* PopoverView */,
@@ -4560,8 +4476,6 @@
 		0AA860FE1A666B0E00AC1BE1 /* MessageSending */ = {
 			isa = PBXGroup;
 			children = (
-				4D6A0D5E19505B3F00B722CC /* AudioMessageSender.h */,
-				4D6A0D5F19505B3F00B722CC /* AudioMessageSender.m */,
 				0A9F237E1B416F2C0046865C /* BlobMessageSender.h */,
 				0A9F237F1B416F2C0046865C /* BlobMessageSender.m */,
 				0ADCEA1B1B0CCCF1006BD786 /* BlobUploader.h */,
@@ -5138,6 +5052,7 @@
 				CE01509020A1CF5700DD72B5 /* WebClientSession.h */,
 				CE01509320A1CF5700DD72B5 /* WebClientSession.m */,
 				2D7548332327753400CCB514 /* ExternalStorageInfo.h */,
+				2DC01E832570D8E20069E595 /* ExternalStorage.swift */,
 			);
 			name = "CoreData Objects";
 			sourceTree = "<group>";
@@ -5216,16 +5131,6 @@
 			);
 			name = HPGrowingTextView;
 			path = Vendor/HPGrowingTextView;
-			sourceTree = "<group>";
-		};
-		4D68937C16480D78000DE62D /* MBProgressHUD */ = {
-			isa = PBXGroup;
-			children = (
-				4D68937D16480D79000DE62D /* MBProgressHUD.h */,
-				4D68937E16480D79000DE62D /* MBProgressHUD.m */,
-			);
-			name = MBProgressHUD;
-			path = Vendor/MBProgressHUD;
 			sourceTree = "<group>";
 		};
 		4D736B3F16487C2A00D70AD9 /* MKNumberBadgeView */ = {
@@ -5479,8 +5384,6 @@
 				CE7DC3011F38BC1400A18DEF /* ConversationUtils.m */,
 				0AFF74491B58DD4B008E08DB /* DocumentPicker.h */,
 				0AFF744A1B58DD4B008E08DB /* DocumentPicker.m */,
-				CE8B6BA31EFD0AE000293643 /* FeatureMaskChecker.h */,
-				CE8B6BA41EFD0AE000293643 /* FeatureMaskChecker.m */,
 				4DE0B1FA22522BB4001CEDE4 /* IDNSafetyHelper.swift */,
 				CE8B6C3A1F051DBA00293643 /* ImageUtils.h */,
 				CE8B6C3B1F051DBA00293643 /* ImageUtils.m */,
@@ -5595,6 +5498,8 @@
 		4DD01F6B14C1CCA900EF7690 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				4A91C82D256D27C700FFE82A /* MBProgressHUD.framework */,
+				2DD5DFEF256E31E300145102 /* TrustKit.framework */,
 				4A8C93D7247BC06A00FEB1B7 /* ZipArchive.framework */,
 				4A63F93B24F803BB00DD629B /* PromiseKit.framework */,
 				2DEE58AA24500F060007FAC1 /* SwiftProtobuf.framework */,
@@ -6377,6 +6282,7 @@
 				CE47F7BB23FAB933005A0C87 /* MasterDndDaysViewController.swift */,
 				CE4A7BE124091FDC00CD0015 /* ThreemaWorkViewController.swift */,
 				CE9F26DF251B7E4800D1FCA8 /* DevModeViewController.swift */,
+				2DFA05332575022B0020E14F /* OrphanedFilesCleanupViewController.swift */,
 			);
 			name = Settings;
 			sourceTree = "<group>";
@@ -6682,136 +6588,6 @@
 			name = Subclass;
 			sourceTree = "<group>";
 		};
-		CEB637912374084900188924 /* TrustKit */ = {
-			isa = PBXGroup;
-			children = (
-				CEB637922374084900188924 /* TSKTrustKitConfig.h */,
-				CEB637932374084900188924 /* Reporting */,
-				CEB6379E2374084900188924 /* TSKTrustDecision.h */,
-				CEB6379F2374084900188924 /* TSKPinningValidatorResult.h */,
-				CEB637A02374084900188924 /* Framework */,
-				CEB637A22374084900188924 /* TSKLog.h */,
-				CEB637A32374084900188924 /* configuration_utils.m */,
-				CEB637A42374084900188924 /* Dependencies */,
-				CEB637B72374084900188924 /* parse_configuration.m */,
-				CEB637B82374084900188924 /* TrustKit.h */,
-				CEB637B92374084900188924 /* TSKPinningValidator.h */,
-				CEB637BA2374084900188924 /* TSKTrustKitConfig.m */,
-				CEB637BB2374084900188924 /* Swizzling */,
-				CEB637C02374084900188924 /* TSKPinningValidatorResult.m */,
-				CEB637C12374084900188924 /* TSKPinningValidator_Private.h */,
-				CEB637C22374084900188924 /* Pinning */,
-				CEB637C82374084900188924 /* configuration_utils.h */,
-				CEB637C92374084900188924 /* TSKPinningValidatorCallback.h */,
-				CEB637CA2374084900188924 /* TSKPinningValidator.m */,
-				CEB637CB2374084900188924 /* TrustKit.m */,
-				CEB637CC2374084900188924 /* parse_configuration.h */,
-			);
-			name = TrustKit;
-			path = ../Vendor/TrustKit;
-			sourceTree = "<group>";
-		};
-		CEB637932374084900188924 /* Reporting */ = {
-			isa = PBXGroup;
-			children = (
-				CEB637942374084900188924 /* vendor_identifier.h */,
-				CEB637952374084900188924 /* TSKBackgroundReporter.m */,
-				CEB637962374084900188924 /* TSKReportsRateLimiter.h */,
-				CEB637972374084900188924 /* TSKPinFailureReport.m */,
-				CEB637982374084900188924 /* reporting_utils.h */,
-				CEB637992374084900188924 /* vendor_identifier.m */,
-				CEB6379A2374084900188924 /* TSKPinFailureReport.h */,
-				CEB6379B2374084900188924 /* TSKReportsRateLimiter.m */,
-				CEB6379C2374084900188924 /* TSKBackgroundReporter.h */,
-				CEB6379D2374084900188924 /* reporting_utils.m */,
-			);
-			path = Reporting;
-			sourceTree = "<group>";
-		};
-		CEB637A02374084900188924 /* Framework */ = {
-			isa = PBXGroup;
-			children = (
-				CEB637A12374084900188924 /* Info.plist */,
-			);
-			path = Framework;
-			sourceTree = "<group>";
-		};
-		CEB637A42374084900188924 /* Dependencies */ = {
-			isa = PBXGroup;
-			children = (
-				CEB637A52374084900188924 /* domain_registry */,
-				CEB637B32374084900188924 /* RSSwizzle */,
-				CEB637B62374084900188924 /* README.md */,
-			);
-			path = Dependencies;
-			sourceTree = "<group>";
-		};
-		CEB637A52374084900188924 /* domain_registry */ = {
-			isa = PBXGroup;
-			children = (
-				CEB637A62374084900188924 /* domain_registry.h */,
-				CEB637A72374084900188924 /* registry_tables_genfiles */,
-				CEB637A92374084900188924 /* private */,
-			);
-			path = domain_registry;
-			sourceTree = "<group>";
-		};
-		CEB637A72374084900188924 /* registry_tables_genfiles */ = {
-			isa = PBXGroup;
-			children = (
-				CEB637A82374084900188924 /* registry_tables.h */,
-			);
-			path = registry_tables_genfiles;
-			sourceTree = "<group>";
-		};
-		CEB637A92374084900188924 /* private */ = {
-			isa = PBXGroup;
-			children = (
-				CEB637AA2374084900188924 /* trie_search.c */,
-				CEB637AB2374084900188924 /* tsk_assert.h */,
-				CEB637AC2374084900188924 /* string_util.h */,
-				CEB637AD2374084900188924 /* trie_search.h */,
-				CEB637AE2374084900188924 /* tsk_assert.c */,
-				CEB637AF2374084900188924 /* registry_types.h */,
-				CEB637B02374084900188924 /* registry_search.c */,
-				CEB637B12374084900188924 /* init_registry_tables.c */,
-				CEB637B22374084900188924 /* trie_node.h */,
-			);
-			path = private;
-			sourceTree = "<group>";
-		};
-		CEB637B32374084900188924 /* RSSwizzle */ = {
-			isa = PBXGroup;
-			children = (
-				CEB637B42374084900188924 /* RSSwizzle.h */,
-				CEB637B52374084900188924 /* RSSwizzle.m */,
-			);
-			path = RSSwizzle;
-			sourceTree = "<group>";
-		};
-		CEB637BB2374084900188924 /* Swizzling */ = {
-			isa = PBXGroup;
-			children = (
-				CEB637BC2374084900188924 /* TSKNSURLSessionDelegateProxy.h */,
-				CEB637BD2374084900188924 /* TSKNSURLConnectionDelegateProxy.h */,
-				CEB637BE2374084900188924 /* TSKNSURLSessionDelegateProxy.m */,
-				CEB637BF2374084900188924 /* TSKNSURLConnectionDelegateProxy.m */,
-			);
-			path = Swizzling;
-			sourceTree = "<group>";
-		};
-		CEB637C22374084900188924 /* Pinning */ = {
-			isa = PBXGroup;
-			children = (
-				CEB637C32374084900188924 /* TSKPublicKeyAlgorithm.h */,
-				CEB637C42374084900188924 /* TSKSPKIHashCache.h */,
-				CEB637C52374084900188924 /* ssl_pin_verifier.m */,
-				CEB637C62374084900188924 /* ssl_pin_verifier.h */,
-				CEB637C72374084900188924 /* TSKSPKIHashCache.m */,
-			);
-			path = Pinning;
-			sourceTree = "<group>";
-		};
 		CEB63E7220AD709100DF1EE2 /* ChunkedDC */ = {
 			isa = PBXGroup;
 			children = (
@@ -7042,16 +6818,9 @@
 				4A63F93A24F7FC9300DD629B /* BlobUploadDelegate.h in Headers */,
 				4D441DD0220B0E8B00572571 /* SDAVAssetExportSession.h in Headers */,
 				0A3864981C633D2800924A29 /* VideoMessage.h in Headers */,
-				CEB637CE2374084900188924 /* vendor_identifier.h in Headers */,
-				CEB637E22374084900188924 /* trie_search.h in Headers */,
-				CEB637F82374084900188924 /* ssl_pin_verifier.h in Headers */,
-				CEB637F62374084900188924 /* TSKSPKIHashCache.h in Headers */,
-				CEB637FA2374084900188924 /* configuration_utils.h in Headers */,
 				0A38648F1C633D2800924A29 /* FileMessage.h in Headers */,
 				2D55A85123851EAE00613425 /* TestLoggerMock.h in Headers */,
 				0A3864881C633D2800924A29 /* BallotMessage.h in Headers */,
-				CEB637F42374084900188924 /* TSKPinningValidator_Private.h in Headers */,
-				CEB637F52374084900188924 /* TSKPublicKeyAlgorithm.h in Headers */,
 				4D17BD862317FBE000AD52F6 /* GCDAsyncHTTPSProxySocket.h in Headers */,
 				CE42BCC92003C3B0001C132F /* ThemedViewController.h in Headers */,
 				4A63CCAB256686F100E73381 /* JKLLockScreenViewController.h in Headers */,
@@ -7059,16 +6828,11 @@
 				CEDE4BAB20A5E003008AFF3F /* LastLoadedMessageIndex.h in Headers */,
 				4A63F93624F7FC1600DD629B /* FileMessageSender.h in Headers */,
 				4DC1D6861D77080A0080A60D /* WorkDataFetcher.h in Headers */,
-				CEB637EC2374084900188924 /* TrustKit.h in Headers */,
 				0A38649A1C633D2800924A29 /* DocumentManager.h in Headers */,
 				4D17BD812317E0DC00AD52F6 /* GCDAsyncSocketFactory.h in Headers */,
 				0A3864951C633D2800924A29 /* SystemMessage.h in Headers */,
-				CEB637D42374084900188924 /* TSKPinFailureReport.h in Headers */,
 				0A3864631C625A8600924A29 /* Constants.h in Headers */,
-				CEB637D22374084900188924 /* reporting_utils.h in Headers */,
 				0A38649F1C633D2800924A29 /* MessageFetcher.h in Headers */,
-				CEB637D82374084900188924 /* TSKTrustDecision.h in Headers */,
-				CEB637DB2374084900188924 /* TSKLog.h in Headers */,
 				0A38648B1C633D2800924A29 /* BaseMessage.h in Headers */,
 				0A3864921C633D2800924A29 /* ImageMessage.h in Headers */,
 				0AC9EF251C99AA8E00555E62 /* MediaConverter.h in Headers */,
@@ -7079,26 +6843,20 @@
 				CE8B6B9A1EFD09EE00293643 /* FeatureMask.h in Headers */,
 				CE5D04A71EF18A7500C40E25 /* BoxVoIPCallRingingMessage.h in Headers */,
 				0A3864861C633D2800924A29 /* AudioMessage.h in Headers */,
-				CEB637E42374084900188924 /* registry_types.h in Headers */,
 				CE5397D71ED309DC002EB388 /* BoxVoIPCallHangupMessage.h in Headers */,
 				0A38649D1C633D2800924A29 /* EntityManager.h in Headers */,
 				2D7548342327753400CCB514 /* ExternalStorageInfo.h in Headers */,
 				4DC8A4AC20DCDE1B003E70C8 /* NBRegularExpressionCache.h in Headers */,
 				4D1454DB1D5B81500095A19B /* MessageDraftStore.h in Headers */,
-				4A63CCA02566857C00E73381 /* Reachability.h in Headers */,
-				CEB637FE2374084900188924 /* parse_configuration.h in Headers */,
 				0A38648E1C633D2800924A29 /* FileData.h in Headers */,
-				CEB637EF2374084900188924 /* TSKNSURLSessionDelegateProxy.h in Headers */,
 				CEAFA2181E895A7C00FF84FD /* ContactSetPhotoMessage.h in Headers */,
 				CECD3ECB20739DC400C451BA /* NBGeneratedPhoneNumberMetaData.h in Headers */,
 				0A3864931C633D2800924A29 /* LastGroupSyncRequest.h in Headers */,
-				CEB637E02374084900188924 /* tsk_assert.h in Headers */,
 				CEA3190D21C3F67E00AB109B /* GroupDeletePhotoMessage.h in Headers */,
 				0A3864961C633D2800924A29 /* TextMessage.h in Headers */,
-				CEB637E72374084900188924 /* trie_node.h in Headers */,
-				CEB637E82374084900188924 /* RSSwizzle.h in Headers */,
 				CEDCFE891E8D5272001AA976 /* ContactPhotoSender.h in Headers */,
 				0A03A15D1CAC0B5600B4C74B /* MDMSetup.h in Headers */,
+				CEF10B37258B36EA00EFB10C /* Reachability.h in Headers */,
 				CEF8D777209B68AF0055F47A /* RequestedConversation.h in Headers */,
 				CEBF6E10210789AB003FC0EC /* BackgroundTaskManagerProxy.h in Headers */,
 				4DD937A7203DE0E300C40880 /* PushPayloadDecryptor.h in Headers */,
@@ -7117,21 +6875,17 @@
 				0A3864911C633D2800924A29 /* ImageData.h in Headers */,
 				CE56496224C1DA87007DEE6E /* ContactAndWorkContactTableDataSource.h in Headers */,
 				4D17BD7E2317E0A600AD52F6 /* GCDAsyncSOCKSProxySocket.h in Headers */,
+				2D4CA145256D3986002BC063 /* SSLCAHelper.h in Headers */,
 				0A3864901C633D2800924A29 /* Group.h in Headers */,
 				0A3864991C633D2800924A29 /* DatabaseManager.h in Headers */,
 				0A38648C1C633D2800924A29 /* Contact.h in Headers */,
 				4D1C44DF1EC072A100EDCD02 /* Nonce.h in Headers */,
-				CEB637DE2374084900188924 /* registry_tables.h in Headers */,
-				CEB637ED2374084900188924 /* TSKPinningValidator.h in Headers */,
 				CE01509420A1CF5700DD72B5 /* WebClientSession.h in Headers */,
 				4D578E5F238EF2FC009A0E57 /* IdentityInfoFetcher.h in Headers */,
-				CEB637D92374084900188924 /* TSKPinningValidatorResult.h in Headers */,
-				CEB637D02374084900188924 /* TSKReportsRateLimiter.h in Headers */,
 				4DC8A4AB20DCDE1B003E70C8 /* NBRegExMatcher.h in Headers */,
 				4DD6143B24EACC6100C3F521 /* TrustedContacts.h in Headers */,
 				2D5D71B922D484B100FFF974 /* ValidationLogger.h in Headers */,
 				0A3864871C633D2800924A29 /* Ballot.h in Headers */,
-				CEB637DD2374084900188924 /* domain_registry.h in Headers */,
 				CE846F171E9CFD6B0068E8BF /* ContactDeletePhotoMessage.h in Headers */,
 				CEB34DBF2091EB74005B5D6C /* PushSetting.h in Headers */,
 				4A63F93724F7FC7500DD629B /* URLSenderItem.h in Headers */,
@@ -7139,18 +6893,14 @@
 				CE8495DB1ECDC9DE006C3905 /* BoxVoIPCallIceCandidatesMessage.h in Headers */,
 				0A3864941C633D2800924A29 /* LocationMessage.h in Headers */,
 				0A38649B1C633D2800924A29 /* EntityCreator.h in Headers */,
-				CEB637F02374084900188924 /* TSKNSURLConnectionDelegateProxy.h in Headers */,
 				0A7DF97B1C9FF626002D4DC3 /* LicenseStore.h in Headers */,
 				CECD3EC920739DC400C451BA /* NSArray+NBAdditions.h in Headers */,
-				CEB637CD2374084900188924 /* TSKTrustKitConfig.h in Headers */,
 				CEFB45BE1ECAF5EE0097B39A /* BoxVoIPCallOfferMessage.h in Headers */,
 				4DC8A4A420DCDE13003E70C8 /* NBPhoneNumberUtil+ShortNumber.h in Headers */,
 				4A63F93924F7FC8900DD629B /* UploadProgressDelegate.h in Headers */,
-				CEB637D62374084900188924 /* TSKBackgroundReporter.h in Headers */,
 				4A63F93824F7FC7F00DD629B /* BlobMessageSender.h in Headers */,
 				CEE93D8220A99247002C1304 /* RequestedThumbnail.h in Headers */,
 				0A3864851C633D2800924A29 /* AudioData.h in Headers */,
-				CEB637FB2374084900188924 /* TSKPinningValidatorCallback.h in Headers */,
 				4D8E802C24D16A7F00D803FA /* NonceHasher.h in Headers */,
 				0A3864671C625C5200924A29 /* ThreemaFramework-Prefix.pch in Headers */,
 				2D670D4B22A7F78200C3EBBD /* BlobData.h in Headers */,
@@ -7158,7 +6908,7 @@
 				0A38649C1C633D2800924A29 /* EntityFetcher.h in Headers */,
 				CED101012090763300D2B7DA /* Tag.h in Headers */,
 				4A63CCA8256686F100E73381 /* JKLLockScreenNumber.h in Headers */,
-				CEB637E12374084900188924 /* string_util.h in Headers */,
+				CEB637E12374084900188924 /* (null) in Headers */,
 				4A63CCAA256686F100E73381 /* JKLLockScreenPincodeView.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -7492,6 +7242,7 @@
 				tr,
 				"eu-ES",
 				gsw,
+				pl,
 			);
 			mainGroup = 4DD01F5D14C1CCA900EF7690;
 			productRefGroup = 4DD01F6914C1CCA900EF7690 /* Products */;
@@ -7544,6 +7295,7 @@
 				0A3863FE1C62565C00924A29 /* KKPasscodeLock.bundle in Resources */,
 				0A38645A1C62588D00924A29 /* Localizable.strings in Resources */,
 				4D441DCF220B0E8B00572571 /* SDAVAssetExportSession.podspec in Resources */,
+				CE3AAB32258CC55700854649 /* JKLLockScreenViewController.xib in Resources */,
 				0A38643A1C62572700924A29 /* ContactPicker.storyboard in Resources */,
 				4A63CCAD256686F100E73381 /* JKLLockScreenViewController.xib in Resources */,
 				CE3AB539231410F2001AF17C /* Symbols.xcassets in Resources */,
@@ -7913,6 +7665,8 @@
 				"$(SRCROOT)/Carthage/Build/iOS/SwiftProtobuf.framework",
 				"$(SRCROOT)/Carthage/Build/iOS/ZipArchive.framework",
 				"$(SRCROOT)/Carthage/Build/iOS/PromiseKit.framework",
+				"$(SRCROOT)/Carthage/Build/iOS/MBProgressHUD.framework",
+				"$(SRCROOT)/Carthage/Build/iOS/TrustKit.framework",
 			);
 			outputFileListPaths = (
 			);
@@ -7941,6 +7695,8 @@
 				"$(SRCROOT)/Carthage/Build/iOS/SwiftProtobuf.framework",
 				"$(SRCROOT)/Carthage/Build/iOS/ZipArchive.framework",
 				"$(SRCROOT)/Carthage/Build/iOS/PromiseKit.framework",
+				"$(SRCROOT)/Carthage/Build/iOS/MBProgressHUD.framework",
+				"$(SRCROOT)/Carthage/Build/iOS/TrustKit.framework",
 			);
 			outputFileListPaths = (
 			);
@@ -7960,7 +7716,6 @@
 				CE66FF8A232117A800338E22 /* StyleKit.swift in Sources */,
 				0A3864BE1C6343BD00924A29 /* FileMessageSender.m in Sources */,
 				0A38647F1C633D0200924A29 /* LastGroupSyncRequest.m in Sources */,
-				CEB637CF2374084900188924 /* TSKBackgroundReporter.m in Sources */,
 				0A3864B51C63439B00924A29 /* GroupSetPhotoMessage.m in Sources */,
 				0A38642C1C62570B00924A29 /* NSData+Base32.m in Sources */,
 				0A3864081C62567600924A29 /* NBPhoneMetaData.m in Sources */,
@@ -7979,8 +7734,6 @@
 				4D441DCD220B0E8B00572571 /* SDAVAssetExportSession.m in Sources */,
 				0A38643D1C62572700924A29 /* PickerContactCell.m in Sources */,
 				0A38647E1C633D0200924A29 /* ImageMessage.m in Sources */,
-				CEB637FC2374084900188924 /* TSKPinningValidator.m in Sources */,
-				CEB637E92374084900188924 /* RSSwizzle.m in Sources */,
 				0A3864721C633D0200924A29 /* AudioMessage.m in Sources */,
 				0A3864791C633D0200924A29 /* Conversation.m in Sources */,
 				4D17BD7D2317E0A600AD52F6 /* GCDAsyncSOCKSProxySocket.m in Sources */,
@@ -8000,11 +7753,8 @@
 				2D1D421D238297DD00CAAE19 /* LogFormatterCustom.m in Sources */,
 				CEF8D778209B68AF0055F47A /* RequestedConversation.m in Sources */,
 				2DFF7D2322A6473E000DD4FA /* FileUtility.swift in Sources */,
-				CEB637E32374084900188924 /* tsk_assert.c in Sources */,
 				0A3864091C62567600924A29 /* NBPhoneNumber.m in Sources */,
-				CEB637D72374084900188924 /* reporting_utils.m in Sources */,
 				CE01509720A1CF5700DD72B5 /* WebClientSession.m in Sources */,
-				CEB637F92374084900188924 /* TSKSPKIHashCache.m in Sources */,
 				0A3864411C62574200924A29 /* RecentTableDataSource.m in Sources */,
 				0A7DF97C1C9FF626002D4DC3 /* LicenseStore.m in Sources */,
 				CEB34DC02091EB74005B5D6C /* PushSetting.m in Sources */,
@@ -8019,22 +7769,21 @@
 				CEFB45D51ECB48A10097B39A /* BoxVoIPCallAnswerMessage.m in Sources */,
 				0AC9EF261C99AA8E00555E62 /* MediaConverter.m in Sources */,
 				4D1454DC1D5B81500095A19B /* MessageDraftStore.m in Sources */,
-				CEB637DF2374084900188924 /* trie_search.c in Sources */,
 				0A3864381C62571A00924A29 /* ThemedNavigationController.m in Sources */,
 				0A3864171C6256EF00924A29 /* core.c in Sources */,
 				0A3864BC1C6343BD00924A29 /* BlobMessageSender.m in Sources */,
 				0A38647B1C633D0200924A29 /* FileMessage.m in Sources */,
-				CEB637D52374084900188924 /* TSKReportsRateLimiter.m in Sources */,
 				2DD8F697245017A0009485A2 /* CallsignalingProtocol.swift in Sources */,
 				0A38644A1C62576500924A29 /* JsonUtil.m in Sources */,
 				0A3864201C6256EF00924A29 /* xor.c in Sources */,
-				CEB637DC2374084900188924 /* configuration_utils.m in Sources */,
 				2DD8F692245014ED009485A2 /* safe.pb.swift in Sources */,
 				CED101022090763300D2B7DA /* Tag.m in Sources */,
 				0A3864311C62570B00924A29 /* UTIConverter.m in Sources */,
 				0A3864111C62569A00924A29 /* NaClCrypto.m in Sources */,
 				0A3864541C62576500924A29 /* TouchIdAuthentication.m in Sources */,
 				CE8495DC1ECDC9DE006C3905 /* BoxVoIPCallIceCandidatesMessage.m in Sources */,
+				2DC01E842570D8E20069E595 /* ExternalStorage.swift in Sources */,
+				CEF10B39258B373600EFB10C /* JKLLockScreenViewController.m in Sources */,
 				0A3864C21C6343BD00924A29 /* MessageSender.m in Sources */,
 				0A3864A01C63439B00924A29 /* BoxedMessage.m in Sources */,
 				4D8E802D24D16A7F00D803FA /* NonceHasher.m in Sources */,
@@ -8087,15 +7836,12 @@
 				CEE1CA7423E9CD9B00CEDF9F /* WizardBackgroundView.swift in Sources */,
 				0A3864271C62570B00924A29 /* ContactUtil.m in Sources */,
 				2D670D4322A7EA4F00C3EBBD /* EntityDestroyer.swift in Sources */,
-				4A63CCAE256686F100E73381 /* JKLLockScreenViewController.m in Sources */,
-				CEB637F22374084900188924 /* TSKNSURLConnectionDelegateProxy.m in Sources */,
 				0A3863FC1C62565000924A29 /* KKPasscodeViewController.m in Sources */,
 				0A38641B1C6256EF00924A29 /* smult.c in Sources */,
 				0A3864BA1C63439B00924A29 /* UnknownTypeMessage.m in Sources */,
 				0A3864421C62576500924A29 /* BallotMessageDecoder.m in Sources */,
 				0A38640E1C62568A00924A29 /* UIImage+Mask.m in Sources */,
 				0A3864321C62571A00924A29 /* ActivityIndicatorProxy.m in Sources */,
-				CEB637D32374084900188924 /* vendor_identifier.m in Sources */,
 				0A3864431C62576500924A29 /* BallotMessageEncoder.m in Sources */,
 				0A38644B1C62576500924A29 /* MessageProcessorProxy.m in Sources */,
 				0A3864A11C63439B00924A29 /* AbstractMessage.m in Sources */,
@@ -8104,14 +7850,11 @@
 				0A38646F1C633CC000924A29 /* ErrorHandler.m in Sources */,
 				0A38640D1C62568A00924A29 /* UIImage+Alpha.m in Sources */,
 				0A3864251C62570B00924A29 /* BlobUtil.m in Sources */,
-				CEB637D12374084900188924 /* TSKPinFailureReport.m in Sources */,
-				CEB637F32374084900188924 /* TSKPinningValidatorResult.m in Sources */,
 				2D5523E32303DA8600A21671 /* AppSetupState.swift in Sources */,
 				0A3864361C62571A00924A29 /* ModalNavigationController.m in Sources */,
 				0A3864471C62576500924A29 /* ContactStore.m in Sources */,
 				0A3864CB1C63462C00924A29 /* AppGroup.m in Sources */,
 				0A3864551C62576500924A29 /* UserSettings.m in Sources */,
-				CEB637FD2374084900188924 /* TrustKit.m in Sources */,
 				0A3864441C62576500924A29 /* BallotManager.m in Sources */,
 				0A3864681C633C9200924A29 /* ThreemaData.xcdatamodeld in Sources */,
 				0A3864701C633CC000924A29 /* MessageFetcher.m in Sources */,
@@ -8121,7 +7864,6 @@
 				0A3864161C6256EF00924A29 /* core.c in Sources */,
 				2DD16B6F2242719A00AFFC35 /* SafeSetupWork.swift in Sources */,
 				0A38647D1C633D0200924A29 /* ImageData.m in Sources */,
-				CEB637E62374084900188924 /* init_registry_tables.c in Sources */,
 				2D5CE08222E03B7000DBC53D /* DatabaseContext.m in Sources */,
 				4DD937A8203DE0E300C40880 /* PushPayloadDecryptor.m in Sources */,
 				0A13009C1C68E45D001DB41C /* UIImage+ColoredImage.m in Sources */,
@@ -8136,7 +7878,6 @@
 				0A3864A71C63439B00924A29 /* BoxImageMessage.m in Sources */,
 				2DD8F68F245014ED009485A2 /* common.pb.swift in Sources */,
 				0A38644D1C62576500924A29 /* PermissionChecker.m in Sources */,
-				CEB637E52374084900188924 /* registry_search.c in Sources */,
 				0A38640B1C62567600924A29 /* NBPhoneNumberUtil.m in Sources */,
 				CE5D04A81EF18A7500C40E25 /* BoxVoIPCallRingingMessage.m in Sources */,
 				2DC50298212594C700B1D317 /* SafeData.swift in Sources */,
@@ -8150,10 +7891,8 @@
 				0A3864131C6256A900924A29 /* before.c in Sources */,
 				0A3864761C633D0200924A29 /* BallotResult.m in Sources */,
 				0A3864B31C63439B00924A29 /* GroupLocationMessage.m in Sources */,
-				CEB637EE2374084900188924 /* TSKTrustKitConfig.m in Sources */,
 				0A3864B21C63439B00924A29 /* GroupLeaveMessage.m in Sources */,
 				0A38642B1C62570B00924A29 /* NibUtil.m in Sources */,
-				CEB637F72374084900188924 /* ssl_pin_verifier.m in Sources */,
 				CEA3190E21C3F67E00AB109B /* GroupDeletePhotoMessage.m in Sources */,
 				CE56496324C1DA87007DEE6E /* ContactAndWorkContactTableDataSource.m in Sources */,
 				0A3864801C633D0200924A29 /* LocationMessage.m in Sources */,
@@ -8176,7 +7915,6 @@
 				0A3863FD1C62565000924A29 /* KKPasscodeGracePeriodViewController.m in Sources */,
 				CEFB45BF1ECAF5EE0097B39A /* BoxVoIPCallOfferMessage.m in Sources */,
 				0A3864A31C63439B00924A29 /* BoxAudioMessage.m in Sources */,
-				CEB637F12374084900188924 /* TSKNSURLSessionDelegateProxy.m in Sources */,
 				0A3863F31C62563100924A29 /* GCDAsyncSocket.m in Sources */,
 				0A3864241C62570B00924A29 /* BaseMessage+Accessibility.m in Sources */,
 				0A3864C11C6343BD00924A29 /* MessageQueue.m in Sources */,
@@ -8198,8 +7936,6 @@
 				0A3864231C6256EF00924A29 /* devurandom.c in Sources */,
 				0A38644F1C62576500924A29 /* ServerAPIConnector.m in Sources */,
 				4DC1D6871D77080A0080A60D /* WorkDataFetcher.m in Sources */,
-				0A3864BB1C6343BD00924A29 /* AudioMessageSender.m in Sources */,
-				CEB637EB2374084900188924 /* parse_configuration.m in Sources */,
 				0A3864B61C63439B00924A29 /* GroupTextMessage.m in Sources */,
 				CE7B1F1F20458FF200C40AEF /* WorkContactTableDataSource.m in Sources */,
 				0A38643E1C62573500924A29 /* ContactNameLabel.m in Sources */,
@@ -8213,6 +7949,7 @@
 			files = (
 				4A6DAA0D250A83940088C282 /* URLSenderItemCreatorTests.swift in Sources */,
 				4AA784D625066BE700882E72 /* VideoURLSenderItemCreatorTest.swift in Sources */,
+				CEF10B33258B360E00EFB10C /* ExternalStorageTests.swift in Sources */,
 				4A2B487A24FE705B0073E29F /* ImageURLSenderItemCreatorTest.swift in Sources */,
 				4A6DA9E6250A73290088C282 /* UTIConverterTests.swift in Sources */,
 			);
@@ -8354,7 +8091,6 @@
 				0A7DF7051C9FDBDE002D4DC3 /* MWTapDetectingImageView.m in Sources */,
 				CE225BC22126D3200075B7CC /* WebUpdateConnectionAckRequest.swift in Sources */,
 				0A7DF7061C9FDBDE002D4DC3 /* PointOfInterest.m in Sources */,
-				CE8B6BCC1F00F08C00293643 /* FeatureMaskChecker.m in Sources */,
 				0A7DF7071C9FDBDE002D4DC3 /* ForwardURLActivity.m in Sources */,
 				CE174AEF1E96443100D3746E /* ProfilePictureSettingViewController.m in Sources */,
 				0A7DF7081C9FDBDE002D4DC3 /* BallotResultMatrixCell.m in Sources */,
@@ -8457,7 +8193,6 @@
 				4A31A2E024AE012E00884144 /* MediaShareOptionsViewController.swift in Sources */,
 				CE54E55024A1E93E0007F2F1 /* LinkedContactCell.swift in Sources */,
 				CE7E4F3123E2C313009977A5 /* BannerStyle.swift in Sources */,
-				0A7DF7431C9FDBDE002D4DC3 /* MBProgressHUD.m in Sources */,
 				0A7DF7441C9FDBDE002D4DC3 /* SDWebImageDownloader.m in Sources */,
 				0A7DF7461C9FDBDE002D4DC3 /* MKNumberBadgeView.m in Sources */,
 				0A7DF7481C9FDBDE002D4DC3 /* QBPopupMenuPagenatorView.m in Sources */,
@@ -8878,7 +8613,6 @@
 				4D1A7F491A169BD100386317 /* HairlineView.m in Sources */,
 				4D228ECB18F67EFB0059BDE7 /* ShareController.m in Sources */,
 				CE8A2B5A1EB38270004973D5 /* DKAssetGroupDetailCameraCell.swift in Sources */,
-				CE8B6BA51EFD0AE000293643 /* FeatureMaskChecker.m in Sources */,
 				CE3D66EF2271AD4C00720DF1 /* ZSWTappableLabelAccessibilityActionLongPress.m in Sources */,
 				CEC42C86228BF61F004D267B /* VoIPIceCandidatesMessage.swift in Sources */,
 				CEF464CB2421F6D700055977 /* ChatAnimatedGifMessageCell.swift in Sources */,
@@ -9009,7 +8743,6 @@
 				0A868E271B45BB7900A5B755 /* FileMessagePreviewUnsupportedTypeView.m in Sources */,
 				4D6893741647F698000DE62D /* ScanIdentityController.mm in Sources */,
 				4D68937B1647FEA8000DE62D /* AddContactViewController.m in Sources */,
-				4D68937F16480D79000DE62D /* MBProgressHUD.m in Sources */,
 				0A6E62851B25E5C0003DDB5A /* SDWebImageDownloader.m in Sources */,
 				4D736B4216487C2A00D70AD9 /* MKNumberBadgeView.m in Sources */,
 				0A50CFE31C49153A00991088 /* QBPopupMenuPagenatorView.m in Sources */,
@@ -9232,6 +8965,7 @@
 				CE3D66ED2271AD4C00720DF1 /* ZSWTappableLabelTappableRegionInfoImpl.m in Sources */,
 				CE7E4F0A23E094AD009977A5 /* NotificationBannerHelper.swift in Sources */,
 				4D8B813618D38B4F0079014F /* MWPhotoBrowser.m in Sources */,
+				2DFA05342575022B0020E14F /* OrphanedFilesCleanupViewController.swift in Sources */,
 				0A23B0341C88388A0015D542 /* AnimGifMessageLoader.m in Sources */,
 				CE0318DF209C5ED600830E58 /* WebClientSessionStore.swift in Sources */,
 				4DAD0A341A214005001D139C /* QRCodeActivity.m in Sources */,
@@ -9452,6 +9186,7 @@
 				CE8EC72A23EC131C003C7D08 /* cs */,
 				CEFCFA622463E51500E3ABD9 /* tr */,
 				CEFCFA6B2463E7D500E3ABD9 /* eu-ES */,
+				CEC0440A25AC5BF3002C484A /* pl */,
 			);
 			name = CreatePassword.storyboard;
 			sourceTree = "<group>";
@@ -9471,6 +9206,7 @@
 				CE8EC72F23EC131E003C7D08 /* cs */,
 				CEFCFA672463E51900E3ABD9 /* tr */,
 				CEFCFA702463E7D700E3ABD9 /* eu-ES */,
+				CEC0440825AC5BF2002C484A /* pl */,
 			);
 			name = Localizable.strings;
 			sourceTree = "<group>";
@@ -9498,6 +9234,7 @@
 				CE8EC72E23EC131D003C7D08 /* cs */,
 				CEFCFA662463E51800E3ABD9 /* tr */,
 				CEFCFA6F2463E7D700E3ABD9 /* eu-ES */,
+				CEC0440725AC5BF2002C484A /* pl */,
 			);
 			name = Ballot.strings;
 			path = Strings;
@@ -9518,6 +9255,7 @@
 				CE8EC73123EC131E003C7D08 /* cs */,
 				CEFCFA692463E51900E3ABD9 /* tr */,
 				CEFCFA722463E7D800E3ABD9 /* eu-ES */,
+				CEC0440F25AC5BF3002C484A /* pl */,
 			);
 			name = Localizable.strings;
 			sourceTree = "<group>";
@@ -9537,6 +9275,7 @@
 				CE8EC72D23EC131D003C7D08 /* cs */,
 				CEFCFA652463E51800E3ABD9 /* tr */,
 				CEFCFA6E2463E7D700E3ABD9 /* eu-ES */,
+				CEC0440625AC5BF2002C484A /* pl */,
 			);
 			name = Localizable.strings;
 			path = Strings;
@@ -9557,6 +9296,7 @@
 				CE8EC73023EC131E003C7D08 /* cs */,
 				CEFCFA682463E51900E3ABD9 /* tr */,
 				CEFCFA712463E7D700E3ABD9 /* eu-ES */,
+				CEC0440D25AC5BF3002C484A /* pl */,
 			);
 			name = InfoPlist.strings;
 			sourceTree = "<group>";
@@ -9577,6 +9317,7 @@
 				CE8EC72923EC131B003C7D08 /* cs */,
 				CEFCFA612463E51500E3ABD9 /* tr */,
 				CEFCFA6A2463E7D500E3ABD9 /* eu-ES */,
+				CEC0440925AC5BF3002C484A /* pl */,
 			);
 			name = MainStoryboard.storyboard;
 			sourceTree = "<group>";
@@ -9597,6 +9338,7 @@
 				CE8EC72B23EC131D003C7D08 /* cs */,
 				CEFCFA632463E51600E3ABD9 /* tr */,
 				CEFCFA6C2463E7D600E3ABD9 /* eu-ES */,
+				CEC0440B25AC5BF3002C484A /* pl */,
 			);
 			name = MyIdentityStoryboard.storyboard;
 			sourceTree = "<group>";
@@ -9617,6 +9359,7 @@
 				CE8EC72C23EC131D003C7D08 /* cs */,
 				CEFCFA642463E51700E3ABD9 /* tr */,
 				CEFCFA6D2463E7D600E3ABD9 /* eu-ES */,
+				CEC0440C25AC5BF3002C484A /* pl */,
 			);
 			name = SettingsStoryboard.storyboard;
 			sourceTree = "<group>";
@@ -9627,7 +9370,6 @@
 		0A677B9A1C6250CA0019B361 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = NO;
 				APPLICATION_EXTENSION_API_ONLY = YES;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
 				CLANG_CXX_LIBRARY = "libc++";
@@ -9692,7 +9434,6 @@
 		0A677B9B1C6250CA0019B361 /* AdHoc */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = NO;
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				APPLICATION_EXTENSION_API_ONLY = YES;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
@@ -9774,7 +9515,6 @@
 		0A677B9C1C6250CA0019B361 /* AppStore */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = NO;
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				APPLICATION_EXTENSION_API_ONLY = YES;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
@@ -10131,14 +9871,14 @@
 		0A7DF9431C9FDBDE002D4DC3 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = "$(EMBEDDED_CONTENT_CONTAINS_SWIFT)";
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				BUILD_NUMBER = "$(BUILD_NUMBER)";
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = Threema/ThreemaForWork.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
-				CURRENT_PROJECT_VERSION = "";
+				CURRENT_PROJECT_VERSION = "$(BUILD_NUMBER)";
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = DL5SR3PBJC;
 				ENABLE_BITCODE = NO;
@@ -10172,7 +9912,10 @@
 					"$(PROJECT_DIR)/SaltyRTC",
 				);
 				MOMC_NO_INVERSE_RELATIONSHIP_WARNINGS = YES;
-				OTHER_LDFLAGS = "-ObjC";
+				OTHER_LDFLAGS = (
+					"-ObjC",
+					"-Wl,-sectcreate,_RESTRICT,_restrict,/dev/null",
+				);
 				OTHER_SWIFT_FLAGS = "-D DEBUG";
 				PRODUCT_BUNDLE_IDENTIFIER = ch.threema.work.iapp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -10190,7 +9933,7 @@
 		0A7DF9441C9FDBDE002D4DC3 /* AdHoc */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = "$(EMBEDDED_CONTENT_CONTAINS_SWIFT)";
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				BUILD_NUMBER = "$(BUILD_NUMBER)";
 				CLANG_ENABLE_MODULES = YES;
@@ -10198,7 +9941,7 @@
 				CODE_SIGN_IDENTITY = "Apple Distribution: Threema GmbH (DL5SR3PBJC)";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "Apple Distribution: Threema GmbH (DL5SR3PBJC)";
 				COPY_PHASE_STRIP = YES;
-				CURRENT_PROJECT_VERSION = "";
+				CURRENT_PROJECT_VERSION = "$(BUILD_NUMBER)";
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = DL5SR3PBJC;
 				ENABLE_BITCODE = NO;
@@ -10231,7 +9974,10 @@
 					"$(PROJECT_DIR)/SaltyRTC",
 				);
 				MOMC_NO_INVERSE_RELATIONSHIP_WARNINGS = YES;
-				OTHER_LDFLAGS = "-ObjC";
+				OTHER_LDFLAGS = (
+					"-ObjC",
+					"-Wl,-sectcreate,_RESTRICT,_restrict,/dev/null",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = ch.threema.work.iapp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "91b1c9ca-b2bd-47f7-8d9c-0019cf5618dc";
@@ -10247,7 +9993,7 @@
 		0A7DF9451C9FDBDE002D4DC3 /* AppStore */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = "$(EMBEDDED_CONTENT_CONTAINS_SWIFT)";
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				BUILD_NUMBER = "$(BUILD_NUMBER)";
 				CLANG_ENABLE_MODULES = YES;
@@ -10255,7 +10001,7 @@
 				CODE_SIGN_IDENTITY = "Apple Distribution: Threema GmbH (DL5SR3PBJC)";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "Apple Distribution: Threema GmbH (DL5SR3PBJC)";
 				COPY_PHASE_STRIP = YES;
-				CURRENT_PROJECT_VERSION = "";
+				CURRENT_PROJECT_VERSION = "$(BUILD_NUMBER)";
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = DL5SR3PBJC;
 				ENABLE_BITCODE = NO;
@@ -10288,7 +10034,10 @@
 					"$(PROJECT_DIR)/SaltyRTC",
 				);
 				MOMC_NO_INVERSE_RELATIONSHIP_WARNINGS = YES;
-				OTHER_LDFLAGS = "-ObjC";
+				OTHER_LDFLAGS = (
+					"-ObjC",
+					"-Wl,-sectcreate,_RESTRICT,_restrict,/dev/null",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = ch.threema.work.iapp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "92afb1ee-4fa5-41e7-a92f-16c9dc555a97";
@@ -10737,7 +10486,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				BUILD_NUMBER = 2587;
+				BUILD_NUMBER = 2602;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ENABLE_MODULES = NO;
 				CLANG_ENABLE_OBJC_ARC = YES;
@@ -10784,7 +10533,7 @@
 				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "";
 				SDKROOT = iphoneos;
 				VALIDATE_PRODUCT = YES;
-				VERSION_NUMBER = 4.6.3;
+				VERSION_NUMBER = 4.6.4;
 			};
 			name = AppStore;
 		};
@@ -10834,7 +10583,10 @@
 				);
 				MOMC_NO_INVERSE_RELATIONSHIP_WARNINGS = YES;
 				ONLY_ACTIVE_ARCH = NO;
-				OTHER_LDFLAGS = "-ObjC";
+				OTHER_LDFLAGS = (
+					"-ObjC",
+					"-Wl,-sectcreate,_RESTRICT,_restrict,/dev/null",
+				);
 				OTHER_SWIFT_FLAGS = "";
 				PRODUCT_BUNDLE_IDENTIFIER = ch.threema.iapp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -10854,7 +10606,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				BUILD_NUMBER = 2587;
+				BUILD_NUMBER = 2602;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ENABLE_MODULES = NO;
 				CLANG_ENABLE_OBJC_ARC = YES;
@@ -10907,7 +10659,7 @@
 				PROVISIONING_PROFILE = "";
 				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "";
 				SDKROOT = iphoneos;
-				VERSION_NUMBER = 4.6.3;
+				VERSION_NUMBER = 4.6.4;
 			};
 			name = Debug;
 		};
@@ -10915,7 +10667,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				BUILD_NUMBER = 2587;
+				BUILD_NUMBER = 2602;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ENABLE_MODULES = NO;
 				CLANG_ENABLE_OBJC_ARC = YES;
@@ -10962,7 +10714,7 @@
 				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "";
 				SDKROOT = iphoneos;
 				VALIDATE_PRODUCT = YES;
-				VERSION_NUMBER = 4.6.3;
+				VERSION_NUMBER = 4.6.4;
 			};
 			name = AdHoc;
 		};
@@ -11011,7 +10763,10 @@
 					"$(PROJECT_DIR)/SaltyRTC",
 				);
 				MOMC_NO_INVERSE_RELATIONSHIP_WARNINGS = YES;
-				OTHER_LDFLAGS = "-ObjC";
+				OTHER_LDFLAGS = (
+					"-ObjC",
+					"-Wl,-sectcreate,_RESTRICT,_restrict,/dev/null",
+				);
 				OTHER_SWIFT_FLAGS = "-D DEBUG";
 				PRODUCT_BUNDLE_IDENTIFIER = ch.threema.iapp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -11073,7 +10828,10 @@
 					"$(PROJECT_DIR)/SaltyRTC",
 				);
 				MOMC_NO_INVERSE_RELATIONSHIP_WARNINGS = YES;
-				OTHER_LDFLAGS = "-ObjC";
+				OTHER_LDFLAGS = (
+					"-ObjC",
+					"-Wl,-sectcreate,_RESTRICT,_restrict,/dev/null",
+				);
 				OTHER_SWIFT_FLAGS = "";
 				PRODUCT_BUNDLE_IDENTIFIER = ch.threema.iapp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -11252,7 +11010,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				BUILD_NUMBER = 2587;
+				BUILD_NUMBER = 2602;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ENABLE_MODULES = NO;
 				CLANG_ENABLE_OBJC_ARC = YES;
@@ -11305,7 +11063,7 @@
 				PROVISIONING_PROFILE = "";
 				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "";
 				SDKROOT = iphoneos;
-				VERSION_NUMBER = 4.6.3;
+				VERSION_NUMBER = 4.6.4;
 			};
 			name = "Debug Sandbox";
 		};
@@ -11354,7 +11112,10 @@
 					"$(PROJECT_DIR)/SaltyRTC",
 				);
 				MOMC_NO_INVERSE_RELATIONSHIP_WARNINGS = YES;
-				OTHER_LDFLAGS = "-ObjC";
+				OTHER_LDFLAGS = (
+					"-ObjC",
+					"-Wl,-sectcreate,_RESTRICT,_restrict,/dev/null",
+				);
 				OTHER_SWIFT_FLAGS = "-D DEBUG";
 				PRODUCT_BUNDLE_IDENTIFIER = ch.threema.iapp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -11374,7 +11135,6 @@
 		CE6916442200568F00056335 /* Debug Sandbox */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = NO;
 				APPLICATION_EXTENSION_API_ONLY = YES;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
 				CLANG_CXX_LIBRARY = "libc++";
@@ -11439,14 +11199,14 @@
 		CE6916452200568F00056335 /* Debug Sandbox */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = "$(EMBEDDED_CONTENT_CONTAINS_SWIFT)";
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				BUILD_NUMBER = "$(BUILD_NUMBER)";
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = Threema/ThreemaForWork.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
-				CURRENT_PROJECT_VERSION = "";
+				CURRENT_PROJECT_VERSION = "$(BUILD_NUMBER)";
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = DL5SR3PBJC;
 				ENABLE_BITCODE = NO;
@@ -11480,7 +11240,10 @@
 					"$(PROJECT_DIR)/SaltyRTC",
 				);
 				MOMC_NO_INVERSE_RELATIONSHIP_WARNINGS = YES;
-				OTHER_LDFLAGS = "-ObjC";
+				OTHER_LDFLAGS = (
+					"-ObjC",
+					"-Wl,-sectcreate,_RESTRICT,_restrict,/dev/null",
+				);
 				OTHER_SWIFT_FLAGS = "-D DEBUG";
 				PRODUCT_BUNDLE_IDENTIFIER = ch.threema.work.iapp;
 				PRODUCT_NAME = "$(TARGET_NAME)";

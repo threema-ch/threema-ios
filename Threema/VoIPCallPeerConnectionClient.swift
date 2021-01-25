@@ -32,6 +32,7 @@ protocol VoIPCallPeerConnectionClientDelegate: class {
     func peerConnectionClient(_ client: VoIPCallPeerConnectionClient, didChangeConnectionState state: RTCIceConnectionState)
     func peerConnectionClient(_ client: VoIPCallPeerConnectionClient, receivingVideo: Bool)
     func peerConnectionClient(_ client: VoIPCallPeerConnectionClient, didReceiveData: Data)
+    func peerConnectionClient(_ client: VoIPCallPeerConnectionClient, shouldShowCellularCallWarning: Bool)
 }
 
 
@@ -86,9 +87,20 @@ final class VoIPCallPeerConnectionClient: NSObject {
     private var previousPeriodDebugState: VoIPStatsState? = nil
     private var previousVideoState: VoIPStatsState? = nil
     
+    private var callId: VoIPCallId? = nil
+    
+    private var isSelectedCandidatePairCellular: Bool = false {
+        didSet {
+            let shouldShowCellularCallWarning = isSelectedCandidatePairCellular && lastInternetStatus == ReachableViaWiFi
+            self.delegate?.peerConnectionClient(self, shouldShowCellularCallWarning: shouldShowCellularCallWarning)
+        }
+    }
+    
     private static let logStatsIntervalConnecting = 2.0
     private static let logStatsIntervalConnected = 30.0
     private static let checkReceivingVideoInterval = 2.0
+    
+    private var videoCallQualityObserver: NSObjectProtocol?
     
     public struct PeerConnectionParameters {
         public var isVideoCallAvailable: Bool = true
@@ -100,10 +112,10 @@ final class VoIPCallPeerConnectionClient: NSObject {
         internal var isDataChannelAvailable: Bool = false
     }
     
-    static func instantiate(contact: Contact, peerConnectionParameters: PeerConnectionParameters, completion: @escaping (Result<VoIPCallPeerConnectionClient,Error>) -> Void) {
+    static func instantiate(contact: Contact, callId: VoIPCallId?, peerConnectionParameters: PeerConnectionParameters, completion: @escaping (Result<VoIPCallPeerConnectionClient,Error>) -> Void) {
         VoIPCallPeerConnectionClient.defaultRTCConfiguration(peerConnectionParameters: peerConnectionParameters) { (result) in
             do {
-                let client = VoIPCallPeerConnectionClient.init(contact: contact, peerConnectionParameters: peerConnectionParameters, config: try result.get())
+                let client = VoIPCallPeerConnectionClient.init(contact: contact, callId: callId, peerConnectionParameters: peerConnectionParameters, config: try result.get())
                 completion(.success(client))
             } catch let e {
                 completion(.failure(e))
@@ -115,23 +127,35 @@ final class VoIPCallPeerConnectionClient: NSObject {
      Init new peer connection with a contact
      - parameter contact: Call contact
      */
-    required init(contact: Contact, peerConnectionParameters: PeerConnectionParameters, config: RTCConfiguration) {
+    required init(contact: Contact, callId: VoIPCallId?, peerConnectionParameters: PeerConnectionParameters, config: RTCConfiguration) {
         self.peerConnectionParameters = peerConnectionParameters
         let constraints = VoIPCallPeerConnectionClient.defaultPeerConnectionConstraints()
         peerConnection = VoIPCallPeerConnectionClient.factory.peerConnection(with: config, constraints: constraints, delegate: nil)
         self.contact = contact
+        self.callId = callId
         super.init()
         self.createMediaSenders()
         configureAudioSession()
         peerConnection.delegate = self
         NotificationCenter.default.addObserver(self, selector: #selector(networkStatusDidChange), name: NSNotification.Name.reachabilityChanged, object: nil)
-        NotificationCenter.default.addObserver(forName: Notification.Name(kThreemaVideoCallsQualitySettingChanged), object: nil, queue: nil) { (notification) in
+        videoCallQualityObserver = NotificationCenter.default.addObserver(forName: Notification.Name(kThreemaVideoCallsQualitySettingChanged), object: nil, queue: nil) { [weak self] notification in
+            guard let self = self else { return }
             self.setQualityProfileForVideoSource()
         }
         if let protobufMessage = CallsignalingProtocol.encodeVideoQuality(CallsignalingProtocol.localPeerQualityProfile().profile!) {
             sendDataToRemote(protobufMessage)
         }
-
+        internetReachability.startNotifier()
+        lastInternetStatus = internetReachability.currentReachabilityStatus()
+    }
+    
+    deinit {
+        internetReachability.stopNotifier()
+        NotificationCenter.default.removeObserver(self, name: NSNotification.Name.reachabilityChanged, object: nil)
+        if let observer = videoCallQualityObserver {
+            videoCallQualityObserver = nil
+            NotificationCenter.default.removeObserver(observer)
+        }
     }
 }
 
@@ -196,7 +220,7 @@ extension VoIPCallPeerConnectionClient {
                         
             self.rtcAudioSession.lockForConfiguration()
             do {
-                try self.rtcAudioSession.setCategory(AVAudioSession.Category.playAndRecord.rawValue, with: [.duckOthers, .allowBluetooth, .allowBluetoothA2DP])
+                try self.rtcAudioSession.setCategory(AVAudioSession.Category.playAndRecord.rawValue, with: [.allowBluetooth, .allowBluetoothA2DP])
                 try self.rtcAudioSession.setMode(AVAudioSession.Mode.voiceChat.rawValue)
                 try self.rtcAudioSession.overrideOutputAudioPort(.none)
                 try self.rtcAudioSession.setActive(true)
@@ -220,7 +244,7 @@ extension VoIPCallPeerConnectionClient {
             
             self.rtcAudioSession.lockForConfiguration()
             do {
-                try self.rtcAudioSession.setCategory(AVAudioSession.Category.playAndRecord.rawValue, with: [.duckOthers, .allowBluetooth, .allowBluetoothA2DP])
+                try self.rtcAudioSession.setCategory(AVAudioSession.Category.playAndRecord.rawValue, with: [.allowBluetooth, .allowBluetoothA2DP])
                 try self.rtcAudioSession.setMode(AVAudioSession.Mode.videoChat.rawValue)
                 try self.rtcAudioSession.overrideOutputAudioPort(.speaker)
                 try self.rtcAudioSession.setActive(true)
@@ -310,7 +334,6 @@ extension VoIPCallPeerConnectionClient {
     // MARK: public functions
     
     func startCaptureLocalVideo(renderer: RTCVideoRenderer, useBackCamera: Bool, switchCamera: Bool = false) {
-        lastInternetStatus = internetReachability.currentReachabilityStatus()
         guard let capturer = self.videoCapturer as? RTCCameraVideoCapturer else {
             return
         }
@@ -336,7 +359,6 @@ extension VoIPCallPeerConnectionClient {
             format: format,
             fps: Int(localCaptureQualityProfile.maxFps))
         }
-        internetReachability.startNotifier()
         self.localVideoTrack?.add(renderer)
         
         if switchCamera == false {
@@ -352,7 +374,7 @@ extension VoIPCallPeerConnectionClient {
                 sendDataToRemote(protobufMessage)
             }
         }
-        internetReachability.stopNotifier()
+    
         guard let capturer = self.videoCapturer as? RTCCameraVideoCapturer else {
             return
         }
@@ -641,14 +663,13 @@ extension VoIPCallPeerConnectionClient: RTCPeerConnectionDelegate {
         if newState == .checking {
             // Schedule 'connecting' stats timer
             let options = VoIPStatsOptions.init()
-            options.selectedCandidatePair = false
+            options.selectedCandidatePair = true
             options.transport = true
             options.crypto = true
             options.inboundRtp = true
             options.outboundRtp = true
             options.tracks = true
             options.candidatePairsFlag = .OVERVIEW_AND_DETAILED
-            
             self.schedulePeriodStats(options: options, period: VoIPCallPeerConnectionClient.logStatsIntervalConnecting)
         }
         
@@ -661,23 +682,16 @@ extension VoIPCallPeerConnectionClient: RTCPeerConnectionDelegate {
             options.outboundRtp = true
             options.tracks = true
             options.candidatePairsFlag = .OVERVIEW
-           
             self.schedulePeriodStats(options: options, period: VoIPCallPeerConnectionClient.logStatsIntervalConnected)
             
             if peerConnectionParameters.isVideoCallAvailable {
                 let receivedVideoOptions = VoIPStatsOptions.init()
                 receivedVideoOptions.framesReceived = true
+                receivedVideoOptions.selectedCandidatePair = true
                 self.scheduleVideoStats(options: receivedVideoOptions, period: VoIPCallPeerConnectionClient.checkReceivingVideoInterval)
             }
         }
-        
-        if newState == .disconnected || newState == .failed || newState == .closed || newState == .new {
-            if receivingVideoTimer != nil {
-                receivingVideoTimer?.invalidate()
-                receivingVideoTimer = nil
-            }
-        }
-                
+                        
         self.delegate?.peerConnectionClient(self, didChangeConnectionState: newState)
     }
     
@@ -715,17 +729,18 @@ extension VoIPCallPeerConnectionClient {
     // MARK: VoIP Stats
     
     func schedulePeriodStats(options: VoIPStatsOptions, period: TimeInterval) {
-        if statsTimer != nil && statsTimer?.isValid == true {
-            statsTimer?.invalidate()
-            statsTimer = nil
+        // check on main thread for statsTimer
+        DispatchQueue.main.async {
+            if self.statsTimer != nil {
+                self.statsTimer?.invalidate()
+                self.statsTimer = nil
+            }
         }
-
         // Create new timer with <period> (but immediately log once)
         var dict = [AnyHashable: Any]()
-        dict.updateValue(peerConnection, forKey: "connection")
+        dict.updateValue(self.peerConnection, forKey: "connection")
         dict.updateValue(options, forKey: "options")
         self.logDebugStats(dict: dict)
-                
         DispatchQueue.main.async {
             self.statsTimer = Timer.scheduledTimer(withTimeInterval: period, repeats: true, block: { (timer) in
                 self.logDebugStats(dict: dict)
@@ -734,9 +749,11 @@ extension VoIPCallPeerConnectionClient {
     }
     
     func scheduleVideoStats(options: VoIPStatsOptions, period: TimeInterval) {
-        if receivingVideoTimer != nil && receivingVideoTimer?.isValid == true {
-            receivingVideoTimer?.invalidate()
-            receivingVideoTimer = nil
+        DispatchQueue.main.async {
+            if self.receivingVideoTimer != nil {
+                self.receivingVideoTimer?.invalidate()
+                self.receivingVideoTimer = nil
+            }
         }
         
         // Create new timer with <period>
@@ -752,9 +769,17 @@ extension VoIPCallPeerConnectionClient {
     }
     
     func logDebugEndStats(completion: @escaping () -> ()) {
-        if statsTimer != nil && statsTimer?.isValid == true {
-            statsTimer?.invalidate()
-            statsTimer = nil
+        DispatchQueue.main.async {
+            if self.receivingVideoTimer != nil {
+                self.receivingVideoTimer?.invalidate()
+                self.receivingVideoTimer = nil
+            }
+        }
+        if statsTimer != nil {
+            DispatchQueue.main.async {
+                self.statsTimer?.invalidate()
+                self.statsTimer = nil
+            }
             
             // Hijack the existing dict, override options and set callback
             let options = VoIPStatsOptions.init()
@@ -784,7 +809,12 @@ extension VoIPCallPeerConnectionClient {
 
             var statsString = stats.getRepresentation()
             statsString += "\n\(CallsignalingProtocol.printDebugQualityProfiles(remoteProfile: self.remoteVideoQualityProfile, networkIsRelayed: self.networkIsRelayed))"
-            ValidationLogger.shared()?.logString("Call: Stats\n \(statsString)")
+            ValidationLogger.shared()?.logString("Call: Stats for \(self.callId?.callId ?? 0) \n \(statsString)")
+            
+            // this is only needed if video calls are not available
+            if !self.peerConnectionParameters.isVideoCallAvailable {
+                self.checkIsSelectedCandidatePairCellular(stats: stats)
+            }
 
             if let callback = dict["callback"] as?  (() -> Void) {
                 callback()
@@ -795,18 +825,23 @@ extension VoIPCallPeerConnectionClient {
     func checkIsReceivingVideo(dict: [AnyHashable: Any]) {
         let connection = dict["connection"] as! RTCPeerConnection
         let options = dict["options"] as! VoIPStatsOptions
-                
+        
+        connection.statistics { (report) in
+            let stats = VoIPStats.init(report: report, options: options, transceivers: connection.transceivers, previousState: self.previousVideoState)
+            self.previousVideoState = stats.buildVoIPStatsState()
+            
+            if !self.isRemoteVideoActivated {
+                self.delegate?.peerConnectionClient(self, receivingVideo: stats.isReceivingVideo())
+            }
+            self.checkIsSelectedCandidatePairCellular(stats: stats)
+        }
         if isRemoteVideoActivated {
             self.delegate?.peerConnectionClient(self, receivingVideo: true)
-        } else {
-            if remoteVideoTrack != nil {
-                connection.statistics { (report) in
-                    let stats = VoIPStats.init(report: report, options: options, transceivers: connection.transceivers, previousState: self.previousVideoState)
-                    self.previousVideoState = stats.buildVoIPStatsState()
-                    self.delegate?.peerConnectionClient(self, receivingVideo: stats.isReceivingVideo())
-                }
-            }
         }
+    }
+    
+    func checkIsSelectedCandidatePairCellular(stats: VoIPStats) {
+        isSelectedCandidatePairCellular = stats.isSelectedCandidatePairCellular()
     }
 }
 

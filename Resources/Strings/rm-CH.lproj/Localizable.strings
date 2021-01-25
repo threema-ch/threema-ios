@@ -73,6 +73,8 @@
 "speak" = "Discurrer";
 "send" = "Trametter";
 "image" = "Maletg";
+"sticker" = "Stickers";
+"gif" = "GIF";
 "video" = "Video";
 "audio" = "Audio";
 "file" = "Datoteca";
@@ -98,10 +100,21 @@
 "show_in_maps" = "Mussar en «Chartas»";
 "calculate_route" = "Calcular la ruta";
 
+/* Chat export */
 "conversation_log_subject" = "Protocol dal chat da Threema cun %@";
 "conversation_log_group_subject" = "Protocol dal chat da gruppa da Threema";
 "conversation_log_body" = "Il protocol dal chat è agiuntà a quest e-mail (%@).\nTi dovras in tool da ZIP modern che sustegna AES per avrir la datoteca, p.ex. http://www.7-zip.org oder https://itunes.apple.com/de/app/the-unarchiver/id425424353";
 "conversation_log_group_body" = "Il protocol dal chat è agiuntà a quest e-mail (%@).\nTi dovras in tool da ZIP modern che sustegna AES per avrir la datoteca, p.ex. http://www.7-zip.org oder https://itunes.apple.com/de/app/the-unarchiver/id425424353";
+"not_enough_storage_title" = "Memia pauca capacitad da memorisar libra.";
+"amount_of_free_storage_needed" = "%@ capacitad da memorisar vegn duvrada. %@ è liber per il mument.";
+"chat_export_failed_title" = "Igl ha dà in sbagl cun exportar il chat.";
+"chat_export_failed_message" = "Igl ha dà in sbagl cun exportar il chat. Code dal sbagl: %d.";
+"cancelling_export" = "L'export vegn interrut.";
+"export_progress_label" = "Exportà %li / %li messadis";
+"caption" = "Suttitel";
+"fileNotDownloaded" = "La datoteca è vegnida stizzada u betg telechargiada.";
+"include_media_title" = "Trametter medias (fotos, videos) sco agiuntas?\n\nTi dovras in tool da ZIP modern che sustegna AES per avrir la datoteca, p.ex. 7-Zip u The Unarchiver (Mac).";
+
 
 /* image sizes */
 "original" = "original";
@@ -122,6 +135,7 @@
 /* Sound names */
 "sound_none" = "Senza tun";
 "sound_default" = "Standard";
+"sound_silent" = "Mo vibrar";
 "sound_bamboo" = "Bambus";
 "sound_drum" = "Schumber";
 "sound_glass" = "Vaider";
@@ -152,6 +166,13 @@
 "enter_code" = "Endatar il code";
 "unlink_contact" = "Allontanar la colliaziun";
 "choose_new_contact" = "Tscherner in auter contact";
+"export_chat" = "Exportar il chat";
+"send_profile_picture" = "Trametter uss il maletg da profil";
+"linked_contact" = "Contact collià";
+"key_fingerprint" = "Clav impronta dal det";
+"block_contact" = "Bloccar il contact";
+"profile_picture_recipient" = "Destinatur dal maletg da profil";
+"member_in_groups" = "Commember da las gruppas";
 
 "no_nickname_title" = "Nagin surnum";
 "no_nickname_message" = "Na vuls ti propi definir nagin surnum? Senza surnum èsi grev per tes contacts d'enconuscher messadis da tai senza avrir l'app.";
@@ -236,11 +257,13 @@
 "record_audio" = "Registraziun dal tun";
 "scan_qr" = "Scannar il code QR";
 "share_file" = "Trametter la datoteca";
-"send_item_photo" = "Trametter foto";
-"send_item_video" = "Trametter video";
-"send_items" = "Trametter %d fotos/videos";
-"send_items_photo" = "Trametter %d fotos";
-"send_items_video" = "Trametter %d videos";
+"add_item_caption" = "Agiuntar ina legenda";
+"add_items_caption" = "Agiuntar ina legenda";
+"send_item_immediately_photo" = "Trametter ina fotografia";
+"send_item_immediately_video" = "Trametter in video";
+"send_items_immediately" = "Trametter %d fotos/videos";
+"send_items_immediately_photo" = "Trametter %d fotos";
+"send_items_immediately_video" = "Trametter %d videos";
 
 "record" = "Registrar";
 "play" = "Reproducir";
@@ -266,7 +289,7 @@
 "microphone_disabled_title" = "Nagin access al microfon";
 "microphone_disabled_message" = "Threema n'ha nagin access al microfon. P.pl. dar access a Threema sut Configuraziuns > Protecziun da datas > Microfon.";
 
-"include_media_title" = "Trametter medias (fotos, videos) sco agiuntas? Il limit èn %d MB; medias pli veglias vegnan eventualmain sursiglidas.\n\nTi dovras in tool da ZIP modern che sustegna AES per avrir la datoteca, p.ex. 7-Zip u The Unarchiver (Mac).";
+
 "include_media" = "Cun medias";
 "without_media" = "Senza medias";
 "media_overview" = "Medias";
@@ -316,6 +339,9 @@
 
 /* Verification level popovers in chat view */
 "verification_level_title" = "Stgalim da segirezza";
+/* Verification level popovers in chat view */
+"verification_level_text" = "Ils puncts da colur inditgeschan il stgalim da confidenza per in contact.";
+"level0_title" = "Stgalim da segirezza il pli bass";
 /* Verification level section title */
 "verification_level_section_work" = "Contacts en vossa organisaziun";
 "verification_level_section_other" = "Auters contacts";
@@ -324,6 +350,7 @@
 "level2_title" = "Stgalim da segirezza mesaun";
 "level3_title" = "Il stgalim da segirezza il pli aut";
 "level4_title" = "Stgalim da segirezza Work";
+"level0_explanation" = "Il contact n'è betg enconuschent; il contact n'ha u betg collià sia ID cun in numer da telefon u in'adressa dad e-mail u che tes cudesch d'adressas na cuntegna betg questas indicaziuns.";
 "level1_explanation" = "I na dat nagina garanzia che questa persuna è propi quella ch'ella pretenda dad esser.";
 "level2_explanation" = "L'identitad da questa persuna è vegnida controllada via e-mail u SMS.";
 "level3_explanation" = "Ti has verifitgà l'identitad da questa persuna cun scannar ses code.";
@@ -535,6 +562,7 @@
 "group_member_x_forced_leave" = "%@ è vegnì allontanà da la gruppa.";
 "group_member_self_added" = "Ti es vegnì agiuntà a la gruppa.";
 "group_member_self_removed" = "Ti es vegnì allontanà da la gruppa.";
+"group_member_self_left" = "Ti has bandunà la gruppa.";
 
 /* accessibility labels */
 "send_media_or_location" = "Trametter medias u il lieu";
@@ -597,7 +625,9 @@
 
 /* VoIP Call */
 "call_mute" = "Mit";
+"call_unmute" = "Activar il tun";
 "call_speaker" = "Autpledader";
+"call_earpiece" = "Conchiglia da l'ureglia";
 "call_end" = "Pender si";
 "call_camera_activate_button" = "Activar la camera";
 "call_camera_deactivate_button" = "Deactivar la camera";
@@ -618,6 +648,7 @@
 "call_accept" = "Acceptar";
 "call_reject" = "Refusar";
 "call_hide_call" = "Zuppentar il telefonat";
+"call_no_wifi" = "Telefon sur la rait per telefonia mobila. Leger dapli ...";
 
 "call_threema_title" = "Telefonar cun Threema";
 "call_callkit_button_title" = "Threema";
@@ -639,6 +670,19 @@
 "call_status_failed_title" = "Telefonats da Threema";
 "call_status_failed_connected_message" = "La colliaziun è interrutta";
 "call_status_failed_initializing_message" = "Betg stà pussaivel da sa colliar";
+"call_status_failed_sdp_patch_message" = "Betg stà pussaivel da cumenzar il telefon da Threema";
+
+"call_threema_initiator_video_info" = "Cliccar qua per activar la camera";
+"call_threema_remote_video_activated_info_title" = "Videotelefonat";
+"call_threema_remote_video_activated_info" = "Tes partenari da discussiun ha cumenzà in videotelefonat. Smatga qua per medemamain activar la camera.";
+"call_threema_speaker_info" = "Smatgar qua per activar l'opziun da telefonar a maun liber";
+"call_threema_camera_disabled_info" = "Quest contact utilisescha ina versiun da Threema betg actuala u na permetta nagins videotelefonats.";
+
+"call_threema_video_in_chat_info_title" = "Nov: videotelefonats";
+"call_threema_video_in_chat_info_description" = "Cun Threema pos ti uss era far ultra da telefonats segirs videotelefonats cun codaziun end-to-end.";
+
+"call_threema_cellular_instead_of_wifi_title" = "Telefonat sur la rait per telefonia mobila";
+"call_threema_cellular_instead_of_wifi_text" = "Attenziun: quest telefonat chaschuna in transfer da datas en la rait per telefonia mobila.";
 
 /* Privacy Policy */
 "privacy_policy_about" = "Threema protegia tia sfera privata uschè consequentamain sco nagin auter messenger. En nossa decleraziun davart la protecziun da datas chattas ti ulteriuras infurmaziuns.";
@@ -816,18 +860,26 @@
 "storage_total_in_use" = "Vegn utilisà";
 "storage_total_free" = "Arcun liber";
 "storage_threema" = "Utilisà per Threema";
+"delete_explain" = "Stizza medias e datotecas veglias per survegnir dapli capacitad da memorisar. Attenziun: messadis na vegnan betg stizzads automaticamain, mabain mo cun smatgar sin il buttun da stizzar.";
 "delete_media_older_than" = "Stizzar las medias e las datotecas ch'èn pli veglias che: %@";
 "delete_media" = "Stizzar las datas";
 "delete_media_confirm" = "Las datotecas vegnan stizzadas definitivamain, i restan sulettamain maletgs da prevista.";
+"delete_media_confirm_all" = "Vuls ti stizzar definitivamain tut las medias e datotecas?";
 "delete_media_explain" = "Sche la capacitad da memorisar è stgarsa, pos ti stizzar datotecas da medias veglias memorisadas cun in code per crear nov spazi. Ils maletgs da prevista vegnan mantegnids.";
 "delete_messages_older_than" = "Stizzar ils messadis ch'èn pli vegls che: %@";
 "delete_messages" = "Stizzar ils messadis";
 "delete_messages_confirm" = "Ils messadis vegnan stizzads cumplettamain e na pon betg pli vegnir restaurads.";
+"delete_messages_confirm_all" = "Vuls ti stizzar definitivamain tut ils messadis?";
 "delete_messages_explain" = "Ti pos era stizzar cumplettamain messadis pli vegls.";
+"one_year_title" = "1 onn";
 "one_year" = "1 onn";
+"six_months_title" = "6 mais";
 "six_months" = "6 mais";
+"three_months_title" = "3 mais";
 "three_months" = "3 mais";
+"one_month_title" = "1 mais";
 "one_month" = "1 mais";
+"one_week_title" = "1 emna";
 "one_week" = "1 emna";
 "everything" = "Tut";
 "media_file_not_found" = "La datoteca da medias na po betg vegnir averta. Ella è vegnida stizzada u betg telechargiada dal server.";
@@ -856,6 +908,7 @@
 "settings_dev_mode" = "Dev Mode";
 
 "settings_advanced_flush_message_queue" = "Stizzar la colonna da spetga da messadis";
+"settings_advanced_orphaned_files_cleanup" = "Stizzar datotecas orfnas";
 
 // Dev Mode
 "settings_devmode_quote_v2" = "Quote V2";
@@ -877,7 +930,7 @@
 "sentry_crash_send_description" = "Vuls ti trametter in rapport da sbagls anonimisà, uschia che nus pudain curreger il problem?";
 "sentry_crash_send_yes" = "Trametter in rapport";
 "sentry_crash_send_no" = "Betg trametter";
-"sentry_crash_comment_placeholder" = "Crash Report";
+"sentry_crash_comment_placeholder" = "Rapport da collaps";
 
 // My profile
 "profile_share_id_text" = "Mia ID da Threema";
@@ -906,13 +959,31 @@
 "settings_notifications_masterDnd_endTime" = "Fin da la lavur";
 "settings_notifications_masterDnd_info" = "Temp da paus activ";
 
+// Orphaned files delete
+"settings_orphaned_files_description" = "En versiuns da Threema precedentas pudevi darar capitar che medias e/u datas che vegnivan stizzadas en l'administraziun da la memoria, vegnivan allontanadas da Threema, ma betg stizzadas cumplettamain.
+
+Fa in backup dad iTunes avant che cuntinuar; uschiglio pon datas ir a perder!";
+"settings_orphaned_files_title" = "DATOTECAS ORFNAS";
+"settings_orphaned_files_button" = "Spustar en il chanaster da palpiri";
+"settings_orphaned_files_footer" = "%@ da %@ datotecas èn orfnas.
+
+Sposta las datotecas orfnas en il chanaster da palpiri e controllescha che naginas medias e/u datotecas mancan en Threema.";
+"settings_orphaned_files_footer_no_files" = "Naginas datotecas orfnas avant maun.";
+"settings_orphaned_files_bin_title" = "CHANASTER DA PALPIRI";
+"settings_orphaned_files_bin_restore_button" = "Restaurar il cuntegn dal chanaster da palpiri";
+"settings_orphaned_files_bin_delete_button" = "Stizzar las datas en il chanaster da palpiri";
+"settings_orphaned_files_bin_footer" = "En il chanaster da palpiri sa chattan %@ datotecas (%@).
+
+Svida il chanaster da palpiri, sche naginas medias e/u datotecas na mancan per stizzar definitivamain las datotecas orfnas.";
+"settings_orphaned_files_bin_footer_no_files" = "Il chanaster da palpiri è vid.";
+"settings_orphaned_files_bin_delete_conformation" = "Vuls ti stizzar definitivamain las datotecas orfnas? Questa acziun na pon ins betg revocar.";
+
 // Threema calls settings
-"settings_threema_calls_call_section" = "Telefonats da Threema";
 "settings_threema_calls_enable_calls" = "Activar telefonats da Threema";
 "settings_threema_calls_always_relay_calls" = "Telefonats adina sur il server";
 "settings_threema_calls_callkit" = "Integrar telefonats en iOS";
 "settings_threema_calls_video_section" = "Videotelefonats da Threema";
-"settings_threema_calls_allow_video_calls" = "Activar videotelefonats da Threema";
+"settings_threema_calls_allow_video_calls" = "Acceptar videotelefonats";
 "settings_threema_calls_video_quality_profile" = "Qualitad dal maletg preferida";
 "settings_threema_calls_video_quality_profile_low" = "Pitschen consum da datas";
 "settings_threema_calls_video_quality_profile_max" = "Qualitad maximala";
@@ -921,3 +992,31 @@
 "settings_threema_calls_video_quality_profile_max_description" = "Attenziun: po chaschunar in grond consum da datas er en la rait mobila!";
 "settings_threema_calls_video_quality_profile_auto_description" = "Auta qualitad dal maletg cun WLAN, consum da datas reducì en la rait mobila";
 "settings_threema_calls_video_quality_profile_footer" = "La qualitad dal maletg effectiva dependa da la rait e da las configuraziuns dal partenari da discurs.";
+
+// Media Preview
+"loading_video_failed" = "Betg stà pussaivel da chargiar il video. P.pl. reaviar l'app ed empruvar anc ina giada.";
+"loading_image" = "Il maletg vegn chargià";
+"loading_video" = "Il video vegn chargià";
+"selected_media_list" = "Glista da las medias tschernidas";
+"media_item_of" = "Datotecas da medias %@ da %@";
+"video_date" = "Video dal(s) %@";
+"imagedate_date" = "Fotografia dal(s) %@";
+"send_as_file_description" = "Datotecas da medias pon vegnir tramessas sco datoteca da medias u sco datoteca. Datotecas da medias vegnan mussadas pli grond en il chat. Datotecas vegnan mussadas pli pitschen e cuntegnan tut las metadatas sco p.ex. il lieu da la registraziun. ";
+"more_options" = "Ulteriuras opziuns";
+"add_caption_to_image" = "Agiuntar ina legenda ...";
+"add_more_images" = "Agiuntar ulteriurs maletgs";
+"back_to_media_selection" = "Enavos a la selecziun da medias";
+"remove_current_image_from_selected_images" = "Allontanar il maletg actual da la selecziun.";
+"send_options" = "Ulteriuras opziuns";
+"multiple_media_items" = "%d datotecas da medias";
+"media_item" = "Datoteca da medias";
+"could_not_add_items_title" = "Betg stà pussaivel d'agiuntar in element";
+"could_not_add_all_items_title" = "Betg stà pussaivel d'agiuntar tut ils elements";
+"one_media_item_could_not_be_processed" = "Betg stà pussaivel d'elavurar in element. El è vegnì sursiglì.";
+"multiple_media_items_could_not_be_processed" = "Betg stà pussaivel d'elavurar %d elements. Els èn vegnids sursiglids.";
+"processing_items_progress" = "Elavura %d/%d";
+"item_too_large_title" = "La datoteca da medias è memia gronda";
+"maximum_file_size_exceeded" = "La grondezza da datoteca maximala è %@. Questa datoteca ha %@. Ti stos stizzar la datoteca per cuntinuar.";
+"back" = "Enavos";
+"sending_item" = "Trametter l'element";
+"send_as_file_title" = "Modus";

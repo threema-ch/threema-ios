@@ -29,7 +29,7 @@
 #import "MyIdentityStore.h"
 #import "IdentityBackupStore.h"
 #import "ServerAPIConnector.h"
-#import "MBProgressHUD.h"
+#import <MBProgressHUD/MBProgressHUD.h>
 #import "ParallaxPageViewController.h"
 #import "AppDelegate.h"
 #import "UIDefines.h"
@@ -808,7 +808,7 @@
     }
     
     // Delete decrypted backup data from application documents folder
-    [FileUtility  deleteWithFileUrl: [[DocumentManager applicationDocumentsDirectory] URLByAppendingPathComponent:@"safe-backup.json"]];
+    [FileUtility  deleteAt: [[DocumentManager applicationDocumentsDirectory] URLByAppendingPathComponent:@"safe-backup.json"]];
 
     AppSetupState *appSetupState = [[AppSetupState alloc] initWithMyIdentityStore:[MyIdentityStore sharedMyIdentityStore]];
     [appSetupState appSetupCompleted];

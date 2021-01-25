@@ -20,7 +20,7 @@
 
 #import <Foundation/Foundation.h>
 
-@interface ContactGroupPhotoLoader : NSObject <NSURLSessionDelegate, NSURLSessionDataDelegate>
+@interface ContactGroupPhotoLoader : NSObject <NSURLSessionDelegate, NSURLConnectionDataDelegate>
 
 - (void)startWithBlobId:(NSData*)blobId encryptionKey:(NSData*)encryptionKey onCompletion:(void (^)(NSData *))onCompletion onError:(void (^)(NSError *))onError;
 

@@ -21,7 +21,7 @@
 #import <MobileCoreServices/UTCoreTypes.h>
 
 #import "ScanBackupController.h"
-#import "MBProgressHUD.h"
+#import <MBProgressHUD/MBProgressHUD.h>
 #import "PortraitNavigationController.h"
 #import "UIDefines.h"
 

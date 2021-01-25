@@ -7,10 +7,10 @@
 
 /* Ballot */
 "ballot" = "Anketa";
-"ballots" = "Ankety";
-"ballot_results" = "Výsledky ankety";
-"ballot_validation_error_title" = "Chybné nastavení ankety";
-"ballot_validation_not_enough_choices" = "Je třeba definovat alespoň dvě možnosti";
+"ballots" = "Ankety ";
+"ballot_results" = "Výsledky ankety ";
+"ballot_validation_error_title" = "Chybne nastavenia ankety ";
+"ballot_validation_not_enough_choices" = "Je potrebné definovat aspoň dve možnosti ";
 "ballot_validation_title_missing" = "Zadejte název ankety.";
 
 "ballot_options" = "Nastavení ankety";

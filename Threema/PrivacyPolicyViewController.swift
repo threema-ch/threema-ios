@@ -21,6 +21,7 @@
 import UIKit
 import ThreemaFramework
 import WebKit
+import MBProgressHUD
 
 class PrivacyPolicyViewController: UIViewController, WKNavigationDelegate {
     

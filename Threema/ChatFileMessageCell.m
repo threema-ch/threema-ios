@@ -361,7 +361,7 @@
 
 - (NSString *)textForQuote {
     FileMessage *fileMessage = (FileMessage*)self.message;
-    return [fileMessage getCaption];
+    return fileMessage.caption;
 }
 
 - (void)resendMessage:(UIMenuController*)menuController {
@@ -387,7 +387,7 @@
 
 + (NSAttributedString*)displayTextForMessage:(BaseMessage*)message {
     FileMessage *fileMessage = (FileMessage*)message;
-    NSString *caption = [fileMessage getCaption];
+    NSString *caption = fileMessage.caption;
     NSMutableAttributedString *labelText;
     UIFont *font = [ChatMessageCell textFont];
     if (caption.length > 0) {
@@ -414,7 +414,7 @@
     
     NSString *fileInfo = [NSString stringWithFormat:@"%@. %@. %@", type, name, size];
     
-    NSString *caption = [fileMessage getCaption];
+    NSString *caption = fileMessage.caption;
     
     if (caption.length > 0) {
         return [NSString stringWithFormat:@"%@. %@", fileInfo, caption];

@@ -60,6 +60,7 @@
 #import "NotificationManager.h"
 #import "NSString+Hex.h"
 #import "NibUtil.h"
+#import <MBProgressHUD/MBProgressHUD.h>
 
 #import "ChatDeleteAction.h"
 #import "SendMediaAction.h"
@@ -783,6 +784,16 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
                 [loader startWithMessage:imageMessage onCompletion:^(BaseMessage *message) {
                 } onError:^(NSError *error) {
                     DDLogError(@"Image message blob load failed with error: %@", error);
+                }];
+            }
+        } else if ([message isKindOfClass:[FileMessage class]]) {
+            FileMessage *fileMessage = (FileMessage *) message;
+            if ([fileMessage renderFileImageMessage] && (![fileMessage thumbnailDownloaded] || ![fileMessage dataDownloaded])) {
+                BlobMessageLoader *loader = [[BlobMessageLoader alloc] init];
+                [loader startWithMessage:fileMessage onCompletion:^(BaseMessage *message) {
+                    DDLogInfo(@"File message blob load completed");
+                } onError:^(NSError *error) {
+                    DDLogError(@"File message blob load failed with error: %@", error);
                 }];
             }
         }
@@ -1821,12 +1832,10 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     } else {
         CGRect keyboardEndFrame;
         [notification.userInfo[UIKeyboardFrameEndUserInfoKey] getValue:&keyboardEndFrame];
-        CGRect keyboardEndFrameRelative = [self.view convertRect:keyboardEndFrame fromView:nil];
         
         CGSize keyboardSize = [notification.userInfo[UIKeyboardFrameEndUserInfoKey] CGRectValue].size;
         
         DDLogVerbose(@"keyboardEndFrame: %@", NSStringFromCGRect(keyboardEndFrame));
-        DDLogVerbose(@"keyboardEndFrameRelative: %@", NSStringFromCGRect(keyboardEndFrameRelative));
         DDLogVerbose(@"Keyboardsize height: %f", keyboardSize.height);
         
         NSNumber *durationValue = notification.userInfo[UIKeyboardAnimationDurationUserInfoKey];
@@ -1835,16 +1844,16 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         NSNumber *curveValue = notification.userInfo[UIKeyboardAnimationCurveUserInfoKey];
         UIViewAnimationCurve animationCurve = curveValue.intValue;
         
-        lastKeyboardEndFrame = keyboardEndFrameRelative;
+        lastKeyboardEndFrame = keyboardEndFrame;
         lastAnimationDuration = animationDuration;
         lastAnimationCurve = animationCurve;
         
         if (visible) {
             [UIView animateWithDuration:animationDuration delay:0 options:(animationCurve << 16 | UIViewAnimationOptionBeginFromCurrentState) animations:^{
-                [self moveContainerViewForKeyboardFrame:keyboardEndFrameRelative willHide:willHide];
+                [self moveContainerViewForKeyboardFrame:keyboardEndFrame willHide:willHide];
             } completion:^(BOOL finished) {}];
         } else {
-            [self moveContainerViewForKeyboardFrame:keyboardEndFrameRelative willHide:willHide];
+            [self moveContainerViewForKeyboardFrame:keyboardEndFrame willHide:willHide];
         }
     }
 }
@@ -1932,15 +1941,10 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     }
     
     NSString *trimmedMessage = nil;
-    NSString *quotedIdentity = nil;
     NSData *quoteMessageId = nil;
     NSString *remainingBody = nil;
     NSString *quotedText = nil;
-    if ([[UserSettings sharedUserSettings] quoteV2Active]) {
-        quoteMessageId = [QuoteParser parseQuoteV2FromMessage:text remainingBody:&remainingBody];
-    } else {
-        quotedText = [QuoteParser parseQuoteFromMessage:text quotedIdentity:&quotedIdentity remainingBody:&remainingBody];
-    }
+    quoteMessageId = [QuoteParser parseQuoteV2FromMessage:text remainingBody:&remainingBody];
     
     if (quoteMessageId || quotedText) {
         remainingBody = [remainingBody stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
@@ -1971,19 +1975,18 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     
     if (!trimmedMessages) {
         [MessageSender sendMessage:trimmedMessage inConversation:conversation async:YES quickReply:NO requestId:nil onCompletion:^(TextMessage *message, Conversation *conv) {
-            [chatBar clearChatInput];
             [MessageDraftStore deleteDraftForConversation:self.conversation];
         }];
     } else {
         [trimmedMessages enumerateObjectsUsingBlock:^(NSString *separatedTrimmedMessage, NSUInteger idx, BOOL * _Nonnull stop) {
             [MessageSender sendMessage:separatedTrimmedMessage inConversation:conversation async:YES quickReply:NO requestId:nil onCompletion:^(TextMessage *message, Conversation *conv) {
                 if (idx == trimmedMessages.count - 1) {
-                    [chatBar clearChatInput];
                     [MessageDraftStore deleteDraftForConversation:self.conversation];
                 }
             }];
         }];
     }
+    [chatBar clearChatInput];
     
     if ([UserSettings sharedUserSettings].inAppSounds) {
         AudioServicesPlaySystemSound(sentMessageSound);
@@ -2010,24 +2013,16 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         return;
     }
     
-    // Check if we can send file messages in this conversation
-    NSSet *conversations = [NSSet setWithObject:self.conversation];
-    [FeatureMask checkFeatureMask:FEATURE_MASK_FILE_TRANSFER forConversations:conversations onCompletion:^(NSArray *unsupportedContacts) {
-        [self hideKeyboardTemporarily:YES];
-        
-        UINavigationController *previewNavVc = [self.storyboard instantiateViewControllerWithIdentifier:@"PreviewImageNav"];
-        PreviewImageViewController *previewVc = previewNavVc.viewControllers[0];
-        previewVc.delegate = self;
-        
-        if ([unsupportedContacts count] > 0) {
-            previewVc.image = UIImageJPEGRepresentation(image, 1.0);
-        } else {
-            previewVc.gifData = gifData;
-        }
-        
-        previewVc.hasCancelButton = YES;
-        [self presentViewController:previewNavVc animated:YES completion:nil];
-    }];
+    [self hideKeyboardTemporarily:YES];
+    
+    UINavigationController *previewNavVc = [self.storyboard instantiateViewControllerWithIdentifier:@"PreviewImageNav"];
+    PreviewImageViewController *previewVc = previewNavVc.viewControllers[0];
+    previewVc.delegate = self;
+    
+    previewVc.gifData = gifData;
+    
+    previewVc.hasCancelButton = YES;
+    [self presentViewController:previewNavVc animated:YES completion:nil];
 }
 
 - (void)chatBarWillStartTyping:(ChatBar *)chatBar {
@@ -2867,7 +2862,9 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 }
 
 - (void)assetActionHelperDidSelectOwnOption:(PPAssetsActionHelper *)picker  didFinishPicking:(NSArray *)assets {
-    
+    [self dismissViewControllerAnimated:YES completion:nil];
+    SendMediaAction *action = [SendMediaAction actionForChatViewController:self];
+    [action sendAssets:assets asFile:false withCaptions:nil];
 }
 
 - (void)assetsActionHelperDidSelectOwnSnapButton:(PPAssetsActionHelper *)picker didFinishPicking:(NSArray *)assets {

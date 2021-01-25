@@ -121,8 +121,6 @@
 @synthesize enableVideoCall;
 @synthesize threemaVideoCallQualitySetting;
 
-@synthesize quoteV2Active;
-
 static UserSettings *instance;
 
 + (UserSettings*)sharedUserSettings {
@@ -204,7 +202,7 @@ static UserSettings *instance;
                                         [NSNumber numberWithBool:YES], @"EnableIPv6",
                                         [NSNumber numberWithBool:NO], @"CompanyDirectory",
                                         [NSNumber numberWithBool:NO], @"AskedForPushDecryption",
-                                        [NSNumber numberWithInt:SendProfilePictureNone], @"SendProfilePicture",
+                                        [NSNumber numberWithInt:SendProfilePictureAll], @"SendProfilePicture",
                                         [NSArray array], @"ProfilePictureContactList",
                                         [NSArray array], @"ProfilePictureRequestList",
                                         [NSNumber numberWithBool:YES], @"ShowGalleryPreview",
@@ -226,7 +224,6 @@ static UserSettings *instance;
                                         @"08:00", @"MasterDNDStartTime",
                                         @"17:00", @"MasterDNDEndTime",
                                         [NSNumber numberWithBool:YES], @"EnableVideoCall",
-                                        [NSNumber numberWithBool:NO], @"QuoteV2Active",
                                         [NSNumber numberWithInt:ThreemaVideoCallQualitySettingAuto], @"ThreemaVideoCallQualitySetting",
                                         @"", @"SentryAppDevice",
                                      nil];
@@ -334,12 +331,6 @@ static UserSettings *instance;
     
     enableVideoCall = [defaults boolForKey:@"EnableVideoCall"];
     threemaVideoCallQualitySetting = [[defaults objectForKey:@"ThreemaVideoCallQualitySetting"] intValue];
-    
-#ifdef DEBUG
-    quoteV2Active = [defaults boolForKey:@"QuoteV2Active"];
-#else
-    quoteV2Active = false;
-#endif
 }
 
 - (void)pushSettingsMigration:(NSOrderedSet *)tmpNoPushIdentities {
@@ -813,12 +804,6 @@ static UserSettings *instance;
 - (void)setThreemaVideoCallQualitySetting:(enum ThreemaVideoCallQualitySetting)newThreemaVideoCallQualitySetting {
     threemaVideoCallQualitySetting = newThreemaVideoCallQualitySetting;
     [defaults setObject:[NSNumber numberWithInt:threemaVideoCallQualitySetting] forKey:@"ThreemaVideoCallQualitySetting"];
-    [defaults synchronize];
-}
-
-- (void)setQuoteV2Active:(BOOL)newQuoteV2Active {
-    quoteV2Active = newQuoteV2Active;
-    [defaults setBool:quoteV2Active forKey:@"QuoteV2Active"];
     [defaults synchronize];
 }
 

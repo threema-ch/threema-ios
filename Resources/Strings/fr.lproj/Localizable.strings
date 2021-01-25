@@ -113,7 +113,7 @@
 "export_progress_label" = "%li message(s) exporté(s)/%li";
 "caption" = "Légende";
 "fileNotDownloaded" = "Le fichier n'a pas été téléchargé ou a été supprimé.";
-"include_media_title" = "Voulez-vous inclure les médias (image, vidéo) comme pièces jointes ? Les chats de grande taille seront répartis en plusieurs fichiers.\n\nUn outil de ZIP récent avec compatibilité AES est nécessaire pour dézipper le fichier, par exemple 7-Zip ou The Unarchiver (Mac).";
+"include_media_title" = "Voulez-vous inclure les médias (image, vidéo) comme pièces jointes ?\n\nUn outil de ZIP récent avec compatibilité AES est nécessaire pour dézipper le fichier, par exemple 7-Zip ou The Unarchiver (Mac).";
 
 
 /* image sizes */
@@ -133,12 +133,13 @@
 "max_x_minutes" = "Max. %d minutes";
 
 /* Sound names */
-"sound_none" = "Aucun son";
+"sound_none" = "Aucun";
 "sound_default" = "Par défaut";
+"sound_silent" = "Vibreur uniquement";
 "sound_bamboo" = "Bambou";
 "sound_drum" = "Tambour";
 "sound_glass" = "Verre";
-"sound_incoming_message" = "Incoming message";
+"sound_incoming_message" = "Message entrant";
 "sound_input" = "Entrée";
 "sound_marimba1" = "Marimba 1";
 "sound_marimba2" = "Marimba 2";
@@ -256,11 +257,13 @@
 "record_audio" = "Prise de son";
 "scan_qr" = "Scanner le code QR";
 "share_file" = "Partager fichier";
-"send_item_photo" = "Aperçu de la photo";
-"send_item_video" = "Aperçu de la vidéo";
-"send_items" = "Aperçu de %d photos/vidéos";
-"send_items_photo" = "Aperçu de %d photos";
-"send_items_video" = "Aperçu de %d vidéos";
+"add_item_caption" = "Ajouter une légende";
+"add_items_caption" = "Ajouter des légendes";
+"send_item_immediately_photo" = "Envoyer photo";
+"send_item_immediately_video" = "Envoyer vidéo";
+"send_items_immediately" = "Envoyer %d photos/vidéos";
+"send_items_immediately_photo" = "Envoyer %d photos";
+"send_items_immediately_video" = "Envoyer %d vidéos";
 
 "record" = "Enregistrer";
 "play" = "Lire";
@@ -622,7 +625,9 @@
 
 /* VoIP Call */
 "call_mute" = "Muet";
+"call_unmute" = "Rétablir le son";
 "call_speaker" = "Haut-parleur";
+"call_earpiece" = "Oreillette";
 "call_end" = "Raccrocher";
 "call_camera_activate_button" = "Activer la caméra";
 "call_camera_deactivate_button" = "Désactiver la caméra";
@@ -643,6 +648,7 @@
 "call_accept" = "Accepter";
 "call_reject" = "Rejeter";
 "call_hide_call" = "Cacher l'appel";
+"call_no_wifi" = "Appel via réseau cellulaire. En apprendre plus…";
 
 "call_threema_title" = "Commencer un appel Threema";
 "call_callkit_button_title" = "Threema";
@@ -674,6 +680,9 @@
 
 "call_threema_video_in_chat_info_title" = "Nouveauté : Appels vidéo";
 "call_threema_video_in_chat_info_description" = "En plus des appels vocaux protégés contre toute mise sur écoute, Threema offre désormais des appels vidéo chiffrés de bout en bout.";
+
+"call_threema_cellular_instead_of_wifi_title" = "Appel via réseau cellulaire";
+"call_threema_cellular_instead_of_wifi_text" = "Avertissement : Cet appel entraîne un transfert de données via le réseau cellulaire.";
 
 /* Privacy Policy */
 "privacy_policy_about" = "Threema protège votre vie privée plus rigoureusement que toute autre messagerie. Vous pouvez en savoir plus dans notre Politique de confidentialité.";
@@ -896,12 +905,13 @@
 "settings_license" = "Licence";
 "settings_advanced" = "Avancé";
 "settings_threema_work" = "Threema Work";
-"settings_dev_mode" = "Dev Mode";
+"settings_dev_mode" = "Mode développeur";
 
 "settings_advanced_flush_message_queue" = "Vider la queue des messages";
+"settings_advanced_orphaned_files_cleanup" = "Supprimer les fichiers orphelins";
 
 // Dev Mode
-"settings_devmode_quote_v2" = "Quote V2";
+"settings_devmode_quote_v2" = "Citation v2";
 
 // Appearance
 "settings_appearance_theme_section" = "Apparence";
@@ -949,6 +959,25 @@
 "settings_notifications_masterDnd_endTime" = "Fin des heures de travail";
 "settings_notifications_masterDnd_info" = "Temps libre activé";
 
+// Orphaned files delete
+"settings_orphaned_files_description" = "Lors de la suppression de données dans la gestion de stockage des versions précédentes de Threema, il pouvait arriver dans de rares cas que des fichiers (médias) n’aient pas été supprimés correctement mais qu’ils aient été retirés dans Threema.
+
+Créez d’abord une sauvegarde iTunes ; une perte de données peut se produire !";
+"settings_orphaned_files_title" = "FICHIERS ORPHELINS";
+"settings_orphaned_files_button" = "Déplacement vers la corbeille";
+"settings_orphaned_files_footer" = "%@ de %@ fichiers sont orphelins.
+
+Déplacez les fichiers orphelins vers la corbeille et assurez-vous qu’aucun fichier (média) ne manque dans Threema.";
+"settings_orphaned_files_footer_no_files" = "Il n’y a pas de fichiers orphelins.";
+"settings_orphaned_files_bin_title" = "CORBEILLE";
+"settings_orphaned_files_bin_restore_button" = "Restaurer le contenu de la corbeille";
+"settings_orphaned_files_bin_delete_button" = "Supprimer le contenu de la corbeille";
+"settings_orphaned_files_bin_footer" = "Il y a des fichiers %@ (%@) dans la corbeille.
+
+S’il ne manque aucun fichier (média) dans Threema, videz la corbeille pour supprimer définitivement les fichiers orphelins.";
+"settings_orphaned_files_bin_footer_no_files" = "La corbeille est vide.";
+"settings_orphaned_files_bin_delete_conformation" = "Vous souhaitez supprimer définitivement les fichiers orphelins ? Cette action ne peut être annulée.";
+
 // Threema calls settings
 "settings_threema_calls_enable_calls" = "Activer les appels Threema";
 "settings_threema_calls_always_relay_calls" = "Transmettre tous les appels";
@@ -979,3 +1008,15 @@
 "back_to_media_selection" = "Retour à l'écran de sélection de médias";
 "remove_current_image_from_selected_images" = "Retirer l'élément actuel de la sélection";
 "send_options" = "Plus d'options";
+"multiple_media_items" = "%d éléments";
+"media_item" = "Un élément";
+"could_not_add_items_title" = "Échec d'ajout de l'élément";
+"could_not_add_all_items_title" = "Échec d'ajout de tous les éléments";
+"one_media_item_could_not_be_processed" = "Un élément n'a pas pu être traité et a été ignoré.";
+"multiple_media_items_could_not_be_processed" = "%d éléments n'ont pas pu être traités et ont été ignorés.";
+"processing_items_progress" = "Traitement de l'élément %d/%d";
+"item_too_large_title" = "L'élément est trop grand";
+"maximum_file_size_exceeded" = "La taille de fichier maximum autorisée est de %@. Ce fichier pèse %@. Retirez le fichier pour continuer.";
+"back" = "Retour";
+"sending_item" = "Envoi de l'élément";
+"send_as_file_title" = "Mode envoi";

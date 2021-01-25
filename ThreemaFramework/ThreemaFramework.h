@@ -46,6 +46,8 @@
 #import <ThreemaFramework/UserSettings.h>
 #import <ThreemaFramework/Reachability.h>
 #import <ThreemaFramework/FeatureMask.h>
+#import <ThreemaFramework/SSLCAHelper.h>
+
 
 //! Project version number for ThreemaFramework.
 FOUNDATION_EXPORT double ThreemaFrameworkVersionNumber;

@@ -32,6 +32,7 @@
 #import "BallotMessage.h"
 #import "LocationMessage.h"
 #import "UserSettings.h"
+#import "FileMessagePreview.h"
 
 #define QUOTE_FONT_SIZE_FACTOR 0.8
 
@@ -193,6 +194,14 @@ static CGFloat quoteIconSpacing = 8.0;
             quoteImage.hidden = false;
             quoteImage.image = ((FileMessage *)quotedMessage).thumbnail.uiImage;
         }
+        else if ([((FileMessage *) quotedMessage) renderFileAudioMessage] == true) {
+            quoteIcon.hidden = false;
+            quoteIcon.image = [[BundleUtil imageNamed:@"ActionMicrophone"] imageWithTint:[Colors fontQuoteText]];
+        }
+        else {
+            quoteIcon.hidden = false;
+            quoteIcon.image = [[FileMessagePreview thumbnailForFileMessage:((FileMessage *) quotedMessage)] imageWithTint:[Colors fontQuoteText]];
+        }
     }
     else if ([quotedMessage isKindOfClass:[AudioMessage class]]) {
         quoteIcon.hidden = false;
@@ -248,39 +257,13 @@ static CGFloat quoteIconSpacing = 8.0;
 }
 
 - (NSString *)makeQuoteWithReply:(NSString *)reply {
-    if ([[UserSettings sharedUserSettings] quoteV2Active]) {
-        NSMutableString *quoteString = [[NSMutableString alloc] initWithString:@"> quote #"];
-        [quoteString appendString:[NSString stringWithHexData:_quotedMessage.id]];
-        
-        [quoteString appendString:@"\n\n"];
-        [quoteString appendString:reply];
-        
-        return quoteString;
-    } else {
-        NSMutableString *quoteString = [[NSMutableString alloc] initWithString:@"> "];
-        if (quotedContact == nil) {
-            [quoteString appendString:[MyIdentityStore sharedMyIdentityStore].identity];
-        } else {
-            [quoteString appendString:quotedContact.identity];
-        }
-        
-        [quoteString appendString:@": "];
-        
-        NSArray *lines = [quotedText componentsSeparatedByString:@"\n"];
-        int i = 0;
-        for (NSString *line in lines) {
-            if (i > 0) {
-                [quoteString appendString:@"\n> "];
-            }
-            [quoteString appendString:line];
-            i++;
-        }
-
-        [quoteString appendString:@"\n"];
-        [quoteString appendString:reply];
-        
-        return quoteString;
-    }
+    NSMutableString *quoteString = [[NSMutableString alloc] initWithString:@"> quote #"];
+    [quoteString appendString:[NSString stringWithHexData:_quotedMessage.id]];
+    
+    [quoteString appendString:@"\n\n"];
+    [quoteString appendString:reply];
+    
+    return quoteString;
 }
 
 + (UIFont *)quoteFont {

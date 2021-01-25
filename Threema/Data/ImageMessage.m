@@ -21,7 +21,6 @@
 #import "ImageMessage.h"
 #import "NSString+Hex.h"
 #import "UTIConverter.h"
-
 #import "ThreemaFramework/ThreemaFramework-swift.h"
 
 @implementation ImageMessage
@@ -44,6 +43,24 @@
 - (NSString*)previewText {
     return NSLocalizedString(@"image", nil);
 }
+
+- (NSString *)quotePreviewText {
+    NSString *caption = nil;
+    if (self.image != nil) {
+        caption = [self.image getCaption];
+        if (caption != nil) {
+            NSString *quotePreviewString = [[caption componentsSeparatedByCharactersInSet:[NSCharacterSet newlineCharacterSet]] componentsJoinedByString:@" "];
+            caption = [quotePreviewString substringWithRange:NSMakeRange(0, MIN(caption.length, 200))];
+        }
+    }
+
+    if (caption == nil || caption.length == 0) {
+        caption = self.previewText;
+    }
+    return caption;
+}
+
+#pragma mark - BlobData
 
 - (NSData *)blobGetData {
     if (self.image) {
@@ -103,38 +120,15 @@
     return self.progress;
 }
 
-#pragma mark ExternalStorageInfo
-
-- (NSString *)getFilename {
-    return self.image != nil ? [self getFilename:self.image.data] : nil;
+- (NSString *)getExternalFilename {
+    return [[self image] getFilename];
 }
 
-- (NSString *)getThumbnailname {
-    return self.thumbnail != nil ? [self getFilename:self.thumbnail.data] : nil;
+- (NSString *)getExternalFilenameThumbnail {
+    return [[self thumbnail] getFilename];
 }
 
-- (NSString *)getFilename:(NSData *)ofData {
-    if (ofData != nil && [ofData respondsToSelector:NSSelectorFromString(@"filename")]) {
-        return [ofData performSelector:NSSelectorFromString(@"filename")];
-    }
-    return nil;
-}
-
-- (NSString *)quotePreviewText {
-    NSString *caption = nil;
-    if (self.image != nil) {
-        caption = [self.image getCaption];
-        if (caption != nil) {
-            NSString *quotePreviewString = [[caption componentsSeparatedByCharactersInSet:[NSCharacterSet newlineCharacterSet]] componentsJoinedByString:@" "];
-            caption = [quotePreviewString substringWithRange:NSMakeRange(0, MIN(caption.length, 200))];
-        }
-    }
-
-    if (caption == nil || caption.length == 0) {
-        caption = self.previewText;
-    }
-    return caption;
-}
+#pragma mark - Misc
 
 #ifdef DEBUG
 #else

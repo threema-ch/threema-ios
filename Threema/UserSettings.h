@@ -126,8 +126,6 @@ enum ThreemaVideoCallQualitySetting {
 @property (nonatomic, readwrite) BOOL enableVideoCall;
 @property (nonatomic, readwrite) enum ThreemaVideoCallQualitySetting threemaVideoCallQualitySetting;
 
-@property (nonatomic, readwrite) BOOL quoteV2Active;
-
 + (UserSettings*)sharedUserSettings;
 
 + (void)resetSharedInstance;

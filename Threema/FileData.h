@@ -20,10 +20,10 @@
 
 #import <Foundation/Foundation.h>
 #import <CoreData/CoreData.h>
+#import "ExternalStorageInfo.h"
 
+@interface FileData : NSManagedObject <ExternalStorageInfo>
 
-@interface FileData : NSManagedObject
-
-@property (nonatomic, retain) NSData * data;
+@property (nonatomic, retain, nullable) NSData * data;
 
 @end

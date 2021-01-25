@@ -21,7 +21,7 @@
 #import "RevocationKeyHandler.h"
 #import "MyIdentityStore.h"
 #import "ServerAPIConnector.h"
-#import "MBProgressHUD.h"
+#import <MBProgressHUD/MBProgressHUD.h>
 #import "AppDelegate.h"
 
 @interface RevocationKeyHandler ()

@@ -46,4 +46,6 @@
 
 - (id)sourceReference;
 
+- (BOOL)canHideToolBar;
+
 @end

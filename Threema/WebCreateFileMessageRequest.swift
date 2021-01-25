@@ -176,34 +176,10 @@ public class WebCreateFileMessageRequest: WebAbstractMessage {
                     sender.send(item, in: conversation, requestId: self.requestId)
                 }
                 else if !self.sendAsFile && ( self.fileType == "audio/m4a" || self.fileType == "audio/x-m4a" || self.fileType == "audio/mp4" ) {
-//                    let senderItem = URLSenderItem(data: self.fileData!, fileName: "audio.m4a", type: self.type, renderType: 1, sendAsFile: true)
-//
-//                    let fileSender = FileMessageSender()
-//                    fileSender.send(senderItem, in: conversation, requestId: self.requestId)
-                    
-                    let audioSender = AudioMessageSender.init()
-                    
-                    let tmpPath = NSTemporaryDirectory() + "audio.m4a"
-                    if FileManager.default.fileExists(atPath: tmpPath) {
-                        do {
-                            try FileManager.default.removeItem(atPath: tmpPath)
-                        }
-                        catch {
-                            print("can't delete file at path %@", tmpPath)
-                        }
-                    }
-                    FileManager.default.createFile(atPath: tmpPath, contents: self.fileData, attributes: nil)
-                    let audio = AVURLAsset.init(url: URL.init(fileURLWithPath: tmpPath))
-                    let duration = CMTimeGetSeconds(audio.duration)
-                    audioSender.start(withAudioData: self.fileData, duration: NSNumber(value: Float(duration)), in: conversation, requestId: self.requestId)
-                    if FileManager.default.fileExists(atPath: tmpPath) {
-                        do {
-                            try FileManager.default.removeItem(atPath: tmpPath)
-                        }
-                        catch {
-                            print("can't delete file at path %@", tmpPath)
-                        }
-                    }
+                    let senderItem = URLSenderItem(data: self.fileData!, fileName: "audio.m4a", type: self.type, renderType: 1, sendAsFile: true)
+
+                    let fileSender = FileMessageSender()
+                    fileSender.send(senderItem, in: conversation, requestId: self.requestId)
                 }
                 else if !self.sendAsFile && ( self.fileType == "video/mp4" || self.fileType == "video/mpeg4" || self.fileType == "video/x-m4v" ) {
                     let creator = VideoURLSenderItemCreator()

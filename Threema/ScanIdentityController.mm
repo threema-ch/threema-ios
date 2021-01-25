@@ -31,7 +31,7 @@
 #import "IdentityVerifiedViewController.h"
 #import "UserSettings.h"
 #import "ServerAPIConnector.h"
-#import "MBProgressHUD.h"
+#import <MBProgressHUD/MBProgressHUD.h>
 #import "QRScannerViewController.h"
 #import "StatusNavigationBar.h"
 #import "PortraitNavigationController.h"

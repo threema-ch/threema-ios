@@ -25,7 +25,7 @@
 "privacy_poliy_url" = "https://threema.ch/en/privacy";
 
 /* MWPhotoBrowser */
-"mwphotobrowser_select" = "Seleccciona";
+"mwphotobrowser_select" = "Selecciona";
 "mwphotobrowser_select_all" = "Seleccionar todo";
 "mwphotobrowser_deselect_all" = "Deseleccionar todo";
 "profileimage_setting_all_footer" = "Todos los contactos recibirán su perfil cuando les envíe un mensaje.";
@@ -113,7 +113,7 @@
 "export_progress_label" = "%li / %li mensajes exportados";
 "caption" = "Subtítulo";
 "fileNotDownloaded" = "El archivo no se ha descargado o se ha eliminado.";
-"include_media_title" = "¿Quieres incluir elementos multimedia (fotos, vídeos) como archivos adjuntos? Los chats largos si dividen en varios archivos.\n\nPara descomprimir el archivo se requiere una herramienta de compresión con sistema de cifrado AES, como por ejemplo 7-Zip o The Unarchiver (Mac).";
+"include_media_title" = "¿Quieres incluir elementos multimedia (fotos, vídeos) como archivos adjuntos?\n\nPara descomprimir el archivo se requiere una herramienta de compresión con sistema de cifrado AES, como por ejemplo 7-Zip o The Unarchiver (Mac).";
 
 
 /* image sizes */
@@ -133,13 +133,13 @@
 "max_x_minutes" = "Máx. %d minutos";
 
 /* Sound names */
-"sound_none" = "Desactivar audio";
+"sound_none" = "ninguno";
 "sound_default" = "Predeterminado";
 "sound_silent" = "Solo vibración";
 "sound_bamboo" = "Bambú";
 "sound_drum" = "Tambor";
 "sound_glass" = "Cristal";
-"sound_incoming_message" = "Incoming message";
+"sound_incoming_message" = "Mensaje entrante";
 "sound_input" = "Entrada";
 "sound_marimba1" = "Marimba 1";
 "sound_marimba2" = "Marimba 2";
@@ -257,11 +257,13 @@
 "record_audio" = "Grabación de audio";
 "scan_qr" = "Escanear código QR";
 "share_file" = "Compartir archivo";
-"send_item_photo" = "Previsualizar foto";
-"send_item_video" = "Previsualizar vídeo";
-"send_items" = "Previsualizar %d fotos/vídeos";
-"send_items_photo" = "Previsualizar %d fotos";
-"send_items_video" = "Previsualizar %d vídeos";
+"add_item_caption" = "Añadir subtítulo";
+"add_items_caption" = "Añadir subtítulos";
+"send_item_immediately_photo" = "Enviar foto";
+"send_item_immediately_video" = "Enviar vídeo";
+"send_items_immediately" = "Enviar %d fotos/vídeos";
+"send_items_immediately_photo" = "Enviar %d fotos";
+"send_items_immediately_video" = "Enviar %d vídeos";
 
 "record" = "Grabar";
 "play" = "Reproducir";
@@ -623,7 +625,9 @@
 
 /* VoIP Call */
 "call_mute" = "Sin sonido";
+"call_unmute" = "Activar sonido";
 "call_speaker" = "Altavoz";
+"call_earpiece" = "Auricular";
 "call_end" = "Hang up";
 "call_camera_activate_button" = "Activar cámara";
 "call_camera_deactivate_button" = "Desactivar cámara";
@@ -644,6 +648,7 @@
 "call_accept" = "Aceptar";
 "call_reject" = "Rechazar";
 "call_hide_call" = "Ocultar llamada";
+"call_no_wifi" = "Llamar a través de red móvil. Más información...";
 
 "call_threema_title" = "Iniciar Threema Voz ";
 "call_callkit_button_title" = "Threema";
@@ -675,6 +680,9 @@
 
 "call_threema_video_in_chat_info_title" = "Nuevo: videollamadas ";
 "call_threema_video_in_chat_info_description" = "Además de las llamadas a prueba de toques accidentales, ahora Threema ofrece videollamadas cifradas de extremo a extremo.";
+
+"call_threema_cellular_instead_of_wifi_title" = "Llamar a través de red móvil";
+"call_threema_cellular_instead_of_wifi_text" = "Aviso: esto llamada causa transferencia de datos en la red móvil.";
 
 /* Privacy Policy */
 "privacy_policy_about" = "Threema protege tu privacidad con más rigor que cualquier otra aplicación de mensajería. Averigua más en nuestro Política de privacidad.";
@@ -900,6 +908,7 @@
 "settings_dev_mode" = "Modo de desarrollador";
 
 "settings_advanced_flush_message_queue" = "Vaciar cola de mensajes";
+"settings_advanced_orphaned_files_cleanup" = "Eliminar archivos huérfanos";
 
 // Dev Mode
 "settings_devmode_quote_v2" = "Quote V2";
@@ -949,6 +958,25 @@
 "settings_notifications_masterDnd_startTime" = "Inicio de horas laborables";
 "settings_notifications_masterDnd_endTime" = "Fin de horas laborables";
 "settings_notifications_masterDnd_info" = "Fuera de horario activo";
+
+// Orphaned files delete
+"settings_orphaned_files_description" = "Al eliminar datos en la gestión de almacenamiento de versiones anteriores de Threema, existe una pequeña posibilidad de que algunos archivos (multimedia) no se borraran correctamente pero se eliminaran en Threema.
+
+Crea antes una copia de seguridad de iTunes. ¡Pueden perderse datos!";
+"settings_orphaned_files_title" = "ARCHIVOS HUÉRFANOS";
+"settings_orphaned_files_button" = "Mover a la papelera de reciclaje";
+"settings_orphaned_files_footer" = "%@ de %@ archivos están huérfanos
+
+Mueve los archivos huérfanos a la papelera de reciclaje y procura que no falten archivos (multimedia) en Threema.";
+"settings_orphaned_files_footer_no_files" = "No hay archivos huérfanos.";
+"settings_orphaned_files_bin_title" = "PAPELERA DE RECICLAJE";
+"settings_orphaned_files_bin_restore_button" = "Restablecer contenidos de la papelera de reciclaje";
+"settings_orphaned_files_bin_delete_button" = "Eliminar contenidos de la papelera de reciclaje";
+"settings_orphaned_files_bin_footer" = "Hay %@ archivos (%@) en la papelera de reciclaje.
+
+Si no faltan archivos (multimedia) en Threema, vacía la papelera de reciclaje para eliminar permanentemente los archivos huérfanos.";
+"settings_orphaned_files_bin_footer_no_files" = "La papelera de reciclaje está vacía.";
+"settings_orphaned_files_bin_delete_conformation" = "¿Seguro que quieres eliminar permanentemente los archivos huérfanos? Esta acción no se puede deshacer.";
 
 // Threema calls settings
 "settings_threema_calls_enable_calls" = "Activar Threema Voz";

@@ -25,7 +25,6 @@
 #import "AppDelegate.h"
 #import "UserSettings.h"
 #import "Threema-Swift.h"
-#import "AudioMessageSender.h"
 
 #ifdef DEBUG
   static const DDLogLevel ddLogLevel = DDLogLevelVerbose;
@@ -401,16 +400,11 @@
 }
 
 - (void)sendFile {
-    DDLogVerbose(@"Sending file");
-    
-    AudioMessageSender *sender = [[AudioMessageSender alloc] init];
+    DDLogVerbose(@"Sending file");    
     NSURL *url = [_recorder audioURL];
-    [sender startWithAudioFile: url inConversation: _conversation requestId:nil];
-    
-//    NSURL *url = [_recorder audioURL];
-//    URLSenderItem *item = [URLSenderItem itemWithUrl:url type:(NSString *)kUTTypeAudio renderType:@1 sendAsFile:true];
-//    FileMessageSender *sender = [[FileMessageSender alloc] init];
-//    [sender sendItem:item inConversation:_conversation requestId:nil];
+    URLSenderItem *item = [URLSenderItem itemWithUrl:url type:(NSString *)kUTTypeAudio renderType:@1 sendAsFile:true];
+    FileMessageSender *sender = [[FileMessageSender alloc] init];
+    [sender sendItem:item inConversation:_conversation requestId:nil];
 }
 
 

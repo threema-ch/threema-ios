@@ -157,3 +157,12 @@ extension RestoreSafeForgotIdViewController {
         }
     }
 }
+
+extension RestoreSafeForgotIdViewController {
+    override func dismissKeyboard() {
+        super.dismissKeyboard()
+        
+        mobileNumberField.resignFirstResponder()
+        emailAddressField.resignFirstResponder()
+    }
+}

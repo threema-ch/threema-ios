@@ -51,6 +51,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     self.enableIPv6Switch.on = [UserSettings sharedUserSettings].enableIPv6;
     self.proximityMonitoringSwitch.on = ![UserSettings sharedUserSettings].disableProximityMonitoring;
     self.sentryAppDeviceLabel.text = [UserSettings sharedUserSettings].sentryAppDevice != nil ? [UserSettings sharedUserSettings].sentryAppDevice : @"-";
+    self.orphanedFilesCleanupLabel.text = [BundleUtil localizedStringForKey:@"settings_advanced_orphaned_files_cleanup"];
     
     [self.tableView reloadData];
 }

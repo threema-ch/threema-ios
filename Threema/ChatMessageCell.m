@@ -38,10 +38,8 @@
 #import "BundleUtil.h"
 #import "Threema-Swift.h"
 #import "ContactGroupPickerViewController.h"
-#import "FeatureMaskChecker.h"
 #import "ChatTextMessageCell.h"
 #import "FileMessageSender.h"
-#import "AudioMessageSender.h"
 
 #define DATE_LABEL_BG_COLOR [[Colors backgroundDark] colorWithAlphaComponent:0.9]
 #define REQUIRED_MENU_HEIGHT 50.0
@@ -897,24 +895,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     if (_messageToQuote == nil || _messageToQuote == self.message) {
         _messageToQuote = nil;
         
-        if ([[UserSettings sharedUserSettings] quoteV2Active]) {
-            [self.chatVc.chatBar addQuotedMessage:self.message];
-        } else {
-            NSString *quotedText = [self textForQuote];
-            if (quotedText.length == 0)
-                return;
-            
-            Contact *sender;
-            if (self.message.isOwn.boolValue) {
-                sender = nil;
-            } else if (self.message.sender != nil) {
-                sender = self.message.sender;
-            } else {
-                sender = self.message.conversation.contact;
-            }
-            
-            [self.chatVc.chatBar addQuotedText:quotedText quotedContact:sender];
-        }
+        [self.chatVc.chatBar addQuotedMessage:self.message];
     }
 }
 
@@ -942,15 +923,8 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         return YES;
     } else if (action == @selector(detailsMessage:)) {
         return YES;
-    } else if (action == @selector(quoteMessage:) /*&& [self textForQuote].length > 0*/) {
-        if ([[UserSettings sharedUserSettings] quoteV2Active]) {
-            return YES;
-        } else {
-            if ([self textForQuote].length > 0) {
-                return true;
-            }
-        }
-        return false;
+    } else if (action == @selector(quoteMessage:)) {
+        return YES;
     } else if (action == @selector(forwardMessage:)) {
         if (@available(iOS 13.0, *)) {
             return YES;
@@ -1300,7 +1274,6 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 }
 
 - (void) handleFileMessagefromContactPicker:(ContactGroupPickerViewController *)contactPicker didPickConversations:(NSSet *)conversations {
-    FeatureMaskChecker *featureMaskChecker = [[FeatureMaskChecker alloc] init];
     URLSenderItem *item;
     
     if ([self.message isKindOfClass: [FileMessage class]]) {
@@ -1313,44 +1286,25 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         item = [URLSenderItem itemWithData:fileMessage.data.data fileName:fileMessage.fileName type:fileMessage.blobGetUTI renderType:type sendAsFile:true];
     }
     else if ([self.message isKindOfClass: [AudioMessage class]]) {
-//        AudioMessage *audioMessage = (AudioMessage *)message;
-//        item = [URLSenderItem itemWithData:audioMessage.audio.data fileName:audioMessage.getFilename type:audioMessage.blobGetUTI renderType:@0 sendAsFile:true];
-        
         AudioMessage *audioMessage = (AudioMessage *)message;
-        
-        NSData *data = [audioMessage.audio.data copy];
-        for (Conversation *conversation in conversations) {
-            AudioMessageSender *sender = [[AudioMessageSender alloc] init];
-            [sender startWithAudioData:data duration:audioMessage.duration inConversation:conversation requestId:nil];
-            
-            if (contactPicker.additionalTextToSend) {
-                [MessageSender sendMessage:contactPicker.additionalTextToSend inConversation:conversation async:YES quickReply:NO requestId:nil onCompletion:^(TextMessage *message, Conversation *conv) {
-                    ;//nop
-                }];
-                item.caption = contactPicker.additionalTextToSend;
-            }
-        }
-        [contactPicker dismissViewControllerAnimated:YES completion:nil];
+        item = [URLSenderItem itemWithData:audioMessage.audio.data fileName:audioMessage.audio.getFilename type:audioMessage.blobGetUTI renderType:@0 sendAsFile:true];
     }
     else if ([self.message isKindOfClass: [ImageMessage class]]) {
         ImageMessage *imageMessage = (ImageMessage *)message;
-        item = [URLSenderItem itemWithData:imageMessage.image.data fileName:imageMessage.getFilename type:imageMessage.blobGetUTI renderType:@0 sendAsFile:true];
+        item = [URLSenderItem itemWithData:imageMessage.image.data fileName:imageMessage.image.getFilename type:imageMessage.blobGetUTI renderType:@0 sendAsFile:true];
     }
     else if ([self.message isKindOfClass: [VideoMessage class]]) {
         VideoMessage *videoMessage = (VideoMessage *)message;
-        item = [URLSenderItem itemWithData:videoMessage.video.data fileName:videoMessage.getFilename type:videoMessage.blobGetUTI renderType:@0 sendAsFile:true];
+        item = [URLSenderItem itemWithData:videoMessage.video.data fileName:videoMessage.video.getFilename type:videoMessage.blobGetUTI renderType:@0 sendAsFile:true];
     }
     if (contactPicker.additionalTextToSend) {
         item.caption = contactPicker.additionalTextToSend;
     }
-    [featureMaskChecker checkFileTransferFor:conversations presentAlarmOn:contactPicker onSuccess:^{
-        for (Conversation *conversation in conversations) {
-            FileMessageSender *urlSender = [[FileMessageSender alloc] init];
-            [urlSender sendItem:item inConversation:conversation];
-        }
-        [contactPicker dismissViewControllerAnimated:YES completion:nil];
-    } onFailure:^{
-    }];
+    for (Conversation *conversation in conversations) {
+        FileMessageSender *urlSender = [[FileMessageSender alloc] init];
+        [urlSender sendItem:item inConversation:conversation];
+    }
+    [contactPicker dismissViewControllerAnimated:YES completion:nil];
 }
 
 - (void)forwardImageMessage:(ImageMessage *)imageMessage toConversations:(NSSet *)conversations additionalTextToSend:(NSString *)additionalText {

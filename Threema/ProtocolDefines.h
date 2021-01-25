@@ -41,7 +41,7 @@
 #define kReconnectMaxInterval 10
 #define kKeepAliveInterval 180
 #define kErrorDisplayInterval 30
-#define kBlobLoadTimeout 30
+#define kBlobLoadTimeout 180
 #define kBlobUploadTimeout 120
 
 #define kMaxMessageLen 3500 // text message size limit (bytes, not characters!); must comfortably fit in maximum packet length (including 360 bytes overhead and padding)

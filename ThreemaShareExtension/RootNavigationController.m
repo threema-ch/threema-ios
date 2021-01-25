@@ -330,36 +330,6 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     }];
 }
 
-- (void)checkFeatureMaskAndSendItems {
-    if ([_itemManager containsFileItem]) {
-        [FeatureMask checkFeatureMask:FEATURE_MASK_FILE_TRANSFER forConversations:_recipientConversations onCompletion:^(NSArray *unsupportedContacts) {
-            if ([unsupportedContacts count] > 0) {
-                [self recipientConversationsRemoveContacts:unsupportedContacts];
-                
-                NSString *messageFormat;
-                if ([_recipientConversations count] == 0) {
-                    messageFormat = [BundleUtil localizedStringForKey:@"error_message_none_feature_level"];
-                } else {
-                    messageFormat = [BundleUtil localizedStringForKey:@"error_message_feature_level"];
-                }
-                
-                NSString *participantNames = [Utils stringFromContacts:unsupportedContacts];
-                NSString *message = [NSString stringWithFormat:messageFormat, participantNames];
-                
-                NSString *title = [BundleUtil localizedStringForKey:@"error_title_feature_level"];
-                
-                [UIAlertTemplate showAlertWithOwner:self title:title message:message actionOk:^(UIAlertAction * _Nonnull okAction) {
-                    [self startSending];
-                }];
-            } else {
-                [self startSending];
-            }
-        }];
-    } else {
-        [self startSending];
-    }
-}
-
 - (void)recipientConversationsRemoveContacts:(NSArray *)contacts {
     NSMutableSet *newRecipientConversations = [NSMutableSet setWithSet:_recipientConversations];
     for (Contact *contact in contacts) {
@@ -451,7 +421,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         [_recipientConversations addObject:conversation];
     }
     
-    [self checkFeatureMaskAndSendItems];
+    [self startSending];
 }
 
 - (void)contactPickerDidCancel:(ContactGroupPickerViewController*)contactPicker {

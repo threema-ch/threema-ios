@@ -38,6 +38,9 @@
 "ballot_description_multiplechoice" = "Decida, sch'ils participants pon selectar ina u pliras opziuns.";
 
 "ballot_vote" = "Vuschar";
+"ballot_votes_count" = "%@ vuschs";
+"ballot_vote_selected" = "Tschernì";
+"ballot_vote_not_selected" = "Betg tschernì";
 "ballot_close" = "Terminar l'enquista";
 "ballot_close_ack" = "Vuls ti terminar questa enquista e metter a disposiziuns ils resultats?";
 "ballot_got_votes_count" = "Survegnì %1$i da %2$i vuschs.";

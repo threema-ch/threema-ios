@@ -54,12 +54,21 @@
                 }
             }
         }
-         
+        
         if (isRenderingFileMessage == true) {
             _isUtiPreview = false;
-            _underlyingImage = [[UIImage alloc] initWithData:_fileMessage.data.data];
+            if (forThumbnail) {
+                if (_fileMessage.thumbnail != nil) {
+                    if (_fileMessage.thumbnail.data != nil) {
+                        _underlyingImage = [[UIImage alloc] initWithData:_fileMessage.thumbnail.data];
+                    }
+                }
+            } else {
+                _underlyingImage = [[UIImage alloc] initWithData:_fileMessage.data.data];
+            }
         }
-        else {
+        
+        if (isRenderingFileMessage == false || _underlyingImage == nil) {
             UIImage *thumbnail = [FileMessagePreview thumbnailForFileMessage:fileMessage];
             _isUtiPreview = !fileMessage.thumbnail;
             if (fileMessage.thumbnail == nil) {
@@ -153,6 +162,25 @@
 - (void)loadUnderlyingImageAndNotify {
     // loaded already
     if (_fileMessage.data != nil) {
+        if (_fileMessage.thumbnail != nil) {
+            if (_fileMessage.thumbnail.data != nil) {
+                _underlyingImage = [[UIImage alloc] initWithData:_fileMessage.thumbnail.data];
+                [self postCompleteNotification];
+            }
+        } else {
+            UIImage *thumbnail = [FileMessagePreview thumbnailForFileMessage:_fileMessage];
+            _isUtiPreview = !_fileMessage.thumbnail;
+            if (_fileMessage.thumbnail == nil) {
+                UIImage *colorizedThumbnail = [thumbnail imageWithTint:[Colors white]];
+                _underlyingImage = colorizedThumbnail;
+            } else {
+                if ([UTIConverter isGifMimeType:_fileMessage.mimeType]) {
+                    thumbnail = [Utils makeThumbWithOverlayFor:thumbnail];
+                }
+                _underlyingImage = thumbnail;
+            }
+            [self postCompleteNotification];
+        }
         return;
     }
     
@@ -195,9 +223,15 @@
     completion([self urlForExportData:@"video"]);
 }
 
+/***** BEGIN THREEMA MODIFICATION: add function *********/
 - (NSString *)accessibilityLabelForContent {
     NSString *date = [DateFormatter accessibilityDateTime:_fileMessage.remoteSentDate];
     return [NSString stringWithFormat:@"%@. %@", NSLocalizedString(@"file", nil), date];
 }
+
+- (BOOL)canHideToolBar {
+    return [UTIConverter isImageMimeType:_fileMessage.mimeType];
+}
+/***** END THREEMA MODIFICATION: add function *********/
 
 @end

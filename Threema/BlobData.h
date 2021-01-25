@@ -44,4 +44,9 @@
 
 - (NSString *)blobGetWebFilename;
 
+- (NSString *)getExternalFilename;
+
+@optional
+- (NSString *)getExternalFilenameThumbnail;
+
 @end

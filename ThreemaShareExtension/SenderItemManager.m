@@ -309,8 +309,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 
 - (URLSenderItem *)prepareImageItem:(id<NSSecureCoding>)item forType:(NSString *)type {
     UIImage *image = (UIImage *)item;
-    ImageURLSenderItemCreator *creator = [[ImageURLSenderItemCreator alloc] init];
-        
+    ImageURLSenderItemCreator *creator = [[ImageURLSenderItemCreator alloc] initWith:@"large" forceSize:false];
     return [creator senderItemFromImage:image];
 }
 

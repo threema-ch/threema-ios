@@ -29,7 +29,7 @@
 #import "PasswordCallback.h"
 #import "CreatePasswordTrigger.h"
 #import "BackupIdentityViewController.h"
-#import "MBProgressHUD.h"
+#import <MBProgressHUD/MBProgressHUD.h>
 #import "RevocationKeyHandler.h"
 #import "QRCodeGenerator.h"
 #import "NSString+Hex.h"

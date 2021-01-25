@@ -24,12 +24,15 @@
 #import "FileMessageKeys.h"
 #import "NSString+Hex.h"
 #import "BundleUtil.h"
+#import "ThreemaFramework/ThreemaFramework-Swift.h"
+#import "Utils.h"
 
 #ifdef DEBUG
 static const DDLogLevel ddLogLevel = DDLogLevelVerbose;
 #else
 static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 #endif
+
 @implementation FileMessage
 
 @dynamic encryptionKey;
@@ -43,12 +46,12 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 @dynamic data;
 @dynamic thumbnail;
 @dynamic json;
-@synthesize caption;
-@synthesize correlationId;
-@synthesize mimeTypeThumbnail;
-@synthesize duration;
-@synthesize height;
-@synthesize width;
+@synthesize caption = _caption;
+@synthesize correlationId = _correlationId;
+@synthesize mimeTypeThumbnail = _mimeTypeThumbnail;
+@synthesize duration = _duration;
+@synthesize height = _height;
+@synthesize width = _width;
 
 - (NSString *)fileName {
     NSString *name = [self primitiveValueForKey:@"fileName"];
@@ -109,6 +112,8 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     return nil;
 }
 
+#pragma mark - BlobData
+
 - (NSData *)blobGetData {
     if (self.data) {
         return self.data.data;
@@ -166,22 +171,15 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     return self.progress;
 }
 
-- (NSString *)getCaption {
-    if (self.json == nil) {
-        return nil;
-    }
-    
-    NSError *error;
-    NSData *jsonData = [self.json dataUsingEncoding:NSUTF8StringEncoding];
-    NSDictionary *json = (NSDictionary *)[NSJSONSerialization JSONObjectWithData:jsonData options:0 error:&error];
-    if (json == nil) {
-        DDLogError(@"Error parsing json data %@, %@", error, [error userInfo]);
-        return nil;
-    }
-    
-    NSString *description = [json objectForKey:JSON_FILE_KEY_DESCRIPTION];
-    return description;
+- (NSString *)getExternalFilename {
+    return [[self data] getFilename];
 }
+
+- (NSString *)getExternalFilenameThumbnail {
+    return [[self thumbnail] getFilename];
+}
+
+#pragma mark - Misc
 
 - (NSURL *)tmpURL:(NSString *)tmpFileName {
     NSURL *tmpFileUrl = nil;
@@ -195,7 +193,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     }
     
     if (fileName == nil) {
-        fileName = [self getFilename];
+        fileName = [[self data] getFilename];
     }
     
     if (fileName != nil) {
@@ -203,9 +201,21 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         if (extension == nil) {
             extension = @"";
         }
-        NSURL *tmp = [[tmpDirUrl URLByAppendingPathComponent:fileName] URLByAppendingPathExtension: extension];
+        
+        NSURL *tmp;
+        //Check if the filename already contains the suffix to avoid appending it twice
+        if ([fileName hasSuffix:[@"." stringByAppendingString:extension]]) {
+            fileName = [fileName stringByReplacingOccurrencesOfString:[@"." stringByAppendingString:extension] withString:@""];
+        }
+        
+        // Get unique filename in temporary directory, to allow sharing multiple files with the same name
+        NSString *uniqueFileName = [FileUtility getUniqueFilenameFrom:fileName directoryURL:tmpDirUrl pathExtension:extension];
+        fileName = uniqueFileName;
+        
+        tmp = [[tmpDirUrl URLByAppendingPathComponent:fileName] URLByAppendingPathExtension: extension];
         tmpFileUrl = tmp;
     }
+    
     if (tmpFileUrl == nil) {
         NSString *extension = [UTIConverter preferedFileExtensionForMimeType:self.mimeType];
         if (extension == nil) {
@@ -224,41 +234,6 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     if (![data writeToURL:url atomically:NO]) {
         DDLogWarn(@"Writing file data to temporary file failed");
     }
-}
-
-- (NSString *)mimeTypeThumbnail {
-    if (self.json != nil) {
-        NSError *error;
-        NSData *jsonData = [self.json dataUsingEncoding:NSUTF8StringEncoding];
-        NSDictionary *json = (NSDictionary *)[NSJSONSerialization JSONObjectWithData:jsonData options:0 error:&error];
-        if (json == nil) {
-            DDLogError(@"Error parsing json data %@, %@", error, [error userInfo]);
-        } else {
-            NSString *mTT = [json objectForKey:JSON_FILE_KEY_MIMETYPETHUMBNAIL];
-            if (mTT != nil) {
-                return mTT;
-            }
-        }
-    }
-    return @"image/jpeg";
-}
-
-
-#pragma mark ExternalStorageInfo
-
-- (NSString *)getFilename {
-    return self.data != nil ? [self getFilename:self.data.data] : nil;
-}
-
-- (NSString *)getThumbnailname {
-    return self.thumbnail != nil ? [self getFilename:self.thumbnail.data] : nil;
-}
-
-- (NSString *)getFilename:(NSData *)ofData {
-    if (ofData != nil && [ofData respondsToSelector:NSSelectorFromString(@"filename")]) {
-        return [ofData performSelector:NSSelectorFromString(@"filename")];
-    }
-    return nil;
 }
 
 - (BOOL)renderFileImageMessage {
@@ -303,6 +278,10 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     return false;
 }
 
+- (BOOL)renderAsFileMessage {
+    return self.type.intValue == 0;
+}
+
 - (BOOL)sendAsFileImageMessage {
     if ([UTIConverter isImageMimeType:self.mimeType]) {
         return [UTIConverter isRenderingImageMimeType:self.mimeType];
@@ -318,11 +297,10 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 }
 
 - (BOOL)sendAsFileAudioMessage {
-//    if (self.type.intValue == 0) {
-//        return false;
-//    }
-//    return true;
-    return false;
+    if (self.type.intValue == 0) {
+        return false;
+    }
+    return true;
 }
 
 - (BOOL)sendAsFileGifMessage {
@@ -339,8 +317,62 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     return true;
 }
 
-- (NSNumber *)getDuration {
-    if (self.json != nil) {
+/// /// Will return the caption. If it does not exist it will return the JSON caption.
+- (NSString *)caption {
+    if (_caption == nil && self.json != nil) {
+        NSError *error;
+        NSData *jsonData = [self.json dataUsingEncoding:NSUTF8StringEncoding];
+        NSDictionary *json = (NSDictionary *)[NSJSONSerialization JSONObjectWithData:jsonData options:0 error:&error];
+        if (json == nil) {
+            DDLogError(@"Error parsing json data %@, %@", error, [error userInfo]);
+        } else {
+            NSString *caption = [json objectForKey:JSON_FILE_KEY_DESCRIPTION];
+            _caption = caption;
+            return caption;
+        }
+    }
+    return _caption;
+}
+
+/// /// Will return the correlationId. If it does not exist it will return the JSON correlationId.
+- (NSString *)correlationId {
+    if (_correlationId == nil && self.json != nil) {
+        NSError *error;
+        NSData *jsonData = [self.json dataUsingEncoding:NSUTF8StringEncoding];
+        NSDictionary *json = (NSDictionary *)[NSJSONSerialization JSONObjectWithData:jsonData options:0 error:&error];
+        if (json == nil) {
+            DDLogError(@"Error parsing json data %@, %@", error, [error userInfo]);
+        } else {
+            NSString *correlationId = [json objectForKey:JSON_FILE_KEY_CORRELATION];
+            _correlationId = correlationId;
+            return correlationId;
+        }
+    }
+    return _correlationId;
+}
+
+/// /// Will return the mimeTypeThumbnail. If it does not exist it will return the JSON mimeTypeThumbnail.
+- (NSString *)mimeTypeThumbnail {
+    if (_mimeTypeThumbnail == nil && self.json != nil) {
+        NSError *error;
+        NSData *jsonData = [self.json dataUsingEncoding:NSUTF8StringEncoding];
+        NSDictionary *json = (NSDictionary *)[NSJSONSerialization JSONObjectWithData:jsonData options:0 error:&error];
+        if (json == nil) {
+            DDLogError(@"Error parsing json data %@, %@", error, [error userInfo]);
+        } else {
+            NSString *mTT = [json objectForKey:JSON_FILE_KEY_MIMETYPETHUMBNAIL];
+            if (mTT != nil) {
+                _mimeTypeThumbnail = mTT;
+                return mTT;
+            }
+        }
+    }
+    return @"image/jpeg";
+}
+
+/// /// Will return the duration. If it does not exist it will return the JSON duration.
+- (NSNumber *)duration {
+    if (_duration == nil && self.json != nil) {
         NSError *error;
         NSData *jsonData = [self.json dataUsingEncoding:NSUTF8StringEncoding];
         NSDictionary *json = (NSDictionary *)[NSJSONSerialization JSONObjectWithData:jsonData options:0 error:&error];
@@ -351,15 +383,17 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
             if (meta != nil) {
                 float durationFloat = [[meta objectForKey:JSON_FILE_KEY_METADATA_DURATION] floatValue];
                 NSNumber *duration = [[NSNumber alloc] initWithFloat:durationFloat];
+                _duration = duration;
                 return duration;
             }
         }
     }
-    return self.duration;
+    return _duration;
 }
 
-- (NSNumber *)getHeight {
-    if (self.json != nil) {
+/// /// Will return the height. If it does not exist it will return the JSON height.
+- (NSNumber *)height {
+    if (_height == nil && self.json != nil) {
         NSError *error;
         NSData *jsonData = [self.json dataUsingEncoding:NSUTF8StringEncoding];
         NSDictionary *json = (NSDictionary *)[NSJSONSerialization JSONObjectWithData:jsonData options:0 error:&error];
@@ -369,15 +403,18 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
             NSDictionary *meta = [json objectForKey:JSON_FILE_KEY_METADATA];
             if (meta != nil) {
                 NSNumber *height = [meta objectForKey:JSON_FILE_KEY_METADATA_HEIGHT];
+                _height = height;
                 return height;
             }
         }
     }
-    return @0;
+    
+    return _height;
 }
 
-- (NSNumber *)getWidth {
-    if (self.json != nil) {
+/// /// Will return the width. If it does not exist it will return the JSON width.
+- (NSNumber *)width {
+    if (_width == nil && self.json != nil) {
         NSError *error;
         NSData *jsonData = [self.json dataUsingEncoding:NSUTF8StringEncoding];
         NSDictionary *json = (NSDictionary *)[NSJSONSerialization JSONObjectWithData:jsonData options:0 error:&error];
@@ -387,25 +424,55 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
             NSDictionary *meta = [json objectForKey:JSON_FILE_KEY_METADATA];
             if (meta != nil) {
                 NSNumber *width = [meta objectForKey:JSON_FILE_KEY_METADATA_WIDTH];
+                _width = width;
                 return width;
             }
         }
     }
-    return @0;
+    
+    return _width;
 }
-
 - (NSString *)quotePreviewText {
-    NSString *quoteCaption = [self getCaption];
+    NSString *quoteCaption = _caption;
     if (!quoteCaption) {
+        if ([self renderFileAudioMessage] == true) {
+            if (self.duration != nil) {
+                return [DateFormatter timeFormatted:self.duration.intValue];
+            }
+            return @"0:00";
+        }
+        else if ([self renderAsFileMessage] == true) {
+            if (self.fileName != nil) {
+                return self.fileName;
+            }
+            return @"";
+        }
+        
         return @"";
     }
     return quoteCaption;
 }
 
+/// Returns true if this FileMessage has a thumbnail and false otherwise
+/// Note that this does not indicate that a thumbnail must exist.
+- (BOOL)thumbnailDownloaded {
+    if (self.thumbnail != nil) {
+        return self.thumbnail.data != nil;
+    }
+    return false;
+}
+
+/// Returns true if this FileMessage has data available and false otherwise
+- (BOOL)dataDownloaded {
+    if (self.data != nil) {
+        return self.data.data != nil;
+    }
+    return false;
+}
+
 #ifdef DEBUG
 #else
-- (NSString *)debugDescription
-{
+- (NSString *)debugDescription {
     return [NSString stringWithFormat:@"%@ <%@>: %@ %@ %@ %@ %@ %@ %@ %@ %@ %@  %@ %@ %@ %@ %@ %@ %@ %@ %@ %@", self.class, self, @"encryptionKey", @"*****", @"blobId", @"*****", @"blobThumbnailId = ", @"****", @"fileName = ", self.fileName.description, @"progress = ", self.progress.description, @"type = ", self.type.description, @"mimeType = ", self.mimeType.description, @"data = ", self.data.description, @"thumbnail", self.thumbnail.description, @"json = ", @"*****"];
 }
 #endif

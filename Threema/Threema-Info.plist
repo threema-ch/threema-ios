@@ -96,7 +96,7 @@
 	<key>SentryClientDsn</key>
 	<string>https://47b97e0e68ce4ce98dbd619b541ad330@bugs.threema.ch/2</string>
 	<key>ThreemaMaxGroupMembers</key>
-	<integer>100</integer>
+	<integer>256</integer>
 	<key>ThreemaVersionSuffix</key>
 	<string></string>
 	<key>UIApplicationShortcutItems</key>

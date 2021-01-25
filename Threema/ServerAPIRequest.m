@@ -59,11 +59,17 @@
     [ActivityIndicatorProxy startActivity];
     
 	NSURLRequest *request = [NSURLRequest requestWithURL:url cachePolicy:cachePolicy timeoutInterval:REQUEST_TIMEOUT];
-    NSURLSession *session = [NSURLSession sessionWithConfiguration:[NSURLSessionConfiguration defaultSessionConfiguration] delegate:loader delegateQueue:[NSOperationQueue currentQueue]];
+    NSURLSessionConfiguration *conf = [NSURLSessionConfiguration defaultSessionConfiguration];
+    conf.requestCachePolicy = cachePolicy;
+    if (cachePolicy == NSURLRequestReloadIgnoringLocalCacheData || cachePolicy == NSURLRequestReloadIgnoringLocalAndRemoteCacheData) {
+        conf.URLCache = nil;
+    }
+    NSURLSession *session = [NSURLSession sessionWithConfiguration:conf delegate:loader delegateQueue:[NSOperationQueue currentQueue]];
     NSURLSessionDataTask *task = [session dataTaskWithRequest:request completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
         [self connectionCompletionHandler:data response:response error:error onCompletion:onCompletion onError:onError];
     }];
     [task resume];
+    [session finishTasksAndInvalidate];
 }
 
 + (void)postJSONToAPIPath:(NSString*)apiPath data:(id)jsonObject onCompletion:(CompletionCallback)onCompletion onError:(ErrorCallback)onError {
@@ -103,11 +109,15 @@
     
     [ActivityIndicatorProxy startActivity];
     
-    NSURLSession *session = [NSURLSession sessionWithConfiguration:[NSURLSessionConfiguration defaultSessionConfiguration] delegate:loader delegateQueue:[NSOperationQueue currentQueue]];
+    NSURLSessionConfiguration *conf = [NSURLSessionConfiguration defaultSessionConfiguration];
+    conf.requestCachePolicy = NSURLRequestReloadIgnoringLocalAndRemoteCacheData;
+    conf.URLCache = nil;
+    NSURLSession *session = [NSURLSession sessionWithConfiguration:conf delegate:loader delegateQueue:[NSOperationQueue currentQueue]];
     NSURLSessionDataTask *task = [session dataTaskWithRequest:request completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
         [self connectionCompletionHandler:data response:response error:error onCompletion:onCompletion onError:onError];
     }];
     [task resume];
+    [session finishTasksAndInvalidate];
 }
 
 + (void)connectionCompletionHandler:(NSData* _Nullable)data response:(NSURLResponse* _Nullable)response error:(NSError* _Nullable)error onCompletion:(CompletionCallback)onCompletion onError:(ErrorCallback)onError {
@@ -201,6 +211,16 @@
 - (void)URLSession:(NSURLSession *)session didReceiveChallenge:(NSURLAuthenticationChallenge *)challenge completionHandler:(void (^)(NSURLSessionAuthChallengeDisposition disposition, NSURLCredential * _Nullable credential))completionHandler
 {
     [SSLCAHelper session:session didReceiveAuthenticationChallenge:challenge completion:completionHandler];
+}
+
+- (NSCachedURLResponse *)connection:(NSURLConnection *)connection willCacheResponse:(NSCachedURLResponse *)cachedResponse {
+    switch (connection.currentRequest.cachePolicy) {
+        case NSURLRequestReloadIgnoringLocalCacheData:
+        case NSURLRequestReloadIgnoringLocalAndRemoteCacheData:
+            return nil;
+        default:
+            return cachedResponse;
+    }
 }
 
 @end

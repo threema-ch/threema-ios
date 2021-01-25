@@ -113,7 +113,7 @@
 "export_progress_label" = "%li / %li berichten geëxporteerd";
 "caption" = "Onderschrift";
 "fileNotDownloaded" = "Het bestand is niet gedownload of is verwijderd.";
-"include_media_title" = "Media (afbeeldingen, video's) bijsluiten als bijlagen? Grote chatgesprekken worden in meerdere bestanden gesplitst.\n\nEen modern ZIP-programma met AES-ondersteuning is vereist om het bestand uit te pakken, bijv. 7-Zip of The Unarchiver (Mac).";
+"include_media_title" = "Media (afbeeldingen, video's) bijsluiten als bijlagen?\n\nEen modern ZIP-programma met AES-ondersteuning is vereist om het bestand uit te pakken, bijv. 7-Zip of The Unarchiver (Mac).";
 
 
 /* image sizes */
@@ -133,8 +133,9 @@
 "max_x_minutes" = "Max. %d minuten";
 
 /* Sound names */
-"sound_none" = "Geen geluid";
+"sound_none" = "Geen";
 "sound_default" = "Standaard";
+"sound_silent" = "Alleen trillen";
 "sound_bamboo" = "Bamboe";
 "sound_drum" = "Drums";
 "sound_glass" = "Glas";
@@ -256,11 +257,13 @@
 "record_audio" = "Audio opnemen";
 "scan_qr" = "QR-code scannen";
 "share_file" = "Bestand delen";
-"send_item_photo" = "Voorbeeld foto";
-"send_item_video" = "Voorbeeld video";
-"send_items" = "Voorbeeld %d foto's/video's";
-"send_items_photo" = "Voorbeeld %d foto's";
-"send_items_video" = "Voorbeeld %d video's";
+"add_item_caption" = "Onderschrift toevoegen";
+"add_items_caption" = "Onderschrift toevoegen";
+"send_item_immediately_photo" = "Foto versturen";
+"send_item_immediately_video" = "Video versturen";
+"send_items_immediately" = "%d foto's/video's versturen";
+"send_items_immediately_photo" = "%d foto's versturen";
+"send_items_immediately_video" = "%d video's versturen";
 
 "record" = "Opnemen";
 "play" = "Spelen";
@@ -622,7 +625,9 @@
 
 /* VoIP Call */
 "call_mute" = "Dempen";
+"call_unmute" = "Geluid aan";
 "call_speaker" = "Luidspreker";
+"call_earpiece" = "Oorstuk";
 "call_end" = "Ophangen";
 "call_camera_activate_button" = "Camera inschakelen";
 "call_camera_deactivate_button" = "Camera uitschakelen";
@@ -643,6 +648,7 @@
 "call_accept" = "Accepteren";
 "call_reject" = "Afwijzen";
 "call_hide_call" = "Oproep verbergen";
+"call_no_wifi" = "Oproep via mobiel netwerk. Meer informatie…";
 
 "call_threema_title" = "Threema-Oproep starten";
 "call_callkit_button_title" = "Threema";
@@ -674,6 +680,9 @@
 
 "call_threema_video_in_chat_info_title" = "Nieuw: Video-oproepen";
 "call_threema_video_in_chat_info_description" = "Naast beveiligde oproepen biedt Threema nu ook end-to-end-versleutelde video-oproepen.";
+
+"call_threema_cellular_instead_of_wifi_title" = "Oproep via mobiel netwerk";
+"call_threema_cellular_instead_of_wifi_text" = "Waarschuwing: deze oproep zal gegevens naar het mobiele netwerk overdragen.";
 
 /* Privacy Policy */
 "privacy_policy_about" = "Threema beschermt je privacy beter dan welke messenger dan ook. Raadpleeg voor meer informatie naar ons Privacybeleid.";
@@ -896,9 +905,10 @@
 "settings_license" = "Licentie";
 "settings_advanced" = "Geavanceerd";
 "settings_threema_work" = "Threema Work";
-"settings_dev_mode" = "Dev Mode";
+"settings_dev_mode" = "Ontwikkelaarsmodus";
 
 "settings_advanced_flush_message_queue" = "Berichtenwachtrij leegmaken";
+"settings_advanced_orphaned_files_cleanup" = "Zwevende bestanden verwijderen";
 
 // Dev Mode
 "settings_devmode_quote_v2" = "Quote V2";
@@ -949,6 +959,25 @@
 "settings_notifications_masterDnd_endTime" = "Einde van kantooruren";
 "settings_notifications_masterDnd_info" = "Actief buiten kantooruren";
 
+// Orphaned files delete
+"settings_orphaned_files_description" = "Wanneer in eerdere versies van Threema gegevens uit het Opslagbeheer werden verwijderd, kon het in zeldzame gevallen gebeuren dat de (media)bestanden niet correct werden verwijderd maar wel in Threema werden verwijderd.
+
+Maak eerst een iTunes-back-up; gegevensverlies kan optreden!";
+"settings_orphaned_files_title" = "ZWEVENDE BESTANDEN";
+"settings_orphaned_files_button" = "Verplaatsen naar prullenbak";
+"settings_orphaned_files_footer" = "%@ van %@ bestanden zweven.
+
+Verplaats de zwevende bestanden naar de prullenbak en zorg ervoor dat er geen (media)bestanden in Threema ontbreken.";
+"settings_orphaned_files_footer_no_files" = "Er zijn geen zwevende bestanden.";
+"settings_orphaned_files_bin_title" = "PRULLENBAK";
+"settings_orphaned_files_bin_restore_button" = "Inhoud van prullenbak herstellen";
+"settings_orphaned_files_bin_delete_button" = "Inhoud van prullenbak verwijderen";
+"settings_orphaned_files_bin_footer" = "De prullenbak bevat %@ bestanden (%@).
+
+Als er geen (media)bestanden in Threema ontbreken, maak de prullenbak dan leeg om de zwevende bestanden permanent te verwijderen.";
+"settings_orphaned_files_bin_footer_no_files" = "De prullenbak is leeg.";
+"settings_orphaned_files_bin_delete_conformation" = "Wilt u de zwevende bestanden permanent verwijderen? Dit kan niet ongedaan worden gemaakt.";
+
 // Threema calls settings
 "settings_threema_calls_enable_calls" = "Threema oproepen inschakelen";
 "settings_threema_calls_always_relay_calls" = "Oproep altijd doorschakelen";
@@ -979,3 +1008,15 @@
 "back_to_media_selection" = "Terug naar scherm voor mediaselectie";
 "remove_current_image_from_selected_images" = "Huidig item uit selectie verwijderen";
 "send_options" = "Meer opties";
+"multiple_media_items" = "%d items";
+"media_item" = "Eén item";
+"could_not_add_items_title" = "Item niet toegevoegd";
+"could_not_add_all_items_title" = "Niet alle items toegevoegd";
+"one_media_item_could_not_be_processed" = "Eén item kon niet worden verwerkt en is overgeslagen.";
+"multiple_media_items_could_not_be_processed" = "%d items konden niet worden verwerkt en zijn overgeslagen.";
+"processing_items_progress" = "Item verwerken %d/%d";
+"item_too_large_title" = "Het item is te groot";
+"maximum_file_size_exceeded" = "De maximale bestandsgrootte is %@. Dit bestand is %@. Verwijder het bestand om door te gaan.";
+"back" = "Terug";
+"sending_item" = "Item versturen";
+"send_as_file_title" = "Verstuurmodus";

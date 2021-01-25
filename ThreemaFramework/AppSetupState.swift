@@ -54,7 +54,7 @@ import Foundation
      Call this if setup completed, otherwise setup screen will show again.
     */
     @objc public func appSetupCompleted() {
-        FileUtility.delete(fileUrl: FileUtility.appDataDirectory?.appendingPathComponent(appSetupNotCompleted))
+        FileUtility.delete(at: FileUtility.appDataDirectory?.appendingPathComponent(appSetupNotCompleted))
     }
     
     /**

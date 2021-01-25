@@ -132,7 +132,8 @@ typedef void (^ErrorBlock)(NSError *err);
 - (void)handleMessage:(AbstractMessage *)message {
     _boxMessage = message;
     
-    [self fetchThumbnail];
+    FileMessage *fileMessage = [self createDBMessage];
+    [self fetchThumbnail:fileMessage];
 }
 
 - (BOOL)prepareJson:(NSData *)data {
@@ -150,13 +151,13 @@ typedef void (^ErrorBlock)(NSError *err);
     return YES;
 }
 
-- (void)fetchThumbnail {
+- (void)fetchThumbnail:(FileMessage *)fileMessage {
     NSString *thumbnailBlobHex = [_json objectForKey: JSON_FILE_KEY_THUMBNAIL_BLOB];
     if (thumbnailBlobHex) {
         NSData *thumbnailId = [thumbnailBlobHex decodeHex];
         
         NSURLRequest *request = [BlobUtil urlRequestForBlobId:thumbnailId];
-        
+    
         PinnedHTTPSURLLoader *thumbnailLoader = [[PinnedHTTPSURLLoader alloc] init];
         [thumbnailLoader startWithURLRequest:request onCompletion:^(NSData *data) {
             NSString *encryptionKeyHex = [_json objectForKey: JSON_FILE_KEY_ENCRYPTION_KEY];
@@ -168,17 +169,16 @@ typedef void (^ErrorBlock)(NSError *err);
                 DDLogError(@"Could not decode thumbnail data");
             }
             
-            [self createDBMessageWithThumbnail:decodedData error:nil];
-
+            [self updateDBMessageWithThumbnail:decodedData fileMessage:fileMessage error:nil];
         } onError:^(NSError *error) {
-            [self createDBMessageWithThumbnail:nil error:error];
+            [self updateDBMessageWithThumbnail:nil fileMessage:fileMessage error:error];
         }];
     } else {
-        [self createDBMessageWithThumbnail:nil error:nil];
+        [self updateDBMessageWithThumbnail:nil fileMessage:fileMessage error:nil];
     }
 }
 
-- (void)createDBMessageWithThumbnail:(NSData *)thumbnailData error:(NSError *)error {
+- (FileMessage *)createDBMessage {
     __block FileMessage *fileMessage;
     
     [_entityManager performSyncBlockAndSafe:^{
@@ -221,6 +221,14 @@ typedef void (^ErrorBlock)(NSError *err);
         }
         
         fileMessage.json = [[NSString alloc] initWithData:_jsonData encoding:NSUTF8StringEncoding];
+    }];
+    
+    return fileMessage;
+}
+
+- (void)updateDBMessageWithThumbnail:(NSData *)thumbnailData fileMessage:(FileMessage *)fileMessage error:(NSError *)error {
+    __block FileMessage *tmpfileMessage = fileMessage;
+    [_entityManager performSyncBlockAndSafe:^{
         if (thumbnailData) {
             ImageData *thumbnail = [_entityManager.entityCreator imageData];
             thumbnail.data = thumbnailData;
@@ -230,14 +238,14 @@ typedef void (^ErrorBlock)(NSError *err);
             thumbnail.width = [NSNumber numberWithInt:thumbnailImage.size.width];
             thumbnail.height = [NSNumber numberWithInt:thumbnailImage.size.height];
             
-            fileMessage.thumbnail = thumbnail;
+            tmpfileMessage.thumbnail = thumbnail;
         }
     }];
     
     if (error) {
         _onError(error);
     } else {
-        _onCompletion(fileMessage);
+        _onCompletion(tmpfileMessage);
     }
 }
 

@@ -22,10 +22,7 @@ import Foundation
 import ThreemaFramework
 
 class DevModeViewController: ThemedTableViewController {
-                    
-    @IBOutlet weak var quoteV2Label: UILabel!
-    @IBOutlet weak var quoteV2Switch: UISwitch!
-    
+                        
     override var shouldAutorotate: Bool {
         return true
     }
@@ -45,7 +42,6 @@ class DevModeViewController: ThemedTableViewController {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
-        updateQuoteSwitch()
     }
     
     override func viewWillDisappear(_ animated: Bool) {
@@ -56,15 +52,8 @@ class DevModeViewController: ThemedTableViewController {
 extension DevModeViewController {
     // MARK: Private methods
     
-    private func updateQuoteSwitch() {
-        quoteV2Label.text = BundleUtil.localizedString(forKey: "settings_devmode_quote_v2")
-        quoteV2Switch.isOn = UserSettings.shared().quoteV2Active
-    }
 }
 
 extension DevModeViewController {
     // MARK: IBActions
-    @IBAction func quoteV2ValueChanged(sender: UISwitch) {
-        UserSettings.shared().quoteV2Active = sender.isOn
-    }
 }

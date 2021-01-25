@@ -113,7 +113,7 @@
 "export_progress_label" = "%li / %li zpráv exportováno";
 "caption" = "Titulek";
 "fileNotDownloaded" = "Soubor nebyl stažen nebo byl smazán.";
-"include_media_title" = "Zahrnout média (obrázky, videa) jako přílohy? Velké chaty jsou rozděleny do několika souborů.\n\nK rozbalení souboru je zapotřebí moderní komprimační nástroj s podporou AES, např. 7-Zip nebo The Unarchiver (Mac).";
+"include_media_title" = "Zahrnout média (obrázky, videa) jako přílohy?\n\nK rozbalení souboru je zapotřebí moderní komprimační nástroj ZIP s podporou AES, např. 7-Zip nebo The Unarchiver (Mac).";
 
 
 /* image sizes */
@@ -133,8 +133,9 @@
 "max_x_minutes" = "Max. %d min.";
 
 /* Sound names */
-"sound_none" = "Žádný zvuk";
+"sound_none" = "Ticho";
 "sound_default" = "Výchozí";
+"sound_silent" = "Pouze vibrace";
 "sound_bamboo" = "Bambus";
 "sound_drum" = "Buben";
 "sound_glass" = "Sklo";
@@ -142,7 +143,7 @@
 "sound_input" = "Vstup";
 "sound_marimba1" = "Marimba 1";
 "sound_marimba2" = "Marimba 2";
-"sound_music_box" = "Hudební skříňka";
+"sound_music_box" = "Hudební obsah";
 "sound_pulse" = "Pulz";
 "sound_sms" = "SMS";
 "sound_received_message" = "Threema";
@@ -256,11 +257,13 @@
 "record_audio" = "Nahrát zvuk";
 "scan_qr" = "Naskenovat QR kód";
 "share_file" = "Sdílet soubor";
-"send_item_photo" = "Náhled fotografie";
-"send_item_video" = "Náhled videa";
-"send_items" = "Náhled %d fotografií/videí";
-"send_items_photo" = "Náhled %d fotografie(í)";
-"send_items_video" = "Náhled %d videa(í)";
+"add_item_caption" = "Přidat titulek";
+"add_items_caption" = "Přidat titulky";
+"send_item_immediately_photo" = "Poslat fotku";
+"send_item_immediately_video" = "Odeslat video";
+"send_items_immediately" = "Odeslat %d fotografií / videí";
+"send_items_immediately_photo" = "Odeslat %d fotografií";
+"send_items_immediately_video" = "Odeslat %d videí";
 
 "record" = "Nahrát";
 "play" = "Spustit";
@@ -622,7 +625,9 @@
 
 /* VoIP Call */
 "call_mute" = "Ztišit";
+"call_unmute" = "Zapnout zvuk";
 "call_speaker" = "Reproduktor";
+"call_earpiece" = "Sluchátko";
 "call_end" = "Zavěsit";
 "call_camera_activate_button" = "Aktivovat kameru";
 "call_camera_deactivate_button" = "Vypnout kameru";
@@ -643,6 +648,7 @@
 "call_accept" = "Přijmout";
 "call_reject" = "Zamítnout";
 "call_hide_call" = "Skrýt hovor";
+"call_no_wifi" = "Volání přes mobilní síť. Zjistit více…";
 
 "call_threema_title" = "Začít Threema hovor";
 "call_callkit_button_title" = "Threema";
@@ -674,6 +680,9 @@
 
 "call_threema_video_in_chat_info_title" = "Novinka: videohovory";
 "call_threema_video_in_chat_info_description" = "Kromě hlasových volání odolných proti odposlechu nyní Threema nabízí i videohovory šifrované  end-to-end.";
+
+"call_threema_cellular_instead_of_wifi_title" = "Volání přes mobilní síť";
+"call_threema_cellular_instead_of_wifi_text" = "Varování: Toto volání využívá k přenosu data mobilní sítě.";
 
 /* Privacy Policy */
 "privacy_policy_about" = "Threema chrání vaše soukromí pečlivěji než kterákoliv jiná komunikační aplikace. Podrobnější informace najdete v našich Zásadách ochrany osobních údajů.";
@@ -896,12 +905,13 @@
 "settings_license" = "Licence";
 "settings_advanced" = "Pokročilé";
 "settings_threema_work" = "Threema Work";
-"settings_dev_mode" = "Dev Mode";
+"settings_dev_mode" = "Režim pro vývojáře";
 
 "settings_advanced_flush_message_queue" = "Pročistit frontu zpráv";
+"settings_advanced_orphaned_files_cleanup" = "Odstranit nepotřebné soubory";
 
 // Dev Mode
-"settings_devmode_quote_v2" = "Quote V2";
+"settings_devmode_quote_v2" = "Citování V2";
 
 // Appearance
 "settings_appearance_theme_section" = "Vizuální motiv";
@@ -949,6 +959,31 @@
 "settings_notifications_masterDnd_endTime" = "Konec pracovní doby";
 "settings_notifications_masterDnd_info" = "Aktivní po pracovní době";
 
+// Orphaned files delete
+"settings_orphaned_files_description" = "Při mazání dat ve správě úložiště v předchozích verzích Threema se ve výjimečných případech mohlo stát, že soubory (média) nebyly odstraněny úplně.
+
+
+Nejprve vytvořte zálohu pomocí iTunes; může dojít ke ztrátě dat!";
+"settings_orphaned_files_title" = "NEPOTŘEBNÉ SOUBORY";
+"settings_orphaned_files_button" = "Přesunout do koše";
+"settings_orphaned_files_footer" = "%@ z %@ souborů je nepotřebných.
+
+
+
+Přesuňte osamocené soubory do koše a ujistěte se, že vám v Threema nechybí žádné (mediální) soubory.
+";
+"settings_orphaned_files_footer_no_files" = "Neexistují žádné osiřelé soubory.";
+"settings_orphaned_files_bin_title" = "ODPADKOVÝ KOŠ";
+"settings_orphaned_files_bin_restore_button" = "Obnovte obsah koše";
+"settings_orphaned_files_bin_delete_button" = "Odstranit obsah koše";
+"settings_orphaned_files_bin_footer" = "V koši je %@ souborů (%@).
+
+
+
+Pokud vám v Threema nechybí žádné (mediální) soubory, vyprázdněte koš, abyste trvale odstranili osiřelé soubory.";
+"settings_orphaned_files_bin_footer_no_files" = "Koš je prázdný.";
+"settings_orphaned_files_bin_delete_conformation" = "Chcete trvale odstranit osiřelé soubory? Tuto akci nelze vrátit zpět.";
+
 // Threema calls settings
 "settings_threema_calls_enable_calls" = "Povolit hovory Threema";
 "settings_threema_calls_always_relay_calls" = "Vždy přesměrovávat hovory";
@@ -979,3 +1014,15 @@
 "back_to_media_selection" = "Zpět na obrazovku výběru médií";
 "remove_current_image_from_selected_images" = "Odebrat aktuální položku z výběru";
 "send_options" = "Více možností";
+"multiple_media_items" = "%d položky";
+"media_item" = "Jedna položka";
+"could_not_add_items_title" = "Položku nelze přidat";
+"could_not_add_all_items_title" = "Nelze přidat všechny položky";
+"one_media_item_could_not_be_processed" = "Jedna položka nemohla být zpracována a byla přeskočena.";
+"multiple_media_items_could_not_be_processed" = "%d položek nelze zpracovat a byly přeskočeny.";
+"processing_items_progress" = "Zpracovává se položka %d/%d";
+"item_too_large_title" = "Položka je moc velká";
+"maximum_file_size_exceeded" = "Maximální povolená velikost souboru je %@. Tento soubor je velký %@. Pokračujte odebráním souboru.";
+"back" = "Zpět";
+"sending_item" = "Odesílání položky";
+"send_as_file_title" = "Režim odesílání";

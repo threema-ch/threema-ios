@@ -28,7 +28,6 @@
 #import "LocationMessage.h"
 #import "FileMessageSender.h"
 #import "UTIConverter.h"
-#import "AudioMessageSender.h"
 
 #ifdef DEBUG
   static const DDLogLevel ddLogLevel = DDLogLevelVerbose;
@@ -64,23 +63,17 @@
             ;//nop
         }];
     } else if ([message isKindOfClass: [AudioMessage class]]) {
-//        AudioMessage *audioMessage = (AudioMessage *)message;
-//        NSData *data = [audioMessage.audio.data copy];
-//
-//        URLSenderItem *item = [URLSenderItem itemWithData:data
-//                                                 fileName:@"AudioMessage"
-//                                                     type:UTTYPE_AUDIO
-//                                               renderType:@0
-//                                               sendAsFile:true];
-//
-//        FileMessageSender *sender = [[FileMessageSender alloc] init];
-//        [sender sendItem:item inConversation:conversation requestId:nil];
-        
         AudioMessage *audioMessage = (AudioMessage *)message;
-        AudioMessageSender *sender = [[AudioMessageSender alloc] init];
-        
         NSData *data = [audioMessage.audio.data copy];
-        [sender startWithAudioData:data duration:audioMessage.duration inConversation:conversation requestId:nil];
+
+        URLSenderItem *item = [URLSenderItem itemWithData:data
+                                                 fileName:@"AudioMessage"
+                                                     type:UTTYPE_AUDIO
+                                               renderType:@0
+                                               sendAsFile:true];
+
+        FileMessageSender *sender = [[FileMessageSender alloc] init];
+        [sender sendItem:item inConversation:conversation requestId:nil];
         
     } else if ([message isKindOfClass: [ImageMessage class]]) {
         ImageMessage *imageMessage = (ImageMessage *)message;

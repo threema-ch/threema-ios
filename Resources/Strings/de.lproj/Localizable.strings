@@ -113,7 +113,7 @@
 "export_progress_label" = "%li / %li Nachrichten exportiert";
 "caption" = "Untertitel";
 "fileNotDownloaded" = "Datei wurde gelöscht oder nicht heruntergeladen.";
-"include_media_title" = "Medien (Fotos, Videos) als Anhänge mitsenden? Grosse Chats werden mehrere Dateien aufgeteilt.\n\nEin modernes ZIP Tool mit AES Unterstützung wird benötigt, um die Datei zu öffnen, z.B. 7-Zip oder The Unarchiver (Mac).";
+"include_media_title" = "Medien (Fotos, Videos) als Anhänge mitsenden?\n\nEin modernes ZIP Tool mit AES Unterstützung wird benötigt, um die Datei zu öffnen, z.B. 7-Zip oder The Unarchiver (Mac).";
 
 
 /* image sizes */
@@ -133,13 +133,13 @@
 "max_x_minutes" = "Max. %d Minuten";
 
 /* Sound names */
-"sound_none" = "Stumm";
+"sound_none" = "Keiner";
 "sound_default" = "Standard";
 "sound_silent" = "Nur Vibrieren";
 "sound_bamboo" = "Bambus";
 "sound_drum" = "Trommel";
 "sound_glass" = "Glas";
-"sound_incoming_message" = "Incoming message";
+"sound_incoming_message" = "Incoming Message";
 "sound_input" = "Eingabe";
 "sound_marimba1" = "Marimba 1";
 "sound_marimba2" = "Marimba 2";
@@ -257,11 +257,13 @@
 "record_audio" = "Tonaufnahme";
 "scan_qr" = "QR-Code scannen";
 "share_file" = "Datei senden";
-"send_item_photo" = "Bild anzeigen";
-"send_item_video" = "Video anzeigen";
-"send_items" = "%d Fotos/Videos anzeigen";
-"send_items_photo" = "%d Bilder anzeigen";
-"send_items_video" = "%d Videos anzeigen";
+"add_item_caption" = "Bildunterschrift hinzufügen";
+"add_items_caption" = "Bildunterschriften hinzufügen";
+"send_item_immediately_photo" = "Foto versenden";
+"send_item_immediately_video" = "Video versenden";
+"send_items_immediately" = "%d Fotos/Videos versenden";
+"send_items_immediately_photo" = "%d Fotos versenden";
+"send_items_immediately_video" = "%d Videos versenden";
 
 "record" = "Aufnehmen";
 "play" = "Abspielen";
@@ -311,7 +313,7 @@
 "group_clone_title" = "Gruppe klonen";
 "group_clone_message" = "Es wird eine Kopie der aktuellen Gruppe mit Ihnen als Administrator erstellt. Fortfahren?";
 
-"group name" = "Gruppen Name";
+"group name" = "Gruppenname";
 "existing groups" = "Bestehende Gruppen";
 "new group" = "Neue Gruppe";
 "edit group" = "Gruppe bearbeiten";
@@ -623,7 +625,9 @@
 
 /* VoIP Call */
 "call_mute" = "Stumm";
+"call_unmute" = "Stumm aufheben";
 "call_speaker" = "Lautsprecher";
+"call_earpiece" = "Ohrmuschel";
 "call_end" = "Auflegen";
 "call_camera_activate_button" = "Kamera aktivieren";
 "call_camera_deactivate_button" = "Kamera deaktivieren";
@@ -644,6 +648,7 @@
 "call_accept" = "Annehmen";
 "call_reject" = "Ablehnen";
 "call_hide_call" = "Anruf verbergen";
+"call_no_wifi" = "Anruf über Mobilfunknetz. Mehr erfahren…";
 
 "call_threema_title" = "Threema-Anruf starten";
 "call_callkit_button_title" = "Threema";
@@ -675,6 +680,9 @@
 
 "call_threema_video_in_chat_info_title" = "Neu: Videoanrufe";
 "call_threema_video_in_chat_info_description" = "Neben abhörsicheren Sprachanrufen tätigen Sie mit Threema jetzt auch Ende-zu-Ende-verschlüsselte Videoanrufe.";
+
+"call_threema_cellular_instead_of_wifi_title" = "Anruf über Mobilfunknetz";
+"call_threema_cellular_instead_of_wifi_text" = "Achtung: Dieser Anruf verursacht Datentransfer im Mobilfunknetz.";
 
 /* Privacy Policy */
 "privacy_policy_about" = "Threema schützt Ihre Privatsphäre so konsequent wie kein anderer Messenger. In unserer Datenschutzerklärung erfahren Sie mehr.";
@@ -900,6 +908,7 @@
 "settings_dev_mode" = "Dev Mode";
 
 "settings_advanced_flush_message_queue" = "Nachrichten-Warteschlange leeren";
+"settings_advanced_orphaned_files_cleanup" = "Verwaiste Dateien löschen";
 
 // Dev Mode
 "settings_devmode_quote_v2" = "Quote V2";
@@ -949,6 +958,25 @@
 "settings_notifications_masterDnd_startTime" = "Arbeitsbeginn";
 "settings_notifications_masterDnd_endTime" = "Arbeitsende";
 "settings_notifications_masterDnd_info" = "Ruhezeit aktiv";
+
+// Orphaned files delete
+"settings_orphaned_files_description" = "In früheren Threema-Versionen konnte es in seltenen Fällen vorkommen, dass beim Löschen von Daten über die Speicherverwaltung Medien und/oder Dateien aus Threema entfernt, jedoch nicht vollständig gelöscht wurden.
+
+Erstellen Sie ein iTunes-Backup, bevor Sie fortfahren; Datenverlust kann entstehen!";
+"settings_orphaned_files_title" = "VERWAISTE DATEIEN";
+"settings_orphaned_files_button" = "In den Papierkorb verschieben";
+"settings_orphaned_files_footer" = "%@ von %@ Dateien sind verwaist.
+
+Verschieben Sie die verwaisten Dateien in den Papierkorb, und überprüfen Sie, ob keine Medien und/oder Dateien in Threema fehlen.";
+"settings_orphaned_files_footer_no_files" = "Es sind keine verwaisten Dateien vorhanden.";
+"settings_orphaned_files_bin_title" = "PAPIERKORB";
+"settings_orphaned_files_bin_restore_button" = "Papierkorb-Inhalt wiederherstellen";
+"settings_orphaned_files_bin_delete_button" = "Daten in Papierkorb löschen";
+"settings_orphaned_files_bin_footer" = "Es befinden sich %@ Dateien (%@) im Papierkorb.
+
+Sofern keine Medien und/oder Dateien fehlen, leeren Sie den Papierkorb, um die verwaisten Dateien endgültig zu löschen.";
+"settings_orphaned_files_bin_footer_no_files" = "Der Papierkorb ist leer.";
+"settings_orphaned_files_bin_delete_conformation" = "Möchten Sie die verwaisten Dateien unwiderruflich löschen? Diese Aktion lässt sich nicht rückgängig machen.";
 
 // Threema calls settings
 "settings_threema_calls_enable_calls" = "Threema-Anrufe aktivieren";

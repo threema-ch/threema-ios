@@ -22,7 +22,7 @@ import Foundation
 
 /// Format and convert dates and time
 ///
-/// All methods are `static`, no initalization needed.
+/// All methods are `static`, no initialization needed.
 ///
 /// Formatters are cached to improve performance. Call `forceReinitialize()` to reset them.
 ///
@@ -166,13 +166,13 @@ public class DateFormatter: NSObject {
     ///
     /// - Parameter date: Date to format
     /// - Returns: Localized relative medium date string
-    private static func realtiveMediumStyleDate(_ date: Date) -> String {
-        if relativeMediumDateDateForamtter == nil {
-            relativeMediumDateDateForamtter = dateFormatterWith(date: .medium, andTime: .none)
-            relativeMediumDateDateForamtter?.doesRelativeDateFormatting = true
+    private static func relativeMediumStyleDate(_ date: Date) -> String {
+        if relativeMediumDateDateFormatter == nil {
+            relativeMediumDateDateFormatter = dateFormatterWith(date: .medium, andTime: .none)
+            relativeMediumDateDateFormatter?.doesRelativeDateFormatting = true
         }
         
-        return relativeMediumDateDateForamtter!.string(from: date)
+        return relativeMediumDateDateFormatter!.string(from: date)
     }
     
     
@@ -337,7 +337,7 @@ public class DateFormatter: NSObject {
     
     // MARK: - Relative custom formats
     
-    /// Localized realtive date
+    /// Localized relative date
     ///
     /// Localized text for today and yesterday, weekday, day and month for the rest of this calendar year. For previous years it also shows the year.
     ///
@@ -347,7 +347,7 @@ public class DateFormatter: NSObject {
     /// - aujourd’hui, hier, sam. 01 févr., ..., mar. 31 déc. 2019, sam. 01 févr. 2019  (fr_CH)
     ///
     /// - Parameter date: Date to format
-    /// - Returns: Localized realtive date or empty string if `date` is nil
+    /// - Returns: Localized relative date or empty string if `date` is nil
     @objc
     public static func relativeMediumDate(for date: Date?) -> String {
         guard let date = date else {
@@ -355,7 +355,7 @@ public class DateFormatter: NSObject {
         }
         
         if isDateInTodayOrYesterday(date) {
-            return realtiveMediumStyleDate(date)
+            return relativeMediumStyleDate(date)
         } else if isDateInThisCalendarYear(date) {
             return mediumWeekdayDayAndMonth(date)
         } else {
@@ -417,7 +417,7 @@ public class DateFormatter: NSObject {
     /// Example: 20200102-131415
     ///
     /// - Parameter date: Date to format
-    /// - Returns: Formated date or empty string if `date` is nil
+    /// - Returns: Formatted date or empty string if `date` is nil
     @objc
     public static func getDateForWeb(_ date: Date?) -> String {
         guard let date = date else {
@@ -426,7 +426,7 @@ public class DateFormatter: NSObject {
         
         if webDateFormatter == nil {
             webDateFormatter = Foundation.DateFormatter()
-            // Always ue this locale for locale independent formats (see https://nsdateformatter.com)
+            // Always use this locale for locale independent formats (see https://nsdateformatter.com)
             webDateFormatter?.locale = Locale(identifier: "en_US_POSIX")
             webDateFormatter?.dateFormat = "yyyyddMM-HHmmss"
         }
@@ -438,8 +438,8 @@ public class DateFormatter: NSObject {
     public static func getNowDateString() -> String {
         if nowDateFormatter == nil {
             nowDateFormatter = Foundation.DateFormatter()
-            webDateFormatter?.locale = Locale(identifier: "en_US_POSIX")
-            webDateFormatter?.dateFormat = "yyyyMMddHHmm"
+            nowDateFormatter?.locale = Locale(identifier: "en_US_POSIX")
+            nowDateFormatter?.dateFormat = "yyyyMMddHHmm"
         }
         
         return nowDateFormatter!.string(from: Date())
@@ -453,7 +453,7 @@ public class DateFormatter: NSObject {
     /// `totalSeconds` is not required as an inverse function.
     ///
     /// - Parameter totalSeconds: Seconds to transform
-    /// - Returns: String of format "01:02:03" with hour obmitted if it's zero
+    /// - Returns: String of format "01:02:03" with hour omitted if it's zero
     @objc
     public static func timeFormatted(_ totalSeconds: Int) -> String {
         let seconds = totalSeconds % 60
@@ -469,7 +469,7 @@ public class DateFormatter: NSObject {
     
     /// Converts time string into seconds
     ///
-    /// - Parameter timeFormatted: Time string with format "01:02:03" where the hour can be obmitted
+    /// - Parameter timeFormatted: Time string with format "01:02:03" where the hour can be omitted
     /// - Returns: Number of seconds
     public static func totalSeconds(_ timeFormatted: String) -> Int {
         // Convert components to `Int` or set to 0 otherwise
@@ -509,7 +509,7 @@ public class DateFormatter: NSObject {
         mediumDateShortTimeDateFormatter = nil
         longDateTimeDateFormatter = nil
         shortTimeDateFormatter = nil
-        relativeMediumDateDateForamtter = nil
+        relativeMediumDateDateFormatter = nil
         
         shortDayMonthAndYearDateFormatter = nil
         mediumWeekdayDayMonthAndYearDateFormatter = nil
@@ -525,7 +525,7 @@ public class DateFormatter: NSObject {
         locale = Locale.current
     }
     
-    // Note: If you add a new property reset it in `foreReinitalize()`.
+    // Note: If you add a new property reset it in `forceReinitialize()`.
     
     private static var shortDateTimeDateFormatter: Foundation.DateFormatter?
     private static var shortDateMediumTimeDateFormatter: Foundation.DateFormatter?
@@ -533,7 +533,7 @@ public class DateFormatter: NSObject {
     private static var mediumDateShortTimeDateFormatter: Foundation.DateFormatter?
     private static var longDateTimeDateFormatter: Foundation.DateFormatter?
     private static var shortTimeDateFormatter: Foundation.DateFormatter?
-    private static var relativeMediumDateDateForamtter: Foundation.DateFormatter?
+    private static var relativeMediumDateDateFormatter: Foundation.DateFormatter?
     
     private static var shortDayMonthAndYearDateFormatter: Foundation.DateFormatter?
     private static var mediumWeekdayDayMonthAndYearDateFormatter: Foundation.DateFormatter?
@@ -570,7 +570,7 @@ public class DateFormatter: NSObject {
         return dateFormatter
     }
     
-    // MARK: - Private realtive date helper
+    // MARK: - Private relative date helper
     
     /// Checks if `date` is in today or yesterday
     ///
@@ -583,7 +583,7 @@ public class DateFormatter: NSObject {
     /// Checks if `date` is in this calendar year
     ///
     /// - Parameter date: Date to check
-    /// - Returns: `True` if the date is in this calenadar year, `False` otherwise
+    /// - Returns: `True` if the date is in this calendar year, `False` otherwise
     private static func isDateInThisCalendarYear(_ date: Date) -> Bool {
         var dateComponents = Calendar.current.dateComponents([.year], from: Date())
         
@@ -599,7 +599,7 @@ public class DateFormatter: NSObject {
     /// Checks if `date` is younger than one year
     ///
     /// - Parameter date: Date to check
-    /// - Returns: `False` if the date is a year ago or older, or not determable in the current calendar, otherwise `True`
+    /// - Returns: `False` if the date is a year ago or older, or not determinable in the current calendar, otherwise `True`
     private static func isDateInLastYear(_ date: Date) -> Bool {
         var dateComponents = Calendar.current.dateComponents([.year, .month, .day], from: Date())
         
@@ -627,7 +627,7 @@ public class DateFormatter: NSObject {
     /// i.e. if today is _Wednesday_ this function returns `true` for all dates up to and including last _Thursday_
     ///
     /// - Parameter date: Date to check
-    /// - Returns: `False` if the date is in last 6 days, or not determable in the current calendar, otherwise `True`
+    /// - Returns: `False` if the date is in last 6 days, or not determinable in the current calendar, otherwise `True`
     private static func isDateInLastSixDays(_ date: Date) -> Bool {
         var dateComponents = Calendar.current.dateComponents([.year, .month, .day], from: Date())
         

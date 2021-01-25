@@ -64,7 +64,7 @@ typedef enum : NSUInteger {
     if (@available(iOS 13.0, *)) {
         // iOS 13 and 13.1 have a bug. When searchbar is active, the navigationitem is not available
         // Bug should be fixed in 13.2
-        self.searchController.hidesNavigationBarDuringPresentation = true;
+        self.searchController.hidesNavigationBarDuringPresentation = false;
         self.navigationController.view.backgroundColor = [Colors backgroundBaseColor];
         [self setModalInPresentation:true];
     } else {

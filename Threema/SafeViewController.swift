@@ -329,6 +329,15 @@ extension SafeViewController {
     }
 }
 
+extension SafeViewController {
+    override func dismissKeyboard() {
+        super.dismissKeyboard()
+        
+        passwordField.resignFirstResponder()
+        passwordAgainField.resignFirstResponder()
+    }
+}
+
 extension UIViewController {
     func hideKeyboardWhenTappedAround() {
         

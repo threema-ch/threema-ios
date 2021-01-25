@@ -39,6 +39,7 @@
 #import "ActivityUtil.h"
 #import "Threema-Swift.h"
 #import "ChatCallMessageCell.h"
+#import "FileMessagePreview.h"
 
 
 static NSDictionary *linkAttributes = nil;
@@ -428,9 +429,17 @@ static ColorTheme currentTheme;
             }
         }
         else if ([quotedMessage isKindOfClass:[FileMessage class]]) {
-            if (((FileMessage *) quoteMessage).thumbnail != nil) {
+            if (((FileMessage *) quotedMessage).thumbnail != nil) {
                 quoteImagePreview.hidden = false;
-                quoteImagePreview.image = ((FileMessage *)quoteMessage).thumbnail.uiImage;
+                quoteImagePreview.image = ((FileMessage *)quotedMessage).thumbnail.uiImage;
+            }
+            else if ([((FileMessage *) quotedMessage) renderFileAudioMessage] == true) {
+                quoteIcon.hidden = false;
+                quoteIcon.image = [[BundleUtil imageNamed:@"ActionMicrophone"] imageWithTint:[Colors fontQuoteText]];
+            }
+            else {
+                quoteIcon.hidden = false;
+                quoteIcon.image = [[FileMessagePreview thumbnailForFileMessage:((FileMessage *) quotedMessage)] imageWithTint:[Colors fontQuoteText]];
             }
         }
         else if ([quotedMessage isKindOfClass:[AudioMessage class]]) {
@@ -587,7 +596,7 @@ static ColorTheme currentTheme;
                                         }
                                     }
                                     else if ([bm isKindOfClass:[FileMessage class]]) {
-                                        if ([[((FileMessage *)bm) getCaption] isEqualToString:origQuotedText]) {
+                                        if ([((FileMessage *)bm).caption isEqualToString:origQuotedText]) {
                                             foundMessage = bm;
                                             *stop = YES;
                                         }

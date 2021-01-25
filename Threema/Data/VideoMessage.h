@@ -24,9 +24,8 @@
 #import "ImageData.h"
 #import "VideoData.h"
 #import "BlobData.h"
-#import "ExternalStorageInfo.h"
 
-@interface VideoMessage : BaseMessage <BlobData, ExternalStorageInfo>
+@interface VideoMessage : BaseMessage <BlobData>
 
 @property (nonatomic, retain) NSNumber *progress;
 @property (nonatomic, retain) NSData *videoBlobId;

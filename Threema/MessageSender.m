@@ -200,10 +200,11 @@
         conversationOwnContext = (Conversation *)[entityManager.entityFetcher getManagedObjectById:conversation.objectID];
         newMessage = [entityManager.entityCreator textMessageForConversation:conversationOwnContext];
         
-        newMessage.text = [[UserSettings sharedUserSettings] quoteV2Active] ? remainingBody : message;
-        
         if (quoteMessageId != nil) {
             newMessage.quotedMessageId = quoteMessageId;
+            newMessage.text = remainingBody;
+        } else {
+            newMessage.text = message;
         }
         
         if (requestId != nil) {

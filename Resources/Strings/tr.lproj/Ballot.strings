@@ -38,6 +38,9 @@
 "ballot_description_multiplechoice" = "Anket katılımcıları tek bir seçimmi yoksa daha fazla seçim yapabilirmi bu kısmı seçiniz.";
 
 "ballot_vote" = "Oy";
+"ballot_votes_count" = "%@ Oy";
+"ballot_vote_selected" = "Seçilmiş";
+"ballot_vote_not_selected" = "Seçili değil";
 "ballot_close" = "Anketi Kapat";
 "ballot_close_ack" = "Anketi Kapatıp sonuçları katılımcılara göstermek istermisiniz?";
 "ballot_got_votes_count" = "Alınan %1$i ile arasında %2$i Oy";

@@ -20,24 +20,25 @@
 
 #import <Foundation/Foundation.h>
 #import <CoreData/CoreData.h>
+#import "ExternalStorageInfo.h"
 
-@interface ImageData : NSManagedObject
+@interface ImageData : NSManagedObject <ExternalStorageInfo>
 
-@property (nonatomic, retain) NSNumber * height;
-@property (nonatomic, retain) NSNumber * width;
-@property (nonatomic, retain) NSData * data;
+@property (nonatomic, retain, nonnull) NSNumber * height;
+@property (nonatomic, retain, nonnull) NSNumber * width;
+@property (nonatomic, retain, nullable) NSData * data;
 
-@property (nonatomic, readonly) UIImage *uiImage;
+@property (nonatomic, readonly, nullable) UIImage *uiImage;
 
 #pragma mark - custom methods
 
-- (NSString *)getCaption;
+- (nullable NSString *)getCaption;
 
-- (void)setCaption:(NSString *)caption;
+- (void)setCaption:(nonnull NSString *) caption;
 
-- (NSDictionary *)getMetadata;
+- (nullable NSDictionary *)getMetadata;
 
-+ (NSString *)getCaptionForImageData:(NSData *)imageData;
-+ (NSData *)addCaption:(NSString *)caption toImageData:(NSData *)imageData;
++ (nullable NSString *)getCaptionForImageData:(nonnull NSData *)imageData;
++ (nullable NSData *)addCaption:(nonnull NSString *)caption toImageData:(nonnull NSData *)imageData;
 
 @end

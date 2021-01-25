@@ -43,8 +43,8 @@ class DateFormatterTests_de_DE: XCTestCase {
     let expectedGetFullDateFor_de_DE = "Sa. 01. Feb. 2020, 13:14"
     
     let expectedRelativeMediumDateYesterday_de_DE = "Gestern"
-    let expectedRelativeMediumDateThisYear_de_DE = "Mi. 20. Mai"
-    let expectedRelativeMediumDateLastCalendarYear_de_DE = "Di. 31. Dez. 2019"
+    let expectedRelativeMediumDateThisYear_de_DE = " 02. Jan."
+    let expectedRelativeMediumDateLastCalendarYear_de_DE = " 31. Dez. "
     let expectedRelativeMediumDateMoreThanAYearAgo_de_DE = "Fr. 01. Feb. 2019"
     
     let expectedAccessibilityDateTime_de_DE = "1. Februar 2020, 13:14"
@@ -152,28 +152,26 @@ class DateFormatterTests_de_DE: XCTestCase {
         XCTAssertEqual(actual, expectedRelativeMediumDateYesterday_de_DE)
     }
     
-    // This test will fail each May.
-    // 1. Update `DateFormatterTests.testDateThisYear` by increasing the year by 1
-    // 2. Update expected string by increasing year by 1
     func testRelativeMediumDateThisYearWithReset() {
+        let expected = "\(DateFormatterTests.formattedShortWeekday(DateFormatterTests.testDateThisYear, localeIdentifier))\(expectedRelativeMediumDateThisYear_de_DE)"
+
         DateFormatter.forceReinitialize()
         DateFormatter.locale = Locale(identifier: localeIdentifier)
         
         let actual = DateFormatter.relativeMediumDate(for: DateFormatterTests.testDateThisYear)
         
-        XCTAssertEqual(actual, expectedRelativeMediumDateThisYear_de_DE)
+        XCTAssertEqual(actual, expected)
     }
     
-    // This test will fail each New Year.
-    // 1. Update `DateFormatterTests.testDateLastCalendarYear` by increasing the year by 1
-    // 2. Update expected string by increasing year by 1
     func testRelativeMediumDateLastCalendarYear() {
+        let expected = "\(DateFormatterTests.formattedShortWeekday(DateFormatterTests.testDateLastCalendarYear, localeIdentifier))\(expectedRelativeMediumDateLastCalendarYear_de_DE)\(DateFormatterTests.formattedFullYear(DateFormatterTests.testDateLastCalendarYear, localeIdentifier))"
+
         let actual = DateFormatter.relativeMediumDate(for: DateFormatterTests.testDateLastCalendarYear)
         
-        XCTAssertEqual(actual, expectedRelativeMediumDateLastCalendarYear_de_DE)
+        XCTAssertEqual(actual, expected)
     }
     
-    func testRelativeMediumDateLastYear() {
+    func testRelativeMediumDateMoreThanAYearAgo() {
         let actual = DateFormatter.relativeMediumDate(for: DateFormatterTests.testDateMoreThanAYearAgo)
         
         XCTAssertEqual(actual, expectedRelativeMediumDateMoreThanAYearAgo_de_DE)

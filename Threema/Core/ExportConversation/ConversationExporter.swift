@@ -20,6 +20,7 @@
 
 import Foundation
 import ZipArchive
+import MBProgressHUD
 
 class ConversationExporter: NSObject, PasswordCallback {
     
@@ -283,15 +284,17 @@ extension ConversationExporter {
     
     private func incrementProgress() {
         DispatchQueue.main.async(execute: {
-            guard let hud = MBProgressHUD(for: self.viewController!.view) else {
+            guard let hud = MBProgressHUD.forView(self.viewController!.view) else {
                 return
             }
-            if hud.progressObject != nil {
-                guard let po = hud.progressObject else {
-                    return
-                }
-                po.completedUnitCount += 1
-                hud.label.text = String(format: NSLocalizedString("export_progress_label", comment: ""), po.completedUnitCount, po.totalUnitCount)
+            
+            guard let po = hud.progressObject else {
+                return
+            }
+            po.completedUnitCount += 1
+            hud.label.text = String(format: NSLocalizedString("export_progress_label", comment: ""), po.completedUnitCount, po.totalUnitCount)
+            if #available(iOS 13.0, *) {
+                hud.label.font = UIFont.monospacedSystemFont(ofSize: hud.label.font.pointSize, weight: .semibold)
             }
         })
     }
@@ -517,9 +520,8 @@ extension ConversationExporter {
     
     func initProgress(totalWork: Int64) {
         DispatchQueue.main.async(execute: {
-            guard let hud = MBProgressHUD(for: self.viewController!.view) else {
-                return
-            }
+            MBProgressHUD.hide(for: self.viewController!.view, animated: true)
+            let hud = MBProgressHUD.showAdded(to: self.viewController!.view, animated: true)
             
             if hud.progressObject == nil {
                 hud.mode = .annularDeterminate

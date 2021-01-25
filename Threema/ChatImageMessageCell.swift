@@ -315,7 +315,12 @@ extension ChatImageMessageCell {
                     var menuItems = super.contextMenuItems()!
                     let saveImage = UIImage.init(systemName: "square.and.arrow.down.fill", compatibleWith: self.traitCollection)
                     let saveAction = UIAction.init(title: BundleUtil.localizedString(forKey: "save"), image: saveImage, identifier: nil, discoverabilityTitle: nil, attributes: [], state: .off) { (action) in
-                        AlbumManager.shared.save(image: imageMessage.image.uiImage)
+                        if let image = imageMessage.image, let uiImage = image.uiImage {
+                            AlbumManager.shared.save(image: uiImage)
+                        } else {
+                            DDLogError("Could not save image because image or image.uiImage was nil")
+                        }
+                        
                     }
                     
                     if self.message.isOwn.boolValue == true || self.chatVc.conversation.isGroup() == true {

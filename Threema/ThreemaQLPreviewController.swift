@@ -23,8 +23,6 @@ import QuickLook
 
 class ThreemaQLPreviewController : QLPreviewController {
     
-    var toolbars: [UIView] = []
-    
     var observations : [NSKeyValueObservation] = []
     
     var mdmSetup: MDMSetup = MDMSetup.init(setup: false)
@@ -32,52 +30,49 @@ class ThreemaQLPreviewController : QLPreviewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        if (mdmSetup.disableShareMedia() == true) {
+        if mdmSetup.disableShareMedia() {
             navigationItem.setRightBarButton(UIBarButtonItem(), animated: false)
         }
     }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        
-        if (mdmSetup.disableShareMedia() == true) {
-            navigationController?.toolbar.isHidden = true
-            
-            if let navigationToobar = navigationController?.toolbar {
-                let observation = navigationToobar.observe(\.isHidden) {[weak self] (changedToolBar, change) in
-                    
-                    if self?.navigationController?.toolbar.isHidden == false {
-                        self?.navigationController?.toolbar.isHidden = true
-                    }
-                }
+        removeToolbarItems()
+    }
+    
+    private func removeToolbarItems() {
+        if (mdmSetup.disableShareMedia()) {
+            if let navigationToolbar = navigationController?.toolbar {
+                navigationToolbar.isHidden = true
+                let observation = navigationToolbar.observe(\.isHidden, changeHandler: observeNavigationToolbarHidden)
                 observations.append(observation)
             }
             
-            toolbars = toolbarsInSubviews(forView: view)
-            
-            for toolbar in toolbars {
-                
+            for toolbar in toolbarsInSubviews(forView: view) {
                 toolbar.isHidden = true
-                
-                let observation = toolbar.observe(\.isHidden) { (changedToolBar, change) in
-                    if let isHidden = change.newValue,
-                        isHidden == false {
-                        changedToolBar.isHidden = true
-                    }
-                }
-                
+                let observation = toolbar.observe(\.isHidden, changeHandler: observeNavigationToolbarSubviewHidden)
                 observations.append(observation)
             }
         }
     }
     
+    func observeNavigationToolbarHidden(changed : UIView, change :  NSKeyValueObservedChange<Bool>) {
+        if self.navigationController?.toolbar.isHidden == false {
+            self.navigationController?.toolbar.isHidden = true
+        }
+
+    }
+    
+    func observeNavigationToolbarSubviewHidden(changed : UIView, change :  NSKeyValueObservedChange<Bool>) {
+        changed.isHidden = true
+    }
+    
     private func toolbarsInSubviews(forView view: UIView) -> [UIView] {
-        var toolbars: [UIView] = []
-        
+        if view is UIToolbar {
+            return [view]
+        }
+        var toolbars = [UIView]()
         for subview in view.subviews {
-            if subview is UIToolbar {
-                toolbars.append(subview)
-            }
             toolbars.append(contentsOf: toolbarsInSubviews(forView: subview))
         }
         return toolbars

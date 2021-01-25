@@ -23,33 +23,30 @@
 #import "BaseMessage.h"
 #import "FileData.h"
 #import "BlobData.h"
-#import "ExternalStorageInfo.h"
 
 @class ImageData;
 
-@interface FileMessage : BaseMessage <BlobData, ExternalStorageInfo>
+@interface FileMessage : BaseMessage <BlobData>
 
-@property (nonatomic, retain) NSData * encryptionKey;
-@property (nonatomic, retain) NSData * blobId;
-@property (nonatomic, retain) NSData * blobThumbnailId;
-@property (nonatomic, retain) NSString * fileName;
-@property (nonatomic, retain) NSNumber * fileSize;
-@property (nonatomic, retain) NSNumber * progress;
-@property (nonatomic, retain) NSNumber * type;
-@property (nonatomic, retain) NSString * mimeType;
-@property (nonatomic, retain) FileData *data;
-@property (nonatomic, retain) ImageData *thumbnail;
-@property (nonatomic, retain) NSString * json;
+@property (nonatomic, retain, nullable) NSData * encryptionKey;
+@property (nonatomic, retain, nullable) NSData * blobId;
+@property (nonatomic, retain, nullable) NSData * blobThumbnailId;
+@property (nonatomic, retain, nullable) NSString * fileName;
+@property (nonatomic, retain, nullable) NSNumber * fileSize;
+@property (nonatomic, retain, nullable) NSNumber * progress;
+@property (nonatomic, retain, nullable) NSNumber * type;
+@property (nonatomic, retain, nullable) NSString * mimeType;
+@property (nonatomic, retain, nullable) FileData *data;
+@property (nonatomic, retain, nullable) ImageData *thumbnail;
+@property (nonatomic, retain, nullable) NSString * json;
 
 // not stored in core data
-@property (nonatomic, retain) NSString *caption;
-@property (nonatomic, retain) NSString *correlationId;
-@property (nonatomic, retain) NSString *mimeTypeThumbnail;
-@property (nonatomic, retain) NSNumber *duration;
-@property (nonatomic, retain) NSNumber *height;
-@property (nonatomic, retain) NSNumber *width;
-
-- (NSString *)getCaption;
+@property (nonatomic, retain, nullable) NSString *caption;
+@property (nonatomic, retain, nullable) NSString *correlationId;
+@property (nonatomic, retain, nullable) NSString *mimeTypeThumbnail;
+@property (nonatomic, retain, nullable) NSNumber *duration;
+@property (nonatomic, retain, nullable) NSNumber *height;
+@property (nonatomic, retain, nullable) NSNumber *width;
 
 - (NSURL *)tmpURL:(NSString *)tmpFileName;
 
@@ -70,8 +67,7 @@
 
 - (BOOL)shouldShowCaption;
 
-- (NSNumber *)getDuration;
-- (NSNumber *)getHeight;
-- (NSNumber *)getWidth;
+- (BOOL)thumbnailDownloaded;
+- (BOOL)dataDownloaded;
 
 @end

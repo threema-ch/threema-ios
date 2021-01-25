@@ -20,6 +20,7 @@
 
 import Foundation
 import WebKit
+import MBProgressHUD
 
 class ThreemaWorkViewController: ThemedViewController {
     

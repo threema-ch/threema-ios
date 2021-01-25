@@ -162,22 +162,7 @@ class PPOptionsViewController: UITableViewController {
             
             if indexPath.row == specifiedRow && (!config.showReplacementOptionInLandscape() || assetManager.isUnauthorizedAndCameraAvailable()) {
                 if selctionCount > 0 && !config.showOptionsWhenAssetIsSelected {
-                    
-                    if selctionCount == 1 {
-                        if (onlyPhotosSelected) {
-                            cell.textLabel?.text = NSLocalizedString("send_item_photo", comment: "")
-                        } else {
-                            cell.textLabel?.text = NSLocalizedString("send_item_video", comment: "")
-                        }
-                    } else {
-                        if (onlyPhotosSelected) {
-                            cell.textLabel?.text = String.localizedStringWithFormat(NSLocalizedString("send_items_photo", comment: ""), selctionCount)
-                        } else if (onlyVideosSelected) {
-                            cell.textLabel?.text = String.localizedStringWithFormat(NSLocalizedString("send_items_video", comment: ""), selctionCount)
-                        } else {
-                            cell.textLabel?.text = String.localizedStringWithFormat(NSLocalizedString("send_items", comment: ""), selctionCount)
-                        }
-                    }
+                    cell.textLabel?.text = NSLocalizedString(selctionCount == 1 ? "add_item_caption" : "add_items_caption", comment: "")
                 } else {
                     if config.useOwnSnapButton && config.ownSnapButtonText != nil {
                         cell.textLabel?.text = config.ownSnapButtonText
@@ -206,6 +191,23 @@ class PPOptionsViewController: UITableViewController {
                 }
                 else if indexPath.row == specifiedRow + 1 && selctionCount > 0 && !config.showOptionsWhenAssetIsSelected && config.showAdditionalOptionWhenAssetIsSelected && config.additionalOptionText != nil {
                     cell.textLabel?.text = config.additionalOptionText
+                    /***** BEGIN THREEMA MODIFICATION: Use custom text for additional option *********/
+                    if selctionCount == 1 {
+                        if (onlyPhotosSelected) {
+                            cell.textLabel?.text = NSLocalizedString("send_item_immediately_photo", comment: "")
+                        } else {
+                            cell.textLabel?.text = NSLocalizedString("send_item_immediately_video", comment: "")
+                        }
+                    } else {
+                        if (onlyPhotosSelected) {
+                            cell.textLabel?.text = String.localizedStringWithFormat(NSLocalizedString("send_items_immediately_photo", comment: ""), selctionCount)
+                        } else if (onlyVideosSelected) {
+                            cell.textLabel?.text = String.localizedStringWithFormat(NSLocalizedString("send_items_immediately_video", comment: ""), selctionCount)
+                        } else {
+                            cell.textLabel?.text = String.localizedStringWithFormat(NSLocalizedString("send_items_immediately", comment: ""), selctionCount)
+                        }
+                    }
+                    /***** END THREEMA MODIFICATION: Use custom text for additional option *********/
                 } else {
                     let row = config.showReplacementOptionInLandscape() || assetManager.isUnauthorizedAndCameraAvailable() ? indexPath.row - 2 : indexPath.row - 1
                     cell.textLabel?.text = options[row].title

@@ -173,6 +173,9 @@ public class PPAssetsActionHelper: NSObject {
         config.tintColor = Colors.main()
         config.tableBackground = Colors.background()
         
+        config.showAdditionalOptionWhenAssetIsSelected = true
+        config.additionalOptionText = BundleUtil.localizedString(forKey: "send_immediately_text")
+        
         let assetsPicker = PPAssetsActionController(with: options, aConfig: config)
         assetsPicker.delegate = self
         return assetsPicker

@@ -555,10 +555,14 @@ public class WebAbstractMessage: NSObject {
                         let conversation = message.conversation
                         if (conversation!.isGroup()) {
                             let key = message.sender.identity + message.id.hexEncodedString()
-                            readNotificationsKeys.append(key)
+                            for stage in PendingMessage.NotificationStage.allCases {
+                                readNotificationsKeys.append(key + "-\(stage)")
+                            }
                         } else {
                             let key = message.conversation.contact.identity + message.id.hexEncodedString()
-                            readNotificationsKeys.append(key)
+                            for stage in PendingMessage.NotificationStage.allCases {
+                                readNotificationsKeys.append(key + "-\(stage)")
+                            }
                         }
                         foundMessageId = true
                     }
@@ -568,19 +572,19 @@ public class WebAbstractMessage: NSObject {
                     if !baseMessage!.conversation.isGroup() {
                         MessageSender.sendReadReceipt(forMessages: readReceiptQueue, toIdentity: baseMessage!.conversation.contact.identity, async: true, quickReply: false)
                     }
-//                    DispatchQueue.main.sync {
-                        entityManager.performSyncBlockAndSafe({
-                            for message in readReceiptQueue {
-                                message.read = NSNumber(value: true)
-                                message.readDate = Date()
-                                let unreadCount: Int = unreadMessages.count - readReceiptQueue.count
-                                conversation!.unreadMessageCount = NSNumber.init(value: unreadCount)
-                            }
-                        })
-                        
+                    entityManager.performSyncBlockAndSafe({
+                        for message in readReceiptQueue {
+                            message.read = NSNumber(value: true)
+                            message.readDate = Date()
+                            let unreadCount: Int = unreadMessages.count - readReceiptQueue.count
+                            conversation!.unreadMessageCount = NSNumber.init(value: unreadCount)
+                        }
+                    })
+                    DispatchQueue.main.sync {
                         let center = UNUserNotificationCenter.current()
+                        center.removePendingNotificationRequests(withIdentifiers: readNotificationsKeys)
                         center.removeDeliveredNotifications(withIdentifiers: readNotificationsKeys)
-//                    }
+                    }
                 } else {
                     requestMessage.ack = WebAbstractMessageAcknowledgement.init(requestMessage.requestId, false, "alreadyRead")
                 }

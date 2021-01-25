@@ -34,6 +34,8 @@ If you find a security issue in Threema, please follow responsible disclosure an
 
 This source code repository will be updated for every public non-beta release. There will be one commit per released version.
 
+Commits are signed using PGP. See [SECURITY.md](SECURITY.md) for more information.
+
 
 ## <a name="license-checks"></a>License Checks
 
@@ -85,7 +87,7 @@ To get started you need a [Mac](https://www.apple.com/mac/), [Xcode](https://dev
    ./scripts/build.sh --dependencies
    ```
 
-   This checks out and builds Carthage dependencies, and downloads debug and release WebRTC binaries if they are missing. (The script uses a workaround for limitations of [Carthage with Xcode 12](https://github.com/Carthage/Carthage/blob/master/Documentation/Xcode12Workaround.md). If you want to build WebRTC yourself see [BUILD_WEBRTC.md](BUILD_WEBRTC.md).)
+   This checks out and builds Carthage dependencies, and downloads debug & release WebRTC binaries and SaltyRTC if they are missing. (The script uses a workaround for limitations of [Carthage with Xcode 12](https://github.com/Carthage/Carthage/blob/master/Documentation/Xcode12Workaround.md). If you want to build WebRTC yourself see [BUILD_WEBRTC.md](BUILD_WEBRTC.md).)
 
 ### 2. Setup Project
 
@@ -168,3 +170,5 @@ Threema for iOS is licensed under the GNU Affero General Public License v3.
     along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 The full license text can be found in [`LICENSE.txt`](LICENSE.txt).
+
+If you have questions about the use of self-compiled apps or the license in general, feel free to [contact us](mailto:opensource@threema.ch). We are publishing the source code in good faith, with transparency being the main goal. By having users pay for the development of the app, we can ensure that our goals sustainably align with the goals of our users: Great privacy and security, no ads, no collection of user data!

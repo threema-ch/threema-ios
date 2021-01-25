@@ -148,7 +148,7 @@ class DbLoadTests: XCTestCase {
                         let message: FileMessage = (entityManager?.entityCreator.fileMessage(for: conversation))!
                         message.data = dbFile
                         message.fileName = "Test.pdf"
-                        message.fileSize = NSNumber(integerLiteral: dbFile.data.count)
+                        message.fileSize = NSNumber(integerLiteral: dbFile.data!.count)
                         message.mimeType = "application/pdf"
                         message.type = NSNumber(integerLiteral: 0);
                         message.date = date
@@ -254,6 +254,51 @@ class DbLoadTests: XCTestCase {
         self.measure {
             // Put the code you want to measure the time of here.
         }
+    }
+    
+    func testLoadImageFileMessages() {
+        var conversation: Conversation? = nil
+        
+        let entityManager = EntityManager(forBackgroundProcess: false)
+        entityManager?.performSyncBlockAndSafe({
+            if let contact = entityManager?.entityFetcher?.contact(forId: "ECHOECHO") {
+                conversation = (entityManager?.conversation(for: contact, createIfNotExisting: true))!
+            }
+        })
+        
+        for i in 0..<1000 {
+            print("\(i)/1000")
+            let testBundle: Bundle = Bundle(for: DbLoadTests.self)
+            let testImageUrl = testBundle.url(forResource: "Bild-1-0", withExtension: "jpg")
+            let testImageData = try? Data(contentsOf: testImageUrl!)
+            
+            loadImage(with: testImageData!, conversation!, entityManager!)
+        }
+    }
+    
+    func loadImage(with imageData : Data, _ conversation : Conversation, _ entityManager : EntityManager) {
+        
+        entityManager.performSyncBlockAndSafe({
+            let dbFile: FileData = (entityManager.entityCreator.fileData())!
+            dbFile.data = imageData
+            
+            let thumbnailFile : ImageData = entityManager.entityCreator.imageData()!
+            thumbnailFile.data = MediaConverter.getThumbnailFor(UIImage(data: imageData))?.jpegData(compressionQuality: 1.0)
+            
+            let message: FileMessage = (entityManager.entityCreator.fileMessage(for: conversation))!
+            message.data = dbFile
+            message.thumbnail = thumbnailFile
+            message.fileName = "Bild.jpeg"
+            message.fileSize = NSNumber(integerLiteral: dbFile.data!.count)
+            message.mimeType = "image/jpeg"
+            message.type = NSNumber(integerLiteral: 1);
+            message.date = Date(timeIntervalSinceReferenceDate: TimeInterval(-1 * Int.random(in: 0...223456789)))
+            message.sender = conversation.contact
+            message.sent = true
+            message.delivered = true
+            message.read = true
+            message.remoteSentDate = Date()
+        })
     }
 
 }

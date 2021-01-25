@@ -21,7 +21,7 @@
 #import "SupportViewController.h"
 #import "MyIdentityStore.h"
 #import "Utils.h"
-#import "MBProgressHUD.h"
+#import <MBProgressHUD/MBProgressHUD.h>
 #import "BundleUtil.h"
 
 @interface SupportViewController ()

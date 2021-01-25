@@ -21,6 +21,7 @@
 import Foundation
 import WebRTC
 import ThreemaFramework
+import CocoaLumberjackSwift
 
 class CallViewController: UIViewController {
     @IBOutlet private weak var backgroundImage: UIImageView!
@@ -33,6 +34,7 @@ class CallViewController: UIViewController {
     @IBOutlet private weak var rejectButton: UIButton!
     
     @IBOutlet private weak var hideButton: UIButton!
+    @IBOutlet private weak var cellularWarningButton: UIButton!
     @IBOutlet private weak var timerLabel: UILabel!
     
     @IBOutlet private weak var localVideoView: UIView!
@@ -79,6 +81,20 @@ class CallViewController: UIViewController {
             }
         }
     }
+    var isRemoteVideoPortrait: Bool = false
+    var shouldShowCellularCallWarning: Bool = false  {
+        didSet {
+            DispatchQueue.main.async {
+                if let warningButton = self.cellularWarningButton, warningButton.isHidden == self.shouldShowCellularCallWarning {
+                    warningButton.isHidden = !self.shouldShowCellularCallWarning
+                }
+            }
+            if self.shouldShowCellularCallWarning {
+                self.playCellularCallWarningSound()
+            }
+        }
+    }
+    
     private var statsTimer: Timer?
     
     private var useBackCamera: Bool = false
@@ -91,13 +107,19 @@ class CallViewController: UIViewController {
     private var cameraDisabledShowcase: MaterialShowcase?
     
     private var didRotateDevice: Bool = false
+    
+    private var audioPlayer: AVAudioPlayer?
+    
+    private var audioRouteChangeObserver: NSObjectProtocol?
         
     required init?(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)
     }
-    
+        
     deinit {
-        NotificationCenter.default.removeObserver(self)
+        if let observer = audioRouteChangeObserver {
+            NotificationCenter.default.removeObserver(observer)
+        }
     }
     
     override func viewDidLoad() {
@@ -105,68 +127,64 @@ class CallViewController: UIViewController {
         
         modalPresentationCapturesStatusBarAppearance = true
         
-        muteButton.accessibilityLabel = BundleUtil.localizedString(forKey: "call_mute")
-        speakerButton.accessibilityLabel = BundleUtil.localizedString(forKey: "call_speaker")
-        endButton.accessibilityLabel = BundleUtil.localizedString(forKey: "call_end")
-        acceptButton.accessibilityLabel = BundleUtil.localizedString(forKey: "call_accept")
-        rejectButton.accessibilityLabel = BundleUtil.localizedString(forKey: "call_reject")
-        hideButton.accessibilityLabel = BundleUtil.localizedString(forKey: "call_hide_call")
+        cellularWarningButton.isHidden = true
         
-        cameraButton.accessibilityLabel = BundleUtil.localizedString(forKey: self.isLocalVideoActive ? "call_camera_deactivate_button" : "call_camera_activate_button")
-        cameraSwitchButton.accessibilityLabel = BundleUtil.localizedString(forKey: "call_camera_switch_to_back_button")
-        
-        NotificationCenter.default.addObserver(forName: AVAudioSession.routeChangeNotification, object: nil, queue: nil) { (n) in
-            DispatchQueue.main.async {
-                let currentRoute = AVAudioSession.sharedInstance().currentRoute
-                
-                for output in currentRoute.outputs {
-                    if self.isBeingDismissed {
-                        UIDevice.current.isProximityMonitoringEnabled = false
+        audioRouteChangeObserver = NotificationCenter.default.addObserver(forName: AVAudioSession.routeChangeNotification, object: nil, queue: .main) { [weak self] n in
+            guard let self = self else { return }
+            let currentRoute = AVAudioSession.sharedInstance().currentRoute
+            
+            for output in currentRoute.outputs {
+                if self.isBeingDismissed {
+                    UIDevice.current.isProximityMonitoringEnabled = false
+                } else {
+                    if output.portType == AVAudioSession.Port.builtInReceiver {
+                        if UserSettings.shared()?.disableProximityMonitoring == false && !UIDevice.current.isProximityMonitoringEnabled && VoIPCallStateManager.shared.currentCallState() != .idle {
+                            UIDevice.current.isProximityMonitoringEnabled = true
+                        }
                     } else {
-                        if output.portType == AVAudioSession.Port.builtInReceiver {
-                            if UserSettings.shared()?.disableProximityMonitoring == false && !UIDevice.current.isProximityMonitoringEnabled && VoIPCallStateManager.shared.currentCallState() != .idle {
-                                UIDevice.current.isProximityMonitoringEnabled = true
-                            }
-                        } else {
-                            if UIDevice.current.isProximityMonitoringEnabled {
-                                UIDevice.current.isProximityMonitoringEnabled = false
-                            }
+                        if UIDevice.current.isProximityMonitoringEnabled {
+                            UIDevice.current.isProximityMonitoringEnabled = false
                         }
                     }
-                    
-                    if output.portType == AVAudioSession.Port.builtInSpeaker {
-                        self.speakerButton.setImage(UIImage.init(named: "SpeakerActive"), for: .normal)
-                        self.speakerButton.setImage(UIImage.init(named: "SpeakerActive"), for: .highlighted)
-                        self.speakerButton.setImage(UIImage.init(named: "SpeakerActive"), for: .selected)
-                    }
-                    else if output.portType == AVAudioSession.Port.headphones {
-                        self.speakerButton.setImage(UIImage.init(named: "HeadphoneActive"), for: .normal)
-                        self.speakerButton.setImage(UIImage.init(named: "HeadphoneActive"), for: .highlighted)
-                        self.speakerButton.setImage(UIImage.init(named: "HeadphoneActive"), for: .selected)
-                    }
-                    else if output.portType == AVAudioSession.Port.bluetoothA2DP || output.portType == AVAudioSession.Port.bluetoothHFP || output.portType == AVAudioSession.Port.bluetoothLE {
-                        self.speakerButton.setImage(UIImage.init(named: "BluetoothActive"), for: .normal)
-                        self.speakerButton.setImage(UIImage.init(named: "BluetoothActive"), for: .highlighted)
-                        self.speakerButton.setImage(UIImage.init(named: "BluetoothActive"), for: .selected)
-                    }
-                    else {
-                        self.speakerButton.setImage(UIImage.init(named: "SpeakerInactive"), for: .normal)
-                        self.speakerButton.setImage(UIImage.init(named: "SpeakerInactive"), for: .highlighted)
-                        self.speakerButton.setImage(UIImage.init(named: "SpeakerInactive"), for: .selected)
-                    }
-                    
-                    guard let info = n.userInfo,
-                        let value = info[AVAudioSessionRouteChangeReasonKey] as? UInt,
-                        let reason = AVAudioSession.RouteChangeReason(rawValue: value) else { return }
-                    
-                    switch reason {
-                    case .newDeviceAvailable, .oldDeviceUnavailable:
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 1, execute: {
-                            self.checkAndHandleAvailableBluetoothDevices()
-                        })
-                        break
-                    default: break
-                    }
+                }
+                
+                if output.portType == AVAudioSession.Port.builtInSpeaker {
+                    self.speakerButton.setImage(UIImage.init(named: "SpeakerActive"), for: .normal)
+                    self.speakerButton.setImage(UIImage.init(named: "SpeakerActive"), for: .highlighted)
+                    self.speakerButton.setImage(UIImage.init(named: "SpeakerActive"), for: .selected)
+                    self.speakerButton.tag = 1
+                }
+                else if output.portType == AVAudioSession.Port.headphones {
+                    self.speakerButton.setImage(UIImage.init(named: "HeadphoneActive"), for: .normal)
+                    self.speakerButton.setImage(UIImage.init(named: "HeadphoneActive"), for: .highlighted)
+                    self.speakerButton.setImage(UIImage.init(named: "HeadphoneActive"), for: .selected)
+                    self.speakerButton.tag = 2
+                }
+                else if output.portType == AVAudioSession.Port.bluetoothA2DP || output.portType == AVAudioSession.Port.bluetoothHFP || output.portType == AVAudioSession.Port.bluetoothLE {
+                    self.speakerButton.setImage(UIImage.init(named: "BluetoothActive"), for: .normal)
+                    self.speakerButton.setImage(UIImage.init(named: "BluetoothActive"), for: .highlighted)
+                    self.speakerButton.setImage(UIImage.init(named: "BluetoothActive"), for: .selected)
+                    self.speakerButton.tag = 3
+                }
+                else {
+                    self.speakerButton.setImage(UIImage.init(named: "SpeakerInactive"), for: .normal)
+                    self.speakerButton.setImage(UIImage.init(named: "SpeakerInactive"), for: .highlighted)
+                    self.speakerButton.setImage(UIImage.init(named: "SpeakerInactive"), for: .selected)
+                    self.speakerButton.tag = 0
+                }
+                self.updateAccessibilityLabels()
+                
+                guard let info = n.userInfo,
+                      let value = info[AVAudioSessionRouteChangeReasonKey] as? UInt,
+                      let reason = AVAudioSession.RouteChangeReason(rawValue: value) else { return }
+                
+                switch reason {
+                case .newDeviceAvailable, .oldDeviceUnavailable:
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1, execute: {
+                        self.checkAndHandleAvailableBluetoothDevices()
+                    })
+                    break
+                default: break
                 }
             }
         }
@@ -198,6 +216,7 @@ class CallViewController: UIViewController {
         }
         UIApplication.shared.isIdleTimerDisabled = true
         setupView()
+        updateAccessibilityLabels()
         
         if !isNavigationVisible() {
             moveLocalVideoViewToCorrectPosition(moveNavigation: true)
@@ -248,11 +267,7 @@ class CallViewController: UIViewController {
             #if arch(arm64)
             if let rR = VoIPCallStateManager.shared.remoteVideoRenderer(),
                let remoteRenderer = rR as? RTCMTLVideoView {
-                var remoteVideoSize = remoteVideoView.frame.size
-                if isRemoteRendererInLocalView() {
-                    remoteVideoSize = localVideoView.frame.size
-                }
-                updateRemoteVideoContentMode(videoView: remoteRenderer, size: remoteVideoSize)
+                updateRemoteVideoContentMode(videoView: remoteRenderer)
             }
             #endif
         }
@@ -425,7 +440,9 @@ extension CallViewController {
         contactLabel.text = contact?.displayName
         
         backgroundImage.contentMode = contact!.isProfilePictureSet() ? .scaleAspectFill : .scaleAspectFit
-        backgroundImage.image = blurImage(image: AvatarMaker.shared().callBackground(for: contact), blurRadius: 4.0)
+        if let contact = self.contact {
+            setBackgroundForContact(contact: contact)
+        }
         backgroundImage.backgroundColor = Colors.black()
         verificationLevel.image = contact?.verificationLevelImage()
 
@@ -493,6 +510,14 @@ extension CallViewController {
         if isTesting == true {
             setupForIncomCallTest()
         }
+    }
+    
+    func setBackgroundForContact(contact : Contact) {
+        guard let avatarImage = AvatarMaker.shared().callBackground(for: contact) else {
+            DDLogError("Could not create avatar image")
+            return
+        }
+        self.backgroundImage.image = self.blurImage(image: avatarImage, blurRadius: 4.0)
     }
     
     private func updateView() {
@@ -586,6 +611,7 @@ extension CallViewController {
             self.cameraButton.isHidden = true
             self.cameraSwitchButton.isHidden = true
             self.debugLabel.isHidden = true
+            self.cellularWarningButton.isHidden = true
         
             self.timerLabel.text = BundleUtil.localizedString(forKey: "call_status_incom_ringing")
         }
@@ -601,6 +627,7 @@ extension CallViewController {
         timerLabel.isHidden = false
         cameraButton.isHidden = false
         cameraSwitchButton.isHidden = true
+        cellularWarningButton.isHidden = true
                 
         self.endButton?.isEnabled = true
         self.muteButton?.isEnabled = true
@@ -630,6 +657,7 @@ extension CallViewController {
         cameraButton.isHidden = false
         cameraButton.isSelected = true
         cameraSwitchButton.isHidden = false
+        cellularWarningButton.isHidden = true
         
         self.endButton?.isEnabled = true
         self.muteButton?.isEnabled = true
@@ -727,7 +755,9 @@ extension CallViewController {
                     }
                 }
             } else {
-                self.backgroundImage.image = self.blurImage(image: AvatarMaker.shared().callBackground(for: self.contact), blurRadius: 4.0)
+                if let contact = self.contact {
+                    self.setBackgroundForContact(contact: contact)
+                }
                 self.removeAllSubviewsFromVideoViews()
             }
             self.flipLocalRenderer()
@@ -736,37 +766,39 @@ extension CallViewController {
     }
     private func startRemoteVideo() {
         DispatchQueue.main.async {
-            self.backgroundImage.image = nil
-            #if arch(arm64)
-            // Using metal (arm64 only)
-            let remoteRenderer = RTCMTLVideoView(frame: self.remoteVideoView?.frame ?? CGRect.zero)
-            remoteRenderer.videoContentMode = .scaleAspectFill
-            #else
-            // Using OpenGLES for the rest
-            let remoteRenderer = RTCEAGLVideoView(frame: self.remoteVideoView?.frame ?? CGRect.zero)
-            #endif
-            remoteRenderer.delegate = self
-            VoIPCallStateManager.shared.renderRemoteVideo(to: remoteRenderer)
-            
-            if (!self.isLocalVideoActive || self.localVideoView.subviews.first == VoIPCallStateManager.shared.localVideoRenderer() as? UIView) {
-                if let remoteVideoView = self.remoteVideoView {
-                    self.embedView(remoteRenderer, into: remoteVideoView)
-                    self.updateVideoViews()
+            if self.viewIfLoaded?.window != nil {
+                self.backgroundImage.image = nil
+                #if arch(arm64)
+                // Using metal (arm64 only)
+                let remoteRenderer = RTCMTLVideoView(frame: self.remoteVideoView?.frame ?? CGRect.zero)
+                remoteRenderer.videoContentMode = .scaleAspectFill
+                #else
+                // Using OpenGLES for the rest
+                let remoteRenderer = RTCEAGLVideoView(frame: self.remoteVideoView?.frame ?? CGRect.zero)
+                #endif
+                remoteRenderer.delegate = self
+                VoIPCallStateManager.shared.renderRemoteVideo(to: remoteRenderer)
+                
+                if (!self.isLocalVideoActive || self.localVideoView.subviews.first == VoIPCallStateManager.shared.localVideoRenderer() as? UIView) {
+                    if let remoteVideoView = self.remoteVideoView {
+                        self.embedView(remoteRenderer, into: remoteVideoView)
+                        self.updateVideoViews()
+                    }
+                } else {
+                    if let localRenderer = VoIPCallStateManager.shared.localVideoRenderer() {
+                        self.moveEmbedView(localRenderer as! UIView, from: self.remoteVideoView, into: self.localVideoView)
+                        self.flipLocalRenderer()
+                    }
+                    if let remoteVideoView = self.remoteVideoView {
+                        self.embedView(remoteRenderer, into: remoteVideoView)
+                        self.updateVideoViews()
+                    }
                 }
-            } else {
-                if let localRenderer = VoIPCallStateManager.shared.localVideoRenderer() {
-                    self.moveEmbedView(localRenderer as! UIView, from: self.remoteVideoView, into: self.localVideoView)
-                    self.flipLocalRenderer()
+                
+                if !self.isLocalVideoActive && self.isReceivingRemoteVideo && !self.viewWasHidden && self.isViewLoaded && self.view.window != nil {
+                    self.showRemoteVideoActivatedInfo()
+                    self.showSpeakerInfo()
                 }
-                if let remoteVideoView = self.remoteVideoView {
-                    self.embedView(remoteRenderer, into: remoteVideoView)
-                    self.updateVideoViews()
-                }
-            }
-            
-            if !self.isLocalVideoActive && self.isReceivingRemoteVideo && !self.viewWasHidden && self.isViewLoaded && self.view.window != nil {
-                self.showRemoteVideoActivatedInfo()
-                self.showSpeakerInfo()
             }
         }
     }
@@ -774,21 +806,29 @@ extension CallViewController {
     private func endRemoteVideo() {
         VoIPCallStateManager.shared.endRemoteVideo()
         DispatchQueue.main.async {
-            if (self.isLocalVideoActive) {
-                if let localRenderer = VoIPCallStateManager.shared.localVideoRenderer() {
-                    if self.localVideoView.subviews.first == localRenderer as? UIView {
-                        self.moveEmbedView(localRenderer as! UIView, from: self.localVideoView, into: self.remoteVideoView)
+            if self.viewIfLoaded?.window != nil {
+                if (self.isLocalVideoActive) {
+                    self.moveOrRemoveLocalRenderer()
+                } else {
+                    if let contact = self.contact {
+                        self.setBackgroundForContact(contact: contact)
                     }
-                    else if self.remoteVideoView.subviews.first == localRenderer as? UIView {
-                        self.removeSubviewsFromLocalView()
-                    }
+                    self.removeAllSubviewsFromVideoViews()
                 }
-            } else {
-                self.backgroundImage.image = self.blurImage(image: AvatarMaker.shared().callBackground(for: self.contact), blurRadius: 4.0)
-                self.removeAllSubviewsFromVideoViews()
+                self.flipLocalRenderer()
+                self.updateVideoViews()
             }
-            self.flipLocalRenderer()
-            self.updateVideoViews()
+        }
+    }
+    
+    private func moveOrRemoveLocalRenderer() {
+        if let localRenderer = VoIPCallStateManager.shared.localVideoRenderer() {
+            if self.localVideoView.subviews.first == localRenderer as? UIView {
+                self.moveEmbedView(localRenderer as! UIView, from: self.localVideoView, into: self.remoteVideoView)
+            }
+            else if self.remoteVideoView.subviews.first == localRenderer as? UIView {
+                self.removeSubviewsFromLocalView()
+            }
         }
     }
     
@@ -812,7 +852,7 @@ extension CallViewController {
     
     private func switchCamera() {
         useBackCamera = !useBackCamera
-        cameraButton.accessibilityLabel = BundleUtil.localizedString(forKey: useBackCamera ? "call_camera_switch_to_front_button" : "call_camera_switch_to_back_button")
+        cameraSwitchButton.accessibilityLabel = BundleUtil.localizedString(forKey: useBackCamera ? "call_camera_switch_to_front_button" : "call_camera_switch_to_back_button")
         endLocalVideo(switchCamera: true)
         startLocalVideo(useBackCamera: useBackCamera, switchCamera: true)
     }
@@ -1363,17 +1403,17 @@ extension CallViewController {
         self.addGradientToView(view: self.phoneButtonsGradientView, startColor: UIColor.white.withAlphaComponent(0.0), middleColor: UIColor.black.withAlphaComponent(0.1),endColor: UIColor.black.withAlphaComponent(0.2), locations: [0, 0.3, 1])
     }
     
-    private func updateRemoteVideoContentMode(videoView: RTCVideoRenderer, size: CGSize) {
+    private func updateRemoteVideoContentMode(videoView: RTCVideoRenderer) {
         #if arch(arm64)
         if let rR = VoIPCallStateManager.shared.remoteVideoRenderer(),
            let remoteRenderer = rR as? RTCMTLVideoView,
            remoteRenderer.isEqual(videoView) {
-            if UIApplication.shared.statusBarOrientation.isPortrait,
-               size.height > size.width {
+            if UIApplication.shared.statusBarOrientation.isPortrait &&
+               isRemoteVideoPortrait {
                 remoteRenderer.videoContentMode = .scaleAspectFill
             } else {
-                if UIApplication.shared.statusBarOrientation.isLandscape,
-                   size.height < size.width {
+                if UIApplication.shared.statusBarOrientation.isLandscape &&
+                   !isRemoteVideoPortrait {
                     remoteRenderer.videoContentMode = .scaleAspectFill
                 } else {
                     remoteRenderer.videoContentMode = .scaleAspectFit
@@ -1383,6 +1423,39 @@ extension CallViewController {
         #endif
     }
     
+    private func updateAccessibilityLabels() {
+        muteButton.accessibilityLabel = BundleUtil.localizedString(forKey: muteButton.isSelected ? "call_unmute" : "call_mute")
+        speakerButton.accessibilityLabel = BundleUtil.localizedString(forKey: speakerButton.tag == 1 ? "call_earpiece" : "call_speaker")
+        endButton.accessibilityLabel = BundleUtil.localizedString(forKey: "call_end")
+        acceptButton.accessibilityLabel = BundleUtil.localizedString(forKey: "call_accept")
+        rejectButton.accessibilityLabel = BundleUtil.localizedString(forKey: "call_reject")
+        hideButton.accessibilityLabel = BundleUtil.localizedString(forKey: "call_hide_call")
+        
+        cameraButton.accessibilityLabel = BundleUtil.localizedString(forKey: self.isLocalVideoActive ? "call_camera_deactivate_button" : "call_camera_activate_button")
+        cameraSwitchButton.accessibilityLabel = BundleUtil.localizedString(forKey: "call_camera_switch_to_back_button")
+    }
+    
+    /**
+     It will play the problem sound
+     */
+    private func playCellularCallWarningSound() {
+        audioPlayer?.stop()
+        let audioSession = AVAudioSession.sharedInstance()
+        do {
+            try audioSession.setCategory(.playAndRecord, mode: .voiceChat, options: [.duckOthers, .allowBluetooth, .allowBluetoothA2DP])
+            try audioSession.overrideOutputAudioPort(VoIPCallStateManager.shared.isSpeakerActive() ? .speaker : .none)
+            try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
+            
+            let soundFilePath = BundleUtil.path(forResource: "threema_problem", ofType: "mp3")
+            let soundUrl = URL.init(fileURLWithPath: soundFilePath!)
+            let player = try AVAudioPlayer(contentsOf: soundUrl, fileTypeHint: AVFileType.mp3.rawValue)
+            player.numberOfLoops = 2
+            audioPlayer = player
+            player.play()
+        } catch let error {
+            print(error.localizedDescription)
+        }
+    }
 }
 
 extension CallViewController {
@@ -1440,6 +1513,7 @@ extension CallViewController {
     @IBAction func muteAction(_ sender: UIButton, forEvent event: UIEvent) {
         let action = VoIPCallUserAction.init(action: VoIPCallStateManager.shared.isCallMuted() ? .unmuteAudio : .muteAudio , contact: contact!, callId: VoIPCallStateManager.shared.currentCallId(), completion: nil)
         muteButton.isSelected = action.action == .muteAudio
+        updateAccessibilityLabels()
         VoIPCallStateManager.shared.processUserAction(action)
     }
     
@@ -1469,6 +1543,7 @@ extension CallViewController {
                 break
             }
         }
+        updateAccessibilityLabels()
     }
     
     @IBAction func startVideoAction(_ sender: UIButton) {
@@ -1492,6 +1567,10 @@ extension CallViewController {
     
     @IBAction func switchCameraAction(_ sender: UIButton, forEvent event: UIEvent) {
         switchCamera()
+    }
+    
+    @IBAction func showCellularWarningAction() {
+        UIAlertTemplate.showAlert(owner: self, title: BundleUtil.localizedString(forKey: "call_threema_cellular_instead_of_wifi_title"), message: BundleUtil.localizedString(forKey: "call_threema_cellular_instead_of_wifi_text"))
     }
         
     @objc func switchVideoViews(gesture: UITapGestureRecognizer) {
@@ -1545,7 +1624,8 @@ extension CallViewController: AVRoutePickerViewDelegate {
 
 extension CallViewController: RTCVideoViewDelegate {
     func videoView(_ videoView: RTCVideoRenderer, didChangeVideoSize size: CGSize) {
-        updateRemoteVideoContentMode(videoView: videoView, size: size)
+        isRemoteVideoPortrait = size.height > size.width
+        updateRemoteVideoContentMode(videoView: videoView)
 
         if let localRenderer = VoIPCallStateManager.shared.localVideoRenderer(),
            localRenderer.isEqual(videoView) {

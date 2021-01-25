@@ -54,6 +54,8 @@ class ContactDetailsViewController: ThemedTableViewController {
     private var showcase: MaterialShowcase?
     
     private var kvoContact: NSKeyValueObservation?
+    private var colorThemeObserver: NSObjectProtocol?
+    private var profilePictureObserver: NSObjectProtocol?
         
     private let THREEMA_ID_SHARE_LINK = "https://threema.id/"
     
@@ -92,10 +94,12 @@ class ContactDetailsViewController: ThemedTableViewController {
         navigationController?.interactivePopGestureRecognizer?.isEnabled = true
         navigationController?.interactivePopGestureRecognizer?.delegate = nil
         
-        NotificationCenter.default.addObserver(forName: Notification.Name(kNotificationColorThemeChanged), object: nil, queue: nil) { (notification) in
+        colorThemeObserver = NotificationCenter.default.addObserver(forName: Notification.Name(kNotificationColorThemeChanged), object: nil, queue: nil) { [weak self] notification in
+            guard let self = self else { return }
             self.setupColors()
         }
-        NotificationCenter.default.addObserver(forName: Notification.Name(kNotificationShowProfilePictureChanged), object: nil, queue: nil) { (notification) in
+        profilePictureObserver = NotificationCenter.default.addObserver(forName: Notification.Name(kNotificationShowProfilePictureChanged), object: nil, queue: nil) { [weak self] notification in
+            guard let self = self else { return }
             self.updateView()
         }
         
@@ -174,6 +178,15 @@ class ContactDetailsViewController: ThemedTableViewController {
             notificationSettingViewController?.identity = contact?.identity
             notificationSettingViewController?.isGroup = false
             notificationSettingViewController?.conversation = conversation
+        }
+    }
+    
+    deinit {
+        if let observer = colorThemeObserver {
+            NotificationCenter.default.removeObserver(observer)
+        }
+        if let observer = profilePictureObserver {
+            NotificationCenter.default.removeObserver(observer)
         }
     }
 }
@@ -344,13 +357,13 @@ extension ContactDetailsViewController {
     }
     
     @objc private func tappedImage() {
-        if contact != nil {
+        if let contact = contact {
             var image: UIImage?
-            if (contact!.contactImage != nil && UserSettings.shared().showProfilePictures) {
-                image = UIImage.init(data: contact!.contactImage.data)
+            if let contactImage = contact.contactImage, let contactImageData = contactImage.data, UserSettings.shared().showProfilePictures {
+                image = UIImage.init(data: contactImageData)
             }
-            else if contact!.imageData != nil {
-                image = UIImage.init(data: contact!.imageData)
+            else if let contactImageData = contact.imageData {
+                image = UIImage.init(data: contactImageData)
             }
             
             if image != nil {

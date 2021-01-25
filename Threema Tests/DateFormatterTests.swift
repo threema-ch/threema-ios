@@ -43,12 +43,12 @@ class DateFormatterTests: XCTestCase {
     
     // Test dates for relative formatting
     
-    // 20.5.2020 13:14:15.00016 GMT+1
+    // 2.1.xxxx 13:14:15.00016 GMT+1
+    // xxxx is the current year
     static var testDateThisYear: Date {
-        var dateComponents = DateComponents()
-        dateComponents.day = 20
-        dateComponents.month = 5
-        dateComponents.year = 2020
+        var dateComponents = Calendar.current.dateComponents([.year], from: Date())
+        dateComponents.day = 2
+        dateComponents.month = 1
         
         dateComponents.hour = 13
         dateComponents.minute = 14
@@ -60,12 +60,13 @@ class DateFormatterTests: XCTestCase {
         return Calendar.current.date(from: dateComponents)!
     }
     
-    // 31.12.2019 22:23:24.00025 GMT+1
+    // 31.12.xxxx 22:23:24.00025 GMT+1
+    // xxxx is last year
     static var testDateLastCalendarYear: Date {
-        var dateComponents = DateComponents()
+        var dateComponents = Calendar.current.dateComponents([.year], from: Date())
         dateComponents.day = 31
         dateComponents.month = 12
-        dateComponents.year = 2019
+        dateComponents.year! -= 1
         
         dateComponents.hour = 22
         dateComponents.minute = 23
@@ -75,6 +76,22 @@ class DateFormatterTests: XCTestCase {
         dateComponents.timeZone = TimeZone(abbreviation: "GMT+1")
         
         return Calendar.current.date(from: dateComponents)!
+    }
+    
+    // Helper to format expected strings from relative formatting
+    static func formattedShortWeekday(_ date: Date, _ identifier: String) -> String {
+        let formatter = Foundation.DateFormatter()
+        formatter.locale = Locale(identifier: identifier)
+        formatter.dateFormat = "E"
+        return formatter.string(from: date)
+    }
+    
+    // Helper to format expected strings from relative formatting
+    static func formattedFullYear(_ date: Date, _ identifier: String) -> String {
+        let formatter = Foundation.DateFormatter()
+        formatter.locale = Locale(identifier: identifier)
+        formatter.dateFormat = "yyyy"
+        return formatter.string(from: date)
     }
     
     // 1.2.2019 13:14:15.00016 GMT+1

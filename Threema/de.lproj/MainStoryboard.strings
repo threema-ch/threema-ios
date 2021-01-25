@@ -150,7 +150,7 @@
 "UbM-As-itV.text" = "XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX";
 
 /* Class = "UILabel"; text = "Group Name"; ObjectID = "VFn-jg-cfh"; */
-"VFn-jg-cfh.text" = "Gruppen Name";
+"VFn-jg-cfh.text" = "Gruppenname";
 
 /* Class = "UILabel"; text = "Acknowledged"; ObjectID = "VRy-nm-s0X"; */
 "VRy-nm-s0X.text" = "Bestätigt";
@@ -165,7 +165,7 @@
 "XTa-xS-cOR.text" = "Datum";
 
 /* Class = "UILabel"; text = "Group Name"; ObjectID = "Y4G-EW-Gux"; */
-"Y4G-EW-Gux.text" = "Gruppen Name";
+"Y4G-EW-Gux.text" = "Gruppenname";
 
 /* Class = "UILabel"; text = "Scan an ID"; ObjectID = "YPC-ic-pTa"; */
 "YPC-ic-pTa.text" = "ID scannen";
@@ -219,7 +219,7 @@
 "dgK-0J-UrZ.footerTitle" = "Diese Daten können zusammen mit dem gewählten Passwort zum Wiederherstellen Ihrer ID auf einem anderen Gerät verwendet werden. Sie können die Daten mittels Kopieren & Einfügen an einem geeigneten Ort ablegen, sich selber per E-Mail senden oder den QR-Code mit einem anderen Gerät scannen.";
 
 /* Class = "UILabel"; text = "Group Name"; ObjectID = "ds7-P9-imN"; */
-"ds7-P9-imN.text" = "Gruppen Name";
+"ds7-P9-imN.text" = "Gruppenname";
 
 /* Class = "UITableViewSection"; footerTitle = "#do not translate#The encrypted ID backup will be included when you back up your phone via iTunes or iCloud."; ObjectID = "eEV-l3-MXP"; */
 "eEV-l3-MXP.footerTitle" = "#do not translate#The encrypted ID backup will be included when you back up your phone via iTunes or iCloud.";

@@ -65,3 +65,11 @@ extension RestoreSafePasswordViewController: SetupTextFieldDelegate {
         self.performSegue(withIdentifier: "okSafePassword", sender: sender)
     }
 }
+
+extension RestoreSafePasswordViewController {
+    override func dismissKeyboard() {
+        super.dismissKeyboard()
+        
+        passwordField.resignFirstResponder()
+    }
+}

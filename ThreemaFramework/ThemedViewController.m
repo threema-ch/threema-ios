@@ -28,6 +28,8 @@
 @implementation ThemedViewController
 
 - (void)viewDidLoad {
+    [super viewDidLoad];
+    
     [self.view setBackgroundColor:[Colors background]];
     [Colors setTextColor:[Colors fontNormal] inView:self.view];
 }

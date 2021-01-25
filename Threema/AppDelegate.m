@@ -184,6 +184,8 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     appLaunchDate = [NSDate date];
 
     [NotificationManager sharedInstance];
+    
+    DDLogNotice(@"AppState: didFinishLaunchingWithOptions");
 
     /* Instantiate various singletons now */
     [NaClCrypto sharedCrypto];
@@ -547,7 +549,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 
         // Start crash report handler
         SentryClient *sentry = [[SentryClient alloc] init];
-        [sentry startWithRootViewController:self.window.rootViewController];
+        [sentry start];
         
         [self updateIdentityInfo];
         [[NotificationManager sharedInstance] updateUnreadMessagesCount:NO];
@@ -959,6 +961,10 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     // but only if we haven't been opened to share a URL
     if (launchOptions[UIApplicationLaunchOptionsURLKey] == nil) {
         [self removeDirectoryContents:[[NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) objectAtIndex:0] stringByAppendingPathComponent:@"Inbox"]];
+        
+        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+            [FileUtility cleanTemporaryDirectoryWithOlderThan:nil];
+        });
     }
 }
 
@@ -986,7 +992,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
      Sent when the application is about to move from active to inactive state. This can occur for certain types of temporary interruptions (such as an incoming phone call or SMS message) or when the user quits the application and it begins the transition to the background state.
      Use this method to pause ongoing tasks, disable timers, and throttle down OpenGL ES frame rates. Games should use this method to pause the game.
      */
-    DDLogInfo(@"applicationWillResignActive");
+    DDLogNotice(@"AppState: applicationWillResignActive");
     self.active = NO;
     
     dispatch_async(dispatch_get_main_queue(), ^{
@@ -1007,7 +1013,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
      Use this method to release shared resources, save user data, invalidate timers, and store enough application state information to restore your application to its current state in case it is terminated later.
      If your application supports background execution, this method is called instead of applicationWillTerminate: when the user quits.
      */
-    DDLogInfo(@"applicationDidEnterBackground");
+    DDLogNotice(@"AppState: applicationDidEnterBackground");
     
     AppSetupState *appSetupState = [[AppSetupState alloc] initWithMyIdentityStore:[MyIdentityStore sharedMyIdentityStore]];
     if (![appSetupState isAppSetupCompleted]) {
@@ -1064,7 +1070,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     /*
      Called as part of the transition from the background to the inactive state; here you can undo many of the changes made on entering the background.
      */
-    DDLogInfo(@"applicationWillEnterForeground");
+    DDLogNotice(@"AppState: applicationWillEnterForeground");
     
     AppSetupState *appSetupState = [[AppSetupState alloc] initWithMyIdentityStore:[MyIdentityStore sharedMyIdentityStore]];
     if (![appSetupState isAppSetupCompleted]) {
@@ -1119,7 +1125,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 }
 
 - (void)applicationProtectedDataWillBecomeUnavailable:(UIApplication *)application {
-    DDLogInfo(@"applicationProtectedDataWillBecomeUnavailable");
+    DDLogInfo(@"AppState: applicationProtectedDataWillBecomeUnavailable");
 
     protectedDataWillBecomeUnavailable = YES;
 
@@ -1129,7 +1135,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 }
 
 - (void)applicationProtectedDataDidBecomeAvailable:(UIApplication *)application {
-    DDLogInfo(@"applicationProtectedDataDidBecomeAvailable");
+    DDLogInfo(@"AppState: applicationProtectedDataDidBecomeAvailable");
     protectedDataWillBecomeUnavailable = NO;
 }
 
@@ -1138,7 +1144,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     /*
      Restart any tasks that were paused (or not yet started) while the application was inactive. If the application was previously in the background, optionally refresh the user interface.
      */
-    DDLogInfo(@"applicationDidBecomeActive");
+    DDLogNotice(@"AppState: applicationDidBecomeActive");
 
     if (migrating) {
         return;
@@ -1210,7 +1216,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
      Save data if appropriate.
      See also applicationDidEnterBackground:.
      */
-    DDLogInfo(@"applicationWillTerminate");
+    DDLogNotice(@"AppState: applicationWillTerminate");
 
     [[MessageQueue sharedMessageQueue] save];
     [[PendingMessagesManager shared] save];

@@ -84,7 +84,7 @@
     
     NSString *apiPath = [NSString stringWithFormat:@"identity/%@", identity];
     
-    [ServerAPIRequest loadJSONFromAPIPath:apiPath withCachePolicy:NSURLRequestUseProtocolCachePolicy onCompletion:^(id jsonObject) {
+    [ServerAPIRequest loadJSONFromAPIPath:apiPath withCachePolicy:NSURLRequestReloadIgnoringLocalCacheData onCompletion:^(id jsonObject) {
         NSData *publicKey = [[NSData alloc] initWithBase64EncodedString:jsonObject[@"publicKey"] options:0];
         NSNumber *state = [NSNumber numberWithInt:[jsonObject[@"state"] intValue]];
         NSNumber *type = [NSNumber numberWithInt:[jsonObject[@"type"] intValue]];
@@ -699,6 +699,16 @@
         DDLogVerbose(@"Send API request %@ phase 2 failed: %@", apiPath, error);
         onError(error);
     }];
+}
+
+- (NSCachedURLResponse *)connection:(NSURLConnection *)connection willCacheResponse:(NSCachedURLResponse *)cachedResponse {
+    switch (connection.currentRequest.cachePolicy) {
+        case NSURLRequestReloadIgnoringLocalCacheData:
+        case NSURLRequestReloadIgnoringLocalAndRemoteCacheData:
+            return nil;
+        default:
+            return cachedResponse;
+    }
 }
 
 @end

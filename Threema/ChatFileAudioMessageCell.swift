@@ -64,7 +64,7 @@ import CocoaLumberjackSwift
     }
     
     public class func displayText(fileMessage: FileMessage) -> String {
-        if let seconds = fileMessage.getDuration() {
+        if let seconds = fileMessage.duration {
             return Utils.timeString(forSeconds: seconds.intValue)
         }
         return "0:00"
@@ -84,7 +84,7 @@ extension ChatFileAudioMessageCell {
         _audioIcon?.autoresizingMask = autoresizingMask
         _captionLabel?.autoresizingMask = autoresizingMask
         
-        if var captionText = fileMessage.getCaption(), captionText.count > 0, fileMessage.shouldShowCaption() {
+        if var captionText = fileMessage.caption, captionText.count > 0, fileMessage.shouldShowCaption() {
             captionText = TextStyleUtils.makeMentionsString(forText: captionText)
             _captionLabel?.text = captionText
             _captionLabel?.isHidden = false
@@ -139,7 +139,7 @@ extension ChatFileAudioMessageCell {
         let size = text.sizeOfString(maxWidth: ChatFileAudioMessageCell.maxContentWidth(forTableWidth: tableWidth) - 25, font: ChatFileAudioMessageCell.textFont())
         var cellHeight = CGFloat(ceilf(Float(size.height)))
         
-        if let caption = fileMessage.getCaption(), caption.count > 0 {
+        if let caption = fileMessage.caption, caption.count > 0 {
             let x: CGFloat = 30.0
             
             let maxSize = CGSize.init(width: ChatFileAudioMessageCell.maxContentWidth(forTableWidth: tableWidth) - x, height: CGFloat.greatestFiniteMagnitude)
@@ -197,13 +197,13 @@ extension ChatFileAudioMessageCell {
             messageTextWidth = ChatMessageCell.maxContentWidth(forTableWidth: frame.size.width)
         }
         
-        if let caption = fileMessage.getCaption(), caption.count > 0 {
+        if let caption = fileMessage.caption, caption.count > 0 {
             captionTextSize = _captionLabel!.sizeThatFits(CGSize.init(width: messageTextWidth - x, height: CGFloat.greatestFiniteMagnitude))
         }
         let textSize = _durationLabel?.text?.sizeOfString(maxWidth: messageTextWidth - 25, font: ChatMessageCell.textFont())
         var cellSize = CGSize.init(width: CGFloat(ceilf(Float(max(textSize!.width, captionTextSize.width)))), height: CGFloat(ceilf(Float(max(34.0, textSize!.height) + captionTextSize.height))))
         
-        if fileMessage.getCaption() == nil {
+        if fileMessage.caption == nil {
             cellSize.width = cellSize.width + 25.0
         }
         let size = CGSize.init(width: cellSize.width, height: cellSize.height)
@@ -230,7 +230,7 @@ extension ChatFileAudioMessageCell {
     
     override open func accessibilityLabelForContent() -> String! {
         let fileMessage = message as! FileMessage
-        let duration = Utils.accessabilityTimeString(forSeconds: fileMessage.getDuration()!.intValue)
+        let duration = Utils.accessabilityTimeString(forSeconds: fileMessage.duration?.intValue ?? 0)
         let durationText = "\(BundleUtil.localizedString(forKey: "audio") ?? "Audio"), \(duration!)"
         if _captionLabel?.text != nil {
             return "\(durationText). \(_captionLabel!.text!)"
@@ -305,8 +305,8 @@ extension ChatFileAudioMessageCell {
     
     @objc override open func copyMessage(_ menuController: UIMenuController!) {
         let fileMessage = message as! FileMessage
-        if let caption = fileMessage.getCaption(), caption.count > 0 {
-            UIPasteboard.general.string = fileMessage.getCaption()
+        if let caption = fileMessage.caption, caption.count > 0 {
+            UIPasteboard.general.string = fileMessage.caption
         }
     }
     

@@ -507,6 +507,7 @@
             
         } else if ([amsg isKindOfClass:[GroupFileMessage class]]) {
             [FileMessageDecoder decodeGroupMessageFromBox:(GroupFileMessage *)amsg forConversation:conversation onCompletion:^(BaseMessage *message) {
+                [self conditionallyStartLoadingFileFromMessage:(FileMessage *)message];
                 [self finalizeGroupMessage:message inConversation:conversation fromBoxMessage:amsg sender:sender pendingMessage:pendingMessage finalizeCompletion:nil];
             } onError:^(NSError *err) {
                 [pendingMessage finishedProcessing];

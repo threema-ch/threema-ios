@@ -23,7 +23,6 @@
 #import "AppDelegate.h"
 #import "UIDefines.h"
 #import "ContactGroupPickerViewController.h"
-#import "FeatureMaskChecker.h"
 #import "BundleUtil.h"
 #import "FileMessageSender.h"
 #import "UTIConverter.h"
@@ -82,26 +81,20 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     }
     
     if(_url) {
-        FeatureMaskChecker *featureMaskChecker = [[FeatureMaskChecker alloc] init];
         NSSet *conversations = [NSSet setWithObject:conversation];
-        UIViewController *presentingViewController = [AppDelegate sharedAppDelegate].window.rootViewController;
         
-        [featureMaskChecker checkFileTransferFor:conversations presentAlarmOn:presentingViewController onSuccess:^{
-            URLSenderItem *item;
-            if (sendAsFile) {
-                NSString *mimetype = [UTIConverter mimeTypeFromUTI:[UTIConverter utiForFileURL:_url]];
-                item = [URLSenderItem itemWithUrl:_url type:mimetype renderType:renderType sendAsFile:true];
-            } else {
-                item = [URLSenderItemCreator getSenderItemFor:_url];
-            }
-            for (Conversation *conv in conversations) {
-                FileMessageSender *sender = [[FileMessageSender alloc] init];
-                [sender sendItem:item inConversation:conv];
-                sender.uploadProgressDelegate = self;
-            }
-        } onFailure:^{
-            ;//nop
-        }];
+        URLSenderItem *item;
+        if (sendAsFile) {
+            NSString *mimetype = [UTIConverter mimeTypeFromUTI:[UTIConverter utiForFileURL:_url]];
+            item = [URLSenderItem itemWithUrl:_url type:mimetype renderType:renderType sendAsFile:true];
+        } else {
+            item = [URLSenderItemCreator getSenderItemFor:_url];
+        }
+        for (Conversation *conv in conversations) {
+            FileMessageSender *sender = [[FileMessageSender alloc] init];
+            [sender sendItem:item inConversation:conv];
+            sender.uploadProgressDelegate = self;
+        }
     } else {
         DDLogError(@"No URL provided, can't share anything");
     }

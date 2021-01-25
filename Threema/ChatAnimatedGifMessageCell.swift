@@ -104,8 +104,12 @@ extension ChatAnimatedGifMessageCell {
     private func setupAnimatedImage() {
         let fileMessage = message as! FileMessage
         _gifDispatchQueue.async {
-            self._animatedImage = FLAnimatedImage.init(animatedGIFData: fileMessage.data.data)
-            self.enableAnimation(true)
+            if let fileMessageData = fileMessage.data {
+                self._animatedImage = FLAnimatedImage.init(animatedGIFData: fileMessageData.data)
+                self.enableAnimation(true)
+            } else {
+                DDLogWarn("FileMessageData was nil")
+            }
         }
     }
     
@@ -144,13 +148,17 @@ extension ChatAnimatedGifMessageCell {
         let fileMessage = message as! FileMessage
         
         var cellHeight: CGFloat = 40.0
-        let imageInsets = UIEdgeInsets.init(top: 5, left: 5, bottom: 5, right: 5)
         var scaledSize = CGSize.init()
         
-        if fileMessage.thumbnail == nil || fileMessage.thumbnail.height.floatValue <= 0.0 {
-            // workaround for backward compatibility, create new thumbnail when not available yet or invalid
-            
-            let animImage = FLAnimatedImage.init(animatedGIFData: fileMessage.data.data)
+        var thumbnailZeroHeight = false
+        if let thumbnail = fileMessage.thumbnail, thumbnail.height.floatValue <= 0.0 {
+            thumbnailZeroHeight = true
+        }
+        
+        // workaround for backward compatibility, create new thumbnail when not available yet or invalid
+        if fileMessage.thumbnail == nil || thumbnailZeroHeight,
+           let fileMessageData = fileMessage.data {
+            let animImage = FLAnimatedImage.init(animatedGIFData: fileMessageData.data)
             if let thumbnail = MediaConverter.getThumbnailFor(animImage?.posterImage) {
                 let entityManager = EntityManager.init()
                 entityManager.performAsyncBlockAndSafe {
@@ -164,60 +172,30 @@ extension ChatAnimatedGifMessageCell {
             }
         }
         
-        if fileMessage.thumbnail != nil {
-            if fileMessage.thumbnail.data != nil && fileMessage.thumbnail.height.floatValue > 0 {
-                let width: CGFloat = CGFloat(fileMessage.thumbnail.width.floatValue)
-                let height: CGFloat = CGFloat(fileMessage.thumbnail.height.floatValue)
-                let size: CGSize = CGSize.init(width: width, height: height)
-                scaledSize = ChatAnimatedGifMessageCell.scaleImageSize(toCell: size, forTableWidth: tableWidth)
-                if scaledSize.height != scaledSize.height || scaledSize.height < 0 {
-                    scaledSize.height = 40.0
-                }
-                cellHeight = scaledSize.height - 17.0
+        if let thumbnail = fileMessage.thumbnail, thumbnail.data != nil && thumbnail.height.floatValue > 0 {
+            let width: CGFloat = CGFloat(thumbnail.width.floatValue)
+            let height: CGFloat = CGFloat(thumbnail.height.floatValue)
+            let size: CGSize = CGSize.init(width: width, height: height)
+            scaledSize = ChatAnimatedGifMessageCell.scaleImageSize(toCell: size, forTableWidth: tableWidth)
+            if scaledSize.height != scaledSize.height || scaledSize.height < 0 {
+                scaledSize.height = 40.0
             }
+            cellHeight = scaledSize.height - 17.0
         }
         
-        if let caption = fileMessage.getCaption(), caption.count > 0 {
-            let x: CGFloat = 30.0
-            
-            let maxSize = CGSize.init(width: scaledSize.width - x, height: CGFloat.greatestFiniteMagnitude)
-            var textSize: CGSize?
-            let captionTextNSString = NSString.init(string: caption)
-            
-            if UserSettings.shared().disableBigEmojis && captionTextNSString.isOnlyEmojisMaxCount(3) {
-                var dummyLabelEmoji: ZSWTappableLabel? = nil
-                if dummyLabelEmoji == nil {
-                    dummyLabelEmoji = ChatTextMessageCell.makeAttributedLabel(withFrame: CGRect.init(x: (x/2), y: 0.0, width: maxSize.width, height: maxSize.height))
-                }
-                dummyLabelEmoji!.font = ChatTextMessageCell.emojiFont()
-                dummyLabelEmoji?.attributedText = NSAttributedString.init(string: caption, attributes: [NSAttributedString.Key.font: ChatMessageCell.emojiFont()!])
-                textSize = dummyLabelEmoji?.sizeThatFits(maxSize)
-                textSize!.height = textSize!.height + 23.0
-            } else {
-                var dummyLabel: ZSWTappableLabel? = nil
-                if dummyLabel == nil {
-                    dummyLabel = ChatTextMessageCell.makeAttributedLabel(withFrame: CGRect.init(x: (x/2), y: 0.0, width: maxSize.width, height: maxSize.height))
-                }
-                dummyLabel!.font = ChatTextMessageCell.textFont()
-                let attributed = TextStyleUtils.makeAttributedString(from: caption, with: dummyLabel!.font, textColor: Colors.fontNormal(), isOwn: true, application: UIApplication.shared)
-                let formattedAttributeString = NSMutableAttributedString.init(attributedString: (dummyLabel!.applyMarkup(for: attributed))!)
-                dummyLabel?.attributedText = TextStyleUtils.makeMentionsAttributedString(for: formattedAttributeString, textFont: dummyLabel!.font!, at: dummyLabel!.textColor.withAlphaComponent(0.4), messageInfo: Int32(message.isOwn!.intValue), application: UIApplication.shared)
-                textSize = dummyLabel?.sizeThatFits(maxSize)
-                textSize!.height = textSize!.height + 23.0
-            }
-            cellHeight = cellHeight + textSize!.height
-        } else {
-            cellHeight += imageInsets.top + imageInsets.bottom
-        }
+        cellHeight = cellHeight + ChatBlobTextMessageCell.calculateCaptionHeight(scaledSize: scaledSize, fileMessage: fileMessage)
         
         return cellHeight
     }
     
     override public func layoutSubviews() {
-        let fileMessage = message as! FileMessage
+        guard let fileMessage = message as? FileMessage else {
+            DDLogError("Message is not a FileMessage.")
+            return
+        }
         let imageInsets = UIEdgeInsets.init(top: 5, left: 5, bottom: 5, right: 5)
-        if (fileMessage.thumbnail != nil) {
-            var size = CGSize.init(width: CGFloat(fileMessage.thumbnail.width.floatValue), height: CGFloat(fileMessage.thumbnail.height.floatValue))
+        if let thumbnail = fileMessage.thumbnail {
+            var size = CGSize.init(width: CGFloat(thumbnail.width.floatValue), height: CGFloat(thumbnail.height.floatValue))
             var textSize: CGSize = CGSize.init(width: 0.0, height: 0.0)
             let x: CGFloat = 30.0
             
@@ -230,7 +208,7 @@ extension ChatAnimatedGifMessageCell {
                 size.width = 120.0
             }
             
-            if let caption = fileMessage.getCaption(), caption.count > 0 {
+            if let caption = fileMessage.caption, caption.count > 0 {
                 textSize = _captionLabel!.sizeThatFits(CGSize.init(width: size.width - x, height: CGFloat.greatestFiniteMagnitude))
                 textSize.height = textSize.height + 12.0
             }
@@ -341,14 +319,14 @@ extension ChatAnimatedGifMessageCell {
 
     @objc override open func copyMessage(_ menuController: UIMenuController!) {
         let fileMessage = message as! FileMessage
-        if let caption = fileMessage.getCaption(), caption.count > 0 {
-            UIPasteboard.general.string = fileMessage.getCaption()
+        if let caption = fileMessage.caption, caption.count > 0 {
+            UIPasteboard.general.string = fileMessage.caption
         } else {
-            if fileMessage.data != nil, fileMessage.data.data != nil {
-                UIPasteboard.general.setData(fileMessage.data.data, forPasteboardType: "com.compuserve.gif")
+            if let fileMessageData = fileMessage.data, let fileMessageDataData = fileMessageData.data {
+                UIPasteboard.general.setData(fileMessageDataData, forPasteboardType: "com.compuserve.gif")
             } else {
-                if fileMessage.thumbnail != nil, fileMessage.thumbnail.data != nil {
-                    UIPasteboard.general.image = UIImage.init(data: fileMessage.thumbnail.data)
+                if let thumbnail = fileMessage.thumbnail, let thumbnailData = thumbnail.data {
+                    UIPasteboard.general.image = UIImage.init(data: thumbnailData)
                 }
             }
         }
@@ -364,16 +342,11 @@ extension ChatAnimatedGifMessageCell {
     }
     
     open override func shouldHideBubbleBackground() -> Bool {
-        let fileMessage = message as? FileMessage
-        if fileMessage?.thumbnail != nil {
-            if fileMessage!.thumbnail!.data != nil {
-                if fileMessage?.type.intValue == 2 {
-                    if let captionText = fileMessage!.getCaption(), captionText.count > 0 {
-                        return false
-                    }
-                    return true
-                }
+        if let fileMessage = message as? FileMessage, let thumbnail = fileMessage.thumbnail, thumbnail.data != nil, let type = fileMessage.type, type.intValue == 2 {
+            if let captionText = fileMessage.caption, captionText.count > 0 {
+                return false
             }
+            return true
         }
         return false
     }
@@ -407,8 +380,8 @@ extension ChatAnimatedGifMessageCell {
 
         
         let fileMessage = message as! FileMessage
-        if fileMessage.data != nil {
-            if fileMessage.data.data != nil {
+        if let fileMessageData = fileMessage.data {
+            if fileMessageData.data != nil {
                 let conf = UIContextMenuConfiguration.init(identifier: indexPath as NSIndexPath, previewProvider: { () -> UIViewController? in
                     return self.previewViewController()
                 }) { (suggestedActions) -> UIMenu? in
@@ -465,16 +438,16 @@ extension ChatAnimatedGifMessageCell {
         
         super.message = newMessage
         
-        if fileMessage.thumbnail != nil, let thumb = fileMessage.thumbnail.uiImage {
+        if let thumbnail = fileMessage.thumbnail, let thumb = thumbnail.uiImage {
             _thumbnailImage = thumb
         }
 
         var size = CGSize.init(width: 80.0, height: 40.0)
         
-        if fileMessage.thumbnail != nil {
-            if fileMessage.thumbnail.data != nil && fileMessage.thumbnail.height.floatValue > 0 {
-                let width: CGFloat = CGFloat(fileMessage.thumbnail.width.floatValue)
-                let height: CGFloat = CGFloat(fileMessage.thumbnail.height.floatValue)
+        if let thumbnail = fileMessage.thumbnail {
+            if thumbnail.data != nil && thumbnail.height.floatValue > 0 {
+                let width: CGFloat = CGFloat(thumbnail.width.floatValue)
+                let height: CGFloat = CGFloat(thumbnail.height.floatValue)
                 let fileMessageSize: CGSize = CGSize.init(width: width, height: height)
                 size = ChatAnimatedGifMessageCell.scaleImageSize(toCell: fileMessageSize, forTableWidth: frame.size.width)
             }
@@ -490,7 +463,7 @@ extension ChatAnimatedGifMessageCell {
         _downloadBackground?.autoresizingMask = autoresizingMask
         _downloadSizeLabel?.autoresizingMask = autoresizingMask
         
-        if let captionText = fileMessage.getCaption(), captionText.count > 0 {
+        if let captionText = fileMessage.caption, captionText.count > 0 {
             let attributed = TextStyleUtils.makeAttributedString(from: captionText, with: _captionLabel!.font, textColor: Colors.fontNormal(), isOwn: true, application: UIApplication.shared)
             let formattedAttributeString = NSMutableAttributedString.init(attributedString: (_captionLabel!.applyMarkup(for: attributed))!)
             _captionLabel?.attributedText = TextStyleUtils.makeMentionsAttributedString(for: formattedAttributeString, textFont: _captionLabel!.font!, at: _captionLabel!.textColor.withAlphaComponent(0.4), messageInfo: Int32(message.isOwn!.intValue), application: UIApplication.shared)
@@ -501,7 +474,7 @@ extension ChatAnimatedGifMessageCell {
             _captionLabel?.isHidden = true
         }
         
-        if fileMessage.data != nil, fileMessage.data.data != nil {
+        if let fileMessageData = fileMessage.data, fileMessageData.data != nil {
             setupAnimatedImage()
             _downloadBackground?.isHidden = true
         } else {

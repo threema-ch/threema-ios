@@ -23,7 +23,6 @@
 #import "NSString+Hex.h"
 #import "UTIConverter.h"
 #import "Utils.h"
-
 #import "ThreemaFramework/ThreemaFramework-swift.h"
 
 @implementation AudioMessage
@@ -45,6 +44,8 @@
 - (NSString*)previewText {
     return [NSString stringWithFormat:@"%@ (%@)", NSLocalizedString(@"audio", nil), [Utils timeStringForSeconds:self.duration.integerValue]];
 }
+
+#pragma mark - BlobData
 
 - (NSData *)blobGetData {
     if (self.audio) {
@@ -98,6 +99,13 @@
 - (NSNumber *)blobGetProgress {
     return self.progress;
 }
+
+- (NSString *)getExternalFilename {
+    return [[self audio] getFilename];
+}
+
+#pragma mark - Misc
+
 #ifdef DEBUG
 #else
 - (NSString *)debugDescription
@@ -105,16 +113,5 @@
     return [NSString stringWithFormat:@"<%@: %p> %@ %@ %@ %@ %@ %@ %@ %@ %@ %@ %@ %@", [self class], self, @"duration = ", self.duration.description, @"encryptionKey = ", @"***", @"progress = ", self.progress.description, @"audioBlobId = ", @"***", @"audioSize = ", self.audioSize.description, @"audio = ", self.audio.description];
 }
 #endif
-
-#pragma mark ExternalStorageInfo
-
-- (NSString *)getFilename {
-    if (self.audio != nil) {
-        if (self.audio.data != nil && [self.audio.data respondsToSelector:NSSelectorFromString(@"filename")]) {
-            return [self.audio.data performSelector:NSSelectorFromString(@"filename")];
-        }
-    }
-    return nil;
-}
 
 @end

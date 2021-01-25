@@ -124,25 +124,30 @@ import CocoaLumberjackSwift
     }
     
     @objc public static func getTemporarySendableFileName(base : String, directoryURL : URL, pathExtension : String? = nil) -> String {
-        let filename = base + "-" + DateFormatter.getDateForWeb(Date())
+        let filename = base + "-" + DateFormatter.getNowDateString()
+        
+        return FileUtility.getUniqueFilename(from: filename, directoryURL: directoryURL, pathExtension: pathExtension)
+    }
+    
+    @objc public static func getUniqueFilename(from filename : String, directoryURL : URL, pathExtension : String? = nil) -> String {
         var newFilename : String?
-
+        
         var fileURL = directoryURL.appendingPathComponent(filename)
         if pathExtension != nil {
             fileURL = fileURL.appendingPathExtension(pathExtension!)
         }
-
+        
         var i = 0
         while FileUtility.isExists(fileUrl: fileURL) {
             newFilename = filename.appending("-\(i)")
             fileURL = directoryURL.appendingPathComponent(newFilename!)
-            if pathExtension != nil {
-                fileURL = fileURL.appendingPathExtension(pathExtension!)
+            if let pathExtension = pathExtension {
+                fileURL = fileURL.appendingPathExtension(pathExtension)
             }
             i += 1
         }
-        if newFilename != nil {
-            return newFilename!
+        if let newFilename = newFilename {
+            return newFilename
         }
         return filename
     }
@@ -175,20 +180,58 @@ import CocoaLumberjackSwift
     }
     
     /**
-     Delete file if exists.
+     Delete file or directory if exists.
      
      - Parameters:
-        - fileUrl: File to delete
+        - at: URL to file or directory
     */
-    @objc public static func delete(fileUrl: URL?) {
-        guard let fileUrl = fileUrl else {
+    @objc public static func delete(at: URL?) {
+        guard let atUrl = at else {
             return;
         }
         
         let fileManager = FileManager.default
-        if fileManager.fileExists(atPath: fileUrl.path) {
-            try? fileManager.removeItem(atPath: fileUrl.path)
+        if fileManager.fileExists(atPath: atUrl.path) {
+            try? fileManager.removeItem(atPath: atUrl.path)
         }
+    }
+
+    /**
+     Create directory, but no intermediate directories.
+     
+     - Parameters:
+        - at: URL of directory
+     
+     - Returns: True was successfully created
+     */
+    public static func mkDir(at: URL) -> Bool {
+        let fileManager = FileManager.default
+        
+        do {
+            try fileManager.createDirectory(at: at, withIntermediateDirectories: false, attributes: nil)
+            
+            return true
+        }
+        catch {
+            DDLogError(error.localizedDescription)
+        }
+        
+        return false
+    }
+    
+    public static func move(source: URL, destination: URL) -> Bool {
+        let fileManager = FileManager.default
+        
+        do {
+            try fileManager.moveItem(at: source, to: destination)
+            
+            return true
+        }
+        catch {
+            DDLogError(error.localizedDescription)
+        }
+        
+        return false
     }
 
     public static func write(fileUrl: URL?, text: String) -> Bool {
@@ -290,6 +333,28 @@ import CocoaLumberjackSwift
         }
         catch {
             DDLogError(error.localizedDescription)
+        }
+    }
+    
+    @objc public static func cleanTemporaryDirectory(olderThan : Date?) {
+        guard let fiveDaysAgo = Calendar.current.date(byAdding: .day, value: -5, to: Date()) else {
+            DDLogError("Could not get date for five days ago")
+            return
+        }
+        let directoryURL = FileManager.default.temporaryDirectory
+        do {
+            let oldTempFiles = try
+                FileManager.default.contentsOfDirectory(at: directoryURL,
+                                                        includingPropertiesForKeys:[.contentModificationDateKey],
+                                                        options: [.skipsHiddenFiles, .skipsSubdirectoryDescendants])
+                .filter { try $0.promisedItemResourceValues(forKeys:[.contentModificationDateKey]).contentModificationDate! <  olderThan ?? fiveDaysAgo}
+            
+            for item in oldTempFiles {
+                DDLogInfo("Removing file: \(item)")
+                try FileManager.default.removeItem(at: item)
+            }
+        } catch {
+            DDLogError("An error occured while cleaning the temporary directory \(error)")
         }
     }
 }

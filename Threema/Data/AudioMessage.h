@@ -23,9 +23,8 @@
 #import "BaseMessage.h"
 #import "AudioData.h"
 #import "BlobData.h"
-#import "ExternalStorageInfo.h"
 
-@interface AudioMessage : BaseMessage <BlobData, ExternalStorageInfo>
+@interface AudioMessage : BaseMessage <BlobData>
 
 @property (nonatomic, retain) NSNumber * duration;
 @property (nonatomic, retain) NSData * encryptionKey;

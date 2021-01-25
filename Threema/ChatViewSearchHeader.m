@@ -22,7 +22,7 @@
 #import "EntityManager.h"
 #import "BundleUtil.h"
 #import "ChatMessageCell.h"
-#import "MBProgressHUD.h"
+#import <MBProgressHUD/MBProgressHUD.h>
 
 @interface ChatViewSearchHeader () <UISearchBarDelegate>
 

@@ -29,7 +29,7 @@
 #import "ModalPresenter.h"
 #import "UIDefines.h"
 #import "FileMessageSender.h"
-#import "MBProgressHUD.h"
+#import <MBProgressHUD/MBProgressHUD.h>
 #import "BundleUtil.h"
 #import "UTIConverter.h"
 #import "MediaConverter.h"
@@ -121,7 +121,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         }
         _picker.mediaTypes = myMediaTypes;
         
-        _picker.videoMaximumDuration = [MediaConverter videoMaxDurationAtCurrentQuality];
+        _picker.videoMaximumDuration = [MediaConverter videoMaxDurationAtCurrentQuality] * 60;
         
         /* Always request high quality from UIImagePickerController, and transcode by ourselves later */
         _picker.videoQuality = UIImagePickerControllerQualityTypeHigh;
@@ -646,6 +646,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 
 - (void)showVideoEncodeProgressHUDWithUnitCount:(long)unitCount text:(NSString *)text {
     if (self.videoEncodeProgressHUD == nil) {
+        [self.chatViewController.chatBar resignFirstResponder];
         self.videoEncodeProgressHUD = [MBProgressHUD showHUDAddedTo:self.chatViewController.view animated:YES];
         self.videoEncodeProgressHUD.mode = MBProgressHUDModeAnnularDeterminate;
         [self.videoEncodeProgressHUD.button setTitle:NSLocalizedString(@"cancel", nil) forState:UIControlStateNormal];

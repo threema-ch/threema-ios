@@ -55,7 +55,7 @@
         [view addSubview:labelLeft];
     }
     
-    NSString *caption = [fileMessage getCaption];
+    NSString *caption = fileMessage.caption;
     if (caption) {
         UITextView *textView = [self createTextViewInRect:rect];
         textView.autoresizingMask = UIViewAutoresizingFlexibleWidth;

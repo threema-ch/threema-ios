@@ -185,8 +185,9 @@
 + (BOOL)isKind:(CFStringRef)type mimeType:(NSString *)mimeType {
     CFStringRef MIMEType = (__bridge CFStringRef)mimeType;
     CFStringRef UTI = UTTypeCreatePreferredIdentifierForTag(kUTTagClassMIMEType, MIMEType, NULL);
-    
-    return UTTypeConformsTo(UTI, type);
+    BOOL isKindOfType = UTTypeConformsTo(UTI, type);
+    CFRelease(UTI);
+    return isKindOfType;
 }
 
 + (UIImage *)getDefaultThumbnailForMimeType:(NSString *)mimeType {

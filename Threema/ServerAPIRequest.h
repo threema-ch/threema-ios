@@ -23,7 +23,7 @@
 typedef void(^CompletionCallback)(id jsonObject);
 typedef void(^ErrorCallback)(NSError *error);
 
-@interface ServerAPIRequest : NSObject <NSURLSessionDelegate>
+@interface ServerAPIRequest : NSObject <NSURLSessionDelegate, NSURLConnectionDataDelegate>
 
 @property (nonatomic, strong) CompletionCallback onCompletion;
 @property (nonatomic, strong) ErrorCallback onError;

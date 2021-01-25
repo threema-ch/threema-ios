@@ -22,8 +22,7 @@
 #import "UTIConverter.h"
 #import "ModalPresenter.h"
 #import "BundleUtil.h"
-#import "MBProgressHUD.h"
-#import "FeatureMaskChecker.h"
+#import <MBProgressHUD/MBProgressHUD.h>
 #import "ContactUtil.h"
 #import "FileMessageSender.h"
 #import <Contacts/Contacts.h>
@@ -50,14 +49,7 @@ static DocumentPicker *pickerStrongReference;
 }
 
 - (void)show {
-    NSSet *conversations = [NSSet setWithObject:_conversation];
-    
-    FeatureMaskChecker *featureMaskChecker = [[FeatureMaskChecker alloc] init];
-    [featureMaskChecker checkFileTransferFor:conversations presentAlarmOn:_presentingViewController onSuccess:^{
-        [self showPicker];
-    } onFailure:^{
-        ;//nop
-    }];
+    [self showPicker];
 }
 
 - (void)showPicker {

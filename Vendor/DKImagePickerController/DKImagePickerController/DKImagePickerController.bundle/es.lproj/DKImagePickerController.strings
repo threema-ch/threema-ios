@@ -8,7 +8,7 @@
 //  Released under an MIT license: http://opensource.org/licenses/MIT
 //
 
-"select" = "Seleccciona (%ld)";
+"select" = "Selecciona (%ld)";
 
 "permissionCamera" = "Por favor, permite el Acceso a la cámara";
 

@@ -78,8 +78,8 @@ class WebCleanReceiverConversationRequest: WebAbstractMessage {
                         if imageData != nil {
                             let tmpImageData = entityManager.entityCreator.imageData()
                             tmpImageData?.data = imageData
-                            tmpImageData?.height = imageHeight
-                            tmpImageData?.width = imageWidth
+                            tmpImageData?.height = imageHeight ?? 0.0
+                            tmpImageData?.width = imageWidth ?? 0.0
                             tmpConversation?.groupImage = tmpImageData
                             tmpConversation?.groupImageSetDate = conversation?.groupImageSetDate
                         }

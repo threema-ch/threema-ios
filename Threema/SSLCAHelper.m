@@ -20,7 +20,7 @@
 
 #import "SSLCAHelper.h"
 #import "BundleUtil.h"
-#import "TrustKit.h"
+#import <TrustKit/TrustKit.h>
 
 @implementation SSLCAHelper
 
@@ -87,26 +87,11 @@
     [SSLCAHelper initTrustKit];
     TSKPinningValidator *pinningValidator = [[TrustKit sharedInstance] pinningValidator];
     // Pass the authentication challenge to the validator; if the validation fails, the connection will be blocked
-    [pinningValidator handleChallenge:challenge completionHandler:^(NSURLSessionAuthChallengeDisposition disposition, NSURLCredential * _Nullable credential) {
-        switch (disposition) {
-            case NSURLSessionAuthChallengeUseCredential:
-                [[challenge sender] useCredential:credential forAuthenticationChallenge:challenge];
-                break;
-            case NSURLSessionAuthChallengePerformDefaultHandling:
-                [challenge.sender performDefaultHandlingForAuthenticationChallenge:challenge];
-                break;
-            case NSURLSessionAuthChallengeCancelAuthenticationChallenge:
-                [challenge.sender cancelAuthenticationChallenge:challenge];
-                break;
-            case NSURLSessionAuthChallengeRejectProtectionSpace:
-                [challenge.sender rejectProtectionSpaceAndContinueWithChallenge:challenge];
-                break;
-            default:
-                [challenge.sender continueWithoutCredentialForAuthenticationChallenge:challenge];
-                break;
-        }
-        completion(disposition, credential);
-    }];
+    if (![pinningValidator handleChallenge:challenge completionHandler:completion]) {
+        // TrustKit did not handle this challenge: perhaps it was not for server trust
+        // or the domain was not pinned. Fall back to the default behavior
+        completion(NSURLSessionAuthChallengePerformDefaultHandling, nil);
+    }
 }
 
 @end

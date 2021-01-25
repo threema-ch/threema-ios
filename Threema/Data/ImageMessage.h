@@ -23,9 +23,8 @@
 #import "BaseMessage.h"
 #import "ImageData.h"
 #import "BlobData.h"
-#import "ExternalStorageInfo.h"
 
-@interface ImageMessage : BaseMessage <BlobData, ExternalStorageInfo>
+@interface ImageMessage : BaseMessage <BlobData>
 
 @property (nonatomic, retain) ImageData *image;
 @property (nonatomic, retain) ImageData *thumbnail;

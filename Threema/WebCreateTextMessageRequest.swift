@@ -49,7 +49,7 @@ public class WebCreateTextMessageRequest: WebAbstractMessage {
         
         let tmpQuote = data["quote"] as? [AnyHashable:Any]
         if tmpQuote != nil {
-            quote = WebTextMessageQuote.init(identity: tmpQuote!["identity"]! as! String, text: tmpQuote!["text"]! as! String)
+            quote = WebTextMessageQuote.init(identity: tmpQuote!["identity"]! as! String, text: tmpQuote!["text"]! as! String, messageId: tmpQuote!["messageId"] as? String)
             let quoteText = makeQuoteWithReply()
             text = quoteText + text
         }
@@ -125,20 +125,10 @@ public class WebCreateTextMessageRequest: WebAbstractMessage {
     }
     
     func makeQuoteWithReply() -> String {
-        var quoteString: String = "> "
-        quoteString.append(quote!.identity)
-        quoteString.append(": ")
-        
-        let lines = quote!.text.components(separatedBy: "\n")
-        var i = 0
-        for line in lines {
-            if i > 0 {
-                quoteString.append("\n> ")
-            }
-            quoteString.append(line)
-            i = i+1
-        }
-        quoteString.append("\n")
+        var quoteString: String = "> quote #"
+        let messageId = Data(base64Encoded: quote!.messageId!, options: .ignoreUnknownCharacters)!
+        quoteString.append(messageId.hexEncodedString())
+        quoteString.append("\n\n")
         return quoteString
     }
 }
@@ -146,4 +136,5 @@ public class WebCreateTextMessageRequest: WebAbstractMessage {
 struct WebTextMessageQuote {
     var identity:String
     var text:String
+    var messageId:String?
 }

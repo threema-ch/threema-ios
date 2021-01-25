@@ -20,6 +20,7 @@
 
 import UIKit
 import CocoaLumberjackSwift
+import MBProgressHUD
 
 @objc protocol RestoreSafeViewControllerDelegate {
     func restoreSafeDone();
@@ -263,5 +264,13 @@ extension RestoreSafeViewController {
             }
 
         })
+    }
+}
+
+extension RestoreSafeViewController {
+    override func dismissKeyboard() {
+        super.dismissKeyboard()
+        
+        identityField.resignFirstResponder()
     }
 }

@@ -19,15 +19,20 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import CocoaLumberjackSwift
 
 @objc public class EntityDestroyer: NSObject {
     
+    /**
+     Relative to app data (group container) path.
+     */
+    public static let externalDataPath: String = ".ThreemaData_SUPPORT/_EXTERNAL_DATA"
+    public static let externalDataBinPath: String = "_EXTERNAL_DATA_BIN"
+
     private let objCnx: NSManagedObjectContext
-    private let logger: ValidationLogger
     
     @objc public required init(managedObjectContext: NSManagedObjectContext) {
         self.objCnx = managedObjectContext
-        self.logger = ValidationLogger.shared()
     }
     
     /**
@@ -89,12 +94,30 @@ import Foundation
             if deleteMediaIDs.count > 0 {
                 var changes = [AnyHashable : [NSManagedObjectID]]()
 
-                // Delete medias
-                let deleteMediaBatch = NSBatchDeleteRequest(objectIDs: deleteMediaIDs)
-                deleteMediaBatch.resultType = .resultTypeObjectIDs
-                let deleteMediaResult = try self.objCnx.execute(deleteMediaBatch) as? NSBatchDeleteResult
-                if let deletedIDs = deleteMediaResult?.result as? [NSManagedObjectID] {
-                    changes[NSDeletedObjectsKey] = deletedIDs
+                // Delete media
+                var confirmedDeletedIDs : [NSManagedObjectID] = []
+
+                self.objCnx.propagatesDeletesAtEndOfEvent = true
+                for mediaID in deleteMediaIDs {
+                    self.objCnx.performAndWait {
+                        do {
+                            let object = try self.objCnx.existingObject(with: mediaID)
+                            self.objCnx.delete(object)
+                            
+                            try self.objCnx.save()
+
+                            confirmedDeletedIDs.append(mediaID)
+                        } catch {
+                            DDLogError("Could not delete file. Error: \(error); \(error.localizedDescription)")
+                        }
+                    }
+                }
+
+                if #available(iOSApplicationExtension 10.3, *) {
+                    changes[NSDeletedObjectIDsKey] = confirmedDeletedIDs
+                } else {
+                    // Fallback on earlier versions
+                   changes[NSDeletedObjectsKey] = confirmedDeletedIDs
                 }
 
                 // Update blobIDs to nil (to prevent downloading blob again)
@@ -112,7 +135,7 @@ import Foundation
                                         updatedIDs.append(updateID)
                                     }
                                     catch let error as NSError {
-                                        self.logger.logString("Cloud not update message. \(error), \(error.userInfo)")
+                                        DDLogError("Cloud not update message. \(error), \(error.userInfo)")
                                     }
                                 }
                             }
@@ -132,7 +155,7 @@ import Foundation
             return messages.count
         }
         catch let error as NSError {
-            self.logger.logString("Could not delete medias. \(error), \(error.userInfo)")
+            DDLogError("Could not delete medias. \(error), \(error.userInfo)")
         }
         
         return 0;
@@ -173,7 +196,7 @@ import Foundation
             return nil
         }
         catch let error as NSError {
-            self.logger.logString("Could not delete messages. \(error), \(error.userInfo)")
+            DDLogError("Could not delete messages. \(error), \(error.userInfo)")
         }
         
         return nil
@@ -212,7 +235,7 @@ import Foundation
 
         }
         catch let error as NSError {
-            self.logger.logString("Could not delete messages. \(error), \(error.userInfo)")
+            DDLogError("Could not delete messages. \(error), \(error.userInfo)")
         }
 
         return 0
@@ -227,12 +250,73 @@ import Foundation
     @objc public func deleteObject(object: NSManagedObject) {
         if let conversation = object as? Conversation {
             let count = deleteMessages(ofCoversation: conversation)
-            print("\(count) messages deleted from conversation")
+            DDLogInfo("\(count) messages deleted from conversation")
         }
 
         let deleteFilenames = self.getExternalFilenames(ofMessages: [object], includeThumbnail: true)
         self.objCnx.delete(object)
         self.deleteExternalFiles(list: deleteFilenames)
+    }
+    
+    /**
+     Get orphaned external files.
+     
+     - Returns: List of orphaned files, count of files in DB
+     */
+    public func orphanedExternalFiles() -> (orphanedFiles: [String]?, totalFilesCount: Int) {
+        
+        // Load all external filenames
+        if let files = FileUtility.dir(pathUrl: FileUtility.appDataDirectory?.appendingPathComponent("\(EntityDestroyer.externalDataPath)/")),
+           files.count > 0 {
+            
+            // Load all filenames from DB
+            var filesInDB = [String]()
+            do {
+                let fetchRequests: [NSFetchRequest<NSManagedObject>] = [NSFetchRequest<NSManagedObject>(entityName: "AudioData"), NSFetchRequest<NSManagedObject>(entityName: "FileData"), NSFetchRequest<NSManagedObject>(entityName: "ImageData"), NSFetchRequest<NSManagedObject>(entityName: "VideoData")]
+                
+                for fetchRequest in fetchRequests {
+                    try autoreleasepool {
+                        let totalItems = try objCnx.count(for: fetchRequest)
+                        let increment = 20
+                        let sequence = stride(from: 0, to: totalItems, by: increment)
+                        for i in sequence {
+                            try autoreleasepool {
+                                fetchRequest.fetchOffset = i
+                                fetchRequest.fetchLimit = increment
+                                
+                                let items = try objCnx.fetch(fetchRequest)
+                                for item in items {
+                                    objCnx.refresh(item, mergeChanges: true)
+                                    
+                                    if let externalStorageInfo = item as? ExternalStorageInfo {
+                                        if let filename = externalStorageInfo.getFilename() {
+                                            filesInDB.append(filename)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            catch let error as NSError {
+                DDLogError("Could not load filenames from DB. \(error), \(error.userInfo)")
+            }
+            
+            // Filter orphaned external files
+            let orphanedFiles = files.filter { (file) -> Bool in
+                !filesInDB.contains(file)
+            }
+            #if DEBUG
+            for file in orphanedFiles {
+                DDLogInfo("Orphaned file: \(file)")
+            }
+            #endif
+            
+            return (orphanedFiles, filesInDB.count)
+        }
+        
+        return (nil, 0)
     }
     
     private func getMediaMetaInfo<T: Any>(messageType: T.Type) throws -> (fetchMessages: NSFetchRequest<NSManagedObject>, relationship: String, blobIDField: String) {
@@ -280,7 +364,7 @@ import Foundation
     private func getExternalFilenames(ofMessages: [Any], includeThumbnail: Bool) -> [String] {
         var externalFilenames: [String] = []
         for message in ofMessages {
-            if let externalStorageInfo = message as? ExternalStorageInfo {
+            if let blobData = message as? BlobData {
                 
                 // Refreshing media objects, otherwise external filenames can not be evaluated for new messages
                 let mediaMetaInfo: (fetchMessages: NSFetchRequest<NSManagedObject>, relationship: String, blobIDField: String)?
@@ -311,11 +395,11 @@ import Foundation
                 }
 
                 // Get external file name
-                if let filename = externalStorageInfo.getFilename() {
+                if let filename = blobData.getExternalFilename() {
                     externalFilenames.append(filename)
                 }
                 if includeThumbnail,
-                    let thumbnailname = externalStorageInfo.getThumbnailname?() {
+                    let thumbnailname = blobData.getExternalFilenameThumbnail?() {
                     
                     externalFilenames.append(thumbnailname)
                 }
@@ -333,8 +417,8 @@ import Foundation
     private func deleteExternalFiles(list: [String]) {
         if list.count > 0 {
             for filename in list {
-                let fileUrl = FileUtility.appDataDirectory?.appendingPathComponent(".ThreemaData_SUPPORT/_EXTERNAL_DATA/\(filename)")
-                FileUtility.delete(fileUrl: fileUrl)
+                let fileUrl = FileUtility.appDataDirectory?.appendingPathComponent("\(EntityDestroyer.externalDataPath)/\(filename)")
+                FileUtility.delete(at: fileUrl)
             }
         }
     }

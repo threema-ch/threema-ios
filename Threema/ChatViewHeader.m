@@ -390,7 +390,16 @@
     _verificationLevel.accessibilityLabel = [_conversation.contact verificationLevelAccessibilityLabel];
 
     [_avatarButton setImage:[[AvatarMaker sharedAvatarMaker] avatarForContact:_conversation.contact size:_avatarButton.frame.size.width masked:YES] forState:UIControlStateNormal];
-    _avatarButton.accessibilityLabel = _conversation.contact.displayName;
+    
+    _avatarButton.accessibilityLabel = nil;
+    
+    if (_conversation != nil) {
+        if (_conversation.contact != nil) {
+            if (_conversation.contact.displayName != nil) {
+                _avatarButton.accessibilityLabel = _conversation.contact.displayName;
+            }
+        }
+    }
     
     _callButton.alpha = 1.0;
     _callButton.enabled = [UserSettings sharedUserSettings].enableThreemaCall && is64Bit == 1;

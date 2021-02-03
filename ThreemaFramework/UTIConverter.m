@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2015-2020 Threema GmbH
+// Copyright (c) 2015-2021 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -20,6 +20,12 @@
 
 #import "UTIConverter.h"
 #import "BundleUtil.h"
+
+#ifdef DEBUG
+static const DDLogLevel ddLogLevel = DDLogLevelVerbose;
+#else
+static const DDLogLevel ddLogLevel = DDLogLevelWarning;
+#endif
 
 @implementation UTIConverter
 
@@ -185,6 +191,10 @@
 + (BOOL)isKind:(CFStringRef)type mimeType:(NSString *)mimeType {
     CFStringRef MIMEType = (__bridge CFStringRef)mimeType;
     CFStringRef UTI = UTTypeCreatePreferredIdentifierForTag(kUTTagClassMIMEType, MIMEType, NULL);
+    if (UTI == nil) {
+        DDLogError(@"UTI was nil for parameters %@ and %@", type, mimeType);
+        return false;
+    }
     BOOL isKindOfType = UTTypeConformsTo(UTI, type);
     CFRelease(UTI);
     return isKindOfType;

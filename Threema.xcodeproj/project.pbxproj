@@ -69,7 +69,7 @@
 		0A3864181C6256EF00924A29 /* auth.c in Sources */ = {isa = PBXBuildFile; fileRef = 4DD01FC314C1CCD000EF7690 /* auth.c */; };
 		0A3864191C6256EF00924A29 /* verify.c in Sources */ = {isa = PBXBuildFile; fileRef = 4DD01FC414C1CCD000EF7690 /* verify.c */; };
 		0A38641A1C6256EF00924A29 /* base.c in Sources */ = {isa = PBXBuildFile; fileRef = 4DD01FC914C1CCD000EF7690 /* base.c */; };
-		0A38641B1C6256EF00924A29 /* smult.c in Sources */ = {isa = PBXBuildFile; fileRef = 4DD01FCA14C1CCD000EF7690 /* smult.c */; };
+		0A38641B1C6256EF00924A29 /* smult_donna-c64.c in Sources */ = {isa = PBXBuildFile; fileRef = 4DD01FCA14C1CCD000EF7690 /* smult_donna-c64.c */; };
 		0A38641C1C6256EF00924A29 /* box.c in Sources */ = {isa = PBXBuildFile; fileRef = 4DD01FCF14C1CCD000EF7690 /* box.c */; };
 		0A38641D1C6256EF00924A29 /* stream.c in Sources */ = {isa = PBXBuildFile; fileRef = 4DD01FD414C1CCD000EF7690 /* stream.c */; };
 		0A38641E1C6256EF00924A29 /* xor.c in Sources */ = {isa = PBXBuildFile; fileRef = 4DD01FD514C1CCD000EF7690 /* xor.c */; };
@@ -1059,6 +1059,7 @@
 		4DCA7FFD195AEB1A0068F801 /* CachedCellHeight.m in Sources */ = {isa = PBXBuildFile; fileRef = 4DCA7FFC195AEB1A0068F801 /* CachedCellHeight.m */; };
 		4DCC5E4616542A6D00644D0D /* EnterCodeViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4DCC5E4516542A6D00644D0D /* EnterCodeViewController.m */; };
 		4DCDB5DB19D891D000A0CA27 /* TTOpenInAppActivity.bundle in Resources */ = {isa = PBXBuildFile; fileRef = 4DCDB5DA19D891D000A0CA27 /* TTOpenInAppActivity.bundle */; };
+		4DCEC40F25C0401D00F9D6AC /* smult_donna.c in Sources */ = {isa = PBXBuildFile; fileRef = 4DCEC40E25C0401D00F9D6AC /* smult_donna.c */; };
 		4DD01F6D14C1CCA900EF7690 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DD01F6C14C1CCA900EF7690 /* UIKit.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		4DD01F7114C1CCA900EF7690 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DD01F7014C1CCA900EF7690 /* CoreGraphics.framework */; settings = {ATTRIBUTES = (Required, ); }; };
 		4DD01F7714C1CCA900EF7690 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 4DD01F7514C1CCA900EF7690 /* InfoPlist.strings */; };
@@ -2953,6 +2954,7 @@
 		4DCC5E4416542A6D00644D0D /* EnterCodeViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EnterCodeViewController.h; sourceTree = "<group>"; };
 		4DCC5E4516542A6D00644D0D /* EnterCodeViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EnterCodeViewController.m; sourceTree = "<group>"; };
 		4DCDB5DA19D891D000A0CA27 /* TTOpenInAppActivity.bundle */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.plug-in"; path = TTOpenInAppActivity.bundle; sourceTree = "<group>"; };
+		4DCEC40E25C0401D00F9D6AC /* smult_donna.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = smult_donna.c; sourceTree = "<group>"; };
 		4DD01F6814C1CCA900EF7690 /* Threema.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Threema.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		4DD01F6C14C1CCA900EF7690 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
 		4DD01F6E14C1CCA900EF7690 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
@@ -2977,7 +2979,7 @@
 		4DD01FC414C1CCD000EF7690 /* verify.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = verify.c; sourceTree = "<group>"; };
 		4DD01FC814C1CCD000EF7690 /* api.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = api.h; sourceTree = "<group>"; };
 		4DD01FC914C1CCD000EF7690 /* base.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = base.c; sourceTree = "<group>"; };
-		4DD01FCA14C1CCD000EF7690 /* smult.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = smult.c; sourceTree = "<group>"; };
+		4DD01FCA14C1CCD000EF7690 /* smult_donna-c64.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = "smult_donna-c64.c"; sourceTree = "<group>"; };
 		4DD01FCE14C1CCD000EF7690 /* api.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = api.h; sourceTree = "<group>"; };
 		4DD01FCF14C1CCD000EF7690 /* box.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = box.c; sourceTree = "<group>"; };
 		4DD01FD314C1CCD000EF7690 /* api.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = api.h; sourceTree = "<group>"; };
@@ -5743,7 +5745,8 @@
 			children = (
 				4DD01FC814C1CCD000EF7690 /* api.h */,
 				4DD01FC914C1CCD000EF7690 /* base.c */,
-				4DD01FCA14C1CCD000EF7690 /* smult.c */,
+				4DD01FCA14C1CCD000EF7690 /* smult_donna-c64.c */,
+				4DCEC40E25C0401D00F9D6AC /* smult_donna.c */,
 			);
 			path = donna;
 			sourceTree = "<group>";
@@ -7837,7 +7840,7 @@
 				0A3864271C62570B00924A29 /* ContactUtil.m in Sources */,
 				2D670D4322A7EA4F00C3EBBD /* EntityDestroyer.swift in Sources */,
 				0A3863FC1C62565000924A29 /* KKPasscodeViewController.m in Sources */,
-				0A38641B1C6256EF00924A29 /* smult.c in Sources */,
+				0A38641B1C6256EF00924A29 /* smult_donna-c64.c in Sources */,
 				0A3864BA1C63439B00924A29 /* UnknownTypeMessage.m in Sources */,
 				0A3864421C62576500924A29 /* BallotMessageDecoder.m in Sources */,
 				0A38640E1C62568A00924A29 /* UIImage+Mask.m in Sources */,
@@ -7899,6 +7902,7 @@
 				0A3864221C6256EF00924A29 /* verify.c in Sources */,
 				4DC8A4AE20DCDE1B003E70C8 /* NBRegularExpressionCache.m in Sources */,
 				0A3864731C633D0200924A29 /* Ballot.m in Sources */,
+				4DCEC40F25C0401D00F9D6AC /* smult_donna.c in Sources */,
 				0A3863FB1C62565000924A29 /* KKPasscodeSettingsViewController.m in Sources */,
 				4A4EB510250F59C4003536D9 /* VideoConversionHelper.swift in Sources */,
 				0A3864071C62567600924A29 /* NBNumberFormat.m in Sources */,
@@ -10486,7 +10490,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				BUILD_NUMBER = 2602;
+				BUILD_NUMBER = 2604;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ENABLE_MODULES = NO;
 				CLANG_ENABLE_OBJC_ARC = YES;
@@ -10533,7 +10537,7 @@
 				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "";
 				SDKROOT = iphoneos;
 				VALIDATE_PRODUCT = YES;
-				VERSION_NUMBER = 4.6.4;
+				VERSION_NUMBER = 4.6.5;
 			};
 			name = AppStore;
 		};
@@ -10606,7 +10610,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				BUILD_NUMBER = 2602;
+				BUILD_NUMBER = 2604;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ENABLE_MODULES = NO;
 				CLANG_ENABLE_OBJC_ARC = YES;
@@ -10659,7 +10663,7 @@
 				PROVISIONING_PROFILE = "";
 				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "";
 				SDKROOT = iphoneos;
-				VERSION_NUMBER = 4.6.4;
+				VERSION_NUMBER = 4.6.5;
 			};
 			name = Debug;
 		};
@@ -10667,7 +10671,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				BUILD_NUMBER = 2602;
+				BUILD_NUMBER = 2604;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ENABLE_MODULES = NO;
 				CLANG_ENABLE_OBJC_ARC = YES;
@@ -10714,7 +10718,7 @@
 				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "";
 				SDKROOT = iphoneos;
 				VALIDATE_PRODUCT = YES;
-				VERSION_NUMBER = 4.6.4;
+				VERSION_NUMBER = 4.6.5;
 			};
 			name = AdHoc;
 		};
@@ -11010,7 +11014,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				BUILD_NUMBER = 2602;
+				BUILD_NUMBER = 2604;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ENABLE_MODULES = NO;
 				CLANG_ENABLE_OBJC_ARC = YES;
@@ -11063,7 +11067,7 @@
 				PROVISIONING_PROFILE = "";
 				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "";
 				SDKROOT = iphoneos;
-				VERSION_NUMBER = 4.6.4;
+				VERSION_NUMBER = 4.6.5;
 			};
 			name = "Debug Sandbox";
 		};

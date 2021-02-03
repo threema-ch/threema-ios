@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2018-2020 Threema GmbH
+// Copyright (c) 2018-2021 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -368,6 +368,11 @@ class WebMessageObject: NSObject {
             let webVideo = WebVideo.init(fileMessage)
             video = webVideo.objectDict()
         }
+        else if fileMessage.renderFileAudioMessage() {
+            type = "audio"
+            let webAudio = WebAudio.init(fileMessage)
+            audio = webAudio.objectDict()
+        }
         else {
             type = "file"
             let webFile = WebFile.init(fileMessage)
@@ -504,7 +509,11 @@ struct WebBlob {
             blob = fileMessageData.data
         }
         name = fileMessage.blobGetWebFilename()
-        type = fileMessage.mimeType ?? "application/octet-stream"
+        if fileMessage.renderFileAudioMessage() {
+            type = "audio/\(MEDIA_EXTENSION_VIDEO)"
+        } else {
+            type = fileMessage.mimeType ?? "application/octet-stream"
+        }
     }
     
     func objectDict() -> [String: Any] {
@@ -634,6 +643,14 @@ struct WebAudio {
     
     init(_ audioMessage: AudioMessage) {
         duration = audioMessage.duration.intValue
+    }
+    
+    init (_ fileMessage: FileMessage) {
+        if let audioDuration = fileMessage.duration {
+            duration = audioDuration.intValue
+        } else {
+            duration = 0
+        }
     }
     
     func objectDict() -> [String: Any] {

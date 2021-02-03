@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2012-2020 Threema GmbH
+// Copyright (c) 2012-2021 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -61,7 +61,7 @@ enum IdentityState {
 - (void)revokeIdForStore:(MyIdentityStore*)identityStore onCompletion:(void(^)(void))onCompletion onError:(void(^)(NSError *error))onError;
 
 - (void)validateLicenseUsername:(NSString*)licenseUsername password:(NSString*)licensePassword appId:(NSString*)appId version:(NSString*)version deviceId:(NSString*)deviceId onCompletion:(void(^)(BOOL success, NSDictionary *info))onCompletion onError:(void(^)(NSError *error))onError;
-- (void)updateWorkInfoForStore:(MyIdentityStore*)identityStore licenseUsername:(NSString*)licenseUsername password:(NSString*)licensePassword onCompletion:(void(^)(void))onCompletion onError:(void(^)(NSError *error))onError;
+- (void)updateWorkInfoForStore:(MyIdentityStore*)identityStore licenseUsername:(NSString*)licenseUsername password:(NSString*)licensePassword onCompletion:(void(^)(BOOL sent))onCompletion onError:(void(^)(NSError *error))onError;
 
 - (void)searchInDirectory:(NSString *)searchString categories:(NSArray *)categories page:(int)page forLicenseStore:(LicenseStore *)licenseStore forMyIdentityStore:(MyIdentityStore*)identityStore onCompletion:(void(^)(NSArray *contacts, NSDictionary *paging))onCompletion onError:(void(^)(NSError *error))onError;
 

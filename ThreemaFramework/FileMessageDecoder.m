@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2015-2020 Threema GmbH
+// Copyright (c) 2015-2021 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -221,6 +221,12 @@ typedef void (^ErrorBlock)(NSError *err);
         }
         
         fileMessage.json = [[NSString alloc] initWithData:_jsonData encoding:NSUTF8StringEncoding];
+        
+        /* Find contact for message */
+        /* A FileMessage with sender != nil will be treated as a file message sent in a group*/
+        if ([_boxMessage isKindOfClass:AbstractGroupMessage.class]) {
+            fileMessage.sender = [_entityManager.entityFetcher contactForId: _boxMessage.fromIdentity];
+        }
     }];
     
     return fileMessage;

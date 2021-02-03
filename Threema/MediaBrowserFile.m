@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2016-2020 Threema GmbH
+// Copyright (c) 2016-2021 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -161,29 +161,33 @@
 
 - (void)loadUnderlyingImageAndNotify {
     // loaded already
-    if (_fileMessage.data != nil) {
+        
+    if (_fileMessage.thumbnail != nil) {
         if (_fileMessage.thumbnail != nil) {
             if (_fileMessage.thumbnail.data != nil) {
                 _underlyingImage = [[UIImage alloc] initWithData:_fileMessage.thumbnail.data];
                 [self postCompleteNotification];
+                return;
             }
-        } else {
-            UIImage *thumbnail = [FileMessagePreview thumbnailForFileMessage:_fileMessage];
-            _isUtiPreview = !_fileMessage.thumbnail;
-            if (_fileMessage.thumbnail == nil) {
-                UIImage *colorizedThumbnail = [thumbnail imageWithTint:[Colors white]];
-                _underlyingImage = colorizedThumbnail;
-            } else {
-                if ([UTIConverter isGifMimeType:_fileMessage.mimeType]) {
-                    thumbnail = [Utils makeThumbWithOverlayFor:thumbnail];
-                }
-                _underlyingImage = thumbnail;
-            }
-            [self postCompleteNotification];
         }
-        return;
     }
     
+    if (_fileMessage.data != nil) {
+        UIImage *thumbnail = [FileMessagePreview thumbnailForFileMessage:_fileMessage];
+        _isUtiPreview = !_fileMessage.thumbnail;
+        if (_fileMessage.thumbnail == nil) {
+            UIImage *colorizedThumbnail = [thumbnail imageWithTint:[Colors white]];
+            _underlyingImage = colorizedThumbnail;
+        } else {
+            if ([UTIConverter isGifMimeType:_fileMessage.mimeType]) {
+                thumbnail = [Utils makeThumbWithOverlayFor:thumbnail];
+            }
+            _underlyingImage = thumbnail;
+        }
+        [self postCompleteNotification];
+        return;
+    }
+        
     // loading
     if (_fileMessage.progress != nil) {
         return;

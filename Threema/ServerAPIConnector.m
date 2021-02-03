@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2012-2020 Threema GmbH
+// Copyright (c) 2012-2021 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -559,7 +559,7 @@
     } onError:onError];
 }
 
-- (void)updateWorkInfoForStore:(MyIdentityStore*)identityStore licenseUsername:(NSString*)licenseUsername password:(NSString*)licensePassword onCompletion:(void(^)(void))onCompletion onError:(void(^)(NSError *error))onError {
+- (void)updateWorkInfoForStore:(MyIdentityStore*)identityStore licenseUsername:(NSString*)licenseUsername password:(NSString*)licensePassword onCompletion:(void(^)(BOOL sent))onCompletion onError:(void(^)(NSError *error))onError {
     
     if (identityStore.identity == nil) {
         onError([ThreemaError threemaError:@"store has no valid identity"]);
@@ -585,16 +585,15 @@
     
     if ([request isEqualToDictionary:identityStore.lastWorkUpdateRequest] && ![identityStore sendUpdateWorkInfoStatus]) {
         // request hasn't changed since last update and it's the same date
-        onCompletion();
+        onCompletion(false);
         return;
     }
     
-    identityStore.lastWorkUpdateRequest = request;
-    
     [self sendSignedRequest:request toApiPath:@"identity/update_work_info" forStore:identityStore onCompletion:^(id jsonObject) {
         if ([jsonObject[@"success"] boolValue]) {
+            identityStore.lastWorkUpdateRequest = request;
             [identityStore setLastWorkUpdateDate:[NSDate date]];
-            onCompletion();
+            onCompletion(true);
         } else {
             onError([ThreemaError threemaError:jsonObject[@"error"]]);
         }

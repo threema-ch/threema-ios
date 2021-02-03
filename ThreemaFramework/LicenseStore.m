@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2016-2020 Threema GmbH
+// Copyright (c) 2016-2021 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -181,10 +181,14 @@ static LicenseStore *singleton;
     
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         ServerAPIConnector *connector = [[ServerAPIConnector alloc] init];
-        [connector updateWorkInfoForStore:[MyIdentityStore sharedMyIdentityStore] licenseUsername:_licenseUsername password:_licensePassword onCompletion:^{
-            DDLogInfo(@"Work info update completed");
+        [connector updateWorkInfoForStore:[MyIdentityStore sharedMyIdentityStore] licenseUsername:_licenseUsername password:_licensePassword onCompletion:^(BOOL sent) {
+            if (sent) {
+                DDLogNotice(@"Work info update completed (sent)");
+            } else {
+                DDLogNotice(@"Work info update completed without changes (not sent)");
+            }
         } onError:^(NSError *error) {
-            DDLogWarn(@"Work info update failed: %@", error);
+            DDLogNotice(@"Work info update failed: %@", error);
         }];
     });
 }

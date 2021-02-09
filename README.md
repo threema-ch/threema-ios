@@ -148,14 +148,14 @@ Our dependencies are manged with Carthage. Additionally we use WebRTC based on b
 
 ## <a name="contributions"></a>Contributions
 
-For the time being, we do not accept contributions via GitHub. If you want to make a contribution, first make sure that you have signed the [CLA](https://threema.ch/open-source/cla/). You can then submit patches over email by following the instructions at [threema.ch/open-source/contributions/](https://threema.ch/open-source/contributions/).
+We accept GitHub pull requests. Please refer to <https://threema.ch/open-source/contributions> for more information on how to contribute.
 
 
 ## <a name="license"></a>License
 
 Threema for iOS is licensed under the GNU Affero General Public License v3.
 
-    Copyright (c) 2012-2020 Threema GmbH
+    Copyright (c) 2012-2021 Threema GmbH
     
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU Affero General Public License, version 3,

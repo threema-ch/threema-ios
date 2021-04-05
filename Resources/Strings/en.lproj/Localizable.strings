@@ -411,7 +411,7 @@
 "no_contacts_syncoff" = "You don't have any contacts yet. Turn on synchronization (Settings > Privacy), or add contacts manually using the + button.";
 "no_contacts_permission_message" = "Threema does not have permission to access your contacts. Please go to your device's privacy settings and enable contacts access for Threema.";
 
-"contact_added_to_profilepicture_list" = "This contact will receive your profile picture when you write him.";
+"contact_added_to_profilepicture_list" = "This contact will receive your profile picture when you write them.";
 "contact_removed_from_profilepicture_list" = "This contact will no longer receive your profile.";
 "contact_send_profilepicture_success" = "Your profile picture has been successfully sent to the contact.";
 "contact_send_profilepicture_error" = "Your profile picture could not be sent. Please try again later.";

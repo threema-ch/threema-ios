@@ -231,7 +231,7 @@ extension VoIPCallKitManager: CXProviderDelegate {
         case .ended, .remoteEnded, .rejected, .rejectedBusy, .rejectedTimeout, .rejectedDisabled, .rejectedOffHours, .rejectedUnknown, .microphoneDisabled:
             action.fulfill()
             return
-        case .idle, .sendOffer, .receivedOffer, .outgoingRinging, .incomingRinging, .sendAnswer, .receivedAnswer, .initalizing, .calling, .reconnecting:
+        case .idle, .sendOffer, .receivedOffer, .outgoingRinging, .incomingRinging, .sendAnswer, .receivedAnswer, .initializing, .calling, .reconnecting:
             // do nothing
             break
         }
@@ -309,7 +309,7 @@ extension VoIPCallKitManager: CXProviderDelegate {
             case .idle, .ended, .remoteEnded, .rejected, .rejectedBusy, .rejectedTimeout, .rejectedOffHours, .rejectedUnknown, .rejectedDisabled, .microphoneDisabled:
                 action.fulfill()
                 break
-            case .sendOffer, .outgoingRinging, .sendAnswer, .receivedAnswer, .initalizing, .calling, .reconnecting:
+            case .sendOffer, .outgoingRinging, .sendAnswer, .receivedAnswer, .initializing, .calling, .reconnecting:
                 let userAction = VoIPCallUserAction.init(action: .end, contact: contact, callId: callId, completion: {
                     action.fulfill()
                 })

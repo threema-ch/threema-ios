@@ -323,6 +323,12 @@
 "leave" = "Abandonar";
 "you are not a member" = "Yo (eliminado)";
 "groups" = "Grupos";
+"create_new_group" = "Crear nuevo grupo";
+"create_note_group_info_title" = "Consejo";
+"create_note_group_info_text" = "Si no añade ningún miembro al grupo, los mensajes a este grupo permanecerán en almacenamiento local. Resulta idóneo para guardar con seguridad notas, medios y documentos o para transferir elementos al escritorio.";
+"doNotShowAgain" = "No volver a mostrar";
+"add_note_group_info" = "*No está solo aquí*\nUse este chat como cuaderno seguro para apuntar mensajes de texto, medios documentos.";
+"end_note_group_info" = "Ya no está solo en este chat* \nLos nuevos mensajes se enviarán a todos los miembros del grupo.";
 
 "choose_recipient" = "Elegir destinatario";
 
@@ -411,7 +417,7 @@
 "no_contacts_syncoff" = "Todavía no tiene contactos. Active la sincronización (Configuración > Esfera privada) o agregue los contactos de forma manual con el botón «+».";
 "no_contacts_permission_message" = "Threema no tiene permiso para acceder a sus contactos. Permita el acceso en la configuración de protección de datos de su dispositivo.";
 
-"contact_added_to_profilepicture_list" = "Este contacto recibirá su foto de perfil cuando les escriba.";
+"contact_added_to_profilepicture_list" = "Este contacto recibirá su foto de perfil cuando le escriba.";
 "contact_removed_from_profilepicture_list" = "Este contacto ya no recibirá su perfil.";
 "contact_send_profilepicture_success" = "Su imagen de perfil se ha enviado correctamente al contacto.";
 "contact_send_profilepicture_error" = "Su foto de perfil no se puede enviar. Inténtelo de nuevo más tarde.";
@@ -657,7 +663,7 @@
 "call_microphone_permission_title" = "Acceso al micrófono denegado";
 "call_microphone_permission_text" = "Debe permitir el acceso al micrófono en los Ajustes.";
 "call_contact_alert" = "¿Quiere llamar a %@?";
-"call_contact_not_reachable" = "No se puede comunicar con el contacto";
+"call_contact_not_reachable" = "No se puede comunicar con el contacto...";
 
 "call_status_idle" = "Listo";
 "call_status_wait_ringing" = "Inicializar";
@@ -937,7 +943,7 @@
 
 // File message
 "optional_caption" = "Título caption";
-"send_as_file" = "Enviar como archivo";
+"send_as_file" = "Enviar como original";
 
 // Notification settings
 "settings_notifications_inapp_section" = "En la aplicación";
@@ -996,14 +1002,15 @@ Si no faltan archivos (multimedia) en Threema, vacía la papelera de reciclaje p
 // Media Preview
 "loading_video_failed" = "No se ha podido cargar el vídeo. Reinicia la aplicación y vuelve a intentarlo.";
 "loading_image" = "Cargando imagen";
+"load_error" = "No se pudo cargar el elemento debido a un error desconocido.";
 "loading_video" = "Cargando vídeo";
 "selected_media_list" = "Lista de medios seleccionados";
 "media_item_of" = "Elemento multimedia %@ de %@";
 "video_date" = "Vídeo tomado el %@";
 "imagedate_date" = "Foto tomada el %@";
-"send_as_file_description" = "Envía las imágenes como archivo o como foto alineada. Los archivos conservarán todos los metadatos, como los datos de ubicación, y se mostrarán con una imagen más pequeña.";
+"send_as_file_description" = "Envía el archivo sin cambios en el original. Los archivos conservarán todos los metadatos, por ejemplo, los datos de ubicación de las fotos.";
 "more_options" = "Más opciones";
-"add_caption_to_image" = "Añadir subtítulo...";
+"add_caption_to_image" = "Añadir un subtítulo";
 "add_more_images" = "Añadir más imágenes";
 "back_to_media_selection" = "Volver a la pantalla de selección de medios";
 "remove_current_image_from_selected_images" = "Eliminar elemento actual de la selección";
@@ -1020,3 +1027,17 @@ Si no faltan archivos (multimedia) en Threema, vacía la papelera de reciclaje p
 "back" = "Volver";
 "sending_item" = "Enviando elemento";
 "send_as_file_title" = "Modo de envío";
+"document" = "Documento";
+"paste_create_file_failure_title" = "Error al pegar";
+"paste_create_file_failure_message" = "No se pudo pegar el archivo. Vuelve a intentarlo.";
+"loading_files_takes_time_title" = "Cargando medios";
+"loading_files_takes_time_description" = "Convertir vídeos puede tardar unos minutos.";
+"pasteErrorMessageTitle" = "No se pudo pegar";
+"pasteErrorMessageMessage" = "No se pudo pegar el elemento debido a un error desconocido. Vuelve a intentarlo.";
+
+// Share Extension
+"finished_sending_title" = "Envío completado";
+"preview_button_accessibility_title" = "Mostrar vista previa del documento";
+"unknown_file_type" = "Tipo de archivo desconocido";
+"unknown_file_size" = "Tamaño de archivo desconocido";
+"unknown_file_name" = "Nombre de archivo desconocido";

@@ -11,9 +11,9 @@
 "cannot_connect_title" = "Geen verbinding";
 "cannot_connect_message" = "Geen verbinding, controleer je internetverbinding.";
 
-"sending_count" = "Versturen... (%1$ld / %2$ld)";
+"sending_count" = "Versturen… (%1$ld / %2$ld)";
 
 "error_message_no_items_title" = "Ongeldige content";
 "error_message_no_items_message" = "Geen ondersteunde items gevonden.";
 
-"send_as_file" = "Versturen als bestand";
+"send_as_file" = "Verzenden als origineel";

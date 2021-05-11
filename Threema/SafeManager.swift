@@ -377,7 +377,7 @@ import CocoaLumberjackSwift
                                     if let errorMessage = errorMessage {
                                         self.logger.logString(errorMessage)
                                         
-                                        self.safeConfigManager.setLastResult(errorMessage.contains("Payload Too Large") ? BundleUtil.localizedString(forKey: "safe_upload_size_exceeded") : "\(BundleUtil.localizedString(forKey: "safe_upload_failed")!) (\(errorMessage))")
+                                        self.safeConfigManager.setLastResult(errorMessage.contains("Payload Too Large") ? BundleUtil.localizedString(forKey: "safe_upload_size_exceeded") : "\(BundleUtil.localizedString(forKey: "safe_upload_failed")) (\(errorMessage))")
                                     } else {
                                         self.safeConfigManager.setLastChecksum(self.checksum)
                                         self.safeConfigManager.setLastBackup(Date())
@@ -409,13 +409,13 @@ import CocoaLumberjackSwift
         } catch SafeError.backupFailed(let message) {
             self.logger.logString(message)
             
-            self.safeConfigManager.setLastResult("\(BundleUtil.localizedString(forKey: "safe_unsuccessful")!): \(message)")
+            self.safeConfigManager.setLastResult("\(BundleUtil.localizedString(forKey: "safe_unsuccessful")): \(message)")
 
             self.backupCompletionHandler!()
         } catch let error {
             self.logger.logString(error.localizedDescription)
             
-            self.safeConfigManager.setLastResult("\(BundleUtil.localizedString(forKey: "safe_unsuccessful")!): \(error.localizedDescription)")
+            self.safeConfigManager.setLastResult("\(BundleUtil.localizedString(forKey: "safe_unsuccessful")): \(error.localizedDescription)")
 
             self.backupCompletionHandler!()
         }
@@ -477,7 +477,7 @@ import CocoaLumberjackSwift
                     })
                 }
             } catch SafeApiService.SafeApiError.requestFailed(let message) {
-                completionHandler(SafeError.restoreFailed(message: "\(BundleUtil.localizedString(forKey: "safe_no_backup_found")!) (\(message))"))
+                completionHandler(SafeError.restoreFailed(message: "\(BundleUtil.localizedString(forKey: "safe_no_backup_found")) (\(message))"))
             } catch SafeStore.SafeError.restoreFailed(let message) {
                 completionHandler(SafeError.restoreFailed(message: message))
                 

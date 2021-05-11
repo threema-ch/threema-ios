@@ -145,7 +145,11 @@ extension ChatFileVideoMessageCell {
             super.layoutSubviews()
 
             _thumbnailView!.frame = CGRect.init(x: msgBackground.frame.origin.x + imageInsets.left, y: msgBackground.frame.origin.y + imageInsets.top, width: size.width, height: size.height)
-            _captionLabel!.frame  = CGRect.init(x:ceil(msgBackground.frame.origin.x + (x/2)), y: ceil(_thumbnailView!.frame.origin.y + _thumbnailView!.frame.size.height), width: ceil(textSize.width), height: ceil(textSize.height))
+            var originX = msgBackground.frame.origin.x + (x/2)
+            if _captionLabel?.textAlignment == .right {
+                originX = msgBackground.frame.origin.x + msgBackground.frame.size.width - (x/2) - textSize.width
+            }
+            _captionLabel!.frame  = CGRect.init(x:ceil(originX), y: ceil(_thumbnailView!.frame.origin.y + _thumbnailView!.frame.size.height), width: ceil(textSize.width), height: ceil(textSize.height))
 
             let mask: CALayer = bubbleMaskWithoutArrow(forImageSize: CGSize.init(width: _thumbnailView!.frame.size.width, height: _thumbnailView!.frame.size.height))
             _thumbnailView?.layer.mask = mask
@@ -199,7 +203,9 @@ extension ChatFileVideoMessageCell {
     override open func accessibilityLabelForContent() -> String! {
         let fileMessage = message as! FileMessage
         
-        let preText = "\(BundleUtil.localizedString(forKey: "video")!), \(fileMessage.duration?.intValue ?? 0) \(BundleUtil.localizedString(forKey: "seconds")!)"
+        let duration = fileMessage.duration!.intValue
+        
+        let preText = "\(BundleUtil.localizedString(forKey: "video")), \(duration) \(BundleUtil.localizedString(forKey: "seconds"))"
         if _captionLabel?.text != nil {
             return "\(preText). \(_captionLabel!.text!))"
         }
@@ -378,6 +384,7 @@ extension ChatFileVideoMessageCell {
             let attributed = TextStyleUtils.makeAttributedString(from: captionText, with: _captionLabel!.font, textColor: Colors.fontNormal(), isOwn: true, application: UIApplication.shared)
             let formattedAttributeString = NSMutableAttributedString.init(attributedString: (_captionLabel!.applyMarkup(for: attributed))!)
             _captionLabel?.attributedText = TextStyleUtils.makeMentionsAttributedString(for: formattedAttributeString, textFont: _captionLabel!.font!, at: _captionLabel!.textColor.withAlphaComponent(0.4), messageInfo: Int32(message.isOwn!.intValue), application: UIApplication.shared)
+            _captionLabel?.textAlignment = captionText.textAlignment()
             _captionLabel?.isHidden = false
         }
         else {
@@ -395,15 +402,6 @@ extension ChatFileVideoMessageCell {
         let fileMessage = message as! FileMessage
         let sender: FileMessageSender = FileMessageSender.init()
         sender.retryMessage(fileMessage)
-    }
-    
-    @objc func speakMessage(_ menuController: UIMenuController) {
-        if _captionLabel?.text != nil {
-            let speakText = "\(BundleUtil.localizedString(forKey: "image") ?? "Image"). \(_captionLabel!.text!)"
-            let utterance: AVSpeechUtterance = AVSpeechUtterance.init(string: speakText)
-            let syn = AVSpeechSynthesizer.init()
-            syn.speak(utterance)
-        }
     }
 }
 

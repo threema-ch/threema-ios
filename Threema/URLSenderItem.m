@@ -192,8 +192,24 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     }
     if ([UTIConverter isRenderingAudioMimeType:[self getMimeType]]) {
         /* Find duration and make thumbnail */
-        AVURLAsset *asset = [[AVURLAsset alloc] initWithURL:self.url options:nil];
-        return CMTimeGetSeconds(asset.duration);
+        NSString *tmpPath = self.url.absoluteString;
+        
+        if (!tmpPath) {
+            NSString *type = [UTIConverter preferedFileExtensionForMimeType:[UTIConverter mimeTypeFromUTI:_type]];
+            tmpPath = [NSString stringWithFormat:@"%@%@.%@", NSTemporaryDirectory(), [FileUtility getTemporarySendableFileNameWithBase:@"audio" directoryURL:[NSURL fileURLWithPath:NSTemporaryDirectory()] pathExtension:type], type];
+            if ([[NSFileManager defaultManager] fileExistsAtPath:tmpPath]) {
+                return 0.0;
+            }
+
+            [_data writeToFile:tmpPath atomically:true];
+        }
+        NSURL *tmpURL = [[NSURL alloc] initFileURLWithPath:tmpPath];
+        AVURLAsset *asset = [[AVURLAsset alloc] initWithURL:tmpURL options:nil];
+        Float64 duration = CMTimeGetSeconds(asset.duration);
+        if (!self.url) {
+            [[NSFileManager defaultManager] removeItemAtPath:tmpPath error:nil];
+        }
+        return duration;
     }
     return 0.0;
 }
@@ -222,6 +238,16 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         return clipVideoTrack.naturalSize.width;
     }
     return 0.0;
+}
+
+- (void) setCaption:(NSString *)caption {
+    _caption = caption;
+    
+    // A file message with render type 2 (sticker) must not contain a caption.
+    // Stickers with caption will be rendered as type 1 (regular image).
+    if (caption != nil && _renderType.intValue == 2) {
+        _renderType = [NSNumber numberWithInt:1];
+    }
 }
 
 @end

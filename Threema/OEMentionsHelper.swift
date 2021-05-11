@@ -138,9 +138,9 @@ import Foundation
                         }
                         
                         let range = Range.init(result!.range, in: draftString)
-                        draftString = draftString.replacingCharacters(in: range!, with: "@\(displayName!)")
+                        draftString = draftString.replacingCharacters(in: range!, with: "@\(displayName)")
                         
-                        let dict = ["key": mentionTag, "length": displayName!.utf16.count + 1] as [String : Any]
+                        let dict = ["key": mentionTag, "length": displayName.utf16.count + 1] as [String : Any]
                         oementions.mentionsIndexes[result!.range.location] = dict
                     } else {
                         let range = Range.init(result!.range, in: draftString)

@@ -141,18 +141,4 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     }];
 }
 
-/**
- If unread message count of conversation less 0, then set to 0 and set marked to true.
-*/
-+ (void)resetUnreadMessageCount {
-    EntityManager *entityManager = [[EntityManager alloc] init];
-    NSArray *conversations = [entityManager.entityFetcher conversationsWithNegativeUnreadMessageCount];
-    for (Conversation *conversation in conversations) {
-        [entityManager performSyncBlockAndSafe:^{
-            conversation.unreadMessageCount = [NSNumber numberWithInt:0];
-            conversation.marked = [NSNumber numberWithBool:YES];
-        }];
-    }
-}
-
 @end

@@ -11,9 +11,9 @@
 "cannot_connect_title" = "No connection";
 "cannot_connect_message" = "Cannot connect, please check your internet connection.";
 
-"sending_count" = "Sending ... (%1$ld / %2$ld)";
+"sending_count" = "Sending… (%1$ld / %2$ld)";
 
 "error_message_no_items_title" = "Invalid content";
 "error_message_no_items_message" = "No supported items found.";
 
-"send_as_file" = "Send as file";
+"send_as_file" = "Send as Original";

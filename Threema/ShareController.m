@@ -61,7 +61,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     } else {
         ModalNavigationController *navigationController = [ContactGroupPickerViewController pickerFromStoryboardWithDelegate:self];
         ContactGroupPickerViewController *picker = (ContactGroupPickerViewController *)navigationController.topViewController;
-        picker.enableMulitSelection = NO;
+        picker.enableMultiSelection = NO;
         picker.enableTextInput = NO;
         picker.submitOnSelect = YES;
                 

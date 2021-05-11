@@ -323,6 +323,12 @@
 "leave" = "Odejít";
 "you are not a member" = "Já (odstraněno)";
 "groups" = "Skupiny";
+"create_new_group" = "Vytvořit novou skupinu";
+"create_note_group_info_title" = "Rada";
+"create_note_group_info_text" = "Pokud nepřidáte žádné členy skupiny, zprávy do této skupiny zůstanou místní. To se hodí pro bezpečné ukládání poznámek, médií a dokumentů nebo pro přenos položek na plochu.";
+"doNotShowAgain" = "Neukazovat znovu";
+"add_note_group_info" = "* Pouze váš chat *\nPoužijte tento chat jako váš zabezpečený poznámkový blok pro text, média a dokumenty.";
+"end_note_group_info" = "* V tomto chatu už nejste sám *\n\nNové zprávy budou odeslány všem členům skupiny.";
 
 "choose_recipient" = "Vyberte příjemce";
 
@@ -411,7 +417,7 @@
 "no_contacts_syncoff" = "Zatím nemáte žádné kontakty. Zapněte synchronizaci (Nastavení > Soukromí) nebo přidejte kontakty ručně pomocí tlačítka +.";
 "no_contacts_permission_message" = "Threema nemá přístup k vašim kontaktům. Přejděte ve svém zařízení do nastavení soukromí a povolte aplikaci Threema přístup ke kontaktům.";
 
-"contact_added_to_profilepicture_list" = "Tento kontakt obdrží váš profilový obrázek, když mu napíšete.";
+"contact_added_to_profilepicture_list" = "Tento kontakt obdrží váš profilový obrázek, jakmile mu napíšete.";
 "contact_removed_from_profilepicture_list" = "Tento kontakt již nebude příjemcem vašeho profilu.";
 "contact_send_profilepicture_success" = "Odeslání vašeho profilového obrázku kontaktu proběhlo úspěšně.";
 "contact_send_profilepicture_error" = "Odeslání vašeho profilového obrázku se nezdařilo. Zkuste to později.";
@@ -937,7 +943,7 @@
 
 // File message
 "optional_caption" = "Volitelný popisek";
-"send_as_file" = "Odeslat jako soubor";
+"send_as_file" = "Odeslat jako originál";
 
 // Notification settings
 "settings_notifications_inapp_section" = "V aplikaci";
@@ -1002,14 +1008,15 @@ Pokud vám v Threema nechybí žádné (mediální) soubory, vyprázdněte koš,
 // Media Preview
 "loading_video_failed" = "Video se nepodařilo načíst. Restartujte aplikaci a zkuste to znovu.";
 "loading_image" = "Načítání obrázku";
+"load_error" = "Položku se nepodařilo načíst kvůli neznámé chybě.";
 "loading_video" = "Načítání videa";
 "selected_media_list" = "Seznam vybraných médií";
 "media_item_of" = "Mediální položka %@ z %@";
 "video_date" = "Video pořízeno %@";
 "imagedate_date" = "Fotografie pořízena %@";
-"send_as_file_description" = "Odešlete obrázky jako soubor nebo jako vloženou fotografii. Soubory si zachovají všechna metadata, jako jsou údaje o poloze. Ve zprávě bude i jejich náhled.";
+"send_as_file_description" = "Odeslat soubory beze změn. Soubory si zachovají všechna metadata, např. údaje o poloze fotografií i čas pořízení.";
 "more_options" = "Více možností";
-"add_caption_to_image" = "Přidat titulek ...";
+"add_caption_to_image" = "Přidat titulek";
 "add_more_images" = "Přidat další obrázky";
 "back_to_media_selection" = "Zpět na obrazovku výběru médií";
 "remove_current_image_from_selected_images" = "Odebrat aktuální položku z výběru";
@@ -1026,3 +1033,17 @@ Pokud vám v Threema nechybí žádné (mediální) soubory, vyprázdněte koš,
 "back" = "Zpět";
 "sending_item" = "Odesílání položky";
 "send_as_file_title" = "Režim odesílání";
+"document" = "Dokument";
+"paste_create_file_failure_title" = "Vkládání se nezdařilo";
+"paste_create_file_failure_message" = "Soubor se nepodařilo vložit, zkuste to znovu.";
+"loading_files_takes_time_title" = "Vkládání médií";
+"loading_files_takes_time_description" = "Převádění videí může trvat několik minut.";
+"pasteErrorMessageTitle" = "Nelze vložit";
+"pasteErrorMessageMessage" = "Položku nelze vložit z důvodu neznámé chyby. Prosím, zkuste to znovu.";
+
+// Share Extension
+"finished_sending_title" = "Odesílání dokončeno";
+"preview_button_accessibility_title" = "Zobrazit náhled dokumentu";
+"unknown_file_type" = "Neznámý typ souboru";
+"unknown_file_size" = "Neznámá velikost souboru";
+"unknown_file_name" = "Neznámý název souboru";

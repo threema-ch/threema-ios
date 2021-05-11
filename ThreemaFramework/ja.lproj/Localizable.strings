@@ -1,0 +1,76 @@
+/* 
+  Localizable.strings
+  Threema
+
+  Copyright (c) 2015 Threema GmbH. All rights reserved.
+*//* JKLockScreenViewController */
+"cancel" = "キャンセル";
+"delete" = "削除";
+
+/* Mentions */
+"mentions_all" = "すべて";
+
+
+"me" = "自分";
+"nobody" = "誰にもしない";
+"(unknown)" = "(不明)";
+"invalid" = "無効";
+"inactive" = "非アクディブ";
+
+"status_acknowledged" = "同意した";
+"status_read" = "既読";
+"status_delivered" = "配信済み";
+"status_sent" = "送信済み";
+"status_sending" = "送信中";
+"status_failed" = "失敗";
+"status_declined" = "反対";
+"blocked" = "ブロックされた";
+
+"contacts" = "連絡先";
+"groups" = "グループ";
+"recent" = "最近";
+"work" = "仕事";
+"creator" = "作成者";
+"%d members" = "%d メンバー";
+
+"ok" = "OK";
+
+"send" = "送信";
+"addText" = "テキストを追加";
+"hide" = "隠す";
+
+"error_sending_failed" = "送信失敗";
+"error_constraints_failed" = "サポートされていないファイルです";
+"error_message_file_too_big" = "ファイルが大きすぎます。最大サイズは50メガバイトです。";
+"error_message_invalid_file" = "ファイルの読み込みに失敗しました。";
+"error_message_generic" = "アップロード失敗";
+
+"error_title_feature_level" = "注意してください";
+"error_message_feature_level" = "一部の受信者は、ファイル・メッセージをまだサポートしていないアプリケーション・バージョンを使用しています: %@";
+"error_message_none_feature_level" = "どの受信者も、ファイルメッセージをサポートするアプリのバージョンを持っていません： %@";
+
+"video_too_long_title" = "動画が長すぎます";
+"video_too_long_message" = "この動画は長すぎるため送信できません。許可された最大の長さは %.0f 分です。";
+
+/* KKPasscodeLock */
+"On" = "オン";
+"Off" = "オフ";
+"all_data_deleted_title" = "すべてのデータが削除されました";
+"all_data_deleted_message" = "誤ったパスコードを何度も入力しています。このアプリのデータはすべて削除されました。";
+"to_unlock_passcode" = "Threemaのロックを解除";    // Touch ID
+
+/* Notifications Text */
+"new_message" = "メッセージ";
+/* Notifications Text */
+"new_message_from_x" = "%@からのメッセージ";
+"new_group_message" = "グループメッセージ";
+"new_group_message_from_x" = "グループで %@ がメッセージを送信しました";
+"new_image_message" = "画像";
+"new_video_message" = "動画";
+"new_location_message" = "位置情報";
+"new_audio_message" = "音声";
+"new_ballot_create_message" = "投票: %@";
+"new_ballot_closed_message" = "投票: 結果を見ることができます";
+"new_file_message" = "データ: %@";
+
+"mediapreview_options" = "オプション";

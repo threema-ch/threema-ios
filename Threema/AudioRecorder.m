@@ -185,11 +185,13 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     DDLogInfo(@"AVAudioSessionInterruptionNotification: %d", interruptionType.intValue);
     if (interruptionType.intValue == AVAudioSessionInterruptionTypeBegan) {
         _interrupted = YES;
+        _interruptedAndNotStarted = true;
         _tmpFileDuration = self.currentTime;
         [_recorder stop];
             
         [self saveToTmpFile];
     } else {
+        _interruptedAndNotStarted = false;
         [self startRecording];
         
         [_delegate recorderResumedAfterInterrupt];
@@ -259,7 +261,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 }
 
 - (void)joinWithTmpFile {
-    if (_tmpRecorderFile) {
+    if (_tmpRecorderFile && !_interruptedAndNotStarted) {
         AVMutableComposition *composition = [AVMutableComposition composition];
         
         AVAsset *asset = [AVURLAsset URLAssetWithURL:_tmpRecorderFile options:nil];

@@ -23,7 +23,7 @@
 
 @protocol PasteImageHandler
 
-- (void)handlePasteImage;
+- (void)handlePasteItem;
 
 @end
 

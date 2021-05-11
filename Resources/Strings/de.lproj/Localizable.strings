@@ -323,6 +323,12 @@
 "leave" = "Verlassen";
 "you are not a member" = "Ich (entfernt)";
 "groups" = "Gruppen";
+"create_new_group" = "Neue Gruppe erstellen";
+"create_note_group_info_title" = "Tipp";
+"create_note_group_info_text" = "Wenn Sie keine Mitglieder hinzufügen, bleiben Nachrichten an diese Gruppe lokal. Das ist ideal, um Notizen, Medien oder Dokumente sicher zu speichern oder auf den Desktop zu übertragen.";
+"doNotShowAgain" = "Nicht mehr anzeigen";
+"add_note_group_info" = "*Sie sind alleine hier*\nVerwenden Sie diesen Chat als sicheres Notizbuch für Texte, Medien oder Dokumente.";
+"end_note_group_info" = "*Sie sind nicht mehr alleine in diesem Chat*\nNeue Nachrichten werden an alle Gruppenmitglieder gesendet.";
 
 "choose_recipient" = "Empfänger auswählen";
 
@@ -996,14 +1002,15 @@ Sofern keine Medien und/oder Dateien fehlen, leeren Sie den Papierkorb, um die v
 // Media Preview
 "loading_video_failed" = "Video konnte nicht geladen werden. Bitte starten Sie die App neu und versuchen Sie es erneut.";
 "loading_image" = "Bild wird geladen";
+"load_error" = "Datei konnte aufgrund eines unbekannten Fehlers nicht geladen werden.";
 "loading_video" = "Video wird geladen";
 "selected_media_list" = "Liste der ausgewählten Medien";
 "media_item_of" = "Mediendatei %@ von %@";
 "video_date" = "Video aufgenommen am %@";
 "imagedate_date" = "Bild aufgenommen am %@";
-"send_as_file_description" = "Mediendateien können als Mediendatei oder als Datei versendet werden. Mediendateien werden im Chat grösser dargestellt. Dateien werden kleiner dargestellt und beinhalten alle Metadaten wie zum Beispiel der Standort bei der Aufnahme.";
+"send_as_file_description" = "Die Datei wird ohne Änderungen versendet. Dateien können Metadaten enthalten, z.B. den Aufnahme-Standort bei Fotos.";
 "more_options" = "Weitere Optionen";
-"add_caption_to_image" = "Bildunterschrift hinzufügen ...";
+"add_caption_to_image" = "Text hinzufügen";
 "add_more_images" = "Weitere Bilder hinzufügen";
 "back_to_media_selection" = "Zurück zur Medienauswahl";
 "remove_current_image_from_selected_images" = "Aktuelles Bild aus der Auswahl entfernen.";
@@ -1020,3 +1027,17 @@ Sofern keine Medien und/oder Dateien fehlen, leeren Sie den Papierkorb, um die v
 "back" = "Zurück";
 "sending_item" = "Sende Element";
 "send_as_file_title" = "Modus";
+"document" = "Datei";
+"paste_create_file_failure_title" = "Einfügen fehlgeschlagen";
+"paste_create_file_failure_message" = "Die Datei konnte nicht eingefügt werden, bitte versuchen Sie es erneut.";
+"loading_files_takes_time_title" = "Lade Medien aus der Medien-Bibliothek";
+"loading_files_takes_time_description" = "Die Video-Konvertierung kann einige Zeit dauern";
+"pasteErrorMessageTitle" = "Einfügen Fehlgeschlagen";
+"pasteErrorMessageMessage" = "Die Datei konnte aufgrund eines unbekannten Fehlers nicht eingefügt werden. Bitte versuchen Sie es erneut.";
+
+// Share Extension
+"finished_sending_title" = "Versand abgeschlossen";
+"preview_button_accessibility_title" = "Show preview of Document";
+"unknown_file_type" = "Unbekannter Dateityp";
+"unknown_file_size" = "Unbekannte Dateigrösse";
+"unknown_file_name" = "Unbekannter Dateiname";

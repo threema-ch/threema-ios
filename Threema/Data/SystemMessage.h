@@ -32,6 +32,8 @@ enum {
     kSystemMessageGroupSelfAdded = 5, // I was added to the group
     kSystemMessageGroupSelfRemoved = 6, // I was removed from the group
     kSystemMessageGroupSelfLeft = 16, // I have left the group
+    kSystemMessageStartNoteGroupInfo = 17, // This is a note group without members
+    kSystemMessageEndNoteGroupInfo = 18, // This is no note group anymore
     kSystemMessageCallMissed = 7,
     kSystemMessageCallRejected = 8,
     kSystemMessageCallRejectedBusy = 9,
@@ -41,6 +43,7 @@ enum {
     kSystemMessageCallRejectedUnknown = 13,
     kSystemMessageContactOtherAppInfo = 14,
     kSystemMessageCallRejectedOffHours = 15
+    
 };
 
 @interface SystemMessage : BaseMessage

@@ -25,6 +25,13 @@
 #import "Group.h"
 #import "EntityManager.h"
 
+#ifdef DEBUG
+static const DDLogLevel ddLogLevel = DDLogLevelInfo;
+#else
+static const DDLogLevel ddLogLevel = DDLogLevelWarning;
+#endif
+
+
 @interface PermissionChecker ()
 
 @property UIViewController *viewController;
@@ -54,6 +61,7 @@
     }
     // Check for blacklisted contact
     if (conversation.groupId == nil && [[UserSettings sharedUserSettings].blacklist containsObject:conversation.contact.identity]) {
+        DDLogError(@"Cannot send a message to this contact %@ because it is blocked", conversation.contact.identity);
         if (_viewController) {
             [self showAlert:NSLocalizedString(@"contact_blocked_cannot_send", nil)];
         }
@@ -61,17 +69,9 @@
         return NO;
     }
     
-    // Check for empty groups
-    if (conversation.groupId != nil && conversation.members.count == 0) {
-        if (_viewController) {
-            [self showAlert:NSLocalizedString(@"no_more_members", nil)];
-        }
-        
-        return NO;
-    }
-    
     // Check that the group was started while we were using the same identity as now
     if (conversation.groupMyIdentity != nil && ![conversation.groupMyIdentity isEqualToString:[MyIdentityStore sharedMyIdentityStore].identity]) {
+        DDLogError(@"Cannot send a message to this group. This group was created while user were using a different Threema ID. Cannot send any messages to it with your current ID");
         if (_viewController) {
             [self showAlert:NSLocalizedString(@"group_different_identity", nil)];
         }
@@ -81,6 +81,7 @@
     
     // Check for invalid contact
     if (conversation.groupId == nil && conversation.contact.state.intValue == kStateInvalid) {
+        DDLogError(@"Cannot send a message to this contact (%@) because it is invalid", conversation.contact.identity);
         if (_viewController) {
             [self showAlert:NSLocalizedString(@"contact_invalid_cannot_send", nil)];
         }
@@ -91,7 +92,19 @@
     // Check group state
     if (conversation.isGroup) {
         Group *group = [manager.entityFetcher groupForConversation:conversation];
+        
+        // Check for empty groups
+        if (conversation.members.count == 0 && group.groupCreator != nil) {
+            DDLogError(@"Cannot send a message because there are no more members in this group");
+            if (_viewController) {
+                [self showAlert:NSLocalizedString(@"no_more_members", nil)];
+            }
+            
+            return NO;
+        }
+        
         if (group.didLeave || group.didForcedLeave) {
+            DDLogError(@"Cannot send a message to this group because user are not a member anymore");
             if (_viewController) {
                 [self showAlert:NSLocalizedString(@"group_is_not_member", nil)];
             }

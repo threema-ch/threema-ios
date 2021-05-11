@@ -276,8 +276,8 @@
     [self setMdm:[self getAllMdmParameters:NO] threemaMdm:oldWorkData];
 
     // new Threema-MDM (override)
-    id keysThreemaMdm[] = { MDM_KEY_LICENSE_USERNAME, MDM_KEY_LICENSE_PASSWORD, MDM_KEY_NICKNAME, MDM_KEY_FIRST_NAME, MDM_KEY_LAST_NAME, MDM_KEY_CSI, MDM_KEY_CATEGORY, MDM_KEY_LINKED_EMAIL, MDM_KEY_LINKED_PHONE, MDM_KEY_CONTACT_SYNC, MDM_KEY_READONLY_PROFILE, MDM_KEY_BLOCK_UNKNOWN, MDM_KEY_HIDE_INACTIVE_IDS, MDM_KEY_DISABLE_SAVE_TO_GALLERY, MDM_KEY_DISABLE_ADD_CONTACT, MDM_KEY_DISABLE_EXPORT, MDM_KEY_DISABLE_BACKUPS, MDM_KEY_DISABLE_ID_EXPORT, MDM_KEY_DISABLE_SYSTEM_BACKUPS, MDM_KEY_DISABLE_MESSAGE_PREVIEW, MDM_KEY_DISABLE_SEND_PROFILE_PICTURE, MDM_KEY_DISABLE_CALLS, MDM_KEY_DISABLE_VIDEO_CALLS, MDM_KEY_SKIP_WIZARD, MDM_KEY_DISABLE_CREATE_GROUP, MDM_KEY_DISABLE_WEB, MDM_KEY_SAFE_ENABLE, MDM_KEY_SAFE_SERVER_URL, MDM_KEY_SAFE_SERVER_USERNAME, MDM_KEY_SAFE_SERVER_PASSWORD, MDM_KEY_SAFE_RESTORE_ENABLE, MDM_KEY_SAFE_RESTORE_ID, MDM_KEY_SAFE_PASSWORD_PATTERN, MDM_KEY_SAFE_PASSWORD_MESSAGE, MDM_KEY_WEB_HOSTS, MDM_KEY_DISABLE_SHARE_MEDIA};
-    id objectsThreemaMdm[] = { @"new-tester", @"new-test1234", @"New-Eieri", @"New-Heiri", @"New-Heirassa", @"new-customer-id", @"new-category", @"new-linked@email.com", @"222", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", _no, @"http://new-test.com", @"new-server-user", @"new-server-password", @"1", @"EINSZWEI", @"new-^[0-9]{1,15}$", @"New-Wrong-password-pattern", @"new.threema.ch", @"0"};
+    id keysThreemaMdm[] = { MDM_KEY_LICENSE_USERNAME, MDM_KEY_LICENSE_PASSWORD, MDM_KEY_NICKNAME, MDM_KEY_FIRST_NAME, MDM_KEY_LAST_NAME, MDM_KEY_CSI, MDM_KEY_CATEGORY, MDM_KEY_LINKED_EMAIL, MDM_KEY_LINKED_PHONE, MDM_KEY_CONTACT_SYNC, MDM_KEY_READONLY_PROFILE, MDM_KEY_BLOCK_UNKNOWN, MDM_KEY_HIDE_INACTIVE_IDS, MDM_KEY_DISABLE_SAVE_TO_GALLERY, MDM_KEY_DISABLE_ADD_CONTACT, MDM_KEY_DISABLE_EXPORT, MDM_KEY_DISABLE_BACKUPS, MDM_KEY_DISABLE_ID_EXPORT, MDM_KEY_DISABLE_SYSTEM_BACKUPS, MDM_KEY_DISABLE_MESSAGE_PREVIEW, MDM_KEY_DISABLE_SEND_PROFILE_PICTURE, MDM_KEY_DISABLE_CALLS, MDM_KEY_DISABLE_VIDEO_CALLS, MDM_KEY_SKIP_WIZARD, MDM_KEY_DISABLE_CREATE_GROUP, MDM_KEY_DISABLE_WEB, MDM_KEY_SAFE_ENABLE, MDM_KEY_SAFE_SERVER_URL, MDM_KEY_SAFE_SERVER_USERNAME, MDM_KEY_SAFE_SERVER_PASSWORD, MDM_KEY_SAFE_RESTORE_ENABLE, MDM_KEY_SAFE_RESTORE_ID, MDM_KEY_SAFE_PASSWORD_PATTERN, MDM_KEY_SAFE_PASSWORD_MESSAGE, MDM_KEY_WEB_HOSTS, MDM_KEY_DISABLE_SHARE_MEDIA, MDM_KEY_DISABLE_WORK_DIRECTORY};
+    id objectsThreemaMdm[] = { @"new-tester", @"new-test1234", @"New-Eieri", @"New-Heiri", @"New-Heirassa", @"new-customer-id", @"new-category", @"new-linked@email.com", @"222", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", _no, @"http://new-test.com", @"new-server-user", @"new-server-password", @"1", @"EINSZWEI", @"new-^[0-9]{1,15}$", @"New-Wrong-password-pattern", @"new.threema.ch", @"0", @"0"};
     NSUInteger countThreemaMdm = sizeof(objectsThreemaMdm) / sizeof(id);
     NSDictionary *threemaMdm = [NSDictionary dictionaryWithObjects:objectsThreemaMdm forKeys:keysThreemaMdm count:countThreemaMdm];
 
@@ -316,6 +316,7 @@
     XCTAssertFalse([mdmSetup disableCreateGroup]);
     XCTAssertFalse([mdmSetup disableWeb]);
     XCTAssertFalse([mdmSetup disableShareMedia]);
+    XCTAssertFalse([mdmSetup disableWorkDirectory]);
     
     XCTAssertTrue([mdmSetup skipWizard]); // not renewable
     XCTAssertEqual(_no, [mdmSetup safeEnable]);
@@ -338,8 +339,8 @@
     [self setMdm:[self getAllMdmParameters:NO] threemaMdm:nil];
     
     // "new" Threema-MDM (override)
-    id keysThreemaMdm[] = { MDM_KEY_LICENSE_USERNAME, MDM_KEY_LICENSE_PASSWORD, MDM_KEY_NICKNAME, MDM_KEY_FIRST_NAME, MDM_KEY_LAST_NAME, MDM_KEY_CSI, MDM_KEY_CATEGORY, MDM_KEY_LINKED_EMAIL, MDM_KEY_LINKED_PHONE, MDM_KEY_CONTACT_SYNC, MDM_KEY_READONLY_PROFILE, MDM_KEY_BLOCK_UNKNOWN, MDM_KEY_HIDE_INACTIVE_IDS, MDM_KEY_DISABLE_SAVE_TO_GALLERY, MDM_KEY_DISABLE_ADD_CONTACT, MDM_KEY_DISABLE_EXPORT, MDM_KEY_DISABLE_BACKUPS, MDM_KEY_DISABLE_ID_EXPORT, MDM_KEY_DISABLE_SYSTEM_BACKUPS, MDM_KEY_DISABLE_MESSAGE_PREVIEW, MDM_KEY_DISABLE_SEND_PROFILE_PICTURE, MDM_KEY_DISABLE_CALLS, MDM_KEY_DISABLE_VIDEO_CALLS, MDM_KEY_SKIP_WIZARD, MDM_KEY_DISABLE_CREATE_GROUP, MDM_KEY_DISABLE_WEB, MDM_KEY_SAFE_ENABLE, MDM_KEY_SAFE_SERVER_URL, MDM_KEY_SAFE_SERVER_USERNAME, MDM_KEY_SAFE_SERVER_PASSWORD, MDM_KEY_SAFE_RESTORE_ENABLE, MDM_KEY_SAFE_RESTORE_ID, MDM_KEY_SAFE_PASSWORD_PATTERN, MDM_KEY_SAFE_PASSWORD_MESSAGE, MDM_KEY_WEB_HOSTS, MDM_KEY_DISABLE_SHARE_MEDIA};
-    id objectsThreemaMdm[] = { @"new-tester", @"new-test1234", @"New-Eieri", @"New-Heiri", @"New-Heirassa", @"new-customer-id", @"new-category", @"new-linked@email.com", @"222", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", _no, @"http://new-test.com", @"new-server-user", @"new-server-password", @"1", @"EINSZWEI", @"new-^[0-9]{1,15}$", @"New-Wrong-password-pattern", @"new.threema.ch", @"0" };
+    id keysThreemaMdm[] = { MDM_KEY_LICENSE_USERNAME, MDM_KEY_LICENSE_PASSWORD, MDM_KEY_NICKNAME, MDM_KEY_FIRST_NAME, MDM_KEY_LAST_NAME, MDM_KEY_CSI, MDM_KEY_CATEGORY, MDM_KEY_LINKED_EMAIL, MDM_KEY_LINKED_PHONE, MDM_KEY_CONTACT_SYNC, MDM_KEY_READONLY_PROFILE, MDM_KEY_BLOCK_UNKNOWN, MDM_KEY_HIDE_INACTIVE_IDS, MDM_KEY_DISABLE_SAVE_TO_GALLERY, MDM_KEY_DISABLE_ADD_CONTACT, MDM_KEY_DISABLE_EXPORT, MDM_KEY_DISABLE_BACKUPS, MDM_KEY_DISABLE_ID_EXPORT, MDM_KEY_DISABLE_SYSTEM_BACKUPS, MDM_KEY_DISABLE_MESSAGE_PREVIEW, MDM_KEY_DISABLE_SEND_PROFILE_PICTURE, MDM_KEY_DISABLE_CALLS, MDM_KEY_DISABLE_VIDEO_CALLS, MDM_KEY_SKIP_WIZARD, MDM_KEY_DISABLE_CREATE_GROUP, MDM_KEY_DISABLE_WEB, MDM_KEY_SAFE_ENABLE, MDM_KEY_SAFE_SERVER_URL, MDM_KEY_SAFE_SERVER_USERNAME, MDM_KEY_SAFE_SERVER_PASSWORD, MDM_KEY_SAFE_RESTORE_ENABLE, MDM_KEY_SAFE_RESTORE_ID, MDM_KEY_SAFE_PASSWORD_PATTERN, MDM_KEY_SAFE_PASSWORD_MESSAGE, MDM_KEY_WEB_HOSTS, MDM_KEY_DISABLE_SHARE_MEDIA, MDM_KEY_DISABLE_WORK_DIRECTORY};
+    id objectsThreemaMdm[] = { @"new-tester", @"new-test1234", @"New-Eieri", @"New-Heiri", @"New-Heirassa", @"new-customer-id", @"new-category", @"new-linked@email.com", @"222", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", _no, @"http://new-test.com", @"new-server-user", @"new-server-password", @"1", @"EINSZWEI", @"new-^[0-9]{1,15}$", @"New-Wrong-password-pattern", @"new.threema.ch", @"0", @"0"};
     NSUInteger countThreemaMdm = sizeof(objectsThreemaMdm) / sizeof(id);
     NSDictionary *threemaMdm = [NSDictionary dictionaryWithObjects:objectsThreemaMdm forKeys:keysThreemaMdm count:countThreemaMdm];
     
@@ -376,6 +377,7 @@
     XCTAssertFalse([mdmSetup disableCreateGroup]);
     XCTAssertFalse([mdmSetup disableWeb]);
     XCTAssertFalse([mdmSetup disableShareMedia]);
+    XCTAssertFalse([mdmSetup disableWorkDirectory]);
     
     XCTAssertTrue([mdmSetup skipWizard]); // not renewable
     XCTAssertEqual(_no, [mdmSetup safeEnable]);
@@ -397,8 +399,8 @@
     // No Company-MDM and no "old" Threema-MDM are equal
     
     // new Threema-MDM (override)
-    id keysThreemaMdm[] = { MDM_KEY_LICENSE_USERNAME, MDM_KEY_LICENSE_PASSWORD, MDM_KEY_NICKNAME, MDM_KEY_FIRST_NAME, MDM_KEY_LAST_NAME, MDM_KEY_CSI, MDM_KEY_CATEGORY, MDM_KEY_LINKED_EMAIL, MDM_KEY_LINKED_PHONE, MDM_KEY_CONTACT_SYNC, MDM_KEY_READONLY_PROFILE, MDM_KEY_BLOCK_UNKNOWN, MDM_KEY_HIDE_INACTIVE_IDS, MDM_KEY_DISABLE_SAVE_TO_GALLERY, MDM_KEY_DISABLE_ADD_CONTACT, MDM_KEY_DISABLE_EXPORT, MDM_KEY_DISABLE_BACKUPS, MDM_KEY_DISABLE_ID_EXPORT, MDM_KEY_DISABLE_SYSTEM_BACKUPS, MDM_KEY_DISABLE_MESSAGE_PREVIEW, MDM_KEY_DISABLE_SEND_PROFILE_PICTURE, MDM_KEY_DISABLE_CALLS, MDM_KEY_DISABLE_VIDEO_CALLS, MDM_KEY_SKIP_WIZARD, MDM_KEY_DISABLE_CREATE_GROUP, MDM_KEY_DISABLE_WEB, MDM_KEY_SAFE_ENABLE, MDM_KEY_SAFE_SERVER_URL, MDM_KEY_SAFE_SERVER_USERNAME, MDM_KEY_SAFE_SERVER_PASSWORD, MDM_KEY_SAFE_RESTORE_ENABLE, MDM_KEY_SAFE_RESTORE_ID, MDM_KEY_SAFE_PASSWORD_PATTERN, MDM_KEY_SAFE_PASSWORD_MESSAGE, MDM_KEY_WEB_HOSTS, MDM_KEY_DISABLE_SHARE_MEDIA};
-    id objectsThreemaMdm[] = { @"new-tester", @"new-test1234", @"New-Eieri", @"New-Heiri", @"New-Heirassa", @"new-customer-id", @"new-category", @"new-linked@email.com", @"222", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", _no, @"http://new-test.com", @"new-server-user", @"new-server-password", @"1", @"EINSZWEI", @"new-^[0-9]{1,15}$", @"New-Wrong-password-pattern", @"new.threema.ch", @"0" };
+    id keysThreemaMdm[] = { MDM_KEY_LICENSE_USERNAME, MDM_KEY_LICENSE_PASSWORD, MDM_KEY_NICKNAME, MDM_KEY_FIRST_NAME, MDM_KEY_LAST_NAME, MDM_KEY_CSI, MDM_KEY_CATEGORY, MDM_KEY_LINKED_EMAIL, MDM_KEY_LINKED_PHONE, MDM_KEY_CONTACT_SYNC, MDM_KEY_READONLY_PROFILE, MDM_KEY_BLOCK_UNKNOWN, MDM_KEY_HIDE_INACTIVE_IDS, MDM_KEY_DISABLE_SAVE_TO_GALLERY, MDM_KEY_DISABLE_ADD_CONTACT, MDM_KEY_DISABLE_EXPORT, MDM_KEY_DISABLE_BACKUPS, MDM_KEY_DISABLE_ID_EXPORT, MDM_KEY_DISABLE_SYSTEM_BACKUPS, MDM_KEY_DISABLE_MESSAGE_PREVIEW, MDM_KEY_DISABLE_SEND_PROFILE_PICTURE, MDM_KEY_DISABLE_CALLS, MDM_KEY_DISABLE_VIDEO_CALLS, MDM_KEY_SKIP_WIZARD, MDM_KEY_DISABLE_CREATE_GROUP, MDM_KEY_DISABLE_WEB, MDM_KEY_SAFE_ENABLE, MDM_KEY_SAFE_SERVER_URL, MDM_KEY_SAFE_SERVER_USERNAME, MDM_KEY_SAFE_SERVER_PASSWORD, MDM_KEY_SAFE_RESTORE_ENABLE, MDM_KEY_SAFE_RESTORE_ID, MDM_KEY_SAFE_PASSWORD_PATTERN, MDM_KEY_SAFE_PASSWORD_MESSAGE, MDM_KEY_WEB_HOSTS, MDM_KEY_DISABLE_SHARE_MEDIA, MDM_KEY_DISABLE_WORK_DIRECTORY};
+    id objectsThreemaMdm[] = { @"new-tester", @"new-test1234", @"New-Eieri", @"New-Heiri", @"New-Heirassa", @"new-customer-id", @"new-category", @"new-linked@email.com", @"222", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", _no, @"http://new-test.com", @"new-server-user", @"new-server-password", @"1", @"EINSZWEI", @"new-^[0-9]{1,15}$", @"New-Wrong-password-pattern", @"new.threema.ch", @"0", @"0"};
     NSUInteger countThreemaMdm = sizeof(objectsThreemaMdm) / sizeof(id);
     NSDictionary *threemaMdm = [NSDictionary dictionaryWithObjects:objectsThreemaMdm forKeys:keysThreemaMdm count:countThreemaMdm];
     
@@ -438,6 +440,7 @@
     XCTAssertFalse([mdmSetup disableCreateGroup]);
     XCTAssertFalse([mdmSetup disableWeb]);
     XCTAssertFalse([mdmSetup disableShareMedia]);
+    XCTAssertFalse([mdmSetup disableWorkDirectory]);
     
     XCTAssertFalse([mdmSetup skipWizard]); // not renewable
     XCTAssertEqual(_no, [mdmSetup safeEnable]);
@@ -585,8 +588,8 @@
     [self setMdm:companyMdm threemaMdm:nil];
     
     // "new" Threema-MDM (override)
-    id keysMdm[] = { MDM_KEY_NICKNAME, MDM_KEY_FIRST_NAME, MDM_KEY_LAST_NAME, MDM_KEY_CSI, MDM_KEY_CATEGORY, MDM_KEY_CONTACT_SYNC, MDM_KEY_READONLY_PROFILE, MDM_KEY_BLOCK_UNKNOWN, MDM_KEY_HIDE_INACTIVE_IDS, MDM_KEY_DISABLE_SAVE_TO_GALLERY, MDM_KEY_DISABLE_ADD_CONTACT, MDM_KEY_DISABLE_EXPORT, MDM_KEY_DISABLE_BACKUPS, MDM_KEY_DISABLE_ID_EXPORT, MDM_KEY_DISABLE_SYSTEM_BACKUPS, MDM_KEY_DISABLE_MESSAGE_PREVIEW, MDM_KEY_DISABLE_SEND_PROFILE_PICTURE, MDM_KEY_DISABLE_CALLS, MDM_KEY_DISABLE_VIDEO_CALLS, MDM_KEY_SKIP_WIZARD, MDM_KEY_DISABLE_CREATE_GROUP, MDM_KEY_DISABLE_WEB, MDM_KEY_SAFE_ENABLE, MDM_KEY_SAFE_SERVER_URL, MDM_KEY_SAFE_SERVER_USERNAME, MDM_KEY_SAFE_SERVER_PASSWORD, MDM_KEY_SAFE_RESTORE_ENABLE, MDM_KEY_SAFE_RESTORE_ID, MDM_KEY_SAFE_PASSWORD_PATTERN, MDM_KEY_SAFE_PASSWORD_MESSAGE, MDM_KEY_WEB_HOSTS, MDM_KEY_DISABLE_SHARE_MEDIA };
-    id objectsMdm[] = { @"Eieri", @"Heiri", @"Heirassa", @"customer-id", @"category" ,@"1" ,@"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", _yes, @"http://test.com", @"server-user", @"server-password", @"0", @"ECHOECHO", @"^[0-9]{1,15}$", @"Wrong-password-pattern", @"new.threema.ch", @"1" };
+    id keysMdm[] = { MDM_KEY_NICKNAME, MDM_KEY_FIRST_NAME, MDM_KEY_LAST_NAME, MDM_KEY_CSI, MDM_KEY_CATEGORY, MDM_KEY_CONTACT_SYNC, MDM_KEY_READONLY_PROFILE, MDM_KEY_BLOCK_UNKNOWN, MDM_KEY_HIDE_INACTIVE_IDS, MDM_KEY_DISABLE_SAVE_TO_GALLERY, MDM_KEY_DISABLE_ADD_CONTACT, MDM_KEY_DISABLE_EXPORT, MDM_KEY_DISABLE_BACKUPS, MDM_KEY_DISABLE_ID_EXPORT, MDM_KEY_DISABLE_SYSTEM_BACKUPS, MDM_KEY_DISABLE_MESSAGE_PREVIEW, MDM_KEY_DISABLE_SEND_PROFILE_PICTURE, MDM_KEY_DISABLE_CALLS, MDM_KEY_DISABLE_VIDEO_CALLS, MDM_KEY_SKIP_WIZARD, MDM_KEY_DISABLE_CREATE_GROUP, MDM_KEY_DISABLE_WEB, MDM_KEY_SAFE_ENABLE, MDM_KEY_SAFE_SERVER_URL, MDM_KEY_SAFE_SERVER_USERNAME, MDM_KEY_SAFE_SERVER_PASSWORD, MDM_KEY_SAFE_RESTORE_ENABLE, MDM_KEY_SAFE_RESTORE_ID, MDM_KEY_SAFE_PASSWORD_PATTERN, MDM_KEY_SAFE_PASSWORD_MESSAGE, MDM_KEY_WEB_HOSTS, MDM_KEY_DISABLE_SHARE_MEDIA, MDM_KEY_DISABLE_WORK_DIRECTORY};
+    id objectsMdm[] = { @"Eieri", @"Heiri", @"Heirassa", @"customer-id", @"category" ,@"1" ,@"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", _yes, @"http://test.com", @"server-user", @"server-password", @"0", @"ECHOECHO", @"^[0-9]{1,15}$", @"Wrong-password-pattern", @"new.threema.ch", @"1", @"1"};
     NSUInteger countMdm = sizeof(objectsMdm) / sizeof(id);
     NSDictionary *mdm = [NSDictionary dictionaryWithObjects:objectsMdm forKeys:keysMdm count:countMdm];
 
@@ -627,6 +630,7 @@
     XCTAssertTrue([mdmSetup disableCreateGroup]);
     XCTAssertTrue([mdmSetup disableWeb]);
     XCTAssertTrue([mdmSetup disableShareMedia]);
+    XCTAssertTrue([mdmSetup disableWorkDirectory]);
     
     XCTAssertFalse([mdmSetup skipWizard]); // not renewable
     XCTAssertTrue([mdmSetup safeEnable]);
@@ -653,8 +657,8 @@
     [self setMdm:companyMdm threemaMdm:nil];
 
     // "new" Threema-MDM (override)
-    id keysMdm[] = { MDM_KEY_NICKNAME, MDM_KEY_FIRST_NAME, MDM_KEY_LAST_NAME, MDM_KEY_CSI, MDM_KEY_CATEGORY, MDM_KEY_CONTACT_SYNC, MDM_KEY_READONLY_PROFILE, MDM_KEY_BLOCK_UNKNOWN, MDM_KEY_HIDE_INACTIVE_IDS, MDM_KEY_DISABLE_SAVE_TO_GALLERY, MDM_KEY_DISABLE_ADD_CONTACT, MDM_KEY_DISABLE_EXPORT, MDM_KEY_DISABLE_BACKUPS, MDM_KEY_DISABLE_ID_EXPORT, MDM_KEY_DISABLE_SYSTEM_BACKUPS, MDM_KEY_DISABLE_MESSAGE_PREVIEW, MDM_KEY_DISABLE_SEND_PROFILE_PICTURE, MDM_KEY_DISABLE_CALLS, MDM_KEY_DISABLE_VIDEO_CALLS, MDM_KEY_SKIP_WIZARD, MDM_KEY_DISABLE_CREATE_GROUP, MDM_KEY_DISABLE_WEB, MDM_KEY_SAFE_ENABLE, MDM_KEY_SAFE_SERVER_URL, MDM_KEY_SAFE_SERVER_USERNAME, MDM_KEY_SAFE_SERVER_PASSWORD, MDM_KEY_SAFE_RESTORE_ENABLE, MDM_KEY_SAFE_RESTORE_ID, MDM_KEY_SAFE_PASSWORD_PATTERN, MDM_KEY_SAFE_PASSWORD_MESSAGE, MDM_KEY_WEB_HOSTS, MDM_KEY_DISABLE_SHARE_MEDIA };
-    id objectsMdm[] = { @"Eieri", @"Heiri", @"Heirassa", @"customer-id", @"category" ,@"1" ,@"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", _yes, @"http://test.com", @"server-user", @"server-password", @"0", @"ECHOECHO", @"^[0-9]{1,15}$", @"Wrong-password-pattern", @"new.threema.ch", @"1" };
+    id keysMdm[] = { MDM_KEY_NICKNAME, MDM_KEY_FIRST_NAME, MDM_KEY_LAST_NAME, MDM_KEY_CSI, MDM_KEY_CATEGORY, MDM_KEY_CONTACT_SYNC, MDM_KEY_READONLY_PROFILE, MDM_KEY_BLOCK_UNKNOWN, MDM_KEY_HIDE_INACTIVE_IDS, MDM_KEY_DISABLE_SAVE_TO_GALLERY, MDM_KEY_DISABLE_ADD_CONTACT, MDM_KEY_DISABLE_EXPORT, MDM_KEY_DISABLE_BACKUPS, MDM_KEY_DISABLE_ID_EXPORT, MDM_KEY_DISABLE_SYSTEM_BACKUPS, MDM_KEY_DISABLE_MESSAGE_PREVIEW, MDM_KEY_DISABLE_SEND_PROFILE_PICTURE, MDM_KEY_DISABLE_CALLS, MDM_KEY_DISABLE_VIDEO_CALLS, MDM_KEY_SKIP_WIZARD, MDM_KEY_DISABLE_CREATE_GROUP, MDM_KEY_DISABLE_WEB, MDM_KEY_SAFE_ENABLE, MDM_KEY_SAFE_SERVER_URL, MDM_KEY_SAFE_SERVER_USERNAME, MDM_KEY_SAFE_SERVER_PASSWORD, MDM_KEY_SAFE_RESTORE_ENABLE, MDM_KEY_SAFE_RESTORE_ID, MDM_KEY_SAFE_PASSWORD_PATTERN, MDM_KEY_SAFE_PASSWORD_MESSAGE, MDM_KEY_WEB_HOSTS, MDM_KEY_DISABLE_SHARE_MEDIA, MDM_KEY_DISABLE_WORK_DIRECTORY};
+    id objectsMdm[] = { @"Eieri", @"Heiri", @"Heirassa", @"customer-id", @"category" ,@"1" ,@"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", _yes, @"http://test.com", @"server-user", @"server-password", @"0", @"ECHOECHO", @"^[0-9]{1,15}$", @"Wrong-password-pattern", @"new.threema.ch", @"1", @"1"};
     NSUInteger countMdm = sizeof(objectsMdm) / sizeof(id);
     NSDictionary *mdm = [NSDictionary dictionaryWithObjects:objectsMdm forKeys:keysMdm count:countMdm];
     
@@ -694,6 +698,7 @@
     XCTAssertTrue([mdmSetup disableCreateGroup]);
     XCTAssertTrue([mdmSetup disableWeb]);
     XCTAssertTrue([mdmSetup disableShareMedia]);
+    XCTAssertTrue([mdmSetup disableWorkDirectory]);
     
     XCTAssertTrue([mdmSetup skipWizard]); // not renewable
     XCTAssertTrue([mdmSetup safeEnable]);
@@ -972,8 +977,8 @@
 }
 
 - (NSDictionary*)getAllMdmParameters:(BOOL)isThreemaMdm  {
-    id keysMdm[] = { MDM_KEY_LICENSE_USERNAME, MDM_KEY_LICENSE_PASSWORD, MDM_KEY_NICKNAME, MDM_KEY_FIRST_NAME, MDM_KEY_LAST_NAME, MDM_KEY_CSI, MDM_KEY_CATEGORY, MDM_KEY_LINKED_EMAIL, MDM_KEY_LINKED_PHONE, MDM_KEY_CONTACT_SYNC, MDM_KEY_READONLY_PROFILE, MDM_KEY_BLOCK_UNKNOWN, MDM_KEY_HIDE_INACTIVE_IDS, MDM_KEY_DISABLE_SAVE_TO_GALLERY, MDM_KEY_DISABLE_ADD_CONTACT, MDM_KEY_DISABLE_EXPORT, MDM_KEY_DISABLE_BACKUPS, MDM_KEY_DISABLE_ID_EXPORT, MDM_KEY_DISABLE_SYSTEM_BACKUPS, MDM_KEY_DISABLE_MESSAGE_PREVIEW, MDM_KEY_DISABLE_SEND_PROFILE_PICTURE, MDM_KEY_DISABLE_CALLS, MDM_KEY_DISABLE_VIDEO_CALLS, MDM_KEY_SKIP_WIZARD, MDM_KEY_DISABLE_CREATE_GROUP, MDM_KEY_DISABLE_WEB, MDM_KEY_SAFE_ENABLE, MDM_KEY_SAFE_SERVER_URL, MDM_KEY_SAFE_SERVER_USERNAME, MDM_KEY_SAFE_SERVER_PASSWORD, MDM_KEY_SAFE_RESTORE_ENABLE, MDM_KEY_SAFE_RESTORE_ID, MDM_KEY_SAFE_PASSWORD_PATTERN, MDM_KEY_SAFE_PASSWORD_MESSAGE, MDM_KEY_WEB_HOSTS, MDM_KEY_DISABLE_SHARE_MEDIA};
-    id objectsMdm[] = { @"tester", @"test1234", @"Eieri", @"Heiri", @"Heirassa", @"customer-id", @"category", @"linked@email.com", @"111", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", _yes, @"http://test.com", @"server-user", @"server-password", @"0", @"ECHOECHO", @"^[0-9]{1,15}$", @"Wrong-password-pattern", @"threema.ch", @"1"};
+    id keysMdm[] = { MDM_KEY_LICENSE_USERNAME, MDM_KEY_LICENSE_PASSWORD, MDM_KEY_NICKNAME, MDM_KEY_FIRST_NAME, MDM_KEY_LAST_NAME, MDM_KEY_CSI, MDM_KEY_CATEGORY, MDM_KEY_LINKED_EMAIL, MDM_KEY_LINKED_PHONE, MDM_KEY_CONTACT_SYNC, MDM_KEY_READONLY_PROFILE, MDM_KEY_BLOCK_UNKNOWN, MDM_KEY_HIDE_INACTIVE_IDS, MDM_KEY_DISABLE_SAVE_TO_GALLERY, MDM_KEY_DISABLE_ADD_CONTACT, MDM_KEY_DISABLE_EXPORT, MDM_KEY_DISABLE_BACKUPS, MDM_KEY_DISABLE_ID_EXPORT, MDM_KEY_DISABLE_SYSTEM_BACKUPS, MDM_KEY_DISABLE_MESSAGE_PREVIEW, MDM_KEY_DISABLE_SEND_PROFILE_PICTURE, MDM_KEY_DISABLE_CALLS, MDM_KEY_DISABLE_VIDEO_CALLS, MDM_KEY_SKIP_WIZARD, MDM_KEY_DISABLE_CREATE_GROUP, MDM_KEY_DISABLE_WEB, MDM_KEY_SAFE_ENABLE, MDM_KEY_SAFE_SERVER_URL, MDM_KEY_SAFE_SERVER_USERNAME, MDM_KEY_SAFE_SERVER_PASSWORD, MDM_KEY_SAFE_RESTORE_ENABLE, MDM_KEY_SAFE_RESTORE_ID, MDM_KEY_SAFE_PASSWORD_PATTERN, MDM_KEY_SAFE_PASSWORD_MESSAGE, MDM_KEY_WEB_HOSTS, MDM_KEY_DISABLE_SHARE_MEDIA, MDM_KEY_DISABLE_WORK_DIRECTORY};
+    id objectsMdm[] = { @"tester", @"test1234", @"Eieri", @"Heiri", @"Heirassa", @"customer-id", @"category", @"linked@email.com", @"111", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", _yes, @"http://test.com", @"server-user", @"server-password", @"0", @"ECHOECHO", @"^[0-9]{1,15}$", @"Wrong-password-pattern", @"threema.ch", @"1", @"1"};
     
     NSUInteger countMdm = sizeof(objectsMdm) / sizeof(id);
     NSMutableDictionary *mdm = [NSMutableDictionary dictionaryWithObjects:objectsMdm forKeys:keysMdm count:countMdm];

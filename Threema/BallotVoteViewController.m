@@ -35,6 +35,7 @@
 #import "UIImage+ColoredImage.h"
 #import "PermissionChecker.h"
 #import "NibUtil.h"
+#import "BundleUtil.h"
 
 #define BALLOT_VOTE_TABLE_CELL_ID @"BallotVoteTableCellId"
 #define BALLOT_CLOSE_ACK_MESSAGE NSLocalizedStringFromTable(@"ballot_close_ack", @"Ballot", nil)
@@ -45,6 +46,7 @@
 @property EntityManager *entityManager;
 @property BallotManager *ballotManager;
 @property Ballot *ballot;
+@property bool voted;
 
 @property BallotHeaderView *headerView;
 
@@ -194,6 +196,7 @@
     BallotChoice *choice = [_choices objectAtIndex:index];
     
     [_ballotManager updateChoice:choice withOwnResult: [NSNumber numberWithBool:value]];
+    self.voted = true;
     
     [self updateTable];
 }
@@ -304,8 +307,25 @@
 }
 
 - (void) cancelPressed {
+    if (self.voted) {
+        NSString *title = NSLocalizedStringFromTable(@"voteCancelTitle", @"Ballot", nil);
+        NSString *message = NSLocalizedStringFromTable(@"voteCancelMessage", @"Ballot", nil);
+        NSString *destructiveTitle = NSLocalizedStringFromTable(@"discardVoteTitle", @"Ballot", nil);
+        NSString *cancelTitle = [BundleUtil localizedStringForKey:@"cancel"];
+        
+        [UIAlertTemplate showDestructiveAlertWithOwner:self title:title message:message titleDestructive:destructiveTitle actionDestructive:^(UIAlertAction * _Nonnull __unused destructiveAction) {
+            [self discardAndClose];
+        } titleCancel:cancelTitle actionCancel:^(UIAlertAction * _Nonnull __unused cancelAction) {
+            // Do nothing and allow casting the vote
+        }];
+    } else {
+        [self discardAndClose];
+    }
+}
+
+- (void)discardAndClose {
+    // Close the dialogue and discard the vote
     [_entityManager rollback];
-    
     [self.navigationController dismissViewControllerAnimated:YES completion:nil];
 }
 

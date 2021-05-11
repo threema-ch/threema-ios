@@ -20,20 +20,20 @@
 
 import Foundation
 
-@objc public class AppSetupState: NSObject {
+@objc open class AppSetupState: NSObject {
     
     private let appSetupNotCompleted = "APP_SETUP_NOT_COMPLETED"
     
     private let myIdentityStore: MyIdentityStore?
 
-    @objc init(myIdentityStore: MyIdentityStore?) {
+    @objc public init(myIdentityStore: MyIdentityStore?) {
         self.myIdentityStore = myIdentityStore
         super.init()
         
         self.checkDatabaseFile()
     }
     
-    @objc override convenience init() {
+    @objc override public convenience init() {
         self.init(myIdentityStore: nil)
     }
     
@@ -43,11 +43,11 @@ import Foundation
      - Returns: True means setup process is finished and database and identity is ready
     */
     @objc public func isAppSetupCompleted() -> Bool {
-        guard self.myIdentityStore != nil else {
+        guard let identityStore = self.myIdentityStore else {
             return false;
         }
         
-        return self.existsDatabaseFile() && self.myIdentityStore?.isProvisioned() ?? false;
+        return self.existsDatabaseFile() && identityStore.isProvisioned();
     }
     
     /**
@@ -56,7 +56,7 @@ import Foundation
     @objc public func appSetupCompleted() {
         FileUtility.delete(at: FileUtility.appDataDirectory?.appendingPathComponent(appSetupNotCompleted))
     }
-    
+        
     /**
      Check is database not created at first time instanced.
      

@@ -21,6 +21,7 @@
 #import "SystemMessage.h"
 #import "Contact.h"
 #import "LicenseStore.h"
+#import "BundleUtil.h"
 
 @implementation SystemMessage
 
@@ -50,6 +51,10 @@
             return NSLocalizedString(@"group_member_self_removed", nil);
         case kSystemMessageGroupSelfLeft:
             return NSLocalizedString(@"group_member_self_left", nil);
+        case kSystemMessageStartNoteGroupInfo:
+            return [BundleUtil localizedStringForKey:@"add_note_group_info"];
+        case kSystemMessageEndNoteGroupInfo:
+            return [BundleUtil localizedStringForKey:@"end_note_group_info"];
         case kSystemMessageCallMissed:
             return NSLocalizedString(@"call_missed", nil);
         case kSystemMessageCallRejected:

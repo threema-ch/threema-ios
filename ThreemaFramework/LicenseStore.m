@@ -176,7 +176,9 @@ static LicenseStore *singleton;
 }
 
 - (void)performUpdateWorkInfo {
-    if (![LicenseStore requiresLicenseKey] || _licenseUsername.length < 1)
+    // Only send the update work info when there is a valid license username and a valid threema id
+    AppSetupState *appSetupState = [[AppSetupState alloc] initWithMyIdentityStore:[MyIdentityStore sharedMyIdentityStore]];
+    if (![LicenseStore requiresLicenseKey] || _licenseUsername.length < 1 || (!appSetupState.isAppSetupCompleted && ![MyIdentityStore sharedMyIdentityStore].pendingCreateID))
         return;
     
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{

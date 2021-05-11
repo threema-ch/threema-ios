@@ -49,3 +49,7 @@
 
 "ballot_open_ballots" = "Sondages ouverts";
 "ballot_closed_ballots" = "Sondages fermés";
+
+"voteCancelTitle" = "Ignorer le vote";
+"voteCancelMessage" = "Si vous partez avant de voter, votre vote sera ignoré.";
+"discardVoteTitle" = "Ignorer";

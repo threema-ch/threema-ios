@@ -20,13 +20,13 @@
 
 import Foundation
 
-class KeyboardResizeCenterY {
+public class KeyboardResizeCenterY {
     let parentView: UIView
     let resizeView: UIView
     var defaultCenterY: NSLayoutConstraint
     var offsetCenterY: NSLayoutConstraint?
     
-    init(parent: UIView, resize: UIView) {
+    public init(parent: UIView, resize: UIView) {
         self.parentView = parent
         self.resizeView = resize
         

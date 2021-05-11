@@ -1,40 +1,58 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="15702" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="PlI-zG-6ML">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="17701" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="PlI-zG-6ML">
     <device id="retina4_7" orientation="portrait" appearance="light"/>
     <dependencies>
         <deployment identifier="iOS"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="15704"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="17703"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
+        <capability name="System colors in document resources" minToolsVersion="11.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <scenes>
-        <!--View Controller-->
-        <scene sceneID="n96-jh-IY8">
+        <!--Text Preview View Controller-->
+        <scene sceneID="6YJ-GA-3Bs">
             <objects>
-                <viewController id="jUr-QF-s9U" sceneMemberID="viewController">
-                    <view key="view" contentMode="scaleToFill" id="SM0-Kt-C0g">
+                <viewController storyboardIdentifier="TextPreviewViewController" useStoryboardIdentifierAsRestorationIdentifier="YES" id="dyq-kR-lnw" customClass="TextPreviewViewController" customModule="ThreemaForWorkShareExtension" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="m6u-wQ-kPP">
                         <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                        <color key="backgroundColor" red="0.0" green="0.0" blue="0.0" alpha="0.0" colorSpace="custom" customColorSpace="sRGB"/>
-                        <viewLayoutGuide key="safeArea" id="KoK-fP-9Ui"/>
+                        <subviews>
+                            <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" contentInsetAdjustmentBehavior="never" adjustsFontForContentSizeCategory="YES" translatesAutoresizingMaskIntoConstraints="NO" id="OrR-er-5Ho">
+                                <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
+                                <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                                <string key="text">Lorem ipsum dolor sit er elit lamet, consectetaur cillium adipisicing pecu, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Nam liber te conscient to factor tum poen legum odioque civiuda.</string>
+                                <color key="textColor" systemColor="labelColor"/>
+                                <fontDescription key="fontDescription" name=".AppleSystemUIFont" family=".AppleSystemUIFont" pointSize="14"/>
+                                <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
+                            </textView>
+                        </subviews>
+                        <viewLayoutGuide key="safeArea" id="5Sg-WM-Vuw"/>
+                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                        <constraints>
+                            <constraint firstItem="OrR-er-5Ho" firstAttribute="bottom" secondItem="5Sg-WM-Vuw" secondAttribute="bottom" id="11k-OG-UeL"/>
+                            <constraint firstItem="OrR-er-5Ho" firstAttribute="trailing" secondItem="5Sg-WM-Vuw" secondAttribute="trailing" id="M2B-74-nMC"/>
+                            <constraint firstItem="OrR-er-5Ho" firstAttribute="top" secondItem="5Sg-WM-Vuw" secondAttribute="top" id="brl-mg-02s"/>
+                            <constraint firstItem="OrR-er-5Ho" firstAttribute="leading" secondItem="5Sg-WM-Vuw" secondAttribute="leading" id="tgl-Sa-0S7"/>
+                        </constraints>
                     </view>
-                    <navigationItem key="navigationItem" id="bPt-1g-DTw"/>
+                    <navigationItem key="navigationItem" id="hOb-GP-pnt"/>
+                    <connections>
+                        <outlet property="bottomLayoutConstraint" destination="11k-OG-UeL" id="l7e-0A-9gT"/>
+                        <outlet property="textView" destination="OrR-er-5Ho" id="7Bn-xs-MwK"/>
+                    </connections>
                 </viewController>
-                <placeholder placeholderIdentifier="IBFirstResponder" id="3MT-r2-FsF" userLabel="First Responder" sceneMemberID="firstResponder"/>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="a08-fW-C6W" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="1069" y="469"/>
+            <point key="canvasLocation" x="1602.4000000000001" y="-202.84857571214394"/>
         </scene>
         <!--Root Navigation Controller-->
         <scene sceneID="tjp-DD-UHP">
             <objects>
-                <navigationController id="PlI-zG-6ML" customClass="RootNavigationController" sceneMemberID="viewController">
+                <navigationController id="PlI-zG-6ML" customClass="RootNavigationController" customModule="ThreemaForWorkShareExtension" customModuleProvider="target" sceneMemberID="viewController">
                     <navigationBar key="navigationBar" contentMode="scaleToFill" id="3eU-Xc-Xxm">
                         <rect key="frame" x="0.0" y="0.0" width="375" height="44"/>
                         <autoresizingMask key="autoresizingMask"/>
                     </navigationBar>
-                    <connections>
-                        <segue destination="jUr-QF-s9U" kind="relationship" relationship="rootViewController" id="UDm-Uh-kf7"/>
-                    </connections>
                 </navigationController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="LVp-Dl-VSF" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
@@ -43,7 +61,7 @@
         <!--Progress View Controller-->
         <scene sceneID="SfS-oM-cJX">
             <objects>
-                <viewController storyboardIdentifier="ProgressViewController" id="1g1-T0-HaN" customClass="ProgressViewController" sceneMemberID="viewController">
+                <viewController storyboardIdentifier="ProgressViewController" id="1g1-T0-HaN" customClass="ProgressViewController" customModule="ThreemaForWorkShareExtension" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="Ep5-ud-z4P">
                         <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -61,20 +79,20 @@
                                                     <rect key="frame" x="34" y="27" width="215" height="21"/>
                                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                                     <fontDescription key="fontDescription" type="system" pointSize="17"/>
-                                                    <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
+                                                    <color key="textColor" systemColor="darkTextColor"/>
                                                     <nil key="highlightedColor"/>
                                                 </label>
                                                 <progressView opaque="NO" contentMode="scaleToFill" verticalHuggingPriority="750" fixedFrame="YES" progress="0.5" translatesAutoresizingMaskIntoConstraints="NO" id="lf0-yi-Qfg">
                                                     <rect key="frame" x="34" y="70" width="233" height="2"/>
                                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                                 </progressView>
-                                                <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="9Ws-Li-364">
+                                                <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="9Ws-Li-364">
                                                     <rect key="frame" x="79" y="95" width="124" height="30"/>
                                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                                     <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                                     <state key="normal" title="Cancel"/>
                                                     <connections>
-                                                        <action selector="didCancel:" destination="1g1-T0-HaN" eventType="touchUpInside" id="qur-r4-46K"/>
+                                                        <action selector="cancelButtonPressed:" destination="1g1-T0-HaN" eventType="touchUpInside" id="alU-Ya-ZdW"/>
                                                     </connections>
                                                 </button>
                                             </subviews>
@@ -94,6 +112,7 @@
                                 <blurEffect style="light"/>
                             </visualEffectView>
                         </subviews>
+                        <viewLayoutGuide key="safeArea" id="VfH-jk-DOe"/>
                         <color key="backgroundColor" red="0.0" green="0.0" blue="0.0" alpha="0.0" colorSpace="custom" customColorSpace="sRGB"/>
                         <constraints>
                             <constraint firstItem="VfH-jk-DOe" firstAttribute="centerX" secondItem="DNP-Jn-Ees" secondAttribute="centerX" id="8wx-cX-St1"/>
@@ -101,15 +120,14 @@
                             <constraint firstAttribute="centerY" secondItem="DNP-Jn-Ees" secondAttribute="centerY" id="N4d-cK-xy5"/>
                             <constraint firstItem="DNP-Jn-Ees" firstAttribute="height" secondItem="Ep5-ud-z4P" secondAttribute="height" id="ohl-go-s1t"/>
                         </constraints>
-                        <viewLayoutGuide key="safeArea" id="VfH-jk-DOe"/>
                     </view>
                     <nil key="simulatedTopBarMetrics"/>
                     <connections>
-                        <outlet property="cancelButton" destination="9Ws-Li-364" id="KWK-d5-8Bz"/>
-                        <outlet property="contentView" destination="wCW-AV-vd5" id="V5J-VK-kNZ"/>
-                        <outlet property="label" destination="PO9-0a-8GW" id="ekc-ek-32Y"/>
-                        <outlet property="progressView" destination="lf0-yi-Qfg" id="MCe-yY-fZP"/>
-                        <outlet property="visualEffectsView" destination="DNP-Jn-Ees" id="7uN-cl-ena"/>
+                        <outlet property="cancelButton" destination="9Ws-Li-364" id="nUl-SZ-62v"/>
+                        <outlet property="contentView" destination="wCW-AV-vd5" id="ZMq-qe-9rX"/>
+                        <outlet property="label" destination="PO9-0a-8GW" id="M0X-80-Taq"/>
+                        <outlet property="progressView" destination="lf0-yi-Qfg" id="hlr-v3-8C3"/>
+                        <outlet property="visualEffectsView" destination="DNP-Jn-Ees" id="1CT-6g-rxV"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="eMF-Sh-nZr" userLabel="First Responder" sceneMemberID="firstResponder"/>
@@ -117,4 +135,15 @@
             <point key="canvasLocation" x="553" y="1198"/>
         </scene>
     </scenes>
+    <resources>
+        <systemColor name="darkTextColor">
+            <color white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+        </systemColor>
+        <systemColor name="labelColor">
+            <color white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+        </systemColor>
+        <systemColor name="systemBackgroundColor">
+            <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+        </systemColor>
+    </resources>
 </document>

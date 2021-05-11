@@ -27,7 +27,7 @@
 + (NotificationManager *)sharedInstance;
 
 - (void)updateUnreadMessagesCount:(BOOL)unloadedMessage;
-- (NSNumber *)unreadMessagesCount:(BOOL)unloadedMessage;
+- (NSDictionary *)unreadMessagesCount:(BOOL)unloadedMessage;
 - (void)handleVoIPPush:(NSDictionary *)payload withCompletionHandler:(void (^)(void))completion;
 
 - (void)playReceivedMessageSound;

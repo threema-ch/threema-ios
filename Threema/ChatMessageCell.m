@@ -386,20 +386,24 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         }
     }
     
+    CGFloat alpha = 0.8;
+    
     if (message.userackDate != nil) {
         if (message.userack.boolValue) {
-            iconName = @"MessageStatus_thumb_up";
+            iconName = @"hand.thumbsup.fill_regular.S";
             color = [Colors green];
         } else if (message.userack.boolValue == NO) {
-            iconName = @"MessageStatus_thumb_down";
+            iconName = @"hand.thumbsdown.fill_regular.S";
             color = [Colors orange];
         }
+        
+        alpha = 1.0;
     }
     
     if (iconName) {
         statusImage.image = [self getStatusImageNamed:iconName withCustomColor:color];
 
-        statusImage.alpha = 0.8;
+        statusImage.alpha = alpha;
         statusImage.hidden = NO;
     } else {
         statusImage.hidden = YES;
@@ -415,7 +419,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     }
     
     if (color) {
-        return [UIImage imageNamed:imageName inColor:color];
+        return [[UIImage imageNamed:imageName inColor:color] imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal];
     } else {
         NSString *glowImageName = [NSString stringWithFormat:@"%@_glow", imageName];
         return [UIImage imageNamed:glowImageName];
@@ -464,7 +468,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     NSMutableArray *menuItems = [NSMutableArray array];
     
     if ([self canPerformAction:@selector(userackMessage:) withSender:nil]) {
-        UIImage *ackImage = [UIImage imageNamed:@"MessageStatus_thumb_up" inColor:[Colors green]];
+        UIImage *ackImage = [UIImage imageNamed:@"hand.thumbsup.fill_regular.M" inColor:[Colors green]];
         
         QBPopupMenuItem *item = [QBPopupMenuItem itemWithImage:ackImage target:self action:@selector(userackMessage:)];
         item.accessibilityLabel = NSLocalizedString(@"acknowledge", nil);
@@ -472,7 +476,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     }
     
     if ([self canPerformAction:@selector(userdeclineMessage:) withSender:nil]) {
-        UIImage *declineImage = [UIImage imageNamed:@"MessageStatus_thumb_down" inColor:[Colors orange]];
+        UIImage *declineImage = [UIImage imageNamed:@"hand.thumbsdown.fill_regular.M" inColor:[Colors orange]];
 
         QBPopupMenuItem *item = [QBPopupMenuItem itemWithImage:declineImage target:self action:@selector(userdeclineMessage:)];
         item.accessibilityLabel = NSLocalizedString(@"decline", nil);
@@ -548,14 +552,14 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         NSMutableArray *menuItems = [NSMutableArray array];
         NSMutableArray *deleteItems = [NSMutableArray array];
         if ([self canPerformAction:@selector(userackMessage:) withSender:nil]) {
-            UIImage *ackImage = [UIImage imageNamed:@"MessageStatus_thumb_up" inColor:[Colors green]];
+            UIImage *ackImage = [[UIImage imageNamed:@"hand.thumbsup.fill_regular.M" inColor:[Colors green]] imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal];
             UIAction *action = [UIAction actionWithTitle:NSLocalizedString(@"acknowledge", nil) image:ackImage identifier:nil handler:^(__kindof UIAction * _Nonnull action) {
                 [self userackMessage:nil];
             }];
             [menuItems addObject:action];
         }
         if ([self canPerformAction:@selector(userdeclineMessage:) withSender:nil]) {
-            UIImage *declineImage = [UIImage imageNamed:@"MessageStatus_thumb_down" inColor:[Colors orange]];
+            UIImage *declineImage = [[UIImage imageNamed:@"hand.thumbsdown.fill_regular.M" inColor:[Colors orange]] imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal];
             UIAction *action = [UIAction actionWithTitle:NSLocalizedString(@"decline", nil) image:declineImage identifier:nil handler:^(__kindof UIAction * _Nonnull action) {
                 [self userdeclineMessage:nil];
             }];
@@ -636,14 +640,14 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     NSMutableArray *menuItems = [NSMutableArray array];
     NSMutableArray *deleteItems = [NSMutableArray array];
     if ([self canPerformAction:@selector(userackMessage:) withSender:nil]) {
-        UIImage *ackImage = [UIImage imageNamed:@"MessageStatus_thumb_up" inColor:[Colors green]];
+        UIImage *ackImage = [[UIImage imageNamed:@"hand.thumbsup.fill_regular.M" inColor:[Colors green]] imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal];
         UIAction *action = [UIAction actionWithTitle:NSLocalizedString(@"acknowledge", nil) image:ackImage identifier:nil handler:^(__kindof UIAction * _Nonnull action) {
             [self userackMessage:nil];
         }];
         [menuItems addObject:action];
     }
     if ([self canPerformAction:@selector(userdeclineMessage:) withSender:nil]) {
-        UIImage *declineImage = [UIImage imageNamed:@"MessageStatus_thumb_down" inColor:[Colors orange]];
+        UIImage *declineImage = [[UIImage imageNamed:@"hand.thumbsdown.fill_regular.M" inColor:[Colors orange]] imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal];
         UIAction *action = [UIAction actionWithTitle:NSLocalizedString(@"decline", nil) image:declineImage identifier:nil handler:^(__kindof UIAction * _Nonnull action) {
             [self userdeclineMessage:nil];
         }];
@@ -789,6 +793,10 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 }
 
 - (void)speakMessage:(UIMenuController *)menuController {
+    chatVc.prevAudioCategory = [AVAudioSession sharedInstance].category;
+    [[AVAudioSession sharedInstance] setCategory: AVAudioSessionCategoryPlayback error:nil];
+    [[AVAudioSession sharedInstance] setActive:YES error:nil];
+    
 }
 
 - (void)shareMessage:(UIMenuController *)menuController {
@@ -796,7 +804,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     if ([mdmSetup disableShareMedia] == true) {
         ModalNavigationController *navigationController = [ContactGroupPickerViewController pickerFromStoryboardWithDelegate:self];
         ContactGroupPickerViewController *picker = (ContactGroupPickerViewController *)navigationController.topViewController;
-        picker.enableMulitSelection = true;
+        picker.enableMultiSelection = true;
         picker.enableTextInput = true;
         picker.submitOnSelect = false;
         
@@ -814,7 +822,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 - (void)forwardMessage:(UIMenuController *)menuController {
     ModalNavigationController *navigationController = [ContactGroupPickerViewController pickerFromStoryboardWithDelegate:self];
     ContactGroupPickerViewController *picker = (ContactGroupPickerViewController *)navigationController.topViewController;
-    picker.enableMulitSelection = true;
+    picker.enableMultiSelection = true;
     picker.enableTextInput = true;
     picker.submitOnSelect = false;
     
@@ -1231,7 +1239,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         
         NSData *data = [audioMessage.audio.data copy];
         for (Conversation *conversation in conversations) {
-            URLSenderItem *item = [URLSenderItem itemWithData:data fileName:@"audio.m4a" type:UTTYPE_AUDIO renderType:@0 sendAsFile:true];
+            URLSenderItem *item = [URLSenderItem itemWithData:data fileName:@"audio.m4a" type:UTTYPE_AUDIO renderType:@1 sendAsFile:true];
             FileMessageSender *sender = [[FileMessageSender alloc] init];
             [sender sendItem:item inConversation:conversation requestId:nil];
             
@@ -1279,15 +1287,11 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     if ([self.message isKindOfClass: [FileMessage class]]) {
         FileMessage *fileMessage = (FileMessage *)message;
         NSNumber *type = fileMessage.type;
-        // Voice Messages are always forwarded with rendering type 0
-        if ([UTIConverter isAudioMimeType:fileMessage.mimeType]) {
-            type = @0;
-        }
         item = [URLSenderItem itemWithData:fileMessage.data.data fileName:fileMessage.fileName type:fileMessage.blobGetUTI renderType:type sendAsFile:true];
     }
     else if ([self.message isKindOfClass: [AudioMessage class]]) {
         AudioMessage *audioMessage = (AudioMessage *)message;
-        item = [URLSenderItem itemWithData:audioMessage.audio.data fileName:audioMessage.audio.getFilename type:audioMessage.blobGetUTI renderType:@0 sendAsFile:true];
+        item = [URLSenderItem itemWithData:audioMessage.audio.data fileName:audioMessage.audio.getFilename type:audioMessage.blobGetUTI renderType:@1 sendAsFile:true];
     }
     else if ([self.message isKindOfClass: [ImageMessage class]]) {
         ImageMessage *imageMessage = (ImageMessage *)message;

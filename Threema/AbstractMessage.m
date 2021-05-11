@@ -248,6 +248,15 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     return [NSString stringWithHexData:self.messageId];
 }
 
+- (BOOL)noDeliveryReceiptFlagSet {
+    if (self.flags != nil) {
+        if ([self.flags integerValue] & BaseMessageFlagsNoDeliveryReceipt) {
+            return true;
+        }
+    }
+    return false;
+}
+
 #pragma mark - NSCoding
 
 - (id)initWithCoder:(NSCoder *)decoder {

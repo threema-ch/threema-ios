@@ -28,6 +28,4 @@
 + (void)markConversation:(Conversation *)conversation;
 + (void)unmarkConversation:(Conversation *)conversation;
 
-+ (void)resetUnreadMessageCount;
-
 @end

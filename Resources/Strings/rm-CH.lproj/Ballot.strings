@@ -49,3 +49,7 @@
 
 "ballot_open_ballots" = "Enquistas avertas";
 "ballot_closed_ballots" = "Enquistas terminadas";
+
+"voteCancelTitle" = "Stizzar la vusch";
+"voteCancelMessage" = "Ti stizzas tia vusch e na la transmettas betg. Tscherna «Vuschar» per dar giu tia vusch.";
+"discardVoteTitle" = "Stizzar";

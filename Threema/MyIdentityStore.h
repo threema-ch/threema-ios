@@ -49,6 +49,11 @@
 @property (strong, nonatomic, readwrite) NSString *licenseLogoDarkUrl;
 @property (strong, nonatomic, readwrite) NSString *licenseSupportUrl;
 
+/*!
+ * @field pendingCreateID
+ * This property should be true if the threema id is created or restored and the setup is not completed.
+ * When the setup is completed, we have to set this value to false. Otherwise it can't connect to the server.
+ */
 @property (nonatomic, readwrite) BOOL pendingCreateID;
 @property (strong, nonatomic, readwrite) NSString *createIDEmail;
 @property (strong, nonatomic, readwrite) NSString *createIDPhone;

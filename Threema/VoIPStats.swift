@@ -740,7 +740,8 @@ internal enum CodecMimeTypePrimary {
         public func getShortRepresentation() -> String {
             var result = "kind=\(mediaType())"
             result += ", mid=\(transceiver.mid)"
-            if transceiver.currentDirection(&transceiver.direction) {
+            var transceiverDirection = transceiver.direction
+            if transceiver.currentDirection(&transceiverDirection) {
                 result += ", cur-dir=\(direction())"
             }
             
@@ -753,7 +754,8 @@ internal enum CodecMimeTypePrimary {
             var result = "kind=\(mediaType())"
             result += ", mid=\(transceiver.mid)"
             result += ", direction=\(direction())"
-            if transceiver.currentDirection(&transceiver.direction) {
+            var transceiverDirection = transceiver.direction
+            if transceiver.currentDirection(&transceiverDirection) {
                 result += ", cur-dir=\(direction())"
             }
             

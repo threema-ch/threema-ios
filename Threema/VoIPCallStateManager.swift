@@ -265,7 +265,6 @@ extension VoIPCallStateManager {
     private func addMessageToQueue(message: Any) {
         var queueCountBefore = 0
         lockQueue.sync {
-            DDLogNotice("Threema call: VoIPCallStateManager -> add message to queue \(message.self)");
             queueCountBefore = callQueue.elements.count
             callQueue.enqueue(message)
         }
@@ -284,7 +283,6 @@ extension VoIPCallStateManager {
         }
         if element != nil {
             managerQueue.async {
-                DDLogNotice("Threema call: VoIPCallStateManager -> start process");
                 self.callService.startProcess(element: element!)
             }
         }
@@ -297,7 +295,6 @@ extension VoIPCallStateManager: VoIPCallServiceDelegate {
      Process next message if queue is not empty
      */
     func callServiceFinishedProcess() {
-        DDLogNotice("Threema call: VoIPCallStateManager -> finished process, check next");
         if callQueue.elements.count > 0 {
             processQueue()
         }

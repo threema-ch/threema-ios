@@ -80,6 +80,10 @@ typedef void (^ChatViewControllerCompletionBlock)(ChatViewController *chatViewCo
 
 @property (nonatomic) BOOL showHeader;
 
+@property (nonatomic, readonly) AVSpeechSynthesizer *speechSynthesizer;
+@property (nonatomic, strong) NSString *prevAudioCategory;
+
+
 - (void)setCurrentAction:(ChatViewControllerAction *)newAction;
 
 - (BOOL)visible;

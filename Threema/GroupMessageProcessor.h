@@ -35,6 +35,8 @@
 
 @property BOOL addToPendingMessages;
 
+@property BOOL rejectMessage;
+
 @property id<GroupMessageProcessorDelegate> delegate;
 
 + (instancetype)groupMessageProcessorForMessage:(AbstractGroupMessage *)message;

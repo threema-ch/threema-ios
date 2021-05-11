@@ -95,7 +95,7 @@
 	<array>
 		<dict>
 			<key>UIApplicationShortcutItemIconType</key>
-			<string>UIApplicationShortcutIconTypeAdd</string>
+			<string>UIApplicationShortcutIconTypeCompose</string>
 			<key>UIApplicationShortcutItemTitle</key>
 			<string>New message</string>
 			<key>UIApplicationShortcutItemType</key>
@@ -169,5 +169,9 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<key>ThreemaAppGroupIdentifier</key>
+	<string>group.ch.threema.work</string>
+	<key>ThreemaAppIdentifier</key>
+	<string>ch.threema.work.iapp</string>
 </dict>
 </plist>

@@ -232,7 +232,7 @@
     }
     
     /* Update public nickname in contact, if necessary */
-    if (![amsg isKindOfClass:[DeliveryReceiptMessage class]] && (contact.publicNickname == nil || ![contact.publicNickname isEqualToString:amsg.pushFromName])) {
+    if (amsg.pushFromName.length > 0 && ![contact.identity isEqualToString:amsg.pushFromName] && ![contact.publicNickname isEqualToString:amsg.pushFromName]) {
         contact.publicNickname = amsg.pushFromName;
         [[NSNotificationCenter defaultCenter] postNotificationName:kNotificationRefreshContactSortIndices object:nil];
     }
@@ -413,9 +413,15 @@
                 onError(nil);
                 return;
             } else {
-                if (groupProcessor.isNewGroup || !conversation) {
-                    /* process any pending group messages that could not be processed before this create */
-                    [self processPendingGroupMessages];
+                if (groupProcessor.rejectMessage) {
+                    [pendingMessage finishedProcessingWithRejected:true];
+                    onCompletion();
+                    return;
+                } else {
+                    if (groupProcessor.isNewGroup || !conversation) {
+                        /* process any pending group messages that could not be processed before this create */
+                        [self processPendingGroupMessages];
+                    }
                 }
             }
             [pendingMessage finishedProcessing];
@@ -532,7 +538,7 @@
         if (message != nil) {
             conversation.lastMessage = message;
         }
-        conversation.unreadMessageCount = [NSNumber numberWithInt:[[conversation unreadMessageCount] intValue] + 1];
+        [self increateUnreadMessageCount:conversation];
     }];
 }
 
@@ -713,7 +719,7 @@
             message.conversation = conversation;
             
             conversation.lastMessage = message;
-            conversation.unreadMessageCount = [NSNumber numberWithInt:[[conversation unreadMessageCount] intValue] + 1];
+            [self increateUnreadMessageCount:conversation];
         }];
         [pendingMessage addBaseMessageWithMessage:message];
         
@@ -744,7 +750,7 @@
             message.conversation = conversation;
             message.thumbnail = dbThumbnail;
             conversation.lastMessage = message;
-            conversation.unreadMessageCount = [NSNumber numberWithInt:[[conversation unreadMessageCount] intValue] + 1];
+            [self increateUnreadMessageCount:conversation];
         }];
         [pendingMessage addBaseMessageWithMessage:message];
         /* Send delivery receipt */
@@ -1003,7 +1009,7 @@
             message.sender = [_entityManager.entityFetcher contactForId: msg.fromIdentity];
             
             currentConversation.lastMessage = message;
-            currentConversation.unreadMessageCount = [NSNumber numberWithInt:[[currentConversation unreadMessageCount] intValue] + 1];
+            [self increateUnreadMessageCount:conversation];
         }];
         [pendingMessage addBaseMessageWithMessage:message];
         
@@ -1034,7 +1040,7 @@
             message.sender = [_entityManager.entityFetcher contactForId: msg.fromIdentity];
             
             currentConversation.lastMessage = message;
-            currentConversation.unreadMessageCount = [NSNumber numberWithInt:[[currentConversation unreadMessageCount] intValue] + 1];
+            [self increateUnreadMessageCount:conversation];
         }];
         [pendingMessage addBaseMessageWithMessage:message];
         
@@ -1333,6 +1339,13 @@
 
 - (void)startProcessPendingGroupMessages {
     [self processPendingGroupMessages];
+}
+
+- (void)increateUnreadMessageCount:(Conversation *)conversation {
+    NSNumber *unreadCount = conversation.unreadMessageCount;
+    if (unreadCount.intValue == -1)
+        unreadCount = @0;
+    conversation.unreadMessageCount = [NSNumber numberWithInt:unreadCount.intValue + 1];
 }
 
 @end

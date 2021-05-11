@@ -854,30 +854,34 @@
 
 - (NSArray *)swipeLeftToRightForTableCell:(MGSwipeTableCell *)cell conversation:(Conversation *)conversation swipeSettings:(MGSwipeSettings *)swipeSettings expansionSettings:(MGSwipeExpansionSettings *)expansionSettings {
     expansionSettings.fillOnTrigger = NO;
-    expansionSettings.threshold = 1.5;
+    expansionSettings.threshold = 1.4;
     swipeSettings.enableSwipeBounces = YES;
     __block NSString *buttonTitle;
     __block UIImage *buttonIcon;
     NSMutableArray *buttonArray = [NSMutableArray new];
     
-    if (conversation.unreadMessageCount.intValue > 0) {
-        NSString *readTitle = NSLocalizedString(@"read", @"");
-        
-        buttonTitle = NSLocalizedString(@"read", @"");
+    __block NSString *readTitle = NSLocalizedString(@"read", @"");
+    __block NSString *unreadTitle = NSLocalizedString(@"unread", @"");
+    
+    if (conversation.unreadMessageCount.intValue == 0) {
+        buttonTitle = unreadTitle;
+        buttonIcon = [UIImage imageNamed:@"MessageStatus_sent" inColor:[UIColor whiteColor]];
+    } else {
+        buttonTitle = readTitle;
         buttonIcon = [UIImage imageNamed:@"MessageStatus_read" inColor:[UIColor whiteColor]];
-        
-        __block MGSwipeButton *read = [MGSwipeButton buttonWithTitle:buttonTitle icon:buttonIcon backgroundColor:[Colors workBlue] padding:10 callback:^BOOL(MGSwipeTableCell *sender) {
-            [ConversationUtils unreadConversation:conversation];
-            [cell refreshButtons:YES];
-            [cell refreshContentView];
-            return YES;
-        }];
-        
-        CGRect readFrame = [readTitle boundingRectWithSize:CGSizeMake(self.view.frame.size.width/2, CGFLOAT_MAX) options:NSStringDrawingUsesLineFragmentOrigin attributes:@{ NSFontAttributeName:read.titleLabel.font } context:nil];
-        [read setButtonWidth:readFrame.size.width + 30.0];
-        [read centerIconOverText];
-        [buttonArray addObject:read];
     }
+    
+    __block MGSwipeButton *read = [MGSwipeButton buttonWithTitle:buttonTitle icon:buttonIcon backgroundColor:[Colors workBlue] padding:10 callback:^BOOL(MGSwipeTableCell *sender) {
+        [ConversationUtils unreadConversation:conversation];
+        [cell refreshButtons:YES];
+        [cell refreshContentView];
+        return YES;
+    }];
+    
+    CGRect readFrame = [buttonTitle boundingRectWithSize:CGSizeMake(self.view.frame.size.width/2, CGFLOAT_MAX) options:NSStringDrawingUsesLineFragmentOrigin attributes:@{ NSFontAttributeName:read.titleLabel.font } context:nil];
+    [read setButtonWidth:readFrame.size.width + 30.0];
+    [read centerIconOverText];
+    [buttonArray addObject:read];
     
     NSString *markTitle = [conversation.marked isEqualToNumber:[NSNumber numberWithBool:YES]] ? NSLocalizedString(@"unpin", nil) : NSLocalizedString(@"pin", nil);
     UIImage *markImage = [conversation.marked isEqualToNumber:[NSNumber numberWithBool:YES]] ? [UIImage imageNamed:@"Unpin" inColor:[UIColor whiteColor]] : [UIImage imageNamed:@"Pin" inColor:[UIColor whiteColor]];

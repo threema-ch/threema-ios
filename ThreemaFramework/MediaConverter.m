@@ -24,7 +24,7 @@
 #import "SDAVAssetExportSession.h"
 #import "UIDefines.h"
 #import "ValidationLogger.h"
-#import <ThreemaFramework/ThreemaFramework-Swift.h>
+#import <CoreServices/UTCoreTypes.h>
 
 #ifdef DEBUG
 static const DDLogLevel ddLogLevel = DDLogLevelVerbose;
@@ -79,7 +79,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     return scaled;
 }
 
-+ (UIImage*)scaleImageData:(NSData *)imageData toMaxSize:(CGFloat)maxSize {
++ (UIImage* _Nullable)scaleImageData:(NSData * _Nonnull)imageData toMaxSize:(CGFloat)maxSize {
     CGImageSourceRef src = CGImageSourceCreateWithData((__bridge CFDataRef)imageData, (__bridge CFDictionaryRef) @{
         (id) kCGImageSourceShouldCache : @NO});
     NSMutableDictionary *imageRefOptions = [MediaConverter imageRefOptionsForSize:maxSize];
@@ -87,7 +87,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     CGImageRef scaledImageRef = CGImageSourceCreateThumbnailAtIndex(src, 0, (__bridge CFDictionaryRef) imageRefOptions);
     UIImage *scaled = [UIImage imageWithCGImage:scaledImageRef];
     CGImageRelease(scaledImageRef);
-    CFRelease(src);
+    if (src) CFRelease(src);
     if (scaled == nil) {
         scaled = [UIImage imageWithData:imageData];
     }
@@ -217,6 +217,57 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     }
     
     return [VideoConversionHelper getAVAssetExportSessionFrom:asset outputURL:outputURL];
+}
+
++ (NSData *)PNGRepresentationFor: (UIImage *) image {
+    return [self representationForType:kUTTypePNG andImage:image];
+}
+
++ (NSData *)JPEGRepresentationFor: (UIImage *) image {
+    return [self representationForType:kUTTypeJPEG andImage:image];
+}
+
++ (NSData *)representationForType: (CFStringRef) type andImage:(UIImage *) image {
+    CFMutableDataRef data = CFDataCreateMutable(nil, 0);
+    CGImageDestinationRef destination = CGImageDestinationCreateWithData(data, type, 1, nil);
+    if (destination == nil) {
+        return nil;
+    }
+    
+    // Fix problem with wrong orientation
+    NSNumber *orientation = @0;
+    switch (image.imageOrientation) {
+        case UIImageOrientationRight:
+            orientation = @6;
+            break;
+        case UIImageOrientationDown:
+            orientation = @3;
+            break;
+        case UIImageOrientationLeft:
+            orientation = @8;
+            break;
+        case UIImageOrientationUp:
+            orientation = @1;
+            break;
+        default:
+            break;
+    }
+    
+    NSDictionary* properties = [NSDictionary dictionaryWithObjectsAndKeys:
+                                [NSNumber numberWithFloat:kJPEGCompressionQuality], kCGImageDestinationLossyCompressionQuality,
+                                @1, kCGImagePropertyDPIHeight,
+                                @1, kCGImagePropertyDPIWidth,
+                                orientation, kCGImagePropertyOrientation,
+                                nil];
+    
+    CGImageDestinationAddImage(destination, image.CGImage, (__bridge CFDictionaryRef) properties);
+    if (!CGImageDestinationFinalize(destination)) {
+        DDLogError(@"Could not write image!");
+        return nil;
+    }
+    NSData *imageData = [NSData dataWithData:(__bridge_transfer NSData*) data];
+    CFRelease(destination);
+    return imageData;
 }
 
 @end

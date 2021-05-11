@@ -323,6 +323,12 @@
 "leave" = "Utzi";
 "you are not a member" = "Ni (ezabatuta)";
 "groups" = "Taldeak";
+"create_new_group" = "Talde berria sortu";
+"create_note_group_info_title" = "Intsinuazioa";
+"create_note_group_info_text" = "Taldeko kiderik gehitzen ez baduzu, talde honetako mezuak lokalak izango dira. Hori ezin hobea da oharrak, baliabideak eta dokumentuak segurtasunez gordetzeko edo elementuak mahaigainera transferitzeko.";
+"doNotShowAgain" = "Berriro ez agertzea";
+"add_note_group_info" = "*Nonbait bakarrik zaude*\nErabili txat hau testurako, baliabideetarako eta dokumentuetarako koaderno seguru gisa.";
+"end_note_group_info" = "*Ez zaude bakarrik txat honetan*\nTaldeko kide guztiei mezu berriak bidaliko zaizkie.";
 
 "choose_recipient" = "Hautatu hartzailea";
 
@@ -411,7 +417,7 @@
 "no_contacts_syncoff" = "Oraindik ez du kontakturik. Aktibatu sinkronizazioa (Konfigurazioa > Esfera pribatua) edo gehitu kontaktuak eskuz, «+» botoiarekin.";
 "no_contacts_permission_message" = "Threemak ez du baimenik bere kontaktuetara sartzeko. Zure gailuko datuen babeserako konfigurazioan sarbidea baimendu.";
 
-"contact_added_to_profilepicture_list" = "Kontaktu horrek profil-argazkia idazten dizunean jasoko du.";
+"contact_added_to_profilepicture_list" = "Kontaktu horrek zure profil-argazkia jasoko du idazten diozunean.";
 "contact_removed_from_profilepicture_list" = "Kontaktu horrek ez du profila jasoko.";
 "contact_send_profilepicture_success" = "Zure profil-irudia behar bezala bidali da kontaktura.";
 "contact_send_profilepicture_error" = "Zure profil-argazkia ezin da bidali. Saiatu berriro geroago.";
@@ -657,7 +663,7 @@
 "call_microphone_permission_title" = "Mikrofonora sartzea ukatu da";
 "call_microphone_permission_text" = "Ezarpenetan mikrofonora sartzeko baimena eman behar duzu.";
 "call_contact_alert" = "%@-ri deitu nahi diozu?";
-"call_contact_not_reachable" = "Ezin da kontaktuarekin komunikatu";
+"call_contact_not_reachable" = "Ezin izan zen kontaktuarekin harremanetan jarri...";
 
 "call_status_idle" = "Eginda";
 "call_status_wait_ringing" = "Hasieratu";
@@ -937,7 +943,7 @@
 
 // File message
 "optional_caption" = "Izenburua";
-"send_as_file" = "Bidali fitxategi gisa";
+"send_as_file" = "Bidali jatorrizkotzat";
 
 // Notification settings
 "settings_notifications_inapp_section" = "Aplikazioan";
@@ -996,14 +1002,15 @@ Threeman artxiborik (multimedia) faltatzen ez badira, hustu zakarrontzia, fitxat
 // Media Preview
 "loading_video_failed" = "Ezin izan da bideoa kargatu. Berrabiarazi aplikazioa eta saiatu berriro.";
 "loading_image" = "Irudia kargatzen";
+"load_error" = "Ezin izan da artikulua kargatu, errore ezezagun bat dela eta.";
 "loading_video" = "Bideoa kargatzen";
 "selected_media_list" = "Aukeratutako multimedia zerrenda";
 "media_item_of" = "Aukeratutako multimedia %@etik %@";
 "video_date" = "Bideoa hautatuta %@";
 "imagedate_date" = "Argazkia %@ eginda";
-"send_as_file_description" = "Irudiak fitxategi gisa bidaliko dira. Artxiboek metadatu guztiak gordeko dira, kokapenaren datuak bezala, eta miniatura txikiagoarekin erakutsiko dira.";
+"send_as_file_description" = "Bidali fitxategia jatorrizko fitxategian aldaketarik egin gabe. Artxiboek metadatu guztiak gordeko dituzte, adibidez, argazkien kokapenari buruzko datuak.";
 "more_options" = "Aukera Gehiago";
-"add_caption_to_image" = "Kaptura gehitzen...";
+"add_caption_to_image" = "Kaptura gehitu";
 "add_more_images" = "Irudi gehiago gehitu";
 "back_to_media_selection" = "Multimedia aukeraketa pantailara itzuli";
 "remove_current_image_from_selected_images" = "Kendu uneko elementua hautapenetik";
@@ -1014,9 +1021,23 @@ Threeman artxiborik (multimedia) faltatzen ez badira, hustu zakarrontzia, fitxat
 "could_not_add_all_items_title" = "Ezin izan dira elementuak gehitu";
 "one_media_item_could_not_be_processed" = "Elementu bat ezin izan da prozesatu eta saltatu egin da.";
 "multiple_media_items_could_not_be_processed" = "ezin izan dira prozesatu %d elementuak eta saltatu egin dira.";
-"processing_items_progress" = "%d/%d item prozesatzen ";
+"processing_items_progress" = "%d/%d itema (ak) prozesatzen ";
 "item_too_large_title" = "Elementua handiegia da";
 "maximum_file_size_exceeded" = "Onartutako gehieneko tamaina %@ da. Fitxategi hau %@ da. Jarraitu ahal izateko, kendu fitxategia.";
 "back" = "Atzera";
 "sending_item" = "Itema bidaltzen";
 "send_as_file_title" = "Bidaltzeko era";
+"document" = "Dokumentua";
+"paste_create_file_failure_title" = "Itsasteak huts egin du";
+"paste_create_file_failure_message" = "Ezin izan da fitxategia itsatsi. Saiatu berriro.";
+"loading_files_takes_time_title" = "Media kargatzen";
+"loading_files_takes_time_description" = "Baliteke minutu batzuk behar izatea bideoak bihurtzeko.";
+"pasteErrorMessageTitle" = "Ezin izan da itsatsi";
+"pasteErrorMessageMessage" = "Ezin izan da elementua itsatsi errore ezezagun baten ondorioz. Saiatu berriro.";
+
+// Share Extension
+"finished_sending_title" = "Bidalketa burutu da";
+"preview_button_accessibility_title" = "Dokumentuaren aurrebista erakutsi";
+"unknown_file_type" = "Fitxategi-mota ezezaguna";
+"unknown_file_size" = "Fitxategiaren tamaina ezezaguna";
+"unknown_file_name" = "Fitxategiaren izen ezezaguna";

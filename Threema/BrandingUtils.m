@@ -25,6 +25,7 @@
 #import "MyIdentityStore.h"
 #import "Colors.h"
 #import "UIImage+ColoredImage.h"
+#import <BundleUtil.h>
 
 #ifdef DEBUG
   static const DDLogLevel ddLogLevel = DDLogLevelVerbose;
@@ -50,26 +51,35 @@
         }
         
         if (logoUrl != nil) {
+            dispatch_semaphore_t sema = dispatch_semaphore_create(0);
             UIImageView *logoView = [[UIImageView alloc] init];
-            [logoView sd_setImageWithURL:[[NSURL alloc] initWithString:logoUrl] completed:^(UIImage *image, NSError *error, SDImageCacheType cacheType, NSURL *imageURL) {
-                if (error == nil) {
-                    [self setupLogoForThreema:false logo:image navigationItem:navigationItem navigationController:navigationController];
-                } else {
-                    DDLogError(@"Loading logo failed: %@", error);
-                }
-            }];
+            dispatch_async(dispatch_get_global_queue( DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^(void){
+                [logoView sd_setImageWithURL:[[NSURL alloc] initWithString:logoUrl] completed:^(UIImage *image, NSError *error, SDImageCacheType cacheType, NSURL *imageURL) {
+                    if (error == nil) {
+                        dispatch_async(dispatch_get_main_queue(), ^(void){
+                            [self setupLogoForThreema:false logo:image navigationItem:navigationItem navigationController:navigationController];
+                        });
+                    } else {
+                        DDLogError(@"Loading logo failed: %@", error);
+                    }
+                    dispatch_semaphore_signal(sema);
+                }];
+                // Wait for five seconds (5 * 10^9 ns) for the image loading operation to time out
+                int64_t nanoseconds = 1000 * 1000 * 1000;
+                dispatch_semaphore_wait(sema, dispatch_time(DISPATCH_TIME_NOW, 5 * nanoseconds));
+            });
         } else {
             // Default work logo
             UIImage *logo;
             switch ([Colors getTheme]) {
                 case ColorThemeDark:
                 case ColorThemeDarkWork:
-                    logo = [UIImage imageNamed:@"ThreemaWorkWhite"];
+                    logo = [BundleUtil imageNamed:@"ThreemaWorkWhite"];
                     break;
                 case ColorThemeLight:
                 case ColorThemeLightWork:
                 case ColorThemeUndefined:
-                    logo = [UIImage imageNamed:@"ThreemaWorkBlack"];
+                    logo = [BundleUtil imageNamed:@"ThreemaWorkBlack"];
                     
                     break;
             }
@@ -81,12 +91,12 @@
         switch ([Colors getTheme]) {
             case ColorThemeDark:
             case ColorThemeDarkWork:
-                logo = [UIImage imageNamed:@"ThreemaWhite"];
+                logo = [BundleUtil imageNamed:@"ThreemaWhite"];
                 break;
             case ColorThemeLight:
             case ColorThemeLightWork:
             case ColorThemeUndefined:
-                logo = [UIImage imageNamed:@"ThreemaBlack"];
+                logo = [BundleUtil imageNamed:@"ThreemaBlack"];
                 break;
         }
         [self setupLogoForThreema:true logo:logo navigationItem:navigationItem navigationController:navigationController];

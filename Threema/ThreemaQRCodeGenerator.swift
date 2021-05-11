@@ -29,7 +29,7 @@ import Foundation
         let qrTransform = CGAffineTransform.init(scaleX: CGFloat(scale), y: CGFloat(scale))
         guard let qrImage = qrFilter.outputImage?.transformed(by: qrTransform) else { return nil }
         
-        guard let logo = BundleUtil.imageNamed("QRLogo").cgImage else {
+        guard let logo = BundleUtil.imageNamed("QRLogo")?.cgImage else {
             return convert(cmage: qrImage)
         }
         guard let threemaQr: CIImage = qrImage.combined(with: CIImage(cgImage: logo)) else {

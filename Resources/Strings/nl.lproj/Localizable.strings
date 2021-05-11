@@ -323,6 +323,12 @@
 "leave" = "Verlaten";
 "you are not a member" = "Mezelf (verwijderd)";
 "groups" = "Groepen";
+"create_new_group" = "Nieuwe groep aanmaken";
+"create_note_group_info_title" = "Hint";
+"create_note_group_info_text" = "Als u geen groepsleden toevoegt, blijven de berichten aan deze groep lokaal. Dat is ideaal om notities, mediabestanden en documenten veilig op te slaan of om bestanden over te zetten naar de desktop.";
+"doNotShowAgain" = "Niet meer weergeven";
+"add_note_group_info" = "*U bent hier helemaal alleen*\nGebruik deze chat als beveiligd notitieboekje voor tekst, mediabestanden en documenten.";
+"end_note_group_info" = "*U bent niet langer de enige in deze chat*\nNieuwe berichten worden aan alle groepsleden verzonden.";
 
 "choose_recipient" = "Ontvanger kiezen";
 
@@ -411,7 +417,7 @@
 "no_contacts_syncoff" = "Je hebt nog geen contactpersonen. Schakel synchronisatie in (Instellingen > Privacy), of voeg contactpersonen handmatig toe met de +-knop.";
 "no_contacts_permission_message" = "Threema heeft geen toegang tot je contactpersonen. Ga naar de privacy-instellingen van je apparaat en geef Threema toegang tot je contactpersonen.";
 
-"contact_added_to_profilepicture_list" = "Deze contactpersoon ontvangt je profielafbeelding als je hem een bericht zendt.";
+"contact_added_to_profilepicture_list" = "Deze contactpersoon ontvangt je profielafbeelding als je hem/haar een bericht zendt.";
 "contact_removed_from_profilepicture_list" = "Deze contactpersoon ontvangt niet langer je profiel.";
 "contact_send_profilepicture_success" = "Je profielafbeelding is naar de contactpersoon verzonden.";
 "contact_send_profilepicture_error" = "Je profielafbeelding kan niet worden verzonden. Probeer het later opnieuw.";
@@ -937,7 +943,7 @@
 
 // File message
 "optional_caption" = "Optioneel onderschrift";
-"send_as_file" = "Versturen als bestand";
+"send_as_file" = "Verzenden als origineel";
 
 // Notification settings
 "settings_notifications_inapp_section" = "In app";
@@ -996,14 +1002,15 @@ Als er geen (media)bestanden in Threema ontbreken, maak de prullenbak dan leeg o
 // Media Preview
 "loading_video_failed" = "De video kon niet worden geladen. Herstart de app en probeer het opnieuw.";
 "loading_image" = "Foto laden…";
+"load_error" = "Item kon niet worden geladen vanwege een onbekende fout.";
 "loading_video" = "Video laden…";
 "selected_media_list" = "Lijst met geselecteerde media";
 "media_item_of" = "Media-item %@ van %@";
 "video_date" = "Video opgenomen op %@";
 "imagedate_date" = "Foto genomen op %@";
-"send_as_file_description" = "Verstuur foto's als bestand of als inline-foto. Alle metadata van bestanden zoals locatiegegevens worden behouden en worden weergegeven met een kleinere miniatuur.";
+"send_as_file_description" = "Verstuur bestanden zonder de bronbestanden te wijzigen. Bestanden behouden alle metagegevens zoals bijvoorbeeld locatiegegevens van foto's.";
 "more_options" = "Meer opties";
-"add_caption_to_image" = "Onderschrift toevoegen…";
+"add_caption_to_image" = "Een onderschrift toevoegen…";
 "add_more_images" = "Meer foto's toevoegen";
 "back_to_media_selection" = "Terug naar scherm voor mediaselectie";
 "remove_current_image_from_selected_images" = "Huidig item uit selectie verwijderen";
@@ -1020,3 +1027,17 @@ Als er geen (media)bestanden in Threema ontbreken, maak de prullenbak dan leeg o
 "back" = "Terug";
 "sending_item" = "Item versturen";
 "send_as_file_title" = "Verstuurmodus";
+"document" = "Document";
+"paste_create_file_failure_title" = "Niet geplakt";
+"paste_create_file_failure_message" = "Bestand niet geplakt. Probeer het opnieuw.";
+"loading_files_takes_time_title" = "Media laden…";
+"loading_files_takes_time_description" = "Video's omzetten kan enkele minuten duren.";
+"pasteErrorMessageTitle" = "Kon niet plakken";
+"pasteErrorMessageMessage" = "Item kon niet worden geplakt vanwege een onbekende fout. Probeer het opnieuw.";
+
+// Share Extension
+"finished_sending_title" = "Verstuurd";
+"preview_button_accessibility_title" = "Voorbeeld van document weergeven";
+"unknown_file_type" = "Onbekend bestandstype";
+"unknown_file_size" = "Onbekende bestandsgrootte";
+"unknown_file_name" = "Onbekende bestandsnaam";

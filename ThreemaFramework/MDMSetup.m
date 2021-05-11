@@ -24,7 +24,6 @@
 #import "MyIdentityStore.h"
 #import "ServerAPIConnector.h"
 #import "ValidationLogger.h"
-#import <ThreemaFramework/ThreemaFramework-Swift.h>
 
 #ifdef DEBUG
 static const DDLogLevel ddLogLevel = DDLogLevelAll;
@@ -66,6 +65,7 @@ NSString * const MDM_KEY_SKIP_WIZARD = @"th_skip_wizard"; // Bool
 NSString * const MDM_KEY_DISABLE_WEB = @"th_disable_web"; // Bool
 NSString * const MDM_KEY_WEB_HOSTS = @"th_web_hosts"; // String
 NSString * const MDM_KEY_DISABLE_SHARE_MEDIA = @"th_disable_share_media"; // Bool
+NSString * const MDM_KEY_DISABLE_WORK_DIRECTORY = @"th_disable_work_directory"; // Bool
 
 NSString * const MDM_KEY_SAFE_ENABLE = @"th_safe_enable"; // Bool
 NSString * const MDM_KEY_SAFE_PASSWORD = @"th_safe_password"; // String min. 8, max. 4096
@@ -183,6 +183,11 @@ static NSDictionary *_mdmCacheSetup;
 - (BOOL)disableShareMedia {
     NSNumber *disableShareMedia = [self getMdmConfigurationBoolForKey:MDM_KEY_DISABLE_SHARE_MEDIA];
     return [disableShareMedia isKindOfClass:[NSNumber class]] ? disableShareMedia.boolValue : NO;
+}
+
+- (BOOL)disableWorkDirectory {
+    NSNumber *disableWorkDirectory = [self getMdmConfigurationBoolForKey:MDM_KEY_DISABLE_WORK_DIRECTORY];
+    return [disableWorkDirectory isKindOfClass:[NSNumber class]] ? disableWorkDirectory.boolValue : NO;
 }
 
 - (BOOL)disableHideStaleContacts {
@@ -320,6 +325,10 @@ static NSDictionary *_mdmCacheSetup;
             [userSettings setSendProfilePicture:SendProfilePictureNone];
         }
     }
+    
+    if ([self existsMdmKey:MDM_KEY_DISABLE_WORK_DIRECTORY]) {
+        userSettings.companyDirectory = ![self disableWorkDirectory];
+    }
 }
 
 - (void)loadLicenseInfo {
@@ -407,15 +416,15 @@ static NSDictionary *_mdmCacheSetup;
     if ([self hasIDBackup] == NO) {
         return;
     }
-    
     MyIdentityStore *identityStore = [MyIdentityStore sharedMyIdentityStore];
-    identityStore.pendingCreateID = YES;
     
     [identityStore restoreFromBackup:_idBackup withPassword:_idBackupPassword onCompletion:^{
         ServerAPIConnector *apiConnector = [[ServerAPIConnector alloc] init];
         /* Obtain server group from server */
         [apiConnector updateMyIdentityStore:identityStore onCompletion:^{
             [identityStore storeInKeychain];
+            identityStore.pendingCreateID = YES;
+            [[LicenseStore sharedLicenseStore] performUpdateWorkInfo];
             onCompletion();
         } onError:^(NSError *error) {
             onError(error);
@@ -495,7 +504,7 @@ static NSDictionary *_mdmCacheSetup;
     return [defaults dictionaryForKey:MDM_CONFIGURATION_KEY];
     
     /// fake company MDM parameters here
-//    NSDictionary *companyMdm = [[NSDictionary alloc] initWithObjectsAndKeys:@1, MDM_KEY_READONLY_PROFILE, @"123456", MDM_KEY_LICENSE_PASSWORD, @"po", MDM_KEY_LICENSE_USERNAME, @"test@test.ch", MDM_KEY_LINKED_EMAIL, @"+41791112233", MDM_KEY_LINKED_PHONE, @"id_pass", MDM_KEY_ID_BACKUP_PASSWORD, @"safe_pass", MDM_KEY_SAFE_PASSWORD, @"server_pass", MDM_KEY_SAFE_SERVER_PASSWORD, @0, MDM_KEY_DISABLE_VIDEO_CALLS, nil];
+//    NSDictionary *companyMdm = [[NSDictionary alloc] initWithObjectsAndKeys:nil];
 //    return companyMdm;
 }
 
@@ -596,7 +605,7 @@ static NSDictionary *_mdmCacheSetup;
 }
 
 - (BOOL)isRenewable:(NSString *)mdmKey {
-    NSArray *renewableKeys = @[MDM_KEY_LICENSE_USERNAME, MDM_KEY_LICENSE_PASSWORD, MDM_KEY_NICKNAME, MDM_KEY_FIRST_NAME, MDM_KEY_LAST_NAME, MDM_KEY_CSI, MDM_KEY_CATEGORY, MDM_KEY_READONLY_PROFILE, MDM_KEY_BLOCK_UNKNOWN, MDM_KEY_HIDE_INACTIVE_IDS, MDM_KEY_DISABLE_SAVE_TO_GALLERY, MDM_KEY_DISABLE_ADD_CONTACT, MDM_KEY_DISABLE_EXPORT, MDM_KEY_DISABLE_BACKUPS, MDM_KEY_DISABLE_ID_EXPORT, MDM_KEY_DISABLE_SYSTEM_BACKUPS, MDM_KEY_DISABLE_MESSAGE_PREVIEW, MDM_KEY_DISABLE_SEND_PROFILE_PICTURE, MDM_KEY_DISABLE_CALLS, MDM_KEY_DISABLE_CREATE_GROUP, MDM_KEY_DISABLE_WEB, MDM_KEY_WEB_HOSTS, MDM_KEY_SAFE_ENABLE, MDM_KEY_SAFE_PASSWORD, MDM_KEY_SAFE_SERVER_URL, MDM_KEY_SAFE_SERVER_USERNAME, MDM_KEY_SAFE_SERVER_PASSWORD, MDM_KEY_SAFE_PASSWORD_PATTERN, MDM_KEY_SAFE_PASSWORD_MESSAGE, MDM_KEY_DISABLE_SHARE_MEDIA, MDM_KEY_CONTACT_SYNC, MDM_KEY_DISABLE_VIDEO_CALLS];
+    NSArray *renewableKeys = @[MDM_KEY_LICENSE_USERNAME, MDM_KEY_LICENSE_PASSWORD, MDM_KEY_NICKNAME, MDM_KEY_FIRST_NAME, MDM_KEY_LAST_NAME, MDM_KEY_CSI, MDM_KEY_CATEGORY, MDM_KEY_READONLY_PROFILE, MDM_KEY_BLOCK_UNKNOWN, MDM_KEY_HIDE_INACTIVE_IDS, MDM_KEY_DISABLE_SAVE_TO_GALLERY, MDM_KEY_DISABLE_ADD_CONTACT, MDM_KEY_DISABLE_EXPORT, MDM_KEY_DISABLE_BACKUPS, MDM_KEY_DISABLE_ID_EXPORT, MDM_KEY_DISABLE_SYSTEM_BACKUPS, MDM_KEY_DISABLE_MESSAGE_PREVIEW, MDM_KEY_DISABLE_SEND_PROFILE_PICTURE, MDM_KEY_DISABLE_CALLS, MDM_KEY_DISABLE_CREATE_GROUP, MDM_KEY_DISABLE_WEB, MDM_KEY_WEB_HOSTS, MDM_KEY_SAFE_ENABLE, MDM_KEY_SAFE_PASSWORD, MDM_KEY_SAFE_SERVER_URL, MDM_KEY_SAFE_SERVER_USERNAME, MDM_KEY_SAFE_SERVER_PASSWORD, MDM_KEY_SAFE_PASSWORD_PATTERN, MDM_KEY_SAFE_PASSWORD_MESSAGE, MDM_KEY_DISABLE_SHARE_MEDIA, MDM_KEY_DISABLE_WORK_DIRECTORY, MDM_KEY_CONTACT_SYNC, MDM_KEY_DISABLE_VIDEO_CALLS];
     return [renewableKeys containsObject:mdmKey];
 }
 

@@ -30,6 +30,7 @@
 #import "ContactPhotoSender.h"
 #import "UTIConverter.h"
 #import "BundleUtil.h"
+#import "MediaConverter.h"
 
 #ifdef DEBUG
   static const DDLogLevel ddLogLevel = DDLogLevelVerbose;
@@ -151,19 +152,21 @@
         message.webRequestId = _webRequestId;
         message.correlationId = _correlationId;
         if (thumbnailImage) {
-            NSData *thumbnailData = nil;
-            if ([UTIConverter isPNGImageMimeType:message.mimeType]) {
-                thumbnailData = UIImagePNGRepresentation(thumbnailImage);
-                message.mimeTypeThumbnail = message.mimeType;
-            } else {
-                thumbnailData = UIImageJPEGRepresentation(thumbnailImage, kJPEGCompressionQuality);
-            }
+                NSData *thumbnailData = nil;
+                if ([UTIConverter isPNGImageMimeType:message.mimeType]) {
+                    thumbnailData = UIImagePNGRepresentation(thumbnailImage);
+                    message.mimeTypeThumbnail = message.mimeType;
+                } else {
+                    // UIImageJPEGRepresentation caused a memory leak. The exact cause for the leak is unknown.
+                    // For more information see: IOS-1576
+                    thumbnailData = [MediaConverter JPEGRepresentationFor:thumbnailImage];
+                }
 
-            ImageData *dbThumbnail = [entityManager.entityCreator imageData];
-            dbThumbnail.data = thumbnailData;
-            dbThumbnail.height = [NSNumber numberWithInt:thumbnailImage.size.height];
-            dbThumbnail.width = [NSNumber numberWithInt:thumbnailImage.size.width];
-            message.thumbnail = dbThumbnail;
+                ImageData *dbThumbnail = [entityManager.entityCreator imageData];
+                dbThumbnail.data = thumbnailData;
+                dbThumbnail.height = [NSNumber numberWithInt:thumbnailImage.size.height];
+                dbThumbnail.width = [NSNumber numberWithInt:thumbnailImage.size.width];
+                message.thumbnail = dbThumbnail;
         }
         
         message.caption = _item.caption;

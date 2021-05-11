@@ -366,6 +366,9 @@
     
     [self syncGroupInfoToContact:contact];
     [self sendGroupCreateToAllMembers];
+    
+    // if this group is mine show the info for the note group
+    [self addNoteGroupSystemMessage:false];
 }
 
 - (void)adminRemoveMember:(Contact *)contact {
@@ -387,6 +390,9 @@
     [MessageSender sendGroupCreateMessageForGroup:self toMember:contact];
     
     [self sendGroupCreateToAllMembers];
+    
+    // if this group is mine show the info for the note group
+    [self addNoteGroupSystemMessage:true];
 }
 
 - (void)groupLeavePostprocess:(Contact *)member {
@@ -587,6 +593,8 @@
     if (member) {
         [self postSystemMessageForMember:member type:kSystemMessageGroupMemberLeave remoteSentDate:remoteSentDate];
     }
+    // if this group is mine show the info for the note group
+    [self addNoteGroupSystemMessage:true];
 }
 
 
@@ -602,6 +610,9 @@
     if (member) {
         [self postSystemMessageForMember:member type:kSystemMessageGroupMemberForcedLeave remoteSentDate:remoteSentDate];
     }
+    
+    // if this group is mine show the info for the note group
+    [self addNoteGroupSystemMessage:true];
 }
 
 - (Contact *)removeGroupMember:(NSString *)memberIdentity {
@@ -674,6 +685,20 @@
     result = [result stringByAppendingFormat: @"lastSyncRequest: %@\n", _lastSyncRequest];
 
     return result;
+}
+
+- (void)addNoteGroupSystemMessage:(BOOL)startNoteGroup {
+    // if this group is mine show the info for the note group
+    if (self.isOwnGroup && self.isSelfMember) {
+        if (_conversation.members.count == 1 && startNoteGroup == false) {
+            [self postSystemMessageType:kSystemMessageEndNoteGroupInfo withArg:nil remoteSentDate:[NSDate date]];
+        } else {
+            if (_conversation.members.count == 0 && startNoteGroup == true) {
+                [self postSystemMessageType:kSystemMessageStartNoteGroupInfo withArg:nil remoteSentDate:[NSDate date]];
+            }
+        }
+        
+    }
 }
 
 @end

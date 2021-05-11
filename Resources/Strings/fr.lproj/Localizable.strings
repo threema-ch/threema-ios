@@ -323,6 +323,12 @@
 "leave" = "Quitter";
 "you are not a member" = "Moi (retiré)";
 "groups" = "Groupes";
+"create_new_group" = "Créer un nouveau groupe";
+"create_note_group_info_title" = "Astuce";
+"create_note_group_info_text" = "Si vous n'ajoutez pas de membres de groupe, les messages envoyés à ce groupe resteront locaux. Cela est parfait pour stocker notes, médias et documents en toute sécurité ou transférer des éléments vers l'ordinateur.";
+"doNotShowAgain" = "Ne plus afficher";
+"add_note_group_info" = "*Il n'y a que vous ici*\nUtilisez ce chat comme bloc-notes sécurisé pour les textes, les médias et les documents.";
+"end_note_group_info" = "*Vous n'êtes plus seul dans cette conversation*\nLes nouveaux messages seront envoyés à tous les membres du groupe.";
 
 "choose_recipient" = "Choisir le destinataire";
 
@@ -657,7 +663,7 @@
 "call_microphone_permission_title" = "Accès au micro refusé";
 "call_microphone_permission_text" = "Vous devez donner l'accès au micro dans les Réglages";
 "call_contact_alert" = "Est-ce que vous voulez appeler %@?";
-"call_contact_not_reachable" = "Impossible de joindre le contact.";
+"call_contact_not_reachable" = "Impossible de joindre le contact…";
 
 "call_status_idle" = "Prêt";
 "call_status_wait_ringing" = "Initialiser";
@@ -937,7 +943,7 @@
 
 // File message
 "optional_caption" = "Légende facultative";
-"send_as_file" = "Envoyer comme fichier";
+"send_as_file" = "Envoyer au format original";
 
 // Notification settings
 "settings_notifications_inapp_section" = "Dans l'appli";
@@ -996,14 +1002,15 @@ S’il ne manque aucun fichier (média) dans Threema, videz la corbeille pour su
 // Media Preview
 "loading_video_failed" = "Impossible de charger la vidéo. Veuillez redémarrer l'application et réessayer.";
 "loading_image" = "Chargement de l'image";
+"load_error" = "Impossible de charger l'élément à cause d'une erreur inconnue.";
 "loading_video" = "Chargement de la vidéo";
 "selected_media_list" = "Liste des médias sélectionnés";
 "media_item_of" = "Élément média %@ sur %@";
 "video_date" = "Vidéo capturée le %@";
 "imagedate_date" = "Photo prise le %@";
-"send_as_file_description" = "Envoyez les images comme fichiers ou photos inline. Les fichiers conserveront toutes les métadonnées telles les données de localisation et seront affichés avec une vignette plus petite.";
+"send_as_file_description" = "Envoyez un fichier sans apporter des modifications au fichier d'origine. Les fichiers conserveront toutes les métadonnées, telles que les données de localisation des photos.";
 "more_options" = "Plus d'options";
-"add_caption_to_image" = "Ajouter une légende…";
+"add_caption_to_image" = "Ajouter une légende";
 "add_more_images" = "Ajouter plus d'images";
 "back_to_media_selection" = "Retour à l'écran de sélection de médias";
 "remove_current_image_from_selected_images" = "Retirer l'élément actuel de la sélection";
@@ -1020,3 +1027,17 @@ S’il ne manque aucun fichier (média) dans Threema, videz la corbeille pour su
 "back" = "Retour";
 "sending_item" = "Envoi de l'élément";
 "send_as_file_title" = "Mode envoi";
+"document" = "Document";
+"paste_create_file_failure_title" = "Impossible de coller";
+"paste_create_file_failure_message" = "Impossible de coller le fichier, veuillez réessayer.";
+"loading_files_takes_time_title" = "Chargement des médias";
+"loading_files_takes_time_description" = "La conversion des vidéos peut prendre quelques minutes.";
+"pasteErrorMessageTitle" = "Impossible de coller";
+"pasteErrorMessageMessage" = "Impossible de coller l'élément à cause d'une erreur inconnue. Veuillez réessayer.";
+
+// Share Extension
+"finished_sending_title" = "Envoi terminé";
+"preview_button_accessibility_title" = "Afficher un aperçu du document";
+"unknown_file_type" = "Type de fichier inconnu";
+"unknown_file_size" = "Taille de fichier inconnue";
+"unknown_file_name" = "Nom de fichier inconnu";

@@ -14,7 +14,9 @@
 #import "MWCommon.h"
 #import "MWPhotoBrowser.h"
 #import "MWPhotoBrowserPrivate.h"
-#import "SDImageCache.h"
+///***** BEGIN THREEMA MODIFICATION: Use carthage SDWebImage *********/
+#import <SDWebImage/SDImageCache.h>
+///***** END THREEMA MODIFICATION: Use carthage SDWebImage *********/
 #import "UIImage+MWPhotoBrowser.h"
 ///***** BEGIN THREEMA MODIFICATION: Add AppGroup and utils *********/
 #import "TTOpenInAppActivity.h"
@@ -1237,7 +1239,9 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
 
 - (void)scrollViewWillBeginDragging:(UIScrollView *)scrollView {
 	// Hide controls when dragging begins
-	[self setControlsHidden:YES animated:YES permanent:NO];
+    /***** BEGIN THREEMA MODIFICATION: do not hide controls when begin dragging *********/
+//	[self setControlsHidden:YES animated:YES permanent:NO];
+    /***** END THREEMA MODIFICATION: do not hide controls when begin dragging *********/
 }
 
 - (void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView {
@@ -1852,7 +1856,7 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
             [self showProgressHUDWithMessage:[NSString stringWithFormat:@"%@...", NSLocalizedString(@"delete", "")]];
             if ([self.delegate respondsToSelector:@selector(photoBrowser:deleteButton:)]) {
                 [self.delegate photoBrowser:self deleteButton:_deleteMultipleButton];
-
+                
                 [self reloadData:YES];
                 [self updateNavigation];
             }
@@ -1865,58 +1869,67 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
 
 - (void)actionMultipleButtonPressed:(id)sender {    
     MDMSetup *mdmSetup = [[MDMSetup alloc] initWithSetup:false];
-       if ([mdmSetup disableShareMedia] == true) {
-           // do nothing
-       } else {
-           NSSet *selectedPhotosIndexes = [((ChatViewHeader *)self.delegate) mediaPhotoSelection];
-           NSMutableArray *allSelectedPhotos = [NSMutableArray new];
-           [selectedPhotosIndexes enumerateObjectsUsingBlock:^(NSNumber *index, BOOL * _Nonnull stop) {
-               MWPhoto *photo = [self photoAtIndex:[index unsignedIntegerValue]];
-               NSURL *photoUrl = [photo urlForExportData:[index stringValue]];
-               if (photoUrl != nil) {
-                   [allSelectedPhotos addObject:photoUrl];
-               }
-           }];
+    if ([mdmSetup disableShareMedia] == true) {
+        // do nothing
+    } else {
+        NSSet *selectedPhotosIndexes = [((ChatViewHeader *)self.delegate) mediaPhotoSelection];
+        NSMutableArray *allSelectedPhotos = [NSMutableArray new];
+        [selectedPhotosIndexes enumerateObjectsUsingBlock:^(NSNumber *index, BOOL * _Nonnull stop) {
+            MWPhoto *photo = [self photoAtIndex:[index unsignedIntegerValue]];
+            NSURL *photoUrl = [photo urlForExportData:[index stringValue]];
+            if (photoUrl != nil) {
+                [allSelectedPhotos addObject:photoUrl];
+            }
+        }];
         
-           if (allSelectedPhotos.count == 0) {
-               return;
-           }
-           
-           TTOpenInAppActivity *openInAppActivity = [[TTOpenInAppActivity alloc] initWithView:self.view andBarButtonItem:_actionButton];
-           ForwardMultipleURLActivity *forwardUrlActivity = [[ForwardMultipleURLActivity alloc] init];
-                                 
-           self.activityViewController = [ActivityUtil activityViewControllerWithActivityItems:allSelectedPhotos applicationActivities:@[forwardUrlActivity, openInAppActivity]];
-                              
-           // Show
-           typeof(self) __weak weakSelf = self;
-           // iOS 8 - Set the Anchor Point for the popover
-           self.activityViewController.popoverPresentationController.barButtonItem = _actionButton;
-           
-           NSUserDefaults *defaults = [AppGroup userDefaults];
-           [defaults setDouble:[Utils systemUptime] forKey:@"UIActivityViewControllerOpenTime"];
-           [defaults synchronize];
-           
-           [self.activityViewController setCompletionWithItemsHandler:^(UIActivityType  _Nullable activityType, BOOL completed, NSArray * _Nullable returnedItems, NSError * _Nullable activityError) {
-               
-               // Fix: iOS 13 close modal view after save image to photos
-               if (@available(iOS 13.0, *)) {
-                   if (activityType == UIActivityTypeSaveToCameraRoll && completed){
-                       // do nothing
-                   } else {
-                       [weakSelf dismissViewControllerAnimated:NO completion:nil];
-                   }
-               }
-               
-               weakSelf.activityViewController = nil;
-               [weakSelf hideControlsAfterDelay];
-               [weakSelf hideProgressHUD:YES];
-               
-               NSUserDefaults *defaults = [AppGroup userDefaults];
-               [defaults removeObjectForKey:@"UIActivityViewControllerOpenTime"];
+        if (allSelectedPhotos.count == 0) {
+            return;
+        }
+        
+        TTOpenInAppActivity *openInAppActivity = [[TTOpenInAppActivity alloc] initWithView:self.view andBarButtonItem:_actionButton];
+        ForwardMultipleURLActivity *forwardUrlActivity = [[ForwardMultipleURLActivity alloc] init];
+        
+        self.activityViewController = [ActivityUtil activityViewControllerWithActivityItems:allSelectedPhotos applicationActivities:@[forwardUrlActivity, openInAppActivity]];
+        
+        // Show
+        typeof(self) __weak weakSelf = self;
+        // iOS 8 - Set the Anchor Point for the popover
+        self.activityViewController.popoverPresentationController.barButtonItem = _actionButton;
+        
+        NSUserDefaults *defaults = [AppGroup userDefaults];
+        [defaults setDouble:[Utils systemUptime] forKey:@"UIActivityViewControllerOpenTime"];
+        [defaults synchronize];
+        
+        [self.activityViewController setCompletionWithItemsHandler:^(UIActivityType  _Nullable activityType, BOOL completed, NSArray * _Nullable returnedItems, NSError * _Nullable activityError) {
+            
+            // Fix: iOS 13 close modal view after save image to photos
+            if (@available(iOS 13.0, *) && !@available(iOS 14.3, *)) {
+                if (activityType == UIActivityTypeSaveToCameraRoll && completed){
+                    // do nothing
+                } else {
+                    [weakSelf dismissViewControllerAnimated:NO completion:nil];
+                }
+            }
+            
+            weakSelf.activityViewController = nil;
+            [weakSelf hideControlsAfterDelay];
+            [weakSelf hideProgressHUD:YES];
+            
+            NSUserDefaults *defaults = [AppGroup userDefaults];
+            [defaults removeObjectForKey:@"UIActivityViewControllerOpenTime"];
+        }];
+        
+        // Fix: iOS 13 close modal view after save image to photos
+        UIViewController *fakeVC=[[UIViewController alloc] init];
+        
+        if (@available(iOS 13.0, *) && !@available(iOS 14.3, *)) {
+            [self presentViewController:fakeVC animated:NO completion:^{
+                [fakeVC presentViewController:self.activityViewController animated:YES completion:nil];
             }];
-           
-           [self presentViewController:self.activityViewController animated:YES completion:nil];
-       }
+        } else {
+            [self presentViewController:self.activityViewController animated:YES completion:nil];
+        }
+    }
 }
 
 - (void)finishedDeleteMedia {
@@ -1994,7 +2007,7 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
     if ([mdmSetup disableShareMedia] == true) {
         ModalNavigationController *navigationController = [ContactGroupPickerViewController pickerFromStoryboardWithDelegate:self];
         ContactGroupPickerViewController *picker = (ContactGroupPickerViewController *)navigationController.topViewController;
-        picker.enableMulitSelection = true;
+        picker.enableMultiSelection = true;
         picker.enableTextInput = true;
         picker.submitOnSelect = false;
         
@@ -2026,7 +2039,7 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
         [self.activityViewController setCompletionWithItemsHandler:^(UIActivityType  _Nullable activityType, BOOL completed, NSArray * _Nullable returnedItems, NSError * _Nullable activityError) {
             
             // Fix: iOS 13 close modal view after save image to photos
-            if (@available(iOS 13.0, *)) {
+            if (@available(iOS 13.0, *) && !@available(iOS 14.3, *)) {
                 if (activityType == UIActivityTypeSaveToCameraRoll && completed){
                     // do nothing
                 } else {
@@ -2085,5 +2098,15 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
     [contactPicker dismissViewControllerAnimated:YES completion:nil];
 }
 ///***** END THREEMA MODIFICATION: ContactGroupPickerDelegate *********/
+
+///***** BEGIN THREEMA MODIFICATION: ModalNavigationControllerDelegate *********/
+
+#pragma mark - ModalNavigationControllerDelegate
+
+- (void)willDismissModalNavigationController {
+    // No op
+}
+
+///***** END THREEMA MODIFICATION: ModalNavigationControllerDelegate *********/
 
 @end

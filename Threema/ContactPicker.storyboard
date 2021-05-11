@@ -270,7 +270,7 @@
                                 <action selector="cancelAction:" destination="rR7-gl-OOG" id="3Je-53-eAh"/>
                             </connections>
                         </barButtonItem>
-                        <barButtonItem key="rightBarButtonItem" enabled="NO" title="Send" id="N99-RD-WsN">
+                        <barButtonItem key="rightBarButtonItem" enabled="NO" title="Send" style="done" id="N99-RD-WsN">
                             <connections>
                                 <action selector="doneAction:" destination="rR7-gl-OOG" id="HQI-mB-JoX"/>
                             </connections>

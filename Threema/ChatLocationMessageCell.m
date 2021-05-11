@@ -181,11 +181,12 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 }
 
 - (void)speakMessage:(UIMenuController *)menuController {
+    [super speakMessage:menuController];
+    
     LocationMessage *locationMessage = (LocationMessage*)self.message;
     NSString *displayText = [ChatLocationMessageCell displayTextForLocationMessage:locationMessage];
     AVSpeechUtterance *utterance = [AVSpeechUtterance speechUtteranceWithString:displayText];
-    AVSpeechSynthesizer *syn = [[AVSpeechSynthesizer alloc] init];
-    [syn speakUtterance:utterance];
+    [self.chatVc.speechSynthesizer speakUtterance:utterance];
 }
 
 

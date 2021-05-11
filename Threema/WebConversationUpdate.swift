@@ -55,9 +55,9 @@ class WebConversationUpdate: WebAbstractMessage {
                 index = index + 1
             }
         }
-        let webConversation = WebConversation.init(conversation: conversation, index: index, request: nil, addAvatar: true, entityManager: entityManager, session: session)
+        let webConversation = WebConversation(conversation: conversation, index: index, request: nil, addAvatar: true, entityManager: entityManager, session: session)
         let tmpArgs:[AnyHashable:Any?] = ["mode": mode]
-        let tmpData:[AnyHashable:Any?] = ["type": webConversation.type, "id": webConversation.id, "position": webConversation.position, "messageCount": webConversation.messageCount, "unreadCount": webConversation.unreadCount, "latestMessage": webConversation.latestMessage, "notifications": webConversation.notifications?.objectDict(), "isStarred": webConversation.isStarred]
+        let tmpData:[AnyHashable:Any?] = ["type": webConversation.type, "id": webConversation.id, "position": webConversation.position, "messageCount": webConversation.messageCount, "unreadCount": webConversation.unreadCount, "latestMessage": webConversation.latestMessage, "notifications": webConversation.notifications?.objectDict(), "isStarred": webConversation.isStarred, "isUnread": webConversation.isUnread]
         
         super.init(messageType: "update", messageSubType: "conversation", requestId: nil, ack: nil, args: tmpArgs, data: tmpData)
     }

@@ -74,6 +74,8 @@
 
 #import "FeatureMask.h"
 
+#import "ThemedNavigationController.h"
+
 #import "Threema-Swift.h"
 
 #ifdef DEBUG
@@ -81,7 +83,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelVerbose;
 #else
 static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 #endif
-@interface ChatViewController () <UIViewControllerPreviewingDelegate, PPAssetsActionHelperDelegate, GroupDetailsViewControllerDelegate>
+@interface ChatViewController () <UIViewControllerPreviewingDelegate, PPAssetsActionHelperDelegate, GroupDetailsViewControllerDelegate, AVSpeechSynthesizerDelegate>
 
 @property ChatTableDataSource *tableDataSource;
 @property UIImageView *backgroundView;
@@ -169,6 +171,8 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 @synthesize imageDataToSend;
 @synthesize deleteMediaTotal;
 @synthesize showHeader;
+@synthesize speechSynthesizer;
+@synthesize prevAudioCategory;
 
 #pragma mark NSObject
 
@@ -292,6 +296,9 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     
     self.navigationController.interactivePopGestureRecognizer.enabled  = YES;
     self.navigationController.interactivePopGestureRecognizer.delegate = nil;
+    
+    speechSynthesizer = [[AVSpeechSynthesizer alloc] init];
+    speechSynthesizer.delegate = self;
     
     /* Load sounds */
     NSString *sendPath = [BundleUtil pathForResource:@"sent_message" ofType:@"caf"];
@@ -632,6 +639,13 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     /* Send stop typing indicator now, as it may be too late once we've deleted the conversation below */
     [chatBar stopTyping];
     
+    if([speechSynthesizer isSpeaking]) {
+        [speechSynthesizer stopSpeakingAtBoundary:AVSpeechBoundaryImmediate];
+        AVSpeechUtterance *utterance = [AVSpeechUtterance speechUtteranceWithString:@""];
+        [speechSynthesizer speakUtterance:utterance];
+        [speechSynthesizer stopSpeakingAtBoundary:AVSpeechBoundaryImmediate];
+    }
+    
     /* Save draft in case we get killed */
     NSCharacterSet *set = [NSCharacterSet whitespaceAndNewlineCharacterSet];
     if ([[chatBar.text stringByTrimmingCharactersInSet: set] length] > 0) {
@@ -657,7 +671,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(refreshDirtyObjects:) name:kNotificationDBRefreshedDirtyObject object:nil];
     
     _tableDataSource.openTableView = NO;
-    
+        
     [super viewWillDisappear:animated];
 }
 
@@ -1994,35 +2008,81 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 }
 
 - (void)chatBar:(ChatBar *)chatBar didSendImageData:(NSData *)image {
-    if (![[PermissionChecker permissionCheckerPresentingAlarmsOn:self] canSendIn:conversation entityManager:nil]) {
-        return;
-    }
-    
-    [self hideKeyboardTemporarily:YES];
-    
-    UINavigationController *previewNavVc = [self.storyboard instantiateViewControllerWithIdentifier:@"PreviewImageNav"];
-    PreviewImageViewController *previewVc = previewNavVc.viewControllers[0];
-    previewVc.delegate = self;
-    previewVc.image = image;
-    previewVc.hasCancelButton = YES;
-    [self presentViewController:previewNavVc animated:YES completion:nil];
+    [self sendImageData:image];
+    [self.chatBar resetKeyboardType:true];
 }
 
-- (void)chatBar:(ChatBar *)chatBar2 didSendGIF:(NSData *)gifData fallbackImage:(UIImage *)image {
-    if (![[PermissionChecker permissionCheckerPresentingAlarmsOn:self] canSendIn:conversation entityManager:nil]) {
+- (void)chatBar:(ChatBar *)chatBar didPasteImageData:(NSData *)image {
+    [self hideKeyboardTemporarily:YES];
+    [self handlePastedImage:image];
+}
+
+- (void)chatBar:(ChatBar*)chatBar didPasteItems:(NSArray*)items {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self hideKeyboardTemporarily:YES];
+        [MBProgressHUD showHUDAddedTo:self.view animated:true];
+    });
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        ItemLoader *itemLoader = [[ItemLoader alloc] initWithForceLoadFileURLItem:true];
+        for (NSItemProvider *itemProvider in items) {
+            NSString *baseType = [ItemLoader getBaseUTIType:itemProvider];
+            NSString *secondType = [ItemLoader getSecondUTIType:itemProvider];
+            [itemLoader addItemWithItemProvider:itemProvider type:baseType secondType:secondType];
+        }
+        NSArray *loadedItems = [itemLoader syncLoadContentItems];
+        if (loadedItems.count == 0) {
+            [self showPasteError];
+        } else {
+            [self showPastedItemPreview:loadedItems];
+        }
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [MBProgressHUD hideHUDForView:self.view animated:true];
+        });
+    });
+}
+
+- (void)showPastedItemPreview:(NSArray *) loadedItems {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        SendMediaAction *sendMediaAction = [SendMediaAction actionForChatViewController:self];
+        [sendMediaAction showPreviewForAssets:loadedItems];
+    });
+}
+
+- (void)showPasteError {
+    NSString *title = [BundleUtil localizedStringForKey:@"pasteErrorMessageTitle"];
+    NSString *message = [BundleUtil localizedStringForKey:@"pasteErrorMessageMessage"];
+    dispatch_sync(dispatch_get_main_queue(), ^{
+        [UIAlertTemplate showAlertWithOwner:[[AppDelegate sharedAppDelegate] currentTopViewController] title:title message:message actionOk:nil];
+    });
+}
+
+- (void)handlePastedImage:(NSData *)data {
+    SendMediaAction *sendMediaAction = [SendMediaAction actionForChatViewController:self];
+    
+    NSString *filename = [FileUtility getTemporaryFileName];
+    NSString *extension = [UTIConverter preferedFileExtensionForMimeType:[UTIConverter mimeTypeFromUTI:(__bridge NSString *)[ImageURLSenderItemCreator getUTIFor:data]]];
+    NSURL *tempDir = [[NSFileManager defaultManager] temporaryDirectory];
+    NSURL *fileURl = [[tempDir URLByAppendingPathComponent:filename] URLByAppendingPathExtension:extension];
+    
+    if (!fileURl) {
+        [self showPasteFailureAlert];
         return;
     }
     
-    [self hideKeyboardTemporarily:YES];
+    bool success = [data writeToURL:fileURl atomically:false];
     
-    UINavigationController *previewNavVc = [self.storyboard instantiateViewControllerWithIdentifier:@"PreviewImageNav"];
-    PreviewImageViewController *previewVc = previewNavVc.viewControllers[0];
-    previewVc.delegate = self;
+    if (!success) {
+        [self showPasteFailureAlert];
+        return;
+    }
     
-    previewVc.gifData = gifData;
-    
-    previewVc.hasCancelButton = YES;
-    [self presentViewController:previewNavVc animated:YES completion:nil];
+    [sendMediaAction showPreviewForAssets:@[fileURl]];
+}
+
+- (void)showPasteFailureAlert {
+    NSString *title = [BundleUtil localizedStringForKey:@"paste_create_file_failure_title"];
+    NSString *message = [BundleUtil localizedStringForKey:@"paste_create_file_failure_message"];
+    [UIAlertTemplate showAlertWithOwner:[[AppDelegate sharedAppDelegate] currentTopViewController] title:title message:message actionOk:nil];
 }
 
 - (void)chatBarWillStartTyping:(ChatBar *)chatBar {
@@ -2127,10 +2187,12 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 - (void)fileImageMessageTapped:(FileMessage *)message {
     [self hideKeyboardTemporarily:true];
     
-    UIViewController *vc = [headerView getPhotoBrowserAtMessage:message forPeeking:NO];
-    vc.modalPresentationStyle = UIModalPresentationFullScreen;
-    
-    [self presentViewController:vc animated:YES completion:nil];
+    if (!message.renderStickerFileMessage) {
+        UIViewController *vc = [headerView getPhotoBrowserAtMessage:message forPeeking:NO];
+        vc.modalPresentationStyle = UIModalPresentationFullScreen;
+        
+        [self presentViewController:vc animated:YES completion:nil];
+    }
 }
 
 - (void)fileVideoMessageTapped:(FileMessage *)message {
@@ -2899,6 +2961,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 
 - (void)assetsActionHelperDidSelectRecordAudio:(PPAssetsActionHelper *)picker {
     [self dismissViewControllerAnimated:YES completion:^{
+        [self hideKeyboardTemporarily:YES];
         [self startRecordingAudio];
     }];
 }
@@ -2926,5 +2989,29 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         }
     }];
 }
+
+#pragma mark AVSpeechUtteranceDelegate
+
+- (void)speechSynthesizer:(AVSpeechSynthesizer *)synthesizer didFinishSpeechUtterance:(AVSpeechUtterance *)utterance {
+    [[AVAudioSession sharedInstance] setCategory:prevAudioCategory error:nil];
+    [[AVAudioSession sharedInstance] setActive:YES error:nil];
+}
+
+- (void)speechSynthesizer:(AVSpeechSynthesizer *)synthesizer didPauseSpeechUtterance:(AVSpeechUtterance *)utterance {
+    [[AVAudioSession sharedInstance] setCategory:prevAudioCategory error:nil];
+    [[AVAudioSession sharedInstance] setActive:YES error:nil];
+}
+
+- (void)speechSynthesizer:(AVSpeechSynthesizer *)synthesizer didContinueSpeechUtterance:(AVSpeechUtterance *)utterance {
+    prevAudioCategory = [AVAudioSession sharedInstance].category;
+    [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryPlayback  error:nil];
+    [[AVAudioSession sharedInstance] setActive:YES error:nil];
+}
+
+- (void)speechSynthesizer:(AVSpeechSynthesizer *)synthesizer didCancelSpeechUtterance:(AVSpeechUtterance *)utterance {
+    [[AVAudioSession sharedInstance] setCategory:prevAudioCategory error:nil];
+    [[AVAudioSession sharedInstance] setActive:YES error:nil];
+}
+
 
 @end

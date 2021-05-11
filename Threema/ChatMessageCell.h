@@ -22,9 +22,15 @@
 #import "ChatViewController.h"
 #import "MGSwipeTableCell.h"
 
+@protocol ChatMessageCellProtocol <NSObject>
+
+- (void)speakMessage:(UIMenuController *)menuController;
+
+@end
+
 @class BaseMessage;
 
-@interface ChatMessageCell : UITableViewCell
+@interface ChatMessageCell : UITableViewCell <ChatMessageCellProtocol>
 
 @property (nonatomic, strong) BaseMessage* message;
 
@@ -33,6 +39,7 @@
 @property (nonatomic, readonly) UIImageView *statusImage;
 @property (nonatomic, readonly) UIImageView *msgBackground;
 @property (nonatomic, readonly) UITapGestureRecognizer *dtgr;
+
 
 - (id)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier transparent:(BOOL)transparent;
 

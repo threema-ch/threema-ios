@@ -20,22 +20,18 @@
 
 import Foundation
 import CocoaLumberjackSwift
+import MBProgressHUD
 #if compiler(>=5.3)
 import PhotosUI
 #endif
 
 let tmpDirectory = "tmpImages/"
 
-enum PhotosPickerError : Error {
-    case fileNotFound
-    case fileTooLarge
-    case unknown
-}
-
 @objc class PhotosAccessHelper : NSObject {
     
     let completion : (([Any], DKImagePickerController?) -> Void)
     var pickerController : DKImagePickerController?
+    var parentViewController : UIViewController?
     
     @objc init(completion : @escaping (([Any], DKImagePickerController?) -> Void)) {
         self.completion = completion
@@ -43,12 +39,13 @@ enum PhotosPickerError : Error {
     }
     
     @objc func showPicker(viewController : UIViewController, limit : Int) {
-        
         #if compiler(>=5.3)
         if #available(iOS 14, *), !PhotosRightsHelper().haveFullAccess() {
+            parentViewController = viewController
             let photoLibrary = PHPhotoLibrary.shared()
             var config = PHPickerConfiguration(photoLibrary: photoLibrary)
             config.selectionLimit = limit
+            config.preferredAssetRepresentationMode = .compatible
             let picker = PHPickerViewController(configuration: config)
             picker.delegate = self
             viewController.present(picker, animated: true, completion: nil)
@@ -135,7 +132,7 @@ enum PhotosPickerError : Error {
         let tmpDir = self.getTempDir()
         let fileName = FileUtility.getTemporarySendableFileName(base: "image")
         let fileUrl = tmpDir.appendingPathComponent(fileName + ".jpeg")
-        let data = imageData.jpegData(compressionQuality: 1.0)
+        let data = MediaConverter.jpegRepresentation(for: imageData)
         
         do {
             try data?.write(to: fileUrl)
@@ -151,35 +148,56 @@ enum PhotosPickerError : Error {
 @available(iOS 14, *)
 extension PhotosAccessHelper : PHPickerViewControllerDelegate {
     func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
-        
-        var photos : [Any] = []
-        
-        let sema = DispatchSemaphore.init(value: 0)
-        
-        for result in results {
-            if result.itemProvider.hasItemConformingToTypeIdentifier(UTType.image.identifier) {
-                result.itemProvider.loadFileRepresentation(forTypeIdentifier: UTType.image.identifier, completionHandler:  { (url, error) in
-                    defer { sema.signal() }
-                    photos.append(self.loadImage(from: url))
-                    if(error != nil) {
-                        DDLogError("Could not load item \(error!)")
-                    }
-                })
-            } else if result.itemProvider.hasItemConformingToTypeIdentifier(UTType.movie.identifier) {
-                result.itemProvider.loadFileRepresentation(forTypeIdentifier: UTType.movie.identifier, completionHandler:  { (url, error) in
-                    defer { sema.signal() }
-                    photos.append(self.loadVideo(from: url))
-                    if(error != nil) {
-                        DDLogError("Could not load item \(error!)")
-                    }
-                })
+        var hud : MBProgressHUD?
+        if let view = parentViewController?.view {
+            hud = MBProgressHUD(view: view)
+            hud?.graceTime = 0.25
+            hud?.mode = .indeterminate
+            hud?.label.text = BundleUtil.localizedString(forKey: "loading_files_takes_time_title")
+            DispatchQueue.main.async {
+                view.addSubview(hud!)
+                hud?.show(animated: true)
+                picker.dismiss(animated: true)
             }
         }
-        for _ in results {
-            sema.wait()
+        
+        DispatchQueue.global(qos: .userInitiated).async {
+            var photos : [Any] = []
+            
+            let sema = DispatchSemaphore.init(value: 0)
+            
+            for result in results {
+                if result.itemProvider.hasItemConformingToTypeIdentifier(UTType.image.identifier) {
+                    // Unfortunately the progress object returned here immediately shows 100% progress
+                    result.itemProvider.loadFileRepresentation(forTypeIdentifier: UTType.image.identifier, completionHandler:  { (url, error) in
+                        defer { sema.signal() }
+                        photos.append(self.loadImage(from: url))
+                        if(error != nil) {
+                            DDLogError("Could not load item \(error!)")
+                        }
+                    })
+                } else if result.itemProvider.hasItemConformingToTypeIdentifier(UTType.movie.identifier) {
+                    DispatchQueue.main.async {
+                        hud?.detailsLabel.text = BundleUtil.localizedString(forKey: "loading_files_takes_time_description")
+                    }
+                    // Unfortunately the progress object returned here immediately shows 100% progress
+                    result.itemProvider.loadFileRepresentation(forTypeIdentifier: UTType.movie.identifier) { (url, error) in
+                        defer { sema.signal() }
+                        photos.append(self.loadVideo(from: url))
+                        if(error != nil) {
+                            DDLogError("Could not load item \(error!)")
+                        }
+                    }
+                }
+            }
+            for _ in results {
+                sema.wait()
+            }
+            DispatchQueue.main.async {
+                hud?.hide(animated: true)
+                self.completion(photos, nil)
+            }
         }
-        picker.dismiss(animated: true, completion: nil)
-        completion(photos, nil)
     }
     
     func loadVideo(from url : URL?) -> Any {

@@ -67,8 +67,9 @@ typedef enum : NSUInteger {
     
     ContactGroupPickerViewController *picker = (ContactGroupPickerViewController *)[navigationController topViewController];
     picker.delegate = delegate;
-    picker.enableMulitSelection = YES; //defaults to YES
+    picker.enableMultiSelection = YES; //defaults to YES
     picker.enableTextInput = YES; //defaults to YES
+    picker.enableControlView = YES;
     
     return navigationController;
 }
@@ -129,15 +130,17 @@ typedef enum : NSUInteger {
     
     [self updateUIStrings];
     
-    if (_submitOnSelect) {
+    if (_submitOnSelect || !_enableControlView) {
         _controlView.hidden = YES;
+        [_controlView removeFromSuperview];
+        _tableViewBottomConstraint.constant = 0.0;
     }
     
     _isTextInputHidden = YES;
     
     _tableView.dataSource = _currentDataSource;
     _tableView.delegate = self;
-    _tableView.allowsMultipleSelection = _enableMulitSelection;
+    _tableView.allowsMultipleSelection = _enableMultiSelection;
     
     [self registerForKeyboardNotifications];
     
@@ -211,9 +214,9 @@ typedef enum : NSUInteger {
     [defaults setValue:[NSNumber numberWithInteger:_mode] forKey:LAST_SELECTED_MODE];
 }
 
-- (void)setEnableMulitSelection:(BOOL)allowMulitSelection {
-    _enableMulitSelection = allowMulitSelection;
-    _tableView.allowsMultipleSelection = _enableMulitSelection;
+- (void)setEnableMultiSelection:(BOOL)allowMulitSelection {
+    _enableMultiSelection = allowMulitSelection;
+    _tableView.allowsMultipleSelection = _enableMultiSelection;
 }
 
 - (void)updateUIStrings {    
@@ -310,12 +313,14 @@ typedef enum : NSUInteger {
     CGFloat keyboardHeight = willHide ? 0.0f : keyboardRect.size.height;
 
     [UIView animateWithDuration:animationDuration delay:0 options:(animationCurve << 16 | UIViewAnimationOptionBeginFromCurrentState) animations:^{
-        CGFloat offset = 0.0;
+        CGFloat controlViewOffset = 0.0;
         if (_isTextInputHidden == true) {
-            offset = willHide == true ? 50.0 : keyboardHeight + _buttonView.frame.size.height;
+            controlViewOffset = _buttonView.frame.size.height;
         } else {
-            offset = willHide == true ? 50.0 : keyboardHeight + _controlView.frame.size.height;
+            controlViewOffset = _controlView.frame.size.height;
         }
+        
+        CGFloat offset = willHide == true ? 0.0 : keyboardHeight + controlViewOffset;
 
         if (@available(iOS 11.0, *)) {
             float difference = self.view.safeAreaLayoutGuide.layoutFrame.size.height - self.view.frame.size.height;

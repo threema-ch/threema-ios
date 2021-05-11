@@ -28,6 +28,7 @@ public class CompanyDirectoryContact: NSObject
     @objc var last: String?
     var csi: String?
     var cat: [String]?
+    var org: String?
     
     public init(dictionary: [AnyHashable: Any?]) {
         id = dictionary["id"] as! String
@@ -46,6 +47,10 @@ public class CompanyDirectoryContact: NSObject
         if let tmp = dictionary["cat"] as? [String] {
             cat = tmp
         }
+        
+        if let orgDict = dictionary["org"] as? [AnyHashable: String], let orgName = orgDict["name"] {
+            org = orgName
+        } 
     }
     
     func fullName() -> String {
@@ -96,11 +101,23 @@ public class CompanyDirectoryContact: NSObject
                 if categoryString.count > 0 {
                     categoryString.append(", ")
                 }
-                let catName = categoryDict[category]
-                categoryString.append(catName!)
+                if let catName = categoryDict[category] {
+                    categoryString.append(catName)
+                }
             }
             return categoryString
         }
         return ""
+    }
+    
+    func categoryWithOrganisationString() -> String {
+        let catString = categoryString()
+        if let organisationName = org, organisationName != MyIdentityStore.shared().companyName {
+            if catString.count > 0 {
+                return organisationName + ", " + catString
+            }
+            return organisationName
+        }
+        return categoryString()
     }
 }

@@ -49,3 +49,7 @@
 
 "ballot_open_ballots" = "Open polls";
 "ballot_closed_ballots" = "Closed polls";
+
+"voteCancelTitle" = "Discard Vote";
+"voteCancelMessage" = "If you leave before casting your vote, it will be discarded.";
+"discardVoteTitle" = "Discard";

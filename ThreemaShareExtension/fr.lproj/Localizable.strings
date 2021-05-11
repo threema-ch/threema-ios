@@ -11,9 +11,9 @@
 "cannot_connect_title" = "Aucune connexion";
 "cannot_connect_message" = "Connexion impossible, veuillez vérifier votre connexion Internet.";
 
-"sending_count" = "Envoi... (%1$ld / %2$ld)";
+"sending_count" = "Envoi… (%1$ld/%2$ld)";
 
 "error_message_no_items_title" = "Contenu non valide";
 "error_message_no_items_message" = "Aucun élément pris en charge trouvé.";
 
-"send_as_file" = "Envoyer comme fichier";
+"send_as_file" = "Envoyer au format original";

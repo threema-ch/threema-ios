@@ -138,6 +138,6 @@ class VerificationViewController: ThemedViewController {
         let title = BundleUtil.localizedString(forKey: String(format: "level%d_title", level))
         let description = BundleUtil.localizedString(forKey: String(format: "level%d_explanation", level))
         
-        return "\(title!), \(description!)"
+        return "\(title), \(description)"
     }
 }

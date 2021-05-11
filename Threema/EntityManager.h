@@ -22,7 +22,8 @@
 #import "DatabaseContext.h"
 #import "EntityCreator.h"
 #import "EntityFetcher.h"
-#import "ThreemaFramework/ThreemaFramework-swift.h"
+
+@class EntityDestroyer;
 
 @interface EntityManager : NSObject
 

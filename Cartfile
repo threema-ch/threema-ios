@@ -14,3 +14,4 @@ github "ZipArchive/ZipArchive" "master"
 github "mxcl/PromiseKit" ~> 6.8
 github "jdg/MBProgressHUD" ~> 1.2.0
 github "datatheorem/TrustKit" ~> 1.6.4
+github "SDWebImage/SDWebImage" ~> 5.9

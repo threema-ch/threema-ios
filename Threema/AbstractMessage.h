@@ -59,4 +59,6 @@
 
 - (NSString *)getMessageIdString;
 
+- (BOOL)noDeliveryReceiptFlagSet;
+
 @end

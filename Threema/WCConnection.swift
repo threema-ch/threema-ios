@@ -125,8 +125,16 @@ extension WCConnection {
     func connect(authToken: Data?) {
         webClientConnectionQueue.async {
             
-            salty_log_change_level(UInt8(LEVEL_OFF))
-            salty_log_init(UInt8(LEVEL_OFF))
+            let callback: @convention(c) (UInt8 ,UnsafePointer<Int8>?, UnsafePointer<Int8>?) -> Void = { level, target, message in
+                if let upmessage = message, let uptarget = target {
+                    let logTarget = String(cString: uptarget)
+                    let logMessage = String(cString: upmessage)
+                    
+                    DDLogNotice("Threema Web Salty Log: " + logTarget + ": " + logMessage)
+                }
+            }
+
+            salty_log_init_callback(callback, UInt8(LEVEL_INFO))
             
             if self.delegate.currentWebClientSession() == nil {
                 ValidationLogger.shared().logString("Threema Web: Can't connect to web, webClientSession is nil")

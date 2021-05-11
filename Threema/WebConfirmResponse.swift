@@ -55,4 +55,8 @@ class WebConfirmResponse: WebAbstractMessage {
     init(webUpdateConversationRequest: WebUpdateConversationRequest) {
         super.init(messageType: "response", messageSubType: "confirmAction", requestId: nil, ack: webUpdateConversationRequest.ack, args: nil, data: nil)
     }
+    
+    init(webUpdateActiveConversationRequest: WebUpdateActiveConversationRequest) {
+        super.init(messageType: "response", messageSubType: "confirm", requestId: nil, ack: webUpdateActiveConversationRequest.ack, args: nil, data: nil)
+    }
 }

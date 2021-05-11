@@ -49,3 +49,7 @@
 
 "ballot_open_ballots" = "Enquetes abertas";
 "ballot_closed_ballots" = "Enquetes encerradas";
+
+"voteCancelTitle" = "Descartar voto";
+"voteCancelMessage" = "Se você sair antes de dar o seu voto, ele será descartado.";
+"discardVoteTitle" = "Descartar";

@@ -323,6 +323,12 @@
 "leave" = "Выйти";
 "you are not a member" = "Я (удалено)";
 "groups" = "группы";
+"create_new_group" = "Создать новую группу";
+"create_note_group_info_title" = "Совет";
+"create_note_group_info_text" = "Если не добавлять участников в группу, сообщения этой группе останутся локальными. Это отличный вариант для безопасного хранения заметок, мультимедийных файлов и документов или для передачи данных на ПК.";
+"doNotShowAgain" = "Больше не показывать";
+"add_note_group_info" = "*Вы здесь в одиночестве*\nИспользуйте этот чат как защищенный блокнот для заметок, мультимедийных файлов и документов.";
+"end_note_group_info" = "*Вы уже не одиноки в этом чате*\nНовые сообщения будут отправляться всем участникам группы.";
 
 "choose_recipient" = "Выбор получателя";
 
@@ -657,7 +663,7 @@
 "call_microphone_permission_title" = "Доступ к микрофону запрещен";
 "call_microphone_permission_text" = "Откройте доступ к микрофону в Настройках";
 "call_contact_alert" = "Хотите позвонить пользователю %@?";
-"call_contact_not_reachable" = "Не удается связаться с контактом.";
+"call_contact_not_reachable" = "Не удается связаться с контактом...";
 
 "call_status_idle" = "Готово";
 "call_status_wait_ringing" = "Инициализация";
@@ -937,7 +943,7 @@
 
 // File message
 "optional_caption" = "Необязательный заголовок";
-"send_as_file" = "Отправить как файл";
+"send_as_file" = "Отправить как оригинал";
 
 // Notification settings
 "settings_notifications_inapp_section" = "В приложении";
@@ -996,14 +1002,15 @@
 // Media Preview
 "loading_video_failed" = "Не удалось загрузить видео. Перезапустите приложение и повторите попытку.";
 "loading_image" = "Идет загрузка изображения";
+"load_error" = "Не удалось загрузить элемент, причина: неизвестная ошибка.";
 "loading_video" = "Идет загрузка видео";
 "selected_media_list" = "Список выбранных мультимедийных элементов";
 "media_item_of" = "Мультимедийный элемент %@ из %@";
 "video_date" = "Видео снято %@";
 "imagedate_date" = "Фото снято %@";
-"send_as_file_description" = "Отправляйте изображения в виде файла или встроенного фото. Файлы сохранят такие метаданные, как данные о местоположении, и будут отображаться с эскизом меньшего размера.";
+"send_as_file_description" = "Отправляйте файлы без изменений в оригинале. Файлы сохранят все метаданные, такие как данные о месте съемки фото.";
 "more_options" = "Больше настроек";
-"add_caption_to_image" = "Добавить заголовок...";
+"add_caption_to_image" = "Добавьте заголовок";
 "add_more_images" = "Добавить другие изображения";
 "back_to_media_selection" = "Возврат на экран выбора мультимедиа";
 "remove_current_image_from_selected_images" = "Удалить текущий элемент из выбора";
@@ -1020,3 +1027,17 @@
 "back" = "Назад";
 "sending_item" = "Выполняется отправка элемента";
 "send_as_file_title" = "Режим отправки";
+"document" = "Документ";
+"paste_create_file_failure_title" = "Не удалось вставить";
+"paste_create_file_failure_message" = "Не удалось вставить файл, повторите попытку.";
+"loading_files_takes_time_title" = "Идет загрузка мультимедиа";
+"loading_files_takes_time_description" = "Конвертация видео может занять несколько минут.";
+"pasteErrorMessageTitle" = "Не удалось вставить";
+"pasteErrorMessageMessage" = "Не удалось вставить элемент, причина: неизвестная ошибка. Повторите попытку.";
+
+// Share Extension
+"finished_sending_title" = "Отправка выполнена";
+"preview_button_accessibility_title" = "Показать предпросмотр документа";
+"unknown_file_type" = "Неизвестный тип файла";
+"unknown_file_size" = "Неизвестный размер файла";
+"unknown_file_name" = "Неизвестное имя файла";

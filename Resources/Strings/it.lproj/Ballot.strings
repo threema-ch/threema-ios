@@ -49,3 +49,7 @@
 
 "ballot_open_ballots" = "Sondaggi in corso";
 "ballot_closed_ballots" = "Sondaggi conclusi";
+
+"voteCancelTitle" = "Elimina voto";
+"voteCancelMessage" = "Il tuo voto sarà eliminato e non verrà inoltrato. Scegli «vota» per dare il tuo voto. ";
+"discardVoteTitle" = "Elimina";

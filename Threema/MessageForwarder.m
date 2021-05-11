@@ -28,6 +28,7 @@
 #import "LocationMessage.h"
 #import "FileMessageSender.h"
 #import "UTIConverter.h"
+#import <ThreemaFramework/ThreemaFramework-Swift.h>
 
 #ifdef DEBUG
   static const DDLogLevel ddLogLevel = DDLogLevelVerbose;
@@ -69,7 +70,7 @@
         URLSenderItem *item = [URLSenderItem itemWithData:data
                                                  fileName:@"AudioMessage"
                                                      type:UTTYPE_AUDIO
-                                               renderType:@0
+                                               renderType:@1
                                                sendAsFile:true];
 
         FileMessageSender *sender = [[FileMessageSender alloc] init];

@@ -34,7 +34,7 @@ class WebConversationsResponse: WebAbstractMessage {
             if !conver.isGroup() && conver.contact == nil {
                 // empty contact in a single conversation, do not send to web
             } else {
-                let webConversation = WebConversation.init(conversation: conver, index: index, request: conversationRequest, addAvatar: index < 16 ? true : false, entityManager: entityManager, session: session)
+                let webConversation = WebConversation(conversation: conver, index: index, request: conversationRequest, addAvatar: index < 16 ? true : false, entityManager: entityManager, session: session)
                 conversationArray.append(webConversation.objectDict())
                 index = index + 1
             }
@@ -55,6 +55,7 @@ struct WebConversation {
     var avatar: Data?
     var notifications: WebNotificationSettings?
     var isStarred: Bool?
+    var isUnread: Bool
     
     init(conversation: Conversation, index: Int, request: WebConversationsRequest?, addAvatar: Bool, entityManager: EntityManager, session: WCSession) {
         if conversation.isGroup() {
@@ -90,6 +91,7 @@ struct WebConversation {
             notifications = WebNotificationSettings.init(pushSetting: pushSetting)
         }
         isStarred = conversation.marked.boolValue
+        isUnread = conversation.unreadMessageCount == -1
     }
 
     init(deletedConversation: Conversation, contact: Contact?) {
@@ -112,10 +114,11 @@ struct WebConversation {
         position = 0
         messageCount = 0
         unreadCount = 0
+        isUnread = false
     }
 
     func objectDict() -> [String: Any] {
-        var objectDict:[String: Any] = ["type": type, "id": id, "position": position, "messageCount": messageCount, "unreadCount": unreadCount]
+        var objectDict:[String: Any] = ["type": type, "id": id, "position": position, "messageCount": messageCount, "unreadCount": unreadCount, "isUnread": isUnread]
 
         if latestMessage != nil {
             objectDict.updateValue(latestMessage!, forKey: "latestMessage")
@@ -136,7 +139,7 @@ struct WebConversation {
         if isStarred != nil {
             objectDict.updateValue(isStarred!, forKey: "isStarred")
         }
-
+        
         return objectDict
     }
 }

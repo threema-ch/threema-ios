@@ -48,10 +48,10 @@ import CocoaLumberjackSwift
         contentView.addSubview(_msgBackground)
                 
         _msgText.frame = CGRect.init(x: 20.0, y: _msgY, width: contentView.frame.size.width - 40.0, height: 20.0)
-        _msgText.font = UIFont.boldSystemFont(ofSize: CGFloat(roundf(fontSize)))
+        _msgText.font = UIFont.systemFont(ofSize: CGFloat(roundf(fontSize)))
         _msgText.textColor = Colors.fontNormal()
-        _msgText.numberOfLines = 0
-        _msgText.textAlignment = .left
+        _msgText.numberOfLines = 5
+        _msgText.textAlignment = .center
         _msgText.autoresizingMask = .flexibleWidth
         _msgText.backgroundColor = .clear
 
@@ -85,7 +85,7 @@ extension ChatSystemMessageCell {
         }
 
         dummySystemLabel!.font = UIFont.boldSystemFont(ofSize: CGFloat(roundf(fontSize)))
-        dummySystemLabel!.numberOfLines = 3
+        dummySystemLabel!.numberOfLines = 5
         dummySystemLabel!.text = text
         
         let height = (dummySystemLabel?.sizeThatFits(maxSize).height)!
@@ -111,6 +111,9 @@ extension ChatSystemMessageCell {
     
     @objc func setMessage(systemMessage: SystemMessage) {
         _msgText.text = systemMessage.format()
+        let att = NSAttributedString(string: systemMessage.format(), attributes: [NSAttributedString.Key.font : _msgText.font!])
+        _msgText.attributedText = _msgText.applyMarkup(for: att)
+
         setupColors()
     }
     

@@ -1,0 +1,19 @@
+/*
+ Localizable.strings
+ Threema
+ 
+ Copyright (c) 2015 Threema GmbH. All rights reserved.
+ */
+
+"need_to_start_app_first_title" = "Threemaはまだ設定されていません";
+"need_to_start_app_first_message" = "まずThreemaアプリを起動してください。";
+
+"cannot_connect_title" = "接続されていません";
+"cannot_connect_message" = "インターネットに接続されているか確認してください。";
+
+"sending_count" = "送信中... (%1$ld / %2$ld)";
+
+"error_message_no_items_title" = "有効でない連絡先";
+"error_message_no_items_message" = "対応するアイテムが見つかりませんでした。";
+
+"send_as_file" = "元のファイルを送信";

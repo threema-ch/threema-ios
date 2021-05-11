@@ -1,0 +1,15 @@
+/* Localized versions of Info.plist keys */
+
+"New message" = "新消息";
+"Scan QR code" = "扫描二维码";
+"My ID" = "个人资料";
+
+"NSCameraUsageDescription" = "当您在会话中拍摄照片或视频时，以及扫描二维码时，都会使用到您的相机。";
+"NSContactsUsageDescription" = "当同步开启时，联系人权限用于寻找其他 Threema 用户。电话号码和电子邮件地址的哈希值将被上传到 Threema 服务器上用于此目的，这些信息都不会存储在服务器上。";
+"NSLocationWhenInUseUsageDescription" = "当您在会话中发送位置时，以及在地图上显示自己的位置，都会使用到您的位置。";
+"NSMicrophoneUsageDescription" = "麦克风权限用于录制音频消息。";
+"NSPhotoLibraryUsageDescription" = "当您从照片库中挑选图片并在会话中发送时，就会使用到您的照片库。";
+/* Explanation why Threema needs the iOS permission to save photos to the "camera roll" (in the user's photo library). */
+"NSPhotoLibraryAddUsageDescription" = "Threema 可以将接收到的媒体文件自动保存在 “照片” 应用程序中。";
+"NSFaceIDUsageDescription" = "您可以使用 Face ID 解锁 Threema，而无需输入密码。";
+"NSLocalNetworkUsageDescription" = "Threema 使用本地网络进行通话连接。";

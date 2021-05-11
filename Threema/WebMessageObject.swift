@@ -228,23 +228,19 @@ class WebMessageObject: NSObject {
         if let quotedMessageId = textMessage.quotedMessageId {
             let entityManager = EntityManager()
             if let quotedMessage = entityManager.entityFetcher.message(withId: quotedMessageId, conversation: textMessage.conversation) {
-                var quotedText = quotedMessage.previewText() ?? ""
-                
-                if let sender = textMessage.sender, !quotedMessage.isOwn.boolValue {
+                if let sender = quotedMessage.sender, !quotedMessage.isOwn.boolValue {
                     quotedIdentity = sender.identity
                 }
                 else if let contact = quotedMessage.conversation.contact, !quotedMessage.isOwn.boolValue {
                     quotedIdentity = contact.identity
                 }
 
-                if let quotedPreviewText = quotedMessage.quotePreviewText(), !quotedPreviewText.isEmpty, quotedPreviewText != quotedText {
-                    quotedText.append(": \(quotedPreviewText)")
-                }
-                
+                let quotedText = quotedMessage.previewText() ?? ""
+
                 quote = ["identity": quotedIdentity, "text": quotedText, "messageId": quotedMessageId.hexEncodedString()]
                 body = textMessage.text
             } else {
-                quote = ["identity": "", "text": BundleUtil.localizedString(forKey: "quote_not_found")!, "messageId": quotedMessageId.hexEncodedString()]
+                quote = ["identity": "", "text": BundleUtil.localizedString(forKey: "quote_not_found"), "messageId": quotedMessageId.hexEncodedString()]
                 body = textMessage.text
             }
         } else {
@@ -534,41 +530,38 @@ struct WebThumbnail {
     var image: Data?
     
     init(imageMessage: ImageMessage, onlyThumbnail: Bool) {
-        var size: CGSize
-        var useThumbnail: Bool = true
-        
-        if !onlyThumbnail && imageMessage.image != nil {
-            if imageMessage.image.data != nil {
-                useThumbnail = false
-            }
-        } else {
-            if imageMessage.thumbnail == nil {
-                useThumbnail = false
-            }
-            
-            if imageMessage.thumbnail != nil {
-                if imageMessage.thumbnail.data == nil {
-                    useThumbnail = false
-                }
-            }
+        if !onlyThumbnail, let origImage = imageMessage.image, let origImageData = origImage.data, let tmpPreview = MediaConverter.getWebPreviewData(origImageData) {
+            let size = MediaConverter.getWebThumbnailSize(forImageData: origImageData)
+            height = Int(size.height)
+            width = Int(size.width)
+            preview = tmpPreview
+            image = MediaConverter.getWebThumbnailData(origImageData)
         }
-
-        if useThumbnail == true {
-            size = MediaConverter.getWebThumbnailSize(forImageData: imageMessage.thumbnail.data)
-            preview = MediaConverter.getWebPreviewData(imageMessage.thumbnail.data)
-        } else {
-            size = MediaConverter.getWebThumbnailSize(forImageData: imageMessage.image.data)
-            preview = MediaConverter.getWebPreviewData(imageMessage.image.data)
-        }
-        height = Int(size.height)
-        width = Int(size.width)
-        
-        if !onlyThumbnail {
-            if useThumbnail == true {
-                image = MediaConverter.getWebThumbnailData(imageMessage.thumbnail.data)
+        else if let thumbnail = imageMessage.thumbnail, let thumbnailData = thumbnail.data, let tmpPreview = MediaConverter.getWebPreviewData(thumbnailData) {
+            let size = MediaConverter.getWebThumbnailSize(forImageData: thumbnailData)
+            height = Int(size.height)
+            width = Int(size.width)
+            preview = tmpPreview
+            var thumbnailImageData : Data
+            if !onlyThumbnail, let image = imageMessage.image, let imageData = image.data {
+                thumbnailImageData = imageData
             } else {
-                image = MediaConverter.getWebThumbnailData(imageMessage.image.data)
+                thumbnailImageData = thumbnailData
             }
+            image = MediaConverter.getWebThumbnailData(thumbnailImageData)
+        }
+        else if let origImage = imageMessage.image, let origImageData = origImage.data, let tmpPreview = MediaConverter.getWebPreviewData(origImageData) {
+            let size = MediaConverter.getWebThumbnailSize(forImageData: origImageData)
+            height = Int(size.height)
+            width = Int(size.width)
+            preview = tmpPreview
+            image = MediaConverter.getWebThumbnailData(origImageData)
+        }
+        else {
+            height = Int(44)
+            width = Int(44)
+            preview = UIImage.init(named: "Thumbnail")!.pngData()!
+            image = preview
         }
     }
     
@@ -584,8 +577,8 @@ struct WebThumbnail {
             preview = UIImage.init(named: "Thumbnail")!.pngData()!
         }
         
-        if !onlyThumbnail {
-            image = MediaConverter.getWebThumbnailData(videoMessage.thumbnail.data)
+        if !onlyThumbnail, let thumbnail = videoMessage.thumbnail, let thumbnailData = thumbnail.data {
+            image = MediaConverter.getWebThumbnailData(thumbnailData)
         }
     }
     

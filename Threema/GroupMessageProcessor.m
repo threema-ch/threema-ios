@@ -57,6 +57,7 @@
         self.message = message;
         self.group = [self groupProxyForMessage:message];
         self.isNewGroup = NO;
+        self.rejectMessage = false;
     }
     
     return self;
@@ -84,6 +85,7 @@
             
         } else if ([_message isKindOfClass:[GroupRequestSyncMessage class]] == NO) {
             // do that only if it's not from notification extension file
+            DDLogInfo(@"Unknown group %@. Aadd to pending messages and request group sync", _message.groupId);
             [GroupProxy sendSyncRequestWithGroupId:_message.groupId creator:_message.groupCreator];
             _addToPendingMessages = YES;
         }
@@ -105,13 +107,19 @@
         if (_group.isOwnGroup) {
             DDLogInfo(@"%@ is not member of group %@, resend group info", _message.fromIdentity, _message.groupId);
             [_group syncGroupInfoToIdentity:_message.fromIdentity];
+            _rejectMessage = true;
         } else {
-            if ([_message isKindOfClass:[GroupRequestSyncMessage class]] == NO) {
+            if ([_message isKindOfClass:[GroupLeaveMessage class]]) {
+                // member is already removed, reject the message
+                DDLogInfo(@"%@ is already removed from the group %@", _message.fromIdentity, _message.groupId);
+                _rejectMessage = true;
+            }
+            else if ([_message isKindOfClass:[GroupRequestSyncMessage class]] == NO) {
                 // do that only if it's not from notification extension file
+                DDLogInfo(@"%@ is not member of group %@, add to pending messages and request group sync", _message.fromIdentity, _message.groupId);
                 [GroupProxy sendSyncRequestWithGroupId:_message.groupId creator:_message.groupCreator];
                 _addToPendingMessages = YES;
             }
-            DDLogInfo(@"%@ is not member of group %@, add to pending messages and request group sync", _message.fromIdentity, _message.groupId);
         }
         
         onCompletion(YES);

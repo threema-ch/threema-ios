@@ -502,7 +502,7 @@ extension WCSessionManager {
     private func responseUpdateConversation(conversation: Conversation, objectMode: WebConversationUpdate.ObjectMode) {
         for publicKey in running {
             if let session = sessions[publicKey] {
-                let conversationResponse = WebConversationUpdate.init(conversation: conversation, objectMode: objectMode, session: session)
+                let conversationResponse = WebConversationUpdate(conversation: conversation, objectMode: objectMode, session: session)
                 DDLogVerbose("Threema Web: MessagePack -> Send update/conversation")
                 session.sendMessageToWeb(blacklisted: false, msgpack: conversationResponse.messagePack())
             }
@@ -751,11 +751,10 @@ extension WCSessionManager {
                 switch baseMessage {
                 case is TextMessage:
                     self.processTextMessageResponse(baseMessage, id)
-                case is SystemMessage:
-                    self.processSystemMessageResponse(baseMessage, id)
                 case is FileMessage, is ImageMessage, is VideoMessage, is AudioMessage:
                     self.processFileMessageResponse(baseMessage, id)
                 default:
+                    self.processBaseMessageResponse(baseMessage, id)
                     break
                 }
             }
@@ -837,7 +836,7 @@ extension WCSessionManager {
 
     }
     
-    private func processSystemMessageResponse(_ baseMessage: BaseMessage, _ id: String) {
+    private func processBaseMessageResponse(_ baseMessage: BaseMessage, _ id: String) {
         let objectMode: WebMessagesUpdate.ObjectMode = .new
         self.responseUpdateMessage(with: id, message: baseMessage, conversation: baseMessage.conversation, objectMode: objectMode)
         // background task to send ack to server
@@ -877,7 +876,7 @@ extension WCSessionManager {
             BackgroundTaskManager.shared.cancelBackgroundTask(key: backgroundIdentifier!)
         }
     }
-    
+        
     private func baseMessageIdentity(_ baseMessage: BaseMessage) -> String {
         if let sender = baseMessage.sender {
             return sender.identity

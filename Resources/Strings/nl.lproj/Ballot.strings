@@ -49,3 +49,7 @@
 
 "ballot_open_ballots" = "Open polls";
 "ballot_closed_ballots" = "Gesloten polls";
+
+"voteCancelTitle" = "Stem annuleren";
+"voteCancelMessage" = "Als u vertrekt voordat u hebt gestemd, gaat uw stem verloren.";
+"discardVoteTitle" = "Annuleren";

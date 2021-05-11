@@ -25,6 +25,17 @@ import Foundation
     @objc enum MessageAction: Int {
         case reject
         case call
+        
+        /**
+         Return the string of the current action for the ValidationLogger
+         - Returns: String of the current action
+         */
+        func description() -> String {
+            switch self {
+            case .reject: return "reject"
+            case .call: return "accept"
+            }
+        }
     }
     
     @objc enum MessageRejectReason: Int {
@@ -34,6 +45,21 @@ import Foundation
         case reject
         case disabled
         case offHours
+        
+        /**
+         Return the string of the current reject reason for the ValidationLogger
+         - Returns: String of the current reject reason
+         */
+        func description() -> String {
+            switch self {
+            case .unknown: return "unknown"
+            case .busy: return "busy"
+            case .timeout: return "timeout"
+            case .reject: return "reject"
+            case .disabled: return "disabled"
+            case .offHours: return "offHours"
+            }
+        }
     }
 
     @objc let action: MessageAction

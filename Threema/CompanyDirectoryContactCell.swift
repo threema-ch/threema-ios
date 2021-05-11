@@ -42,7 +42,7 @@ class CompanyDirectoryContactCell: UITableViewCell {
         avatar.image = AvatarMaker.shared().avatar(forFirstName: contact.first, lastName: contact.last, size: avatar.frame.size.width)
     
         nameLabel.text = contact.fullName()
-        categoryLabel.text = contact.categoryString()
+        categoryLabel.text = contact.categoryWithOrganisationString()
         csiLabel.text = contact.csi
         
         identityLabel.text = contact.id

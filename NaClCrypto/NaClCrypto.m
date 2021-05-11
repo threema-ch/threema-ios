@@ -31,7 +31,9 @@
   static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 #endif
 
-@implementation NaClCrypto
+@implementation NaClCrypto {
+    NSCache *sharedSecretCache;
+}
 
 #if (kNaClCryptoPubKeySize != crypto_box_PUBLICKEYBYTES)
 #error Bad public key size
@@ -80,6 +82,7 @@
 {
     self = [super init];
     if (self) {
+        sharedSecretCache = [[NSCache alloc] init];
         [self selfTest];
     }
     
@@ -182,9 +185,9 @@
     bzero(ctbuf, crypto_box_ZEROBYTES);
     memcpy(&ctbuf[crypto_box_ZEROBYTES], plaintext.bytes, plaintext.length);
     
-    if (crypto_box((unsigned char *)ctbuf, (unsigned char *)ctbuf, mlen, nonce.bytes,
-                   publicKey.bytes, signKey.bytes) != 0) {
-        
+    NSData *sharedSecret = [self sharedSecretForPublicKey:publicKey secretKey:signKey];
+    
+    if (crypto_box_afternm((unsigned char *)ctbuf, (unsigned char *)ctbuf, mlen, nonce.bytes, sharedSecret.bytes) != 0) {
         /* shouldn't happen */
         free(ctbuf);
         @throw([NSException exceptionWithName:@"CryptoException" reason:@"Crypto error" userInfo:nil]);
@@ -220,9 +223,9 @@
     bzero(msgbuf, crypto_box_BOXZEROBYTES);
     memcpy(&msgbuf[crypto_box_BOXZEROBYTES], ciphertext.bytes, ciphertext.length);
     
-    if (crypto_box_open((unsigned char *)msgbuf, (unsigned char *)msgbuf, clen, nonce.bytes,
-                   signKey.bytes, secretKey.bytes) != 0) {
-        
+    NSData *sharedSecret = [self sharedSecretForPublicKey:signKey secretKey:secretKey];
+    
+    if (crypto_box_open_afternm((unsigned char *)msgbuf, (unsigned char *)msgbuf, clen, nonce.bytes, sharedSecret.bytes) != 0) {
         /* probably bad signature */
         free(msgbuf);
         return nil;
@@ -310,6 +313,28 @@
     free(msgbuf);
     
     return plaintext;
+}
+
+- (NSData*)sharedSecretForPublicKey:(NSData*)publicKey secretKey:(NSData*)secretKey {
+    /* Check cache first */
+    NSMutableData *cacheKey = [NSMutableData dataWithData:publicKey];
+    [cacheKey appendData:secretKey];
+    NSData *sharedSecretData = [sharedSecretCache objectForKey:cacheKey];
+    if (sharedSecretData != nil) {
+        return sharedSecretData;
+    }
+    
+    unsigned char sharedSecret[crypto_box_BEFORENMBYTES];
+    
+    if (crypto_box_beforenm(sharedSecret, publicKey.bytes, secretKey.bytes) != 0) {
+        /* shouldn't happen */
+        @throw([NSException exceptionWithName:@"CryptoException" reason:@"Crypto error" userInfo:nil]);
+    }
+    
+    sharedSecretData = [NSData dataWithBytes:sharedSecret length:crypto_box_BEFORENMBYTES];
+    [sharedSecretCache setObject:sharedSecretData forKey:cacheKey];
+    
+    return sharedSecretData;
 }
 
 - (void)selfTest {

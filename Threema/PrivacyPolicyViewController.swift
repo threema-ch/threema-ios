@@ -54,8 +54,8 @@ class PrivacyPolicyViewController: UIViewController, WKNavigationDelegate {
             lang = "en";
         }
         
-        var version = BundleUtil.mainBundle().object(forInfoDictionaryKey: "CFBundleShortVersionString") as! String
-        let suffix = BundleUtil.mainBundle().object(forInfoDictionaryKey: "ThreemaVersionSuffix") as? String
+        var version = BundleUtil.mainBundle()!.object(forInfoDictionaryKey: "CFBundleShortVersionString") as! String
+        let suffix = BundleUtil.mainBundle()!.object(forInfoDictionaryKey: "ThreemaVersionSuffix") as? String
         if suffix != nil {
             version = version.appending(suffix!)
         }

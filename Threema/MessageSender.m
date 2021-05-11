@@ -64,22 +64,30 @@
 @implementation MessageSender
 
 + (void)sendDeliveryReceiptForMessage:(BaseMessage*)message fromIdentity:(NSString*)identity {
-    DDLogVerbose(@"Sending delivery receipt for message ID: %@", message.id);
-    DeliveryReceiptMessage *deliveryReceipt = [[DeliveryReceiptMessage alloc] init];
-    deliveryReceipt.receiptType = DELIVERYRECEIPT_MSGRECEIVED;
-    deliveryReceipt.receiptMessageIds = @[message.id];
-    deliveryReceipt.toIdentity = identity;
-    [[MessageQueue sharedMessageQueue] enqueue:deliveryReceipt];
+    if (message.noDeliveryReceiptFlagSet) {
+        DDLogVerbose(@"Do not send delivery receipt (noDeliveryReceiptFlagSet) for message ID: %@", message.id);
+    } else {
+        DDLogVerbose(@"Sending delivery receipt for message ID: %@", message.id);
+        DeliveryReceiptMessage *deliveryReceipt = [[DeliveryReceiptMessage alloc] init];
+        deliveryReceipt.receiptType = DELIVERYRECEIPT_MSGRECEIVED;
+        deliveryReceipt.receiptMessageIds = @[message.id];
+        deliveryReceipt.toIdentity = identity;
+        [[MessageQueue sharedMessageQueue] enqueue:deliveryReceipt];
+    }
 }
 
 + (void)sendDeliveryReceiptForAbstractMessage:(AbstractMessage*)message fromIdentity:(NSString*)identity {
-    NSString *messageId = [NSString stringWithHexData:message.messageId];
-    DDLogVerbose(@"Sending delivery receipt for notification extension message ID: %@", messageId);
-    DeliveryReceiptMessage *deliveryReceipt = [[DeliveryReceiptMessage alloc] init];
-    deliveryReceipt.receiptType = DELIVERYRECEIPT_MSGRECEIVED;
-    deliveryReceipt.receiptMessageIds = @[message.messageId];
-    deliveryReceipt.toIdentity = identity;
-    [[MessageQueue sharedMessageQueue] enqueueWait:deliveryReceipt];
+    NSString *messageId = [message getMessageIdString];
+    if (message.noDeliveryReceiptFlagSet) {
+        DDLogVerbose(@"Do not send delivery receipt (noDeliveryReceiptFlagSet) for notification extension ID: %@", messageId);
+    } else {
+        DDLogVerbose(@"Sending delivery receipt for notification extension message ID: %@", messageId);
+        DeliveryReceiptMessage *deliveryReceipt = [[DeliveryReceiptMessage alloc] init];
+        deliveryReceipt.receiptType = DELIVERYRECEIPT_MSGRECEIVED;
+        deliveryReceipt.receiptMessageIds = @[message.messageId];
+        deliveryReceipt.toIdentity = identity;
+        [[MessageQueue sharedMessageQueue] enqueueWait:deliveryReceipt];
+    }
 }
 
 + (void)sendGroupCreateMessageForGroup:(GroupProxy*)group toMember:(Contact*)toMember {
@@ -213,28 +221,33 @@
     }];
     
     if (conversationOwnContext.groupId != nil) {
-        /* send to each group member */
-        for (Contact *member in conversationOwnContext.members) {
-            DDLogVerbose(@"Sending group message to %@", member.identity);
-            GroupTextMessage *msg = [[GroupTextMessage alloc] init];
-            msg.messageId = newMessage.id;
-            msg.date = newMessage.date;
-            msg.text = message;
-            msg.groupId = conversationOwnContext.groupId;
-            
-            if (conversationOwnContext.contact == nil)
-                msg.groupCreator = [MyIdentityStore sharedMyIdentityStore].identity;
-            else
-                msg.groupCreator = conversationOwnContext.contact.identity;
-            
-            msg.toIdentity = member.identity;
-            if (async) {
-                [[MessageQueue sharedMessageQueue] enqueue:msg];
-            } else {
-                [[MessageQueue sharedMessageQueue] enqueueWait:msg];
-            }
-            if (!quickReply) {
-                [ContactPhotoSender sendProfilePicture:msg];
+        if (conversationOwnContext.members.count == 0) {
+            /* set as sent for own note group */
+            [MessageSender markMessageAsSent:newMessage.id];
+        } else {
+            /* send to each group member */
+            for (Contact *member in conversationOwnContext.members) {
+                DDLogVerbose(@"Sending group message to %@", member.identity);
+                GroupTextMessage *msg = [[GroupTextMessage alloc] init];
+                msg.messageId = newMessage.id;
+                msg.date = newMessage.date;
+                msg.text = message;
+                msg.groupId = conversationOwnContext.groupId;
+                
+                if (conversationOwnContext.contact == nil)
+                    msg.groupCreator = [MyIdentityStore sharedMyIdentityStore].identity;
+                else
+                    msg.groupCreator = conversationOwnContext.contact.identity;
+                
+                msg.toIdentity = member.identity;
+                if (async) {
+                    [[MessageQueue sharedMessageQueue] enqueue:msg];
+                } else {
+                    [[MessageQueue sharedMessageQueue] enqueueWait:msg];
+                }
+                if (!quickReply) {
+                    [ContactPhotoSender sendProfilePicture:msg];
+                }
             }
         }
     } else {
@@ -285,27 +298,33 @@
     }];
     
     if (conversationOwnContext.groupId != nil) {
-        /* send to each group member */
-        for (Contact *member in conversationOwnContext.members) {
-            DDLogVerbose(@"Sending group location message to %@", member.identity);
-            GroupLocationMessage *msg = [[GroupLocationMessage alloc] init];
-            msg.messageId = newMessage.id;
-            msg.date = newMessage.date;
-            msg.latitude = coordinates.latitude;
-            msg.longitude = coordinates.longitude;
-            msg.accuracy = accuracy;
-            msg.poiName = poiName;
-            msg.poiAddress = poiAddress;
-            msg.groupId = conversationOwnContext.groupId;
-            
-            if (conversationOwnContext.contact == nil)
-                msg.groupCreator = [MyIdentityStore sharedMyIdentityStore].identity;
-            else
-                msg.groupCreator = conversationOwnContext.contact.identity;
-            
-            msg.toIdentity = member.identity;
-            [[MessageQueue sharedMessageQueue] enqueue:msg];
-            [ContactPhotoSender sendProfilePicture:msg];
+        
+        if (conversationOwnContext.members.count == 0) {
+            /* set as sent for own note group */
+            [MessageSender markMessageAsSent:newMessage.id];
+        } else {
+            /* send to each group member */
+            for (Contact *member in conversationOwnContext.members) {
+                DDLogVerbose(@"Sending group location message to %@", member.identity);
+                GroupLocationMessage *msg = [[GroupLocationMessage alloc] init];
+                msg.messageId = newMessage.id;
+                msg.date = newMessage.date;
+                msg.latitude = coordinates.latitude;
+                msg.longitude = coordinates.longitude;
+                msg.accuracy = accuracy;
+                msg.poiName = poiName;
+                msg.poiAddress = poiAddress;
+                msg.groupId = conversationOwnContext.groupId;
+                
+                if (conversationOwnContext.contact == nil)
+                    msg.groupCreator = [MyIdentityStore sharedMyIdentityStore].identity;
+                else
+                    msg.groupCreator = conversationOwnContext.contact.identity;
+                
+                msg.toIdentity = member.identity;
+                [[MessageQueue sharedMessageQueue] enqueue:msg];
+                [ContactPhotoSender sendProfilePicture:msg];
+            }
         }
     } else {
         BoxLocationMessage *msg = [[BoxLocationMessage alloc] init];
@@ -385,26 +404,32 @@
                 return;
             }
             
-            [receiptMessageIds addObject:message.id];
+            if (receiptType == DELIVERYRECEIPT_MSGREAD && message.noDeliveryReceiptFlagSet) {
+                DDLogVerbose(@"Do not send read receipt (noDeliveryReceiptFlagSet) for message ID: %@", message.id);
+            } else {
+                [receiptMessageIds addObject:message.id];
+            }
         }
         @catch (NSException *exception) {
             DDLogError(@"Exception while marking message as read: %@", exception);
         }
     }
     
-    DDLogVerbose(@"Sending read receipt for message IDs: %@", receiptMessageIds);
-    
-    DeliveryReceiptMessage *deliveryReceipt = [[DeliveryReceiptMessage alloc] init];
-    deliveryReceipt.receiptType = receiptType;
-    deliveryReceipt.receiptMessageIds = receiptMessageIds;
-    deliveryReceipt.toIdentity = identity;
-    if (quickReply) {
-        [[MessageQueue sharedMessageQueue] enqueueWaitForQuickReply:deliveryReceipt];
-    } else {
-        if (async) {
-            [[MessageQueue sharedMessageQueue] enqueue:deliveryReceipt];
+    if (receiptMessageIds.count > 0) {
+        DDLogVerbose(@"Sending read receipt for message IDs: %@", receiptMessageIds);
+        
+        DeliveryReceiptMessage *deliveryReceipt = [[DeliveryReceiptMessage alloc] init];
+        deliveryReceipt.receiptType = receiptType;
+        deliveryReceipt.receiptMessageIds = receiptMessageIds;
+        deliveryReceipt.toIdentity = identity;
+        if (quickReply) {
+            [[MessageQueue sharedMessageQueue] enqueueWaitForQuickReply:deliveryReceipt];
         } else {
-            [[MessageQueue sharedMessageQueue] enqueueWait:deliveryReceipt];
+            if (async) {
+                [[MessageQueue sharedMessageQueue] enqueue:deliveryReceipt];
+            } else {
+                [[MessageQueue sharedMessageQueue] enqueueWait:deliveryReceipt];
+            }
         }
     }
 }
@@ -478,14 +503,19 @@
     boxMessage.messageId = message.id;
     
     if (conversation.groupId != nil) {
-        /* send to each group member */
-        for (Contact *member in conversation.members) {
-            DDLogVerbose(@"Sending ballot create message to %@", member.identity);
-            
-            GroupBallotCreateMessage *msg = [BallotMessageEncoder groupBallotCreateMessageFrom:boxMessage forConversation:conversation];
-            
-            msg.toIdentity = member.identity;
-            [[MessageQueue sharedMessageQueue] enqueue:msg];
+        if (conversation.members.count == 0) {
+            /* set as sent for own note group */
+            [MessageSender markMessageAsSent:boxMessage.messageId];
+        } else {
+            /* send to each group member */
+            for (Contact *member in conversation.members) {
+                DDLogVerbose(@"Sending ballot create message to %@", member.identity);
+                
+                GroupBallotCreateMessage *msg = [BallotMessageEncoder groupBallotCreateMessageFrom:boxMessage forConversation:conversation];
+                
+                msg.toIdentity = member.identity;
+                [[MessageQueue sharedMessageQueue] enqueue:msg];
+            }
         }
     } else {
         boxMessage.toIdentity = conversation.contact.identity;
@@ -512,14 +542,19 @@
     BoxBallotVoteMessage *boxMessage = [BallotMessageEncoder encodeVoteMessageForBallot: ballot];
     
     if (conversation.groupId != nil) {
-        /* send to each group member */
-        for (Contact *member in conversation.members) {
-            DDLogVerbose(@"Sending ballot vote message to %@", member.identity);
-            
-            GroupBallotVoteMessage *msg = [BallotMessageEncoder groupBallotVoteMessageFrom:boxMessage forConversation:conversation];
-            
-            msg.toIdentity = member.identity;
-            [[MessageQueue sharedMessageQueue] enqueue:msg];
+        if (conversation.members.count == 0) {
+            /* set as sent for own note group */
+            [MessageSender markMessageAsSent:boxMessage.messageId];
+        } else {
+            /* send to each group member */
+            for (Contact *member in conversation.members) {
+                DDLogVerbose(@"Sending ballot vote message to %@", member.identity);
+                
+                GroupBallotVoteMessage *msg = [BallotMessageEncoder groupBallotVoteMessageFrom:boxMessage forConversation:conversation];
+                
+                msg.toIdentity = member.identity;
+                [[MessageQueue sharedMessageQueue] enqueue:msg];
+            }
         }
     } else {
         boxMessage.toIdentity = conversation.contact.identity;

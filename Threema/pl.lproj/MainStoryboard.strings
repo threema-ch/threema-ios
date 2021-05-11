@@ -107,9 +107,6 @@
 /* Class = "UILabel"; text = "Send Message"; ObjectID = "IpT-Hm-dLe"; */
 "IpT-Hm-dLe.text" = "Wyślij wiadomość";
 
-/* Class = "UILabel"; text = "Create new group"; ObjectID = "JLU-Sq-XK3"; */
-"JLU-Sq-XK3.text" = "Utwórz nową grupę";
-
 /* Class = "UILabel"; text = "Group Name"; ObjectID = "Jri-Jp-Hpu"; */
 "Jri-Jp-Hpu.text" = "Nazwa Grupy";
 

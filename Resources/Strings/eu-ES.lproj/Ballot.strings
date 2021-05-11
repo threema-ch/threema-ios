@@ -49,3 +49,7 @@
 
 "ballot_open_ballots" = "Inkesta irekiak";
 "ballot_closed_ballots" = "Inkesta itxiak";
+
+"voteCancelTitle" = "Botoa baztertu";
+"voteCancelMessage" = "Botoa eman aurretik erretiratzen bazara, baztertu egingo zaitugu.";
+"discardVoteTitle" = "Baztertu";

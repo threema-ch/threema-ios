@@ -484,6 +484,13 @@ public class WebAbstractMessage: NSObject {
                         return
                     }
                     return
+                case "activeConversation"?:
+                    let updateActiveConversation = WebUpdateActiveConversationRequest(message: self)
+                    updateActiveConversation.updateActiveConversation()
+                    let confirmActionResponse = WebConfirmResponse(webUpdateActiveConversationRequest: updateActiveConversation)
+                    DDLogVerbose("Threema Web: MessagePack -> Send update/confirm")
+                    completionHandler(confirmActionResponse.messagePack(), false)
+                    return
                 default:
                     let responseConfirmAction = WebConfirmResponse.init(message: self, success: false, error: "unknownSubtype")
                     DDLogVerbose("Threema Web: MessagePack -> Send update/confirm")

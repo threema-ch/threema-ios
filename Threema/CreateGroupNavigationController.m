@@ -28,6 +28,14 @@
 #import "GroupPhotoSender.h"
 #import "ModalPresenter.h"
 #import "UserSettings.h"
+#import "BundleUtil.h"
+#import "AppGroup.h"
+
+#ifdef DEBUG
+  static const DDLogLevel ddLogLevel = DDLogLevelVerbose;
+#else
+  static const DDLogLevel ddLogLevel = DDLogLevelWarning;
+#endif
 
 @interface CreateGroupNavigationController () <EditGroupDelegate>
 
@@ -76,7 +84,12 @@
             dbImage.data = _groupImageData;
             conversation.groupImage = dbImage;
         }
-
+        
+        if (_groupMembers.count == 0) {
+            // If there is no member we show a note group info
+            SystemMessage *systemMessage = [entityManager.entityCreator systemMessageForConversation:conversation];
+            systemMessage.type = [NSNumber numberWithInt:kSystemMessageStartNoteGroupInfo];
+        }
     }];
     
     /* send group create messages to all members */
@@ -126,6 +139,19 @@
     }
 
     [super pushViewController:viewController animated:animated];
+    
+    BOOL doNotShowAgain = [[AppGroup userDefaults] boolForKey:@"NoteGroupDoNotShowAgain"];
+    if (doNotShowAgain == true) {
+        DDLogVerbose(@"Note group already shown");
+        return;
+    }
+
+    [UIAlertTemplate showAlertWithOwner:viewController title:[BundleUtil localizedStringForKey:@"create_note_group_info_title"] message:[BundleUtil localizedStringForKey:@"create_note_group_info_text"] titleOk:[BundleUtil localizedStringForKey:@"ok"] actionOk:^(UIAlertAction *action) {
+        // do nothing
+    } titleCancel:[BundleUtil localizedStringForKey:@"doNotShowAgain"] actionCancel:^(UIAlertAction *action) {
+        [[AppGroup userDefaults] setBool:true forKey:@"NoteGroupDoNotShowAgain"];
+        [[AppGroup userDefaults] synchronize];
+    }];
 }
 
 #pragma mark - actions

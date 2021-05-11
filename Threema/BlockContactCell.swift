@@ -52,5 +52,4 @@ class BlockContactCell: UITableViewCell {
         
         NotificationCenter.default.post(name: NSNotification.Name(rawValue: kNotificationBlockedContact), object: identity)
     }
-
 }

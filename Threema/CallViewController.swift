@@ -89,10 +89,10 @@ class CallViewController: UIViewController {
             DispatchQueue.main.async {
                 if let warningButton = self.cellularWarningButton, warningButton.isHidden == self.shouldShowCellularCallWarning {
                     warningButton.isHidden = !self.shouldShowCellularCallWarning
+                    if self.shouldShowCellularCallWarning {
+                        self.playCellularCallWarningSound()
+                    }
                 }
-            }
-            if self.shouldShowCellularCallWarning {
-                self.playCellularCallWarningSound()
             }
         }
     }
@@ -325,7 +325,7 @@ extension CallViewController {
         case .receivedAnswer:
             timerString = BundleUtil.localizedString(forKey: "call_status_ringing")
             break
-        case .initalizing:
+        case .initializing:
             timerString = BundleUtil.localizedString(forKey: "call_status_initializing")
             break
         case .calling:
@@ -519,7 +519,11 @@ extension CallViewController {
             DDLogError("Could not create avatar image")
             return
         }
-        self.backgroundImage.image = self.blurImage(image: avatarImage, blurRadius: 4.0)
+        if contact.isProfilePictureSet() {
+            self.backgroundImage.image = self.blurImage(image: avatarImage, blurRadius: 4.0)
+        } else {
+            self.backgroundImage.image = avatarImage
+        }
     }
     
     private func updateView() {
@@ -1507,7 +1511,8 @@ extension CallViewController {
     }
     
     @IBAction func endAction(_ sender: UIButton, forEvent event: UIEvent) {
-        DDLogNotice("Threema call: HangupBug -> User pressed the end call button")
+        DDLogNotice("VoipCallService: [cid=\(VoIPCallStateManager.shared.currentCallId()?.callId ?? 0)]: User pressed the hangup button")
+
         let action = VoIPCallUserAction.init(action: .end, contact: contact!, callId: VoIPCallStateManager.shared.currentCallId(), completion: nil)
         VoIPCallStateManager.shared.processUserAction(action)
     }

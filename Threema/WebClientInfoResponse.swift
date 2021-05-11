@@ -35,7 +35,7 @@ class WebClientInfoResponse: WebAbstractMessage {
         device = UIDevice.current.name
         os = "ios"
         osVersion = UIDevice.current.systemVersion
-        appVersion = BundleUtil.mainBundle()?.object(forInfoDictionaryKey: "CFBundleShortVersionString") as! String
+        appVersion = BundleUtil.mainBundle()!.object(forInfoDictionaryKey: "CFBundleShortVersionString") as! String
         isWork = LicenseStore.requiresLicenseKey()
         let tmpPushToken = AppGroup.userDefaults().object(forKey: kVoIPPushNotificationDeviceToken) as? Data
         if tmpPushToken != nil {

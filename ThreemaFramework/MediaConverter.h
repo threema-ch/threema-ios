@@ -28,17 +28,19 @@
 
 + (UIImage*)getThumbnailForVideo:(AVAsset *)asset;
 
-+ (NSData *)getWebThumbnailData:(NSData *)orig;
++ (NSData * _Nullable)getWebThumbnailData:(NSData * _Nonnull)orig;
 
 + (NSData *)getWebPreviewData:(NSData *)orig;
+
++ (NSUInteger)thumbnailSizeForCurrentDevice;
 
 + (UIImage*)getThumbnailForImage:(UIImage *)orig;
 
 + (UIImage*)scaleImage:(UIImage*)orig toMaxSize:(CGFloat)maxSize;
 
-+ (UIImage*)scaleImageData:(NSData *)imageData toMaxSize:(CGFloat)maxSize;
++ (UIImage* _Nullable)scaleImageData:(NSData * _Nonnull)imageData toMaxSize:(CGFloat)maxSize;
 
-+ (NSData*)scaleImageDataToData:(nonnull NSData *)imageData toMaxSize:(CGFloat)maxSize useJPEG:(BOOL)useJPEG;
++ (NSData* _Nullable)scaleImageDataToData:(NSData * _Nonnull)imageData toMaxSize:(CGFloat)maxSize useJPEG:(BOOL)useJPEG;
 
 + (UIImage*)scaleImageUrl:(NSURL *)imageUrl toMaxSize:(CGFloat)maxSize;
 
@@ -53,5 +55,8 @@
 
 + (SDAVAssetExportSession *)getAVAssetExportSessionFrom:(AVAsset *) asset outputURL:(NSURL *)outputURL;
 + (NSURL *) getAssetOutputURL;
+
++ (NSData *_Nullable)PNGRepresentationFor: (UIImage *_Nonnull) image;
++ (NSData *_Nullable)JPEGRepresentationFor: (UIImage *_Nonnull) image;
 
 @end

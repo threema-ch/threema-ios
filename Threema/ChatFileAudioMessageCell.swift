@@ -87,6 +87,7 @@ extension ChatFileAudioMessageCell {
         if var captionText = fileMessage.caption, captionText.count > 0, fileMessage.shouldShowCaption() {
             captionText = TextStyleUtils.makeMentionsString(forText: captionText)
             _captionLabel?.text = captionText
+            _captionLabel?.textAlignment = captionText.textAlignment()
             _captionLabel?.isHidden = false
         }
         else {
@@ -224,7 +225,11 @@ extension ChatFileAudioMessageCell {
             _durationLabel?.frame = CGRect.init(x: 46.0 + contentLeftOffset(), y: textY, width: floor(textSize!.width + 1), height: floor(textSize!.height + 1))
             _audioIcon!.frame = CGRect.init(x: 23.0 + contentLeftOffset(), y: (_durationLabel!.frame.origin.y + _durationLabel!.frame.size.height/2) - _audioIcon!.frame.size.height / 2, width: _audioIcon!.frame.size.width, height: _audioIcon!.frame.size.height)
         }
-        _captionLabel!.frame  = CGRect.init(x:ceil(msgBackground.frame.origin.x + (x/2)), y: ceil(_durationLabel!.frame.origin.y + _durationLabel!.frame.size.height + 3.0), width: ceil(captionTextSize.width), height: ceil(captionTextSize.height))
+        var originX = msgBackground.frame.origin.x + (x/2)
+        if _captionLabel?.textAlignment == .right {
+            originX = msgBackground.frame.origin.x + msgBackground.frame.size.width - (x/2) - captionTextSize.width
+        }
+        _captionLabel!.frame  = CGRect.init(x:ceil(originX), y: ceil(_durationLabel!.frame.origin.y + _durationLabel!.frame.size.height + 3.0), width: ceil(captionTextSize.width), height: ceil(captionTextSize.height))
         activityIndicator.frame = _audioIcon!.frame
     }
     
@@ -354,15 +359,6 @@ extension ChatFileAudioMessageCell {
         let fileMessage = message as! FileMessage
         let sender: FileMessageSender = FileMessageSender.init()
         sender.retryMessage(fileMessage)
-    }
-    
-    @objc func speakMessage(_ menuController: UIMenuController) {
-        if _captionLabel?.text != nil {
-            let speakText = "\(BundleUtil.localizedString(forKey: "image") ?? "Image"). \(_captionLabel!.text!)"
-            let utterance: AVSpeechUtterance = AVSpeechUtterance.init(string: speakText)
-            let syn = AVSpeechSynthesizer.init()
-            syn.speak(utterance)
-        }
     }
 }
 

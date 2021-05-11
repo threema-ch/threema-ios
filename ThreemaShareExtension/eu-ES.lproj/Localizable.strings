@@ -11,9 +11,9 @@
 "cannot_connect_title" = "Ez dago konexiorik";
 "cannot_connect_message" = "Ez dago konexiorik, mesedez, egiaztatu zure Interneteko konexioa.";
 
-"sending_count" = "Bidalita... (%1$ld / %2$ld)";
+"sending_count" = "Bidaltzen... (%1$ld / %2$ld)";
 
 "error_message_no_items_title" = "Edukia ez da baliozkoa";
 "error_message_no_items_message" = "Ez da elementu onarturik aurkitu.";
 
-"send_as_file" = "Bidali fitxategi gisa";
+"send_as_file" = "Bidali jatorrizkotzat";

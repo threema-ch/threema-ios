@@ -36,7 +36,6 @@ class UTIConverterTests: XCTestCase {
     }
     
     /// This tests the mime type generation from the uti for a selection of raw formats generated with imagemagick.
-    /// The list was taken from https://stackoverflow.com/a/47612661/2310837.
     /// All items not recognized by macOSs Finder were removed.
     /// - Throws:
     func testGetRawImageMimeType() throws {

@@ -208,10 +208,11 @@
 }
 
 - (void)speakMessage:(UIMenuController *)menuController {
+    [super speakMessage:menuController];
+    
     NSString *speakText = [NSString stringWithFormat:@"%@, %@", [ChatBallotMessageCell headerForMessage:self.message], [ChatBallotMessageCell displayTextForMessage:self.message]];;
     AVSpeechUtterance *utterance = [AVSpeechUtterance speechUtteranceWithString:speakText];
-    AVSpeechSynthesizer *syn = [[AVSpeechSynthesizer alloc] init];
-    [syn speakUtterance:utterance];
+    [self.chatVc.speechSynthesizer speakUtterance:utterance];
 }
 
 

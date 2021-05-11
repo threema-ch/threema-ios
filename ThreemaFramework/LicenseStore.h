@@ -38,6 +38,11 @@
 
 - (void)performLicenseCheckWithCompletion:(void(^)(BOOL success))onCompletion;
 
+/*!
+ * @function performUpdateWorkInfo
+ * This function send the update if there is a valid license username and a valid threema id.
+ * If there was nothing changed and the last request was earlier then 24 hours, the request will not be send to the server.
+ */
 - (void)performUpdateWorkInfo;
 
 - (void)deleteLicense;

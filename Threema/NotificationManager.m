@@ -74,19 +74,24 @@
 }
 
 - (void)updateUnreadMessagesCount:(BOOL)unloadedMessage {
-    NSNumber *unread = [self unreadMessagesCount:unloadedMessage];
+    NSDictionary *unreadDict = [self unreadMessagesCount:unloadedMessage];
+    NSNumber *badgeCount = unreadDict[@"badgeCount"];
+    NSNumber *markedCount = unreadDict[@"markedCount"];
+    int totalCount = badgeCount.intValue + markedCount.intValue;
     
-    [[NSNotificationCenter defaultCenter] postNotificationName:@"ThreemaUnreadMessagesCountChanged" object:nil userInfo:[NSDictionary dictionaryWithObject:unread forKey:@"unread"]];
+    [[NSNotificationCenter defaultCenter] postNotificationName:@"ThreemaUnreadMessagesCountChanged" object:nil userInfo:[NSDictionary dictionaryWithObject:[NSNumber numberWithInt:totalCount] forKey:@"unread"]];
     
     dispatch_async(dispatch_get_main_queue(), ^{
-        [UIApplication sharedApplication].applicationIconBadgeNumber = [unread integerValue];
+        [UIApplication sharedApplication].applicationIconBadgeNumber = totalCount;
     });
 }
 
-- (NSNumber *)unreadMessagesCount:(BOOL)unloadedMessage {
+- (NSDictionary *)unreadMessagesCount:(BOOL)unloadedMessage {
     EntityManager *entityManager = [[EntityManager alloc] init];
     NSArray *conversations = [entityManager.entityFetcher allConversations];
     int unread = 0;
+    int markedConversations = 0;
+    
     if (unloadedMessage)
         unread++;
     
@@ -95,11 +100,14 @@
         if (count > 0) {
             unread += [conversation.unreadMessageCount intValue];
         }
+        else if (count == -1) {
+            markedConversations += 1;
+        }
     }
     
     NSString *badgeValue = nil;
-    if (unread > 0)
-        badgeValue = [NSString stringWithFormat:@"%d", unread];
+    if (unread + markedConversations > 0)
+        badgeValue = [NSString stringWithFormat:@"%d", unread + markedConversations];
     
     __block UITabBarController *mainTabBar;
     if ([NSThread isMainThread]) {
@@ -118,7 +126,7 @@
         });
     }
     
-    return [NSNumber numberWithInt:unread];
+    return @{@"badgeCount": [NSNumber numberWithInt:unread], @"markedCount": [NSNumber numberWithInt:markedConversations]};
 }
 
 - (void)handleVoIPPush:(NSDictionary *)payload withCompletionHandler:(void (^)(void))completion {

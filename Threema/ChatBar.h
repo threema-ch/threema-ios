@@ -30,7 +30,8 @@
 - (void)chatBar:(ChatBar*)chatBar didChangeHeight:(CGFloat)height;
 - (void)chatBar:(ChatBar*)chatBar didSendText:(NSString*)text;
 - (void)chatBar:(ChatBar*)chatBar didSendImageData:(NSData*)image;
-- (void)chatBar:(ChatBar*)chatBar didSendGIF:(NSData*)gifData fallbackImage:(UIImage*)image;
+- (void)chatBar:(ChatBar *)chatBar didPasteImageData:(NSData *)image;
+- (void)chatBar:(ChatBar*)chatBar didPasteItems:(NSArray*)items;
 - (void)chatBarWillStartTyping:(ChatBar*)chatBar;
 - (void)chatBarDidStopTyping:(ChatBar*)chatBar;
 

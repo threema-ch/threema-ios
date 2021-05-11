@@ -21,6 +21,8 @@
 import Foundation
 import ZipArchive
 import MBProgressHUD
+import CocoaLumberjackSwift
+import ThreemaFramework
 
 class ConversationExporter: NSObject, PasswordCallback {
     
@@ -148,7 +150,7 @@ extension ConversationExporter {
     }
     
     private func conversationTextFilename() -> String {
-        return self.filenamePrefix() + ".txt"
+        return "messages.txt"
     }
     
     /// Deletes all files created for this specific export
@@ -294,7 +296,7 @@ extension ConversationExporter {
             po.completedUnitCount += 1
             hud.label.text = String(format: NSLocalizedString("export_progress_label", comment: ""), po.completedUnitCount, po.totalUnitCount)
             if #available(iOS 13.0, *) {
-                hud.label.font = UIFont.monospacedSystemFont(ofSize: hud.label.font.pointSize, weight: .semibold)
+                hud.label.font = UIFont.monospacedDigitSystemFont(ofSize: hud.label.font.pointSize, weight: .semibold)
             }
         })
     }
@@ -321,8 +323,7 @@ extension ConversationExporter {
     }
     
     private func addMessage(message : BaseMessage) -> Bool {
-        log.append(ConversationExporter.getMessageFrom(baseMessage: message))
-        
+        log.append(getMessageFrom(baseMessage: message))
         if self.withMedia, message is BlobData, ((message as! BlobData).blobGet()) != nil {
             let storageNecessary = Int64((message as! BlobData).blobGet()!.count)
             if !enoughFreeStorage(toStore: storageNecessary) {
@@ -406,15 +407,15 @@ extension ConversationExporter {
         return (true, totalStorageNecessary)
     }
     
-    private static func getMessageFrom(baseMessage: BaseMessage) -> String {
+    private func getMessageFrom(baseMessage: BaseMessage) -> String {
         var log = ""
         if baseMessage.isOwn.boolValue {
             log.append(">>> ")
         } else {
             log.append("<<< ")
-            if baseMessage.sender != nil {
+            if let sender = baseMessage.sender {
                 log.append("(")
-                log.append(baseMessage.sender.displayName)
+                log.append(sender.displayName)
                 log.append(") ")
             }
         }
@@ -422,6 +423,24 @@ extension ConversationExporter {
         let date = DateFormatter.longStyleDateTime(baseMessage.remoteSentDate)
         log.append(date)
         log.append(": ")
+        
+        if let textMessage = baseMessage as? TextMessage, let quoteId = textMessage.quotedMessageId, let quoteMessage = entityManager.entityFetcher.message(withId: quoteId, conversation: baseMessage.conversation) {
+            log.append("[")
+            if let displayName = quoteMessage.sender?.displayName {
+                log.append("\(displayName): ")
+            }
+            else if let isOwn = quoteMessage.isOwn, !isOwn.boolValue, let displayName = quoteMessage.conversation.contact.displayName {
+                log.append("\(displayName): ")
+            }
+            else {
+                log.append("\(BundleUtil.localizedString(forKey: "me")): ")
+            }
+            if let previewText = quoteMessage.previewText() {
+                log.append("\"\(previewText)\"] ")
+            } else {
+                log.append("] ")
+            }
+        }
         
         if baseMessage.logText() != nil {
             log.append(baseMessage.logText())
@@ -515,7 +534,7 @@ extension ConversationExporter {
     func cancelProgressHud() {
         self.removeCurrentHUD()
         MBProgressHUD.showAdded(to: self.viewController!.view, animated: true)
-        MBProgressHUD(view: self.viewController!.view).label.text = NSLocalizedString("cancelling_export", comment: "")
+        MBProgressHUD.forView(self.viewController!.view)?.label.text = NSLocalizedString("cancelling_export", comment: "")
     }
     
     func initProgress(totalWork: Int64) {

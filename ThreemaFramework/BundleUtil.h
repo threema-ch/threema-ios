@@ -22,20 +22,24 @@
 
 @interface BundleUtil : NSObject
 
-+ (NSBundle *)frameworkBundle;
++ (nullable NSBundle *)frameworkBundle;
 
-+ (NSBundle *)mainBundle;
++ (nullable NSBundle *)mainBundle;
 
-+ (id)objectForInfoDictionaryKey:(NSString *)key;
++ (nullable id)objectForInfoDictionaryKey:(nonnull NSString *)key;
 
-+ (NSString *)pathForResource:(NSString *)resource ofType:(NSString *)type;
++ (nullable NSString *)pathForResource:(nullable NSString *)resource ofType:(nullable NSString *)type;
 
-+ (NSURL *)URLForResource:(NSString *)resourceName withExtension:(NSString *)extension;
++ (nullable NSURL *)URLForResource:(nullable NSString *)resourceName withExtension:(nullable NSString *)extension;
 
-+ (UIImage *)imageNamed:(NSString *)imageName;
++ (nullable UIImage *)imageNamed:(nullable NSString *)imageName;
 
-+ (NSString *)localizedStringForKey:(NSString *)key;
++ (nonnull NSString *)localizedStringForKey:(nullable NSString *)key;
 
-+ (UIView *)loadXibNamed:(NSString *)name;
++ (nullable UIView *)loadXibNamed:(nullable NSString *)name;
+
++ (nonnull NSString *)threemaAppGroupIdentifier;
+
++ (nonnull NSString *)threemaAppIdentifier;
 
 @end

@@ -452,6 +452,7 @@ import ThreemaFramework
             // Store identity in keychain
             self.serverApiConnector.update(MyIdentityStore.shared(), onCompletion: { () in
                 MyIdentityStore.shared().storeInKeychain()
+                MyIdentityStore.shared().pendingCreateID = true
                 
                 if let nickname = safeBackupData.user?.nickname {
                     MyIdentityStore.shared().pushFromName = nickname
@@ -520,7 +521,8 @@ import ThreemaFramework
                     self.restoreUserSettings(safeBackupData: safeBackupData)
                     self.restoreContactsAndGroups(identity: identity, safeBackupData: safeBackupData, completionHandler: completionHandler)
                 }
-                
+                LicenseStore.shared().performUpdateWorkInfo()
+                MyIdentityStore.shared().pendingCreateID = false
             }, onError: { (error) in
                 DDLogError("Safe restore error:update identity store failed")
                 completionHandler(SafeError.restoreFailed(message: BundleUtil.localizedString(forKey: "safe_no_backup_found")))

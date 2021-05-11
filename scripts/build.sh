@@ -90,9 +90,9 @@ if [[ "$dependencies_arg" = 1 ]] || [[ "$dependencies_force_arg" = 1 ]]; then
   
   # Build carthage dependencies
   if [[ "$dependencies_force_arg" = 1 ]]; then
-    "$project_dir/scripts/carthage.sh" bootstrap --platform iOS --no-use-binaries --project-directory "$project_dir"
+    "$project_dir/scripts/carthage.sh" bootstrap --platform iOS --no-use-binaries --project-directory "$project_dir" --derived-data "DerivedData/"
   else
-    "$project_dir/scripts/carthage.sh" bootstrap --platform iOS --no-use-binaries --cache-builds --project-directory "$project_dir"
+    "$project_dir/scripts/carthage.sh" bootstrap --platform iOS --no-use-binaries --cache-builds --project-directory "$project_dir" --derived-data "$project_dir/DerivedData/"
   fi
 
   # Delete or reset download directories
@@ -121,6 +121,7 @@ if [[ "$dependencies_arg" = 1 ]] || [[ "$dependencies_force_arg" = 1 ]]; then
     curl "$download_url" -o "$download_dir/$1.zip"
     unzip -q "$download_dir/$1.zip" -d "$download_dir"
     rm "$download_dir/$1.zip"
+    touch "$download_dir/$2-$3"
   }
 
   # $1: Local directory
@@ -128,12 +129,12 @@ if [[ "$dependencies_arg" = 1 ]] || [[ "$dependencies_force_arg" = 1 ]]; then
   # $3: Dependency version on oss
   check() {
     if [[ -d "$project_dir/$1" ]]; then
-      if [[ "$dependencies_force_arg" = 1 ]]; then
+      if [[ "$dependencies_force_arg" = 1 || ! -f "$project_dir/$1/$2-$3" ]]; then
         rm -R "$project_dir/$1"
       fi
     fi
 
-    if [[ -d "$project_dir/$1" ]]; then
+    if [[ -d "$project_dir/$1" && -f "$project_dir/$1/$2-$3" ]]; then
       echo "Cache found for $1"
     else
       download $1 $2 $3
@@ -141,11 +142,11 @@ if [[ "$dependencies_arg" = 1 ]] || [[ "$dependencies_force_arg" = 1 ]]; then
   }
   
   reset "WebRTC"
-  check "WebRTC-debug" "webrtc" "84.1.1"
-  check "WebRTC-release" "webrtc" "84.1.1"
+  check "WebRTC-debug" "webrtc" "91.0.0"
+  check "WebRTC-release" "webrtc" "91.0.0"
 
   reset "SaltyRTC"
-  check "SaltyRTC" "saltyrtc" "0.2.0"
+  check "SaltyRTC" "saltyrtc" "0.2.1"
 fi
 
 if [[ "$generate_protobuf_arg" = 1 ]]; then

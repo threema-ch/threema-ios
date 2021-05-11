@@ -73,7 +73,7 @@ class VoIPIceServerSource {
                 expirationDate: expirationDate
             )
             completion(.success(makeIceServers(dualStack: dualStack, turnServerInfo: cachedTurnServers!)))
-        } onError: { (e: Error?) in
+        } onError: { (e: Error?) -> Void in
             completion(.failure(e!))
         }
     }

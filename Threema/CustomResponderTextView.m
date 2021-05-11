@@ -35,21 +35,41 @@
 }
 
 - (BOOL)canPerformAction:(SEL)action withSender:(id)sender {
-    if (overrideNextResponder != nil)
+    if (overrideNextResponder != nil) {
         return NO;
-    else {
-        if (action == @selector(paste:) && pasteImageHandler != nil && [UIPasteboard generalPasteboard].image != nil)
+    } else {
+        if (action == @selector(paste:) && pasteImageHandler != nil && !([UIPasteboard generalPasteboard].hasStrings || [UIPasteboard generalPasteboard].hasURLs)) {
+            if ([UIPasteboard generalPasteboard].hasImages) {
+                return YES;
+            }
+            
+            if (@available(iOS 11.0, *)) {
+                return YES;
+            }
+            return NO;
+        } else if (action == @selector(scanQrCode:)) {
             return YES;
-        else if (action == @selector(scanQrCode:))
-            return YES;
-        else
+            
+        } else {
             return [super canPerformAction:action withSender:sender];
+        }
     }
 }
 
 - (void)paste:(id)sender {
-    if (pasteImageHandler != nil && [UIPasteboard generalPasteboard].image != nil) {
-        [pasteImageHandler handlePasteImage];
+    bool hasTextOrURL = [UIPasteboard generalPasteboard].hasStrings || [UIPasteboard generalPasteboard].hasURLs;
+    bool hasImages = [UIPasteboard generalPasteboard].hasImages;
+    if (pasteImageHandler != nil && (hasImages || !hasTextOrURL)) {
+        if (@available(iOS 11.0, *)) {
+            if ([UIPasteboard generalPasteboard].numberOfItems > 0) {
+                [pasteImageHandler handlePasteItem];
+            }
+        } else {
+            // Fallback on earlier versions
+            if ([UIPasteboard generalPasteboard].image != nil) {
+                [pasteImageHandler handlePasteItem];
+            }
+        }
     } else {
         [super paste:sender];
     }

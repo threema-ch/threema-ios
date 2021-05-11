@@ -49,3 +49,7 @@
 
 "ballot_open_ballots" = "Otevřená hlasování";
 "ballot_closed_ballots" = "Uzavřená hlasování";
+
+"voteCancelTitle" = "Zahodit hlasování";
+"voteCancelMessage" = "Pokud před odesláním hlasu odejdete, bude zahozen.";
+"discardVoteTitle" = "Vyřadit";

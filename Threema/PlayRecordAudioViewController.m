@@ -89,10 +89,12 @@
         [_audioView setStopped];
         
         AVAudioSessionRouteDescription *currentRoute = [AVAudioSession sharedInstance].currentRoute;
-        if ([currentRoute.outputs[0].portType isEqualToString:@"Speaker"] || [currentRoute.outputs[0].portType isEqualToString:@"Receiver"]) {
-            [self registerForNotifications];
-            if (![UserSettings sharedUserSettings].disableProximityMonitoring) {
-                [[UIDevice currentDevice] setProximityMonitoringEnabled: YES];
+        if (currentRoute.outputs.count > 0) {
+            if ([currentRoute.outputs[0].portType isEqualToString:@"Speaker"] || [currentRoute.outputs[0].portType isEqualToString:@"Receiver"]) {
+                [self registerForNotifications];
+                if (![UserSettings sharedUserSettings].disableProximityMonitoring) {
+                    [[UIDevice currentDevice] setProximityMonitoringEnabled: YES];
+                }
             }
         }
     }
@@ -418,7 +420,6 @@
             [self setupAudioPlayer: url];
             [_audioView setFinishedRecording];
         }
-
     });
 }
 
@@ -437,11 +438,13 @@
         [self setupAudioPlayer: _audioFile];
         [self pause];
         AVAudioSessionRouteDescription *currentRoute = [AVAudioSession sharedInstance].currentRoute;
-        if ([currentRoute.outputs[0].portType isEqualToString:@"Speaker"]) {
-            [self setupAudioSessionWithSpeaker:true];
-        }
-        else if ([currentRoute.outputs[0].portType isEqualToString:@"Receiver"]) {
-            [self setupAudioSessionWithSpeaker:false];
+        if (currentRoute.outputs.count > 0) {
+            if ([currentRoute.outputs[0].portType isEqualToString:@"Speaker"]) {
+                [self setupAudioSessionWithSpeaker:true];
+            }
+            else if ([currentRoute.outputs[0].portType isEqualToString:@"Receiver"]) {
+                [self setupAudioSessionWithSpeaker:false];
+            }
         }
         
         if (_hideOnFinishPlayback) {
@@ -478,20 +481,26 @@
 
 - (void)proximityStateChanged:(NSNotification *)notification {
     AVAudioSessionRouteDescription *currentRoute = [AVAudioSession sharedInstance].currentRoute;
-    if (_player.isPlaying && ([currentRoute.outputs[0].portType isEqualToString:@"Speaker"] || [currentRoute.outputs[0].portType isEqualToString:@"Receiver"])) {
-        [self adaptToProximityState];
+    if (currentRoute.outputs.count > 0) {
+        if (_player.isPlaying && ([currentRoute.outputs[0].portType isEqualToString:@"Speaker"] || [currentRoute.outputs[0].portType isEqualToString:@"Receiver"])) {
+            [self adaptToProximityState];
+        }
     }
 }
 
 - (void)adaptToProximityState {
     AVAudioSessionRouteDescription *currentRoute = [AVAudioSession sharedInstance].currentRoute;
-    if ([currentRoute.outputs[0].portType isEqualToString:@"Speaker"] || [currentRoute.outputs[0].portType isEqualToString:@"Receiver"]) {
-        if ([UIDevice currentDevice].proximityState) {
-            // close to ear
-            [self setupAudioSessionWithSpeaker:false];
+    if (currentRoute.outputs.count > 0) {
+        if ([currentRoute.outputs[0].portType isEqualToString:@"Speaker"] || [currentRoute.outputs[0].portType isEqualToString:@"Receiver"]) {
+            if ([UIDevice currentDevice].proximityState) {
+                // close to ear
+                [self setupAudioSessionWithSpeaker:false];
+            } else {
+                // speaker
+                [self setupAudioSessionWithSpeaker:true];
+            }
         } else {
-            // speaker
-            [self setupAudioSessionWithSpeaker:true];
+            [self setupAudioSessionWithSpeaker:false];
         }
     } else {
         [self setupAudioSessionWithSpeaker:false];

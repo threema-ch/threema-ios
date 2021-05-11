@@ -323,6 +323,12 @@
 "leave" = "Leave";
 "you are not a member" = "Me (removed)";
 "groups" = "Groups";
+"create_new_group" = "Create new group";
+"create_note_group_info_title" = "Hint";
+"create_note_group_info_text" = "If you don't add any group members, messages to this group will stay local. That's ideal to securely store notes, media, and documents or to transfer items to the desktop.";
+"doNotShowAgain" = "Don't Show Again";
+"add_note_group_info" = "*You're alone inhere*\nUse this chat as a secure notebook for text, media, and documents.";
+"end_note_group_info" = "*You're no longer alone in this chat*\nNew messages will be sent to all group members.";
 
 "choose_recipient" = "Choose Recipient";
 
@@ -411,7 +417,7 @@
 "no_contacts_syncoff" = "You don't have any contacts yet. Turn on synchronization (Settings > Privacy), or add contacts manually using the + button.";
 "no_contacts_permission_message" = "Threema does not have permission to access your contacts. Please go to your device's privacy settings and enable contacts access for Threema.";
 
-"contact_added_to_profilepicture_list" = "This contact will receive your profile picture when you write him.";
+"contact_added_to_profilepicture_list" = "This contact will receive your profile picture when you write them.";
 "contact_removed_from_profilepicture_list" = "This contact will no longer receive your profile.";
 "contact_send_profilepicture_success" = "Your profile picture has been successfully sent to the contact.";
 "contact_send_profilepicture_error" = "Your profile picture could not be sent. Please try again later.";
@@ -657,7 +663,7 @@
 "call_microphone_permission_title" = "Microphone Access Denied";
 "call_microphone_permission_text" = "You must allow microphone access in Settings";
 "call_contact_alert" = "Do you want to call %@?";
-"call_contact_not_reachable" = "Unable to reach contact..";
+"call_contact_not_reachable" = "Unable to reach contact...";
 
 "call_status_idle" = "Ready";
 "call_status_wait_ringing" = "Initialize";
@@ -937,7 +943,7 @@
 
 // File message
 "optional_caption" = "Optional caption";
-"send_as_file" = "Send as file";
+"send_as_file" = "Send as Original";
 
 // Notification settings
 "settings_notifications_inapp_section" = "In App";
@@ -996,14 +1002,15 @@ If there are no (media) files missing in Threema, empty the trash bin to permane
 // Media Preview
 "loading_video_failed" = "Could not load the video. Please restart the app and try again.";
 "loading_image" = "Loading Image";
+"load_error" = "Could not load item due to an unknown error.";
 "loading_video" = "Loading Video";
 "selected_media_list" = "List of selected Media";
 "media_item_of" = "Media item %@ of %@";
 "video_date" = "Video taken on %@";
 "imagedate_date" = "Photo taken on %@";
-"send_as_file_description" = "Send the images as file or as inline photo. Files will retain all metadata such as location data and will be displayed with a smaller thumbnail.";
+"send_as_file_description" = "Send file without any changes to the original file. Files will retain all metadata, e.g., location data of photos.";
 "more_options" = "More Options";
-"add_caption_to_image" = "Add caption...";
+"add_caption_to_image" = "Add a Caption";
 "add_more_images" = "Add more images";
 "back_to_media_selection" = "Back to the media selection screen";
 "remove_current_image_from_selected_images" = "Remove current item from selection";
@@ -1014,9 +1021,23 @@ If there are no (media) files missing in Threema, empty the trash bin to permane
 "could_not_add_all_items_title" = "Could Not Add All Items";
 "one_media_item_could_not_be_processed" = "One item could not be processed and was skipped.";
 "multiple_media_items_could_not_be_processed" = "%d items could not be processed and were skipped.";
-"processing_items_progress" = "Processing item %d/%d";
+"processing_items_progress" = "Processing Item %d/%d";
 "item_too_large_title" = "Item Is Too Large";
 "maximum_file_size_exceeded" = "The maximum allowed file size is %@. This file is %@. Remove the file to continue.";
 "back" = "Back";
 "sending_item" = "Sending item";
 "send_as_file_title" = "Send Mode";
+"document" = "Document";
+"paste_create_file_failure_title" = "Pasting Failed";
+"paste_create_file_failure_message" = "Could not paste the file, please try again.";
+"loading_files_takes_time_title" = "Loading Media";
+"loading_files_takes_time_description" = "Converting videos can take a few minutes.";
+"pasteErrorMessageTitle" = "Could not paste";
+"pasteErrorMessageMessage" = "Item could not be pasted because of an unknown error. Please try again.";
+
+// Share Extension
+"finished_sending_title" = "Sending completed";
+"preview_button_accessibility_title" = "Show preview of document";
+"unknown_file_type" = "Unknown file type";
+"unknown_file_size" = "Unknown file size";
+"unknown_file_name" = "Unkown file name";

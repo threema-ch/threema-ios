@@ -27,10 +27,10 @@ class VoIPCallSender: NSObject {
         do {
             msg.jsonData = try offer.jsonData()
             msg.toIdentity = offer.contact!.identity
-            DDLogNotice("Threema call: send offer to \(offer.contact!.identity ?? "?") with callId \(offer.callId.callId)")
+            DDLogNotice("VoipCallService: [cid=\(offer.callId.callId)]: Call offer enqueued to \(offer.contact!.identity ?? "?")")
             MessageQueue.shared()?.enqueue(msg)
         } catch let error {
-            DDLogError("Threema call: Can't send offer message to \(offer.contact!.identity ?? "?") with callId \(offer.callId.callId)) -> \(error.localizedDescription)")
+            DDLogError("VoipCallService: [cid=\(offer.callId.callId)]: Can't send offer message to \(offer.contact!.identity ?? "?") -> \(error.localizedDescription)")
         }
     }
     
@@ -39,11 +39,11 @@ class VoIPCallSender: NSObject {
         do {
             msg.jsonData = try answer.jsonData()
             msg.toIdentity = answer.contact!.identity
-            DDLogNotice("Threema call: send answer to \(answer.contact!.identity ?? "?") with callId \(answer.callId.callId)")
+            DDLogNotice("VoipCallService: [cid=\(answer.callId.callId)]: Call answer enqueued to \(answer.contact!.identity ?? "?")")
             MessageQueue.shared()?.enqueue(msg)
         }
         catch let error {
-            DDLogError("Threema call: Can't send answer message to \(answer.contact!.identity ?? "?") with callId \(answer.callId.callId)) -> \(error.localizedDescription)")
+            DDLogError("VoipCallService: [cid=\(answer.callId.callId)]: Can't send answer message to \(answer.contact!.identity ?? "?") -> \(error.localizedDescription)")
         }
     }
 
@@ -52,11 +52,14 @@ class VoIPCallSender: NSObject {
         do {
             msg.jsonData = try iceCandidates.jsonData()
             msg.toIdentity = iceCandidates.contact!.identity
-            DDLogNotice("Threema call: send iceCandidates to \(iceCandidates.contact!.identity ?? "?") with callId \(iceCandidates.callId.callId)")
+            DDLogNotice("VoipCallService: [cid=\(iceCandidates.callId.callId)]: Call ICE candidate message enqueued to \(iceCandidates.contact?.identity ?? "?") (\(iceCandidates.candidates.count) candidates")
+            for candidate in iceCandidates.candidates {
+                DDLogNotice("VoipCallService: [cid=\(iceCandidates.callId.callId)]: Outgoing ICE candidate: \(candidate.sdp)")
+            }
             MessageQueue.shared()?.enqueue(msg)
         }
         catch let error {
-            DDLogError("Threema call: Can't send ice candidates message \(iceCandidates.contact!.identity ?? "?") with callId \(iceCandidates.callId.callId)) -> \(error.localizedDescription)")
+            DDLogError("VoipCallService: [cid=\(iceCandidates.callId.callId)]: Can't send ice candidates message \(iceCandidates.contact!.identity ?? "?") -> \(error.localizedDescription)")
         }
     }
     
@@ -65,7 +68,7 @@ class VoIPCallSender: NSObject {
         do {
             msg.jsonData = try hangupMessage.jsonData()
             msg.toIdentity = hangupMessage.contact.identity
-            DDLogNotice("Threema call: send hangup to \(hangupMessage.contact.identity ?? "?") with callId \(hangupMessage.callId.callId)")
+            DDLogNotice("VoipCallService: [cid=\(hangupMessage.callId.callId)]: Call hangup message enqueued to \(hangupMessage.contact.identity ?? "?")")
             if wait == true {
                 MessageQueue.shared()?.enqueueWait(msg)
             } else {
@@ -73,7 +76,7 @@ class VoIPCallSender: NSObject {
             }
         }
         catch let error {
-            DDLogError("Threema call: Can't send hangup message to \(hangupMessage.contact.identity ?? "?") with callId \(hangupMessage.callId.callId)) -> \(error.localizedDescription)")
+            DDLogError("VoipCallService: [cid=\(hangupMessage.callId.callId)]: Can't send hangup message to \(hangupMessage.contact.identity ?? "?") -> \(error.localizedDescription)")
         }
     }
     
@@ -82,11 +85,11 @@ class VoIPCallSender: NSObject {
         do {
             msg.jsonData = try ringingMessage.jsonData()
             msg.toIdentity = ringingMessage.contact.identity
-            DDLogNotice("Threema call: send ringing to \(ringingMessage.contact.identity ?? "?") with callId \(ringingMessage.callId.callId)")
+            DDLogNotice("VoipCallService: [cid=\(ringingMessage.callId.callId)]: Call ringing message enqueued to \(ringingMessage.contact.identity ?? "?")")
             MessageQueue.shared()?.enqueue(msg)
         }
         catch let error {
-            DDLogError("Threema call: Can't send ringing message to \(ringingMessage.contact.identity ?? "?") with callId \(ringingMessage.callId.callId)) -> \(error.localizedDescription)")
+            DDLogError("VoipCallService: [cid=\(ringingMessage.callId.callId)]: Can't send call ringing message to \(ringingMessage.contact.identity ?? "?") -> \(error.localizedDescription)")
         }
     }
 }

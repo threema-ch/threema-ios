@@ -96,9 +96,17 @@ static CGFloat quoteIconSpacing = 8.0;
     
     quoteBar.frame = CGRectMake(0, 0, quoteBarWidth, self.frame.size.height);
     if (!quoteImage.hidden) {
-        quoteLabel.frame = CGRectMake(quoteBarWidth + quoteTextSpacing, 0, self.frame.size.width - quoteBarWidth - quoteTextSpacing - _buttonWidthHint - quoteImageSize - quoteImageSpacing, self.frame.size.height);
-        quoteImage.frame = CGRectMake(quoteLabel.frame.origin.x + quoteLabel.frame.size.width + quoteImageSpacing, quoteBarSpacing, quoteImageSize, quoteImageSize);
-        cancelButton.frame = CGRectMake(1 + quoteImage.frame.origin.x + quoteImage.frame.size.width + (_buttonWidthHint - cancelButtonSize) / 2, (self.frame.size.height - cancelButtonSize) / 2, cancelButtonSize, cancelButtonSize);
+        if (quoteLabel.textAlignment == NSTextAlignmentRight) {
+            quoteImage.frame = CGRectMake(quoteBarWidth + quoteTextSpacing, quoteBarSpacing, quoteImageSize, quoteImageSize);
+            quoteLabel.frame = CGRectMake(quoteImage.frame.origin.x + quoteImageSize + quoteImageSpacing, 0, self.frame.size.width - quoteBarWidth - quoteTextSpacing - _buttonWidthHint - quoteImageSize - quoteImageSpacing, self.frame.size.height);
+            cancelButton.frame = CGRectMake(1 + quoteLabel.frame.origin.x + quoteLabel.frame.size.width + (_buttonWidthHint - cancelButtonSize) / 2, (self.frame.size.height - cancelButtonSize) / 2, cancelButtonSize, cancelButtonSize);
+
+        } else {
+            quoteLabel.frame = CGRectMake(quoteBarWidth + quoteTextSpacing, 0, self.frame.size.width - quoteBarWidth - quoteTextSpacing - _buttonWidthHint - quoteImageSize - quoteImageSpacing, self.frame.size.height);
+            quoteImage.frame = CGRectMake(quoteLabel.frame.origin.x + quoteLabel.frame.size.width + quoteImageSpacing, quoteBarSpacing, quoteImageSize, quoteImageSize);
+            cancelButton.frame = CGRectMake(1 + quoteImage.frame.origin.x + quoteImage.frame.size.width + (_buttonWidthHint - cancelButtonSize) / 2, (self.frame.size.height - cancelButtonSize) / 2, cancelButtonSize, cancelButtonSize);
+
+        }
     } else {
         if (!quoteIcon.hidden) {
             quoteLabel.frame = CGRectMake(quoteBarWidth + quoteTextSpacing + [quoteLabel.font pointSize] + quoteIconSpacing, 0, self.frame.size.width - quoteBarWidth - quoteTextSpacing - _buttonWidthHint - [quoteLabel.font pointSize] - quoteIconSpacing, self.frame.size.height);
@@ -149,6 +157,8 @@ static CGFloat quoteIconSpacing = 8.0;
     quotedText = newQuotedText;
     quotedContact = newQuotedContact;
     
+    quoteLabel.textAlignment = [newQuotedText textAlignment];
+    
     quoteLabel.attributedText = [self makeQuoteAttributedString];
     quoteImage.hidden = true;
     quoteIcon.hidden = true;
@@ -159,6 +169,8 @@ static CGFloat quoteIconSpacing = 8.0;
     _quotedMessage = quotedMessage;
     
     quotedText = _quotedMessage.quotePreviewText;
+    
+    quoteLabel.textAlignment = [quotedText textAlignment];
     
     Contact *sender;
     if (_quotedMessage.isOwn.boolValue) {

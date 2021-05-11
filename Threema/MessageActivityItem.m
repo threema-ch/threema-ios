@@ -56,7 +56,7 @@
     return self;
 }
 
-- (NSURL *)dataUrl {
+- (NSURL *)getNewDataURL {
     if ([_message isKindOfClass:[AudioMessage class]]) {
         return [self audioUrl];
     } else if ([_message isKindOfClass:[ImageMessage class]]) {
@@ -88,9 +88,12 @@
     return [[self tmpShareDirUrl] URLByAppendingPathExtension: MEDIA_EXTENSION_VIDEO];
 }
 
-- (void)exportDataToUrl {
+- (NSURL *)exportData {
+    if (_url == nil) {
+        _url = [self getNewDataURL];
+    }
     if (_didExportData) {
-        return;
+        return _url;
     }
     
     _didExportData = YES;
@@ -113,13 +116,10 @@
         FileMessage *fileMessage = (FileMessage *)self.message;
         [fileMessage exportDataToURL:_url];
     }
+    return _url;
 }
 
 - (NSURL *)getURL {
-    if (_url == nil) {
-        _url = [self dataUrl];
-    }
-    
     return _url;
 }
 
@@ -129,23 +129,20 @@
     if ([_message isKindOfClass:[TextMessage class]]) {
         return ((TextMessage *)_message).text;
     }
-
-    if (_url) {
-        [self exportDataToUrl];
-        
-        if ([_message isKindOfClass:[FileMessage class]] && [activityType isEqualToString:@"ch.threema.iapp.forwardMsg"]) {
-            NSNumber *type = ((FileMessage *)_message).type;
-            if (type == nil) {
-                type = @0;
-            }
-            return @{@"url": _url, @"renderType": type};
-        } else {
-            return _url;
+    NSURL *exportURL = [self exportData];
+    
+    if ([_message isKindOfClass:[FileMessage class]] && [activityType isEqualToString:@"ch.threema.iapp.forwardMsg"]) {
+        NSNumber *type = ((FileMessage *)_message).type;
+        if (type == nil) {
+            type = @0;
         }
+        return @{@"url": exportURL, @"renderType": type};
+    } else {
+        return exportURL;
     }
 
     // unsupported message type
-    DDLogInfo(@"MessageActivityItem: unsupported message type");
+    DDLogError(@"MessageActivityItem: unsupported message type");
     return nil;
 }
 
@@ -153,16 +150,11 @@
     if ([_message isKindOfClass:[TextMessage class]]) {
         return ((TextMessage *)_message).text;
     }
-    
     // don't try to return thumbnail image, it won't work
-    
-    _url = [self dataUrl];
 
     // some activities only appear in menu if file is exported at this point in time
     // that's ok since files will be deleted after activity controller finishes (ActivityUtil)
-    [self exportDataToUrl];
-    
-    return _url;
+    return [self exportData];
 }
 
 - (NSString *)activityViewController:(UIActivityViewController *)activityViewController dataTypeIdentifierForActivityType:(NSString *)activityType {

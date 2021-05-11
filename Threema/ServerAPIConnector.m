@@ -567,12 +567,12 @@
     }
     
     NSMutableDictionary *request = [@{
-                              @"identity": identityStore.identity,
-                              @"licenseUsername": licenseUsername,
-                              @"licensePassword": licensePassword,
-                              @"publicNickname": (identityStore.pushFromName != nil ? identityStore.pushFromName : identityStore.identity),
-                              @"version": [Utils getClientVersion]
-                              } mutableCopy];
+        @"identity": identityStore.identity,
+        @"licenseUsername": licenseUsername,
+        @"licensePassword": licensePassword,
+        @"publicNickname": (identityStore.pushFromName != nil ? identityStore.pushFromName : identityStore.identity),
+        @"version": [Utils getClientVersion]
+    } mutableCopy];
     
     if (identityStore.firstName != nil)
         request[@"firstName"] = identityStore.firstName;
@@ -582,7 +582,7 @@
         request[@"csi"] = identityStore.csi;
     if (identityStore.category != nil)
         request[@"category"] = identityStore.category;
-    
+        
     if ([request isEqualToDictionary:identityStore.lastWorkUpdateRequest] && ![identityStore sendUpdateWorkInfoStatus]) {
         // request hasn't changed since last update and it's the same date
         onCompletion(false);

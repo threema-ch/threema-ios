@@ -109,12 +109,12 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 - (NSString *)tableView:(UITableView *)tableView titleForFooterInSection:(NSInteger)section {
     if (section == 1) {
         if ([UserSettings sharedUserSettings].disableProximityMonitoring) {
-            return NSLocalizedString(@"proximity_monitoring_off", nil);
+            return [BundleUtil localizedStringForKey:@"proximity_monitoring_off"];
         } else {
-            return NSLocalizedString(@"proximity_monitoring_on", nil);
+            return [BundleUtil localizedStringForKey:@"proximity_monitoring_on"];
         }
     } else if (section == 2) {
-        return NSLocalizedString(@"validation_logging_expl", nil);
+        return [BundleUtil localizedStringForKey:@"validation_logging_expl"];
     }
     
     return nil;
@@ -141,18 +141,18 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
             }
             [self presentViewController:activityViewController animated:YES completion:nil];
         } else {
-            [UIAlertTemplate showAlertWithOwner:self title:@"" message:NSLocalizedString(@"log_empty_message", nil) actionOk:nil];
+            [UIAlertTemplate showAlertWithOwner:self title:@"" message:[BundleUtil localizedStringForKey:@"log_empty_message"] actionOk:nil];
         }
     } else if (indexPath.section == 2 && indexPath.row == 3) {
         /* clear log */
         UIAlertController *actionSheet = [UIAlertController alertControllerWithTitle:nil message:nil preferredStyle:UIAlertControllerStyleActionSheet];
-        [actionSheet addAction:[UIAlertAction actionWithTitle:NSLocalizedString(@"validation_log_clear", nil) style:UIAlertActionStyleDestructive handler:^(UIAlertAction * action) {
+        [actionSheet addAction:[UIAlertAction actionWithTitle:[BundleUtil localizedStringForKey:@"validation_log_clear"] style:UIAlertActionStyleDestructive handler:^(UIAlertAction * action) {
             
             [LogManager deleteLogFile:[LogManager debugLogFile]];
             
             [self updateLogSize];
         }]];
-        [actionSheet addAction:[UIAlertAction actionWithTitle:NSLocalizedString(@"cancel", nil) style:UIAlertActionStyleCancel handler:nil]];
+        [actionSheet addAction:[UIAlertAction actionWithTitle:[BundleUtil localizedStringForKey:@"cancel"] style:UIAlertActionStyleCancel handler:nil]];
         
         if (!self.tabBarController) {
             CGRect cellRect = [tableView rectForRowAtIndexPath:indexPath];

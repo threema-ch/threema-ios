@@ -28,8 +28,28 @@
 }
 
 + (NSBundle *)mainBundle {
-    return [NSBundle mainBundle];
+    NSBundle *bundle = [NSBundle mainBundle];
+    NSURL *url;
+    while (![[bundle.bundleURL pathExtension] isEqualToString:@"app"]) {
+        url = [bundle.bundleURL URLByDeletingLastPathComponent];
+        if (!url) {
+            return nil;
+        }
+        bundle = [NSBundle bundleWithURL:url];
+    }
+    return bundle;
 }
+
++ (NSString *)threemaAppGroupIdentifier {
+    NSAssert([[BundleUtil mainBundle] objectForInfoDictionaryKey:@"ThreemaAppGroupIdentifier"] != nil, @"Bundle ThreemaAppGroupIdentifier not set");
+    return [[BundleUtil mainBundle] objectForInfoDictionaryKey:@"ThreemaAppGroupIdentifier"];
+}
+
++ (NSString *)threemaAppIdentifier {
+    NSAssert([[BundleUtil mainBundle] objectForInfoDictionaryKey:@"ThreemaAppIdentifier"] != nil, @"Bundle ThreemaAppIdentifier not set");
+    return [[BundleUtil mainBundle] objectForInfoDictionaryKey:@"ThreemaAppIdentifier"];
+}
+
 
 + (id)objectForInfoDictionaryKey:(NSString *)key {
     id value = [[self frameworkBundle] objectForInfoDictionaryKey:key];
@@ -76,6 +96,12 @@
     if (image) {
         return image;
     }
+    
+    image = [UIImage imageNamed:imageName inBundle:[self mainBundle] compatibleWithTraitCollection:nil];
+    
+    if (image) {
+        return image;
+    }
 
     image = [UIImage imageNamed:imageName];
 
@@ -95,6 +121,8 @@
     NSString *value = [[self frameworkBundle] localizedStringForKey:key value:nil table:nil];
     
     if (value && [value isEqualToString:key] == NO) {
+        return value;
+    } else if ((value = [[self mainBundle] localizedStringForKey:key value:nil table:nil]) && ([value isEqual:key] == NO)) {
         return value;
     } else {
         return NSLocalizedString(key, nil);

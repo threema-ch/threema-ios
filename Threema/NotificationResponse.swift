@@ -100,6 +100,7 @@ import Foundation
                 self.handleCallMessage()
             }
             else {
+                AppDelegate.shared().handleRemoteNotification(self.userInfo, receivedWhileRunning: AppDelegate.shared().active, notification: nil)
                 self.finishResponse()
             }
         }

@@ -49,6 +49,28 @@
 #import <ThreemaFramework/SSLCAHelper.h>
 
 
+#import <ThreemaFramework/ContactGroupPickerViewController.h>
+#import <ThreemaFramework/LicenseStore.h>
+#import <ThreemaFramework/KKPasscodeLock.h>
+#import <ThreemaFramework/TouchIdAuthentication.h>
+#import <ThreemaFramework/ServerConnector.h>
+#import <ThreemaFramework/MessageQueue.h>
+#import <ThreemaFramework/Utils.h>
+#import <ThreemaFramework/BundleUtil.h>
+#import <ThreemaFramework/Colors.h>
+#import <ThreemaFramework/EntityManager.h>
+#import <ThreemaFramework/TextMessage.h>
+#import <ThreemaFramework/FileMessageSender.h>
+#import <ThreemaFramework/MessageSender.h>
+#import <ThreemaFramework/TextStyleUtils.h>
+#import <ThreemaFramework/UIImage+ColoredImage.h>
+#import <ThreemaFramework/BrandingUtils.h>
+
+#import <ThreemaFramework/JKLLockScreenViewController.h>
+
+#import <ThreemaFramework/FLAnimatedImage.h>
+#import <ThreemaFramework/FLAnimatedImageView.h>
+
 //! Project version number for ThreemaFramework.
 FOUNDATION_EXPORT double ThreemaFrameworkVersionNumber;
 

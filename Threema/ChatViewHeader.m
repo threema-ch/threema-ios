@@ -563,10 +563,18 @@
     NSArray *imageMessages = [_entityManager.entityFetcher imageMessagesForConversation: _conversation];
     NSArray *videoMessages = [_entityManager.entityFetcher videoMessagesForConversation: _conversation];
     NSArray *fileMessages = [_entityManager.entityFetcher fileMessagesForConversation: _conversation];
+    NSMutableArray *filteredFileMessages = [NSMutableArray new];
 
     NSMutableArray *allMediaMessages = [NSMutableArray arrayWithArray:imageMessages];
     [allMediaMessages addObjectsFromArray:videoMessages];
-    [allMediaMessages addObjectsFromArray:fileMessages];
+    
+    // remove sticker, gif and audio file messages
+    for (FileMessage *fileMessage in fileMessages) {
+        if (!fileMessage.renderFileAudioMessage && !fileMessage.renderStickerFileMessage && !fileMessage.renderFileGifMessage) {
+            [filteredFileMessages addObject:fileMessage];
+        }
+    }
+    [allMediaMessages addObjectsFromArray:filteredFileMessages];
 
     _mediaMessages = [allMediaMessages sortedArrayWithOptions:0 usingComparator:^NSComparisonResult(BaseMessage *msg1, BaseMessage *msg2) {
         return [msg1.date compare:msg2.date];

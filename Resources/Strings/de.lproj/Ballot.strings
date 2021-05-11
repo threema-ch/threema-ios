@@ -49,3 +49,7 @@
 
 "ballot_open_ballots" = "Offene Umfragen";
 "ballot_closed_ballots" = "Abgeschlossene Umfragen";
+
+"voteCancelTitle" = "Stimme Verwerfen";
+"voteCancelMessage" = "Ihre Stimme wird verworfen und nicht versendet. Wählen Sie «Abstimmen», um Ihre Stimme abzugeben.";
+"discardVoteTitle" = "Verwerfen";

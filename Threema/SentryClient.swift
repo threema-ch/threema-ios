@@ -105,7 +105,7 @@ import Sentry
     }
     
     private func redact(exceptionDescription : String) -> String {
-        let keys = ["encryptionKey", "k:", "password", "blobId", "blobThumbnailId", "\"k\""]
+        let keys = ["encryptionKey", "k:", "password", "blobId", "blobThumbnailId", "\"k\"", "\\\"k\\\"", "json", "text"]
         
         var linesArray = exceptionDescription.linesArray
 

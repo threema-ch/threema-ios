@@ -114,7 +114,7 @@
 #pragma mark - MWPhoto Protocol Methods
 
 -(BOOL)showControls {
-    return YES;
+    return !([_fileMessage renderFileImageMessage]);
 }
 
 -(void)handleSingleTap:(CGPoint)touchPoint {

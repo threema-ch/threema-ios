@@ -668,21 +668,33 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 
 #pragma mark - Paste image handler
 
-- (void)handlePasteImage {
-    if ([UIPasteboard generalPasteboard].image == nil)
-        return;
-    
-    // Check if there is also an (animated) GIF on the pasteboard; if so, send it as a file to preserve the animation
-    NSData *gifData = [[UIPasteboard generalPasteboard] dataForPasteboardType:(__bridge NSString *)kUTTypeGIF];
-    if (gifData != nil) {
-        [delegate chatBar:self didSendGIF:gifData fallbackImage:[UIPasteboard generalPasteboard].image];
-    } else {
-        NSData *imageData = [[UIPasteboard generalPasteboard] dataForPasteboardType:(__bridge NSString *)kUTTypeImage];
-        if (imageData != nil) {
-            [delegate chatBar:self didSendImageData:imageData];
+- (void)handlePasteItem {
+    // Allow pasting all items in iOS 11 or newer because we can reuse the item handling from the share extension
+    if (@available(iOS 11.0, *)) {
+        // Handle memoji separately and send them immediately
+        NSString *memojiMimeType = @"com.apple.png-sticker";
+        bool memoji = [[UIPasteboard generalPasteboard] containsPasteboardTypes:@[memojiMimeType]] && [UIPasteboard generalPasteboard].numberOfItems == 1;
+        if (!memoji) {
+            if ([UIPasteboard generalPasteboard].itemProviders != nil) {
+                [delegate chatBar:self didPasteItems:[UIPasteboard generalPasteboard].itemProviders];
+                return;
+            }
         } else {
-            [delegate chatBar:self didSendImageData:UIImageJPEGRepresentation([UIPasteboard generalPasteboard].image, 1.0)];
+            NSData *imageData = [[UIPasteboard generalPasteboard] dataForPasteboardType:(__bridge NSString *)kUTTypeImage];
+            [delegate chatBar:self didSendImageData:imageData];
+            return;
         }
+    }
+    // Handle pasted images on older versions or if no itemProvider was available
+    [self handlePastedImage];
+}
+
+- (void)handlePastedImage {
+    NSData *imageData = [[UIPasteboard generalPasteboard] dataForPasteboardType:(__bridge NSString *)kUTTypeImage];
+    if (imageData != nil) {
+        [delegate chatBar:self didPasteImageData:imageData];
+    } else {
+        [delegate chatBar:self didPasteImageData:UIImageJPEGRepresentation([UIPasteboard generalPasteboard].image, 1.0)];
     }
 }
 

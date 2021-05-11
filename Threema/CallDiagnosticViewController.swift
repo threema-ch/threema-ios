@@ -35,6 +35,8 @@ class CallDiagnosticViewController: UIViewController, RTCPeerConnectionDelegate 
     var factory: RTCPeerConnectionFactory = RTCPeerConnectionFactory()
     var isDiagnosticRunning: Bool = false
     
+    internal let webrtcLogger = RTCCallbackLogger()
+    
     internal var kCANDIDATE_ATTRIBUTE: NSRegularExpression?
     internal var kSP: String = "\\s"
     internal var kICE_CHAR: String = "[a-zA-Z\\d\\+\\/]"
@@ -96,6 +98,8 @@ class CallDiagnosticViewController: UIViewController, RTCPeerConnectionDelegate 
                 self.connection?.close()
                 self.connection = nil
             }
+            
+            self.webrtcLogger.stop()
         }
     }
     
@@ -152,6 +156,11 @@ class CallDiagnosticViewController: UIViewController, RTCPeerConnectionDelegate 
         isDiagnosticRunning = true
         diagnosticTextView.text = ""
         
+        webrtcLogger.severity = .info
+        webrtcLogger.start { (message) in
+            DDLogNotice("libwebrtc: \(message)")
+        }
+        
         let ipv6 = UserSettings.shared().enableIPv6 ? "IPv6 enabled" : "IPv6 disabled"
         let relay = UserSettings.shared().alwaysRelayCalls ? "Always relay enabled" : "Always relay disabled"
         printStatus("Start diagnostic (\(ipv6), \(relay))")
@@ -163,7 +172,7 @@ class CallDiagnosticViewController: UIViewController, RTCPeerConnectionDelegate 
                 printStatus("Cannot obtain TURN servers: \(result)")
                 return
             }
-            
+                        
             connection = factory.peerConnection(with: configuration, constraints: constraints, delegate: self)
             let localStream = createLocalMediaStreamWithFactory(factory: factory)
             connection?.add(localStream)
@@ -333,6 +342,7 @@ class CallDiagnosticViewController: UIViewController, RTCPeerConnectionDelegate 
         }
         
         diagnosticTextView.text = diagnosticString + status
+        DDLogNotice("webrtcdiagnostics: \(status)")
     }
     
     

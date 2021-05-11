@@ -49,3 +49,7 @@
 
 "ballot_open_ballots" = "Aktif ve Açık Anketler";
 "ballot_closed_ballots" = "Kapalı Anketler";
+
+"voteCancelTitle" = "Oyu Sil";
+"voteCancelMessage" = "Oyunuzu vermeden önce ayrılırsanız, oyunuz iptal edilecektir.";
+"discardVoteTitle" = "At";

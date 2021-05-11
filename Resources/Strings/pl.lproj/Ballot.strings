@@ -24,8 +24,8 @@
 "ballot_feature_level_warning_message" = "Niektórzy uczestnicy mają wersję aplikacji, która nie obsługuje ankiet: %@";
 "ballot_feature_level_error_message" = "Żaden z uczestników nie ma wersji aplikacji obsługującej ankiety: %@";
 
-"ballot_add_choice" = "Dodaj wybór";
-"ballot_create" = "Utwórz ankietę";
+"ballot_add_choice" = "Dodaj Wybór";
+"ballot_create" = "Utwórz Ankietę";
 "ballot_placeholder_title" = "Tytuł, np. Gdzie chcesz dzisiaj iść?";
 "ballot_placeholder_choice" = "Wybór";
 "ballot_date_button" = "Data";
@@ -41,7 +41,7 @@
 "ballot_votes_count" = "%@ głosów";
 "ballot_vote_selected" = "Wybrane";
 "ballot_vote_not_selected" = "Nie wybrane";
-"ballot_close" = "Zamknij ankietę";
+"ballot_close" = "Zamknij Ankietę";
 "ballot_close_ack" = "Czy chcesz zamknąć tę ankietę i udostępnić wyniki?";
 "ballot_got_votes_count" = "Otrzymano %1$i z %2$i głosów.";
 "ballot_vote_ballot_closed_title" = "Niestety, za późno";
@@ -49,3 +49,7 @@
 
 "ballot_open_ballots" = "Otwarte ankiety";
 "ballot_closed_ballots" = "Zamknięte ankiety";
+
+"voteCancelTitle" = "Odrzuć głos";
+"voteCancelMessage" = "Jeśli wyjdziesz przed oddaniem głosu, zostanie on odrzucony.";
+"discardVoteTitle" = "Odrzuć";

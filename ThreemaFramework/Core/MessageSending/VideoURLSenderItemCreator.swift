@@ -29,7 +29,7 @@ enum VideoURLSenderItemCreatorError : Error {
 }
 
 @objc protocol VideoConversionProgressDelegate {
-    func videoExportSession(exportSession : SDAVAssetExportSession)
+    @objc func videoExportSession(exportSession : SDAVAssetExportSession)
 }
 
 @objc public class VideoURLSenderItemCreator: NSObject {
@@ -37,6 +37,7 @@ enum VideoURLSenderItemCreatorError : Error {
     @objc public static let temporaryDirectory = "tmpVideoCreator"
     
     @objc var encodeProgressDelegate : VideoConversionProgressDelegate?
+    @objc var exportSession : SDAVAssetExportSession?
     
     func getThumbnail(asset : AVAsset) -> Promise<UIImage>  {
         return Promise { seal in
@@ -48,17 +49,24 @@ enum VideoURLSenderItemCreatorError : Error {
         }
     }
     
+    deinit {
+        exportSession?.removeObserver(self, forKeyPath: "progress")
+    }
+    
     func getExportSession(asset : AVAsset) -> Promise<SDAVAssetExportSession> {
         return Promise { seal in
             guard let outputURL = MediaConverter.getAssetOutputURL() else {
+                DDLogError("Could not get outputURL")
                 seal.reject(VideoURLSenderItemCreatorError.couldNotCreateExportSession)
                 return
             }
             guard let exportSession = MediaConverter.getAVAssetExportSession(from: asset, outputURL: outputURL) else {
+                DDLogError("Could not get exportSession for asset \(asset.debugDescription)")
                 seal.reject(VideoURLSenderItemCreatorError.couldNotCreateExportSession)
                 return
             }
-            //            exportSession.addObserver(self, forKeyPath: "progress", options: .new, context: nil)
+            exportSession.addObserver(self, forKeyPath: "progress", options: .new, context: nil)
+            self.exportSession = exportSession
             
             seal.fulfill(exportSession)
         }
@@ -68,31 +76,27 @@ enum VideoURLSenderItemCreatorError : Error {
                                       of object: Any?,
                                       change: [NSKeyValueChangeKey : Any]?,
                                       context: UnsafeMutableRawPointer?) {
-        super.observeValue(forKeyPath: keyPath, of: object, change: change, context: context)
-        
         if let exportSession = object as? SDAVAssetExportSession {
             self.encodeProgressDelegate?.videoExportSession(exportSession: exportSession)
         }
     }
     
     @objc public func getExportSession(for asset : AVAsset) -> SDAVAssetExportSession? {
-        var exportSession : SDAVAssetExportSession?
+        var newExportSession : SDAVAssetExportSession?
         let sema = DispatchSemaphore(value: 0)
         
         DispatchQueue.global(qos: .userInitiated).async {
             self.getExportSession(asset: asset).done { session in
-                exportSession = session
+                newExportSession = session
                 sema.signal()
             }.catch { error in
                 sema.signal()
                 DDLogError("Encountered an error: \(error)")
             }
-            
         }
         sema.wait()
-        return exportSession
+        return newExportSession
     }
-    
     
     func convertVideo(asset : AVAsset) -> Promise<URL> {
         getExportSession(asset: asset).then { exportSession in
@@ -101,6 +105,7 @@ enum VideoURLSenderItemCreatorError : Error {
     }
     
     func convertVideo(on exportSession : SDAVAssetExportSession, asset : AVAsset) -> Promise<URL> {
+        self.exportSession = exportSession
         return Promise { seal in
             MediaConverter.convertVideoAsset(asset, with: exportSession, onCompletion: { completionURL in
                 guard let url = completionURL else {
@@ -168,10 +173,11 @@ enum VideoURLSenderItemCreatorError : Error {
         
         firstly {
             self.convertVideo(on: exportSession, asset: asset)
-        }.then { url in
-            self.senderItem(from: asset)
-        }.done { item in
-            senderItem = item
+        }.done { (url : URL) in
+            senderItem = URLSenderItem(url: url,
+                                       type: kUTTypeMPEG4 as String,
+                                       renderType: 1,
+                                       sendAsFile: true)
             sema.signal()
         }.catch { error in
             sema.signal()
@@ -213,7 +219,9 @@ enum VideoURLSenderItemCreatorError : Error {
         let tmpDirectory = fileManager.temporaryDirectory
         let tmpFolder = tmpDirectory.appendingPathComponent(VideoURLSenderItemCreator.temporaryDirectory)
         do {
-            try fileManager.removeItem(at: tmpFolder)
+            if fileManager.fileExists(atPath: tmpFolder.absoluteString) {
+                try fileManager.removeItem(at: tmpFolder)
+            }
         } catch {
             DDLogError("Could not clean temporary directory \(error)")
             return false

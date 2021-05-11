@@ -247,6 +247,12 @@
             else if ([iconName isEqualToString:@"call"]) {
                 self.statusIcon.image = [UIImage imageNamed:@"ThreemaPhone" inColor:color];
             }
+            else if ([iconName isEqualToString:@"thumb_up"]) {
+                self.statusIcon.image = [[UIImage imageNamed:@"hand.thumbsup.fill_regular.S" inColor:color] imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal];
+            }
+            else if ([iconName isEqualToString:@"thumb_down"]) {
+                self.statusIcon.image = [[UIImage imageNamed:@"hand.thumbsdown.fill_regular.S" inColor:color] imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal];
+            }
             else {
                 self.statusIcon.image = [UIImage imageNamed:[NSString stringWithFormat:@"MessageStatus_%@", iconName] inColor:color];
             }
@@ -273,6 +279,8 @@
         if (conversation.groupId == nil) {
             self.statusIcon.hidden = YES;
         }
+        
+        _draftLabel.textAlignment = [draftMessage textAlignment];
     } else {
         self.dateLabel.hidden = NO;
         self.draftLabel.hidden = YES;
@@ -310,6 +318,7 @@
         }
         
         self.messagePreviewLabel.attributedText = [TextStyleUtils makeMentionsAttributedStringForAttributedString:formattedAttributeString textFont:self.messagePreviewLabel.font atColor:[[Colors fontLight] colorWithAlphaComponent:0.6] messageInfo:TextStyleUtilsMessageInfoOverview application:[UIApplication sharedApplication]];
+        self.messagePreviewLabel.textAlignment = [editedString textAlignment];
     }
     
     
@@ -400,7 +409,8 @@
 }
 
 - (void)updateBadgeView {
-    if (conversation.unreadMessageCount.intValue > 0) {
+    int badgeCount = conversation.unreadMessageCount.intValue;
+    if (badgeCount > 0) {
         self.badgeView.alignment = NSTextAlignmentCenter;
         self.badgeView.font = [UIFont systemFontOfSize:13];
         self.badgeView.shadowOffset = CGSizeMake(1,1);
@@ -408,8 +418,17 @@
         self.badgeView.alpha = 1.0;
         self.badgeView.hidden = NO;
     } else {
-        self.badgeView.alpha = 0.0;
-        self.badgeView.hidden = YES;
+        if (badgeCount == -1) {
+            self.badgeView.alignment = NSTextAlignmentCenter;
+            self.badgeView.font = [UIFont systemFontOfSize:13];
+            self.badgeView.shadowOffset = CGSizeMake(1,1);
+            self.badgeView.value = 0;
+            self.badgeView.alpha = 1.0;
+            self.badgeView.hidden = NO;
+        } else {
+            self.badgeView.alpha = 0.0;
+            self.badgeView.hidden = YES;
+        }
     }
 }
 

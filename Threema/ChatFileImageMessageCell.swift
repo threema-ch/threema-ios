@@ -121,8 +121,12 @@ extension ChatFileImageMessageCell {
         super.layoutSubviews()
         
         _imageView?.frame = CGRect.init(x: msgBackground.frame.origin.x + imageInsets.left, y: msgBackground.frame.origin.y + imageInsets.top, width: size.width, height: size.height)
-        _captionLabel!.frame  = CGRect.init(x:ceil(msgBackground.frame.origin.x + (x/2)), y: ceil(_imageView!.frame.origin.y + _imageView!.frame.size.height), width: ceil(textSize.width), height: ceil(textSize.height))
-        
+        var originX = msgBackground.frame.origin.x + (x/2)
+        if _captionLabel?.textAlignment == .right {
+            originX = msgBackground.frame.origin.x + msgBackground.frame.size.width - (x/2) - textSize.width
+        }
+        _captionLabel!.frame = CGRect.init(x:ceil(originX), y: ceil(_imageView!.frame.origin.y + _imageView!.frame.size.height), width: ceil(textSize.width), height: ceil(textSize.height))
+
         let mask: CALayer = bubbleMaskWithoutArrow(forImageSize: CGSize.init(width: _imageView!.frame.size.width, height: _imageView!.frame.size.height))
         _imageView?.layer.mask = mask
         _imageView?.layer.masksToBounds = true
@@ -145,7 +149,7 @@ extension ChatFileImageMessageCell {
     
     override open func accessibilityLabelForContent() -> String! {
         if _captionLabel?.text != nil {
-            return "\(BundleUtil.localizedString(forKey: "image") ?? "Image"). \(_captionLabel!.text!))"
+            return "\(BundleUtil.localizedString(forKey: "image")). \(_captionLabel!.text!))"
         } else {
             return BundleUtil.localizedString(forKey: "image")
         }
@@ -254,7 +258,10 @@ extension ChatFileImageMessageCell {
     }
         
     open override func previewViewController() -> UIViewController! {
-        return chatVc.headerView.getPhotoBrowser(at: message, forPeeking: true)
+        if let fileMessage = message as? FileMessage, !fileMessage.renderStickerFileMessage() {
+            return chatVc.headerView.getPhotoBrowser(at: message, forPeeking: true)
+        }
+        return nil
     }
     
     open override func previewViewController(for previewingContext: UIViewControllerPreviewing!, viewControllerForLocation location: CGPoint) -> UIViewController! {
@@ -368,6 +375,7 @@ extension ChatFileImageMessageCell {
             let attributed = TextStyleUtils.makeAttributedString(from: captionText, with: _captionLabel!.font, textColor: Colors.fontNormal(), isOwn: true, application: UIApplication.shared)
             let formattedAttributeString = NSMutableAttributedString.init(attributedString: (_captionLabel!.applyMarkup(for: attributed))!)
             _captionLabel?.attributedText = TextStyleUtils.makeMentionsAttributedString(for: formattedAttributeString, textFont: _captionLabel!.font!, at: _captionLabel!.textColor.withAlphaComponent(0.4), messageInfo: Int32(message.isOwn!.intValue), application: UIApplication.shared)
+            _captionLabel?.textAlignment = captionText.textAlignment()
             _captionLabel?.isHidden = false
         }
         else {
@@ -383,14 +391,5 @@ extension ChatFileImageMessageCell {
         let fileMessage = message as! FileMessage
         let sender: FileMessageSender = FileMessageSender.init()
         sender.retryMessage(fileMessage)
-    }
-    
-    @objc func speakMessage(_ menuController: UIMenuController) {
-        if _captionLabel?.text != nil {
-            let speakText = "\(BundleUtil.localizedString(forKey: "image") ?? "Image"). \(_captionLabel!.text!)"
-            let utterance: AVSpeechUtterance = AVSpeechUtterance.init(string: speakText)
-            let syn = AVSpeechSynthesizer.init()
-            syn.speak(utterance)
-        }
     }
 }

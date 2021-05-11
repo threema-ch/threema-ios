@@ -423,9 +423,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     }
     
     [[ContactStore sharedContactStore] updateAllContactsToCNContact];
-    
-    [ConversationUtils resetUnreadMessageCount];
-    
+        
     [NotificationManager generatePushSettingForAllGroups];
     
     [TypingIndicatorManager sharedInstance];
@@ -803,13 +801,24 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     EnterLicenseViewController *viewController = [storyboard instantiateInitialViewController];
     dispatch_async(dispatch_get_main_queue(), ^{
         if ([self.window.rootViewController isKindOfClass:[viewController class]] == NO) {
-            viewController.delegate = self;
             
-            [[WCSessionManager shared] stopAndForgetAllSessions];
-            
-            [self.window.rootViewController presentViewController:viewController animated:NO completion:nil];
+            if ([AppDelegate isAlertViewShown]) {
+                [self.window.rootViewController dismissViewControllerAnimated:NO completion:^{
+                    [self presentEnterLicenseViewController:viewController];
+                }];
+            } else {
+                [self presentEnterLicenseViewController:viewController];
+            }
         }
     });
+}
+
+- (void)presentEnterLicenseViewController:(EnterLicenseViewController *)viewController {
+    viewController.delegate = self;
+    viewController.modalPresentationStyle = UIModalPresentationFullScreen;
+    [[WCSessionManager shared] stopAndForgetAllSessions];
+    
+    [self.window.rootViewController presentViewController:viewController animated:NO completion:nil];
 }
 
 - (void)showLockScreen {
@@ -1087,12 +1096,12 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
         [self presentPasscodeView];
         shouldLoadUI = false;
     }
-    else if ([[KKPasscodeLock sharedLock] isPasscodeRequired] && [[VoIPCallStateManager shared] currentCallState] != CallStateIncomingRinging && [[VoIPCallStateManager shared] currentCallState] != CallStateOutgoingRinging && [[VoIPCallStateManager shared] currentCallState] != CallStateInitalizing && [[VoIPCallStateManager shared] currentCallState] != CallStateCalling && [[VoIPCallStateManager shared] currentCallState] != CallStateReconnecting) {
+    else if ([[KKPasscodeLock sharedLock] isPasscodeRequired] && [[VoIPCallStateManager shared] currentCallState] != CallStateIncomingRinging && [[VoIPCallStateManager shared] currentCallState] != CallStateOutgoingRinging && [[VoIPCallStateManager shared] currentCallState] != CallStateInitializing && [[VoIPCallStateManager shared] currentCallState] != CallStateCalling && [[VoIPCallStateManager shared] currentCallState] != CallStateReconnecting) {
         [self presentPasscodeView];
         shouldLoadUI = false;
     }
     else {
-        if ([[KKPasscodeLock sharedLock] isPasscodeRequired] && ([[VoIPCallStateManager shared] currentCallState] == CallStateIncomingRinging || [[VoIPCallStateManager shared] currentCallState] == CallStateOutgoingRinging || [[VoIPCallStateManager shared] currentCallState] == CallStateInitalizing || [[VoIPCallStateManager shared] currentCallState] == CallStateCalling || [[VoIPCallStateManager shared] currentCallState] == CallStateReconnecting)) {
+        if ([[KKPasscodeLock sharedLock] isPasscodeRequired] && ([[VoIPCallStateManager shared] currentCallState] == CallStateIncomingRinging || [[VoIPCallStateManager shared] currentCallState] == CallStateOutgoingRinging || [[VoIPCallStateManager shared] currentCallState] == CallStateInitializing || [[VoIPCallStateManager shared] currentCallState] == CallStateCalling || [[VoIPCallStateManager shared] currentCallState] == CallStateReconnecting)) {
             if ([lastViewController.presentedViewController isKindOfClass:[CallViewController class]] || SYSTEM_IS_IPAD) {
                 [self.window.rootViewController dismissViewControllerAnimated:NO completion:nil];
                 [self presentApplicationUI];
@@ -1312,7 +1321,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 
             NSString *cmd = [threemaDict objectForKey:@"cmd"];
             if (cmd != nil) {
-                if ([cmd isEqualToString:@"newmsg"]) {
+                if ([cmd isEqualToString:@"newmsg"] || [cmd isEqualToString:@"missedcall"]) {
                     /* New message push - switch to appropriate conversation */
                     NSString *from = [threemaDict objectForKey:@"from"];
                     if (from != nil) {
@@ -1582,7 +1591,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 
 - (void)pushRegistry:(PKPushRegistry *)registry didUpdatePushCredentials:(PKPushCredentials *)credentials forType:(NSString *)type {
     if([credentials.token length] == 0) {
-        NSLog(@"voip token NULL");
+        DDLogNotice(@"Token is null");
         return;
     }
 

@@ -30,7 +30,7 @@ enum PhotosRights {
     case none
 }
 
-protocol PhotosRightsHelperProtocol {
+public protocol PhotosRightsHelperProtocol {
     func accessLevelDetermined() -> Bool
     func requestWriteAccess() -> Bool
     func requestReadAccess() -> Bool

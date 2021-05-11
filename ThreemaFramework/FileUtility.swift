@@ -124,32 +124,30 @@ import CocoaLumberjackSwift
     }
     
     @objc public static func getTemporarySendableFileName(base : String, directoryURL : URL, pathExtension : String? = nil) -> String {
-        let filename = base + "-" + DateFormatter.getNowDateString()
+        let filename = base + "-" + DateFormatter.getDateForWeb(Date())
         
         return FileUtility.getUniqueFilename(from: filename, directoryURL: directoryURL, pathExtension: pathExtension)
     }
     
     @objc public static func getUniqueFilename(from filename : String, directoryURL : URL, pathExtension : String? = nil) -> String {
-        var newFilename : String?
+        var newFilename = filename
         
         var fileURL = directoryURL.appendingPathComponent(filename)
-        if pathExtension != nil {
-            fileURL = fileURL.appendingPathExtension(pathExtension!)
+        if let pathExtension = pathExtension {
+            fileURL = fileURL.appendingPathExtension(pathExtension)
         }
         
         var i = 0
         while FileUtility.isExists(fileUrl: fileURL) {
             newFilename = filename.appending("-\(i)")
-            fileURL = directoryURL.appendingPathComponent(newFilename!)
+            fileURL = directoryURL.appendingPathComponent(newFilename)
             if let pathExtension = pathExtension {
                 fileURL = fileURL.appendingPathExtension(pathExtension)
             }
             i += 1
         }
-        if let newFilename = newFilename {
-            return newFilename
-        }
-        return filename
+        
+        return newFilename
     }
     
     @objc public static func getTemporarySendableFileName(base : String) -> String {

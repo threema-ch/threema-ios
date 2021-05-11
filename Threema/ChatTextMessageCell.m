@@ -40,7 +40,7 @@
 #import "Threema-Swift.h"
 #import "ChatCallMessageCell.h"
 #import "FileMessagePreview.h"
-
+#import "ThreemaFramework.h"
 
 static NSDictionary *linkAttributes = nil;
 static NSDictionary *activeLinkAttributes = nil;
@@ -276,24 +276,46 @@ static ColorTheme currentTheme;
     [super layoutSubviews];
     
     CGFloat x;
+    CGFloat xLeftAligned;
     if (self.message.isOwn.boolValue) {
-        x = self.contentView.frame.size.width-bubbleSize.width-21.0f-sideMargin;
+        xLeftAligned = self.contentView.frame.size.width-bubbleSize.width-21.0f-sideMargin;
+        if (textLabel.textAlignment == NSTextAlignmentRight) {
+            x = xLeftAligned + (bubbleSize.width - textSize.width + sideMargin);
+        } else {
+            x = xLeftAligned;
+        }
     } else {
-        x = 20.0f + self.contentLeftOffset;
+        xLeftAligned = 20.0f + self.contentLeftOffset;
+        if (textLabel.textAlignment == NSTextAlignmentRight) {
+            x = xLeftAligned + (bubbleSize.width - textSize.width + sideMargin);
+        } else {
+            x = xLeftAligned;
+        }
+        
     }
     
     CGFloat y = 7.0f;
     
     if (quoteLabel != nil && quoteLabel.hidden == NO) {
         if (quoteIcon.hidden == false) {
-            quoteLabel.frame = CGRectMake(x + quoteBarWidth + quoteBarSpacing + [quoteLabel.font pointSize] + quoteIconSpacing, y, quoteSize.width, quoteSize.height);
-            quoteIcon.frame = CGRectMake(x + quoteBarWidth + quoteBarSpacing, y + (quoteLabel.frame.size.height / 2) - ([quoteLabel.font pointSize] / 2), [quoteLabel.font pointSize], [quoteLabel.font pointSize]);
+            quoteLabel.frame = CGRectMake(xLeftAligned + quoteBarWidth + quoteBarSpacing + [quoteLabel.font pointSize] + quoteIconSpacing, y, quoteSize.width, quoteSize.height);
+            quoteIcon.frame = CGRectMake(xLeftAligned + quoteBarWidth + quoteBarSpacing, y + (quoteLabel.frame.size.height / 2) - ([quoteLabel.font pointSize] / 2), [quoteLabel.font pointSize], [quoteLabel.font pointSize]);
         } else {
-             quoteLabel.frame = CGRectMake(x + quoteBarWidth + quoteBarSpacing, y, quoteSize.width, quoteSize.height);
+            if (quoteLabel.textAlignment == NSTextAlignmentRight) {
+                quoteLabel.frame = CGRectMake(xLeftAligned + bubbleSize.width + sideMargin - quoteSize.width, y, quoteSize.width, quoteSize.height);
+            } else {
+                quoteLabel.frame = CGRectMake(xLeftAligned + quoteBarWidth + quoteBarSpacing, y, quoteSize.width, quoteSize.height);
+            }
         }
         
-        quoteBar.frame = CGRectMake(x, y, quoteBarWidth, quoteSize.height);
-        quoteImagePreview.frame = CGRectMake(quoteLabel.frame.origin.x + quoteLabel.frame.size.width + quoteImageSpacing, quoteBarSpacing, quoteImageSize, quoteImageSize);
+        if (quoteLabel.textAlignment == NSTextAlignmentRight) {
+            quoteBar.frame = CGRectMake(xLeftAligned, y, quoteBarWidth, quoteSize.height);
+            quoteImagePreview.frame = CGRectMake(xLeftAligned + quoteBarWidth + quoteImageSpacing, quoteBarSpacing, quoteImageSize, quoteImageSize);
+        } else {
+            quoteBar.frame = CGRectMake(xLeftAligned, y, quoteBarWidth, quoteSize.height);
+            quoteImagePreview.frame = CGRectMake(quoteLabel.frame.origin.x + quoteLabel.frame.size.width + quoteImageSpacing, quoteBarSpacing, quoteImageSize, quoteImageSize);
+        }
+        
         y += quoteLabel.frame.size.height;
         y += quoteTextSpacing;
     }
@@ -326,7 +348,7 @@ static ColorTheme currentTheme;
         textLabel.font = [ChatMessageCell emojiFont];
         textLabel.attributedText = [[NSAttributedString alloc] initWithString:origText attributes:@{NSFontAttributeName: [ChatMessageCell emojiFont]}];
     } else {
-        
+        textLabel.textAlignment = [origText textAlignment];
         textLabel.font = [ChatMessageCell textFont];
         
         NSAttributedString *attributed = [TextStyleUtils makeAttributedStringFromString:origText withFont:textLabel.font textColor:[Colors fontNormal] isOwn:self.message.isOwn.boolValue application:[UIApplication sharedApplication]];
@@ -375,6 +397,8 @@ static ColorTheme currentTheme;
         [self.contentView addSubview:quoteIcon];
     }
     
+    quotedMessage = nil;
+    
     if (textMessage.quotedMessageId != nil) {
         BaseMessage *quoteMessage = [entityManager.entityFetcher messageWithId:textMessage.quotedMessageId conversation:textMessage.conversation];
                 
@@ -393,7 +417,6 @@ static ColorTheme currentTheme;
             }
             quotedText = quoteMessage.quotePreviewText;
         } else {
-            quotedMessage = nil;
             origQuotedIdentity = @"";
             quotedText = [BundleUtil localizedStringForKey:@"quote_not_found"];
             origQuotedText = nil;
@@ -408,6 +431,8 @@ static ColorTheme currentTheme;
             [trimmedString appendAttributedString:ellipses];
             quoteLabel.attributedText = trimmedString;
         }
+        
+        quoteLabel.textAlignment = [quotedText textAlignment];
         
         quoteLabel.hidden = NO;
         quoteBar.hidden = NO;
@@ -473,6 +498,8 @@ static ColorTheme currentTheme;
         origQuotedText = quotedText;
         origText = remainingBody;
         origQuotedIdentity = quotedIdentity;
+        
+        quoteLabel.textAlignment = [origQuotedText textAlignment];
         
         quoteBar.backgroundColor = [Colors quoteBar];
                 
@@ -543,9 +570,10 @@ static ColorTheme currentTheme;
 }
 
 - (void)speakMessage:(UIMenuController *)menuController {
+    [super speakMessage:menuController];
+    
     AVSpeechUtterance *utterance = [AVSpeechUtterance speechUtteranceWithString:origText];
-    AVSpeechSynthesizer *syn = [[AVSpeechSynthesizer alloc] init];
-    [syn speakUtterance:utterance];
+    [self.chatVc.speechSynthesizer speakUtterance:utterance];
 }
 
 - (NSString *)textForQuote {

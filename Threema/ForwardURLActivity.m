@@ -85,7 +85,7 @@
 - (UIViewController *)activityViewController {
     ModalNavigationController *navigationController = [ContactGroupPickerViewController pickerFromStoryboardWithDelegate:self];
     ContactGroupPickerViewController *picker = (ContactGroupPickerViewController *)navigationController.topViewController;
-    picker.enableMulitSelection = true;
+    picker.enableMultiSelection = true;
     picker.enableTextInput = true;
     picker.submitOnSelect = false;
     picker.renderType = _renderType;

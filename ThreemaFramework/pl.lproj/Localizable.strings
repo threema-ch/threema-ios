@@ -53,11 +53,11 @@
 "video_too_long_message" = "Wideo jest zbyt długie, by go wysłać. Maksymalna dozwolona długość wynosi %.0f minut.";
 
 /* KKPasscodeLock */
-"On" = "Wł";
+"On" = "Wł.";
 "Off" = "Wył.";
-"all_data_deleted_title" = "Wszystkie Dane Usunięte";
+"all_data_deleted_title" = "Wszystkie Dane Usunięto";
 "all_data_deleted_message" = "Zbyt wiele razy wprowadzono niepoprawny kod dostępu. Wszystkie dane w tej aplikacji zostały usunięte.";
-"to_unlock_passcode" = "Aby odblokować Threema";    // Touch ID
+"to_unlock_passcode" = "Do odblokowania Threema";    // Touch ID
 
 /* Notifications Text */
 "new_message" = "Wiadomość";
@@ -73,3 +73,4 @@
 "new_ballot_closed_message" = "Ankieta: Wynik dostępny";
 "new_file_message" = "Plik: %@";
 
+"mediapreview_options" = "Opcje";

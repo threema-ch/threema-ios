@@ -123,9 +123,9 @@ import CocoaLumberjackSwift
             
             if ImageURLSenderItemCreator.isPNGSticker(image: scaledImage, uti: uti) {
                 renderType = 2
-                imageData = scaledImage.pngData()
+                imageData = MediaConverter.pngRepresentation(for: scaledImage)
             } else {
-                guard let convJpgData = scaledImage.jpegData(compressionQuality: CGFloat(kJPEGCompressionQuality)) else {
+                guard let convJpgData = MediaConverter.jpegRepresentation(for: scaledImage) else {
                     return nil
                 }
                 imageData = convJpgData
@@ -165,7 +165,7 @@ import CocoaLumberjackSwift
                 guard let image = UIImage(data: data) else {
                     return nil
                 }
-                guard let imageData = image.jpegData(compressionQuality: 1.0) else {
+                guard let imageData = MediaConverter.jpegRepresentation(for: image) else {
                     return nil
                 }
                 data = imageData
@@ -199,7 +199,7 @@ import CocoaLumberjackSwift
             return nil
         }
         
-        let data = image.jpegData(compressionQuality: 1.0)!
+        let data = MediaConverter.jpegRepresentation(for: image)!
         let type = kUTTypeJPEG as String
         let renderType : NSNumber = 1
         

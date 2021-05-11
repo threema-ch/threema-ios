@@ -28,4 +28,5 @@
     #import <CocoaLumberjack/CocoaLumberjack.h>
     #import "LogLevelCustom.h"
     #import "Colors.h"
+    #import <ThreemaFramework/ThreemaFramework-Swift.h>
 #endif

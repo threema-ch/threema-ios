@@ -1,0 +1,55 @@
+/* 
+  Ballot.strings
+  Threema
+
+  Copyright (c) 2014 Threema GmbH. All rights reserved.
+*/
+
+/* Ballot */
+"ballot" = "投票";
+"ballots" = "投票";
+"ballot_results" = "投票結果";
+"ballot_validation_error_title" = "投票の設定が無効です";
+"ballot_validation_not_enough_choices" = "2つ以上の選択肢を作成してください。";
+"ballot_validation_title_missing" = "投票のタイトルを入力してください。";
+
+"ballot_options" = "投票オプション";
+"ballot_intermediate_results" = "中間結果";
+"ballot_show_intermediate_results" = "中間結果を表示";
+"ballot_multiple_choice" = "複数選択可";
+"ballot_clone" = "投票を複製する";
+"ballot_clone_warning_title" = "注意";
+"ballot_clone_warning_message" = "すでに入力されたデータは上書きされます。";
+"ballot_feature_level_warning_title" = "注意してください";
+"ballot_feature_level_warning_message" = "参加者の中には、投票に対応したThreemaのバージョンをまだ持っていない人もいます: %@";
+"ballot_feature_level_error_message" = "どの参加者も、投票に対応したThreemaのバージョンではありません: %@";
+
+"ballot_add_choice" = "選択肢を追加";
+"ballot_create" = "投票を作成";
+"ballot_placeholder_title" = "タイトル, 例: どこにご飯食べに行きますか？";
+"ballot_placeholder_choice" = "選択肢";
+"ballot_date_button" = "日付";
+"ballot_allDay_switch" = "終日";
+
+"ballot_choose_title" = "投票を選択";
+"ballot_closed_cell_title" = "投票結果";
+"ballot_new_cell_title" = "新しい投票";
+"ballot_description_intermediate" = "投票の中間結果を参加者全員に表示するかどうかを選択します。そうしない場合、投票が終了した後にしか結果が表示されません。";
+"ballot_description_multiplechoice" = "参加者が1つ、または複数の選択肢を選べるかどうかを決める。";
+
+"ballot_vote" = "投票";
+"ballot_votes_count" = "%@ 票";
+"ballot_vote_selected" = "選択されました";
+"ballot_vote_not_selected" = "選択されていません";
+"ballot_close" = "投票を終了";
+"ballot_close_ack" = "この投票を終了して、結果を公開しますか？";
+"ballot_got_votes_count" = "%2$i 票のうち、%1$i 票を獲得しました。";
+"ballot_vote_ballot_closed_title" = "残念ながら終了してしまいました";
+"ballot_vote_ballot_closed_message" = "投票は終了しました。";
+
+"ballot_open_ballots" = "受付中の投票";
+"ballot_closed_ballots" = "終了した投票";
+
+"voteCancelTitle" = "票を放棄";
+"voteCancelMessage" = "投票前に退出された場合は放棄されます。";
+"discardVoteTitle" = "放棄";

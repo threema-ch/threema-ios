@@ -50,8 +50,12 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     _licenseUsernameTextField.layer.cornerRadius = 3;
     _licensePasswordTextField.layer.cornerRadius = 3;
    
-    _feedbackView.textColor = [UIColor whiteColor];
-    _feedbackView.numberOfLines = 5;
+    _feedbackLabel.textColor = [UIColor whiteColor];
+    _feedbackLabel.numberOfLines = 5;
+    
+    _feedbackImageView.hidden = true;
+    _feedbackLabel.hidden = true;
+    _activityIndicatorView.hidden = true;
     
     _descriptionLabel.text = [BundleUtil localizedStringForKey:@"enter_license_description"];
     [_confirmButton setTitle:[BundleUtil localizedStringForKey:@"next"] forState:UIControlStateNormal];
@@ -93,6 +97,11 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     [_confirmButton setTitleColor:[Colors fontNormal] forState:UIControlStateNormal];
     _licenseUsernameTextField.tintColor = [Colors mainThemeDark];
     _licensePasswordTextField.tintColor = [Colors mainThemeDark];
+    
+    // use other spacing for small screens
+    if (self.view.frame.size.height < 500.0) {
+        _stackView.spacing = 25.0;
+    }
 }
 
 - (void)dealloc {
@@ -106,9 +115,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         if (_licenseStore.errorMessage && ![_licenseStore.errorMessage isEqualToString:@"License username/password too short"]) {
             [_licenseUsernameTextField resignFirstResponder];
             [_licensePasswordTextField resignFirstResponder];
-            _feedbackView.hidden = NO;
-            _confirmButton.hidden = YES;
-            [_feedbackView showErrorMessage:_licenseStore.errorMessage];
+            [self showErrorMessage:_licenseStore.errorMessage];
         }
     });
 }
@@ -156,6 +163,42 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     _confirmButton.hidden = NO;
 }
 
+- (void)showActivityIndicatorView:(BOOL)show {
+    _activityIndicatorView.hidden = !show;
+    if (show) {
+        _feedbackImageView.hidden = true;
+        [_activityIndicatorView startAnimating];
+    } else {
+        [_activityIndicatorView stopAnimating];
+    }
+}
+
+- (void)showErrorMessage:(NSString *)errorMessage {
+    [self showActivityIndicatorView:false];
+        
+    _feedbackImageView.image = [BundleUtil imageNamed:@"ExclamationMark"];
+    _feedbackImageView.hidden = false;
+    
+    _feedbackLabel.text = errorMessage;
+}
+
+- (void)showSuccessMessage:(NSString *)successMessage {
+    [self showActivityIndicatorView:false];
+        
+    _feedbackImageView.image = [[BundleUtil imageNamed:@"Checkbox"] imageWithTint:[Colors white]];
+    _feedbackImageView.hidden = false;
+    
+    _feedbackLabel.text = successMessage;
+}
+
+- (void)showActivityIndicatorWithMessage:(NSString *)message {
+    _feedbackLabel.text = message;
+    _feedbackLabel.hidden = false;
+    _confirmButton.hidden = true;
+    
+    [self showActivityIndicatorView:true];
+}
+
 #pragma mark - actions
 
 - (IBAction)confirmAction:(id)sender {
@@ -163,12 +206,8 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     if (!_confirmButton.enabled)
         return;
     
-    _feedbackView.hidden = NO;
-    _confirmButton.hidden = YES;
+    [self showActivityIndicatorWithMessage:[BundleUtil localizedStringForKey:@"enter_license_checking"]];
     
-    [_feedbackView showActivityIndicator];
-    _feedbackView.text = [BundleUtil localizedStringForKey:@"enter_license_checking"];
-
     [_licenseUsernameTextField resignFirstResponder];
     [_licensePasswordTextField resignFirstResponder];
     
@@ -179,27 +218,21 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
             if (success) {
                 [WorkDataFetcher checkUpdateThreemaMDM:^{
                     dispatch_async(dispatch_get_main_queue(), ^{
-                        [_feedbackView hideActivityIndicator];
-                        
-                        [_feedbackView showSuccessMessage:[BundleUtil localizedStringForKey:@"ok"]];
+                        [self showSuccessMessage:[BundleUtil localizedStringForKey:@"ok"]];
                         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1000 * NSEC_PER_MSEC)), dispatch_get_main_queue(), ^{
                             [_delegate licenseConfirmed];
                         });
                     });
                 } onError:^(NSError *error) {
                     dispatch_async(dispatch_get_main_queue(), ^{
-                        [_feedbackView hideActivityIndicator];
-                        [_feedbackView showErrorMessage:_licenseStore.errorMessage];
-                        
+                        [self showErrorMessage:_licenseStore.errorMessage];
                         // disable button, user has to change key first
                         _confirmButton.enabled = NO;
                         _confirmButton.alpha = 0.7;
                     });
                 }];
             } else {
-                [_feedbackView hideActivityIndicator];
-                [_feedbackView showErrorMessage:_licenseStore.errorMessage];
-                
+                [self showErrorMessage:_licenseStore.errorMessage];
                 // disable button, user has to change key first
                 _confirmButton.enabled = NO;
                 _confirmButton.alpha = 0.7;
@@ -221,7 +254,8 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 
 - (void)textFieldDidBeginEditing:(UITextField *)textField {
     _confirmButton.hidden = NO;
-    _feedbackView.hidden = YES;
+    _feedbackLabel.hidden = YES;
+    _feedbackImageView.hidden = true;
 }
 
 - (BOOL)textFieldShouldReturn:(UITextField *)textField {

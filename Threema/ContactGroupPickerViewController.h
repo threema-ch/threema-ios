@@ -52,8 +52,9 @@
 
 @property (strong, nonatomic) id<ContactGroupPickerDelegate> delegate;
 
-@property (nonatomic) BOOL enableMulitSelection;
+@property (nonatomic) BOOL enableMultiSelection;
 @property (nonatomic) BOOL enableTextInput;
+@property (nonatomic) BOOL enableControlView;
 
 @property (nonatomic, strong) NSString *pickerTitle;
 @property (nonatomic, strong) NSNumber *renderType;

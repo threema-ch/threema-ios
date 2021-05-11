@@ -22,6 +22,7 @@ import Foundation
 import AVFoundation
 import WebRTC
 import ThreemaFramework
+import CocoaLumberjackSwift
 
 protocol VoIPCallPeerConnectionClientDelegate: class {
     func peerConnectionClient(_ client: VoIPCallPeerConnectionClient, changeState: VoIPCallService.CallState)
@@ -102,6 +103,9 @@ final class VoIPCallPeerConnectionClient: NSObject {
     
     private var videoCallQualityObserver: NSObjectProtocol?
     
+    private let webrtcLogger = RTCCallbackLogger()
+
+    
     public struct PeerConnectionParameters {
         public var isVideoCallAvailable: Bool = true
         public var videoCodecHwAcceleration: Bool = true
@@ -128,9 +132,13 @@ final class VoIPCallPeerConnectionClient: NSObject {
      - parameter contact: Call contact
      */
     required init(contact: Contact, callId: VoIPCallId?, peerConnectionParameters: PeerConnectionParameters, config: RTCConfiguration) {
+        webrtcLogger.severity = .warning
+        webrtcLogger.start { (message) in
+            DDLogNotice("libwebrtc: \(message)")
+        }
         self.peerConnectionParameters = peerConnectionParameters
         let constraints = VoIPCallPeerConnectionClient.defaultPeerConnectionConstraints()
-        peerConnection = VoIPCallPeerConnectionClient.factory.peerConnection(with: config, constraints: constraints, delegate: nil)
+        peerConnection = VoIPCallPeerConnectionClient.factory.peerConnection(with: config, constraints: constraints, delegate: nil)!
         self.contact = contact
         self.callId = callId
         super.init()
@@ -156,6 +164,7 @@ final class VoIPCallPeerConnectionClient: NSObject {
             videoCallQualityObserver = nil
             NotificationCenter.default.removeObserver(observer)
         }
+        webrtcLogger.stop()
     }
 }
 
@@ -265,7 +274,7 @@ extension VoIPCallPeerConnectionClient {
         let audioTracks = self.peerConnection.transceivers.compactMap { return $0.sender.track as? RTCAudioTrack }
         audioTracks.forEach { $0.isEnabled = isEnabled }
 
-        DDLogNotice("Threema call: set audio to \(isEnabled)")
+        DDLogNotice("VoipCallService: [cid=\(self.callId?.callId ?? 0)]: \(isEnabled ? "Enabled" : "Disabled") Audio for current call")
     }
 }
 
@@ -510,10 +519,10 @@ extension VoIPCallPeerConnectionClient {
         let parameters = sender.parameters
         parameters.degradationPreference = NSNumber(value: RTCDegradationPreference.balanced.rawValue)
         for encoding in parameters.encodings {
-            DDLogNotice("Threema Call: rtp encoding before -> maxBitrateBps: \(encoding.maxBitrateBps ?? 0), maxFramerate: \(encoding.maxFramerate ?? 0)")
+            DDLogDebug("VoipCallService: [cid=\(self.callId?.callId ?? 0)]: Rtp encoding before -> maxBitrateBps: \(encoding.maxBitrateBps ?? 0), maxFramerate: \(encoding.maxFramerate ?? 0)")
             encoding.maxBitrateBps = NSNumber(value: maxBitrate)
             encoding.maxFramerate = NSNumber(value: maxFps)
-            DDLogNotice("Threema Call: rtp encoding after -> maxBitrateBps: \(encoding.maxBitrateBps ?? 0), maxFramerate: \(encoding.maxFramerate ?? 0)")
+            DDLogDebug("VoipCallService: [cid=\(self.callId?.callId ?? 0)]: Rtp encoding after -> maxBitrateBps: \(encoding.maxBitrateBps ?? 0), maxFramerate: \(encoding.maxFramerate ?? 0)")
         }
         sender.parameters = parameters
     }
@@ -631,7 +640,12 @@ extension VoIPCallPeerConnectionClient {
     }
     
     func set(addRemoteCandidate: RTCIceCandidate) {
-        self.peerConnection.add(addRemoteCandidate)
+        self.peerConnection.add(addRemoteCandidate) { (error) in
+            if error != nil {
+                DDLogNotice("VoipCallService: [cid=\(self.callId?.callId ?? 0)]: Can't add remote ICE candidate \(addRemoteCandidate.sdp)")
+                return
+            }
+        }
     }
     
     func set(removeRemoteCandidates: [RTCIceCandidate]) {
@@ -642,23 +656,24 @@ extension VoIPCallPeerConnectionClient {
 extension VoIPCallPeerConnectionClient: RTCPeerConnectionDelegate {
     // MARK: RTCPeerConnectionDelegates
     func peerConnection(_ peerConnection: RTCPeerConnection, didChange stateChanged: RTCSignalingState) {
-        debugPrint("peerConnection new signaling state: \(stateChanged.rawValue)")
+        DDLogNotice("VoipCallService: [cid=\(self.callId?.callId ?? 0)]: Signaling state change to \(stateChanged.debugDescription)")
     }
     
     func peerConnection(_ peerConnection: RTCPeerConnection, didAdd stream: RTCMediaStream) {
-        debugPrint("peerConnection did add stream")
+        DDLogNotice("VoipCallService: [cid=\(self.callId?.callId ?? 0)]: Did add stream")
     }
     
     func peerConnection(_ peerConnection: RTCPeerConnection, didRemove stream: RTCMediaStream) {
-        debugPrint("peerConnection did remove stream")
+        DDLogNotice("VoipCallService: [cid=\(self.callId?.callId ?? 0)]: Did remove stream")
     }
-    
+
+        
     func peerConnectionShouldNegotiate(_ peerConnection: RTCPeerConnection) {
-        debugPrint("peerConnection should negotiate")
+        DDLogNotice("VoipCallService: [cid=\(self.callId?.callId ?? 0)]: Renegotiation needed")
     }
     
     func peerConnection(_ peerConnection: RTCPeerConnection, didChange newState: RTCIceConnectionState) {
-        debugPrint("peerConnection new connection state: \(newState.rawValue)")
+        DDLogNotice("VoipCallService: [cid=\(self.callId?.callId ?? 0)]: ICE connection state change to \(newState.debugDescription)")
         
         if newState == .checking {
             // Schedule 'connecting' stats timer
@@ -673,7 +688,7 @@ extension VoIPCallPeerConnectionClient: RTCPeerConnectionDelegate {
             self.schedulePeriodStats(options: options, period: VoIPCallPeerConnectionClient.logStatsIntervalConnecting)
         }
         
-        if VoIPCallStateManager.shared.currentCallState() == .initalizing && (newState == .connected || newState == .completed) {
+        if VoIPCallStateManager.shared.currentCallState() == .initializing && (newState == .connected || newState == .completed) {
             let options = VoIPStatsOptions.init()
             options.selectedCandidatePair = true
             options.transport = true
@@ -696,26 +711,27 @@ extension VoIPCallPeerConnectionClient: RTCPeerConnectionDelegate {
     }
     
     func peerConnection(_ peerConnection: RTCPeerConnection, didChange newState: RTCIceGatheringState) {
-        debugPrint("peerConnection new gathering state: \(newState.rawValue)")
+        DDLogNotice("VoipCallService: [cid=\(self.callId?.callId ?? 0)]: ICE gathering state change to \(newState.debugDescription)")
     }
     
     func peerConnection(_ peerConnection: RTCPeerConnection, didGenerate candidate: RTCIceCandidate) {
+        DDLogNotice("VoipCallService: [cid=\(self.callId?.callId ?? 0)]: New local ICE candidate: \(candidate.sdp)")
         self.delegate?.peerConnectionClient(self, addedCandidate: candidate)
     }
     
     func peerConnection(_ peerConnection: RTCPeerConnection, didRemove candidates: [RTCIceCandidate]) {
+        // Log is in the delegate
         self.delegate?.peerConnectionClient(self, removedCandidates: candidates)
     }
     
     func peerConnection(_ peerConnection: RTCPeerConnection, didOpen dataChannel: RTCDataChannel) {
-        debugPrint("peerConnection did open data channel")
+        DDLogNotice("VoipCallService: [cid=\(self.callId?.callId ?? 0)]: New data channel: (\(dataChannel.label)) (id=\(dataChannel.channelId))")
     }
 }
 
 extension VoIPCallPeerConnectionClient: RTCDataChannelDelegate {
     // MARK: RTCDataChannelDelegate
     func dataChannelDidChangeState(_ dataChannel: RTCDataChannel) {
-        debugPrint("dataChannel did change state: \(dataChannel.readyState.rawValue)")
         peerConnectionParameters.isDataChannelAvailable = dataChannel.readyState == .open
         sendCachedDataChannelDataToRemote()
     }
@@ -809,7 +825,7 @@ extension VoIPCallPeerConnectionClient {
 
             var statsString = stats.getRepresentation()
             statsString += "\n\(CallsignalingProtocol.printDebugQualityProfiles(remoteProfile: self.remoteVideoQualityProfile, networkIsRelayed: self.networkIsRelayed))"
-            ValidationLogger.shared()?.logString("Call: Stats for \(self.callId?.callId ?? 0) \n \(statsString)")
+            DDLogNotice("VoipCallService: [cid=\(self.callId?.callId ?? 0)]: Stats: \n \(statsString)")
             
             // this is only needed if video calls are not available
             if !self.peerConnectionParameters.isVideoCallAvailable {

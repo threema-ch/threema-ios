@@ -65,10 +65,10 @@ class SettingsViewController: ThemedTableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        var version = BundleUtil.mainBundle()?.object(forInfoDictionaryKey: "CFBundleShortVersionString") as! String
-        if let suffix = BundleUtil.mainBundle()?.object(forInfoDictionaryKey: "ThreemaVersionSuffix") as? String {
+        var version = BundleUtil.mainBundle()!.object(forInfoDictionaryKey: "CFBundleShortVersionString") as! String
+        if let suffix = BundleUtil.mainBundle()!.object(forInfoDictionaryKey: "ThreemaVersionSuffix") as? String {
             version = version.appending(suffix)
-            let build = BundleUtil.mainBundle()?.object(forInfoDictionaryKey: kCFBundleVersionKey as String)
+            let build = BundleUtil.mainBundle()!.object(forInfoDictionaryKey: kCFBundleVersionKey as String)
             versionCell.detailTextLabel?.text = "\(version) (\(build!))"
             if let versionCopyLabel = versionCell.detailTextLabel as? CopyLabel {
                 versionCopyLabel.textForCopying = "\(version)b\(build ?? "0")"
@@ -217,10 +217,10 @@ extension SettingsViewController {
         
         var statusText = BundleUtil.localizedString(forKey: locKey)
         if ServerConnector.shared()?.isIPv6Connection == true {
-            statusText = statusText?.appending(" (IPv6)")
+            statusText = statusText.appending(" (IPv6)")
         }
         if ServerConnector.shared()?.isProxyConnection == true {
-            statusText = statusText?.appending(" (Proxy)")
+            statusText = statusText.appending(" (Proxy)")
         }
         
         networkStatusCell.detailTextLabel?.text = statusText

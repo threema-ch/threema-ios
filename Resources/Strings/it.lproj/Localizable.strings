@@ -323,6 +323,12 @@
 "leave" = "Abbandona";
 "you are not a member" = "Io (rimosso)";
 "groups" = "Gruppi";
+"create_new_group" = "Crea nuovo gruppo";
+"create_note_group_info_title" = "Consiglio";
+"create_note_group_info_text" = "Se non aggiungi dei membri i messaggi di questo gruppo rimangono locali. Questo è ideale per salvare o trasferire sul desktop in modo sicuro appunti, media o file.";
+"doNotShowAgain" = "Non mostrare più";
+"add_note_group_info" = "*Non sono presenti altre persone*\nUsa questa chat come taccuino sicuro per testi, media o file.";
+"end_note_group_info" = "*Sono presenti altre persone in questa chat*\nI nuovi messaggi vengono inviati a tutti i membri del gruppo.";
 
 "choose_recipient" = "Seleziona destinatario";
 
@@ -996,6 +1002,7 @@ Se non mancano file multimediali e/o dati, svuota il cestino per cancellare defi
 // Media Preview
 "loading_video_failed" = "Il video non è stato caricato. Riavvia l'app e riprova.";
 "loading_image" = "L'immagine viene caricata";
+"load_error" = "A causa di un errore sconosciuto non è stato possibile caricare il file.";
 "loading_video" = "Il video viene caricato";
 "selected_media_list" = "Lista dei media selezionati";
 "media_item_of" = "File media %@ su %@";
@@ -1020,3 +1027,17 @@ Se non mancano file multimediali e/o dati, svuota il cestino per cancellare defi
 "back" = "Indietro";
 "sending_item" = "Invia elemento";
 "send_as_file_title" = "Modalità";
+"document" = "File";
+"paste_create_file_failure_title" = "Inserimento non riuscito";
+"paste_create_file_failure_message" = "Inserimento file non riuscito, riprova.";
+"loading_files_takes_time_title" = "Carica media dalla biblioteca";
+"loading_files_takes_time_description" = "La conversione del video può richiedere un po' di tempo";
+"pasteErrorMessageTitle" = "Inserimento non riuscito";
+"pasteErrorMessageMessage" = "A causa di un errore sconosciuto non è stato possibile inserire il file. Riprova.";
+
+// Share Extension
+"finished_sending_title" = "Invio concluso";
+"preview_button_accessibility_title" = "Visualizza anteprima documento";
+"unknown_file_type" = "Tipo di file sconosciuto";
+"unknown_file_size" = "Dimensione file sconosciuta";
+"unknown_file_name" = "Nome file sconosciuto";

@@ -323,7 +323,7 @@
 "leave" = "Bandunar";
 "you are not a member" = "Jau (allontanar)";
 "groups" = "Gruppas";
-
+"create_new_group" = "Crear ina nova gruppa";
 "choose_recipient" = "Tscherner il destinatur";
 
 "msg_unknown_group_request_sync_x_title" = "Survegnì in messadi en ina gruppa nunenconuschenta";
@@ -996,6 +996,7 @@ Svida il chanaster da palpiri, sche naginas medias e/u datotecas na mancan per s
 // Media Preview
 "loading_video_failed" = "Betg stà pussaivel da chargiar il video. P.pl. reaviar l'app ed empruvar anc ina giada.";
 "loading_image" = "Il maletg vegn chargià";
+"load_error" = "Pervia d'ina errur betg enconuschenta n'èsi betg stà pussaivel da chargiar la datoteca.";
 "loading_video" = "Il video vegn chargià";
 "selected_media_list" = "Glista da las medias tschernidas";
 "media_item_of" = "Datotecas da medias %@ da %@";
@@ -1020,3 +1021,17 @@ Svida il chanaster da palpiri, sche naginas medias e/u datotecas na mancan per s
 "back" = "Enavos";
 "sending_item" = "Trametter l'element";
 "send_as_file_title" = "Modus";
+"document" = "Datoteca";
+"paste_create_file_failure_title" = "Betg reussì d'encollar";
+"paste_create_file_failure_message" = "I n'è betg reussì d'encollar la datoteca. P.pl. empruvar anc ina giada.";
+"loading_files_takes_time_title" = "Chargiar medias or da la biblioteca da medias";
+"loading_files_takes_time_description" = "I po durar in mument fin ch'il video è convertì";
+"pasteErrorMessageTitle" = "Betg reussì d'encollar";
+"pasteErrorMessageMessage" = "Pervia d'ina errur betg enconuschenta n'èsi betg stà pussaivel d'encollar la datoteca. P.pl. empruvar anc ina giada.";
+
+// Share Extension
+"finished_sending_title" = "Terminà la spediziun";
+"preview_button_accessibility_title" = "Mussar ina prevista dal document";
+"unknown_file_type" = "Tip da datoteca betg enconuschent";
+"unknown_file_size" = "Grondezza da la datoteca betg enconuschenta";
+"unknown_file_name" = "Num da datoteca betg enconuschent";

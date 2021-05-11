@@ -11,9 +11,9 @@
 "cannot_connect_title" = "Bağlantı yok";
 "cannot_connect_message" = "Bağlantı Kurulamıyor! Lütfen internet bağlantınızı kontrol edin.";
 
-"sending_count" = "Gönderiliyor ... ( %1$ld / %2$ld )";
+"sending_count" = "Gönderiliyor... ( %1$ld / %2$ld )";
 
 "error_message_no_items_title" = "Geçersiz içerik";
 "error_message_no_items_message" = "Desteklenen öğe bulunamadı.";
 
-"send_as_file" = "Dosya olarak gönder";
+"send_as_file" = "Orijinali Gönder";

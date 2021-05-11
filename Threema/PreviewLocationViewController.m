@@ -19,7 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import "PreviewLocationViewController.h"
-#import "UIImageView+WebCache.h"
+#import <SDWebImage/UIImageView+WebCache.h>
 #import "PoiTableViewCell.h"
 #import "UserSettings.h"
 #import "PointOfInterest.h"

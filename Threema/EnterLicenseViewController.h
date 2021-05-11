@@ -31,7 +31,10 @@
 
 @interface EnterLicenseViewController : UIViewController
 
-@property (weak, nonatomic) IBOutlet ProgressLabel *feedbackView;
+@property (weak, nonatomic) IBOutlet UIStackView *stackView;
+@property (weak, nonatomic) IBOutlet UIActivityIndicatorView *activityIndicatorView;
+@property (weak, nonatomic) IBOutlet UIImageView *feedbackImageView;
+@property (weak, nonatomic) IBOutlet UILabel *feedbackLabel;
 @property (weak, nonatomic) IBOutlet UILabel *descriptionLabel;
 @property (weak, nonatomic) IBOutlet UITextField *licenseUsernameTextField;
 @property (weak, nonatomic) IBOutlet UITextField *licensePasswordTextField;

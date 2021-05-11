@@ -1,0 +1,19 @@
+/*
+ Localizable.strings
+ Threema
+ 
+ Copyright (c) 2015 Threema GmbH. All rights reserved.
+ */
+
+"need_to_start_app_first_title" = "Threema 还没有设置完成";
+"need_to_start_app_first_message" = "请先启动 Threema 应用。";
+
+"cannot_connect_title" = "没有连接";
+"cannot_connect_message" = "无法连接，请检查您的网络连接。";
+
+"sending_count" = "发送中... (%1$ld / %2$ld)";
+
+"error_message_no_items_title" = "无效内容";
+"error_message_no_items_message" = "未发现有支持的项目。";
+
+"send_as_file" = "以原件发送";

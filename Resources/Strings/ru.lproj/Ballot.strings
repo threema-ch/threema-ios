@@ -49,3 +49,7 @@
 
 "ballot_open_ballots" = "Открытые опросы";
 "ballot_closed_ballots" = "Закрытые опросы";
+
+"voteCancelTitle" = "Отменить голосование";
+"voteCancelMessage" = "Если выйти до подачи голоса, голос не будет учтен.";
+"discardVoteTitle" = "Отменить";

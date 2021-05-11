@@ -42,9 +42,9 @@
 #define MIN_CHECK_INTERVAL 5*60
 
 #ifdef DEBUG
-static const DDLogLevel ddLogLevel = DDLogLevelInfo;
+static const DDLogLevel ddLogLevel = DDLogLevelAll;
 #else
-static const DDLogLevel ddLogLevel = DDLogLevelWarning;
+static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 #endif
 
 static const uint8_t emailHashKey[] = {0x30,0xa5,0x50,0x0f,0xed,0x97,0x01,0xfa,0x6d,0xef,0xdb,0x61,0x08,0x41,0x90,0x0f,0xeb,0xb8,0xe4,0x30,0x88,0x1f,0x7a,0xd8,0x16,0x82,0x62,0x64,0xec,0x09,0xba,0xd7};
@@ -201,6 +201,7 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
                     [UserSettings sharedUserSettings].workIdentities = workIdentities;
                 }
             }
+            [self addProfilePictureRequest:identity];
         }
         
         if (contact.verificationLevel == nil || (contact.verificationLevel.intValue < verificationLevel && contact.verificationLevel.intValue != kVerificationLevelFullyVerified) || verificationLevel == kVerificationLevelFullyVerified)
@@ -320,6 +321,7 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
             if (![workIdentities containsObject:contact.identity])
                 [workIdentities addObject:contact.identity];
             [UserSettings sharedUserSettings].workIdentities = workIdentities;
+            [self addProfilePictureRequest:identity];
         }
         
         contact.verificationLevel = [NSNumber numberWithInt:kVerificationLevelServerVerified];
@@ -610,6 +612,16 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
         if ([self existsProfilePictureRequest:identity]) {
             NSMutableSet *profilePictureRequestList = [NSMutableSet setWithArray:[UserSettings sharedUserSettings].profilePictureRequestList];
             [profilePictureRequestList removeObject:identity];
+            [UserSettings sharedUserSettings].profilePictureRequestList = profilePictureRequestList.allObjects;
+        }
+    }
+}
+
+- (void)addProfilePictureRequest:(NSString *)identity {
+    @synchronized (self) {
+        if (![self existsProfilePictureRequest:identity]) {
+            NSMutableSet *profilePictureRequestList = [NSMutableSet setWithArray:[UserSettings sharedUserSettings].profilePictureRequestList];
+            [profilePictureRequestList addObject:identity];
             [UserSettings sharedUserSettings].profilePictureRequestList = profilePictureRequestList.allObjects;
         }
     }

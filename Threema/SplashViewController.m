@@ -628,9 +628,10 @@
     [MBProgressHUD showHUDAddedTo:self.view animated:YES];
 
     [[[ServerAPIConnector alloc] init] createIdentityWithStore:[MyIdentityStore sharedMyIdentityStore] onCompletion:^(MyIdentityStore *store) {
-        [MBProgressHUD hideHUDForView:self.view animated:YES];
-
         store.pendingCreateID = YES;
+        [[LicenseStore sharedLicenseStore] performUpdateWorkInfo];
+        [MBProgressHUD hideHUDForView:self.view animated:YES];
+        
         [self presentPageViewController];
     } onError:^(NSError *error) {
         [MBProgressHUD hideHUDForView:self.view animated:YES];
@@ -815,9 +816,7 @@
     
     [[ContactStore sharedContactStore] updateAllContactsToCNContact];
     [[ContactStore sharedContactStore] updateAllContacts];
-    
-    [ConversationUtils resetUnreadMessageCount];
-    
+        
     [NotificationManager generatePushSettingForAllGroups];
 
     [self addEchoEchoToContacts];

@@ -79,7 +79,11 @@ public class WebCreateTextMessageRequest: WebAbstractMessage {
                 if conversation != nil {
                     if !PermissionChecker.init().canSend(in: conversation, entityManager: entityManager) {
                         self.baseMessage = nil
-                        tmpError = "blocked"
+                        if conversation!.groupId == nil, let identity = conversation?.contact.identity, UserSettings.shared().blacklist.contains(identity) {
+                            tmpError = "blocked"
+                        } else {
+                            tmpError = "internal Error"
+                        }
                         completion()
                         return
                     }

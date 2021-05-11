@@ -158,17 +158,17 @@
         BOOL refreshWorkContactTableView = false;
         
         /* Check if there is a company directory */
-        if (workData[@"directory"] != [NSNull null]) {
-            if (workData[@"directory"] != nil) {
+        if (workData[@"directory"] != [NSNull null] && workData[@"directory"] != nil) {
+            if ([mdmSetup disableWorkDirectory] == true) {
+                [UserSettings sharedUserSettings].companyDirectory = false;
+            } else {
                 NSDictionary *directory = workData[@"directory"];
                 BOOL enableWorkDirectory = [directory[@"enabled"] boolValue];
                 if (enableWorkDirectory != [UserSettings sharedUserSettings].companyDirectory) {
-                    [UserSettings sharedUserSettings].companyDirectory = [directory[@"enabled"] boolValue];
+                    [UserSettings sharedUserSettings].companyDirectory = enableWorkDirectory;
                     refreshWorkContactTableView = true;
                 }
                 [MyIdentityStore sharedMyIdentityStore].directoryCategories = directory[@"cat"];
-            } else {
-                [UserSettings sharedUserSettings].companyDirectory = false;
             }
         } else {
             [UserSettings sharedUserSettings].companyDirectory = false;

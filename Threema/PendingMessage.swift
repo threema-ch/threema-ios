@@ -133,8 +133,12 @@ import CocoaLumberjackSwift
         startTimedNotification(setFireDate: true, stage: .base)
     }
     
-    // Final roundrip when a new message is recieved
     @objc func finishedProcessing() {
+        finishedProcessing(rejected: false)
+    }
+    
+    // Final roundtrip when a new message is recieved
+    @objc func finishedProcessing(rejected: Bool = false) {
         PendingMessage.removalQueue.sync {
             self.removeNotifications(stages: [.initial, .abstract, .base])
         }
@@ -143,6 +147,7 @@ import CocoaLumberjackSwift
         if isPendingGroupMessages == true {
             self.removeAllMyNotifications()
             completionHandler?()
+            
             return
         }
         
@@ -153,25 +158,29 @@ import CocoaLumberjackSwift
         
         processed = true
         
-        startTimedNotification(setFireDate: false, stage: .final)
-        
-        if let currentBaseMessage = baseMessage {
-            /* Broadcast a notification, just in case we're currently in another chat within the app */
-            if AppDelegate.shared().isAppInBackground() == false && self.abstractMessage!.receivedAfterInitialQueueSend == true {
-                if PendingMessagesManager.canMasterDndSendPush() == true {
-                    if let pushSetting = PushSetting.find(for: currentBaseMessage.conversation) {
-                        if pushSetting.canSendPush(for: currentBaseMessage) {
-                            threemaNewMessageReceived()
-                            if !pushSetting.silent {
-                                NotificationManager.sharedInstance().playReceivedMessageSound()
+        if rejected {
+            self.removeAllMyNotifications()
+        } else {
+            startTimedNotification(setFireDate: false, stage: .final)
+            
+            if let currentBaseMessage = baseMessage {
+                /* Broadcast a notification, just in case we're currently in another chat within the app */
+                if AppDelegate.shared().isAppInBackground() == false && self.abstractMessage!.receivedAfterInitialQueueSend == true {
+                    if PendingMessagesManager.canMasterDndSendPush() == true {
+                        if let pushSetting = PushSetting.find(for: currentBaseMessage.conversation) {
+                            if pushSetting.canSendPush(for: currentBaseMessage) {
+                                threemaNewMessageReceived()
+                                if !pushSetting.silent {
+                                    NotificationManager.sharedInstance().playReceivedMessageSound()
+                                }
                             }
+                        } else {
+                            threemaNewMessageReceived()
+                            NotificationManager.sharedInstance().playReceivedMessageSound()
                         }
-                    } else {
-                        threemaNewMessageReceived()
-                        NotificationManager.sharedInstance().playReceivedMessageSound()
                     }
+                    NotificationManager.sharedInstance().updateUnreadMessagesCount(false)
                 }
-                NotificationManager.sharedInstance().updateUnreadMessagesCount(false)
             }
         }
         
@@ -534,7 +543,10 @@ import CocoaLumberjackSwift
             }
         }
         
-        notification.badge = NotificationManager.sharedInstance().unreadMessagesCount(!self.processed)
+        let unreadDict = NotificationManager.sharedInstance().unreadMessagesCount(!self.processed && !self.isPendingGroupMessages)
+        let badgeCount = unreadDict!["badgeCount"] as? NSNumber ?? 0
+        let markedCount = unreadDict!["markedCount"] as? NSNumber ?? 0
+        notification.badge = NSNumber(value: badgeCount.intValue + markedCount.intValue)
         
         var trigger: UNTimeIntervalNotificationTrigger? = nil
         if setFireDate == true {

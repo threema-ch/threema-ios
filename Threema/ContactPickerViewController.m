@@ -278,6 +278,7 @@ typedef enum : NSUInteger {
     if (_mode == ModeGroups) {
         if (indexPath.section == 0) {
             cell = [self.tableView dequeueReusableCellWithIdentifier:@"CreateGroupCell"];
+            ((CreateGroupCell *)cell).titleLabel.text = [BundleUtil localizedStringForKey:@"create_new_group"];
         } else {
             NSIndexPath *convertedIndex = [NSIndexPath indexPathForRow:indexPath.row inSection:indexPath.section - 1];
             cell = [self tableView:tableView groupCellForIndexPath:convertedIndex];
@@ -368,7 +369,6 @@ typedef enum : NSUInteger {
                 } else {
                     UIStoryboard *storyboard = [UIStoryboard storyboardWithName:@"CreateGroup" bundle:nil];
                     UINavigationController *navVC = [storyboard instantiateInitialViewController];
-                    
                     [presentingVC presentViewController:navVC animated:YES completion:nil];
                 }
             } else {

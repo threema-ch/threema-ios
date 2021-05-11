@@ -31,7 +31,9 @@
 		<key>NSExtensionAttributes</key>
 		<dict>
 			<key>NSExtensionActivationRule</key>
-			<string>SUBQUERY (
+			<string>
+(
+SUBQUERY (
     extensionItems,
     $extensionItem,
     SUBQUERY (
@@ -43,8 +45,25 @@
         ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.archive" || 
         ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.contact" || 
         ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.message"
-    ).@count &lt;= 10
+    ).@count &lt;= 20
 ).@count == 1
+||
+SUBQUERY(
+    extensionItems, 
+    $extensionItem, 
+        (
+            SUBQUERY(
+                $extensionItem.attachments, 
+                $attachment, 
+                ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.url"
+            ).@count &gt;= 1
+        AND
+            $extensionItem.attachments.@count &lt;= 20
+        )
+    AND
+        extensionItems.@count &lt;= 20
+).@count &gt;= 1
+)
 </string>
 		</dict>
 		<key>NSExtensionMainStoryboard</key>

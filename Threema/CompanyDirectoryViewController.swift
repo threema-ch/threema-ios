@@ -259,7 +259,7 @@ import Foundation
         let stackView = UIStackView.init(frame: CGRect.init(x: 0.0, y: 0.0, width: textWidth + buttonWidth + (padding * 2), height: activeFiltersView.frame.size.height))
         stackView.axis = .horizontal
         stackView.distribution = .equalSpacing
-        stackView.spacing = 0
+        stackView.spacing = 2.0
         
         let textlabel = UILabel.init(frame: CGRect.init(x: 0.0, y: 0.0, width: textWidth, height: 20.0))
         textlabel.textColor = Colors.fontInverted()
@@ -268,18 +268,17 @@ import Foundation
         stackView.addArrangedSubview(textlabel)
         
         let button = UIButton(type: .custom)
-        button.frame = CGRect(x: 0.0, y: 0.0, width: buttonWidth, height: buttonWidth)
         button.backgroundColor = .clear
-        button.layer.cornerRadius = CGFloat(button.frame.size.width)/CGFloat(2.0)
         button.setImage(UIImage(named: "CloseCategory", in: .white), for: .normal)
         button.tag = index
         button.imageView?.contentMode = .scaleAspectFit
+        button.frame = CGRect(x: 0.0, y: 0.0, width: buttonWidth - (6 * padding), height: buttonWidth - (6 * padding))
+        button.layer.cornerRadius = CGFloat(button.frame.size.width)/CGFloat(2.0)
         button.addTarget(self, action: #selector(removeTag(_:)), for: .touchUpInside)
         stackView.addArrangedSubview(button)
         
-        let widthContraints =  NSLayoutConstraint(item: button, attribute: NSLayoutConstraint.Attribute.width, relatedBy: NSLayoutConstraint.Relation.equal, toItem: nil, attribute: NSLayoutConstraint.Attribute.notAnAttribute, multiplier: 1, constant: buttonWidth)
+        let widthContraints =  NSLayoutConstraint(item: button, attribute: NSLayoutConstraint.Attribute.width, relatedBy: NSLayoutConstraint.Relation.equal, toItem: nil, attribute: NSLayoutConstraint.Attribute.notAnAttribute, multiplier: 1, constant: buttonWidth - (4 * padding))
         NSLayoutConstraint.activate([widthContraints])
-
 
         stackView.layoutIfNeeded()
         

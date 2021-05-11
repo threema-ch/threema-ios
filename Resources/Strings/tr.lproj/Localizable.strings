@@ -257,6 +257,8 @@
 "record_audio" = "Ses Kaydı";
 "scan_qr" = "QR kodunu tara";
 "share_file" = "Dosya Paylaş";
+"add_item_caption" = "Altyazı ekle";
+"add_items_caption" = "Altyazı Ekle";
 "send_item_immediately_photo" = "Resim Gönder";
 "send_item_immediately_video" = "Video Gönder";
 "send_items_immediately" = "%d Fotoğraf / Video Gönder";
@@ -321,6 +323,12 @@
 "leave" = "Ayrılmak";
 "you are not a member" = "Ben (Kaldırıldı)";
 "groups" = "Gruplar";
+"create_new_group" = "Yeni Grup Oluştur";
+"create_note_group_info_title" = "Hint";
+"create_note_group_info_text" = "Herhangi bir grup üyesi eklemezseniz, bu gruba gelen mesajlar yerel olarak kalacaktır. Bu, notları, medyayı ve belgeleri güvenli bir şekilde saklamak veya öğeleri masaüstüne aktarmak için idealdir.";
+"doNotShowAgain" = "Tekrar Gösterme";
+"add_note_group_info" = "* Burada yalnızsınız *\nBu sohbeti metin, medya ve belgeler için güvenli bir not defteri olarak kullanın.";
+"end_note_group_info" = "* Artık bu sohbette yalnız değilsiniz *\nTüm grup üyelerine yeni mesajlar gönderilecek.";
 
 "choose_recipient" = "Alıcı Seçin";
 
@@ -409,7 +417,7 @@
 "no_contacts_syncoff" = "Henüz hiç kişiniz yok. Senkronizasyonu açın (Ayarlar> Gizlilik) veya + düğmesini kullanarak kişileri manuel olarak ekleyin.";
 "no_contacts_permission_message" = "Threema'nın kişilerinize erişme izni yok. Lütfen cihazınızın gizlilik ayarlarına gidin ve Threema için kişi erişimini etkinleştirin.";
 
-"contact_added_to_profilepicture_list" = "Bu kişi, onu yazdığınızda profil resminizi görecek.";
+"contact_added_to_profilepicture_list" = "Bu kişi, yazdığınızda profil resminizi alacak.";
 "contact_removed_from_profilepicture_list" = "Bu kişi artık profilinizi göremeyecek";
 "contact_send_profilepicture_success" = "Profil bilginiz kişiye başarıyla gönderildi.";
 "contact_send_profilepicture_error" = "Profil bilginiz gönderilemedi. Lütfen daha sonra tekrar deneyiniz.";
@@ -655,7 +663,7 @@
 "call_microphone_permission_title" = "Mikrofon Erişimi Reddedildi";
 "call_microphone_permission_text" = "Mikrofon erişimine Ayarlar'dan izin vermelisiniz";
 "call_contact_alert" = "%@'I aramak ister misiniz ?";
-"call_contact_not_reachable" = "Kişiye ulaşılamıyor ..";
+"call_contact_not_reachable" = "ulaşılamıyor ...";
 
 "call_status_idle" = "Hazır";
 "call_status_wait_ringing" = "Başlatma";
@@ -935,7 +943,7 @@
 
 // File message
 "optional_caption" = "İsteğe bağlı altyazı";
-"send_as_file" = "Dosya olarak gönder";
+"send_as_file" = "Orijinali Gönder";
 
 // Notification settings
 "settings_notifications_inapp_section" = "Uygulama İçi";
@@ -994,14 +1002,15 @@ Threema'da eksik (medya) dosyası yoksa, artık dosyaları kalıcı olarak silme
 // Media Preview
 "loading_video_failed" = "Video yüklenemedi. Lütfen uygulamayı yeniden başlatın ve tekrar deneyin.";
 "loading_image" = "Resim Yükleniyor";
+"load_error" = "Bilinmeyen bir hata nedeniyle öğe yüklenemedi.";
 "loading_video" = "Video yükleniyor";
 "selected_media_list" = "Seçili Medya Listesi";
 "media_item_of" = "Medya öğesi %@ / %@";
 "video_date" = "%@ Tarihinde çekilen video";
 "imagedate_date" = "%@ Tarihinde çekilen fotoğraf";
-"send_as_file_description" = "Görüntüleri dosya veya satır içi fotoğraf olarak gönderin. Dosyalar, konum verileri gibi tüm meta verileri koruyacak ve daha küçük bir küçük resimle görüntülenecektir.";
+"send_as_file_description" = "Orijinal dosyada herhangi bir değişiklik yapmadan dosyayı gönderin. Dosyalar, tüm meta verileri, örneğin fotoğrafların konum verilerini koruyacaktır.";
 "more_options" = "Daha fazla seçenek";
-"add_caption_to_image" = "ekleyin ... ekleyin...";
+"add_caption_to_image" = "Başlık ekleyin Bir Başlık Ekleyin";
 "add_more_images" = "Daha fazla resim ekleyin";
 "back_to_media_selection" = "Medya seçim ekranına dön";
 "remove_current_image_from_selected_images" = "Mevcut öğeyi seçimden kaldır";
@@ -1012,9 +1021,23 @@ Threema'da eksik (medya) dosyası yoksa, artık dosyaları kalıcı olarak silme
 "could_not_add_all_items_title" = "Hiçbir Öğe Eklenemedi";
 "one_media_item_could_not_be_processed" = "Bir öğe işlenemedi ve atlandı.";
 "multiple_media_items_could_not_be_processed" = "%d öğe işlenemedi ve atlandı.";
-"processing_items_progress" = "%d / %d öğesi işleniyor";
+"processing_items_progress" = "Öğre İşleme %d / %d";
 "item_too_large_title" = "Öğe Çok Büyük";
 "maximum_file_size_exceeded" = "İzin verilen maksimum dosya boyutu %@ . Bu dosya %@ . Devam etmek için dosyayı kaldırın.";
 "back" = "Geri";
 "sending_item" = "Öğe gönderiliyor";
 "send_as_file_title" = "Gönderme Modu";
+"document" = "Belge";
+"paste_create_file_failure_title" = "Yapıştırma Başarısız";
+"paste_create_file_failure_message" = "Dosya yapıştırılamadı, lütfen tekrar deneyin.";
+"loading_files_takes_time_title" = "Medya Yükleme";
+"loading_files_takes_time_description" = "Videoları dönüştürmek birkaç dakika sürebilir.";
+"pasteErrorMessageTitle" = "Yapıştırılamadı";
+"pasteErrorMessageMessage" = "Bilinmeyen bir hata nedeniyle öğe yapıştırılamadı. Lütfen tekrar deneyin.";
+
+// Share Extension
+"finished_sending_title" = "Gönderme tamamlandı";
+"preview_button_accessibility_title" = "Belgenin önizlemesini göster";
+"unknown_file_type" = "Bilinmeyen dosya türü";
+"unknown_file_size" = "Bilinmeyen dosya boyutu";
+"unknown_file_name" = "Bilinmeyen dosya adı";

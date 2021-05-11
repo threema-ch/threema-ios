@@ -323,6 +323,12 @@
 "leave" = "Sair";
 "you are not a member" = "Eu (removido)";
 "groups" = "Grupos";
+"create_new_group" = "Criar novo grupo";
+"create_note_group_info_title" = "Dica";
+"create_note_group_info_text" = "Se você não adicionar nenhum membro ao grupo, as mensagens para este grupo permanecerão locais. Isso é o ideal para armazenar em segurança notas, mídia e documentos ou transferir itens à área de trabalho.";
+"doNotShowAgain" = "Não mostrar de novo";
+"add_note_group_info" = "*Você não está sozinho aqui*\nUse este bate-papo como um bloco de notas seguro para texto, mídia e documentos.";
+"end_note_group_info" = "*Você não está mais sozinho neste bate-papo\". Novas mensagens serão enviadas a todos membros.";
 
 "choose_recipient" = "Escolher destinatário";
 
@@ -657,7 +663,7 @@
 "call_microphone_permission_title" = "Acesso ao Microfone Negado";
 "call_microphone_permission_text" = "Você deve permitir o acesso ao microfone nas Configurações";
 "call_contact_alert" = "Deseja ligar para %@?";
-"call_contact_not_reachable" = "Não possível acessar contacto..";
+"call_contact_not_reachable" = "Não possível acessar contacto...";
 
 "call_status_idle" = "Pronto";
 "call_status_wait_ringing" = "Iniciar";
@@ -937,7 +943,7 @@
 
 // File message
 "optional_caption" = "Legenda opcional";
-"send_as_file" = "Enviar como arquivo";
+"send_as_file" = "Enviar como original";
 
 // Notification settings
 "settings_notifications_inapp_section" = "No aplicativo";
@@ -996,14 +1002,15 @@ Caso não haja nenhum arquivo (de mídia) faltando no Threema, esvazie a lixeira
 // Media Preview
 "loading_video_failed" = "Não foi possível enviar o vídeo. Reinicialize o app e tente novamente.";
 "loading_image" = "Carregando imagem";
+"load_error" = "Não foi possível carregar o item devido a um erro desconhecido.";
 "loading_video" = "Carregando vídeo";
 "selected_media_list" = "Lista da mídia selecionada";
 "media_item_of" = "Item de mídia %@ de %@";
 "video_date" = "Vídeo gravado em %@";
 "imagedate_date" = "Foto tirada em %@";
-"send_as_file_description" = "Envie as imagens como arquivo ou como fotos adicionadas. Os arquivos manterão todos os metadados, tais como localização, e serão exibidos com uma miniatura.";
+"send_as_file_description" = "Envie o arquivo sem alterações ao arquivo original. Os arquivos manterão todos os metadados, como dados de localização em fotos.";
 "more_options" = "Mais opções";
-"add_caption_to_image" = "Adicionar legenda...";
+"add_caption_to_image" = "Adicione uma legenda";
 "add_more_images" = "Adicione mais imagens";
 "back_to_media_selection" = "Voltar para a tela de seleção de mídia";
 "remove_current_image_from_selected_images" = "Remover o item atual da seleção";
@@ -1020,3 +1027,17 @@ Caso não haja nenhum arquivo (de mídia) faltando no Threema, esvazie a lixeira
 "back" = "Voltar";
 "sending_item" = "Enviando item";
 "send_as_file_title" = "Enviar mais";
+"document" = "Documento";
+"paste_create_file_failure_title" = "Falha ao colar";
+"paste_create_file_failure_message" = "Não foi possível colar o arquivo, tente novamente.";
+"loading_files_takes_time_title" = "Carregando mídia";
+"loading_files_takes_time_description" = "Converter vídeos pode levar alguns minutos.";
+"pasteErrorMessageTitle" = "Não foi possível colar";
+"pasteErrorMessageMessage" = "O item não pôde ser colado devido a um erro desconhecido. Tente novamente.";
+
+// Share Extension
+"finished_sending_title" = "Envio concluído";
+"preview_button_accessibility_title" = "Mostrar pré-visualização do documento";
+"unknown_file_type" = "Tipo de arquivo desconhecido";
+"unknown_file_size" = "Tamanho de arquivo desconhecido";
+"unknown_file_name" = "Nome de arquivo desconhecido";

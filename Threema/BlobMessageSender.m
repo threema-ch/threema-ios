@@ -24,6 +24,7 @@
 #import "EntityManager.h"
 #import "MessageFetcher.h"
 #import "BlobUploader.h"
+#import "MessageSender.h"
 
 #define MAX_CONCURRENT_UPLOADS 1
 #define TIMEOUT_INTERVAL_S 5
@@ -136,6 +137,12 @@ static dispatch_queue_t backgroundQueue;
                 return;
             }
             
+            if (self.conversation.groupId != nil && self.conversation.members.count == 0) {
+                DDLogError(@"BlobMessageSender: note group, no message to send");
+                [self noUploadNoteGroup];
+                return;
+            }
+            
             _blobSender = [[BlobUploader alloc] init];
             
             NSData *data = [self encryptedData];
@@ -149,6 +156,7 @@ static dispatch_queue_t backgroundQueue;
             _blobSender.thumbnailData = [self encryptedThumbnailData];
             
             [_blobSender startUploadFor:self];
+            data = nil;
         });
     });
 }
@@ -199,10 +207,15 @@ static dispatch_queue_t backgroundQueue;
     /* send actual message */
     Conversation *conversation = _message.conversation;
     if (conversation.groupId != nil) {
+        if (conversation.members.count == 0) {
+            /* set as sent for own note group */
+            [MessageSender markMessageAsSent:_message.id];
+        } else {
         /* send to each group member */
-        for (Contact *member in conversation.members) {
-            DDLogVerbose(@"Sending group blob message to %@", member.identity);
-            [self sendGroupMessageTo:member blobIds:blobIds];
+            for (Contact *member in conversation.members) {
+                DDLogVerbose(@"Sending group blob message to %@", member.identity);
+                [self sendGroupMessageTo:member blobIds:blobIds];
+            }
         }
     } else {
         DDLogVerbose(@"Sending  blob message to %@", conversation.contact);
@@ -227,6 +240,19 @@ static dispatch_queue_t backgroundQueue;
     [_uploadProgressDelegate blobMessageSender:self uploadFailedForMessage:_message error:UploadErrorSendFailed];
 }
 
+- (void)noUploadNoteGroup {
+    [self didFinishUpload];
+    
+    if ([_message wasDeleted] == NO) {
+        EntityManager *entityManager = [[EntityManager alloc] init];
+        [entityManager performSyncBlockAndSafe:^{
+            _message.sent = [NSNumber numberWithBool:YES];
+            [_message blobUpdateProgress:nil];
+        }];
+    }
+    [_uploadProgressDelegate blobMessageSender:self uploadSucceededForMessage:_message];
+}
+
 - (void)uploadProgress:(NSNumber *)progress {
     if ([_message wasDeleted]) {
         return;
@@ -243,6 +269,7 @@ static dispatch_queue_t backgroundQueue;
         [_message removeObserver:self forKeyPath:@"sent"];
         [_message blobUpdateProgress:nil];
         [_uploadProgressDelegate blobMessageSender:self uploadSucceededForMessage:_message];
+        _blobSender = nil;
     }
 }
 

@@ -38,7 +38,7 @@ class VoIPCallService: NSObject {
         case incomingRinging
         case sendAnswer
         case receivedAnswer
-        case initalizing
+        case initializing
         case calling
         case reconnecting
         case ended
@@ -50,6 +50,62 @@ class VoIPCallService: NSObject {
         case rejectedOffHours
         case rejectedUnknown
         case microphoneDisabled
+        
+        /**
+         Return the string of the current state for the ValidationLogger
+         - Returns: String of the current state
+         */
+        func description() -> String {
+            switch self {
+            case .idle: return "IDLE"
+            case .sendOffer: return "SENDOFFER"
+            case .receivedOffer: return "RECEIVEDOFFER"
+            case .outgoingRinging: return "RINGING"
+            case .incomingRinging: return "RINGING"
+            case .sendAnswer: return "SENDANSWER"
+            case .receivedAnswer: return "RECEIVEDANSWER"
+            case .initializing: return "INITIALIZING"
+            case .calling: return "CALLING"
+            case .reconnecting: return "RECONNECTING"
+            case .ended: return "ENDED"
+            case .remoteEnded: return "REMOTEENDED"
+            case .rejected: return "REJECTED"
+            case .rejectedBusy: return "REJECTEDBUSY"
+            case .rejectedTimeout: return "REJECTEDTIMEOUT"
+            case .rejectedDisabled: return "REJECTEDDISABLED"
+            case .rejectedOffHours: return "REJECTEDOFFHOURS"
+            case .rejectedUnknown: return "REJECTEDUNKNOWN"
+            case .microphoneDisabled: return "MICROPHONEDISABLED"
+            }
+        }
+        
+        /**
+         Get the localized string for the current state
+         - Returns: Current localized call state string
+         */
+        func localizedString() -> String {
+            switch self {
+            case .idle: return BundleUtil.localizedString(forKey: "call_status_idle")
+            case .sendOffer: return BundleUtil.localizedString(forKey: "call_status_wait_ringing")
+            case .receivedOffer: return BundleUtil.localizedString(forKey: "call_status_wait_ringing")
+            case .outgoingRinging: return BundleUtil.localizedString(forKey: "call_status_ringing")
+            case .incomingRinging: return BundleUtil.localizedString(forKey: "call_status_incom_ringing")
+            case .sendAnswer: return BundleUtil.localizedString(forKey: "call_status_ringing")
+            case .receivedAnswer: return BundleUtil.localizedString(forKey: "call_status_ringing")
+            case .initializing: return BundleUtil.localizedString(forKey: "call_status_initializing")
+            case .calling: return BundleUtil.localizedString(forKey: "call_status_calling")
+            case .reconnecting: return BundleUtil.localizedString(forKey: "call_status_reconnecting")
+            case .ended: return BundleUtil.localizedString(forKey: "call_end")
+            case .remoteEnded: return BundleUtil.localizedString(forKey: "call_end")
+            case .rejected: return BundleUtil.localizedString(forKey: "call_rejected")
+            case .rejectedBusy: return BundleUtil.localizedString(forKey: "call_rejected_busy")
+            case .rejectedTimeout: return BundleUtil.localizedString(forKey: "call_rejected_timeout")
+            case .rejectedDisabled: return BundleUtil.localizedString(forKey: "call_rejected_disabled")
+            case .rejectedOffHours: return BundleUtil.localizedString(forKey: "call_rejected")
+            case .rejectedUnknown: return BundleUtil.localizedString(forKey: "call_rejected")
+            case .microphoneDisabled: return BundleUtil.localizedString(forKey: "call_microphone_permission_title")
+            }
+        }
     }
     
     weak var delegate: VoIPCallServiceDelegate?
@@ -68,7 +124,7 @@ class VoIPCallService: NSObject {
                 localAddedIceCandidates.removeAll()
                 localRelatedAddresses.removeAll()
                 receivedIcecandidatesMessages.removeAll()
-            case .initalizing:
+            case .initializing:
                 handleLocalIceCandidates([])
             default:
                 // do nothing
@@ -104,7 +160,7 @@ class VoIPCallService: NSObject {
     private var shouldShowCellularCallWarning: Bool = false {
         didSet {
             if let callViewController = callViewController {
-                print("Threema call: Should show cellular warning -> \(self.shouldShowCellularCallWarning)")
+                DDLogDebug("VoipCallService: [cid=\(self.callId?.callId ?? 0)]: Should show cellular warning -> \(self.shouldShowCellularCallWarning)")
                 callViewController.shouldShowCellularCallWarning = self.shouldShowCellularCallWarning
             }
         }
@@ -221,62 +277,6 @@ extension VoIPCallService {
     // MARK: public functions
     
     /**
-     Return the string of the current state for the ValidationLogger
-     - Returns: String of the current state
-     */
-    func callStateString() -> String {
-        switch state {
-        case .idle: return "idle"
-        case .sendOffer: return "sendOffer"
-        case .receivedOffer: return "receivedOffer"
-        case .outgoingRinging: return "outgoingRinging"
-        case .incomingRinging: return "incomingRinging"
-        case .sendAnswer: return "sendAnswer"
-        case .receivedAnswer: return "receivedAnswer"
-        case .initalizing: return "initalizing"
-        case .calling: return "calling"
-        case .reconnecting: return "reconnecting"
-        case .ended: return "ended"
-        case .remoteEnded: return "remoteEnded"
-        case .rejected: return "rejected"
-        case .rejectedBusy: return "rejectedBusy"
-        case .rejectedTimeout: return "rejectedTimeout"
-        case .rejectedDisabled: return "rejectedDisabled"
-        case .rejectedOffHours: return "rejectedOffHours"
-        case .rejectedUnknown: return "rejectedUnknown"
-        case .microphoneDisabled: return "microphoneDisabled"
-        }
-    }
-    
-    /**
-     Get the localized string for the current state
-     - Returns: Current localized call state string
-     */
-    func callStateLocalizedString() -> String {
-        switch state {
-        case .idle: return BundleUtil.localizedString(forKey: "call_status_idle")
-        case .sendOffer: return BundleUtil.localizedString(forKey: "call_status_wait_ringing")
-        case .receivedOffer: return BundleUtil.localizedString(forKey: "call_status_wait_ringing")
-        case .outgoingRinging: return BundleUtil.localizedString(forKey: "call_status_ringing")
-        case .incomingRinging: return BundleUtil.localizedString(forKey: "call_status_incom_ringing")
-        case .sendAnswer: return BundleUtil.localizedString(forKey: "call_status_ringing")
-        case .receivedAnswer: return BundleUtil.localizedString(forKey: "call_status_ringing")
-        case .initalizing: return BundleUtil.localizedString(forKey: "call_status_initializing")
-        case .calling: return BundleUtil.localizedString(forKey: "call_status_calling")
-        case .reconnecting: return BundleUtil.localizedString(forKey: "call_status_reconnecting")
-        case .ended: return BundleUtil.localizedString(forKey: "call_end")
-        case .remoteEnded: return BundleUtil.localizedString(forKey: "call_end")
-        case .rejected: return BundleUtil.localizedString(forKey: "call_rejected")
-        case .rejectedBusy: return BundleUtil.localizedString(forKey: "call_rejected_busy")
-        case .rejectedTimeout: return BundleUtil.localizedString(forKey: "call_rejected_timeout")
-        case .rejectedDisabled: return BundleUtil.localizedString(forKey: "call_rejected_disabled")
-        case .rejectedOffHours: return BundleUtil.localizedString(forKey: "call_rejected")
-        case .rejectedUnknown: return BundleUtil.localizedString(forKey: "call_rejected")
-        case .microphoneDisabled: return BundleUtil.localizedString(forKey: "call_microphone_permission_title")
-        }
-    }
-    
-    /**
      Start process to handle the message
      - parameter element: Message
      */
@@ -340,8 +340,7 @@ extension VoIPCallService {
                 self.delegate?.callServiceFinishedProcess()
                 break
             case .end:
-                DDLogNotice("Threema call: HangupBug -> Send hangup for end action")
-                if state == .sendOffer || state == .outgoingRinging || state == .sendAnswer || state == .receivedAnswer || state == .initalizing || state == .calling || state == .reconnecting {
+                if state == .sendOffer || state == .outgoingRinging || state == .sendAnswer || state == .receivedAnswer || state == .initializing || state == .calling || state == .reconnecting {
                     RTCAudioSession.sharedInstance().isAudioEnabled = false
                     let hangupMessage = VoIPCallHangupMessage(contact: action.contact, callId: action.callId!, completion: nil)
                     VoIPCallSender.sendVoIPCallHangup(hangupMessage: hangupMessage, wait: false)
@@ -486,7 +485,7 @@ extension VoIPCallService {
      */
     func presentCallViewController() {
         if contact != nil {
-            presentCallView(contact: contact!, alreadyAccepted: alreadyAccepted, isCallInitiator: callInitiator, isThreemaVideoCallAvailable: threemaVideoCallAvailable, videoActive: videoActive, receivingVideo: isReceivingVideo, viewWasHidden: alreadyAccepted)
+            presentCallView(contact: contact!, alreadyAccepted: alreadyAccepted, isCallInitiator: callInitiator, isThreemaVideoCallAvailable: threemaVideoCallAvailable, videoActive: videoActive, receivingVideo: isReceivingVideo, viewWasHidden: false)
         }
     }
     
@@ -595,7 +594,8 @@ extension VoIPCallService {
      - parameter completion: Completion block
      */
     private func handleOfferMessage(offer: VoIPCallOfferMessage, completion: @escaping (() -> Void)) {
-        DDLogNotice("Threema call: handle incomming offer from \(offer.contact?.identity ?? "?") with callId \(offer.callId.callId)")
+        DDLogNotice("VoipCallService: [cid=\(offer.callId.callId)]: Handle new call with \(offer.contact?.identity ?? "?"), we are the callee")
+        DDLogNotice("VoipCallService: [cid=\(offer.callId.callId)]: Call offer received from \(offer.contact?.identity ?? "?")")
         if UserSettings.shared().enableThreemaCall == true && is64Bit == 1 {
             var appRunsInBackground = false
             DispatchQueue.main.sync {
@@ -603,7 +603,7 @@ extension VoIPCallService {
             }
             if state == .idle {
                 if PendingMessagesManager.canMasterDndSendPush() == false {
-                    DDLogNotice("Threema call: handleOfferMessage -> Master DND active -> reject call from \(String(describing: offer.contact?.identity))");
+                    DDLogWarn("VoipCallService: [cid=\(offer.callId.callId)]: Master DND active, reject the call")
                     self.contact = offer.contact
                     let action = VoIPCallUserAction.init(action: .rejectOffHours, contact: offer.contact!, callId: offer.callId, completion: offer.completion)
                     self.rejectCall(action: action, closeCallView: true)
@@ -612,7 +612,6 @@ extension VoIPCallService {
                 }
                 AVAudioSession.sharedInstance().requestRecordPermission { (granted) in
                     if granted == true {
-                        DDLogNotice("Threema call: handleOfferMessage -> Add offer -> set contact to service \(String(describing: offer.contact?.identity))");
                         self.contact = offer.contact
                         self.alreadyAccepted = false
                         self.state = .receivedOffer
@@ -646,7 +645,7 @@ extension VoIPCallService {
                         
                         completion()
                     } else {
-                        DDLogNotice("Threema call: handleOfferMessage -> Audio is not granted -> reject call from \(String(describing: offer.contact?.identity))");
+                        DDLogWarn("VoipCallService: [cid=\(offer.callId.callId)]: Audio is not granted")
                         self.contact = offer.contact
                         self.state = .microphoneDisabled
                         // reject call because there is no permission for the microphone
@@ -685,21 +684,18 @@ extension VoIPCallService {
                     }
                 }
             } else {
-                DDLogNotice("Threema call: handleOfferMessage -> State is not idle");
+                DDLogWarn("VoipCallService: [cid=\(offer.callId.callId)]: Current state is not IDLE (\(state.description()))")
                 if contact == offer.contact && state == .incomingRinging {
-                    DDLogNotice("Threema call: handleOfferMessage -> same contact as the current call");
                     if PendingMessagesManager.canMasterDndSendPush() == false && appRunsInBackground == true{
-                        DDLogNotice("Threema call: handleOfferMessage -> Master DND active -> reject call from \(String(describing: offer.contact?.identity))");
                         let action = VoIPCallUserAction.init(action: .rejectOffHours, contact: offer.contact!, callId: offer.callId, completion: offer.completion)
                         self.rejectCall(action: action, closeCallView: true)
                         completion()
                     } else {
-                        DDLogNotice("Threema call: handleOfferMessage -> Master DND inactive -> set offer \(String(describing: offer.contact?.identity))");
+                        DDLogWarn("VoipCallService: [cid=\(offer.callId.callId)]: Same contact as the current call ((\(offer.contact?.identity ?? "?")), Master DND inactive, set the offer")
                         disconnectPeerConnection()
                         handleOfferMessage(offer: offer, completion: completion)
                     }
                 } else {
-                    DDLogNotice("Threema call: handleOfferMessage -> reject call, it's the wrong state");
                     // reject call because it's the wrong state
                     let reason: VoIPCallUserAction.Action = contact == offer.contact ? .rejectUnknown : .rejectBusy
                     let action = VoIPCallUserAction.init(action: reason, contact: offer.contact!, callId: offer.callId, completion: offer.completion)
@@ -708,7 +704,6 @@ extension VoIPCallService {
                 }
             }
         } else {
-            DDLogNotice("Threema call: handleOfferMessage -> reject all, threema call is disabled");
             // reject call because Threema Calls are disabled or unavailable
             let action = VoIPCallUserAction.init(action: .rejectDisabled, contact: offer.contact!, callId: offer.callId, completion: offer.completion)
             rejectCall(action: action)
@@ -741,7 +736,13 @@ extension VoIPCallService {
      - parameter completion: Completion block
      */
     private func handleAnswerMessage(answer: VoIPCallAnswerMessage, completion: @escaping (() -> Void)) {
-        DDLogNotice("Threema call: handle incomming answer from \(answer.contact?.identity ?? "?") with callId \(answer.callId.callId)")
+        let logString = "VoipCallService: [cid=\(answer.callId.callId)]: Call answer received from \(answer.contact?.identity ?? "?"): \(answer.action.description())"
+        if answer.action == .call {
+            DDLogNotice(logString)
+        } else {
+            DDLogNotice(logString + "/\(answer.rejectReason?.description() ?? "unknown")")
+        }
+        
         if contact != nil {
             if callInitiator == true {
                 if let callId = callId, (state == .sendOffer || state == .outgoingRinging) && contact!.identity == answer.contact?.identity && callId.isSame(answer.callId) {
@@ -789,13 +790,12 @@ extension VoIPCallService {
                                 if error == nil {
                                     switch self.state {
                                     case .idle, .sendOffer, .receivedOffer, .outgoingRinging, .incomingRinging, .sendAnswer, .receivedAnswer:
-                                        self.state = .initalizing
+                                        self.state = .initializing
                                     default:
                                         break
                                     }
                                 } else {
-                                    // can't set remote sdp --> end call
-                                    DDLogNotice("Threema call: HangupBug -> Can't set remote sdp -> hangup")
+                                    DDLogError("VoipCallService: [cid=\(answer.callId.callId)]: Can't add remote sdp to the peerConnection")
                                     let hangupMessage = VoIPCallHangupMessage(contact: self.contact!, callId: self.callId!, completion: nil)
                                     VoIPCallSender.sendVoIPCallHangup(hangupMessage: hangupMessage, wait: false)
                                     self.state = .rejectedUnknown
@@ -806,8 +806,7 @@ extension VoIPCallService {
                             })
                             
                         } else {
-                            // remote sdp is empty --> end call
-                            DDLogNotice("Threema call: HangupBug -> Remote sdp is empty -> hangup")
+                            DDLogError("VoipCallService: [cid=\(answer.callId.callId)]: Remote sdp is empty")
                             let hangupMessage = VoIPCallHangupMessage(contact: self.contact!, callId: self.callId!, completion: nil)
                             VoIPCallSender.sendVoIPCallHangup(hangupMessage: hangupMessage, wait: false)
                             self.state = .rejectedUnknown
@@ -818,19 +817,19 @@ extension VoIPCallService {
                     }
                 } else {
                     if contact!.identity == answer.contact?.identity {
-                        ValidationLogger.shared().logString("Threema call with \(String(describing: contact!.identity)): Can't handle answer message, because \(callStateString()) is the wrong state or answer callId \(answer.callId.callId) is different to \(callId?.callId ?? 0)")
+                        DDLogWarn("VoipCallService: [cid=\(answer.callId.callId)]: Current state is wrong (\(state.description())) or callId is different to \(callId?.callId ?? 0)")
                     } else {
-                        ValidationLogger.shared().logString("Threema call with \(String(describing: contact!.identity)): Contact in manager is different to answer message \(String(describing: answer.contact?.identity))")
+                        DDLogWarn("VoipCallService: [cid=\(answer.callId.callId)]: Answer contact (\(answer.contact?.identity ?? "?") is different to current call contact (\(contact?.identity ?? "?")")
                     }
                     completion()
                 }
             } else {
                 // We are not the initiator so we can ignore this message
-                ValidationLogger.shared().logString("Threema call: Not initiator, ignore this message -> answer message from contact \(String(describing: answer.contact?.identity))")
+                DDLogWarn("VoipCallService: [cid=\(answer.callId.callId)]: No initiator, ignore this answer")
                 completion()
             }
         } else {
-            ValidationLogger.shared().logString("Threema call: No contact set in manager -> answer message from contact \(String(describing: answer.contact?.identity))")
+            DDLogWarn("VoipCallService: [cid=\(answer.callId.callId)]: No contact set for currenct call")
             completion()
         }
     }
@@ -842,7 +841,7 @@ extension VoIPCallService {
      - parameter completion: Completion block
      */
     private func handleRingingMessage(ringing: VoIPCallRingingMessage, completion: @escaping (() -> Void)) {
-        DDLogNotice("Threema call: handle incoming ringing from \(ringing.contact.identity ?? "?") with callId \(ringing.callId.callId)")
+        DDLogNotice("VoipCallService: [cid=\(ringing.callId.callId)]: Call ringing message received from \(ringing.contact.identity ?? "?")")
         if contact != nil {
             if let callId = callId, contact!.identity == ringing.contact.identity && callId.isSame(ringing.callId) {
                 switch state {
@@ -850,13 +849,13 @@ extension VoIPCallService {
                     state = .outgoingRinging
                     break
                 default:
-                    ValidationLogger.shared().logString("Threema call with \(String(describing: contact!.identity)): Can't handle ringing message, because \(callStateString()) is the wrong state")
+                    DDLogWarn("VoipCallService: [cid=\(ringing.callId.callId)]: Wrong state (\(state.description())) to handle ringing message")
                 }
             } else {
-                ValidationLogger.shared().logString("Threema call with \(String(describing: contact!.identity)) (\(callId?.callId ?? 0): Contact in manager is different to ringing message \(String(describing: ringing.contact.identity)) (\(ringing.callId.callId)")
+                DDLogWarn("VoipCallService: [cid=\(ringing.callId.callId)]: Ringing contact (\(ringing.contact.identity ?? "?") is different to current call contact (\(contact?.identity ?? "?")")
             }
         } else {
-            ValidationLogger.shared().logString("Threema call: No contact set in manager -> ringing message from contact \(String(describing: ringing.contact.identity))")
+            DDLogWarn("VoipCallService: [cid=\(ringing.callId.callId)]: No contact set for currenct call")
         }
         completion()
     }
@@ -868,14 +867,19 @@ extension VoIPCallService {
      - parameter completion: Completion block
      */
     private func handleIceCandidatesMessage(ice: VoIPCallIceCandidatesMessage, completion: @escaping (() -> Void)) {
-        DDLogNotice("Threema call: handle incoming ice candidates from \(ice.contact?.identity ?? "?") with callId \(ice.callId.callId)")
+        DDLogNotice("VoipCallService: [cid=\(ice.callId.callId)]: Call ICE candidate message received from \(ice.contact?.identity ?? "?") (\(ice.candidates.count) candidates)")
+        
+        for candidate in ice.candidates {
+            DDLogNotice("VoipCallService: [cid=\(ice.callId.callId)]: Incoming ICE candidate: \(candidate.sdp)")
+        }
+        
         if contact != nil {
             if let callId = callId, contact!.identity == ice.contact?.identity && callId.isSame(ice.callId)  {
                 switch state {
-                case .sendOffer, .outgoingRinging, .sendAnswer, .receivedAnswer, .initalizing, .calling, .reconnecting:
+                case .sendOffer, .outgoingRinging, .sendAnswer, .receivedAnswer, .initializing, .calling, .reconnecting:
                     if ice.removed == false {
                         for candidate in ice.candidates {
-                            if shouldAddLocalCandidate(candidate) == true {
+                            if shouldAddLocalCandidate(candidate) == (true, nil) {
                                 peerConnectionClient?.set(addRemoteCandidate: candidate)
                             }
                         }
@@ -894,17 +898,17 @@ extension VoIPCallService {
                     }
                     break
                 default:
-                    ValidationLogger.shared().logString("Threema call with \(String(describing: contact!.identity)): Can't handle ice candidates message, because \(callStateString()) is the wrong state")
+                    DDLogWarn("VoipCallService: [cid=\(ice.callId.callId)]: Wrong state (\(state.description())) to handle ICE candidates message")
                     completion()
                 }
             } else {
                 addUnknownCallIcecandidatesMessages(message: ice)
-                ValidationLogger.shared().logString("Threema call with \(String(describing: contact!.identity)): Contact in manager is different to ice candidates message \(String(describing: ice.contact?.identity))")
+                DDLogNotice("VoipCallService: [cid=\(ice.callId.callId)]: ICE candidates contact (\(ice.contact?.identity ?? "?") is different to current call contact (\(contact?.identity ?? "?")")
                 completion()
             }
         } else {
             addUnknownCallIcecandidatesMessages(message: ice)
-            ValidationLogger.shared().logString("Threema call: No contact set in manager -> ice candidates message from contact \(String(describing: ice.contact?.identity))")
+            DDLogWarn("VoipCallService: [cid=\(ice.callId.callId)]: No contact set for currenct call")
             completion()
         }
     }
@@ -916,11 +920,12 @@ extension VoIPCallService {
      - parameter completion: Completion block
      */
     private func handleHangupMessage(hangup: VoIPCallHangupMessage, completion: @escaping (() -> Void)) {
-        DDLogNotice("Threema call: handle incoming hangup from \(hangup.contact.identity ?? "?") with callId \(hangup.callId.callId)")
+        DDLogNotice("VoipCallService: [cid=\(hangup.callId.callId)]: Call hangup message received from \(hangup.contact.identity ?? "?")")
+        
         if contact != nil {
             if let callId = callId, contact!.identity == hangup.contact.identity && callId.isSame(hangup.callId)  {
                 switch state {
-                case .receivedOffer, .outgoingRinging, .incomingRinging, .sendAnswer, .initalizing, .calling, .reconnecting:
+                case .receivedOffer, .outgoingRinging, .incomingRinging, .sendAnswer, .initializing, .calling, .reconnecting:
                     RTCAudioSession.sharedInstance().isAudioEnabled = false
                     state = .remoteEnded
                     callKitManager?.endCall()
@@ -928,13 +933,13 @@ extension VoIPCallService {
                     disconnectPeerConnection()
                     break
                 default:
-                    ValidationLogger.shared().logString("Threema call with \(String(describing: contact!.identity)): Can't handle hangup message, because \(callStateString()) is the wrong state")
+                    DDLogWarn("VoipCallService: [cid=\(hangup.callId.callId)]: Wrong state (\(state.description())) to handle hangup message")
                 }
             } else {
-                ValidationLogger.shared().logString("Threema call with \(String(describing: contact!.identity)) (\(callId?.callId ?? 0): Contact in manager is different to hangup message \(String(describing: hangup.contact.identity)) (\(hangup.callId.callId)")
+                DDLogNotice("VoipCallService: [cid=\(hangup.callId.callId)]: Hangup contact (\(hangup.contact.identity ?? "?") is different to current call contact (\(contact?.identity ?? "?")")
             }
         } else {
-            ValidationLogger.shared().logString("Threema call: No contact set in manager -> hangup message contact \(String(describing: hangup.contact.identity))")
+            DDLogWarn("VoipCallService: [cid=\(hangup.callId.callId)]: No contact set for currenct call")
         }
         completion()
     }
@@ -971,8 +976,7 @@ extension VoIPCallService {
                     }
                 }
             } else {
-                // do nothing because it's the wrong state
-                ValidationLogger.shared().logString("Threema call with \(String(describing: contact!.identity)): Can't handle call, because \(callStateString()) is the wrong state")
+                DDLogWarn("VoipCallService: [cid=\(action.callId?.callId ?? 0)]: Wrong state (\(state.description())) to start call as initiator")
                 completion()
             }
         } else {
@@ -1006,6 +1010,7 @@ extension VoIPCallService {
 
                     let answerMessage = VoIPCallAnswerMessage.init(action: .call, contact: action.contact, answer: sdp, rejectReason: nil, features: nil, isVideoAvailable: self.threemaVideoCallAvailable, callId: self.callId!, completion: nil)
                     VoIPCallSender.sendVoIPCall(answer: answerMessage)
+                    
                     if action.action != .acceptCallKit {
                         self.callKitManager?.callAccepted()
                     }
@@ -1022,7 +1027,7 @@ extension VoIPCallService {
                         for message in self.receivedIcecandidatesMessages {
                             if message.removed == false {
                                 for candidate in message.candidates {
-                                    if self.shouldAddLocalCandidate(candidate) == true {
+                                    if self.shouldAddLocalCandidate(candidate) == (true, nil) {
                                         self.peerConnectionClient?.set(addRemoteCandidate: candidate)
                                     }
                                 }
@@ -1035,8 +1040,7 @@ extension VoIPCallService {
                 })
             } else {
                 // dismiss call view because it's the wrong state
-                let identity = action.contact.identity ?? "?"
-                ValidationLogger.shared().logString("Threema call with \(identity): Can't handle accept call, because \(self.callStateString()) is the wrong state")
+                DDLogWarn("VoipCallService: [cid=\(action.callId?.callId ?? 0)]: Wrong state (\(self.state.description())) to accept incoming call action")
                 self.callKitManager?.answerFailed()
                 self.dismissCallView()
                 self.disconnectPeerConnection()
@@ -1063,6 +1067,9 @@ extension VoIPCallService {
             let forceTurn: Bool = Int(truncating: self.contact!.verificationLevel) == kVerificationLevelUnverified || UserSettings.shared()?.alwaysRelayCalls == true
             let peerConnectionParameters = VoIPCallPeerConnectionClient.PeerConnectionParameters(isVideoCallAvailable: self.threemaVideoCallAvailable, videoCodecHwAcceleration: self.threemaVideoCallAvailable, forceTurn: forceTurn, gatherContinually: true, allowIpv6: UserSettings.shared().enableIPv6, isDataChannelAvailable: false)
             self.callId = VoIPCallId.generate()
+            
+            DDLogNotice("VoipCallService: [cid=\(self.callId!.callId)]: Handle new call with \(self.contact!.identity ?? "?"), we are the caller")
+            
             VoIPCallPeerConnectionClient.instantiate(contact: self.contact!, callId: self.callId, peerConnectionParameters: peerConnectionParameters) { (result) in
                 do {
                     self.peerConnectionClient = try result.get()
@@ -1100,7 +1107,7 @@ extension VoIPCallService {
                             BackgroundTaskManager.shared.newBackgroundTask(key: kAppVoIPBackgroundTask, timeout: Int(kAppPushBackgroundTaskTime)) {
                                 ServerConnector.shared()?.connectWait()
                                 RTCAudioSession.sharedInstance().isAudioEnabled = false
-                                DDLogNotice("Threema call: HangupBug -> call ringing timeout -> hangup")
+                                DDLogNotice("VoipCallService: [cid=\(self.callId!)]: Call ringing timeout")
                                 let hangupMessage = VoIPCallHangupMessage(contact: self.contact!, callId: self.callId!, completion: nil)
                                 VoIPCallSender.sendVoIPCallHangup(hangupMessage: hangupMessage, wait: false)
                                 self.state = .ended
@@ -1300,7 +1307,7 @@ extension VoIPCallService {
                     Timer.scheduledTimer(withTimeInterval: 4, repeats: false, block: { (timer) in
                         callVC.dismiss(animated: true, completion: {
                             switch self.state {
-                            case .sendOffer, .receivedOffer, .outgoingRinging, .incomingRinging, .sendAnswer, .receivedAnswer, .initalizing, .calling, .reconnecting: break
+                            case .sendOffer, .receivedOffer, .outgoingRinging, .incomingRinging, .sendAnswer, .receivedAnswer, .initializing, .calling, .reconnecting: break
                             case .idle, .ended, .remoteEnded, .rejected, .rejectedBusy, .rejectedTimeout, .rejectedDisabled, .rejectedOffHours, .rejectedUnknown, .microphoneDisabled:
                                 self.callViewController = nil
                             }
@@ -1313,7 +1320,7 @@ extension VoIPCallService {
                 } else {
                     callVC.dismiss(animated: true, completion: {
                         switch self.state {
-                        case .sendOffer, .receivedOffer, .outgoingRinging, .incomingRinging, .sendAnswer, .receivedAnswer, .initalizing, .calling, .reconnecting: break
+                        case .sendOffer, .receivedOffer, .outgoingRinging, .incomingRinging, .sendAnswer, .receivedAnswer, .initializing, .calling, .reconnecting: break
                         case .idle, .ended, .remoteEnded, .rejected, .rejectedBusy, .rejectedTimeout, .rejectedDisabled, .rejectedOffHours, .rejectedUnknown, .microphoneDisabled:
                             self.callViewController = nil
                         }
@@ -1455,7 +1462,7 @@ extension VoIPCallService {
             break
         case .idle:
             break
-        case .sendOffer, .receivedOffer, .sendAnswer, .receivedAnswer, .initalizing:
+        case .sendOffer, .receivedOffer, .sendAnswer, .receivedAnswer, .initializing:
             // do nothing
             break
         case .microphoneDisabled:
@@ -1529,7 +1536,7 @@ extension VoIPCallService {
         case .receivedAnswer:
             invalidateInitCallTimeout()
             invalidateCallFailedTimer()
-        case .initalizing:
+        case .initializing:
             invalidateInitCallTimeout()
             invalidateIncomingCallTimeout()
         case .calling:
@@ -1599,7 +1606,7 @@ extension VoIPCallService {
         func addCandidateToLocalArray(_ addedCadidates: [RTCIceCandidate]) {
             iceCandidatesLockQueue.sync {
                 for (_, candidate) in addedCadidates.enumerated() {
-                    if shouldAddLocalCandidate(candidate) == true {
+                    if shouldAddLocalCandidate(candidate) == (true, nil) {
                         localAddedIceCandidates.append(candidate)
                     }
                 }
@@ -1607,7 +1614,7 @@ extension VoIPCallService {
         }
         
         switch state {
-        case .sendOffer, .outgoingRinging, .receivedAnswer, .initalizing, .calling, .reconnecting:
+        case .sendOffer, .outgoingRinging, .receivedAnswer, .initializing, .calling, .reconnecting:
             addCandidateToLocalArray(candidates)
             let seperatedCandidates = self.localAddedIceCandidates.take(localAddedIceCandidates.count)
             if (seperatedCandidates.count > 0) {
@@ -1629,52 +1636,52 @@ extension VoIPCallService {
     /**
      Check if should add a ice candidate
      - parameter candidate: RTCIceCandidate
-     - Returns: true or false
+     - Returns: true or false, reason
      */
-    private func shouldAddLocalCandidate(_ candidate: RTCIceCandidate) -> Bool {
+    private func shouldAddLocalCandidate(_ candidate: RTCIceCandidate) -> (Bool, String?) {
         let parts = candidate.sdp.components(separatedBy: CharacterSet.init(charactersIn: " "))
         
         // Invalid candidate but who knows what they're doing, so we'll just eat it...
         if parts.count < 8 {
-            return true
+            return (true, nil)
         }
         
         // Discard loopback
         let ip = parts[4]
         if ip == "172.0.0.1" || ip == "::1" {
-            debugPrint("Call: Discarding loopback candidate: \(candidate.sdp)")
-            return false
+            debugPrint("VoipCallService: [cid=\(self.callId?.callId ?? 0)]: Discarding loopback candidate: \(candidate.sdp)")
+            return (false, "loopback")
         }
         
         // Discard IPv6 if disabled
         if UserSettings.shared()?.enableIPv6 == false && ip.contains(":") {
-            debugPrint("Call: Discarding local IPv6 candidate: \(candidate.sdp)")
-            return false
+            debugPrint("VoipCallService: [cid=\(self.callId?.callId ?? 0)]: Discarding local IPv6 candidate: \(candidate.sdp)")
+            return (false, "ipv6_disabled")
         }
         
         // Always add if not relay
         let type = parts[7]
         if type != "relay" || parts.count < 10 {
-            return true
+            return (true, nil)
         }
         
         // Always add if related address is any
         let relatedAddress = parts[9]
         if relatedAddress == "0.0.0.0" {
-            return true
+            return (true, nil)
         }
         
         // Discard relay candidates with the same related address
         // Important: This only works as long as we don't do ICE restarts and don't add further relay transport types!
         if localRelatedAddresses.contains(relatedAddress) {
-            debugPrint("Call: Discarding local relay candidate (duplicate related address: \(relatedAddress)): \(candidate.sdp)")
-            return false
+            debugPrint("VoipCallService: [cid=\(self.callId?.callId ?? 0)]: Discarding local relay candidate (duplicate related address: \(relatedAddress)): \(candidate.sdp)")
+            return (false, "duplicate_related_addr")
         } else {
             localRelatedAddresses.insert(relatedAddress)
         }
         
         // Add it!
-        return true
+        return (true, nil)
     }
     
     /**
@@ -1779,7 +1786,7 @@ extension VoIPCallService {
                                     }
                                 }
                                 
-                                notification.userInfo = ["threema": ["cmd": "missedcall", "from": contact.displayName]]
+                                notification.userInfo = ["threema": ["cmd": "missedcall", "from": contact.identity]]
                                 if !UserSettings.shared().pushShowNickname {
                                     notification.title = contact.displayName
                                 } else {
@@ -1821,7 +1828,7 @@ extension VoIPCallService {
             break
         case .receivedAnswer:
             break
-        case .initalizing:
+        case .initializing:
             removeIncomCall()
             break
         case .calling:
@@ -1867,7 +1874,7 @@ extension VoIPCallService {
             break
         case .receivedAnswer:
             break
-        case .initalizing:
+        case .initializing:
             break
         case .calling:
             break
@@ -2013,7 +2020,6 @@ extension VoIPCallService {
     }
     
     private func callFailed() {
-        DDLogNotice("Threema call: peerconnection new state failed -> close connection")
         var message = BundleUtil.localizedString(forKey: "call_status_failed_connected_message")
         if !self.iceWasConnected {
             // show error as notification
@@ -2023,7 +2029,7 @@ extension VoIPCallService {
             }
             message = BundleUtil.localizedString(forKey: "call_status_failed_initializing_message")
         }
-        NotificationBannerHelper.newErrorToast(title: BundleUtil.localizedString(forKey: "call_status_failed_title"), body: message!)
+        NotificationBannerHelper.newErrorToast(title: BundleUtil.localizedString(forKey: "call_status_failed_title"), body: message)
         invalidateCallFailedTimer()
         handleTones(state: .ended, oldState: .reconnecting)
         callKitManager?.endCall()
@@ -2032,9 +2038,9 @@ extension VoIPCallService {
     }
 
     private func callCantCreateOffer(error: Error?) {
-        DDLogNotice("Threema call: Can't create offer -> \(error?.localizedDescription ?? "error is missing")")
+        DDLogNotice("VoipCallService: [cid=\(self.callId?.callId ?? 0)]: Can't create offer (\(error?.localizedDescription ?? "error is missing")")
         let message = BundleUtil.localizedString(forKey: "call_status_failed_sdp_patch_message")
-        NotificationBannerHelper.newErrorToast(title: BundleUtil.localizedString(forKey: "call_status_failed_title"), body: message!)
+        NotificationBannerHelper.newErrorToast(title: BundleUtil.localizedString(forKey: "call_status_failed_title"), body: message)
         invalidateCallFailedTimer()
         handleTones(state: .ended, oldState: .reconnecting)
         callKitManager?.endCall()
@@ -2047,6 +2053,11 @@ extension VoIPCallService: VoIPCallPeerConnectionClientDelegate {
     func peerConnectionClient(_ client: VoIPCallPeerConnectionClient, removedCandidates: [RTCIceCandidate]) {
         // ICE candidate messages are currently allowed to have a "removed" flag. However, this is non-standard.
         // Ignore generated ICE candidates with removed set to true coming from libwebrtc
+        
+        for candidate in removedCandidates {
+            let reason = shouldAddLocalCandidate(candidate).1 ?? "unknown"
+            DDLogNotice("VoipCallService: [cid=\(self.callId?.callId ?? 0)]: Ignoring local ICE candidate (\(reason)): \(candidate.sdp)")
+        }
     }
     
     func peerConnectionClient(_ client: VoIPCallPeerConnectionClient, addedCandidate: RTCIceCandidate) {
@@ -2087,19 +2098,18 @@ extension VoIPCallService: VoIPCallPeerConnectionClientDelegate {
     }
     
     func peerConnectionClient(_ client: VoIPCallPeerConnectionClient, didChangeConnectionState state: RTCIceConnectionState) {
-        DDLogNotice("Threema call: peerConnectionClient state changed: new state \(state.rawValue))")
+        let oldState = self.state
         
         switch state {
         case .new:
             break
         case .checking:
-            self.state = .initalizing
+            self.state = .initializing
         case .connected:
             invalidateCallFailedTimer()
             iceWasConnected = true
             if self.state != .reconnecting {
                 self.state = .calling
-                ValidationLogger.shared().logString("Threema call status is calling: \(self.callStateString())")
                 DispatchQueue.main.async {
                     self.callDurationTime = 0
                     self.callDurationTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true, block: { (timer) in
@@ -2108,7 +2118,7 @@ extension VoIPCallService: VoIPCallPeerConnectionClientDelegate {
                             self.callViewController?.voIPCallDurationChanged(self.callDurationTime)
                         } else {
                             self.callViewController?.voIPCallStatusChanged(state: self.state, oldState: self.state)
-                            ValidationLogger.shared().logString("Threema call status is connected, but shows something different: \(self.callStateString())")
+                            DDLogWarn("VoipCallService: [cid=\(self.callId?.callId ?? 0)]: State is connected, but shows something different \(self.state.description())")
                         }
                         if VoIPHelper.shared()?.isCallActiveInBackground == true {
                             NotificationCenter.default.post(name: NSNotification.Name(kNotificationCallInBackgroundTimeChanged), object: self.callDurationTime)
@@ -2118,9 +2128,7 @@ extension VoIPCallService: VoIPCallPeerConnectionClientDelegate {
                 self.callViewController?.startDebugMode(connection: client.peerConnection)
                 callKitManager?.callConnected()
             } else {
-                ValidationLogger.shared().logString("Threema call status is reconnecting: \(self.callStateString())")
                 self.state = .calling
-                ValidationLogger.shared().logString("Threema call status is calling: \(self.callStateString())")
             }
             self.activateRTCAudio()
         case .completed:
@@ -2131,10 +2139,10 @@ extension VoIPCallService: VoIPCallPeerConnectionClientDelegate {
             } else {
                 if self.iceWasConnected {
                     self.state = .reconnecting
-                    DDLogNotice("Threema call: peerconnection failed, set state to reconnecting -> start callFailedTimer")
+                    DDLogNotice("VoipCallService: [cid=\(self.callId?.callId ?? 0)]: PeerConnection failed, set state to reconnecting and start callFailedTimer")
                 } else {
-                    self.state = .initalizing
-                    DDLogNotice("Threema call: peerconnection failed, set state to initalizing -> start callFailedTimer")
+                    self.state = .initializing
+                    DDLogNotice("VoipCallService: [cid=\(self.callId?.callId ?? 0)]: PeerConnection failed, set state to initializing and start callFailedTimer")
                 }
                 // start timer and wait if state change back to connected
                 DispatchQueue.main.async {
@@ -2145,7 +2153,7 @@ extension VoIPCallService: VoIPCallPeerConnectionClientDelegate {
                 }
             }
         case .disconnected:
-            if self.state == .calling || self.state == .initalizing {
+            if self.state == .calling || self.state == .initializing {
                 self.state = .reconnecting
             }
         case .closed:
@@ -2154,6 +2162,9 @@ extension VoIPCallService: VoIPCallPeerConnectionClientDelegate {
             break
         @unknown default:
             break
+        }
+        if (oldState != self.state) {
+            DDLogNotice("VoipCallService: [cid=\(callId?.callId ?? 0)]: Call state change from \(oldState.description()) to \(self.state.description())")
         }
     }
     

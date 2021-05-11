@@ -34,6 +34,7 @@
 #import "UTIConverter.h"
 #import "MediaConverter.h"
 #import "MessageSender.h"
+#import "ThemedNavigationController.h"
 
 #ifdef DEBUG
 static const DDLogLevel ddLogLevel = DDLogLevelVerbose;
@@ -51,7 +52,9 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 @property NSMutableSet *fileMessageSenders;
 @property MBProgressHUD *videoEncodeProgressHUD;
 @property PhotosAccessHelper *helper;
+@property MediaPreviewDataProcessor *mediaPreviewDataProcessor;
 @property NSTimer *sequentialSendTimer;
+@property float lastProgress;
 
 @property dispatch_semaphore_t sequentialSema;
 
@@ -87,7 +90,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     }
     
     for (long i = 0; i < assets.count; i++) {
-        long found = [MediaPreviewViewController containsWithAsset:assets[i] itemList:prevSelected];
+        long found = [MediaPreviewDataProcessor containsWithAsset:assets[i] itemList:prevSelected];
         if (found == -1) {
             [selection insertObject:assets[i] atIndex:i + urlItems.count];
         } else {
@@ -145,10 +148,16 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     
     int limit = 50;
     
+    if (_mediaPreviewDataProcessor == nil) {
+        _mediaPreviewDataProcessor = [[MediaPreviewDataProcessor alloc] init];
+    }
+    
     _helper = [[PhotosAccessHelper alloc] initWithCompletion:^(NSArray * _Nonnull assets, DKImagePickerController * pickerController) {
         
-        UIStoryboard *storyboard = [UIStoryboard storyboardWithName:@"MediaShareStoryboard" bundle:nil];
-        MediaPreviewViewController *selectionViewController = [storyboard instantiateViewControllerWithIdentifier:@"MediaShareController"];
+        NSBundle *sbBundle = [NSBundle bundleForClass:[MediaPreviewViewController class]];
+        UIStoryboard *storyboard = [UIStoryboard storyboardWithName:@"MediaShareStoryboard" bundle:sbBundle];
+        ThemedNavigationController *navController = [storyboard instantiateInitialViewController];
+        MediaPreviewViewController *selectionViewController = (MediaPreviewViewController *)[navController topViewController];
         
         if (assets.count > 0) {
             if ([assets.firstObject isKindOfClass:DKAsset.class]) {
@@ -157,61 +166,72 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
                 
                 [selectionViewController initWithMediaWithDataArray:initialSelection delegate:self completion:^(NSArray *selection, BOOL sendAsFile, NSArray *captions) {
                     dispatch_async(dispatch_get_main_queue(), ^{
-                        [dismissable dismissViewControllerAnimated:true completion:nil];
+                        [dismissable dismissViewControllerAnimated:true completion:^{
+                            [self sendAssets:selection asFile:sendAsFile withCaptions: captions];
+                        }];
                     });
-                    [self sendAssets:selection asFile:sendAsFile withCaptions: captions];
-                } returnToMe: ^(NSArray *defaultSelection, NSArray *prevSelection) {
-                    dispatch_async(dispatch_get_main_queue(), ^{
-                        [selectionViewController dismissViewControllerAnimated:true completion:nil];
-                        prevSelected = [NSMutableArray arrayWithArray:prevSelection];
-                        [pickerController setDefaultSelectedAssets:defaultSelection];
-                        [((ThreemaImagePickerControllerDefaultUIDelegate *) pickerController.UIDelegate) updateButton];
-                    });
-                } addMore: ^(NSArray *defaultSelection, NSArray *prevSelection) {
-                    dispatch_async(dispatch_get_main_queue(), ^{
-                        [selectionViewController dismissViewControllerAnimated:true completion:nil];
-                        prevSelected = [NSMutableArray arrayWithArray:prevSelection];
-                        [pickerController setDefaultSelectedAssets:defaultSelection];
-                        [((ThreemaImagePickerControllerDefaultUIDelegate *) pickerController.UIDelegate) updateButton];
-                    });
-                }];
+                } itemDelegate: _mediaPreviewDataProcessor];
                 
                 dispatch_async(dispatch_get_main_queue(), ^{
                     selectionViewController.modalPresentationStyle = UIModalPresentationOverCurrentContext;
-                    [self.chatViewController.presentedViewController presentViewController:selectionViewController animated:YES completion:nil];
+                    [self.chatViewController.presentedViewController presentViewController:navController animated:YES completion:nil];
                 });
                 
-            } else {
+                _mediaPreviewDataProcessor.addMore = ^(NSArray *defaultSelection, NSArray *prevSelection) {
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        [selectionViewController dismissViewControllerAnimated:true completion:nil];
+                        prevSelected = [NSMutableArray arrayWithArray:prevSelection];
+                        [pickerController setDefaultSelectedAssets:defaultSelection];
+                        [((ThreemaImagePickerControllerDefaultUIDelegate *) pickerController.UIDelegate) updateButton];
+                    });
+                };
                 
+                _mediaPreviewDataProcessor.returnToMe = ^(NSArray *defaultSelection, NSArray *prevSelection) {
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        [selectionViewController dismissViewControllerAnimated:true completion:nil];
+                        prevSelected = [NSMutableArray arrayWithArray:prevSelection];
+                        [pickerController setDefaultSelectedAssets:defaultSelection];
+                        [((ThreemaImagePickerControllerDefaultUIDelegate *) pickerController.UIDelegate) updateButton];
+                    });
+                };
+                
+            } else {
                 if (lastSelection != nil) {
                     assets = [lastSelection arrayByAddingObjectsFromArray:assets];
                 }
                 
                 [selectionViewController initWithMediaWithDataArray:assets delegate:self completion:^(NSArray *selection, BOOL sendAsFile, NSArray *captions) {
                     dispatch_async(dispatch_get_main_queue(), ^{
-                        [selectionViewController dismissViewControllerAnimated:true completion:nil];
+                        [selectionViewController dismissViewControllerAnimated:true completion:^{
+                            [self sendAssets:selection asFile:sendAsFile withCaptions: captions];
+                        }];
                     });
-                    [self sendAssets:selection asFile:sendAsFile withCaptions: captions];
-                } returnToMe: ^(__unused NSArray *defaultSelection, NSArray *prevSelection) {
+                } itemDelegate: _mediaPreviewDataProcessor];
+                
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [selectionViewController setBackIsCancel:true];
+                    [self.chatViewController presentViewController:navController animated:YES completion:nil];
+                });
+                
+                __weak typeof(self) weakSelf = self;
+                _mediaPreviewDataProcessor.returnToMe =  ^(__unused NSArray *defaultSelection, NSArray *prevSelection) {
                     dispatch_async(dispatch_get_main_queue(), ^{
                         [selectionViewController dismissViewControllerAnimated:true completion:nil];
                     });
-                    [self clearTemporaryDirectoryItems:prevSelection];
-                } addMore: ^(__unused NSArray *defaultSelection, NSArray *prevSelection) {
+                    [weakSelf clearTemporaryDirectoryItems:prevSelection];
+                };
+                
+                _mediaPreviewDataProcessor.addMore = ^(__unused NSArray *defaultSelection, NSArray *prevSelection) {
                     dispatch_async(dispatch_get_main_queue(), ^{
                         prevSelected = [NSMutableArray arrayWithArray:prevSelection];
                         _helper = [[PhotosAccessHelper alloc] initWithCompletion:^(NSArray * _Nonnull defaultAssets, __unused DKImagePickerController *returnedPickerController) {
                             NSArray *newAssets = [prevSelection arrayByAddingObjectsFromArray:defaultAssets];
                             [selectionViewController resetMediaToDataArray:newAssets reloadData:true];
                         }];
-                        [_helper showPickerWithViewController:selectionViewController limit:50-prevSelection.count];
+                        [weakSelf.helper showPickerWithViewController:selectionViewController limit:50-prevSelection.count];
                     });
                     
-                }];
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    [selectionViewController setBackIsCancel:true];
-                    [self.chatViewController presentViewController:selectionViewController animated:YES completion:nil];
-                });
+                };
             }
         }
     }];
@@ -242,21 +262,36 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 }
 
 - (void)showPreviewForAssets:(NSArray *)assets {
-    UIStoryboard *storyboard = [UIStoryboard storyboardWithName:@"MediaShareStoryboard" bundle:nil];
-    MediaPreviewViewController *selectionViewController = [storyboard instantiateViewControllerWithIdentifier:@"MediaShareController"];
+    NSBundle *sbBundle = [NSBundle bundleForClass:[MediaPreviewViewController class]];
+    UIStoryboard *storyboard = [UIStoryboard storyboardWithName:@"MediaShareStoryboard" bundle:sbBundle];
+    ThemedNavigationController *navController = [storyboard instantiateInitialViewController];
+    MediaPreviewViewController *selectionViewController = (MediaPreviewViewController *)[navController topViewController];
     
     selectionViewController.backIsCancel = true;
+    if (![assets.firstObject isKindOfClass:PHAsset.class]) {
+        selectionViewController.disableAdd = true;
+    }
+    
+    if (_mediaPreviewDataProcessor == nil) {
+        _mediaPreviewDataProcessor = [[MediaPreviewDataProcessor alloc] init];
+    }
     
     [selectionViewController initWithMediaWithDataArray:assets delegate:self completion:^(NSArray *selection, BOOL sendAsFile, NSArray *captions) {
-        [selectionViewController dismissViewControllerAnimated:true completion:nil];
-        [self sendAssets:selection asFile:sendAsFile withCaptions: captions];
-    } returnToMe: ^(__unused NSArray *defaultSelection, NSArray *prevSelection) {
+        [selectionViewController dismissViewControllerAnimated:true completion:^{
+            [self sendAssets:selection asFile:sendAsFile withCaptions: captions];
+        }];
+    } itemDelegate: _mediaPreviewDataProcessor];
+    
+    __weak typeof(self) weakSelf = self;
+    _mediaPreviewDataProcessor.returnToMe = ^(__unused NSArray *defaultSelection, NSArray *prevSelection) {
         dispatch_async(dispatch_get_main_queue(), ^{
             [selectionViewController dismissViewControllerAnimated:true completion:nil];
         });
-        [self clearTemporaryDirectoryItems:prevSelection];
-    } addMore: ^(NSArray *defaultSelection, NSArray *prevSelection) {
-        DKImagePickerController *pickerController = [self setupDKImagePickerController];
+        [weakSelf clearTemporaryDirectoryItems:prevSelection];
+    };
+    
+    _mediaPreviewDataProcessor.addMore = ^(NSArray *defaultSelection, NSArray *prevSelection) {
+        DKImagePickerController *pickerController = [weakSelf setupDKImagePickerController];
         pickerController.defaultSelectedAssets = defaultSelection;
         [selectionViewController presentViewController:pickerController animated:YES completion:nil];
         
@@ -264,12 +299,12 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         
         [pickerController setDidSelectAssets:^(NSArray * __nonnull selectedAssetes) {
             [weakPickerController dismissViewControllerAnimated:true completion:nil];
-            NSArray *selection = [self diffSelection:selectedAssetes fromPreviouslySelected:prevSelection];
+            NSArray *selection = [weakSelf diffSelection:selectedAssetes fromPreviouslySelected:prevSelection];
             [selectionViewController resetMediaToDataArray:selection reloadData:true];
         }];
-    }];
+    };
     
-    [self.chatViewController presentViewController:selectionViewController animated:YES completion:nil];
+    [self.chatViewController presentViewController:navController animated:YES completion:nil];
 }
 
 - (void)prepareAssets:(NSArray *)assets withTarget:(NSMutableArray *)itemArray asFile:(bool) sendAsFile {
@@ -287,21 +322,49 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
             } else {
                 NSURL *url = assets[i];
                 NSString *uti = [UTIConverter utiForFileURL:url];
-                if ([UTIConverter conformsToImageType:uti] || [UTIConverter conformsToMovieType:uti]) {
-                    URLSenderItem *item = [URLSenderItemCreator getSenderItemFor:url];
+                if ([UTIConverter conformsToImageType:uti]) {
+                    URLSenderItem *item;
+                    if (sendAsFile) {
+                        item = [URLSenderItem itemWithUrl:url type:[UTIConverter utiForFileURL:url] renderType:@0 sendAsFile:true];
+                    } else {
+                        item = [URLSenderItemCreator getSenderItemFor:url];
+                    }
+                    if (item != nil)  {
+                        [itemArray addObject:item];
+                    } else {
+                        DDLogError(@"Could not create URLSenderItem from media asset");
+                    }
+                } else if ([UTIConverter conformsToMovieType:uti]) {
+                    // All videos in the format of an URL come from the media preview and have already been converted
+                    URLSenderItem *item = [URLSenderItem itemWithUrl:url
+                                                                type:[UTIConverter mimeTypeFromUTI:uti]
+                                                          renderType:sendAsFile ? @0 : @1
+                                                          sendAsFile:true];
                     if (item != nil)  {
                         [itemArray addObject:item];
                     } else {
                         DDLogError(@"Could not create URLSenderItem from media asset");
                     }
                 } else {
-                    DDLogError(@"Unrecognized media asset");
+                    URLSenderItem *item = [URLSenderItemCreator getSenderItemFor:url];
+                    if (item != nil)  {
+                        [itemArray addObject:item];
+                    } else {
+                        DDLogError(@"Could not create URLSenderItem from url");
+                    }
                 }
             }
             dispatch_async(dispatch_get_main_queue(), ^{
                 NSString *text = NSLocalizedString(@"processing_items_progress", nil);
-                [self incrementVideoProgressHUDWithText:text placeholderIncluded:true];
+                [self incrementVideoProgressHUDBy:100 WithText:text placeholderIncluded:true];
             });
+        }
+        if (self.cancelled) {
+            itemArray = nil;
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [self hideVideoEncodeProgressHUD];
+            });
+            return;
         }
     }
 }
@@ -364,10 +427,6 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
                     }];
                 }
             }
-            dispatch_async(dispatch_get_main_queue(), ^{
-                NSString *text = NSLocalizedString(@"sending_item", nil);
-                [self incrementVideoProgressHUDWithText:text placeholderIncluded:false];
-            });
         }
     }
 }
@@ -377,27 +436,29 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     NSMutableArray *itemArray = [[NSMutableArray alloc] init];
     
     NSString *text = NSLocalizedString(@"processing_items_progress", nil);
-    [self showVideoEncodeProgressHUDWithUnitCount:assets.count text:text];
+    [self showVideoEncodeProgressHUDWithUnitCount:assets.count * 100 text:text];
     
-    self.videoEncodeProgressHUD.progressObject.totalUnitCount = assets.count;
+    self.videoEncodeProgressHUD.progressObject.totalUnitCount = assets.count * 100;
     
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^(void) {
         [self prepareAssets:assets withTarget:itemArray asFile:sendAsFile];
         
-        dispatch_async(dispatch_get_main_queue(), ^{
-            NSString *text = NSLocalizedString(@"sending_item", nil);
-            [self hideVideoEncodeProgressHUD];
-            [self showVideoEncodeProgressHUDWithUnitCount:assets.count text:text];
-        });
-        
-        [self sendItems:itemArray asFile:sendAsFile withCaptions:captions];
+        if(self.cancelled) {
+            dispatch_async(dispatch_get_main_queue(), ^(void){
+                [self hideVideoEncodeProgressHUD];
+            });
+            [self clearTemporaryDirectoryItems:assets];
+            return;
+        }
         
         double delayInSeconds = 1.0;
         dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delayInSeconds * NSEC_PER_SEC));
         dispatch_after(popTime, dispatch_get_main_queue(), ^(void){
             [self hideVideoEncodeProgressHUD];
         });
-        [self clearTemporaryDirectoryItems:assets];
+        
+        [self sendItems:itemArray asFile:sendAsFile withCaptions:captions];
+        
     });
 }
 
@@ -471,8 +532,16 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     
     [imageManager requestAVAssetForVideo:asset options:options resultHandler:^(AVAsset *videoAsset, __unused AVAudioMix *audioMix, __unused NSDictionary *info) {
         
-        VideoURLSenderItemCreator *senderCreator = [[VideoURLSenderItemCreator alloc] init];
-        senderItem = [senderCreator senderItemFromAsset:videoAsset];
+        VideoURLSenderItemCreator *creator = [[VideoURLSenderItemCreator alloc] init];
+        creator.encodeProgressDelegate = self;
+        SDAVAssetExportSession *exportSession = [creator getExportSessionFor:videoAsset];
+        if (!exportSession) {
+            DDLogError(@"Could not create SDAVAssetExportSession for media asset");
+        } else {
+            [self.videoEncoders addObject: exportSession];
+            senderItem = [creator senderItemFrom:videoAsset on:exportSession];
+        }
+        
         dispatch_semaphore_signal(sema);
     }];
     
@@ -639,7 +708,15 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     float progress = exportSession.progress;
     dispatch_async(dispatch_get_main_queue(), ^{
         if (progress == 1.0f) {
+            _lastProgress = 0;
             [self.videoEncoders removeObject:exportSession];
+        }
+        if ((progress - _lastProgress) * 100 > 1) {
+            NSString *text = NSLocalizedString(@"processing_items_progress", nil);
+            // TODO: This is the same bad thing as in the MediaPreviewViewController
+            [self incrementVideoProgressHUDBy:(progress - _lastProgress) * 100 WithText:text placeholderIncluded:true];
+            DDLogInfo(@"Actual progress %f, incremental progress %f, incremented by %f", progress, (progress - _lastProgress), (progress - _lastProgress) * 100);
+            _lastProgress = progress;
         }
     });
 }
@@ -655,8 +732,8 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         self.videoEncodeProgressHUD.progressObject = [[NSProgress alloc] init];
         self.videoEncodeProgressHUD.progressObject.totalUnitCount = unitCount;
         
-        long current = self.videoEncodeProgressHUD.progressObject.completedUnitCount;
-        long total = self.videoEncodeProgressHUD.progressObject.totalUnitCount;
+        long current = MAX(1, self.videoEncodeProgressHUD.progressObject.completedUnitCount / 100);
+        long total = self.videoEncodeProgressHUD.progressObject.totalUnitCount / 100;
         
         [self updateHUDTextWithCompleted:current total:total text:text];
     }
@@ -669,11 +746,15 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     }
 }
 
-- (void)incrementVideoProgressHUDWithText:(NSString *)text placeholderIncluded:(bool)placeholder {
+- (void)incrementVideoProgressHUDBy:(int) incrementValue WithText:(NSString *)text placeholderIncluded:(bool)placeholder {
     if (self.videoEncodeProgressHUD != nil) {
-        self.videoEncodeProgressHUD.progressObject.completedUnitCount++;
-        long current = self.videoEncodeProgressHUD.progressObject.completedUnitCount;
-        long total = self.videoEncodeProgressHUD.progressObject.totalUnitCount;
+        self.videoEncodeProgressHUD.progressObject.completedUnitCount += incrementValue;
+        long long current = self.videoEncodeProgressHUD.progressObject.completedUnitCount / 100;
+        long long total = self.videoEncodeProgressHUD.progressObject.totalUnitCount / 100;
+        current = MIN(current, total);
+        if (current == 0) {
+            current = 1;
+        }
         
         if (!placeholder) {
             text = [text stringByAppendingString:@" %d/%d"];
@@ -683,8 +764,11 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     }
 }
 
-- (void)updateHUDTextWithCompleted:(long)completed total:(long)total text:(NSString *)text {
+- (void)updateHUDTextWithCompleted:(long long)completed total:(long long)total text:(NSString *)text {
     self.videoEncodeProgressHUD.label.text = [NSString stringWithFormat:text, completed, total];
+    if (@available(iOS 13.0, *)) {
+        self.videoEncodeProgressHUD.label.font = [UIFont monospacedDigitSystemFontOfSize:self.videoEncodeProgressHUD.label.font.pointSize weight:UIFontWeightSemibold];
+    }
 }
 
 - (void)removeFileMessageSender:(FileMessageSender*)videoMessageSender {

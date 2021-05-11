@@ -155,6 +155,14 @@ import Foundation
             return imageInsets.top + imageInsets.bottom
         }
     }
+    
+    @objc override open func speakMessage(_ menuController: UIMenuController) {
+        if _captionLabel?.text != nil {
+            let utterance: AVSpeechUtterance = AVSpeechUtterance.init(string: accessibilityLabelForContent())
+            let syn = AVSpeechSynthesizer.init()
+            syn.speak(utterance)
+        }
+    }
 }
 
 extension ChatBlobTextMessageCell {
@@ -267,17 +275,17 @@ extension ChatBlobTextMessageCell {
                 if let element = _captionLabel!.accessibilityElement(at: i) as? UIAccessibilityElement {
                     if element.accessibilityLabel != nil, element.accessibilityLabel! != "." && element.accessibilityLabel! != "@" {
                         if self.checkTextResult(text: element.accessibilityLabel!) != nil {
-                            let openString = "\(BundleUtil.localizedString(forKey: "open") ?? ""): \(element.accessibilityLabel!)"
+                            let openString = "\(BundleUtil.localizedString(forKey: "open") ): \(element.accessibilityLabel!)"
                             let linkAction = UIAccessibilityCustomAction.init(name: openString, target: self, selector: #selector(openLink(with:)))
                             actions?.insert(linkAction, at: indexCounter)
                             indexCounter += 1
                             
-                            let shareString = "\(BundleUtil.localizedString(forKey: "share") ?? ""): \(element.accessibilityLabel!)"
+                            let shareString = "\(BundleUtil.localizedString(forKey: "share") ): \(element.accessibilityLabel!)"
                             let shareAction = UIAccessibilityCustomAction.init(name: shareString, target: self, selector: #selector(shareLink))
                             actions?.insert(shareAction, at: indexCounter)
                             indexCounter += 1
                         } else {
-                            let mentionString = "\(BundleUtil.localizedString(forKey: "details") ?? ""): \(element.accessibilityLabel!)"
+                            let mentionString = "\(BundleUtil.localizedString(forKey: "details") ): \(element.accessibilityLabel!)"
                             let mentionAction = UIAccessibilityCustomAction.init(name: mentionString, target: self, selector: #selector(openMentions(action:)))
                             actions?.insert(mentionAction, at: indexCounter)
                             indexCounter += 1
@@ -321,7 +329,7 @@ extension ChatBlobTextMessageCell {
     }
     
     @objc private func openMentions(action: UIAccessibilityCustomAction) -> Bool {
-        let identity = action.name.replacingOccurrences(of: "\(BundleUtil.localizedString(forKey: "details")!) @", with: "")
+        let identity = action.name.replacingOccurrences(of: "\(BundleUtil.localizedString(forKey: "details")) @", with: "")
         if identity == BundleUtil.localizedString(forKey: "me") {
             handleTapResult(result: "meContact")
         } else {

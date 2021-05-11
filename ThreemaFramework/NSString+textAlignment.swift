@@ -26,7 +26,7 @@ public extension NSString {
         if #available(iOS 11.0, *) {
             lang = NSLinguisticTagger.dominantLanguage(for: self as String)
         } else {
-            lang = CFStringTokenizerCopyBestStringLanguage(self as CFString, CFRange(location: 0, length: self.length)) as String
+            lang = CFStringTokenizerCopyBestStringLanguage(self as CFString, CFRange(location: 0, length: self.length)) as String?
         }
 
         if let lang = lang {

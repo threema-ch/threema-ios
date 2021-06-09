@@ -326,6 +326,7 @@
 "create_new_group" = "Crear nuevo grupo";
 "create_note_group_info_title" = "Consejo";
 "create_note_group_info_text" = "Si no añade ningún miembro al grupo, los mensajes a este grupo permanecerán en almacenamiento local. Resulta idóneo para guardar con seguridad notas, medios y documentos o para transferir elementos al escritorio.";
+"remind_me_next_time" = "Recordarme la próxima vez";
 "doNotShowAgain" = "No volver a mostrar";
 "add_note_group_info" = "*No está solo aquí*\nUse este chat como cuaderno seguro para apuntar mensajes de texto, medios documentos.";
 "end_note_group_info" = "Ya no está solo en este chat* \nLos nuevos mensajes se enviarán a todos los miembros del grupo.";

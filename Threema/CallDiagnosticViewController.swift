@@ -158,7 +158,8 @@ class CallDiagnosticViewController: UIViewController, RTCPeerConnectionDelegate 
         
         webrtcLogger.severity = .info
         webrtcLogger.start { (message) in
-            DDLogNotice("libwebrtc: \(message)")
+            let trimmed = message.trimmingCharacters(in: .newlines)
+            DDLogNotice("libwebrtc: \(trimmed)")
         }
         
         let ipv6 = UserSettings.shared().enableIPv6 ? "IPv6 enabled" : "IPv6 disabled"

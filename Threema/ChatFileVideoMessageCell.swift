@@ -258,6 +258,10 @@ extension ChatFileVideoMessageCell {
         let fileMessage = message as! FileMessage
         if let caption = fileMessage.caption, caption.count > 0 {
             UIPasteboard.general.string = fileMessage.caption
+        } else {
+            if let fileMessageData = fileMessage.data, let fileMessageDataData = fileMessageData.data {
+                UIPasteboard.general.setData(fileMessageDataData, forPasteboardType: fileMessage.blobGetUTI())
+            }
         }
     }
             

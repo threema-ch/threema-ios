@@ -1,198 +1,198 @@
 
 /* Class = "UIBarButtonItem"; title = "Send"; ObjectID = "25C-Te-sfW"; */
-"25C-Te-sfW.title" = "Wyślij";
+"25C-Te-sfW.title" = "傳送";
 
 /* Class = "UILabel"; text = "Key Fingerprint"; ObjectID = "3r3-TQ-lzw"; */
-"3r3-TQ-lzw.text" = "Klucz Odcisk Palca";
+"3r3-TQ-lzw.text" = "金鑰指紋";
 
 /* Class = "UILabel"; text = "Threema ID"; ObjectID = "3zz-BI-IiZ"; */
-"3zz-BI-IiZ.text" = "ID Threema";
+"3zz-BI-IiZ.text" = "Threema ID";
 
 /* Class = "UILabel"; text = "The ID and public key of this contact have been verified."; ObjectID = "4Js-Fh-l8T"; */
-"4Js-Fh-l8T.text" = "ID i klucz publiczny tego kontaktu zostały zweryfikowane.";
+"4Js-Fh-l8T.text" = "這個聯絡人的ID和公鑰已被驗證。";
 
 /* Class = "UILabel"; text = "Message preview"; ObjectID = "4a3-95-oYU"; */
-"4a3-95-oYU.text" = "Podgląd wiadomości";
+"4a3-95-oYU.text" = "訊息預覽";
 
 /* Class = "UILabel"; text = "Detail"; ObjectID = "5Ca-aK-dv0"; */
-"5Ca-aK-dv0.text" = "Szczegół";
+"5Ca-aK-dv0.text" = "詳情";
 
 /* Class = "UILabel"; text = "Threema Call"; ObjectID = "5Ea-OE-GRI"; */
-"5Ea-OE-GRI.text" = "Połączenie Threema";
+"5Ea-OE-GRI.text" = "Threema 通話";
 
 /* Class = "UITabBarItem"; title = "My Profile"; ObjectID = "5lj-oy-IYs"; */
-"5lj-oy-IYs.title" = "Mój Profil";
+"5lj-oy-IYs.title" = "個人檔案";
 
 /* Class = "UILabel"; text = "XXXXXXXX"; ObjectID = "6GC-h6-PJ3"; */
 "6GC-h6-PJ3.text" = "XXXXXXXX";
 
 /* Class = "UILabel"; text = "Detail"; ObjectID = "6On-uo-xuU"; */
-"6On-uo-xuU.text" = "Szczegół";
+"6On-uo-xuU.text" = "詳情";
 
 /* Class = "UILabel"; text = "Clone group"; ObjectID = "6Z4-do-02L"; */
-"6Z4-do-02L.text" = "Grupę klonuj";
+"6Z4-do-02L.text" = "克隆群組";
 
 /* Class = "UILabel"; text = "Detail"; ObjectID = "6bQ-Vj-jcf"; */
-"6bQ-Vj-jcf.text" = "Szczegół";
+"6bQ-Vj-jcf.text" = "詳情";
 
 /* Class = "UILabel"; text = "Leave Group"; ObjectID = "74M-ip-a37"; */
-"74M-ip-a37.text" = "Wyjdź z grupy";
+"74M-ip-a37.text" = "離開群組";
 
 /* Class = "UISegmentedControl"; 77n-al-llJ.segmentTitles[0] = "Contacts"; ObjectID = "77n-al-llJ"; */
-"77n-al-llJ.segmentTitles[0]" = "Kontakty";
+"77n-al-llJ.segmentTitles[0]" = "聯絡人";
 
 /* Class = "UISegmentedControl"; 77n-al-llJ.segmentTitles[1] = "Groups"; ObjectID = "77n-al-llJ"; */
-"77n-al-llJ.segmentTitles[1]" = "Grupy";
+"77n-al-llJ.segmentTitles[1]" = "群組";
 
 /* Class = "UILabel"; text = "Detail"; ObjectID = "8GS-Yt-ab7"; */
-"8GS-Yt-ab7.text" = "Szczegół";
+"8GS-Yt-ab7.text" = "詳情";
 
 /* Class = "UILabel"; text = "00000000000000000000000000000000"; ObjectID = "8S8-W1-o1S"; */
 "8S8-W1-o1S.text" = "00000000000000000000000000000000";
 
 /* Class = "UILabel"; text = "# members"; ObjectID = "9H6-Np-ifa"; */
-"9H6-Np-ifa.text" = "%d członków";
+"9H6-Np-ifa.text" = "# 成員";
 
 /* Class = "UISegmentedControl"; 9mW-FX-ba3.segmentTitles[0] = "Single"; ObjectID = "9mW-FX-ba3"; */
-"9mW-FX-ba3.segmentTitles[0]" = "Pojedyńczy";
+"9mW-FX-ba3.segmentTitles[0]" = "單個";
 
 /* Class = "UISegmentedControl"; 9mW-FX-ba3.segmentTitles[1] = "Group"; ObjectID = "9mW-FX-ba3"; */
-"9mW-FX-ba3.segmentTitles[1]" = "Grupa";
+"9mW-FX-ba3.segmentTitles[1]" = "群組";
 
 /* Class = "UILabel"; text = "Edit Members..."; ObjectID = "AHX-FD-Cmx"; */
-"AHX-FD-Cmx.text" = "Edytuj Członków...";
+"AHX-FD-Cmx.text" = "編輯成員...";
 
 /* Class = "UILabel"; text = "Detail"; ObjectID = "AyW-jc-MkD"; */
-"AyW-jc-MkD.text" = "Szczegół";
+"AyW-jc-MkD.text" = "詳情";
 
 /* Class = "UINavigationItem"; title = "New Contact"; ObjectID = "BAB-op-TwI"; */
-"BAB-op-TwI.title" = "Nowy Kontakt";
+"BAB-op-TwI.title" = "新聯絡人";
 
 /* Class = "UILabel"; text = "Message-ID"; ObjectID = "CyG-aF-qUX"; */
-"CyG-aF-qUX.text" = "Wiadomość-ID";
+"CyG-aF-qUX.text" = "訊息ID";
 
 /* Class = "UILabel"; text = "Detail"; ObjectID = "D8z-NN-iT9"; */
-"D8z-NN-iT9.text" = "Szczegół";
+"D8z-NN-iT9.text" = "詳情";
 
 /* Class = "UILabel"; text = "First Last"; ObjectID = "DfM-u6-9Pl"; */
-"DfM-u6-9Pl.text" = "Pierwszy Ostatni";
+"DfM-u6-9Pl.text" = "名字 姓氏";
 
 /* Class = "UILabel"; text = "Nickname"; ObjectID = "EpZ-nu-d7H"; */
-"EpZ-nu-d7H.text" = "Pseudonim";
+"EpZ-nu-d7H.text" = "暱稱";
 
 /* Class = "UINavigationItem"; title = "Add Contact"; ObjectID = "Eq0-ED-f11"; */
-"Eq0-ED-f11.title" = "Dodaj Kontakt";
+"Eq0-ED-f11.title" = "新增聯絡人";
 
 /* Class = "UILabel"; text = "Group creator"; ObjectID = "FaC-iq-fy4"; */
-"FaC-iq-fy4.text" = "Kreator grupy";
+"FaC-iq-fy4.text" = "群組建立者";
 
 /* Class = "UILabel"; text = "No push notifications"; ObjectID = "Fji-Pc-2Te"; */
-"Fji-Pc-2Te.text" = "Brak powiadomień push";
+"Fji-Pc-2Te.text" = "沒有推播通知";
 
 /* Class = "UILabel"; text = "# members"; ObjectID = "I8P-9o-uIi"; */
-"I8P-9o-uIi.text" = "# członków";
+"I8P-9o-uIi.text" = "# 成員";
 
 /* Class = "UILabel"; text = "Send Message"; ObjectID = "IpT-Hm-dLe"; */
-"IpT-Hm-dLe.text" = "Wyślij wiadomość";
+"IpT-Hm-dLe.text" = "傳送訊息";
 
 /* Class = "UILabel"; text = "Group Name"; ObjectID = "Jri-Jp-Hpu"; */
-"Jri-Jp-Hpu.text" = "Nazwa Grupy";
+"Jri-Jp-Hpu.text" = "群組名稱";
 
 /* Class = "UILabel"; text = "Group creator"; ObjectID = "KRl-DY-AIA"; */
-"KRl-DY-AIA.text" = "Kreator grupy";
+"KRl-DY-AIA.text" = "群組建立者";
 
 /* Class = "UILabel"; text = "Verification Level"; ObjectID = "LID-K1-9a6"; */
-"LID-K1-9a6.text" = "Poziom Weryfikacji";
+"LID-K1-9a6.text" = "驗證等級";
 
 /* Class = "UINavigationItem"; title = "Edit Contact"; ObjectID = "Leg-Pw-PQ8"; */
-"Leg-Pw-PQ8.title" = "Edytuj Kontakt";
+"Leg-Pw-PQ8.title" = "編輯聯絡人";
 
 /* Class = "UILabel"; text = "Threema ID"; ObjectID = "Li7-m2-jkf"; */
-"Li7-m2-jkf.text" = "ID Threema";
+"Li7-m2-jkf.text" = "Threema ID";
 
 /* Class = "UINavigationItem"; title = "Contacts"; ObjectID = "Ll3-Ew-izw"; */
-"Ll3-Ew-izw.title" = "Kontakty";
+"Ll3-Ew-izw.title" = "聯絡人";
 
 /* Class = "UINavigationItem"; title = "Message Details"; ObjectID = "LsJ-Ts-xZd"; */
-"LsJ-Ts-xZd.title" = "Detale Wiadomości";
+"LsJ-Ts-xZd.title" = "訊息詳情";
 
 /* Class = "UISegmentedControl"; M1P-ix-V2L.segmentTitles[0] = "Standard"; ObjectID = "M1P-ix-V2L"; */
-"M1P-ix-V2L.segmentTitles[0]" = "Standard";
+"M1P-ix-V2L.segmentTitles[0]" = "標準";
 
 /* Class = "UISegmentedControl"; M1P-ix-V2L.segmentTitles[1] = "Hybrid"; ObjectID = "M1P-ix-V2L"; */
-"M1P-ix-V2L.segmentTitles[1]" = "Hybryda";
+"M1P-ix-V2L.segmentTitles[1]" = "混合";
 
 /* Class = "UISegmentedControl"; M1P-ix-V2L.segmentTitles[2] = "Satellite"; ObjectID = "M1P-ix-V2L"; */
-"M1P-ix-V2L.segmentTitles[2]" = "Satelita";
+"M1P-ix-V2L.segmentTitles[2]" = "衛星";
 
 /* Class = "UILabel"; text = "Synchronize group"; ObjectID = "MEa-Te-wbA"; */
-"MEa-Te-wbA.text" = "Synchronizuj grupę";
+"MEa-Te-wbA.text" = "同步群組";
 
 /* Class = "UILabel"; text = "IDENTITY"; ObjectID = "NFg-lg-c4C"; */
-"NFg-lg-c4C.text" = "TOŻSAMOŚĆ";
+"NFg-lg-c4C.text" = "身份";
 
 /* Class = "UILabel"; text = "Creator name"; ObjectID = "NUe-Ut-5hr"; */
-"NUe-Ut-5hr.text" = "Nazwa kreatora";
+"NUe-Ut-5hr.text" = "建立者姓名";
 
 /* Class = "UILabel"; text = "No contacts"; ObjectID = "Ofe-BC-uXe"; */
-"Ofe-BC-uXe.text" = "Brak kontaktów";
+"Ofe-BC-uXe.text" = "沒有聯絡人";
 
 /* Class = "UILabel"; text = "Verification Level"; ObjectID = "Pfs-mu-Rfj"; */
-"Pfs-mu-Rfj.text" = "Poziom Weryfikacji";
+"Pfs-mu-Rfj.text" = "驗證等級";
 
 /* Class = "UINavigationItem"; title = "Verification Level"; ObjectID = "RYr-oG-d5j"; */
-"RYr-oG-d5j.title" = "Poziom Weryfikacji";
+"RYr-oG-d5j.title" = "驗證等級";
 
 /* Class = "UILabel"; text = "XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX"; ObjectID = "UbM-As-itV"; */
 "UbM-As-itV.text" = "XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX";
 
 /* Class = "UILabel"; text = "Group Name"; ObjectID = "VFn-jg-cfh"; */
-"VFn-jg-cfh.text" = "Nazwa Grupy";
+"VFn-jg-cfh.text" = "群組名稱";
 
 /* Class = "UILabel"; text = "Acknowledged"; ObjectID = "VRy-nm-s0X"; */
-"VRy-nm-s0X.text" = "Potwierdzony";
+"VRy-nm-s0X.text" = "已確認";
 
 /* Class = "UINavigationItem"; title = "First Last"; ObjectID = "Wsn-z9-eRi"; */
-"Wsn-z9-eRi.title" = "Pierwszy Ostatni";
+"Wsn-z9-eRi.title" = "名字 姓氏";
 
 /* Class = "UIButton"; normalTitle = "Load Earlier Messages"; ObjectID = "WuX-yK-0RJ"; */
-"WuX-yK-0RJ.normalTitle" = "Ładowanie wcześniejszych wiadomości";
+"WuX-yK-0RJ.normalTitle" = "載入先前的訊息";
 
 /* Class = "UILabel"; text = "Date"; ObjectID = "XTa-xS-cOR"; */
-"XTa-xS-cOR.text" = "Data";
+"XTa-xS-cOR.text" = "日期";
 
 /* Class = "UILabel"; text = "Group Name"; ObjectID = "Y4G-EW-Gux"; */
-"Y4G-EW-Gux.text" = "Nazwa Grupy";
+"Y4G-EW-Gux.text" = "群組名稱";
 
 /* Class = "UILabel"; text = "Scan an ID"; ObjectID = "YPC-ic-pTa"; */
-"YPC-ic-pTa.text" = "Skanuj ID";
+"YPC-ic-pTa.text" = "掃描ID";
 
 /* Class = "UITextField"; placeholder = "ID"; ObjectID = "YoS-Np-Z37"; */
 "YoS-Np-Z37.placeholder" = "ID";
 
 /* Class = "UILabel"; text = "Your ID backup"; ObjectID = "ZIq-dn-JdH"; */
-"ZIq-dn-JdH.text" = "Twój eksport ID";
+"ZIq-dn-JdH.text" = "您的ID匯出";
 
 /* Class = "UILabel"; text = "Read"; ObjectID = "Zrm-eG-ewD"; */
-"Zrm-eG-ewD.text" = "Odczyt";
+"Zrm-eG-ewD.text" = "已讀";
 
 /* Class = "UILabel"; text = "Key Fingerprint"; ObjectID = "aGy-xg-eRi"; */
-"aGy-xg-eRi.text" = "Klucz Odcisk Palca";
+"aGy-xg-eRi.text" = "金鑰指紋";
 
 /* Class = "UIBarButtonItem"; title = "Send"; ObjectID = "aQb-a9-JtU"; */
-"aQb-a9-JtU.title" = "Wyślij";
+"aQb-a9-JtU.title" = "傳送";
 
 /* Class = "UILabel"; text = "Name"; ObjectID = "aU9-dp-bDt"; */
-"aU9-dp-bDt.text" = "Nazwa";
+"aU9-dp-bDt.text" = "名稱";
 
 /* Class = "UITabBarItem"; title = "Settings"; ObjectID = "b04-Gg-ZdB"; */
-"b04-Gg-ZdB.title" = "Ustawienia";
+"b04-Gg-ZdB.title" = "設定";
 
 /* Class = "UILabel"; text = "Scan ID"; ObjectID = "b4I-LV-xkG"; */
-"b4I-LV-xkG.text" = "Skanuj ID";
+"b4I-LV-xkG.text" = "掃描ID";
 
 /* Class = "UILabel"; text = "Export Conversation"; ObjectID = "bFb-Sh-rtO"; */
-"bFb-Sh-rtO.text" = "Eksport Konwersacji";
+"bFb-Sh-rtO.text" = "匯出對話";
 
 /* Class = "UILabel"; text = "MacBook Office 10 7"; ObjectID = "bsh-sy-Xwu"; */
 "bsh-sy-Xwu.text" = "MacBook Office 10 7";
@@ -201,85 +201,85 @@
 "bt1-G0-NzZ.text" = "00000000000000000000000000000000";
 
 /* Class = "UILabel"; text = "Send Message"; ObjectID = "cHE-Oc-08d"; */
-"cHE-Oc-08d.text" = "Wyślij Wiadomość";
+"cHE-Oc-08d.text" = "傳送訊息";
 
 /* Class = "UILabel"; text = "Creator: Name"; ObjectID = "cNf-3j-eOO"; */
-"cNf-3j-eOO.text" = "Kreator: Nazwa";
+"cNf-3j-eOO.text" = "建立者：名字";
 
 /* Class = "UINavigationItem"; title = "Choose contact"; ObjectID = "cNq-Pt-Uma"; */
-"cNq-Pt-Uma.title" = "Wybierz kontakt";
+"cNq-Pt-Uma.title" = "選擇聯絡人";
 
 /* Class = "UILabel"; text = "Include in phone backup"; ObjectID = "d2g-FC-ibo"; */
-"d2g-FC-ibo.text" = "Uwzględnij w kopii zapasowej telefonu";
+"d2g-FC-ibo.text" = "包括在電話備份中";
 
 /* Class = "UITableViewSection"; footerTitle = "#do not translate#This data, along with the password that you have chosen, can be used to restore your ID on another device. You can copy & paste it to a suitable location, email it to yourself or scan the QR code using another device."; ObjectID = "dgK-0J-UrZ"; */
-"dgK-0J-UrZ.footerTitle" = "#do not translate# Te dane, wraz z wybranym hasłem, mogą być użyte do przywrócenia Twojego ID na innym urządzeniu. Możesz skopiować & wkleić go w odpowiednim miejscu, wysłać e-mailem do siebie lub zeskanować kod QR za pomocą innego urządzenia.";
+"dgK-0J-UrZ.footerTitle" = "#do not translate#這些資料和您選擇的密碼，可用於在另一台裝置上還原您的ID。您可以將其複製並貼上至合適的位置，透過電子郵件傳送給自己或使用其他裝置掃描QR碼。";
 
 /* Class = "UILabel"; text = "Group Name"; ObjectID = "ds7-P9-imN"; */
-"ds7-P9-imN.text" = "Nazwa Grupy";
+"ds7-P9-imN.text" = "群組名稱";
 
 /* Class = "UITableViewSection"; footerTitle = "#do not translate#The encrypted ID backup will be included when you back up your phone via iTunes or iCloud."; ObjectID = "eEV-l3-MXP"; */
-"eEV-l3-MXP.footerTitle" = "#do not translate# Kopia zapasowa zaszyfrowanego ID zostanie dołączona podczas tworzenia kopii zapasowej telefonu za pośrednictwem iTunes lub iCloud.";
+"eEV-l3-MXP.footerTitle" = "#do not translate#透過 iTunes 或 iCloud 備份電話時，將包括已加密的ID匯出。";
 
 /* Class = "UILabel"; text = "Detail"; ObjectID = "eK9-D8-pFP"; */
-"eK9-D8-pFP.text" = "Szczegół";
+"eK9-D8-pFP.text" = "詳情";
 
 /* Class = "UINavigationItem"; title = "Location"; ObjectID = "eXF-nx-MbG"; */
-"eXF-nx-MbG.title" = "Lokalizacja";
+"eXF-nx-MbG.title" = "位置";
 
 /* Class = "UILabel"; text = "John Doe"; ObjectID = "g8r-Dc-Sp0"; */
-"g8r-Dc-Sp0.text" = "John Doe";
+"g8r-Dc-Sp0.text" = "王小明";
 
 /* Class = "UILabel"; text = "Label"; ObjectID = "gsp-ed-V8R"; */
-"gsp-ed-V8R.text" = "Etykieta";
+"gsp-ed-V8R.text" = "標籤";
 
 /* Class = "UILabel"; text = "John Doe"; ObjectID = "iJa-K2-2uc"; */
-"iJa-K2-2uc.text" = "John Doe";
+"iJa-K2-2uc.text" = "王小明";
 
 /* Class = "UILabel"; text = "No places found in current location"; ObjectID = "jSK-DO-xV2"; */
-"jSK-DO-xV2.text" = "Brak miejsca w bieżącej lokalizacji";
+"jSK-DO-xV2.text" = "在當前位置找不到地點";
 
 /* Class = "UILabel"; text = "Draft"; ObjectID = "jlK-CM-mIS"; */
-"jlK-CM-mIS.text" = "Projekt";
+"jlK-CM-mIS.text" = "草稿";
 
 /* Class = "UILabel"; text = "Phone call"; ObjectID = "k8z-Fl-qML"; */
-"k8z-Fl-qML.text" = "Połączenie telefoniczne";
+"k8z-Fl-qML.text" = "電話";
 
 /* Class = "UILabel"; text = "Detail"; ObjectID = "kaj-lV-4MC"; */
-"kaj-lV-4MC.text" = "Szczegół";
+"kaj-lV-4MC.text" = "詳情";
 
 /* Class = "UILabel"; text = "Verification Level"; ObjectID = "lH9-a1-MBS"; */
-"lH9-a1-MBS.text" = "Poziom weryfikacji";
+"lH9-a1-MBS.text" = "驗證等級";
 
 /* Class = "UILabel"; text = "MacBook Office 10 7"; ObjectID = "lrl-UM-94p"; */
 "lrl-UM-94p.text" = "MacBook Office 10 7";
 
 /* Class = "UILabel"; text = "IDENTITY"; ObjectID = "n7x-y4-2CM"; */
-"n7x-y4-2CM.text" = "TOŻSAMOŚĆ";
+"n7x-y4-2CM.text" = "身份";
 
 /* Class = "UITabBarItem"; title = "Messages"; ObjectID = "nZg-gf-uED"; */
-"nZg-gf-uED.title" = "Wiadomość";
+"nZg-gf-uED.title" = "訊息";
 
 /* Class = "UITabBarItem"; title = "Contacts"; ObjectID = "JXW-2V-ftV"; */
-"JXW-2V-ftV.title" = "Kontakty";
+"JXW-2V-ftV.title" = "聯絡人";
 
 /* Class = "UINavigationItem"; title = "Group details"; ObjectID = "oEX-1h-I2a"; */
-"oEX-1h-I2a.title" = "Szczegóły grupy";
+"oEX-1h-I2a.title" = "群組詳情";
 
 /* Class = "UILabel"; text = "Link to Contact"; ObjectID = "otC-iO-wzt"; */
-"otC-iO-wzt.text" = "Link do Kontaktu";
+"otC-iO-wzt.text" = "連結至聯絡人";
 
 /* Class = "UILabel"; text = "Nickname"; ObjectID = "p0V-dq-HkU"; */
-"p0V-dq-HkU.text" = "Pseudonim";
+"p0V-dq-HkU.text" = "暱稱";
 
 /* Class = "UILabel"; text = "Label"; ObjectID = "pVJ-rQ-2qD"; */
-"pVJ-rQ-2qD.text" = "Etykieta";
+"pVJ-rQ-2qD.text" = "標籤";
 
 /* Class = "UILabel"; text = "# members"; ObjectID = "pk3-Z5-GK7"; */
-"pk3-Z5-GK7.text" = "# członków";
+"pk3-Z5-GK7.text" = "# 成員";
 
 /* Class = "UILabel"; text = "Delivered"; ObjectID = "qNO-eF-kmI"; */
-"qNO-eF-kmI.text" = "Dostarczono";
+"qNO-eF-kmI.text" = "已送達";
 
 /* Class = "UILabel"; text = "Threema ID"; ObjectID = "sJF-Ib-o6C"; */
 "sJF-Ib-o6C.text" = "Threema ID";
@@ -288,58 +288,58 @@
 "sVW-vw-h0n.text" = "00000000000000000000000000000000";
 
 /* Class = "UINavigationItem"; title = "ID Verified"; ObjectID = "sik-yL-35n"; */
-"sik-yL-35n.title" = "Zweryfikowano ID";
+"sik-yL-35n.title" = "ID已驗證";
 
 /* Class = "UINavigationItem"; title = "Backup"; ObjectID = "tUV-iz-VQc"; */
-"tUV-iz-VQc.title" = "Eksport ID";
+"tUV-iz-VQc.title" = "ID匯出";
 
 /* Class = "UILabel"; text = "Nickname"; ObjectID = "tr2-Ia-imu"; */
-"tr2-Ia-imu.text" = "Pseudonim";
+"tr2-Ia-imu.text" = "暱稱";
 
 /* Class = "UINavigationItem"; title = "Location"; ObjectID = "uA6-FU-2ms"; */
-"uA6-FU-2ms.title" = "Lokalizacja";
+"uA6-FU-2ms.title" = "位置";
 
 /* Class = "UILabel"; text = "X contacts"; ObjectID = "uT9-uH-vrD"; */
-"uT9-uH-vrD.text" = "X kontaktów";
+"uT9-uH-vrD.text" = "X個聯絡人";
 
 /* Class = "UITextField"; placeholder = "First name"; ObjectID = "uv8-Zw-8w0"; */
-"uv8-Zw-8w0.placeholder" = "Imię";
+"uv8-Zw-8w0.placeholder" = "姓名";
 
 /* Class = "UILabel"; text = "First Last"; ObjectID = "vVr-Sj-fJm"; */
-"vVr-Sj-fJm.text" = "Nazwisko";
+"vVr-Sj-fJm.text" = "名字 姓氏";
 
 /* Class = "UINavigationItem"; title = "Messages"; ObjectID = "vkp-6o-Lct"; */
-"vkp-6o-Lct.title" = "Wiadomość";
+"vkp-6o-Lct.title" = "訊息";
 
 /* Class = "UILabel"; text = "Company Name"; ObjectID = "wLS-iM-q79"; */
-"wLS-iM-q79.text" = "Nazwa Firmy";
+"wLS-iM-q79.text" = "公司名稱";
 
 /* Class = "UINavigationItem"; title = "Preview"; ObjectID = "wPu-F7-kf1"; */
-"wPu-F7-kf1.title" = "Podgląd";
+"wPu-F7-kf1.title" = "預覽";
 
 /* Class = "UILabel"; text = "First Last"; ObjectID = "wV3-0n-mKm"; */
-"wV3-0n-mKm.text" = "Pierwszy Ostatni";
+"wV3-0n-mKm.text" = "名字 姓氏";
 
 /* Class = "UILabel"; text = "Detail"; ObjectID = "wVo-z6-Ml9"; */
-"wVo-z6-Ml9.text" = "Szczegół";
+"wVo-z6-Ml9.text" = "詳情";
 
 /* Class = "UILabel"; text = "XXXXXXXX"; ObjectID = "wXd-jf-kGm"; */
 "wXd-jf-kGm.text" = "XXXXXXXX";
 
 /* Class = "UITextField"; placeholder = "Last name"; ObjectID = "wpY-cw-D2O"; */
-"wpY-cw-D2O.placeholder" = "Nazwisko";
+"wpY-cw-D2O.placeholder" = "姓氏";
 
 /* Class = "UILabel"; text = "Invite a Friend"; ObjectID = "xRZ-tM-3dS"; */
-"xRZ-tM-3dS.text" = "Zaproś Znajomego";
+"xRZ-tM-3dS.text" = "邀請好友";
 
 /* Class = "UILabel"; text = "Sent"; ObjectID = "yWO-wH-mIW"; */
-"yWO-wH-mIW.text" = "Wyślij";
+"yWO-wH-mIW.text" = "已傳送";
 
 /* Class = "UILabel"; text = "You don't have any contacts. Turn on synchronization, or add contacts manually using the + button."; ObjectID = "zFq-Zo-ECJ"; */
-"zFq-Zo-ECJ.text" = "Nie masz żadnych kontaktów. Włącz synchronizację lub dodaj kontakty ręcznie za pomocą przycisku +.";
+"zFq-Zo-ECJ.text" = "您還沒有任何聯絡人。請開啟同步，或按「+」按鈕手動新增聯絡人。";
 
 /* Class = "UILabel"; text = "Enter ID manually"; ObjectID = "zYA-qz-iwe"; */
-"zYA-qz-iwe.text" = "Wpisz ID ręcznie";
+"zYA-qz-iwe.text" = "手動輸入ID";
 
 /* Class = "UILabel"; text = "Enter a query to search for places"; ObjectID = "oXh-5e-M7J"; */
-"oXh-5e-M7J.text" = "Wpisz zapytanie, aby wyszukać miejsca";
+"oXh-5e-M7J.text" = "輸入查詢以搜尋地點";

@@ -107,7 +107,12 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     } else if ([UTIConverter isVideoMimeType:self.mimeType] || [UTIConverter isMovieMimeType:self.mimeType]) {
         return [NSString stringWithFormat:@"%@", [BundleUtil localizedStringForKey:@"video"]];
     } else if ([UTIConverter isAudioMimeType:self.mimeType]) {
-        return [NSString stringWithFormat:@"%@", [BundleUtil localizedStringForKey:@"audio"]];
+        if (self.duration != nil) {
+            return [NSString stringWithFormat:@"%@ (%@)", [BundleUtil localizedStringForKey:@"audio"], [Utils timeStringForSeconds:self.duration.integerValue]];
+        } else {
+            return [NSString stringWithFormat:@"%@", [BundleUtil localizedStringForKey:@"audio"]];
+        }
+
     }
     return nil;
 }

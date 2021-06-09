@@ -9,7 +9,7 @@
 "5bh-L5-CVm.placeholder" = "您的电子邮件地址";
 
 /* Class = "UINavigationItem"; title = "My Profile"; ObjectID = "8Pu-jd-SHn"; */
-"8Pu-jd-SHn.title" = "我的资料";
+"8Pu-jd-SHn.title" = "个人资料";
 
 /* Class = "UILabel"; text = "Key Fingerprint"; ObjectID = "sJA-2q-zE2"; */
 "sJA-2q-zE2.text" = "密钥指纹";
@@ -39,7 +39,7 @@
 "NLA-jz-irZ.text" = "昵称";
 
 /* Class = "UITableViewSection"; footerTitle = "Linking your email address or phone number to your ID lets other people find you on Threema automatically if they have you in their address book."; ObjectID = "NUr-0t-zng"; */
-"NUr-0t-zng.footerTitle" = "将您的电子邮件地址或电话号码与您的ID连结，如果其他人的通讯录中有保存您的资料，他们将在Threema上自动找到您。";
+"NUr-0t-zng.footerTitle" = "将您的电子邮件地址或电话号码与您的ID链接，如果其他人的通讯录中有保存您的资料，他们将在 Threema 上自动找到您。";
 
 /* Class = "UILabel"; text = "Threema ID"; ObjectID = "PG7-5d-WL5"; */
 "PG7-5d-WL5.text" = "Threema ID";
@@ -84,7 +84,7 @@
 "o3l-bU-add.placeholder" = "昵称";
 
 /* Class = "UITableViewSection"; footerTitle = "Linking your email address to your ID lets other people find you on Threema automatically if they have your email in their address book."; ObjectID = "qQD-Gd-ca9"; */
-"qQD-Gd-ca9.footerTitle" = "将您的电子邮件地址与您的ID连结，如果其他人的通讯录中有保存您的电子邮件地址，他们将在 Threema 上自动找到您。";
+"qQD-Gd-ca9.footerTitle" = "将您的电子邮件地址与您的ID链接，如果其他人的通讯录中有保存您的电子邮件地址，他们将在 Threema 上自动找到您。";
 
 /* Class = "UINavigationItem"; title = "Enter code"; ObjectID = "tGC-WP-fBC"; */
 "tGC-WP-fBC.title" = "输入验证码";
@@ -108,7 +108,7 @@
 "yaz-xj-2bb.text" = "详情";
 
 /* Class = "UITableViewSection"; footerTitle = "Linking your phone number to your ID lets other people find you on Threema automatically if they have your phone number in their address book."; ObjectID = "z3E-MB-Mey"; */
-"z3E-MB-Mey.footerTitle" = "将您的电话号码与您的ID连结，如果其他人的通讯录中有保存您的电话号码，他们将在Threema上自动找到您。";
+"z3E-MB-Mey.footerTitle" = "将您的电话号码与您的ID链接，如果其他人的通讯录中有保存您的电话号码，他们将在 Threema 上自动找到您。";
 
 /* Class = "UILabel"; text = "00000000000000000000000000000000"; ObjectID = "z90-JB-13a"; */
 "z90-JB-13a.text" = "00000000000000000000000000000000";

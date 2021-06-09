@@ -326,6 +326,7 @@
 "create_new_group" = "Talde berria sortu";
 "create_note_group_info_title" = "Intsinuazioa";
 "create_note_group_info_text" = "Taldeko kiderik gehitzen ez baduzu, talde honetako mezuak lokalak izango dira. Hori ezin hobea da oharrak, baliabideak eta dokumentuak segurtasunez gordetzeko edo elementuak mahaigainera transferitzeko.";
+"remind_me_next_time" = "Gogoratu hurrengoan";
 "doNotShowAgain" = "Berriro ez agertzea";
 "add_note_group_info" = "*Nonbait bakarrik zaude*\nErabili txat hau testurako, baliabideetarako eta dokumentuetarako koaderno seguru gisa.";
 "end_note_group_info" = "*Ez zaude bakarrik txat honetan*\nTaldeko kide guztiei mezu berriak bidaliko zaizkie.";

@@ -1,498 +1,222 @@
 
-/* Class = "UILabel"; text = "Total free space"; ObjectID = "06t-fE-Y6z"; */
-"06t-fE-Y6z.text" = "Total free space";
-
-/* Class = "UINavigationItem"; title = "Title"; ObjectID = "0aZ-HV-9vo"; */
-"0aZ-HV-9vo.title" = "Title";
-
-/* Class = "UILabel"; text = "Title"; ObjectID = "2EM-QH-X8q"; */
-"2EM-QH-X8q.text" = "Title";
-
-/* Class = "UILabel"; text = "Detail"; ObjectID = "2IJ-eg-1EA"; */
-"2IJ-eg-1EA.text" = "Detail";
-
 /* Class = "UILabel"; text = "Detail"; ObjectID = "2Ve-Rz-Jab"; */
-"2Ve-Rz-Jab.text" = "Detail";
+"2Ve-Rz-Jab.text" = "詳細";
 
 /* Class = "UILabel"; text = "0.0 (000)"; ObjectID = "2a3-K6-cFL"; */
 "2a3-K6-cFL.text" = "0.0 (000)";
 
-/* Class = "UILabel"; text = "License"; ObjectID = "2bS-As-V6Z"; */
-"2bS-As-V6Z.text" = "License";
-
-/* Class = "UILabel"; text = "Daten löschen"; ObjectID = "2kJ-Y2-iOd"; */
-"2kJ-Y2-iOd.text" = "Daten löschen";
-
-/* Class = "UILabel"; text = "Threema Calls"; ObjectID = "2nG-dM-oou"; */
-"2nG-dM-oou.text" = "Threema Calls";
-
 /* Class = "UINavigationItem"; title = "Font Size"; ObjectID = "3OC-m7-GmD"; */
-"3OC-m7-GmD.title" = "Font Size";
-
-/* Class = "UILabel"; text = "Enable Threema Video Calls"; ObjectID = "3S0-6H-Ocr"; */
-"3S0-6H-Ocr.text" = "Enable Threema Video Calls";
-
-/* Class = "UILabel"; text = "Always relay calls"; ObjectID = "5Z4-we-4ct"; */
-"5Z4-we-4ct.text" = "Always relay calls";
+"3OC-m7-GmD.title" = "フォントサイズ";
 
 /* Class = "UILabel"; text = "Exclusion List"; ObjectID = "5hd-D5-keA"; */
-"5hd-D5-keA.text" = "Exclusion List";
-
-/* Class = "UILabel"; text = "Light"; ObjectID = "5qo-b9-Lor"; */
-"5qo-b9-Lor.text" = "Light";
+"5hd-D5-keA.text" = "除外リスト";
 
 /* Class = "UILabel"; text = "0 KB"; ObjectID = "67x-OC-XxU"; */
-"67x-OC-XxU.text" = "0 KB";
-
-/* Class = "UILabel"; text = "Show profile pictures"; ObjectID = "73k-4u-GSo"; */
-"73k-4u-GSo.text" = "Show profile pictures";
-
-/* Class = "UILabel"; text = "Sounds"; ObjectID = "767-fB-vds"; */
-"767-fB-vds.text" = "Sounds";
+"67x-OC-XxU.text" = "0 キロバイト";
 
 /* Class = "UILabel"; text = "Return Key = Send"; ObjectID = "7C7-0j-j2r"; */
-"7C7-0j-j2r.text" = "Return Key = Send";
-
-/* Class = "UILabel"; text = "Label"; ObjectID = "7UQ-Nr-5Tn"; */
-"7UQ-Nr-5Tn.text" = "Label";
-
-/* Class = "UITableViewSection"; headerTitle = "Threema Call"; ObjectID = "7hB-ZG-6eB"; */
-"7hB-ZG-6eB.headerTitle" = "Threema Call";
-
-/* Class = "UILabel"; text = "Working Days"; ObjectID = "83i-Sz-RiA"; */
-"83i-Sz-RiA.text" = "Working Days";
-
-/* Class = "UILabel"; text = "Notifications"; ObjectID = "8G0-w5-Ogg"; */
-"8G0-w5-Ogg.text" = "Notifications";
-
-/* Class = "UILabel"; text = "Limit: %.0f thumbnails"; ObjectID = "8MF-g0-jVQ"; */
-"8MF-g0-jVQ.text" = "Limit: %.0f thumbnails";
+"7C7-0j-j2r.text" = "改行キーで送信";
 
 /* Class = "UILabel"; text = "Connected"; ObjectID = "8hI-GF-46C"; */
-"8hI-GF-46C.text" = "Connected";
+"8hI-GF-46C.text" = "接続済";
 
-/* Class = "UILabel"; text = "Space on internal storage"; ObjectID = "9HG-t5-Xhb"; */
-"9HG-t5-Xhb.text" = "Space on internal storage";
+/* Class = "UITableViewSection"; headerTitle = "Threema Call"; ObjectID = "9Jg-qG-CuX"; */
+"9Jg-qG-CuX.headerTitle" = "Threema通話";
 
 /* Class = "UILabel"; text = "Sound name"; ObjectID = "9WQ-EZ-toz"; */
-"9WQ-EZ-toz.text" = "Sound name";
-
-/* Class = "UINavigationItem"; title = "Privacy"; ObjectID = "9hC-3k-nmq"; */
-"9hC-3k-nmq.title" = "Privacy";
+"9WQ-EZ-toz.text" = "通知音の名前";
 
 /* Class = "UILabel"; text = "Sound name"; ObjectID = "B1c-wM-V4d"; */
-"B1c-wM-V4d.text" = "Sound name";
+"B1c-wM-V4d.text" = "通知音の名前";
 
 /* Class = "UINavigationItem"; title = "Privacy"; ObjectID = "BH4-Z9-imt"; */
-"BH4-Z9-imt.title" = "Privacy";
+"BH4-Z9-imt.title" = "プライバシー管理";
 
 /* Class = "UILabel"; text = "Proximity monitoring"; ObjectID = "BK0-LJ-WwY"; */
-"BK0-LJ-WwY.text" = "Proximity monitoring";
+"BK0-LJ-WwY.text" = "プロキシミティモニタリング";
 
 /* Class = "UILabel"; text = "Hide Stale Contacts"; ObjectID = "C7N-a6-E8Y"; */
-"C7N-a6-E8Y.text" = "Hide Stale Contacts";
+"C7N-a6-E8Y.text" = "古い連絡先を隠す";
 
 /* Class = "UINavigationItem"; title = "License"; ObjectID = "Cuk-M6-y9N"; */
-"Cuk-M6-y9N.title" = "License";
+"Cuk-M6-y9N.title" = "ライセンス";
 
 /* Class = "UINavigationItem"; title = "Display Order"; ObjectID = "DWN-sS-DbE"; */
-"DWN-sS-DbE.title" = "Display Order";
-
-/* Class = "UILabel"; text = "Threema Web"; ObjectID = "EIQ-BB-fEn"; */
-"EIQ-BB-fEn.text" = "Threema Web";
-
-/* Class = "UINavigationItem"; title = "Threema Work"; ObjectID = "EsR-Zr-hie"; */
-"EsR-Zr-hie.title" = "Threema Work";
+"DWN-sS-DbE.title" = "表示順序";
 
 /* Class = "UILabel"; text = "Subtitle"; ObjectID = "F51-gk-IFX"; */
-"F51-gk-IFX.text" = "Subtitle";
-
-/* Class = "UILabel"; text = "Version"; ObjectID = "FHz-R0-2YX"; */
-"FHz-R0-2YX.text" = "Version";
-
-/* Class = "UITableViewSection"; headerTitle = "Push Notifications"; ObjectID = "GAH-k5-f9K"; */
-"GAH-k5-f9K.headerTitle" = "Push Notifications";
+"F51-gk-IFX.text" = "字幕";
 
 /* Class = "UILabel"; text = "Detail"; ObjectID = "GCE-65-OPQ"; */
-"GCE-65-OPQ.text" = "Detail";
+"GCE-65-OPQ.text" = "詳細";
 
-/* Class = "UILabel"; text = "Label"; ObjectID = "GDc-WD-Ysg"; */
-"GDc-WD-Ysg.text" = "Label";
-
-/* Class = "UILabel"; text = "Sound"; ObjectID = "Gxz-el-mis"; */
-"Gxz-el-mis.text" = "Sound";
-
-/* Class = "UILabel"; text = "Received Message Time"; ObjectID = "HDn-EN-rtP"; */
-"HDn-EN-rtP.text" = "Received Message Time";
+/* Class = "UILabel"; text = "Push Token"; ObjectID = "HoL-yt-ghu"; */
+"HoL-yt-ghu.text" = "プッシュトークン";
 
 /* Class = "UILabel"; text = "Detail"; ObjectID = "IzO-Nl-ekz"; */
-"IzO-Nl-ekz.text" = "Detail";
+"IzO-Nl-ekz.text" = "詳細";
 
 /* Class = "UILabel"; text = "Title"; ObjectID = "JeY-ke-mv9"; */
-"JeY-ke-mv9.text" = "Title";
-
-/* Class = "UILabel"; text = "Group Sound"; ObjectID = "K7w-aV-b8T"; */
-"K7w-aV-b8T.text" = "Group Sound";
-
-/* Class = "UILabel"; text = "Threema Channel"; ObjectID = "KQm-3z-p5f"; */
-"KQm-3z-p5f.text" = "Threema Channel";
+"JeY-ke-mv9.text" = "タイトル";
 
 /* Class = "UILabel"; text = "Clear Log"; ObjectID = "KvG-gM-I5I"; */
-"KvG-gM-I5I.text" = "Clear Log";
+"KvG-gM-I5I.text" = "ログをクリア";
 
 /* Class = "UILabel"; text = "First, last"; ObjectID = "L3v-Ts-9T0"; */
-"L3v-Ts-9T0.text" = "First, last";
+"L3v-Ts-9T0.text" = "名/姓";
 
 /* Class = "UITableViewSection"; headerTitle = "Sensor"; ObjectID = "N0M-ec-m5Y"; */
-"N0M-ec-m5Y.headerTitle" = "Sensor";
-
-/* Class = "UITableViewSection"; headerTitle = "ORPHANED FILES"; ObjectID = "NOd-xS-ii6"; */
-"NOd-xS-ii6.headerTitle" = "ORPHANED FILES";
-
-/* Class = "UITableViewSection"; footerTitle = "Sie können auch ältere Nachrichten komplett löschen."; ObjectID = "Na7-X0-iSY"; */
-"Na7-X0-iSY.footerTitle" = "Sie können auch ältere Nachrichten komplett löschen.";
-
-/* Class = "UILabel"; text = "Storage Management"; ObjectID = "Nab-aA-gik"; */
-"Nab-aA-gik.text" = "Storage Management";
-
-/* Class = "UILabel"; text = "Sentry"; ObjectID = "Nyx-m0-yFD"; */
-"Nyx-m0-yFD.text" = "Sentry";
+"N0M-ec-m5Y.headerTitle" = "センサー";
 
 /* Class = "UILabel"; text = "Send Typing Indicator"; ObjectID = "O7I-2W-NWv"; */
-"O7I-2W-NWv.text" = "Send Typing Indicator";
+"O7I-2W-NWv.text" = "入力中アイコンを相手に表示";
 
-/* Class = "UILabel"; text = "Label"; ObjectID = "OC2-0Y-pj2"; */
-"OC2-0Y-pj2.text" = "Label";
+/* Class = "UINavigationItem"; title = "Exclusion List"; ObjectID = "OfE-jH-kl6"; */
+"OfE-jH-kl6.title" = "除外リスト";
 
 /* Class = "UINavigationItem"; title = "Video Quality"; ObjectID = "Oji-5c-VQi"; */
-"Oji-5c-VQi.title" = "Video Quality";
+"Oji-5c-VQi.title" = "動画品質";
 
 /* Class = "UILabel"; text = "Title"; ObjectID = "PX2-6n-WIX"; */
-"PX2-6n-WIX.text" = "Title";
-
-/* Class = "UILabel"; text = "Title"; ObjectID = "PgU-hr-nkc"; */
-"PgU-hr-nkc.text" = "Title";
-
-/* Class = "UILabel"; text = "Integrate calls into iOS"; ObjectID = "Q1w-c7-mEv"; */
-"Q1w-c7-mEv.text" = "Integrate calls into iOS";
-
-/* Class = "UILabel"; text = "Nachrichten löschen"; ObjectID = "QMn-HC-MBS"; */
-"QMn-HC-MBS.text" = "Nachrichten löschen";
+"PX2-6n-WIX.text" = "タイトル";
 
 /* Class = "UINavigationItem"; title = "Notifications"; ObjectID = "QQx-aC-ygX"; */
-"QQx-aC-ygX.title" = "Notifications";
-
-/* Class = "UILabel"; text = "After-work DND"; ObjectID = "QSK-AZ-ClW"; */
-"QSK-AZ-ClW.text" = "After-work DND";
+"QQx-aC-ygX.title" = "通知";
 
 /* Class = "UILabel"; text = "Detail"; ObjectID = "Qpp-gz-gkC"; */
-"Qpp-gz-gkC.text" = "Detail";
+"Qpp-gz-gkC.text" = "詳細";
 
 /* Class = "UITableViewSection"; headerTitle = "Chat"; ObjectID = "R1G-2w-yDd"; */
-"R1G-2w-yDd.headerTitle" = "Chat";
-
-/* Class = "UILabel"; text = "Detail"; ObjectID = "RP5-V9-cLk"; */
-"RP5-V9-cLk.text" = "Detail";
-
-/* Class = "UILabel"; text = "Label"; ObjectID = "RcX-GS-Xg5"; */
-"RcX-GS-Xg5.text" = "Label";
+"R1G-2w-yDd.headerTitle" = "トーク";
 
 /* Class = "UILabel"; text = "Reset Wallpaper"; ObjectID = "Rfg-a6-EB2"; */
-"Rfg-a6-EB2.text" = "Reset Wallpaper";
+"Rfg-a6-EB2.text" = "壁紙を初期化";
 
 /* Class = "UINavigationItem"; title = "Privacy Policy"; ObjectID = "SQX-77-CzT"; */
-"SQX-77-CzT.title" = "Privacy Policy";
-
-/* Class = "UILabel"; text = "Privacy"; ObjectID = "SaB-S6-XQO"; */
-"SaB-S6-XQO.text" = "Privacy";
-
-/* Class = "UILabel"; text = "Display Order"; ObjectID = "SeE-st-lWM"; */
-"SeE-st-lWM.text" = "Display Order";
+"SQX-77-CzT.title" = "プライバシーポリシー";
 
 /* Class = "UILabel"; text = "Add exclusion..."; ObjectID = "Sow-GN-gms"; */
-"Sow-GN-gms.text" = "Add exclusion...";
-
-/* Class = "UILabel"; text = "Preview"; ObjectID = "TK5-dl-jlh"; */
-"TK5-dl-jlh.text" = "Preview";
+"Sow-GN-gms.text" = "除外するIDを追加する...";
 
 /* Class = "UILabel"; text = "Show gallery preview"; ObjectID = "TyO-Dl-3LV"; */
-"TyO-Dl-3LV.text" = "Show gallery preview";
+"TyO-Dl-3LV.text" = "ショーギャラリープレビュー";
 
 /* Class = "UINavigationItem"; title = "Media"; ObjectID = "U7Q-cL-ZiA"; */
-"U7Q-cL-ZiA.title" = "Media";
-
-/* Class = "UILabel"; text = "-"; ObjectID = "Ue7-f7-Pqb"; */
-"Ue7-f7-Pqb.text" = "-";
+"U7Q-cL-ZiA.title" = "メディア";
 
 /* Class = "UINavigationItem"; title = "Advanced"; ObjectID = "UsC-dS-qae"; */
-"UsC-dS-qae.title" = "Advanced";
-
-/* Class = "UILabel"; text = "Dark"; ObjectID = "V5m-Tp-tcN"; */
-"V5m-Tp-tcN.text" = "Dark";
+"UsC-dS-qae.title" = "上級者向け";
 
 /* Class = "UITableViewSection"; headerTitle = "Validation logging"; ObjectID = "VzU-Hf-fg5"; */
-"VzU-Hf-fg5.headerTitle" = "Validation logging";
-
-/* Class = "UILabel"; text = "Invite a Friend"; ObjectID = "WWx-HN-MHB"; */
-"WWx-HN-MHB.text" = "Invite a Friend";
+"VzU-Hf-fg5.headerTitle" = "デバグログ";
 
 /* Class = "UILabel"; text = "Sync Contacts"; ObjectID = "Wdo-iP-Jy2"; */
-"Wdo-iP-Jy2.text" = "Sync Contacts";
+"Wdo-iP-Jy2.text" = "連絡先を同期";
 
 /* Class = "UILabel"; text = "Validation Logging"; ObjectID = "WeM-6s-Xpj"; */
-"WeM-6s-Xpj.text" = "Validation Logging";
+"WeM-6s-Xpj.text" = "デバッグログ";
 
-/* Class = "UILabel"; text = "Sound"; ObjectID = "XLO-ze-uPq"; */
-"XLO-ze-uPq.text" = "Sound";
+/* Class = "UILabel"; text = "Group Notifications"; ObjectID = "XNU-cf-XDO"; */
+"XNU-cf-XDO.text" = "グループ通知";
 
 /* Class = "UILabel"; text = "Save Media to Camera Roll"; ObjectID = "XgJ-Fv-QL5"; */
-"XgJ-Fv-QL5.text" = "Save Media to Camera Roll";
-
-/* Class = "UINavigationItem"; title = "Working Days"; ObjectID = "Y3i-h0-x0z"; */
-"Y3i-h0-x0z.title" = "Working Days";
+"XgJ-Fv-QL5.text" = "「写真 」アプリでメディアを自動保存";
 
 /* Class = "UINavigationItem"; title = "Support"; ObjectID = "Yb8-8D-YgU"; */
-"Yb8-8D-YgU.title" = "Support";
+"Yb8-8D-YgU.title" = "サポート(英語)";
 
 /* Class = "UINavigationItem"; title = "Settings"; ObjectID = "Z1n-S1-DAp"; */
-"Z1n-S1-DAp.title" = "Settings";
-
-/* Class = "UILabel"; text = "Label"; ObjectID = "ZMs-fp-gbD"; */
-"ZMs-fp-gbD.text" = "Label";
+"Z1n-S1-DAp.title" = "設定";
 
 /* Class = "UINavigationItem"; title = "Appearance"; ObjectID = "ZYa-QO-V4r"; */
-"ZYa-QO-V4r.title" = "Appearance";
+"ZYa-QO-V4r.title" = "外観";
 
-/* Class = "UILabel"; text = "Last use: Yesterday Saved"; ObjectID = "ZwR-ey-2Tv"; */
-"ZwR-ey-2Tv.text" = "Last use: Yesterday Saved";
-
-/* Class = "UILabel"; text = "Passcode Lock"; ObjectID = "aIj-lm-zMl"; */
-"aIj-lm-zMl.text" = "Passcode Lock";
-
-/* Class = "UILabel"; text = "Network Status"; ObjectID = "bLS-Z9-TSk"; */
-"bLS-Z9-TSk.text" = "Network Status";
-
-/* Class = "UILabel"; text = "Appearance"; ObjectID = "bMQ-iT-eGf"; */
-"bMQ-iT-eGf.text" = "Appearance";
-
-/* Class = "UILabel"; text = "Advanced"; ObjectID = "bde-fJ-sgC"; */
-"bde-fJ-sgC.text" = "Advanced";
-
-/* Class = "UILabel"; text = "Chat"; ObjectID = "cZS-fm-VM3"; */
-"cZS-fm-VM3.text" = "Chat";
-
-/* Class = "UILabel"; text = "Media"; ObjectID = "ch4-Rz-Vt0"; */
-"ch4-Rz-Vt0.text" = "Media";
-
-/* Class = "UITableViewSection"; headerTitle = "TRASH BIN"; ObjectID = "dDy-0z-mux"; */
-"dDy-0z-mux.headerTitle" = "TRASH BIN";
-
-/* Class = "UILabel"; text = "Start"; ObjectID = "dQF-El-WN5"; */
-"dQF-El-WN5.text" = "Start";
-
-/* Class = "UILabel"; text = "In use"; ObjectID = "e89-ku-bQL"; */
-"e89-ku-bQL.text" = "In use";
+/* Class = "UITableViewSection"; headerTitle = "Support information"; ObjectID = "bGr-LK-G1Y"; */
+"bGr-LK-G1Y.headerTitle" = "サポート情報";
 
 /* Class = "UILabel"; text = "WebRTC Diagnostics"; ObjectID = "eN8-vV-OIw"; */
-"eN8-vV-OIw.text" = "WebRTC Diagnostics";
+"eN8-vV-OIw.text" = "WebRTC診断機能";
 
 /* Class = "UILabel"; text = "xx pt"; ObjectID = "eXp-kk-t9y"; */
 "eXp-kk-t9y.text" = "xx pt";
 
-/* Class = "UILabel"; text = "Vibrate"; ObjectID = "ecU-zr-KHj"; */
-"ecU-zr-KHj.text" = "Vibrate";
-
-/* Class = "UILabel"; text = "Label"; ObjectID = "ehj-iN-9LX"; */
-"ehj-iN-9LX.text" = "Label";
-
-/* Class = "UILabel"; text = "Bigger single emoji"; ObjectID = "etj-Pj-I1Y"; */
-"etj-Pj-I1Y.text" = "Bigger single emoji";
+/* Class = "UILabel"; text = "Received Message Time"; ObjectID = "HDn-EN-rtP"; */
+"HDn-EN-rtP.text" = "メッセージ受信時刻";
 
 /* Class = "UINavigationItem"; title = "Push Group Sound"; ObjectID = "ezY-mc-1PI"; */
-"ezY-mc-1PI.title" = "Push Group Sound";
+"ezY-mc-1PI.title" = "グループのプッシュ通知音";
 
 /* Class = "UILabel"; text = "Size"; ObjectID = "f2r-1x-GtL"; */
-"f2r-1x-GtL.text" = "Size";
-
-/* Class = "UITableViewSection"; headerTitle = "In App"; ObjectID = "f4R-xX-l5O"; */
-"f4R-xX-l5O.headerTitle" = "In App";
-
-/* Class = "UILabel"; text = "Flush Message Queue"; ObjectID = "fKv-Ae-5f0"; */
-"fKv-Ae-5f0.text" = "Flush Message Queue";
-
-/* Class = "UILabel"; text = "End"; ObjectID = "fgB-qj-59D"; */
-"fgB-qj-59D.text" = "End";
-
-/* Class = "UILabel"; text = "Detail"; ObjectID = "fz9-XE-Oer"; */
-"fz9-XE-Oer.text" = "Detail";
-
-/* Class = "UILabel"; text = "-"; ObjectID = "giX-Df-fBe"; */
-"giX-Df-fBe.text" = "-";
-
-/* Class = "UILabel"; text = "Threema Work"; ObjectID = "hqy-Tv-y10"; */
-"hqy-Tv-y10.text" = "Threema Work";
+"f2r-1x-GtL.text" = "サイズ";
 
 /* Class = "UILabel"; text = "Detail"; ObjectID = "iDF-6E-SQr"; */
-"iDF-6E-SQr.text" = "Detail";
-
-/* Class = "UILabel"; text = "System"; ObjectID = "iF9-Vl-b0E"; */
-"iF9-Vl-b0E.text" = "System";
+"iDF-6E-SQr.text" = "詳細";
 
 /* Class = "UILabel"; text = "Video Quality"; ObjectID = "icP-dl-OGv"; */
-"icP-dl-OGv.text" = "Video Quality";
-
-/* Class = "UITableViewSection"; headerTitle = "ORPHANED FILES DELETE"; ObjectID = "iiS-8s-IBb"; */
-"iiS-8s-IBb.headerTitle" = "ORPHANED FILES DELETE";
+"icP-dl-OGv.text" = "動画画質";
 
 /* Class = "UILabel"; text = "max. 640 x 640 pixels"; ObjectID = "ij7-I7-TzW"; */
-"ij7-I7-TzW.text" = "max. 640 x 640 pixels";
-
-/* Class = "UIViewController"; title = "Threema Work"; ObjectID = "jCJ-Xa-v16"; */
-"jCJ-Xa-v16.title" = "Threema Work";
-
-/* Class = "UILabel"; text = "Name"; ObjectID = "jGx-48-XMs"; */
-"jGx-48-XMs.text" = "Name";
+"ij7-I7-TzW.text" = "最大 640 x 640 ピクセル";
 
 /* Class = "UINavigationItem"; title = "Chat"; ObjectID = "jI2-1V-LmF"; */
-"jI2-1V-LmF.title" = "Chat";
+"jI2-1V-LmF.title" = "トーク";
 
 /* Class = "UILabel"; text = "IPv6"; ObjectID = "jKP-qh-haK"; */
 "jKP-qh-haK.text" = "IPv6";
 
 /* Class = "UILabel"; text = "Detail"; ObjectID = "jrN-Cn-NEr"; */
-"jrN-Cn-NEr.text" = "Detail";
+"jrN-Cn-NEr.text" = "詳細";
 
 /* Class = "UILabel"; text = "Log Size"; ObjectID = "k9C-Wp-8hl"; */
-"k9C-Wp-8hl.text" = "Log Size";
-
-/* Class = "UILabel"; text = "-"; ObjectID = "kHb-uQ-Ce1"; */
-"kHb-uQ-Ce1.text" = "-";
-
-/* Class = "UILabel"; text = "Orphaned files clean up"; ObjectID = "lCE-eO-V5T"; */
-"lCE-eO-V5T.text" = "Orphaned files clean up";
-
-/* Class = "UILabel"; text = "Used by Threema"; ObjectID = "lgV-MU-UON"; */
-"lgV-MU-UON.text" = "Used by Threema";
+"k9C-Wp-8hl.text" = "ログサイズ";
 
 /* Class = "UILabel"; text = "Email Log"; ObjectID = "m9f-E9-TK7"; */
-"m9f-E9-TK7.text" = "Email Log";
-
-/* Class = "UITableViewSection"; footerTitle = "Falls der Speicherplatz knapp wird, können Sie alte, verschlüsselt gespeicherte Medien-Dateien löschen, um Platz zu schaffen. Die Vorschaubilder bleiben erhalten."; ObjectID = "mIj-qg-9G8"; */
-"mIj-qg-9G8.footerTitle" = "Falls der Speicherplatz knapp wird, können Sie alte, verschlüsselt gespeicherte Medien-Dateien löschen, um Platz zu schaffen. Die Vorschaubilder bleiben erhalten.";
+"m9f-E9-TK7.text" = "ログを共有";
 
 /* Class = "UILabel"; text = "Choose POIs"; ObjectID = "mWM-cJ-vcw"; */
-"mWM-cJ-vcw.text" = "Choose POIs";
-
-/* Class = "UILabel"; text = "Label"; ObjectID = "mfL-7m-jcS"; */
-"mfL-7m-jcS.text" = "Label";
-
-/* Class = "UILabel"; text = "Detail"; ObjectID = "n4P-Of-W5c"; */
-"n4P-Of-W5c.text" = "Detail";
+"mWM-cJ-vcw.text" = "POIsを選ぶ";
 
 /* Class = "UILabel"; text = "Font Size"; ObjectID = "oTH-CS-y8U"; */
-"oTH-CS-y8U.text" = "Font Size";
-
-/* Class = "UILabel"; text = "Label"; ObjectID = "odX-ct-snW"; */
-"odX-ct-snW.text" = "Label";
+"oTH-CS-y8U.text" = "フォントサイズ";
 
 /* Class = "UINavigationItem"; title = "Image Size"; ObjectID = "owJ-3Q-Phk"; */
-"owJ-3Q-Phk.title" = "Image Size";
+"owJ-3Q-Phk.title" = "画像サイズ";
 
 /* Class = "UILabel"; text = "Send Read Receipts"; ObjectID = "pd4-eC-QZk"; */
-"pd4-eC-QZk.text" = "Send Read Receipts";
-
-/* Class = "UILabel"; text = "Dev Mode"; ObjectID = "pk6-CB-I9M"; */
-"pk6-CB-I9M.text" = "Dev Mode";
-
-/* Class = "UINavigationItem"; title = "Settings"; ObjectID = "pn3-uL-xG8"; */
-"pn3-uL-xG8.title" = "Settings";
+"pd4-eC-QZk.text" = "「既読」の送信";
 
 /* Class = "UILabel"; text = "Detail"; ObjectID = "qCc-Eb-8rc"; */
-"qCc-Eb-8rc.text" = "Detail";
+"qCc-Eb-8rc.text" = "詳細";
 
 /* Class = "UILabel"; text = "Sound name"; ObjectID = "qT1-va-5Fb"; */
-"qT1-va-5Fb.text" = "Sound name";
-
-/* Class = "UITableViewSection"; footerTitle = "The data will not be deleted automatically but only when tapping the Delete Media and Files button. Thumbnails will not be deleted."; ObjectID = "qiD-zj-Qqg"; */
-"qiD-zj-Qqg.footerTitle" = "The data will not be deleted automatically but only when tapping the Delete Media and Files button. Thumbnails will not be deleted.";
-
-/* Class = "UINavigationItem"; title = "Older than"; ObjectID = "r6W-Ij-j5O"; */
-"r6W-Ij-j5O.title" = "Older than";
-
-/* Class = "UILabel"; text = "Preferred picture quality"; ObjectID = "rME-eF-iPo"; */
-"rME-eF-iPo.text" = "Preferred picture quality";
+"qT1-va-5Fb.text" = "通知音の名前";
 
 /* Class = "UITableViewSection"; headerTitle = "Wallpaper"; ObjectID = "ri0-wl-hNq"; */
-"ri0-wl-hNq.headerTitle" = "Wallpaper";
+"ri0-wl-hNq.headerTitle" = "壁紙";
 
-/* Class = "UILabel"; text = "Show Nickname"; ObjectID = "sDQ-S3-zni"; */
-"sDQ-S3-zni.text" = "Show Nickname";
-
-/* Class = "UITableViewSection"; headerTitle = "Work-Life balance"; ObjectID = "szt-Qx-ulO"; */
-"szt-Qx-ulO.headerTitle" = "Work-Life balance";
+/* Class = "UILabel"; text = "Push Token"; ObjectID = "sC4-2F-pcW"; */
+"sC4-2F-pcW.text" = "プッシュトークン";
 
 /* Class = "UILabel"; text = "Block Unknown"; ObjectID = "t3A-s5-ui3"; */
-"t3A-s5-ui3.text" = "Block Unknown";
-
-/* Class = "UILabel"; text = "Enable Threema Call"; ObjectID = "tbO-52-AvQ"; */
-"tbO-52-AvQ.text" = "Enable Threema Call";
-
-/* Class = "UILabel"; text = "Preview"; ObjectID = "tmM-ej-SO5"; */
-"tmM-ej-SO5.text" = "Preview";
-
-/* Class = "UILabel"; text = "Privacy Policy"; ObjectID = "tz7-kW-scx"; */
-"tz7-kW-scx.text" = "Privacy Policy";
-
-/* Class = "UINavigationItem"; title = "Storage Management"; ObjectID = "u0Q-wW-S40"; */
-"u0Q-wW-S40.title" = "Storage Management";
+"t3A-s5-ui3.text" = "不明のブロック";
 
 /* Class = "UITableViewSection"; headerTitle = "Networking"; ObjectID = "ukQ-aK-GUe"; */
-"ukQ-aK-GUe.headerTitle" = "Networking";
-
-/* Class = "UILabel"; text = "Monday"; ObjectID = "upe-NW-h86"; */
-"upe-NW-h86.text" = "Monday";
+"ukQ-aK-GUe.headerTitle" = "ネットワーキング";
 
 /* Class = "UITableViewSection"; footerTitle = "Anybody can send you a message. New contacts will be added automatically when their first message arrives."; ObjectID = "vhK-tc-aH5"; */
-"vhK-tc-aH5.footerTitle" = "Anybody can send you a message. New contacts will be added automatically when their first message arrives.";
+"vhK-tc-aH5.footerTitle" = "誰でもあなたにメッセージを送ることができます。新しい連絡先は、最初のメッセージが届いたときに自動的に追加されます。";
 
 /* Class = "UITableViewSection"; headerTitle = "Contacts"; ObjectID = "vhK-tc-aH5"; */
-"vhK-tc-aH5.headerTitle" = "Contacts";
-
-/* Class = "UILabel"; text = "Subtitle"; ObjectID = "vhl-XQ-YFx"; */
-"vhl-XQ-YFx.text" = "Subtitle";
-
-/* Class = "UILabel"; text = "Detail"; ObjectID = "w6Z-IX-2ZA"; */
-"w6Z-IX-2ZA.text" = "Detail";
-
-/* Class = "UILabel"; text = "-"; ObjectID = "wE7-pn-Gu5"; */
-"wE7-pn-Gu5.text" = "-";
-
-/* Class = "UILabel"; text = "Label"; ObjectID = "wVB-DV-DFQ"; */
-"wVB-DV-DFQ.text" = "Label";
+"vhK-tc-aH5.headerTitle" = "連絡先";
 
 /* Class = "UINavigationItem"; title = "Push Sound"; ObjectID = "wii-ly-S2S"; */
-"wii-ly-S2S.title" = "Push Sound";
-
-/* Class = "UILabel"; text = "Support"; ObjectID = "x94-1w-4Li"; */
-"x94-1w-4Li.text" = "Support";
-
-/* Class = "UINavigationItem"; title = "Video Quality"; ObjectID = "xdv-oq-YmZ"; */
-"xdv-oq-YmZ.title" = "Video Quality";
+"wii-ly-S2S.title" = "プッシュ通知音";
 
 /* Class = "UILabel"; text = "Image Size"; ObjectID = "xhX-4h-CHj"; */
-"xhX-4h-CHj.text" = "Image Size";
-
-/* Class = "UITableViewSection"; headerTitle = "Design theme"; ObjectID = "y1u-xK-T6S"; */
-"y1u-xK-T6S.headerTitle" = "Design theme";
-
-/* Class = "UILabel"; text = "Detail"; ObjectID = "yCv-CF-FTa"; */
-"yCv-CF-FTa.text" = "Detail";
+"xhX-4h-CHj.text" = "画像サイズ";
 
 /* Class = "UILabel"; text = "Detail"; ObjectID = "yFW-ty-9QR"; */
-"yFW-ty-9QR.text" = "Detail";
+"yFW-ty-9QR.text" = "詳細";
 
 /* Class = "UINavigationItem"; title = "Threema Call Sound"; ObjectID = "yts-q5-Yzc"; */
-"yts-q5-Yzc.title" = "Threema Call Sound";
-
-/* Class = "UILabel"; text = "Label"; ObjectID = "zbI-6q-2ND"; */
-"zbI-6q-2ND.text" = "Label";
+"yts-q5-Yzc.title" = "Threema通話音";

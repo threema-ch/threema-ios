@@ -33,7 +33,7 @@
 "BH4-Z9-imt.title" = "隐私";
 
 /* Class = "UILabel"; text = "Proximity monitoring"; ObjectID = "BK0-LJ-WwY"; */
-"BK0-LJ-WwY.text" = "近距离传感器监测";
+"BK0-LJ-WwY.text" = "距离传感器监测中";
 
 /* Class = "UILabel"; text = "Hide Stale Contacts"; ObjectID = "C7N-a6-E8Y"; */
 "C7N-a6-E8Y.text" = "隐藏陈旧的联系人";
@@ -69,7 +69,7 @@
 "N0M-ec-m5Y.headerTitle" = "传感器";
 
 /* Class = "UILabel"; text = "Send Typing Indicator"; ObjectID = "O7I-2W-NWv"; */
-"O7I-2W-NWv.text" = "发送打字状态";
+"O7I-2W-NWv.text" = "发送输入状态";
 
 /* Class = "UINavigationItem"; title = "Exclusion List"; ObjectID = "OfE-jH-kl6"; */
 "OfE-jH-kl6.title" = "排除名单";
@@ -87,7 +87,7 @@
 "Qpp-gz-gkC.text" = "详情";
 
 /* Class = "UITableViewSection"; headerTitle = "Chat"; ObjectID = "R1G-2w-yDd"; */
-"R1G-2w-yDd.headerTitle" = "聊天室";
+"R1G-2w-yDd.headerTitle" = "会话";
 
 /* Class = "UILabel"; text = "Reset Wallpaper"; ObjectID = "Rfg-a6-EB2"; */
 "Rfg-a6-EB2.text" = "重置壁纸";
@@ -96,7 +96,7 @@
 "SQX-77-CzT.title" = "隐私政策";
 
 /* Class = "UILabel"; text = "Add exclusion..."; ObjectID = "Sow-GN-gms"; */
-"Sow-GN-gms.text" = "添加排除...";
+"Sow-GN-gms.text" = "添加排除项...";
 
 /* Class = "UILabel"; text = "Show gallery preview"; ObjectID = "TyO-Dl-3LV"; */
 "TyO-Dl-3LV.text" = "显示图库预览";
@@ -120,7 +120,7 @@
 "XNU-cf-XDO.text" = "群组通知";
 
 /* Class = "UILabel"; text = "Save Media to Camera Roll"; ObjectID = "XgJ-Fv-QL5"; */
-"XgJ-Fv-QL5.text" = "自动保存在 “照片” 应用程序中";
+"XgJ-Fv-QL5.text" = "自动保存在 “照片” 应用程序";
 
 /* Class = "UINavigationItem"; title = "Support"; ObjectID = "Yb8-8D-YgU"; */
 "Yb8-8D-YgU.title" = "支持";
@@ -141,19 +141,13 @@
 "eXp-kk-t9y.text" = "xx pt";
 
 /* Class = "UILabel"; text = "Received Message Time"; ObjectID = "HDn-EN-rtP"; */
-"HDn-EN-rtP.text" = "接收信息时间";
+"HDn-EN-rtP.text" = "接收消息时间";
 
 /* Class = "UINavigationItem"; title = "Push Group Sound"; ObjectID = "ezY-mc-1PI"; */
 "ezY-mc-1PI.title" = "推送群组音效";
 
 /* Class = "UILabel"; text = "Size"; ObjectID = "f2r-1x-GtL"; */
 "f2r-1x-GtL.text" = "大小";
-
-/* Class = "UILabel"; text = "Enable Threema Call"; ObjectID = "ffR-oW-QMI"; */
-"ffR-oW-QMI.text" = "启用 Threema 通话";
-
-/* Class = "UILabel"; text = "Integrate calls into iOS"; ObjectID = "gbG-Cf-QPK"; */
-"gbG-Cf-QPK.text" = "将通话整合到iOS";
 
 /* Class = "UILabel"; text = "Detail"; ObjectID = "iDF-6E-SQr"; */
 "iDF-6E-SQr.text" = "详情";
@@ -165,7 +159,7 @@
 "ij7-I7-TzW.text" = "最大 640 x 640 像素";
 
 /* Class = "UINavigationItem"; title = "Chat"; ObjectID = "jI2-1V-LmF"; */
-"jI2-1V-LmF.title" = "聊天室";
+"jI2-1V-LmF.title" = "会话";
 
 /* Class = "UILabel"; text = "IPv6"; ObjectID = "jKP-qh-haK"; */
 "jKP-qh-haK.text" = "IPv6";
@@ -175,9 +169,6 @@
 
 /* Class = "UILabel"; text = "Log Size"; ObjectID = "k9C-Wp-8hl"; */
 "k9C-Wp-8hl.text" = "日志大小";
-
-/* Class = "UILabel"; text = "Always relay calls"; ObjectID = "m29-az-gFj"; */
-"m29-az-gFj.text" = "始终中继通话";
 
 /* Class = "UILabel"; text = "Email Log"; ObjectID = "m9f-E9-TK7"; */
 "m9f-E9-TK7.text" = "分享日志";
@@ -210,10 +201,10 @@
 "t3A-s5-ui3.text" = "封锁未知者";
 
 /* Class = "UITableViewSection"; headerTitle = "Networking"; ObjectID = "ukQ-aK-GUe"; */
-"ukQ-aK-GUe.headerTitle" = "联网";
+"ukQ-aK-GUe.headerTitle" = "联网中";
 
 /* Class = "UITableViewSection"; footerTitle = "Anybody can send you a message. New contacts will be added automatically when their first message arrives."; ObjectID = "vhK-tc-aH5"; */
-"vhK-tc-aH5.footerTitle" = "任何人都可以向您发信息。当他向您发送第一条信息时，会自动添加到新的联系人。";
+"vhK-tc-aH5.footerTitle" = "任何人都可以向您发送消息。当他向您发送第一条消息时，会自动添加到新的联系人。";
 
 /* Class = "UITableViewSection"; headerTitle = "Contacts"; ObjectID = "vhK-tc-aH5"; */
 "vhK-tc-aH5.headerTitle" = "联系人";

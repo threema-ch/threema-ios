@@ -1,114 +1,114 @@
 
 /* Class = "UILabel"; text = "Nickname"; ObjectID = "2jc-3N-31S"; */
-"2jc-3N-31S.text" = "Pseudonim";
+"2jc-3N-31S.text" = "暱稱";
 
 /* Class = "UITableViewSection"; footerTitle = "Number: +41 79 123 45 67"; ObjectID = "5HP-W8-nFp"; */
-"5HP-W8-nFp.footerTitle" = "Numer: +41 79 123 45 67";
+"5HP-W8-nFp.footerTitle" = "電話號碼： +41 79 123 45 67";
 
 /* Class = "UITextField"; placeholder = "your email address"; ObjectID = "5bh-L5-CVm"; */
-"5bh-L5-CVm.placeholder" = "twój adres e-mail";
+"5bh-L5-CVm.placeholder" = "您的電子郵件地址";
 
 /* Class = "UINavigationItem"; title = "My Profile"; ObjectID = "8Pu-jd-SHn"; */
-"8Pu-jd-SHn.title" = "Mój Profil";
+"8Pu-jd-SHn.title" = "個人檔案";
 
 /* Class = "UILabel"; text = "Key Fingerprint"; ObjectID = "sJA-2q-zE2"; */
-"sJA-2q-zE2.text" = "Klucz Odcisku Palca";
+"sJA-2q-zE2.text" = "金鑰指紋";
 
 /* Class = "UINavigationItem"; title = "Link Number"; ObjectID = "ELz-zT-AmB"; */
-"ELz-zT-AmB.title" = "Numer Połączenia";
+"ELz-zT-AmB.title" = "連結電話號碼";
 
 /* Class = "UILabel"; text = "Detail"; ObjectID = "FIY-Hl-kwh"; */
-"FIY-Hl-kwh.text" = "Szczegół";
+"FIY-Hl-kwh.text" = "詳情";
 
 /* Class = "UITextField"; placeholder = "your phone number"; ObjectID = "FRl-f2-pIa"; */
-"FRl-f2-pIa.placeholder" = "twój numer telefonu";
+"FRl-f2-pIa.placeholder" = "您的電話號碼";
 
 /* Class = "UILabel"; text = "Detail"; ObjectID = "H7W-RZ-gej"; */
-"H7W-RZ-gej.text" = "Szczegół";
+"H7W-RZ-gej.text" = "詳情";
 
 /* Class = "UILabel"; text = "Delete ID"; ObjectID = "ISb-ca-Ste"; */
-"ISb-ca-Ste.text" = "Usuń ID";
+"ISb-ca-Ste.text" = "刪除ID";
 
 /* Class = "UILabel"; text = "Email address"; ObjectID = "JRY-UB-2Zx"; */
-"JRY-UB-2Zx.text" = "Adres e-mail";
+"JRY-UB-2Zx.text" = "電子郵件地址";
 
 /* Class = "UITextField"; placeholder = "code"; ObjectID = "KTz-4x-SnC"; */
-"KTz-4x-SnC.placeholder" = "kod";
+"KTz-4x-SnC.placeholder" = "驗證碼";
 
 /* Class = "UILabel"; text = "Nickname"; ObjectID = "NLA-jz-irZ"; */
-"NLA-jz-irZ.text" = "Pseudonim";
+"NLA-jz-irZ.text" = "暱稱";
 
 /* Class = "UITableViewSection"; footerTitle = "Linking your email address or phone number to your ID lets other people find you on Threema automatically if they have you in their address book."; ObjectID = "NUr-0t-zng"; */
-"NUr-0t-zng.footerTitle" = "Powiązanie adresu e-mail lub numeru telefonu z ID pozwala innym osobom automatyczne znalezienie Ciebie w Threema, jeśli mają  w swojej książce adresowej.";
+"NUr-0t-zng.footerTitle" = "將您的電子郵件地址或電話號碼與您的ID連結，如果其他人的通訊錄中有儲存您的資料，他們將在 Threema 上自動找到您。";
 
 /* Class = "UILabel"; text = "Threema ID"; ObjectID = "PG7-5d-WL5"; */
 "PG7-5d-WL5.text" = "Threema ID";
 
 /* Class = "UILabel"; text = "Profile picture recipients"; ObjectID = "PqJ-0p-bkD"; */
-"PqJ-0p-bkD.text" = "Odbiorcy zdjęcia profilowego";
+"PqJ-0p-bkD.text" = "大頭貼收件者";
 
 /* Class = "UILabel"; text = "Phone Number"; ObjectID = "QCC-2k-HfZ"; */
-"QCC-2k-HfZ.text" = "Numer Telefonu";
+"QCC-2k-HfZ.text" = "電話號碼";
 
 /* Class = "UILabel"; text = "Linked Email"; ObjectID = "Re1-k2-FsT"; */
-"Re1-k2-FsT.text" = "Powiązany Email";
+"Re1-k2-FsT.text" = "連結電子郵件";
 
 /* Class = "UILabel"; text = "XXXXXXXX"; ObjectID = "RjP-ON-gaW"; */
 "RjP-ON-gaW.text" = "XXXXXXXX";
 
 /* Class = "UILabel"; text = "Request Call"; ObjectID = "RvX-Ht-6JQ"; */
-"RvX-Ht-6JQ.text" = "Żądanie Połączenia";
+"RvX-Ht-6JQ.text" = "要求通話";
 
 /* Class = "UILabel"; text = "Linked Number"; ObjectID = "UWU-JO-PcU"; */
-"UWU-JO-PcU.text" = "Powiązany Numer";
+"UWU-JO-PcU.text" = "連結電話號碼";
 
 /* Class = "UILabel"; text = "ID Revocation Password"; ObjectID = "XOE-qz-Fzh"; */
-"XOE-qz-Fzh.text" = "Hasło Unieważnienia ID";
+"XOE-qz-Fzh.text" = "ID撤銷密碼";
 
 /* Class = "UINavigationItem"; title = "Release profile picture to"; ObjectID = "aX3-NQ-eU7"; */
-"aX3-NQ-eU7.title" = "Publikacja zdjęcia profilowego do";
+"aX3-NQ-eU7.title" = "將大頭貼發佈至";
 
 /* Class = "UILabel"; text = "Nickname"; ObjectID = "bL4-qe-Mh9"; */
-"bL4-qe-Mh9.text" = "Pseudonim";
+"bL4-qe-Mh9.text" = "暱稱";
 
 /* Class = "UILabel"; text = "Backup"; ObjectID = "eS1-Gf-A4o"; */
-"eS1-Gf-A4o.text" = "Eksport ID";
+"eS1-Gf-A4o.text" = "ID匯出";
 
 /* Class = "UILabel"; text = "..."; ObjectID = "gan-4f-TrM"; */
 "gan-4f-TrM.text" = "...";
 
 /* Class = "UINavigationItem"; title = "Edit Profile"; ObjectID = "jni-2G-zzz"; */
-"jni-2G-zzz.title" = "Edytuj Profil";
+"jni-2G-zzz.title" = "編輯個人檔案";
 
 /* Class = "UITextField"; placeholder = "Nickname"; ObjectID = "o3l-bU-add"; */
-"o3l-bU-add.placeholder" = "Pseudonim";
+"o3l-bU-add.placeholder" = "暱稱";
 
 /* Class = "UITableViewSection"; footerTitle = "Linking your email address to your ID lets other people find you on Threema automatically if they have your email in their address book."; ObjectID = "qQD-Gd-ca9"; */
-"qQD-Gd-ca9.footerTitle" = "Powiązanie adresu email z ID umożliwia innym osobom automatyczne znajdowanie Ciebie w Threema, jeśli mają Twój adres email w książce adresowej.";
+"qQD-Gd-ca9.footerTitle" = "將您的電子郵件地址與您的ID連結，如果其他人的通訊錄中有儲存您的電子郵件地址，他們將在 Threema 上自動找到您。";
 
 /* Class = "UINavigationItem"; title = "Enter code"; ObjectID = "tGC-WP-fBC"; */
-"tGC-WP-fBC.title" = "Wpisz kod";
+"tGC-WP-fBC.title" = "輸入驗證碼";
 
 /* Class = "UILabel"; text = "Release profile picture to"; ObjectID = "vvJ-Em-VJ0"; */
-"vvJ-Em-VJ0.text" = "Publikacja zdjęcia profilowego do";
+"vvJ-Em-VJ0.text" = "將大頭貼發佈至";
 
 /* Class = "UINavigationItem"; title = "Link Email"; ObjectID = "uEL-Yh-Kca"; */
-"uEL-Yh-Kca.title" = "Link Email";
+"uEL-Yh-Kca.title" = "連結電子郵件";
 
 /* Class = "UILabel"; text = "Abort Verification"; ObjectID = "wJP-Jf-Pgx"; */
-"wJP-Jf-Pgx.text" = "Przerwij weryfikację";
+"wJP-Jf-Pgx.text" = "中止驗證";
 
 /* Class = "UILabel"; text = "05:00"; ObjectID = "xdM-Ja-eNy"; */
 "xdM-Ja-eNy.text" = "05:00";
 
 /* Class = "UILabel"; text = "Enter code"; ObjectID = "xih-kT-hBC"; */
-"xih-kT-hBC.text" = "Wpisz kod";
+"xih-kT-hBC.text" = "輸入驗證碼";
 
 /* Class = "UILabel"; text = "Detail"; ObjectID = "yaz-xj-2bb"; */
-"yaz-xj-2bb.text" = "Szczegół";
+"yaz-xj-2bb.text" = "詳情";
 
 /* Class = "UITableViewSection"; footerTitle = "Linking your phone number to your ID lets other people find you on Threema automatically if they have your phone number in their address book."; ObjectID = "z3E-MB-Mey"; */
-"z3E-MB-Mey.footerTitle" = "Powiązanie numeru telefonu z ID umożliwia innym osobom automatyczne znajdowanie Ciebie w Threema, jeśli mają Twój numer telefonu w swojej książce adresowej.";
+"z3E-MB-Mey.footerTitle" = "將您的電話號碼與您的ID連結，如果其他人的通訊錄中有儲存您的電話號碼，他們將在 Threema 上自動找到您。";
 
 /* Class = "UILabel"; text = "00000000000000000000000000000000"; ObjectID = "z90-JB-13a"; */
 "z90-JB-13a.text" = "00000000000000000000000000000000";

@@ -115,20 +115,22 @@
         NSMutableSet *workContactIds = [NSMutableSet set];
         if (workContacts != nil) {
             for (NSDictionary *workContact in workContacts) {
-                Contact *contact = [[ContactStore sharedContactStore] addContactWithIdentity:workContact[@"id"] publicKey:[[NSData alloc] initWithBase64EncodedString:workContact[@"pk"] options:0] cnContactId:nil verificationLevel:kVerificationLevelUnverified state:nil type:@1 featureMask:nil alerts:NO];
-                if ((contact.firstName == nil && contact.lastName == nil) || contact.cnContactId == nil) {
-                    if (workContact[@"first"] != nil && workContact[@"first"] != [NSNull null] && workContact[@"last"] != nil && workContact[@"last"] != [NSNull null]) {
-                        NSString *first = workContact[@"first"];
-                        NSString *last = workContact[@"last"];
-                        if (first.length > 0 || last.length > 0) {
-                            EntityManager *entityManager = [[EntityManager alloc] init];
-                            [entityManager performSyncBlockAndSafe:^{
-                                contact.firstName = first;
-                                contact.lastName = last;
-                            }];
-                        }
+                NSString *firstName = nil;
+                NSString *lastName = nil;
+                
+                if (workContact[@"first"] != nil && workContact[@"first"] != [NSNull null]) {
+                    if (((NSString *) workContact[@"first"]).length > 0) {
+                        firstName = workContact[@"first"];
                     }
                 }
+                
+                if (workContact[@"last"] != nil && workContact[@"last"] != [NSNull null]) {
+                    if (((NSString *) workContact[@"last"]).length > 0) {
+                        lastName = workContact[@"last"];
+                    }
+                }
+                
+                [[ContactStore sharedContactStore] addWorkContactWithIdentity:workContact[@"id"] publicKey:[[NSData alloc] initWithBase64EncodedString:workContact[@"pk"] options:0] firstname:firstName lastname:lastName];
                 [workContactIds addObject:workContact[@"id"]];
             }
         }

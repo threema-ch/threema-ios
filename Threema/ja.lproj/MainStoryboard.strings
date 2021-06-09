@@ -1,297 +1,198 @@
 
-/* Class = "UILabel"; text = "IDENTITY"; ObjectID = "0lc-S9-AQW"; */
-"0lc-S9-AQW.text" = "IDENTITY";
-
-/* Class = "UILabel"; text = "00000000000000000000000000000000"; ObjectID = "15d-ji-q7j"; */
-"15d-ji-q7j.text" = "00000000000000000000000000000000";
-
-/* Class = "UILabel"; text = "Detail"; ObjectID = "1F4-9N-fcI"; */
-"1F4-9N-fcI.text" = "Detail";
-
-/* Class = "UILabel"; text = "Anonymous contact. The ID could not be matched with a contact in your address book."; ObjectID = "1xB-q0-ZXX"; */
-"1xB-q0-ZXX.text" = "Anonymous contact. The ID could not be matched with a contact in your address book.";
-
 /* Class = "UIBarButtonItem"; title = "Send"; ObjectID = "25C-Te-sfW"; */
-"25C-Te-sfW.title" = "Send";
-
-/* Class = "UILabel"; text = "Send Message"; ObjectID = "29s-0j-pO7"; */
-"29s-0j-pO7.text" = "Send Message";
+"25C-Te-sfW.title" = "送信";
 
 /* Class = "UILabel"; text = "Key Fingerprint"; ObjectID = "3r3-TQ-lzw"; */
-"3r3-TQ-lzw.text" = "Key Fingerprint";
+"3r3-TQ-lzw.text" = "フィンガープリントキー";
 
 /* Class = "UILabel"; text = "Threema ID"; ObjectID = "3zz-BI-IiZ"; */
 "3zz-BI-IiZ.text" = "Threema ID";
 
 /* Class = "UILabel"; text = "The ID and public key of this contact have been verified."; ObjectID = "4Js-Fh-l8T"; */
-"4Js-Fh-l8T.text" = "The ID and public key of this contact have been verified.";
+"4Js-Fh-l8T.text" = "この連絡先のIDと公開鍵が確認されました。";
 
-/* Class = "UILabel"; text = "Message preview q fasdf asdf asd fasd fasd fa\nefgjsk djflg"; ObjectID = "4a3-95-oYU"; */
-"4a3-95-oYU.text" = "Message preview q fasdf asdf asd fasd fasd fa\nefgjsk djflg";
+/* Class = "UILabel"; text = "Message preview"; ObjectID = "4a3-95-oYU"; */
+"4a3-95-oYU.text" = "この連絡先のIDと公開鍵が確認されました。";
 
 /* Class = "UILabel"; text = "Detail"; ObjectID = "5Ca-aK-dv0"; */
-"5Ca-aK-dv0.text" = "Detail";
+"5Ca-aK-dv0.text" = "詳細";
 
 /* Class = "UILabel"; text = "Threema Call"; ObjectID = "5Ea-OE-GRI"; */
-"5Ea-OE-GRI.text" = "Threema Call";
+"5Ea-OE-GRI.text" = "Threema通話";
 
 /* Class = "UITabBarItem"; title = "My Profile"; ObjectID = "5lj-oy-IYs"; */
-"5lj-oy-IYs.title" = "My Profile";
-
-/* Class = "UILabel"; text = "Nickname"; ObjectID = "5uj-zQ-HDk"; */
-"5uj-zQ-HDk.text" = "Nickname";
+"5lj-oy-IYs.title" = "自分の情報";
 
 /* Class = "UILabel"; text = "XXXXXXXX"; ObjectID = "6GC-h6-PJ3"; */
 "6GC-h6-PJ3.text" = "XXXXXXXX";
 
 /* Class = "UILabel"; text = "Detail"; ObjectID = "6On-uo-xuU"; */
-"6On-uo-xuU.text" = "Detail";
-
-/* Class = "UILabel"; text = "Group Name"; ObjectID = "6W1-LE-5ka"; */
-"6W1-LE-5ka.text" = "Group Name";
+"6On-uo-xuU.text" = "詳細";
 
 /* Class = "UILabel"; text = "Clone group"; ObjectID = "6Z4-do-02L"; */
-"6Z4-do-02L.text" = "Clone group";
+"6Z4-do-02L.text" = "グループを複製";
 
 /* Class = "UILabel"; text = "Detail"; ObjectID = "6bQ-Vj-jcf"; */
-"6bQ-Vj-jcf.text" = "Detail";
-
-/* Class = "UIBarButtonItem"; title = "Item"; ObjectID = "6rx-8S-8dN"; */
-"6rx-8S-8dN.title" = "Item";
-
-/* Class = "UILabel"; text = "Off"; ObjectID = "70C-9T-QSE"; */
-"70C-9T-QSE.text" = "Off";
+"6bQ-Vj-jcf.text" = "詳細";
 
 /* Class = "UILabel"; text = "Leave Group"; ObjectID = "74M-ip-a37"; */
-"74M-ip-a37.text" = "Leave Group";
+"74M-ip-a37.text" = "グループを退会";
+
+/* Class = "UISegmentedControl"; 77n-al-llJ.segmentTitles[0] = "Contacts"; ObjectID = "77n-al-llJ"; */
+"77n-al-llJ.segmentTitles[0]" = "連絡先";
+
+/* Class = "UISegmentedControl"; 77n-al-llJ.segmentTitles[1] = "Groups"; ObjectID = "77n-al-llJ"; */
+"77n-al-llJ.segmentTitles[1]" = "グループ";
 
 /* Class = "UILabel"; text = "Detail"; ObjectID = "8GS-Yt-ab7"; */
-"8GS-Yt-ab7.text" = "Detail";
+"8GS-Yt-ab7.text" = "詳細";
 
 /* Class = "UILabel"; text = "00000000000000000000000000000000"; ObjectID = "8S8-W1-o1S"; */
 "8S8-W1-o1S.text" = "00000000000000000000000000000000";
 
-/* Class = "UILabel"; text = "Contacts in your Organization"; ObjectID = "8y4-Kc-IzK"; */
-"8y4-Kc-IzK.text" = "Contacts in your Organization";
-
 /* Class = "UILabel"; text = "# members"; ObjectID = "9H6-Np-ifa"; */
-"9H6-Np-ifa.text" = "# members";
+"9H6-Np-ifa.text" = "# メンバー";
 
-/* Class = "UINavigationItem"; title = "First Last"; ObjectID = "AEe-kf-VNo"; */
-"AEe-kf-VNo.title" = "First Last";
+/* Class = "UISegmentedControl"; 9mW-FX-ba3.segmentTitles[0] = "Single"; ObjectID = "9mW-FX-ba3"; */
+"9mW-FX-ba3.segmentTitles[0]" = "シングル";
+
+/* Class = "UISegmentedControl"; 9mW-FX-ba3.segmentTitles[1] = "Group"; ObjectID = "9mW-FX-ba3"; */
+"9mW-FX-ba3.segmentTitles[1]" = "グループ";
 
 /* Class = "UILabel"; text = "Edit Members..."; ObjectID = "AHX-FD-Cmx"; */
-"AHX-FD-Cmx.text" = "Edit Members...";
+"AHX-FD-Cmx.text" = "メンバーを編集...";
 
 /* Class = "UILabel"; text = "Detail"; ObjectID = "AyW-jc-MkD"; */
-"AyW-jc-MkD.text" = "Detail";
+"AyW-jc-MkD.text" = "詳細";
 
 /* Class = "UINavigationItem"; title = "New Contact"; ObjectID = "BAB-op-TwI"; */
-"BAB-op-TwI.title" = "New Contact";
+"BAB-op-TwI.title" = "新しい連絡先";
 
 /* Class = "UILabel"; text = "Message-ID"; ObjectID = "CyG-aF-qUX"; */
-"CyG-aF-qUX.text" = "Message-ID";
+"CyG-aF-qUX.text" = "メッセージID";
 
 /* Class = "UILabel"; text = "Detail"; ObjectID = "D8z-NN-iT9"; */
-"D8z-NN-iT9.text" = "Detail";
+"D8z-NN-iT9.text" = "詳細";
 
 /* Class = "UILabel"; text = "First Last"; ObjectID = "DfM-u6-9Pl"; */
-"DfM-u6-9Pl.text" = "First Last";
-
-/* Class = "UILabel"; text = "Threema Work contact. The administrator has pre-configured this contact."; ObjectID = "Dkl-lv-Gfl"; */
-"Dkl-lv-Gfl.text" = "Threema Work contact. The administrator has pre-configured this contact.";
-
-/* Class = "UILabel"; text = "The dots are an indicator for a contact's verification level."; ObjectID = "DxA-AM-Zv1"; */
-"DxA-AM-Zv1.text" = "The dots are an indicator for a contact's verification level.";
+"DfM-u6-9Pl.text" = "名/姓";
 
 /* Class = "UILabel"; text = "Nickname"; ObjectID = "EpZ-nu-d7H"; */
-"EpZ-nu-d7H.text" = "Nickname";
+"EpZ-nu-d7H.text" = "ニックネーム";
 
 /* Class = "UINavigationItem"; title = "Add Contact"; ObjectID = "Eq0-ED-f11"; */
-"Eq0-ED-f11.title" = "Add Contact";
-
-/* Class = "UILabel"; text = "First Last"; ObjectID = "F29-qq-lEF"; */
-"F29-qq-lEF.text" = "First Last";
+"Eq0-ED-f11.title" = "連絡先に追加";
 
 /* Class = "UILabel"; text = "Group creator"; ObjectID = "FaC-iq-fy4"; */
-"FaC-iq-fy4.text" = "Group creator";
+"FaC-iq-fy4.text" = "グループ作成者";
 
-/* Class = "UILabel"; text = "Mentions"; ObjectID = "GY1-sO-0wR"; */
-"GY1-sO-0wR.text" = "Mentions";
-
-/* Class = "UILabel"; text = "Linked contact"; ObjectID = "HUp-wZ-oF0"; */
-"HUp-wZ-oF0.text" = "Linked contact";
+/* Class = "UILabel"; text = "No push notifications"; ObjectID = "Fji-Pc-2Te"; */
+"Fji-Pc-2Te.text" = "プッシュ通知を鳴らさない";
 
 /* Class = "UILabel"; text = "# members"; ObjectID = "I8P-9o-uIi"; */
-"I8P-9o-uIi.text" = "# members";
-
-/* Class = "UILabel"; text = "Threema ID"; ObjectID = "IDl-ul-tY3"; */
-"IDl-ul-tY3.text" = "Threema ID";
+"I8P-9o-uIi.text" = "# メンバー";
 
 /* Class = "UILabel"; text = "Send Message"; ObjectID = "IpT-Hm-dLe"; */
-"IpT-Hm-dLe.text" = "Send Message";
+"IpT-Hm-dLe.text" = "メッセージを送信";
 
-/* Class = "UITableViewSection"; headerTitle = "Notification sound"; ObjectID = "JEB-UJ-EFF"; */
-"JEB-UJ-EFF.headerTitle" = "Notification sound";
-
-/* Class = "UILabel"; text = "Create new group"; ObjectID = "JLU-Sq-XK3"; */
-"JLU-Sq-XK3.text" = "Create new group";
-
-/* Class = "UITabBarItem"; title = "Contacts"; ObjectID = "JXW-2V-ftV"; */
-"JXW-2V-ftV.title" = "Contacts";
+/* Class = "UILabel"; text = "Group Name"; ObjectID = "Jri-Jp-Hpu"; */
+"Jri-Jp-Hpu.text" = "グループ名";
 
 /* Class = "UILabel"; text = "Group creator"; ObjectID = "KRl-DY-AIA"; */
-"KRl-DY-AIA.text" = "Group creator";
-
-/* Class = "UILabel"; text = "First Last"; ObjectID = "Kap-D0-eRe"; */
-"Kap-D0-eRe.text" = "First Last";
-
-/* Class = "UILabel"; text = "Threema Work contact. The administrator has pre-configured this contact."; ObjectID = "KbO-86-RBn"; */
-"KbO-86-RBn.text" = "Threema Work contact. The administrator has pre-configured this contact.";
+"KRl-DY-AIA.text" = "グループ作成者";
 
 /* Class = "UILabel"; text = "Verification Level"; ObjectID = "LID-K1-9a6"; */
-"LID-K1-9a6.text" = "Verification Level";
+"LID-K1-9a6.text" = "検証レベル";
 
 /* Class = "UINavigationItem"; title = "Edit Contact"; ObjectID = "Leg-Pw-PQ8"; */
-"Leg-Pw-PQ8.title" = "Edit Contact";
+"Leg-Pw-PQ8.title" = "連絡先を編集";
 
 /* Class = "UILabel"; text = "Threema ID"; ObjectID = "Li7-m2-jkf"; */
 "Li7-m2-jkf.text" = "Threema ID";
 
 /* Class = "UINavigationItem"; title = "Contacts"; ObjectID = "Ll3-Ew-izw"; */
-"Ll3-Ew-izw.title" = "Contacts";
-
-/* Class = "UILabel"; text = "Threema Call"; ObjectID = "Loc-jL-c6X"; */
-"Loc-jL-c6X.text" = "Threema Call";
-
-/* Class = "UILabel"; text = "Key Fingerprint"; ObjectID = "LrC-J2-IWd"; */
-"LrC-J2-IWd.text" = "Key Fingerprint";
+"Ll3-Ew-izw.title" = "連絡先";
 
 /* Class = "UINavigationItem"; title = "Message Details"; ObjectID = "LsJ-Ts-xZd"; */
-"LsJ-Ts-xZd.title" = "Message Details";
+"LsJ-Ts-xZd.title" = "メッセージ詳細";
 
 /* Class = "UISegmentedControl"; M1P-ix-V2L.segmentTitles[0] = "Standard"; ObjectID = "M1P-ix-V2L"; */
-"M1P-ix-V2L.segmentTitles[0]" = "Standard";
+"M1P-ix-V2L.segmentTitles[0]" = "スタンダード";
 
 /* Class = "UISegmentedControl"; M1P-ix-V2L.segmentTitles[1] = "Hybrid"; ObjectID = "M1P-ix-V2L"; */
-"M1P-ix-V2L.segmentTitles[1]" = "Hybrid";
+"M1P-ix-V2L.segmentTitles[1]" = "ハイブリッド";
 
 /* Class = "UISegmentedControl"; M1P-ix-V2L.segmentTitles[2] = "Satellite"; ObjectID = "M1P-ix-V2L"; */
-"M1P-ix-V2L.segmentTitles[2]" = "Satellite";
+"M1P-ix-V2L.segmentTitles[2]" = "サテライト";
 
 /* Class = "UILabel"; text = "Synchronize group"; ObjectID = "MEa-Te-wbA"; */
-"MEa-Te-wbA.text" = "Synchronize group";
-
-/* Class = "UILabel"; text = "Export Conversation"; ObjectID = "MjB-gx-MEm"; */
-"MjB-gx-MEm.text" = "Export Conversation";
+"MEa-Te-wbA.text" = "グループを同期";
 
 /* Class = "UILabel"; text = "IDENTITY"; ObjectID = "NFg-lg-c4C"; */
-"NFg-lg-c4C.text" = "IDENTITY";
+"NFg-lg-c4C.text" = "同一性";
 
 /* Class = "UILabel"; text = "Creator name"; ObjectID = "NUe-Ut-5hr"; */
-"NUe-Ut-5hr.text" = "Creator name";
+"NUe-Ut-5hr.text" = "作成者名";
 
 /* Class = "UILabel"; text = "No contacts"; ObjectID = "Ofe-BC-uXe"; */
-"Ofe-BC-uXe.text" = "No contacts";
+"Ofe-BC-uXe.text" = "連絡先がありません";
 
-/* Class = "UILabel"; text = "MacBook Office 10 7"; ObjectID = "PGA-fl-u3I"; */
-"PGA-fl-u3I.text" = "MacBook Office 10 7";
-
-/* Class = "UILabel"; text = "Please enter at least 3 characters of a name to begin searching in your company's directory of Threema users"; ObjectID = "Pqv-bT-HSz"; */
-"Pqv-bT-HSz.text" = "Please enter at least 3 characters of a name to begin searching in your company's directory of Threema users";
+/* Class = "UILabel"; text = "Verification Level"; ObjectID = "Pfs-mu-Rfj"; */
+"Pfs-mu-Rfj.text" = "検証レベル";
 
 /* Class = "UINavigationItem"; title = "Verification Level"; ObjectID = "RYr-oG-d5j"; */
-"RYr-oG-d5j.title" = "Verification Level";
-
-/* Class = "UILabel"; text = "Off"; ObjectID = "Sjz-Xi-DOn"; */
-"Sjz-Xi-DOn.text" = "Off";
-
-/* Class = "UILabel"; text = "No entries found"; ObjectID = "TxQ-av-ynQ"; */
-"TxQ-av-ynQ.text" = "No entries found";
+"RYr-oG-d5j.title" = "検証レベル";
 
 /* Class = "UILabel"; text = "XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX"; ObjectID = "UbM-As-itV"; */
 "UbM-As-itV.text" = "XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX";
 
-/* Class = "UILabel"; text = "Key Fingerprint"; ObjectID = "Uhh-8Z-kvD"; */
-"Uhh-8Z-kvD.text" = "Key Fingerprint";
-
 /* Class = "UILabel"; text = "Group Name"; ObjectID = "VFn-jg-cfh"; */
-"VFn-jg-cfh.text" = "Group Name";
-
-/* Class = "UILabel"; text = "Label"; ObjectID = "VRU-Fw-VBt"; */
-"VRU-Fw-VBt.text" = "Label";
+"VFn-jg-cfh.text" = "グループ名";
 
 /* Class = "UILabel"; text = "Acknowledged"; ObjectID = "VRy-nm-s0X"; */
-"VRy-nm-s0X.text" = "Acknowledged";
+"VRy-nm-s0X.text" = "了承済み";
 
 /* Class = "UINavigationItem"; title = "First Last"; ObjectID = "Wsn-z9-eRi"; */
-"Wsn-z9-eRi.title" = "First Last";
+"Wsn-z9-eRi.title" = "姓/名";
 
 /* Class = "UIButton"; normalTitle = "Load Earlier Messages"; ObjectID = "WuX-yK-0RJ"; */
-"WuX-yK-0RJ.normalTitle" = "Load Earlier Messages";
+"WuX-yK-0RJ.normalTitle" = "前のメッセージの読み込み";
 
 /* Class = "UILabel"; text = "Date"; ObjectID = "XTa-xS-cOR"; */
-"XTa-xS-cOR.text" = "Date";
-
-/* Class = "UILabel"; text = "Push setting"; ObjectID = "XoR-5p-xDo"; */
-"XoR-5p-xDo.text" = "Push setting";
+"XTa-xS-cOR.text" = "日付";
 
 /* Class = "UILabel"; text = "Group Name"; ObjectID = "Y4G-EW-Gux"; */
-"Y4G-EW-Gux.text" = "Group Name";
-
-/* Class = "UILabel"; text = "The contact matches with a verified phone number or email address in your address book."; ObjectID = "Y9L-O2-c5C"; */
-"Y9L-O2-c5C.text" = "The contact matches with a verified phone number or email address in your address book.";
-
-/* Class = "UILabel"; text = "Search for employees"; ObjectID = "YKn-tL-59L"; */
-"YKn-tL-59L.text" = "Search for employees";
+"Y4G-EW-Gux.text" = "グループ名";
 
 /* Class = "UILabel"; text = "Scan an ID"; ObjectID = "YPC-ic-pTa"; */
-"YPC-ic-pTa.text" = "Scan an ID";
+"YPC-ic-pTa.text" = "IDをスキャン";
 
 /* Class = "UITextField"; placeholder = "ID"; ObjectID = "YoS-Np-Z37"; */
 "YoS-Np-Z37.placeholder" = "ID";
 
 /* Class = "UILabel"; text = "Your ID backup"; ObjectID = "ZIq-dn-JdH"; */
-"ZIq-dn-JdH.text" = "Your ID backup";
-
-/* Class = "UILabel"; text = "Other Contacts"; ObjectID = "ZgX-VT-k2O"; */
-"ZgX-VT-k2O.text" = "Other Contacts";
+"ZIq-dn-JdH.text" = "あなたのIDのエクスポート";
 
 /* Class = "UILabel"; text = "Read"; ObjectID = "Zrm-eG-ewD"; */
-"Zrm-eG-ewD.text" = "Read";
-
-/* Class = "UILabel"; text = "You reach the highest verification level only by scanning the QR Code of a contact in person."; ObjectID = "Zxb-Je-9CC"; */
-"Zxb-Je-9CC.text" = "You reach the highest verification level only by scanning the QR Code of a contact in person.";
-
-/* Class = "UILabel"; text = "Load more"; ObjectID = "aBL-4d-MSk"; */
-"aBL-4d-MSk.text" = "Load more";
+"Zrm-eG-ewD.text" = "既読";
 
 /* Class = "UILabel"; text = "Key Fingerprint"; ObjectID = "aGy-xg-eRi"; */
-"aGy-xg-eRi.text" = "Key Fingerprint";
+"aGy-xg-eRi.text" = "フィンガープリントキー";
 
 /* Class = "UIBarButtonItem"; title = "Send"; ObjectID = "aQb-a9-JtU"; */
-"aQb-a9-JtU.title" = "Send";
+"aQb-a9-JtU.title" = "送信";
 
 /* Class = "UILabel"; text = "Name"; ObjectID = "aU9-dp-bDt"; */
-"aU9-dp-bDt.text" = "Name";
-
-/* Class = "UILabel"; text = "Company Directory"; ObjectID = "akQ-gG-9WP"; */
-"akQ-gG-9WP.text" = "Company Directory";
+"aU9-dp-bDt.text" = "名前";
 
 /* Class = "UITabBarItem"; title = "Settings"; ObjectID = "b04-Gg-ZdB"; */
-"b04-Gg-ZdB.title" = "Settings";
+"b04-Gg-ZdB.title" = "設定";
 
 /* Class = "UILabel"; text = "Scan ID"; ObjectID = "b4I-LV-xkG"; */
-"b4I-LV-xkG.text" = "Scan ID";
-
-/* Class = "UILabel"; text = "Member in groups"; ObjectID = "b8z-Gr-9hX"; */
-"b8z-Gr-9hX.text" = "Member in groups";
+"b4I-LV-xkG.text" = "IDをスキャン";
 
 /* Class = "UILabel"; text = "Export Conversation"; ObjectID = "bFb-Sh-rtO"; */
-"bFb-Sh-rtO.text" = "Export Conversation";
-
-/* Class = "UILabel"; text = "Push setting"; ObjectID = "bne-OA-inf"; */
-"bne-OA-inf.text" = "Push setting";
+"bFb-Sh-rtO.text" = "トークをエクスポート";
 
 /* Class = "UILabel"; text = "MacBook Office 10 7"; ObjectID = "bsh-sy-Xwu"; */
 "bsh-sy-Xwu.text" = "MacBook Office 10 7";
@@ -300,184 +201,145 @@
 "bt1-G0-NzZ.text" = "00000000000000000000000000000000";
 
 /* Class = "UILabel"; text = "Send Message"; ObjectID = "cHE-Oc-08d"; */
-"cHE-Oc-08d.text" = "Send Message";
+"cHE-Oc-08d.text" = "メッセージを送信";
+
+/* Class = "UILabel"; text = "Creator: Name"; ObjectID = "cNf-3j-eOO"; */
+"cNf-3j-eOO.text" = "作成者: 名前";
 
 /* Class = "UINavigationItem"; title = "Choose contact"; ObjectID = "cNq-Pt-Uma"; */
-"cNq-Pt-Uma.title" = "Choose contact";
-
-/* Class = "UILabel"; text = "Nickname"; ObjectID = "cdG-mM-SxM"; */
-"cdG-mM-SxM.text" = "Nickname";
+"cNq-Pt-Uma.title" = "連絡先を選択";
 
 /* Class = "UILabel"; text = "Include in phone backup"; ObjectID = "d2g-FC-ibo"; */
-"d2g-FC-ibo.text" = "Include in phone backup";
+"d2g-FC-ibo.text" = "電話のバックアップに含まれる";
 
 /* Class = "UITableViewSection"; footerTitle = "#do not translate#This data, along with the password that you have chosen, can be used to restore your ID on another device. You can copy & paste it to a suitable location, email it to yourself or scan the QR code using another device."; ObjectID = "dgK-0J-UrZ"; */
-"dgK-0J-UrZ.footerTitle" = "#do not translate#This data, along with the password that you have chosen, can be used to restore your ID on another device. You can copy & paste it to a suitable location, email it to yourself or scan the QR code using another device.";
+"dgK-0J-UrZ.footerTitle" = "このデータはお客様が選択されたパスワードとともに、別の端末でIDを復元するために使用することができます。適当な場所にコピー＆ペーストしたり、メールで送信したり、QRコードを別の端末で読み取ったりすることができます。";
 
 /* Class = "UILabel"; text = "Group Name"; ObjectID = "ds7-P9-imN"; */
-"ds7-P9-imN.text" = "Group Name";
-
-/* Class = "UILabel"; text = "Creator: Name gy"; ObjectID = "dsp-g0-auI"; */
-"dsp-g0-auI.text" = "Creator: Name gy";
+"ds7-P9-imN.text" = "グループ名";
 
 /* Class = "UITableViewSection"; footerTitle = "#do not translate#The encrypted ID backup will be included when you back up your phone via iTunes or iCloud."; ObjectID = "eEV-l3-MXP"; */
-"eEV-l3-MXP.footerTitle" = "#do not translate#The encrypted ID backup will be included when you back up your phone via iTunes or iCloud.";
+"eEV-l3-MXP.footerTitle" = "暗号化されたIDのエクスポートは、iTunesやiCloudで携帯電話をバックアップする際に含まれます。";
 
 /* Class = "UILabel"; text = "Detail"; ObjectID = "eK9-D8-pFP"; */
-"eK9-D8-pFP.text" = "Detail";
+"eK9-D8-pFP.text" = "詳細";
 
 /* Class = "UINavigationItem"; title = "Location"; ObjectID = "eXF-nx-MbG"; */
-"eXF-nx-MbG.title" = "Location";
+"eXF-nx-MbG.title" = "位置情報";
 
 /* Class = "UILabel"; text = "John Doe"; ObjectID = "g8r-Dc-Sp0"; */
-"g8r-Dc-Sp0.text" = "John Doe";
+"g8r-Dc-Sp0.text" = "ジョン・ドー";
 
 /* Class = "UILabel"; text = "Label"; ObjectID = "gsp-ed-V8R"; */
-"gsp-ed-V8R.text" = "Label";
-
-/* Class = "UILabel"; text = "Sound"; ObjectID = "iId-KD-odT"; */
-"iId-KD-odT.text" = "Sound";
+"gsp-ed-V8R.text" = "ラベル";
 
 /* Class = "UILabel"; text = "John Doe"; ObjectID = "iJa-K2-2uc"; */
-"iJa-K2-2uc.text" = "John Doe";
-
-/* Class = "UITableViewSection"; headerTitle = "Notification"; ObjectID = "iNd-G8-O6k"; */
-"iNd-G8-O6k.headerTitle" = "Notification";
-
-/* Class = "UIButton"; normalTitle = "Button"; ObjectID = "j85-AA-x4F"; */
-"j85-AA-x4F.normalTitle" = "Button";
+"iJa-K2-2uc.text" = "ジョン・ドー";
 
 /* Class = "UILabel"; text = "No places found in current location"; ObjectID = "jSK-DO-xV2"; */
-"jSK-DO-xV2.text" = "No places found in current location";
+"jSK-DO-xV2.text" = "現在の場所では見つかりません";
 
 /* Class = "UILabel"; text = "Draft"; ObjectID = "jlK-CM-mIS"; */
-"jlK-CM-mIS.text" = "Draft";
+"jlK-CM-mIS.text" = "下書き";
 
-/* Class = "UILabel"; text = "First Last"; ObjectID = "k43-1S-VjC"; */
-"k43-1S-VjC.text" = "First Last";
+/* Class = "UILabel"; text = "Phone call"; ObjectID = "k8z-Fl-qML"; */
+"k8z-Fl-qML.text" = "通話";
 
 /* Class = "UILabel"; text = "Detail"; ObjectID = "kaj-lV-4MC"; */
-"kaj-lV-4MC.text" = "Detail";
+"kaj-lV-4MC.text" = "詳細";
 
 /* Class = "UILabel"; text = "Verification Level"; ObjectID = "lH9-a1-MBS"; */
-"lH9-a1-MBS.text" = "Verification Level";
+"lH9-a1-MBS.text" = "検証レベル";
 
 /* Class = "UILabel"; text = "MacBook Office 10 7"; ObjectID = "lrl-UM-94p"; */
 "lrl-UM-94p.text" = "MacBook Office 10 7";
 
 /* Class = "UILabel"; text = "IDENTITY"; ObjectID = "n7x-y4-2CM"; */
-"n7x-y4-2CM.text" = "IDENTITY";
+"n7x-y4-2CM.text" = "同一性";
 
 /* Class = "UITabBarItem"; title = "Messages"; ObjectID = "nZg-gf-uED"; */
-"nZg-gf-uED.title" = "Messages";
+"nZg-gf-uED.title" = "メッセージ";
 
-/* Class = "UILabel"; text = "Profile picture recipient"; ObjectID = "nmk-Tk-7Kq"; */
-"nmk-Tk-7Kq.text" = "Profile picture recipient";
-
-/* Class = "UILabel"; text = "Send profile picture now"; ObjectID = "nw5-78-OP1"; */
-"nw5-78-OP1.text" = "Send profile picture now";
+/* Class = "UITabBarItem"; title = "Contacts"; ObjectID = "JXW-2V-ftV"; */
+"JXW-2V-ftV.title" = "連絡先";
 
 /* Class = "UINavigationItem"; title = "Group details"; ObjectID = "oEX-1h-I2a"; */
-"oEX-1h-I2a.title" = "Group details";
-
-/* Class = "UILabel"; text = "Send Message"; ObjectID = "oGf-Sp-Z3O"; */
-"oGf-Sp-Z3O.text" = "Send Message";
-
-/* Class = "UILabel"; text = "Enter a query to search for places"; ObjectID = "oXh-5e-M7J"; */
-"oXh-5e-M7J.text" = "Enter a query to search for places";
-
-/* Class = "UILabel"; text = "Block Contact"; ObjectID = "okc-AP-jvX"; */
-"okc-AP-jvX.text" = "Block Contact";
+"oEX-1h-I2a.title" = "グループの詳細";
 
 /* Class = "UILabel"; text = "Link to Contact"; ObjectID = "otC-iO-wzt"; */
-"otC-iO-wzt.text" = "Link to Contact";
+"otC-iO-wzt.text" = "連絡先に紐付け";
 
 /* Class = "UILabel"; text = "Nickname"; ObjectID = "p0V-dq-HkU"; */
-"p0V-dq-HkU.text" = "Nickname";
-
-/* Class = "UILabel"; text = "Detail"; ObjectID = "pQe-OG-f3M"; */
-"pQe-OG-f3M.text" = "Detail";
-
-/* Class = "UILabel"; text = "Title"; ObjectID = "pTV-j2-YY0"; */
-"pTV-j2-YY0.text" = "Title";
+"p0V-dq-HkU.text" = "ニックネーム";
 
 /* Class = "UILabel"; text = "Label"; ObjectID = "pVJ-rQ-2qD"; */
-"pVJ-rQ-2qD.text" = "Label";
+"pVJ-rQ-2qD.text" = "ラベル";
 
 /* Class = "UILabel"; text = "# members"; ObjectID = "pk3-Z5-GK7"; */
-"pk3-Z5-GK7.text" = "# members";
+"pk3-Z5-GK7.text" = "# メンバー";
 
 /* Class = "UILabel"; text = "Delivered"; ObjectID = "qNO-eF-kmI"; */
-"qNO-eF-kmI.text" = "Delivered";
+"qNO-eF-kmI.text" = "配信済み";
 
 /* Class = "UILabel"; text = "Threema ID"; ObjectID = "sJF-Ib-o6C"; */
 "sJF-Ib-o6C.text" = "Threema ID";
-
-/* Class = "UILabel"; text = "Search for employees"; ObjectID = "sUm-6k-kdq"; */
-"sUm-6k-kdq.text" = "Search for employees";
 
 /* Class = "UILabel"; text = "00000000000000000000000000000000"; ObjectID = "sVW-vw-h0n"; */
 "sVW-vw-h0n.text" = "00000000000000000000000000000000";
 
 /* Class = "UINavigationItem"; title = "ID Verified"; ObjectID = "sik-yL-35n"; */
-"sik-yL-35n.title" = "ID Verified";
-
-/* Class = "UILabel"; text = "Label"; ObjectID = "spN-GT-ek4"; */
-"spN-GT-ek4.text" = "Label";
-
-/* Class = "UILabel"; text = "Company Directory"; ObjectID = "tM0-nk-pXd"; */
-"tM0-nk-pXd.text" = "Company Directory";
+"sik-yL-35n.title" = "ID検証済み";
 
 /* Class = "UINavigationItem"; title = "Backup"; ObjectID = "tUV-iz-VQc"; */
-"tUV-iz-VQc.title" = "Backup";
+"tUV-iz-VQc.title" = "IDエクスポート";
 
 /* Class = "UILabel"; text = "Nickname"; ObjectID = "tr2-Ia-imu"; */
-"tr2-Ia-imu.text" = "Nickname";
+"tr2-Ia-imu.text" = "ニックネーム";
 
 /* Class = "UINavigationItem"; title = "Location"; ObjectID = "uA6-FU-2ms"; */
-"uA6-FU-2ms.title" = "Location";
+"uA6-FU-2ms.title" = "位置情報";
 
 /* Class = "UILabel"; text = "X contacts"; ObjectID = "uT9-uH-vrD"; */
-"uT9-uH-vrD.text" = "X contacts";
+"uT9-uH-vrD.text" = "X件の連絡先";
 
 /* Class = "UITextField"; placeholder = "First name"; ObjectID = "uv8-Zw-8w0"; */
-"uv8-Zw-8w0.placeholder" = "First name";
+"uv8-Zw-8w0.placeholder" = "名前";
 
-/* Class = "UILabel"; text = "Do Not Disturb"; ObjectID = "uwC-cP-33R"; */
-"uwC-cP-33R.text" = "Do Not Disturb";
+/* Class = "UILabel"; text = "First Last"; ObjectID = "vVr-Sj-fJm"; */
+"vVr-Sj-fJm.text" = "名/姓";
 
 /* Class = "UINavigationItem"; title = "Messages"; ObjectID = "vkp-6o-Lct"; */
-"vkp-6o-Lct.title" = "Messages";
+"vkp-6o-Lct.title" = "メッセージ";
 
 /* Class = "UILabel"; text = "Company Name"; ObjectID = "wLS-iM-q79"; */
-"wLS-iM-q79.text" = "Company Name";
+"wLS-iM-q79.text" = "会社名";
 
 /* Class = "UINavigationItem"; title = "Preview"; ObjectID = "wPu-F7-kf1"; */
-"wPu-F7-kf1.title" = "Preview";
+"wPu-F7-kf1.title" = "プレビュー";
+
+/* Class = "UILabel"; text = "First Last"; ObjectID = "wV3-0n-mKm"; */
+"wV3-0n-mKm.text" = "名/姓";
 
 /* Class = "UILabel"; text = "Detail"; ObjectID = "wVo-z6-Ml9"; */
-"wVo-z6-Ml9.text" = "Detail";
+"wVo-z6-Ml9.text" = "詳細";
 
 /* Class = "UILabel"; text = "XXXXXXXX"; ObjectID = "wXd-jf-kGm"; */
 "wXd-jf-kGm.text" = "XXXXXXXX";
 
 /* Class = "UITextField"; placeholder = "Last name"; ObjectID = "wpY-cw-D2O"; */
-"wpY-cw-D2O.placeholder" = "Last name";
+"wpY-cw-D2O.placeholder" = "名前";
 
 /* Class = "UILabel"; text = "Invite a Friend"; ObjectID = "xRZ-tM-3dS"; */
-"xRZ-tM-3dS.text" = "Invite a Friend";
-
-/* Class = "UILabel"; text = "Nickname"; ObjectID = "y6w-qJ-WpE"; */
-"y6w-qJ-WpE.text" = "Nickname";
+"xRZ-tM-3dS.text" = "友だちに紹介";
 
 /* Class = "UILabel"; text = "Sent"; ObjectID = "yWO-wH-mIW"; */
-"yWO-wH-mIW.text" = "Sent";
+"yWO-wH-mIW.text" = "送信済み";
 
 /* Class = "UILabel"; text = "You don't have any contacts. Turn on synchronization, or add contacts manually using the + button."; ObjectID = "zFq-Zo-ECJ"; */
-"zFq-Zo-ECJ.text" = "You don't have any contacts. Turn on synchronization, or add contacts manually using the + button.";
+"zFq-Zo-ECJ.text" = "連絡先がありません。同期を有効にするか、＋ボタンで連絡先を追加してください。";
 
 /* Class = "UILabel"; text = "Enter ID manually"; ObjectID = "zYA-qz-iwe"; */
-"zYA-qz-iwe.text" = "Enter ID manually";
+"zYA-qz-iwe.text" = "手動でIDを入力";
 
-/* Class = "UILabel"; text = "Threema Call"; ObjectID = "zj8-Bo-VYE"; */
-"zj8-Bo-VYE.text" = "Threema Call";
+/* Class = "UILabel"; text = "Enter a query to search for places"; ObjectID = "oXh-5e-M7J"; */
+"oXh-5e-M7J.text" = "クエリを入力して場所を検索";

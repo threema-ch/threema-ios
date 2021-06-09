@@ -327,6 +327,7 @@
 "create_new_group" = "Utwórz nową grupę";
 "create_note_group_info_title" = "Wskazówka";
 "create_note_group_info_text" = "Jeśli nie dodasz żadnych członków czy wiadomości do tej grupy, pozostanie ona lokalna. To idealne rozwiązanie, jeśli chcesz bezpiecznie przechowywać notatki, pliki multimedialne i dokumenty lub przenosić te je na pulpit.";
+"remind_me_next_time" = "Przypomnij następnym razem";
 "doNotShowAgain" = "Nie pokazuj ponownie";
 "add_note_group_info" = "Jesteś tu sam(-a)*\nUżywaj tego czatu jako bezpiecznego notesu do przechowywania tekstów, plików multimedialnych i dokumentów.";
 "end_note_group_info" = "*Nie jesteś już sam(-a) w tym czacie*\nNowe wiadomości będą wysyłane do wszystkich członków grupy.";

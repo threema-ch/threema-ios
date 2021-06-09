@@ -40,6 +40,8 @@ enum IdentityState {
 
 - (void)fetchPrivateIdentityInfo:(MyIdentityStore*)identityStore onCompletion:(void(^)(NSString *serverGroup, NSString *email, NSString *mobileNo))onCompletion onError:(void(^)(NSError *error))onError;
 
+- (void)fetchWorkIdentitiesInfo:(NSArray *)identities onCompletion:(void(^)(NSArray *foundIdentities))onCompletion onError:(void(^)(NSError *error))onError;
+
 - (void)updateMyIdentityStore:(MyIdentityStore*)identityStore onCompletion:(void(^)(void))onCompletion onError:(void(^)(NSError* error))onError;
 
 - (void)linkEmailWithStore:(MyIdentityStore*)identityStore email:(NSString*)email onCompletion:(void(^)(BOOL linked))onCompletion onError:(void(^)(NSError *error))onError;

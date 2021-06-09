@@ -28,6 +28,7 @@
 
 - (void)fetchPublicKeyForIdentity:(NSString*)identity onCompletion:(void(^)(NSData *publicKey))onCompletion onError:(void(^)(NSError *error))onError;
 - (void)prefetchIdentityInfo:(NSSet*)identities onCompletion:(void(^)(void))onCompletion onError:(void(^)(NSError *error))onError;
+- (void)fetchWorkIdentitiesInBlockUnknownCheck:(NSArray *)identities onCompletion:(void(^)(NSArray *foundIdentities))onCompletion onError:(void(^)(NSError *error))onError;
 - (Contact*)contactForIdentity:(NSString *)identity;
 
 /* The following function must be run on the main queue! */

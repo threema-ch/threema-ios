@@ -326,6 +326,7 @@
 "create_new_group" = "Create new group";
 "create_note_group_info_title" = "Hint";
 "create_note_group_info_text" = "If you don't add any group members, messages to this group will stay local. That's ideal to securely store notes, media, and documents or to transfer items to the desktop.";
+"remind_me_next_time" = "Remind Me Next Time";
 "doNotShowAgain" = "Don't Show Again";
 "add_note_group_info" = "*You're alone inhere*\nUse this chat as a secure notebook for text, media, and documents.";
 "end_note_group_info" = "*You're no longer alone in this chat*\nNew messages will be sent to all group members.";

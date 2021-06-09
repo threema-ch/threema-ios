@@ -224,7 +224,8 @@ import CocoaLumberjackSwift
             if self.checkItemType() == .Media {
                 return Promise { seal in
                     let isFileItem = intermediateItem.itemProvider.hasItemConformingToTypeIdentifier(kUTTypeFileURL as String)
-                    if isFileItem || forceLoadFileURLItem {
+                    let isContent = intermediateItem.itemProvider.hasItemConformingToTypeIdentifier(kUTTypeContent as String)
+                    if (isFileItem && isContent) || forceLoadFileURLItem {
                         intermediateItem.itemProvider.loadFileRepresentation(forTypeIdentifier: type) { (item, error) in
                             if let error = error {
                                 seal.reject(error)

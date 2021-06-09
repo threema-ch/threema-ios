@@ -1,213 +1,114 @@
 
-/* Class = "UILabel"; text = "-"; ObjectID = "0E4-vK-K50"; */
-"0E4-vK-K50.text" = "-";
-
-/* Class = "UILabel"; text = "-"; ObjectID = "3Mu-GA-aJo"; */
-"3Mu-GA-aJo.text" = "-";
+/* Class = "UILabel"; text = "Nickname"; ObjectID = "2jc-3N-31S"; */
+"2jc-3N-31S.text" = "ニックネーム";
 
 /* Class = "UITableViewSection"; footerTitle = "Number: +41 79 123 45 67"; ObjectID = "5HP-W8-nFp"; */
-"5HP-W8-nFp.footerTitle" = "Number: +41 79 123 45 67";
+"5HP-W8-nFp.footerTitle" = "電話番号: +41 79 123 45 67";
 
 /* Class = "UITextField"; placeholder = "your email address"; ObjectID = "5bh-L5-CVm"; */
-"5bh-L5-CVm.placeholder" = "your email address";
-
-/* Class = "UILabel"; text = "Max. backup size"; ObjectID = "6oN-AH-5cw"; */
-"6oN-AH-5cw.text" = "Max. backup size";
+"5bh-L5-CVm.placeholder" = "あなたのEメールアドレス";
 
 /* Class = "UINavigationItem"; title = "My Profile"; ObjectID = "8Pu-jd-SHn"; */
-"8Pu-jd-SHn.title" = "My Profile";
+"8Pu-jd-SHn.title" = "自分の情報";
 
-/* Class = "UILabel"; text = "Backup size"; ObjectID = "ACN-oG-s71"; */
-"ACN-oG-s71.text" = "Backup size";
-
-/* Class = "UILabel"; text = "Enable Threema Safe to create automatic secure and anonymous backups of all your important data."; ObjectID = "Akv-9b-ynC"; */
-"Akv-9b-ynC.text" = "Enable Threema Safe to create automatic secure and anonymous backups of all your important data.";
-
-/* Class = "UILabel"; text = "00000000000000000000000000000000"; ObjectID = "BzD-7E-yoJ"; */
-"BzD-7E-yoJ.text" = "00000000000000000000000000000000";
-
-/* Class = "UILabel"; text = "Server"; ObjectID = "CCz-Rx-Iyj"; */
-"CCz-Rx-Iyj.text" = "Server";
+/* Class = "UILabel"; text = "Key Fingerprint"; ObjectID = "sJA-2q-zE2"; */
+"sJA-2q-zE2.text" = "フィンガープリントキー";
 
 /* Class = "UINavigationItem"; title = "Link Number"; ObjectID = "ELz-zT-AmB"; */
-"ELz-zT-AmB.title" = "Link Number";
+"ELz-zT-AmB.title" = "電話番号を紐付け";
+
+/* Class = "UILabel"; text = "Detail"; ObjectID = "FIY-Hl-kwh"; */
+"FIY-Hl-kwh.text" = "詳細";
 
 /* Class = "UITextField"; placeholder = "your phone number"; ObjectID = "FRl-f2-pIa"; */
-"FRl-f2-pIa.placeholder" = "your phone number";
-
-/* Class = "UILabel"; text = "Retention days"; ObjectID = "Gj2-0g-N9D"; */
-"Gj2-0g-N9D.text" = "Retention days";
+"FRl-f2-pIa.placeholder" = "あなたの電話番号";
 
 /* Class = "UILabel"; text = "Detail"; ObjectID = "H7W-RZ-gej"; */
-"H7W-RZ-gej.text" = "Detail";
-
-/* Class = "UIButton"; normalTitle = "Button"; ObjectID = "HNt-4v-CIs"; */
-"HNt-4v-CIs.normalTitle" = "Button";
+"H7W-RZ-gej.text" = "詳細";
 
 /* Class = "UILabel"; text = "Delete ID"; ObjectID = "ISb-ca-Ste"; */
-"ISb-ca-Ste.text" = "Delete ID";
+"ISb-ca-Ste.text" = "IDを消去";
 
 /* Class = "UILabel"; text = "Email address"; ObjectID = "JRY-UB-2Zx"; */
-"JRY-UB-2Zx.text" = "Email address";
-
-/* Class = "UIButton"; normalTitle = "Button"; ObjectID = "Jug-be-JzD"; */
-"Jug-be-JzD.normalTitle" = "Button";
-
-/* Class = "UILabel"; text = "Threema Safe"; ObjectID = "KKh-sE-YNq"; */
-"KKh-sE-YNq.text" = "Threema Safe";
+"JRY-UB-2Zx.text" = "Eメールアドレス";
 
 /* Class = "UITextField"; placeholder = "code"; ObjectID = "KTz-4x-SnC"; */
-"KTz-4x-SnC.placeholder" = "code";
+"KTz-4x-SnC.placeholder" = "コード";
 
 /* Class = "UILabel"; text = "Nickname"; ObjectID = "NLA-jz-irZ"; */
-"NLA-jz-irZ.text" = "Nickname";
+"NLA-jz-irZ.text" = "ニックネーム";
 
 /* Class = "UITableViewSection"; footerTitle = "Linking your email address or phone number to your ID lets other people find you on Threema automatically if they have you in their address book."; ObjectID = "NUr-0t-zng"; */
-"NUr-0t-zng.footerTitle" = "Linking your email address or phone number to your ID lets other people find you on Threema automatically if they have you in their address book.";
+"NUr-0t-zng.footerTitle" = "メールアドレスや電話番号をIDに紐付けることで、アドレス帳に登録されている人は自動的にThreemaであなたを見つけることができます。";
 
-/* Class = "UILabel"; text = "-"; ObjectID = "OlD-BV-zrc"; */
-"OlD-BV-zrc.text" = "-";
-
-/* Class = "UITableViewSection"; footerTitle = "Test"; ObjectID = "OmS-m4-S3q"; */
-"OmS-m4-S3q.footerTitle" = "Test";
-
-/* Class = "UITableViewSection"; headerTitle = "Authentication (optional)"; ObjectID = "OmS-m4-S3q"; */
-"OmS-m4-S3q.headerTitle" = "Authentication (optional)";
+/* Class = "UILabel"; text = "Threema ID"; ObjectID = "PG7-5d-WL5"; */
+"PG7-5d-WL5.text" = "Threema ID";
 
 /* Class = "UILabel"; text = "Profile picture recipients"; ObjectID = "PqJ-0p-bkD"; */
-"PqJ-0p-bkD.text" = "Profile picture recipients";
-
-/* Class = "UIButton"; normalTitle = "Button"; ObjectID = "Q00-XE-5z0"; */
-"Q00-XE-5z0.normalTitle" = "Button";
+"PqJ-0p-bkD.text" = "プロフィール写真の受信者";
 
 /* Class = "UILabel"; text = "Phone Number"; ObjectID = "QCC-2k-HfZ"; */
-"QCC-2k-HfZ.text" = "Phone Number";
-
-/* Class = "UILabel"; text = "Backup now"; ObjectID = "QRg-9e-VxA"; */
-"QRg-9e-VxA.text" = "Backup now";
-
-/* Class = "UILabel"; text = "XXXXXXXX"; ObjectID = "QTy-20-z7s"; */
-"QTy-20-z7s.text" = "XXXXXXXX";
+"QCC-2k-HfZ.text" = "電話番号";
 
 /* Class = "UILabel"; text = "Linked Email"; ObjectID = "Re1-k2-FsT"; */
-"Re1-k2-FsT.text" = "Linked Email";
+"Re1-k2-FsT.text" = "紐付けされたEメールアドレス";
+
+/* Class = "UILabel"; text = "XXXXXXXX"; ObjectID = "RjP-ON-gaW"; */
+"RjP-ON-gaW.text" = "XXXXXXXX";
 
 /* Class = "UILabel"; text = "Request Call"; ObjectID = "RvX-Ht-6JQ"; */
-"RvX-Ht-6JQ.text" = "Request Call";
-
-/* Class = "UITableViewSection"; footerTitle = "Test"; ObjectID = "TUo-Sz-38Z"; */
-"TUo-Sz-38Z.footerTitle" = "Test";
-
-/* Class = "UITableViewSection"; headerTitle = "Choose a password"; ObjectID = "TUo-Sz-38Z"; */
-"TUo-Sz-38Z.headerTitle" = "Choose a password";
+"RvX-Ht-6JQ.text" = "電話をかける";
 
 /* Class = "UILabel"; text = "Linked Number"; ObjectID = "UWU-JO-PcU"; */
-"UWU-JO-PcU.text" = "Linked Number";
-
-/* Class = "UILabel"; text = "-"; ObjectID = "V4j-Ub-pdi"; */
-"V4j-Ub-pdi.text" = "-";
-
-/* Class = "UILabel"; text = "Last backup"; ObjectID = "WHu-Ia-hVX"; */
-"WHu-Ia-hVX.text" = "Last backup";
+"UWU-JO-PcU.text" = "紐付けされた電話番号";
 
 /* Class = "UILabel"; text = "ID Revocation Password"; ObjectID = "XOE-qz-Fzh"; */
-"XOE-qz-Fzh.text" = "ID Revocation Password";
-
-/* Class = "UILabel"; text = " kajsdkf jalksjdölfk jaklsj dfkjasdkö "; ObjectID = "YYH-qM-Srd"; */
-"YYH-qM-Srd.text" = " kajsdkf jalksjdölfk jaklsj dfkjasdkö ";
-
-/* Class = "UILabel"; text = "Nickname"; ObjectID = "YyS-mS-2B1"; */
-"YyS-mS-2B1.text" = "Nickname";
-
-/* Class = "UILabel"; text = "Label"; ObjectID = "Zy0-SZ-HJi"; */
-"Zy0-SZ-HJi.text" = "Label";
+"XOE-qz-Fzh.text" = "ID失効パスワード";
 
 /* Class = "UINavigationItem"; title = "Release profile picture to"; ObjectID = "aX3-NQ-eU7"; */
-"aX3-NQ-eU7.title" = "Release profile picture to";
+"aX3-NQ-eU7.title" = "にプロフィール画像を公開します";
 
-/* Class = "UILabel"; text = "-"; ObjectID = "cDG-vj-35i"; */
-"cDG-vj-35i.text" = "-";
+/* Class = "UILabel"; text = "Nickname"; ObjectID = "bL4-qe-Mh9"; */
+"bL4-qe-Mh9.text" = "ニックネーム";
 
-/* Class = "UILabel"; text = "Label"; ObjectID = "cmC-T0-PCP"; */
-"cmC-T0-PCP.text" = "Label";
-
-/* Class = "UILabel"; text = "Last result "; ObjectID = "eFF-tz-39Z"; */
-"eFF-tz-39Z.text" = "Last result ";
-
-/* Class = "UILabel"; text = "ID Backup"; ObjectID = "eS1-Gf-A4o"; */
-"eS1-Gf-A4o.text" = "ID Backup";
+/* Class = "UILabel"; text = "Backup"; ObjectID = "eS1-Gf-A4o"; */
+"eS1-Gf-A4o.text" = "IDエクスポート";
 
 /* Class = "UILabel"; text = "..."; ObjectID = "gan-4f-TrM"; */
 "gan-4f-TrM.text" = "...";
 
-/* Class = "UILabel"; text = "Nickname"; ObjectID = "h9u-uR-RRc"; */
-"h9u-uR-RRc.text" = "Nickname";
-
-/* Class = "UILabel"; text = "Label"; ObjectID = "jcI-bX-mXj"; */
-"jcI-bX-mXj.text" = "Label";
-
-/* Class = "UILabel"; text = "Threema Safe"; ObjectID = "jhG-Ge-qyu"; */
-"jhG-Ge-qyu.text" = "Threema Safe";
-
 /* Class = "UINavigationItem"; title = "Edit Profile"; ObjectID = "jni-2G-zzz"; */
-"jni-2G-zzz.title" = "Edit Profile";
-
-/* Class = "UILabel"; text = "Label"; ObjectID = "ky3-aw-XMX"; */
-"ky3-aw-XMX.text" = "Label";
-
-/* Class = "UILabel"; text = "..."; ObjectID = "m6i-Rb-VUQ"; */
-"m6i-Rb-VUQ.text" = "...";
+"jni-2G-zzz.title" = "プロフィールを編集";
 
 /* Class = "UITextField"; placeholder = "Nickname"; ObjectID = "o3l-bU-add"; */
-"o3l-bU-add.placeholder" = "Nickname";
-
-/* Class = "UILabel"; text = "-"; ObjectID = "pW4-Aa-Fp5"; */
-"pW4-Aa-Fp5.text" = "-";
+"o3l-bU-add.placeholder" = "ニックネーム";
 
 /* Class = "UITableViewSection"; footerTitle = "Linking your email address to your ID lets other people find you on Threema automatically if they have your email in their address book."; ObjectID = "qQD-Gd-ca9"; */
-"qQD-Gd-ca9.footerTitle" = "Linking your email address to your ID lets other people find you on Threema automatically if they have your email in their address book.";
-
-/* Class = "UILabel"; text = "Key Fingerprint"; ObjectID = "sJA-2q-zE2"; */
-"sJA-2q-zE2.text" = "Key Fingerprint";
-
-/* Class = "UILabel"; text = "Label"; ObjectID = "seC-te-7L0"; */
-"seC-te-7L0.text" = "Label";
+"qQD-Gd-ca9.footerTitle" = "メールアドレスとIDを紐付けすることで、他の人がアドレス帳にあなたのメールアドレスを登録していれば、自動的にThreemaであなたを見つけることができます。";
 
 /* Class = "UINavigationItem"; title = "Enter code"; ObjectID = "tGC-WP-fBC"; */
-"tGC-WP-fBC.title" = "Enter code";
-
-/* Class = "UINavigationItem"; title = "Link Email"; ObjectID = "uEL-Yh-Kca"; */
-"uEL-Yh-Kca.title" = "Link Email";
+"tGC-WP-fBC.title" = "コードを確定";
 
 /* Class = "UILabel"; text = "Release profile picture to"; ObjectID = "vvJ-Em-VJ0"; */
-"vvJ-Em-VJ0.text" = "Release profile picture to";
+"vvJ-Em-VJ0.text" = "にプロフィール画像を公開します";
+
+/* Class = "UINavigationItem"; title = "Link Email"; ObjectID = "uEL-Yh-Kca"; */
+"uEL-Yh-Kca.title" = "Eメールアドレスを紐付けする";
 
 /* Class = "UILabel"; text = "Abort Verification"; ObjectID = "wJP-Jf-Pgx"; */
-"wJP-Jf-Pgx.text" = "Abort Verification";
-
-/* Class = "UILabel"; text = "Server switch label"; ObjectID = "wMx-pg-1qc"; */
-"wMx-pg-1qc.text" = "Server switch label";
-
-/* Class = "UITableViewSection"; footerTitle = "Test"; ObjectID = "xGC-9L-rgo"; */
-"xGC-9L-rgo.footerTitle" = "Test";
-
-/* Class = "UITableViewSection"; headerTitle = "Expert Settings"; ObjectID = "xGC-9L-rgo"; */
-"xGC-9L-rgo.headerTitle" = "Expert Settings";
+"wJP-Jf-Pgx.text" = "検証を中止する";
 
 /* Class = "UILabel"; text = "05:00"; ObjectID = "xdM-Ja-eNy"; */
 "xdM-Ja-eNy.text" = "05:00";
 
-/* Class = "UILabel"; text = "Change Password"; ObjectID = "xeg-TX-OYB"; */
-"xeg-TX-OYB.text" = "Change Password";
-
 /* Class = "UILabel"; text = "Enter code"; ObjectID = "xih-kT-hBC"; */
-"xih-kT-hBC.text" = "Enter code";
-
-/* Class = "UILabel"; text = "Threema ID"; ObjectID = "xrG-XN-fYs"; */
-"xrG-XN-fYs.text" = "Threema ID";
+"xih-kT-hBC.text" = "コードを確定";
 
 /* Class = "UILabel"; text = "Detail"; ObjectID = "yaz-xj-2bb"; */
-"yaz-xj-2bb.text" = "Detail";
+"yaz-xj-2bb.text" = "詳細";
 
 /* Class = "UITableViewSection"; footerTitle = "Linking your phone number to your ID lets other people find you on Threema automatically if they have your phone number in their address book."; ObjectID = "z3E-MB-Mey"; */
-"z3E-MB-Mey.footerTitle" = "Linking your phone number to your ID lets other people find you on Threema automatically if they have your phone number in their address book.";
+"z3E-MB-Mey.footerTitle" = "電話番号とIDを紐付けさせることで、アドレス帳にあなたの電話番号が登録されていれば、他の人が自動的にThreemaであなたを見つけることができます。";
+
+/* Class = "UILabel"; text = "00000000000000000000000000000000"; ObjectID = "z90-JB-13a"; */
+"z90-JB-13a.text" = "00000000000000000000000000000000";

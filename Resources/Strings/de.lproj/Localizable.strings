@@ -326,6 +326,7 @@
 "create_new_group" = "Neue Gruppe erstellen";
 "create_note_group_info_title" = "Tipp";
 "create_note_group_info_text" = "Wenn Sie keine Mitglieder hinzufügen, bleiben Nachrichten an diese Gruppe lokal. Das ist ideal, um Notizen, Medien oder Dokumente sicher zu speichern oder auf den Desktop zu übertragen.";
+"remind_me_next_time" = "Nächstes Mal erinnern";
 "doNotShowAgain" = "Nicht mehr anzeigen";
 "add_note_group_info" = "*Sie sind alleine hier*\nVerwenden Sie diesen Chat als sicheres Notizbuch für Texte, Medien oder Dokumente.";
 "end_note_group_info" = "*Sie sind nicht mehr alleine in diesem Chat*\nNeue Nachrichten werden an alle Gruppenmitglieder gesendet.";

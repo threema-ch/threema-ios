@@ -201,4 +201,36 @@
     return msg;
 }
 
+/// Checks whether the given ballot passes a basic sanity check and can be encoded
+/// @param ballot The ballot that should be checked for sanity
++ (BOOL)passesSanityCheck:(nullable Ballot *) ballot {
+    if (ballot == nil) {
+        DDLogError(@"Ballot is nil.");
+        return false;
+    }
+    
+    if (ballot.title == nil) {
+        DDLogError(@"Ballot Title is nil");
+        return false;
+    }
+    if (ballot.type == nil) {
+        DDLogError(@"Ballot Type is nil");
+        return false;
+    }
+    if (ballot.state == nil) {
+        DDLogError(@"Ballot State is nil");
+        return false;
+    }
+    if (ballot.assessmentType == nil) {
+        DDLogError(@"Ballot AssessmentType is nil");
+        return false;
+    }
+    if (ballot.choicesType == nil) {
+        DDLogError(@"Ballot ChoicesType is nil");
+        return false;
+    }
+    
+    return true;
+}
+
 @end

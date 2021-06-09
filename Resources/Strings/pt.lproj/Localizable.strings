@@ -326,6 +326,7 @@
 "create_new_group" = "Criar novo grupo";
 "create_note_group_info_title" = "Dica";
 "create_note_group_info_text" = "Se você não adicionar nenhum membro ao grupo, as mensagens para este grupo permanecerão locais. Isso é o ideal para armazenar em segurança notas, mídia e documentos ou transferir itens à área de trabalho.";
+"remind_me_next_time" = "Lembrar da próxima vez";
 "doNotShowAgain" = "Não mostrar de novo";
 "add_note_group_info" = "*Você não está sozinho aqui*\nUse este bate-papo como um bloco de notas seguro para texto, mídia e documentos.";
 "end_note_group_info" = "*Você não está mais sozinho neste bate-papo\". Novas mensagens serão enviadas a todos membros.";

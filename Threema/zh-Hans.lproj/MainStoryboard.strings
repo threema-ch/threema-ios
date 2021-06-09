@@ -1,7 +1,4 @@
 
-/* Class = "UILabel"; text = "Anonymous contact. The ID could not be matched with a contact in your address book."; ObjectID = "1xB-q0-ZXX"; */
-"1xB-q0-ZXX.text" = "这是匿名联系人。该ID与您通讯录中的联系人不匹配。";
-
 /* Class = "UIBarButtonItem"; title = "Send"; ObjectID = "25C-Te-sfW"; */
 "25C-Te-sfW.title" = "发送";
 
@@ -15,7 +12,7 @@
 "4Js-Fh-l8T.text" = "这个联系人的ID和公钥已被验证。";
 
 /* Class = "UILabel"; text = "Message preview"; ObjectID = "4a3-95-oYU"; */
-"4a3-95-oYU.text" = "信息预览";
+"4a3-95-oYU.text" = "消息预览";
 
 /* Class = "UILabel"; text = "Detail"; ObjectID = "5Ca-aK-dv0"; */
 "5Ca-aK-dv0.text" = "详情";
@@ -24,7 +21,7 @@
 "5Ea-OE-GRI.text" = "Threema 通话";
 
 /* Class = "UITabBarItem"; title = "My Profile"; ObjectID = "5lj-oy-IYs"; */
-"5lj-oy-IYs.title" = "我的资料";
+"5lj-oy-IYs.title" = "个人资料";
 
 /* Class = "UILabel"; text = "XXXXXXXX"; ObjectID = "6GC-h6-PJ3"; */
 "6GC-h6-PJ3.text" = "XXXXXXXX";
@@ -72,19 +69,13 @@
 "BAB-op-TwI.title" = "新联系人";
 
 /* Class = "UILabel"; text = "Message-ID"; ObjectID = "CyG-aF-qUX"; */
-"CyG-aF-qUX.text" = "信息识别码";
+"CyG-aF-qUX.text" = "消息识别码";
 
 /* Class = "UILabel"; text = "Detail"; ObjectID = "D8z-NN-iT9"; */
 "D8z-NN-iT9.text" = "详情";
 
 /* Class = "UILabel"; text = "First Last"; ObjectID = "DfM-u6-9Pl"; */
 "DfM-u6-9Pl.text" = "名字 姓氏";
-
-/* Class = "UILabel"; text = "Threema Work contact. The administrator has pre-configured this contact."; ObjectID = "Dkl-lv-Gfl"; */
-"Dkl-lv-Gfl.text" = "这是 Threema Work 联系人。管理员已经预先配置了这个联系人。";
-
-/* Class = "UILabel"; text = "The dots are an indicator for a contact's verification level."; ObjectID = "DxA-AM-Zv1"; */
-"DxA-AM-Zv1.text" = "圆点是联系人的验证级别指标。";
 
 /* Class = "UILabel"; text = "Nickname"; ObjectID = "EpZ-nu-d7H"; */
 "EpZ-nu-d7H.text" = "昵称";
@@ -98,14 +89,11 @@
 /* Class = "UILabel"; text = "No push notifications"; ObjectID = "Fji-Pc-2Te"; */
 "Fji-Pc-2Te.text" = "没有推送通知";
 
-/* Class = "UILabel"; text = "Linked contact"; ObjectID = "HUp-wZ-oF0"; */
-"HUp-wZ-oF0.text" = "已关联的联系人";
-
 /* Class = "UILabel"; text = "# members"; ObjectID = "I8P-9o-uIi"; */
 "I8P-9o-uIi.text" = "# 成员";
 
 /* Class = "UILabel"; text = "Send Message"; ObjectID = "IpT-Hm-dLe"; */
-"IpT-Hm-dLe.text" = "发送信息";
+"IpT-Hm-dLe.text" = "发送消息";
 
 /* Class = "UILabel"; text = "Group Name"; ObjectID = "Jri-Jp-Hpu"; */
 "Jri-Jp-Hpu.text" = "群组名称";
@@ -125,11 +113,8 @@
 /* Class = "UINavigationItem"; title = "Contacts"; ObjectID = "Ll3-Ew-izw"; */
 "Ll3-Ew-izw.title" = "联系人";
 
-/* Class = "UILabel"; text = "Key Fingerprint"; ObjectID = "LrC-J2-IWd"; */
-"LrC-J2-IWd.text" = "密钥指纹";
-
 /* Class = "UINavigationItem"; title = "Message Details"; ObjectID = "LsJ-Ts-xZd"; */
-"LsJ-Ts-xZd.title" = "信息详情";
+"LsJ-Ts-xZd.title" = "消息详情";
 
 /* Class = "UISegmentedControl"; M1P-ix-V2L.segmentTitles[0] = "Standard"; ObjectID = "M1P-ix-V2L"; */
 "M1P-ix-V2L.segmentTitles[0]" = "标准";
@@ -142,9 +127,6 @@
 
 /* Class = "UILabel"; text = "Synchronize group"; ObjectID = "MEa-Te-wbA"; */
 "MEa-Te-wbA.text" = "同步群组";
-
-/* Class = "UILabel"; text = "Export Conversation"; ObjectID = "MjB-gx-MEm"; */
-"MjB-gx-MEm.text" = "导出对话";
 
 /* Class = "UILabel"; text = "IDENTITY"; ObjectID = "NFg-lg-c4C"; */
 "NFg-lg-c4C.text" = "身份";
@@ -174,16 +156,13 @@
 "Wsn-z9-eRi.title" = "名字 姓氏";
 
 /* Class = "UIButton"; normalTitle = "Load Earlier Messages"; ObjectID = "WuX-yK-0RJ"; */
-"WuX-yK-0RJ.normalTitle" = "加载之前的信息";
+"WuX-yK-0RJ.normalTitle" = "加载之前的消息";
 
 /* Class = "UILabel"; text = "Date"; ObjectID = "XTa-xS-cOR"; */
 "XTa-xS-cOR.text" = "日期";
 
 /* Class = "UILabel"; text = "Group Name"; ObjectID = "Y4G-EW-Gux"; */
 "Y4G-EW-Gux.text" = "群组名称";
-
-/* Class = "UILabel"; text = "The contact matches with a verified phone number or email address in your address book."; ObjectID = "Y9L-O2-c5C"; */
-"Y9L-O2-c5C.text" = "该联系人与您通讯录中经过验证的电话号码或电子邮件地址相匹配。";
 
 /* Class = "UILabel"; text = "Scan an ID"; ObjectID = "YPC-ic-pTa"; */
 "YPC-ic-pTa.text" = "扫描ID";
@@ -196,9 +175,6 @@
 
 /* Class = "UILabel"; text = "Read"; ObjectID = "Zrm-eG-ewD"; */
 "Zrm-eG-ewD.text" = "已读";
-
-/* Class = "UILabel"; text = "You reach the highest verification level only by scanning the QR Code of a contact in person."; ObjectID = "Zxb-Je-9CC"; */
-"Zxb-Je-9CC.text" = "只有亲自扫描联系人的二维码，才能达到最高验证级别。";
 
 /* Class = "UILabel"; text = "Key Fingerprint"; ObjectID = "aGy-xg-eRi"; */
 "aGy-xg-eRi.text" = "密钥指纹";
@@ -215,9 +191,6 @@
 /* Class = "UILabel"; text = "Scan ID"; ObjectID = "b4I-LV-xkG"; */
 "b4I-LV-xkG.text" = "扫描ID";
 
-/* Class = "UILabel"; text = "Member in groups"; ObjectID = "b8z-Gr-9hX"; */
-"b8z-Gr-9hX.text" = "群组成员";
-
 /* Class = "UILabel"; text = "Export Conversation"; ObjectID = "bFb-Sh-rtO"; */
 "bFb-Sh-rtO.text" = "导出对话";
 
@@ -228,7 +201,7 @@
 "bt1-G0-NzZ.text" = "00000000000000000000000000000000";
 
 /* Class = "UILabel"; text = "Send Message"; ObjectID = "cHE-Oc-08d"; */
-"cHE-Oc-08d.text" = "发送信息";
+"cHE-Oc-08d.text" = "发送消息";
 
 /* Class = "UILabel"; text = "Creator: Name"; ObjectID = "cNf-3j-eOO"; */
 "cNf-3j-eOO.text" = "创建者：名字";
@@ -285,22 +258,13 @@
 "n7x-y4-2CM.text" = "身份";
 
 /* Class = "UITabBarItem"; title = "Messages"; ObjectID = "nZg-gf-uED"; */
-"nZg-gf-uED.title" = "信息";
+"nZg-gf-uED.title" = "消息";
 
 /* Class = "UITabBarItem"; title = "Contacts"; ObjectID = "JXW-2V-ftV"; */
 "JXW-2V-ftV.title" = "联系人";
 
-/* Class = "UILabel"; text = "Profile picture recipient"; ObjectID = "nmk-Tk-7Kq"; */
-"nmk-Tk-7Kq.text" = "个人头像接收者";
-
-/* Class = "UILabel"; text = "Send profile picture now"; ObjectID = "nw5-78-OP1"; */
-"nw5-78-OP1.text" = "立即发送个人头像";
-
 /* Class = "UINavigationItem"; title = "Group details"; ObjectID = "oEX-1h-I2a"; */
 "oEX-1h-I2a.title" = "群组详情";
-
-/* Class = "UILabel"; text = "Block Contact"; ObjectID = "okc-AP-jvX"; */
-"okc-AP-jvX.text" = "屏蔽联系人";
 
 /* Class = "UILabel"; text = "Link to Contact"; ObjectID = "otC-iO-wzt"; */
 "otC-iO-wzt.text" = "链接到联系人";
@@ -345,7 +309,7 @@
 "vVr-Sj-fJm.text" = "名字 姓氏";
 
 /* Class = "UINavigationItem"; title = "Messages"; ObjectID = "vkp-6o-Lct"; */
-"vkp-6o-Lct.title" = "信息";
+"vkp-6o-Lct.title" = "消息";
 
 /* Class = "UILabel"; text = "Company Name"; ObjectID = "wLS-iM-q79"; */
 "wLS-iM-q79.text" = "公司名称";

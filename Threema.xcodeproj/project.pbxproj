@@ -3439,6 +3439,15 @@
 		CE92572F2049452000ACDF98 /* WebReceiversRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebReceiversRequest.swift; sourceTree = "<group>"; };
 		CE92573C2049663E00ACDF98 /* WebConversationsRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebConversationsRequest.swift; sourceTree = "<group>"; };
 		CE9257402049717B00ACDF98 /* WebMessagesResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebMessagesResponse.swift; sourceTree = "<group>"; };
+		CE9317762652BC2100F2D4C5 /* zh-Hant */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hant"; path = "zh-Hant.lproj/MainStoryboard.strings"; sourceTree = "<group>"; };
+		CE9317772652BC2100F2D4C5 /* zh-Hant */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hant"; path = "zh-Hant.lproj/CreatePassword.strings"; sourceTree = "<group>"; };
+		CE9317792652BC2100F2D4C5 /* zh-Hant */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hant"; path = "zh-Hant.lproj/MyIdentityStoryboard.strings"; sourceTree = "<group>"; };
+		CE93177A2652BC2200F2D4C5 /* zh-Hant */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hant"; path = "zh-Hant.lproj/SettingsStoryboard.strings"; sourceTree = "<group>"; };
+		CE93177B2652BC2200F2D4C5 /* zh-Hant */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hant"; path = "zh-Hant.lproj/Localizable.strings"; sourceTree = "<group>"; };
+		CE93177C2652BC2200F2D4C5 /* zh-Hant */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hant"; path = "zh-Hant.lproj/Ballot.strings"; sourceTree = "<group>"; };
+		CE93177D2652BC2200F2D4C5 /* zh-Hant */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hant"; path = "zh-Hant.lproj/Localizable.strings"; sourceTree = "<group>"; };
+		CE93177E2652BC2200F2D4C5 /* zh-Hant */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hant"; path = "zh-Hant.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
+		CE93177F2652BC2200F2D4C5 /* zh-Hant */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hant"; path = "zh-Hant.lproj/Localizable.strings"; sourceTree = "<group>"; };
 		CE9F26DF251B7E4800D1FCA8 /* DevModeViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DevModeViewController.swift; sourceTree = "<group>"; };
 		CE9F992E21DE66D400AABCAE /* AlbumManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlbumManager.swift; sourceTree = "<group>"; };
 		CEA3190B21C3F67E00AB109B /* GroupDeletePhotoMessage.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GroupDeletePhotoMessage.h; sourceTree = "<group>"; };
@@ -7389,6 +7398,7 @@
 				pl,
 				"zh-Hans",
 				ja,
+				"zh-Hant",
 			);
 			mainGroup = 4DD01F5D14C1CCA900EF7690;
 			productRefGroup = 4DD01F6914C1CCA900EF7690 /* Products */;
@@ -9322,6 +9332,7 @@
 				CEC0440A25AC5BF3002C484A /* pl */,
 				CE1BD24C25C98E750070A87A /* zh-Hans */,
 				CE90A68D261F22CE003D7AC9 /* ja */,
+				CE9317772652BC2100F2D4C5 /* zh-Hant */,
 			);
 			name = CreatePassword.storyboard;
 			sourceTree = "<group>";
@@ -9344,6 +9355,7 @@
 				CEC0440825AC5BF2002C484A /* pl */,
 				CE1BD25125C98E760070A87A /* zh-Hans */,
 				CE90A693261F22CF003D7AC9 /* ja */,
+				CE93177D2652BC2200F2D4C5 /* zh-Hant */,
 			);
 			name = Localizable.strings;
 			sourceTree = "<group>";
@@ -9374,6 +9386,7 @@
 				CEC0440725AC5BF2002C484A /* pl */,
 				CE1BD25025C98E750070A87A /* zh-Hans */,
 				CE90A692261F22CF003D7AC9 /* ja */,
+				CE93177C2652BC2200F2D4C5 /* zh-Hant */,
 			);
 			name = Ballot.strings;
 			path = Strings;
@@ -9397,6 +9410,7 @@
 				CEC0440F25AC5BF3002C484A /* pl */,
 				CE1BD25425C98E760070A87A /* zh-Hans */,
 				CE90A695261F22CF003D7AC9 /* ja */,
+				CE93177F2652BC2200F2D4C5 /* zh-Hant */,
 			);
 			name = Localizable.strings;
 			sourceTree = "<group>";
@@ -9419,6 +9433,7 @@
 				CEC0440625AC5BF2002C484A /* pl */,
 				CE1BD24F25C98E750070A87A /* zh-Hans */,
 				CE90A691261F22CE003D7AC9 /* ja */,
+				CE93177B2652BC2200F2D4C5 /* zh-Hant */,
 			);
 			name = Localizable.strings;
 			path = Strings;
@@ -9442,6 +9457,7 @@
 				CEC0440D25AC5BF3002C484A /* pl */,
 				CE1BD25225C98E760070A87A /* zh-Hans */,
 				CE90A694261F22CF003D7AC9 /* ja */,
+				CE93177E2652BC2200F2D4C5 /* zh-Hant */,
 			);
 			name = InfoPlist.strings;
 			sourceTree = "<group>";
@@ -9465,6 +9481,7 @@
 				CEC0440925AC5BF3002C484A /* pl */,
 				CE1BD24B25C98E740070A87A /* zh-Hans */,
 				CE90A68C261F22CE003D7AC9 /* ja */,
+				CE9317762652BC2100F2D4C5 /* zh-Hant */,
 			);
 			name = MainStoryboard.storyboard;
 			sourceTree = "<group>";
@@ -9488,6 +9505,7 @@
 				CEC0440B25AC5BF3002C484A /* pl */,
 				CE1BD24D25C98E750070A87A /* zh-Hans */,
 				CE90A68F261F22CE003D7AC9 /* ja */,
+				CE9317792652BC2100F2D4C5 /* zh-Hant */,
 			);
 			name = MyIdentityStoryboard.storyboard;
 			sourceTree = "<group>";
@@ -9511,6 +9529,7 @@
 				CEC0440C25AC5BF3002C484A /* pl */,
 				CE1BD24E25C98E750070A87A /* zh-Hans */,
 				CE90A690261F22CE003D7AC9 /* ja */,
+				CE93177A2652BC2200F2D4C5 /* zh-Hant */,
 			);
 			name = SettingsStoryboard.storyboard;
 			sourceTree = "<group>";
@@ -10656,7 +10675,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				BUILD_NUMBER = 2628;
+				BUILD_NUMBER = 2636;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ENABLE_MODULES = NO;
 				CLANG_ENABLE_OBJC_ARC = YES;
@@ -10703,7 +10722,7 @@
 				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "";
 				SDKROOT = iphoneos;
 				VALIDATE_PRODUCT = YES;
-				VERSION_NUMBER = 4.6.8;
+				VERSION_NUMBER = 4.6.9;
 			};
 			name = AppStore;
 		};
@@ -10776,7 +10795,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				BUILD_NUMBER = 2628;
+				BUILD_NUMBER = 2636;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ENABLE_MODULES = NO;
 				CLANG_ENABLE_OBJC_ARC = YES;
@@ -10829,7 +10848,7 @@
 				PROVISIONING_PROFILE = "";
 				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "";
 				SDKROOT = iphoneos;
-				VERSION_NUMBER = 4.6.8;
+				VERSION_NUMBER = 4.6.9;
 			};
 			name = Debug;
 		};
@@ -10837,7 +10856,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				BUILD_NUMBER = 2628;
+				BUILD_NUMBER = 2636;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ENABLE_MODULES = NO;
 				CLANG_ENABLE_OBJC_ARC = YES;
@@ -10884,7 +10903,7 @@
 				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "";
 				SDKROOT = iphoneos;
 				VALIDATE_PRODUCT = YES;
-				VERSION_NUMBER = 4.6.8;
+				VERSION_NUMBER = 4.6.9;
 			};
 			name = AdHoc;
 		};
@@ -11180,7 +11199,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				BUILD_NUMBER = 2628;
+				BUILD_NUMBER = 2636;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ENABLE_MODULES = NO;
 				CLANG_ENABLE_OBJC_ARC = YES;
@@ -11233,7 +11252,7 @@
 				PROVISIONING_PROFILE = "";
 				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "";
 				SDKROOT = iphoneos;
-				VERSION_NUMBER = 4.6.8;
+				VERSION_NUMBER = 4.6.9;
 			};
 			name = "Debug Sandbox";
 		};

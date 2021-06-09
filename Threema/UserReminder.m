@@ -25,6 +25,7 @@
 #import "AppDelegate.h"
 #import "AppGroup.h"
 #import <UserNotifications/UserNotifications.h>
+#import "BundleUtil.h"
 
 #ifdef DEBUG
   static const DDLogLevel ddLogLevel = DDLogLevelVerbose;
@@ -135,12 +136,26 @@
     }];
 }
 
+- (void)showNoteGroupReminderOnViewController:(UIViewController *)viewController {
+    BOOL doNotShowAgain = [[AppGroup userDefaults] boolForKey:@"NoteGroupDoNotShowAgain"];
+    if (doNotShowAgain == true) {
+        DDLogVerbose(@"Note group already shown");
+        return;
+    }
+    
+    [UIAlertTemplate showAlertWithOwner:viewController title:[BundleUtil localizedStringForKey:@"create_note_group_info_title"] message:[BundleUtil localizedStringForKey:@"create_note_group_info_text"] titleOk:[BundleUtil localizedStringForKey:@"remind_me_next_time"] actionOk:nil titleCancel:[BundleUtil localizedStringForKey:@"ok"] actionCancel:^(UIAlertAction __unused *action) {
+        [[AppGroup userDefaults] setBool:true forKey:@"NoteGroupDoNotShowAgain"];
+        [[AppGroup userDefaults] synchronize];
+    }];
+}
+
 - (void)markIdentityDeleted {
     
     [[AppGroup userDefaults] removeObjectForKey:@"LinkReminderShown"];
     [[AppGroup userDefaults] removeObjectForKey:@"PublicNicknameReminderShown"];
     [[AppGroup userDefaults] removeObjectForKey:@"IdentityCreationDate"];
     [[AppGroup userDefaults] removeObjectForKey:@"PushReminderDoNotShowAgain"];
+    [[AppGroup userDefaults] removeObjectForKey:@"NoteGroupDoNotShowAgain"];
 }
 
 - (NSDate*)idCreationDate {

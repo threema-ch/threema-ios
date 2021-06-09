@@ -326,6 +326,7 @@
 "create_new_group" = "创建新群组";
 "create_note_group_info_title" = "提示";
 "create_note_group_info_text" = "如果您不添加任何群组成员，发送到这个群组的信息将保留在本地。这样能方便您安全地存储笔记、媒体和文件，或将文件转移到桌面。";
+"remind_me_next_time" = "下次提醒我";
 "doNotShowAgain" = "下次不再提示";
 "add_note_group_info" = "*在此会话中只有您一个人*\n将此会话作为保存文本、媒体和文件的安全笔记本。";
 "end_note_group_info" = "*在此会话中不再只有您一个人*\n新消息将被发送到所有成员。";

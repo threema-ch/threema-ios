@@ -1,0 +1,76 @@
+/* 
+  Localizable.strings
+  Threema
+
+  Copyright (c) 2015 Threema GmbH. All rights reserved.
+*//* JKLockScreenViewController */
+"cancel" = "取消";
+"delete" = "刪除";
+
+/* Mentions */
+"mentions_all" = "所有";
+
+
+"me" = "我自己";
+"nobody" = "沒有人";
+"(unknown)" = "（未知）";
+"invalid" = "無效";
+"inactive" = "非活躍";
+
+"status_acknowledged" = "已同意";
+"status_read" = "已讀取";
+"status_delivered" = "已送達";
+"status_sent" = "已傳送";
+"status_sending" = "傳送中";
+"status_failed" = "失敗";
+"status_declined" = "不同意";
+"blocked" = "被封鎖";
+
+"contacts" = "聯絡人";
+"groups" = "群組";
+"recent" = "最近項目";
+"work" = "工作";
+"creator" = "建立者";
+"%d members" = "%d位成員";
+
+"ok" = "確認";
+
+"send" = "傳送";
+"addText" = "新增文字";
+"hide" = "隱藏";
+
+"error_sending_failed" = "傳送失敗";
+"error_constraints_failed" = "不支援的檔案";
+"error_message_file_too_big" = "檔案太大，最大檔案大小為 50MB。";
+"error_message_invalid_file" = "讀取檔案錯誤。";
+"error_message_generic" = "上傳失敗。";
+
+"error_title_feature_level" = "請注意";
+"error_message_feature_level" = "某些收件者的應用程式版本還不支援檔案訊息：%@";
+"error_message_none_feature_level" = "沒有收件者具備支援檔案訊息的應用程式版本：%@";
+
+"video_too_long_title" = "影片太長";
+"video_too_long_message" = "此影片太長，無法傳送。最大允許長度為%.0f分鐘。";
+
+/* KKPasscodeLock */
+"On" = "開啟";
+"Off" = "關閉";
+"all_data_deleted_title" = "所有資料已刪除";
+"all_data_deleted_message" = "您已經輸入了太多次錯誤的密碼。此應用程式中的所有資料已被刪除。";
+"to_unlock_passcode" = "解鎖 Threema";    // Touch ID
+
+/* Notifications Text */
+"new_message" = "訊息";
+/* Notifications Text */
+"new_message_from_x" = "來自%@的訊息";
+"new_group_message" = "群組訊息";
+"new_group_message_from_x" = "來自%@的群組訊息";
+"new_image_message" = "圖片";
+"new_video_message" = "影片";
+"new_location_message" = "位置";
+"new_audio_message" = "音訊";
+"new_ballot_create_message" = "投票：%@";
+"new_ballot_closed_message" = "投票：結果已公佈";
+"new_file_message" = "檔案：%@";
+
+"mediapreview_options" = "選項";

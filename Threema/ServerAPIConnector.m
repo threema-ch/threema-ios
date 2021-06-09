@@ -38,6 +38,8 @@
 #else
   static const DDLogLevel ddLogLevel = DDLogLevelInfo;
 #endif
+
+
 @implementation ServerAPIConnector
 
 - (void)createIdentityWithStore:(MyIdentityStore*)identityStore onCompletion:(void(^)(MyIdentityStore *store))onCompletion onError:(void(^)(NSError *error))onError {
@@ -145,6 +147,27 @@
         onCompletion(jsonObject[@"serverGroup"], jsonObject[@"email"], jsonObject[@"mobileNo"]);
     } onError:onError];
 }
+
+- (void)fetchWorkIdentitiesInfo:(NSArray *)identities onCompletion:(void(^)(NSArray *foundIdentities))onCompletion onError:(void(^)(NSError *error))onError {
+    
+    if (identities == nil) {
+        onError([ThreemaError threemaError:@"Identity is nil"]);
+        return;
+    }
+        
+    NSDictionary *request = @{
+        @"username": [[LicenseStore sharedLicenseStore] licenseUsername],
+        @"password": [[LicenseStore sharedLicenseStore] licensePassword],
+        @"contacts": identities
+    };
+
+    [ServerAPIRequest postJSONToWorkAPIPath:@"identities" data:request onCompletion:^(id jsonObject) {
+        onCompletion(jsonObject[@"contacts"]);
+    } onError:^(NSError *error) {
+        onError(error);
+    }];
+}
+
 
 - (void)updateMyIdentityStore:(MyIdentityStore*)identityStore onCompletion:(void(^)(void))onCompletion onError:(void(^)(NSError* error))onError {
     [self fetchPrivateIdentityInfo:identityStore onCompletion:^(NSString *serverGroup, NSString *email, NSString *mobileNo) {

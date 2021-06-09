@@ -326,8 +326,9 @@
 "create_new_group" = "Vytvořit novou skupinu";
 "create_note_group_info_title" = "Rada";
 "create_note_group_info_text" = "Pokud nepřidáte žádné členy skupiny, zprávy do této skupiny zůstanou místní. To se hodí pro bezpečné ukládání poznámek, médií a dokumentů nebo pro přenos položek na plochu.";
+"remind_me_next_time" = "Připomenout příště";
 "doNotShowAgain" = "Neukazovat znovu";
-"add_note_group_info" = "* Pouze váš chat *\nPoužijte tento chat jako váš zabezpečený poznámkový blok pro text, média a dokumenty.";
+"add_note_group_info" = "* Pouze váš chat *\n\nPoužijte tento chat jako váš zabezpečený poznámkový blok pro text, média a dokumenty.";
 "end_note_group_info" = "* V tomto chatu už nejste sám *\n\nNové zprávy budou odeslány všem členům skupiny.";
 
 "choose_recipient" = "Vyberte příjemce";

@@ -15,7 +15,7 @@
 "67x-OC-XxU.text" = "0 KB";
 
 /* Class = "UILabel"; text = "Return Key = Send"; ObjectID = "7C7-0j-j2r"; */
-"7C7-0j-j2r.text" = "Return Key = Wyślij";
+"7C7-0j-j2r.text" = "Klucz Zwrotny = Wyślij";
 
 /* Class = "UILabel"; text = "Connected"; ObjectID = "8hI-GF-46C"; */
 "8hI-GF-46C.text" = "Połączony";
@@ -108,13 +108,13 @@
 "UsC-dS-qae.title" = "Zaawansowane";
 
 /* Class = "UITableViewSection"; headerTitle = "Validation logging"; ObjectID = "VzU-Hf-fg5"; */
-"VzU-Hf-fg5.headerTitle" = "Dziennik Debugowania";
+"VzU-Hf-fg5.headerTitle" = "Dziennik Debug";
 
 /* Class = "UILabel"; text = "Sync Contacts"; ObjectID = "Wdo-iP-Jy2"; */
 "Wdo-iP-Jy2.text" = "Synchronizacja Kontaktów";
 
 /* Class = "UILabel"; text = "Validation Logging"; ObjectID = "WeM-6s-Xpj"; */
-"WeM-6s-Xpj.text" = "Dziennik Debugowania";
+"WeM-6s-Xpj.text" = "Dziennik Debug";
 
 /* Class = "UILabel"; text = "Group Notifications"; ObjectID = "XNU-cf-XDO"; */
 "XNU-cf-XDO.text" = "Powiadomienia Grupy";
@@ -132,7 +132,7 @@
 "ZYa-QO-V4r.title" = "Wygląd";
 
 /* Class = "UITableViewSection"; headerTitle = "Support information"; ObjectID = "bGr-LK-G1Y"; */
-"bGr-LK-G1Y.headerTitle" = "Informacja o Pomocy Technicznej";
+"bGr-LK-G1Y.headerTitle" = "Informacja Wsparcia";
 
 /* Class = "UILabel"; text = "WebRTC Diagnostics"; ObjectID = "eN8-vV-OIw"; */
 "eN8-vV-OIw.text" = "Diagnostyka WebRTC";
@@ -148,12 +148,6 @@
 
 /* Class = "UILabel"; text = "Size"; ObjectID = "f2r-1x-GtL"; */
 "f2r-1x-GtL.text" = "Rozmiar";
-
-/* Class = "UILabel"; text = "Enable Threema Call"; ObjectID = "ffR-oW-QMI"; */
-"ffR-oW-QMI.text" = "Włącz Połączenia Threema";
-
-/* Class = "UILabel"; text = "Integrate calls into iOS"; ObjectID = "gbG-Cf-QPK"; */
-"gbG-Cf-QPK.text" = "Integruj połączenia z iOS";
 
 /* Class = "UILabel"; text = "Detail"; ObjectID = "iDF-6E-SQr"; */
 "iDF-6E-SQr.text" = "Szczegół";
@@ -175,9 +169,6 @@
 
 /* Class = "UILabel"; text = "Log Size"; ObjectID = "k9C-Wp-8hl"; */
 "k9C-Wp-8hl.text" = "Rozmiar Dziennika";
-
-/* Class = "UILabel"; text = "Always relay calls"; ObjectID = "m29-az-gFj"; */
-"m29-az-gFj.text" = "Zawsze Przekazuj Połączenia";
 
 /* Class = "UILabel"; text = "Email Log"; ObjectID = "m9f-E9-TK7"; */
 "m9f-E9-TK7.text" = "Udostępnij Dziennik";

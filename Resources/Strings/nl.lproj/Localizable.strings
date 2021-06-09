@@ -326,6 +326,7 @@
 "create_new_group" = "Nieuwe groep aanmaken";
 "create_note_group_info_title" = "Hint";
 "create_note_group_info_text" = "Als u geen groepsleden toevoegt, blijven de berichten aan deze groep lokaal. Dat is ideaal om notities, mediabestanden en documenten veilig op te slaan of om bestanden over te zetten naar de desktop.";
+"remind_me_next_time" = "Me nogmaals herinneren";
 "doNotShowAgain" = "Niet meer weergeven";
 "add_note_group_info" = "*U bent hier helemaal alleen*\nGebruik deze chat als beveiligd notitieboekje voor tekst, mediabestanden en documenten.";
 "end_note_group_info" = "*U bent niet langer de enige in deze chat*\nNieuwe berichten worden aan alle groepsleden verzonden.";

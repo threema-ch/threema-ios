@@ -37,7 +37,7 @@ import Foundation
     @objc public static func showAlert(owner: UIViewController, title: String?, message: String?, titleOk: String, actionOk: ((UIAlertAction) -> Void)? = nil, titleCancel: String, actionCancel: ((UIAlertAction) -> Void)? = nil) {
         let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: titleOk, style: .default, handler: actionOk))
-        alert.addAction(UIAlertAction(title: titleCancel, style: .default, handler: actionCancel))
+        alert.addAction(UIAlertAction(title: titleCancel, style: .cancel, handler: actionCancel))
         owner.present(alert, animated: true, completion: nil);
     }
     

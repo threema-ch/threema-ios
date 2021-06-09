@@ -26,6 +26,8 @@
 
 #import "Ballot.h"
 
+NS_ASSUME_NONNULL_BEGIN
+
 @interface BallotMessageEncoder : NSObject
 
 + (BoxBallotCreateMessage *)encodeCreateMessageForBallot:(Ballot *)ballot;
@@ -36,4 +38,8 @@
 
 + (GroupBallotVoteMessage *)groupBallotVoteMessageFrom:(BoxBallotVoteMessage *)boxBallotMessage forConversation:(Conversation *)conversation;
 
++ (BOOL)passesSanityCheck:(nullable Ballot *) ballot;
+
 @end
+
+NS_ASSUME_NONNULL_END

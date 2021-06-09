@@ -149,12 +149,6 @@
 /* Class = "UILabel"; text = "Size"; ObjectID = "f2r-1x-GtL"; */
 "f2r-1x-GtL.text" = "Boyut";
 
-/* Class = "UILabel"; text = "Enable Threema Call"; ObjectID = "ffR-oW-QMI"; */
-"ffR-oW-QMI.text" = "Threema Çağrılarını Etkinleştir";
-
-/* Class = "UILabel"; text = "Integrate calls into iOS"; ObjectID = "gbG-Cf-QPK"; */
-"gbG-Cf-QPK.text" = "Çağrıları iOS'a Entegre Et";
-
 /* Class = "UILabel"; text = "Detail"; ObjectID = "iDF-6E-SQr"; */
 "iDF-6E-SQr.text" = "Detay";
 
@@ -175,9 +169,6 @@
 
 /* Class = "UILabel"; text = "Log Size"; ObjectID = "k9C-Wp-8hl"; */
 "k9C-Wp-8hl.text" = "Günlük Boyutu";
-
-/* Class = "UILabel"; text = "Always relay calls"; ObjectID = "m29-az-gFj"; */
-"m29-az-gFj.text" = "Çağrıları Her Zaman Aktar";
 
 /* Class = "UILabel"; text = "Email Log"; ObjectID = "m9f-E9-TK7"; */
 "m9f-E9-TK7.text" = "Günlüğü Paylaş";

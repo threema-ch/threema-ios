@@ -31,6 +31,8 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     NSMutableDictionary *prefetchCache;
     NSMutableDictionary *pendingFetchCompletionHandlersByIdentity;
     NSMutableDictionary *pendingFetchErrorHandlersByIdentity;
+    NSMutableDictionary *workInfoBlockUnknownCache;
+
     dispatch_queue_t queue;
 }
 
@@ -53,6 +55,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         prefetchCache = [NSMutableDictionary dictionary];
         pendingFetchCompletionHandlersByIdentity = [NSMutableDictionary dictionary];
         pendingFetchErrorHandlersByIdentity = [NSMutableDictionary dictionary];
+        workInfoBlockUnknownCache = [NSMutableDictionary dictionary];
     }
     return self;
 }
@@ -119,6 +122,50 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
             }];
         }
     });
+}
+
+- (void)fetchWorkIdentitiesInfoInBlockUnknownCheck:(NSArray *)identities onCompletion:(void(^)(NSArray *foundIdentities))onCompletion onError:(void(^)(NSError *error))onError {
+    NSMutableArray *cachedIdentities = [NSMutableArray new];
+    BOOL allIdentitiesAreCached = true;
+    
+    for (NSString *identity in identities) {
+        if ([workInfoBlockUnknownCache.allKeys containsObject:identity]) {
+            NSDictionary *identityInfo = [workInfoBlockUnknownCache valueForKey:identity];
+            if (![identityInfo isEqual:[NSNull null]]) {
+                [cachedIdentities addObject:identityInfo];
+            }
+        } else {
+            allIdentitiesAreCached = false;
+            break;
+        }
+    }
+    
+    if (allIdentitiesAreCached) {
+        onCompletion(cachedIdentities);
+        return;
+    }
+        
+    ServerAPIConnector *apiConnector = [[ServerAPIConnector alloc] init];
+    [apiConnector fetchWorkIdentitiesInfo:identities onCompletion:^(NSArray *foundIdentities) {
+        dispatch_async(queue, ^{
+            
+            for (NSDictionary *foundIdentity in foundIdentities) {
+                [workInfoBlockUnknownCache setObject:foundIdentity forKey:foundIdentity[@"id"]];
+            }
+            
+            if (foundIdentities.count < identities.count) {
+                for (NSString *identity in identities) {
+                    if (![foundIdentities containsObject:identity]) {
+                        [workInfoBlockUnknownCache setObject:[NSNull null] forKey:identity];
+                    }
+                }
+            }
+            
+            onCompletion(foundIdentities);
+        });
+    } onError:^(NSError *error) {
+        onError(error);
+    }];
 }
 
 @end

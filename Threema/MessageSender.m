@@ -470,6 +470,11 @@
 }
 
 + (void)sendCreateMessageForBallot:(Ballot *)ballot toContact:(Contact *)contact {
+    if (![BallotMessageEncoder passesSanityCheck:ballot]) {
+        DDLogError(@"Ballot did not pass sanity check. Do not send.");
+        return;
+    }
+    
     EntityManager *entityManager = [[EntityManager alloc] init];
     
     Ballot *ballotOwnContext = (Ballot *)[entityManager.entityFetcher getManagedObjectById:ballot.objectID];
@@ -484,6 +489,10 @@
 }
 
 + (void)sendCreateMessageForBallot:(Ballot *)ballot {
+    if (![BallotMessageEncoder passesSanityCheck:ballot]) {
+        DDLogError(@"Ballot did not pass sanity check. Do not send.");
+        return;
+    }
     
     __block Ballot *ballotOwnContext;
     __block Conversation *conversation;
@@ -524,6 +533,11 @@
 }
 
 + (void)sendBallotVoteMessage:(Ballot *)ballot toContact:(Contact *) contact {
+    if (![BallotMessageEncoder passesSanityCheck:ballot]) {
+        DDLogError(@"Ballot did not pass sanity check. Do not send.");
+        return;
+    }
+    
     EntityManager *entityManager = [[EntityManager alloc] init];
     
     Ballot *ballotOwnContext = (Ballot *)[entityManager.entityFetcher getManagedObjectById:ballot.objectID];
@@ -538,6 +552,11 @@
 }
 
 + (void)sendBallotVoteMessage:(Ballot *)ballot {
+    if (![BallotMessageEncoder passesSanityCheck:ballot]) {
+        DDLogError(@"Ballot did not pass sanity check. Do not send.");
+        return;
+    }
+    
     Conversation *conversation = ballot.conversation;
     BoxBallotVoteMessage *boxMessage = [BallotMessageEncoder encodeVoteMessageForBallot: ballot];
     

@@ -1,0 +1,1045 @@
+/*
+ Localizable.strings
+ Threema
+ 
+ Copyright (c) 2012 Threema GmbH. All rights reserved.
+ */
+"use_dynamic_font_size" = "系統字型大小";
+
+"SortOrder_Firstname" = "名字，姓氏";
+"SortOrder_Lastname" = "姓氏，名字";
+
+"segmentcontrol_contacts" = "聯絡人";
+"segmentcontrol_groups" = "群組";
+"segmentcontrol_work_contacts" = "工作";
+
+/* WebRTC diagnostics */
+"webrtc_diagnostics.title" = "WebRTC 診斷";
+"webrtc_diagnostics.description" = "啟用此工具以調試與設定語音通話連接有關的問題。\n按「開始」按鈕開始測試。";
+"webrtc_diagnostics.start" = "開始";
+"webrtc_diagnostics.copyToClipboard" = "複製至剪貼簿";
+"webrtc_diagnostics.copy" = "已複製至剪貼簿";
+"webrtc_diagnostics.done" = "大功告成。如果您在建立通話連線時遇到問題，請將錯誤日誌傳送至 Threema 支援。";
+
+/* Privacy Policy */
+"privacy_poliy_url" = "https://threema.ch/en/privacy";
+
+/* MWPhotoBrowser */
+"mwphotobrowser_select" = "選擇";
+"mwphotobrowser_select_all" = "選擇所有";
+"mwphotobrowser_deselect_all" = "全部不選";
+"profileimage_setting_all_footer" = "當您向聯絡人傳送訊息時，他們將看到您的大頭貼。";
+"profileimage_setting_contacts_footer" = "當您向清單中選定的聯絡人傳送訊息時，他們將看到您的大頭貼。";
+
+
+"status_disconnected" = "已中斷連線";
+"status_connecting" = "連線中";
+"status_connected" = "連線中";    /* note: this is intentional; don't want to bother user with protocol details */
+"status_loggedin" = "已連線";
+"status_disconnecting" = "已中斷連線";
+
+"cannot_connect_title" = "沒有連線";
+"cannot_connect_message" = "無法連線，請檢查您的網路連線。";
+
+"delete_identity_warning" = "如果您刪除您的ID，您的金鑰和應用程式資料都會被刪除。如果您沒有建立備份，您將無法再次使用此ID傳送或接收訊息。\n\n如果您不想再使用此ID，建議先取消電子郵件地址或電話號碼與ID的連結，然後再刪除ID。";
+"delete_identity_warning2" = "最後警告：您真的要刪除您的資料和ID嗎？";
+"delete_identity_passcode_title" = "密碼鎖已開啟";
+"delete_identity_passcode_message" = "請在刪除您的ID之前停用密碼鎖。";
+"delete_identity_title" = "應用程式資料已刪除";
+"delete_identity_description" = "所有應用程式資料已被刪除。請重新啟動應用程式以設定 Threema。";
+"delete_identity_app_close" = "關閉應用程式";
+
+"delete_contact_warn_title" = "現有對話";
+"delete_contact_warn_message" = "與此聯絡人仍有對話。如果刪除此聯絡人，對話（包括聊天記錄）也會被刪除。";
+
+/* JKLockScreenViewController */
+"cancel" = "取消";
+"continue" = "繼續";
+"ok" = "確認";
+"no" = "否";
+"yes" = "是";
+"delete" = "刪除";
+"messages" = "訊息";
+"bar_messages_x" = "訊息 (%d)";
+"try_again" = "再試一次";
+"delete_identity" = "刪除資料和ID";
+"copy" = "複製";
+"save" = "儲存";
+"share" = "分享";
+"details" = "詳情";
+"acknowledge" = "同意";
+"decline" = "不同意";
+"quote" = "引用";
+"speak" = "說話";
+"send" = "傳送";
+"image" = "圖片";
+"sticker" = "貼圖";
+"gif" = "GIF";
+"video" = "影片";
+"audio" = "音訊";
+"file" = "檔案";
+"location" = "位置";
+"locating" = "定位中...";
+"unknown_location" = "未知位置";
+"open" = "開啟";
+"call" = "通話";
+"Info" = "資訊";
+"error_abort" = "無法恢復的錯誤";
+"qr_code" = "QR碼";
+"forward" = "轉寄";
+"showNext" = "更多選項";
+"showPrevious" = "以前的選項";
+"read" = "已讀";
+"unread" = "未讀";
+"settings" = "設定";
+"loadMore" = "載入更多";
+"all" = "所有";
+"myIdentity" = "個人檔案";
+"share_id" = "分享您的 Threema ID";
+
+"show_in_maps" = "在地圖上顯示";
+"calculate_route" = "計算路線";
+
+/* Chat export */
+"conversation_log_subject" = "以 %@ 匯出 Threema 對話記錄";
+"conversation_log_group_subject" = "Threema 群組對話記錄";
+"conversation_log_body" = "已加密的對話記錄包括在 %@ 中。\n您需要配備 AES 支援的現代 ZIP 工具才能解壓縮檔案，例如 \nhttp://www.7-zip.org 或 https://itunes.apple.com/us/app/the-unarchiver/id425424353";
+"conversation_log_group_body" = "已加密的群組對話記錄包括在 %@ 中。\n您需要配備 AES 支援的現代 ZIP 工具才能解壓縮檔案，例如 \nhttp://www.7-zip.org 或 https://itunes.apple.com/us/app/the-unarchiver/id425424353";
+"not_enough_storage_title" = "沒有足夠的儲存空間以匯出此對話。";
+"amount_of_free_storage_needed" = "需要 %@ 才能匯出此對話。 %@ 目前有剩餘儲存空間。";
+"chat_export_failed_title" = "對話匯出失敗。";
+"chat_export_failed_message" = "對話匯出失敗，錯誤代碼為%d。";
+"cancelling_export" = "正在取消對話匯出";
+"export_progress_label" = "%li / %li 條訊息已匯出";
+"caption" = "描述";
+"fileNotDownloaded" = "檔案尚未下載或已被刪除。";
+"include_media_title" = "包括媒體（圖片，影片）作為附件？\n\n解壓檔案需要支援 AES 的現代 ZIP 工具，例如 7-Zip 或 The Unarchiver（Mac）。";
+
+
+/* image sizes */
+"original" = "原圖";
+"small" = "小";
+"medium" = "中";
+"large" = "大";
+"xlarge" = "特大";
+"max_x_by_x_pixels" = "最高 %@ × %@ 像素";
+"images are not scaled" = "圖片未縮放";
+"image_resize_share_extension" = "由於記憶體資源有限，通過「分享擴展」 (Share Extension) 傳送的圖片將降至最高 1600 x 1600 像素。";
+
+/* video sizes */
+"low" = "低影片大小";
+"high" = "高影片大小";
+"max_1_minute" = "最長1分鐘";
+"max_x_minutes" = "最長%d分鐘";
+
+/* Sound names */
+"sound_none" = "無音效";
+"sound_default" = "預設";
+"sound_silent" = "僅震動";
+"sound_bamboo" = "竹子";
+"sound_drum" = "鼓";
+"sound_glass" = "玻璃";
+"sound_incoming_message" = "傳入的訊息";
+"sound_input" = "輸入";
+"sound_marimba1" = "馬林巴琴 1";
+"sound_marimba2" = "馬林巴琴 2";
+"sound_music_box" = "音樂盒";
+"sound_pulse" = "脈衝";
+"sound_sms" = "簡訊";
+"sound_received_message" = "Threema";
+"sound_synth" = "合成器";
+"sound_trill" = "顫音";
+"sound_whoop" = "歡呼";
+
+"sound_threema_best" = "Threema";
+"sound_threema_incom" = "遊戲";
+"sound_threema_xylo" = "木琴";
+"sound_threema_goody" = "混音";
+"sound_threema_alphorn" = "長號";
+
+"font_point" = "pt";
+"bigger_single_emojis" = "更大的單個表情符號";
+"identity_none" = "無";
+"scan_identity" = "掃描ID";
+"(none)" = "（無）";
+"(pending)" = "（待定中）";
+"enter_code" = "輸入驗證碼";
+"unlink_contact" = "解除連結聯絡人";
+"choose_new_contact" = "選擇新聯絡人";
+"export_chat" = "匯出對話";
+"send_profile_picture" = "立即傳送大頭貼";
+"linked_contact" = "連結聯絡人";
+"key_fingerprint" = "金鑰指紋";
+"block_contact" = "封鎖聯絡人";
+"profile_picture_recipient" = "大頭貼收件者";
+"member_in_groups" = "群組成員";
+
+"no_nickname_title" = "未設定暱稱";
+"no_nickname_message" = "您確定要繼續而不設定暱稱嗎？ 其他人收發訊息時將很難辨別您的身份。";
+
+"server_message_title" = "伺服器訊息";
+
+"no_preview_available" = "預覽不可用";
+
+"bad_phone_number_format_title" = "無法識別號碼";
+"bad_phone_number_format_message" = "您輸入的電話號碼無法被識別。請嘗試以國際格式輸入。";
+
+"confirm_phone_number_title" = "確認電話號碼";
+"confirm_phone_number_x" = "我們即將傳送簡訊至：\n\n%@\n\n這個電話號碼正確嗎？";
+
+"abort_verification" = "中止驗證";
+"abort_verification_message" = "驗證次數已經達到上限，請至少等待30分鐘簡訊到達，或嘗試通話選項。";
+"call_me_title" = "關於通話的通知";
+"call_me_message" = "如果您選擇繼續，我們將嘗試立即致電給您。您的驗證碼將被朗讀兩次。請注意，您只有一次致電的機會，因此在繼續之前，請確定您已準備就緒。";
+"number" = "電話號碼";
+
+"mobileno_linked_title" = "電話號碼已連結";
+"mobileno_linked_message" = "您的電話號碼已成功連結至您的ID。";
+
+"link_email_sent_title" = "驗證郵件已傳送";
+"link_email_sent_message" = "驗證連結已透過電子郵件傳送至 %@ 。";
+
+"public_key_mismatch_title" = "公鑰不匹配";
+"public_key_mismatch_message" = "已經有一個具有此ID的聯絡人，但公開金鑰不匹配！這可能表明有人試圖欺騙您，讓您向錯誤的接收者傳送訊息。\n新的公鑰尚未儲存； 如果您確定它是正確的，請刪除現有的聯絡人，然後再試一次。";
+
+"public_key_server_mismatch_title" = "公鑰不匹配";
+"public_key_server_mismatch_message" = "您掃描的公鑰與伺服器返回的 ID 的金鑰不匹配。這說明有人惡意修改了您掃描的代碼，無論如何都不能相信該金鑰。請將此事件報告至 security@threema.ch 。如有可能，請詳細說明該 ID 和情況。";
+
+"password_again" = "再次輸入密碼";
+"password_too_short_title" = "密碼長度太短";
+"password_too_short_message" = "密碼長度太短，請輸入至少8个字元。";
+"password_mismatch_title" = "密碼不匹配";
+"password_mismatch_message" = "您輸入的密碼不匹配。請返回並再試一次。";
+"password_description_backup" = "您的私鑰將與您在此輸入的密碼一起加密。最少8個字元（建議混合使用字母、數字和符號）。";
+"password_description_export" = "對話資料將被壓縮，並與您在此輸入的密碼加密。最少8個字元（建議混合使用字母、數字和符號）。";
+
+"revocation_password" = "ID撤銷密碼";
+"revocation_password_description" = "有了這個密碼，您可以透過 https://myid.threema.ch/revoke 徹底撤銷您的 Threema ID。最少8個字元（建議混合使用字母、數字和符號）。";
+"revocation_request_success" = "ID撤銷密碼已更新";
+"revocation_request_failed" = "ID撤銷密碼更新失敗";
+"revocation_password_not_set" = "未設定";
+"conversations_delete_all_confirm" = "您確定要刪除所有對話嗎？\n注意：群組對話不會受到影響。";
+"revocation_check_failed" = "檢查失敗";
+
+"messages_delete_all_confirm" = "您確定要刪除此對話中的所有訊息嗎？";
+"messages_delete_selected_confirm" = "您確定要刪除選定訊息嗎？";
+"conversation_delete_confirm" = "您確定要刪除此對話嗎？";
+"group_delete_confirm" = "您確定要離開此群組嗎？";
+"group_admin_delete_confirm" = "您確定要離開此群組嗎？由於您是群組管理員，因此以後無法修改群組。";
+"delete_contact_group_exists_title" = "聯絡人仍在群組對話中";
+"delete_contact_group_exists_message" = "此聯絡人仍然是群組對話的成員，因此無法刪除。從所有群組對話中刪除該聯絡人，或刪除包括該聯絡人的所有群組對話，然後再試一次。";
+"delete_all" = "刪除所有";
+"delete_n" = "刪除 (%d)";
+"message_cannot_play_movie" = "無法播放影片。";
+
+"identity_not_found_title" = "無法找到ID";
+"identity_not_found_message" = "無法找到該ID。請檢查您輸入的內容是否正確，然後再試一次。";
+
+"message_too_long_title" = "訊息太長";
+"message_too_long_message" = "訊息的最大長度為%d位元組。";
+
+"scanned_identity_mismatch_title" = "ID不匹配";
+"scanned_identity_mismatch_message" = "您掃描的ID与您儲存的聯絡人不匹配。";
+
+"scanned_own_identity_title" = "您掃描了自己的ID。";
+
+"scan_code_expired_title" = "QR碼已過期";
+"scan_code_expired_message" = "此QR碼已過期。請直接從其他使用者的應用程式中再次掃描。";
+
+"take_photo_or_video" = "拍攝照片或影片";
+"take_photo" = "拍攝照片";
+"choose_existing" = "選擇現有";
+"edit_photos" = "編輯選定檔案";
+"delete_photo" = "刪除照片";
+"delete_video" = "刪除影片";
+"delete_file" = "刪除檔案";
+"share_location" = "分享位置";
+"record_audio" = "錄製音訊";
+"scan_qr" = "掃描QR碼";
+"share_file" = "分享檔案";
+"add_item_caption" = "新增描述";
+"add_items_caption" = "新增描述";
+"send_item_immediately_photo" = "傳送照片";
+"send_item_immediately_video" = "傳送影片";
+"send_items_immediately" = "傳送%d個照片/影片";
+"send_items_immediately_photo" = "傳送%d張照片";
+"send_items_immediately_video" = "傳送%d個影片";
+
+"record" = "錄製";
+"play" = "播放";
+"pause" = "暫停";
+"stop" = "停止";
+"voice message" = "語音訊息";
+"quit" = "完成";
+"record_cancel_title" = "捨棄錄音";
+"record_cancel_message" = "您真的想捨棄錄音？";
+"record_cancel_button_discard" = "捨棄錄影";
+
+"send_file_title" = "傳送檔案";
+"camera_disabled_title" = "訪問被拒絕";
+"send_file_message" = "檔案：%@\n至\n%@";
+
+"quote_not_found" = "未找到引用的訊息。";
+
+"camera_disabled_message" = "Threema 没有權限取用您的相機。請在「設定」>「隱私權」>「相機」中授予權限。";
+
+"location_disabled_title" = "訪問被拒絕";
+"location_disabled_message" = "Threema 没有權限取用您的位置。請在「設定」>「隱私權」>「定位服務」中授予權限。";
+
+"microphone_disabled_title" = "無法取用麥克風";
+"microphone_disabled_message" = "Threema 没有權限取用麥克風。請在「設定」>「隱私權」>「麥克風」中授予權限。";
+
+
+"include_media" = "包括媒體";
+"without_media" = "不包括媒體";
+"media_overview" = "媒體";
+
+"save_photo_failed_title" = "儲存照片失敗";
+"save_photo_failed_message" = "請在裝置的隱私設定中檢查 Threema 是否有權限取用您的照片。";
+"save_video_failed_title" = "儲存影片失敗";
+"save_video_failed_message" = "請在裝置的隱私設定中檢查 Threema 是否有權限取用您的照片。";
+
+"members" = "成員";
+"too_many_members_title" = "群組成員太多";
+"too_many_members_message" = "群組成員人數上限為%d人。";
+"add_member" = "增加成員";
+"no_more_members" = "這個群組已經沒有成員了。";
+"group_different_identity" = "這個群組是您在使用其他 Threema ID 時建立的。您無法使用您當前的ID傳送任何訊息。";
+"group_is_not_member" = "您無法傳送訊息至這個群組，因為您已經不是群組成員了。";
+"contact_blocked_cannot_send" = "您無法傳送訊息至這個聯絡人，因為他被封鎖了。";
+"contact_invalid_cannot_send" = "您無法傳送訊息至這個聯絡人，因為他是無效的聯絡人。";
+"group_sync_title" = "群組同步";
+"group_sync_message" = "當前的群組資料已經傳送至所有成員。";
+"group_clone_title" = "克隆群組";
+"group_clone_message" = "這將建立這個群組的克隆，並由您作為管理員。是否繼續？";
+
+"group name" = "群組名稱";
+"existing groups" = "現有群組";
+"new group" = "建立群組";
+"edit group" = "編輯群組";
+"pick image" = "挑選\n圖片";
+"create" = "建立";
+"search" = "搜尋";
+"leave" = "離開";
+"you are not a member" = "我自己（已移除）";
+"groups" = "群組";
+"create_new_group" = "建立新群組";
+"create_note_group_info_title" = "提示";
+"create_note_group_info_text" = "如果您不新增任何群組成員，傳送至這個群組的訊息將保留在本地。這樣能方便您安全地儲存筆記、媒體和檔案，或將檔案轉移至桌面。";
+"remind_me_next_time" = "下次提醒我";
+"doNotShowAgain" = "不再顯示";
+"add_note_group_info" = "*在此對話中只有您一個人*\n將此對話作為儲存文字、媒體和檔案的安全筆記本。";
+"end_note_group_info" = "*在此對話中不再只有您一個人*\n新訊息將被傳送至所有成員。";
+
+"choose_recipient" = "選擇收件者";
+
+"msg_unknown_group_request_sync_x_title" = "在未知群組中收到的訊息";
+"msg_unknown_group_request_sync_x_message" = "在未知群組中收到訊息。已向群組建立者(%@)要求群組資訊。一旦建立者再次上線，該群組就會再次出現。";
+
+"chat_search_label_format" = "%ld條訊息中的第%ld條";
+"load_earlier_messages" = "載入先前的訊息";
+"tap_to_cancel" = "點擊以取消";
+"previous" = "上一步";
+"tap_to_change" = "點擊以變更";
+"next" = "下一步";
+"unread_messages" = "未讀訊息";
+
+/* Verification level popovers in chat view */
+"verification_level_title" = "驗證等級";
+/* Verification level popovers in chat view */
+"verification_level_text" = "彩色圓點表示聯絡人的驗證等級。";
+"level0_title" = "最低驗證等級";
+/* Verification level section title */
+"verification_level_section_work" = "貴機構中的聯絡人";
+"verification_level_section_other" = "其他聯絡人";
+/* Verification level popovers in chat view */
+"level1_title" = "中等驗證等級";
+"level2_title" = "最高驗證等級";
+"level3_title" = "中等工作驗證等級";
+"level4_title" = "最高工作驗證等級";
+"level0_explanation" = "未知聯絡人；該聯絡人沒有將電話號碼或電子郵件地址連結至其ID，或者您的通訊錄沒有儲存該聯絡人。";
+"level1_explanation" = "聯絡人的電話號碼和/或電子郵件地址已儲存在您的通訊錄。";
+"level2_explanation" = "透過掃描QR碼，您能親自驗證聯絡人的身份和公鑰。";
+"level3_explanation" = "內部聯絡人，由貴機構預填充。";
+"level4_explanation" = "透過掃描QR碼，您能親自驗證內部聯絡人的身份和公鑰。";
+
+/* Invalid country code alert */
+"invalid_country_code_title" = "無效的區域格式";
+"invalid_country_code_message" = "您的裝置上的「地區」似乎設定為無效值。請開啟 「設定」，轉到「一般」>「語言與地區」，然後重新選擇「地區」，以避免電話號碼匹配出現問題。";
+
+/* Settings */
+"block_unknown_on" = "只有在通訊錄的聯絡人才能向您傳送訊息。";
+"block_unknown_off" = "任何人都可以向您傳送訊息。當他向您傳送第一條訊息時，會自動新增至新聯絡人。";
+"show_stale_contacts_on" = "非活躍的 Threema ID（即至少三個月沒有使用的ID）和被撤銷的ID都會被隱藏。";
+"show_stale_contacts_off" = "所有 Threema ID 都列在通訊錄中。";
+"hide_voip_call_ip_off" = "如果可以的話，則建立直接連線，並且僅透過 Threema 伺服器將呼叫中繼至未經驗證的聯絡人。這可能會暴露您的IP位址。";
+"hide_voip_call_ip_on" = "透過 Threema 伺服器強制中繼所有通話，從而保護您的 IP 地址。這可能會影響通話品質。";
+"voip_callkit_off" = "推播通知用作來電通知。";
+"voip_callkit_on" = "來電通知會顯示在鎖定屏幕上，並列在原生「電話」應用程式的通話清單中。如果啟動了 iCloud Drive，通話記錄會透過 Apple 伺服器同步。";
+
+"backgrounding_on" = "移至背景後，Threema 將保持連線長達30秒。";
+"backgrounding_off" = "移至背景後，Threema 將立即中斷連線。";
+"proximity_monitoring_off" = "當距離感測器被覆蓋時，螢幕不會關閉。";
+"proximity_monitoring_on" = "當進行語音通話時，以及錄製或播放語音訊息時，如果距離感測器被覆蓋，則螢幕會關閉。";
+"validation_logging_expl" = "調試日誌可以用來獨立驗證 Threema 的端到端加密。\n詳情：https://threema.ch/validation";
+
+"validation_log_clear" = "清除日誌";
+"validation_log_subject" = "Threema 調試日誌";
+"validation_log_body" = "附上日誌檔案。";
+"log_empty_message" = "調試日誌為空白。";
+"cannot_send_mail_message" = "此裝置上未配置電子郵件帳戶。";
+
+"preview_limit" = "限制：\n%.0f張縮圖";
+
+/* Backup identity */
+"backup_mail_subject" = "用作%@的 Threema ID 匯出";
+"backup_found_message" = "在您的裝置上找到了匯出的 Threema ID。您要還原嗎？";
+"backup_include" = "透過 iTunes 或 iCloud 備份電話時，將包括已加密的ID匯出。";
+"backup_found_title" = "發現了ID匯出";
+"backup_footer" = "這些資料和您選擇的密碼，可用於在另一台裝置上還原您的ID。您可以將其複製並貼上至合適的位置，透過電子郵件傳送給自己或使用其他裝置掃描QR碼。";
+
+/* Restore identity */
+"scan_backup" = "掃描ID匯出";
+"backup_exclude" = "透過 iTunes 或 iCloud 備份電話時，ID匯出將不包括在內。請手動儲存ID匯出，以免遺失。";
+/* Contacts */
+"pull_to_sync" = "下拉以同步...";
+"bad_identity_backup" = "ID 匯出資料無效，或者您輸入了錯誤的密碼。請使用您建立匯出時選擇的密碼以還原您的 Threema ID。請檢查您的輸入，再試一次。";
+
+"synchronizing" = "正在同步...";
+
+"no_contacts_syncon" = "您還沒有任何聯絡人。同步已經開始，但在通訊錄中的聯絡人看似都不在 Threema 上（您可以邀請他們）。";
+"no_contacts" = "沒有聯絡人";
+"no_groups" = "沒有群組";
+"no_groups_message" = "您還未加入任何群組。按「+」按鈕手動新增群組。";
+"no_work_contacts" = "Threema Work 使用者";
+"no_work_contacts_message" = "沒有找到經管理員驗證的 Threema Work 聯絡人。";
+
+"no_contacts_permission_title" = "没有權限取用通訊錄";
+"no_contacts_syncoff" = "您還沒有任何聯絡人。請開啟同步（「設置」> 「隱私權」），或按「+」按鈕手動新增聯絡人。";
+"no_contacts_permission_message" = "Threema 没有權限取用您的通訊錄。請到裝置的隱私權設定，並啟用 Threema 的通訊錄取用權限。";
+
+"contact_added_to_profilepicture_list" = "當您向聯絡人傳送訊息時，他們將看到您的大頭貼。";
+"contact_removed_from_profilepicture_list" = "此聯絡人將不能看到您的個人資料。";
+"contact_send_profilepicture_success" = "您的大頭貼已成功傳送至聯絡人。";
+"contact_send_profilepicture_error" = "您的大頭貼無法傳送。請稍後再試。";
+
+"setup_threema_work" = "設定 Threema Work";
+
+"sync_group" = "同步群組";
+
+"contact_threema_work_title" = "Threema Work";
+"contact_threema_work_info" = "公文包圖示表示聯絡人使用了商務版「Threema Work」。";
+"contact_threema_title" = "Threema";
+"contact_threema_info" = "房子圖示表示聯絡人使用 Threema 的私人版本，而不是商務版 Threema Work。";
+"contact_threema_work_conversation_info" = "這個聯絡人使用 Threema Work。";
+"contact_threema_conversation_info" = "這個聯絡人使用 Threema 的私人版本。";
+
+/* create id */
+"lets_get_started" = "讓我們開始吧";
+"welcome_work" = "歡迎使用\nThreema Work";
+"setup_threema" = "設定 Threema";
+"restore_id" = "從備份中還原";
+"restore_id_export" = "還原已匯出的ID";
+"id_exists" = "此裝置上以前使用的 Threema ID (%@) 仍然在線。您想還原這個ID嗎？";
+
+"welcome" = "歡迎使用 Threema";
+"move_your_finger" = "在螢幕上移動手指。";
+"more_information" = "更多資訊";
+"more_information_link_id_work" = "向我們提供您的電話號碼和電子郵件地址，以協助您的聯絡人在 Threema 上自動找到您。這些訊息將以安全且匿名的方式儲存。如果您跳過此步驟，則完全匿名使用 Threema。";
+"more_information_pick_nickname" = "暱稱用於裝置的推播通知。當對方未儲存您的電話號碼在他的通訊錄時。暱稱可以方便對方辨別您的身份。我們建議只提供您的名字或假名。如果您不設定暱稱，我們將預設使用您的 Threema ID 作為暱稱。";
+"more_information_sync_contacts" = "如果開啟此選項，Threema 會將電子郵件地址和電話號碼單向加密（雜湊），然後將其傳送到伺服器以尋找匹配的聯絡人。我們不會儲存任何通訊錄資料。";
+"more_information_random_seed" = "您可以移動手指建立隨機資料（稱為熵），生成與 Threema ID 相關的唯一的新金鑰對。";
+"id_confirm_description_work" = "您的 Threema ID 就像電話號碼一樣。您的聯絡人可以透過這個ID與您聯絡。";
+"more_information_link_id" = "向我們提供您的電話號碼和電子郵件地址，以協助您的聯絡人在 Threema 上自動找到您。這些訊息將以安全且匿名的方式儲存。如果您跳過此步驟，則完全匿名使用 Threema。";
+"more_information_confirm_id" = "您還建立了一個金鑰對。金鑰已安全地傳輸到我們的伺服器，私鑰永遠不會離開您的裝置，這樣可以確保沒有其他人可以閱讀您的訊息。";
+
+"id_confirm_description" = "您的 Threema ID 就像電話號碼一樣。您的好友可以透過這個ID與您聯絡。";
+"id_pick_nickname_description_work" = "當您的聯絡人收到訊息時，他們會看到您的暱稱。";
+"id_confirm_your_id" = "這是您的 Threema ID：";
+
+"id_pick_nickname_title" = "選擇暱稱";
+"id_pick_nickname_description" = "當您的好友收到訊息時，他們會看到您的暱稱。";
+"id_link_title_work" = "協助聯絡人找到您";
+"id_pick_nickname_question" = "您要使用 Threema ID 作為暱稱嗎？";
+"id_enter_nickname" = "輸入暱稱";
+
+"id_link_no_input_work" = "您沒有輸入電話號碼或電子郵件地址連結至 Threema ID，您將不會出現在聯絡人名單中。您真的要以完全匿名的方式使用 Threema 嗎？";
+"id_link_title" = "協助好友找到您";
+"id_link_description_work" = "將您的電話號碼和/或電子郵件連結至 Threema ID。";
+"id_link_description" = "將您的電話號碼連結至 Threema ID。";
+"id_link_no_input" = "您沒有輸入電話號碼連結至 Threema ID，您不會出現在好友的聯絡人清單中。您真的要以完全匿名的方式使用 Threema 嗎？";
+"id_sync_title_work" = "在 Threema Work 上尋找您的聯絡人";
+"id_sync_description_work" = "開啟以查看哪些聯絡人正在使用 Threema。";
+"id_enter_email" = "電子郵件（選用）";
+
+"id_sync_title" = "在 Threema 上尋找您的好友";
+"id_sync_description" = "開啟以查看哪些好友正在使用 Threema。";
+"id_sync_contacts" = "同步聯絡人";
+
+"id_completed_title" = "大功告成！資料正確嗎？";
+"id_completed_nickname" = "您的暱稱";
+"id_completed_linked_to" = "連結至";
+"id_completed_sync_contacts" = "同步聯絡人";
+"finish" = "完成";
+
+"linking_email" = "正在連結電子郵件";
+"syncing_contacts" = "正在同步聯絡人";
+"linking_phone" = "正在連結電話號碼";
+"(linked)" = "（已連結）";
+"linking_phone_sms_sent" = "傳送簡訊以進行驗證";
+
+"Password" = "密碼";
+"(optional)" = "（選用）";
+"scan_id_backup" = "掃描已匯出的QR碼";
+"phone number" = "電話號碼";
+"id_backup" = "已匯出的ID";
+"id_backup_placeholder" = "輸入或貼上ID匯出的文字字串以還原";
+"username" = "用戶名稱";
+
+"country_code" = "國家代碼";
+"send_message" = "傳送訊息";
+"enter_license_password_placeholder" = "密碼";
+"leave_group" = "離開群組";
+
+/* License Key */
+"enter_license_title" = "輸入憑證";
+/* MWPhotoBrowser */
+"Done" = "完成";
+"enter_license_description" = "請輸入貴公司或機構提供的憑證";
+"Save" = "儲存";
+"enter_license_username_placeholder" = "用戶名稱";
+"of" = "的";
+"Cancel" = "取消";
+"enter_license_checking" = "正在檢查憑證";
+"confirm" = "確認";
+"enter_license_info" = "如果您是私人使用者，請點擊這裡下載 Threema。";
+"enter_license_info_link" = "點擊這裡";
+
+"Copy" = "複製";
+"Email" = "電子郵件";
+"Saving" = "儲存中";
+"Failed" = "失敗";
+"Saved" = "已儲存";
+"Copying" = "複製中";
+"Copied" = "已複製";
+"Preparing" = "準備中";
+"photo" = "照片";
+"Dismiss" = "忽略";
+"photos" = "照片";
+
+/* invite messages */
+"invite_email_body" = "你好，\n\n我正在使用 Threema，這是一款安全的即時通訊工具，能保護使用者的隱私。\n\n我的 Threema ID： https://threema.id/%@\n\n讓我們透過 Threema 通訊吧！\n\n乾杯\n";
+"invite_email_subject" = "Threema，保護隱私的安全即時通訊工具。";
+"invite_sms_body" = "嘿！讓我們使用 Threema 以安全和符合隱私的方式進行通訊！我的 Threema ID：https://threema.id/%@";
+"invite_facebook_text" = "我使用Threema，這是保護使用者隱私的安全即時通訊工具。我的 Threema ID：https://threema.id/%@";
+"invite_twitter_text" = "我使用Threema，這是保護使用者隱私的安全即時通訊工具。我的 Threema ID：https://threema.id/%@";
+"invite_using" = "透過...邀請好友";
+"sms" = "文字訊息";
+
+/* Notifications Text */
+"new_message" = "訊息";
+/* Notifications Text */
+"new_message_from_x" = "來自%@的訊息";
+"new_group_message" = "群組訊息";
+"new_group_message_from_x" = "來自%@的群組訊息";
+"new_message_cant_load" = "請開啟 Threema 載入訊息。";
+"new_group_message_cant_load" = "請開啟 Threema 載入群組訊息。";
+"new_message_no_access_title" = "新訊息";
+"new_message_no_access_message" = "請開啟 Threema 取得收到的訊息。";
+
+/* reminder messages */
+"push_reminder_title" = "未開啟推播通知";
+"push_reminder_message" = "Threema 似乎沒有權限向您推播通知。當 Threema 關閉時，您不會收到新訊息的通知。請前往「設定」>「通知」，然後為 Threema 開啟通知，這樣您就不會錯過任何訊息。";
+"not_now" = "現在不要";
+"set_now" = "立即設定";
+
+"updating_database" = "正在更新資料庫...\n\n請不要中斷此操作！對於大型訊息資料庫，可能需要幾分鐘的時間才能完成。";
+"database_migration_error_hints" = "請確保裝置上有足夠的可用儲存空間，重新啟動裝置後再試一次。";
+"database_migration_storage_warning_title" = "可用儲存空間不足";
+"database_migration_storage_warning_message" = "資料庫更新暫時需要至少 %.1f GB 的可用儲存空間。您的裝置目前只有 %.1f GB 的可用儲存空間。請在「儲存空間」中刪除專案以取得更多可用的儲存空間，然後再試一次。";
+
+"sync_exclusion_footer" = "同步聯絡人時，這裡列出的ID將被忽略。";
+"enter_id_to_exclude" = "輸入要從同步中排除的ID：";
+"exclude_deleted_id_title" = "您是否想將剛剛刪除的聯絡人的ID，在下次同步中排除？";
+"exclude_deleted_id_message" = "您可以在隱私設定中管理排除項。";
+
+"group_renamed_to_x" = "群組名稱變更為「%@」";
+"group_member_x_left" = "%@ 離開了群組";
+"group_member_x_added" = "%@ 已新增至群組";
+"group_member_x_forced_leave" = "%@ 已從群組中被移除";
+"group_member_self_added" = "您已新增至群組";
+"group_member_self_removed" = "您已從群組中被移除";
+"group_member_self_left" = "您已退出群組";
+
+/* accessibility labels */
+"send_media_or_location" = "傳送媒體或位置";
+"my_profilepicture" = "您的大頭貼";
+"my_threema_id" = "您的 Threema ID";
+"edit_profile" = "編輯暱稱和大頭貼";
+"edit_contact" = "編輯聯絡人和聯絡人大頭貼";
+
+"from" = "來自";
+"at" = "在";
+"seconds" = "秒";
+"duration" = "長度";
+"current_position" = "位置";
+"in_reply_to" = "回覆";
+"go_to_position" = "在";
+"draft" = "草稿";
+"new_message_accessibility" = "新訊息： ";
+"scoll_down_text" = "向下捲動";
+
+/* TTOpenInAppActivity */
+"Open in ..." = "在...開啟";
+
+/* VoiceOver long labels */
+"restore" = "還原";
+
+/* PullToRefresh */
+"pull_to_refresh" = "下拉以重新整理";
+"refreshing" = "載入中...";
+
+/* Threema Channel */
+"threema_channel_intro" = "Threema 頻道為您提供關於 Threema 的所有新聞。您想把 Threema 頻道新增至您的聯絡人中嗎？";
+
+/* Push decryption */
+"decryption_push_title" = "您想在推播通知中看到訊息內容的預覽嗎？";
+"decryption_push_text" = "如果預覽被停用，您需要開啟 Threema 才能看到新訊息的內容。";
+"decryption_push_activate" = "開啟預覽";
+"decryption_push_deactivate" = "停用預覽";
+"decryption_push_reply" = "回覆";
+"decryption_push_placeholder" = "回覆...";
+"decryption_push_agree" = "同意";
+"decryption_push_disagree" = "不同意";
+
+"send_notification_message_error_title" = "傳送訊息";
+"send_notification_message_error_failed" = "訊息無法傳送。";
+"send_notification_message_error_no_connection" = "訊息無法傳送。開啟 Threema 再試一次。";
+"send_notification_message_error_agree" = "「同意」過程失敗。";
+"send_notification_message_error_disagree" = "「不同意」過程失敗。";
+
+/* Device policy */
+"disabled_by_device_policy" = "某些設定已被裝置策略停用";
+
+/* Edit profile */
+"send_profileimage_off" = "沒有人";
+"send_profileimage_on" = "任何人";
+"send_profileimage_contacts" = "選定的聯絡人";
+"edit_profile_footer" = "暱稱會包括在您已傳送的訊息推播通知中。我們建議只使用您的名字或化名。";
+
+/* DKImagePickerView */
+"gallery_moments" = "精彩時刻";
+
+/* VoIP Call */
+"call_mute" = "靜音";
+"call_unmute" = "取消靜音";
+"call_speaker" = "揚聲器";
+"call_earpiece" = "聽筒";
+"call_end" = "掛斷電話";
+"call_camera_activate_button" = "開啟攝影機";
+"call_camera_deactivate_button" = "停用攝影機";
+"call_camera_switch_to_front_button" = "切換至前置鏡頭";
+"call_camera_switch_to_back_button" = "切換至後置鏡頭";
+
+"call_rejected" = "通話被拒絕";
+"call_rejected_busy" = "忙碌中";
+"call_rejected_timeout" = "通話收件者無法接通";
+"call_rejected_disabled" = "Threema 通話被收件者停用";
+"call_rejected_unknown" = "通話被拒絕";
+"call_missed" = "未接來電";
+"call_incoming_ended" = "收到的來電";
+"call_outgoing_ended" = "撥出的電話";
+"call_duration" = "長度：%@";
+"call_canceled" = "通話中止";
+"call_back" = "回電";
+"call_accept" = "接聽";
+"call_reject" = "拒絕";
+"call_hide_call" = "隱藏通話";
+"call_no_wifi" = "透過行動網路通話。了解更多...";
+
+"call_threema_title" = "開始 Threema 通話";
+"call_callkit_button_title" = "Threema";
+"call_voip_not_supported_title" = "Threema 通話";
+"call_voip_not_supported_text" = "您的聯絡人不支援 Threema 通話";
+"call_microphone_permission_title" = "麥克風取用被拒絕";
+"call_microphone_permission_text" = "您必須在「設定」中允許麥克風取用";
+"call_contact_alert" = "您要致電至%@嗎？";
+"call_contact_not_reachable" = "無法聯絡至聯絡人...";
+
+"call_status_idle" = "準備就緒";
+"call_status_wait_ringing" = "初始化";
+"call_status_ringing" = "響鈴中";
+"call_status_incom_ringing" = "Threema 通話";
+"call_status_initializing" = "連線中...";
+"call_status_calling" = "已連線";
+"call_status_reconnecting" = "連線中...";
+"call_status_unknown" = "未知";
+"call_status_failed_title" = "Threema 通話";
+"call_status_failed_connected_message" = "連線中斷";
+"call_status_failed_initializing_message" = "無法建立連線";
+"call_status_failed_sdp_patch_message" = "無法建立 Threema 通話";
+
+"call_threema_initiator_video_info" = "點擊這裡開啟攝影機";
+"call_threema_remote_video_activated_info_title" = "視訊通話";
+"call_threema_remote_video_activated_info" = "對方已發起視訊通話，點擊這裡開啟攝影機。";
+"call_threema_speaker_info" = "點擊這裡開啟電話揚聲器";
+"call_threema_camera_disabled_info" = "這個聯絡人沒有使用當前的 Threema 版本，或者不允許進行視訊通話。";
+
+"call_threema_video_in_chat_info_title" = "新增：視訊通話";
+"call_threema_video_in_chat_info_description" = "除了反竊聽的語音通話之外，Threema 現在還提供端到端加密的視訊通話。";
+
+"call_threema_cellular_instead_of_wifi_title" = "透過行動網路通話";
+"call_threema_cellular_instead_of_wifi_text" = "警告：這個通話將透過行動網路進行。";
+
+/* Privacy Policy */
+"privacy_policy_about" = "Threema 比任何其他即時通訊工具都更加嚴格地保護您的隱私。在我們的隱私權政策中了解更多。";
+"privacy_policy_about_work" = "Threema Work 比任何其他即時通訊工具都更加嚴格地保護您的隱私。在我們的隱私權政策中了解更多。";
+"privacy_policy_about_link" = "隱私權政策";
+"accept_privacy_policy" = "接受隱私權政策";
+"privacy_policy_switch" = "隱私權政策切換";
+"privacy_policy_alert_text" = "使用 Threema 前，請接受隱私權政策。\n\n（根據歐盟法規 2016/679《一般資料保護規範》的要求）";
+"privacy_policy_alert_text_work" = "使用 Threema Work 前，請接受隱私權政策。\n\n（根據歐盟法規 2016/679《一般資料保護規範》的要求）";
+
+/* Conversation */
+"pin" = "置頂";
+"unpin" = "取消置頂";
+"pinned_conversation" = "已置頂對話";
+
+"pushSetting_title" = "通知設定";
+"doNotDisturb_title" = "請勿打擾";
+"doNotDisturb_header" = "通知";
+"doNotDisturb_mention" = "提及時通知我";
+"doNotDisturb_mention_footer_off" = "即使有人提及您，您也不會收到任何通知。";
+"doNotDisturb_mention_footer_on" = "如果有人提及您，您將收到通知。";
+
+"doNotDisturb_off" = "關閉";
+"doNotDisturb_on" = "開啟";
+"doNotDisturb_onPeriod" = "在設定的時段內開啟";
+"doNotDisturb_onPeriod_time" = "直至：";
+"doNotDisturb_onPeriod_1Hour" = "1小時";
+"doNotDisturb_onPeriod_2Hours" = "2小時";
+"doNotDisturb_onPeriod_3Hours" = "3小時";
+"doNotDisturb_onPeriod_4Hours" = "4小時";
+"doNotDisturb_onPeriod_8Hours" = "8小時";
+"doNotDisturb_onPeriod_1day" = "1天";
+"doNotDisturb_onPeriod_1week" = "1星期";
+
+"notification_sound_header" = "通知音效";
+"notification_sound_title" = "播放通知音效";
+
+/* WebClient */
+"webClientSession_title" = "Threema 網頁版";
+"webClientSession_add" = "開始新工作階段";
+"webClientSession_add_wrong_qr_title" = "Threema 網頁版";
+"webClientSession_add_wrong_qr_message" = "這不是 Threema 網頁版的QR碼。開啟 
+ https://web.threema.ch/ ，掃描該網頁上的QR碼。";
+"webClientSession_add_footer" = "首先，在 PC / Mac 上開啟 https://web.threema.ch/ 。然後，點擊螢幕右上角的相機圖示，掃描電腦上的QR碼。";
+"webClientSession_sessions_header" = "工作階段";
+"webClientSession_unnamed" = "未命名工作階段";
+"webClientSession_lastUse" = "最後使用時間";
+"webClientSession_saved" = "已儲存";
+"webClientSession_notSaved" = "未儲存";
+"webClientSession_sessionName" = "工作階段名稱";
+"webClientSession_actionSheetTitle" = "編輯工作階段";
+"webClientSession_actionSheet_stopSession" = "停止工作階段";
+"webClientSession_actionSheet_startSession" = "開始工作階段";
+"webClientSession_actionSheet_renameSession" = "重新命名工作階段";
+"webClientSession_actionSheet_deleteSession" = "刪除工作階段";
+"webClientSession_error_updateApp_title" = "Threema 網頁版";
+"webClientSession_error_updateApp_message" = "錯誤的 Threema 網頁版協定版本，請更新您的應用程式。";
+"webClientSession_error_updateServer_title" = "Threema 網頁版";
+"webClientSession_error_updateServer_message" = "錯誤的 Threema 網頁版協定版本，請要求管理員更新網路用戶端。";
+"webClientSession_error_wrongVersion_title" = "Threema 網頁版";
+"webClientSession_error_wrongVersion_message" = "此應用程式版本不支援網路用戶端的 Threema 網頁版協定。";
+
+"webClient_scan_error_title" = "Threema 網頁版";
+"webClient_scan_error_message" = "這是 Threema 網頁版的QR碼。請在「設定」>「Threema 網頁版」掃描QR碼。";
+
+"webClient_scan_error_mdm_host_title" = "無法開始 Threema 網頁版工作階段";
+"webClient_scan_error_mdm_host_message" = "伺服器未經管理員批准。";
+
+
+/* ProtectedDataUnavailable */
+"protectedDataUnavailable_error_text" = "受保護的資料目前不可存取，請退出應用程式並再試一次。";
+"protectedDataUnavailable_exitbutton" = "退出";
+
+/* Photo Browser */
+"media_delete_all_confirm" = "您確定要刪除所有媒體檔案嗎？";
+"media_delete_selected_confirm" = "您確定要刪除選定的媒體檔案嗎？";
+
+/* Threema Safe */
+"deactivate" = "停用";
+"invalid_threema_id" = "無效的 Threema ID";
+"number_of_days" = "%d 天";
+
+"safe_enable_explain_short" = "開啟 Threema Safe 可以自動為所有重要資料建立安全和匿名的備份。";
+"safe_enable_explain" = "您對話相關的所有資料只儲存在您的裝置上。因為我們沒有儲存您的帳戶，所以如果您丢失了電話或意外刪除了資料，我们將無法為您提供協助。\n\nThreema Safe 在您選擇的安全伺服器上，以匿名方式建立所有重要資料的自動備份，包括您的金鑰，聯絡人清單和群組成員身份。";
+
+"safe_server_authentication" = "驗證（選用）";
+"safe_server_name" = "伺服器名稱";
+"safe_max_backup_size" = "最大備份大小";
+"safe_retention" = "備份保留";
+"safe_last_backup" = "上次備份";
+"safe_size" = "備份大小";
+"safe_result" = "備份結果";
+"safe_successful" = "成功";
+"safe_unsuccessful" = "失敗";
+"safe_upload_failed" = "上傳失敗";
+"safe_upload_size_exceeded" = "超出伺服器的上傳最大限制";
+"safe_change_password" = "變更密碼";
+"safe_backup_now" = "立即備份";
+"safe_deactivate" = "關閉 Threema Safe";
+"safe_deactivate_explain" = "如果您停用 Threema Safe，任何現有的備份都將在伺服器上被刪除。是否繼續？";
+"safe_disable_confirm" = "您真的要在不開啟 Threema Safe 的情況下繼續嗎？";
+
+"safe_setup_backup_title" = "Threema Safe";
+"safe_setup_backup_description" = "請選擇一個強密碼。您將需要此密碼來還原 Threema Safe 備份。";
+"safe_advanced_options" = "專業設定";
+"safe_configure_choose_server" = "選擇 Threema Safe 伺服器";
+"safe_configure_server_explain" = "您可以使用 Threema 官方的伺服器，也可以選擇使用第三方備份伺服器。";
+"safe_use_default_server" = "使用預設伺服器";
+"safe_restore" = "還原 Threema Safe";
+"safe_restore_enter_id" = "請輸入您想恢復的 Threema ID";
+"safe_forgot_your_id" = "忘記了您的ID？";
+"safe_threema_id" = "您的 Threema ID";
+"safe_search_id_title" = "請輸入與您的ID所連結的電話號碼或電子郵件地址";
+"safe_linked_mobile" = "電話號碼";
+"safe_linked_email" = "電子郵件";
+"safe_no_id_found" = "找不到 Threema ID";
+"safe_select_id" = "找到多個 Threema ID。請選擇要使用的ID：";
+"safe_enter_password" = "請輸入您的 Threema Safe 密碼";
+"safe_restore_failed" = "還原失敗";
+"safe_no_backup_found" = "在伺服器上找不到備份。請檢查ID和密碼。";
+"safe_preparing" = "正在準備 Threema Safe";
+"safe_error_preparing" = "準備 Threema Safe 備份時出錯";
+"safe_configure_choose_password_title" = "選擇密碼";
+"safe_configure_choose_password" = "請選擇一個密碼。您將需要此密碼來還原 Threema Safe 備份。";
+"safe_configure_choose_password_mdm" = "您的管理員為您的裝置開啟了 Threema Safe。";
+"safe_version_mismatch" = "此備份的版本高於支援的版本。請更新至最新版本的應用程式。";
+"safe_intro_title" = "隆重介紹 Threema Safe";
+"safe_intro_description" = "再也不會丟失您的 Threema ID、聯絡人、群組和設定了！";
+"safe_intro_explain" = "Threema Safe 定期為您最重要的資料建立加密的匿名備份，並將其儲存在 Threema 伺服器，或在您選擇的其他伺服器上。";
+"safe_intro_enable" = "立刻開啟";
+"safe_intro_cancel" = "不再顯示";
+"safe_failed_notification" = "Threema Safe 連續%.0f天備份失敗。請檢查 Threema Safe 的設定。";
+"safe_expired_notification" = "您的 Threema Safe 備份可能已過期，可能很快將被刪除。請檢查 Threema Safe 設定，並確保可以建立 Threema Safe 備份。";
+"safe_test_server" = "測試伺服器";
+"safe_test_server_invalid_url" = "請輸入有效的 HTTPS 地址。";
+"safe_restore_error" = "還原 Threema Safe 備份失敗，請重試一次。";
+"safe_activation_failed" = "還原備份後，Threema Safe 無法開啟。";
+
+"password_bad" = "弱密碼";
+"password_bad_explain" = "Threema Safe 選定的密碼不安全，容易被攻擊者猜中，請選擇其他密碼。提示：使用由多個詞彙組成的密碼。";
+"password_bad_guidelines" = "輸入的密碼不符合指引。";
+"password_bad_regex" = "密碼要求為無效定義（規則運算式）。請聯絡您的 Threema Work 管理員。";
+
+"continue_anyway" = "仍然繼續";
+
+"restore_option_title" = "還原備份";
+"restore_option_id_title" = "從備份中還原ID";
+"restore_option_description" = "您想還原哪個備份？";
+"restore_option_safe" = "還原您的ID，聯絡人和群組";
+"restore_option_safe_keep_data" = "僅從 Threema Safe 還原 ID，並將資料（對話，聯絡人，群組等）儲存在此裝置上";
+"restore_option_id" = "僅還原您的ID";
+"restore_option_id_keep_data" = "還原已匯出的Threema ID，並將資料（對話，聯絡人，群組等）儲存在此裝置上";
+
+"restore_option_data_description" = "Threema 的資料（對話，聯絡人，群組等）仍存在此裝置上。";
+"restore_option_data_keep_data" = "保留本地資料";
+"restore_option_data_keep_data_description" = "僅還原 Threema ID（從 Threema Safe 或從ID匯出），並保留本地資料";
+"restore_option_data_delete_data" = "刪除本地資料";
+"restore_option_data_delete_data_description" = "刪除本地資料後，還原 Threema Safe 備份（包括您的 ID，聯絡人和群組）或 ID 匯出（僅限 Threema ID）";
+"restore_option_data_delete_data_explain" = "為了還原完整的 Threema Safe 備份，您必須重新安裝 Threema。請先刪除 Threema，然後從 App Store 重新下載。";
+
+// Company Directory
+"companydirectory_description" = "尋找內部聯絡人";
+"companydirectory_placeholder" = "搜尋目錄";
+"companydirectory_noentries_title" = "找不到結果";
+"companydirectory_noentries_description" = "請輸入至少3個字元以搜尋";
+
+"already_licensed" = "已取得許可";
+
+// IDNSafetyHelper
+"url_warning_title" = "網路釣魚警告";
+"url_warning_body" = "您要打開的連結的主機名有可疑。\n\n顯示的主機名：%@\n真實的主機名：%@\n\n這可能是試圖欺騙您開啟一個假裝成其他網站的虛假網頁。\n\n您仍然要繼續嗎？";
+
+// Storage Management
+"storage_management" = "儲存管理";
+"storage_total" = "總磁碟空間";
+"storage_total_in_use" = "已佔用空間";
+"storage_total_free" = "可用空間";
+"storage_threema" = "Threema 佔用的空間";
+"delete_explain" = "刪除舊媒體和檔案以釋放磁碟空間。請注意：訊息不會自動刪除，只有在點擊相應的「刪除」按鈕時才會刪除。";
+"delete_media_older_than" = "刪除早於...的媒體和檔案";
+"delete_media" = "刪除媒體和檔案";
+"delete_media_confirm" = "您要永久刪除所有早於%@的媒體和檔案嗎？";
+"delete_media_confirm_all" = "您要永久刪除所有媒體和檔案嗎？";
+"delete_media_explain" = "縮圖不會被刪除。";
+"delete_messages_older_than" = "刪除早於...的訊息";
+"delete_messages" = "刪除訊息";
+"delete_messages_confirm" = "您要永久刪除所有早於%@的訊息嗎？";
+"delete_messages_confirm_all" = "您要永久刪除所有訊息嗎？";
+"delete_messages_explain" = "任何類型的訊息都將被刪除：文字和語音訊息、媒體、檔案、投票等。";
+"one_year_title" = "1年";
+"one_year" = "1年";
+"six_months_title" = "6個月";
+"six_months" = "6個月";
+"three_months_title" = "3個月";
+"three_months" = "3個月";
+"one_month_title" = "1個月";
+"one_month" = "1個月";
+"one_week_title" = "1星期";
+"one_week" = "1星期";
+"everything" = "刪除所有";
+"media_file_not_found" = "無法開啟媒體檔案。該檔案已被刪除或未從伺服器下載。";
+"older_than" = "早於";
+
+// Settings
+"settings_privacy" = "隱私權";
+"settings_appearance" = "外觀";
+"settings_notification" = "通知";
+"settings_chat" = "對話";
+"settings_media" = "多媒體";
+"settings_storage_management" = "儲存管理";
+"settings_passcode_lock" = "密碼鎖";
+"settings_threema_calls" = "Threema 通話";
+"settings_threema_web" = "Threema 網頁版";
+"settings_network_status" = "網路狀態";
+"settings_version" = "版本";
+"settings_license_username" = "許可證用戶名稱";
+"settings_invite_a_friend" = "邀請好友";
+"settings_threema_channel" = "Threema 頻道";
+"settings_support" = "支援";
+"settings_privacy_policy" = "隱私權政策";
+"settings_license" = "許可證";
+"settings_advanced" = "進階";
+"settings_threema_work" = "Threema Work";
+"settings_dev_mode" = "開發人員模式";
+
+"settings_advanced_flush_message_queue" = "重新整理訊息佇列";
+"settings_advanced_orphaned_files_cleanup" = "刪除孤兒檔案";
+
+// Dev Mode
+"settings_devmode_quote_v2" = "引用 V2";
+
+// Appearance
+"settings_appearance_theme_section" = "設計主題";
+"settings_appearance_light_theme" = "淺色";
+"settings_appearance_dark_theme" = "深色";
+"settings_appearance_system_theme" = "根據系統設定";
+"settings_appearance_theme_selected" = "%@ 主題啟用中";
+"settings_appearance_theme_active" = "啟用";
+"settings_appearance_hide_stale_contacts" = "隱藏非活躍的ID";
+"settings_appearance_show_profile_pictures" = "顯示大頭貼";
+"settings_appearance_display_order" = "顯示順序";
+"settings_appearance_show_gallery_preview" = "顯示圖片庫預覽";
+
+// Sentry
+"sentry_crash_send_title" = "%@ 意外退出";
+"sentry_crash_send_description" = "您可以提交匿名崩潰報告。請您詳細解釋導致崩潰的原因，將有助於解決根本問題。";
+"sentry_crash_send_yes" = "傳送匿名報告";
+"sentry_crash_send_no" = "請勿傳送";
+"sentry_crash_comment_placeholder" = "崩潰報告";
+
+// My profile
+"profile_share_id_text" = "我的 Threema ID";
+
+// File message
+"optional_caption" = "選定描述";
+"send_as_file" = "以原始檔案傳送";
+
+// Notification settings
+"settings_notifications_inapp_section" = "應用程式內";
+"settings_notifications_inapp_sounds" = "音效";
+"settings_notifications_inapp_vibrate" = "震動";
+"settings_notifications_inapp_preview" = "預覽";
+"settings_notifications_push_section" = "推播通知";
+"settings_notifications_push_sound" = "音效";
+"settings_notifications_push_groupsound" = "群組音效";
+"settings_notifications_push_preview" = "預覽";
+"settings_notifications_push_showNickname" = "顯示暱稱";
+"settings_notifications_call_section" = "Threema 通話";
+"settings_notifications_call_sound" = "音效";
+"settings_notifications_masterDnd_section_header" = "非工作時間政策";
+"settings_notifications_masterDnd" = "非工作時間期間請勿打擾";
+"settings_notifications_masterDnd_section_footer" = "在工作時間以外停用通知並拒絕通話。";
+"settings_notifications_masterDnd_workingDays" = "工作日";
+"settings_notifications_masterDnd_startTime" = "上班時間";
+"settings_notifications_masterDnd_endTime" = "下班時間";
+"settings_notifications_masterDnd_info" = "非工作時間在線";
+
+// Orphaned files delete
+"settings_orphaned_files_description" = "在以前的Threema版本中，在儲存管理中刪除資料時，在極少數情況下，可能會發生以下情況：（媒體）​​檔案未正確刪除，而是在 Threema 中刪除了。
+
+請先建立 iTunes 備份，否則可能會出現資料丟失！";
+"settings_orphaned_files_title" = "孤兒檔案";
+"settings_orphaned_files_button" = "移至垃圾桶";
+"settings_orphaned_files_footer" = "%@個檔案中的%@個是孤兒檔案。
+
+將孤兒檔案移至垃圾桶，並確保 Threema 中沒有丟失（媒體）檔案。";
+"settings_orphaned_files_footer_no_files" = "沒有孤兒檔案。";
+"settings_orphaned_files_bin_title" = "垃圾桶";
+"settings_orphaned_files_bin_restore_button" = "還原垃圾桶的內容";
+"settings_orphaned_files_bin_delete_button" = "刪除垃圾桶的內容";
+"settings_orphaned_files_bin_footer" = "垃圾桶中有%@個檔案（%@）。
+
+如果 Threema 中沒有缺少（媒體）檔案，請清空垃圾桶以永久刪除孤兒檔案。";
+"settings_orphaned_files_bin_footer_no_files" = "垃圾桶是空的。";
+"settings_orphaned_files_bin_delete_conformation" = "您要永久刪除孤兒檔案嗎？此作業無法復原。";
+
+// Threema calls settings
+"settings_threema_calls_enable_calls" = "開啟 Threema 通話";
+"settings_threema_calls_always_relay_calls" = "始終中繼通話";
+"settings_threema_calls_callkit" = "將通話整合至 iOS";
+"settings_threema_calls_video_section" = "視訊通話";
+"settings_threema_calls_allow_video_calls" = "允許視訊通話";
+"settings_threema_calls_video_quality_profile" = "首選圖像品質";
+"settings_threema_calls_video_quality_profile_low" = "低數據耗用";
+"settings_threema_calls_video_quality_profile_max" = "最高品質";
+"settings_threema_calls_video_quality_profile_auto" = "平衡（建議）";
+"settings_threema_calls_video_quality_profile_low_description" = "降低圖像品質以降低數據耗用";
+"settings_threema_calls_video_quality_profile_max_description" = "注意：在行動網路中可能會耗用大量的網路流量！";
+"settings_threema_calls_video_quality_profile_auto_description" = "僅在 Wi-Fi 上設定高品質圖像，在行動網路中上減少網路流量";
+"settings_threema_calls_video_quality_profile_footer" = "實際的圖像品質取決於網絡品質和對方的設定。";
+
+// Media Preview
+"loading_video_failed" = "無法載入影片。請重新啟動應用程式並再試一次。";
+"loading_image" = "正在載入圖片";
+"load_error" = "由於未知錯誤，無法載入專案。";
+"loading_video" = "正在載入影片";
+"selected_media_list" = "選定媒體清單";
+"media_item_of" = "媒體專案中的第%@項，共%@項";
+"video_date" = "影片在 %@ 上拍攝";
+"imagedate_date" = "照片在 %@ 上拍攝";
+"send_as_file_description" = "傳送檔案時，不對原始檔案進行任何變更。檔案將保留所有元資料，例如照片的位置資料。";
+"more_options" = "更多選項";
+"add_caption_to_image" = "新增描述";
+"add_more_images" = "增加更多圖片";
+"back_to_media_selection" = "返回多媒體選擇畫面";
+"remove_current_image_from_selected_images" = "從已選專案中移除當前專案";
+"send_options" = "更多選項";
+"multiple_media_items" = "%d個專案";
+"media_item" = "1個專案";
+"could_not_add_items_title" = "無法新增專案";
+"could_not_add_all_items_title" = "無法新增所有專案";
+"one_media_item_could_not_be_processed" = "有一個專案無法處理，被跳過。";
+"multiple_media_items_could_not_be_processed" = "有%d個專案無法處理，被跳過。";
+"processing_items_progress" = "正在處理專案 %d/%d";
+"item_too_large_title" = "專案大小太大";
+"maximum_file_size_exceeded" = "允許的最大檔案大小為%@。這個檔案是%@。刪除檔案以繼續。";
+"back" = "返回";
+"sending_item" = "正在傳送專案";
+"send_as_file_title" = "傳送模式";
+"document" = "文件";
+"paste_create_file_failure_title" = "貼上失敗";
+"paste_create_file_failure_message" = "無法貼上檔案，請再試一次。";
+"loading_files_takes_time_title" = "正在載入媒體";
+"loading_files_takes_time_description" = "轉換影片可能需要幾分鐘的時間。";
+"pasteErrorMessageTitle" = "無法貼上";
+"pasteErrorMessageMessage" = "由於未知的錯誤，無法貼上專案。請再試一次。";
+
+// Share Extension
+"finished_sending_title" = "傳送完成";
+"preview_button_accessibility_title" = "顯示文件預覽";
+"unknown_file_type" = "未知檔案類型";
+"unknown_file_size" = "未知檔案大小";
+"unknown_file_name" = "未知檔案名稱";

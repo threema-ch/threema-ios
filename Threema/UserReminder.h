@@ -26,5 +26,6 @@
 
 - (void)checkReminders:(void(^)(BOOL check))onCompletion;
 - (void)markIdentityDeleted;
+- (void)showNoteGroupReminderOnViewController:(UIViewController *)viewController;
 
 @end

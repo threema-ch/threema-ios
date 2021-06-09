@@ -326,6 +326,7 @@
 "create_new_group" = "Yeni Grup Oluştur";
 "create_note_group_info_title" = "Hint";
 "create_note_group_info_text" = "Herhangi bir grup üyesi eklemezseniz, bu gruba gelen mesajlar yerel olarak kalacaktır. Bu, notları, medyayı ve belgeleri güvenli bir şekilde saklamak veya öğeleri masaüstüne aktarmak için idealdir.";
+"remind_me_next_time" = "Bir dahaki sefere bana hatırlat";
 "doNotShowAgain" = "Tekrar Gösterme";
 "add_note_group_info" = "* Burada yalnızsınız *\nBu sohbeti metin, medya ve belgeler için güvenli bir not defteri olarak kullanın.";
 "end_note_group_info" = "* Artık bu sohbette yalnız değilsiniz *\nTüm grup üyelerine yeni mesajlar gönderilecek.";

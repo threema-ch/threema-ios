@@ -67,6 +67,7 @@ class RootNavigationController : UINavigationController {
         LogManager.initializeGlobalLogger(debug: false)
         #endif
         
+        self.recolorBarButtonItems()
         self.navigationBar.backgroundColor = Colors.background()
     }
     
@@ -179,6 +180,7 @@ class RootNavigationController : UINavigationController {
         }
         
         self.pushViewController(picker, animated: true)
+        recolorBarButtonItems()
     }
     
     @objc private func popBack() {
@@ -186,16 +188,40 @@ class RootNavigationController : UINavigationController {
     }
     
     override func viewDidAppear(_ animated: Bool) {
+        Colors.update(self.navigationBar)
+        self.recolorBarButtonItems()
+        
         super.viewDidAppear(animated)
+    }
+    
+    /// This takes the left and right bar button items and sets the tintColor and titleTextAttributes back to something that is legible in our share extension
+    private func recolorBarButtonItems() {
+        for viewController in self.children {
+            let navItem = viewController.navigationItem
+            var items = [UIBarButtonItem]()
+            items.append(contentsOf: navItem.leftBarButtonItems ?? [UIBarButtonItem]())
+            items.append(contentsOf: navItem.rightBarButtonItems ?? [UIBarButtonItem]())
+            
+            for item in items {
+                let attributes : [NSAttributedString.Key : Any] = [
+                    NSAttributedString.Key.foregroundColor : Colors.main() as Any,
+                ]
+                
+                item.setTitleTextAttributes(attributes , for: .normal)
+                item.setTitleTextAttributes(attributes, for: .application)
+                item.tintColor = Colors.main()
+            }
+        }
     }
     
     private func presentTextPreview() {
         let storyboard = UIStoryboard(name: "ThreemaShareStoryboard", bundle: nil)
         textPreview = (storyboard.instantiateViewController(withIdentifier: "TextPreviewViewController") as! TextPreviewViewController)
-        
-        self.pushViewController(textPreview!, animated: true)
         textPreview!.navigationItem.rightBarButtonItem = UIBarButtonItem(title: BundleUtil.localizedString(forKey: "next"), style: .done, target: self, action: #selector(chooseContacts))
         textPreview!.navigationItem.leftBarButtonItem = UIBarButtonItem(title: BundleUtil.localizedString(forKey: "cancel"), style: .plain, target: self, action: #selector(cancelTapped))
+        
+        self.pushViewController(textPreview!, animated: true)
+        recolorBarButtonItems()
         
         BrandingUtils.updateTitleLogo(of: textPreview!.navigationItem, navigationController: self)
     }

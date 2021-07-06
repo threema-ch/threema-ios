@@ -316,14 +316,15 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
             contact = [entityManager.entityCreator contact];
             contact.identity = identity;
             contact.publicKey = publicKey;
-            contact.firstName = firstname;
-            contact.lastName = lastname;
             NSMutableOrderedSet *workIdentities = [[NSMutableOrderedSet alloc] initWithOrderedSet:[UserSettings sharedUserSettings].workIdentities];
             if (![workIdentities containsObject:contact.identity])
                 [workIdentities addObject:contact.identity];
             [UserSettings sharedUserSettings].workIdentities = workIdentities;
             [self addProfilePictureRequest:identity];
         }
+        
+        contact.firstName = firstname;
+        contact.lastName = lastname;
         
         if (contact.verificationLevel.intValue != kVerificationLevelFullyVerified) {
             contact.verificationLevel = [NSNumber numberWithInt:kVerificationLevelServerVerified];

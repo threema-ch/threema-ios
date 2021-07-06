@@ -104,6 +104,13 @@ open class MediaPreviewViewController: UIViewController, UIGestureRecognizerDele
         themeChanged()
     }
     
+    open override func viewDidDisappear(_ animated: Bool) {
+        for item in mediaData {
+            item.freeMemory()
+        }
+        NotificationCenter.default.removeObserver(self)
+    }
+    
     @objc func themeChanged() {
         greyBgView.backgroundColor = Colors.backgroundDark()
         self.largeCollectionView.backgroundColor = Colors.backgroundDark()
@@ -236,7 +243,7 @@ open class MediaPreviewViewController: UIViewController, UIGestureRecognizerDele
         
         let titleViewSize = CGRect(x: 0.0, y: 0.0, width: Double(finalWidth), height: fullHeight)
         
-        let tapAction = self.optionsEnabled ? self.moreButtonPressed : nil
+        let tapAction = self.optionsEnabled ? { [weak self] in self?.moreButtonPressed() } : nil
         
         let headerView = HeaderView(for: self.mediaData, frame: titleViewSize, tapAction: tapAction)
         headerView.rotate(landscape: landscape, newWidth: titleViewSize.width)

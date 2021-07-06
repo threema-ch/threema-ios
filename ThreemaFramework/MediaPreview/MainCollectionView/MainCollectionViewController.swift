@@ -131,7 +131,7 @@ class MainCollectionViewController: NSObject, UICollectionViewDataSource, UIColl
                 return
             }
             
-            guard let data = item.getItem() else {
+            guard var data = item.getItem() else {
                 DDLogError("Could not get item to preview")
                 return
             }
@@ -144,6 +144,9 @@ class MainCollectionViewController: NSObject, UICollectionViewDataSource, UIColl
                 if UTIConverter.isGifMimeType(UTIConverter.mimeType(fromUTI: item.uti!)) {
                     cell.updateImageTo(data: data)
                 } else {
+                    if self.delegate.memoryConstrained {
+                        data = MediaConverter.jpegRepresentation(for: item.getThumbnail()!)!
+                    }
                     self.updateImageCell(data: data, cell: cell)
                 }
             }

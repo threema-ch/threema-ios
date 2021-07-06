@@ -274,6 +274,7 @@
 "record_cancel_title" = "Discard Recording";
 "record_cancel_message" = "Do you really want to cancel and discard the recording?";
 "record_cancel_button_discard" = "Discard Recording";
+"speed" = "Playback speed";
 
 "send_file_title" = "Send file";
 "camera_disabled_title" = "Access denied";

@@ -895,7 +895,7 @@ struct pktPayload {
     if (lastSendDate == nil) {
         [self setPushOverrideTimeout];
     } else {
-        NSDateComponents *components = [[NSCalendar currentCalendar] components:NSCalendarUnitMinute fromDate:[NSDate date] toDate:lastSendDate options:0];
+        NSDateComponents *components = [[NSCalendar currentCalendar] components:NSCalendarUnitMinute fromDate:lastSendDate toDate:[NSDate date] options:0];
         NSInteger minutes = [components minute];
         
         if (minutes > 60 || lastSendDate == nil) {

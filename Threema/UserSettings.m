@@ -33,8 +33,16 @@
 #import "Conversation.h"
 #import "Contact.h"
 
+typedef NS_ENUM(NSInteger, ThreemaAudioMessagePlaySpeed) {
+    ThreemaAudioMessagePlaySpeedHalf = 0,
+    ThreemaAudioMessagePlaySpeedSingle,
+    ThreemaAudioMessagePlaySpeedOneAndHalf,
+    ThreemaAudioMessagePlaySpeedDouble
+};
+
 @implementation UserSettings {
     NSUserDefaults *defaults;
+    enum ThreemaAudioMessagePlaySpeed threemaAudioMessagePlaySpeed;
 }
 
 @synthesize sendReadReceipts;
@@ -226,6 +234,7 @@ static UserSettings *instance;
                                         [NSNumber numberWithBool:YES], @"EnableVideoCall",
                                         [NSNumber numberWithInt:ThreemaVideoCallQualitySettingAuto], @"ThreemaVideoCallQualitySetting",
                                         @"", @"SentryAppDevice",
+                                        [NSNumber numberWithInt:ThreemaAudioMessagePlaySpeedSingle], @"ThreemaAudioMessagePlaySpeed",
                                      nil];
         [defaults registerDefaults:appDefaults];
         
@@ -331,6 +340,8 @@ static UserSettings *instance;
     
     enableVideoCall = [defaults boolForKey:@"EnableVideoCall"];
     threemaVideoCallQualitySetting = [[defaults objectForKey:@"ThreemaVideoCallQualitySetting"] intValue];
+        
+    threemaAudioMessagePlaySpeed = [[defaults objectForKey:@"ThreemaAudioMessagePlaySpeed"] intValue];
 }
 
 - (void)pushSettingsMigration:(NSOrderedSet *)tmpNoPushIdentities {
@@ -804,6 +815,45 @@ static UserSettings *instance;
 - (void)setThreemaVideoCallQualitySetting:(enum ThreemaVideoCallQualitySetting)newThreemaVideoCallQualitySetting {
     threemaVideoCallQualitySetting = newThreemaVideoCallQualitySetting;
     [defaults setObject:[NSNumber numberWithInt:threemaVideoCallQualitySetting] forKey:@"ThreemaVideoCallQualitySetting"];
+    [defaults synchronize];
+}
+
+/// Change the playback speed to the next value (0.5, 1, 1.5, 2)
+/// @return The value of the new speed
+- (CGFloat)threemaAudioMessagePlaySpeedSwitchToNextValue {
+    if (threemaAudioMessagePlaySpeed == ThreemaAudioMessagePlaySpeedDouble) {
+        threemaAudioMessagePlaySpeed = ThreemaAudioMessagePlaySpeedHalf;
+    } else {
+        threemaAudioMessagePlaySpeed = threemaAudioMessagePlaySpeed + 1;
+    }
+
+    
+    [self setThreemaAudioMessagePlaySpeed:threemaAudioMessagePlaySpeed];
+    return [self threemaAudioMessagePlaySpeedCurrentValue];
+}
+
+/// Return the current playback speed
+- (CGFloat)threemaAudioMessagePlaySpeedCurrentValue {
+    switch (threemaAudioMessagePlaySpeed) {
+        case ThreemaAudioMessagePlaySpeedHalf:
+            return 0.5;
+        case ThreemaAudioMessagePlaySpeedSingle:
+            return 1.0;
+        case ThreemaAudioMessagePlaySpeedOneAndHalf:
+            return 1.5;
+        case ThreemaAudioMessagePlaySpeedDouble:
+            return 2.0;
+        default:
+            return 1.0;
+    }
+}
+
+
+/// Set the new playback speed and save it to the defaults (private function)
+/// @param newThreemaAudioMessagePlaySpeed The new playback speed
+- (void)setThreemaAudioMessagePlaySpeed:(enum ThreemaAudioMessagePlaySpeed)newThreemaAudioMessagePlaySpeed {
+    threemaAudioMessagePlaySpeed = newThreemaAudioMessagePlaySpeed;
+    [defaults setObject:[NSNumber numberWithInteger:threemaAudioMessagePlaySpeed] forKey:@"ThreemaAudioMessagePlaySpeed"];
     [defaults synchronize];
 }
 

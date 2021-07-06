@@ -56,6 +56,10 @@ class TextPreviewViewController: UIViewController, UITextViewDelegate {
         self.textView.tintColor = Colors.main()
     }
     
+    override func viewDidDisappear(_ animated: Bool) {
+        NotificationCenter.default.removeObserver(self)
+    }
+    
     func textViewDidChange(_ textView: UITextView) {
         self.previewText = self.textView.text
     }

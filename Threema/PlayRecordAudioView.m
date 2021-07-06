@@ -84,6 +84,11 @@
     
     _horizontalDividerLine.backgroundColor = [Colors hairline];
     _verticalDividerLine.backgroundColor = [Colors hairline];
+    
+    _speedButton.backgroundColor = [Colors backgroundDark];
+    _speedButton.clipsToBounds = YES;
+    [_speedButton setTitleColor:[Colors fontNormal] forState:UIControlStateNormal];
+    _speedButton.layer.cornerRadius = 15.0;
 }
 
 - (void)setupForPlaying:(AVAudioPlayer *)player {
@@ -100,6 +105,7 @@
 
 - (void)setPlaying {
     _recordButton.enabled = NO;
+    _speedButton.hidden = false;
     [_playPauseStopButton setImage:_pauseImage forState:UIControlStateNormal];
     [self updateTimerFired];
     
@@ -123,6 +129,7 @@
 
 - (void)setRecording {
     _recordButton.enabled = NO;
+    _speedButton.hidden = true;
     [_playPauseStopButton setImage:_stopImage forState:UIControlStateNormal];
     
     if (_recorder.recording) {
@@ -135,12 +142,14 @@
 
 - (void)setPaused {
     _recordButton.enabled = YES;
+    _speedButton.hidden = false;
     [_playPauseStopButton setImage:_playImage forState:UIControlStateNormal];
     [self stopTimeUpdater];
 }
 
 - (void)setStopped {
     _recordButton.enabled = YES;
+    _speedButton.hidden = false;
     [_playPauseStopButton setImage:_playImage forState:UIControlStateNormal];
     
     [_graphView setPlaying:NO];

@@ -70,58 +70,66 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 }
 
 + (UIImage*)scaleImage:(UIImage*)orig toMaxSize:(CGFloat)maxSize {
-    // Check if we need to scale this image at all
-    if (orig.size.width * orig.scale <= maxSize && orig.size.height * orig.scale <= maxSize) {
-        // to rotate the image to the correct orientation
-        return [orig resizedImage:CGSizeMake(orig.size.width * orig.scale, orig.size.height * orig.scale) interpolationQuality:kCGInterpolationLow];
+    @autoreleasepool {
+        // Check if we need to scale this image at all
+        if (orig.size.width * orig.scale <= maxSize && orig.size.height * orig.scale <= maxSize) {
+            // to rotate the image to the correct orientation
+            return [orig resizedImage:CGSizeMake(orig.size.width * orig.scale, orig.size.height * orig.scale) interpolationQuality:kCGInterpolationLow];
+        }
+        UIImage *scaled = [orig resizedImageWithContentMode:UIViewContentModeScaleAspectFit bounds:CGSizeMake(maxSize, maxSize) interpolationQuality:kCGInterpolationLow];
+        return scaled;
     }
-    UIImage *scaled = [orig resizedImageWithContentMode:UIViewContentModeScaleAspectFit bounds:CGSizeMake(maxSize, maxSize) interpolationQuality:kCGInterpolationLow];
-    return scaled;
 }
 
 + (UIImage* _Nullable)scaleImageData:(NSData * _Nonnull)imageData toMaxSize:(CGFloat)maxSize {
-    CGImageSourceRef src = CGImageSourceCreateWithData((__bridge CFDataRef)imageData, (__bridge CFDictionaryRef) @{
-        (id) kCGImageSourceShouldCache : @NO});
-    NSMutableDictionary *imageRefOptions = [MediaConverter imageRefOptionsForSize:maxSize];
-    
-    CGImageRef scaledImageRef = CGImageSourceCreateThumbnailAtIndex(src, 0, (__bridge CFDictionaryRef) imageRefOptions);
-    UIImage *scaled = [UIImage imageWithCGImage:scaledImageRef];
-    CGImageRelease(scaledImageRef);
-    if (src) CFRelease(src);
-    if (scaled == nil) {
-        scaled = [UIImage imageWithData:imageData];
+    @autoreleasepool {
+        CGImageSourceRef src = CGImageSourceCreateWithData((__bridge CFDataRef)imageData, (__bridge CFDictionaryRef) @{
+            (id) kCGImageSourceShouldCache : @NO});
+        NSMutableDictionary *imageRefOptions = [MediaConverter imageRefOptionsForSize:maxSize];
+        
+        CGImageRef scaledImageRef = CGImageSourceCreateThumbnailAtIndex(src, 0, (__bridge CFDictionaryRef) imageRefOptions);
+        UIImage *scaled = [UIImage imageWithCGImage:scaledImageRef];
+        CGImageRelease(scaledImageRef);
+        if (src) CFRelease(src);
+        if (scaled == nil) {
+            scaled = [UIImage imageWithData:imageData];
+        }
+        return scaled;
     }
-    return scaled;
 }
 
 + (NSData*)scaleImageDataToData:(nonnull NSData *)imageData toMaxSize:(CGFloat)maxSize useJPEG:(BOOL)useJPEG {
-    CGImageSourceRef src = CGImageSourceCreateWithData((__bridge CFDataRef)imageData, (__bridge CFDictionaryRef) @{
-        (id) kCGImageSourceShouldCache : @NO});
-    NSMutableDictionary *imageRefOptions = [MediaConverter imageRefOptionsForSize:maxSize];
-    
-    CGImageRef scaledImageRef = CGImageSourceCreateThumbnailAtIndex(src, 0, (__bridge CFDictionaryRef) imageRefOptions);
-    
-    UIImage *scaled = [UIImage imageWithCGImage:scaledImageRef];
-    CGImageRelease(scaledImageRef);
-    CFRelease(src);
-    
-    if (scaled == nil) {
-        scaled = [UIImage imageWithData:imageData];
+    @autoreleasepool {
+        CGImageSourceRef src = CGImageSourceCreateWithData((__bridge CFDataRef)imageData, (__bridge CFDictionaryRef) @{
+            (id) kCGImageSourceShouldCache : @NO});
+        NSMutableDictionary *imageRefOptions = [MediaConverter imageRefOptionsForSize:maxSize];
+        
+        CGImageRef scaledImageRef = CGImageSourceCreateThumbnailAtIndex(src, 0, (__bridge CFDictionaryRef) imageRefOptions);
+        
+        UIImage *scaled = [UIImage imageWithCGImage:scaledImageRef];
+        CGImageRelease(scaledImageRef);
+        CFRelease(src);
+        
+        if (scaled == nil) {
+            scaled = [UIImage imageWithData:imageData];
+        }
+        NSData *scaledData = useJPEG ? UIImageJPEGRepresentation(scaled, kJPEGCompressionQuality) : UIImagePNGRepresentation(scaled);
+        return scaledData;
     }
-    NSData *scaledData = useJPEG ? UIImageJPEGRepresentation(scaled, kJPEGCompressionQuality) : UIImagePNGRepresentation(scaled);
-    return scaledData;
 }
 
 + (UIImage*)scaleImageUrl:(NSURL *)imageUrl toMaxSize:(CGFloat)maxSize {
-    CGImageSourceRef src = CGImageSourceCreateWithURL((__bridge CFURLRef)imageUrl, (__bridge CFDictionaryRef) @{
-        (id) kCGImageSourceShouldCache : @NO});    
-    NSMutableDictionary *imageRefOptions = [MediaConverter imageRefOptionsForSize:maxSize];
+    @autoreleasepool {
+        CGImageSourceRef src = CGImageSourceCreateWithURL((__bridge CFURLRef)imageUrl, (__bridge CFDictionaryRef) @{
+            (id) kCGImageSourceShouldCache : @NO});
+        NSMutableDictionary *imageRefOptions = [MediaConverter imageRefOptionsForSize:maxSize];
 
-    CGImageRef scaledImageRef = CGImageSourceCreateThumbnailAtIndex(src, 0, (__bridge CFDictionaryRef) imageRefOptions);
-    UIImage *scaled = [UIImage imageWithCGImage:scaledImageRef];
-    CGImageRelease(scaledImageRef);
-    CFRelease(src);
-    return scaled;
+        CGImageRef scaledImageRef = CGImageSourceCreateThumbnailAtIndex(src, 0, (__bridge CFDictionaryRef) imageRefOptions);
+        UIImage *scaled = [UIImage imageWithCGImage:scaledImageRef];
+        CGImageRelease(scaledImageRef);
+        CFRelease(src);
+        return scaled;
+    }
 }
 
 + (NSMutableDictionary *)imageRefOptionsForSize:(CGFloat)maxSize {
@@ -228,46 +236,48 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 }
 
 + (NSData *)representationForType: (CFStringRef) type andImage:(UIImage *) image {
-    CFMutableDataRef data = CFDataCreateMutable(nil, 0);
-    CGImageDestinationRef destination = CGImageDestinationCreateWithData(data, type, 1, nil);
-    if (destination == nil) {
-        return nil;
+    @autoreleasepool {
+        CFMutableDataRef data = CFDataCreateMutable(nil, 0);
+        CGImageDestinationRef destination = CGImageDestinationCreateWithData(data, type, 1, nil);
+        if (destination == nil) {
+            return nil;
+        }
+        
+        // Fix problem with wrong orientation
+        NSNumber *orientation = @0;
+        switch (image.imageOrientation) {
+            case UIImageOrientationRight:
+                orientation = @6;
+                break;
+            case UIImageOrientationDown:
+                orientation = @3;
+                break;
+            case UIImageOrientationLeft:
+                orientation = @8;
+                break;
+            case UIImageOrientationUp:
+                orientation = @1;
+                break;
+            default:
+                break;
+        }
+        
+        NSDictionary* properties = [NSDictionary dictionaryWithObjectsAndKeys:
+                                    [NSNumber numberWithFloat:kJPEGCompressionQuality], kCGImageDestinationLossyCompressionQuality,
+                                    @1, kCGImagePropertyDPIHeight,
+                                    @1, kCGImagePropertyDPIWidth,
+                                    orientation, kCGImagePropertyOrientation,
+                                    nil];
+        
+        CGImageDestinationAddImage(destination, image.CGImage, (__bridge CFDictionaryRef) properties);
+        if (!CGImageDestinationFinalize(destination)) {
+            DDLogError(@"Could not write image!");
+            return nil;
+        }
+        NSData *imageData = [NSData dataWithData:(__bridge_transfer NSData*) data];
+        CFRelease(destination);
+        return imageData;
     }
-    
-    // Fix problem with wrong orientation
-    NSNumber *orientation = @0;
-    switch (image.imageOrientation) {
-        case UIImageOrientationRight:
-            orientation = @6;
-            break;
-        case UIImageOrientationDown:
-            orientation = @3;
-            break;
-        case UIImageOrientationLeft:
-            orientation = @8;
-            break;
-        case UIImageOrientationUp:
-            orientation = @1;
-            break;
-        default:
-            break;
-    }
-    
-    NSDictionary* properties = [NSDictionary dictionaryWithObjectsAndKeys:
-                                [NSNumber numberWithFloat:kJPEGCompressionQuality], kCGImageDestinationLossyCompressionQuality,
-                                @1, kCGImagePropertyDPIHeight,
-                                @1, kCGImagePropertyDPIWidth,
-                                orientation, kCGImagePropertyOrientation,
-                                nil];
-    
-    CGImageDestinationAddImage(destination, image.CGImage, (__bridge CFDictionaryRef) properties);
-    if (!CGImageDestinationFinalize(destination)) {
-        DDLogError(@"Could not write image!");
-        return nil;
-    }
-    NSData *imageData = [NSData dataWithData:(__bridge_transfer NSData*) data];
-    CFRelease(destination);
-    return imageData;
 }
 
 @end

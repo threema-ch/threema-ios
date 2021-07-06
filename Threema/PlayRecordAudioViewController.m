@@ -88,14 +88,10 @@
         
         [_audioView setStopped];
         
-        AVAudioSessionRouteDescription *currentRoute = [AVAudioSession sharedInstance].currentRoute;
-        if (currentRoute.outputs.count > 0) {
-            if ([currentRoute.outputs[0].portType isEqualToString:@"Speaker"] || [currentRoute.outputs[0].portType isEqualToString:@"Receiver"]) {
-                [self registerForNotifications];
-                if (![UserSettings sharedUserSettings].disableProximityMonitoring) {
-                    [[UIDevice currentDevice] setProximityMonitoringEnabled: YES];
-                }
-            }
+        [self registerForNotifications];
+        
+        if (![UserSettings sharedUserSettings].disableProximityMonitoring) {
+            [[UIDevice currentDevice] setProximityMonitoringEnabled: YES];
         }
     }
     
@@ -116,23 +112,24 @@
     _prevAudioCategory = [AVAudioSession sharedInstance].category;
 }
 
-- (void)setupAudioSessionWithSpeaker:(BOOL)speaker {
+- (void)setupAudioSessionWithEarpiece:(BOOL)earpiece {
     NSInteger state = [[VoIPCallStateManager shared] currentCallState];
     if (state == CallStateIdle) {
         NSError *error = nil;
         AVAudioSession *session = [AVAudioSession sharedInstance];
         
-        if (![session setCategory:AVAudioSessionCategoryPlayAndRecord mode:AVAudioSessionModeSpokenAudio options:AVAudioSessionCategoryOptionAllowBluetooth|AVAudioSessionCategoryOptionAllowBluetoothA2DP error:&error]) {
+        if (![session setCategory:earpiece ? AVAudioSessionCategoryPlayAndRecord : AVAudioSessionCategoryPlayback mode:AVAudioSessionModeSpokenAudio options:0 error:&error]) {
             DDLogError(@"Cannot set audio session category: %@", error);
             [UIAlertTemplate showAlertWithOwner:self title:error.localizedDescription message:error.localizedFailureReason actionOk:nil];
             return;
         }
-        
-        if (![session overrideOutputAudioPort:speaker ? AVAudioSessionPortOverrideSpeaker : AVAudioSessionPortOverrideNone error:&error]) {
+
+        if (earpiece && ![session overrideOutputAudioPort:AVAudioSessionPortOverrideNone error:&error]) {
             DDLogError(@"Cannot set audio session override outputaudio port: %@", error);
             [UIAlertTemplate showAlertWithOwner:self title:error.localizedDescription message:error.localizedFailureReason actionOk:nil];
             return;
         }
+        
         [session setActive:YES withOptions:AVAudioSessionSetActiveOptionNotifyOthersOnDeactivation error:nil];
     }
 }
@@ -296,6 +293,9 @@
     
     _player.numberOfLoops = 0;
     _player.delegate = self;
+    _player.enableRate = true;
+    _player.rate = [[UserSettings sharedUserSettings] threemaAudioMessagePlaySpeedCurrentValue];
+    [self setSpeedTitle];
     
     [_audioView setupForPlaying: _player];
     
@@ -382,6 +382,19 @@
     [self removeFromView];
 }
 
+- (IBAction)speedButtonPressed:(id)sender {
+    _player.rate = [[UserSettings sharedUserSettings] threemaAudioMessagePlaySpeedSwitchToNextValue];
+    [self setSpeedTitle];
+}
+
+- (void)setSpeedTitle {
+    NSString *speedText = [NSString stringWithFormat:@"%.1f×", _player.rate];
+    [_audioView.speedButton setTitle:speedText forState:UIControlStateNormal];
+    
+    _audioView.speedButton.accessibilityLabel = [BundleUtil localizedStringForKey:@"speed"];
+    _audioView.speedButton.accessibilityValue = speedText;
+}
+
 + (void)checkPermissionOnCompletion:(void(^)(void))onCompletion {
     AVAudioSession *session = [AVAudioSession sharedInstance];
     if ([session respondsToSelector:@selector(requestRecordPermission:)]) {
@@ -440,10 +453,10 @@
         AVAudioSessionRouteDescription *currentRoute = [AVAudioSession sharedInstance].currentRoute;
         if (currentRoute.outputs.count > 0) {
             if ([currentRoute.outputs[0].portType isEqualToString:@"Speaker"]) {
-                [self setupAudioSessionWithSpeaker:true];
+                [self setupAudioSessionWithEarpiece:false];
             }
             else if ([currentRoute.outputs[0].portType isEqualToString:@"Receiver"]) {
-                [self setupAudioSessionWithSpeaker:false];
+                [self setupAudioSessionWithEarpiece:true];
             }
         }
         
@@ -494,16 +507,16 @@
         if ([currentRoute.outputs[0].portType isEqualToString:@"Speaker"] || [currentRoute.outputs[0].portType isEqualToString:@"Receiver"]) {
             if ([UIDevice currentDevice].proximityState) {
                 // close to ear
-                [self setupAudioSessionWithSpeaker:false];
+                [self setupAudioSessionWithEarpiece:true];
             } else {
                 // speaker
-                [self setupAudioSessionWithSpeaker:true];
+                [self setupAudioSessionWithEarpiece:false];
             }
         } else {
-            [self setupAudioSessionWithSpeaker:false];
+            [self setupAudioSessionWithEarpiece:false];
         }
     } else {
-        [self setupAudioSessionWithSpeaker:false];
+        [self setupAudioSessionWithEarpiece:false];
     }
 }
 

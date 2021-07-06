@@ -274,6 +274,7 @@
 "record_cancel_title" = "Aufnahme löschen";
 "record_cancel_message" = "Möchten Sie die Aufnahme wirklich abbrechen und löschen?";
 "record_cancel_button_discard" = "Aufnahme löschen";
+"speed" = "Wiedergabegeschwindigkeit";
 
 "send_file_title" = "Datei senden";
 "camera_disabled_title" = "Kein Zugriff";

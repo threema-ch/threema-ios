@@ -203,8 +203,11 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     
     if (fileName != nil) {
         NSString *extension = [UTIConverter preferedFileExtensionForMimeType:self.mimeType];
+        // The mime type might not return an extension. If it does not, we check the path extension. If there is none, we use an empty extension.
         if (extension == nil) {
-            extension = @"";
+            if (!(extension = fileName.pathExtension)) {
+                extension = @"";
+            }
         }
         
         NSURL *tmp;

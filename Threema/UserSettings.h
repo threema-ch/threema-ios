@@ -132,5 +132,7 @@ enum ThreemaVideoCallQualitySetting {
 
 - (void)setSortOrderFirstName:(BOOL)sortOrderFirstName displayOrderFirstName:(BOOL)displayOrderFirstName;
 - (void)checkWallpaper;
+- (CGFloat)threemaAudioMessagePlaySpeedCurrentValue;
+- (CGFloat)threemaAudioMessagePlaySpeedSwitchToNextValue;
 
 @end

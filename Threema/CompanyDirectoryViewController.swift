@@ -432,7 +432,7 @@ extension CompanyDirectoryViewController: UISearchBarDelegate {
     
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
         NSObject.cancelPreviousPerformRequests(withTarget: self, selector: #selector(performSearch), object: nil)
-        if searchText.count >= 3 {
+        if searchText.count >= 3 || (filterArray.count > 0 && searchText.contains("*")) {
             perform(#selector(performSearch), with: nil, afterDelay: 0.75)
         } else {
             contactsWithSections.removeAll()

@@ -50,7 +50,7 @@
 @property (weak, nonatomic) IBOutlet UILabel *sendAsFileLabel;
 @property (weak, nonatomic) IBOutlet UISwitch *sendAsFileSwitch;
 
-@property (strong, nonatomic) id<ContactGroupPickerDelegate> delegate;
+@property (weak, nonatomic) id<ContactGroupPickerDelegate> delegate;
 
 @property (nonatomic) BOOL enableMultiSelection;
 @property (nonatomic) BOOL enableTextInput;

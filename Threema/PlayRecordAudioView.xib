@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="14490.70" targetRuntime="iOS.CocoaTouch" variant="6xAndEarlier" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
-    <device id="retina4_7" orientation="portrait">
-        <adaptation id="fullscreen"/>
-    </device>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="18122" targetRuntime="iOS.CocoaTouch" variant="6xAndEarlier" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+    <device id="retina4_7" orientation="portrait" appearance="light"/>
     <dependencies>
         <deployment identifier="iOS"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="14490.49"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="18093"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
+        <capability name="System colors in document resources" minToolsVersion="11.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
@@ -18,28 +17,42 @@
         </placeholder>
         <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
         <view clipsSubviews="YES" contentMode="scaleToFill" id="H6B-0z-z3V" customClass="PlayRecordAudioView">
-            <rect key="frame" x="0.0" y="0.0" width="250" height="128"/>
+            <rect key="frame" x="0.0" y="0.0" width="250" height="148"/>
             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
             <subviews>
                 <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="lrD-MY-A3q">
-                    <rect key="frame" x="0.0" y="0.0" width="250" height="80"/>
+                    <rect key="frame" x="0.0" y="0.0" width="250" height="100"/>
                     <subviews>
                         <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="AQm-kP-3Wn" customClass="RecordingMeterGraph">
-                            <rect key="frame" x="20" y="14" width="210" height="40"/>
+                            <rect key="frame" x="20" y="34" width="210" height="40"/>
                             <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                         </view>
                         <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" tag="1" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="00:00" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontForContentSizeCategory="YES" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Sou-A7-xna" customClass="LazyAccessibilityLabel">
-                            <rect key="frame" x="8" y="62" width="41.5" height="18"/>
+                            <rect key="frame" x="8" y="82" width="41.5" height="18"/>
                             <fontDescription key="fontDescription" style="UICTFontTextStyleSubhead"/>
-                            <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
+                            <color key="textColor" systemColor="darkTextColor"/>
                             <nil key="highlightedColor"/>
                         </label>
                         <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" tag="1" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="00:00" textAlignment="right" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontForContentSizeCategory="YES" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="a4Z-Qv-3BY" customClass="LazyAccessibilityLabel">
-                            <rect key="frame" x="200.5" y="62" width="41.5" height="18"/>
+                            <rect key="frame" x="200.5" y="82" width="41.5" height="18"/>
                             <fontDescription key="fontDescription" style="UICTFontTextStyleSubhead"/>
-                            <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
+                            <color key="textColor" systemColor="darkTextColor"/>
                             <nil key="highlightedColor"/>
                         </label>
+                        <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Oce-ze-YvU">
+                            <rect key="frame" x="190" y="5" width="55" height="30"/>
+                            <color key="backgroundColor" systemColor="systemGreenColor"/>
+                            <constraints>
+                                <constraint firstAttribute="width" constant="55" id="cvr-b7-vvf"/>
+                            </constraints>
+                            <inset key="titleEdgeInsets" minX="5" minY="0.0" maxX="5" maxY="0.0"/>
+                            <state key="normal" title="Button">
+                                <color key="titleColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                            </state>
+                            <connections>
+                                <action selector="speedButtonPressed:" destination="-1" eventType="touchUpInside" id="j92-ch-bLq"/>
+                            </connections>
+                        </button>
                     </subviews>
                     <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                     <constraints>
@@ -49,13 +62,15 @@
                         <constraint firstAttribute="bottom" secondItem="a4Z-Qv-3BY" secondAttribute="bottom" id="Qft-iu-42G"/>
                         <constraint firstAttribute="trailingMargin" secondItem="AQm-kP-3Wn" secondAttribute="trailing" constant="12" id="SFC-yc-UAh"/>
                         <constraint firstItem="Sou-A7-xna" firstAttribute="leading" secondItem="lrD-MY-A3q" secondAttribute="leading" constant="8" id="TO3-Cx-6Ym"/>
-                        <constraint firstItem="AQm-kP-3Wn" firstAttribute="top" secondItem="lrD-MY-A3q" secondAttribute="topMargin" constant="6" id="Vp6-N1-Ad1"/>
+                        <constraint firstItem="AQm-kP-3Wn" firstAttribute="top" secondItem="lrD-MY-A3q" secondAttribute="topMargin" constant="26" id="Vp6-N1-Ad1"/>
                         <constraint firstAttribute="bottom" secondItem="AQm-kP-3Wn" secondAttribute="bottom" constant="26" id="dpY-Dl-Bav"/>
-                        <constraint firstAttribute="height" constant="80" id="ld3-qb-hee"/>
+                        <constraint firstAttribute="trailing" secondItem="Oce-ze-YvU" secondAttribute="trailing" constant="5" id="hSq-dp-lph"/>
+                        <constraint firstAttribute="height" constant="100" id="ld3-qb-hee"/>
+                        <constraint firstItem="Oce-ze-YvU" firstAttribute="top" secondItem="lrD-MY-A3q" secondAttribute="top" constant="5" id="t6X-5F-oOD"/>
                     </constraints>
                 </view>
                 <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="JDg-2O-MGc">
-                    <rect key="frame" x="0.0" y="80" width="250" height="48"/>
+                    <rect key="frame" x="0.0" y="100" width="250" height="48"/>
                     <subviews>
                         <view contentMode="scaleToFill" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Yed-9f-JGK" userLabel="Horizontal Divider" customClass="HairlineView">
                             <rect key="frame" x="0.0" y="0.0" width="250" height="1"/>
@@ -122,6 +137,7 @@
                     </constraints>
                 </view>
             </subviews>
+            <viewLayoutGuide key="safeArea" id="gMK-3D-vXx"/>
             <color key="backgroundColor" red="0.0" green="0.0" blue="0.0" alpha="0.0" colorSpace="custom" customColorSpace="sRGB"/>
             <constraints>
                 <constraint firstItem="lrD-MY-A3q" firstAttribute="leading" secondItem="gMK-3D-vXx" secondAttribute="leading" id="7rr-gz-F7g"/>
@@ -134,7 +150,6 @@
             </constraints>
             <nil key="simulatedStatusBarMetrics"/>
             <freeformSimulatedSizeMetrics key="simulatedDestinationMetrics"/>
-            <viewLayoutGuide key="safeArea" id="gMK-3D-vXx"/>
             <connections>
                 <outlet property="buttonView" destination="JDg-2O-MGc" id="Keb-5i-SmE"/>
                 <outlet property="dataView" destination="lrD-MY-A3q" id="bec-wT-9bJ"/>
@@ -144,14 +159,21 @@
                 <outlet property="playPauseStopButton" destination="HJ7-3v-rtF" id="R1c-jh-hiI"/>
                 <outlet property="recordButton" destination="k7u-Y3-Um7" id="gEk-7k-Qen"/>
                 <outlet property="sendButton" destination="wuU-Rb-fJO" id="TDw-QZ-D7W"/>
+                <outlet property="speedButton" destination="Oce-ze-YvU" id="l5o-Rx-cbS"/>
                 <outlet property="timeCursorLabel" destination="Sou-A7-xna" id="hV3-2Q-HFI"/>
                 <outlet property="verticalDividerLine" destination="oxA-2H-2Yw" id="jIu-cW-Pbs"/>
             </connections>
-            <point key="canvasLocation" x="-23" y="-159"/>
+            <point key="canvasLocation" x="-24" y="-150.22488755622189"/>
         </view>
     </objects>
     <resources>
-        <image name="Play" width="16" height="16"/>
-        <image name="Record" width="16" height="16"/>
+        <image name="Play" width="34" height="34"/>
+        <image name="Record" width="34" height="34"/>
+        <systemColor name="darkTextColor">
+            <color white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+        </systemColor>
+        <systemColor name="systemGreenColor">
+            <color red="0.20392156862745098" green="0.7803921568627451" blue="0.34901960784313724" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+        </systemColor>
     </resources>
 </document>

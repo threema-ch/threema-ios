@@ -23,13 +23,14 @@ import CocoaLumberjackSwift
 
 class HeaderView : UIView {
     private lazy var touchAnimator = UIViewPropertyAnimator.barButtonHighlightAnimator(for: self)
-    private var tapAction : (() -> ())?
+    private var tapAction : (() -> ()?)?
+    
     private var titleLabel : UILabel
     private var optionsLabel : UILabel?
     private var viewButton : UIButton
     private var stackView : UIStackView
     
-    init(for mediaPreviewItems : [MediaPreviewItem], frame : CGRect, tapAction : (() -> ())? = nil) {
+    init(for mediaPreviewItems : [MediaPreviewItem], frame : CGRect, tapAction : (() -> ()?)? = nil) {
         self.titleLabel = UILabel()
         self.viewButton = UIButton(frame: frame)
         self.stackView = UIStackView(frame: frame)

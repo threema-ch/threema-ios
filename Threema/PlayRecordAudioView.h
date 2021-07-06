@@ -37,6 +37,7 @@
 
 @property (weak, nonatomic) IBOutlet UIButton *playPauseStopButton;
 @property (weak, nonatomic) IBOutlet UIButton *recordButton;
+@property (weak, nonatomic) IBOutlet UIButton *speedButton;
 
 @property (weak, nonatomic) IBOutlet LazyAccessibilityLabel *timeCursorLabel;
 @property (weak, nonatomic) IBOutlet LazyAccessibilityLabel *durationLabel;

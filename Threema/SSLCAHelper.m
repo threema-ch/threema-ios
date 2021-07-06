@@ -28,28 +28,40 @@
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         NSDictionary *trustKitConfig = @{
-                                         kTSKSwizzleNetworkDelegates: @NO,
-                                         kTSKPinnedDomains: @{
-                                                 @"threema.ch" : @{
-                                                         kTSKIncludeSubdomains: @YES,
-                                                         kTSKPublicKeyHashes : @[
-                                                                 @"8SLubAXo6MrrGziVya6HjCS/Cuc7eqtzw1v6AfIW57c=",
-                                                                 @"8kTK9HP1KHIP0sn6T2AFH3Bq+qq3wn2i/OJSMjewpFw=",
-                                                                 @"KKBJHJn1PQSdNTmoAfhxqWTO61r8O8bPi/JeGtP/6gg=",
-                                                                 @"h2gHawxPZyMCiZSkJN0dQ4RsDxowVuTmuiNQyjeU+Sk=",
-                                                                 @"HXqz8rMr6nBDdUX3CdyIwln8ym3qFUBwv4QGyMN2uEg=",
-                                                                 @"2Vpy8qUQCqc2+Lg6BgRO8G6e6vh7NmvVHTljfwP/Pfk=",
-                                                                 @"vGQZ8hm2h+km+q7rnJ7kF9S17BwSY0rbhwjz6nIupf0=",
-                                                                 @"jsQHAHKQ2oOf3rvMn9GJVIKslkhLpODGOMPSxgLeIyo="
-                                                                 ],
-                                                         kTSKEnforcePinning : @YES,
-                                                         kTSKReportUris: @[
-                                                                 @"https://3ma.ch/pinreport"
-                                                                 ],
-                                                         kTSKDisableDefaultReportUri: @YES
-                                                         },
-                                                 }
-                                         };
+            kTSKSwizzleNetworkDelegates: @NO,
+            kTSKPinnedDomains: @{
+                    @"threema.ch" : @{
+                            kTSKIncludeSubdomains: @YES,
+                            kTSKPublicKeyHashes : @[
+                                    @"8SLubAXo6MrrGziVya6HjCS/Cuc7eqtzw1v6AfIW57c=",
+                                    @"8kTK9HP1KHIP0sn6T2AFH3Bq+qq3wn2i/OJSMjewpFw=",
+                                    @"KKBJHJn1PQSdNTmoAfhxqWTO61r8O8bPi/JeGtP/6gg=",
+                                    @"h2gHawxPZyMCiZSkJN0dQ4RsDxowVuTmuiNQyjeU+Sk=",
+                                    @"HXqz8rMr6nBDdUX3CdyIwln8ym3qFUBwv4QGyMN2uEg=",
+                                    @"2Vpy8qUQCqc2+Lg6BgRO8G6e6vh7NmvVHTljfwP/Pfk=",
+                                    @"vGQZ8hm2h+km+q7rnJ7kF9S17BwSY0rbhwjz6nIupf0=",
+                                    @"jsQHAHKQ2oOf3rvMn9GJVIKslkhLpODGOMPSxgLeIyo="
+                            ],
+                            kTSKEnforcePinning : @YES,
+                            kTSKReportUris: @[
+                                    @"https://3ma.ch/pinreport"
+                            ],
+                            kTSKDisableDefaultReportUri: @YES
+                    },
+                    @"test.threema.ch" : @{
+                            kTSKIncludeSubdomains: @YES,
+                            kTSKPublicKeyHashes : @[
+                                    @"/mH2CVdSxVBMuKiRHplBP2GTFWs/l+KXHriAxRFNsaw=",
+                                    @"bmsGGaIGEs1HWAUIE082NSPYTURvChScDmE7PjL+5RQ="
+                            ],
+                            kTSKEnforcePinning : @YES,
+                            kTSKReportUris: @[
+                                    @"https://3ma.ch/pinreport"
+                            ],
+                            kTSKDisableDefaultReportUri: @YES
+                    },
+            }
+        };
         [TrustKit initSharedInstanceWithConfiguration:trustKitConfig];
     });
 }

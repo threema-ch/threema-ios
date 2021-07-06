@@ -24,18 +24,20 @@ import CocoaLumberjackSwift
 import PromiseKit
 
 class RootNavigationController : UINavigationController {
-    var recipientConversations : Set<Conversation>?
-    var itemLoader = ItemLoader()
-    var itemSender = ItemSender()
-    var passcodeTryCount : Int = 0
     
+    var recipientConversations : Set<Conversation>?
     var passcodeVC : JKLLockScreenViewController?
+    var passcodeTryCount : Int = 0
     var isAuthorized : Bool = false
     
-    var progressViewController : ProgressViewController?
-    var textPreview : TextPreviewViewController?
+    let itemLoader = ItemLoader()
+    var itemSender = ItemSender()
     
-    var extensionRunning = false
+    
+    unowned var previewViewController : MediaPreviewViewController?
+    unowned var picker : ContactGroupPickerViewController?
+    unowned var progressViewController : ProgressViewController?
+    unowned var textPreview : TextPreviewViewController?
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -119,7 +121,13 @@ class RootNavigationController : UINavigationController {
         let storyboardName = "MediaShareStoryboard"
         let storyboardBundle = Bundle(for: MediaPreviewViewController.self)
         let sb = UIStoryboard(name: storyboardName, bundle: storyboardBundle)
-        let previewViewController = sb.instantiateViewController(withIdentifier: "MediaShareController") as! MediaPreviewViewController
+        previewViewController = sb.instantiateViewController(withIdentifier: "MediaShareController") as? MediaPreviewViewController
+        
+        guard let previewViewController = previewViewController else {
+            let err = "Could not create preview view controller!"
+            DDLogError(err)
+            fatalError(err)
+        }
         
         previewViewController.backIsCancel = true
         previewViewController.sendIsChoose = true
@@ -128,20 +136,20 @@ class RootNavigationController : UINavigationController {
         previewViewController.memoryConstrained = true
         
         let dataProcessor = MediaPreviewURLDataProcessor()
-        dataProcessor.cancelAction = self.cancelAndClose
+        dataProcessor.cancelAction = {[weak self] in self?.cancelAndClose()}
+        dataProcessor.memoryConstrained = true
         
-        previewViewController.initWithMedia(dataArray: data, delegate: self, completion: { (data, sendAsFile, captions) in
+        previewViewController.initWithMedia(dataArray: data, delegate: self, completion: { [weak self] (data, sendAsFile, captions) in
             guard let dataItems = data as? [URL] else {
                 let err = "Invalid format for data items from media preview"
                 DDLogError(err)
                 fatalError(err)
             }
-            self.itemSender.sendAsFile = sendAsFile
-            self.itemSender.itemsToSend = dataItems
-            self.itemSender.captions = captions
-            self.chooseContacts()
+            self?.itemSender.sendAsFile = sendAsFile
+            self?.itemSender.itemsToSend = dataItems
+            self?.itemSender.captions = captions
+            self?.chooseContacts()
         }, itemDelegate: dataProcessor)
-        
         
         self.pushViewController(previewViewController, animated: true)
         let title = BundleUtil.localizedString(forKey: "cancel")
@@ -159,7 +167,8 @@ class RootNavigationController : UINavigationController {
             fatalError(err)
         }
         
-        guard let picker = pickerController.topViewController as? ContactGroupPickerViewController else {
+        picker = pickerController.topViewController as? ContactGroupPickerViewController
+        guard let picker = picker else {
             let err = "Could not create Contact Picker"
             DDLogError(err)
             fatalError(err)
@@ -404,9 +413,8 @@ class RootNavigationController : UINavigationController {
     }
     
     private func showProgressUI() {
-        self.progressViewController = self.storyboard!.instantiateViewController(withIdentifier: "ProgressViewController") as? ProgressViewController
-        
         _ = itemSender.itemCount().done { itemCount in
+            self.progressViewController = self.storyboard!.instantiateViewController(withIdentifier: "ProgressViewController") as? ProgressViewController
             guard let progressController = self.progressViewController else {
                 DDLogError("Could not find progressViewController")
                 self.finishAndClose(success: false)
@@ -425,8 +433,8 @@ class RootNavigationController : UINavigationController {
     }
     
     private func sendItems() {
-        self.navigationController?.viewControllers.removeAll()
-        itemSender.sendItemsTo(conversations: recipientConversations!)
+        self.popToRootViewController(animated: true)
+        self.itemSender.sendItemsTo(conversations: self.recipientConversations!)
     }
     
     private func startSending() {
@@ -451,21 +459,31 @@ class RootNavigationController : UINavigationController {
     
     private func commonCompletionHandler() {
         AppGroup.setActive(false, for: AppGroupTypeShareExtension)
+        forceExit()
     }
     
     private func completionHandler(expired : Bool) {
-        self.commonCompletionHandler()
-        
         if expired {
             itemSender.shouldCancel = true;
             ServerConnector.shared()?.disconnect()
         } else {
             ServerConnector.shared()?.disconnectWait()
         }
+        self.commonCompletionHandler()
     }
     
     private func cancelAndClose() {
         self.finishAndClose(success: false)
+    }
+    
+    /// The share extension lives in a process which will be reused when the share extension is launched multiple times.
+    /// Since we cannot clear all state, some leftover memory (around 15MB per launch of the SE) will always exist causing issues when large images are shared.
+    private func forceExit() {
+        DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 1.5) {
+            DDLogNotice("Force exiting the share extension")
+            DDLog.flushLog()
+            exit(0)
+        }
     }
     
     private func finishAndClose(success : Bool) {
@@ -489,6 +507,7 @@ class RootNavigationController : UINavigationController {
                 }
             }
             self.extensionContext?.completeRequest(returningItems: nil, completionHandler: { expired in
+                NotificationCenter.default.removeObserver(self)
                 self.completionHandler(expired: expired)
             })
         })
@@ -512,15 +531,12 @@ extension RootNavigationController : ContactGroupPickerDelegate {
             recipientConversations?.insert(conversation)
         }
         
-        self.navigationController?.viewControllers.removeFirst()
         self.startSending()
     }
     
     func contactPickerDidCancel(_ contactPicker: ContactGroupPickerViewController!) {
         self.popViewController(animated: true)
     }
-    
-    
 }
 
 // MARK: - Passcode lock delegate

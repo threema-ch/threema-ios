@@ -24,7 +24,7 @@ import CoreServices
 import PromiseKit
 import CocoaLumberjackSwift
 
-protocol SenderItemDelegate {
+protocol SenderItemDelegate : AnyObject {
     func showAlert(with title : String, message : String)
     func setProgress(progress : NSNumber, forItem : Any)
     func finishedItem(item : Any)
@@ -48,7 +48,7 @@ class ItemSender : NSObject {
     private var uploadSema = DispatchSemaphore(value: 0)
     private var sender : FileMessageSender?
     
-    var delegate : SenderItemDelegate?
+    weak var delegate : SenderItemDelegate?
     
     func itemCount() -> Promise<Int> {
         var count = 0

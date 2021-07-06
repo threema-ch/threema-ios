@@ -22,7 +22,7 @@ import UIKit
 
 class MediaPreviewCarouselContainerView : UIView {
     var carouselAccessibilityElement : MediaPreviewCarouselAccessibilityElement?
-    var delegate : MediaPreviewViewController?
+    weak var delegate : MediaPreviewViewController?
     var currentImage : MediaPreviewItem?
     var index = 0
     

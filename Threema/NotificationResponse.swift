@@ -127,7 +127,9 @@ import Foundation
     private func finishResponse() {
         NotificationManager.sharedInstance()?.updateUnreadMessagesCount(false)
         BackgroundTaskManager.shared.cancelBackgroundTask(key: notificationIdentifier)
-        self.completionHandler()
+        DispatchQueue.main.async {
+            self.completionHandler()
+        }
     }
 
     private func handleThumbUp() {

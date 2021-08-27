@@ -175,12 +175,6 @@ public class WebCreateFileMessageRequest: WebAbstractMessage {
                     let sender = FileMessageSender()
                     sender.send(item, in: conversation, requestId: self.requestId)
                 }
-                else if !self.sendAsFile && ( self.fileType == "audio/m4a" || self.fileType == "audio/x-m4a" || self.fileType == "audio/mp4" ) {
-                    let senderItem = URLSenderItem(data: self.fileData!, fileName: "audio.m4a", type: self.type, renderType: 1, sendAsFile: true)
-
-                    let fileSender = FileMessageSender()
-                    fileSender.send(senderItem, in: conversation, requestId: self.requestId)
-                }
                 else if !self.sendAsFile && ( self.fileType == "video/mp4" || self.fileType == "video/mpeg4" || self.fileType == "video/x-m4v" ) {
                     let creator = VideoURLSenderItemCreator()
                     guard let data = self.fileData else {
@@ -201,6 +195,8 @@ public class WebCreateFileMessageRequest: WebAbstractMessage {
                     }
                     
                 }
+                // Note: Audio files are always sent as file messages except when they are recorded voice
+                // messages inside the app. Thus we don't have a special case for them here.
                 else {
                     DispatchQueue.main.async {
                         let blobSender = FileMessageSender.init()

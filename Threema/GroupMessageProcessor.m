@@ -103,7 +103,14 @@
         return;
     }
 
-    if ([_group isGroupMember:_message.fromIdentity] == NO) {
+    if ([_group isSelfMember] == NO && _group.isOwnGroup == NO) {
+        [GroupProxy sendSyncRequestWithGroupId:_message.groupId creator:_message.groupCreator];
+        _addToPendingMessages = YES;
+                
+        onCompletion(YES);
+        return;
+    }
+    else if ([_group isGroupMember:_message.fromIdentity] == NO) {
         if (_group.isOwnGroup) {
             DDLogInfo(@"%@ is not member of group %@, resend group info", _message.fromIdentity, _message.groupId);
             [_group syncGroupInfoToIdentity:_message.fromIdentity];
@@ -157,7 +164,7 @@
 
             NSMutableSet *members = [NSMutableSet setWithArray:msg.groupMembers];
             [members addObject:msg.fromIdentity];
-            
+
             [self updateMembers:members remoteSentDate:msg.date];
         
             /* update GroupMyIdentity in conversation to send messages if we were (re-)added to existing group */

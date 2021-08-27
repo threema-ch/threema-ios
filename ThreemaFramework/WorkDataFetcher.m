@@ -119,15 +119,12 @@
                 NSString *lastName = nil;
                 
                 if (workContact[@"first"] != nil && workContact[@"first"] != [NSNull null]) {
-                    if (((NSString *) workContact[@"first"]).length > 0) {
-                        firstName = workContact[@"first"];
-                    }
+                    firstName = workContact[@"first"];
+                    
                 }
                 
                 if (workContact[@"last"] != nil && workContact[@"last"] != [NSNull null]) {
-                    if (((NSString *) workContact[@"last"]).length > 0) {
-                        lastName = workContact[@"last"];
-                    }
+                    lastName = workContact[@"last"];
                 }
                 
                 [[ContactStore sharedContactStore] addWorkContactWithIdentity:workContact[@"id"] publicKey:[[NSData alloc] initWithBase64EncodedString:workContact[@"pk"] options:0] firstname:firstName lastname:lastName];

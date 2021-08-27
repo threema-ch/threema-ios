@@ -50,7 +50,8 @@
 @property (weak, nonatomic) IBOutlet UILabel *sendAsFileLabel;
 @property (weak, nonatomic) IBOutlet UISwitch *sendAsFileSwitch;
 
-@property (weak, nonatomic) id<ContactGroupPickerDelegate> delegate;
+// This is required to be strong when called from ShareController
+@property (strong, nonatomic) id<ContactGroupPickerDelegate> delegate;
 
 @property (nonatomic) BOOL enableMultiSelection;
 @property (nonatomic) BOOL enableTextInput;

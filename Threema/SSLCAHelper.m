@@ -48,18 +48,7 @@
                             ],
                             kTSKDisableDefaultReportUri: @YES
                     },
-                    @"test.threema.ch" : @{
-                            kTSKIncludeSubdomains: @YES,
-                            kTSKPublicKeyHashes : @[
-                                    @"/mH2CVdSxVBMuKiRHplBP2GTFWs/l+KXHriAxRFNsaw=",
-                                    @"bmsGGaIGEs1HWAUIE082NSPYTURvChScDmE7PjL+5RQ="
-                            ],
-                            kTSKEnforcePinning : @YES,
-                            kTSKReportUris: @[
-                                    @"https://3ma.ch/pinreport"
-                            ],
-                            kTSKDisableDefaultReportUri: @YES
-                    },
+                    
             }
         };
         [TrustKit initSharedInstanceWithConfiguration:trustKitConfig];

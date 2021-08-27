@@ -323,8 +323,16 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
             [self addProfilePictureRequest:identity];
         }
         
-        contact.firstName = firstname;
-        contact.lastName = lastname;
+        if (firstname != nil) {
+            if (firstname.length > 0) {
+                contact.firstName = firstname;
+            }
+        }
+        if (lastname != nil) {
+            if (lastname.length > 0) {
+                contact.lastName = lastname;
+            }
+        }
         
         if (contact.verificationLevel.intValue != kVerificationLevelFullyVerified) {
             contact.verificationLevel = [NSNumber numberWithInt:kVerificationLevelServerVerified];

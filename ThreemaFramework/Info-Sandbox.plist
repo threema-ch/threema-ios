@@ -51,7 +51,7 @@
 	<key>ThreemaServerNamePrefixv6</key>
 	<string>ds.g-</string>
 	<key>ThreemaServerNameSuffix</key>
-	<string>.0.test.threema.ch</string>
+	<string></string>
 	<key>ThreemaServerPorts</key>
 	<array>
 		<integer>5222</integer>

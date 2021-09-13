@@ -412,7 +412,7 @@ extension CompanyDirectoryViewController: UITableViewDelegate {
             loadMore(cell: cell!)
         } else {
             let directoryContact = contactsWithSections[indexPath.section][indexPath.row]
-            let contact = ContactStore.shared()?.addWorkContact(withIdentity: directoryContact.id, publicKey: directoryContact.pk, firstname: directoryContact.first, lastname: directoryContact.last)
+            let contact = ContactStore.shared()?.addWorkContact(withIdentity: directoryContact.id, publicKey: directoryContact.pk, firstname: directoryContact.first, lastname: directoryContact.last, shouldUpdateFeatureMask: true)
             // show chat
             if contact != nil {
                 navigationController?.dismiss(animated: true, completion: {

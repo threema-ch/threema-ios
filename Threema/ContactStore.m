@@ -292,7 +292,7 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
     return contact;
 }
 
-- (Contact *)addWorkContactWithIdentity:(NSString *)identity publicKey:(NSData*)publicKey firstname:(NSString *)firstname lastname:(NSString *)lastname {
+- (Contact *)addWorkContactWithIdentity:(NSString *)identity publicKey:(NSData*)publicKey firstname:(NSString *)firstname lastname:(NSString *)lastname shouldUpdateFeatureMask:(BOOL)shouldUpdateFeatureMask {
     /* Make sure this is not our own identity */
     if ([MyIdentityStore sharedMyIdentityStore].isProvisioned && [identity isEqualToString:[MyIdentityStore sharedMyIdentityStore].identity]) {
         DDLogInfo(@"Ignoring attempt to add own identity");
@@ -344,9 +344,12 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
     if (added)
         [[NSNotificationCenter defaultCenter] postNotificationName:kNotificationAddedContact object:contact];
     
-    [self updateFeatureMasksForContacts:@[contact] onCompletion:^{
-    } onError:^(NSError *error) {
-    }];
+    if (shouldUpdateFeatureMask) {
+        [self updateFeatureMasksForContacts:@[contact] onCompletion:^{
+        } onError:^(NSError *error) {
+        }];
+    }
+    
     return contact;
 }
 
@@ -529,7 +532,7 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
                                         lastName = foundIdentity[@"last"];
                                     }
                                     
-                                    [self addWorkContactWithIdentity:identity publicKey:publicKey firstname:firstName lastname:lastName];
+                                    [self addWorkContactWithIdentity:identity publicKey:publicKey firstname:firstName lastname:lastName shouldUpdateFeatureMask:true];
                                     onCompletion(publicKey);
                                 }
                             }

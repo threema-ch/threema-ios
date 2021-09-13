@@ -127,7 +127,8 @@
                     lastName = workContact[@"last"];
                 }
                 
-                [[ContactStore sharedContactStore] addWorkContactWithIdentity:workContact[@"id"] publicKey:[[NSData alloc] initWithBase64EncodedString:workContact[@"pk"] options:0] firstname:firstName lastname:lastName];
+                // The feature mask will be updated a few lines below in line 139.
+                [[ContactStore sharedContactStore] addWorkContactWithIdentity:workContact[@"id"] publicKey:[[NSData alloc] initWithBase64EncodedString:workContact[@"pk"] options:0] firstname:firstName lastname:lastName shouldUpdateFeatureMask:false];
                 [workContactIds addObject:workContact[@"id"]];
             }
         }

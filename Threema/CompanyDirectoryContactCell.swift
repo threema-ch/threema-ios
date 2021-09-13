@@ -73,7 +73,7 @@ class CompanyDirectoryContactCell: UITableViewCell {
     }
     
     @objc private func addContact() {
-        ContactStore.shared()?.addWorkContact(withIdentity: contact.id, publicKey: contact.pk, firstname: contact.first, lastname: contact.last)
+        ContactStore.shared()?.addWorkContact(withIdentity: contact.id, publicKey: contact.pk, firstname: contact.first, lastname: contact.last, shouldUpdateFeatureMask: true)
         setupCell()
     }
 }

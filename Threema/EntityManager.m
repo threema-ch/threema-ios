@@ -137,11 +137,14 @@
 }
 
 - (void)internalSave:(void (^)(void))onCompletion {
-    if (ddLogLevel == DDLogLevelVerbose) {        
+    
+    #ifdef DEBUG
+    if (ddLogLevel == DDLogLevelVerbose) {
         DDLogVerbose(@"inserted objects: %@", [dbContext.current insertedObjects]);
         DDLogVerbose(@"updated objects: %@", [dbContext.current updatedObjects]);
         DDLogVerbose(@"deleted objects: %@", [dbContext.current deletedObjects]);
     }
+    #endif
     
     NSError *error = nil;
     if (![dbContext.current save:&error]) {

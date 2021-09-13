@@ -76,8 +76,10 @@ class CallViewController: UIViewController {
         didSet {
             if self.isReceivingRemoteVideo {
                 self.startRemoteVideo()
-                let generator = UINotificationFeedbackGenerator()
-                generator.notificationOccurred(.warning)
+                DispatchQueue.main.async {
+                    let generator = UINotificationFeedbackGenerator()
+                    generator.notificationOccurred(.warning)
+                }
             } else {
                 self.endRemoteVideo()
             }

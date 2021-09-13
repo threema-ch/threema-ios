@@ -35,7 +35,7 @@
 - (void)addContactWithIdentity:(NSString*)identity verificationLevel:(int32_t)verificationLevel onCompletion:(void(^)(Contact *contact, BOOL alreadyExists))onCompletion onError:(void(^)(NSError *error))onError;
 - (Contact*)addContactWithIdentity:(NSString*)identity publicKey:(NSData*)publicKey cnContactId:(NSString *)cnContactId verificationLevel:(int32_t)verificationLevel featureMask:(NSNumber *)featureMask alerts:(BOOL)alerts;
 - (Contact*)addContactWithIdentity:(NSString*)identity publicKey:(NSData*)publicKey cnContactId:(NSString *)cnContactId verificationLevel:(int32_t)verificationLevel state:(NSNumber *)state type:(NSNumber *)type featureMask:(NSNumber *)featureMask alerts:(BOOL)alerts;
-- (Contact *)addWorkContactWithIdentity:(NSString *)identity publicKey:(NSData*)publicKey firstname:(NSString *)firstname lastname:(NSString *)lastname;
+- (Contact *)addWorkContactWithIdentity:(NSString *)identity publicKey:(NSData*)publicKey firstname:(NSString *)firstname lastname:(NSString *)lastname shouldUpdateFeatureMask:(BOOL)shouldUpdateFeatureMask;
 
 - (void)updateContact:(Contact*)contact;
 - (void)linkContact:(Contact *)contact toCnContactId:(NSString *)cnContactId;

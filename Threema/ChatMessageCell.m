@@ -1371,13 +1371,14 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     CGFloat minX = self.msgBackground.frame.size.width/2 < 75.0 && message.isOwn.boolValue ? self.msgBackground.frame.size.width / 2 : 75.0;
     CGFloat newAlpha = recognizer.view.frame.origin.x / minX;
     
-    if (quoteSlideIconImage.alpha < 0.8 && newAlpha >= 0.8) {
-        [gen prepare];
-    }
-    
-    if (quoteSlideIconImage.alpha < 1.0 && newAlpha >= 1.0) {
-        [gen impactOccurred];
-    }
+    dispatch_async(dispatch_get_main_queue(), ^{
+        if (quoteSlideIconImage.alpha < 0.8 && newAlpha >= 0.8) {
+            [gen prepare];
+        }
+        if (quoteSlideIconImage.alpha < 1.0 && newAlpha >= 1.0) {
+            [gen impactOccurred];
+        }
+    });
     if (message.isOwn.boolValue) {
         quoteSlideIconImage.frame = CGRectMake(dateLabel.frame.origin.x - 30.0, recognizer.view.frame.origin.y + (recognizer.view.frame.size.height / 2) - 10.0, 20.0, 20.0);
     } else {

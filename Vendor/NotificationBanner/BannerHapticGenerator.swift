@@ -44,9 +44,11 @@ open class BannerHapticGenerator: NSObject {
     open class func generate(_ haptic: BannerHaptic) {
         if #available(iOS 10.0, *) {
             if let style = haptic.impactStyle {
-                let feedbackGenerator = UIImpactFeedbackGenerator(style: style)
-                feedbackGenerator.prepare()
-                feedbackGenerator.impactOccurred()
+                DispatchQueue.main.async {
+                    let feedbackGenerator = UIImpactFeedbackGenerator(style: style)
+                    feedbackGenerator.prepare()
+                    feedbackGenerator.impactOccurred()
+                }
             }
         }
     }

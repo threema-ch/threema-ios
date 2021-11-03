@@ -728,11 +728,12 @@
 "notification_sound_title" = "通知音を鳴らす";
 
 /* WebClient */
-"webClientSession_title" = "Threemaウェブ";
+"webClientSession_title" = "デスクトップ／ウェブ";
 "webClientSession_add" = "新しいセッションを始める";
-"webClientSession_add_wrong_qr_title" = "Threemaウェブ";
-"webClientSession_add_wrong_qr_message" = "Threema WebのQRコードではありません。https://web.threema.ch/ を開いて、そこに表示されているQRコードを読み取ってください。";
-"webClientSession_add_footer" = "パソコンで https://web.threema.ch/ を開きます。そしてこの画面の右上にあるカメラのアイコンをタップして、パソコンでQRコードを読み取ってください。";
+"webClientSession_add_wrong_qr_title" = "デスクトップ／ウェブ";
+"webClientSession_add_wrong_qr_message" = "デスクトップアプリ／ウェブクライアントのQRコードではありません。デスクトップアプリをダウンロード（https://threema.ch/download）するか、ウェブクライアント（https://web.threema.ch/） を開いて、そこに表示されているQRコードを読み取ってください。";
+"webClientSession_add_footer" = "パソコン（PCまたはMac）
+でデスクトップアプリをダウンロード（https://threema.ch/download）するか、ウェブクライアント（https://web.threema.ch/）を開きます。そしてこの画面の右上にあるカメラのアイコンをタップして、パソコンでQRコードを読み取ってください。";
 "webClientSession_sessions_header" = "セッション";
 "webClientSession_unnamed" = "名称未設定のセッション";
 "webClientSession_lastUse" = "最終接続";
@@ -744,19 +745,18 @@
 "webClientSession_actionSheet_startSession" = "セッションを開始";
 "webClientSession_actionSheet_renameSession" = "セッション名を編集";
 "webClientSession_actionSheet_deleteSession" = "セッションを削除";
-"webClientSession_error_updateApp_title" = "Threemaウェブ";
-"webClientSession_error_updateApp_message" = "Threema Webプロトコルのバージョンが間違っているので、アプリをアップデートしてください。";
-"webClientSession_error_updateServer_title" = "Threemaウェブ";
-"webClientSession_error_updateServer_message" = "Threema Webのバージョンが間違っているので、管理者にWebクライアントのアップデートを依頼してください。";
-"webClientSession_error_wrongVersion_title" = "Threemaウェブ";
-"webClientSession_error_wrongVersion_message" = "このアプリのバージョンでは、WebクライアントのThreema Webプロトコルには対応していません。";
+"webClientSession_error_updateApp_title" = "デスクトップ／ウェブ";
+"webClientSession_error_updateApp_message" = "アプリリモートプロトコルのバージョンが正しくありません。iOSアプリをアップデートしてください。";
+"webClientSession_error_updateServer_title" = "デスクトップ／ウェブ";
+"webClientSession_error_updateServer_message" = "アプリリモートプロトコルのバージョンが正しくありません。現在のバージョンのデスクトップアプリをダウンロードするか、管理者にウェブクライアントのアップデートを依頼してください。";
+"webClientSession_error_wrongVersion_title" = "デスクトップ／ウェブ";
+"webClientSession_error_wrongVersion_message" = "このiOSアプリのバージョンは、デスクトップアプリ／ウェブクライアントのアプリリモートプロトコルには対応していません。";
 
-"webClient_scan_error_title" = "Threemaウェブ";
-"webClient_scan_error_message" = "これはThreema WebのQRコードです。設定 > Threema Web のスキャナーで読み取ってください。";
+"webClient_scan_error_title" = "デスクトップ／ウェブ";
+"webClient_scan_error_message" = "これはデスクトップアプリ／ウェブクライアントのQRコードです。［設定］>［デスクトップ／ウェブ］でスキャナーを使用してください。";
 
-"webClient_scan_error_mdm_host_title" = "Threema Webセッションを開始できません";
+"webClient_scan_error_mdm_host_title" = "セッションを開始できません";
 "webClient_scan_error_mdm_host_message" = "サーバーが管理者によって承認されていません。";
-
 
 /* ProtectedDataUnavailable */
 "protectedDataUnavailable_error_text" = "保護されたデータは現在利用できません。アプリを終了して再度お試しください。";
@@ -902,7 +902,7 @@
 "settings_storage_management" = "ストレージ管理";
 "settings_passcode_lock" = "パスコードロック";
 "settings_threema_calls" = "Threema通話";
-"settings_threema_web" = "Threemaウェブ";
+"settings_threema_web" = "デスクトップ／ウェブ";
 "settings_network_status" = "ネットワークステータス";
 "settings_version" = "バージョン";
 "settings_license_username" = "ライセンスユーザーネーム";

@@ -478,12 +478,14 @@
     [verify(_mockLicenseStore) setLicensePassword:@"new-test1234"];
     
     [verifyCount(_mockMyIdentityStore, times(0)) setPushFromName:anything()];
-    [verifyCount(_mockMyIdentityStore, times(0)) setFirstName:anything()];
-    [verifyCount(_mockMyIdentityStore, times(0)) setLastName:anything()];
-    [verifyCount(_mockMyIdentityStore, times(0)) setCsi:anything()];
-    [verifyCount(_mockMyIdentityStore, times(0)) setCategory:anything()];
     [verifyCount(_mockMyIdentityStore, times(0)) setCreateIDEmail:anything()]; // not renewable
     [verifyCount(_mockMyIdentityStore, times(0)) setCreateIDPhone:anything()]; // not renewable
+    
+    [verifyCount(_mockMyIdentityStore, times(1)) setFirstName:anything()];
+    [verifyCount(_mockMyIdentityStore, times(1)) setLastName:anything()];
+    [verifyCount(_mockMyIdentityStore, times(1)) setCsi:anything()];
+    [verifyCount(_mockMyIdentityStore, times(1)) setCategory:anything()];
+
     
     XCTAssertFalse([mdmSetup readonlyProfile]);
     [verifyCount(_mockUserSettings, times(0)) setBlockUnknown:anything()];
@@ -974,6 +976,49 @@
     XCTAssertTrue([mdmSetup isSafeRestoreForce]);
     XCTAssertTrue([mdmSetup isSafeRestoreServerPreset]);
     XCTAssertTrue([mdmSetup isSafeRestorePasswordPreset]);
+}
+
+- (void)testLoadDisabledIDCreationValues {
+    [given([_mockLicenseStore getRequiresLicenseKey]) willReturnBool:YES];
+    
+    // Company-MDM
+    [self setMdm:[self getAllMdmParameters:NO] threemaMdm:nil];
+
+    MDMSetup *mdmSetup = [[MDMSetup alloc] initWithSetup:NO];
+    [mdmSetup loadIDCreationValues];
+    
+    [self setMdm:nil threemaMdm:nil];
+
+    [mdmSetup loadIDCreationValues];
+    
+    [verifyCount(_mockMyIdentityStore, times(2)) setFirstName:anything()];
+    [verifyCount(_mockMyIdentityStore, times(2)) setLastName:anything()];
+    [verifyCount(_mockMyIdentityStore, times(2)) setCsi:anything()];
+    [verifyCount(_mockMyIdentityStore, times(2)) setCategory:anything()];
+}
+
+- (void)testLoadEmptyIDCreationValues {
+    [given([_mockLicenseStore getRequiresLicenseKey]) willReturnBool:YES];
+    
+    // Company-MDM
+    [self setMdm:[self getAllMdmParameters:NO] threemaMdm:nil];
+
+    MDMSetup *mdmSetup = [[MDMSetup alloc] initWithSetup:NO];
+    [mdmSetup loadIDCreationValues];
+    
+    id keysCompanyMdm[] = { MDM_KEY_FIRST_NAME, MDM_KEY_LAST_NAME, MDM_KEY_CSI, MDM_KEY_CATEGORY };
+    id objectsCompanyMdm[] = { @"", @"", @"", @"" };
+    NSUInteger countCompanyMdm = sizeof(objectsCompanyMdm) / sizeof(id);
+    NSDictionary *companyMdm = [NSDictionary dictionaryWithObjects:objectsCompanyMdm forKeys:keysCompanyMdm count:countCompanyMdm];
+    
+    [self setMdm:companyMdm threemaMdm:nil];
+
+    [mdmSetup loadIDCreationValues];
+    
+    [verifyCount(_mockMyIdentityStore, times(2)) setFirstName:anything()];
+    [verifyCount(_mockMyIdentityStore, times(2)) setLastName:anything()];
+    [verifyCount(_mockMyIdentityStore, times(2)) setCsi:anything()];
+    [verifyCount(_mockMyIdentityStore, times(2)) setCategory:anything()];
 }
 
 - (NSDictionary*)getAllMdmParameters:(BOOL)isThreemaMdm  {

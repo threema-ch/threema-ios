@@ -1252,7 +1252,7 @@ extension VoIPCallService {
             if let navController = presentingVC as? UINavigationController {
                 presentingVC = navController.viewControllers.last
             }
-            if !(presentingVC?.isKind(of: CallViewController.self))! {
+            if !(presentingVC?.isKind(of: CallViewController.self) ?? false) {
                 if let presentedVC = presentingVC?.presentedViewController {
                     if presentedVC.isKind(of: CallViewController.self) {
                         return

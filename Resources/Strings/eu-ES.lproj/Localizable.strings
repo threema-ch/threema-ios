@@ -757,7 +757,6 @@
 "webClient_scan_error_mdm_host_title" = "Ezin da saioa hasi Threema Web-ean";
 "webClient_scan_error_mdm_host_message" = "Administratzaileak onartu gabeko zerbitzaria.";
 
-
 /* ProtectedDataUnavailable */
 "protectedDataUnavailable_error_text" = "Datu babestuak ez daude erabilgarri une honetan. Irten aplikaziotik eta saiatu berriro.";
 "protectedDataUnavailable_exitbutton" = "Irten";

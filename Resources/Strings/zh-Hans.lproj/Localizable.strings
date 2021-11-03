@@ -728,11 +728,11 @@
 "notification_sound_title" = "播放通知声音";
 
 /* WebClient */
-"webClientSession_title" = "Threema 网页版";
+"webClientSession_title" = "桌面版/网页版";
 "webClientSession_add" = "开始新的会话";
-"webClientSession_add_wrong_qr_title" = "Threema 网页版";
-"webClientSession_add_wrong_qr_message" = "这不是 Threema 网页版的二维码。打开 https://web.threema.ch/ ，扫描该网页上的二维码。";
-"webClientSession_add_footer" = "首先，在 PC / Mac 上打开 https://web.threema.ch/ 。然后，点击屏幕右上角的相机图标，扫描电脑上的二维码。";
+"webClientSession_add_wrong_qr_title" = "桌面版/网页版";
+"webClientSession_add_wrong_qr_message" = "这不是桌面版应用程序 / 网页版客户端的二维码。下载桌面版应用程序 (https://threema.ch/download) 或打开网页版客户端 (https://web.threema.ch/)，然后扫描那里显示的二维码。";
+"webClientSession_add_footer" = "在您的PC/Mac上，下载桌面版应用程序(https://threema.ch/download) 或打开网页版客户端(https://web.threema.ch/)。然后，点击这个屏幕右上角的相机图标，扫描电脑上的二维码。";
 "webClientSession_sessions_header" = "会话";
 "webClientSession_unnamed" = "未命名会话";
 "webClientSession_lastUse" = "最后使用时间";
@@ -744,19 +744,18 @@
 "webClientSession_actionSheet_startSession" = "开始会话";
 "webClientSession_actionSheet_renameSession" = "重命名会话";
 "webClientSession_actionSheet_deleteSession" = "删除会话";
-"webClientSession_error_updateApp_title" = "Threema 网页版";
-"webClientSession_error_updateApp_message" = "错误的 Threema 网页版协议版本，请更新您的应用程序。";
-"webClientSession_error_updateServer_title" = "Threema 网页版";
-"webClientSession_error_updateServer_message" = "错误的Threema 网页版协议版本，请要求管理员更新网络客户端。";
-"webClientSession_error_wrongVersion_title" = "Threema 网页版";
-"webClientSession_error_wrongVersion_message" = "此应用程序版本不支持网络客户端的 Threema 网页版协议。";
+"webClientSession_error_updateApp_title" = "桌面版/网页版";
+"webClientSession_error_updateApp_message" = "应用程序远程协议版本有误，请更新您的iOS应用程序。";
+"webClientSession_error_updateServer_title" = "桌面版/网页版";
+"webClientSession_error_updateServer_message" = "应用程序远程协议版本有误，请下载桌面版应用程序的当前版，或请求管理员更新网页版客户端。";
+"webClientSession_error_wrongVersion_title" = "桌面版/网页版";
+"webClientSession_error_wrongVersion_message" = "此iOS应用程序版本不支持您的桌面版应用程序/网页版客户端的应用程序远程协议。";
 
-"webClient_scan_error_title" = "Threema 网页版";
-"webClient_scan_error_message" = "这是 Threema 网页版的二维码。请在 “设置” > “Threema 网页版” 扫描二维码。";
+"webClient_scan_error_title" = "桌面版/网页版";
+"webClient_scan_error_message" = "这是桌面版应用程序/网页版客户端的二维码。请使用设置 > 桌面版/网页版中的扫码器。";
 
-"webClient_scan_error_mdm_host_title" = "无法启动 Threema 网页版会话";
+"webClient_scan_error_mdm_host_title" = "无法启动会话";
 "webClient_scan_error_mdm_host_message" = "服务器未经管理员批准。";
-
 
 /* ProtectedDataUnavailable */
 "protectedDataUnavailable_error_text" = "受保护的数据目前不可存取，请退出应用程序并再次尝试。";
@@ -901,7 +900,7 @@
 "settings_storage_management" = "存储管理";
 "settings_passcode_lock" = "密码锁";
 "settings_threema_calls" = "Threema 通话";
-"settings_threema_web" = "Threema 网页版";
+"settings_threema_web" = "桌面版/网页版";
 "settings_network_status" = "网络状态";
 "settings_version" = "版本";
 "settings_license_username" = "许可证用户名";

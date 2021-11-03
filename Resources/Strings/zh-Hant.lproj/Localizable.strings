@@ -728,12 +728,11 @@
 "notification_sound_title" = "播放通知音效";
 
 /* WebClient */
-"webClientSession_title" = "Threema 網頁版";
+"webClientSession_title" = "桌面版/網頁版";
 "webClientSession_add" = "開始新工作階段";
-"webClientSession_add_wrong_qr_title" = "Threema 網頁版";
-"webClientSession_add_wrong_qr_message" = "這不是 Threema 網頁版的QR碼。開啟 
- https://web.threema.ch/ ，掃描該網頁上的QR碼。";
-"webClientSession_add_footer" = "首先，在 PC / Mac 上開啟 https://web.threema.ch/ 。然後，點擊螢幕右上角的相機圖示，掃描電腦上的QR碼。";
+"webClientSession_add_wrong_qr_title" = "桌面版/網頁版";
+"webClientSession_add_wrong_qr_message" = "這不是桌面版 App / 網頁用戶端的 QR 圖碼。請先下載桌面版 App (https://threema.ch/download)，或開啟網路用戶端 (https://web.threema.ch/)，然後掃描畫面所顯示的 QR 圖碼。";
+"webClientSession_add_footer" = "首先，在電腦 / Mac 下載桌面版 App (https://threema.ch/download)，或開啟網路用戶端 (https://web.threema.ch/)。然後點擊螢幕右上角的相機圖示，掃描電腦上的 QR 圖碼。";
 "webClientSession_sessions_header" = "工作階段";
 "webClientSession_unnamed" = "未命名工作階段";
 "webClientSession_lastUse" = "最後使用時間";
@@ -745,19 +744,18 @@
 "webClientSession_actionSheet_startSession" = "開始工作階段";
 "webClientSession_actionSheet_renameSession" = "重新命名工作階段";
 "webClientSession_actionSheet_deleteSession" = "刪除工作階段";
-"webClientSession_error_updateApp_title" = "Threema 網頁版";
-"webClientSession_error_updateApp_message" = "錯誤的 Threema 網頁版協定版本，請更新您的應用程式。";
-"webClientSession_error_updateServer_title" = "Threema 網頁版";
-"webClientSession_error_updateServer_message" = "錯誤的 Threema 網頁版協定版本，請要求管理員更新網路用戶端。";
-"webClientSession_error_wrongVersion_title" = "Threema 網頁版";
-"webClientSession_error_wrongVersion_message" = "此應用程式版本不支援網路用戶端的 Threema 網頁版協定。";
+"webClientSession_error_updateApp_title" = "桌面版/網頁版";
+"webClientSession_error_updateApp_message" = "目前的應用程式遠端協定版本出現錯誤。請更新目前的 iOS App。";
+"webClientSession_error_updateServer_title" = "桌面版/網頁版";
+"webClientSession_error_updateServer_message" = "目前的應用程式遠端協定版本出現錯誤。請下載最新版本的桌面 App，或要求管理員更新網路用戶端。";
+"webClientSession_error_wrongVersion_title" = "桌面版/網頁版";
+"webClientSession_error_wrongVersion_message" = "此 iOS App 版本並不支援目前桌面版 App / 網路用戶端的 Threema 應用程式遠端協定。";
 
-"webClient_scan_error_title" = "Threema 網頁版";
-"webClient_scan_error_message" = "這是 Threema 網頁版的QR碼。請在「設定」>「Threema 網頁版」掃描QR碼。";
+"webClient_scan_error_title" = "桌面版/網頁版";
+"webClient_scan_error_message" = "這是桌面版 App / 網路用戶端的 QR 圖碼。請前往「設定」>「桌面版/網頁版」掃描 QR 圖碼。";
 
-"webClient_scan_error_mdm_host_title" = "無法開始 Threema 網頁版工作階段";
+"webClient_scan_error_mdm_host_title" = "無法開始工作階段";
 "webClient_scan_error_mdm_host_message" = "伺服器未經管理員批准。";
-
 
 /* ProtectedDataUnavailable */
 "protectedDataUnavailable_error_text" = "受保護的資料目前不可存取，請退出應用程式並再試一次。";
@@ -902,7 +900,7 @@
 "settings_storage_management" = "儲存管理";
 "settings_passcode_lock" = "密碼鎖";
 "settings_threema_calls" = "Threema 通話";
-"settings_threema_web" = "Threema 網頁版";
+"settings_threema_web" = "桌面版/網頁版";
 "settings_network_status" = "網路狀態";
 "settings_version" = "版本";
 "settings_license_username" = "許可證用戶名稱";

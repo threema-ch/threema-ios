@@ -1,0 +1,220 @@
+syntax = "proto3";
+
+package join;
+
+option java_package = "ch.threema.protobuf.d2d.join";
+
+import "common.proto";
+import "md-d2d-sync.proto";
+
+// ## Device Join Protocol
+//
+// This protocol specifies how to add a new device to an existing device
+// family.
+//
+// ### Terminology
+//
+// - `ED`: Existing device
+// - `ND`: New device to be added
+// - `PSK`: Key derived from the passphrase chosen by the user
+//
+// ### Key Derivation
+//
+//     PSK = scrypt(
+//       password=<passphrase>,
+//       salt='3ma-mdev-join',
+//       key-length=32,
+//       parameters={r=8, N=65536, p=1}
+//     )
+//
+// ### Blobs
+//
+// For binary data, the usual Blob scheme is being used by ED. However,
+// instead of transferring Blob data via the Blob server, the data is
+// transmitted in form of a `common.BlobData` message ahead of a message
+// referencing that Blob by the associated Blob ID.
+//
+// ND is supposed to cache received `common.BlobData` until it can associate
+// the data to a Blob referencing its ID. Once the rendezvous connection has
+// been closed, any remaining cached `common.BlobData` can be discarded.
+//
+// ### Protocol Kickoff Flow
+//
+// ND or ED may choose to start the protocol. If ND starts the protocol it is
+// _requesting to join the device family_. If ED starts the protocol it is
+// _offering to join the device family_.
+//
+// Either way, the user must first be asked for a passphrase to encrypt the data
+// to prevent the user from unintentionally adding a device to the device
+// family. The passphrase must not be empty. From that passphrase, derive the
+// Passphrase Key (PSK).
+//
+// If ED started the protocol:
+//
+// - `purpose` must be set to _offer to join the device family_.
+// - ED takes the role of RID
+// - ND takes the role of RRD
+//
+// If ND started the protocol:
+//
+// - `purpose` must be set to _request to join the device family_.
+// - ND takes the role of RID
+// - ED takes the role of RRD
+//
+// #### Connection Setup
+//
+// RID creates an `rendezvous.RendezvousInit` by following the Connection
+// Rendezvous Protocol. It encrypts the created `rendezvous.RendezvousInit`
+// with `PSK`, wraps it in a `url.DeviceFamilyJoinRequestOrOffer` and offers
+// it in form of a URL or a QR code.
+//
+// RRD scans the QR code and parses the `url.DeviceFamilyJoinRequestOrOffer`.
+// It will then ask the user for the passphrase to decrypt the contained
+// `rendezvous.RendezvousInit`. Once decrypted, the enclosed
+// `rendezvous.RendezvousInit` must be handled according to the Connection
+// Rendezvous Protocol.
+//
+// Once the Connection Rendezvous Protocol has established at least one
+// connection path, ND waits another 3s or until all connection paths have
+// been established. Nomination is then done by ND following the Connection
+// Rendezvous Protocol.
+//
+// Note that all messages on the nominated connection path must be end-to-end
+// encrypted as defined by the Connection Rendezvous Protocol. All transmitted
+// messages are to be wrapped in:
+//
+// - `TowardsExistingDeviceEnvelope` when sending from ND to ED, and
+// - `TowardsNewDeviceEnvlope` when sending from ED to ND.
+//
+// #### Device Join Flow
+//
+// As soon as one of the connection paths has been nominated, ND sends a
+// `Begin` message to start the device join process.
+//
+//     ED <------ Begin ------- ND   [1]
+//
+// ED will now send all `EssentialData` (with `common.BlobData` ahead).
+//
+//     ED -- common.BlobData -> ND   [0..N]
+//     ED --- EssentialData --> ND   [1]
+//
+// Once ND successfully registered itself on the Mediator server, it sends a
+// `Registered` message.
+//
+//     ED <---- Registered ---- ND   [1]
+//
+// ND may now either close the connection or leave it open to transition to
+// the History Exchange Protocol. Any further messages ED receives from ND
+// will transition into the History Exchange Protocol.
+
+
+
+// Root message envelope for messages towards the existing device (ED).
+message TowardsExistingDeviceEnvelope {
+  // The enveloped message
+  oneof content {
+    Begin begin = 1;
+    Registered registered = 2;
+  }
+}
+
+// Root message envelope for messages towards the new device (ND).
+message TowardsNewDeviceEnvelope {
+  // The enveloped message
+  oneof content {
+    common.BlobData blob_data = 1;
+    EssentialData essential_data = 2;
+  }
+}
+
+// Initial message sent by ND after a connection has been established.
+//
+// When receiving this message:
+//
+// 1. If `Begin` has been received before, close the connection and abort
+//    these steps.
+// 2. Begin a transaction with scope `NEW_DEVICE_SYNC` on the D2M connection.
+//    This transaction is to be held until the connection to ND drops or until
+//    a `Registered` message was received. While the transaction is being
+//    held, no `Reflected` and no end-to-end encrypted message coming from the
+//    chat server is allowed to be processed! If the D2M connection is lost,
+//    the established connection must also be closed, aborting any running
+//    steps.
+// 3. Gather all data necessary to create `EssentialData`. Any Blobs must now
+//    be sent in form of `common.BlobData` messages.
+// 4. Send the gathered `EssentialData` to ND.
+message Begin {}
+
+// Essential data ND needs to be able to participate in the device family.
+//
+// When receiving this message:
+//
+// 1. If `EssentialData` has been received before, close the connection and
+//    abort these steps.
+// 2. If any Blob ID is missing from the previously received set of
+//    `common.BlobData`, close the connection and abort these steps.
+// 3. If any `DeltaImage` is set to _unchanged_, close the connection and
+//    abort these steps.
+// 4. Store the data in the device's database.
+// 5. Generate a random Mediator Device ID and a random CSP Device ID and
+//    store both in the device's database.
+// 6. Establish a D2M connection by connecting to the provided mediator
+//    server.
+// 7. Wait until the `ServerInfo` has been received on the D2M connection.
+//    Validate that the provided `DeviceSlotState` is `NEW`. Otherwise, close
+//    both the D2M connection (normally) and the connection to ED and
+//    abort these steps.
+// 8. Send a `Registered` message to ED.
+// 9. Ask the user whether conversation history data should be requested from
+//    ND:
+//    1. If the user wants to request conversation history data from ED, leave
+//       the connection running and start the History Exchange Protocol. Abort
+//       these steps.
+//    2. If the user does not want to request conversation history data, wait
+//       until all buffered data on the connection has been written. Then,
+//       close the connection.
+message EssentialData {
+  // Mediator server public key and address
+  message MediatorServer {
+    // Public key of the server
+    bytes public_key = 1;
+
+    // Server address
+    oneof address {
+      // Hostname of the WebSocket server
+      string web_socket_hostname = 2;
+    }
+  }
+  MediatorServer mediator_server = 1;
+
+  // The private key associated with the Threema ID
+  bytes private_key = 2;
+
+  // The user's profile
+  sync.UserProfile user_profile = 3;
+
+  // Shared settings
+  sync.Settings settings = 4;
+
+  // Contacts
+  repeated sync.Contact contacts = 5;
+
+  // Groups
+  repeated sync.Group groups = 6;
+
+  // Distribution lists
+  repeated sync.DistributionList distribution_lists = 7;
+}
+
+// Lets ED know that ND has received all essential data and successfully
+// registered itself on the mediator server.
+//
+// When receiving this message:
+//
+// 1. Release the transaction on the D2M connection. From this point on,
+//    processing `Reflected` and end-to-end encrypted message coming from the
+//    chat server is allowed again.
+// 2. Wait for ND to either close the connection or for ND to request
+//    conversation history data. Any further messages from ND will move into
+//    the History Exchange Protocol.
+message Registered {}

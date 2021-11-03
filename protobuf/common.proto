@@ -4,6 +4,10 @@ package common;
 
 option java_package = "ch.threema.protobuf";
 
+// A unit that may be used in a `oneof` option without any values.
+// Note: We're using this to simulate tagged unions.
+message Unit {}
+
 // Threema Blob to be uploaded/downloaded from the Blob server.
 message Blob {
   // Blob ID as given by the Blob server
@@ -18,6 +22,15 @@ message Blob {
   bytes key = 3;
 }
 
+// Inline Blob data.
+message BlobData {
+  // Associated Blob ID
+  bytes id = 1;
+
+  // The Blob's data
+  bytes data = 2;
+}
+
 // Generic image.
 message Image {
   // Format type of the image
@@ -26,16 +39,8 @@ message Image {
   }
   Type type = 1;
 
-  // The image's source
-  oneof source {
-    // The image's data needs to be downloaded from the Blob server
-    Blob blob = 2;
-
-    // The image's data is inlined.
-    // Note: This MUST only be used when explicitly allowed.
-    //       Almost always use a global/device group shared Blob instead!
-    bytes data = 3;
-  }
+  // The image's associated blob.
+  Blob blob = 2;
 }
 
 // Unique group identity.
@@ -47,3 +52,24 @@ message GroupIdentity {
   string creator_identity = 2;
 }
 
+// Generic image allowing delta updates
+message DeltaImage {
+  oneof image {
+    // The image remains unchanged
+    Unit unchanged = 1;
+    // The image is empty or was explicitly removed
+    Unit removed = 2;
+    // The new updated image
+    Image updated = 3;
+  }
+}
+
+// Timespan (year 1970+) with milliseconds accuracy.
+//
+// Note: This message is invalid if `to` is smaller than `from`.
+message Timespan {
+  // Start of the timespan (Unix-ish timestamp in milliseconds, inclusive)
+  uint64 from = 1;
+  // End of the timespan (Unix-ish timestamp in miliseconds, inclusive)
+  uint64 to = 2;
+}

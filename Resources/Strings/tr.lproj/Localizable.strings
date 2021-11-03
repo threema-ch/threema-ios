@@ -728,11 +728,11 @@
 "notification_sound_title" = "Bildirim Sesi Çal";
 
 /* WebClient */
-"webClientSession_title" = "Threema Web";
+"webClientSession_title" = "Masaüstü / Web";
 "webClientSession_add" = "Yeni bir oturum başlat";
-"webClientSession_add_wrong_qr_title" = "Threema Web";
-"webClientSession_add_wrong_qr_message" = "Bu bir Threema Web QR kodu değildir. https://web.threema.ch/ adresini açın ve orada görüntülenen QR kodunu tarayın.";
-"webClientSession_add_footer" = "lk olarak, PC / Mac'inizde https://web.threema.ch/ adresini açın. Ardından, bu ekranın sağ üst köşesindeki kamera simgesine dokunun ve bilgisayarınızdaki QR kodunu tarayın.";
+"webClientSession_add_wrong_qr_title" = "Masaüstü / Web";
+"webClientSession_add_wrong_qr_message" = "Bu, masaüstü uygulaması / web istemcisi için bir QR kodu değildir. Masaüstü uygulamasını indirin (https://threema.ch/download) veya web istemcisini açın (https://web.threema.ch/) ve görüntülenen QR kodunu tarayın.";
+"webClientSession_add_footer" = "PC/Mac'inizde masaüstü uygulamasını indirin (https://threema.ch/download) veya web istemcisini açın (https://web.threema.ch/). Ardından, bu ekranın sağ üst köşesindeki kamera simgesine dokunun ve bilgisayarınızdaki QR kodunu tarayın.";
 "webClientSession_sessions_header" = "Oturumlar";
 "webClientSession_unnamed" = "Adsız oturum";
 "webClientSession_lastUse" = "Son kullanılan";
@@ -744,19 +744,18 @@
 "webClientSession_actionSheet_startSession" = "Oturumu Başlat";
 "webClientSession_actionSheet_renameSession" = "Oturumu Yeniden Adlandır";
 "webClientSession_actionSheet_deleteSession" = "Oturumu Sil";
-"webClientSession_error_updateApp_title" = "Threema Web";
-"webClientSession_error_updateApp_message" = "Yanlış Threema Web protokolü sürümü, lütfen uygulamanızı güncelleyin.";
-"webClientSession_error_updateServer_title" = "Threema Web";
-"webClientSession_error_updateServer_message" = "Yanlış Threema Web protokolü sürümü, lütfen yöneticiden web istemcisini güncellemesini isteyin.";
-"webClientSession_error_wrongVersion_title" = "Threema Web";
-"webClientSession_error_wrongVersion_message" = "Bu uygulama sürümü web istemcisinin Threema Web protokolünü desteklemiyor.";
+"webClientSession_error_updateApp_title" = "Masaüstü/Web";
+"webClientSession_error_updateApp_message" = "Yanlış Uygulama Uzak Protokol sürümü, lütfen iOS uygulamanızı güncelleyin.";
+"webClientSession_error_updateServer_title" = "Masaüstü/Web";
+"webClientSession_error_updateServer_message" = "Yanlış Uygulama Uzak Protokol sürümü, lütfen masaüstü uygulamasının mevcut sürümünü indirin veya yöneticinizden web istemcisini güncellemesini isteyin.";
+"webClientSession_error_wrongVersion_title" = "Masaüstü / Web";
+"webClientSession_error_wrongVersion_message" = "Bu iOS uygulaması sürümü, masaüstü uygulamanızın/web istemcinizin Uygulama Uzak Protokolünü desteklemiyor.";
 
-"webClient_scan_error_title" = "Threema Web";
-"webClient_scan_error_message" = "Bu bir Threema Web QR kodudur. Lütfen Ayarlar> Threema Web'deki tarayıcıyı kullanın.";
+"webClient_scan_error_title" = "Masaüstü/Web";
+"webClient_scan_error_message" = "Bu bir masaüstü uygulaması / web istemcisi için QR kodudur. Lütfen Ayarlar > Masaüstü/Web'deki tarayıcıyı kullanın.";
 
-"webClient_scan_error_mdm_host_title" = "Threema Web oturumu başlatılamıyor";
+"webClient_scan_error_mdm_host_title" = "Oturum başlatılamıyor";
 "webClient_scan_error_mdm_host_message" = "Sunucu yönetici tarafından onaylanmadı.";
-
 
 /* ProtectedDataUnavailable */
 "protectedDataUnavailable_error_text" = "Korumalı veriler şu anda kullanılamıyor. Lütfen uygulamadan çıkın ve tekrar deneyin.";
@@ -901,7 +900,7 @@
 "settings_storage_management" = "Depolama Yönetimi";
 "settings_passcode_lock" = "Parola Kilidi";
 "settings_threema_calls" = "Threema Çağrıları";
-"settings_threema_web" = "Threema Web";
+"settings_threema_web" = "Masaüstü / Web";
 "settings_network_status" = "Ağ durumu";
 "settings_version" = "Versiyon";
 "settings_license_username" = "Lisans Kullanıcı Adı";

@@ -728,11 +728,11 @@
 "notification_sound_title" = "Reproduzir som de notificação";
 
 /* WebClient */
-"webClientSession_title" = "Threema Web";
+"webClientSession_title" = "Desktop/Web";
 "webClientSession_add" = "Inicie uma nova sessão";
-"webClientSession_add_wrong_qr_title" = "Threema Web";
-"webClientSession_add_wrong_qr_message" = "Esse não é um código QR do Threema Web. Abra https://web.threema.ch/ e escaneie o código QR que é exibido lá.";
-"webClientSession_add_footer" = "Primeiro, abra https://web.threema.ch/ no seu PC/Mac. Depois, toque no ícone da câmera no canto superior direito dessa tela e escaneie o código QR no seu computador.";
+"webClientSession_add_wrong_qr_title" = "Desktop/Web";
+"webClientSession_add_wrong_qr_message" = "Esse não é um código QR do aplicativo para desktop/cliente web. Baixe o aplicativo para desktop (https://threema.ch/download) ou abra o cliente da web (https://web.threema.ch/) e escaneie o código QR exibido lá.";
+"webClientSession_add_footer" = "No seu PC/Mac, baixe o aplicativo para desktop (https://threema.ch/download) ou abra o cliente da web (https://web.threema.ch/). Depois, toque no ícone da câmera no canto superior direito dessa tela e escaneie o código QR no seu computador.";
 "webClientSession_sessions_header" = "Sessões";
 "webClientSession_unnamed" = "Sessão sem título";
 "webClientSession_lastUse" = "Última utilização";
@@ -744,19 +744,18 @@
 "webClientSession_actionSheet_startSession" = "Iniciar Sessão";
 "webClientSession_actionSheet_renameSession" = "Renomear Sessão";
 "webClientSession_actionSheet_deleteSession" = "Excluir Sessão";
-"webClientSession_error_updateApp_title" = "Threema Web";
-"webClientSession_error_updateApp_message" = "Versão errada do protocolo do Threema Web, atualize o seu aplicativo.";
-"webClientSession_error_updateServer_title" = "Threema Web";
-"webClientSession_error_updateServer_message" = "Versão errada do protocolo do Threema Web, peça para o administrador atualizar o cliente web.";
-"webClientSession_error_wrongVersion_title" = "Threema Web";
-"webClientSession_error_wrongVersion_message" = "Essa versão do aplicativo não é compatível com o protocolo do Threema Web do cliente web.";
+"webClientSession_error_updateApp_title" = "Desktop/Web";
+"webClientSession_error_updateApp_message" = "Versão errada do protocolo remoto de aplicativo. Atualize seu aplicativo do iOS.";
+"webClientSession_error_updateServer_title" = "Desktop/Web";
+"webClientSession_error_updateServer_message" = "Versão errada do protocolo remoto de aplicativo. Baixe a versão atual do aplicativo para desktop ou peça para o administrador atualizar o cliente web.";
+"webClientSession_error_wrongVersion_title" = "Desktop/Web";
+"webClientSession_error_wrongVersion_message" = "Essa versão do aplicativo de iOS não é compatível com o protocolo remoto de aplicativo do seu aplicativo para desktop/cliente web.";
 
-"webClient_scan_error_title" = "Threema Web";
-"webClient_scan_error_message" = "Esse é um código QR do Threema Web. Use o scanner em Configurações > Threema Web.";
+"webClient_scan_error_title" = "Desktop/Web";
+"webClient_scan_error_message" = "Esse é um código QR do aplicativo para desktop/cliente web. Use o scanner em Configurações > Desktop/Web.";
 
-"webClient_scan_error_mdm_host_title" = "Não é possível iniciar a sessão do Threema Web";
+"webClient_scan_error_mdm_host_title" = "Não é possível iniciar a sessão";
 "webClient_scan_error_mdm_host_message" = "Servidor não aprovado pelo administrador.";
-
 
 /* ProtectedDataUnavailable */
 "protectedDataUnavailable_error_text" = "Dados protegidos estão indisponíveis no momento. Saia do aplicativo e tente novamente.";
@@ -901,7 +900,7 @@
 "settings_storage_management" = "Gerenciamento de armazenamento";
 "settings_passcode_lock" = "Bloqueio por código";
 "settings_threema_calls" = "Chamadas do Threema";
-"settings_threema_web" = "Threema Web";
+"settings_threema_web" = "Desktop/Web";
 "settings_network_status" = "Status da rede";
 "settings_version" = "Versão";
 "settings_license_username" = "Nome de usuário da licença";

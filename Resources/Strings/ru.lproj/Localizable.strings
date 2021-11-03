@@ -728,11 +728,11 @@
 "notification_sound_title" = "Воспроизвести звук уведомления";
 
 /* WebClient */
-"webClientSession_title" = "Веб-клиент Threema";
+"webClientSession_title" = "ПК/веб-клиент";
 "webClientSession_add" = "Запустить новый сеанс";
-"webClientSession_add_wrong_qr_title" = "Веб-приложение Threema";
-"webClientSession_add_wrong_qr_message" = "Это не QR-код веб-приложения Threema. Откройте сайт https://web.threema.ch/ и сканируйте QR-код, который там изображен.";
-"webClientSession_add_footer" = "Сначала откройте сайт https://web.threema.ch/ на компьютере PC/Mac. Затем коснитесь значка камеры в правом верхнем углу этого экрана и сканируйте QR-код на компьютере.";
+"webClientSession_add_wrong_qr_title" = "ПК/веб-клиент";
+"webClientSession_add_wrong_qr_message" = "Это не QR-код ПК/веб-клиента. Загрузите приложение для ПК (https://threema.ch/download) или откройте веб-клиент (https://web.threema.ch/) и сканируйте изображенный здесь QR-код.";
+"webClientSession_add_footer" = "На компьютере PC/Mac загрузите приложение для компьютера (https://threema.ch/download) или откройте веб-клиент (https://web.threema.ch/). Затем коснитесь значка камеры в правом верхнем углу этого экрана и сканируйте QR-код на компьютере.";
 "webClientSession_sessions_header" = "Сеансы";
 "webClientSession_unnamed" = "Сеанс без названия";
 "webClientSession_lastUse" = "Последнее пользование";
@@ -744,19 +744,18 @@
 "webClientSession_actionSheet_startSession" = "Запустить сеанс";
 "webClientSession_actionSheet_renameSession" = "Переименовать сеанс";
 "webClientSession_actionSheet_deleteSession" = "Удалить сеанс";
-"webClientSession_error_updateApp_title" = "Веб-приложение Threema";
-"webClientSession_error_updateApp_message" = "Неверная версия протокола веб-приложения Threema, обновите приложение.";
-"webClientSession_error_updateServer_title" = "Веб-приложение Threema";
-"webClientSession_error_updateServer_message" = "Неверная версия протокола веб-приложения Threema, попросите администратора обновить веб-клиент.";
-"webClientSession_error_wrongVersion_title" = "Веб-приложение Threema";
-"webClientSession_error_wrongVersion_message" = "Эта версия приложения не поддерживает протокол веб-клиента веб-приложения Threema";
+"webClientSession_error_updateApp_title" = "ПК/веб-клиент";
+"webClientSession_error_updateApp_message" = "Неверная версия удаленного протокола приложения, обновите приложение для iOS.";
+"webClientSession_error_updateServer_title" = "ПК/веб-клиент";
+"webClientSession_error_updateServer_message" = "Неверная версия удаленного протокола приложения, загрузите текущую версию приложения для ПК или попросите администратора обновить веб-клиент.";
+"webClientSession_error_wrongVersion_title" = "ПК/веб-клиент";
+"webClientSession_error_wrongVersion_message" = "Эта версия приложения не поддерживает удаленный протокол приложения для вашего приложения для ПК / веб-клиента.";
 
-"webClient_scan_error_title" = "Веб-приложение Threema";
-"webClient_scan_error_message" = "Это QR-код веб-приложения Threema. Используйте сканер в меню «Настройки > Веб-приложение Threema».";
+"webClient_scan_error_title" = "ПК/веб-клиент";
+"webClient_scan_error_message" = "Это QR-код для приложения для ПК/веб-клиента. Используйте сканер в меню «Настройки > ПК/веб-клиент».";
 
-"webClient_scan_error_mdm_host_title" = "Невозможно запустить сеанс веб-приложения Threema";
+"webClient_scan_error_mdm_host_title" = "Невозможно запустить сеанс";
 "webClient_scan_error_mdm_host_message" = "Сервер не санкционирован администратором.";
-
 
 /* ProtectedDataUnavailable */
 "protectedDataUnavailable_error_text" = "Защищенные данные временно недоступны. Закройте приложение и повторите попытку.";
@@ -901,7 +900,7 @@
 "settings_storage_management" = "Управление памятью";
 "settings_passcode_lock" = "Блокировка паролем";
 "settings_threema_calls" = "Звонки Threema";
-"settings_threema_web" = "Веб-клиент Threema";
+"settings_threema_web" = "ПК/веб-клиент";
 "settings_network_status" = "Статус сети";
 "settings_version" = "Версия";
 "settings_license_username" = "Имя пользователя лицензии";

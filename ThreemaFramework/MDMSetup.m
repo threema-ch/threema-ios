@@ -374,24 +374,56 @@ static NSDictionary *_mdmCacheSetup;
         identityStore.createIDPhone = phone;
     }
     
-    NSString *firstName = [self getMdmConfigurationValueForKey:MDM_KEY_FIRST_NAME];
-    if ([firstName isKindOfClass:[NSString class]]) {
-        identityStore.firstName = firstName;
+    // Set the firstname to nil if the key is not set or the value is empty
+    // because the user can't edit this value
+    if ([self existsMdmKey:MDM_KEY_FIRST_NAME]) {
+        NSString *firstName = [self getMdmConfigurationValueForKey:MDM_KEY_FIRST_NAME];
+        if ([firstName isKindOfClass:[NSString class]]) {
+            identityStore.firstName = firstName;
+        } else {
+            identityStore.firstName = nil;
+        }
+    } else {
+        identityStore.firstName = nil;
     }
     
-    NSString *lastName = [self getMdmConfigurationValueForKey:MDM_KEY_LAST_NAME];
-    if ([lastName isKindOfClass:[NSString class]]) {
-        identityStore.lastName = lastName;
+    // Set the lastname to nil if the key is not set or the value is empty
+    // because the user can't edit this value
+    if ([self existsMdmKey:MDM_KEY_LAST_NAME]) {
+        NSString *lastName = [self getMdmConfigurationValueForKey:MDM_KEY_LAST_NAME];
+        if ([lastName isKindOfClass:[NSString class]]) {
+            identityStore.lastName = lastName;
+        } else {
+            identityStore.lastName = nil;
+        }
+    } else {
+        identityStore.lastName = nil;
     }
     
-    NSString *csi = [self getMdmConfigurationValueForKey:MDM_KEY_CSI];
-    if ([csi isKindOfClass:[NSString class]]) {
-        identityStore.csi = csi;
+    // Set the csi to nil if the key is not set or the value is empty
+    // because the user can't edit this value
+    if ([self existsMdmKey:MDM_KEY_CSI]) {
+        NSString *csi = [self getMdmConfigurationValueForKey:MDM_KEY_CSI];
+        if ([csi isKindOfClass:[NSString class]]) {
+            identityStore.csi = csi;
+        } else {
+            identityStore.csi = nil;
+        }
+    } else {
+        identityStore.csi = nil;
     }
     
-    NSString *category = [self getMdmConfigurationValueForKey:MDM_KEY_CATEGORY];
-    if ([category isKindOfClass:[NSString class]]) {
-        identityStore.category = category;
+    // Set the category to nil if the key is not set or the value is empty
+    // because the user can't edit this value
+    if ([self existsMdmKey:MDM_KEY_CATEGORY]) {
+        NSString *category = [self getMdmConfigurationValueForKey:MDM_KEY_CATEGORY];
+        if ([category isKindOfClass:[NSString class]]) {
+            identityStore.category = category;
+        } else {
+            identityStore.category = nil;
+        }
+    } else {
+        identityStore.category = nil;
     }
     
     [[LicenseStore sharedLicenseStore] performUpdateWorkInfo];

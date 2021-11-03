@@ -728,11 +728,11 @@
 "notification_sound_title" = "Přehrát zvuk oznámení";
 
 /* WebClient */
-"webClientSession_title" = "Threema Web";
+"webClientSession_title" = "Desktop/web";
 "webClientSession_add" = "Spustit novou relaci";
-"webClientSession_add_wrong_qr_title" = "Threema Web";
-"webClientSession_add_wrong_qr_message" = "Toto není QR kód pro Threema Web. Otevřete stránku https://web.threema.ch/ a naskenujte QR kód, který se na ní nachází.";
-"webClientSession_add_footer" = "Nejprve na svém PC/Macu otevřete stránku https://web.threema.ch/. Poté klepněte v pravém horním rohu obrazovky na ikonu kamery a naskenujte na počítači QR kód.";
+"webClientSession_add_wrong_qr_title" = "Desktop/web";
+"webClientSession_add_wrong_qr_message" = "Toto není QR kód pro desktopovou aplikaci / webového klienta. Stáhněte si desktopovou aplikaci (https://threema.ch/download) nebo otevřete webového klienta (https://web.threema.ch/) a naskenujte tamní QR kód.";
+"webClientSession_add_footer" = "Stáhněte si na svém PC/Macu desktopovou aplikaci (https://threema.ch/download) nebo otevřete webového klienta (https://web.threema.ch/). Poté klepněte v pravém horním rohu této obrazovky na ikonu kamery a naskenujte na počítači QR kód.";
 "webClientSession_sessions_header" = "Relace";
 "webClientSession_unnamed" = "Nepojmenovaná relace";
 "webClientSession_lastUse" = "Naposledy použito";
@@ -744,19 +744,18 @@
 "webClientSession_actionSheet_startSession" = "Spustit relaci";
 "webClientSession_actionSheet_renameSession" = "Přejmenovat relaci";
 "webClientSession_actionSheet_deleteSession" = "Smazat relaci";
-"webClientSession_error_updateApp_title" = "Threema Web";
-"webClientSession_error_updateApp_message" = "Špatná verze protokolu Threema Web, aktualizujte prosím svou aplikaci.";
-"webClientSession_error_updateServer_title" = "Threema Web";
-"webClientSession_error_updateServer_message" = "Špatná verze protokolu Threema Web, požádejte prosím správce o aktualizaci webového klienta.";
-"webClientSession_error_wrongVersion_title" = "Threema Web";
-"webClientSession_error_wrongVersion_message" = "Tato verze aplikace nepodporuje protokol webového klienta Threema Web.";
+"webClientSession_error_updateApp_title" = "Desktop/web";
+"webClientSession_error_updateApp_message" = "Špatná verze protokolu vzdálené aplikace, aktualizujte si prosím aplikaci pro iOS.";
+"webClientSession_error_updateServer_title" = "Desktop/web";
+"webClientSession_error_updateServer_message" = "Špatná verze protokolu vzdálené aplikace, stáhněte si prosím aktuální verzi desktopové aplikace nebo požádejte svého správce o aktualizaci webového klienta.";
+"webClientSession_error_wrongVersion_title" = "Desktop/web";
+"webClientSession_error_wrongVersion_message" = "Tato verze aplikace pro iOS nepodporuje protokol vzdálené aplikace vaší desktopové aplikace/webového klienta.";
 
-"webClient_scan_error_title" = "Threema Web";
-"webClient_scan_error_message" = "Toto je QR kód pro Threema Web. Použijte skener v nabídce Nastavení > Threema Web.";
+"webClient_scan_error_title" = "Desktop/web";
+"webClient_scan_error_message" = "Toto je QR kód pro desktopovou aplikaci / webového klienta. Použijte skener v nabídce Nastavení > Desktop/web.";
 
-"webClient_scan_error_mdm_host_title" = "Spuštění relace Threema Web se nezdařilo";
+"webClient_scan_error_mdm_host_title" = "Nelze spustit relaci";
 "webClient_scan_error_mdm_host_message" = "Server není schválený správcem.";
-
 
 /* ProtectedDataUnavailable */
 "protectedDataUnavailable_error_text" = "Chráněná data jsou momentálně nedostupná. Odejděte prosím z aplikace a zkuste to znovu.";
@@ -901,7 +900,7 @@
 "settings_storage_management" = "Správa úložiště";
 "settings_passcode_lock" = "Zamykání přístupovým kódem";
 "settings_threema_calls" = "Hovory Threema";
-"settings_threema_web" = "Threema Web";
+"settings_threema_web" = "Desktop/web";
 "settings_network_status" = "Stav sítě";
 "settings_version" = "Verze";
 "settings_license_username" = "Uživatelské jméno licence";

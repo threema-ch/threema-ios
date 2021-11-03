@@ -68,6 +68,8 @@ class WebClientSessionCell: UITableViewCell {
             browserIcon.image = UIImage(named: "Edge")
         case "opera":
             browserIcon.image = UIImage(named: "Opera")
+        case "macosThreemaDesktop", "win32ThreemaDesktop", "linuxThreemaDesktop":
+            browserIcon.image = BundleUtil.imageNamed("desktopcomputer_semibold.L")
         default:
             if webClientSession.isConnecting {
                 browserIcon.image = nil

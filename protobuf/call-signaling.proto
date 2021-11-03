@@ -6,7 +6,7 @@ option java_package = "ch.threema.protobuf.callsignaling";
 
 // Root signaling message
 message Envelope {
-  // Random amount of padding, ignored by the receiver
+  // Random amount of padding (0-255 bytes), ignored by the receiver
   bytes padding = 1;
 
   oneof content {

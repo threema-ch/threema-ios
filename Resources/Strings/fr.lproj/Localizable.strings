@@ -728,11 +728,11 @@
 "notification_sound_title" = "Jouer un son de notification";
 
 /* WebClient */
-"webClientSession_title" = "Threema Web";
+"webClientSession_title" = "Desktop/Web";
 "webClientSession_add" = "Commencer une nouvelle session";
-"webClientSession_add_wrong_qr_title" = "Threema Web";
-"webClientSession_add_wrong_qr_message" = "Ceci n'est pas un code QR Threema Web. Ouvrez https://web.threema.ch/ et scannez le code QR affiché là-bas.";
-"webClientSession_add_footer" = "Tout d'abord, ouvrez https://web.threema.ch/ sur votre PC ou Mac. Ensuite, touchez l'icône d'appareil photo en haut à droite de cette page et scannez le code QR affiché sur votre ordinateur.";
+"webClientSession_add_wrong_qr_title" = "Desktop/Web";
+"webClientSession_add_wrong_qr_message" = "Ceci n'est pas un code QR pour l'application Desktop/le client Web. Téléchargez l'application Desktop (https://threema.ch/download) ou ouvrez le client Web (https://web.threema.ch/) et scannez le code QR qui y est affiché.";
+"webClientSession_add_footer" = "Sur votre PC/Mac, téléchargez l'application Desktop (https://threema.ch/download) ou ouvrez le client Web (https://web.threema.ch/). Ensuite, touchez l'icône d'appareil photo en haut à droite de cette page et scannez le code QR affiché sur votre ordinateur.";
 "webClientSession_sessions_header" = "Sessions";
 "webClientSession_unnamed" = "Session sans titre";
 "webClientSession_lastUse" = "Dernière utilisation";
@@ -744,19 +744,18 @@
 "webClientSession_actionSheet_startSession" = "Commencer la session";
 "webClientSession_actionSheet_renameSession" = "Renommer la session";
 "webClientSession_actionSheet_deleteSession" = "Supprimer la session";
-"webClientSession_error_updateApp_title" = "Threema Web";
-"webClientSession_error_updateApp_message" = "Version de protocole Threema Web incorrecte, veuillez mettre à jour votre application.";
-"webClientSession_error_updateServer_title" = "Threema Web";
-"webClientSession_error_updateServer_message" = "Version de protocole Threema Web incorrecte, veuillez demander à l'administrateur de mettre à jour le client web.";
-"webClientSession_error_wrongVersion_title" = "Threema Web";
-"webClientSession_error_wrongVersion_message" = "Cette version de l'application ne prend pas en charge le protocole Threema Web du client web.";
+"webClientSession_error_updateApp_title" = "Desktop/Web";
+"webClientSession_error_updateApp_message" = "Version d'App Remote Protocol incorrecte, veuillez mettre à jour votre application iOS.";
+"webClientSession_error_updateServer_title" = "Desktop/Web";
+"webClientSession_error_updateServer_message" = "Version d'App Remote Protocol incorrecte, veuillez télécharger la version actuelle de l'application Desktop ou demander à votre administrateur de mettre à jour le client Web.";
+"webClientSession_error_wrongVersion_title" = "Desktop/Web";
+"webClientSession_error_wrongVersion_message" = "Cette application iOS ne prend pas en charge l'App Remote Protocol de votre application Desktop/du client Web.";
 
-"webClient_scan_error_title" = "Threema Web";
-"webClient_scan_error_message" = "Ceci est un code QR Threema Web. Veuillez utiliser le scanner dans Paramètres > Threema Web.";
+"webClient_scan_error_title" = "Desktop/Web";
+"webClient_scan_error_message" = "Ceci est un code QR pour l'application Desktop/le client Web. Veuillez utiliser le scanner dans Réglages > Desktop/Web.";
 
-"webClient_scan_error_mdm_host_title" = "Impossible de lancer une session Threema Web";
+"webClient_scan_error_mdm_host_title" = "Impossible de lancer une session";
 "webClient_scan_error_mdm_host_message" = "Le serveur n'est pas approuvé par l'administrateur.";
-
 
 /* ProtectedDataUnavailable */
 "protectedDataUnavailable_error_text" = "Les données protégées sont actuellement indisponibles. Veuillez quitter l'application et réessayer.";
@@ -901,7 +900,7 @@
 "settings_storage_management" = "Gestion du stockage";
 "settings_passcode_lock" = "Verrouillage du code";
 "settings_threema_calls" = "Appels Threema";
-"settings_threema_web" = "Threema Web";
+"settings_threema_web" = "Desktop/Web";
 "settings_network_status" = "Statut du réseau";
 "settings_version" = "Version";
 "settings_license_username" = "Nom d’utilisateur de licence";

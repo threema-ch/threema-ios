@@ -1,0 +1,606 @@
+syntax = "proto3";
+
+package sync;
+
+option java_package = "ch.threema.protobuf.d2d.sync";
+
+import "common.proto";
+
+// ## Data Synchronisation Messages
+//
+// All strings are UTF-8 encoded.
+
+
+
+// Visibility of a conversation.
+enum ConversationVisibility {
+  // Appears in the list of conversations
+  SHOW = 0;
+  // Appears in the archived list of conversations
+  ARCHIVE = 1;
+}
+
+// Category of a conversation.
+enum ConversationCategory {
+  // No specific (default) category
+  DEFAULT = 0;
+  // Protected conversation (*private chat*)
+  PROTECTED = 1;
+}
+
+
+
+// Mobile device management parameters shared across Threema Work devices.
+//
+// More detailed parameter information is available here:
+// https://work.threema.ch/en/docs/mdm_configuration
+message MdmParameters {
+  // Username required for activation of the app
+  // References: `th_license_username`
+  optional string license_username = 1;
+
+  // Password required for activation of the app
+  // References: `th_license_password`
+  optional string license_password = 2;
+
+  // Nickname to be used
+  // References: `th_nickname`
+  optional string nickname = 3;
+
+  // First name of the user
+  // References: `th_firstname`
+  optional string first_name = 4;
+
+  // Last name of the user
+  // References: `th_lastname`
+  optional string last_name = 5;
+
+  // Customer specific identifier
+  // References: `th_csi`
+  optional string customer_specific_id = 6;
+
+  // User category
+  // References: `th_category`
+  optional string category = 7;
+
+  // Email address linked to the ID
+  // References: `th_linked_email`
+  optional string linked_email = 8;
+
+  // Phone number linked to the ID
+  // References: `th_linked_phone`
+  optional string linked_phone = 9;
+
+  // Restore a Threema ID
+  // References: `th_id_backup`
+  optional string identity_restore = 10;
+
+  // Password for restoring a Threema ID
+  // References: `th_id_backup_password`
+  optional string identity_restore_password = 11;
+
+  // Threema Safe configuration
+  // References: `th_safe_enable`
+  enum ThreemaSafePolicy {
+    // Configurable by the user
+    SAFE_OPTIONAL = 0;
+    // Forcibly enabled
+    SAFE_MANDATORY = 1;
+    // Forcibly disabled
+    SAFE_DISABLED = 2;
+  }
+  ThreemaSafePolicy threema_safe_policy = 12;
+
+  // Threema Safe password (predefined)
+  // References: `th_safe_password`
+  optional string threema_safe_password = 13;
+
+  // Threema Safe password pattern
+  // References: `th_safe_password_pattern`
+  optional string threema_safe_password_pattern = 14;
+
+  // Threema Safe password pattern error (mismatch) message
+  // References: `th_safe_password_message`
+  optional string threema_safe_password_pattern_error_message = 15;
+
+  // Threema Safe server URL
+  // References: `th_safe_server_url`
+  optional string threema_safe_server_url = 16;
+
+  // Threema Safe server username for authentication
+  // References: `th_safe_server_username`
+  optional string threema_safe_server_username = 17;
+
+  // Threema Safe server password for authentication
+  // References: `th_safe_server_password`
+  optional string threema_safe_server_password = 18;
+
+  // Restore policy for restoring from a Threema Safe backup
+  // References: `th_safe_restore_enable`
+  enum ThreemaSafeRestorePolicy {
+    // Choosable by the user
+    SAFE_RESTORE_OPTIONAL = 0;
+    // Automatic restore
+    SAFE_RESTORE_MANDATORY = 1;
+    // Forcibly disabled
+    SAFE_RESTORE_DISABLED = 2;
+  }
+  ThreemaSafeRestorePolicy threema_safe_restore_policy = 19;
+
+  // Threema ID to be restored from Threema Safe
+  // References: `th_safe_restore_id`
+  optional string threema_safe_restore_identity = 20;
+
+  // Override policy in regards to MDM parameters (profile, settings, ...)
+  // References: `th_readonly_profile`
+  enum OverridePolicy {
+    // Allows the user to override some of the MDM parameter presets
+    LOOSE = 0;
+    // The user may not override any MDM parameter presets
+    STRICT = 1;
+  }
+  OverridePolicy override_policy = 21;
+
+  // Contact synchronisation policy
+  // References: `th_contact_sync`
+  enum ContactSyncPolicy {
+    // Not synced
+    NOT_SYNCED = 0;
+    // Synced
+    SYNC = 1;
+  }
+  ContactSyncPolicy contact_sync_policy = 22;
+
+  // Inactive Threema ID display policy
+  // References: `th_hide_inactive_ids`
+  enum InactiveIdentityDisplayPolicy {
+    // Show inactive IDs
+    SHOW_INACTIVE = 0;
+    // Hide inactive IDs
+    HIDE_INACTIVE = 1;
+  }
+  InactiveIdentityDisplayPolicy inactive_identity_display_policy = 23;
+
+  // Unknown contacts policy
+  // References: `th_block_unknown`
+  enum UnknownContactPolicy {
+    // Allowed to contact the user
+    ALLOW_UNKNOWN = 0;
+    // Will be blocked by the user
+    BLOCK_UNKNOWN = 1;
+  }
+  UnknownContactPolicy unknown_contact_policy = 24;
+
+  // Auto-save media policy
+  // References: `th_disable_save_to_gallery`
+  enum AutoSaveMediaPolicy {
+    // Allow auto-saving, configurable by the user
+    ALLOW_AUTO_SAVE = 0;
+    // Deny auto-saving
+    DENY_AUTO_SAVE = 1;
+  }
+  AutoSaveMediaPolicy auto_save_media_policy = 25;
+
+  // Screenshot policy
+  // References: `th_disable_screenshots`
+  enum ScreenshotPolicy {
+    // Allow taking screenshots
+    ALLOW_SCREENSHOT = 0;
+    // Deny taking screenshots, if possible
+    DENY_SCREENSHOT = 1;
+  }
+  ScreenshotPolicy screenshot_policy = 26;
+
+  // Add contact policy
+  // References: `th_disable_add_contact`
+  enum AddContactPolicy {
+    // Allow manually adding contacts
+    ALLOW_ADD_CONTACT = 0;
+    // Deny manually adding contacts
+    DENY_ADD_CONTACT = 1;
+  }
+  AddContactPolicy add_contact_policy = 27;
+
+  // Chat export policy
+  // References: `th_disable_export`
+  enum ChatExportPolicy {
+    // Allow exporting chats
+    ALLOW_CHAT_EXPORT = 0;
+    // Deny exporting of chats
+    DENY_CHAT_EXPORT = 1;
+  }
+  ChatExportPolicy chat_export_policy = 28;
+
+  // Backup policy
+  // References: `th_disable_backups`
+  enum BackupPolicy {
+    // Generally allow backups to be made
+    ALLOW_BACKUP = 0;
+    // Deny creating backups
+    DENY_BACKUP = 1;
+  }
+  BackupPolicy backup_policy = 29;
+
+  // Threema ID export policy
+  // References: `th_disable_id_export`
+  enum IdentityExportPolicy {
+    // Allow exporting of the Threema ID
+    ALLOW_IDENTITY_EXPORT = 0;
+    // Deny exporting of the Threema ID
+    DENY_IDENTITY_EXPORT = 1;
+  }
+  IdentityExportPolicy identity_export_policy = 30;
+
+  // Data backup policy
+  // References: `th_disable_data_backups`
+  enum DataBackupPolicy {
+    // Allow creating data backups
+    ALLOW_DATA_BACKUP = 0;
+    // Deny creating data backups
+    DENY_DATA_BACKUP = 1;
+  }
+  DataBackupPolicy data_backup_policy = 31;
+
+  // System backup policy
+  // References: `th_disable_system_backups`
+  enum SystemBackupPolicy {
+    // The system may include app data
+    ALLOW_SYSTEM_BACKUP = 0;
+    // The system is denied from including app data
+    DENY_SYSTEM_BACKUP = 1;
+  }
+  SystemBackupPolicy system_backup_policy = 32;
+
+  // Message preview (in notifications)
+  // References: `th_disable_message_preview`
+  enum MessagePreviewPolicy {
+    // Allow showing a message preview
+    ALLOW_PREVIEW = 0;
+    // Deny showing a message preview
+    DENY_PREVIEW = 1;
+  }
+  MessagePreviewPolicy message_preview_policy = 33;
+
+  // Profile picture sharing policy
+  // References: `th_disable_send_profile_picture`
+  enum ProfilePictureSharePolicy {
+    // Allow the profile picture to be shared with contacts
+    ALLOW_SHARE = 0;
+    // Denied from sharing the profile picture with contacts
+    DENY_SHARE = 1;
+  }
+  ProfilePictureSharePolicy profile_picture_share_policy = 34;
+
+  // Threema Call policy
+  // References: `th_disable_calls`
+  enum CallPolicy {
+    // Allow creating/receiving Threema Calls
+    ALLOW_CALL = 0;
+    // Denied from creating/receiving any Threema Calls
+    DENY_CALL = 1;
+  }
+  CallPolicy call_policy = 35;
+
+  // Setup wizard policy
+  // References: `th_skip_wizard`
+  enum SetupWizardPolicy {
+    // Show the setup wizard
+    SHOW_WIZARD = 0;
+    // Skip the setup wizard (restores an ID or a backup and sets up the
+    // profile automatically).
+    SKIP_WIZARD = 1;
+  }
+  SetupWizardPolicy setup_wizard_policy = 36;
+
+  // Group creation policy
+  // References: `th_disable_create_group`
+  enum CreateGroupPolicy {
+    // Allow manually creating groups
+    ALLOW_CREATE_GROUP = 0;
+    // Deny manually creating groups
+    DENY_CREATE_GROUP = 1;
+  }
+  CreateGroupPolicy create_group_policy = 37;
+
+  // Share media policy
+  // References: `th_disable_share_media`
+  enum ShareMediaPolicy {
+    // Allow unrestricted sharing of media
+    ALLOW_SHARE_MEDIA = 0;
+    // Deny sharing of media outside of Threema, if possible
+    DENY_OUTSIDE_APP = 1;
+  }
+  ShareMediaPolicy share_media_policy = 38;
+}
+
+// The user's profile.
+message UserProfile {
+  // Nickname
+  string nickname = 1;
+
+  // Profile picture
+  common.DeltaImage profile_picture = 2;
+
+  // Profile picture share policy
+  message ProfilePictureShareWith {
+    // Share only with explicitly listed contacts
+    message AllowList {
+      // Identities the profile picture may be shared with
+      repeated string identifies = 1;
+    }
+
+    oneof policy {
+      // Don't share
+      common.Unit nobody = 1;
+      // Share with everyone
+      common.Unit everyone = 2;
+      // Share only with explicitly listed contacts
+      AllowList allow_list = 3;
+    }
+  }
+  ProfilePictureShareWith profile_picture_share_with = 3;
+
+  // External entities linked with the identity
+  repeated IdentityLink identity_links = 5;
+}
+
+// Threema contact.
+message Contact {
+  // Threema ID of the contact
+  string identity = 1;
+
+  // Public key of the contact
+  bytes public_key = 2;
+
+  // Unix-ish timestamp in milliseconds when the contact has been created
+  // (added) locally.
+  uint64 created_at = 3;
+
+  // Verification level of the contact
+  enum VerificationLevel {
+    // Unverified, public key has been obtained from the server
+    UNVERIFIED = 0;
+    // Verified with one of the account links via the server, or the contact
+    // has been obtained via the Work API.
+    SERVER_VERIFIED = 1;
+    // Verified, public key has been obtained via a secure channel
+    FULLY_VERIFIED = 2;
+  }
+  VerificationLevel verification_level = 4;
+
+  // Identity type of the contact
+  enum IdentityType {
+    // Regular contact (uses the regular Threema app)
+    REGULAR = 0;
+    // Work contact (uses the Threema work app)
+    WORK = 1;
+  }
+  IdentityType identity_type = 5;
+
+  // Acquaintance level of the contact
+  enum AcquaintanceLevel {
+    // The contact was explicitly added by the user or a 1:1 conversation with
+    // the contact has been initiated.
+    DIRECT = 0;
+    // The contact is part of a group the user is also part of. The contact was
+    // not explicitly added and no 1:1 conversation has been initiated.
+    GROUP = 1;
+  }
+  AcquaintanceLevel acquaintance_level = 6;
+
+  // Activity state of the contact
+  enum ActivityState {
+    // The ID is active (used recently and not deleted).
+    ACTIVE = 0;
+    // The ID has not been used for a prolonged time (typically 3 months) and
+    // may have been abandoned. Such IDs can be marked as "inactive" in the
+    // client's contact database, and the user may be alerted to the fact that
+    // messages to this ID may not arrive (e.g. alert box, gray color in
+    // contact list etc.). An inactive ID can become active again at any time,
+    // so the client should keep checking it.
+    INACTIVE = 1;
+    // ID has never been assigned, or it has been permanently deleted. Such IDs
+    // should be marked as "deleted" in the client's contact database, and no
+    // further messages should be sent or received from them. Since deletion is
+    // permanent, once an ID has been reported as invalid by the server, it
+    // should not be checked again in the future.
+    INVALID = 2;
+  }
+  ActivityState activity_state = 7;
+
+  // Conversation category of the contact
+  ConversationCategory conversation_category = 8;
+
+  // Conversation visbility of the contact
+  ConversationVisibility conversation_visibility = 9;
+
+  // First name of the contact
+  optional string first_name = 10;
+
+  // Last name of the contact
+  optional string last_name = 11;
+
+  // Nickname of the contact (without `~` prefix)
+  optional string nickname = 12;
+
+  // Contact-defined profile picture as received from the contact in a
+  // `set-profile-picture` message.
+  common.DeltaImage contact_defined_profile_picture = 13;
+
+  // User-defined profile picture set by the user or imported from the address
+  // book
+  common.DeltaImage user_defined_profile_picture = 14;
+
+  // Contact synchronisation state
+  // Note: These states are strict monotonic.
+  enum SyncState {
+    // The contact data has not been imported and has not been edited by the
+    // user either.
+    INITIAL = 0;
+    // The contact data has been imported (e.g. via a local address book and an
+    // identity link). In this state, subsequent contact synchronisations must
+    // not alter the contact's data.
+    IMPORTED = 1;
+    // The contact data has been edited by the user. In this state, subsequent
+    // contact synchronisations must not alter the contact's data.
+    CUSTOM = 2;
+  }
+  SyncState sync_state = 15;
+}
+
+// Threema contacts associated to a group.
+message Group {
+  // Unique group identity
+  common.GroupIdentity group_identity = 1;
+
+  // Name of the group
+  string name = 2;
+
+  // Unix-ish timestamp in milliseconds when the group has been created locally
+  uint64 created_at = 3;
+
+  // Conversation category of the group
+  ConversationCategory conversation_category = 4;
+
+  // Conversation visbility of the group
+  ConversationVisibility conversation_visibility = 5;
+
+  // The user's state within the group
+  enum UserState {
+    // The user is a member (or an admin) of the group
+    MEMBER = 0;
+    // The user has been kicked from the group
+    KICKED = 1;
+    // The user left the group
+    LEFT = 2;
+  }
+  UserState user_state = 6;
+
+  // Group's profile picture as received from the group's administrator
+  common.DeltaImage profile_picture = 7;
+
+  // Group members (**NOT** including the user itself)
+  repeated string member_identities = 8;
+}
+
+// Threema contacts associated to a distribution list.
+message DistributionList {
+  // Unique ID of the distribution list
+  fixed64 distribution_list_id = 1;
+
+  // Name of the distribution list
+  string name = 2;
+
+  // Unix-ish timestamp in milliseconds when the group has been created
+  uint64 created_at = 3;
+
+  // Conversation category of the distribution list
+  ConversationCategory conversation_category = 4;
+
+  // Conversation visbility of the distribution list
+  ConversationVisibility conversation_visibility = 5;
+
+  // Distribution list members
+  repeated string member_identities = 6;
+}
+
+// App settings
+message Settings {
+  // Contact synchronisation policy
+  enum ContactSyncPolicy {
+    // Not synced
+    NOT_SYNCED = 0;
+    // Synced
+    SYNC = 1;
+  }
+  ContactSyncPolicy contact_sync_policy = 1;
+
+  // Unknown contacts policy
+  enum UnknownContactPolicy {
+    // Allowed to contact the user
+    ALLOW_UNKNOWN = 0;
+    // Will be blocked by the user
+    BLOCK_UNKNOWN = 1;
+  }
+  UnknownContactPolicy unknown_contact_policy = 2;
+
+  // Read message policy (when an unread message has been read)
+  enum ReadMessagePolicy {
+    // Send *read* receipt when an unread message has been read
+    SEND_READ_RECEIPT = 0;
+    // Don't send *read* receipts
+    IGNORE_READ = 1;
+  }
+  ReadMessagePolicy read_message_policy = 3;
+
+  // Compose message policy
+  enum ComposeMessagePolicy {
+    // Send *typing* indicator when a message is being composed
+    SEND_TYPING_INDICATOR = 0;
+    // Don't send *typing* indicators
+    IGNORE_COMPOSE = 1;
+  }
+  ComposeMessagePolicy compose_message_policy = 4;
+
+  // Threema Call policy
+  enum CallPolicy {
+    // Allow creating/receiving Threema Calls
+    ALLOW_CALL = 0;
+    // Denied from creating/receiving any Threema Calls
+    DENY_CALL = 1;
+  }
+  CallPolicy call_policy = 5;
+
+  // Threema Call connection policy
+  enum CallConnectionPolicy {
+    // Allow direct (peer-to-peer) connections for Threema Calls
+    ALLOW_DIRECT = 0;
+    // Require relayed connections for Threema Calls
+    REQUIRE_RELAY = 1;
+  }
+  CallConnectionPolicy call_connection_polity = 6;
+
+  // Screenshot policy
+  enum ScreenshotPolicy {
+    // Allow taking screenshots
+    ALLOW_SCREENSHOT = 0;
+    // Deny taking screenshots, if possible
+    DENY_SCREENSHOT = 1;
+  }
+  ScreenshotPolicy screenshot_policy = 7;
+
+  // Keyboard data collection policy (e.g. for personalised suggestions)
+  enum KeyboardDataCollectionPolicy {
+    // Allow keyboard input data to be collected
+    ALLOW_DATA_COLLECTION = 0;
+    // Deny collecting of keyboard input data
+    DENY_DATA_COLLECTION = 1;
+  }
+  KeyboardDataCollectionPolicy keyboard_data_collection_policy = 8;
+
+  // List of Threema IDs whose messages are blocked
+  repeated string blocked_identities = 9;
+
+  // Threema IDs to be excluded when syncing
+  repeated string exclude_from_sync_identities = 10;
+
+  // List of recently used emojis, where the most recently used Emoji comes
+  // first.
+  repeated string recent_emojis = 11;
+}
+
+// Threema ID link.
+message IdentityLink {
+  // Identity link type
+  oneof type {
+    // Linked with a verified telephone number (E.164 format without leading
+    // `+`)
+    string phone_number = 1;
+    // Linked with a verified email address
+    string email = 2;
+  }
+
+  // Identity link description
+  string description = 3;
+}
+

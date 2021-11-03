@@ -728,11 +728,11 @@
 "notification_sound_title" = "Reproducir sonido de notificación";
 
 /* WebClient */
-"webClientSession_title" = "Threema Web";
+"webClientSession_title" = "Escritorio/Web";
 "webClientSession_add" = "Iniciar sesión nueva";
-"webClientSession_add_wrong_qr_title" = "Threema Web";
-"webClientSession_add_wrong_qr_message" = "Este no es un código QR de Threema Web. Abra la página https://web.threema.ch/ y escanee el código QR que aparece allí.";
-"webClientSession_add_footer" = "Primero, abra la página open https://web.threema.ch/ en su PC o Mac. Después, toque el icono de la cámara situado en la esquina superior derecha de esta pantalla y escanee el código QR que aparece en la pantalla de su ordenador.";
+"webClientSession_add_wrong_qr_title" = "Escritorio/Web";
+"webClientSession_add_wrong_qr_message" = "Este no es un código QR de la aplicación de escritorio o cliente web. Descargue la aplicación de escritorio (https://threema.ch/download) o abra el cliente web (https://web.threema.ch/) y escanee el código QR que aparece.";
+"webClientSession_add_footer" = "En su PC/Mac, descargue la aplicación de escritorio (https://threema.ch/download) o abra el cliente web (https://web.threema.ch/). Después, toque el icono de la cámara situado en la esquina superior derecha de esta pantalla y escanee el código QR que aparece en la pantalla de su ordenador.";
 "webClientSession_sessions_header" = "Sesiones";
 "webClientSession_unnamed" = "Sesión sin título";
 "webClientSession_lastUse" = "Usada por última vez";
@@ -744,19 +744,18 @@
 "webClientSession_actionSheet_startSession" = "Iniciar sesión";
 "webClientSession_actionSheet_renameSession" = "Renombrar sesión";
 "webClientSession_actionSheet_deleteSession" = "Borrar sesión";
-"webClientSession_error_updateApp_title" = "Threema Web";
-"webClientSession_error_updateApp_message" = "Versión del protocolo Threema Web incorrecta. Actualice la aplicación.";
-"webClientSession_error_updateServer_title" = "Threema Web";
-"webClientSession_error_updateServer_message" = "Versión del protocolo Threema Web incorrecta. Pida al administrador que actualice el cliente web.";
-"webClientSession_error_wrongVersion_title" = "Threema Web";
-"webClientSession_error_wrongVersion_message" = "Esta versión de la aplicación no soporta el protocolo Threema Web del cliente web.";
+"webClientSession_error_updateApp_title" = "Escritorio/Web";
+"webClientSession_error_updateApp_message" = "Versión del protocolo remoto de aplicación incorrecta. Actualice la aplicación iOS.";
+"webClientSession_error_updateServer_title" = "Escritorio/Web";
+"webClientSession_error_updateServer_message" = "Versión del protocolo remoto de aplicación incorrecta. Descargue la versión más reciente de la aplicación de escritorio o pida al administrador que actualice el cliente web.";
+"webClientSession_error_wrongVersion_title" = "Escritorio/Web";
+"webClientSession_error_wrongVersion_message" = "Esta versión de la aplicación no admite el protocolo remoto de aplicación de su aplicación de escritorio o cliente web.";
 
-"webClient_scan_error_title" = "Threema Web";
-"webClient_scan_error_message" = "Este es un código QR de Threema Web. Utilice el escáner disponible en Ajustes > Threema Web.";
+"webClient_scan_error_title" = "Escritorio/Web";
+"webClient_scan_error_message" = "Este es un código QR para la aplicación de escritorio o cliente web. Use el escáner en Ajustes > Escritorio/Web.";
 
-"webClient_scan_error_mdm_host_title" = "No se puede iniciar la sesión en Threema Web";
+"webClient_scan_error_mdm_host_title" = "No se puede iniciar la sesión";
 "webClient_scan_error_mdm_host_message" = "Servidor no aprobado por el administrador.";
-
 
 /* ProtectedDataUnavailable */
 "protectedDataUnavailable_error_text" = "Los datos protegidos no están disponibles en este momento. Salga de la aplicación e inténtelo de nuevo.";
@@ -901,7 +900,7 @@
 "settings_storage_management" = "Gestión del almacenamiento";
 "settings_passcode_lock" = "Bloqueo con código";
 "settings_threema_calls" = "Threema Voz";
-"settings_threema_web" = "Threema Web";
+"settings_threema_web" = "Escritorio/Web";
 "settings_network_status" = "Estado de la red";
 "settings_version" = "Versión";
 "settings_license_username" = "Nombre de usuario de licencia";

@@ -1,0 +1,111 @@
+syntax = "proto3";
+
+package rendezvous;
+
+option java_package = "ch.threema.protobuf.d2d.rendezvous";
+
+// ## Connection Rendezvous Protocol (Supplementary)
+//
+// This is a supplementary section to the corresponding structbuf section
+// with complementary protobuf messages. All defined messages here follow the
+// same logic.
+
+
+
+// Network cost
+enum NetworkCost {
+  // It is unknown whether the interface is metered or unmetered
+  UNKNOWN = 0;
+  // The interface is unmetered
+  UNMETERED = 1;
+  // The interface is metered
+  METERED = 2;
+}
+
+// Contains the data necessary to initialise a 1:1 connection between two
+// devices.
+//
+// When creating this message, run the following sub-steps simultaneously and
+// wait for them to finish:
+//
+// 1. If the device is able to create a TCP server socket:
+//    1. Bind to *any* IP address with a random port number. Silently ignore
+//       failures.
+//    2. If successful, let `addresses` be the list of available IP addresses
+//       on network interfaces the server has been bound to.
+//    3. Drop any loopback and duplicate IP addresses from `addresses`.
+//    4. Drop link-local IPv6 addresses associated to interfaces that only
+//       provide link-local IPv6 addresses.
+//    5. Sort `addresses` in the following way, highest priority first:
+//         1. IP addresses on unmetered, fast networks
+//         2. IP addresses on unmetered, slow networks
+//         3. IP addresses on metered, fast networks
+//         4. Any other addresses
+//    6. Complete the subroutine and provide `addresses` and other necessary
+//       data in the `direct_tcp_server` field.
+// 2. Connect to a WebSocket relay server:
+//    1. Generate a random 32 byte hex-encoded rendezvous path.
+//    2. Connect to the WebSocket relay server URL as provided by the context
+//       with the generated hex-encoded rendezvous path.
+//    3. Once connected, complete the subroutine and provide the necessary
+//       data in the `relayed_web_socket` field.
+//
+// When receiving this message:
+//
+// 1. If any `path_id` is contained more than once, abort these steps.
+// 2. If the device is able to create a TCP client connection:
+//    1. Let `addresses` be the IP addresses of `direct_tcp_server`.
+//    2. Filter `addresses` by discarding IPs with unsupported families (e.g.
+//       if the device has no IPv6 address, drop any IPv6 addresses).
+//    3. For each IP address in `addresses`:
+//       1. Connect to the given IP address in the background.
+//       2. Wait 100ms.
+// 3. Connect to the provided relayed WebSocket server in the background.
+// 4. On each successful direct or relayed connection made in the background,
+//    forward an event to the upper-level protocol in order for it to select
+//    one of the paths for nomination.
+message RendezvousInit {
+  // 32 byte secret key (RK)
+  bytes key = 1;
+
+  // Relayed WebSocket path
+  message RelayedWebSocket {
+    // Unique path id
+    uint32 path_id = 1;
+
+    // Network cost
+    NetworkCost network_cost = 2;
+
+    // Full URL to the WebSocket server with a random 32 byte hex-encoded
+    // rendezvous path. Must begin with `wss://``.
+    string url = 3;
+  }
+  RelayedWebSocket relayed_web_socket = 2;
+
+  // Direct path to a TCP server created by the initiator
+  message DirectTcpServer {
+    // Random 16 bit port. Values greater than 65535 are invalid.
+    uint32 port = 1;
+
+    // List of associated IP addresses. Each IP address creates its own path.
+    repeated IpAddress ip_addresses = 2;
+
+    // An IP address
+    message IpAddress {
+      // Unique path id
+      fixed32 path_id = 1;
+
+      // Network cost
+      NetworkCost network_cost = 2;
+
+      oneof ip {
+        // 4 byte IPv4 address in little-endian encoding.
+        bytes ipv4 = 3;
+
+        // 16 byte IPv6 address in little-endian encoding.
+        bytes ipv6 = 4;
+      }
+    }
+  }
+  DirectTcpServer direct_tcp_server = 3;
+}

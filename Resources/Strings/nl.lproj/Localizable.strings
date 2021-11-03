@@ -728,11 +728,11 @@
 "notification_sound_title" = "Meldingsgeluid afspelen";
 
 /* WebClient */
-"webClientSession_title" = "Threema Web";
+"webClientSession_title" = "Desktop/web";
 "webClientSession_add" = "Nieuwe sessie starten";
-"webClientSession_add_wrong_qr_title" = "Threema Web";
-"webClientSession_add_wrong_qr_message" = "Dit is geen QR-code voor Threema Web. Open https://web.threema.ch/ en scan de QR-code die daar wordt weergegeven.";
-"webClientSession_add_footer" = "Open https://web.threema.ch/ op uw pc/Mac. Tik daarna op het camerapictogram rechtsboven in dit scherm en scan de QR-code op uw computer.";
+"webClientSession_add_wrong_qr_title" = "Desktop/web";
+"webClientSession_add_wrong_qr_message" = "Dit is geen QR-code voor de desktop-app/de webclient. Download de desktop-app (https://threema.ch/download) of open de webclient (https://web.threema.ch/) en scan de QR-code die daar wordt weergegeven.";
+"webClientSession_add_footer" = "Download de desktop-app (https://web.threema.ch/download) op uw pc/Mac of open de webclient (https://web.threema.ch/). Tik daarna op het camerapictogram rechtsboven in dit scherm en scan de QR-code op uw computer.";
 "webClientSession_sessions_header" = "Sessies";
 "webClientSession_unnamed" = "Sessie zonder titel";
 "webClientSession_lastUse" = "Laatst gebruikt";
@@ -744,19 +744,18 @@
 "webClientSession_actionSheet_startSession" = "Sessie starten";
 "webClientSession_actionSheet_renameSession" = "Sessie hernoemen";
 "webClientSession_actionSheet_deleteSession" = "Sessie verwijderen";
-"webClientSession_error_updateApp_title" = "Threema Web";
-"webClientSession_error_updateApp_message" = "Verkeerde protocolversie van Threema Web. Werk uw app bij.";
-"webClientSession_error_updateServer_title" = "Threema Web";
-"webClientSession_error_updateServer_message" = "Verkeerde protocolversie van Threema Web. Vraag uw administrator om de web client bij te werken.";
-"webClientSession_error_wrongVersion_title" = "Threema Web";
-"webClientSession_error_wrongVersion_message" = "Deze appversie ondersteunt het protocol voor de web client voor Threema Web niet.";
+"webClientSession_error_updateApp_title" = "Desktop/web";
+"webClientSession_error_updateApp_message" = "Verkeerde protocolversie van App Remote. Werk uw iOS-app bij.";
+"webClientSession_error_updateServer_title" = "Desktop/web";
+"webClientSession_error_updateServer_message" = "Verkeerde protocolversie van App Remote. Download de huidige versie van de desktop-app of vraag uw beheerder om de webclient bij te werken.";
+"webClientSession_error_wrongVersion_title" = "Desktop/web";
+"webClientSession_error_wrongVersion_message" = "Deze iOS-appversie ondersteunt het protocol voor de App Remote voor uw desktop-app/webclient niet.";
 
-"webClient_scan_error_title" = "Threema Web";
-"webClient_scan_error_message" = "Dit is een QR-code voor Threema Web. Gebruik de scanner via Instellingen > Threema Web.";
+"webClient_scan_error_title" = "Desktop/web";
+"webClient_scan_error_message" = "Dit is een QR-code voor de desktop-app/webclient. Gebruik de scanner via Instellingen > Desktop/web.";
 
-"webClient_scan_error_mdm_host_title" = "Threema Web-sessie kan niet worden gestart";
+"webClient_scan_error_mdm_host_title" = "Sessie kan niet worden gestart";
 "webClient_scan_error_mdm_host_message" = "De server is niet goedgekeurd door de administrator.";
-
 
 /* ProtectedDataUnavailable */
 "protectedDataUnavailable_error_text" = "Beschermde gegevens is momenteel niet beschikbaar. Sluit de app en start hem opnieuw op.";
@@ -901,7 +900,7 @@
 "settings_storage_management" = "Opslagbeheer";
 "settings_passcode_lock" = "Veiligheidscode";
 "settings_threema_calls" = "Threema Oproepen";
-"settings_threema_web" = "Threema Web";
+"settings_threema_web" = "Desktop/web";
 "settings_network_status" = "Netwerkstatus";
 "settings_version" = "Versie";
 "settings_license_username" = "Gebruikersnaam licentie";

@@ -169,7 +169,8 @@
 "export_chat" = "Görüşmeyi Dışa Aktar";
 "send_profile_picture" = "Profil Resmini Şimdi Gönder";
 "linked_contact" = "Bağlantılı Kişi";
-"key_fingerprint" = "Anahtar Parmak İzi";
+"public_key" = "Ortak Anahtar";
+"public_key_of" = "%@ Ortak Anahtarı";
 "block_contact" = "Kişiyi Engelle";
 "profile_picture_recipient" = "Profil Resmi Alıcısı";
 "member_in_groups" = "Gruplardaki Üye";

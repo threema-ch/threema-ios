@@ -67,6 +67,8 @@
     UIAlertController *deleteActionSheet;
     
     MDMSetup *mdmSetup;
+    
+    PublicKeyView *publicKeyView;
 }
 
 @synthesize nickNameTitleLabel;
@@ -74,7 +76,6 @@
 @synthesize threemaIdLabel;
 @synthesize threemaSafeLabel;
 @synthesize nickNameLabel;
-@synthesize keyFingerprintLabel;
 @synthesize qrBackgroundImageView;
 
 - (instancetype)initWithCoder:(NSCoder *)coder
@@ -130,10 +131,12 @@
     [_shareIdButton addGestureRecognizer:shareIdTapRecognizer];
     _shareIdButton.accessibilityTraits = UIAccessibilityTraitNone;
     _shareIdButton.accessibilityLabel = [BundleUtil localizedStringForKey:@"share_id"];
-    
+        
     if (@available(iOS 11.0, *)) {
         _imageView.accessibilityIgnoresInvertColors = true;
     }
+    
+    publicKeyView = [[PublicKeyView alloc] initWithIdentity:[MyIdentityStore sharedMyIdentityStore].identity publicKey:[MyIdentityStore sharedMyIdentityStore].publicKey];
 }
 
 - (void)dealloc {
@@ -187,6 +190,7 @@
 
 - (void)viewWillDisappear:(BOOL)animated {
     [self hideFullScreenQrViewAnimated:NO];
+    [publicKeyView close];
 
     [super viewWillDisappear:animated];
 }
@@ -218,7 +222,6 @@
     threemaIdLabel.text = [MyIdentityStore sharedMyIdentityStore].identity;
     threemaIdLabel.accessibilityLabel = [NSString stringWithFormat:@"%@: %@", NSLocalizedString(@"my_threema_id", @""), [MyIdentityStore sharedMyIdentityStore].identity];
 
-    keyFingerprintLabel.text = [MyIdentityStore sharedMyIdentityStore].keyFingerprint;
 
     UIImage *qrCodeImage = [self renderQrCodeWithDimension:self.qrCodeButton.frame.size.width * [UIScreen mainScreen].scale];
 
@@ -254,7 +257,9 @@
         else
             self.linkedMobileNoLabel.text = @" ";
     }
-
+    
+    _publicKeyLabel.text = [BundleUtil localizedStringForKey:@"public_key"];
+    
     [self updateNickname];
 
     [self updateProfilePicture];
@@ -295,7 +300,7 @@
 - (void)updateColors {
     nickNameTitleLabel.textColor = [Colors fontVeryLight];
     nickNameTitleLabel.shadowColor = nil;
-    threemaIdTitleLabel.textColor = [Colors fontVeryLight];
+    threemaIdTitleLabel.textColor = [Colors fontNormal];
     threemaIdTitleLabel.shadowColor = nil;
 
     nickNameLabel.textColor = [Colors fontNormal];
@@ -330,6 +335,8 @@
             break;
     }
     [self.qrCodeButton setImage:qrCodeImage forState:UIControlStateNormal];
+    
+    [publicKeyView updateColors];
 }
 
 - (void)updateThreemaSafe {
@@ -405,10 +412,6 @@
         coverView = nil;
         zoomingQrImageView = nil;
     }
-}
-
-- (void)viewWillTransitionToSize:(CGSize)size withTransitionCoordinator:(id<UIViewControllerTransitionCoordinator>)coordinator {
-    [self hideFullScreenQrViewAnimated:NO];
 }
 
 - (void)createBackup {
@@ -496,27 +499,23 @@
 
 - (void)tableView:(UITableView *)tableView willDisplayCell:(UITableViewCell *)cell forRowAtIndexPath:(NSIndexPath *)indexPath {
 
-    if (indexPath.section == 3 && indexPath.row == 0) {
+    if (indexPath.section == 4 && indexPath.row == 0) {
         // handle custom table cells
         [Colors updateTableViewCellBackground:cell];
         [Colors setTextColor:[Colors red] inView:cell.contentView];
     } else {
         [Colors updateTableViewCell:cell];
     }
-
-    if (indexPath.section == 0) {
-        self.keyFingerprintLabel.textColor = [Colors fontLight];
-    }
 }
 
 - (NSString *)tableView:(UITableView *)tableView titleForFooterInSection:(NSInteger)section {
-    if (section == 0 && ![mdmSetup readonlyProfile] && ![mdmSetup disableBackups] && [mdmSetup disableAddContact]) {
+    if (section == 1 && ![mdmSetup readonlyProfile] && ![mdmSetup disableBackups] && [mdmSetup disableAddContact]) {
         return NSLocalizedString(@"disabled_by_device_policy", nil);
     }
-    else if (section == 1) {
+    else if (section == 2) {
         return NSLocalizedString(![mdmSetup isSafeBackupDisable] ? @"safe_enable_explain_short" : @"disabled_by_device_policy", nil);
     }
-    else if (section == 2 && ([mdmSetup readonlyProfile] || [mdmSetup disableBackups] || [mdmSetup disableIdExport])) {
+    else if (section == 3 && ([mdmSetup readonlyProfile] || [mdmSetup disableBackups] || [mdmSetup disableIdExport])) {
         return NSLocalizedString(@"disabled_by_device_policy", nil);
     }
 
@@ -524,26 +523,29 @@
 }
 
 - (CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section {
-    if (section == 0) {
-        return 0.0;
-    }
     return UITableViewAutomaticDimension;
 }
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
 {
-    
-    if (indexPath.section == 0 && indexPath.row == 0) {
+    if (indexPath.section == 0 && indexPath.row == 1) {
+        // show public key
+        [publicKeyView show];
+    }
+    else if (indexPath.section == 1 && indexPath.row == 0) {
         /* Link mobile no */
         if ([MyIdentityStore sharedMyIdentityStore].linkMobileNoPending)
             [self performSegueWithIdentifier:@"EnterCode" sender:self];
         else
             [self performSegueWithIdentifier:@"LinkMobileNo" sender:self];
-    } else if (indexPath.section == 2 && indexPath.row == 1) {
+    }
+    else if (indexPath.section == 3 && indexPath.row == 0) {
         [self createBackup];
-    } else if (indexPath.section == 2 && indexPath.row == 2) {
+    }
+    else if (indexPath.section == 3 && indexPath.row == 1) {
         [self createRevocationKey];
-    } else if (indexPath.section == 3 && indexPath.row == 0) {
+    }
+    else if (indexPath.section == 4 && indexPath.row == 0) {
         UITableViewCell *cell = [tableView cellForRowAtIndexPath:indexPath];
         [self deleteIdentity:cell];
     }

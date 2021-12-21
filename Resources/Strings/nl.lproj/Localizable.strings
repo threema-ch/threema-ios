@@ -169,7 +169,8 @@
 "export_chat" = "Gesprek exporteren";
 "send_profile_picture" = "Profielafbeelding verzenden";
 "linked_contact" = "Gekoppelde contactpersoon";
-"key_fingerprint" = "Vingerafdruksleutel";
+"public_key" = "Publieke sleutel";
+"public_key_of" = "Publieke sleutel van %@";
 "block_contact" = "Contactpersoon blokkeren";
 "profile_picture_recipient" = "Ontvangers profielafbeeldingen";
 "member_in_groups" = "Lid in groepen";

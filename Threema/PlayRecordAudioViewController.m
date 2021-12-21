@@ -118,7 +118,7 @@
         NSError *error = nil;
         AVAudioSession *session = [AVAudioSession sharedInstance];
         
-        if (![session setCategory:earpiece ? AVAudioSessionCategoryPlayAndRecord : AVAudioSessionCategoryPlayback mode:AVAudioSessionModeSpokenAudio options:0 error:&error]) {
+        if (![session setCategory:earpiece ? AVAudioSessionCategoryPlayAndRecord : AVAudioSessionCategoryPlayback mode:AVAudioSessionModeSpokenAudio options:earpiece ? AVAudioSessionCategoryOptionAllowBluetooth|AVAudioSessionCategoryOptionAllowBluetoothA2DP : 0 error:&error]) {
             DDLogError(@"Cannot set audio session category: %@", error);
             [UIAlertTemplate showAlertWithOwner:self title:error.localizedDescription message:error.localizedFailureReason actionOk:nil];
             return;
@@ -131,6 +131,8 @@
         }
         
         [session setActive:YES withOptions:AVAudioSessionSetActiveOptionNotifyOthersOnDeactivation error:nil];
+        
+        [self printInAndOutputs];
     }
 }
 
@@ -147,6 +149,19 @@
         }
         
         [session setActive:YES withOptions:AVAudioSessionSetActiveOptionNotifyOthersOnDeactivation error:nil];
+        
+        [self printInAndOutputs];
+    }
+}
+
+- (void)printInAndOutputs {
+    AVAudioSessionRouteDescription *currentRoute = [AVAudioSession sharedInstance].currentRoute;
+    NSArray *availableInputs = [AVAudioSession sharedInstance].availableInputs;
+    for (AVAudioSessionPortDescription *input in availableInputs) {
+        DDLogInfo(@"Play/Record audio: Available input port: %@", input.portType);
+    }
+    for (AVAudioSessionPortDescription *output in currentRoute.outputs) {
+        DDLogInfo(@"Play/Record audio: Current output port: %@", output.portType);
     }
 }
 

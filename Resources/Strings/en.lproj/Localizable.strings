@@ -169,7 +169,8 @@
 "export_chat" = "Export Conversation";
 "send_profile_picture" = "Send Profile Picture Now";
 "linked_contact" = "Linked Contact";
-"key_fingerprint" = "Key Fingerprint";
+"public_key" = "Public Key";
+"public_key_of" = "Public Key of %@";
 "block_contact" = "Block Contact";
 "profile_picture_recipient" = "Profile Picture Recipient";
 "member_in_groups" = "Member in Groups";
@@ -984,6 +985,8 @@ Move the orphaned files to the trash bin, and ensure that no (media) files are m
 If there are no (media) files missing in Threema, empty the trash bin to permanently delete the orphaned files.";
 "settings_orphaned_files_bin_footer_no_files" = "The trash bin is empty.";
 "settings_orphaned_files_bin_delete_conformation" = "Would you like to permanently delete the orphaned files? This action cannot be undone.";
+"settings_orphaned_files_log_title" = "LOG FILES";
+"settings_orphaned_files_log_all_files_button" = "Log Files into Debug Log";
 
 // Threema calls settings
 "settings_threema_calls_enable_calls" = "Enable Threema Calls";

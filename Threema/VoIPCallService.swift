@@ -719,9 +719,8 @@ extension VoIPCallService {
                     BackgroundTaskManager.shared.newBackgroundTask(key: kAppVoIPBackgroundTask, timeout: Int(kAppVoIPBackgroundTaskTime)) {
                         ServerConnector.shared()?.connectWait()
                         let action = VoIPCallUserAction.init(action: .rejectTimeout, contact: offer.contact!, callId: offer.callId, completion: offer.completion)
-                        self.state = .rejectedTimeout
-                        self.callKitManager?.timeoutCall()
                         self.rejectCall(action: action)
+                        self.callKitManager?.timeoutCall()
                         self.invalidateIncomingCallTimeout()
                     }
                 })
@@ -1417,8 +1416,6 @@ extension VoIPCallService {
                     
                     setupAudioSession(true)
                     playSound(soundUrl: soundUrl, loops: -1)
-                } else {
-                    audioPlayer?.stop()
                 }
             }
             break

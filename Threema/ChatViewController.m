@@ -336,7 +336,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         initialChatBarHeight = 45.0;
     
     CGFloat initialChatBarWrapperPadding = 0.0f;
-    if ([AppDelegate hasBottomSafeAreaInsets]) {
+    if ([AppDelegate hasBottomSafeAreaInsets] && !SYSTEM_IS_IPAD) {
         initialChatBarWrapperPadding += kIphoneXChatBarBottomPadding;
         wrapperBottomPadding = kIphoneXChatBarBottomPadding;
     }
@@ -1023,13 +1023,17 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     }
     
     if ([AppDelegate hasBottomSafeAreaInsets]) {
-        if (willHide) {
+        if (willHide && !SYSTEM_IS_IPAD) {
             // Must add padding to chat bar wrapper for iPhone X
             wrapperBottomPadding = kIphoneXChatBarBottomPadding;
         } else {
             wrapperBottomPadding = 0;
         }
         [self chatBar:chatBar didChangeHeight:chatBar.frame.size.height];
+    }
+    
+    if(keyboardHeight < 0.0f) {
+        keyboardHeight = 0.0f;
     }
     
     containerViewFrame.origin.y = -keyboardHeight;
@@ -1801,10 +1805,10 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     float statusBarHeight = [[UIApplication sharedApplication] statusBarFrame].size.height;
     
     if (@available(iOS 11.0, *)) {
-        chatContent.contentInset = UIEdgeInsetsMake(lastKeyboardHeight + [self topOffsetForVisibleChatContent] - self.navigationController.navigationBar.frame.size.height - statusBarHeight + 4.0f, 0, 0, 0);
+        chatContent.contentInset = UIEdgeInsetsMake(lastKeyboardHeight + [self topOffsetForVisibleChatContent] - self.navigationController.navigationBar.frame.size.height - statusBarHeight, 0, 0, 0);
         chatContent.scrollIndicatorInsets = UIEdgeInsetsMake(lastKeyboardHeight + [self topOffsetForVisibleChatContent]  - self.navigationController.navigationBar.frame.size.height - statusBarHeight, 0, 0, 0);
     } else {
-        chatContent.contentInset = UIEdgeInsetsMake(lastKeyboardHeight + [self topOffsetForVisibleChatContent] + 4.0f, 0, 0, 0);
+        chatContent.contentInset = UIEdgeInsetsMake(lastKeyboardHeight + [self topOffsetForVisibleChatContent], 0, 0, 0);
         chatContent.scrollIndicatorInsets = UIEdgeInsetsMake(lastKeyboardHeight + [self topOffsetForVisibleChatContent], 0, 0, 0);
     }
 }

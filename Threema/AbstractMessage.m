@@ -131,7 +131,8 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         boxmsg.flags |= MESSAGE_FLAG_GROUP;
     if (self.isVoIP)
         boxmsg.flags |= MESSAGE_FLAG_VOIP;
-    boxmsg.pushFromName = [MyIdentityStore sharedMyIdentityStore].pushFromName;
+    if (self.allowToSendProfilePicture)
+        boxmsg.pushFromName = [MyIdentityStore sharedMyIdentityStore].pushFromName;
     boxmsg.nonce = nonce;
     boxmsg.box = boxedData;
     

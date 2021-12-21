@@ -75,7 +75,7 @@
     dispatch_async(dispatch_get_main_queue(), ^{
         UIImage *thumbnail = [MediaConverter getThumbnailForImage:_image];
         
-        NSData *thumbnailData = UIImageJPEGRepresentation(thumbnail, kJPEGCompressionQuality);
+        NSData *thumbnailData = UIImageJPEGRepresentation(thumbnail, kJPEGCompressionQualityLow);
         
         EntityManager *entityManager = [[EntityManager alloc] init];
         [entityManager performSyncBlockAndSafe:^{

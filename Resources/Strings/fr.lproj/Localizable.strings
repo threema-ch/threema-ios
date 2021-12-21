@@ -169,7 +169,8 @@
 "export_chat" = "Exporter la conversation";
 "send_profile_picture" = "Envoyer l'image de profil maintenant";
 "linked_contact" = "Contact lié";
-"key_fingerprint" = "Empreinte de clé";
+"public_key" = "Clé publique";
+"public_key_of" = "Clé publique de %@";
 "block_contact" = "Bloquer le contact";
 "profile_picture_recipient" = "Destinataires d'image de profil";
 "member_in_groups" = "Membre des groupes";

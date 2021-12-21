@@ -1228,6 +1228,8 @@
 		CE2A42B22018D73600C314DA /* WebCreateTextMessageResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE2A42B12018D73600C314DA /* WebCreateTextMessageResponse.swift */; };
 		CE2A42B42018D73600C314DA /* WebCreateTextMessageResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE2A42B12018D73600C314DA /* WebCreateTextMessageResponse.swift */; };
 		CE3014021EBB2F0D00068754 /* UIImage+MWPhotoBrowser.m in Sources */ = {isa = PBXBuildFile; fileRef = CE3014011EBB2F0D00068754 /* UIImage+MWPhotoBrowser.m */; };
+		CE3125AF27397559003B2F48 /* PublicKeyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE3125AE27397559003B2F48 /* PublicKeyView.swift */; };
+		CE3125B027397559003B2F48 /* PublicKeyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE3125AE27397559003B2F48 /* PublicKeyView.swift */; };
 		CE337CBF1FBB59DF002265DC /* SDStatusBarOverriderPost11_0.m in Sources */ = {isa = PBXBuildFile; fileRef = CE0A24BF1FB313C400E37E24 /* SDStatusBarOverriderPost11_0.m */; };
 		CE3AAB32258CC55700854649 /* JKLLockScreenViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 4A63CCA6256686F100E73381 /* JKLLockScreenViewController.xib */; };
 		CE3AB52023102EA5001AF17C /* Icons.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = CE3AB51F23102EA5001AF17C /* Icons.xcassets */; };
@@ -1311,8 +1313,6 @@
 		CE54E55024A1E93E0007F2F1 /* LinkedContactCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE54E54E24A1E93E0007F2F1 /* LinkedContactCell.swift */; };
 		CE54E55224A1EB5A0007F2F1 /* VerificationLevelCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE54E55124A1EB5A0007F2F1 /* VerificationLevelCell.swift */; };
 		CE54E55324A1EB5A0007F2F1 /* VerificationLevelCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE54E55124A1EB5A0007F2F1 /* VerificationLevelCell.swift */; };
-		CE54E55524A1F4440007F2F1 /* KeyFingerprintCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE54E55424A1F4440007F2F1 /* KeyFingerprintCell.swift */; };
-		CE54E55624A1F4440007F2F1 /* KeyFingerprintCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE54E55424A1F4440007F2F1 /* KeyFingerprintCell.swift */; };
 		CE54E55824A1F6940007F2F1 /* BlockContactCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE54E55724A1F6940007F2F1 /* BlockContactCell.swift */; };
 		CE54E55924A1F6940007F2F1 /* BlockContactCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE54E55724A1F6940007F2F1 /* BlockContactCell.swift */; };
 		CE54E55B24A1FBBE0007F2F1 /* ProfilePictureRecipientCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE54E55A24A1FBBE0007F2F1 /* ProfilePictureRecipientCell.swift */; };
@@ -3210,6 +3210,7 @@
 		CE2A42B12018D73600C314DA /* WebCreateTextMessageResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebCreateTextMessageResponse.swift; sourceTree = "<group>"; };
 		CE3014001EBB2F0D00068754 /* UIImage+MWPhotoBrowser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UIImage+MWPhotoBrowser.h"; sourceTree = "<group>"; };
 		CE3014011EBB2F0D00068754 /* UIImage+MWPhotoBrowser.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UIImage+MWPhotoBrowser.m"; sourceTree = "<group>"; };
+		CE3125AE27397559003B2F48 /* PublicKeyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PublicKeyView.swift; sourceTree = "<group>"; };
 		CE3427981FD5C59100A4D857 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/MyIdentityStoryboard.strings; sourceTree = "<group>"; };
 		CE3AB51F23102EA5001AF17C /* Icons.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Icons.xcassets; sourceTree = "<group>"; };
 		CE3AB52923103192001AF17C /* ContactsNavigationController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ContactsNavigationController.h; sourceTree = "<group>"; };
@@ -3267,7 +3268,6 @@
 		CE54E54B24A1E8490007F2F1 /* ContactSendPictureCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactSendPictureCell.swift; sourceTree = "<group>"; };
 		CE54E54E24A1E93E0007F2F1 /* LinkedContactCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinkedContactCell.swift; sourceTree = "<group>"; };
 		CE54E55124A1EB5A0007F2F1 /* VerificationLevelCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VerificationLevelCell.swift; sourceTree = "<group>"; };
-		CE54E55424A1F4440007F2F1 /* KeyFingerprintCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyFingerprintCell.swift; sourceTree = "<group>"; };
 		CE54E55724A1F6940007F2F1 /* BlockContactCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockContactCell.swift; sourceTree = "<group>"; };
 		CE54E55A24A1FBBE0007F2F1 /* ProfilePictureRecipientCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfilePictureRecipientCell.swift; sourceTree = "<group>"; };
 		CE5635B722F86CF100DCAABF /* ThreemaDataV27.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = ThreemaDataV27.xcdatamodel; sourceTree = "<group>"; };
@@ -5480,6 +5480,7 @@
 				0A0C55BE1A1A8DE00014F5E0 /* VideoCaptionView.m */,
 				4DCA090F1DE77B0300E2D8D9 /* QuoteView.h */,
 				4DCA09101DE77B0300E2D8D9 /* QuoteView.m */,
+				CE3125AE27397559003B2F48 /* PublicKeyView.swift */,
 			);
 			name = "Custom views";
 			sourceTree = "<group>";
@@ -6298,7 +6299,6 @@
 				CE54E54B24A1E8490007F2F1 /* ContactSendPictureCell.swift */,
 				CE54E54E24A1E93E0007F2F1 /* LinkedContactCell.swift */,
 				CE54E55124A1EB5A0007F2F1 /* VerificationLevelCell.swift */,
-				CE54E55424A1F4440007F2F1 /* KeyFingerprintCell.swift */,
 				CE54E55724A1F6940007F2F1 /* BlockContactCell.swift */,
 				CE54E55A24A1FBBE0007F2F1 /* ProfilePictureRecipientCell.swift */,
 			);
@@ -8194,6 +8194,7 @@
 				CE7E4F3B23E2C313009977A5 /* GrowingNotificationBanner.swift in Sources */,
 				CE54E55C24A1FBBE0007F2F1 /* ProfilePictureRecipientCell.swift in Sources */,
 				CE54E53F24A1E2DB0007F2F1 /* ContactThreemaCallCell.swift in Sources */,
+				CE3125B027397559003B2F48 /* PublicKeyView.swift in Sources */,
 				2D5B8FB321BF8E9700788B2E /* salsa20.c in Sources */,
 				CE54E54724A1E5400007F2F1 /* ExportConversationCell.swift in Sources */,
 				CE8A2B551EB38270004973D5 /* DKAssetGroupCellItemProtocol.swift in Sources */,
@@ -8496,7 +8497,6 @@
 				CE66FFAB23267FD100338E22 /* StorageManagementViewController.swift in Sources */,
 				4A5AEEE3252379E800B91866 /* PhotosRightsHelper.swift in Sources */,
 				0A7DF7A11C9FDBDE002D4DC3 /* ChatViewSearchHeader.m in Sources */,
-				CE54E55624A1F4440007F2F1 /* KeyFingerprintCell.swift in Sources */,
 				CE9257322049452000ACDF98 /* WebReceiversRequest.swift in Sources */,
 				0A7DF7A21C9FDBDE002D4DC3 /* PoiTableViewCell.m in Sources */,
 				CE7E4F2D23E2C313009977A5 /* UIWindow+orientation.swift in Sources */,
@@ -8742,7 +8742,6 @@
 				4DD01F7D14C1CCA900EF7690 /* AppDelegate.m in Sources */,
 				0A182B0819FA29D000D1A6EF /* BallotMatrixLabelView.m in Sources */,
 				CEC42C93228C48F0004D267B /* VoIPCallConstants.swift in Sources */,
-				CE54E55524A1F4440007F2F1 /* KeyFingerprintCell.swift in Sources */,
 				0AA2D48419E2D68F0048D54F /* BallotVoteViewController.m in Sources */,
 				4A3642F024A0EE1D00B7C277 /* ConversationExporter.swift in Sources */,
 				4D6638EA17E0C26300D03144 /* HPTextViewInternal.m in Sources */,
@@ -8809,6 +8808,7 @@
 				4D37D1C9193F67E40094682B /* PointOfInterest.m in Sources */,
 				CE6CFBC9204DAB15001FCBDD /* WebUpdateContactResponse.swift in Sources */,
 				CEC4DAE62114A927004C7DCF /* WebChunkCache.swift in Sources */,
+				CE3125AF27397559003B2F48 /* PublicKeyView.swift in Sources */,
 				CE174AEE1E96443100D3746E /* ProfilePictureSettingViewController.m in Sources */,
 				0A6959511A6CF71A002FF905 /* ForwardURLActivity.m in Sources */,
 				0A535E7A19FE464100C5DA04 /* BallotResultMatrixCell.m in Sources */,
@@ -10675,7 +10675,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				BUILD_NUMBER = 2663;
+				BUILD_NUMBER = 2678;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ENABLE_MODULES = NO;
 				CLANG_ENABLE_OBJC_ARC = YES;
@@ -10722,7 +10722,7 @@
 				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "";
 				SDKROOT = iphoneos;
 				VALIDATE_PRODUCT = YES;
-				VERSION_NUMBER = 4.6.13;
+				VERSION_NUMBER = 4.6.14;
 			};
 			name = AppStore;
 		};
@@ -10795,7 +10795,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				BUILD_NUMBER = 2663;
+				BUILD_NUMBER = 2678;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ENABLE_MODULES = NO;
 				CLANG_ENABLE_OBJC_ARC = YES;
@@ -10848,7 +10848,7 @@
 				PROVISIONING_PROFILE = "";
 				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "";
 				SDKROOT = iphoneos;
-				VERSION_NUMBER = 4.6.13;
+				VERSION_NUMBER = 4.6.14;
 			};
 			name = Debug;
 		};
@@ -10856,7 +10856,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				BUILD_NUMBER = 2663;
+				BUILD_NUMBER = 2678;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ENABLE_MODULES = NO;
 				CLANG_ENABLE_OBJC_ARC = YES;
@@ -10902,7 +10902,7 @@
 				PROVISIONING_PROFILE = "";
 				SDKROOT = iphoneos;
 				VALIDATE_PRODUCT = YES;
-				VERSION_NUMBER = 4.6.13;
+				VERSION_NUMBER = 4.6.14;
 			};
 			name = AdHoc;
 		};
@@ -11198,7 +11198,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				BUILD_NUMBER = 2663;
+				BUILD_NUMBER = 2678;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ENABLE_MODULES = NO;
 				CLANG_ENABLE_OBJC_ARC = YES;
@@ -11251,7 +11251,7 @@
 				PROVISIONING_PROFILE = "";
 				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "";
 				SDKROOT = iphoneos;
-				VERSION_NUMBER = 4.6.13;
+				VERSION_NUMBER = 4.6.14;
 			};
 			name = "Debug Sandbox";
 		};

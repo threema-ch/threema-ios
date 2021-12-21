@@ -79,12 +79,12 @@ import CocoaLumberjackSwift
         } else if ImageURLSenderItemCreator.isPNGSticker(image: img, uti: uti) {
             renderType = 2
 
-            guard let convData = MediaConverter.scaleImageData(to: image, toMaxSize: maxSize, useJPEG: false) else {
+            guard let convData = MediaConverter.scaleImageData(to: image, toMaxSize: maxSize, useJPEG: false, withQuality: imageCompressionQuality()) else {
                 return nil
             }
             imageData = convData
         } else {
-            guard let convJpgData = MediaConverter.scaleImageData(to: image, toMaxSize: maxSize, useJPEG: true) else {
+            guard let convJpgData = MediaConverter.scaleImageData(to: image, toMaxSize: maxSize, useJPEG: true, withQuality: imageCompressionQuality()) else {
                 return nil
             }
             imageData = convJpgData
@@ -125,7 +125,7 @@ import CocoaLumberjackSwift
                 renderType = 2
                 imageData = MediaConverter.pngRepresentation(for: scaledImage)
             } else {
-                guard let convJpgData = MediaConverter.jpegRepresentation(for: scaledImage) else {
+                guard let convJpgData = MediaConverter.jpegRepresentation(for: scaledImage, withQuality: imageCompressionQuality()) else {
                     return nil
                 }
                 imageData = convJpgData
@@ -165,7 +165,7 @@ import CocoaLumberjackSwift
                 guard let image = UIImage(data: data) else {
                     return nil
                 }
-                guard let imageData = MediaConverter.jpegRepresentation(for: image) else {
+                guard let imageData = MediaConverter.jpegRepresentation(for: image, withQuality: imageCompressionQuality()) else {
                     return nil
                 }
                 data = imageData
@@ -199,7 +199,7 @@ import CocoaLumberjackSwift
             return nil
         }
         
-        let data = MediaConverter.jpegRepresentation(for: image)!
+        let data = MediaConverter.jpegRepresentation(for: image, withQuality: imageCompressionQuality())!
         let type = kUTTypeJPEG as String
         let renderType : NSNumber = 1
         
@@ -319,6 +319,36 @@ import CocoaLumberjackSwift
         
         return maxSize
     }
+    
+    /// Returns the maximum size of the longest edge of media thumbnails to be sent
+    /// The size should be inbetween 128px and 512px
+    @objc public func imageThumbnailMaxSize(_ image: UIImage?) -> CGFloat {
+        let thumbnailSize = min(imageMaxSize(image)/3, 512)
+        return max(128, thumbnailSize)
+    }
+    
+    @objc public func stickerThumbnailMaxSize(_ image: UIImage?) -> CGFloat {
+        let maxStickerSize: CGFloat = 400
+        if let image = image,
+           image.size.width < maxStickerSize,
+           image.size.height < maxStickerSize {
+            return max(image.size.width, image.size.height)
+        }
+        
+        let thumbnailSize = min(imageMaxSize(image)/2, 1024)
+        return max(400, thumbnailSize)
+    }
+    
+    func imageCompressionQuality() -> Double {
+        if self.userSettingsImageSize == "original" {
+            return kJPEGCompressionQualityHigh
+        }
+        return kJPEGCompressionQualityLow
+    }
+    
+    func imageCompressionQuality() -> NSNumber {
+        NSNumber.init(value: imageCompressionQuality())
+    }
         
     // MARK: Private Helper Functions
     /// Returns true if the given uti is supported by the file message spec
@@ -349,19 +379,16 @@ import CocoaLumberjackSwift
     /// Returns the number of supported image sizes
     /// - Returns:
     @objc static func getImageSizeNo() -> Int {
-        guard let imageSizes = imageSizes() else {
-            return 0
-        }
-        return imageSizes.count
+        return imageSizes().count
     }
     
     ///
     /// - Returns: A list of the descriptions of the available image sizes as String
-    @objc static func imageSizes() -> [AnyHashable]? {
+    @objc static func imageSizes() -> [String] {
         return ["small", "medium", "large", "xlarge", "original"]
     }
     
-    /// 
+    ///
     /// - Returns: A list of the sizes of the available image sizes as Float
     @objc static func imagePixelSizes() -> [AnyHashable]? {
         return [

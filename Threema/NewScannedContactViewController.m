@@ -23,7 +23,6 @@
 #import <MobileCoreServices/MobileCoreServices.h>
 
 #import "NewScannedContactViewController.h"
-#import "CryptoUtils.h"
 #import "Contact.h"
 #import "ContactStore.h"
 #import "StatusNavigationBar.h"
@@ -43,13 +42,13 @@
 #import "TrustedContacts.h"
 
 @interface NewScannedContactViewController ()
-
 @end
 
 @implementation NewScannedContactViewController {
     CNContactStore *cnAddressBook;
     Contact *dummyContact;
     EntityManager *tempEntityManager;
+    PublicKeyView *publicKeyView;
 }
 
 - (id)initWithCoder:(NSCoder *)aDecoder {
@@ -116,6 +115,12 @@
     [self updateView];
 }
 
+- (void)viewWillDisappear:(BOOL)animated {
+    [super viewWillDisappear:animated];
+    
+    [publicKeyView close];
+}
+
 - (void)setIdentity:(NSString *)identity {
     _identity = identity;
     
@@ -140,7 +145,7 @@
     self.threemaCallLabel.text = [BundleUtil localizedStringForKey:@"call_voip_not_supported_title"];
     
     self.identityLabel.text = self.identity;
-    self.keyFingerprintCell.fingerprintValueLabel.text = [CryptoUtils fingerprintForPublicKey:self.publicKey];
+    self.publicKeyCell.textLabel.text = [BundleUtil localizedStringForKey:@"public_key"];
     
     // check if this is a trusted contact (like *THREEMA)
     if ([TrustedContacts isTrustedContactWithIdentity:self.identity publicKey:_publicKey]) {
@@ -195,6 +200,8 @@
         } onError:^(NSError *error) {
         }];
     }
+    
+    publicKeyView = [[PublicKeyView alloc] initWithIdentity:_identity publicKey:_publicKey];
 }
 
 - (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
@@ -297,6 +304,9 @@
                 [self.tableView deselectRowAtIndexPath:[self.tableView indexPathForSelectedRow] animated:YES];
             }
         }];
+    } else if (selectedCell == self.publicKeyCell) {
+        [publicKeyView show];
+        [tableView deselectRowAtIndexPath:indexPath animated:true];
     }
 }
 

@@ -28,6 +28,7 @@ class OrphanedFilesCleanupViewController: ThemedTableViewController {
     @IBOutlet weak var orphanedFilesMoveToBin: UILabel!
     @IBOutlet weak var orphanedFilesRestore: UILabel!
     @IBOutlet weak var orphanedFilesDelete: UILabel!
+    @IBOutlet weak var logAllFiles: UILabel!
     
     private var totalFilesCount: Int?
     private var orphanedFiles: [String]?
@@ -39,6 +40,9 @@ class OrphanedFilesCleanupViewController: ThemedTableViewController {
         orphanedFilesMoveToBin.text = BundleUtil.localizedString(forKey: "settings_orphaned_files_button")
         orphanedFilesRestore.text = BundleUtil.localizedString(forKey: "settings_orphaned_files_bin_restore_button")
         orphanedFilesDelete.text = BundleUtil.localizedString(forKey: "settings_orphaned_files_bin_delete_button")
+        logAllFiles.text = BundleUtil.localizedString(forKey: "settings_orphaned_files_log_all_files_button")
+        
+        self.view.backgroundColor = Colors.backgroundDark()
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -82,6 +86,8 @@ class OrphanedFilesCleanupViewController: ThemedTableViewController {
             return BundleUtil.localizedString(forKey: "settings_orphaned_files_title")
         case 2:
             return BundleUtil.localizedString(forKey: "settings_orphaned_files_bin_title")
+        case 3:
+            return BundleUtil.localizedString(forKey: "settings_orphaned_files_log_title")
         default:
             return nil
         }
@@ -155,6 +161,9 @@ class OrphanedFilesCleanupViewController: ThemedTableViewController {
                 }
             }, titleCancel: BundleUtil.localizedString(forKey: "cancel"))
 
+        } else if indexPath.section == 3 && indexPath.row == 0 {
+            DDLogNotice("Logging all files in appDataDirectory")
+            logFilesAndShowProgress()
         }
     }
     
@@ -202,6 +211,8 @@ class OrphanedFilesCleanupViewController: ThemedTableViewController {
             orphanedFilesDelete.isEnabled = false
         }
         
+        logAllFiles.isEnabled = true
+        
         tableView.reloadData()
     }
     
@@ -209,6 +220,7 @@ class OrphanedFilesCleanupViewController: ThemedTableViewController {
         self.orphanedFilesMoveToBin.textColor = Colors.fontLink()
         self.orphanedFilesRestore.textColor = Colors.fontLink()
         self.orphanedFilesDelete.textColor = Colors.red()
+        self.logAllFiles.textColor = Colors.fontLink()
     }
     
     private func filesInBin() -> [String]? {
@@ -277,5 +289,19 @@ class OrphanedFilesCleanupViewController: ThemedTableViewController {
             return nil
         }
         return MBProgressHUD.showAdded(to: superview, animated: true)
+    }
+    
+    private func logFilesAndShowProgress() {
+        var progress : MBProgressHUD?
+        DispatchQueue.main.async {
+            if let superview = self.tableView.superview {
+                progress = MBProgressHUD.showAdded(to: superview, animated: true)
+            }
+        }
+        
+        FileUtility.logDirectoriesAndFiles(path:  DocumentManager.databaseDirectory(), logFileName: "validation_log.txt")
+        DispatchQueue.main.async {
+            progress?.hide(animated: true, afterDelay: 1.5)
+        }
     }
 }

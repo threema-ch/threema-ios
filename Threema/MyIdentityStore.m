@@ -25,7 +25,6 @@
 #import "ProtocolDefines.h"
 #import "NaClCrypto.h"
 #import "NSData+Base32.h"
-#import "CryptoUtils.h"
 #import "NaClCrypto.h"
 #import "ThreemaError.h"
 #import "AppGroup.h"
@@ -536,13 +535,6 @@ static MyIdentityStore *instance;
 - (void)setLastWorkUpdateDate:(NSDate *)lastWorkUpdateDate {
     [[AppGroup userDefaults] setObject:lastWorkUpdateDate forKey:@"LastWorkUpdateDate"];
     [[AppGroup userDefaults] synchronize];
-}
-
-- (NSString*)keyFingerprint {
-    if (publicKey == nil)
-        return nil;
-    
-    return [CryptoUtils fingerprintForPublicKey:publicKey];
 }
 
 - (NSData*)keySecret {

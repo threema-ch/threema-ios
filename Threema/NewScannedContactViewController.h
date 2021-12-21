@@ -24,8 +24,6 @@
 
 @class VerificationLevelCell;
 
-@class KeyFingerprintCell;
-
 @interface NewScannedContactViewController : ThemedTableViewController <CNContactPickerDelegate>
 
 @property (weak, nonatomic) IBOutlet UIView *headerView;
@@ -41,7 +39,7 @@
 @property (weak, nonatomic) IBOutlet UILabel *identityLabel;
 @property (weak, nonatomic) IBOutlet UILabel *sendMessageLabel;
 @property (weak, nonatomic) IBOutlet UILabel *threemaCallLabel;
-@property (weak, nonatomic) IBOutlet KeyFingerprintCell *keyFingerprintCell;
+@property (weak, nonatomic) IBOutlet UITableViewCell *publicKeyCell;
 
 @property (weak, nonatomic) IBOutlet VerificationLevelCell *verificationLevelCell;
 @property (weak, nonatomic) IBOutlet UITableViewCell *linkToContactCell;

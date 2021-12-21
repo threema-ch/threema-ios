@@ -161,13 +161,12 @@
     }
 }
 
-- (void)processAck:(NSData*)messageId {
+- (void)processAck:(NSData*)messageId toIdentity:(NSString *)toIdentity {
     /* check our queue for a message with this ID, and remove it */
     dispatch_async(dispatchQueue, ^{
-        DDLogVerbose(@"Process ACK for message ID %@", messageId);
-        
+        DDLogVerbose(@"Process ACK for message ID %@ to Identity %@", messageId, toIdentity);
         for (BoxedMessage *message in queue) {
-            if ([message.messageId isEqualToData:messageId]) {
+            if ([message.messageId isEqualToData:messageId] && [message.toIdentity isEqualToString:toIdentity]) {
                 [queue removeObject:message];
                 [MessageSender markMessageAsSent:messageId];
                 if (queue.count == 0) {

@@ -52,6 +52,9 @@
 @property (weak, nonatomic) IBOutlet UIImageView *notificationIcon;
 @property (weak, nonatomic) IBOutlet NSLayoutConstraint *callImageHeight;
 
+- (void)addObservers;
+- (void)removeObservers;
+- (void)changedValuesForConversation:(NSDictionary *)changedValuesForCurrentEvent;
 - (void)updateLastMessagePreview;
 
 @end

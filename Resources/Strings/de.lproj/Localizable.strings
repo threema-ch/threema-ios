@@ -169,7 +169,8 @@
 "export_chat" = "Chat exportieren";
 "send_profile_picture" = "Profilbild jetzt senden";
 "linked_contact" = "Verknüpfter Kontakt";
-"key_fingerprint" = "Schlüssel-Fingerabdruck";
+"public_key" = "Öffentlicher Schlüssel";
+"public_key_of" = "Öffentlicher Schlüssel von %@";
 "block_contact" = "Kontakt blockieren";
 "profile_picture_recipient" = "Profilbild-Empfänger";
 "member_in_groups" = "Mitglied in Gruppen";
@@ -984,6 +985,8 @@ Verschieben Sie die verwaisten Dateien in den Papierkorb, und überprüfen Sie, 
 Sofern keine Medien und/oder Dateien fehlen, leeren Sie den Papierkorb, um die verwaisten Dateien endgültig zu löschen.";
 "settings_orphaned_files_bin_footer_no_files" = "Der Papierkorb ist leer.";
 "settings_orphaned_files_bin_delete_conformation" = "Möchten Sie die verwaisten Dateien unwiderruflich löschen? Diese Aktion lässt sich nicht rückgängig machen.";
+"settings_orphaned_files_log_title" = "DATEIEN LOGGEN";
+"settings_orphaned_files_log_all_files_button" = "Dateien in Debug-Log loggen";
 
 // Threema calls settings
 "settings_threema_calls_enable_calls" = "Threema-Anrufe aktivieren";

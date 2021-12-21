@@ -169,7 +169,8 @@
 "export_chat" = "导出对话";
 "send_profile_picture" = "立即发送个人头像";
 "linked_contact" = "关联联系人";
-"key_fingerprint" = "密钥指纹";
+"public_key" = "公钥";
+"public_key_of" = "%@的公钥";
 "block_contact" = "屏蔽联系人";
 "profile_picture_recipient" = "个人头像接收者";
 "member_in_groups" = "群组成员";

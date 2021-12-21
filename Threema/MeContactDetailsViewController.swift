@@ -29,6 +29,8 @@ class MeContactDetailsViewController: ThemedTableViewController {
     @IBOutlet weak var nameLabel: UILabel!
     @IBOutlet weak var threemaTypeIcon: UIImageView!
     
+    private var publicKeyView: PublicKeyView = PublicKeyView(identity: MyIdentityStore.shared().identity, publicKey: MyIdentityStore.shared().publicKey)
+    
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -69,9 +71,17 @@ class MeContactDetailsViewController: ThemedTableViewController {
         nameLabel.font = UIFont.boldSystemFont(ofSize: size)
     }
     
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        
+        publicKeyView.close()
+    }
+    
     func setupColors() {
         nameLabel.textColor = Colors.fontNormal()
         nameLabel.shadowColor = nil
+        
+        publicKeyView.updateColors()
     }
     
     func updateView() {
@@ -95,7 +105,7 @@ class MeContactDetailsViewController: ThemedTableViewController {
         imageView.accessibilityLabel = NSLocalizedString("my_profilepicture", comment: "")
         
         threemaTypeIcon.isHidden = !LicenseStore.requiresLicenseKey()
-                
+                        
         tableView.reloadData()
     }
     
@@ -124,12 +134,20 @@ class MeContactDetailsViewController: ThemedTableViewController {
             return cell
         }
         else {
-            let cell:KeyFingerprintCell = tableView.dequeueReusableCell(withIdentifier: "KeyFingerprintCell", for: indexPath) as! KeyFingerprintCell
-            cell.fingerprintValueLabel.text = CryptoUtils.fingerprint(forPublicKey: MyIdentityStore.shared().publicKey)
+            let cell:UITableViewCell = tableView.dequeueReusableCell(withIdentifier: "PublicKeyCell", for: indexPath)
+            cell.textLabel?.text = BundleUtil.localizedString(forKey: "public_key")
             return cell
         }
     }
-
+    
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        let cell = tableView.cellForRow(at: indexPath)
+        
+        if indexPath.row == 2 {
+            publicKeyView.show()
+            tableView.deselectRow(at: indexPath, animated: true)
+        }
+    }
     
     // MARK: - GestureRecognizer
     

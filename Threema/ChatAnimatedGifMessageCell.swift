@@ -163,7 +163,7 @@ extension ChatAnimatedGifMessageCell {
                 let entityManager = EntityManager.init()
                 entityManager.performAsyncBlockAndSafe {
                     let dbThumbnail = entityManager.entityCreator.imageData()
-                    dbThumbnail?.data = thumbnail.jpegData(compressionQuality: CGFloat(kJPEGCompressionQuality))
+                    dbThumbnail?.data = thumbnail.jpegData(compressionQuality: CGFloat(kJPEGCompressionQualityLow))
                     dbThumbnail?.width = NSNumber(value: Float(thumbnail.size.width))
                     dbThumbnail?.height = NSNumber(value: Float(thumbnail.size.height))
                     

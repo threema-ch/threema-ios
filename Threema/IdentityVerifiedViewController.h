@@ -22,7 +22,6 @@
 #import "ThemedTableViewController.h"
 
 @class Contact;
-@class KeyFingerprintCell;
 @class VerificationLevelCell;
 
 @interface IdentityVerifiedViewController : ThemedTableViewController
@@ -34,7 +33,7 @@
 @property (weak, nonatomic) IBOutlet UILabel *nameLabel;
 
 @property (weak, nonatomic) IBOutlet UILabel *identityLabel;
-@property (weak, nonatomic) IBOutlet KeyFingerprintCell *keyFingerprintCell;
+@property (weak, nonatomic) IBOutlet UITableViewCell *publicKeyCell;
 @property (weak, nonatomic) IBOutlet VerificationLevelCell *verificationLevelCell;
 @property (weak, nonatomic) IBOutlet UIImageView *verificationLevelImage;
 

@@ -306,7 +306,7 @@ import CocoaLumberjackSwift
                 for case let url as URL in urls {
                     let resourceValues = try url.resourceValues(forKeys: Set(resourceKeys))
                     let logFile: String = "\(url.path) \(ByteCountFormatter.string(fromByteCount: Int64(resourceValues.fileSize ?? 0), countStyle: ByteCountFormatter.CountStyle.file)) \(resourceValues.creationDate!) \(resourceValues.isDirectory!)"
-                    DDLogVerbose(logFile)
+                    DDLogNotice(logFile)
                     logFiles += "\(logFile)\n"
                 }
             }

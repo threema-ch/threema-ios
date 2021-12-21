@@ -67,6 +67,7 @@
     
     if (_forceRefresh == NO && [self isExpiredForIdentiy:identity] == NO) {
         onError(nil);
+        return;
     }
     
     NSURL *url = [self urlForGatewayId:identity];

@@ -21,6 +21,7 @@
 #import "AvatarMaker.h"
 #import "Contact.h"
 #import "Conversation.h"
+#import "EntityManager.h"
 #import "ImageData.h"
 #import "UIImage+Mask.h"
 #import "UserSettings.h"
@@ -35,7 +36,6 @@ static AvatarMaker *sharedInstance = nil;
 
 @property NSCache *avatarCache;
 @property NSCache *maskedImageCache;
-@property dispatch_queue_t dispatchQueue;
 
 @end
 
@@ -96,7 +96,6 @@ static AvatarMaker *sharedInstance = nil;
     if (self) {
         _avatarCache = [[NSCache alloc] init];
         _maskedImageCache = [[NSCache alloc] init];
-        _dispatchQueue = dispatch_queue_create("ch.threema.AvatarMaker", NULL);
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(applicationDidReceiveMemoryWarning:) name:UIApplicationDidReceiveMemoryWarningNotification object:nil];
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(managedObjectImageChanged:) name:@"ThreemaContactImageChanged" object:nil];
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(managedObjectImageChanged:) name:@"ThreemaGroupConversationImageChanged" object:nil];
@@ -124,10 +123,13 @@ static AvatarMaker *sharedInstance = nil;
 }
 
 - (void)avatarForContact:(Contact*)contact size:(CGFloat)size masked:(BOOL)masked onCompletion:(void (^)(UIImage *avatarImage))onCompletion {
-    dispatch_async(_dispatchQueue, ^{
-        UIImage *avatarImage = [self avatarForContact:contact size:size masked:masked];
+    EntityManager *newBackgroundEntityManager = [[EntityManager alloc] initForBackgroundProcess:YES];
+    
+    [newBackgroundEntityManager performBlock:^{
+        Contact *privateContact = [newBackgroundEntityManager.entityFetcher getManagedObjectById:contact.objectID];
+        UIImage *avatarImage = [self avatarForContact:privateContact size:size masked:masked];
         onCompletion(avatarImage);
-    });
+    }];
 }
 
 - (UIImage*)avatarForContact:(Contact*)contact size:(CGFloat)size masked:(BOOL)masked {
@@ -210,10 +212,13 @@ static AvatarMaker *sharedInstance = nil;
 }
 
 - (void)avatarForConversation:(Conversation*)conversation size:(CGFloat)size masked:(BOOL)masked onCompletion:(void (^)(UIImage *avatarImage))onCompletion {
-    dispatch_async(_dispatchQueue, ^{
-        UIImage *avatarImage = [self avatarForConversation:conversation size:size masked:masked];
+    EntityManager *newBackgroundEntityManager = [[EntityManager alloc] initForBackgroundProcess:YES];
+    
+    [newBackgroundEntityManager performBlock:^{
+        Conversation *privateConversation = [newBackgroundEntityManager.entityFetcher getManagedObjectById:conversation.objectID];
+        UIImage *avatarImage = [self avatarForConversation:privateConversation size:size masked:masked];
         onCompletion(avatarImage);
-    });
+    }];
 }
 
 - (UIImage*)avatarForConversation:(Conversation*)conversation size:(CGFloat)size masked:(BOOL)masked {

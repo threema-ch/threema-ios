@@ -22,7 +22,6 @@
 
 #import "IdentityVerifiedViewController.h"
 #import "Contact.h"
-#import "CryptoUtils.h"
 #import "AvatarMaker.h"
 #import "BundleUtil.h"
 #import "FeatureMask.h"
@@ -34,7 +33,9 @@
 
 @end
 
-@implementation IdentityVerifiedViewController
+@implementation IdentityVerifiedViewController {
+    PublicKeyView *publicKeyView;
+}
 
 - (void)viewDidLoad {
     [super viewDidLoad];
@@ -60,6 +61,12 @@
     [super viewWillAppear:animated];
     
     [self updateView];
+}
+
+- (void)viewWillDisappear:(BOOL)animated {
+    [super viewWillDisappear:animated];
+    
+    [publicKeyView close];
 }
 
 - (void)viewWillLayoutSubviews {
@@ -93,7 +100,7 @@
     _threemaTypeIcon.hidden = [Utils hideThreemaTypeIconForContact:self.contact];
     
     self.identityLabel.text = self.contact.identity;
-    self.keyFingerprintCell.fingerprintValueLabel.text = [CryptoUtils fingerprintForPublicKey:self.contact.publicKey];
+    self.publicKeyCell.textLabel.text = [BundleUtil localizedStringForKey:@"public_key"];
     self.verificationLevelCell.contact = self.contact;
     
     if (self.contact.isWorkContact == true) {
@@ -105,6 +112,8 @@
     if (self.contact.isGatewayId || !is64Bit) {
         self.threemaCallCell.hidden = YES;
     }
+    
+    publicKeyView = [[PublicKeyView alloc] initFor:_contact];
 }
 
 - (void)tableView:(UITableView *)tableView willDisplayCell:(UITableViewCell *)cell forRowAtIndexPath:(NSIndexPath *)indexPath {
@@ -153,6 +162,10 @@
                 [self.tableView deselectRowAtIndexPath:[self.tableView indexPathForSelectedRow] animated:YES];
             }
         }];
+    }
+    else if (selectedCell == self.publicKeyCell) {
+        [publicKeyView show];
+        [tableView deselectRowAtIndexPath:indexPath animated:true];
     }
 }
 

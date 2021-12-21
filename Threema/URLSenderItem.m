@@ -118,60 +118,75 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 }
 
 - (UIImage *)getThumbnail {
-    if ([UTIConverter isGifMimeType:[self getMimeType]]) {
-        FLAnimatedImage *animImage = [FLAnimatedImage animatedImageWithGIFData:[self getData]];
-        UIImage *thumbnail = [MediaConverter getThumbnailForImage:animImage.posterImage];
-        
-        return thumbnail;
-    } else if ([self.type isEqualToString:@"image/gif"]) {
-        FLAnimatedImage *animImage = [FLAnimatedImage animatedImageWithGIFData:[self getData]];
-        UIImage *thumbnail = [MediaConverter getThumbnailForImage:animImage.posterImage];
-        
-        return thumbnail;
+    if ([UTIConverter isGifMimeType:[self getMimeType]] || [self.type isEqualToString:@"image/gif"]) {
+        return [self getGifThumbnail];
     }
-    
-    if ([UTIConverter isRenderingImageMimeType:[self getMimeType]]) {
-        NSData *data = [self getData];
-        if (data == nil) {
-            return nil;
-        }
-        UIImage *originalImage = [UIImage imageWithData:data];
-        UIImage *thumbnaiil = [MediaConverter getThumbnailForImage:originalImage];
-        return thumbnaiil;
+    else if ([UTIConverter isRenderingImageMimeType:[self getMimeType]]) {
+        return [self getImageThumbnail];
     }
-    
-    if ([UTIConverter isRenderingVideoMimeType:[self getMimeType]]) {
-        if (self.url == nil) {
-            
-            NSString *tmpPath = [NSString stringWithFormat:@"%@video.mp4", NSTemporaryDirectory()];
-            if ([[NSFileManager defaultManager] fileExistsAtPath:tmpPath]) {
-                NSError *error;
-                [[NSFileManager defaultManager] removeItemAtPath:tmpPath error:&error];
-                if (error != nil) {
-                    DDLogError(@"Can't delete file at path %@", tmpPath);
-                }
-            }
-            [[NSFileManager defaultManager] createFileAtPath:tmpPath contents:[self getData] attributes:nil];
-            _url = [[NSURL alloc] initFileURLWithPath:tmpPath];
-        }
-        
-        AVURLAsset *asset = [[AVURLAsset alloc] initWithURL:self.url options:nil];
-                
-        AVAssetImageGenerator *gen = [[AVAssetImageGenerator alloc] initWithAsset:asset];
-        gen.appliesPreferredTrackTransform = YES;
-        CMTime time = CMTimeMakeWithSeconds(0.0, 600);
-        NSError *error = nil;
-        CMTime actualTime;
-        
-        CGImageRef image = [gen copyCGImageAtTime:time actualTime:&actualTime error:&error];
-        UIImage *thumbnail = [[UIImage alloc] initWithCGImage:image];
-        CGImageRelease(image);
-        
-        thumbnail = [MediaConverter getThumbnailForImage:thumbnail];
-        return thumbnail;
+    else if ([UTIConverter isRenderingVideoMimeType:[self getMimeType]]) {
+        return [self getVideoThumnbail];
     }
 
     return nil;
+}
+
+- (UIImage *)getGifThumbnail {
+    FLAnimatedImage *animImage = [FLAnimatedImage animatedImageWithGIFData:[self getData]];
+    UIImage *thumbnail = [MediaConverter getThumbnailForSticker:animImage.posterImage];
+    
+    return thumbnail;
+}
+
+- (UIImage *)getImageThumbnail {
+    NSData *data = [self getData];
+    if (data == nil) {
+        return nil;
+    }
+    UIImage *originalImage = [UIImage imageWithData:data];
+    
+    if (originalImage == nil) {
+        return nil;
+    }
+    
+    UIImage *thumbnail;
+    if ([self.renderType  isEqual: @2]) {
+        thumbnail = [MediaConverter getThumbnailForSticker:originalImage];
+    } else {
+        thumbnail = [MediaConverter getThumbnailForImage:originalImage];
+    }
+    return thumbnail;
+}
+
+- (UIImage *)getVideoThumnbail {
+    if (self.url == nil) {
+        
+        NSString *tmpPath = [NSString stringWithFormat:@"%@video.mp4", NSTemporaryDirectory()];
+        if ([[NSFileManager defaultManager] fileExistsAtPath:tmpPath]) {
+            NSError *error;
+            [[NSFileManager defaultManager] removeItemAtPath:tmpPath error:&error];
+            if (error != nil) {
+                DDLogError(@"Can't delete file at path %@", tmpPath);
+            }
+        }
+        [[NSFileManager defaultManager] createFileAtPath:tmpPath contents:[self getData] attributes:nil];
+        _url = [[NSURL alloc] initFileURLWithPath:tmpPath];
+    }
+    
+    AVURLAsset *asset = [[AVURLAsset alloc] initWithURL:self.url options:nil];
+            
+    AVAssetImageGenerator *gen = [[AVAssetImageGenerator alloc] initWithAsset:asset];
+    gen.appliesPreferredTrackTransform = YES;
+    CMTime time = CMTimeMakeWithSeconds(0.0, 600);
+    NSError *error = nil;
+    CMTime actualTime;
+    
+    CGImageRef image = [gen copyCGImageAtTime:time actualTime:&actualTime error:&error];
+    UIImage *thumbnail = [[UIImage alloc] initWithCGImage:image];
+    CGImageRelease(image);
+    
+    thumbnail = [MediaConverter getThumbnailForImage:thumbnail];
+    return thumbnail;
 }
 
 - (NSString *)getContactFileName {

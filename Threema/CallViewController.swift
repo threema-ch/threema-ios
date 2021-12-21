@@ -193,8 +193,10 @@ class CallViewController: UIViewController {
             }
         }
         
+        #if DEBUG
         let longPressRecognizer = UILongPressGestureRecognizer.init(target: self, action: #selector(handleLongPress))
         hideButton.addGestureRecognizer(longPressRecognizer)
+        #endif
         
         let panGR = UIPanGestureRecognizer(target: self, action: #selector(didPan(gesture:)))
         localVideoView.addGestureRecognizer(panGR)

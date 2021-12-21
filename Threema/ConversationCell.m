@@ -50,10 +50,8 @@
 
 @synthesize conversation;
 
-- (void)dealloc {
+- (void)dealloc {    
     [self removeObservers];
-    
-    [[NSNotificationCenter defaultCenter] removeObserver: self];
 }
 
 - (void)awakeFromNib {
@@ -102,82 +100,89 @@
     _typingIndicator.image = [UIImage imageNamed:@"Typing" inColor:[Colors fontLight]];
 }
 
-- (void)removeObservers {
-    [conversation removeObserver:self forKeyPath:@"typing"];
-    [conversation removeObserver:self forKeyPath:@"lastMessage"];
-    [conversation removeObserver:self forKeyPath:@"unreadMessageCount"];
-    [conversation removeObserver:self forKeyPath:@"lastMessage.reverseGeocodingResult"];
-    [conversation removeObserver:self forKeyPath:@"lastMessage.userack"];
-    [conversation removeObserver:self forKeyPath:@"lastMessage.read"];
-    [conversation removeObserver:self forKeyPath:@"lastMessage.delivered"];
-    [conversation removeObserver:self forKeyPath:@"lastMessage.sendfailed"];
-    [conversation removeObserver:self forKeyPath:@"lastMessage.sent"];
-    [conversation removeObserver:self forKeyPath:@"groupName"];
-    [conversation removeObserver:self forKeyPath:@"members"];
-    [conversation removeObserver:self forKeyPath:@"contact.displayName"];
-    [conversation removeObserver:self forKeyPath:@"contact.imageData"];
-    [conversation removeObserver:self forKeyPath:@"groupImage"];
-    [conversation removeObserver:self forKeyPath:@"contact.contactImage"];
-    [conversation removeObserver:self forKeyPath:@"tags"];
-    [[NSNotificationCenter defaultCenter] removeObserver: self];
-}
-
-- (void)setConversation:(Conversation *)newConversation {
-    
-    if (conversation == newConversation) {
-        [self setupColors];
-        [self updateDateLabel];
-        [self updateContactImage];
-        [self updateLastMessagePreview];
-        [self updateThreemaTypeIcon];
-        [self updateName];
-        [self updateTagsView];
-        [self updateNotificationIcon];
-                
-        return;
-    }
-    
-    [self removeObservers];
-    
-    conversation = newConversation;
-    
+- (void)addObservers {
     /* observe this conversation as the last message text could change */
-    [conversation addObserver:self forKeyPath:@"typing" options:0 context:nil];
-    [conversation addObserver:self forKeyPath:@"lastMessage" options:0 context:nil];
-    [conversation addObserver:self forKeyPath:@"unreadMessageCount" options:0 context:nil];
     [conversation addObserver:self forKeyPath:@"lastMessage.reverseGeocodingResult" options:0 context:nil];
     [conversation addObserver:self forKeyPath:@"lastMessage.userack" options:0 context:nil];
     [conversation addObserver:self forKeyPath:@"lastMessage.read" options:0 context:nil];
     [conversation addObserver:self forKeyPath:@"lastMessage.delivered" options:0 context:nil];
     [conversation addObserver:self forKeyPath:@"lastMessage.sendfailed" options:0 context:nil];
     [conversation addObserver:self forKeyPath:@"lastMessage.sent" options:0 context:nil];
-    [conversation addObserver:self forKeyPath:@"groupName" options:0 context:nil];
-    [conversation addObserver:self forKeyPath:@"members" options:0 context:nil];
     [conversation addObserver:self forKeyPath:@"contact.displayName" options:0 context:nil];
     [conversation addObserver:self forKeyPath:@"contact.imageData" options:0 context:nil];
-    [conversation addObserver:self forKeyPath:@"groupImage" options:0 context:nil];
     [conversation addObserver:self forKeyPath:@"contact.contactImage" options:0 context:nil];
-    [conversation addObserver:self forKeyPath:@"tags" options:0 context:nil];
-    
     
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(avatarChanged:) name:kNotificationIdentityAvatarChanged object:nil];
+}
+
+- (void)removeObservers {
+    if (conversation != nil) {
+        @try{
+            [conversation removeObserver:self forKeyPath:@"lastMessage.reverseGeocodingResult"];
+            [conversation removeObserver:self forKeyPath:@"lastMessage.userack"];
+            [conversation removeObserver:self forKeyPath:@"lastMessage.read"];
+            [conversation removeObserver:self forKeyPath:@"lastMessage.delivered"];
+            [conversation removeObserver:self forKeyPath:@"lastMessage.sendfailed"];
+            [conversation removeObserver:self forKeyPath:@"lastMessage.sent"];
+            [conversation removeObserver:self forKeyPath:@"contact.displayName"];
+            [conversation removeObserver:self forKeyPath:@"contact.imageData"];
+            [conversation removeObserver:self forKeyPath:@"contact.contactImage"];
+        } @catch(id anException) {
+            //do nothing, observer wasn't registered because an exception was thrown
+        }
+    }
+        
+    [[NSNotificationCenter defaultCenter] removeObserver: self];
+}
+
+- (void)setConversation:(Conversation *)newConversation {
     
+    if (conversation == newConversation) {
+        [self updateAllViews];
+        return;
+    }
+    
+    conversation = newConversation;
+    
+    [self updateAllViews];
+}
+
+- (void)changedValuesForConversation:(NSDictionary *)changedValuesForCurrentEvent {
+    
+    if (changedValuesForCurrentEvent[@"lastMessage"] != nil) {
+        [self updateLastMessagePreview];
+        [self updateDateLabel];
+    }
+    if ([[changedValuesForCurrentEvent allKeys] containsObject:@"groupName"] || [[changedValuesForCurrentEvent allKeys] containsObject:@"members"]) {
+        [self updateName];
+    }
+    if ([[changedValuesForCurrentEvent allKeys] containsObject:@"groupImage"]) {
+        [self updateContactImage];
+    }
+    if ([[changedValuesForCurrentEvent allKeys] containsObject:@"typing"]) {
+        [self updateTypingIndicator];
+    }
+    if ([[changedValuesForCurrentEvent allKeys] containsObject:@"unreadMessageCount"]) {
+        [self updateBadgeView];
+    }
+    if ([[changedValuesForCurrentEvent allKeys] containsObject:@"marked"] || [[changedValuesForCurrentEvent allKeys] containsObject:@"tags"]) {
+        [self updateTagsView];
+    }
+}
+
+- (void)updateAllViews {
     [self updateName];
-    
     [self updateLastMessagePreview];
     [self updateDateLabel];
-    
     [self updateBadgeView];
     [self updateContactImage];
     [self updateTypingIndicator];
-    
     [self setupColors];
-    
     [self updateThreemaTypeIcon];
-    
     [self updateTagsView];
-    
     [self updateNotificationIcon];
+    [self updateBadgeView];
+    [self updateContactImage];
 }
 
 - (void)updateLastMessagePreview {

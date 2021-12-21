@@ -84,7 +84,6 @@
 
 - (NSData*)encryptData:(NSData*)data withNonce:(NSData*)nonce publicKey:(NSData*)publicKey;
 - (NSData*)decryptData:(NSData*)data withNonce:(NSData*)nonce publicKey:(NSData*)_publicKey;
-- (NSString*)keyFingerprint;
 - (NSData*)keySecret;
 
 - (NSString*)backupIdentityWithPassword:(NSString*)password;

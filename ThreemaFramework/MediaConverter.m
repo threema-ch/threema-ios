@@ -50,23 +50,36 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     UIImage *thumbnail = [[UIImage alloc] initWithCGImage:image];
     CGImageRelease(image);
     
-    CGFloat size = (CGFloat) [self thumbnailSizeForCurrentDevice];
+    CGFloat size = [[[ImageURLSenderItemCreator alloc] init] imageThumbnailMaxSize:thumbnail];
     return [self scaleImage:thumbnail toMaxSize:size];
 }
 
 + (UIImage*)getThumbnailForImage:(UIImage *)orig {
-    NSUInteger size = [self thumbnailSizeForCurrentDevice];
-    return [self scaleImage:orig toMaxSize:size];
+    CGFloat maxSize = [[[ImageURLSenderItemCreator alloc] init] imageThumbnailMaxSize:orig];
+    return [self scaleImage:orig toMaxSize:maxSize];
+}
+
++ (UIImage*)getThumbnailForSticker:(UIImage *)orig {
+    CGFloat maxSize = [[[ImageURLSenderItemCreator alloc] init] stickerThumbnailMaxSize:orig];
+    return [self scaleImage:orig toMaxSize:maxSize];
 }
 
 + (NSData *)getWebPreviewData:(NSData *)orig {
     UIImage *image = [self scaleImageData:orig toMaxSize:kWebClientMediaPreviewSize];
-    return UIImageJPEGRepresentation(image, kWebClientMediaQuality);
+    if (image != nil) {
+        return [MediaConverter JPEGRepresentationFor:image withQuality:[NSNumber numberWithFloat:kWebClientMediaQuality]];
+    }
+    
+    return orig;
 }
 
 + (NSData *)getWebThumbnailData:(NSData *)orig {
     UIImage *image = [self scaleImageData:orig toMaxSize:kWebClientMediaThumbnailSize];
-    return UIImageJPEGRepresentation(image, kWebClientMediaQuality);
+    if (image != nil) {
+        return [MediaConverter JPEGRepresentationFor:image withQuality:[NSNumber numberWithFloat:kWebClientMediaQuality]];
+    }
+    
+    return orig;
 }
 
 + (UIImage*)scaleImage:(UIImage*)orig toMaxSize:(CGFloat)maxSize {
@@ -99,6 +112,10 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 }
 
 + (NSData*)scaleImageDataToData:(nonnull NSData *)imageData toMaxSize:(CGFloat)maxSize useJPEG:(BOOL)useJPEG {
+    return [MediaConverter scaleImageDataToData:imageData toMaxSize:maxSize useJPEG:useJPEG withQuality:[NSNumber numberWithDouble:kJPEGCompressionQualityLow]];
+}
+
++ (NSData *)scaleImageDataToData:(NSData *)imageData toMaxSize:(CGFloat)maxSize useJPEG:(BOOL)useJPEG withQuality:(NSNumber *)compressionQuality {
     @autoreleasepool {
         CGImageSourceRef src = CGImageSourceCreateWithData((__bridge CFDataRef)imageData, (__bridge CFDictionaryRef) @{
             (id) kCGImageSourceShouldCache : @NO});
@@ -113,7 +130,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         if (scaled == nil) {
             scaled = [UIImage imageWithData:imageData];
         }
-        NSData *scaledData = useJPEG ? UIImageJPEGRepresentation(scaled, kJPEGCompressionQuality) : UIImagePNGRepresentation(scaled);
+        NSData *scaledData = useJPEG ? [MediaConverter JPEGRepresentationFor:scaled withQuality:compressionQuality] : [MediaConverter PNGRepresentationFor:scaled];
         return scaledData;
     }
 }
@@ -232,10 +249,18 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 }
 
 + (NSData *)JPEGRepresentationFor: (UIImage *) image {
-    return [self representationForType:kUTTypeJPEG andImage:image];
+    return [MediaConverter JPEGRepresentationFor:image withQuality:[NSNumber numberWithDouble:kJPEGCompressionQualityLow]];
+}
+
++ (NSData *)JPEGRepresentationFor: (UIImage *) image withQuality:(NSNumber *)compressionQuality {
+    return [self representationForType:kUTTypeJPEG andImage:image andQuality:compressionQuality];
 }
 
 + (NSData *)representationForType: (CFStringRef) type andImage:(UIImage *) image {
+    return [MediaConverter representationForType:type andImage:image andQuality:[NSNumber numberWithDouble:kJPEGCompressionQualityLow]];
+}
+
++ (NSData *)representationForType: (CFStringRef) type andImage:(UIImage *) image andQuality:(NSNumber *)compressionQuality {
     @autoreleasepool {
         CFMutableDataRef data = CFDataCreateMutable(nil, 0);
         CGImageDestinationRef destination = CGImageDestinationCreateWithData(data, type, 1, nil);
@@ -263,7 +288,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         }
         
         NSDictionary* properties = [NSDictionary dictionaryWithObjectsAndKeys:
-                                    [NSNumber numberWithFloat:kJPEGCompressionQuality], kCGImageDestinationLossyCompressionQuality,
+                                    compressionQuality, kCGImageDestinationLossyCompressionQuality,
                                     @1, kCGImagePropertyDPIHeight,
                                     @1, kCGImagePropertyDPIWidth,
                                     orientation, kCGImagePropertyOrientation,

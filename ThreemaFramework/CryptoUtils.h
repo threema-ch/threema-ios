@@ -22,7 +22,6 @@
 
 @interface CryptoUtils : NSObject
 
-+ (NSString*)fingerprintForPublicKey:(NSData*)publicKey;
 + (NSData*)hmacSha256ForData:(NSData*)data key:(NSData*)key;
 
 @end

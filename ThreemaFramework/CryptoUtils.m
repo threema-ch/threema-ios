@@ -25,15 +25,6 @@
 
 @implementation CryptoUtils
 
-+ (NSString*)fingerprintForPublicKey:(NSData*)publicKey {
-    /* The key fingerprint is a truncated SHA256 hash */
-    unsigned char digest[CC_SHA256_DIGEST_LENGTH];
-    CC_SHA256(publicKey.bytes, (CC_LONG)publicKey.length, digest);
-    
-    NSData *truncDigest = [NSData dataWithBytes:digest length:16];
-    return [NSString stringWithHexData:truncDigest];
-}
-
 + (NSData*)hmacSha256ForData:(NSData*)data key:(NSData*)key {
     unsigned char hmac[CC_SHA256_DIGEST_LENGTH];
     CCHmac(kCCHmacAlgSHA256, key.bytes, key.length, data.bytes, data.length, hmac);

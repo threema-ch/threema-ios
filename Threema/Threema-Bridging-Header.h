@@ -132,3 +132,4 @@
 #import "CreatePasswordTrigger.h"
 #import "SendMediaAction.h"
 #import "CreatePasswordTrigger.h"
+#import "HairlineView.h"

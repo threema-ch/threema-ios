@@ -497,26 +497,33 @@
 #pragma mark - Table view
 
 - (void)tableView:(UITableView *)tableView willDisplayCell:(UITableViewCell *)cell forRowAtIndexPath:(NSIndexPath *)indexPath {
-    //overwrite since conversation cells have custom UI
+    if ([cell isKindOfClass:[ConversationCell class]]) {
+        ConversationCell *conversationCell = (ConversationCell *)cell;
+        [conversationCell addObservers];
+    }
+}
+
+- (void)tableView:(UITableView *)tableView didEndDisplayingCell:(UITableViewCell *)cell forRowAtIndexPath:(NSIndexPath *)indexPath {
+    if ([cell isKindOfClass:[ConversationCell class]]) {
+        ConversationCell *conversationCell = (ConversationCell *)cell;
+        [conversationCell removeObservers];
+    }
 }
 
 - (CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section {
     return CGFLOAT_MIN;
 }
 
-- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
-{
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
     return [[self.fetchedResultsController sections] count];
 }
 
-- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
-{
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
     id <NSFetchedResultsSectionInfo> sectionInfo = [self.fetchedResultsController sections][section];
     return [sectionInfo numberOfObjects];
 }
 
-- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
-{
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     static NSString *CellIdentifier = @"ConversationCell";
     ConversationCell *cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier];
     cell.conversation = [self.fetchedResultsController objectAtIndexPath:indexPath];
@@ -728,8 +735,8 @@
             case NSFetchedResultsChangeUpdate: {
                 ConversationCell *cell = (ConversationCell*)[tableView cellForRowAtIndexPath:indexPath];
                 Conversation *conversation = anObject;
-                if ([anObject changedValues].count != 0) {
-                    cell.conversation = conversation;
+                if ([conversation changedValuesForCurrentEvent].count != 0) {
+                    [cell changedValuesForConversation:[conversation changedValuesForCurrentEvent]];
                 }
                 [cell refreshButtons:YES];
                 break;

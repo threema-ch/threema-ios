@@ -169,7 +169,8 @@
 "export_chat" = "トークをエクスポート";
 "send_profile_picture" = "プロフィール画像を送信";
 "linked_contact" = "紐付けされた連絡先";
-"key_fingerprint" = "フィンガープリントキー";
+"public_key" = "公開鍵";
+"public_key_of" = "%@の公開鍵";
 "block_contact" = "連絡先をブロック";
 "profile_picture_recipient" = "プロフィール画像受信者";
 "member_in_groups" = "グループのメンバー";
@@ -232,8 +233,8 @@
 "delete_n" = "削除 (%d)";
 "message_cannot_play_movie" = "動画の再生ができません。";
 
-"identity_not_found_title" = "IDが見つかりません";
-"identity_not_found_message" = "IDが見つかりませんでした。正しく入力されているかどうかを確認し、再度お試しください。";
+"identity_not_found_title" = "不明なID";
+"identity_not_found_message" = "このIDは存在しません。または、このIDを持つ人は互換性のないアプリを使用しています。";
 
 "message_too_long_title" = "メッセージが長すぎます";
 "message_too_long_message" = "メッセージの最大の長さは%dバイトに相当するものまでです。";

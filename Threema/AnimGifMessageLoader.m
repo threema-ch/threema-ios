@@ -31,7 +31,7 @@
         
         UIImage *thumbnail = [MediaConverter getThumbnailForImage:animImage.posterImage];
         
-        NSData *thumbnailData = UIImageJPEGRepresentation(thumbnail, kJPEGCompressionQuality);
+        NSData *thumbnailData = UIImageJPEGRepresentation(thumbnail, kJPEGCompressionQualityLow);
         
         EntityManager *entityManager = [[EntityManager alloc] init];
         [entityManager performSyncBlockAndSafe:^{

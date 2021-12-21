@@ -637,6 +637,11 @@
     return -1;
 }
 
+- (void)viewControllerWillDisappear {
+    [_popoverView dismiss:false];
+    _popoverView = nil;
+}
+
 #pragma mark - Popover delegate
 
 - (void)popoverViewDidDismiss:(PopoverView *)popoverView {

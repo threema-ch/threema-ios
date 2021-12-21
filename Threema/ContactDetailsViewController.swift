@@ -39,7 +39,14 @@ class ContactDetailsViewController: ThemedTableViewController {
     @IBOutlet weak var threemaTypeIcon: UIButton!
     @IBOutlet weak var scanQrCodeBarButtonItem: UIBarButtonItem!
     
-    @objc var contact: Contact?
+    @objc var contact: Contact? {
+        didSet {
+            guard let contact = contact else {
+                return
+            }
+            publicKeyView = PublicKeyView(for: contact)
+        }
+    }
     @objc var hideActionButtons: Bool = false
     @objc weak var delegate : ContactDetailsViewControllerDelegate?
     
@@ -56,6 +63,8 @@ class ContactDetailsViewController: ThemedTableViewController {
     private var kvoContact: NSKeyValueObservation?
     private var colorThemeObserver: NSObjectProtocol?
     private var profilePictureObserver: NSObjectProtocol?
+    
+    private var publicKeyView: PublicKeyView?
         
     private let THREEMA_ID_SHARE_LINK = "https://threema.id/"
     
@@ -69,7 +78,7 @@ class ContactDetailsViewController: ThemedTableViewController {
         }
         return UIInterfaceOrientationMask.allButUpsideDown
     }
-    
+        
     override internal var previewActionItems: [UIPreviewActionItem] {
         let sendMessageAction = UIPreviewAction.init(title: BundleUtil.localizedString(forKey: "send_message"), style: .default) { (action, previewController) in
             self.sendMessageAction()
@@ -155,6 +164,8 @@ class ContactDetailsViewController: ThemedTableViewController {
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
+        
+        publicKeyView?.close()
         
         if #available(iOS 13.0, *) {
             kvoContact?.invalidate()
@@ -272,6 +283,8 @@ extension ContactDetailsViewController {
             imageView.accessibilityIgnoresInvertColors = true
             threemaTypeIcon.accessibilityIgnoresInvertColors = true
         }
+        
+        publicKeyView?.updateColors()
     }
     
     private func updateView() {
@@ -307,6 +320,7 @@ extension ContactDetailsViewController {
             tabBarController?.tabBar.isHidden = false
             didHideTabBar = false
         }
+                
         tableView.reloadData()
     }
         
@@ -538,7 +552,7 @@ extension ContactDetailsViewController {
                     }
                 }
                 break
-            case 3:
+            case 4:
                 if contact!.isGatewayId() {
                     return true
                 }
@@ -712,6 +726,10 @@ extension ContactDetailsViewController {
                 publicNicknameCell!.detailTextLabel?.text = contact?.publicNickname
                 return publicNicknameCell!
             case 3:
+                let publicKeyCell = tableView.dequeueReusableCell(withIdentifier: "PublicKeyCell")
+                publicKeyCell?.textLabel?.text = BundleUtil.localizedString(forKey: "public_key")
+                return publicKeyCell!
+            case 4:
                 let lcc = tableView.dequeueReusableCell(withIdentifier: "LinkedContactCell") as! LinkedContactCell
                 lcc.accessibilityTraits = .button
                 
@@ -727,16 +745,12 @@ extension ContactDetailsViewController {
                     lcc.displayNameLabel.text = BundleUtil.localizedString(forKey: "(none)")
                 }
                 return lcc
-            case 4:
+            case 5:
                 let groupMembershipCell = tableView.dequeueReusableCell(withIdentifier: "GroupMembershipCell")
                 groupMembershipCell?.textLabel?.text = BundleUtil.localizedString(forKey: "member_in_groups")
                 groupMembershipCell?.detailTextLabel?.text = String.init(format: "%lu", contact?.groupConversations.count ?? 0)
                 groupMembershipCell?.accessibilityTraits = .button
                 return groupMembershipCell!
-            case 5:
-                let kfc = tableView.dequeueReusableCell(withIdentifier: "KeyFingerprintCell") as! KeyFingerprintCell
-                kfc.fingerprintValueLabel.text = CryptoUtils.fingerprint(forPublicKey: contact?.publicKey)
-                return kfc
             default:
                 break
             }
@@ -810,9 +824,13 @@ extension ContactDetailsViewController {
         switch indexPath.section {
         case 0:
             if indexPath.row == 3 {
-                linkNewContact(view: cell!)
+                publicKeyView?.show()
+                tableView.deselectRow(at: indexPath, animated: true)
             }
             else if indexPath.row == 4 {
+                linkNewContact(view: cell!)
+            }
+            else if indexPath.row == 5 {
                 let vc = storyboard!.instantiateViewController(withIdentifier: "contactGroupMembershipViewController") as! ContactGroupMembershipViewController
                 vc.groupContact = contact
                 navigationController?.pushViewController(vc, animated: true)

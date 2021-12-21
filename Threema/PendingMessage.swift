@@ -101,13 +101,11 @@ import CocoaLumberjackSwift
     
     // First roundtrip when a new message is received
     func startInitialTimedNotification() {
-        ValidationLogger.shared()?.logString("Push: start initial timed notification for message \(messageId)")
         startTimedNotification(setFireDate: true, stage: .initial)
     }
     
     // Second roundtrip when a new message is received
     @objc func addAbstractMessage(message: AbstractMessage) {
-        ValidationLogger.shared()?.logString("Push: add abstract message for message \(messageId)")
         abstractMessage = message
         PendingMessage.removalQueue.sync {
             self.removeNotifications(stages: [.initial])
@@ -125,7 +123,6 @@ import CocoaLumberjackSwift
     
     // Third roundtrip when a new message is received
     @objc func addBaseMessage(message: BaseMessage) {
-        ValidationLogger.shared()?.logString("Push: add basemessage for message \(messageId)")
         baseMessage = message
         PendingMessage.removalQueue.sync {
             self.removeNotifications(stages: [.initial, .abstract])
@@ -143,7 +140,6 @@ import CocoaLumberjackSwift
             self.removeNotifications(stages: [.initial, .abstract, .base])
         }
         
-        ValidationLogger.shared()?.logString("Push: finished processing for message \(messageId)")
         if isPendingGroupMessages == true {
             self.removeAllMyNotifications()
             completionHandler?()
@@ -496,7 +492,6 @@ import CocoaLumberjackSwift
     /// This function must be called on the removalQueue
     private func removeNotifications(stages: [NotificationStage]? = nil, except: String? = nil) {
         if let stages = stages {
-            ValidationLogger.shared()?.logString("Push: Adding stages as removable \(stages)")
             for stage in stages {
                 let currKey = self.key.appending("-\(stage)")
                 currRemove.insert(currKey)
@@ -508,7 +503,6 @@ import CocoaLumberjackSwift
             }
             
             DispatchQueue.main.async {
-                ValidationLogger.shared()?.logString("Push: Remove notifications with key \(self.currRemove) for message \(self.messageId)")
                 UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: currRemoveArr)
             }
         }
@@ -592,7 +586,6 @@ import CocoaLumberjackSwift
             if let error = error {
                 ValidationLogger.shared()?.logString("Push: Adding notification for message \(self.messageId) was not successful. Error: \(error.localizedDescription)")
             } else {
-                ValidationLogger.shared().logString("Push: Added message \(self.messageId) to notification center with trigger \(trigger?.timeInterval ?? 0)s and identifier \(notificationRequest.identifier)")
                 PendingMessage.removalQueue.sync {
                     self.removeNotifications(except: notificationRequest.identifier)
                 }

@@ -169,7 +169,8 @@
 "export_chat" = "Экспортировать беседу";
 "send_profile_picture" = "Отправить аватар";
 "linked_contact" = "Привязанный контакт";
-"key_fingerprint" = "Контрольная сумма ключа";
+"public_key" = "Общедоступный код";
+"public_key_of" = "Общедоступный код %@";
 "block_contact" = "Блокировать контакт";
 "profile_picture_recipient" = "Получатели аватара";
 "member_in_groups" = "Член групп";

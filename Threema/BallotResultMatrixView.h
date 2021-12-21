@@ -26,7 +26,7 @@
 @property (nonatomic) Ballot *ballot;
 
 - (void)adaptToInterfaceRotation;
-
 - (void)adaptToSize:(CGSize)size;
+- (void)viewControllerWillDisappear;
 
 @end

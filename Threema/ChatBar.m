@@ -191,6 +191,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         [[ServerConnector sharedServerConnector] addObserver:self forKeyPath:@"connectionState" options:0 context:nil];
         
         updateTextColorForEmptyString = false;
+        [self updateHeight];
     }
     return self;
 }

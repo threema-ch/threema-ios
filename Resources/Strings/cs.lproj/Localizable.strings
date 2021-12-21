@@ -169,7 +169,8 @@
 "export_chat" = "Exportovat konverzaci";
 "send_profile_picture" = "Poslat profilový obrázek";
 "linked_contact" = "Propojený kontakt";
-"key_fingerprint" = "Otisk klíče";
+"public_key" = "Veřejný klíč";
+"public_key_of" = "Veřejný klíč – %@";
 "block_contact" = "Blokovat kontakt";
 "profile_picture_recipient" = "Příjemce profilového obrázku";
 "member_in_groups" = "Členové ve skupině";
@@ -232,8 +233,8 @@
 "delete_n" = "Smazat (%d)";
 "message_cannot_play_movie" = "Video nelze přehrát.";
 
-"identity_not_found_title" = "ID nebylo nalezeno";
-"identity_not_found_message" = "Nalezení ID se nezdařilo. Zkontrolujte, zda jste jej zadali správně, a zkuste to znovu.";
+"identity_not_found_title" = "Neznámé ID";
+"identity_not_found_message" = "Toto ID neexistuje nebo osoba, které náleží, používá nekompatibilní aplikaci.";
 
 "message_too_long_title" = "Zpráva je příliš dlouhá";
 "message_too_long_message" = "Maximální délka zprávy je %d bytů.";

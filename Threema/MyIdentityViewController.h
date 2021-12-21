@@ -34,8 +34,8 @@
 @property (weak, nonatomic) IBOutlet CopyLabel *threemaIdLabel;
 @property (weak, nonatomic) IBOutlet UIButton *qrCodeButton;
 @property (weak, nonatomic) IBOutlet UIButton *shareIdButton;
+@property (weak, nonatomic) IBOutlet UILabel *publicKeyLabel;
 
-@property (weak, nonatomic) IBOutlet UILabel *keyFingerprintLabel;
 @property (weak, nonatomic) IBOutlet UIImageView *qrBackgroundImageView;
 
 @property (weak, nonatomic) IBOutlet UILabel *linkedEmailLabel;

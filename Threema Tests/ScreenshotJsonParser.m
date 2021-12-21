@@ -326,7 +326,7 @@
         
         UIImage *image = [UIImage imageWithData:data];
         UIImage *thumbnail = [MediaConverter getThumbnailForImage:image];
-        NSData *thumbnailData = UIImageJPEGRepresentation(thumbnail, kJPEGCompressionQuality);
+        NSData *thumbnailData = UIImageJPEGRepresentation(thumbnail, kJPEGCompressionQualityLow);
         
         ImageData *dbThumbnail = [_entityManager.entityCreator imageData];
         dbThumbnail.data = thumbnailData;

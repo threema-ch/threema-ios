@@ -169,7 +169,8 @@
 "export_chat" = "Elkarrizketa esportatu";
 "send_profile_picture" = "Profil argazkia bidali orain";
 "linked_contact" = "Kontaktua lotuta";
-"key_fingerprint" = "Hatz-marka gako digitala";
+"public_key" = "Public Key";
+"public_key_of" = "Public Key of %@";
 "block_contact" = "Kontaktua blokeatu";
 "profile_picture_recipient" = "Profileko argazki hartzaileak";
 "member_in_groups" = "Taldeetako kidea";

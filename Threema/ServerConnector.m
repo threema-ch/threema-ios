@@ -464,10 +464,11 @@ struct pktPayload {
                 break;
             }
             
-            struct plMessageAck *ack = (struct plMessageAck*)pl->data;
+            struct plOutgoingMessageAck *ack = (struct plOutgoingMessageAck*)pl->data;
             /* ignore from identity, as it must be ours */
             NSData *messageId = [NSData dataWithBytes:ack->message_id length:kMessageIdLen];
-            [[MessageQueue sharedMessageQueue] processAck:messageId];
+            NSString *toIdentity = [[NSString alloc] initWithData:[NSData dataWithBytes:ack->to_identity length:kIdentityLen] encoding:NSASCIIStringEncoding];
+            [[MessageQueue sharedMessageQueue] processAck:messageId toIdentity:toIdentity];
             break;
         }
         case PLTYPE_INCOMING_MESSAGE: {

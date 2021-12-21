@@ -169,7 +169,8 @@
 "export_chat" = "Exportar il chat";
 "send_profile_picture" = "Trametter uss il maletg da profil";
 "linked_contact" = "Contact collià";
-"key_fingerprint" = "Clav impronta dal det";
+"public_key" = "Clav publica";
+"public_key_of" = "La clav public da %@";
 "block_contact" = "Bloccar il contact";
 "profile_picture_recipient" = "Destinatur dal maletg da profil";
 "member_in_groups" = "Commember da las gruppas";

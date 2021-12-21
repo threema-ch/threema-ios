@@ -76,6 +76,12 @@
     [self setupColors];
 }
 
+- (void)viewWillDisappear:(BOOL)animated {
+    [super viewWillDisappear:animated];
+    
+    [_matrixView viewControllerWillDisappear];
+}
+
 - (void)setupColors {
     self.view.backgroundColor = [Colors background];
 }

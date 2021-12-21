@@ -106,7 +106,7 @@
 
         // strip image metadata
         UIImage *image = imageMessage.image.uiImage;
-        NSData *imageData = UIImageJPEGRepresentation(image, kJPEGCompressionQuality);
+        NSData *imageData = UIImageJPEGRepresentation(image, kJPEGCompressionQualityLow);
 
         [imageData writeToURL:_url atomically:NO];
     } else if ([_message isKindOfClass:[VideoMessage class]]) {

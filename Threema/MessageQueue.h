@@ -29,7 +29,7 @@
 - (void)enqueue:(AbstractMessage*)message;
 - (void)enqueueWait:(AbstractMessage *)message;
 - (void)enqueueWaitForQuickReply:(AbstractMessage *)message;
-- (void)processAck:(NSData*)messageId;
+- (void)processAck:(NSData*)messageId toIdentity:(NSString *)toIdentity;
 - (void)flush;
 - (void)save;
 

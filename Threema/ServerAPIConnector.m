@@ -699,7 +699,13 @@
     NSString *tokenStr = resp1[@"token"];
     NSData *token = [[NSData alloc] initWithBase64EncodedString:tokenStr options:0];
     NSData *tokenRespKeyPub = [[NSData alloc] initWithBase64EncodedString:resp1[@"tokenRespKeyPub"] options:0];
-    
+        
+    /* token must start with 0xff and be longer than 32 bytes to avoid payload confusion */
+    if (token.length <= 32 || (((const uint8_t*)token.bytes)[0] != 0xff)) {
+        onError([ThreemaError threemaError:@"Bad token"]);
+        return;
+    }
+
     /* sign token with our secret key */
     NSData *response = [identityStore encryptData:token withNonce:nonce publicKey:tokenRespKeyPub];
     if (response == nil) {

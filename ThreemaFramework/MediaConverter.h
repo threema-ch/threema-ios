@@ -35,12 +35,14 @@
 + (NSUInteger)thumbnailSizeForCurrentDevice;
 
 + (UIImage*)getThumbnailForImage:(UIImage *)orig;
++ (nullable UIImage *)getThumbnailForSticker:(UIImage * _Nonnull)orig;
 
 + (UIImage*)scaleImage:(UIImage*)orig toMaxSize:(CGFloat)maxSize;
 
 + (UIImage* _Nullable)scaleImageData:(NSData * _Nonnull)imageData toMaxSize:(CGFloat)maxSize;
 
 + (NSData* _Nullable)scaleImageDataToData:(NSData * _Nonnull)imageData toMaxSize:(CGFloat)maxSize useJPEG:(BOOL)useJPEG;
++ (nullable NSData *)scaleImageDataToData:(NSData * _Nonnull)imageData toMaxSize:(CGFloat)maxSize useJPEG:(BOOL)useJPEG withQuality:(NSNumber * _Nonnull)compressionQuality;
 
 + (UIImage*)scaleImageUrl:(NSURL *)imageUrl toMaxSize:(CGFloat)maxSize;
 
@@ -58,5 +60,6 @@
 
 + (NSData *_Nullable)PNGRepresentationFor: (UIImage *_Nonnull) image;
 + (NSData *_Nullable)JPEGRepresentationFor: (UIImage *_Nonnull) image;
++ (nullable NSData *)JPEGRepresentationFor: (UIImage * _Nonnull) image withQuality:(NSNumber * _Nonnull)compressionQuality;
 
 @end

@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2012-2021 Threema GmbH
+// Copyright (c) 2012-2022 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -68,6 +68,11 @@ static NSString *licenseFile = @"license.html";
         case ColorThemeUndefined:
             break;
     }
+    
+    // Replace copyright year placeholder with current year
+    NSString *currentYearString = [DateFormatter getYearFor:[NSDate date]];
+    htmlString = [htmlString stringByReplacingOccurrencesOfString:@"/*threemalicensetoyear*/" withString:currentYearString];
+    
     [self.webView loadHTMLString:htmlString baseURL:baseURL];
 }
 

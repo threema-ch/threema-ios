@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2012-2021 Threema GmbH
+// Copyright (c) 2012-2022 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -297,7 +297,13 @@
 - (UIContextMenuConfiguration *)getContextMenu:(NSIndexPath *)indexPath point:(CGPoint)point API_AVAILABLE(ios(13.0)) {
     if (self.editing) {
          return nil;
-     }
+    }
+    
+    MDMSetup *mdmSetup = [[MDMSetup alloc] initWithSetup:NO];
+    if ([mdmSetup disableShareMedia] == YES) {
+        return [super getContextMenu:indexPath point:point];
+    }
+    
     VideoMessage *videoMessage = (VideoMessage*)self.message;
     if (videoMessage.video != nil) {
         if (videoMessage.video.data != nil) {

@@ -224,8 +224,7 @@ class OEMentions: NSObject, UITextViewDelegate, UITableViewDelegate, UITableView
                 updateTableView()
             }
         } else {
-            if text == self.mentionCharater && ( range.location == 0 || lastCharacter == " " || range.length == 0 ) { /* (Beginning of textView) OR (space then @) */
-                
+            if text == self.mentionCharater && textView.markedTextRange == nil && ( range.location == 0 || lastCharacter == " " || range.length == 0 ) { /* (Beginning of textView) OR (space then @) */
                 self.isMentioning = true
                 self.startMentionIndex = range.location
                 updateTableView()

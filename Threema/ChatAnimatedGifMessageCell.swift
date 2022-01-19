@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2019-2021 Threema GmbH
+// Copyright (c) 2019-2022 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -386,42 +386,40 @@ extension ChatAnimatedGifMessageCell {
             return menu
         }
 
-        
-        let fileMessage = message as! FileMessage
-        if let fileMessageData = fileMessage.data {
-            if fileMessageData.data != nil {
-                let conf = UIContextMenuConfiguration.init(identifier: indexPath as NSIndexPath, previewProvider: { () -> UIViewController? in
-                    return self.previewViewController()
-                }) { (suggestedActions) -> UIMenu? in
-                    var menuItems = super.contextMenuItems()!
-                    let saveImage = UIImage.init(systemName: "square.and.arrow.down.fill", compatibleWith: self.traitCollection)
-                    let saveAction = UIAction.init(title: BundleUtil.localizedString(forKey: "save"), image: saveImage, identifier: nil, discoverabilityTitle: nil, attributes: [], state: .off) { (action) in
-                        let filename = FileUtility.getTemporarySendableFileName(base: "gif")
-                        let tmpFileUrl = fileMessage.tmpURL(filename)
-                        fileMessage.exportData(to: tmpFileUrl)
-                        AlbumManager.shared.save(url: tmpFileUrl!, isVideo: false) { (success) in
-                            do {
-                                try FileManager.default.removeItem(at: tmpFileUrl!)
-                            }
-                            catch {
-                            }
+        if let mdmSetup = MDMSetup.init(setup: false),
+           !mdmSetup.disableShareMedia(),
+           let fileMessage = message as? FileMessage,
+           let fileMessageData = fileMessage.data,
+           fileMessageData.data != nil
+        {
+            let conf = UIContextMenuConfiguration.init(identifier: indexPath as NSIndexPath, previewProvider: { () -> UIViewController? in
+                return self.previewViewController()
+            }) { (suggestedActions) -> UIMenu? in
+                var menuItems = super.contextMenuItems()!
+                let saveImage = UIImage.init(systemName: "square.and.arrow.down.fill", compatibleWith: self.traitCollection)
+                let saveAction = UIAction.init(title: BundleUtil.localizedString(forKey: "save"), image: saveImage, identifier: nil, discoverabilityTitle: nil, attributes: [], state: .off) { (action) in
+                    let filename = FileUtility.getTemporarySendableFileName(base: "gif")
+                    let tmpFileUrl = fileMessage.tmpURL(filename)
+                    fileMessage.exportData(to: tmpFileUrl)
+                    AlbumManager.shared.save(url: tmpFileUrl!, isVideo: false) { (success) in
+                        do {
+                            try FileManager.default.removeItem(at: tmpFileUrl!)
+                        }
+                        catch {
                         }
                     }
-                    
-                    if self.message.isOwn.boolValue == true || self.chatVc.conversation.isGroup() == true {
-                        menuItems.insert(saveAction, at: 0)
-                    } else {
-                        menuItems.insert(saveAction, at: 1)
-                    }
-                    return UIMenu.init(title: "", image: nil, identifier: nil, options: .displayInline, children: menuItems as! [UIMenuElement])
                 }
-                return conf
-            } else {
-                return super.getContextMenu(indexPath, point: point)
+                
+                if self.message.isOwn.boolValue == true || self.chatVc.conversation.isGroup() == true {
+                    menuItems.insert(saveAction, at: 0)
+                } else {
+                    menuItems.insert(saveAction, at: 1)
+                }
+                return UIMenu.init(title: "", image: nil, identifier: nil, options: .displayInline, children: menuItems as! [UIMenuElement])
             }
-        } else {
-            return super.getContextMenu(indexPath, point: point)
+            return conf
         }
+        return super.getContextMenu(indexPath, point: point)
     }
     
     open override func willDisplay() {

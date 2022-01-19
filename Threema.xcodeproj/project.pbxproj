@@ -1125,6 +1125,7 @@
 		4DFF8E5C193340D300F2CF0D /* SVProgressHUD.m in Sources */ = {isa = PBXBuildFile; fileRef = 4DFF8E5A193340D300F2CF0D /* SVProgressHUD.m */; };
 		6725D93021BEA9EF0058B8C0 /* StdTypeHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6725D92F21BEA9EF0058B8C0 /* StdTypeHelper.swift */; };
 		67D692BD21B80AE3009AE6E2 /* VoIPStats.swift in Sources */ = {isa = PBXBuildFile; fileRef = 67D692BC21B80AE3009AE6E2 /* VoIPStats.swift */; };
+		7E50142F278EFAB6002AB922 /* OrphanedFilesCleanupViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DFA05332575022B0020E14F /* OrphanedFilesCleanupViewController.swift */; };
 		CE01509420A1CF5700DD72B5 /* WebClientSession.h in Headers */ = {isa = PBXBuildFile; fileRef = CE01509020A1CF5700DD72B5 /* WebClientSession.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		CE01509720A1CF5700DD72B5 /* WebClientSession.m in Sources */ = {isa = PBXBuildFile; fileRef = CE01509320A1CF5700DD72B5 /* WebClientSession.m */; };
 		CE0211771ED5B4750022D04F /* VoIPCallMessageDecoder.m in Sources */ = {isa = PBXBuildFile; fileRef = CE02116D1ED5B4750022D04F /* VoIPCallMessageDecoder.m */; };
@@ -8544,6 +8545,7 @@
 				0A7DF7BA1C9FDBDE002D4DC3 /* IdentityBackupStore.m in Sources */,
 				2DF30F9B217DC91B00093371 /* SafeJsonParser.swift in Sources */,
 				CE16BCD11F27948E0029251C /* PPAsset.swift in Sources */,
+				7E50142F278EFAB6002AB922 /* OrphanedFilesCleanupViewController.swift in Sources */,
 				0A7DF7BB1C9FDBDE002D4DC3 /* CachedCellHeight.m in Sources */,
 				CE10D9071EA8FA0300802355 /* PPAssetsActionConfig.swift in Sources */,
 				CEB7A75E22E1ED8B009ADFDF /* WCSession.swift in Sources */,
@@ -10675,7 +10677,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				BUILD_NUMBER = 2678;
+				BUILD_NUMBER = 2685;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ENABLE_MODULES = NO;
 				CLANG_ENABLE_OBJC_ARC = YES;
@@ -10722,7 +10724,7 @@
 				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "";
 				SDKROOT = iphoneos;
 				VALIDATE_PRODUCT = YES;
-				VERSION_NUMBER = 4.6.14;
+				VERSION_NUMBER = 4.6.15;
 			};
 			name = AppStore;
 		};
@@ -10795,7 +10797,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				BUILD_NUMBER = 2678;
+				BUILD_NUMBER = 2685;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ENABLE_MODULES = NO;
 				CLANG_ENABLE_OBJC_ARC = YES;
@@ -10848,7 +10850,7 @@
 				PROVISIONING_PROFILE = "";
 				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "";
 				SDKROOT = iphoneos;
-				VERSION_NUMBER = 4.6.14;
+				VERSION_NUMBER = 4.6.15;
 			};
 			name = Debug;
 		};
@@ -10856,7 +10858,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				BUILD_NUMBER = 2678;
+				BUILD_NUMBER = 2685;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ENABLE_MODULES = NO;
 				CLANG_ENABLE_OBJC_ARC = YES;
@@ -10902,7 +10904,7 @@
 				PROVISIONING_PROFILE = "";
 				SDKROOT = iphoneos;
 				VALIDATE_PRODUCT = YES;
-				VERSION_NUMBER = 4.6.14;
+				VERSION_NUMBER = 4.6.15;
 			};
 			name = AdHoc;
 		};
@@ -11198,7 +11200,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				BUILD_NUMBER = 2678;
+				BUILD_NUMBER = 2685;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ENABLE_MODULES = NO;
 				CLANG_ENABLE_OBJC_ARC = YES;
@@ -11251,7 +11253,7 @@
 				PROVISIONING_PROFILE = "";
 				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "";
 				SDKROOT = iphoneos;
-				VERSION_NUMBER = 4.6.14;
+				VERSION_NUMBER = 4.6.15;
 			};
 			name = "Debug Sandbox";
 		};

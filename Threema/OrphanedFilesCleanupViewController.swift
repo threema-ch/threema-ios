@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2020-2021 Threema GmbH
+// Copyright (c) 2020-2022 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -161,12 +161,28 @@ class OrphanedFilesCleanupViewController: ThemedTableViewController {
                 }
             }, titleCancel: BundleUtil.localizedString(forKey: "cancel"))
 
-        } else if indexPath.section == 3 && indexPath.row == 0 {
-            DDLogNotice("Logging all files in appDataDirectory")
+        } else if indexPath.section == 3 && indexPath.row == 0 && logAllFiles.isEnabled {
+            DDLogNotice("Logging all files used by Threema")
             logFilesAndShowProgress()
         }
     }
-    
+
+    override func tableView(_ tableView: UITableView, willSelectRowAt indexPath: IndexPath) -> IndexPath? {
+        if indexPath.section == 1 && indexPath.row == 0 && orphanedFilesMoveToBin.isEnabled {
+            return indexPath
+        }
+        else if indexPath.section == 2 && indexPath.row == 0 && orphanedFilesRestore.isEnabled {
+            return indexPath
+        }
+        else if indexPath.section == 2 && indexPath.row == 1 && orphanedFilesDelete.isEnabled {
+            return indexPath
+        }
+        else if indexPath.section == 3 && indexPath.row == 0 && logAllFiles.isEnabled {
+            return indexPath
+        }
+        return nil
+    }
+
     // MARK: - Private functions
     
     private func updateView() {
@@ -211,7 +227,7 @@ class OrphanedFilesCleanupViewController: ThemedTableViewController {
             orphanedFilesDelete.isEnabled = false
         }
         
-        logAllFiles.isEnabled = true
+        logAllFiles.isEnabled = UserSettings.shared().validationLogging
         
         tableView.reloadData()
     }
@@ -298,8 +314,15 @@ class OrphanedFilesCleanupViewController: ThemedTableViewController {
                 progress = MBProgressHUD.showAdded(to: superview, animated: true)
             }
         }
-        
-        FileUtility.logDirectoriesAndFiles(path:  DocumentManager.databaseDirectory(), logFileName: "validation_log.txt")
+
+        if let url = FileUtility.appDataDirectory {
+            FileUtility.logDirectoriesAndFiles(path: url, logFileName: nil)
+        }
+        if let url = FileUtility.appDocumentsDirectory {
+            FileUtility.logDirectoriesAndFiles(path: url, logFileName: nil)
+        }
+        FileUtility.logDirectoriesAndFiles(path: FileManager.default.temporaryDirectory, logFileName: nil)
+
         DispatchQueue.main.async {
             progress?.hide(animated: true, afterDelay: 1.5)
         }

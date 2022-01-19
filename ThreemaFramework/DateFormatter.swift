@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2020-2021 Threema GmbH
+// Copyright (c) 2020-2022 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -262,6 +262,20 @@ public class DateFormatter: NSObject {
         }
         
         return mediumWeekdayDayMonthYearAndTimeDateFormatter!.string(from: date)
+    }
+    
+    /// Long year string
+    ///
+    /// - Parameter date: Date to format
+    /// - Returns: Long year string or empty string if `date` is nil
+    @objc
+    public static func getYear(for date: Date?) -> String {
+        guard let date = date else {
+            return ""
+        }
+        
+        let dateFormatter = dateFormatter(for: "yyyy")
+        return dateFormatter.string(from: date)
     }
     
     

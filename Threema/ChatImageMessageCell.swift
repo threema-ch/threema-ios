@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2019-2021 Threema GmbH
+// Copyright (c) 2019-2022 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -310,37 +310,37 @@ extension ChatImageMessageCell {
             return menu
         }
         
-        let imageMessage = message as! ImageMessage
-        if imageMessage.image != nil {
-            if imageMessage.image.data != nil {
-                let conf = UIContextMenuConfiguration.init(identifier: indexPath as NSIndexPath, previewProvider: { () -> UIViewController? in
-                    return self.previewViewController()
-                }) { (suggestedActions) -> UIMenu? in
-                    var menuItems = super.contextMenuItems()!
-                    let saveImage = UIImage.init(systemName: "square.and.arrow.down.fill", compatibleWith: self.traitCollection)
-                    let saveAction = UIAction.init(title: BundleUtil.localizedString(forKey: "save"), image: saveImage, identifier: nil, discoverabilityTitle: nil, attributes: [], state: .off) { (action) in
-                        if let image = imageMessage.image, let uiImage = image.uiImage {
-                            AlbumManager.shared.save(image: uiImage)
-                        } else {
-                            DDLogError("Could not save image because image or image.uiImage was nil")
-                        }
-                        
+        if let mdmSetup = MDMSetup.init(setup: false),
+           !mdmSetup.disableShareMedia(),
+           let imageMessage = message as? ImageMessage,
+           let imageMessageImage = imageMessage.image,
+           imageMessageImage.data != nil
+        {
+            let conf = UIContextMenuConfiguration.init(identifier: indexPath as NSIndexPath, previewProvider: { () -> UIViewController? in
+                return self.previewViewController()
+            }) { (suggestedActions) -> UIMenu? in
+                var menuItems = super.contextMenuItems()!
+                let saveImage = UIImage.init(systemName: "square.and.arrow.down.fill", compatibleWith: self.traitCollection)
+                let saveAction = UIAction.init(title: BundleUtil.localizedString(forKey: "save"), image: saveImage, identifier: nil, discoverabilityTitle: nil, attributes: [], state: .off) { (action) in
+                    if let image = imageMessage.image, let uiImage = image.uiImage {
+                        AlbumManager.shared.save(image: uiImage)
+                    } else {
+                        DDLogError("Could not save image because image or image.uiImage was nil")
                     }
                     
-                    if self.message.isOwn.boolValue == true || self.chatVc.conversation.isGroup() == true {
-                        menuItems.insert(saveAction, at: 0)
-                    } else {
-                        menuItems.insert(saveAction, at: 1)
-                    }
-                    return UIMenu.init(title: "", image: nil, identifier: nil, options: .displayInline, children: menuItems as! [UIMenuElement])
                 }
-                return conf
-            } else {
-                return super.getContextMenu(indexPath, point: point)
+                
+                if self.message.isOwn.boolValue == true || self.chatVc.conversation.isGroup() == true {
+                    menuItems.insert(saveAction, at: 0)
+                } else {
+                    menuItems.insert(saveAction, at: 1)
+                }
+                return UIMenu.init(title: "", image: nil, identifier: nil, options: .displayInline, children: menuItems as! [UIMenuElement])
             }
-        } else {
-            return super.getContextMenu(indexPath, point: point)
+            return conf
         }
+        
+        return super.getContextMenu(indexPath, point: point)
     }
 }
 

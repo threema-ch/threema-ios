@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2019-2021 Threema GmbH
+// Copyright (c) 2019-2022 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -72,8 +72,7 @@ import CocoaLumberjackSwift
             if let urls = fileManager.enumerator(at: pathUrl, includingPropertiesForKeys: resourceKeys) {
                 for case let url as URL in urls {
                     let resourceValues = try url.resourceValues(forKeys: Set(resourceKeys))
-                    DDLogVerbose("\(url.path) \(resourceValues.creationDate!) \(resourceValues.isDirectory!)")
-                    
+
                     if let isDirectory = resourceValues.isDirectory,
                         !isDirectory {
                         
@@ -292,11 +291,11 @@ import CocoaLumberjackSwift
         - path: Root directory to list objects
         - logFileName: Name of log file stored in application documents folder
     */
-    @objc public static func logDirectoriesAndFiles(path: URL, logFileName: String) {
+    @objc public static func logDirectoriesAndFiles(path: URL, logFileName: String?) {
         let fileManager = FileManager.default
         
         do {
-            DDLogInfo("Log files form \(path.path) into \(logFileName)")
+            DDLogInfo("Log files form \(path.path) into \(logFileName ?? "validation_log.txt")")
             
             let resourceKeys: [URLResourceKey] = [.creationDateKey, .isDirectoryKey, .fileSizeKey]
             
@@ -311,7 +310,9 @@ import CocoaLumberjackSwift
                 }
             }
 
-            if let appDocuments = appDocumentsDirectory {
+            if let logFileName = logFileName,
+               let appDocuments = appDocumentsDirectory
+            {
                 let documentsPath = URL(fileURLWithPath: appDocuments.path)
                 let filePath = documentsPath.appendingPathComponent(logFileName)
                 

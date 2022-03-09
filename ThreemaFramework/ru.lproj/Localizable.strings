@@ -49,6 +49,9 @@
 "error_message_feature_level" = "У некоторых получателей установлена версия приложения, пока не поддерживающая сообщения с файлами: %@";
 "error_message_none_feature_level" = "Ни у кого из получателей не установлена версия приложения, поддерживающая сообщения с файлами: %@";
 
+"error_message_requires_migration_error_title" = "Ошибка";
+"error_message_requires_migration_error_description" = "Сбой проверки переноса. Перезапустите приложение.";
+
 "video_too_long_title" = "Видео слишком длинное";
 "video_too_long_message" = "Видео слишком длинное для отправки. Максимальная допустимая длина составляет %.0f мин.";
 

@@ -294,12 +294,7 @@
 #pragma mark - Static functions
 
 + (void)showNoAccessToDatabaseNotification {
-    UNMutableNotificationContent *content = [[UNMutableNotificationContent alloc] init];
-    content.title = NSLocalizedString(@"new_message_no_access_title", @"");
-    content.body = NSLocalizedString(@"new_message_no_access_message", @"");
-    content.badge = @1;
-    UNNotificationRequest *request = [UNNotificationRequest requestWithIdentifier:@"NoAccessToDB" content:content trigger:nil];
-    [[UNUserNotificationCenter currentNotificationCenter] addNotificationRequest:request withCompletionHandler:nil];
+    [Utils sendErrorLocalNotification:NSLocalizedString(@"new_message_no_access_title", @"") body:NSLocalizedString(@"new_message_no_access_message", @"") userInfo:nil];
 }
 
 /**

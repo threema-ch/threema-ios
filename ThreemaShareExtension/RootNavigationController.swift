@@ -240,11 +240,8 @@ class RootNavigationController : UINavigationController {
             return false
         }
         
-        if dbManager.storeRequiresMigration() {
-            return false
-        }
-        
-        return true
+        let requiresMigration = dbManager.storeRequiresMigration();
+        return requiresMigration == RequiresMigrationNone
     }
     
     func hasLicense() -> Bool {

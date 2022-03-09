@@ -21,6 +21,12 @@
 #import <Foundation/Foundation.h>
 #import <CoreData/CoreData.h>
 
+typedef NS_ENUM(NSInteger, BallotDisplayMode) {
+    BallotDisplayModeList = 0,
+    BallotDisplayModeSummary = 1,
+};
+
+
 @class Contact,BallotChoice, BallotMessage, Conversation;
 
 @interface Ballot : NSManagedObject
@@ -38,6 +44,7 @@
 @property (nonatomic, retain) NSSet *choices;
 @property (nonatomic, retain) Conversation *conversation;
 @property (nonatomic, retain) NSSet *message;
+@property (nonatomic) BallotDisplayMode ballotDisplayMode;
 
 // participants are persisted when the ballot is closed
 @property (nonatomic, retain) NSSet *participants;
@@ -60,7 +67,9 @@
 - (void)addParticipants:(NSSet *)values;
 - (void)removeParticipants:(NSSet *)values;
 
-#pragma mark - own definitions & methods
+- (BallotDisplayMode)ballotDisplayMode;
+- (void)setBallotDisplayMode:(BallotDisplayMode)ballotDisplayMode;
+#pragma mark - Own Definitions & Methods
 
 enum {
     kBallotStateOpen = 0,
@@ -104,5 +113,13 @@ enum {
 - (NSInteger)numberOfReceivedVotes;
 
 - (NSInteger)participantCount;
+
+- (NSInteger)conversationParticipantsCount;
+
+- (BOOL)localIdentityDidVote;
+
+- (NSSet*)voters;
+
+- (NSSet*)nonVoters;
 
 @end

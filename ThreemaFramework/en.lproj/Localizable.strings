@@ -49,6 +49,9 @@
 "error_message_feature_level" = "Some recipients have an app version that does not support file messages yet: %@";
 "error_message_none_feature_level" = "None of the recipients have an app version that supports file messages: %@";
 
+"error_message_requires_migration_error_title" = "Error";
+"error_message_requires_migration_error_description" = "Migration check failed. Please restart the app.";
+
 "video_too_long_title" = "Video too long";
 "video_too_long_message" = "This video is too long to be sent. The maximum allowed length is %.0f Minutes.";
 

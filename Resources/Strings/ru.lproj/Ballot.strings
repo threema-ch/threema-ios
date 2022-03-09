@@ -46,6 +46,7 @@
 "ballot_got_votes_count" = "Получено %1$i из %2$i голосов.";
 "ballot_vote_ballot_closed_title" = "Извините, слишком поздно.";
 "ballot_vote_ballot_closed_message" = "Опрос был между тем закончен.";
+"ballot_not_voted" = "Эти участники не голосовали:";
 
 "ballot_open_ballots" = "Открытые опросы";
 "ballot_closed_ballots" = "Закрытые опросы";

@@ -46,6 +46,7 @@
 "ballot_got_votes_count" = "%1$i sur %2$i votes ont été reçus.";
 "ballot_vote_ballot_closed_title" = "Désolé, trop tard";
 "ballot_vote_ballot_closed_message" = "Ce sondage a été fermé entre temps.";
+"ballot_not_voted" = "Ces participants n'ont pas voté :";
 
 "ballot_open_ballots" = "Sondages ouverts";
 "ballot_closed_ballots" = "Sondages fermés";

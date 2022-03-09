@@ -49,6 +49,9 @@
 "error_message_feature_level" = "Bazı alıcıların henüz dosya mesajlarını desteklemeyen bir uygulama sürümü var: %@";
 "error_message_none_feature_level" = "Hiçbir alıcının dosya mesajlarını destekleyen bir uygulama sürümü yok: %@";
 
+"error_message_requires_migration_error_title" = "Hata";
+"error_message_requires_migration_error_description" = "Taşıma denetimi başarısız oldu. Lütfen uygulamayı yeniden başlatın.";
+
 "video_too_long_title" = "Video çok uzun";
 "video_too_long_message" = "Bu video gönderilemeyecek kadar uzun. İzin verilen maksimum uzunluk %.0f Dakikadır .";
 

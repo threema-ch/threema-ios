@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<model name="" userDefinedModelVersionIdentifier="" type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="1811" systemVersion="12C60" minimumToolsVersion="Xcode 4.3" macOSVersion="Automatic" iOSVersion="Automatic">
+    <entity name="Contact" representedClassName="Contact" syncable="YES">
+        <attribute name="abRecordId" optional="YES" attributeType="Integer 32" indexed="YES" syncable="YES"/>
+        <attribute name="firstName" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="identity" attributeType="String" indexed="YES" syncable="YES"/>
+        <attribute name="imageData" optional="YES" attributeType="Binary" syncable="YES"/>
+        <attribute name="lastName" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="publicKey" attributeType="Binary" syncable="YES"/>
+        <attribute name="sortIndex" optional="YES" attributeType="Integer 32" defaultValueString="0" indexed="YES" syncable="YES"/>
+        <attribute name="sortInitial" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="verificationLevel" attributeType="Integer 16" syncable="YES"/>
+        <attribute name="verifiedEmail" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="verifiedMobileNo" optional="YES" attributeType="String" syncable="YES"/>
+        <relationship name="conversations" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="Conversation" inverseName="contact" inverseEntity="Conversation" syncable="YES"/>
+    </entity>
+    <entity name="Conversation" representedClassName="Conversation" syncable="YES">
+        <attribute name="lastTypingStart" optional="YES" transient="YES" attributeType="Date" syncable="YES"/>
+        <attribute name="typing" transient="YES" attributeType="Boolean" defaultValueString="NO" syncable="YES"/>
+        <attribute name="unreadMessageCount" attributeType="Integer 32" defaultValueString="0" syncable="YES"/>
+        <relationship name="contact" minCount="1" maxCount="1" deletionRule="Nullify" destinationEntity="Contact" inverseName="conversations" inverseEntity="Contact" syncable="YES"/>
+        <relationship name="lastMessage" optional="YES" minCount="1" maxCount="1" deletionRule="Nullify" destinationEntity="Message" syncable="YES"/>
+        <relationship name="messages" optional="YES" toMany="YES" deletionRule="Cascade" ordered="YES" destinationEntity="Message" inverseName="conversation" inverseEntity="Message" syncable="YES"/>
+    </entity>
+    <entity name="ImageData" representedClassName="ImageData" syncable="YES">
+        <attribute name="data" attributeType="Binary" allowsExternalBinaryDataStorage="YES" syncable="YES"/>
+        <attribute name="height" attributeType="Integer 16" defaultValueString="0" syncable="YES"/>
+        <attribute name="width" attributeType="Integer 16" defaultValueString="0" syncable="YES"/>
+    </entity>
+    <entity name="ImageMessage" representedClassName="ImageMessage" parentEntity="Message" syncable="YES">
+        <attribute name="sendProgress" optional="YES" transient="YES" attributeType="Float" defaultValueString="0" syncable="YES"/>
+        <relationship name="image" minCount="1" maxCount="1" deletionRule="Cascade" destinationEntity="ImageData" syncable="YES"/>
+        <relationship name="thumbnail" minCount="1" maxCount="1" deletionRule="Cascade" destinationEntity="ImageData" syncable="YES"/>
+    </entity>
+    <entity name="LocationMessage" representedClassName="LocationMessage" parentEntity="Message" syncable="YES">
+        <attribute name="accuracy" optional="YES" attributeType="Double" defaultValueString="0.0" syncable="YES"/>
+        <attribute name="latitude" attributeType="Double" defaultValueString="0.0" syncable="YES"/>
+        <attribute name="longitude" attributeType="Double" defaultValueString="0.0" syncable="YES"/>
+        <attribute name="reverseGeocodingResult" optional="YES" attributeType="String" syncable="YES"/>
+    </entity>
+    <entity name="Message" representedClassName="BaseMessage" isAbstract="YES" syncable="YES">
+        <attribute name="date" attributeType="Date" indexed="YES" syncable="YES"/>
+        <attribute name="delivered" attributeType="Boolean" syncable="YES"/>
+        <attribute name="deliveryDate" optional="YES" attributeType="Date" syncable="YES"/>
+        <attribute name="id" attributeType="Binary" indexed="YES" syncable="YES"/>
+        <attribute name="isOwn" attributeType="Boolean" syncable="YES"/>
+        <attribute name="read" attributeType="Boolean" syncable="YES"/>
+        <attribute name="readDate" optional="YES" attributeType="Date" syncable="YES"/>
+        <attribute name="sendFailed" optional="YES" attributeType="Boolean" syncable="YES"/>
+        <attribute name="sent" attributeType="Boolean" syncable="YES"/>
+        <attribute name="userack" attributeType="Boolean" syncable="YES"/>
+        <attribute name="userackDate" optional="YES" attributeType="Date" syncable="YES"/>
+        <relationship name="conversation" minCount="1" maxCount="1" deletionRule="Nullify" destinationEntity="Conversation" inverseName="messages" inverseEntity="Conversation" syncable="YES"/>
+    </entity>
+    <entity name="TextMessage" representedClassName="TextMessage" parentEntity="Message" syncable="YES">
+        <attribute name="text" attributeType="String" syncable="YES"/>
+    </entity>
+    <elements>
+        <element name="Contact" positionX="0" positionY="0" width="128" height="225"/>
+        <element name="Conversation" positionX="0" positionY="0" width="128" height="135"/>
+        <element name="ImageData" positionX="160" positionY="192" width="128" height="90"/>
+        <element name="ImageMessage" positionX="0" positionY="0" width="128" height="90"/>
+        <element name="LocationMessage" positionX="160" positionY="192" width="128" height="105"/>
+        <element name="Message" positionX="0" positionY="0" width="128" height="225"/>
+        <element name="TextMessage" positionX="0" positionY="0" width="128" height="60"/>
+    </elements>
+</model>

@@ -34,6 +34,7 @@
 @dynamic orderPosition;
 @dynamic ballot;
 @dynamic result;
+@dynamic totalVotes;
 
 - (BallotResult *)getOwnResult {
     NSString *myId = [MyIdentityStore sharedMyIdentityStore].identity;

@@ -156,11 +156,11 @@ static DatabaseManager *dbManager;
     return [[NSFileManager defaultManager] fileExistsAtPath:storeURL.path];
 }
 
-- (BOOL)storeRequiresMigration {
+- (StoreRequiresMigration)storeRequiresMigration {
     NSURL *storeURL = [DatabaseManager storeUrl];
     
     if (![[NSFileManager defaultManager] fileExistsAtPath:storeURL.path]) {
-        return NO;  /* no store = no migration */
+        return RequiresMigrationNone;  /* no store = no migration */
     }
     
     NSError *error;
@@ -170,7 +170,11 @@ static DatabaseManager *dbManager;
                              [NSNumber numberWithBool:YES], NSInferMappingModelAutomaticallyOption,
                              protectionType, NSPersistentStoreFileProtectionKey, nil];
     NSDictionary *sourceMetadata = [NSPersistentStoreCoordinator metadataForPersistentStoreOfType:NSSQLiteStoreType URL:storeURL options:options error:&error];
-    return ![self.managedObjectModel isConfiguration:nil compatibleWithStoreMetadata:sourceMetadata];
+    if (!sourceMetadata || error != nil) {
+        DDLogError(@"SourceMetaData returns a error or nil, do not migrate the database. %@", error.description);
+        return RequiresMigrationError;
+    }
+    return  [self.managedObjectModel isConfiguration:nil compatibleWithStoreMetadata:sourceMetadata] ? RequiresMigrationNone : RequiresMigration;
 }
 
 - (BOOL)storeRequiresImport {

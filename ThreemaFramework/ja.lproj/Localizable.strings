@@ -49,6 +49,9 @@
 "error_message_feature_level" = "一部の受信者は、ファイルメッセージをまだサポートしていないアプリケーションのバージョンを使用しています: %@";
 "error_message_none_feature_level" = "どの受信者も、ファイルメッセージをサポートするアプリのバージョンを持っていません： %@";
 
+"error_message_requires_migration_error_title" = "エラー";
+"error_message_requires_migration_error_description" = "移行チェックに失敗しました。アプリを再起動してください。";
+
 "video_too_long_title" = "動画が長すぎます";
 "video_too_long_message" = "この動画は長すぎるため送信できません。許可された最大の長さは %.0f 分です。";
 

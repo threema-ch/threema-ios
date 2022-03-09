@@ -46,6 +46,7 @@
 "ballot_got_votes_count" = "Hai ricevuto %1$i su %2$i voti.";
 "ballot_vote_ballot_closed_title" = "Spiacenti, è troppo tardi";
 "ballot_vote_ballot_closed_message" = "Nel frattempo questo sondaggio è stato concluso.";
+"ballot_not_voted" = "Questi partecipanti non hanno votato:";
 
 "ballot_open_ballots" = "Sondaggi in corso";
 "ballot_closed_ballots" = "Sondaggi conclusi";

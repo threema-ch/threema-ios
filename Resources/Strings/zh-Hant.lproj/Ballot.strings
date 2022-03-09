@@ -46,6 +46,7 @@
 "ballot_got_votes_count" = "取得%2$i票中的%1$i票。";
 "ballot_vote_ballot_closed_title" = "對不起，您遲來一步。";
 "ballot_vote_ballot_closed_message" = "本次投票已經結束。";
+"ballot_not_voted" = "這些參與者沒有投票：";
 
 "ballot_open_ballots" = "開放投票";
 "ballot_closed_ballots" = "關閉投票";

@@ -46,6 +46,7 @@
 "ballot_got_votes_count" = "%2$i票のうち、%1$i票を獲得しました。";
 "ballot_vote_ballot_closed_title" = "残念ながら終了してしまいました";
 "ballot_vote_ballot_closed_message" = "投票は終了しました。";
+"ballot_not_voted" = "These participants did not vote:";
 
 "ballot_open_ballots" = "受付中の投票";
 "ballot_closed_ballots" = "終了した投票";

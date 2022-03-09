@@ -22,6 +22,12 @@
 #import <CoreData/CoreData.h>
 #import "DatabaseContext.h"
 
+typedef enum : NSUInteger {
+    RequiresMigrationNone = 0,
+    RequiresMigration = 1,
+    RequiresMigrationError = 2
+} StoreRequiresMigration;
+
 @interface DatabaseManager : NSObject
 
 @property (strong, nonatomic) NSManagedObjectModel *managedObjectModel;
@@ -42,7 +48,7 @@
 
 + (BOOL)storeExists;
 
-- (BOOL)storeRequiresMigration;
+- (StoreRequiresMigration)storeRequiresMigration;
 
 - (BOOL)storeRequiresImport;
 

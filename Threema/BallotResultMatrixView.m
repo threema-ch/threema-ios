@@ -66,6 +66,7 @@
 @property NSInteger numParticipants;
 @property NSMutableArray *participantIds;
 @property NSMutableArray *participantNames;
+@property NSMutableArray *notParticipantNames;
 @property NSMutableArray *participantAvatars;
 
 @property (nonatomic) CGRect matrixRect;
@@ -174,7 +175,7 @@
     CGFloat width = size.width - offsetLeft - offsetRight;
     
     CGFloat contactsHeight = [self contactsHeightForSize:size];
-    CGFloat height = size.height - TOP_PADDING - BOTTOM_PADDING - contactsHeight;
+    CGFloat height =  TOP_PADDING + [_ballot.choices count] * _gridHeight + BOTTOM_PADDING + contactsHeight;
     
     return CGRectMake(offsetLeft, TOP_PADDING + contactsHeight, width, height);
 }
@@ -193,6 +194,10 @@
 
 - (CGRect)totalsRectForSize:(CGSize)size {
     return CGRectMake(X_PADDING + [self choicesWidthForSize:size], TOP_PADDING + [self contactsHeightForSize:size], _totalsWidth, _matrixRect.size.height);
+}
+
+- (CGRect)textRectForSize:(CGSize)size {
+    return CGRectMake(X_PADDING, _matrixView.frame.size.height , self.frame.size.width, self.frame.size.height - _matrixRect.size.height);
 }
 
 - (CGFloat)sin {
@@ -260,6 +265,19 @@
     [_totalsView.panGestureRecognizer requireGestureRecognizerToFail: _panGesture];
     [_totalsView setContent: totalsContent];
     [self addSubview:_totalsView];
+    
+    CGRect textRect = [self textRectForSize:size];
+    UITextView *notVotedView = [[UITextView alloc] initWithFrame:textRect];
+    notVotedView.text = [self createNotVotedString];
+    notVotedView.textColor = [Colors fontLight];
+    notVotedView.backgroundColor = self.backgroundColor;
+    notVotedView.font = [UIFont preferredFontForTextStyle:UIFontTextStyleFootnote];
+    notVotedView.editable = false;
+    
+    // Only show non-voters if there are any and DisplayMode is not Summary
+    if(([_ballot.nonVoters count] != 0 || !_ballot.localIdentityDidVote) && _ballot.ballotDisplayMode != BallotDisplayModeSummary)  {
+        [self addSubview:notVotedView];
+    }
     
     [self updateLineColors];
     
@@ -452,7 +470,14 @@
     NSInteger index = 0;
     NSInteger maxCount = 0;
     for (BallotChoice *choice in _ballot.choicesSortedByOrder) {
-        NSInteger count = [choice totalCountOfResultsTrue];
+        
+        NSInteger count = 0;
+        // If Ballot is in DisplayModeSummary, show totalVotes instead
+        if(_ballot.ballotDisplayMode == BallotDisplayModeSummary) {
+            count = [[choice totalVotes] intValue];
+        } else {
+            count = [choice totalCountOfResultsTrue];
+        }
         
         if (count > 0) {
             if (count == maxCount) {
@@ -525,24 +550,40 @@
     _participantNames = [NSMutableArray array];
     _participantAvatars = [NSMutableArray array];
 
-    NSString *myIdentity = [MyIdentityStore sharedMyIdentityStore].identity;
-    [_participantIds addObject:myIdentity];
-    [_participantNames addObject:[BundleUtil localizedStringForKey:@"me"]];
-    
-    NSMutableDictionary *profilePicture = [[MyIdentityStore sharedMyIdentityStore] profilePicture];
-    UIImage *image = [UIImage imageWithData:profilePicture[@"ProfilePicture"]];
-    if (image) {
-        [_participantAvatars addObject:[[AvatarMaker sharedAvatarMaker] maskedProfilePicture:image size:CONTACT_AVATAR_SIZE-2*CONTACT_AVATAR_PADDING]];
-    } else {
-        [_participantAvatars addObject:[[AvatarMaker sharedAvatarMaker] avatarForContact:nil size:CONTACT_AVATAR_SIZE-2*CONTACT_AVATAR_PADDING masked:YES]];
+    if (_ballot.localIdentityDidVote) {
+        NSString *myIdentity = [MyIdentityStore sharedMyIdentityStore].identity;
+        [_participantIds addObject:myIdentity];
+        [_participantNames addObject:[BundleUtil localizedStringForKey:@"me"]];
+        
+        NSMutableDictionary *profilePicture = [[MyIdentityStore sharedMyIdentityStore] profilePicture];
+        UIImage *image = [UIImage imageWithData:profilePicture[@"ProfilePicture"]];
+        if (image) {
+            [_participantAvatars addObject:[[AvatarMaker sharedAvatarMaker] maskedProfilePicture:image size:CONTACT_AVATAR_SIZE-2*CONTACT_AVATAR_PADDING]];
+        } else {
+            [_participantAvatars addObject:[[AvatarMaker sharedAvatarMaker] avatarForContact:nil size:CONTACT_AVATAR_SIZE-2*CONTACT_AVATAR_PADDING masked:YES]];
+        }
     }
         
-    for (Contact *contact in _ballot.participants) {
+    for (Contact *contact in _ballot.voters) {
         [_participantIds addObject:contact.identity];
         [_participantNames addObject:contact.displayName];
         [_participantAvatars addObject:[[AvatarMaker sharedAvatarMaker] avatarForContact:contact size:CONTACT_AVATAR_SIZE-2*CONTACT_AVATAR_PADDING masked:YES]];
     }
 }
+
+- (NSString*)createNotVotedString {
+    _notParticipantNames = [NSMutableArray array];
+    
+    if (!_ballot.localIdentityDidVote){
+        [_notParticipantNames addObject: [BundleUtil localizedStringForKey:@"me"]];
+    }
+    for (Contact *contact in _ballot.nonVoters) {
+        [_notParticipantNames addObject:contact.displayName];
+    }
+    
+    return [NSString stringWithFormat:@"%@\n%@", NSLocalizedStringFromTable(@"ballot_not_voted", @"Ballot", nil), [_notParticipantNames componentsJoinedByString:@", "]];
+}
+
 
 #pragma mark - touch handling
 

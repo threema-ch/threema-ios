@@ -46,6 +46,7 @@
 "ballot_got_votes_count" = "Recebeu %1$i de %2$i votos.";
 "ballot_vote_ballot_closed_title" = "Desculpe, tarde demais.";
 "ballot_vote_ballot_closed_message" = "A enquete foi encerrada no ínterim.";
+"ballot_not_voted" = "Estes participantes não votaram:";
 
 "ballot_open_ballots" = "Enquetes abertas";
 "ballot_closed_ballots" = "Enquetes encerradas";

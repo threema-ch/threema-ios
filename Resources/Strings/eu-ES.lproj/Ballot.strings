@@ -46,6 +46,7 @@
 "ballot_got_votes_count" = " %1$i bototik %2$i jaso dira.";
 "ballot_vote_ballot_closed_title" = "Barkatu, beranduegi";
 "ballot_vote_ballot_closed_message" = "Bitartean, inkesta itxita egon da.";
+"ballot_not_voted" = "These participants did not vote:";
 
 "ballot_open_ballots" = "Inkesta irekiak";
 "ballot_closed_ballots" = "Inkesta itxiak";

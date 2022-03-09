@@ -111,6 +111,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 
 @implementation AppDelegate  {
     NSDictionary *launchOptions;
+    StoreRequiresMigration requiresMigration;
     BOOL migrating;
     BOOL databaseImported;
     NSURL *pendingUrl;
@@ -223,10 +224,10 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     
     // if database must migrate and app runs in background (e.g of push request), show local notification to start app in foreground
     DatabaseManager *dbManager = [DatabaseManager dbManager];
-    if (([dbManager storeRequiresImport] || [dbManager storeRequiresMigration]) && [self isAppInBackground]) {
+    requiresMigration = [dbManager storeRequiresMigration];
+    if (([dbManager storeRequiresImport] || requiresMigration == RequiresMigration) && [self isAppInBackground]) {
         [NotificationManager showNoAccessToDatabaseNotification];
-        sleep(2);
-        exit(EXIT_SUCCESS);
+        return NO;
     }
     
     if ([dbManager storeRequiresImport]) {
@@ -235,10 +236,14 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
         
         [self performSelectorOnMainThread:@selector(launchImportDatabase) withObject:nil waitUntilDone:NO];
     } else {
-        if ([dbManager storeRequiresMigration]) {
+        if (requiresMigration == RequiresMigrationError) {
+            [Utils sendErrorLocalNotification:[BundleUtil localizedStringForKey:@"error_message_requires_migration_error_title"] body:[BundleUtil localizedStringForKey:@"error_message_requires_migration_error_description"] userInfo:@{@"threema": @{@"cmd": @"error", @"error": @"migration"}}];
+            return NO;
+        }
+        else if (requiresMigration == RequiresMigration) {
             DDLogVerbose(@"Store requires migration");
             migrating = YES;
-
+            
             /* run phase 2 (which involves migration) separately to avoid getting killed with "failed to launch in time" */
             [self performSelectorOnMainThread:@selector(launchPhase2) withObject:nil waitUntilDone:NO];
         } else {
@@ -329,7 +334,10 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
             });
         } else {
             dispatch_async(dispatch_get_main_queue(), ^{
-                if ([[DatabaseManager dbManager] storeRequiresMigration]) {
+                if (requiresMigration == RequiresMigrationError) {
+                    [Utils sendErrorLocalNotification:[BundleUtil localizedStringForKey:@"error_message_requires_migration_error_title"] body:[BundleUtil localizedStringForKey:@"error_message_requires_migration_error_description"] userInfo:nil];
+                }
+                else if (requiresMigration == RequiresMigration) {
                     DDLogVerbose(@"Store requires migration");
                     databaseImported = YES;
                     /* run phase 2 (which involves migration) separately to avoid getting killed with "failed to launch in time" */
@@ -1285,6 +1293,28 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 
 #pragma mark - Push notifications
 
+/**
+ Is not allowed when could not evaluate requiers DB migration or DB migration is running or App setup is not finished yet.
+ @param doBeforExit: Will be running before possible exit
+ */
+- (BOOL)isHandleNotificationAllowed:(void(^ _Nullable)(void))doBeforeExit {
+    AppSetupState *appSetupState = [[AppSetupState alloc] initWithMyIdentityStore:[MyIdentityStore sharedMyIdentityStore]];
+    if (migrating || ![appSetupState isAppSetupCompleted]) {
+        return NO;
+    }
+    else {
+        if (requiresMigration == RequiresMigrationError) {
+            DDLogError(@"Exit App because could not evaluate requiering DB migration");
+            if (doBeforeExit != nil) {
+                doBeforeExit();
+            }
+            exit(0);
+            return NO;
+        }
+    }
+    return YES;
+}
+
 - (void)application:(UIApplication *)application didFailToRegisterForRemoteNotificationsWithError:(NSError *)error {
     DDLogWarn(@"Push registration failed: %@", error);
 }
@@ -1294,24 +1324,23 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 }
 
 - (void)userNotificationCenter:(UNUserNotificationCenter *)center willPresentNotification:(UNNotification *)notification withCompletionHandler:(void (^)(UNNotificationPresentationOptions options))completionHandler {
-    [self handleRemoteNotification:notification.request.content.userInfo receivedWhileRunning:true notification:notification];
+    if ([self isHandleNotificationAllowed:^{
+        completionHandler(UNNotificationPresentationOptionAlert|UNNotificationPresentationOptionBadge|UNNotificationPresentationOptionSound);
+    }] == YES) {
+        NSDictionary *userInfo = notification.request.content.userInfo;
+        [self handleRemoteNotification:userInfo receivedWhileRunning:true notification:notification];
+    }
 }
 
 - (void)userNotificationCenter:(UNUserNotificationCenter *)center didReceiveNotificationResponse:(UNNotificationResponse *)response withCompletionHandler:(void (^)(void))completionHandler {
-    // Decrypt Threema payload if necessary
-    NotificationResponse *notificationResponse = [[NotificationResponse alloc] initWithResponse:response completion:completionHandler];
-    [notificationResponse handleNotificationResponse];
+    if ([self isHandleNotificationAllowed:nil] == YES) {
+        // Decrypt Threema payload if necessary
+        NotificationResponse *notificationResponse = [[NotificationResponse alloc] initWithResponse:response completion:completionHandler];
+        [notificationResponse handleNotificationResponse];
+    }
 }
 
 - (void)handleRemoteNotification:(NSDictionary*)userInfo receivedWhileRunning:(BOOL)receivedWhileRunning notification:(UNNotification *)notification {
-    DDLogVerbose(@"Remote notification: %@, while running: %d", userInfo, receivedWhileRunning);
-    
-    AppSetupState *appSetupState = [[AppSetupState alloc] initWithMyIdentityStore:[MyIdentityStore sharedMyIdentityStore]];
-    
-    if (migrating || ![appSetupState isAppSetupCompleted]) {
-        return;
-    }
-
     EntityManager *entityManager = [[EntityManager alloc] init];
     if (!receivedWhileRunning) {
         NSDictionary *threemaDict = [userInfo objectForKey:@"threema"];
@@ -1609,6 +1638,12 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 }
 
 - (void)handlePushPayload:(PKPushPayload*)payload withCompletionHandler:(nonnull void (^)(void))completion {
+    AppSetupState *appSetupState = [[AppSetupState alloc] initWithMyIdentityStore:[MyIdentityStore sharedMyIdentityStore]];
+    if (migrating || ![appSetupState isAppSetupCompleted] || requiresMigration != RequiresMigrationNone) {
+        completion();
+        return;
+    }
+    
     [[ValidationLogger sharedValidationLogger] logString:[NSString stringWithFormat:@"didReceiveIncomingPushWithPayload: %@", payload.dictionaryPayload]];
     [[BackgroundTaskManager shared] newBackgroundTaskWithKey:kAppPushBackgroundTask timeout:kAppPushBackgroundTaskTime completionHandler:^{
         [AppGroup setActive:NO forType:AppGroupTypeShareExtension];

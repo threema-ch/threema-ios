@@ -50,7 +50,6 @@
 }
 
 + (BoxBallotCreateMessage *)encodeCreateMessageForBallot:(Ballot *)ballot {
-    
     NSData *jsonData = [self jsonCreateDataFor:ballot];
     
     BoxBallotCreateMessage *boxMessage = [[BoxBallotCreateMessage alloc] init];
@@ -70,6 +69,8 @@
     [dictionary setObject:ballot.state forKey:JSON_KEY_STATE];
     [dictionary setObject:ballot.assessmentType forKey:JSON_KEY_ASSESSMENT_TYPE];
     [dictionary setObject:ballot.choicesType forKey:JSON_KEY_CHOICES_TYPE];
+    // Clients must no be able to set this other than 0, which is ListMode
+    [dictionary setObject:[[NSNumber alloc] initWithInteger: BallotDisplayModeList] forKey:JSON_KEY_DISPLAYMODE];
 
     NSArray *participantArray = nil;
     if ([ballot displayResult]) {
@@ -99,6 +100,8 @@
         [dictionary setObject:choice.id forKey:JSON_CHOICE_KEY_ID];
         [dictionary setObject:choice.name forKey:JSON_CHOICE_KEY_NAME];
         [dictionary setObject:choice.orderPosition forKey:JSON_CHOICE_KEY_ORDER_POSITION];
+        // This should always be 0, it is only be set by Broadcast
+        [dictionary setObject:@0 forKey:JSON_CHOICE_KEY_TOTALVOTES];
         
         if ([ballot displayResult]) {
             NSArray *result = [self resultForChoice:choice participants:participants];

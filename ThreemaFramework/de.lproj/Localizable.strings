@@ -49,6 +49,9 @@
 "error_message_feature_level" = "Einige Empfänger verfügen über eine Threema Version die Datei Nachrichten noch nicht unterstützt: %@";
 "error_message_none_feature_level" = "Keiner der Empfänger verfügt über eine Threema-Version, die Datei Nachrichten unterstützt: %@";
 
+"error_message_requires_migration_error_title" = "Fehler";
+"error_message_requires_migration_error_description" = "Migrationsüberprüfung fehlgeschlagen. Bitte starten Sie die App neu.";
+
 "video_too_long_title" = "Video zu lang";
 "video_too_long_message" = "Dieses Video ist zu lang um gesendet zu werden. Die maximal zulässige Länge ist %.0f Minuten.";
 

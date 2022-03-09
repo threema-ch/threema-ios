@@ -49,6 +49,9 @@
 "error_message_feature_level" = "Algunos destinatarios tienen instalada una versión de la aplicación que aún no admite mensajes con archivos: %@";
 "error_message_none_feature_level" = "Ninguno de los destinatarios tiene instalada una versión de la aplicación que admita mensajes con archivos: %@";
 
+"error_message_requires_migration_error_title" = "Error";
+"error_message_requires_migration_error_description" = "Error de comprobación de migración. Reinicia la aplicación.";
+
 "video_too_long_title" = "El vídeo es demasiado pesado";
 "video_too_long_message" = "Este vídeo no se puede enviar porque es demasiado largo.  La duración máxima permitida es de %.0f minutos.";
 

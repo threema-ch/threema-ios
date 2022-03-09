@@ -46,6 +46,7 @@
 "ballot_got_votes_count" = "%1$i van %2$i stemmen ontvangen.";
 "ballot_vote_ballot_closed_title" = "Sorry, te laat";
 "ballot_vote_ballot_closed_message" = "De poll is ondertussen gesloten.";
+"ballot_not_voted" = "Deze deelnemers hebben niet gestemd:";
 
 "ballot_open_ballots" = "Open polls";
 "ballot_closed_ballots" = "Gesloten polls";

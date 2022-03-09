@@ -49,6 +49,9 @@
 "error_message_feature_level" = "Někteří příjemci mají verzi aplikace, která zatím neumožňuje zprávy se soubory: %@";
 "error_message_none_feature_level" = "Žádný z příjemců nemá verzi aplikace, která umožňuje zprávy se soubory: %@";
 
+"error_message_requires_migration_error_title" = "Chyba";
+"error_message_requires_migration_error_description" = "Kontrola migrace se nezdařila. Restartujte prosím aplikaci.";
+
 "video_too_long_title" = "Video je příliš dlouhé";
 "video_too_long_message" = "Toto video je příliš dlouhé k odeslání. Maximální povolená délka je %.0f minut.";
 

@@ -218,6 +218,8 @@
         message.isOwn = [NSNumber numberWithBool:outgoing];
         if (outgoing == NO) {
             message.sender = conversation.contact;
+        } else {
+            message.readDate = message.date;
         }
         
         message.sent = [NSNumber numberWithBool:YES];

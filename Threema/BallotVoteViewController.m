@@ -166,7 +166,7 @@
     }
     
     NSString *messageFormat = NSLocalizedStringFromTable(@"ballot_got_votes_count", @"Ballot", nil);
-    NSInteger countParticipants = _ballot.participantCount;
+    NSInteger countParticipants = _ballot.conversationParticipantsCount;
     NSInteger countVotes = _ballot.numberOfReceivedVotes;
     
     NSString *message = [NSString stringWithFormat:messageFormat, countVotes, countParticipants];

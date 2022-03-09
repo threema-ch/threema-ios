@@ -21,7 +21,10 @@
 #import "Ballot.h"
 #import "BallotChoice.h"
 #import "Conversation.h"
+#import "Contact.h"
 #import "MyIdentityStore.h"
+
+static NSString *fieldDisplayMode = @"displayMode";
 
 @implementation Ballot
 
@@ -41,11 +44,6 @@
 @dynamic participants;
 
 static NSArray *orderSortDescriptors;
-
-- (NSSet *)participants {
-    //ignore core data participants field, use conversation participants instead
-    return [self conversationParticipants];
-}
 
 - (NSInteger)participantCount {
     //participants only contains other contacts
@@ -71,6 +69,10 @@ static NSArray *orderSortDescriptors;
     self.modifyDate = [NSDate date];
 }
 
+- (BOOL)isClosed {
+    return self.state.intValue == kBallotStateClosed;
+}
+
 - (void)setMultipleChoice:(BOOL)multipleChoice {
     if (multipleChoice) {
         self.assessmentType = [NSNumber numberWithInt: kBallotAssessmentTypeMultiple];
@@ -79,20 +81,16 @@ static NSArray *orderSortDescriptors;
     }
 }
 
+- (BOOL)isMultipleChoice {
+    return self.assessmentType.intValue == kBallotAssessmentTypeMultiple;
+}
+
 - (void)setIntermediate:(BOOL)intermediate {
     if (intermediate) {
         self.type = [NSNumber numberWithInt: kBallotTypeIntermediate];
     } else {
         self.type = [NSNumber numberWithInt: kBallotTypeClosed];
     }
-}
-
-- (BOOL)isClosed {
-    return self.state.intValue == kBallotStateClosed;
-}
-
-- (BOOL)isMultipleChoice {
-    return self.assessmentType.intValue == kBallotAssessmentTypeMultiple;
 }
 
 - (BOOL)isIntermediate {
@@ -128,19 +126,86 @@ static NSArray *orderSortDescriptors;
     }
 }
 
-- (NSSet *)ballotParticipants {
+- (NSInteger)conversationParticipantsCount {
+    if (self.conversation) {
+        return self.conversation.participants.count + 1;
+    } else {
+        return 0;
+    }
+}
+
+- (NSInteger)numberOfReceivedVotes {
     NSMutableSet *set = [NSMutableSet set];
+    
     for (BallotChoice *choice in self.choices) {
         NSSet *participantsForChoice = [choice getAllParticipantIds];
         [set unionSet:participantsForChoice];
     }
-    
-    return set;
-}
-
-- (NSInteger)numberOfReceivedVotes {
-    NSSet *set = [self ballotParticipants];
-    
     return [set count];
 }
+
+- (BOOL)localIdentityDidVote {
+    NSMutableSet *idSet = [NSMutableSet set];
+    
+    for (BallotChoice *choice in self.choices) {
+        NSSet *participantsForChoice = [choice getAllParticipantIds];
+        [idSet unionSet:participantsForChoice];
+    }
+    return [idSet containsObject: [MyIdentityStore sharedMyIdentityStore].identity];
+}
+
+/// Returns set of contacts that did vote, does not include local user
+- (NSSet *)voters {
+    NSMutableSet *idSet = [NSMutableSet set];
+    NSMutableSet *contactSet = [NSMutableSet set];
+    
+    for (BallotChoice *choice in self.choices) {
+        NSSet *participantsForChoice = [choice getAllParticipantIds];
+        [idSet unionSet:participantsForChoice];
+    }
+    for (Contact *contact in self.conversation.participants) {
+        if([idSet containsObject: contact.identity]) {
+            [contactSet addObject:contact];
+        }
+    }
+    
+    return contactSet;
+}
+
+/// Returns set of contacts that did not vote, does not include local user
+- (NSSet *)nonVoters {
+    NSMutableSet *idSet = [NSMutableSet set];
+    NSMutableSet *contactSet = [NSMutableSet set];
+
+    for (BallotChoice *choice in self.choices) {
+        NSSet *participantsForChoice = [choice getAllParticipantIds];
+        [idSet unionSet:participantsForChoice];
+    }
+    for (Contact* contact in self.conversation.participants) {
+        if(![idSet containsObject:contact.identity]) {
+            [contactSet addObject:contact];
+        }
+    }
+    
+    return contactSet;
+}
+
+- (BallotDisplayMode)ballotDisplayMode {
+    if ([self valueForKey:fieldDisplayMode] != nil) {
+        switch ([[self valueForKey:fieldDisplayMode] intValue]) {
+            case BallotDisplayModeSummary:
+                return BallotDisplayModeSummary;
+            default:
+                return BallotDisplayModeList;
+        }
+    }
+    return BallotDisplayModeList;
+}
+
+- (void)setBallotDisplayMode:(BallotDisplayMode)ballotDisplayMode {
+    [self willChangeValueForKey:fieldDisplayMode];
+    [self setPrimitiveValue:[NSNumber numberWithInt:(int)ballotDisplayMode] forKey:fieldDisplayMode];
+    [self didChangeValueForKey:fieldDisplayMode];
+}
+
 @end

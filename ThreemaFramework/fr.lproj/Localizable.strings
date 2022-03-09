@@ -49,6 +49,9 @@
 "error_message_feature_level" = "Certains destinataires ont une version de l'application qui ne prend pas encore en charge les messages contenant des fichiers : %@";
 "error_message_none_feature_level" = "Aucun des destinataires n'a une version de l'application qui prend en charge les messages contenant des fichiers : %@";
 
+"error_message_requires_migration_error_title" = "Erreur";
+"error_message_requires_migration_error_description" = "Échec de vérification de migration. Veuillez redémarrer l’application.";
+
 "video_too_long_title" = "Vidéo trop longue";
 "video_too_long_message" = "Cette vidéo est trop longue pour être envoyée. La longueur maximale autorisée est de %.0f minutes.";
 

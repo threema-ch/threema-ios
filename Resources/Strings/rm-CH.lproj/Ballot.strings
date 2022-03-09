@@ -46,6 +46,7 @@
 "ballot_got_votes_count" = "Survegnì %1$i da %2$i vuschs.";
 "ballot_vote_ballot_closed_title" = "Memia tard, donn!";
 "ballot_vote_ballot_closed_message" = "La retschertga è gist vegnida terminada.";
+"ballot_not_voted" = "Quests participants n'han betg vuschà:";
 
 "ballot_open_ballots" = "Enquistas avertas";
 "ballot_closed_ballots" = "Enquistas terminadas";

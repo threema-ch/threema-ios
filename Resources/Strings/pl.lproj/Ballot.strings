@@ -46,6 +46,7 @@
 "ballot_got_votes_count" = "Otrzymano %1$i z %2$i głosów.";
 "ballot_vote_ballot_closed_title" = "Niestety, za późno";
 "ballot_vote_ballot_closed_message" = "W międzyczasie ankieta została zamknięta.";
+"ballot_not_voted" = "Ci uczestnicy nie głosowali:";
 
 "ballot_open_ballots" = "Otwarte ankiety";
 "ballot_closed_ballots" = "Zamknięte ankiety";

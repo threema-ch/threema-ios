@@ -72,19 +72,18 @@ static const DDLogLevel ddLogLevel = DDLogLevelVerbose;
     if (resetDevice) {
         DDLogInfo(@"ScreenshotJsonImporter: resetting device");
         [[MyIdentityStore sharedMyIdentityStore] destroy];
-        
         if ([LicenseStore requiresLicenseKey]) {
             [[LicenseStore sharedLicenseStore] deleteLicense];
         }
     }
     
     NSString *srcroot = [[[NSProcessInfo processInfo] environment] objectForKey:@"SRCROOT"];
-    NSString *screenshotProject = [NSString stringWithFormat:@"screenshot/%@", [LicenseStore requiresLicenseKey] ? @"dataWork" : @"data"];
-    NSURL *screenShotDataURL = [NSURL URLWithString:[srcroot stringByReplacingOccurrencesOfString:@"ios-client" withString:screenshotProject]];
+    NSString *screenshotProject = [NSString stringWithFormat:@"screenshot/chat_data/%@", [LicenseStore requiresLicenseKey] ? @"work" : @"consumer"];
+    NSURL *screenShotDataURL = [NSURL URLWithString:[srcroot stringByReplacingOccurrencesOfString:@"4.6.16" withString:screenshotProject]];
 
 //** uncomment for manual testing
-//     regionCode = @"de-DE";
-//    _language = @"de";
+//     regionCode = @"en-EN";
+//    _language = @"en";
 //**
         
     if (regionCode == nil) {

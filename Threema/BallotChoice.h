@@ -32,6 +32,7 @@
 @property (nonatomic, retain) NSNumber * orderPosition;
 @property (nonatomic, retain) Ballot *ballot;
 @property (nonatomic, retain) NSSet *result;
+@property (nonatomic, retain) NSNumber *totalVotes;
 @end
 
 @interface BallotChoice (CoreDataGeneratedAccessors)

@@ -49,6 +49,9 @@
 "error_message_feature_level" = "某些接收者的应用版本还不支持文件消息：%@";
 "error_message_none_feature_level" = "没有接收者具有支持文件消息的应用版本：%@";
 
+"error_message_requires_migration_error_title" = "错误";
+"error_message_requires_migration_error_description" = "迁移检查失败。请重启应用程序。";
+
 "video_too_long_title" = "视频太长";
 "video_too_long_message" = "此视频太长，无法发送。最大允许长度为%.0f分钟。";
 

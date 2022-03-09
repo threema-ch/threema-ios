@@ -46,6 +46,7 @@
 "ballot_got_votes_count" = "Alınan %1$i ile arasında %2$i Oy";
 "ballot_vote_ballot_closed_title" = "Üzgünüm artık çok geç.";
 "ballot_vote_ballot_closed_message" = "Anket Kapatıldı";
+"ballot_not_voted" = "Bu katılımcılar oy vermedi:";
 
 "ballot_open_ballots" = "Aktif ve Açık Anketler";
 "ballot_closed_ballots" = "Kapalı Anketler";

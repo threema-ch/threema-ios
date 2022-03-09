@@ -351,9 +351,15 @@
 }
 
 + (void)sendErrorLocalNotification:(NSString *)title body:(NSString *)body userInfo:(NSDictionary *)userInfo {
+    [self sendErrorLocalNotification:title body:body userInfo:userInfo onCompletion:nil];
+}
+
++ (void)sendErrorLocalNotification:(NSString *)title body:(NSString *)body userInfo:(NSDictionary *)userInfo onCompletion:(void(^)(void))onCompletion {
     UNMutableNotificationContent *notification = [[UNMutableNotificationContent alloc] init];
     notification.title = title;
     notification.body = body;
+    notification.badge = @1;
+
     if (userInfo != nil) {
         notification.userInfo = userInfo;
     } else {
@@ -366,6 +372,9 @@
     UNNotificationRequest *notificationRequest = [UNNotificationRequest requestWithIdentifier:notificationIdentifier content:notification trigger:nil];
     UNUserNotificationCenter *center = [UNUserNotificationCenter currentNotificationCenter];
     [center addNotificationRequest:notificationRequest withCompletionHandler:^(NSError * _Nullable error) {
+        if (onCompletion != nil) {
+            onCompletion();
+        }
     }];
 }
 

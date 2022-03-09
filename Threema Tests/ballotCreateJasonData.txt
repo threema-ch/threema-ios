@@ -1,9 +1,10 @@
 {
-"d": "Test ballot",
+"d": "Test Ballot ListMode",
 "s": 0,
 "a": 1,
 "t": 1,
 "o": 0,
+"p": ["ECHOECHO","ECHOECHO1", "ECHOECHO2"],
 "c": [
 	{
 		"i": 1,
@@ -29,6 +30,5 @@
         "o": 3,
         "r": [0,0,1]
     }
-],
-"p": ["ECHOECHO","ECHOECH1", "ECHOECH2"]
+]
 }

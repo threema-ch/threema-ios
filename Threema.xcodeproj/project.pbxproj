@@ -130,8 +130,6 @@
 		0A3864631C625A8600924A29 /* Constants.h in Headers */ = {isa = PBXBuildFile; fileRef = 0AD1CDFC19ACE2A900EA21B2 /* Constants.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		0A3864641C625A8600924A29 /* ProtocolDefines.h in Headers */ = {isa = PBXBuildFile; fileRef = 4D0EDF2916372E15000921EA /* ProtocolDefines.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		0A3864671C625C5200924A29 /* ThreemaFramework-Prefix.pch in Headers */ = {isa = PBXBuildFile; fileRef = 0A3864661C625C5200924A29 /* ThreemaFramework-Prefix.pch */; };
-		0A3864681C633C9200924A29 /* ThreemaData.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 4D086E81164468A600EC75BF /* ThreemaData.xcdatamodeld */; };
-		0A3864691C633C9800924A29 /* ThreemaData.xcmappingmodel in Sources */ = {isa = PBXBuildFile; fileRef = 4D2476461663CC22009111D3 /* ThreemaData.xcmappingmodel */; };
 		0A38646A1C633CC000924A29 /* DatabaseManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 0A58CBCD1AD5032600DB281F /* DatabaseManager.m */; };
 		0A38646B1C633CC000924A29 /* DocumentManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 0ADCEA4D1B1C5A7A006BD786 /* DocumentManager.m */; };
 		0A38646C1C633CC000924A29 /* EntityCreator.m in Sources */ = {isa = PBXBuildFile; fileRef = 0A26663219DD407C004C94F3 /* EntityCreator.m */; };
@@ -1126,6 +1124,8 @@
 		6725D93021BEA9EF0058B8C0 /* StdTypeHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6725D92F21BEA9EF0058B8C0 /* StdTypeHelper.swift */; };
 		67D692BD21B80AE3009AE6E2 /* VoIPStats.swift in Sources */ = {isa = PBXBuildFile; fileRef = 67D692BC21B80AE3009AE6E2 /* VoIPStats.swift */; };
 		7E50142F278EFAB6002AB922 /* OrphanedFilesCleanupViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DFA05332575022B0020E14F /* OrphanedFilesCleanupViewController.swift */; };
+		8099717627C68E2B005E7638 /* ThreemaData.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 8099715227C68E2A005E7638 /* ThreemaData.xcdatamodeld */; };
+		8099717727C68E2B005E7638 /* ThreemaData.xcmappingmodel in Sources */ = {isa = PBXBuildFile; fileRef = 8099717527C68E2B005E7638 /* ThreemaData.xcmappingmodel */; };
 		CE01509420A1CF5700DD72B5 /* WebClientSession.h in Headers */ = {isa = PBXBuildFile; fileRef = CE01509020A1CF5700DD72B5 /* WebClientSession.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		CE01509720A1CF5700DD72B5 /* WebClientSession.m in Sources */ = {isa = PBXBuildFile; fileRef = CE01509320A1CF5700DD72B5 /* WebClientSession.m */; };
 		CE0211771ED5B4750022D04F /* VoIPCallMessageDecoder.m in Sources */ = {isa = PBXBuildFile; fileRef = CE02116D1ED5B4750022D04F /* VoIPCallMessageDecoder.m */; };
@@ -1956,7 +1956,6 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		0A00FEC81A287A7B00DD1A57 /* ThreemaDataV20.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = ThreemaDataV20.xcdatamodel; sourceTree = "<group>"; };
 		0A00FECD1A28A1E500DD1A57 /* MessageFetcher.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MessageFetcher.h; sourceTree = "<group>"; };
 		0A00FECE1A28A1E500DD1A57 /* MessageFetcher.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MessageFetcher.m; sourceTree = "<group>"; };
 		0A03A1571CAC06FC00B4C74B /* ThreemaWork.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = ThreemaWork.xcassets; sourceTree = "<group>"; };
@@ -1966,7 +1965,6 @@
 		0A0551E819C71CA8004B4313 /* UIImage+ColoredImage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "UIImage+ColoredImage.m"; path = "../Threema/UIImage+ColoredImage.m"; sourceTree = "<group>"; };
 		0A09D5E61A9E1DE0000F922D /* RevocationKeyHandler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RevocationKeyHandler.h; sourceTree = "<group>"; };
 		0A09D5E71A9E1DE0000F922D /* RevocationKeyHandler.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RevocationKeyHandler.m; sourceTree = "<group>"; };
-		0A0B19F319D97A7D0046774F /* ThreemaDataV18.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = ThreemaDataV18.xcdatamodel; sourceTree = "<group>"; };
 		0A0C55B11A1A26820014F5E0 /* MediaBrowserVideo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MediaBrowserVideo.h; sourceTree = "<group>"; };
 		0A0C55B21A1A26820014F5E0 /* MediaBrowserVideo.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MediaBrowserVideo.m; sourceTree = "<group>"; };
 		0A0C55BD1A1A8DE00014F5E0 /* VideoCaptionView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VideoCaptionView.h; sourceTree = "<group>"; };
@@ -1985,7 +1983,6 @@
 		0A0EFBAB1A135B280041A756 /* DummyDataCreator.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DummyDataCreator.m; sourceTree = "<group>"; };
 		0A0EFBAD1A13C3E00041A756 /* ErrorHandler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ErrorHandler.h; sourceTree = "<group>"; };
 		0A0EFBAE1A13C3E00041A756 /* ErrorHandler.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; lineEnding = 0; path = ErrorHandler.m; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objc; };
-		0A0EFBB01A13FAB00041A756 /* ThreemaDataV19.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = ThreemaDataV19.xcdatamodel; sourceTree = "<group>"; };
 		0A101F4F1B6667AE00E9E30B /* ChatViewSearchHeader.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = ChatViewSearchHeader.xib; sourceTree = "<group>"; };
 		0A101F581B6669F400E9E30B /* ChatViewSearchHeader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ChatViewSearchHeader.h; sourceTree = "<group>"; };
 		0A101F591B6669F400E9E30B /* ChatViewSearchHeader.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ChatViewSearchHeader.m; sourceTree = "<group>"; };
@@ -2030,7 +2027,6 @@
 		0A2CC91E19D0566C00175DB4 /* RootSquareMean.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RootSquareMean.m; sourceTree = "<group>"; };
 		0A2FD3911A6EC7D40052D52B /* GroupMessageProcessor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GroupMessageProcessor.h; sourceTree = "<group>"; };
 		0A2FD3921A6EC7D40052D52B /* GroupMessageProcessor.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; lineEnding = 0; path = GroupMessageProcessor.m; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objc; };
-		0A2FD39D1A7693840052D52B /* ThreemaDataV21.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = ThreemaDataV21.xcdatamodel; sourceTree = "<group>"; };
 		0A2FD39E1A7694E10052D52B /* Group.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Group.h; path = Data/Group.h; sourceTree = "<group>"; };
 		0A2FD39F1A7694E10052D52B /* Group.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = Group.m; path = Data/Group.m; sourceTree = "<group>"; };
 		0A336AA01AFA4742002D9809 /* ActivityIndicatorProxy.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ActivityIndicatorProxy.h; sourceTree = "<group>"; };
@@ -2154,7 +2150,6 @@
 		0A6959561A6D0103002FF905 /* ForwardTextActivity.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ForwardTextActivity.m; sourceTree = "<group>"; };
 		0A6E626C1B25D960003DDB5A /* PinnedHTTPSURLLoader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PinnedHTTPSURLLoader.h; sourceTree = "<group>"; };
 		0A6E626D1B25D960003DDB5A /* PinnedHTTPSURLLoader.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PinnedHTTPSURLLoader.m; sourceTree = "<group>"; };
-		0A6E62901B2857A2003DDB5A /* ThreemaDataV22.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = ThreemaDataV22.xcdatamodel; sourceTree = "<group>"; };
 		0A6E62951B286BBA003DDB5A /* FileMessage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FileMessage.h; sourceTree = "<group>"; };
 		0A6E62961B286BBA003DDB5A /* FileMessage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; lineEnding = 0; path = FileMessage.m; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objc; };
 		0A6E62991B286BBB003DDB5A /* FileData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FileData.h; sourceTree = "<group>"; };
@@ -2424,7 +2419,6 @@
 		2D8BB2EC236B051D0035B2CC /* PendingMessagesManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PendingMessagesManagerTests.swift; sourceTree = "<group>"; };
 		2D8BB2EE236B08CB0035B2CC /* ValidationLoggerMock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ValidationLoggerMock.swift; sourceTree = "<group>"; };
 		2D8FDC262225832600C5EBF8 /* HttpClient.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HttpClient.swift; sourceTree = "<group>"; };
-		2DA01B5522C25928007928A9 /* ThreemaDataV26.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = ThreemaDataV26.xcdatamodel; sourceTree = "<group>"; };
 		2DA27380235EF7A800833621 /* Sentry.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Sentry.framework; path = Carthage/Build/iOS/Sentry.framework; sourceTree = "<group>"; };
 		2DA56F56211C1D6600BA3C41 /* SafeStore.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SafeStore.swift; sourceTree = "<group>"; };
 		2DA56F58211C1F0500BA3C41 /* SafeJsonParser.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SafeJsonParser.swift; sourceTree = "<group>"; };
@@ -2577,12 +2571,10 @@
 		4AED21F724D94D0700F897A6 /* PhotosRightsHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = PhotosRightsHelper.swift; path = UI/Utilities/PhotosRightsHelper.swift; sourceTree = "<group>"; };
 		4AED220324D97E3D00F897A6 /* PhotosAccessHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = PhotosAccessHelper.swift; path = UI/Utilities/PhotosAccessHelper.swift; sourceTree = "<group>"; };
 		4AFD8D4D2582671800E10841 /* PlusButtonCollectionViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlusButtonCollectionViewCell.swift; sourceTree = "<group>"; };
-		4D01EC5D16A80BE900FA3D90 /* ThreemaDataV9.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = ThreemaDataV9.xcdatamodel; sourceTree = "<group>"; };
 		4D01EC5E16A8106B00FA3D90 /* ImageMessageLoader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ImageMessageLoader.h; sourceTree = "<group>"; };
 		4D01EC5F16A8106B00FA3D90 /* ImageMessageLoader.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; lineEnding = 0; path = ImageMessageLoader.m; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objc; };
 		4D0495431632A72100A0042D /* StatusNavigationBar.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StatusNavigationBar.h; sourceTree = "<group>"; };
 		4D0495441632A72100A0042D /* StatusNavigationBar.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = StatusNavigationBar.m; sourceTree = "<group>"; };
-		4D086E82164468A600EC75BF /* ThreemaData.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = ThreemaData.xcdatamodel; sourceTree = "<group>"; };
 		4D08BF12190FB04800458BC4 /* CoreImage.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreImage.framework; path = System/Library/Frameworks/CoreImage.framework; sourceTree = SDKROOT; };
 		4D0D907119F272B500198483 /* ru */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ru; path = ru.lproj/Localizable.strings; sourceTree = "<group>"; };
 		4D0EDF161637099A000921EA /* BoxedMessage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BoxedMessage.h; sourceTree = "<group>"; };
@@ -2616,7 +2608,6 @@
 		4D1C44DC1EC072A100EDCD02 /* Nonce.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Nonce.m; sourceTree = "<group>"; };
 		4D20C7EC1CDB55E500018CAA /* BrandingUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BrandingUtils.h; path = ../Threema/BrandingUtils.h; sourceTree = "<group>"; };
 		4D20C7ED1CDB55E500018CAA /* BrandingUtils.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; lineEnding = 0; name = BrandingUtils.m; path = ../Threema/BrandingUtils.m; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objc; };
-		4D22600A16676EA5003C5691 /* ThreemaDataV4.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = ThreemaDataV4.xcdatamodel; sourceTree = "<group>"; };
 		4D22600D166775F2003C5691 /* SDNetworkActivityIndicator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SDNetworkActivityIndicator.h; sourceTree = "<group>"; };
 		4D22600E166775F2003C5691 /* SDNetworkActivityIndicator.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SDNetworkActivityIndicator.m; sourceTree = "<group>"; };
 		4D22601116677A15003C5691 /* PreviewLocationViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PreviewLocationViewController.h; sourceTree = "<group>"; };
@@ -2625,7 +2616,6 @@
 		4D22601616677EC2003C5691 /* CoreLocation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreLocation.framework; path = System/Library/Frameworks/CoreLocation.framework; sourceTree = SDKROOT; };
 		4D22601B16678BBE003C5691 /* BoxLocationMessage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BoxLocationMessage.h; sourceTree = "<group>"; };
 		4D22601C16678BBE003C5691 /* BoxLocationMessage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BoxLocationMessage.m; sourceTree = "<group>"; };
-		4D22601E16678C8E003C5691 /* ThreemaDataV5.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = ThreemaDataV5.xcdatamodel; sourceTree = "<group>"; };
 		4D22601F16678CC2003C5691 /* LocationMessage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = LocationMessage.h; path = Data/LocationMessage.h; sourceTree = "<group>"; };
 		4D22602016678CC2003C5691 /* LocationMessage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = LocationMessage.m; path = Data/LocationMessage.m; sourceTree = "<group>"; };
 		4D226022166790DE003C5691 /* ChatLocationMessageCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ChatLocationMessageCell.h; sourceTree = "<group>"; };
@@ -2646,9 +2636,6 @@
 		4D237C9017B3C56D0058AB05 /* SSLCAHelper.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; lineEnding = 0; name = SSLCAHelper.m; path = ../Threema/SSLCAHelper.m; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objc; };
 		4D237C9217B3C76C0058AB05 /* HTTPSURLLoader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = HTTPSURLLoader.h; path = ../Threema/HTTPSURLLoader.h; sourceTree = "<group>"; };
 		4D237C9317B3C76C0058AB05 /* HTTPSURLLoader.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; lineEnding = 0; name = HTTPSURLLoader.m; path = ../Threema/HTTPSURLLoader.m; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objc; };
-		4D2476451663CB8F009111D3 /* ThreemaDataV2.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = ThreemaDataV2.xcdatamodel; sourceTree = "<group>"; };
-		4D2476461663CC22009111D3 /* ThreemaData.xcmappingmodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcmappingmodel; path = ThreemaData.xcmappingmodel; sourceTree = SOURCE_ROOT; };
-		4D25744A166A26D100E5E36C /* ThreemaDataV6.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = ThreemaDataV6.xcdatamodel; sourceTree = "<group>"; };
 		4D290971164187E400364E22 /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		4D290973164187ED00364E22 /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
 		4D290975164187F200364E22 /* CoreVideo.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreVideo.framework; path = System/Library/Frameworks/CoreVideo.framework; sourceTree = SDKROOT; };
@@ -2661,7 +2648,6 @@
 		4D2C881916A2F05D00C6C4FC /* EditContactViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EditContactViewController.m; sourceTree = "<group>"; };
 		4D2F44DA1A2CC1FD0059882F /* BlobUtil.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BlobUtil.h; path = ../Threema/BlobUtil.h; sourceTree = "<group>"; };
 		4D2F44DB1A2CC1FD0059882F /* BlobUtil.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = BlobUtil.m; path = ../Threema/BlobUtil.m; sourceTree = "<group>"; };
-		4D342ABB173D1C0000B3239D /* ThreemaDataV10.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = ThreemaDataV10.xcdatamodel; sourceTree = "<group>"; };
 		4D353F601666B398002DD0E0 /* PrivacySettingsViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PrivacySettingsViewController.h; sourceTree = "<group>"; };
 		4D353F611666B398002DD0E0 /* PrivacySettingsViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PrivacySettingsViewController.m; sourceTree = "<group>"; };
 		4D37D1C7193F67E40094682B /* PointOfInterest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PointOfInterest.h; sourceTree = "<group>"; };
@@ -2695,10 +2681,8 @@
 		4D4B10EF17A43574003CCA1C /* GroupLocationMessage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GroupLocationMessage.h; sourceTree = "<group>"; };
 		4D4B10F017A43575003CCA1C /* GroupLocationMessage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GroupLocationMessage.m; sourceTree = "<group>"; };
 		4D4C03C622524E0100106108 /* Punycode.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Punycode.framework; path = Carthage/Build/iOS/Punycode.framework; sourceTree = "<group>"; };
-		4D4C546A1806988100D904AA /* ThreemaDataV13.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = ThreemaDataV13.xcdatamodel; sourceTree = "<group>"; };
 		4D4C546D1806990400D904AA /* SystemMessage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SystemMessage.h; path = Data/SystemMessage.h; sourceTree = "<group>"; };
 		4D4C546E1806990400D904AA /* SystemMessage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = SystemMessage.m; path = Data/SystemMessage.m; sourceTree = "<group>"; };
-		4D4CFC96191BAE6B006264BE /* ThreemaDataV15.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = ThreemaDataV15.xcdatamodel; sourceTree = "<group>"; };
 		4D4CFC9D191BAFCD006264BE /* GroupRequestSyncMessage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GroupRequestSyncMessage.h; sourceTree = "<group>"; };
 		4D4CFC9E191BAFCD006264BE /* GroupRequestSyncMessage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GroupRequestSyncMessage.m; sourceTree = "<group>"; };
 		4D5040B218F7DD58006DBFCC /* QRScannerViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = QRScannerViewController.h; sourceTree = "<group>"; };
@@ -2764,7 +2748,6 @@
 		4D701C7C163AD878007500E2 /* ServerAPIConnector.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; lineEnding = 0; name = ServerAPIConnector.m; path = ../Threema/ServerAPIConnector.m; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objc; };
 		4D70B3A419348247003FA7F0 /* NewMessageToaster.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NewMessageToaster.h; sourceTree = "<group>"; };
 		4D70B3A519348247003FA7F0 /* NewMessageToaster.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; lineEnding = 0; path = NewMessageToaster.m; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objc; };
-		4D70B4211934B67E003FA7F0 /* ThreemaDataV17.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = ThreemaDataV17.xcdatamodel; sourceTree = "<group>"; };
 		4D70B4291934B6D4003FA7F0 /* AudioMessage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AudioMessage.h; path = Data/AudioMessage.h; sourceTree = "<group>"; };
 		4D70B42A1934B6D4003FA7F0 /* AudioMessage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = AudioMessage.m; path = Data/AudioMessage.m; sourceTree = "<group>"; };
 		4D70B42C1934B6D5003FA7F0 /* AudioData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AudioData.h; path = Data/AudioData.h; sourceTree = "<group>"; };
@@ -2794,7 +2777,6 @@
 		4D776C79166D0B0F007A4C32 /* NSData+Base32.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "NSData+Base32.m"; path = "../Vendor/NSData+Base32/NSData+Base32.m"; sourceTree = "<group>"; };
 		4D776C7B166D0BFD007A4C32 /* BackupIdentityViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BackupIdentityViewController.h; sourceTree = "<group>"; };
 		4D776C7C166D0BFD007A4C32 /* BackupIdentityViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BackupIdentityViewController.m; sourceTree = "<group>"; };
-		4D78718817FEF33B0099075C /* ThreemaDataV12.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = ThreemaDataV12.xcdatamodel; sourceTree = "<group>"; };
 		4D78718B17FEF5FC0099075C /* GroupSetPhotoMessage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GroupSetPhotoMessage.h; sourceTree = "<group>"; };
 		4D78718C17FEF5FC0099075C /* GroupSetPhotoMessage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GroupSetPhotoMessage.m; sourceTree = "<group>"; };
 		4D78718E17FEF7DF0099075C /* ContactGroupPhotoLoader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ContactGroupPhotoLoader.h; sourceTree = "<group>"; };
@@ -2807,7 +2789,6 @@
 		4D7B442416641198003D6F73 /* BoxImageMessage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BoxImageMessage.m; sourceTree = "<group>"; };
 		4D7C73B21A16BCC900C6C574 /* SZTextView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SZTextView.h; sourceTree = "<group>"; };
 		4D7C73B31A16BCC900C6C574 /* SZTextView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SZTextView.m; sourceTree = "<group>"; };
-		4D7EF7421923B5F000286B48 /* ThreemaDataV16.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = ThreemaDataV16.xcdatamodel; sourceTree = "<group>"; };
 		4D7EF74A1923B65C00286B48 /* LastGroupSyncRequest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = LastGroupSyncRequest.h; path = Data/LastGroupSyncRequest.h; sourceTree = "<group>"; };
 		4D7EF74B1923B65C00286B48 /* LastGroupSyncRequest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = LastGroupSyncRequest.m; path = Data/LastGroupSyncRequest.m; sourceTree = "<group>"; };
 		4D7F81E31702305B00070F63 /* ScanBackupController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ScanBackupController.h; sourceTree = "<group>"; };
@@ -2818,7 +2799,6 @@
 		4D80F38B17A279EC00174711 /* GroupMemberCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GroupMemberCell.m; sourceTree = "<group>"; };
 		4D80F39617A2C85F00174711 /* GroupRenameMessage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GroupRenameMessage.h; sourceTree = "<group>"; };
 		4D80F39717A2C86000174711 /* GroupRenameMessage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GroupRenameMessage.m; sourceTree = "<group>"; };
-		4D82F245183B703D00987EEE /* ThreemaDataV14.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = ThreemaDataV14.xcdatamodel; sourceTree = "<group>"; };
 		4D851B5B17FF079D00AE7D4A /* GroupPhotoSender.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GroupPhotoSender.h; sourceTree = "<group>"; };
 		4D851B5C17FF079D00AE7D4A /* GroupPhotoSender.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; lineEnding = 0; path = GroupPhotoSender.m; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objc; };
 		4D8B811B18D38B4F0079014F /* MWCaptionView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MWCaptionView.h; sourceTree = "<group>"; };
@@ -2868,7 +2848,6 @@
 		4D9F2F301647C0B00030E260 /* ContactPickerViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ContactPickerViewController.m; sourceTree = "<group>"; };
 		4DA0516F166FD3D70090F24D /* InviteController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = InviteController.h; sourceTree = "<group>"; };
 		4DA05170166FD3D70090F24D /* InviteController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = InviteController.m; sourceTree = "<group>"; };
-		4DA202191677FD34007FEEB6 /* ThreemaDataV7.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = ThreemaDataV7.xcdatamodel; sourceTree = "<group>"; };
 		4DA38C86178AF5D100937DD7 /* Social.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Social.framework; path = System/Library/Frameworks/Social.framework; sourceTree = SDKROOT; };
 		4DA592841666846300DCF674 /* PreviewImageViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PreviewImageViewController.h; sourceTree = "<group>"; };
 		4DA592851666846300DCF674 /* PreviewImageViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PreviewImageViewController.m; sourceTree = "<group>"; };
@@ -2933,7 +2912,6 @@
 		4DC16F26168CCCC300AD243E /* PortraitNavigationController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PortraitNavigationController.m; sourceTree = "<group>"; };
 		4DC1D6841D77080A0080A60D /* WorkDataFetcher.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WorkDataFetcher.h; sourceTree = "<group>"; };
 		4DC1D6851D77080A0080A60D /* WorkDataFetcher.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WorkDataFetcher.m; sourceTree = "<group>"; };
-		4DC2A65417A143D700A5CD27 /* ThreemaDataV11.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = ThreemaDataV11.xcdatamodel; sourceTree = "<group>"; };
 		4DC2A65A17A1459E00A5CD27 /* GroupCreateMessage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GroupCreateMessage.h; sourceTree = "<group>"; };
 		4DC2A65B17A1459F00A5CD27 /* GroupCreateMessage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GroupCreateMessage.m; sourceTree = "<group>"; };
 		4DC2A65D17A1467900A5CD27 /* GroupTextMessage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GroupTextMessage.h; sourceTree = "<group>"; };
@@ -3038,7 +3016,6 @@
 		4DD3186D1829AB35000D3933 /* DACircularProgressView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DACircularProgressView.h; sourceTree = "<group>"; };
 		4DD3186E1829AB35000D3933 /* DACircularProgressView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DACircularProgressView.m; sourceTree = "<group>"; };
 		4DD318841829AE3A000D3933 /* AssetsLibrary.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AssetsLibrary.framework; path = System/Library/Frameworks/AssetsLibrary.framework; sourceTree = SDKROOT; };
-		4DD5511D1689CA2F00B19DF8 /* ThreemaDataV8.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = ThreemaDataV8.xcdatamodel; sourceTree = "<group>"; };
 		4DD5511E1689CA9A00B19DF8 /* VideoMessage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = VideoMessage.h; path = Data/VideoMessage.h; sourceTree = "<group>"; };
 		4DD5511F1689CA9A00B19DF8 /* VideoMessage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = VideoMessage.m; path = Data/VideoMessage.m; sourceTree = "<group>"; };
 		4DD551211689CA9B00B19DF8 /* VideoData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = VideoData.h; path = Data/VideoData.h; sourceTree = "<group>"; };
@@ -3067,7 +3044,6 @@
 		4DE709751641593600BF99BE /* MessageProcessor.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; lineEnding = 0; path = MessageProcessor.m; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objc; };
 		4DE93EC41664EE0B00954B1D /* ImageData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ImageData.h; path = Data/ImageData.h; sourceTree = "<group>"; };
 		4DE93EC51664EE0B00954B1D /* ImageData.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = ImageData.m; path = Data/ImageData.m; sourceTree = "<group>"; };
-		4DE93EC71664F12D00954B1D /* ThreemaDataV3.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = ThreemaDataV3.xcdatamodel; sourceTree = "<group>"; };
 		4DE93F01166507BA00954B1D /* ImageSizeViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ImageSizeViewController.h; sourceTree = "<group>"; };
 		4DE93F02166507BA00954B1D /* ImageSizeViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ImageSizeViewController.m; sourceTree = "<group>"; };
 		4DEB53D016A96F220024E6DE /* drum.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = drum.caf; sourceTree = "<group>"; };
@@ -3112,6 +3088,40 @@
 		4DFF8E5A193340D300F2CF0D /* SVProgressHUD.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SVProgressHUD.m; sourceTree = "<group>"; };
 		6725D92F21BEA9EF0058B8C0 /* StdTypeHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StdTypeHelper.swift; sourceTree = "<group>"; };
 		67D692BC21B80AE3009AE6E2 /* VoIPStats.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoIPStats.swift; sourceTree = "<group>"; };
+		8099715327C68E2A005E7638 /* ThreemaDataV15.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = ThreemaDataV15.xcdatamodel; sourceTree = "<group>"; };
+		8099715427C68E2A005E7638 /* ThreemaDataV7.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = ThreemaDataV7.xcdatamodel; sourceTree = "<group>"; };
+		8099715527C68E2A005E7638 /* ThreemaDataV27.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = ThreemaDataV27.xcdatamodel; sourceTree = "<group>"; };
+		8099715627C68E2A005E7638 /* ThreemaDataV32.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = ThreemaDataV32.xcdatamodel; sourceTree = "<group>"; };
+		8099715727C68E2A005E7638 /* ThreemaDataV19.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = ThreemaDataV19.xcdatamodel; sourceTree = "<group>"; };
+		8099715827C68E2A005E7638 /* ThreemaData.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = ThreemaData.xcdatamodel; sourceTree = "<group>"; };
+		8099715927C68E2A005E7638 /* ThreemaDataV10.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = ThreemaDataV10.xcdatamodel; sourceTree = "<group>"; };
+		8099715A27C68E2A005E7638 /* ThreemaDataV22.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = ThreemaDataV22.xcdatamodel; sourceTree = "<group>"; };
+		8099715B27C68E2A005E7638 /* ThreemaDataV2.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = ThreemaDataV2.xcdatamodel; sourceTree = "<group>"; };
+		8099715C27C68E2A005E7638 /* ThreemaDataV21.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = ThreemaDataV21.xcdatamodel; sourceTree = "<group>"; };
+		8099715D27C68E2A005E7638 /* ThreemaDataV13.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = ThreemaDataV13.xcdatamodel; sourceTree = "<group>"; };
+		8099715E27C68E2A005E7638 /* ThreemaDataV8.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = ThreemaDataV8.xcdatamodel; sourceTree = "<group>"; };
+		8099715F27C68E2A005E7638 /* ThreemaDataV28.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = ThreemaDataV28.xcdatamodel; sourceTree = "<group>"; };
+		8099716027C68E2A005E7638 /* ThreemaDataV31.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = ThreemaDataV31.xcdatamodel; sourceTree = "<group>"; };
+		8099716127C68E2A005E7638 /* ThreemaDataV24.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = ThreemaDataV24.xcdatamodel; sourceTree = "<group>"; };
+		8099716227C68E2A005E7638 /* ThreemaDataV4.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = ThreemaDataV4.xcdatamodel; sourceTree = "<group>"; };
+		8099716327C68E2A005E7638 /* ThreemaDataV16.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = ThreemaDataV16.xcdatamodel; sourceTree = "<group>"; };
+		8099716427C68E2A005E7638 /* ThreemaDataV23.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = ThreemaDataV23.xcdatamodel; sourceTree = "<group>"; };
+		8099716527C68E2A005E7638 /* ThreemaDataV3.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = ThreemaDataV3.xcdatamodel; sourceTree = "<group>"; };
+		8099716627C68E2A005E7638 /* ThreemaDataV11.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = ThreemaDataV11.xcdatamodel; sourceTree = "<group>"; };
+		8099716727C68E2A005E7638 /* ThreemaDataV18.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = ThreemaDataV18.xcdatamodel; sourceTree = "<group>"; };
+		8099716827C68E2A005E7638 /* ThreemaDataV33.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = ThreemaDataV33.xcdatamodel; sourceTree = "<group>"; };
+		8099716927C68E2A005E7638 /* ThreemaDataV6.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = ThreemaDataV6.xcdatamodel; sourceTree = "<group>"; };
+		8099716A27C68E2A005E7638 /* ThreemaDataV26.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = ThreemaDataV26.xcdatamodel; sourceTree = "<group>"; };
+		8099716B27C68E2A005E7638 /* ThreemaDataV14.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = ThreemaDataV14.xcdatamodel; sourceTree = "<group>"; };
+		8099716C27C68E2A005E7638 /* ThreemaDataV17.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = ThreemaDataV17.xcdatamodel; sourceTree = "<group>"; };
+		8099716D27C68E2A005E7638 /* ThreemaDataV25.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = ThreemaDataV25.xcdatamodel; sourceTree = "<group>"; };
+		8099716E27C68E2A005E7638 /* ThreemaDataV5.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = ThreemaDataV5.xcdatamodel; sourceTree = "<group>"; };
+		8099716F27C68E2A005E7638 /* ThreemaDataV30.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = ThreemaDataV30.xcdatamodel; sourceTree = "<group>"; };
+		8099717027C68E2A005E7638 /* ThreemaDataV9.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = ThreemaDataV9.xcdatamodel; sourceTree = "<group>"; };
+		8099717127C68E2A005E7638 /* ThreemaDataV29.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = ThreemaDataV29.xcdatamodel; sourceTree = "<group>"; };
+		8099717227C68E2A005E7638 /* ThreemaDataV12.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = ThreemaDataV12.xcdatamodel; sourceTree = "<group>"; };
+		8099717327C68E2A005E7638 /* ThreemaDataV20.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = ThreemaDataV20.xcdatamodel; sourceTree = "<group>"; };
+		8099717527C68E2B005E7638 /* ThreemaData.xcmappingmodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcmappingmodel; path = ThreemaData.xcmappingmodel; sourceTree = SOURCE_ROOT; };
 		CE01509020A1CF5700DD72B5 /* WebClientSession.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = WebClientSession.h; path = ThreemaFramework/WebClientSession.h; sourceTree = SOURCE_ROOT; };
 		CE01509320A1CF5700DD72B5 /* WebClientSession.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = WebClientSession.m; path = ThreemaFramework/WebClientSession.m; sourceTree = SOURCE_ROOT; };
 		CE02116C1ED5B4750022D04F /* VoIPCallMessageDecoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VoIPCallMessageDecoder.h; sourceTree = "<group>"; };
@@ -3187,7 +3197,6 @@
 		CE1BD25425C98E760070A87A /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/Localizable.strings"; sourceTree = "<group>"; };
 		CE1C4B982056EA7300678D32 /* WebThumbnailRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebThumbnailRequest.swift; sourceTree = "<group>"; };
 		CE1C4BA32056EB1400678D32 /* WebThumbnailResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebThumbnailResponse.swift; sourceTree = "<group>"; };
-		CE222423216E2C1B00C6DFBB /* ThreemaDataV25.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = ThreemaDataV25.xcdatamodel; sourceTree = "<group>"; };
 		CE225BB521256F880075B7CC /* WebConnectionContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebConnectionContext.swift; sourceTree = "<group>"; };
 		CE225BB72126CB960075B7CC /* WebConnectionAckRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebConnectionAckRequest.swift; sourceTree = "<group>"; };
 		CE225BBB2126CC600075B7CC /* WebConnectionAckUpdateResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebConnectionAckUpdateResponse.swift; sourceTree = "<group>"; };
@@ -3256,7 +3265,6 @@
 		CE4CA9981E2629B000F3A560 /* ScreenshotsWithData.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ScreenshotsWithData.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		CE4CA99C1E2629B100F3A560 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		CE4CB4CC24AF3B8E0057954A /* VoIPCallId.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoIPCallId.swift; sourceTree = "<group>"; };
-		CE4F73D320343BC900C64484 /* ThreemaDataV24.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = ThreemaDataV24.xcdatamodel; sourceTree = "<group>"; };
 		CE5061F9244EF3DF0051DFEF /* ThreemaVideoCallQualityViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThreemaVideoCallQualityViewController.swift; sourceTree = "<group>"; };
 		CE535B9325272C0F003495D0 /* SwiftUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftUtils.swift; sourceTree = "<group>"; };
 		CE5397D51ED309DC002EB388 /* BoxVoIPCallHangupMessage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BoxVoIPCallHangupMessage.h; sourceTree = "<group>"; };
@@ -3271,7 +3279,6 @@
 		CE54E55124A1EB5A0007F2F1 /* VerificationLevelCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VerificationLevelCell.swift; sourceTree = "<group>"; };
 		CE54E55724A1F6940007F2F1 /* BlockContactCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockContactCell.swift; sourceTree = "<group>"; };
 		CE54E55A24A1FBBE0007F2F1 /* ProfilePictureRecipientCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfilePictureRecipientCell.swift; sourceTree = "<group>"; };
-		CE5635B722F86CF100DCAABF /* ThreemaDataV27.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = ThreemaDataV27.xcdatamodel; sourceTree = "<group>"; };
 		CE56491124BC573E007DEE6E /* VoIPCallIdTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoIPCallIdTests.swift; sourceTree = "<group>"; };
 		CE56496024C1DA87007DEE6E /* ContactAndWorkContactTableDataSource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ContactAndWorkContactTableDataSource.h; sourceTree = "<group>"; };
 		CE56496124C1DA87007DEE6E /* ContactAndWorkContactTableDataSource.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ContactAndWorkContactTableDataSource.m; sourceTree = "<group>"; };
@@ -3461,7 +3468,6 @@
 		CEAC91DF244DE1C60091E53D /* ThreemaCallsSettingsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThreemaCallsSettingsViewController.swift; sourceTree = "<group>"; };
 		CEAFA2161E895A7C00FF84FD /* ContactSetPhotoMessage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ContactSetPhotoMessage.h; sourceTree = "<group>"; };
 		CEAFA2171E895A7C00FF84FD /* ContactSetPhotoMessage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ContactSetPhotoMessage.m; sourceTree = "<group>"; };
-		CEAFA2241E89697900FF84FD /* ThreemaDataV23.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = ThreemaDataV23.xcdatamodel; sourceTree = "<group>"; };
 		CEAFA2291E8AAC6100FF84FD /* EditProfileViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EditProfileViewController.h; sourceTree = "<group>"; };
 		CEAFA22A1E8AAC6100FF84FD /* EditProfileViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EditProfileViewController.m; sourceTree = "<group>"; };
 		CEB044EC1EB9DB3400B06571 /* Threema-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Threema-Bridging-Header.h"; sourceTree = "<group>"; };
@@ -3566,7 +3572,6 @@
 		CEE93D8020A99247002C1304 /* RequestedThumbnail.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RequestedThumbnail.h; sourceTree = "<group>"; };
 		CEE93D8120A99247002C1304 /* RequestedThumbnail.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = RequestedThumbnail.m; sourceTree = "<group>"; };
 		CEE93D9620AB1EE8002C1304 /* ThreemaWebSettingCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThreemaWebSettingCell.swift; sourceTree = "<group>"; };
-		CEE9D84E23CF630600C15220 /* ThreemaDataV28.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = ThreemaDataV28.xcdatamodel; sourceTree = "<group>"; };
 		CEF162AF22A7B93E00885A38 /* VoIPCallKitManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoIPCallKitManager.swift; sourceTree = "<group>"; };
 		CEF3BD5B223BDBFC00898821 /* OEMentions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = OEMentions.swift; sourceTree = "<group>"; };
 		CEF464C5241FADEC00055977 /* ForwardMultipleURLActivity.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ForwardMultipleURLActivity.h; sourceTree = "<group>"; };
@@ -3626,7 +3631,6 @@
 		CEFD85A024193B3A008CB862 /* MaterialShowcaseInstructionView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MaterialShowcaseInstructionView.swift; sourceTree = "<group>"; };
 		CEFD85B0241A64EB008CB862 /* ChatContactInfoSystemMessageCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatContactInfoSystemMessageCell.swift; sourceTree = "<group>"; };
 		CEFDEB0F247C099E0058C07E /* VoIPCallSdpPatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoIPCallSdpPatcher.swift; sourceTree = "<group>"; };
-		CEFEB5DB242B56B800D094A1 /* ThreemaDataV29.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = ThreemaDataV29.xcdatamodel; sourceTree = "<group>"; };
 		CEFEB5DE242CCE6300D094A1 /* threema_incom.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = threema_incom.caf; sourceTree = "<group>"; };
 		CEFEB5E0242CCE6400D094A1 /* threema_xylo.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = threema_xylo.caf; sourceTree = "<group>"; };
 		CEFEB5E1242CCE6400D094A1 /* threema_goody.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = threema_goody.caf; sourceTree = "<group>"; };
@@ -4192,8 +4196,6 @@
 		0A58CBC51AD5030100DB281F /* DB */ = {
 			isa = PBXGroup;
 			children = (
-				4D086E81164468A600EC75BF /* ThreemaData.xcdatamodeld */,
-				4D2476461663CC22009111D3 /* ThreemaData.xcmappingmodel */,
 				4D10447E1643280D002DEF85 /* CoreData Objects */,
 				0A58CBCC1AD5032600DB281F /* DatabaseManager.h */,
 				0A58CBCD1AD5032600DB281F /* DatabaseManager.m */,
@@ -4212,6 +4214,8 @@
 				0A00FECD1A28A1E500DD1A57 /* MessageFetcher.h */,
 				0A00FECE1A28A1E500DD1A57 /* MessageFetcher.m */,
 				2D670D4222A7EA4F00C3EBBD /* EntityDestroyer.swift */,
+				8099715227C68E2A005E7638 /* ThreemaData.xcdatamodeld */,
+				8099717527C68E2B005E7638 /* ThreemaData.xcmappingmodel */,
 			);
 			name = DB;
 			path = ../Threema;
@@ -7927,7 +7931,6 @@
 				0A3863FF1C62567600924A29 /* NBPhoneNumberDefines.m in Sources */,
 				0A1D752D1C88B1F5001F903E /* FLAnimatedImageView.m in Sources */,
 				4AFD8D4E2582671800E10841 /* PlusButtonCollectionViewCell.swift in Sources */,
-				0A3864691C633C9800924A29 /* ThreemaData.xcmappingmodel in Sources */,
 				CEAFA2191E895A7C00FF84FD /* ContactSetPhotoMessage.m in Sources */,
 				0A3864B01C63439B00924A29 /* GroupFileMessage.m in Sources */,
 				0A3864061C62567600924A29 /* NBAsYouTypeFormatter.m in Sources */,
@@ -7972,6 +7975,7 @@
 				0A3864351C62571A00924A29 /* GatewayAvatarMaker.m in Sources */,
 				CEBF6E11210789AB003FC0EC /* BackgroundTaskManagerProxy.m in Sources */,
 				4A5AEEEB25237DC000B91866 /* (null) in Sources */,
+				8099717627C68E2B005E7638 /* ThreemaData.xcdatamodeld in Sources */,
 				0A3864A51C63439B00924A29 /* BoxBallotVoteMessage.m in Sources */,
 				CE42BCC620037EA6001C132F /* VoIPHelper.m in Sources */,
 				4A5FA5EE2509386100D13DD2 /* URLSenderItemCreator.swift in Sources */,
@@ -8031,7 +8035,6 @@
 				0A3864CB1C63462C00924A29 /* AppGroup.m in Sources */,
 				0A3864551C62576500924A29 /* UserSettings.m in Sources */,
 				0A3864441C62576500924A29 /* BallotManager.m in Sources */,
-				0A3864681C633C9200924A29 /* ThreemaData.xcdatamodeld in Sources */,
 				0A3864701C633CC000924A29 /* MessageFetcher.m in Sources */,
 				E182F42C24FFD0850072A8D1 /* Constants.m in Sources */,
 				0A3864821C633D0200924A29 /* TextMessage.m in Sources */,
@@ -8092,6 +8095,7 @@
 				0A3864BD1C6343BD00924A29 /* BlobUploader.m in Sources */,
 				0A3864291C62570B00924A29 /* HTTPSURLLoader.m in Sources */,
 				0A3864C61C6343BD00924A29 /* URLSenderItem.m in Sources */,
+				8099717727C68E2B005E7638 /* ThreemaData.xcmappingmodel in Sources */,
 				4A027D7225ADAA540022EBE1 /* ProgressViewHandler.swift in Sources */,
 				0A3863FA1C62565000924A29 /* KKPasscodeLock.m in Sources */,
 				0A38641C1C6256EF00924A29 /* box.c in Sources */,
@@ -10677,7 +10681,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				BUILD_NUMBER = 2685;
+				BUILD_NUMBER = 2693;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ENABLE_MODULES = NO;
 				CLANG_ENABLE_OBJC_ARC = YES;
@@ -10701,7 +10705,7 @@
 				CODE_SIGN_IDENTITY = "Apple Distribution";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "Apple Distribution";
 				COPY_PHASE_STRIP = YES;
-				COREDATA_VERSION = 29;
+				COREDATA_VERSION = 33;
 				DEFINES_MODULE = NO;
 				ENABLE_BITCODE = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -10724,7 +10728,7 @@
 				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "";
 				SDKROOT = iphoneos;
 				VALIDATE_PRODUCT = YES;
-				VERSION_NUMBER = 4.6.15;
+				VERSION_NUMBER = 4.6.16;
 			};
 			name = AppStore;
 		};
@@ -10797,7 +10801,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				BUILD_NUMBER = 2685;
+				BUILD_NUMBER = 2693;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ENABLE_MODULES = NO;
 				CLANG_ENABLE_OBJC_ARC = YES;
@@ -10821,7 +10825,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = NO;
-				COREDATA_VERSION = 29;
+				COREDATA_VERSION = 33;
 				DEFINES_MODULE = NO;
 				ENABLE_BITCODE = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -10850,7 +10854,7 @@
 				PROVISIONING_PROFILE = "";
 				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "";
 				SDKROOT = iphoneos;
-				VERSION_NUMBER = 4.6.15;
+				VERSION_NUMBER = 4.6.16;
 			};
 			name = Debug;
 		};
@@ -10858,7 +10862,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				BUILD_NUMBER = 2685;
+				BUILD_NUMBER = 2693;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ENABLE_MODULES = NO;
 				CLANG_ENABLE_OBJC_ARC = YES;
@@ -10882,7 +10886,7 @@
 				CODE_SIGN_IDENTITY = "Apple Distribution";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "Apple Distribution";
 				COPY_PHASE_STRIP = YES;
-				COREDATA_VERSION = 29;
+				COREDATA_VERSION = 33;
 				DEFINES_MODULE = NO;
 				ENABLE_BITCODE = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -10904,7 +10908,7 @@
 				PROVISIONING_PROFILE = "";
 				SDKROOT = iphoneos;
 				VALIDATE_PRODUCT = YES;
-				VERSION_NUMBER = 4.6.15;
+				VERSION_NUMBER = 4.6.16;
 			};
 			name = AdHoc;
 		};
@@ -11200,7 +11204,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				BUILD_NUMBER = 2685;
+				BUILD_NUMBER = 2693;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ENABLE_MODULES = NO;
 				CLANG_ENABLE_OBJC_ARC = YES;
@@ -11224,7 +11228,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = NO;
-				COREDATA_VERSION = 29;
+				COREDATA_VERSION = 33;
 				DEFINES_MODULE = NO;
 				ENABLE_BITCODE = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -11253,7 +11257,7 @@
 				PROVISIONING_PROFILE = "";
 				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "";
 				SDKROOT = iphoneos;
-				VERSION_NUMBER = 4.6.15;
+				VERSION_NUMBER = 4.6.16;
 			};
 			name = "Debug Sandbox";
 		};
@@ -12006,40 +12010,44 @@
 /* End XCConfigurationList section */
 
 /* Begin XCVersionGroup section */
-		4D086E81164468A600EC75BF /* ThreemaData.xcdatamodeld */ = {
+		8099715227C68E2A005E7638 /* ThreemaData.xcdatamodeld */ = {
 			isa = XCVersionGroup;
 			children = (
-				CEFEB5DB242B56B800D094A1 /* ThreemaDataV29.xcdatamodel */,
-				CEE9D84E23CF630600C15220 /* ThreemaDataV28.xcdatamodel */,
-				CE5635B722F86CF100DCAABF /* ThreemaDataV27.xcdatamodel */,
-				2DA01B5522C25928007928A9 /* ThreemaDataV26.xcdatamodel */,
-				CE222423216E2C1B00C6DFBB /* ThreemaDataV25.xcdatamodel */,
-				CE4F73D320343BC900C64484 /* ThreemaDataV24.xcdatamodel */,
-				CEAFA2241E89697900FF84FD /* ThreemaDataV23.xcdatamodel */,
-				0A6E62901B2857A2003DDB5A /* ThreemaDataV22.xcdatamodel */,
-				0A2FD39D1A7693840052D52B /* ThreemaDataV21.xcdatamodel */,
-				0A00FEC81A287A7B00DD1A57 /* ThreemaDataV20.xcdatamodel */,
-				0A0EFBB01A13FAB00041A756 /* ThreemaDataV19.xcdatamodel */,
-				0A0B19F319D97A7D0046774F /* ThreemaDataV18.xcdatamodel */,
-				4D7EF7421923B5F000286B48 /* ThreemaDataV16.xcdatamodel */,
-				4D70B4211934B67E003FA7F0 /* ThreemaDataV17.xcdatamodel */,
-				4D82F245183B703D00987EEE /* ThreemaDataV14.xcdatamodel */,
-				4D4CFC96191BAE6B006264BE /* ThreemaDataV15.xcdatamodel */,
-				4DC2A65417A143D700A5CD27 /* ThreemaDataV11.xcdatamodel */,
-				4D78718817FEF33B0099075C /* ThreemaDataV12.xcdatamodel */,
-				4D4C546A1806988100D904AA /* ThreemaDataV13.xcdatamodel */,
-				4DD5511D1689CA2F00B19DF8 /* ThreemaDataV8.xcdatamodel */,
-				4D01EC5D16A80BE900FA3D90 /* ThreemaDataV9.xcdatamodel */,
-				4D342ABB173D1C0000B3239D /* ThreemaDataV10.xcdatamodel */,
-				4D25744A166A26D100E5E36C /* ThreemaDataV6.xcdatamodel */,
-				4DA202191677FD34007FEEB6 /* ThreemaDataV7.xcdatamodel */,
-				4D22600A16676EA5003C5691 /* ThreemaDataV4.xcdatamodel */,
-				4D22601E16678C8E003C5691 /* ThreemaDataV5.xcdatamodel */,
-				4DE93EC71664F12D00954B1D /* ThreemaDataV3.xcdatamodel */,
-				4D2476451663CB8F009111D3 /* ThreemaDataV2.xcdatamodel */,
-				4D086E82164468A600EC75BF /* ThreemaData.xcdatamodel */,
+				8099715327C68E2A005E7638 /* ThreemaDataV15.xcdatamodel */,
+				8099715427C68E2A005E7638 /* ThreemaDataV7.xcdatamodel */,
+				8099715527C68E2A005E7638 /* ThreemaDataV27.xcdatamodel */,
+				8099715627C68E2A005E7638 /* ThreemaDataV32.xcdatamodel */,
+				8099715727C68E2A005E7638 /* ThreemaDataV19.xcdatamodel */,
+				8099715827C68E2A005E7638 /* ThreemaData.xcdatamodel */,
+				8099715927C68E2A005E7638 /* ThreemaDataV10.xcdatamodel */,
+				8099715A27C68E2A005E7638 /* ThreemaDataV22.xcdatamodel */,
+				8099715B27C68E2A005E7638 /* ThreemaDataV2.xcdatamodel */,
+				8099715C27C68E2A005E7638 /* ThreemaDataV21.xcdatamodel */,
+				8099715D27C68E2A005E7638 /* ThreemaDataV13.xcdatamodel */,
+				8099715E27C68E2A005E7638 /* ThreemaDataV8.xcdatamodel */,
+				8099715F27C68E2A005E7638 /* ThreemaDataV28.xcdatamodel */,
+				8099716027C68E2A005E7638 /* ThreemaDataV31.xcdatamodel */,
+				8099716127C68E2A005E7638 /* ThreemaDataV24.xcdatamodel */,
+				8099716227C68E2A005E7638 /* ThreemaDataV4.xcdatamodel */,
+				8099716327C68E2A005E7638 /* ThreemaDataV16.xcdatamodel */,
+				8099716427C68E2A005E7638 /* ThreemaDataV23.xcdatamodel */,
+				8099716527C68E2A005E7638 /* ThreemaDataV3.xcdatamodel */,
+				8099716627C68E2A005E7638 /* ThreemaDataV11.xcdatamodel */,
+				8099716727C68E2A005E7638 /* ThreemaDataV18.xcdatamodel */,
+				8099716827C68E2A005E7638 /* ThreemaDataV33.xcdatamodel */,
+				8099716927C68E2A005E7638 /* ThreemaDataV6.xcdatamodel */,
+				8099716A27C68E2A005E7638 /* ThreemaDataV26.xcdatamodel */,
+				8099716B27C68E2A005E7638 /* ThreemaDataV14.xcdatamodel */,
+				8099716C27C68E2A005E7638 /* ThreemaDataV17.xcdatamodel */,
+				8099716D27C68E2A005E7638 /* ThreemaDataV25.xcdatamodel */,
+				8099716E27C68E2A005E7638 /* ThreemaDataV5.xcdatamodel */,
+				8099716F27C68E2A005E7638 /* ThreemaDataV30.xcdatamodel */,
+				8099717027C68E2A005E7638 /* ThreemaDataV9.xcdatamodel */,
+				8099717127C68E2A005E7638 /* ThreemaDataV29.xcdatamodel */,
+				8099717227C68E2A005E7638 /* ThreemaDataV12.xcdatamodel */,
+				8099717327C68E2A005E7638 /* ThreemaDataV20.xcdatamodel */,
 			);
-			currentVersion = CEFEB5DB242B56B800D094A1 /* ThreemaDataV29.xcdatamodel */;
+			currentVersion = 8099716827C68E2A005E7638 /* ThreemaDataV33.xcdatamodel */;
 			path = ThreemaData.xcdatamodeld;
 			sourceTree = SOURCE_ROOT;
 			versionGroupType = wrapper.xcdatamodel;

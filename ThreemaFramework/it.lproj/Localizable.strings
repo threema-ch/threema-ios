@@ -49,6 +49,9 @@
 "error_message_feature_level" = "Alcuni destinatari posseggono una versione dell'app che non supporta ancora i messaggi con file: %@";
 "error_message_none_feature_level" = "Nessun destinatario possiede una versione dell'app che supporta i messaggi con file: %@";
 
+"error_message_requires_migration_error_title" = "Errore";
+"error_message_requires_migration_error_description" = "Controllo della migrazione non riuscito. Riavvia l’app.";
+
 "video_too_long_title" = "Video troppo lungo";
 "video_too_long_message" = "Questo video è troppo lungo per essere inviato. La lunghezza massima consentita è di %.0f minuti.";
 

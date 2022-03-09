@@ -266,7 +266,7 @@
         return title;
     } else {
         if (ballot.isIntermediate || ballot.isOwn) {
-            NSInteger countParticipants = ballot.participantCount;
+            NSInteger countParticipants = ballot.conversationParticipantsCount;
             NSInteger countVotes = ballot.numberOfReceivedVotes;
             
             return [NSString stringWithFormat:@"%@ %li/%li", title, (long)countVotes, (long)countParticipants];

@@ -46,6 +46,7 @@
 "ballot_got_votes_count" = "%1$i von %2$i Stimmen erhalten.";
 "ballot_vote_ballot_closed_title" = "Schade, zu spät";
 "ballot_vote_ballot_closed_message" = "Die Umfrage wurde soeben abgeschlossen.";
+"ballot_not_voted" = "Diese Teilnehmer haben nicht abgestimmt:";
 
 "ballot_open_ballots" = "Offene Umfragen";
 "ballot_closed_ballots" = "Abgeschlossene Umfragen";

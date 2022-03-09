@@ -46,6 +46,7 @@
 "ballot_got_votes_count" = "Received %1$i of %2$i votes.";
 "ballot_vote_ballot_closed_title" = "Sorry, too late";
 "ballot_vote_ballot_closed_message" = "The poll has been closed in the meantime.";
+"ballot_not_voted" = "These participants did not vote:";
 
 "ballot_open_ballots" = "Open polls";
 "ballot_closed_ballots" = "Closed polls";

@@ -280,6 +280,9 @@
         ballot.assessmentType = assessmentType;
     }
     
+    // Clients will always send DisplayListMode, SummaryMode is only for Broadcast
+    ballot.ballotDisplayMode = BallotDisplayModeList;
+    
     return ballot;
 }
 

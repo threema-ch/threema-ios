@@ -134,7 +134,7 @@ extension WCConnection {
                 }
             }
 
-            salty_log_init_callback(callback, UInt8(LEVEL_INFO))
+            salty_log_init_callback(callback, UInt8(LEVEL_WARN))
             
             if self.delegate.currentWebClientSession() == nil {
                 ValidationLogger.shared().logString("Threema Web: Can't connect to web, webClientSession is nil")

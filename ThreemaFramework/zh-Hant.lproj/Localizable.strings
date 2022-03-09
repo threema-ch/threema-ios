@@ -49,6 +49,9 @@
 "error_message_feature_level" = "某些收件者的應用程式版本還不支援檔案訊息：%@";
 "error_message_none_feature_level" = "沒有收件者具備支援檔案訊息的應用程式版本：%@";
 
+"error_message_requires_migration_error_title" = "錯誤";
+"error_message_requires_migration_error_description" = "遷移檢查失敗。請重新啟動應用程式。";
+
 "video_too_long_title" = "影片太長";
 "video_too_long_message" = "此影片太長，無法傳送。最大允許長度為%.0f分鐘。";
 

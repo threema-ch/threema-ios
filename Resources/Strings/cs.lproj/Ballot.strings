@@ -46,6 +46,7 @@
 "ballot_got_votes_count" = "Obdrženo %1$i z %2$i hlasů.";
 "ballot_vote_ballot_closed_title" = "Bohužel, už je pozdě.";
 "ballot_vote_ballot_closed_message" = "Hlasování mezitím skončilo.";
+"ballot_not_voted" = "Tito účastníci nehlasovali:";
 
 "ballot_open_ballots" = "Otevřená hlasování";
 "ballot_closed_ballots" = "Uzavřená hlasování";

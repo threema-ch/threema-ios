@@ -99,7 +99,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         DDLogError(@"Ballot decode: invalid message type");
         return nil;
     }
-
+    
     /* Create Message in DB */
     BallotMessage *message = [_entityManager.entityCreator ballotMessageFromBox:boxMessage];
     
@@ -143,12 +143,12 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         DDLogError(@"no ballot found for vote");
         return NO;
     }
-
+    
     if (ballot.isClosed) {
         DDLogError(@"ballot already closed");
         return NO;
     }
-
+    
     ballot.modifyDate = [NSDate date];
     [ballot incrementUnreadUpdateCount];
     
@@ -156,10 +156,10 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 }
 
 - (void)updateExistingBallot:(Ballot *)ballot jsonData:(NSData *)jsonData {
-    ballot.modifyDate = [NSDate date];
-    [ballot incrementUnreadUpdateCount];
-
-    [self parseJsonCreateData:jsonData forBallot:ballot];
+    if ([self parseJsonCreateData:jsonData forBallot:ballot update:true]) {
+        ballot.modifyDate = [NSDate date];
+        [ballot incrementUnreadUpdateCount];
+    }
 }
 
 - (Ballot *)createNewBallotWithId:(NSData *)ballotId creatorId:(NSString *)creatorId jsonData:(NSData *)jsonData {
@@ -168,7 +168,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     ballot.creatorId = creatorId;
     ballot.createDate = [NSDate date];
     
-    if ([self parseJsonCreateData:jsonData forBallot:ballot]) {
+    if ([self parseJsonCreateData:jsonData forBallot:ballot update:false]) {
         return ballot;
     }
     
@@ -200,7 +200,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     return YES;
 }
 
-- (BOOL)parseJsonCreateData:(NSData *)jsonData forBallot:(Ballot *)ballot {
+- (BOOL)parseJsonCreateData:(NSData *)jsonData forBallot:(Ballot *)ballot update:(BOOL)update {
     NSError *error;
     NSDictionary *json = (NSDictionary *)[NSJSONSerialization JSONObjectWithData:jsonData options:0 error:&error];
     if (json == nil) {
@@ -208,41 +208,86 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         return NO;
     }
     
-    ballot.title = [json objectForKey: JSON_KEY_TITLE];
-    ballot.type = [json objectForKey: JSON_KEY_TYPE];
-    ballot.state = [json objectForKey: JSON_KEY_STATE];
-    ballot.assessmentType = [json objectForKey: JSON_KEY_ASSESSMENT_TYPE];
-    ballot.choicesType = [json objectForKey: JSON_KEY_CHOICES_TYPE];
+    NSNumber *state = [json objectForKey: JSON_KEY_STATE];
+    NSNumber *displayMode = [json objectForKey: JSON_KEY_DISPLAYMODE];
+    
+    if (update == true) {
+        // only update the state of the ballot
+        
+        if ([ballot.state isEqualToNumber:@1]) {
+            DDLogError(@"Error can't update ballot, because ballot is already closed");
+            return NO;
+        }
+        if ([state isEqualToNumber:@1]) {
+            ballot.state = state;
+        }
+        
+    } else {
+        if ([state isEqualToNumber:@1]) {
+            DDLogError(@"Error ballot not found and state is closed");
+            return NO;
+        }
+        ballot.title = [json objectForKey: JSON_KEY_TITLE];
+        ballot.type = [json objectForKey: JSON_KEY_TYPE];
+        ballot.state = state;
+        ballot.assessmentType = [json objectForKey: JSON_KEY_ASSESSMENT_TYPE];
+        ballot.choicesType = [json objectForKey: JSON_KEY_CHOICES_TYPE];
+        
+        // Get Display-Mode, if no value is present use DisplayModeList
+        if (displayMode != NULL && [displayMode isEqualToNumber: [[NSNumber alloc] initWithInteger:BallotDisplayModeSummary]]) {
+            ballot.ballotDisplayMode = BallotDisplayModeSummary;
+        } else {
+            ballot.ballotDisplayMode = BallotDisplayModeList;
+        }
+    }
+        
+    return [self updateParticipants:ballot json:json update:update];
+}
 
+- (BOOL)updateParticipants:(Ballot *)ballot json:(NSDictionary *)json update:(BOOL)update {
     NSArray *choicesArray = [json objectForKey: JSON_KEY_CHOICES];
     NSArray *participantIds = [json objectForKey: JSON_KEY_PARTICIPANTS];
     
     NSMutableSet *choices = [NSMutableSet set];
     for (NSDictionary *choiceData in choicesArray) {
-        BallotChoice *choice = [self handleChoiceData: choiceData participantIds: participantIds forBallot: ballot];
-        
+        BallotChoice *choice = [self handleChoiceData: choiceData participantIds: participantIds forBallot: ballot update:update];
+        if (choice == nil) {
+            return false;
+        }
         [choices addObject: choice];
     }
     
     ballot.choices = choices;
-    
-    return YES;
+    return true;
 }
 
-- (BallotChoice *)handleChoiceData:(NSDictionary *)choiceData participantIds: (NSArray *) participantIds forBallot:(Ballot *)ballot {
+- (BallotChoice *)handleChoiceData:(NSDictionary *)choiceData participantIds: (NSArray *) participantIds forBallot:(Ballot *)ballot update:(BOOL)update {
     NSNumber *choiceId = [choiceData objectForKeyedSubscript: JSON_CHOICE_KEY_ID];
     
     BallotChoice *choice = [_entityManager.entityFetcher ballotChoiceForBallotId:ballot.id choiceId:choiceId];
+    
     if (choice == nil) {
-        choice = [_entityManager.entityCreator ballotChoice];
-        choice.id = [choiceData objectForKeyedSubscript: JSON_CHOICE_KEY_ID];
+        if (!update) {
+            choice = [_entityManager.entityCreator ballotChoice];
+            choice.id = [choiceData objectForKeyedSubscript: JSON_CHOICE_KEY_ID];
+        } else {
+            DDLogError(@"Invalid choice for create message: choice result array count does not match participant array count");
+            return choice;
+        }
     }
     
+    // We update choices when we receive the final result.
     choice.ballot = ballot;
     choice.name = [choiceData objectForKeyedSubscript: JSON_CHOICE_KEY_NAME];
     choice.orderPosition = [choiceData objectForKeyedSubscript: JSON_CHOICE_KEY_ORDER_POSITION];
     
     NSArray *choiceResult = [choiceData objectForKeyedSubscript: JSON_CHOICE_KEY_RESULT];
+    
+    // TotalVotes must only be present in DisplayModeSummary, also choice results must be ignored
+    if (ballot.ballotDisplayMode == BallotDisplayModeSummary) {
+        choice.totalVotes = [choiceData objectForKeyedSubscript: JSON_CHOICE_KEY_TOTALVOTES];
+        return choice;
+    }
     
     if ([choiceResult count] != [participantIds count]) {
         DDLogError(@"Invalid ballot create message: choice result array count does not match participant array count");
@@ -262,4 +307,3 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 }
 
 @end
-

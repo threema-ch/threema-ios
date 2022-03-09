@@ -46,6 +46,7 @@
 "ballot_got_votes_count" = "%1$i de %2$i votos recibidos.";
 "ballot_vote_ballot_closed_title" = "Demasiado tarde, lo sentimos";
 "ballot_vote_ballot_closed_message" = "El sondeo se ha cerrado entretanto.";
+"ballot_not_voted" = "Estos participantes no han votado:";
 
 "ballot_open_ballots" = "Sondeos abiertos";
 "ballot_closed_ballots" = "Sondeos cerrados";

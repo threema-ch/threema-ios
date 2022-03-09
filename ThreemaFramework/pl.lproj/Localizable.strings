@@ -49,6 +49,9 @@
 "error_message_feature_level" = "Niektórzy odbiorcy mają wersję aplikacji, która jeszcze nie obsługuje wiadomości w postaci plików: %@";
 "error_message_none_feature_level" = "Żaden z uczestników nie ma wersji aplikacji obsługującej ankiety: %@";
 
+"error_message_requires_migration_error_title" = "Błąd";
+"error_message_requires_migration_error_description" = "Nieudane sprawdzanie migracji. Ponownie uruchom aplikację.";
+
 "video_too_long_title" = "Wideo jest za długie";
 "video_too_long_message" = "Wideo jest zbyt długie, by go wysłać. Maksymalna dozwolona długość wynosi %.0f minut.";
 

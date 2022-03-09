@@ -49,6 +49,9 @@
 "error_message_feature_level" = "Sommige ontvangers gebruiken een versie van de app die berichten met bestanden nog niet ondersteunt: %@";
 "error_message_none_feature_level" = "Geen van de ontvangers gebruiken een versie van de app die berichten met bestanden ondersteunt: %@";
 
+"error_message_requires_migration_error_title" = "Fout";
+"error_message_requires_migration_error_description" = "Migratiecontrole mislukt. Herstart de app.";
+
 "video_too_long_title" = "Video te lang";
 "video_too_long_message" = "Deze video is te lang om te worden verstuurd. De maximum lengte is %.0f minuten.";
 

@@ -227,7 +227,8 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     requiresMigration = [dbManager storeRequiresMigration];
     if (([dbManager storeRequiresImport] || requiresMigration == RequiresMigration) && [self isAppInBackground]) {
         [NotificationManager showNoAccessToDatabaseNotification];
-        return NO;
+        sleep(2);
+        exit(EXIT_SUCCESS);
     }
     
     if ([dbManager storeRequiresImport]) {

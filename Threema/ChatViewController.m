@@ -667,6 +667,10 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         [self removeUnreadLine:YES];
     }
     
+    if (audioRecorder) {
+        [audioRecorder cancel];
+    }
+    
     [[NSNotificationCenter defaultCenter] removeObserver:self];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(refreshDirtyObjects:) name:kNotificationDBRefreshedDirtyObject object:nil];
     

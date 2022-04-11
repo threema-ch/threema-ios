@@ -30,7 +30,7 @@
 #import <UserNotifications/UserNotifications.h>
 #import "ThreemaFramework/ThreemaFramework-swift.h"
 #import "UIImage+ColoredImage.h"
-
+#import "AppGroup.h"
 #import "Utils.h"
 
 #define OVERLAY_DIAMETER 80.0
@@ -376,6 +376,16 @@
             onCompletion();
         }
     }];
+}
+
++ (void)waitForSeconds:(int)count finish:(void(^)(void))finish {
+    if (count > 0 && [AppGroup getActiveType] == AppGroupTypeApp) {
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+            [self waitForSeconds:count-1 finish:finish];
+        });
+    } else {
+        finish();
+    }
 }
 
 @end

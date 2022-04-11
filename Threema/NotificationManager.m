@@ -132,11 +132,11 @@
 - (void)handleVoIPPush:(NSDictionary *)payload withCompletionHandler:(void (^)(void))completion {
     if ([[MyIdentityStore sharedMyIdentityStore] isKeychainLocked]) {
         if (payload[@"threema"] != nil) {
-            [NotificationManager showNoAccessToDatabaseNotification];
+            [NotificationManager showNoAccessToDatabaseNotification:^{
+                    exit(0);
+            }];
         }
-        [self waitForSeconds:2 finish:^{
-            exit(0);
-        }];
+        
         // The keychain is locked; we cannot proceed. The UI will show the ProtectedDataUnavailable screen
         // at this point. To prevent this screen from appearing when the user unlocks their device after we
         // have processed the push, we exit now so that the process will restart after the device is unlocked.
@@ -281,20 +281,14 @@
     lastReceivedMessageSound = curTime;
 }
 
-- (void)waitForSeconds:(int)count finish:(void(^)(void))finish {
-    if (count > 0 && [AppGroup getActiveType] == AppGroupTypeApp) {
-        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-            [self waitForSeconds:count-1 finish:finish];
-        });
-    } else {
-        finish();
-    }
-}
-
 #pragma mark - Static functions
 
-+ (void)showNoAccessToDatabaseNotification {
-    [Utils sendErrorLocalNotification:NSLocalizedString(@"new_message_no_access_title", @"") body:NSLocalizedString(@"new_message_no_access_message", @"") userInfo:nil];
+/// Show no access to database error
+/// @param onCompletion This is called after 2 seconds to be sure the notification is fired
++ (void)showNoAccessToDatabaseNotification:(void(^)(void))onCompletion {
+    [Utils sendErrorLocalNotification:NSLocalizedString(@"new_message_no_access_title", @"") body:NSLocalizedString(@"new_message_no_access_message", @"") userInfo:nil onCompletion:^{
+        [Utils waitForSeconds:2 finish:onCompletion];
+    }];
 }
 
 /**

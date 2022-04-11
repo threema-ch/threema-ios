@@ -32,7 +32,7 @@
 
 - (void)playReceivedMessageSound;
 
-+ (void)showNoAccessToDatabaseNotification;
++ (void)showNoAccessToDatabaseNotification:(void(^)(void))onCompletion;
 
 + (void)generatePushSettingForAllGroups;
 

@@ -39,7 +39,7 @@
 
 #define X_PADDING 8.0f
 #define TOP_PADDING 0.0f
-#define BOTTOM_PADDING 8.0f
+#define BOTTOM_PADDING 150.0f
 #define MATRIX_PADDING 0.0f
 
 #define BORDER_WIDTH 1.0
@@ -83,6 +83,7 @@
 @property SlaveScrollView *contactsView;
 @property SlaveScrollView *matrixView;
 @property SlaveScrollView *totalsView;
+@property UITextView *notVotedView;
 @property UIView *totalsHeaderView;
 
 @property CGPoint beginTouchPoint;
@@ -148,6 +149,7 @@
     _contactsView.frame = newContactsRect;
     _matrixView.frame = _matrixRect;
     _totalsView.frame = [self totalsRectForSize:size];
+    _notVotedView.frame = [self textRectForSize:size];
 }
 
 - (void)adaptToInterfaceRotation {
@@ -175,8 +177,8 @@
     CGFloat width = size.width - offsetLeft - offsetRight;
     
     CGFloat contactsHeight = [self contactsHeightForSize:size];
-    CGFloat height =  TOP_PADDING + [_ballot.choices count] * _gridHeight + BOTTOM_PADDING + contactsHeight;
-    
+    CGFloat height = self.frame.size.height - TOP_PADDING - BOTTOM_PADDING - contactsHeight;
+
     return CGRectMake(offsetLeft, TOP_PADDING + contactsHeight, width, height);
 }
 
@@ -197,7 +199,8 @@
 }
 
 - (CGRect)textRectForSize:(CGSize)size {
-    return CGRectMake(X_PADDING, _matrixView.frame.size.height , self.frame.size.width, self.frame.size.height - _matrixRect.size.height);
+    CGFloat width = size.width - X_PADDING;
+    return CGRectMake(0, size.height-BOTTOM_PADDING, width, BOTTOM_PADDING);
 }
 
 - (CGFloat)sin {
@@ -267,16 +270,17 @@
     [self addSubview:_totalsView];
     
     CGRect textRect = [self textRectForSize:size];
-    UITextView *notVotedView = [[UITextView alloc] initWithFrame:textRect];
-    notVotedView.text = [self createNotVotedString];
-    notVotedView.textColor = [Colors fontLight];
-    notVotedView.backgroundColor = self.backgroundColor;
-    notVotedView.font = [UIFont preferredFontForTextStyle:UIFontTextStyleFootnote];
-    notVotedView.editable = false;
+    _notVotedView = [[UITextView alloc] initWithFrame:textRect];
+    _notVotedView.text = [self createNotVotedString];
+    _notVotedView.textColor = [Colors fontLight];
+    _notVotedView.backgroundColor = self.backgroundColor;
+    _notVotedView.font = [UIFont preferredFontForTextStyle:UIFontTextStyleFootnote];
+    _notVotedView.showsVerticalScrollIndicator = NO;
+    _notVotedView.editable = false;
     
     // Only show non-voters if there are any and DisplayMode is not Summary
     if(([_ballot.nonVoters count] != 0 || !_ballot.localIdentityDidVote) && _ballot.ballotDisplayMode != BallotDisplayModeSummary)  {
-        [self addSubview:notVotedView];
+     [self addSubview:_notVotedView];
     }
     
     [self updateLineColors];

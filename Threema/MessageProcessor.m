@@ -424,7 +424,15 @@
                     }
                 }
             }
-            [pendingMessage finishedProcessing];
+
+            // Do only show a notification, if there a group and i'm not left
+            GroupProxy *group = [GroupProxy groupProxyForConversation:conversation];
+            if (group && group.didLeaveGroup == NO) {
+                [pendingMessage finishedProcessing];
+            }
+            else {
+                [pendingMessage finishedProcessingWithRejected:YES];
+            }
             onCompletion();
             return;
         }

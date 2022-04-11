@@ -226,9 +226,11 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     DatabaseManager *dbManager = [DatabaseManager dbManager];
     requiresMigration = [dbManager storeRequiresMigration];
     if (([dbManager storeRequiresImport] || requiresMigration == RequiresMigration) && [self isAppInBackground]) {
-        [NotificationManager showNoAccessToDatabaseNotification];
-        sleep(2);
-        exit(EXIT_SUCCESS);
+        [NotificationManager showNoAccessToDatabaseNotification:^{
+            sleep(2);
+            exit(EXIT_SUCCESS);
+        }];
+        return NO;
     }
     
     if ([dbManager storeRequiresImport]) {
@@ -238,7 +240,19 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
         [self performSelectorOnMainThread:@selector(launchImportDatabase) withObject:nil waitUntilDone:NO];
     } else {
         if (requiresMigration == RequiresMigrationError) {
-            [Utils sendErrorLocalNotification:[BundleUtil localizedStringForKey:@"error_message_requires_migration_error_title"] body:[BundleUtil localizedStringForKey:@"error_message_requires_migration_error_description"] userInfo:@{@"threema": @{@"cmd": @"error", @"error": @"migration"}}];
+            /* Is protected data is not available, then we show a other notification */
+            if ([[MyIdentityStore sharedMyIdentityStore] isKeychainLocked]) {
+                [NotificationManager showNoAccessToDatabaseNotification:^{
+                    exit(EXIT_SUCCESS);
+                }];
+            } else {
+                [Utils sendErrorLocalNotification:[BundleUtil localizedStringForKey:@"error_message_requires_migration_error_title"] body:[BundleUtil localizedStringForKey:@"error_message_requires_migration_error_description"] userInfo:@{@"threema": @{@"cmd": @"error", @"error": @"migration"}} onCompletion:^{
+                    // Wait 2 seconds to be sure the notification is fired
+                    [Utils waitForSeconds:2 finish:^{
+                        exit(EXIT_SUCCESS);
+                    }];
+                }];
+            }
             return NO;
         }
         else if (requiresMigration == RequiresMigration) {

@@ -1,0 +1,46 @@
+# Excluded files
+
+## Generated files
+--exclude **/*.pb.swift # Protobuf
+--exclude **/ColorDefines.swift # Colors
+--exclude **/SnapshotHelper.swift
+
+## Vendored code
+--exclude Carthage/**
+--exclude DerivedData/**
+--exclude fastlane/**
+--exclude NaClCrypto/**
+--exclude protobuf/**
+--exclude SaltyRTC/**
+--exclude Vendor/**
+--exclude WebRTC**
+
+# Format options
+
+--elseposition next-line
+--emptybraces spaced
+--groupedextension "MARK: - %c"
+--importgrouping testable-last
+--indentstrings true
+--marktypes never
+--maxwidth 120
+--ranges no-space
+--redundanttype inferred
+--self init-only
+--semicolons never
+--stripunusedargs closure-only
+--trimwhitespace nonblank-lines
+--wraparguments before-first 
+--wrapcollections before-first
+--wrapparameters before-first
+
+# Rules
+
+--enable acronyms
+--enable blockComments
+--enable isEmpty
+--enable markTypes
+--enable wrapConditionalBodies
+
+--disable blankLinesAtStartOfScope # Waiting for https://github.com/nicklockwood/SwiftFormat/pull/806
+--disable wrapMultilineStatementBraces

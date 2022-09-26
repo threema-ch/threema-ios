@@ -44,6 +44,8 @@
 
 - (NSData*)streamXorData:(NSData*)data secretKey:(NSData*)secretKey nonce:(NSData*)nonce;
 
+- (NSData*)sharedSecretForPublicKey:(NSData*)publicKey secretKey:(NSData*)secretKey;
+
 - (NSData*)randomBytes:(int)len;
 - (NSData*)zeroBytes:(int)len;
 

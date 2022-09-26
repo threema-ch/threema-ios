@@ -11,7 +11,9 @@ import UIKit
 open class DKPopoverViewController: UIViewController {
     
     open class func popoverViewController(_ viewController: UIViewController, fromView: UIView) {
-        let window = UIApplication.shared.keyWindow!
+        /***** BEGIN THREEMA MODIFICATION: Use windows instead of keyWindow *********/
+        let window = UIApplication.shared.windows.first!
+        /***** END THREEMA MODIFICATION: Use windows instead of keyWindow *********/
         
         let popoverViewController = DKPopoverViewController()
         
@@ -23,7 +25,9 @@ open class DKPopoverViewController: UIViewController {
     }
     
     open class func dismissPopoverViewController() {
-        let window = UIApplication.shared.keyWindow!
+        /***** BEGIN THREEMA MODIFICATION: Use windows instead of keyWindow *********/
+        let window = UIApplication.shared.windows.first!
+        /***** END THREEMA MODIFICATION: Use windows instead of keyWindow *********/
 
         for vc in window.rootViewController!.children {
             if vc is DKPopoverViewController {

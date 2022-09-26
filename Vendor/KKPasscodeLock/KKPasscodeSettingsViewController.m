@@ -315,7 +315,23 @@
             
             [self presentViewController:alertController animated:YES completion:nil];
         } else {
-            [self showPasswordViewControllerWithMode:KKPasscodeModeDisabled];
+            NSString *title = KKPasscodeLockLocalizedString(@"Passcode_remove_title", @"");
+            NSString *message = KKPasscodeLockLocalizedString(@"Passcode_remove_message", @"");
+            NSString *cancel = NSLocalizedString(@"cancel", nil);
+                
+            UIAlertController *alertController = [UIAlertController alertControllerWithTitle:title message:message preferredStyle:UIAlertControllerStyleAlert];
+            UIAlertAction *cancelAction = [UIAlertAction actionWithTitle:cancel style:UIAlertActionStyleCancel handler:^(UIAlertAction *action) {
+                [self cancelAction];
+            }];
+            
+            UIAlertAction *disableAction = [UIAlertAction actionWithTitle: KKPasscodeLockLocalizedString(@"Passcode_remove_disable", @"") style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
+                [self showPasswordViewControllerWithMode:KKPasscodeModeDisabled];
+            }];
+            
+            [alertController addAction:cancelAction];
+            [alertController addAction:disableAction];
+            
+            [self presentViewController:alertController animated:YES completion:nil];
 		}
 	} else if (indexPath.section == 0 && indexPath.row == 1 && _passcodeLockOn) {
         [self showPasswordViewControllerWithMode:KKPasscodeModeChange];
@@ -381,6 +397,7 @@
 - (void)okAction {
     [self showPasswordViewControllerWithMode:KKPasscodeModeSet];
 }
+
 
 + (NSString*)textForGracePeriod:(int)gracePeriod shortForm:(BOOL)shortForm {
     if (gracePeriod == 0) {

@@ -27,7 +27,7 @@ class VideoURLSenderItemCreatorTest: XCTestCase {
     
     override func setUpWithError() throws {
         // Put setup code here. This method is called before the invocation of each test method in the class.
-        AppGroup.setGroupId("group.ch.threema") //THREEMA_GROUP_IDENTIFIER @"group.ch.threema"
+        AppGroup.setGroupID("group.ch.threema") // THREEMA_GROUP_IDENTIFIER @"group.ch.threema"
     }
     
     override func tearDownWithError() throws {
@@ -35,22 +35,22 @@ class VideoURLSenderItemCreatorTest: XCTestCase {
     }
     
     func testVideoConversion() throws {
-        let testBundle: Bundle = Bundle(for: VideoURLSenderItemCreatorTest.self)
+        let testBundle = Bundle(for: VideoURLSenderItemCreatorTest.self)
         let testVideoURL = testBundle.url(forResource: videoName, withExtension: "mp4")
         let asset = AVURLAsset(url: testVideoURL!)
         
         let senderItemCreator = VideoURLSenderItemCreator()
         let videoURL = senderItemCreator.convertVideo(asset: asset)
         
-        let expectation = self.expectation(description: "Video Conversion")
+        let expect = expectation(description: "Video Conversion")
         
-        var url : URL?
+        var url: URL?
         
         videoURL.done { vidURL in
             url = vidURL
-            expectation.fulfill()
+            expect.fulfill()
         }.catch { _ in
-            expectation.fulfill()
+            expect.fulfill()
         }
         
         waitForExpectations(timeout: 60, handler: nil)
@@ -60,16 +60,16 @@ class VideoURLSenderItemCreatorTest: XCTestCase {
     
     func testGetThumbnail() {
         
-        let testBundle: Bundle = Bundle(for: VideoURLSenderItemCreatorTest.self)
+        let testBundle = Bundle(for: VideoURLSenderItemCreatorTest.self)
         let testVideoURL = testBundle.url(forResource: videoName, withExtension: "mp4")
         let asset = AVURLAsset(url: testVideoURL!)
         
         let senderItemCreator = VideoURLSenderItemCreator()
         
-        let expectation = self.expectation(description: "Video Creation")
+        let expect = expectation(description: "Video Creation")
         
-        senderItemCreator.getThumbnail(asset: asset).done { thumbnail in
-            expectation.fulfill()
+        senderItemCreator.getThumbnail(asset: asset).done { _ in
+            expect.fulfill()
         }.catch { _ in
             XCTFail()
         }
@@ -78,7 +78,7 @@ class VideoURLSenderItemCreatorTest: XCTestCase {
     }
     
     func testGarbageURL() {
-        let urlMatrix : [String] = [
+        let urlMatrix: [String] = [
             "https://threema.ch/en",
             "file://threema.ch/en",
         ]

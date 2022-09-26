@@ -45,7 +45,9 @@
             _tapView = [[MWTapDetectingView alloc] initWithFrame:self.bounds];
             _tapView.tapDelegate = self;
             _tapView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
-            _tapView.backgroundColor = [UIColor blackColor];
+            /***** BEGIN THREEMA MODIFICATION *********/
+            _tapView.backgroundColor = [Colors backgroundView];
+            /***** BEGIN THREEMA MODIFICATION *********/
             [self addSubview:_tapView];
         }
 		

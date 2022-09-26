@@ -18,87 +18,93 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-import Foundation
-import ThreemaFramework
 import CocoaLumberjackSwift
+import Foundation
 import PromiseKit
+import ThreemaFramework
 
-class RootNavigationController : UINavigationController {
+class RootNavigationController: UINavigationController {
     
-    var recipientConversations : Set<Conversation>?
-    var passcodeVC : JKLLockScreenViewController?
-    var passcodeTryCount : Int = 0
-    var isAuthorized : Bool = false
+    var recipientConversations: Set<Conversation>?
+    var passcodeVC: JKLLockScreenViewController?
+    var passcodeTryCount = 0
+    var isAuthorized = false
     
     let itemLoader = ItemLoader()
     var itemSender = ItemSender()
     
-    
-    unowned var previewViewController : MediaPreviewViewController?
-    unowned var picker : ContactGroupPickerViewController?
-    unowned var progressViewController : ProgressViewController?
-    unowned var textPreview : TextPreviewViewController?
+    unowned var previewViewController: MediaPreviewViewController?
+    unowned var picker: ContactGroupPickerViewController?
+    unowned var progressViewController: ProgressViewController?
+    unowned var textPreview: TextPreviewViewController?
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        AppGroup.setGroupId(BundleUtil.threemaAppGroupIdentifier())
-        AppGroup.setAppId(BundleUtil.threemaAppIdentifier())
+        setAppGroup()
+        Colors.initTheme()
+        overrideUserInterfaceStyle = UserSettings.shared().darkTheme ? .dark : .light
         
-        _ = AppSetupState()
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(didBecomeActive),
+            name: UIApplication.didBecomeActiveNotification,
+            object: nil
+        )
         
-        NotificationCenter.default.addObserver(self, selector: #selector(didBecomeActive), name: UIApplication.didBecomeActiveNotification, object: nil)
-        
-        if self.extensionIsReady() {
-            self.startExtension()
+        if extensionIsReady() {
+            startExtension()
         }
     }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
-        Colors.update(self.navigationBar)
+        Colors.update(navigationBar: navigationBar)
         
-        UserSettings.resetSharedInstance()
-        
-        AppGroup.setActive(true, for: AppGroupTypeShareExtension)
+        setAppGroup()
         
         #if DEBUG
-        LogManager.initializeGlobalLogger(debug: true)
+            LogManager.initializeGlobalLogger(debug: true)
         #else
-        LogManager.initializeGlobalLogger(debug: false)
+            LogManager.initializeGlobalLogger(debug: false)
         #endif
         
-        self.recolorBarButtonItems()
-        self.navigationBar.backgroundColor = Colors.background()
+        recolorBarButtonItems()
+
+        navigationBar.backgroundColor = Colors.backgroundNavigationController
     }
     
     private func startExtension() {
-        ServerConnector.shared()?.connect()
+        ServerConnector.shared()?.connect(initiator: .shareExtension)
         
-        _ = self.loadItemsFromContext()
+        _ = loadItemsFromContext()
         
         let itemType = itemLoader.checkItemType()
         
         if itemType == .TextOnly {
             itemLoader.filterTextItems()
             let items = itemLoader.loadItems()
-            _ = itemLoader.generatePreviewText(items: items).done { (text, range) in
+            _ = itemLoader.generatePreviewText(items: items).done { text, range in
                 self.presentTextPreview()
                 self.textPreview?.previewText = text
                 self.textPreview?.selectedText = range
             }.catch { err in
-                DDLogError("Error: \(err)")
-                self.finishAndClose(success: false)
+                // iOS 12 does not allow us to detect whether we are receiving a text file or a regular
+                // string. Thus the item loader throws an error if the text turns out to be a file url.
+                if err is ItemLoader.TextFileLoaderError {
+                    self.loadMediaItems()
+                }
+                else {
+                    DDLogError("Error: \(err)")
+                    self.finishAndClose(success: false)
+                }
             }
-        } else if itemType == .Media {
-            _ = itemLoader.loadItems().done({ (items) in
-                self.presentMediaPreview(with: items as [Any])
-            }).catch { err in
-                DDLogError("Error: \(err)")
-                self.finishAndClose(success: false)
-            }
-        } else {
+        }
+        else if itemType == .Media {
+            loadMediaItems()
+        }
+        else {
             // Not allowed
             let err = "illegal item type provided"
             DDLogError(err)
@@ -106,7 +112,16 @@ class RootNavigationController : UINavigationController {
         }
     }
     
-    private func optionsEnabled(itemCount : Int, item : Any?) -> Bool {
+    private func loadMediaItems() {
+        _ = itemLoader.loadItems().done { items in
+            self.presentMediaPreview(with: items as [Any])
+        }.catch { err in
+            DDLogError("Error: \(err)")
+            self.finishAndClose(success: false)
+        }
+    }
+    
+    private func optionsEnabled(itemCount: Int, item: Any?) -> Bool {
         guard itemCount == 1 else {
             return true
         }
@@ -114,14 +129,18 @@ class RootNavigationController : UINavigationController {
             return true
         }
         let uti = UTIConverter.uti(forFileURL: urlItem)
-        return (UTIConverter.type(uti, conformsTo: kUTTypeImage as String) || UTIConverter.type(uti, conformsTo: kUTTypeMovie as String))
+        return (
+            UTIConverter.type(uti, conformsTo: kUTTypeImage as String) || UTIConverter
+                .type(uti, conformsTo: kUTTypeMovie as String)
+        )
     }
     
-    private func presentMediaPreview(with data : [Any]) {
+    private func presentMediaPreview(with data: [Any]) {
         let storyboardName = "MediaShareStoryboard"
         let storyboardBundle = Bundle(for: MediaPreviewViewController.self)
         let sb = UIStoryboard(name: storyboardName, bundle: storyboardBundle)
-        previewViewController = sb.instantiateViewController(withIdentifier: "MediaShareController") as? MediaPreviewViewController
+        previewViewController = sb
+            .instantiateViewController(withIdentifier: "MediaShareController") as? MediaPreviewViewController
         
         guard let previewViewController = previewViewController else {
             let err = "Could not create preview view controller!"
@@ -132,32 +151,42 @@ class RootNavigationController : UINavigationController {
         previewViewController.backIsCancel = true
         previewViewController.sendIsChoose = true
         previewViewController.disableAdd = true
-        previewViewController.optionsEnabled = self.optionsEnabled(itemCount: data.count, item: data.first)
+        previewViewController.optionsEnabled = optionsEnabled(itemCount: data.count, item: data.first)
         previewViewController.memoryConstrained = true
         
         let dataProcessor = MediaPreviewURLDataProcessor()
-        dataProcessor.cancelAction = {[weak self] in self?.cancelAndClose()}
+        dataProcessor.cancelAction = { [weak self] in self?.cancelAndClose() }
         dataProcessor.memoryConstrained = true
         
-        previewViewController.initWithMedia(dataArray: data, delegate: self, completion: { [weak self] (data, sendAsFile, captions) in
-            guard let dataItems = data as? [URL] else {
-                let err = "Invalid format for data items from media preview"
-                DDLogError(err)
-                fatalError(err)
-            }
-            self?.itemSender.sendAsFile = sendAsFile
-            self?.itemSender.itemsToSend = dataItems
-            self?.itemSender.captions = captions
-            self?.chooseContacts()
-        }, itemDelegate: dataProcessor)
+        previewViewController.initWithMedia(
+            dataArray: data,
+            delegate: self,
+            completion: { [weak self] data, sendAsFile, captions in
+                guard let dataItems = data as? [URL] else {
+                    let err = "Invalid format for data items from media preview"
+                    DDLogError(err)
+                    fatalError(err)
+                }
+                self?.itemSender.sendAsFile = sendAsFile
+                self?.itemSender.itemsToSend = dataItems
+                self?.itemSender.captions = captions
+                self?.chooseContacts()
+            },
+            itemDelegate: dataProcessor
+        )
         
-        self.pushViewController(previewViewController, animated: true)
+        pushViewController(previewViewController, animated: true)
         let title = BundleUtil.localizedString(forKey: "cancel")
-        previewViewController.navigationItem.leftBarButtonItem = UIBarButtonItem(title: title, style: .plain, target: self, action: #selector(cancelTapped))
+        previewViewController.navigationItem.leftBarButtonItem = UIBarButtonItem(
+            title: title,
+            style: .plain,
+            target: self,
+            action: #selector(cancelTapped)
+        )
     }
     
     @objc private func cancelTapped() {
-        self.finishAndClose(success: false)
+        finishAndClose(success: false)
     }
     
     @objc private func chooseContacts() {
@@ -185,54 +214,68 @@ class RootNavigationController : UINavigationController {
         picker.navigationItem.leftBarButtonItem = nil
         
         if textPreview != nil {
-            self.itemSender.textToSend = textPreview!.previewText
+            itemSender.textToSend = textPreview!.previewText
         }
         
-        self.pushViewController(picker, animated: true)
+        pushViewController(picker, animated: true)
         recolorBarButtonItems()
+        
+        isModalInPresentation = true
     }
     
     @objc private func popBack() {
-        self.popViewController(animated: true)
+        popViewController(animated: true)
     }
     
     override func viewDidAppear(_ animated: Bool) {
-        Colors.update(self.navigationBar)
-        self.recolorBarButtonItems()
+        Colors.update(navigationBar: navigationBar)
+        recolorBarButtonItems()
         
         super.viewDidAppear(animated)
     }
     
     /// This takes the left and right bar button items and sets the tintColor and titleTextAttributes back to something that is legible in our share extension
     private func recolorBarButtonItems() {
-        for viewController in self.children {
+        for viewController in children {
             let navItem = viewController.navigationItem
             var items = [UIBarButtonItem]()
             items.append(contentsOf: navItem.leftBarButtonItems ?? [UIBarButtonItem]())
             items.append(contentsOf: navItem.rightBarButtonItems ?? [UIBarButtonItem]())
             
             for item in items {
-                let attributes : [NSAttributedString.Key : Any] = [
-                    NSAttributedString.Key.foregroundColor : Colors.main() as Any,
+                let attributes: [NSAttributedString.Key: Any] = [
+                    NSAttributedString.Key.foregroundColor: Colors.primary as Any,
                 ]
                 
-                item.setTitleTextAttributes(attributes , for: .normal)
+                item.setTitleTextAttributes(attributes, for: .normal)
                 item.setTitleTextAttributes(attributes, for: .application)
-                item.tintColor = Colors.main()
             }
         }
     }
     
     private func presentTextPreview() {
         let storyboard = UIStoryboard(name: "ThreemaShareStoryboard", bundle: nil)
-        textPreview = (storyboard.instantiateViewController(withIdentifier: "TextPreviewViewController") as! TextPreviewViewController)
-        textPreview!.navigationItem.rightBarButtonItem = UIBarButtonItem(title: BundleUtil.localizedString(forKey: "next"), style: .done, target: self, action: #selector(chooseContacts))
-        textPreview!.navigationItem.leftBarButtonItem = UIBarButtonItem(title: BundleUtil.localizedString(forKey: "cancel"), style: .plain, target: self, action: #selector(cancelTapped))
+        textPreview = (
+            storyboard
+                .instantiateViewController(withIdentifier: "TextPreviewViewController") as! TextPreviewViewController
+        )
+        textPreview!.navigationItem.rightBarButtonItem = UIBarButtonItem(
+            title: BundleUtil.localizedString(forKey: "next"),
+            style: .done,
+            target: self,
+            action: #selector(chooseContacts)
+        )
+        textPreview!.navigationItem.leftBarButtonItem = UIBarButtonItem(
+            title: BundleUtil.localizedString(forKey: "cancel"),
+            style: .plain,
+            target: self,
+            action: #selector(cancelTapped)
+        )
         
-        self.pushViewController(textPreview!, animated: true)
+        pushViewController(textPreview!, animated: true)
         recolorBarButtonItems()
         
-        BrandingUtils.updateTitleLogo(of: textPreview!.navigationItem, navigationController: self)
+        BrandingUtils.updateTitleLogo(of: textPreview!.navigationItem, in: self)
     }
     
     private func isDBReady() -> Bool {
@@ -240,21 +283,28 @@ class RootNavigationController : UINavigationController {
             return false
         }
         
-        let requiresMigration = dbManager.storeRequiresMigration();
+        let requiresMigration = dbManager.storeRequiresMigration()
         return requiresMigration == RequiresMigrationNone
     }
-    
+
+    private func isAppReady() -> Bool {
+        !AppMigrationVersion.isMigrationRequired(userSettings: UserSettings.shared())
+    }
+
     func hasLicense() -> Bool {
-        guard let ls = LicenseStore.shared() else {
-            return false
-        }
-        return ls.isValid()
+        LicenseStore.shared().isValid()
     }
     
     private func showNeedStartAppFirst() {
-        let title = BundleUtil.localizedString(forKey:"need_to_start_app_first_title")
-        let message = BundleUtil.localizedString(forKey:"need_to_start_app_first_message")
-        self.showAlert(with: title, message: message, closeOnOK: true)
+        let title = String(
+            format: BundleUtil.localizedString(forKey: "need_to_start_app_first_title"),
+            ThreemaApp.currentName
+        )
+        let message = String(
+            format: BundleUtil.localizedString(forKey: "need_to_start_app_first_message"),
+            ThreemaApp.currentName
+        )
+        showAlert(with: title, message: message, closeOnOK: true)
     }
     
     private func checkPasscode() -> Bool {
@@ -264,9 +314,9 @@ class RootNavigationController : UINavigationController {
         
         var hidePasslock = false
         let maxTimeSinceApp = 10
-        let uptime = Utils.systemUptime()
+        let uptime = ThreemaUtilityObjC.systemUptime()
         
-        if uptime > 0 && openTime > 0 && (uptime - openTime) > 0 && (uptime - openTime) < maxTimeSinceApp {
+        if uptime > 0, openTime > 0, (uptime - openTime) > 0, (uptime - openTime) < maxTimeSinceApp {
             hidePasslock = true
         }
         
@@ -275,9 +325,8 @@ class RootNavigationController : UINavigationController {
         let passcodeRequired = KKPasscodeLock.shared()?.isPasscodeRequired() ?? true
         let withinGracePeriod = KKPasscodeLock.shared()?.isWithinGracePeriod() ?? false
         
-        if passcodeRequired && !withinGracePeriod && !hidePasslock {
+        if passcodeRequired, !withinGracePeriod, !hidePasslock {
             isAuthorized = false
-            
             
             let str = String(describing: JKLLockScreenViewController.self)
             
@@ -289,35 +338,35 @@ class RootNavigationController : UINavigationController {
             let navigationController = UINavigationController(rootViewController: lockViewController)
             navigationController.setNavigationBarHidden(true, animated: false)
             
-            self.present(navigationController, animated: true, completion: {
-                self.tryTouchIdAuthentication()
+            present(navigationController, animated: true, completion: {
+                self.tryTouchIDAuthentication()
             })
             return false
         }
         return true
     }
     
-    private func tryTouchIdAuthentication() {
-        TouchIdAuthentication.tryCallback({ (success, error) in
+    private func tryTouchIDAuthentication() {
+        TouchIDAuthentication.tryCallback { success, _ in
             if success {
                 DispatchQueue.main.async {
                     self.showExtension()
                 }
             }
-        })
+        }
     }
     
     private func showExtension() {
-        self.presentedViewController?.dismiss(animated: true, completion: {
+        presentedViewController?.dismiss(animated: true, completion: {
             self.startExtension()
         })
     }
     
     private func checkContextItems() -> Bool {
-        if self.extensionContext?.inputItems.count == 0 {
-            let title = BundleUtil.localizedString(forKey:"error_message_no_items_title")
-            let message = BundleUtil.localizedString(forKey:"error_message_no_items_message")
-            self.showAlert(with: title, message: message, closeOnOK: true)
+        if extensionContext?.inputItems.isEmpty == true {
+            let title = BundleUtil.localizedString(forKey: "error_message_no_items_title")
+            let message = BundleUtil.localizedString(forKey: "error_message_no_items_message")
+            showAlert(with: title, message: message, closeOnOK: true)
             return false
         }
         return true
@@ -330,7 +379,7 @@ class RootNavigationController : UINavigationController {
         let appSetupState = AppSetupState(myIdentityStore: MyIdentityStore.shared())
         
         if !appSetupState.isAppSetupCompleted() {
-            self.showNeedStartAppFirst()
+            showNeedStartAppFirst()
         }
         
         if !hasLicense() {
@@ -339,6 +388,11 @@ class RootNavigationController : UINavigationController {
         }
         
         if !isDBReady() {
+            showNeedStartAppFirst()
+            return false
+        }
+
+        if !isAppReady() {
             showNeedStartAppFirst()
             return false
         }
@@ -354,8 +408,8 @@ class RootNavigationController : UINavigationController {
         return true
     }
     
-    private func showAlert(with title: String, message : String, closeOnOK : Bool) {
-        var vc = self.viewControllers.last
+    private func showAlert(with title: String, message: String, closeOnOK: Bool) {
+        var vc = viewControllers.last
         if vc == nil {
             vc = self
         }
@@ -367,29 +421,30 @@ class RootNavigationController : UINavigationController {
         UIAlertTemplate.showAlert(owner: viewController, title: title, message: message, actionOk: { _ in
             
             if closeOnOK {
-                self.extensionContext!.completeRequest(returningItems: nil, completionHandler: { _  in
+                self.extensionContext!.completeRequest(returningItems: nil, completionHandler: { _ in
                     self.commonCompletionHandler()
                 })
             }
         })
     }
     
-    private func showAlert(alertController : UIAlertController) {
-        if (self.presentedViewController != nil) {
-            self.presentedViewController?.present(alertController, animated: true, completion: nil)
-        } else {
-            self.present(alertController, animated: true, completion: nil)
+    private func showAlert(alertController: UIAlertController) {
+        if presentedViewController != nil {
+            presentedViewController?.present(alertController, animated: true, completion: nil)
+        }
+        else {
+            present(alertController, animated: true, completion: nil)
         }
     }
     
     private func loadItemsFromContext() -> Promise<Void> {
-        self.itemSender = ItemSender()
+        itemSender = ItemSender()
         itemSender.delegate = self
         
         // We theoretically accept multiple input items, but this is only to allow the share extension to show up
         // when sharing a pdf from Safari. In all other tested cases only one inputItem and multiple attachments are provided.
         // In the case of a pdf from Safari, we are only interested in the pdf and not the url anyways.
-        if let item = self.extensionContext!.inputItems.first as? NSExtensionItem {
+        if let item = extensionContext!.inputItems.first as? NSExtensionItem {
             for case let itemProvider in item.attachments! {
                 let baseUTI = ItemLoader.getBaseUTIType(itemProvider)
                 let secondUTI = ItemLoader.getSecondUTIType(itemProvider)
@@ -401,17 +456,34 @@ class RootNavigationController : UINavigationController {
     }
     
     private func canConnect() -> Bool {
-        if ServerConnector.shared()?.connectionState == ConnectionStateLoggedIn {
+        if ServerConnector.shared()?.connectionState == .loggedIn {
             return true
         }
         
-        ServerConnector.shared()?.connect()
+        if !AppGroup.amIActive() {
+            setAppGroup()
+        }
+        
+        ServerConnector.shared()?.connect(initiator: .shareExtension)
         return false
+    }
+    
+    private func setAppGroup() {
+        AppGroup.setGroupID(BundleUtil.threemaAppGroupIdentifier())
+        AppGroup.setAppID(BundleUtil.threemaAppIdentifier())
+        
+        AppGroup.setActive(true, for: AppGroupTypeShareExtension)
+        AppGroup.setActive(false, for: AppGroupTypeNotificationExtension)
+
+        UserSettings.resetSharedInstance()
+        
+        _ = AppSetupState()
     }
     
     private func showProgressUI() {
         _ = itemSender.itemCount().done { itemCount in
-            self.progressViewController = self.storyboard!.instantiateViewController(withIdentifier: "ProgressViewController") as? ProgressViewController
+            self.progressViewController = self.storyboard!
+                .instantiateViewController(withIdentifier: "ProgressViewController") as? ProgressViewController
             guard let progressController = self.progressViewController else {
                 DDLogError("Could not find progressViewController")
                 self.finishAndClose(success: false)
@@ -430,8 +502,8 @@ class RootNavigationController : UINavigationController {
     }
     
     private func sendItems() {
-        self.popToRootViewController(animated: true)
-        self.itemSender.sendItemsTo(conversations: self.recipientConversations!)
+        popToRootViewController(animated: true)
+        itemSender.sendItemsTo(conversations: recipientConversations!)
     }
     
     private func startSending() {
@@ -443,13 +515,13 @@ class RootNavigationController : UINavigationController {
             }
             
             if !self.canConnect() {
-                let title = BundleUtil.localizedString(forKey:"cannot_connect_title")
-                let message = BundleUtil.localizedString(forKey:"cannot_connect_message")
+                let title = BundleUtil.localizedString(forKey: "cannot_connect_title")
+                let message = BundleUtil.localizedString(forKey: "cannot_connect_message")
                 self.showAlert(with: title, message: message, closeOnOK: false)
             }
         }.ensure(on: DispatchQueue.main) {
             self.showProgressUI()
-        }.catch { err in
+        }.catch { _ in
             DDLogError("Unknown error occurred")
         }
     }
@@ -459,18 +531,19 @@ class RootNavigationController : UINavigationController {
         forceExit()
     }
     
-    private func completionHandler(expired : Bool) {
+    private func completionHandler(expired: Bool) {
         if expired {
-            itemSender.shouldCancel = true;
-            ServerConnector.shared()?.disconnect()
-        } else {
-            ServerConnector.shared()?.disconnectWait()
+            itemSender.shouldCancel = true
+            ServerConnector.shared()?.disconnect(initiator: .shareExtension)
         }
-        self.commonCompletionHandler()
+        else {
+            ServerConnector.shared()?.disconnectWait(initiator: .shareExtension)
+        }
+        commonCompletionHandler()
     }
     
     private func cancelAndClose() {
-        self.finishAndClose(success: false)
+        finishAndClose(success: false)
     }
     
     /// The share extension lives in a process which will be reused when the share extension is launched multiple times.
@@ -483,20 +556,18 @@ class RootNavigationController : UINavigationController {
         }
     }
     
-    private func finishAndClose(success : Bool) {
+    private func finishAndClose(success: Bool) {
         AppGroup.setActive(false, for: AppGroupTypeShareExtension)
+                
+        itemLoader.deleteTempDir()
         
-        MessageQueue.shared()?.save()
-        
-        self.itemLoader.deleteTempDir()
-        
-        var delay : Double = 0
+        var delay: Double = 0
         
         if progressViewController != nil {
             delay = 0.5
         }
         let when = DispatchTime.now() + delay
-        DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: when, execute: {
+        DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: when) {
             if success {
                 DispatchQueue.main.async {
                     let generator = UIImpactFeedbackGenerator()
@@ -507,49 +578,59 @@ class RootNavigationController : UINavigationController {
                 NotificationCenter.default.removeObserver(self)
                 self.completionHandler(expired: expired)
             })
-        })
+        }
     }
     
-    @objc private func didBecomeActive(notification : Notification) {
+    @objc private func didBecomeActive(notification: Notification) {
         AppGroup.setActive(true, for: AppGroupTypeShareExtension)
+        AppGroup.setActive(false, for: AppGroupTypeNotificationExtension)
     }
 }
 
-//MARK: - ContactGroupPickerDelegate
+// MARK: - ContactGroupPickerDelegate
 
-extension RootNavigationController : ContactGroupPickerDelegate {
-    func contactPicker(_ contactPicker: ContactGroupPickerViewController!, didPickConversations conversations: Set<AnyHashable>!, renderType: NSNumber!, sendAsFile: Bool) {
+extension RootNavigationController: ContactGroupPickerDelegate {
+    func contactPicker(
+        _ contactPicker: ContactGroupPickerViewController!,
+        didPickConversations conversations: Set<AnyHashable>!,
+        renderType: NSNumber!,
+        sendAsFile: Bool
+    ) {
         recipientConversations = Set<Conversation>()
         
-        if (contactPicker.additionalTextToSend != nil) {
+        if contactPicker.additionalTextToSend != nil {
             itemSender.addText(text: contactPicker.additionalTextToSend)
         }
         for case let conversation as Conversation in conversations {
             recipientConversations?.insert(conversation)
         }
         
-        self.startSending()
+        startSending()
     }
     
     func contactPickerDidCancel(_ contactPicker: ContactGroupPickerViewController!) {
-        self.popViewController(animated: true)
+        popViewController(animated: true)
+    }
+    
+    override func popViewController(animated: Bool) -> UIViewController? {
+        isModalInPresentation = false
+        return super.popViewController(animated: animated)
     }
 }
 
-// MARK: - Passcode lock delegate
+// MARK: - JKLLockScreenViewControllerDelegate
 
-
-extension RootNavigationController : JKLLockScreenViewControllerDelegate {
+extension RootNavigationController: JKLLockScreenViewControllerDelegate {
     
     func shouldEraseApplicationData(_ viewController: JKLLockScreenViewController!) {
-        self.extensionContext?.completeRequest(returningItems: nil, completionHandler: { _ in
+        extensionContext?.completeRequest(returningItems: nil, completionHandler: { _ in
             self.commonCompletionHandler()
         })
     }
     
     func didPasscodeEnteredIncorrectly(_ viewController: JKLLockScreenViewController!) {
         if passcodeTryCount >= 3 {
-            self.extensionContext?.completeRequest(returningItems: nil, completionHandler: { _ in
+            extensionContext?.completeRequest(returningItems: nil, completionHandler: { _ in
                 self.commonCompletionHandler()
             })
         }
@@ -561,19 +642,19 @@ extension RootNavigationController : JKLLockScreenViewControllerDelegate {
     }
     
     func unlockWasCancelledLockScreenViewController(_ lockScreenViewController: JKLLockScreenViewController!) {
-        self.finishAndClose(success: false)
+        finishAndClose(success: false)
     }
     
     func didPasscodeViewDismiss(_ viewController: JKLLockScreenViewController!) {
         if isAuthorized {
-            self.startExtension()
+            startExtension()
         }
     }
 }
 
-//MARK: - ProgressViewDelegate
+// MARK: - ProgressViewDelegate
 
-extension RootNavigationController : ProgressViewDelegate {    
+extension RootNavigationController: ProgressViewDelegate {
     func progressViewDidCancel() {
         itemSender.shouldCancel = true
         
@@ -583,17 +664,17 @@ extension RootNavigationController : ProgressViewDelegate {
     }
 }
 
-//MARK: - ModalNavigationControllerDelegate
+// MARK: - ModalNavigationControllerDelegate
 
-extension RootNavigationController : ModalNavigationControllerDelegate {
+extension RootNavigationController: ModalNavigationControllerDelegate {
     func willDismissModalNavigationController() {
-        self.finishAndClose(success: false)
+        finishAndClose(success: false)
     }
 }
 
-//MARK: - SenderItemDelegate
+// MARK: - SenderItemDelegate
 
-extension RootNavigationController : SenderItemDelegate {
+extension RootNavigationController: SenderItemDelegate {
     func showAlert(with title: String, message: String) {
         DispatchQueue.main.async {
             self.showAlert(with: title, message: message, closeOnOK: true)
@@ -601,7 +682,8 @@ extension RootNavigationController : SenderItemDelegate {
     }
     
     func setProgress(progress: NSNumber, forItem: Any) {
-        progressViewController?.setProgress(progress: progress, item: forItem)
+        // TODO: IOS-2707 Something with progress reporting is broken
+//        progressViewController?.setProgress(progress: progress, item: forItem)
     }
     
     func finishedItem(item: Any) {
@@ -609,6 +691,6 @@ extension RootNavigationController : SenderItemDelegate {
     }
     
     func setFinished() {
-        self.finishAndClose(success: true)
+        finishAndClose(success: true)
     }
 }

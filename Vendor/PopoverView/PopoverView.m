@@ -481,7 +481,9 @@
     
     // get the top view
     // http://stackoverflow.com/questions/3843411/getting-reference-to-the-top-most-view-window-in-ios-application/8045804#8045804
-    topView = [[[[UIApplication sharedApplication] keyWindow] subviews] lastObject];
+    /***** BEGIN THREEMA MODIFICATION: Use windows instead of keyWindow *********/
+    topView = [[[[[UIApplication sharedApplication] windows] firstObject] subviews] lastObject];
+    /***** END THREEMA MODIFICATION: Use windows instead of keyWindow *********/
     
     [self setupLayout:point inView:view];
     

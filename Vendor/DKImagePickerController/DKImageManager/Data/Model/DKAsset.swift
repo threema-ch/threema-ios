@@ -49,6 +49,8 @@ open class DKAsset: NSObject {
 			self.isVideo = true
 			self.duration = originalAsset.duration
 		}
+        
+        accessibilityLabel = getAccessiblityDescription(originalAsset: originalAsset)
 	}
 	
 	private var image: UIImage?
@@ -86,6 +88,32 @@ open class DKAsset: NSObject {
 	public func fetchFullScreenImageWithCompleteBlock(_ completeBlock: @escaping (_ image: UIImage?, _ info: [AnyHashable: Any]?) -> Void) {
 		self.fetchFullScreenImage(false, completeBlock: completeBlock)
 	}
+    
+    /// Returns an AccessibilityLabel for a given Asset
+    func getAccessiblityDescription(originalAsset: PHAsset) -> String? {
+        
+        guard let date = originalAsset.creationDate else {
+            return nil
+        }
+        
+        var text = ""
+        let datetime = DateFormatter.accessibilityDateTime(date)
+        
+        if originalAsset.mediaType == .image {
+            text = String(format: BundleUtil.localizedString(forKey: "imagedate_date"), datetime)
+
+        } else if originalAsset.mediaType == .video {
+            
+            let formatter = DateComponentsFormatter()
+            formatter.allowedUnits = [.hour, .minute, .second]
+            formatter.unitsStyle = .full
+
+            let durationString = formatter.string(from: TimeInterval(originalAsset.duration))!
+            
+            text = String(format: BundleUtil.localizedString(forKey: "video_date_duration"), datetime, durationString)
+        }
+        return text
+    }
 	
 	/**
      Fetch an image with the current screen size.

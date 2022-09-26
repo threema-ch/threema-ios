@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="18122" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+    <device id="retina4_7" orientation="portrait" appearance="light"/>
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="18093"/>
+        <capability name="Safe area layout guides" minToolsVersion="9.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" selectionStyle="default" indentationWidth="10" id="gZO-T1-kpb" customClass="UnreadMessageLineCell">
+            <rect key="frame" x="0.0" y="0.0" width="375" height="40"/>
+            <autoresizingMask key="autoresizingMask"/>
+            <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="gZO-T1-kpb" id="zNz-UC-p4r">
+                <rect key="frame" x="0.0" y="0.0" width="375" height="40"/>
+                <autoresizingMask key="autoresizingMask"/>
+                <subviews>
+                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Unread messages" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontForContentSizeCategory="YES" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="hWl-Kx-vG7">
+                        <rect key="frame" x="0.0" y="5" width="375" height="31"/>
+                        <color key="backgroundColor" white="0.0" alpha="0.45000000000000001" colorSpace="custom" customColorSpace="calibratedWhite"/>
+                        <fontDescription key="fontDescription" style="UICTFontTextStyleSubhead"/>
+                        <nil key="textColor"/>
+                        <nil key="highlightedColor"/>
+                    </label>
+                    <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="ArrowDown" translatesAutoresizingMaskIntoConstraints="NO" id="w9q-R4-97f">
+                        <rect key="frame" x="38" y="15" width="15.5" height="12"/>
+                        <constraints>
+                            <constraint firstAttribute="width" secondItem="w9q-R4-97f" secondAttribute="height" multiplier="22:17" id="cm1-GR-rFL"/>
+                        </constraints>
+                    </imageView>
+                    <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="ArrowDown" translatesAutoresizingMaskIntoConstraints="NO" id="jQr-1n-S0M">
+                        <rect key="frame" x="321.5" y="15" width="15.5" height="12"/>
+                        <constraints>
+                            <constraint firstAttribute="width" secondItem="jQr-1n-S0M" secondAttribute="height" multiplier="22:17" id="UtR-L1-kh4"/>
+                        </constraints>
+                    </imageView>
+                </subviews>
+                <constraints>
+                    <constraint firstItem="hWl-Kx-vG7" firstAttribute="top" secondItem="zNz-UC-p4r" secondAttribute="top" constant="5" id="4ai-wg-hMe"/>
+                    <constraint firstItem="jQr-1n-S0M" firstAttribute="top" secondItem="zNz-UC-p4r" secondAttribute="topMargin" constant="4" id="DmG-VX-tDF"/>
+                    <constraint firstItem="hWl-Kx-vG7" firstAttribute="leading" secondItem="zNz-UC-p4r" secondAttribute="leading" id="KbN-Ay-kCC"/>
+                    <constraint firstAttribute="trailingMargin" secondItem="jQr-1n-S0M" secondAttribute="trailing" constant="22" id="T9K-er-wqw"/>
+                    <constraint firstItem="w9q-R4-97f" firstAttribute="leading" secondItem="zNz-UC-p4r" secondAttribute="leadingMargin" constant="22" id="dAW-Ua-oWb"/>
+                    <constraint firstAttribute="bottomMargin" secondItem="jQr-1n-S0M" secondAttribute="bottom" constant="2" id="ddA-Wx-PU0"/>
+                    <constraint firstAttribute="trailing" secondItem="hWl-Kx-vG7" secondAttribute="trailing" id="hpU-d6-j2j"/>
+                    <constraint firstItem="w9q-R4-97f" firstAttribute="top" secondItem="zNz-UC-p4r" secondAttribute="topMargin" constant="4" id="rM0-7O-n6x"/>
+                    <constraint firstAttribute="bottom" secondItem="hWl-Kx-vG7" secondAttribute="bottom" constant="4" id="uE4-cH-Nmj"/>
+                    <constraint firstAttribute="bottomMargin" secondItem="w9q-R4-97f" secondAttribute="bottom" constant="2" id="xRZ-Gk-yvp"/>
+                </constraints>
+            </tableViewCellContentView>
+            <viewLayoutGuide key="safeArea" id="jRf-C2-Zy7"/>
+            <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="calibratedRGB"/>
+            <connections>
+                <outlet property="arrowDownLeft" destination="w9q-R4-97f" id="wch-7A-pRD"/>
+                <outlet property="arrowDownRight" destination="jQr-1n-S0M" id="c1N-2W-gsh"/>
+                <outlet property="unreadMessagesLabel" destination="hWl-Kx-vG7" id="JWl-ta-Ilk"/>
+            </connections>
+            <point key="canvasLocation" x="33.5" y="66"/>
+        </tableViewCell>
+    </objects>
+    <resources>
+        <image name="ArrowDown" width="36" height="36"/>
+    </resources>
+</document>

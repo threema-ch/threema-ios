@@ -1,0 +1,76 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: saltyrtc/circleci-image-rs:1.57
+    steps:
+      - checkout
+
+      # Load cargo target from cache if possible.
+      # Multiple caches are used to increase the chance of a cache hit.
+      - restore_cache:
+          keys:
+            - v2-cargo-cache-{{ arch }}-{{ .Branch }}
+            - v2-cargo-cache-{{ arch }}
+
+      # Diagnostics
+      - run:
+          name: Show versions
+          command: rustc --version && cargo --version
+
+      # Certificates
+      - run:
+          name: Generate certificates
+          command: /saltyrtc/certs/generate-cert.sh
+      - run:
+          name: Copy certificate
+          command: cp /saltyrtc/certs/saltyrtc.der .
+
+      # Start processes
+      - run:
+          name: Start SaltyRTC server
+          command: nohup saltyrtc-server-launcher > server.pid
+
+      # Build and test main crate
+      - run:
+          name: Build (Rust)
+          command: cargo update && cargo build
+      - run:
+          name: Test (Rust)
+          command: cargo test
+      - run:
+          name: Build with flags (Rust)
+          command: cargo build --features 'msgpack-debugging'
+#      - run:
+#          name: Audit (Rust)
+#          command: cargo audit
+
+      # Build and test FFI crate
+      - run:
+          name: Build (Rust FFI)
+          command: cd ffi && cargo build --locked
+      - run:
+          name: Test (Rust FFI)
+          command: cd ffi && cargo test
+#      - run:
+#          name: Audit (Rust FFI)
+#          command: cd ffi && cargo audit
+
+      # Show server log
+      - run:
+          name: Print server log
+          command: cat /saltyrtc/serverlog.txt
+
+      # Save cache
+      - save_cache:
+          key: v2-cargo-cache-{{ arch }}-{{ .Branch }}
+          paths:
+            - target
+            - ffi/target
+            - /usr/local/cargo/registry
+      - save_cache:
+          key: v2-cargo-cache-{{ arch }}
+          paths:
+            - target
+            - ffi/target
+            - /usr/local/cargo/registry

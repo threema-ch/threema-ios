@@ -44,7 +44,7 @@
 
 - (void)disablePasscode;
 
-- (BOOL)isTouchIdOn;
+- (BOOL)isTouchIdOn NS_SWIFT_NAME(isTouchIDOn());
 
 /**
  * returns a localized string from the framework's bundle

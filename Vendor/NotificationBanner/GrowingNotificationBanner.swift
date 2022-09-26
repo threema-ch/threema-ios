@@ -39,7 +39,9 @@ open class GrowingNotificationBanner: BaseNotificationBanner {
                 
                 // Substract safeAreaInsets from width, if available
                 // We have to use keyWindow to ask for safeAreaInsets as `self` only knows its' safeAreaInsets in layoutSubviews
-                if #available(iOS 11.0, *), let keyWindow = UIApplication.shared.keyWindow {
+                /***** BEGIN THREEMA MODIFICATION: Use windows instead of keyWindow *********/
+                if #available(iOS 11.0, *), let keyWindow = UIApplication.shared.windows.first {
+                /***** END THREEMA MODIFICATION: Use windows instead of keyWindow *********/
                     let safeAreaOffset = keyWindow.safeAreaInsets.left + keyWindow.safeAreaInsets.right
                     
                     boundingWidth -= safeAreaOffset

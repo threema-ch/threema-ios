@@ -1,0 +1,1373 @@
+/*
+ Localizable.strings
+ Threema
+ 
+ Copyright (c) 2012 Threema GmbH. All rights reserved.
+ */
+
+// General
+"quotation_mark_start" = "“";
+"quotation_mark_end" = "”";
+
+/* Tabbar and title for list with all conversations */
+"chats_title" = "Діалоги";
+
+"use_dynamic_font_size" = "Розмір шрифта";
+
+"SortOrder_Firstname" = "Ім’я, Прізвище";
+"SortOrder_Lastname" = "Прізвище, Ім’я";
+
+"segmentcontrol_contacts" = "Контакти";
+"segmentcontrol_groups" = "Групи";
+"segmentcontrol_work_contacts" = "Робота";
+
+/* WebRTC diagnostics */
+"webrtc_diagnostics.title" = "Діагностика WebRTC";
+"webrtc_diagnostics.description" = "Запустіть цей засіб, щоб усунути проблеми зі з’єднанням для голосового зв’язку.\nЩоб почати перевірку, натисність кнопку “Почати”.";
+"webrtc_diagnostics.start" = "Почати";
+"webrtc_diagnostics.copyToClipboard" = "Скопіювати до буфера обміну";
+"webrtc_diagnostics.copy" = "Скопійовано до буфера обміну";
+"webrtc_diagnostics.done" = "Готово. Якщо у вас виникають проблеми з налаштуванням зв’язку, надішліть ці дані до служби підтримки Threema.";
+
+/* Privacy Policy */
+"privacy_poliy_url" = "https://threema.ch/en/privacy";
+
+/* MWPhotoBrowser */
+"mwphotobrowser_select" = "Вибрати";
+"mwphotobrowser_select_all" = "Вибрати все";
+"mwphotobrowser_deselect_all" = "Скасувати вибір";
+"profileimage_setting_all_footer" = "Усі контакти побачать зображення вашого профілю, коли ви надішлете їм повідомлення.";
+"profileimage_setting_contacts_footer" = "Контакти з цього списку побачать зображення вашого профілю, коли ви надішлете їм повідомлення.";
+
+
+"status_disconnected" = "Відключено";
+"status_connecting" = "Підключення";
+"status_connected" = "Підключення";    /* note: this is intentional; don't want to bother user with protocol details */
+"status_loggedIn" = "З'єднано";
+"status_disconnecting" = "Відключено";
+
+"cannot_connect_title" = "Немає підключення";
+"cannot_connect_message" = "Не вдається підключитися, будь ласка, перевірте інтернет-з’єднання.";
+
+"delete_identity_warning" = "Якщо ви видалите свій ID, то ваші ключі й дані застосунку буде видалено. Якщо ви не створювали резервну копію, ви не зможете знову надсилати чи отримувати повідомлення з цього ID.\nЯкщо ви більше не хочете користуватися цим ID, радимо перед видаленням від’єднати від нього електронні адреси чи номери телефонів.";
+"delete_identity_warning2" = "Останнє попередження: ви дійсно хочете видалити свої дані й ID?";
+"delete_identity_passcode_title" = "Код доступу активовано";
+"delete_identity_passcode_message" = "Перед видаленням свого ID вимкніть код доступу, будь ласка.";
+"delete_identity_title" = "Дані застосунку видалено";
+"delete_identity_description" = "Усі дані застосунку видалено. Будь ласка, перезапустіть застосунок, щоб налаштувати %@.";
+"delete_identity_app_close" = "Закрити застосунок";
+
+/* JKLockScreenViewController */
+"cancel" = "Скасувати";
+"continue" = "Продовжити";
+"ok" = "Гаразд";
+"no" = "Ні";
+"yes" = "Так";
+"delete" = "Видалити";
+"try_again" = "Спробувати ще раз";
+"delete_identity" = "Видалити дані й ID";
+"copy" = "Скопіювати";
+"save" = "Зберегти";
+"share" = "Поділитися";
+"details" = "Деталі";
+"acknowledge" = "Погоджуюся";
+"decline" = "Не погоджуюся";
+"quote" = "Цитувати";
+"speak" = "Говорити";
+"send" = "Надіслати";
+"image" = "Зображення";
+"sticker" = "Наліпка";
+"gif" = "GIF";
+"video" = "Відео";
+"audio" = "Аудіо";
+"file" = "Файл";
+"location" = "Місцеперебування";
+"locating" = "Пошук місцеперебування...";
+"unknown_location" = "невідоме місцеперебування";
+"open" = "Відкрити";
+"call" = "Зателефонувати"; /* Short version for "Start Threema Call" */
+"Info" = "Інформація";
+"error_abort" = "Невиправна помилка";
+"qr_code" = "QR-код";
+"forward" = "Назад";
+"showNext" = "Більше налаштувань";
+"showPrevious" = "Попередні налаштування";
+"read" = "Прочитане";
+"unread" = "Непрочитане";
+"settings" = "Налаштування";
+"loadMore" = "Завантажити більше";
+"all" = "Усі";
+"myIdentity" = "Мій профіль";
+"share_id" = "Поділитись вашим Threema ID";
+"close" = "закрити";
+"threema_id" = "Threema ID";
+"nickname" = "Прізвисько";
+"add_button" = "Додати";
+
+"chat_back_button_accessibility" = "%d непрочитаних";
+
+"show_in_google_maps" = "Показати у Google Maps";
+"show_in_maps" = "Показати у Картах";
+"calculate_route" = "Прорахувати маршрут";
+
+/* Chat export */
+"conversation_log_subject" = "Діалог у Threema з %@";
+"conversation_log_body" = "Журнал захищеного діалогу прикріплено до %@.\nЩоб розархівувати файл, потрібен сучасний ZIP-застосунок з підтримкою AES: https://7-zip.org.ua/ або https://apps.apple.com/ua/app/the-unarchiver/id425424353";
+"conversation_log_group_body" = "Журнал захищеного групового діалогу прикріплено до %@.\nЩоб розархівувати файл, потрібен сучасний ZIP-застосунок з підтримкою AES: https://7-zip.org.ua/ або https://apps.apple.com/ua/app/the-unarchiver/id425424353";
+"not_enough_storage_title" = "Недостатньо вільного місця для експортування цього діалогу.";
+"amount_of_free_storage_needed" = "%@ потрібно для експорту діалогу. %@ наразі наявно.";
+"chat_export_failed_title" = "Не вдалось експортувати діалог.";
+"chat_export_failed_message" = "Не вдалось експортувати діалог з помилкою %d.";
+"cancelling_export" = "Скасування експортування";
+"export_progress_label" = "%li / %li повідомлень експортовано";
+"caption" = "Підпис";
+"fileNotDownloaded" = "Файл не завантажено або видалено.";
+"include_media_title" = "Долучити медіа (зображення, відео) як вкладення?";
+"include_media_message" = "Сучасний ZIP застосунок з підтримкою AES необхідний для розархівування файлу, як-от 7-Zip або The Unarchiver (Mac).";
+
+
+/* image sizes */
+"image_size_title" = "Розмір зображення";
+/* image sizes */
+"original" = "Оригінал";
+"small" = "Маленький";
+"medium" = "Середній";
+"large" = "Великий";
+"xlarge" = "Дуже великий";
+"max_x_by_x_pixels" = "Макс. %d × %d пікселів";
+"images are not scaled" = "Зображення не масштабуються";
+"image_resize_share_extension" = "Через обмежені ресурси пам’яті, надіслані через Share Extension зображення зменшуються до макс. 1600 на 1600 пікселів.";
+
+/* video sizes */
+"videoquality_title" = "Якість відео";
+/* video sizes */
+"low" = "Низька";
+"high" = "Висока";
+"max_1_minute" = "Макс. 1 хвилина";
+"max_x_minutes" = "Макс. %d хвилин";
+
+/* Sound names */
+"push_sound_title" = "Звук натискання";
+"push_group_sound_title" = "Груповий звук натискання";
+/* Sound names */
+"sound_none" = "Порожньо";
+"sound_default" = "За замовчуванням";
+"sound_silent" = "Лише вібро";
+"sound_bamboo" = "Бамбук";
+"sound_drum" = "Барабани";
+"sound_glass" = "Скло";
+"sound_incoming_message" = "Вхідне повідомлення";
+"sound_input" = "Вхідний";
+"sound_marimba1" = "Марімба 1";
+"sound_marimba2" = "Марімба 2";
+"sound_music_box" = "Музична Скриня";
+"sound_pulse" = "Пульс";
+"sound_sms" = "СМС";
+"sound_received_message" = "Threema";
+"sound_synth" = "Синтезатор";
+"sound_trill" = "Трель";
+"sound_whoop" = "Опа!";
+
+"sound_threema_best" = "Threema";
+"sound_threema_incom" = "Гра";
+"sound_threema_xylo" = "XYLO";
+"sound_threema_goody" = "Ремікс";
+"sound_threema_alphorn" = "Альфорн";
+
+"reset_wallpaper" = "Скинути фон";
+"font_size_title" = "Розмір шрифту";
+"font_size" = "%d пт";
+"bigger_single_emojis" = "Великі окремі емодзі";
+"received_message_time" = "Час отримання повідомлення";
+"return_key_send" = "Клавіша вводу = Надіслати";
+"identity_none" = "немає";
+"message" = "Надіслати"; /* Short version for "Send Message" */
+"scan_identity" = "Сканувати ID";
+"scan" = "Сканувати"; /* Short version for "Scan ID" */
+"(pending)" = "(очікується)";
+"enter_code" = "Ввести код";
+"export_chat" = "Експортувати діалог";
+"send_profile_picture" = "Надіслати зображення профілю";
+"public_key" = "Відкритий ключ";
+"public_key_of" = "Відкритий ключ %@";
+"block_contact" = "Заблокувати контакт";
+"profile_picture_recipient" = "Показати фотографію профілю";
+
+"no_contacts_access_title" = "Немає доступу до контактів";
+"no_contacts_access_message" = "Відкрийте Налаштування та дозвольте доступ до Контактів.";
+"no_linked_contact_access_title" = "Немає доступу до прив'язаних контактів";
+"no_linked_contact_access_message" = "Відкрийте Налаштування та надайте Контактам дозвіл на перегляд прив'язаного контакту. Або відв'яжіть контакт.";
+"no_linked_contact_access_edit_message" = "Відкрийте Налаштування та дозвольте Контактам доступ до редагування прив'язаних контактів. Або відв'яжіть контакт для редагування.";
+"restricted_contacts_access_title" = "Доступ до контактів обмежено";
+"restricted_contacts_access_message" = "Попросіть свого керівника надати доступ до Контактів.";
+"restricted_linked_contact_access_message" = "%@ не може отримати доступ до вашого прив’язаного контакту через обмеження доступу. Попросіть свого керівника надати доступ до Контактів. Або назавжди від’єднайте контакт.";
+"restricted_linked_contact_access_edit_message" = "%@ не може отримати доступ до вашого прив’язаного контакту через обмеження доступу. Попросіть свого керівника надати доступ до Контактів. Або назавжди від’єднайте контакт, щоб редагувати.";
+"linked_contact_not_found_title" = "Прив'язаний контакт не знайдено";
+"linked_contact_not_found_message" = "Не вдалось знайти прив'язаний контакт. Відв'яжіть контакт для редагування.";
+
+"unlink_contact" = "Відв'язати контакт";
+"unlink_and_edit_contact" = "Відв'язати та редагувати контакт";
+"link_new_contact" = "Прив'язати новий контакт";
+"show_linked_contact" = "Показати прив'язаний контакт";
+
+"link_contact" = "Прив'язати до контакту";
+"linked_contact" = "Прив'язаний контакт";
+"[no access]" = "[Немає доступу]";
+"[not found]" = "[Не знайдено]";
+"[restricted]" = "[Обмежено]";
+
+"go_to_settings" = "Перейти до Налаштувань";
+
+/* This shows the number of groups in parentheses */
+"groups_header" = "Групи (%lu)";
+"show_all_button" = "Показати усі";
+
+"share_contact_id_button" = "Поділитись ID контакта";
+
+// Edit contact or group
+
+"edit_contact_title" = "Редагувати контакт";
+"edit_group_title" = "Редагувати групу";
+
+"first_name_placeholder" = "Ім'я";
+"last_name_placeholder" = "Прізвище";
+"group_name_placeholder" = "Назва групи";
+
+"no_nickname_title" = "Прізвисько не вказано";
+"no_nickname_message" = "Ви дійсно бажаєте продовжити без вказання прізвиська? Іншим особам буде важко зрозуміти, що саме ви надіслали повідомлення, допоки вони не відкриють застосунок.";
+
+"server_message_title" = "Повідомлення серверу";
+
+"no_preview_available" = "Попередній перегляд недоступний";
+
+"bad_phone_number_format_title" = "Номер не розпізнано";
+"bad_phone_number_format_message" = "Номер телефону, що ви вказали, не вдалось розпізнати. Будь ласка, введіть його у міжнародному форматі.";
+
+"confirm_phone_number_title" = "Підтвердити номер";
+"confirm_phone_number_x" = "Ми надішлемо СМС на:\n\n%@\n\nЦе вірний номер?";
+
+"abort_verification" = "Припинити верифікацію";
+"abort_verification_message" = "Кількість спроб обмежена. Будь ласка, зачекайте щонайменше 30 хвилин для отримання СМС або спробуйте опцію виклику.";
+"call_me_title" = "Інформація про виклик";
+"call_me_message" = "Якщо ви продовжите, ми спробуємо негайно зателефонувати вам. Код підтвердження буде прочитано вголос двічі. Зауважте, що ми зробимо лише одну спробу, тому, будь ласка, переконайтеся, що ви готові, перш ніж продовжити.";
+"number" = "Номер";
+
+"mobileno_linked_title" = "Номер телефону прив'язано";
+"mobileno_linked_message" = "Номер телефону успішно прив'язано до вашого ID.";
+
+"link_email_title" = "Прив’язати електронну пошту";
+"link_your_email" = "Ваша електронна пошта";
+"link_email_address" = "Електронна пошта";
+"link_email_sent_title" = "Лист підтвердження надіслано";
+"link_email_sent_message" = "Посилання для підтвердження надіслано через електронну пошту до %@.";
+"invalid_email_address_title" = "Невірна адреса електронної пошти";
+"invalid_email_address_message" = "Не вдалось розпізнати адресу електронної пошти";
+
+"public_key_mismatch_title" = "Невідповідність відкритих ключів";
+"public_key_mismatch_message" = "Контакт із цим ідентифікатором вже існує, але відкритий ключ не збігається! Це може свідчити про спробу обманом відправити повідомлення не тому одержувачу.\nНовий відкритий ключ не було збережено; якщо ви впевнені, що все правильно, видаліть наявний контакт і повторіть спробу.";
+
+"public_key_server_mismatch_title" = "Невідповідність відкритих ключів";
+"public_key_server_mismatch_message" = "Просканований відкритий ключ не відповідає ключу, що повернув сервер для цього ID. Це означає, що хтось зловмисно змінив код, який ви сканували, і ключу ні в якому разі не можна довіряти. Будь ласка, повідомте про цей інцидент на security@threema.ch, надавши, якщо можливо, подробиці про ID та обставини.";
+
+"password_again" = "Введіть пароль ще раз";
+"password_too_short_title" = "Пароль дуже короткий";
+"password_too_short_message" = "Пароль дуже короткий. Будь ласка, введіть щонайменше 8 символів.";
+"password_mismatch_title" = "Паролі відрізняються";
+"password_mismatch_message" = "Паролі, які ви ввели, відрізняються. Будь ласка, поверніться та спробуйте ще раз.";
+"password_description_backup" = "Ваш приватний ключ буде захищений паролем, який ви введете тут. Мінімум 8 символів (рекомендується поєднання букв, цифр та символів).";
+"password_description_export" = "Дані чату будуть заархівовані та захищені паролем, який ви введете тут. Мінімум 8 символів (рекомендується поєднання букв, цифр та символів).";
+
+"revocation_password" = "Пароль скидання ID";
+"revocation_password_description" = "За допомогою цього пароля ви можете остаточно скинути свій ідентифікатор Threema через https://myid.threema.ch/revoke. Мінімум 8 символів (рекомендується поєднання букв, цифр і символів).";
+"revocation_request_success" = "Пароль скидання ID оновлено";
+"revocation_request_failed" = "Не вдалось оновити пароль скидання ID";
+"revocation_password_not_set" = "не задано";
+"conversations_delete_all_confirm" = "Ви дійсно бажаєте видалити усі діалоги? \nПримітка: групових діалогів це не торкнеться.";
+"revocation_check_failed" = "помилка перевірки";
+
+"messages_delete_all_button" = "Видалити усі повідомлення";
+"messages_delete_all_confirm_title" = "Видалити повідомлення у діалозі з цього пристрою?";
+"messages_delete_all_confirm_message" = "Це включає усі медіа та документи.";
+"messages_delete_selected_confirm" = "Видалити обрані повідомлення з цього пристрою?";
+"conversation_delete_confirm" = "Видалити діалог з пристрою?";
+"delete_all" = "Видалити усі";
+"delete_n" = "Видалити (%d)";
+"message_cannot_play_movie" = "Не вдається програти відео.";
+
+"identity_not_found_title" = "Невідомий ID";
+"identity_not_found_message" = "ID не існує, або особа з цим ID використовує непідтримуваний застосунок.";
+
+"message_too_long_title" = "Повідомлення задовге";
+"message_too_long_message" = "Максимальна довжина повідомлення — %d байтів.";
+
+"scanned_identity_mismatch_title" = "Невідповідність ID";
+"scanned_identity_mismatch_message" = "Зісканований ID не відповідає збереженому контакту.";
+
+"scanned_own_identity_title" = "Ви зісканували власний ID.";
+
+"scan_code_expired_title" = "Строк дії коду закінчився";
+"scan_code_expired_message" = "Строк дії цього коду закінчився. Будь ласка, зіскануйте його знов із застосунку співрозмовника.";
+
+"scan_id_add_contact_failed_title" = "Неможливо додати контакт";
+"scan_id_add_contact_failed_message" = "Будь ласка, спробуйте ще.";
+
+"scanned_non_threema_id_title" = "Неможливо прочитати ID";
+"scanned_non_threema_id_message" = "Це недійсний QR-код для %@.";
+
+"take_photo_or_video" = "Зняти фото або відео";
+"take_photo" = "Зробити фото";
+"choose_existing" = "Обрати наявне";
+"choose_existing_photo" = "Обрати наявне фото";
+"edit_photos" = "Редагувати обрані файли";
+"delete_photo" = "Видалити фото";
+"delete_video" = "Видалити відео";
+"delete_file" = "Видалити файл";
+"send_location" = "Надіслати місцеперебування";
+"record_audio" = "Записати аудіо";
+"scan_qr" = "Сканувати QR-код";
+"share_file" = "Поділитись файлом";
+"add_item_caption" = "Додати підпис";
+"add_items_caption" = "Додати підписи";
+"send_item_immediately_photo" = "Надіслати фото";
+"send_item_immediately_video" = "Надіслати відео";
+"send_items_immediately" = "Надіслати %d фото / відео";
+"send_items_immediately_photo" = "Надіслати %d фото";
+"send_items_immediately_video" = "Надіслати %d відео";
+
+"record" = "Записати";
+"play" = "Прослухати";
+"pause" = "Павза";
+"stop" = "Стоп";
+"voice message" = "Голосове повідомлення";
+"quit" = "Завершити";
+"record_cancel_title" = "Скасувати записування";
+"record_cancel_message" = "Ви дійсно бажаєте скасувати та видалити записане?";
+"record_cancel_button_discard" = "Видалити записане";
+"speed" = "Швидкість відтворення";
+
+"send_file_title" = "Надіслати файл";
+"camera_disabled_title" = "Доступ заборонено";
+"send_file_message" = "Файл: %@\nдо\n%@";
+
+"quote_not_found" = "Цитоване повідомлення не знайдене.";
+
+"camera_disabled_message" = "%@ не має доступу до вашої камери. Будь ласка, надайте доступ у Налаштування > Приватність > Камера.";
+
+"location_disabled_title" = "Немає доступу до служб локації";
+"location_disabled_message" =  "Будь ласка, перейдіть до Налаштувань та дозвольте доступ до геопозиції.";
+
+"microphone_disabled_title" = "Немає доступу до мікрофона";
+"microphone_disabled_message" = "%@ не має доступу до мікрофона. Будь ласка, надайте доступ у Налаштування > Приватність > Мікрофон.";
+
+"include_media" = "З медіа";
+"without_media" = "Без медіа";
+"media_overview" = "Медіа";
+
+"members" = "Учасники";
+"group_one_member_title" = "1 учасник";
+"group_multiple_members_title" = "Учасників %d";
+"group_members_section_header" = "Учасників (%d)";
+"group_add_members_button" = "Додати учасників";
+"group_manage_members_button" = "Керувати учасниками";
+"group_creator_section_header" = "Автор";
+"group_creator_left_section_header" = "Автор (вийшов)";
+"too_many_members_title" = "Забагато учасників групи";
+"too_many_members_message" = "Максимальна кількість учасників групи %d.";
+"add_member" = "Додати учасників";
+"no_more_members" = "У групи більше немає учасників.";
+"group_different_identity" = "Цю групу створено коли у вас був інший Threema ID. Ви не можете надсилати повідомлення до групи з поточним ID.";
+"group_is_not_member" = "Ви не можете надсилати повідомлення до цієї групи оскільки ви більше не її учасник.";
+"contact_blocked_cannot_send" = "Ви не можете надіслати повідомлення цьому контакту тому що його заблоковано.";
+"contact_invalid_cannot_send" = "Ви не можете надіслати повідомлення цьому контакту тому що він недійсний.";
+"contact_betafeedback_cannot_send" = "Це не бета-версія, будь ласка, надішліть відгук до *SUPPORT.";
+"group_sync_button" = "Синхронізувати групу";
+"group_sync_title" = "Групу синхронізовано";
+"group_sync_message" = "Поточні дані групи надіслано до усіх учасників.";
+"group_sync_error_title" = "Не вдалось синхронізувати групу";
+"group_sync_error_message" = "Будь ласка, спробуйте пізніше.";
+"group_clone_button" = "Клонувати групу";
+"group_clone_title" = "Клонувати групу";
+"group_clone_message" = "Це клонує цю групу з вами в ролі адміністратора.";
+"group_clone_action_button" = "Клонувати";
+"group_leave_button" = "Покинути групу";
+"group_delete_confirm" = "Ви дійсно бажаєте покинути групу?";
+"group_admin_delete_confirm" = "Ви дійсно бажаєте розпустити цю групу?";
+"group_dissolve_button" = "Розпустити групу";
+"group_delete" = "Видалити групу";
+
+"group name" = "Назва групи";
+"existing groups" = "Наявні групи";
+"new group" = "Нова група";
+"edit group" = "Редагувати групу";
+"pick image" = "Обрати \nзображення";
+"create" = "Створити";
+"search" = "Пошук";
+"leave" = "Покинути";
+"dissolve" = "Розпустити";
+"groups" = "Групи";
+"create_new_group" = "Створити нову групу";
+"create_note_group_info_title" = "Підказка";
+"create_note_group_info_text" = "Якщо ви не додасте жодного учасника групи, повідомлення до цієї групи залишаться на пристрої. Це ідеально підходить для безпечного зберігання нотаток, медіа та документів або для перенесення елементів на робочий стіл.";
+"remind_me_next_time" = "Нагадати наступного разу";
+"doNotShowAgain" = "Не показувати знов";
+"add_note_group_info" = "*Тут лише ви*\nВикористовуйте цей чат як надійний нотатник для тексту, медіа та документів.";
+"end_note_group_info" = "*Ви більше не самотні у цьому чаті*\nНові повідомлення надсилатимуться усім членам групи.";
+
+"choose_recipient" = "Обрати отримувача";
+
+"msg_unknown_group_request_sync_x_title" = "Повідомлення отримано у невідомій групі";
+"msg_unknown_group_request_sync_x_message" = "Отримано повідомлення в невідомій групі. Інформацію про групу запитано в автора групи (%@). Група з'явиться щойно її автор буде в мережі.";
+
+"chat_search_label_format" = "%ld з %ld повідомлень";
+"load_earlier_messages" = "Завантаження попередніх повідомлень";
+"tap_to_cancel" = "Торкніться для скасування";
+"previous" = "Попередні";
+"tap_to_change" = "Торкніться для зміни";
+"next" = "Далі";
+"unread_messages" = "Непрочитані повідомлення";
+
+/* Verification level popovers in chat view */
+"verification_level_title" = "Рівень підтвердження";
+/* Verification level popovers in chat view */
+"verification_level_text" = "Кольорові точки вказують на рівень підтвердження контакту.";
+"level0_title" = "Нижчий рівень підтвердження";
+/* Verification level section title */
+"verification_level_section_work" = "Контакти у вашій організації";
+"verification_level_section_other" = "Інші контакти";
+/* Verification level popovers in chat view */
+"level1_title" = "Середній рівень підтвердження";
+"level2_title" = "Найвищий рівень підтвердження";
+"level3_title" = "Середній робочий рівень підтвердження";
+"level4_title" = "Найвищий робочий рівень підтвердження";
+"level0_explanation" = "Невідомий контакт; цей контакт або не прив’язав номер телефону чи адресу електронної пошти до свого ID, або ваша адресна книга не містить цих контактних даних.";
+"level1_explanation" = "Контакт, чий номер телефону або адреса електронної пошти міститься у вашій адресній книзі.";
+"level2_explanation" = "Контакт, чию особистість та відкритий ключ особисто підтверджено через сканування QR-коду.";
+"level3_explanation" = "Внутрішній контакт, створений вашою організацією.";
+"level4_explanation" = "Внутрішній контакт, чию особистість та відкритий ключ підтверджено через сканування QR-коду.";
+
+"id_verified_title" = "ID підтверджено";
+"id_verified_message" = "Особистість та відкритий ключ %@ підтверджено.";
+
+/* Invalid country code alert */
+"invalid_country_code_title" = "Невірний формат регіону";
+"invalid_country_code_message" = "Схоже, що для формату регіону на вашому пристрої встановлено недійсне значення. Відкрийте Налаштування, перейдіть до Загальні > Мова і регіон та Вибрати регіон, щоб уникнути проблем з номерами телефонів.";
+
+/* Settings */
+"block_unknown_on" = "Лише ваші контакти можуть надсилати вам повідомлення.";
+"block_unknown_off" = "Будь-хто може надсилати вам повідомлення. Нові контакти автоматично додаватимуться щойно направлять вам повідомлення.";
+"show_stale_contacts_on" = "Неактивні Threema ID (тобто такі, що не використовувались протягом щонайменше трьох місяців) та видалені ID приховано.";
+"show_stale_contacts_off" = "Усі Threema ID перелічені у списку контактів.";
+"hide_voip_call_ip_off" = "Встановіть пряме з’єднання, якщо це можливо, і переадресуйте виклики лише неперевіреним контактам через сервери Threema. Це може розкрити вашу IP-адресу.";
+"hide_voip_call_ip_on" = "Переадресуйте всі виклики через сервери Threema, щоб приховати IP-адресу від партнерів по виклику. Це може вплинути на якість викликів.";
+"onprem_hide_voip_call_ip_off" = "Встановіть пряме з’єднання, якщо це можливо, і переадресуйте виклики лише неперевіреним контактам через ваші сервери OnPrem. Це може розкрити вашу IP-адресу.";
+"onprem_hide_voip_call_ip_on" = "Ретранслюйте всі виклики через ваші сервери OnPrem, щоб приховати IP-адресу від партнерів по виклику. Це може вплинути на якість викликів.";
+"voip_include_call_in_recents_off" = "Виклики показуються на заблокованому екрані, але не перелічені в списку викликів програми Телефон.";
+"voip_include_call_in_recents_on" = "Виклики показуються на заблокованому екрані та перелічені в списку викликів програми Телефон. Якщо iCloud Drive активовано, список викликів програми Телефон синхронізується через сервери Apple.";
+
+"backgrounding_on" = "Застосунок залишатиметься у мережі до 30 секунд після переходу у фоновий режим.";
+"backgrounding_off" = "При переході до фонового режиму застосунок негайно відключається від мережі.";
+"proximity_monitoring_off" = "Екран не вимикається, якщо датчик наближення закритий.";
+"proximity_monitoring_on" = "Під час голосових викликів та під час запису чи відтворення голосових повідомлень екран вимикається, якщо датчик наближення закритий.";
+"validation_logging_expl" = "Журнал відладки можна використовувати для незалежної перевірки наскрізного шифрування Threema. \nДеталі: https://threema.ch/validation";
+
+"validation_log_clear" = "Очистити журнал";
+"log_empty_message" = "Журнал відладки порожній.";
+"cannot_send_mail_message" = "На цьому пристрої не налаштовано обліковий запис електронної пошти.";
+
+"preview_limit" = "Ліміт: \n%.0f ескізів";
+
+/* Backup identity */
+"backup_mail_subject" = "Експорт Threema ID для %@";
+"backup_found_message" = "На вашому пристрої знайдено експортований Threema ID. Ви хочете його відновити?";
+"backup_include" = "Експорт зашифрованого ID буде додано, коли ви створите резервну копію телефону через iTunes або iCloud.";
+"backup_found_title" = "Знайдено експортований ID";
+"backup_footer" = "Ці дані разом із вибраним паролем можна використовувати для відновлення вашого ID на іншому пристрої. Ви можете скопіювати та вставити його у відповідне місце, надіслати електронною поштою собі або зісканувати QR-код за допомогою іншого пристрою.";
+
+/* Restore identity */
+"scan_backup" = "Сканувати експортований ID";
+"backup_exclude" = "Експортований ID не буде додано, коли ви створюєте резервну копію телефону через iTunes або iCloud. Збережіть експортований ID вручну, щоб уникнути його втрати.";
+
+/* Contacts */
+"pull_to_sync" = "Потягніть, щоб синхронізувати...";
+"bad_identity_backup" = "Дані експортованого ID недійсні або ви ввели хибний пароль. Використовуйте пароль, який ви ввели під час експортування для відновлення свого Threema ID. Перевірте введені дані та повторіть спробу.";
+
+"synchronizing" = "Синхронізація...";
+
+"no_contacts_syncon" = "У вас ще немає контактів. Синхронізацію увімкнено, але здається, що жоден з ваших контактів не використовує Threema (запросіть їх!).";
+"no_contacts" = "Немає контактів";
+"no_groups" = "Немає груп";
+"no_groups_message" = "Наразі груп немає. Додати групи вручну кнопкою +.";
+"no_work_contacts" = "%@ користувачів";
+"no_work_contacts_message" = "Не знайдено перевірених адміністратором %@ контактів.";
+
+"no_contacts_permission_title" = "Немає доступу до контактів";
+"no_contacts_syncoff" = "У вас ще немає контактів. Увімкніть синхронізацію (Налаштування > Конфіденційність) або додайте контакти вручну за допомогою кнопки +.";
+"no_contacts_permission_message" = "%@ не має дозволу на доступ до ваших контактів. Будь ласка, перейдіть до налаштувань конфіденційності пристрою та увімкніть доступ до контактів.";
+
+"my_profile_picture_title" = "Зображення вашого профілю";
+"release_profilepicture_to" = "Показувати зображення профілю";
+"contact_added_to_profile_picture_list" = "Цей контакт отримає зображення вашого профілю коли ви йому писатимете.";
+"contact_removed_from_profile_picture_list" = "Цей контакт більше не отримає інформацію вашого профілю.";
+"contact_send_profile_picture_success" = "Зображення вашого профілю успішно надіслано контакту.";
+"contact_send_profile_picture_error" = "Зображення вашого профілю не вдалось надіслати. Будь ласка, спробуйте пізніше.";
+
+"sync_group" = "Синхронізувати групу";
+
+"contact_threema_work_title" = "Threema Робота";
+"contact_threema_work_info" = "Значок портфеля вказує на те, що контакт використовує бізнес-версію застосунку — «Threema Робота».";
+"contact_threema_title" = "Threema";
+"contact_threema_info" = "Значок дому вказує на те, що контакт використовує приватну версію Threema, а не Threema Робота.";
+"contact_threema_work_conversation_info" = "Цей контакт використовує Threema Робота.";
+"contact_threema_conversation_info" = "Цей контакт використовує приватну версію Threema.";
+
+"threema_type_icon_work_accessibility_label" = "Робочий контакт";
+"threema_type_icon_private_accessibility_label" = "Приватний контакт";
+
+"delete_contact_group_exists_title" = "Неможливо видалити контакт";
+"delete_contact_group_exists_message_single" = "«%@» ще є учасником групи. Видаліть контакт з групи або видаліть групу.";
+"delete_contact_group_exists_message_multiple" = "«%@» ще є учасником груп: %d. Видаліть контакт з груп або видаліть групи.";
+"delete_contact_group_exists_show_contact_button" = "Показати контакт";
+"delete_contact_existing_conversation_title" = "Видалити «%@»?";
+"delete_contact_existing_conversation_button" = "Видалити контакт + історію діалогу";
+"delete_contact_confirmation_with_exclusion_message" = "Видалити «%@» та виключити з синхронізації?";
+"delete_contact_button" = "Видалити контакт";
+"delete_contact_confirmation_with_exclusion_button" = "Видалити + виключити";
+"exclude_deleted_id_title" = "Виключити Threema ID «%@» з синхронізації?";
+"exclude_deleted_id_message" = "Виключеннями можна керувати у налаштуваннях приватності.";
+"exclude_deleted_id_exclude_button" = "Виключити";
+
+/* create id */
+"lets_get_started" = "Почнімо";
+"setup_threema" = "Розпочати налаштування";
+"restore_id" = "Відновити резервну копію";
+"restore_title_text" = "Повернулись до %@?";
+"setup_title_text" = "Новенький у %@?";
+"restore_id_export" = "Відновити експортований ID";
+"id_exists" = "Threema ID, що вже використовувався на цьому пристрої (%@), ще наявний. Бажаєте відновити його?";
+
+"welcome" = "Вітаємо у %@";
+"move_your_finger" = "Переміщуйте палець по екрану для створення нового Threema ID.";
+"more_information" = "Більше інформації";
+"more_information_link_id_work" = "Надавши нам свій номер телефону та адресу електронної пошти, ми зможемо допомогти вашим контактам автоматично знайти вас у %@. Ця інформація зберігатиметься у безпечний та анонімний спосіб. Якщо ви пропустите цей крок, ви використовуватимете %@ повністю анонімно.";
+"more_information_pick_nickname" = "Прізвисько використовується в push-повідомленнях на деяких пристроях або як додатковий засіб ідентифікації користувачами, які ще не мають вас у своїй адресній книзі. Ми рекомендуємо вказувати лише своє ім’я чи прізвисько. Якщо ви не вкажете прізвисько, ми використовуватимемо ваш Threema ID за замовчуванням.";
+"more_information_sync_contacts" = "Якщо ввімкнути цю опцію, %@ шифрує (хешує) адреси електронної пошти та номери телефонів на пристрої, перш ніж надсилати їх на сервер для пошуку відповідних контактів. Ми не зберігаємо жодних даних адресної книги.";
+"more_information_random_seed" = "Рухаючи пальцями, ви створюєте випадкові дані (так звані ентропії), які використовуються для створення пари ключів, пов’язаної з вашим новим унікальним Threema ID.";
+"id_confirm_description_work" = "Ваш Threema ID працює як номер телефону. Ваші контакти можуть зв’язатися з вами через цей ID.";
+"more_information_link_id" = "Надавши нам свій номер телефону, ми зможемо допомогти вашим друзям автоматично знайти вас у Threema. Ця інформація зберігатиметься в безпечний та анонімний спосіб. Якщо ви пропустите цей крок, ви використовуватимете Threema повністю анонімно.";
+"more_information_confirm_id" = "Також ви створили пару ключів. Відкритий ключ безпечно передано на наші сервери. Закритий ключ залишається суто на вашому пристрої. Це гарантує, що ніхто інший не зможе прочитати ваші повідомлення.";
+
+"id_confirm_description" = "Ваш Threema ID працює як номер телефону. Ваші друзі можуть зв’язатися з вами за допомогою цього ID.";
+"id_pick_nickname_description_work" = "Контакти побачать ваше прізвисько, коли отримають повідомлення.";
+"id_confirm_your_id" = "Це ваш Threema ID:";
+
+"id_pick_nickname_title" = "Обрати прізвисько";
+"id_pick_nickname_description" = "Ваші друзі побачать ваше прізвисько під час отримання повідомлення.";
+"id_link_title_work" = "Допоможіть своїм контактам знайти вас";
+"id_pick_nickname_question" = "Бажаєте використати Threema ID як прізвисько?";
+"id_enter_nickname" = "Введіть прізвисько";
+
+"id_link_no_input_work" = "Ви не ввели ані номеру телефону, ані адреси електронної пошти для посилання на свій Threema ID. Ви не з'являтиметесь в списках контактів. Ви дійсно хочете використовувати %@ у такий абсолютно анонімний спосіб?";
+"id_link_title" = "Допоможіть своїм друзям знайти вас";
+"id_link_description_work" = "Прив'яжіть номер телефону та / або електронну пошту до Threema ID.";
+"id_link_description" = "Прив'яжіть свій номер телефону до Threema ID.";
+"id_link_no_input" = "Ви не ввели номеру телефону для прив'язання до Threema ID. Ви не з’являтиметесь в списках контактів ваших друзів. Ви дійсно хочете використовувати Threema у такий абсолютно анонімний спосіб?";
+"id_sync_title_work" = "Знайти контакти у %@";
+"id_sync_description_work" = "Увімкніть для перегляду контактів, які використовують %@.";
+"id_enter_email" = "Електронна пошта (за бажанням)";
+
+"id_sync_title" = "Знайдіть своїх друзів на Threema";
+"id_sync_description" = "Увімкніть, щоб побачити хто з ваших друзів використовує Threema.";
+"id_sync_contacts" = "Синхронізувати контакти";
+
+"id_completed_title" = "Готово! Все вірно?";
+"id_completed_nickname" = "Ваше прізвисько";
+"id_completed_linked_to" = "Прив'язано до";
+"id_completed_sync_contacts" = "Синхронізовані контакти";
+"finish" = "Завершити";
+
+"linking_email" = "Прив'язування електронної пошти";
+"syncing_contacts" = "Синхронізація контактів";
+"linking_phone" = "Прив'язування номеру телефону";
+"(linked)" = "(прив'язано)";
+"linking_phone_sms_sent" = "Надіслано СМС для підтвердження";
+
+"Password" = "Пароль";
+"(optional)" = "(за бажанням)";
+"scan_id_backup" = "Сканувати експортований QR-код";
+"phone number" = "Номер телефону";
+"id_backup" = "Експортований ID";
+"id_backup_placeholder" = "Введіть або вставте текстовий рядок експортованого ID для відновлення";
+"username" = "Ім'я користувача";
+
+"country_code" = "Код країни";
+"enter_license_password_placeholder" = "Пароль";
+"leave_group" = "Покинути групу";
+
+/* License Key */
+"enter_license_title" = "Ввести особисті дані";
+/* MWPhotoBrowser */
+"Done" = "Готово";
+"enter_license_description" = "Threema Робота — це месенджер для компаній. Будь ласка, введіть облікові дані, надані вашою компанією.";
+"enter_license_onprem_description" = "Threema OnPrem — це приватний месенджер для компаній. Будь ласка, введіть облікові дані, надані вашою компанією";
+"more_work_info" = "Дізнатись більше про %@.";
+"Save" = "Зберегти";
+"enter_license_username_placeholder" = "Ім'я користувача";
+"of" = "з";
+"Cancel" = "Скасувати";
+"enter_license_checking" = "Перевірка особистих даних";
+"confirm" = "Підтвердити";
+"enter_license_info" = "Якщо ви приватний користувач, торкніться тут, щоб завантажити Threema.";
+"enter_license_info_link" = "торкніться тут";
+"enter_license_server_placeholder" = "Сервер";
+
+"enter_license_enter_new_credentials" = "Увести нові дані";
+
+"Copy" = "Копіювати";
+"Email" = "Електронна пошта";
+"Saving" = "Збереження";
+"Failed" = "Не вдалось";
+"Saved" = "Збережено";
+"Copying" = "Копіювання";
+"Copied" = "Скопійовано";
+"Preparing" = "Підготовка";
+"photo" = "Фото";
+"Dismiss" = "Відхилити";
+"photos" = "Фото";
+
+/* invite messages */
+"invite_email_body" = "Вітаю,\n\nЯ використовую Threema — безпечний месенджер, який захищає конфіденційність користувачів.\n\nМій Threema ID: https://threema.id/%@\n\nСпілкуймося через Threema!\n\nВсього найкращого,\n";
+"invite_email_subject" = "Threema. Захищений месенджер на варті нашої конфіденційності";
+"invite_sms_body" = "Привіт! Використовуймо Threema для безпечного та конфіденційного спілкування! Мій Threema ID: https://threema.id/%@";
+"invite_facebook_text" = "Я використовую Threema — безпечний месенджер, який захищає конфіденційність користувачів. Мій Threema ID: https://threema.id/%@";
+"invite_twitter_text" = "Я використовую Threema — безпечний месенджер, який захищає конфіденційність користувачів. Мій Threema ID: https://threema.id/%@";
+"invite_using" = "Запросити друга через...";
+"sms" = "Текстове повідомлення";
+
+/* Notifications Text */
+"new_message" = "Повідомлення";
+/* Notifications Text */
+"new_message_from_x" = "Повідомлення від %@";
+"new_group_message" = "Повідомлення групи";
+"new_group_message_from_x" = "Повідомлення групи від %@";
+"new_message_no_access_title" = "Нове повідомлення";
+"new_message_no_access_message" = "Будь ласка, відкрийте %@ для отримання вхідних повідомлень.";
+"new_message_invalid_license" = "Ваша ліцензія закінчилась, для продовження відкрийте застосунок, будь ласка.";
+
+/* reminder messages */
+"push_reminder_title" = "Push-сповіщення не увімкнено";
+"push_reminder_message" = "Схоже, %@ не має дозволу надсилати вам push-сповіщення. Ви не отримуватимете сповіщення про нові повідомлення, коли %@ закритий. Перейдіть до Налаштування iOS > Сповіщення та увімкніть сповіщення для %@, щоб не пропустити жодного повідомлення.";
+"not_now" = "Не зараз";
+"set_now" = "Задати зараз";
+
+"updating_database" = "Оновлення бази даних... \n\nБудь ласка, не переривайте цю операцію! Для великих баз даних повідомлень це може зайняти кілька хвилин.";
+"database_migration_error_hints" = "Переконайтеся, що на вашому пристрої достатньо місця, перезавантажте пристрій і повторіть спробу.";
+"database_migration_storage_warning_title" = "Недостатньо місця";
+"database_migration_storage_warning_message" = "Для оновлення бази даних тимчасово потрібно принаймні %.1f ГБ вільного місця. Зараз на вашому пристрої доступно лише %.1f ГБ. Звільніть більше місця, видаливши елементи в налаштуваннях використаного місця, та повторіть спробу.";
+
+"sync_exclusion_footer" = "Перераховані тут ID ігноруватимуться під час синхронізації контактів.";
+"enter_id_to_exclude" = "Введіть ID, який потрібно виключити з синхронізації:";
+
+"group_renamed_to_x" = "Групу перейменовано на «%@»";
+"group_member_x_left" = "%@ покинув групу";
+"group_member_x_added" = "%@ додано до групи";
+"group_member_x_forced_leave" = "%@ видалено з групи";
+"group_member_self_added" = "Вас додано до групи.";
+"group_member_self_removed" = "Вас видалено з групи.";
+"group_member_self_left" = "Ви покинули групу.";
+"group_member_creator_left" = "*Ця група осиротіла*\nОрганізатор групи покинув її, тому її більше не можна підтримувати. Один із учасників, які залишилися, має клонувати групу (через меню групи), щоб стати новим адміністратором.";
+
+/* accessibility labels */
+"send_media_or_location" = "Надіслати медіа або місцеперебування";
+"my_profilepicture" = "Зображення вашого профілю";
+"my_threema_id" = "Ваш Threema ID";
+"edit_profile" = "Редагувати прізвисько та зображення профілю";
+
+"from" = "від";
+"at" = "о";
+"seconds" = "секунд";
+"duration" = "тривалість";
+"current_position" = "позиція";
+"in_reply_to" = "у відповідь";
+"go_to_position" = "на";
+"draft" = "Чернетка";
+"new_message_accessibility" = "Нове повідомлення: ";
+"scoll_down_text" = "Гортати донизу";
+"quote_interaction_hint" = "Торкніться для переходу до цитованого повідомлення.";
+
+/* TTOpenInAppActivity */
+"Open in ..." = "Відкрити у...";
+
+/* VoiceOver long labels */
+"restore" = "Відновити";
+
+/* PullToRefresh */
+"pull_to_refresh" = "Потягніть для оновлення...";
+"refreshing" = "Завантаження...";
+
+/* Threema Channel */
+"threema_channel_intro" = "Додати канал Threema до ваших контактів?";
+"threema_channel_info" = "Канал Threema надає новини про все, що пов'язано зі Threema.";
+"threema_channel_failed" = "Неможливо додати канал Threema.";
+
+/* Push decryption */
+"decryption_push_title" = "Бажаєте бачити попередній перегляд вмісту повідомлення в push-сповіщеннях?";
+"decryption_push_text" = "Якщо попередній перегляд вимкнено, потрібно відкрити %@ для перегляду вмісту нових повідомлень.";
+"decryption_push_activate" = "Увімкнути попередній перегляд вмісту";
+"decryption_push_deactivate" = "Вимкнути попередній перегляд вмісту";
+"decryption_push_reply" = "Відповідь";
+"decryption_push_placeholder" = "Відповісти...";
+"decryption_push_agree" = "Погодитись";
+"decryption_push_disagree" = "Не погоджуватись";
+
+"send_notification_message_error_title" = "Надіслати повідомлення";
+"send_notification_message_error_failed" = "Не вдалось надіслати повідомлення.";
+"send_notification_message_error_agree" = "Помилка прийняття згоди.";
+"send_notification_message_error_disagree" = "Помилка прийняття незгоди.";
+
+/* Device policy */
+"disabled_by_device_policy" = "Деякі налаштування вимкнено через політику пристрою";
+
+/* Edit profile */
+"profile_picture_recipients" = "Хто може бачити зображення профілю";
+/* Edit profile */
+"send_profileimage_off" = "Ніхто";
+"send_profileimage_on" = "Усі співрозмовники";
+"send_profileimage_contacts" = "Обрані контакти";
+"edit_profile_footer" = "Прізвисько додається до push-сповіщень повідомлень, які ви надсилаєте. Ми рекомендуємо використовувати лише своє ім’я чи псевдонім.";
+
+/* DKImagePickerView */
+"gallery_moments" = "Моменти";
+
+/* VoIP Call */
+"call_mute" = "Стишити";
+"call_unmute" = "Не стишувати";
+"call_speaker" = "Гучномовець";
+"call_earpiece" = "Навушник";
+"call_end" = "Завершити виклик";
+"call_camera_activate_button" = "Увімкнути камеру";
+"call_camera_deactivate_button" = "Вимкнути камеру";
+"call_camera_switch_to_front_button" = "Перемкнутись на фронтальну камеру";
+"call_camera_switch_to_back_button" = "Перемкнутись на задню камеру";
+
+"call_rejected" = "Виклик відхилено";
+"call_rejected_busy" = "Зайнято";
+"call_rejected_timeout" = "Співрозмовник недоступний";
+"call_rejected_disabled" = "Співрозмовник вимкнув виклики через Threema";
+"call_rejected_unknown" = "Виклик відхилено";
+"call_missed" = "Пропущений виклик";
+"call_incoming_ended" = "Вхідний виклик";
+"call_outgoing_ended" = "Вихідний виклик";
+"call_duration" = "Тривалість: %@";
+"call_canceled" = "Виклик скасовано";
+"call_back" = "Викликати";
+"call_accept" = "Прийняти";
+"call_reject" = "Відхилити";
+"call_hide_call" = "Приховати виклик";
+"call_no_wifi" = "Виклик через стільник. Дізнатись більше...";
+
+"call_voip_not_supported_title" = "Виклики Threema";
+"call_voip_not_supported_text" = "Пристрій співрозмовника не підтримує виклики Threema";
+"call_microphone_permission_title" = "Доступ до мікрофона заборонено";
+"call_microphone_permission_text" = "Потрібно дозволити доступ до мікрофона у Налаштуваннях";
+"call_contact_alert" = "Бажаєте викликати %@?";
+"call_contact_not_reachable" = "Неможливо зв'язатись зі співрозмовником...";
+"already_in_call" = "Можливо здійснювати лише один виклик одночасно.";
+
+"call_status_idle" = "Готовий";
+"call_status_wait_ringing" = "Ініціалізація";
+"call_status_ringing" = "Викликаємо";
+"call_status_incom_ringing" = "Виклик Threema";
+"call_status_initializing" = "З'єднання...";
+"call_status_calling" = "З'єднано";
+"call_status_reconnecting" = "З'єднання...";
+"call_status_unknown" = "Невідомо";
+"call_status_blocked" = "Заблокований контакт";
+"call_status_failed_title" = "Виклик Threema";
+"call_status_failed_connected_message" = "З'єднання втрачено";
+"call_status_failed_initializing_message" = "Не вдалось встановити з'єднання";
+"call_status_failed_sdp_patch_message" = "Не вдалось стоврити виклик Threema";
+
+"call_threema_initiator_video_info" = "Торкніться для увімкнення камери";
+"call_threema_remote_video_activated_info_title" = "Відеовиклик";
+"call_threema_remote_video_activated_info" = "Співрозмовник розпочав відеовиклик. Торкніться тут для увімкнення своєї камери.";
+"call_threema_speaker_info" = "Торкніться для увімкнення гучномовця";
+"call_threema_camera_disabled_info" = "Цей контакт не використовує поточну версію застосунку або не дозволив відеовиклики.";
+
+"call_threema_video_in_chat_info_title" = "Нове: Відеовиклики";
+"call_threema_video_in_chat_info_description" = "На додаток до голосових викликів із захистом від дотику, відтепер %@ пропонує наскрізно зашифровані відеовиклики.";
+
+"call_threema_cellular_instead_of_wifi_title" = "Виклик через стільник";
+"call_threema_cellular_instead_of_wifi_text" = "Увага: цей виклик передає дані у стільниковій мережі.";
+
+/* Privacy Policy */
+"privacy_policy_about" = "Threema захищає вашу приватність суворіше, ніж будь-який інший месенджер. Дізнайтесь більше у нашій Політиці конфіденційності.";
+"privacy_policy_about_work" = "%@ захищає вашу приватність суворіше, ніж будь-який інший месенджер. Дізнайтесь більше у нашій Політиці конфіденційності.";
+"privacy_policy_about_link" = "Політика конфіденційності";
+
+/* Conversation */
+"pin" = "Закріпити";
+"unpin" = "Відкріпити";
+"pinned_conversation" = "Закріплений діалог";
+
+/* Begin Edit */
+
+"private_message_label" = "Приватне повідомлення";
+"private_chat_label" = "Приватний";
+"private_chat_accessibility" = "Приватний діалог";
+"make_private" = "Зробити приватним";
+"remove_private" = "Зробити неприватним";
+"archive" = "Архівувати";
+"unarchive" = "Розархівувати";
+"mark_read" = "Позначити прочитаним";
+"mark_unread" = "Позначити непрочитаним";
+"archived_chats" = "Архівовані чати";
+
+"archived_title" = "Архівовані";
+"conversations_search_placeholder" = "Контакти, групи, ID...";
+
+"select_all" = "Обрати усі";
+"deselect_all" = "Зняти виділення";
+"no_archived_chats" = "Немає архівованих бесід";
+
+"privateChat_alert_title" = "Приватні діалоги";
+"privateChat_code_alert_message" = "Позначте діалоги приватними для захисту за допомогою паролю та приховання з переліку бесід. Для цього має бути налаштовано Блокування паролем.";
+"privateChat_code_alert_confirm" = "Налаштувати зараз";
+"privateChat_set_alert_title" = "Ви бажаєте зробити цей діалог приватним?";
+"privateChat_set_alert_message" = "Ви можете налаштувати видимість приватних діалогів у налаштуваннях приватності.";
+"hide_private_toggle" = "Сховати приватні діалоги";
+"privacy_footer" = "Ховає усі приватні діалоги з переліку діалогів. Ви повинні задати пароль для увімкнення цього налаштування.";
+
+"group_leave_sheet_title" = "Покинути «%@»?";
+"group_leave_sheet_message" = "Якщо ви просто вийдете, то не зможете брати участь у подальшій розмові, проте матимете доступ до історії діалогу.";
+
+"group_leave_delete_sheet_title" = "Покинути та видалити «%@»?";
+"group_leave_delete_sheet_message" = "Якщо ви вийдете й видалите групу, то не зможете брати участь у подальшій розмові, а історію діалогу буде видалено.";
+"group_leave_and_delete_button" = "Покинути та видалити групу";
+
+"group_dissolve_sheet_title" = "Розпустити «%@»?";
+"group_dissolve_sheet_message" = "Якщо ви просто розпустите групу, ніхто більше не зможе надсилати повідомлення групі та нею не можна буде керувати. Розпущену групу можна клонувати.";
+
+"group_dissolve_delete_sheet_title" = "Розпустити й видалити «%@»?";
+"group_dissolve_delete_sheet_message" = "Якщо ви видалите групу, ніхто більше не зможе надсилати повідомлення групі та нею не можна буде керувати. Історію діалогу буде видалено на цьому пристрої.";
+"group_dissolve_and_delete_button" = "Розпустити та видалити групу";
+
+"group_delete_sheet_title" = "Видалити «%@»?";
+"group_delete_sheet_message" = "Ви дійсно бажаєте видалити цю групу?";
+"group_delete_button" = "Видалити групу + історію діалогу";
+
+"selected_count" = "Обрано %d";
+"all_selected" = "Усі обрано";
+
+"archived_alert_title" = "Архівовані діалоги";
+"archived_alert_message" = "Для перегляду архівованих діалогів, торкніться нагорі переліку діалогів.";
+
+"private_delete_info_alert_message" = "При видаленні приватного діалогу, новий не позначатиметься приватним автоматично.";
+
+/* End Edit */
+
+"pushSetting_header" = "Сповіщення";
+"doNotDisturb_title" = "Не турбувати";
+
+"doNotDisturb_turn_off_button" = "Вимкнути";
+"doNotDisturb_offHours_info" = "Години тиші налаштовано.";
+"doNotDisturb_offHours_details" = "Ви отримуватимете сповіщення %@ лише з %@ до %@.";
+
+"doNotDisturb_off" = "Вимкнено";
+"doNotDisturb_on" = "Назавжди";
+"doNotDisturb_on_until_date_and_time" = "До %@";
+"doNotDisturb_on_until_date_and_time_long" = "Увімкнено до %@";
+"doNotDisturb_onPeriod_time" = "До";
+"doNotDisturb_onPeriod_reset" = "Скинути до";
+"doNotDisturb_onPeriod_1Hour" = "1 година";
+"doNotDisturb_onPeriod_2Hours" = "2 години";
+"doNotDisturb_onPeriod_3Hours" = "3 години";
+"doNotDisturb_onPeriod_4Hours" = "4 години";
+"doNotDisturb_onPeriod_8Hours" = "8 годин";
+"doNotDisturb_onPeriod_1Day" = "1 день";
+"doNotDisturb_onPeriod_1Week" = "1 тиждень";
+"doNotDisturb_on_forever" = "Назавжди";
+
+"doNotDisturb_mention" = "Сповіщати при згадуванні";
+"doNotDisturb_mention_footer_off" = "Якщо увімкнено не турбувати, ви не отримуватимете жодних сповіщень, навіть коли вас хтось згадує.";
+"doNotDisturb_mention_footer_on" = "Якщо увімкнено не турбувати, ви все одно отримуватимете сповіщення про згадування.";
+
+"notification_sound_header" = "Звук сповіщення";
+"notification_sound_title" = "Програти звук сповіщення";
+
+"edit_avatar_no_image_found_title" = "Не вдалось завантажити зображення";
+"edit_avatar_no_image_found_message" = "Будь ласка, спробуйте ще. Можливо з іншим зображенням.";
+"edit_avatar_edit_picture_accessibility_label" = "Редагувати зображення";
+"edit_avatar_picture_accessibility_label" = "Зображення";
+"edit_avatar_picture_not_editable_accessibility" = "Не підлягає редагуванню";
+
+/* WebClient */
+"webClientSession_title" = "Застосунок / Вебверсія";
+"webClientSession_add" = "Почати новий сеанс";
+"webClientSession_add_wrong_qr_title" = "Застосунок / Вебверсія";
+"webClientSession_add_wrong_qr_message" = "Це не QR-код для настільного застосунку / вебклієнта. Завантажте настільний застосунок (%@) або відкрийте вебклієнт (%@) і зіскануйте показаний QR-код.";
+"webClientSession_add_footer" = "На своєму ПК/Mac завантажте настільний застосунок (%@) або відкрийте вебклієнт (%@). Потім торкніться значка камери у верхньому правому куті екрана та проскануйте QR-код на комп’ютері.";
+"webClientSession_sessions_header" = "Сеанси";
+"webClientSession_unnamed" = "Сеанс без назви";
+"webClientSession_lastUse" = "Використовувалось востаннє";
+"webClientSession_saved" = "Збережені";
+"webClientSession_notSaved" = "Не збережені";
+"webClientSession_sessionName" = "Ім'я сеансу";
+"webClientSession_actionSheetTitle" = "Редагувати сеанс";
+"webClientSession_actionSheet_stopSession" = "Зупинити сеанс";
+"webClientSession_actionSheet_startSession" = "Розпочати сеанс";
+"webClientSession_actionSheet_renameSession" = "Перейменувати сеанс";
+"webClientSession_actionSheet_deleteSession" = "Видалити сеанс";
+"webClientSession_error_updateApp_title" = "Застосунок / Вебверсія";
+"webClientSession_error_updateApp_message" = "Неправильна версія App Remote Protocol, будь ласка, оновіть програму iOS.";
+"webClientSession_error_updateServer_title" = "Застосунок / Вебверсія";
+"webClientSession_error_updateServer_message" = "Неправильна версія App Remote Protocol, будь ласка, завантажте поточну версію настільного застосунку або попросіть адміністратора оновити вебклієнт.";
+"webClientSession_error_wrongVersion_title" = "Застосунок / Вебверсія";
+"webClientSession_error_wrongVersion_message" = "Ця версія застосунку iOS не підтримує протокол App Remote у вашому настільному додатку / вебклієнті.";
+"webClientSession_error_voip_title" = "Сеанс завершився на комп’ютері / у вебверсії";
+"webClientSession_error_voip_message" = "%@ намагався(-лася) під’єднатися до вашого комп’ютера. Вимкніть сесію на вашому комп’ютері й почніть нову.";
+
+"webClient_scan_error_title" = "Застосунок / Вебверсія";
+"webClient_scan_error_message" = "Це QR-код для настільного додатка / вебклієнта. Використовуйте сканер у меню Налаштування > Робочий стіл / Веб.";
+
+"webClient_scan_error_mdm_host_title" = "Неможливо розпочати сеанс";
+"webClient_scan_error_mdm_host_message" = "Сервер не схвалено адміністратором.";
+
+/* ProtectedDataUnavailable */
+"protectedDataUnavailable_error_text" = "Захищені дані наразі недоступні. Вийдіть із застосунку та повторіть спробу.";
+"protectedDataUnavailable_exitbutton" = "Вийти";
+
+/* Photo Browser */
+"media_delete_all_confirm" = "Ви дійсно бажаєте видалити усі медіафайли?";
+"media_delete_selected_confirm" = "Ви дійсно бажаєте видалити обрані медіафайли?";
+
+/* Threema Safe */
+"deactivate" = "Вимкнути";
+"invalid_threema_id" = "Хибний Threema ID";
+"number_of_days" = "%d днів";
+
+"safe_enable_explain_short" = "Увімкніть Threema Safe для автоматичного створення безпечних та анонімних резервних копій усіх ваших важливих даних.";
+"safe_enable_explain" = "Усе, що вам потрібно для спілкування, зберігається лише на вашому пристрої. Ми не зберігаємо ваш обліковий запис, отже не зможемо допомогти вам, якщо ви втратите телефон або випадково видалите свої дані.\n\nThreema Safe створює автоматичні резервні копії всіх важливих даних, зокрема ключів, списку контактів та участі у групах, анонімно на захищеному сервері на ваш вибір.";
+
+"safe_server_authentication" = "Автентифікація (за бажанням)";
+"safe_server_name" = "Ім'я серверу";
+"safe_max_backup_size" = "Максимальний розмір резервної копії";
+"safe_retention" = "Зберігання резервної копії";
+"safe_last_backup" = "Остання резервна копія";
+"safe_size" = "Розмір резервної копії";
+"safe_result" = "Результат створення резервної копії";
+"safe_successful" = "Успішно";
+"safe_unsuccessful" = "Не вдалось";
+"safe_upload_failed" = "Вивантаження не вдалось";
+"safe_upload_size_exceeded" = "Перевищено встановлений сервером розмір файлів для вивантаження.";
+"safe_change_password" = "Змінити пароль";
+"safe_backup_now" = "Зробити резервну копію зараз";
+"safe_deactivate" = "Вимкнути Threema Safe";
+"safe_deactivate_explain" = "Якщо вимкнути Threema Safe, усі наявні резервні копії будуть видалені з сервера. Продовжити?";
+"safe_disable_confirm" = "Ви бажаєте продовжити не вмикаючи Threema Safe? 
+За використання Threema Safe ви зможете відновити свій Threema ID, контакти та групи у випадку, якщо ви втратите доступ до свого пристрою.";
+
+"safe_setup_backup_title" = "Threema Safe";
+"safe_setup_backup_description" = "Будь ласка, виберіть надійний пароль. Цей пароль знадобиться для відновлення резервної копії Threema Safe.";
+"safe_advanced_options" = "Експертні налаштування";
+"safe_configure_choose_server" = "Виберіть сервер Threema Safe";
+"safe_configure_server_explain" = "Ви можете використовувати сервер Threema або вказати сторонній сервер резервного копіювання для використання.";
+"safe_configure_server_explain_onprem" = "Збережіть резервну копію Threema Safe на сервері вашої організації, або вкажіть інший сервер резервного копіювання.";
+"safe_use_default_server" = "Використовувати сервер за замовчуванням";
+"safe_restore" = "Відновити Threema Safe";
+"safe_restore_enter_id" = "Будь ласка, введіть Threema ID, який ви хочете відновити";
+"safe_forgot_your_id" = "Забули свій ID?";
+"safe_threema_id" = "Ваш Threema ID";
+"safe_search_id_title" = "Будь ласка, введіть номер мобільного телефону або адресу електронної пошти, прив'язану до вашого ID";
+"safe_linked_mobile" = "Номер телефону";
+"safe_linked_email" = "Електронна пошта";
+"safe_no_id_found" = "Threema ID не знайдено";
+"safe_select_id" = "Знайдено декілька Threema ID. Будь ласка, оберіть ID для використання:";
+"safe_enter_password" = "Будь ласка, введіть свій пароль Threema Safe";
+"safe_restore_failed" = "Не вдалося відновити";
+"safe_no_backup_found" = "На сервері не знайдено резервної копії. Перевірте ID та пароль.";
+"safe_preparing" = "Підготовка Threema Safe";
+"safe_error_preparing" = "Помилка підготовки резервної копії Threema Safe";
+"safe_configure_choose_password_title" = "Оберіть пароль";
+"safe_configure_choose_password" = "Будь ласка, оберіть пароль. Цей пароль знадобиться для відновлення резервної копії Threema Safe.";
+"safe_configure_choose_password_mdm" = "Адміністратор увімкнув Threema Safe для вашого пристрою.";
+"safe_version_mismatch" = "Версія цієї резервної копії вища за підтримувану версію. Будь ласка, оновіть застосунок до найновішої версії.";
+"safe_intro_title" = "Презентуємо Threema Safe";
+"safe_intro_description" = "Більше не втрачайте Threema ID, контакти, групи та налаштування!";
+"safe_intro_explain" = "Threema Safe регулярно створює зашифровану анонімну резервну копію найважливіших даних для вас та зберігає її на сервері Threema або іншому сервері на ваш вибір.";
+"safe_intro_enable" = "Увімкнути зараз";
+"safe_intro_cancel" = "Не показувати знов";
+"safe_failed_notification" = "Не вдається створити резервну копію Threema Safe упродовж %.0f днів. Будь ласка, перевірте налаштування Threema Safe.";
+"safe_expired_notification" = "Ваша резервна копія Threema Safe може бути застарілою та незабаром може бути видалена. Перевірте налаштування Threema Safe та переконайтесь, резервну копію Threema Safe може бути створено.";
+"safe_test_server" = "Тестовий сервер";
+"safe_test_server_invalid_url" = "Будь ласка, введіть дійсну адресу HTTPS.";
+"safe_restore_error" = "Відновлення резервної копії Threema Safe не вдалось. Будь ласка, спробуйте пізніше.";
+"safe_activation_failed" = "Не вдалось активувати Threema Safe після відновлення резервної копії.";
+
+"password_bad" = "Слабий пароль";
+"password_bad_explain" = "Обраний пароль для Threema Safe не є безпечним і може бути легко вгаданий зловмисниками. Будь ласка, виберіть інший пароль. Підказка: використовуйте пароль, що складається з кількох окремих слів.";
+"password_bad_guidelines" = "Уведений пароль не відповідає рекомендаціям.";
+"password_bad_regex" = "Недійсне визначення (регулярний вираз) вимог до пароля. Будь ласка, зв’яжіться з адміністратором %@.";
+
+"continue_anyway" = "Все одно продовжити";
+
+"restore_option_title" = "Відновити з резервної копії";
+"restore_option_id_title" = "Відновити ID з резервної копії";
+"restore_option_description" = "Яку резервну копію бажаєте відновити?";
+"restore_option_safe" = "Відновити ID, контакти та групи";
+"restore_option_safe_keep_data" = "Відновити лише ID з Threema Safe та залишити дані (діалоги, контакти, групи тощо) на пристрої";
+"restore_option_id" = "Відновити лише ID";
+"restore_option_id_keep_data" = "Відновити експортований Threema ID та залишити дані (діалоги, контакти, групи тощо) на пристрої";
+"backup_faq_link_text" = "Дізнатись більше про резервні копії у %@";
+"forgot_password_link_text" = "Забули пароль?";
+
+"restore_option_data_description" = "На цьому пристрої наявні такі дані %@ (діалоги, контакти, групи тощо).";
+"restore_option_data_keep_data" = "Зберегти дані на пристрої";
+"restore_option_data_keep_data_description" = "Відновити лише Threema ID (з Threema Safe або з експортованого ID) та залишити дані на пристрої";
+"restore_option_data_delete_data" = "Видалити дані на пристрої";
+"restore_option_data_delete_data_description" = "Відновити резервну копію Threema Safe (містить ваш ID, контакти та групи) або експортований ID (містить лише Threema ID) після видалення даних на пристрої";
+"restore_option_data_delete_data_explain" = "Для відновлення повної резервної копії Threema Safe ви маєте перевстановити %@. Будь ласка, видаліть застосунок та завантажте його знов з App Store.";
+
+// Company Directory
+"companydirectory_description" = "Шукати у папці компанії";
+"companydirectory_placeholder" = "Пошук у папці";
+"companydirectory_noentries_title" = "Записів не знайдено";
+"companydirectory_noentries_description" = "Введіть щонайменше 3 знаки для пошуку, будь ласка";
+
+"already_licensed" = "Вже ліцензовано";
+
+// IDNSafetyHelper
+"url_warning_title" = "Попередження про фішинг";
+"url_warning_body" = "Ім’я хоста посилання, яке ви збираєтеся відкрити, підозріле:\n\nПоказане ім'я хоста: %@\nСправжнє ім'я: %@\n\nЦе може бути спробою змусити вас відкрити сайт, прикидаючись іншим сайтом.\n\nВсе одно бажаєте продовжити?";
+
+// Storage Management
+"storage_management" = "Керування сховищем";
+"storage_total" = "Загальний розмір диска";
+"storage_total_in_use" = "Використано";
+"storage_total_free" = "Вільно";
+"storage_threema" = "Використано %@";
+"delete_explain" = "Видаліть старі медіа та файли, щоб звільнити місце на диску. Зверніть увагу: повідомлення не видаляються автоматично, а лише після натискання відповідної кнопки Видалити.";
+"delete_media_older_than" = "Видалити медіа та файли старіші за";
+"delete_media" = "Видалити медіа та файли";
+"delete_media_confirm" = "Бажаєте назавжди видалити усі медіа та файли старіші за %@?";
+"delete_media_confirm_all" = "Бажаєте назавжди видалити усі медіа та файли?";
+"delete_media_explain" = "Ескізи не видалятимуться.";
+"delete_messages_older_than" = "Видалити повідомлення старіші за";
+"delete_messages" = "Видалити повідомлення";
+"delete_messages_confirm" = "Бажаєте назавжди видалити усі повідомлення старіші за %@?";
+"delete_messages_confirm_all" = "Бажаєте назавжди видалити усі повідомлення?";
+"delete_messages_explain" = "Усі типи повідомлень буде видалено: текстові, голосові, медіа, файли, опитування тощо.";
+"one_year_title" = "1 рік";
+"one_year" = "1 рік";
+"six_months_title" = "6 місяців";
+"six_months" = "6 місяців";
+"three_months_title" = "3 місяця";
+"three_months" = "3 місяця";
+"one_month_title" = "1 місяць";
+"one_month" = "1 місяць";
+"one_week_title" = "1 тиждень";
+"one_week" = "1 тиждень";
+"everything" = "Видалити все";
+"media_file_not_found" = "Не вдалось відкрити медіафайл. Його було видалено або не завантажено з сервера.";
+"older_than" = "Старіші за";
+
+"file_deleted_title" = "Файл видалено";
+"file_not_found_title" = "Файл не знайдено";
+
+// Settings
+"settings_privacy" = "Приватність";
+"settings_appearance" = "Вигляд";
+"settings_notification" = "Сповіщення";
+"settings_chat" = "Діалог";
+"settings_media" = "Медіа";
+"settings_storage_management" = "Керування сховищем";
+"settings_passcode_lock" = "Блокування за допомогою пароля";
+"settings_threema_calls" = "Виклики Threema";
+"settings_threema_web" = "Застосунок / Вебверсія";
+"settings_network_status" = "Стан мережі";
+"settings_version" = "Версія";
+"settings_license_username" = "Ім'я користувача ліцензії";
+"settings_invite_a_friend" = "Запросити друга";
+"settings_threema_channel" = "Канал Threema";
+"settings_support" = "Підтримка";
+"settings_privacy_policy" = "Політика конфіденційності";
+"settings_license" = "Ліцензія";
+"settings_advanced" = "Розширені";
+"settings_threema_work" = "Threema Робота";
+"settings_feedback" = "Відгук про бета-версію";
+"settings_dev_mode" = "Режим розробника";
+"tos_cell_title" = "Умови використання";
+
+"settings_advanced_flush_message_queue" = "Очистити чергу повідомлень";
+"settings_advanced_orphaned_files_cleanup" = "Видалити загублені файли";
+
+// Dev Mode
+"settings_devmode_quote_v2" = "Цитування Версія 2";
+"settings_devmode_new_chat_view" = "Новий вигляд діалогів";
+"settings_devmode_stylekit_debug_view" = "Режим відладки StyleKit";
+
+// Appearance
+"settings_appearance_theme_section" = "Тема";
+"settings_appearance_light_theme" = "Світла";
+"settings_appearance_dark_theme" = "Темна";
+"settings_appearance_system_theme" = "Системна";
+"settings_appearance_theme_selected" = "Обрана тема %@";
+"settings_appearance_theme_active" = "Активна";
+"settings_appearance_hide_stale_contacts" = "Сховати неактивні ID";
+"settings_appearance_show_profile_pictures" = "Показувати зображення профілю";
+"settings_appearance_display_order" = "Порядок показування";
+"settings_appearance_show_gallery_preview" = "Попередній перегляд галереї";
+
+// Sentry
+"sentry_crash_send_title" = "Аварійне завершення роботи %@";
+"sentry_crash_send_description" = "Ви можете надіслати анонімний звіт про аварійне завершення роботи. Деталі, які пояснюють причину збою, допоможуть розв'язати проблему, що призвела до цього.";
+"sentry_crash_send_yes" = "Надіслати анонімний звіт";
+"sentry_crash_send_no" = "Не надсилати";
+"sentry_crash_comment_placeholder" = "Звіт про аварійне завершення роботи";
+
+// My profile
+"profile_share_id_text" = "Мій Threema ID";
+
+// File message
+"optional_caption" = "Підпис за бажанням";
+"send_as_file" = "Надіслати в оригінальному стані";
+
+// Notification settings
+"settings_notifications_inapp_section" = "У застосунку";
+"settings_notifications_inapp_sounds" = "Звуки";
+"settings_notifications_inapp_vibrate" = "Вібрація";
+"settings_notifications_inapp_preview" = "Попередній перегляд";
+"settings_notifications_push_section" = "Push-сповіщення";
+"settings_notifications_push_sound" = "Звук";
+"settings_notifications_push_groupsound" = "Звук групи";
+"settings_notifications_push_preview" = "Попередній перегляд";
+"settings_notifications_push_showNickname" = "Показати прізвисько";
+"settings_notifications_masterDnd_section_header" = "Політика годин тиші";
+"settings_notifications_masterDnd" = "Не турбувати під час годин тиші";
+"settings_notifications_masterDnd_section_footer" = "Заблокувати сповіщення та відхиляти дзвінки не у робочий час.";
+"settings_notifications_masterDnd_workingDays" = "Робочі дні";
+"settings_notifications_masterDnd_startTime" = "Початок робочого дня";
+"settings_notifications_masterDnd_endTime" = "Кінец робочого дня";
+"settings_notification_iOS_settings" = "Системні налаштування";
+"settings_notification_open_iOS_settings" = "Відкрити системні налаштування";
+
+// Orphaned files delete
+"settings_orphaned_files_description" = "Під час видалення даних через Керування сховищем у попередніх версіях %@, траплялись рідкі випадки того, що файли не видалялись, а переміщувались до %@.
+
+Спочатку створіть резервну копію iTunes; дані може бути втрачено!";
+"settings_orphaned_files_title" = "ЗАГУБЛЕНІ ФАЙЛИ";
+"settings_orphaned_files_button" = "Перемістити до смітника";
+"settings_orphaned_files_footer" = "%@ з %@ файлів загублені.
+
+Перемістіть загублені файли до смітника та упевніться, що жодних (медіа) файлів не залишилось у %@.";
+"settings_orphaned_files_footer_no_files" = "Загублених файлів немає.";
+"settings_orphaned_files_bin_title" = "СМІТНИК";
+"settings_orphaned_files_bin_restore_button" = "Відновити вміст смітника";
+"settings_orphaned_files_bin_delete_button" = "Очистити смітник";
+"settings_orphaned_files_bin_footer" = "У смітнику %@ файлів (%@).
+
+Якщо у %@ не залишилось загублених (медіа) файлів, очистить смітник для остаточного видалення загублених файлів.";
+"settings_orphaned_files_bin_footer_no_files" = "Смітник порожній.";
+"settings_orphaned_files_bin_delete_conformation" = "Бажаєте остаточно видалити загублені файли? Цю дію неможливо скасувати.";
+"settings_orphaned_files_log_title" = "ФАЙЛИ ЖУРНАЛІВ";
+"settings_orphaned_files_log_all_files_button" = "Внести файли до журналу відладки";
+
+// Threema calls settings
+"settings_threema_calls_enable_calls" = "Увімкнути виклики Threema";
+"settings_threema_calls_always_relay_calls" = "Завжди ретранслювати виклики";
+"settings_threema_calls_callkit" = "Показувати виклики у iOS";
+"settings_threema_calls_video_section" = "Відеовиклики";
+"settings_threema_calls_allow_video_calls" = "Дозволити відеовиклики";
+"settings_threema_calls_video_quality_profile" = "Бажана якість відео";
+"settings_threema_calls_video_quality_profile_low" = "Низьке споживання даних";
+"settings_threema_calls_video_quality_profile_max" = "Максимальна якість";
+"settings_threema_calls_video_quality_profile_auto" = "Збалансовано (рекомендується)";
+"settings_threema_calls_video_quality_profile_low_description" = "Зменшена якість відео для низького споживання даних";
+"settings_threema_calls_video_quality_profile_max_description" = "Увага: може викликати високе споживання даних, зокрема у стільниковій мережі!";
+"settings_threema_calls_video_quality_profile_auto_description" = "Висока якість відео у Wi-Fi мережі, зменшене споживання даних у стільниковій мережі";
+"settings_threema_calls_video_quality_profile_footer" = "Фактична якість відео залежить від мережі та налаштувань вашого співрозмовника.";
+"settings_threema_calls_call_sound" = "Звук";
+
+// Media Preview
+"loading_video_failed" = "Не вдалось завантажити відео. Будь ласка, перезапустіть застосунок та спробуйте знов.";
+"loading_image" = "Завантаження зображення";
+"loading_document" = "Завантаження документу";
+"load_error" = "Не вдалось завантажити елемент через невідому помилку.";
+"loading_video" = "Завантаження відео";
+"selected_media_list" = "Список обраних медіа";
+"media_item_of" = "Медіа %@ з %@";
+"video_date" = "Відео знято %@";
+"video_date_duration" = "Відео знято %@, тривалість: %@";
+"imagedate_date" = "Фото зроблено %@";
+"send_as_file_description" = "Надіслати файл без змін. Файли міститимуть усі метадані, як-от дані геолокації фотографії.";
+"more_options" = "Більше налаштувань";
+"add_caption_to_image" = "Додати підпис";
+"add_more_images" = "Додати більше зображень";
+"back_to_media_selection" = "Повернутись до екрана вибору медіа";
+"remove_current_image_from_selected_images" = "Прибрати поточний елемент з обраних";
+"send_options" = "Більше налаштувань";
+"multiple_media_items" = "%d елементів";
+"media_item" = "Один елемент";
+"could_not_add_items_title" = "Не вдалось додати елемент";
+"could_not_add_all_items_title" = "Не вдалось додати елменти";
+"one_media_item_could_not_be_processed" = "Один елемент не вдалось опрацювати ти його було пропущено.";
+"multiple_media_items_could_not_be_processed" = "%d елементів не вдалось опрацювати та їх було пропущено.";
+"processing_items_progress" = "Опрацювання елементів %d / %d";
+"item_too_large_title" = "Елемент завеликий";
+"maximum_file_size_exceeded" = "Максимальний розмір файлу %@. Цей файл — %@. Приберіть файл для продовження.";
+"back" = "Назад";
+"sending_item" = "Надсилання елементу";
+"send_as_file_title" = "Тип надсилання";
+"document" = "Документ";
+"paste_create_file_failure_title" = "Не вдалось вставити";
+"paste_create_file_failure_message" = "Не вдалось вставити файл. Будь ласка, спробуйте знов.";
+"loading_files_takes_time_title" = "Завантаження медіа";
+"loading_files_takes_time_description" = "Конвертація відео може зайняти декілька хвилин.";
+"pasteErrorMessageTitle" = "Не вдалось вставити";
+"pasteErrorMessageMessage" = "Не вдалось вставити файл через невідому помилку. Будь ласка, спробуйте пізніше.";
+"media_preview_preview_button_accessibility_label" = "Попередній перегляд";
+"preview" = "Попередній перегляд";
+"could_not_add_all_items_memory_constrained_title" = "Файл не оброблено";
+"could_not_add_all_items_memory_constrained_message" = "Один або кілька файлів не вдалося обробити через технічні обмеження. Спробуйте надіслати ці файли безпосередньо із застосунку.";
+"image_preview_cell_cannot_preview" = "Попередній перегляд неможливий.";
+
+// Share Extension
+"finished_sending_title" = "Надіслання завершено";
+"preview_button_accessibility_title" = "Попередній перегляд документу";
+"unknown_file_type" = "Невідомий тип файлу";
+"unknown_file_size" = "Невідомий розмір файлу";
+"unknown_file_name" = "Невідоме ім'я файлу";
+
+"ballots_with_open_count_accessibility" = "Опитування (відкриті %d)";
+
+/* Ballot */
+"ballot" = "Опитування";
+"ballots" = "Опитування";
+"ballot_results" = "Результати опитування";
+"ballot_validation_error_title" = "Невірне налаштування для опитування";
+"ballot_validation_not_enough_choices" = "Оберіть щонайменше два пункти, будь ласка.";
+"ballot_validation_title_missing" = "Вкажіть назву опитування, будь ласка.";
+
+"ballot_options" = "Налаштування опитування";
+"ballot_intermediate_results" = "Проміжні результати";
+"ballot_show_intermediate_results" = "Показувати проміжні результати";
+"ballot_multiple_choice" = "Декілька варіантів";
+"ballot_clone" = "Копіювати наявне опитування";
+"ballot_clone_warning_title" = "Увага";
+"ballot_clone_warning_message" = "Усі дані буде перезаписано.";
+"ballot_feature_level_warning_title" = "Будь ласка, завуважте";
+"ballot_feature_level_warning_message" = "Деякі співрозмовники мають версію застосунку, що не підтримує опитування: %@";
+"ballot_feature_level_error_message" = "Ніхто зі співрозмовників не має версії застосунку, яка підтримує опитування: %@";
+
+"ballot_add_choice" = "Додати варіант";
+"ballot_create" = "Створити опитування";
+"ballot_placeholder_title" = "Заголовок, наприклад, «Куди ви бажаєте піти сьогодні»?";
+"ballot_placeholder_choice" = "Варіанти";
+"ballot_date_button" = "Дата";
+"ballot_allDay_switch" = "Увесь день";
+
+"ballot_choose_title" = "Обрати опитування";
+"ballot_closed_cell_title" = "Результати опитування";
+"ballot_new_cell_title" = "Нове опитування";
+"ballot_description_intermediate" = "Увімкніть можливість усім учасникам бачити результати незавершеного опитування. В іншому випадку результати не показуватимуться допоки опитування не завершене.";
+"ballot_description_multiplechoice" = "Вкажіть, чи зможуть учасники опитування обирати один варіант або декілька.";
+
+"ballot_vote" = "Голосувати";
+"ballot_votes_count" = "Голосів %@";
+"ballot_vote_selected" = "Обрані";
+"ballot_vote_not_selected" = "Не обрані";
+"ballot_close" = "Завершити опитування";
+"ballot_close_ack" = "Бажаєте завершити опитування та зробити його результати доступними?";
+"ballot_got_votes_count" = "Отримано %1$i з %2$i голосів.";
+"ballot_vote_ballot_closed_title" = "Вибачте, вже запізно";
+"ballot_vote_ballot_closed_message" = "Опитування вже завершено.";
+
+"ballot_open_ballots" = "Відкриті опитування";
+"ballot_closed_ballots" = "Закриті опитування";
+"ballot_not_voted" = "Ці учасники не брали участь в опитуванні:";
+
+"voteCancelTitle" = "Відхилити";
+"voteCancelMessage" = "Якщо ви покинете опитування не проголосувавши, вашу відповідь не буде зараховано.";
+"discardVoteTitle" = "Відхилити";
+
+/* Custom Privacy Settings */
+"privacySetting_header" = "Приватність";
+"send_readReceipts" = "Звіти про прочитання";
+"dont_send" = "Не надсилати";
+"send_readReceipt" = "Звіт про прочитання";
+"send_typingIndicators" = "Сповіщення про набір тексту";
+"send_typingIndicator" = "Сповіщення про набір тексту";
+
+"default_send" = "%@ (за замовчуванням)";
+"use_default_send" = "За замовчуванням (%@)";
+"default_setting" = "Налаштування за замовчуванням";
+
+"readReceipt_sheetMessage" = "Перезаписати налаштування за замовчуванням для цього контакту.";
+"typingIndicator_sheetMessage" = "Перезаписати налаштування за замовчуванням для цього контакту.";
+
+"reset_overrides" = "Скинути для усіх контактів";
+"resetButton_footer" = "Скинути налаштування усіх контактів до налаштувань за замовчуванням.";
+"reset_overrides_alert_title" = "Скинути";
+"reset_overrides_alert_message" = "Скинути усі контакти до налаштувань за замовчуванням. Дію неможливо скасувати.";
+"reset_overrides_alert_action" = "Скинути все";
+
+/* Multi Decvice */
+"multi_device_linked_devices_title" = "Прив'язані пристрої";
+"multi_device_linked_devices_refresh" = "Потягніть для оновлення";
+"multi_device_linked_devices_loading_failed" = "Не вдалось завантажити пристрої: %@";
+"multi_device_linked_devices_failed_to_load_title" = "Не вдалось завантажити список пристроїв";
+"multi_device_linked_devices_failed_to_load_message" = "Не вдалось завантажити прив'язані пристрої. Будь ласка, перевірте інтернет-з'єднання та спробуйте ще раз.";
+"multi_device_linked_devices_this" = "Ці пристрої";
+"multi_device_linked_devices_others" = "Інші пристрої";
+"multi_device_linked_devices_remove_failed" = "Видалення пристрою не вдалось: %@";
+"multi_device_linked_devices_failed_remove_title" = "Не вдалось видалити пристрій";
+"multi_device_linked_devices_failed_remove_message" = "Не вдалось видалити прив'язаний пристрій. Будь ласка, спробуйте ще.";
+"multi_device_linked_devices_failed_remove_message_2" = "Не вдалось видалити прив'язаний пристрій. Будь ласка, перевірте інтернет-з'єднання та спробуйте ще раз.";
+
+"myprofile_link_email_phone_footer" = "Прив'язання електронної пошти або мобільного номеру до вашого ID дозволить іншим користувачам знаходити вас у %@ автоматично якщо ваш номер збережено у їхніх контактах.";
+"myprofile_link_email_footer" = "Прив'язання електронної пошти до вашого ID дозволить іншим користувачам знаходити вас у %@ автоматично якщо ваш номер збережено у їхніх контактах.";
+"myprofile_link_email_onprem_footer" = "Прив'язання електронної пошти до вашого ID дозволить іншим користувачам цього серверу (%@) знаходити вас у %@ автоматично якщо ваш номер збережено у їхніх контактах.";
+"myprofile_link_phone_footer" = "Прив'язання мобільного номеру до вашого ID дозволить іншим користувачам знаходити вас у %@ автоматично якщо ваш номер збережено у їхніх контактах.";
+"myprofile_link_phone_onprem_footer" = "Прив'язання мобільного номеру до вашого ID дозволить іншим користувачам цього серверу (%@) знаходити вас у %@ автоматично якщо ваш номер збережено у їхніх контактах.";
+"mentions_table_view_cell_accessibility_hint" = "Торкніться для створення згадки";
+
+// POI
+"poi_unavailable" = "Недоступно";
+"poi_not_marked" = "–";
+"poi_location_disabled_action" = "Відкрити налаштування";
+"poi_search_POI" = "Міста та вулиці";
+"poi_search_prefix" = "Шукати біля %@";
+"poi_away" = "%@ не на зв'язку";
+"poi_dropped_pin_info_alert_title" = "Поставити мітку";
+"poi_dropped_pin_info_alert_message" = "Щоб поставити мітку торкніться та утримуйте палець на карті.";
+"poi_accuracy_info_alert_title" = "Немає доступу до точної геопозиції";
+"poi_accuracy_info_alert_message" = "Будь ласка, відкрийте налаштування та дозвольте доступ до точної геопозиції.";
+"poi_current_location" = "Моя геопозиція";
+"poi_marked_location" = "Поставлена мітка";
+
+"notification_threemaweb_connectionlost_title" = "З'єднання з Threema Web втрачено";
+"notification_threemaweb_connectionlost_body" = "Щоб продовжити використовувати Threema Web, заново відкрийте застосунок.";
+
+"settings_threema_web_connected" = "Версію для комп’ютера / вебверсію під’єднано";
+"settings_threema_web_connectioninfo" = "Щоб залишатися на зв’язку, ваш пристрій має бути розблоковано, а %@ має працювати у фоновому режимі. Під’єднаний пристрій не блокуватиметься автоматично.";
+
+"chat_text_view_placeholder" = "Нове повідомлення";
+"compose_bar_camera_button_accessibility_label" = "Відкрити камеру";
+"compose_bar_record_button_accessibility_label" = "Записати голосове повідомлення";
+"compose_bar_send_message_button_accessibility_label" = "Надіслати повідомлення";
+"compose_bar_attachment_button_accessibility_label" = "Додати вкладення";
+"play_record_audio_view_controller_general_error_title" = "Не вдалося записати";
+"play_record_audio_view_controller_general_error_message" = "Голосове повідомлення зараз неможливо записати через невідому помилку";
+"hardware_keyboard_send_on_enter_discoverability_title" = "Надіслати повідомлення";
+
+// New Ballot Message Cell
+"ballot_message_local_votes" = "Ви проголосували за таке: %@.";
+"ballot_message_most_votes" = "Більшість голосів за таке: %@.";
+"ballot_message_closed" = "Закрито.";
+"ballot_message_did_vote" = "%@ з %@ учасників.";
+"ballot_message_no_votes" = "Голоси не отримано.";
+"vote_system_message" = "«%@» проголосував(-ла) в «%@»";
+"vote_system_message_hidden" = "Отримано новий голос в «%@»";
+"vote_system_message_default" = "Отримано повідомлення щодо голосів для невідомого голосування";
+
+// ChatBar
+"chat_bar_quote_close_button" = "Закрити цитату";

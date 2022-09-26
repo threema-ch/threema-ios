@@ -18,37 +18,37 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-import Foundation
-import ThreemaFramework
-import CoreServices
-import PromiseKit
 import CocoaLumberjackSwift
+import CoreServices
+import Foundation
+import PromiseKit
+import ThreemaFramework
 
-protocol SenderItemDelegate : AnyObject {
-    func showAlert(with title : String, message : String)
-    func setProgress(progress : NSNumber, forItem : Any)
-    func finishedItem(item : Any)
+protocol SenderItemDelegate: AnyObject {
+    func showAlert(with title: String, message: String)
+    func setProgress(progress: NSNumber, forItem: Any)
+    func finishedItem(item: Any)
     func setFinished()
 }
 
-class ItemSender : NSObject {
-    private var recipientConversations : Set<Conversation>?
-    var itemsToSend : [URL]?
-    var textToSend : String?
-    var sendAsFile : Bool = false
-    var captions : [String?] = [String?]()
+class ItemSender: NSObject {
+    private var recipientConversations: Set<Conversation>?
+    var itemsToSend: [URL]?
+    var textToSend: String?
+    var sendAsFile = false
+    var captions = [String?]()
     
-    private var sentItemCount : Int?
-    private var totalSendCount : Int?
+    private var sentItemCount: Int?
+    private var totalSendCount: Int?
     
-    private var correlationIDs : Array<String> = Array()
+    private var correlationIDs: [String] = Array()
     
-    var shouldCancel : Bool = false
+    var shouldCancel = false
     
     private var uploadSema = DispatchSemaphore(value: 0)
-    private var sender : FileMessageSender?
+    private var sender: FileMessageSender?
     
-    weak var delegate : SenderItemDelegate?
+    weak var delegate: SenderItemDelegate?
     
     func itemCount() -> Promise<Int> {
         var count = 0
@@ -59,14 +59,14 @@ class ItemSender : NSObject {
         guard let text = textToSend else {
             return .value(count)
         }
-        if text.count > 0 {
+        if !text.isEmpty {
             count = count + 1
         }
         
         return .value(count)
     }
     
-    func addText(text : String) {
+    func addText(text: String) {
         textToSend = text
     }
     
@@ -75,48 +75,59 @@ class ItemSender : NSObject {
             if shouldCancel {
                 return
             }
-            self.sendItem(senderItem: textToSend!, toConversation: conversation, correlationId: nil)
+            sendItem(senderItem: textToSend!, toConversation: conversation, correlationID: nil)
         }
     }
     
     private func sendMediaItems() {
-        let conv : [Conversation] = Array(recipientConversations!)
-        DispatchQueue.global(qos: .userInitiated).async {
-            var senderItem : URLSenderItem?
-            var sentItems = 0
+        let conv: [Conversation] = Array(recipientConversations!)
+        DispatchQueue.global().async {
+            var senderItem: URLSenderItem?
             for i in 0..<self.itemsToSend!.count {
+                guard !self.shouldCancel else {
+                    return
+                }
+                
                 autoreleasepool {
-                    senderItem = self.getMediaSenderItem(url:self.itemsToSend![i], caption: self.captions[i])
+                    senderItem = self.getMediaSenderItem(url: self.itemsToSend![i], caption: self.captions[i])
                     
                     for j in 0..<conv.count {
+                        guard !self.shouldCancel else {
+                            senderItem = nil
+                            return
+                        }
+                        
                         autoreleasepool {
-                            self.sendItem(senderItem: senderItem!,
-                                          toConversation: conv[j],
-                                          correlationId: self.correlationIDs[j])
+                            self.sendItem(
+                                senderItem: senderItem!,
+                                toConversation: conv[j],
+                                correlationID: self.correlationIDs[j]
+                            )
                         }
-                        sentItems += 1
-                        if sentItems > 10 {
-                            sentItems = 0
-                            DatabaseManager.db()?.refreshDirtyObjects()
-                        }
+                        DatabaseManager.db()?.refreshDirtyObjects(false)
                     }
+                    
+                    senderItem = nil
                 }
             }
         }
     }
     
-    private func getMediaSenderItem(url : URL, caption : String?) -> URLSenderItem {
-        var senderItem : URLSenderItem
-        if self.sendAsFile {
+    private func getMediaSenderItem(url: URL, caption: String?) -> URLSenderItem {
+        var senderItem: URLSenderItem
+        if sendAsFile {
             let mimeType = UTIConverter.mimeType(fromUTI: UTIConverter.uti(forFileURL: url))
-            senderItem = URLSenderItem(url: url,
-                                       type: mimeType,
-                                       renderType: 0,
-                                       sendAsFile: true)
-        } else {
-            guard let item = URLSenderItemCreator.getSenderItem(for: url, maxSize: "large") else {
+            senderItem = URLSenderItem(
+                url: url,
+                type: mimeType,
+                renderType: 0,
+                sendAsFile: true
+            )
+        }
+        else {
+            guard let item = URLSenderItemCreator.getSenderItem(for: url, maxSize: .large) else {
                 let mimeType = UTIConverter.mimeType(fromUTI: UTIConverter.uti(forFileURL: url)) ?? "unknown type"
-                let msg = "Could not create sender item for item of type \(mimeType )"
+                let msg = "Could not create sender item for item of type \(mimeType)"
                 DDLogError(msg)
                 fatalError(msg)
             }
@@ -128,20 +139,22 @@ class ItemSender : NSObject {
         return senderItem
     }
     
-    func sendItemsTo(conversations : Set<Conversation>) {
-        self.recipientConversations = conversations
-        _ = self.itemCount().done { itemCount in
+    func sendItemsTo(conversations: Set<Conversation>) {
+        recipientConversations = conversations
+        _ = itemCount().done { itemCount in
             self.totalSendCount = self.recipientConversations!.count * itemCount
             self.sentItemCount = 0
             
             if self.textToSend != nil {
                 self.sendTextItems()
-            } else if self.itemsToSend != nil {
+            }
+            else if self.itemsToSend != nil {
                 for _ in 0..<self.recipientConversations!.count {
                     self.correlationIDs.append(ImageURLSenderItemCreator.createCorrelationID())
                 }
                 self.sendMediaItems()
-            } else {
+            }
+            else {
                 let err = "No sendable items provided"
                 DDLogError(err)
                 fatalError(err)
@@ -149,108 +162,120 @@ class ItemSender : NSObject {
         }
     }
     
-    private func sendItem(senderItem : Any, toConversation : Conversation, correlationId : String?) {
+    private func sendItem(senderItem: Any, toConversation: Conversation, correlationID: String?) {
         if let senderItem = senderItem as? URLSenderItem {
-            sendUrlSenderItem(senderItem: senderItem, toConversation: toConversation, correlationId: correlationId)
-        } else if let message = senderItem as? String {
-            if message.count > 0 {
+            sendURLSenderItem(senderItem: senderItem, toConversation: toConversation, correlationID: correlationID)
+        }
+        else if let message = senderItem as? String {
+            if !message.isEmpty {
                 sendString(message: message, toConversation: toConversation)
-            } else {
-                delegate?.finishedItem(item: self.progressItemKey(item: message, conversation: toConversation)!)
-                sentItemCount = sentItemCount! + 1
-                self.checkIsFinished()
             }
-        } else {
-            let title = BundleUtil.localizedString(forKey:"error_message_no_items_title")
-            let message = BundleUtil.localizedString(forKey:"error_message_no_items_message")
+            else {
+                delegate?.finishedItem(item: progressItemKey(item: message, conversation: toConversation)!)
+                sentItemCount = sentItemCount! + 1
+                checkIsFinished()
+            }
+        }
+        else {
+            let title = BundleUtil.localizedString(forKey: "error_message_no_items_title")
+            let message = BundleUtil.localizedString(forKey: "error_message_no_items_message")
             delegate!.showAlert(with: title, message: message)
             
             sentItemCount = sentItemCount! + 1
-            self.checkIsFinished()
+            checkIsFinished()
         }
     }
     
-    private func sendUrlSenderItem(senderItem : URLSenderItem, toConversation : Conversation, correlationId : String?) {
+    private func sendURLSenderItem(senderItem: URLSenderItem, toConversation: Conversation, correlationID: String?) {
         sender = FileMessageSender()
         sender!.uploadProgressDelegate = self
-        sender!.send((senderItem), in: toConversation, requestId: nil, correlationId: correlationId)
-        self.uploadSema.wait()
+        sender!.send(senderItem, in: toConversation, requestID: nil, correlationID: correlationID)
+        toConversation.conversationVisibility = .default
+        uploadSema.wait()
         sender = nil
     }
     
-    private func sendString(message : String, toConversation : Conversation) {
+    private func sendString(message: String, toConversation: Conversation) {
         DispatchQueue.main.async {
-            self.delegate?.setProgress(progress: 0.1, forItem: self.progressItemKey(item: message, conversation:toConversation)!)
+            self.delegate?.setProgress(
+                progress: 0.1,
+                forItem: self.progressItemKey(item: message, conversation: toConversation)!
+            )
             
             let trimmedMessage = message.trimmingCharacters(in: .whitespacesAndNewlines)
             if !(trimmedMessage == "" || trimmedMessage == "\u{fffc}") {
-                let messages = Utils.getTrimmedMessages(trimmedMessage)
+                let messages = ThreemaUtilityObjC.getTrimmedMessages(trimmedMessage)
                 
-                if messages == nil {
-                    MessageSender.sendMessage(trimmedMessage, in: toConversation, async: true, quickReply: false, requestId: nil, onCompletion: {(textMessage, conversation) in
-                        self.awaitAckForMessageId(messageId: textMessage!.id)
-                    })
-                } else {
-                    for m in messages! {
-                        MessageSender.sendMessage(m as? String, in: toConversation, async: true, quickReply: false, requestId: nil, onCompletion: {(textMessage, conversation) in
-                            self.awaitAckForMessageId(messageId: textMessage!.id)
-                        })
+                if let messages = messages {
+                    for m in messages {
+                        MessageSender.sendMessage(
+                            m as? String,
+                            in: toConversation,
+                            quickReply: false,
+                            requestID: nil,
+                            completion: self.textMessageCompletionHandler(baseMessage:)
+                        )
                     }
+                }
+                else {
+                    MessageSender.sendMessage(
+                        trimmedMessage,
+                        in: toConversation,
+                        quickReply: false,
+                        requestID: nil,
+                        completion: self.textMessageCompletionHandler(baseMessage:)
+                    )
                 }
             }
         }
     }
     
-    private func awaitAckForMessageId(messageId : Data) {
-        let entityManager = EntityManager()
-        let message = entityManager.entityFetcher.ownMessage(withId: messageId)
-        
-        message?.addObserver(self, forKeyPath: "sent", options: .new, context: nil)
-    }
-    
-    //MARK: - KVO
-    
-    override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
-        if object is TextMessage {
-            let message = object as! TextMessage
+    @objc private func textMessageCompletionHandler(baseMessage: BaseMessage?) {
+        if let message = baseMessage as? TextMessage {
+            delegate?.finishedItem(item: [progressItemKey(item: message.text!, conversation: message.conversation)])
             
-            delegate?.finishedItem(item: [self.progressItemKey(item: message.text!, conversation: message.conversation)])
-            
-            message.removeObserver(self, forKeyPath: "sent")
+            message.conversation.conversationVisibility = .default
             
             DatabaseManager.db()?.addDirtyObject(message.conversation)
             DatabaseManager.db()?.addDirtyObject(message.conversation.lastMessage)
             
             sentItemCount! += 1
-            self.checkIsFinished()
+            checkIsFinished()
+        }
+        else {
+            DDLogError("Expected a TextMessage but received something else \(type(of: baseMessage))")
         }
     }
     
-    private func progressItemKey(item : String, conversation : Conversation) -> Any? {
-        let hash : NSInteger = (item as AnyObject).hash + conversation.hashValue
+    private func progressItemKey(item: String, conversation: Conversation) -> Any? {
+        let hash: NSInteger = (item as AnyObject).hash + conversation.hashValue
         return NSNumber(value: hash)
     }
     
     private func checkIsFinished() {
         if sentItemCount == totalSendCount {
             let when = DispatchTime.now() + 0.75
-            DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: when, execute: {
+            DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: when) {
                 DispatchQueue.main.async { [self] in
                     self.delegate?.setFinished()
                 }
-            })
+            }
         }
     }
 }
 
-//MARK: - UploadProgressDelegate
+// MARK: - UploadProgressDelegate
 
-extension ItemSender : UploadProgressDelegate {
+extension ItemSender: UploadProgressDelegate {
     public func blobMessageSenderUploadShouldCancel(_ blobMessageSender: BlobMessageSender!) -> Bool {
-        return shouldCancel
+        shouldCancel
     }
     
-    public func blobMessageSender(_ blobMessageSender: BlobMessageSender!, uploadProgress progress: NSNumber!, for message: BaseMessage!) {
+    public func blobMessageSender(
+        _ blobMessageSender: BlobMessageSender!,
+        uploadProgress progress: NSNumber!,
+        for message: BaseMessage!
+    ) {
         delegate?.setProgress(progress: progress, forItem: message.id!)
     }
     
@@ -260,21 +285,24 @@ extension ItemSender : UploadProgressDelegate {
 
         markDirty(for: message)
 
-        self.checkIsFinished()
+        checkIsFinished()
         
         DispatchQueue.global(qos: .userInteractive).async {
             self.uploadSema.signal()
         }
     }
     
-    public func blobMessageSender(_ blobMessageSender: BlobMessageSender!, uploadFailedFor message: BaseMessage!, error: UploadError) {
+    public func blobMessageSender(
+        _ blobMessageSender: BlobMessageSender!,
+        uploadFailedFor message: BaseMessage!,
+        error: UploadError
+    ) {
         DispatchQueue.global(qos: .userInteractive).async {
             self.uploadSema.signal()
         }
         sentItemCount! += 1
         
-        
-        let errorTitle = BundleUtil.localizedString(forKey:"error_sending_failed")
+        let errorTitle = BundleUtil.localizedString(forKey: "error_sending_failed")
         let errorMessage = FileMessageSender.message(forError: error)
         
         delegate?.showAlert(with: errorTitle, message: errorMessage!)
@@ -288,9 +316,9 @@ extension ItemSender : UploadProgressDelegate {
         DatabaseManager.db()?.addDirtyObject(message.conversation)
         DatabaseManager.db()?.addDirtyObject(message)
         
-        if let fileMessage = message as? FileMessage {
-            DatabaseManager.db()?.addDirtyObject(fileMessage.thumbnail)
-            DatabaseManager.db()?.addDirtyObject(fileMessage.data)
+        if let fileMessageEntity = message as? FileMessageEntity {
+            DatabaseManager.db()?.addDirtyObject(fileMessageEntity.thumbnail)
+            DatabaseManager.db()?.addDirtyObject(fileMessageEntity.data)
         }
     }
 }

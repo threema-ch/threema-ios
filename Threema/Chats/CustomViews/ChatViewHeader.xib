@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="20037" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" colorMatched="YES">
+    <device id="retina4_7" orientation="portrait" appearance="light"/>
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="20020"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <view contentMode="scaleToFill" id="iN0-l3-epB" customClass="ChatViewHeader">
+            <rect key="frame" x="0.0" y="0.0" width="320" height="92"/>
+            <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxY="YES"/>
+            <subviews>
+                <view contentMode="scaleToFill" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="4Py-YG-yJP" userLabel="Wrapper View">
+                    <rect key="frame" x="0.0" y="0.0" width="320" height="92"/>
+                    <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                    <subviews>
+                        <view contentMode="scaleToFill" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="aea-LW-ZY5">
+                            <rect key="frame" x="0.0" y="0.0" width="320" height="48"/>
+                            <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxY="YES"/>
+                            <subviews>
+                                <button opaque="NO" contentMode="scaleAspectFit" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="XD4-lm-aeM">
+                                    <rect key="frame" x="8" y="8" width="120" height="32"/>
+                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                    <accessibility key="accessibilityConfiguration" identifier="CallButton"/>
+                                    <size key="titleShadowOffset" width="1" height="1"/>
+                                    <connections>
+                                        <action selector="callAction:" destination="iN0-l3-epB" eventType="touchUpInside" id="yvl-Db-cBF"/>
+                                    </connections>
+                                </button>
+                                <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="s8z-SE-x9k" userLabel="Avatar">
+                                    <rect key="frame" x="142" y="6" width="36" height="36"/>
+                                    <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                    <accessibility key="accessibilityConfiguration" identifier="AvatarButton"/>
+                                    <state key="normal">
+                                        <color key="titleShadowColor" red="0.5" green="0.5" blue="0.5" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                    </state>
+                                </button>
+                                <button opaque="NO" contentMode="center" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="5Hc-uF-Ls2" userLabel="Verification Levels">
+                                    <rect key="frame" x="254" y="18" width="48" height="12"/>
+                                    <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
+                                    <state key="normal">
+                                        <color key="titleShadowColor" red="0.5" green="0.5" blue="0.5" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                    </state>
+                                </button>
+                                <imageView hidden="YES" userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Qls-co-fKp">
+                                    <rect key="frame" x="141" y="27" width="14" height="14"/>
+                                    <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                </imageView>
+                            </subviews>
+                            <color key="backgroundColor" red="0.0" green="0.0" blue="0.0" alpha="0.0" colorSpace="custom" customColorSpace="sRGB"/>
+                        </view>
+                        <view contentMode="scaleToFill" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Q8a-Qm-Lgf" userLabel="buttonView">
+                            <rect key="frame" x="0.0" y="48" width="320" height="44"/>
+                            <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxY="YES"/>
+                            <subviews>
+                                <button opaque="NO" contentMode="center" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="SEb-0T-YYQ" userLabel="Search">
+                                    <rect key="frame" x="0.0" y="0.0" width="60" height="44"/>
+                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                    <inset key="imageEdgeInsets" minX="20" minY="12" maxX="20" maxY="12"/>
+                                    <state key="normal" image="Search"/>
+                                    <connections>
+                                        <action selector="searchAction:" destination="iN0-l3-epB" eventType="touchUpInside" id="UX3-FW-cPn"/>
+                                    </connections>
+                                </button>
+                                <button hidden="YES" opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="HGb-YJ-933">
+                                    <rect key="frame" x="120" y="0.0" width="100" height="44"/>
+                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                    <color key="backgroundColor" red="0.0" green="0.0" blue="0.0" alpha="0.0" colorSpace="custom" customColorSpace="sRGB"/>
+                                    <state key="normal" title="xMedia"/>
+                                    <connections>
+                                        <action selector="mediaAction:" destination="iN0-l3-epB" eventType="touchUpInside" id="aDV-EL-X0k"/>
+                                    </connections>
+                                </button>
+                                <view hidden="YES" contentMode="scaleToFill" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Kw4-f2-q8i" userLabel="BallotBadge" customClass="MKNumberBadgeView">
+                                    <rect key="frame" x="280" y="0.0" width="36" height="28"/>
+                                    <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
+                                    <color key="backgroundColor" red="0.0" green="0.0" blue="0.0" alpha="0.0" colorSpace="custom" customColorSpace="sRGB"/>
+                                    <inset key="insetFor6xAndEarlier" minX="5" minY="0.0" maxX="-5" maxY="0.0"/>
+                                </view>
+                                <button hidden="YES" opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="P3Q-08-zWI">
+                                    <rect key="frame" x="220" y="-1" width="100" height="44"/>
+                                    <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
+                                    <accessibility key="accessibilityConfiguration" identifier="BallotButton"/>
+                                    <state key="normal" title="xballots">
+                                        <color key="titleShadowColor" red="0.5" green="0.5" blue="0.5" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                    </state>
+                                    <connections>
+                                        <action selector="ballotAction:" destination="iN0-l3-epB" eventType="touchUpInside" id="PFR-gQ-kMs"/>
+                                    </connections>
+                                </button>
+                                <view contentMode="scaleToFill" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="cUb-AJ-0gx" userLabel="Horizontal Divider Line" customClass="HairlineView">
+                                    <rect key="frame" x="0.0" y="44" width="320" height="1"/>
+                                    <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxY="YES"/>
+                                    <color key="backgroundColor" red="0.73699933290481567" green="0.73166358470916748" blue="0.75551497936248779" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                </view>
+                                <view contentMode="scaleToFill" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="ifg-FP-DDZ" userLabel="Vertical Divider Line" customClass="HairlineView">
+                                    <rect key="frame" x="59" y="0.0" width="1" height="43"/>
+                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                    <color key="backgroundColor" red="0.73699933290481567" green="0.73166358470916748" blue="0.75551497936248779" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                </view>
+                                <view contentMode="scaleToFill" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="LMp-XN-vrG" userLabel="Vertical Divider Line" customClass="HairlineView">
+                                    <rect key="frame" x="119" y="0.0" width="1" height="43"/>
+                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                    <color key="backgroundColor" red="0.73699933289999997" green="0.73166358470000004" blue="0.75551497940000001" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                </view>
+                                <view contentMode="scaleToFill" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="sCZ-ot-BdD" userLabel="Vertical Divider Line" customClass="HairlineView">
+                                    <rect key="frame" x="219" y="0.0" width="1" height="43"/>
+                                    <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                    <color key="backgroundColor" red="0.73699933290481567" green="0.73166358470916748" blue="0.75551497936248779" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                </view>
+                                <button opaque="NO" contentMode="center" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Dhv-Dh-H2o" userLabel="Search">
+                                    <rect key="frame" x="59" y="0.0" width="60" height="44"/>
+                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                    <state key="normal" image="Bell"/>
+                                    <connections>
+                                        <action selector="notificationsSettingsAction:" destination="iN0-l3-epB" eventType="touchUpInside" id="rer-Zc-nQW"/>
+                                    </connections>
+                                </button>
+                            </subviews>
+                            <color key="backgroundColor" red="0.0" green="0.0" blue="0.0" alpha="0.0" colorSpace="custom" customColorSpace="sRGB"/>
+                        </view>
+                        <view contentMode="scaleToFill" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="mae-uW-cwF" userLabel="Horizontal Divider Line" customClass="HairlineView">
+                            <rect key="frame" x="0.0" y="48" width="320" height="1"/>
+                            <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxY="YES"/>
+                            <color key="backgroundColor" red="0.73699933290481567" green="0.73166358470916748" blue="0.75551497936248779" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                        </view>
+                    </subviews>
+                    <color key="backgroundColor" red="0.96055269241333008" green="0.96052390336990356" blue="0.96054017543792725" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                </view>
+            </subviews>
+            <nil key="simulatedStatusBarMetrics"/>
+            <nil key="simulatedTopBarMetrics"/>
+            <nil key="simulatedBottomBarMetrics"/>
+            <freeformSimulatedSizeMetrics key="simulatedDestinationMetrics"/>
+            <connections>
+                <outlet property="avatarButton" destination="s8z-SE-x9k" id="dth-dz-sMG"/>
+                <outlet property="ballotBadge" destination="Kw4-f2-q8i" id="0UR-Xw-vc1"/>
+                <outlet property="ballotsButton" destination="P3Q-08-zWI" id="bt3-bj-Vse"/>
+                <outlet property="callButton" destination="XD4-lm-aeM" id="neJ-9c-4sZ"/>
+                <outlet property="horizontalDividerLine1" destination="mae-uW-cwF" id="sPF-3u-mAM"/>
+                <outlet property="horizontalDividerLine2" destination="cUb-AJ-0gx" id="aK6-cO-awa"/>
+                <outlet property="mainView" destination="aea-LW-ZY5" id="sEW-DX-9pX"/>
+                <outlet property="mediaButton" destination="HGb-YJ-933" id="VUg-WN-fkh"/>
+                <outlet property="notificationsSettingsButton" destination="Dhv-Dh-H2o" id="O1J-1v-noc"/>
+                <outlet property="optionalButtonsView" destination="Q8a-Qm-Lgf" id="6Wf-sm-qji"/>
+                <outlet property="searchButton" destination="SEb-0T-YYQ" id="FZ6-DX-J8L"/>
+                <outlet property="threemaTypeIcon" destination="Qls-co-fKp" id="HXD-n9-Gqj"/>
+                <outlet property="verificationLevel" destination="5Hc-uF-Ls2" id="CJ0-Qo-4Ie"/>
+                <outlet property="verticalDividerLine1" destination="ifg-FP-DDZ" id="RfA-Mm-P8a"/>
+                <outlet property="verticalDividerLine2" destination="LMp-XN-vrG" id="JYx-lP-Ba7"/>
+                <outlet property="verticalDividerLine3" destination="sCZ-ot-BdD" id="FJD-9d-MWk"/>
+                <outlet property="wrapperView" destination="4Py-YG-yJP" id="UhY-x8-LhV"/>
+            </connections>
+            <point key="canvasLocation" x="224" y="141.22938530734635"/>
+        </view>
+    </objects>
+    <resources>
+        <image name="Bell" width="22" height="22"/>
+        <image name="Search" width="32" height="32"/>
+    </resources>
+</document>

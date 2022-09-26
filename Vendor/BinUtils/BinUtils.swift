@@ -25,7 +25,7 @@ extension DataConvertible {
     
     init?(data: Data) {
         guard data.count == MemoryLayout<Self>.size else { return nil }
-        self = data.withUnsafeBytes { $0.pointee }
+        self = data.withUnsafeBytes { $0.load(as: Self.self) }
     }
     
     init?(bytes: [UInt8]) {
@@ -66,9 +66,7 @@ extension String {
 
 extension Data {
     var bytes : [UInt8] {
-        return self.withUnsafeBytes {
-            [UInt8](UnsafeBufferPointer(start: $0, count: self.count))
-        }
+        return [UInt8](self)
     }
 }
 
@@ -171,25 +169,24 @@ func numberOfBytesInFormat(_ format:String) -> Int {
             continue
         }
         
-        for _ in 0..<max(n,1) {
+        let repeatCount = max(n,1)
+        
+        switch(c) {
             
-            switch(c) {
-                
-            case "@", "<", "=", ">", "!", " ":
-                ()
-            case "c", "b", "B", "x", "?":
-                numberOfBytes += 1
-            case "h", "H":
-                numberOfBytes += 2
-            case "i", "l", "I", "L", "f":
-                numberOfBytes += 4
-            case "q", "Q", "d":
-                numberOfBytes += 8
-            case "P":
-                numberOfBytes += MemoryLayout<Int>.size
-            default:
-                assertionFailure("-- unsupported format \(c)")
-            }
+        case "@", "<", "=", ">", "!", " ":
+            ()
+        case "c", "b", "B", "x", "?":
+            numberOfBytes += 1 * repeatCount
+        case "h", "H":
+            numberOfBytes += 2 * repeatCount
+        case "i", "l", "I", "L", "f":
+            numberOfBytes += 4 * repeatCount
+        case "q", "Q", "d":
+            numberOfBytes += 8 * repeatCount
+        case "P":
+            numberOfBytes += MemoryLayout<Int>.size * repeatCount
+        default:
+            assertionFailure("-- unsupported format \(c)")
         }
         
         n = 0

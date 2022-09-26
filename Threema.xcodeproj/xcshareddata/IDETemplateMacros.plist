@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>FILEHEADER</key>
+	<string>  ___FIVE___ _
+// |_   _| |_  _ _ ___THREE___ ___THREE___ _ __  __ _
+//   | | | &apos; \| &apos;_/ -_) -_) &apos;  \/ _` |_
+//   |_| |_||_|_| \___THREE___\___THREE___|_|_|_\__,_(_)
+//
+// Threema iOS Client
+// Copyright (c) ___YEAR___ Threema GmbH
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License, version 3,
+// as published by the Free Software Foundation.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see &lt;https://www.gnu.org/licenses/&gt;.</string>
+	<key>TWO</key>
+	<string>__</string>
+	<key>THREE</key>
+	<string>___TWO____</string>
+	<key>FIVE</key>
+	<string>___THREE______TWO___</string>
+</dict>
+</plist>

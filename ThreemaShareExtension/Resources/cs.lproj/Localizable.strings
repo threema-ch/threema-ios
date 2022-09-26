@@ -1,0 +1,19 @@
+/*
+ Localizable.strings
+ Threema
+ 
+ Copyright (c) 2015 Threema GmbH. All rights reserved.
+ */
+
+"need_to_start_app_first_title" = "Aplikace %@ není dosud nastavena";
+"need_to_start_app_first_message" = "Nejprve spusťte aplikaci %@.";
+
+"cannot_connect_title" = "Není spojení";
+"cannot_connect_message" = "Nefunkční připojení k Internetu, proveďte nápravu, prosím.";
+
+"sending_count" = "Odesílání... (%1$ld / %2$ld)";
+
+"error_message_no_items_title" = "Neplatný obsah";
+"error_message_no_items_message" = "Nebyly nalezeny žádné podporované položky.";
+
+"send_as_file" = "Odeslat jako originál";

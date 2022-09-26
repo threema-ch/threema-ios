@@ -22,7 +22,7 @@
 #import <CoreData/CoreData.h>
 #import "KKPasscodeLock.h"
 #import "JKLLockScreenViewController.h"
-#import <UserNotifications/UserNotifications.h>  
+#import <UserNotifications/UserNotifications.h>
 
 #define BACKGROUND_GRACE_TIME 5.0 // maximum amount of time to stay connected after moving to background (if not connected to Threema Web)
 #define BACKGROUND_GRACE_TIME_WEB   30.0 // maximum amount of time to stay connected after moving to background (if connected to Threema Web)
@@ -53,26 +53,25 @@
 @property (weak, nonatomic) id<MagicTapHandler> magicTapHandler;
 
 + (AppDelegate*)sharedAppDelegate;
-
-- (BOOL)isAppInBackground;
-
 + (UIAlertController *)isAlertViewShown;
-- (BOOL)isPresentingKeyGeneration;
-- (BOOL)isPresentingEnterLicense;
-- (void)presentKeyGeneration;
-- (void)presentIDBackupRestore;
-- (void)completedIDSetup;
-- (void)presentPasscodeView;
-- (UIViewController *)currentTopViewController;
 + (BOOL)hasBottomSafeAreaInsets;
-
 + (void)setupConnection;
-- (void)handleRemoteNotification:(NSDictionary*)userInfo receivedWhileRunning:(BOOL)receivedWhileRunning notification:(UNNotification *)notification;
 
 + (UIStoryboard *)getLaunchStoryboard;
 + (UIStoryboard *)getMainStoryboard;
 + (UIStoryboard *)getSettingsStoryboard;
 + (UIStoryboard *)getMyIdentityStoryboard;
 + (UITabBarController *)getMainTabBarController;
+
+- (BOOL)isAppInBackground;
+- (BOOL)isPresentingKeyGeneration;
+- (BOOL)isPresentingEnterLicense;
+- (void)presentKeyGeneration;
+- (void)presentIDBackupRestore;
+- (void)completedIDSetup;
+- (void)presentPasscodeView;
+- (void)eraseApplicationData:(JKLLockScreenViewController *)viewController;
+- (UIViewController *)currentTopViewController;
+- (void)eraseApplicationData;
 
 @end

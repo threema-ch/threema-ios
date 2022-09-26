@@ -18,7 +18,7 @@
 #import "KKPasscodeLock.h"
 #import "KKKeychain.h"
 #import "KKPasscodeViewController.h"
-#import "Utils.h"
+#import "ThreemaUtilityObjC.h"
 #import "BundleUtil.h"
 #import "AppGroup.h"
 
@@ -56,7 +56,7 @@ static KKPasscodeLock *sharedLock = nil;
 - (BOOL)isWithinGracePeriod {
     int gracePeriod = [[KKKeychain getStringForKey:@"grace_period"] intValue];
     if (gracePeriod > 0) {
-        time_t uptime = [Utils systemUptime];
+        time_t uptime = [ThreemaUtilityObjC systemUptime];
         if (uptime > 0 && self.lastUnlockTime > 0 && (uptime - self.lastUnlockTime) < gracePeriod)
             return YES;
     }
@@ -115,7 +115,7 @@ static KKPasscodeLock *sharedLock = nil;
 }
 
 - (void)updateLastUnlockTime {
-    self.lastUnlockTime = [Utils systemUptime];
+    self.lastUnlockTime = [ThreemaUtilityObjC systemUptime];
 }
 
 @end

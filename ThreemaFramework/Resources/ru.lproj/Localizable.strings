@@ -1,0 +1,89 @@
+/* 
+  Localizable.strings
+  Threema
+
+  Copyright (c) 2015 Threema GmbH. All rights reserved.
+*//* JKLockScreenViewController */
+"cancel" = "Отмена";
+"delete" = "Удалить";
+
+/* Mentions */
+"mentions_all" = "Все";
+
+
+"me" = "Я";
+"nobody" = "никто";
+"(unknown)" = "(неизвестно)";
+"invalid" = "недействительный";
+"inactive" = "неактивный";
+
+"status_acknowledged" = "принято";
+"status_read" = "прочтено";
+"status_delivered" = "доставлено";
+"status_sent" = "отправлено";
+"status_sending" = "отправка";
+"status_failed" = "не удалось";
+"status_declined" = "не принято";
+"blocked" = "блокировано";
+
+"contacts" = "Контакты";
+"groups" = "группы";
+"recent" = "Недавние";
+"work" = "Work";
+"creator" = "Создатель";
+"%d members" = "%d участника(-ов)";
+
+"ok" = "OK";
+
+"send" = "Отпр.";
+"addText" = "Добавить текст";
+"hide" = "Скрыть";
+
+"error_sending_failed" = "Не удалось отправить";
+"error_constraints_failed" = "Неподдерживаемый тип файла";
+"error_message_file_too_big" = "Слишком большой файл! Максимальный размер файла: %@.";
+"error_message_invalid_file" = "Ошибка чтения файла.";
+"error_message_generic" = "Не удалось передать.";
+
+"error_title_feature_level" = "Внимание";
+"error_message_feature_level" = "У некоторых получателей установлена версия приложения, пока не поддерживающая сообщения с файлами: %@";
+"error_message_none_feature_level" = "Ни у кого из получателей не установлена версия приложения, поддерживающая сообщения с файлами: %@";
+
+"error_message_requires_migration_error_title" = "Ошибка";
+"error_message_requires_migration_error_description" = "Сбой проверки переноса. Перезапустите приложение.";
+
+"error_other_connection_for_same_identity_title" = "Предупреждение";
+"error_other_connection_for_same_identity_message" = "Сервер выявил два или более подключения с различных устройств, использующие один Threema ID.\nИспользовать один и тот же Threema ID на нескольких устройствах невозможно. Новые сообщения передаются только на устройство, которое последним выполнило вход на сервер.\n\nЕсли вы переходите на новое устройство, удалите или отключите %@ на старом устройстве, а затем перезагрузите новое.";
+
+"video_too_long_title" = "Видео слишком длинное";
+"video_too_long_message" = "Видео слишком длинное для отправки. Максимальная допустимая длина составляет %.0f мин.";
+
+/* KKPasscodeLock */
+"On" = "Вкл.";
+"Off" = "Выкл.";
+"all_data_deleted_title" = "Все данные удалены";
+"all_data_deleted_message" = "Вы ввели неправильный пароль слишком много раз. Все данные в этом приложении были удалены.";
+"to_unlock_passcode" = "Чтобы разблокировать %@";    // Touch ID
+
+/* Notifications Text */
+"new_message" = "Сообщение";
+/* Notifications Text */
+"new_message_from_x" = "Сообщение от %@";
+"new_group_message" = "Групповое сообщение";
+"new_group_message_from_x" = "Групповое сообщение от %@";
+"new_image_message" = "Изображение";
+"new_video_message" = "Видео";
+"new_location_message" = "Расположение";
+"new_audio_message" = "Аудио";
+"new_ballot_create_message" = "Опрос: %@";
+"new_ballot_closed_message" = "Опрос: Результаты доступны";
+"new_file_message" = "Файл: %@";
+
+"mediapreview_options" = "Настройки";
+
+"testflight_feedback_viewtitle" = "Отзыв на бета-версию";
+"testflight_feedback_title" = "Отправьте нам отзыв на бета-версию!";
+"testflight_feedback_description" = "Благодарим за тестирование бета-версии Threema. Однако тестирование — лишь половина формулы, другая половина — ваш отзыв. Пожалуйста, дайте нам знать, обнаружили ли вы какие-либо ошибки или нарушения. Для этого откройте «Настройки > Отзыв на бета-версию», чтобы открыть чат бета-версии.";
+
+"notification.threemaweb.connect.title" = "ПК/веб-клиент";
+"notification.threemaweb.connect.body" = "Нажмите на это уведомление, чтобы повторно установить соединение с программой для ПК/веб-клиентом.";

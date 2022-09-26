@@ -78,8 +78,16 @@ class PPOptionsViewController: UITableViewController {
                                                    constant: 0.0)
         tableView.addConstraint(tableHeightConstraint)
         /***** BEGIN THREEMA MODIFICATION: separatorColor *********/
-        tableView.separatorColor = Colors.hairline()
+        tableView.separatorColor = Colors.hairLine
         /***** END THREEMA MODIFICATION: separatorColor *********/
+        
+        /***** BEGIN THREEMA MODIFICATION: Fix section header padding in iOS 15 *********/
+        if #available(iOS 15.0, *) {
+            tableView.sectionHeaderTopPadding = 0.0
+        } else {
+            // Fallback on earlier versions
+        }
+        /***** END THREEMA MODIFICATION: Fix section header padding in iOS 15 *********/
     }
     
     override func updateViewConstraints() {
@@ -263,8 +271,19 @@ class PPOptionsViewController: UITableViewController {
             /***** BEGIN THREEMA MODIFICATION: Use bold font for cancel *********/
             cell.textLabel?.font = UIFont.boldSystemFont(ofSize: 19.0)
             /***** END THREEMA MODIFICATION: Use bold font for cancel *********/
-            cell.layer.cornerRadius = config.cornerRadius
-            cell.layer.masksToBounds = true
+            
+            /***** BEGIN THREEMA MODIFICATION: Round cancel button corners *********/
+            let cellBounds = CGRect(x: cell.bounds.origin.x, y: cell.bounds.origin.y, width: cellWidth!, height: cell.bounds.size.height)
+            let maskPath = UIBezierPath(roundedRect: cellBounds,
+                                        byRoundingCorners: [.bottomRight, .bottomLeft, .topLeft, .topRight],
+                                        cornerRadii: CGSize(width: config.cornerRadius, height: config.cornerRadius))
+            let maskLayer = CAShapeLayer()
+            maskLayer.frame = cellBounds
+            maskLayer.path = maskPath.cgPath
+            cell.layer.mask = maskLayer
+            cell.layer.cornerRadius = 0
+            /***** END THREEMA MODIFICATION: Round cancel button corners *********/
+            
             /***** BEGIN THREEMA MODIFICATION: Hide separator on cancel cell *********/
             cell.separatorInset = UIEdgeInsets.init(top: 0, left: 0, bottom: 0, right: .greatestFiniteMagnitude)
             /***** END THREEMA MODIFICATION: Hide separator on cancel cell *********/
@@ -311,14 +330,6 @@ class PPOptionsViewController: UITableViewController {
             }
         }
     }
-    /***** BEGIN THREEMA MODIFICATION: cell color *********/
-    override func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
-        if cell.isKind(of: UITableViewCell.self) {
-            Colors.updateTableViewCellBackground(cell)
-        }
-    }
-    
-    /***** END THREEMA MODIFICATION: cell color *********/
     
     override func tableView(_ tableView: UITableView, willDisplayHeaderView view: UIView, forSection section: Int) {
         if let headerView = view as? UITableViewHeaderFooterView {

@@ -18,26 +18,35 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+// swiftformat:disable blankLinesAroundMark
+
 import XCTest
 
 class MakeScreenshots: XCTestCase {
-        
-    var language: String = ""
-    var theme: String = "light"
-    var version: String = "4.6.3"
-    var orientation: String = ""
-    var screenshotNameStart: String = ""
-    var screenshotNameEnd: String = ""
+    
+    enum ThreemaApp {
+        case threema
+        case work
+        case onPrem
+    }
+    
+    var language = ""
+    var theme = "light"
+    var version = "4.8"
+    var orientation = ""
+    var screenshotNameStart = ""
+    var screenshotNameEnd = ""
     var app: XCUIApplication?
-    var isWorkApp: Bool = false
-
+    var threemaApp: ThreemaApp = .threema
+    
     override func setUp() {
         // Put setup code here. This method is called before the invocation of each test method in the class.
         
         if UIDevice.current.userInterfaceIdiom == .pad {
             orientation = "landscape"
             XCUIDevice.shared.orientation = .landscapeLeft
-        } else {
+        }
+        else {
             orientation = "portrait"
             XCUIDevice.shared.orientation = .portrait
         }
@@ -49,6 +58,19 @@ class MakeScreenshots: XCTestCase {
         app = XCUIApplication()
         Snapshot.setupSnapshot(app!, waitForAnimations: true)
         language = Snapshot.getLanguage()
+        
+        // ** uncomment for manual testing
+        //  language = "zh-Hans"
+        //  app!.launchArguments.removeFirst(4)
+        //  app!.launchArguments += ["-AppleLanguages", "(zh-Hans)"]
+        //  app!.launchArguments += ["-AppleLocale", "\"zh-Hans\""]
+        
+        //  language = "de"
+        //  app!.launchArguments.removeFirst(4)
+        //  app!.launchArguments += ["-AppleLanguages", "(de)"]
+        //  app!.launchArguments += ["-AppleLocale", "\"de_DE\""]
+        // **
+        
         app!.launch()
                 
         // In UI tests it’s important to set the initial state - such as interface orientation - required for your tests before they run. The setUp method is a good place to do this.
@@ -60,7 +82,7 @@ class MakeScreenshots: XCTestCase {
             version = tmpVersion
         }
         
-        var ios: String = "ios-"
+        var ios = "ios-"
         ios.append(ProcessInfo().environment["SIMULATOR_DEVICE_NAME"]!)
         
         // add os, device, appversion, locale, theme
@@ -69,77 +91,48 @@ class MakeScreenshots: XCTestCase {
         
         screenshotNameStart = "\(ios)-\(version)-\(lang)"
         screenshotNameEnd = "\(theme)-\(orientation)"
-        
-        if #available(iOS 13.0, *) {
-        }
-        else {
-            SDStatusBarManager.sharedInstance().carrierName = "3ma"
-            SDStatusBarManager.sharedInstance().timeString = "08:15"
-            SDStatusBarManager.sharedInstance().bluetoothState = .hidden
-            SDStatusBarManager.sharedInstance().batteryDetailEnabled = true
-            SDStatusBarManager.sharedInstance().enableOverrides()
-        }
-                        
-        addUIInterruptionMonitor(withDescription: "System Dialog") { (alert) -> Bool in
-            let btnAllow: XCUIElement
-            let btnAllowAlways: XCUIElement
-            let btnAllowAll: XCUIElement
-            let btnOK: XCUIElement
-            let cancelButton: XCUIElement
+                                
+        addUIInterruptionMonitor(withDescription: "System Dialog") { alert -> Bool in
             
-            btnAllow = alert.buttons[self.allowButtonText()]
-            btnAllowAlways = alert.buttons[self.alwaysAllowButtonText()]
-            btnAllowAll = alert.buttons[self.allowAllButtonText()]
-            btnOK = alert.buttons[self.okButtonText()]
-            cancelButton = alert.buttons[self.cancelButtonText()]
-            
-            if cancelButton.exists {
-                cancelButton.tap()
+            switch alert.buttons.count {
+            case 2:
+                if alert.description.contains("Apple") {
+                    alert.buttons.element(boundBy: 0).tap()
+                }
+                else {
+                    alert.buttons.element(boundBy: 1).tap()
+                }
                 return true
-            }
-            if btnAllow.exists {
-                btnAllow.tap()
+            case 3:
+                alert.buttons.element(boundBy: 1).tap()
                 return true
+            default:
+                return false
             }
-            if btnAllowAlways.exists {
-                btnAllowAlways.tap()
-                return true
-            }
-            if btnAllowAll.exists {
-                btnAllowAll.tap()
-                return true
-            }
-            if btnOK.exists {
-                btnOK.tap()
-                return true
-            }
-            return true
         }
     }
 
     override func tearDown() {
         // Put teardown code here. This method is called after the invocation of each test method in the class.
-        
-        if #available(iOS 13.0, *) {
-            
-        }
-        else {
-            SDStatusBarManager.sharedInstance().disableOverrides()
-        }
     }
     
     func testMakeScreenshots() {
         app = XCUIApplication()
         
         if Bundle.main.bundleIdentifier == "ch.threema.ScreenshotsWithDataWork.xctrunner" {
-            isWorkApp = true
+            threemaApp = .work
 //            theme = "dark"
 //            screenshotNameEnd = "\(theme)-\(orientation)"
         }
-        
+        if Bundle.main.bundleIdentifier == "ch.threema.ScreenshotsWithDataOnPrem.xctrunner" {
+            threemaApp = .onPrem
+        }
+              
         // MARK: Enter license key
-        if isWorkApp && app!.textFields.count > 0 {
-            let login = workLogin()
+        if threemaApp == .work || threemaApp == .onPrem,
+           // swiftformat:disable:next isEmpty
+           app!.textFields.count > 0 {
+            let login = appLogin()
             
             app!.textFields["licenseUsername"].typeText(login!["username"]!)
             if app!.keys.allElementsBoundByIndex[0].exists {
@@ -150,7 +143,7 @@ class MakeScreenshots: XCTestCase {
             
             sleep(5)
         }
-        
+                
         let contactTabBarItem = app!.tabBars.buttons.element(boundBy: 0)
         let messagesTabBarItem = app!.tabBars.buttons.element(boundBy: 1)
         
@@ -159,29 +152,22 @@ class MakeScreenshots: XCTestCase {
         messagesTabBarItem.tap()
                         
         if UIDevice.current.userInterfaceIdiom == .pad {
-            if isWorkApp == true {
-                workScreenshotsForIpads()
-            } else {
-                screenshotsForIpads()
-            }
-        } else {
-            if isWorkApp == true {
-                workScreenshotsForIphones()
-            } else {
-                screenshotsForIphones()
-            }
+            screenshotsForIpads()
+        }
+        else {
+            screenshotsForIphones()
         }
     }
     
-    private func workLogin() -> [String: String]? {
+    private func appLogin() -> [String: String]? {
         
         // get screenshot project directory for work login
         guard let srcroot: String = ProcessInfo.processInfo.environment["SRCROOT"] else {
             assertionFailure("Can't find environment variable ro SRCROOT")
             return nil
         }
-        
-        let screenshotProject = "screenshot/dataWork"
+                
+        let screenshotProject = threemaApp == .work ? "screenshot/chat_data/work" : "screenshot/chat_data/onPrem"
         let screenshotPath = srcroot.replacingOccurrences(of: "ios-client", with: screenshotProject)
         
         let bundle = Bundle(path: screenshotPath)
@@ -195,17 +181,18 @@ class MakeScreenshots: XCTestCase {
         }
         
         do {
-            return try JSONSerialization.jsonObject(with: loginJsonData, options: []) as? [String : String]
-        } catch {
+            return try JSONSerialization.jsonObject(with: loginJsonData, options: []) as? [String: String]
+        }
+        catch {
             assertionFailure("Can't create jsonObject from login.json")
             return nil
         }
     }
-    
+                
     private func screenshotsForIphones() {
         let contactTabBarItem = app!.tabBars.buttons.element(boundBy: 0)
         let messagesTabBarItem = app!.tabBars.buttons.element(boundBy: 1)
-        let myIdTabBarItem = app!.tabBars.buttons.element(boundBy: 2)
+        let myIDTabBarItem = app!.tabBars.buttons.element(boundBy: 2)
         
         // switch tabs that fastlane will close all alerts before it will take the first screenshot
         contactTabBarItem.tap()
@@ -223,8 +210,17 @@ class MakeScreenshots: XCTestCase {
         // Switch to Chtas
         messagesTabBarItem.tap()
         
-        // open chat of hanna schmidt
-        app!.tables.cells.element(boundBy: 0).tap()
+        switch threemaApp {
+        case .threema:
+            // open chat of hanna schmidt
+            app!.tables.cells.element(boundBy: 0).tap()
+        case .work:
+            // open chat of peter schreiner
+            app!.tables.cells.element(boundBy: 0).tap()
+        case .onPrem:
+            // open chat of peter schreiner
+            app!.tables.cells.element(boundBy: 0).tap()
+        }
         
         // MARK: Screenshot 3: single_chat
         Snapshot.snapshot(screenshotName("03", "single_chat"))
@@ -237,10 +233,18 @@ class MakeScreenshots: XCTestCase {
         
         // leave plus icon
         app!.cells["Cancel"].tap()
-        // leave single chat --> chat overview
-        app!.navigationBars.buttons.element(boundBy: 0).tap()
-        // open chat of lisa goldman
-        app!.tables.cells.element(boundBy: 4).tap()
+        
+        switch threemaApp {
+        case .threema:
+            // leave single chat --> chat overview
+            app!.navigationBars.buttons.element(boundBy: 0).tap()
+            // open chat of lisa goldman
+            app!.tables.cells.element(boundBy: 4).tap()
+            // swipe down to show the header
+            app!.swipeDown()
+        case .work: break
+        case .onPrem: break
+        }
         // swipe down to show the header
         app!.swipeDown()
         // open call view
@@ -255,18 +259,27 @@ class MakeScreenshots: XCTestCase {
         // MARK: Screenshot 6: threema_call
         Snapshot.snapshot(screenshotName("06", "threema_call"))
         
-        // close call view
-        app!.buttons["EndButton"].tap()
-        // leave single chat --> chat overview
-        app!.navigationBars.buttons.element(boundBy: 0).tap()
-        // open chat from roberto dias
-        app!.tables.cells.element(boundBy: 3).tap()
-        // swipe down to show the header
-        app!.swipeDown()
-        // open call view
-        app!.buttons["CallButton"].tap()
-        // tap hide button to change ui to connected call
-        app!.buttons["HideButton"].tap()
+        switch threemaApp {
+        case .threema:
+            // close call view
+            app!.buttons["EndButton"].tap()
+            _ = waitForElementToDisappear(app!.buttons["EndButton"])
+            
+            // leave single chat --> chat overview
+            app!.navigationBars.buttons.element(boundBy: 0).tap()
+            // open chat from roberto dias
+            app!.tables.cells.element(boundBy: 3).tap()
+            // swipe down to show the header
+            app!.swipeDown()
+            // open call view
+            app!.buttons["CallButton"].tap()
+            // tap hide button to change ui to connected call
+            app!.buttons["HideButton"].tap()
+            
+        case .work: break
+        case .onPrem: break
+        }
+        
         // tap camera button to change ui to video call
         app!.buttons["VideoButton"].tap()
         
@@ -275,10 +288,22 @@ class MakeScreenshots: XCTestCase {
         
         // close call view
         app!.buttons["EndButton"].tap()
+        _ = waitForElementToDisappear(app!.buttons["EndButton"])
+        
         // leave single chat --> chat overview
         app!.navigationBars.buttons.element(boundBy: 0).tap()
-        // open group chat
-        app!.tables.cells.element(boundBy: 1).tap()
+        
+        switch threemaApp {
+        case .threema:
+            // open group chat
+            app!.tables.cells.element(boundBy: 1).tap()
+        case .work:
+            // open group chat
+            app!.tables.cells.element(boundBy: 2).tap()
+        case .onPrem:
+            // open group chat
+            app!.tables.cells.element(boundBy: 2).tap()
+        }
         
         // MARK: Screenshot 8: group_chat
         Snapshot.snapshot(screenshotName("08", "group_chat"))
@@ -292,7 +317,13 @@ class MakeScreenshots: XCTestCase {
         Snapshot.snapshot(screenshotName("09", "group_detail"))
         
         // leave group detail --> group chat
-        app!.navigationBars.buttons.element(boundBy: 0).tap()
+        if app!.navigationBars.buttons["DismissButton"].exists {
+            app!.navigationBars.buttons["DismissButton"].tap()
+        }
+        else {
+            app!.navigationBars.buttons.element(boundBy: 0).tap()
+        }
+        
         // swipe down to show the header
         app!.swipeDown()
         // open ballot view
@@ -310,22 +341,62 @@ class MakeScreenshots: XCTestCase {
         // group chat --> conversation overview
         app!.navigationBars.buttons.element(boundBy: 0).tap()
         contactTabBarItem.tap()
-        // show detail of Schmidt Hanna
-        app!.cells.element(boundBy: indexOfHannaSchmidt()).tap()
+        
+        switch threemaApp {
+        case .threema: break
+        case .work:
+            // tap contacts on segment control
+            if app!.navigationBars.element(boundBy: 0).buttons["Work"].exists {
+                app!.navigationBars.element(boundBy: 0).buttons["Work"].tap()
+            }
+            else {
+                if app!.navigationBars.element(boundBy: 0).buttons["Case"].exists {
+                    app!.navigationBars.element(boundBy: 0).buttons["Case"].tap()
+                }
+            }
+        case .onPrem:
+            // tap contacts on segment control
+            if app!.navigationBars.element(boundBy: 0).buttons["Work"].exists {
+                app!.navigationBars.element(boundBy: 0).buttons["Work"].tap()
+            }
+            else {
+                if app!.navigationBars.element(boundBy: 0).buttons["Case"].exists {
+                    app!.navigationBars.element(boundBy: 0).buttons["Case"].tap()
+                }
+            }
+        }
+        
+        switch threemaApp {
+        case .threema:
+            // show detail of Schmidt Hanna
+            app!.cells.element(boundBy: indexOfHannaSchmidt()).tap()
+        case .work:
+            // show detail of peter schreiner
+            app!.cells.element(boundBy: indexOfPeterSchreiner()).tap()
+        case .onPrem:
+            // show detail of peter schreiner
+            app!.cells.element(boundBy: indexOfPeterSchreiner()).tap()
+        }
         
         // MARK: Screenshot 11: contact_detail
         Snapshot.snapshot(screenshotName("11", "contact_detail"))
         
         // contact detail --> contact overview
         app!.navigationBars.buttons.element(boundBy: 0).tap()
+        
         // show my id tab
-        myIdTabBarItem.tap()
+        myIDTabBarItem.tap()
         
         // MARK: Screenshot 12: my_id
         Snapshot.snapshot(screenshotName("12", "my_id"))
         
-        //MARK: Show qr code
-        app?.buttons["qrCodeButton"].tap()
+        // MARK: Show qr code
+        if app!.buttons["qrCodeButton"].exists {
+            app!.buttons["qrCodeButton"].tap()
+        }
+        else {
+            app!.otherElements["qrCodeButton"].tap()
+        }
         
         // MARK: Screenshot 13: qr_code
         Snapshot.snapshot(screenshotName("13", "qr_code"))
@@ -343,7 +414,7 @@ class MakeScreenshots: XCTestCase {
     private func screenshotsForIpads() {
         let contactTabBarItem = app!.tabBars.buttons.element(boundBy: 0)
         let messagesTabBarItem = app!.tabBars.buttons.element(boundBy: 1)
-        let myIdTabBarItem = app!.tabBars.buttons.element(boundBy: 2)
+        let myIDTabBarItem = app!.tabBars.buttons.element(boundBy: 2)
         
         // switch tabs that fastlane will close all alerts before it will take the first screenshot
         contactTabBarItem.tap()
@@ -361,14 +432,23 @@ class MakeScreenshots: XCTestCase {
         // Switch to Chtas
         messagesTabBarItem.tap()
         
-        // open chat of hanna schmidt
-        app!.tables.cells.element(boundBy: 0).tap()
+        switch threemaApp {
+        case .threema:
+            // open chat of hanna schmidt
+            app!.tables.cells.element(boundBy: 0).tap()
+        case .work:
+            // open chat of peter schreiner
+            app!.tables.cells.element(boundBy: 0).tap()
+        case .onPrem:
+            // open chat of peter schreiner
+            app!.tables.cells.element(boundBy: 0).tap()
+        }
         
         // MARK: Screenshot 3: single_chat
         Snapshot.snapshot(screenshotName("03", "single_chat"))
         
         // tap plus icon
-        app!.tap()
+        app!.buttons["PlusButton"].tap()
         
         // MARK: Screenshot 4: single_chat_attachments
         Snapshot.snapshot(screenshotName("04", "single_chat_attachments"))
@@ -376,8 +456,14 @@ class MakeScreenshots: XCTestCase {
         // leave plus icon
         app!.cells["Cancel"].tap()
         
-        // open chat of lisa goldman
-        app!.tables.cells.element(boundBy: 4).tap()
+        switch threemaApp {
+        case .threema:
+            // open chat of lisa goldman
+            app!.tables.cells.element(boundBy: 4).tap()
+        case .work: break
+        case .onPrem: break
+        }
+        
         // swipe down to show the header
         app!.swipeDown()
         // open call view
@@ -392,16 +478,24 @@ class MakeScreenshots: XCTestCase {
         // MARK: Screenshot 6: threema_call
         Snapshot.snapshot(screenshotName("06", "threema_call"))
         
-        // close call view
-        app!.buttons["EndButton"].tap()
-        // open chat from roberto dias
-        app!.tables.cells.element(boundBy: 3).tap()
-        // swipe down to show the header
-        app!.swipeDown()
-        // open call view
-        app!.buttons["CallButton"].tap()
-        // tap hide button to change ui to connected call
-        app!.buttons["HideButton"].tap()
+        switch threemaApp {
+        case .threema:
+            // close call view
+            app!.buttons["EndButton"].tap()
+            _ = waitForElementToDisappear(app!.buttons["EndButton"])
+            
+            // open chat from roberto dias
+            app!.tables.cells.element(boundBy: 3).tap()
+            // swipe down to show the header
+            app!.swipeDown()
+            // open call view
+            app!.buttons["CallButton"].tap()
+            // tap hide button to change ui to connected call
+            app!.buttons["HideButton"].tap()
+        case .work: break
+        case .onPrem: break
+        }
+        
         // tap camera button to change ui to video call
         app!.buttons["VideoButton"].tap()
         
@@ -410,9 +504,19 @@ class MakeScreenshots: XCTestCase {
         
         // close call view
         app!.buttons["EndButton"].tap()
+        _ = waitForElementToDisappear(app!.buttons["EndButton"])
 
-        // open group chat
-        app!.tables.cells.element(boundBy: 1).tap()
+        switch threemaApp {
+        case .threema:
+            // open group chat
+            app!.tables.cells.element(boundBy: 1).tap()
+        case .work:
+            // open group chat
+            app!.tables.cells.element(boundBy: 2).tap()
+        case .onPrem:
+            // open group chat
+            app!.tables.cells.element(boundBy: 2).tap()
+        }
         
         // MARK: Screenshot 8: group_chat
         Snapshot.snapshot(screenshotName("08", "group_chat"))
@@ -426,7 +530,7 @@ class MakeScreenshots: XCTestCase {
         Snapshot.snapshot(screenshotName("09", "group_detail"))
         
         // leave group detail --> group chat
-        app!.navigationBars.element(boundBy: 1).buttons.element(boundBy: 0).tap()
+        app!.navigationBars.element(boundBy: 1).buttons.element(boundBy: 1).tap()
         // swipe down to show the header
         app!.swipeDown()
         // open ballot view
@@ -443,152 +547,49 @@ class MakeScreenshots: XCTestCase {
         app!.navigationBars.element(boundBy: 1).buttons.element(boundBy: 0).tap()
         // show contact tab
         contactTabBarItem.tap()
-        // show detail of Schmidt Hanna
-        app!.tables.element(boundBy: 0).cells.element(boundBy: indexOfHannaSchmidt()).tap()
         
-        // MARK: Screenshot 11: contact_detail
-        Snapshot.snapshot(screenshotName("11", "contact_detail"))
-        
-        // show my id tab
-        myIdTabBarItem.tap()
-        
-        // MARK: Screenshot 12: my_id
-        Snapshot.snapshot(screenshotName("12", "my_id"))
-        
-        //MARK: Show qr code
-        app?.buttons["qrCodeButton"].tap()
-        
-        // MARK: Screenshot 13: qr_code
-        Snapshot.snapshot(screenshotName("13", "qr_code"))
-        
-        // MARK: Dismiss qr code
-        app?.otherElements["CoverView"].tap()
-        
-        // show threema safe
-        app!.cells["SafeCell"].tap()
-        
-        // MARK: Screenshot 14: threema_safe
-        Snapshot.snapshot(screenshotName("14", "threema_safe"))
-    }
-    
-    private func workScreenshotsForIphones() {
-        let contactTabBarItem = app!.tabBars.buttons.element(boundBy: 0)
-        let messagesTabBarItem = app!.tabBars.buttons.element(boundBy: 1)
-        let myIdTabBarItem = app!.tabBars.buttons.element(boundBy: 2)
-        
-        // switch tabs that fastlane will close all alerts before it will take the first screenshot
-        contactTabBarItem.tap()
-        messagesTabBarItem.tap()
-        
-        // MARK: Screenshot 1: conversations
-        Snapshot.snapshot(screenshotName("01", "conversations"))
-        
-        // Switch to Contacts
-        contactTabBarItem.tap()
-        
-        // MARK: Screenshot 2: contacts
-        Snapshot.snapshot(screenshotName("02", "contacts"))
-        
-        // Switch to Chtas
-        messagesTabBarItem.tap()
-
-        // open chat of peter schreiner
-        app!.tables.cells.element(boundBy: 0).tap()
-
-        // MARK: Screenshot 3: single_chat
-        Snapshot.snapshot(screenshotName("03", "single_chat"))
-
-        // tap plus icon
-        app!/*@START_MENU_TOKEN@*/.buttons["PlusButton"]/*[[".images",".buttons[\"Send media or location\"]",".buttons[\"PlusButton\"]"],[[[-1,2],[-1,1],[-1,0,1]],[[-1,2],[-1,1]]],[0]]@END_MENU_TOKEN@*/.tap()
-
-        // MARK: Screenshot 4: single_chat_attachments
-        Snapshot.snapshot(screenshotName("04", "single_chat_attachments"))
-
-        // leave plus icon
-        app!.cells["Cancel"].tap()
-        // swipe down to show the header
-        app!.swipeDown()
-        // open call view
-        app!.buttons["CallButton"].tap()
-                
-        // MARK: Screenshot 5: threema_call
-        Snapshot.snapshot(screenshotName("05", "threema_call_incoming"))
-        
-        // tap hide button to change ui to connected call
-        app!.buttons["HideButton"].tap()
-        
-        // MARK: Screenshot 6: threema_call
-        Snapshot.snapshot(screenshotName("06", "threema_call"))
-        
-        // tap camera button to change ui to video call
-        app!.buttons["VideoButton"].tap()
-        
-        // MARK: Screenshot 7: threema_video_call
-        Snapshot.snapshot(screenshotName("07", "threema_video_call"))
-
-        // close call view
-        app!.buttons["EndButton"].tap()
-        // leave single chat --> chat overview
-        app!.navigationBars.buttons.element(boundBy: 0).tap()
-        // open group chat
-        app!.tables.cells.element(boundBy: 2).tap()
-        
-        // MARK: Screenshot 8: group_chat
-        Snapshot.snapshot(screenshotName("08", "group_chat"))
-        
-        // swipe down to show the header
-        app!.swipeDown()
-        // show group detail
-        app!.scrollViews["GroupImageView"].tap()
-
-        // MARK: Screenshot 9: group_detail
-        Snapshot.snapshot(screenshotName("09", "group_detail"))
-
-        // leave group detail --> group chat
-        app!.navigationBars.buttons.element(boundBy: 0).tap()
-        // swipe down to show the header
-        app!.swipeDown()
-        // open ballot view
-        app!.buttons["BallotButton"].tap()
-        // select closed ballot
-        app!.cells.element(boundBy: 0).tap()
-
-        // MARK: Screenshot 10: ballot_matrix
-        Snapshot.snapshot(screenshotName("10", "ballot_matrix"))
-
-        // leave ballot --> ballot overview
-        app!.navigationBars.buttons.element(boundBy: 0).tap()
-        // ballot overview --> group chat
-        app!.navigationBars.buttons.element(boundBy: 0).tap()
-        // group chat --> conversation overview
-        app!.navigationBars.buttons.element(boundBy: 0).tap()
-        contactTabBarItem.tap()
-        
-        // tap contacts on segment control
-        if app!.navigationBars.element(boundBy: 0).buttons["Work"].exists {
-            app!.navigationBars.element(boundBy: 0).buttons["Work"].tap()
-        } else {
-            if app!.navigationBars.element(boundBy: 0).buttons["Case"].exists {
-                app!.navigationBars.element(boundBy: 0).buttons["Case"].tap()
+        switch threemaApp {
+        case .threema:
+            // show detail of Schmidt Hanna
+            app!.tables.element(boundBy: 0).cells.element(boundBy: indexOfHannaSchmidt()).tap()
+        case .work:
+            // tap contacts on segment control
+            if app!.navigationBars.element(boundBy: 0).buttons["Work"].exists {
+                app!.navigationBars.element(boundBy: 0).buttons["Work"].tap()
             }
+            else {
+                if app!.navigationBars.element(boundBy: 0).buttons["Case"].exists {
+                    app!.navigationBars.element(boundBy: 0).buttons["Case"].tap()
+                }
+            }
+            
+            // show detail of peter schreiner
+            app!.cells.element(boundBy: indexOfPeterSchreiner()).tap()
+        case .onPrem:
+            // tap contacts on segment control
+            if app!.navigationBars.element(boundBy: 0).buttons["Work"].exists {
+                app!.navigationBars.element(boundBy: 0).buttons["Work"].tap()
+            }
+            else {
+                if app!.navigationBars.element(boundBy: 0).buttons["Case"].exists {
+                    app!.navigationBars.element(boundBy: 0).buttons["Case"].tap()
+                }
+            }
+            
+            // show detail of peter schreiner
+            app!.cells.element(boundBy: indexOfPeterSchreiner()).tap()
         }
         
-        // show detail of peter schreiner
-        app!.cells.element(boundBy: indexOfPeterSchreiner()).tap()
-        
         // MARK: Screenshot 11: contact_detail
         Snapshot.snapshot(screenshotName("11", "contact_detail"))
         
-        // contact detail --> contact overview
-        app!.navigationBars.buttons.element(boundBy: 0).tap()
-        
         // show my id tab
-        myIdTabBarItem.tap()
+        myIDTabBarItem.tap()
         
         // MARK: Screenshot 12: my_id
         Snapshot.snapshot(screenshotName("12", "my_id"))
         
-        //MARK: Show qr code
+        // MARK: Show qr code
         app?.buttons["qrCodeButton"].tap()
         
         // MARK: Screenshot 13: qr_code
@@ -603,148 +604,21 @@ class MakeScreenshots: XCTestCase {
         // MARK: Screenshot 14: threema_safe
         Snapshot.snapshot(screenshotName("14", "threema_safe"))
     }
-    
-    private func workScreenshotsForIpads() {
-        let contactTabBarItem = app!.tabBars.buttons.element(boundBy: 0)
-        let messagesTabBarItem = app!.tabBars.buttons.element(boundBy: 1)
-        let myIdTabBarItem = app!.tabBars.buttons.element(boundBy: 2)
-        
-        // switch tabs that fastlane will close all alerts before it will take the first screenshot
-        contactTabBarItem.tap()
-        messagesTabBarItem.tap()
-        
-        // MARK: Screenshot 1: conversations
-        Snapshot.snapshot(screenshotName("01", "conversations"))
-        
-        // Switch to Contacts
-        contactTabBarItem.tap()
-        
-        // MARK: Screenshot 2: contacts
-        Snapshot.snapshot(screenshotName("02", "contacts"))
-        
-        // Switch to Chtas
-        messagesTabBarItem.tap()
-        
-        // open chat of peter schreiner
-        app!.tables.cells.element(boundBy: 0).tap()
-        
-        // MARK: Screenshot 3: single_chat
-        Snapshot.snapshot(screenshotName("03", "single_chat"))
-        
-        // tap plus icon
-        app!/*@START_MENU_TOKEN@*/.buttons["PlusButton"]/*[[".images",".buttons[\"Send media or location\"]",".buttons[\"PlusButton\"]"],[[[-1,2],[-1,1],[-1,0,1]],[[-1,2],[-1,1]]],[0]]@END_MENU_TOKEN@*/.tap()
-        
-        // MARK: Screenshot 4: single_chat_attachments
-        Snapshot.snapshot(screenshotName("04", "single_chat_attachments"))
-        
-        // leave plus icon
-        app!.cells["Cancel"].tap()
-        // swipe down to show the header
-        app!.swipeDown()
-        // open call view
-        app!.buttons["CallButton"].tap()
                 
-        // MARK: Screenshot 5: threema_call_incoming
-        Snapshot.snapshot(screenshotName("05", "threema_call_incoming"))
-                        
-        // tap hide button to change ui to connected call
-        app!.buttons["HideButton"].tap()
-                
-        // MARK: Screenshot 6: threema_call
-        Snapshot.snapshot(screenshotName("06", "threema_call"))
-        
-        // tap camera button to change ui to video call
-        app!.buttons["VideoButton"].tap()
-        
-        // MARK: Screenshot 7: threema_video_call
-        Snapshot.snapshot(screenshotName("07", "threema_video_call"))
-                
-        // close call view
-        app!.buttons["EndButton"].tap()
-        // open group chat
-        app!.tables.cells.element(boundBy: 2).tap()
-        
-        // MARK: Screenshot 8: group_chat
-        Snapshot.snapshot(screenshotName("08", "group_chat"))
-        
-        // swipe down to show the header
-        app!.swipeDown()
-        // show group detail
-        app!.scrollViews["GroupImageView"].tap()
-        
-        // MARK: Screenshot 9: group_detail
-        Snapshot.snapshot(screenshotName("09", "group_detail"))
-        
-        // leave group detail --> group chat
-        app!.navigationBars.element(boundBy: 1).buttons.element(boundBy: 0).tap()
-        // swipe down to show the header
-        app!.swipeDown()
-        // open ballot view
-        app!.buttons["BallotButton"].tap()
-        // select closed ballot
-        app!.tables.element(boundBy: 1).cells.element(boundBy: 0).tap()
-        
-        // MARK: Screenshot 10: ballot_matrix
-        Snapshot.snapshot(screenshotName("10", "ballot_matrix"))
-        
-        // leave ballot --> ballot overview
-        app!.navigationBars.element(boundBy: 1).buttons.element(boundBy: 0).tap()
-        // ballot overview --> group chat
-        app!.navigationBars.element(boundBy: 1).buttons.element(boundBy: 0).tap()
-        contactTabBarItem.tap()
-                
-        // tap contacts on segment control
-        if app!.navigationBars.element(boundBy: 0).buttons["Work"].exists {
-            app!.navigationBars.element(boundBy: 0).buttons["Work"].tap()
-        } else {
-            if app!.navigationBars.element(boundBy: 0).buttons["Case"].exists {
-                app!.navigationBars.element(boundBy: 0).buttons["Case"].tap()
-            }
-        }
-        
-        // show detail of peter schreiner
-        app!.cells.element(boundBy: indexOfPeterSchreiner()).tap()
-        
-        // MARK: Screenshot 11: contact_detail
-        Snapshot.snapshot(screenshotName("11", "contact_detail"))
-        
-        // show my id tab
-        myIdTabBarItem.tap()
-        
-        // MARK: Screenshot 12: my_id
-        Snapshot.snapshot(screenshotName("12", "my_id"))
-
-                
-        //MARK: Show qr code
-        app?.buttons["qrCodeButton"].tap()
-        
-        // MARK: Screenshot 13: qr_code
-        Snapshot.snapshot(screenshotName("13", "qr_code"))
-        
-        // MARK: Dismiss qr code
-        app?.otherElements["CoverView"].tap()
-        
-        // show threema safe
-        app!.cells["SafeCell"].tap()
-        
-        // MARK: Screenshot 14: threema_safe
-        Snapshot.snapshot(screenshotName("14", "threema_safe"))
-    }
-        
     private func argValueForKey(key: String, app: XCUIApplication) -> String? {
         if let index = app.launchArguments.firstIndex(of: key) {
             
-            return app.launchArguments[index+1]
+            return app.launchArguments[index + 1]
         }
         return nil
     }
     
     private func screenshotName(_ count: String, _ key: String) -> String {
-        return "\(screenshotNameStart)-\(count)-\(key)-\(screenshotNameEnd)"
+        "\(screenshotNameStart)-\(count)-\(key)-\(screenshotNameEnd)"
     }
     
     private func indexOfHannaSchmidt() -> Int {
-        if language == "ru-RU" || language == "nl-NL" {
+        if language == "ru-RU" || language == "nl-NL" || language == "zh_Hans_CN" || language == "zh_Hant_CN" {
             return 4
         }
         else if language == "it-IT" || language == "pt_BR" {
@@ -758,26 +632,17 @@ class MakeScreenshots: XCTestCase {
     }
     
     private func indexOfPeterSchreiner() -> Int {
-        return 2
-    }
-        
-    private func allowButtonText() -> String {
-        return "Allow"
+        2
     }
     
-    private func alwaysAllowButtonText() -> String {
-        return "Always Allow"
-    }
-    
-    private func allowAllButtonText() -> String {
-        return "Allow Access to All Photos"
-    }
-    
-    private func okButtonText() -> String {
-        return "OK"
-    }
-    
-    private func cancelButtonText() -> String {
-        return "Cancel"
+    func waitForElementToDisappear(_ element: XCUIElement) -> Bool {
+        let expectation = XCTKVOExpectation(
+            keyPath: "exists",
+            object: element,
+            expectedValue: false
+        )
+
+        let result = XCTWaiter().wait(for: [expectation], timeout: 5)
+        return result == .completed
     }
 }

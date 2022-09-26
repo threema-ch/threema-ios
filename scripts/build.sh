@@ -22,30 +22,27 @@
 set -euo pipefail
 
 if [[ $# = 0 ]]; then
-  echo "Usage: ./build.sh [--dependencies | --dependencies-force | --generate-protobuf | [--switch-webrtc-to-debug | --switch-webrtc-to-release] | [--build & --work]] [<relative project path>]"
+  echo "Usage: ./build.sh [--dependencies | --dependencies-force | --generate-protobuf | [--build & --work]] [<relative project path>]"
   echo ""
   echo "Options to build the app and its dependencies:
-  --dependencies                Check out and build Carthage dependencies, and download debug/release WebRTC binaries
-                                and SaltyRTC binary if they are missing.
+  --dependencies                Check out and build Carthage dependencies, and download WebRTC.
                                 (https://github.com/Carthage/Carthage#installing-carthage)
-  --dependencies-force          Rebuild Carthage dependencies, download debug/release version of 
-                                WebRTC binaries and SaltyRTC binary.
-  
+                                
+  --dependencies-force          Rebuild Carthage dependencies, download version of
+                                WebRTC.
+                                
   --generate-protobuf           Parse Protobuf files and generate Swift source code.
                                 (https://github.com/apple/swift-protobuf/#alternatively-install-via-homebrew)
-
-  --switch-webrtc-to-debug      Switch WebRTC binary to debug version.
-  --switch-webrtc-to-release    Switch WebRTC binary to release version.
 
   --build                       Build debug version of target 'Threema'.
   --build --work                Build debug version of target 'Threema Work'.
   
-  Example: ./build.sh --dependencies --switch-webrtc-to-debug --build .."
+  Example: ./build.sh --dependencies --build .."
   exit 0
 fi
 
 # Initialize project directory
-if [[ $# -gt 0 ]] && [[ ${!#} != '--dependencies' ]] && [[ ${!#} != '--dependencies-force' ]] && [[ ${!#} != '--generate-protobuf' ]] && [[ ${!#} != '--switch-webrtc-to-debug' ]] && [[ ${!#} != '--switch-webrtc-to-release' ]] && [[ ${!#} != '--build' ]] && [[ ${!#} != '--work' ]]; then
+if [[ $# -gt 0 ]] && [[ ${!#} != '--dependencies' ]] && [[ ${!#} != '--dependencies-force' ]] && [[ ${!#} != '--generate-protobuf' ]] && [[ ${!#} != '--build' ]] && [[ ${!#} != '--work' ]]; then
   project_dir="$PWD/${!#}"
 else
   project_dir="$PWD"
@@ -62,8 +59,6 @@ fi
 dependencies_arg=0
 dependencies_force_arg=0
 generate_protobuf_arg=0
-switch_webrtc_to_debug_arg=0
-switch_webrtc_to_release_arg=0
 build_arg=0
 work_arg=0
 
@@ -74,10 +69,6 @@ for arg in "$@"; do
     dependencies_force_arg=1
   elif [[ "$arg" = '--generate-protobuf' ]]; then
     generate_protobuf_arg=1
-  elif [[ "$arg" = '--switch-webrtc-to-debug' ]]; then
-    switch_webrtc_to_debug_arg=1
-  elif [[ "$arg" = '--switch-webrtc-to-release' ]]; then
-    switch_webrtc_to_release_arg=1
   elif [[ "$arg" = '--build' ]]; then
     build_arg=1
   elif [[ "$arg" = '--work' ]]; then
@@ -90,9 +81,9 @@ if [[ "$dependencies_arg" = 1 ]] || [[ "$dependencies_force_arg" = 1 ]]; then
   
   # Build carthage dependencies
   if [[ "$dependencies_force_arg" = 1 ]]; then
-    "$project_dir/scripts/carthage.sh" bootstrap --platform iOS --no-use-binaries --project-directory "$project_dir" --derived-data "DerivedData/"
+    carthage bootstrap --platform iOS --use-xcframeworks --no-use-binaries --project-directory "$project_dir" --derived-data "DerivedData/"
   else
-    "$project_dir/scripts/carthage.sh" bootstrap --platform iOS --no-use-binaries --cache-builds --project-directory "$project_dir" --derived-data "$project_dir/DerivedData/"
+    carthage bootstrap --platform iOS --use-xcframeworks --no-use-binaries --cache-builds --project-directory "$project_dir" --derived-data "$project_dir/DerivedData/"
   fi
 
   # Delete or reset download directories
@@ -101,12 +92,6 @@ if [[ "$dependencies_arg" = 1 ]] || [[ "$dependencies_force_arg" = 1 ]]; then
     if [[ -d "$project_dir/$1" ]]; then
       if  [[ "$dependencies_force_arg" = 1 ]]; then
         rm -R "$project_dir/$1"
-      elif [[ $1 == 'WebRTC' ]]; then
-        if [[ -d "WebRTC-debug" ]]; then
-          mv "$project_dir/WebRTC" "$project_dir/WebRTC-release"
-        else
-          mv "$project_dir/WebRTC" "$project_dir/WebRTC-debug"
-        fi
       fi
     fi
   }
@@ -121,7 +106,7 @@ if [[ "$dependencies_arg" = 1 ]] || [[ "$dependencies_force_arg" = 1 ]]; then
     curl "$download_url" -o "$download_dir/$1.zip"
     unzip -q "$download_dir/$1.zip" -d "$download_dir"
     rm "$download_dir/$1.zip"
-    touch "$download_dir/$2-$3"
+    touch "$download_dir"
   }
 
   # $1: Local directory
@@ -129,24 +114,22 @@ if [[ "$dependencies_arg" = 1 ]] || [[ "$dependencies_force_arg" = 1 ]]; then
   # $3: Dependency version on oss
   check() {
     if [[ -d "$project_dir/$1" ]]; then
-      if [[ "$dependencies_force_arg" = 1 || ! -f "$project_dir/$1/$2-$3" ]]; then
+      if [[ "$dependencies_force_arg" = 1 ]]; then
         rm -R "$project_dir/$1"
+        echo "Forcing dependency refresh, removing cache for $1"
       fi
     fi
 
-    if [[ -d "$project_dir/$1" && -f "$project_dir/$1/$2-$3" ]]; then
+    if [[ -d "$project_dir/$1" ]]; then
       echo "Cache found for $1"
     else
       download $1 $2 $3
     fi
   }
   
-  reset "WebRTC"
-  check "WebRTC-debug" "webrtc" "91.0.0"
-  check "WebRTC-release" "webrtc" "91.0.0"
+  reset "WebRTC.xcframework"
+  check "WebRTC.xcframework" "webrtc" "100.0.0"
 
-  reset "SaltyRTC"
-  check "SaltyRTC" "saltyrtc" "0.2.1"
 fi
 
 if [[ "$generate_protobuf_arg" = 1 ]]; then
@@ -166,24 +149,6 @@ if [[ "$generate_protobuf_arg" = 1 ]]; then
     do
       protoc  --swift_out="$protobuf_source_path" --proto_path="$protobuf_submodule_path" "$(basename -- "$file")"
     done
-  fi
-fi
-
-if [[ "$switch_webrtc_to_debug_arg" = 1 ]]; then
-  echo "Switch to WebRTC debug binary"
-  if [[ -d "$project_dir/WebRTC-debug" ]]; then
-      if [[ -d "$project_dir/WebRTC" ]]; then
-          mv "$project_dir/WebRTC" "$project_dir/WebRTC-release"
-      fi
-      mv "$project_dir/WebRTC-debug" "$project_dir/WebRTC"
-  fi
-elif [[ "$switch_webrtc_to_release_arg" = 1 ]]; then
-  echo "Switch to WebRTC release binary"
-  if [[ -d "$project_dir/WebRTC-release" ]]; then
-      if [[ -d "$project_dir/WebRTC" ]]; then
-          mv "$project_dir/WebRTC" "$project_dir/WebRTC-debug"
-      fi
-      mv "$project_dir/WebRTC-release" "$project_dir/WebRTC"
   fi
 fi
 

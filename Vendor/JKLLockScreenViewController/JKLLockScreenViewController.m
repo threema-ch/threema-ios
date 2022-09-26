@@ -5,7 +5,6 @@
 // See Resources/License.html for original license
 
 #import "JKLLockScreenViewController.h"
-
 #import "JKLLockScreenPincodeView.h"
 #import "JKLLockScreenNumber.h"
 
@@ -70,6 +69,7 @@ static const NSUInteger newMaxLength = 6;
 }
 
 - (void)viewWillAppear:(BOOL)animated {
+    [_pincodeView initPincode];
     [super viewWillAppear:animated];
     //------------------ Threema edit begin ---------------------------
     [_cancelButton setTitle:[BundleUtil localizedStringForKey:@"cancel"] forState:UIControlStateNormal];
@@ -80,26 +80,33 @@ static const NSUInteger newMaxLength = 6;
     _passcodeLockOn = [[KKKeychain getStringForKey:@"passcode_on"] isEqualToString:@"YES"];
     _eraseData = [[KKPasscodeLock sharedLock] eraseOption] && [[KKKeychain getStringForKey:@"erase_data_on"] isEqualToString:@"YES"];
     
-    _titleLabel.textColor = [Colors white];
+    _titleLabel.textColor = Colors.textLockScreen;
     _titleLabel.shadowColor = [UIColor colorWithRed:0.3 green:0.3 blue:0.4 alpha:0.6];
-    _subtitleLabel.textColor = [Colors white];
+    _subtitleLabel.textColor = Colors.textLockScreen;
     _subtitleLabel.shadowColor = [UIColor colorWithRed:0.3 green:0.3 blue:0.4 alpha:0.6];
-    [_eraseDataButton setTitleColor:[Colors red] forState:UIControlStateNormal];
+    [_eraseDataButton setTitleColor:Colors.red forState:UIControlStateNormal];
     [_eraseDataButton setTitleShadowColor:[UIColor colorWithRed:0.3 green:0.3 blue:0.4 alpha:0.6] forState:UIControlStateNormal];
-    [self.view setBackgroundColor:[Colors backgroundDark]];
+    [self.view setBackgroundColor:Colors.backgroundView];
     
     //------------------ Threema edit begin ---------------------------
-    if ([LicenseStore requiresLicenseKey] == NO) {
-        _threemaLogo.image = [BundleUtil imageNamed:@"PasscodeLogo"];
-    } else {
-        _threemaLogo.image = [BundleUtil imageNamed:@"PasscodeLogoWork"];
+    switch(ThreemaAppObjc.current) {
+        case ThreemaAppThreema:
+        case ThreemaAppRed:
+            _threemaLogo.image = [BundleUtil imageNamed:@"PasscodeLogo"];
+            break;
+        case ThreemaAppWork:
+        case ThreemaAppWorkRed:
+            _threemaLogo.image = [BundleUtil imageNamed:@"PasscodeLogoWork"];
+            break;
+        case ThreemaAppOnPrem:
+            _threemaLogo.image = [BundleUtil imageNamed:@"PasscodeLogoOnprem"];
     }
     //------------------ Threema edit end ---------------------------
     
-    [Colors updateNavigationBar:self.navigationController.navigationBar];
+    [Colors updateWithNavigationBar:self.navigationController.navigationBar];
     
-    _pincodeView.pincodeColor = [Colors main];
-    _tintColor = [Colors main];
+    _pincodeView.pincodeColor = Colors.primary;
+    _tintColor = Colors.primary;
     [self tintSubviewsWithColor:_tintColor];
 }
 //------------------ Threema edit end ---------------------------
@@ -177,7 +184,6 @@ static const NSUInteger newMaxLength = 6;
 
 - (void)viewDidAppear:(BOOL)animated {
     [super viewDidAppear:animated];
-    
     // [일반모드] 였을 경우
     BOOL isModeNormal = (_lockScreenMode == LockScreenModeNormal || _lockScreenMode == LockScreenModeExtension);
     if (isModeNormal && [_delegate respondsToSelector:@selector(allowTouchIDLockScreenViewController:)]) {
@@ -201,7 +207,7 @@ static const NSUInteger newMaxLength = 6;
     for (JKLLockScreenNumber * number in _numberButtons)
     {
         [number setTintColor:color];
-        [number setTitleColor:[Colors white] forState:UIControlStateNormal];
+        [number setTitleColor:Colors.textLockScreen forState:UIControlStateNormal];
     }
 }
 
@@ -296,11 +302,16 @@ static const NSUInteger newMaxLength = 6;
  @param NSString 서브 제목
  */
 - (void)lsv_updateTitle:(NSString *)title {
-    [_titleLabel    setText:title];
+    [_titleLabel setText:title];
+    UIAccessibilityPostNotification(UIAccessibilityScreenChangedNotification, self.titleLabel);
 }
 
 - (void)lsv_updateSubtitle:(NSString *)subtitle {
     [_subtitleLabel setText:subtitle];
+    
+    if(subtitle != nil) {
+        UIAccessibilityPostNotification(UIAccessibilityScreenChangedNotification, self.subtitleLabel);
+    }
 }
 
 /**
@@ -338,7 +349,7 @@ static const NSUInteger newMaxLength = 6;
     [_pincodeView.layer addAnimation:shake forKey:@"shake"];
     [_pincodeView setEnabled:NO];
     //------------------ Threema edit begin ---------------------------
-    [_subtitleLabel setText:KKPasscodeLockLocalizedString(@"Passcodes did not match. Try again.", @"")];
+    [self lsv_updateSubtitle:KKPasscodeLockLocalizedString(@"Passcodes did not match. Try again.", @"")];
     //------------------ Threema edit end ---------------------------
     dispatch_time_t delayInSeconds = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(LSVShakeAnimationDuration * NSEC_PER_SEC));
     dispatch_after(delayInSeconds, dispatch_get_main_queue(), ^(void){
@@ -355,7 +366,7 @@ static const NSUInteger newMaxLength = 6;
                 if (_failedAttemptsCount == 1) {
                     [self lsv_updateSubtitle:KKPasscodeLockLocalizedString(@"1 Failed Passcode Attempt", @"")];
                 } else {
-                    [self lsv_updateSubtitle:[NSString stringWithFormat:KKPasscodeLockLocalizedString(@"%i Failed Passcode Attempts", @""), _failedAttemptsCount]];
+                    [self lsv_updateSubtitle:[NSString stringWithFormat:KKPasscodeLockLocalizedString(@"%i Failed Passcode Attempts", @""), (long)_failedAttemptsCount]];
                 }
                 
                 if (_failedAttemptsCount >= [[KKPasscodeLock sharedLock] attemptsAllowed]) {
@@ -525,6 +536,9 @@ static const NSUInteger newMaxLength = 6;
             [[AppGroup userDefaults] setInteger:0 forKey:@"FailedCodeAttempts"];
             [[AppGroup userDefaults] synchronize];
             
+            ConversationStore * conversationStore = [[ConversationStore alloc] init];
+            [conversationStore unmarkAllPrivateConversations];
+            
             [self dismissViewControllerAnimated:YES completion:nil];
         } else {
             [self lsv_unlockScreenFailure];
@@ -540,7 +554,9 @@ static const NSUInteger newMaxLength = 6;
             
             [[AppGroup userDefaults] setInteger:0 forKey:@"FailedCodeAttempts"];
             [[AppGroup userDefaults] synchronize];
-            
+            _failedAttemptsCount = 0;
+            [self lsv_updateSubtitle:nil];
+            [_pincodeView initPincode];
             [self lsv_unlockScreenSuccessful:pincode];
         }
         else {
@@ -587,7 +603,6 @@ static const NSUInteger newMaxLength = 6;
             _confirmPincode = pincode;
             _prevLockScreenMode = _lockScreenMode;
             [self setLockScreenMode:LockScreenModeVerification];
-            
             // 재입력 타이틀로 전환
             [self lsv_updateTitle:KKPasscodeLockLocalizedString(@"Re-enter your new passcode", @"")];
             [self lsv_updateSubtitle:nil];

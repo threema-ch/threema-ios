@@ -24,7 +24,6 @@
 
 #import "ContactGroupPickerViewController.h"
 #import "Contact.h"
-#import "GroupProxy.h"
 #import "ServerConnector.h"
 #import "DatabaseManager.h"
 #import "MyIdentityStore.h"
@@ -35,7 +34,6 @@
 #import "RectUtil.h"
 #import "ProgressViewController.h"
 #import "AppGroup.h"
-#import "MessageQueue.h"
 #import "UserSettings.h"
 #import "ModalNavigationController.h"
 #import "UTIConverter.h"
@@ -45,6 +43,7 @@
 #import "JKLLockScreenViewController.h"
 #import "DocumentManager.h"
 #import "SenderItemManager.h"
+#import "Conversation.h"
 
 #define MAX_NUM_PASSCODE_TRIES 3
 
@@ -78,8 +77,8 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        [AppGroup setGroupId:THREEMA_GROUP_IDENTIFIER];
-        [AppGroup setAppId:APP_ID];
+        [AppGroup setGroupId:[BundleUtil threemaAppGroupIdentifier]];
+        [AppGroup setAppId:[[BundleUtil mainBundle] bundleIdentifier]];
         
         // Initialize app setup state (checking database file exists) as early as possible
         (void)[[AppSetupState alloc] init];
@@ -210,9 +209,6 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 }
 
 - (BOOL)extensionIsReady {
-    
-    // drop shared instance, otherwise we won't notice any changes to it
-    [MyIdentityStore resetSharedInstance];
     AppSetupState *appSetupSate = [[AppSetupState alloc] initWithMyIdentityStore:[MyIdentityStore sharedMyIdentityStore]];
     if (![appSetupSate isAppSetupCompleted]) {
         [self showNeedStartAppFirst];
@@ -392,7 +388,8 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 - (void)finishAndClose {
     [AppGroup setActive:NO forType:AppGroupTypeShareExtension];
     
-    [[MessageQueue sharedMessageQueue] save];
+    TaskManager *tm = [[TaskManager alloc] init];
+    [tm save];
     
     NSInteger delay = 0;
     if (_progressViewController != nil) {

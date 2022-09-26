@@ -23,28 +23,29 @@ import Foundation
 class WebConversationUpdate: WebAbstractMessage {
     
     enum ObjectMode: String {
-        case new = "new"
-        case modified = "modified"
-        case removed = "removed"
+        case new
+        case modified
+        case removed
     }
     
     var mode: String
     
-    init(conversation: Conversation, objectMode: ObjectMode, session: WCSession) {        
-        mode = objectMode.rawValue
+    init(conversation: Conversation, objectMode: ObjectMode, session: WCSession) {
+        self.mode = objectMode.rawValue
         
         let entityManager = EntityManager()
         let allConversations = entityManager.entityFetcher.allConversationsSorted() as? [Conversation]
         
-        var index:Int = 0
-        var found: Bool = false
+        var index = 0
+        var found = false
         for conver in allConversations! {
-            if conver.groupId != nil || conversation.groupId != nil {
-                if conver.groupId == conversation.groupId {
+            if conver.groupID != nil || conversation.groupID != nil {
+                if conver.groupID == conversation.groupID {
                     found = true
                 }
-            } else {
-                if conver.contact != nil && conversation.contact != nil {
+            }
+            else {
+                if conver.contact != nil, conversation.contact != nil {
                     if conver.contact.identity == conversation.contact.identity {
                         found = true
                     }
@@ -55,20 +56,57 @@ class WebConversationUpdate: WebAbstractMessage {
                 index = index + 1
             }
         }
-        let webConversation = WebConversation(conversation: conversation, index: index, request: nil, addAvatar: true, entityManager: entityManager, session: session)
-        let tmpArgs:[AnyHashable:Any?] = ["mode": mode]
-        let tmpData:[AnyHashable:Any?] = ["type": webConversation.type, "id": webConversation.id, "position": webConversation.position, "messageCount": webConversation.messageCount, "unreadCount": webConversation.unreadCount, "latestMessage": webConversation.latestMessage, "notifications": webConversation.notifications?.objectDict(), "isStarred": webConversation.isStarred, "isUnread": webConversation.isUnread]
+        let webConversation = WebConversation(
+            conversation: conversation,
+            index: index,
+            request: nil,
+            addAvatar: true,
+            entityManager: entityManager,
+            session: session
+        )
+        let tmpArgs: [AnyHashable: Any?] = ["mode": mode]
+        let tmpData: [AnyHashable: Any?] = [
+            "type": webConversation.type,
+            "id": webConversation.id,
+            "position": webConversation.position,
+            "messageCount": webConversation.messageCount,
+            "unreadCount": webConversation.unreadCount,
+            "latestMessage": webConversation.latestMessage,
+            "notifications": webConversation.notifications?.objectDict(),
+            "isStarred": webConversation.isStarred,
+            "isUnread": webConversation.isUnread,
+        ]
         
-        super.init(messageType: "update", messageSubType: "conversation", requestId: nil, ack: nil, args: tmpArgs, data: tmpData)
+        super.init(
+            messageType: "update",
+            messageSubType: "conversation",
+            requestID: nil,
+            ack: nil,
+            args: tmpArgs,
+            data: tmpData
+        )
     }
     
     init(conversation: Conversation, contact: Contact?, objectMode: ObjectMode) {
-        mode = objectMode.rawValue
+        self.mode = objectMode.rawValue
         
-        let webConversation = WebConversation.init(deletedConversation: conversation, contact: contact)
-        let tmpArgs:[AnyHashable:Any?] = ["mode": mode]
-        let tmpData:[AnyHashable:Any?] = ["type": webConversation.type, "id": webConversation.id, "position": webConversation.position, "messageCount": webConversation.messageCount, "unreadCount": webConversation.unreadCount]
+        let webConversation = WebConversation(deletedConversation: conversation, contact: contact)
+        let tmpArgs: [AnyHashable: Any?] = ["mode": mode]
+        let tmpData: [AnyHashable: Any?] = [
+            "type": webConversation.type,
+            "id": webConversation.id,
+            "position": webConversation.position,
+            "messageCount": webConversation.messageCount,
+            "unreadCount": webConversation.unreadCount,
+        ]
         
-        super.init(messageType: "update", messageSubType: "conversation", requestId: nil, ack: nil, args: tmpArgs, data: tmpData)
+        super.init(
+            messageType: "update",
+            messageSubType: "conversation",
+            requestID: nil,
+            ack: nil,
+            args: tmpArgs,
+            data: tmpData
+        )
     }
 }

@@ -1,0 +1,10 @@
+header = "/**\n * C bindings for saltyrtc-task-relayed-data crate.\n * https://github.com/saltyrtc/saltyrtc-task-relayed-data-rs\n **/"
+include_guard = "saltyrtc_task_relayed_data_bindings_h"
+language = "C"
+braces = "SameLine"
+
+[parse]
+parse_deps = false
+
+[fn]
+args = "Vertical"

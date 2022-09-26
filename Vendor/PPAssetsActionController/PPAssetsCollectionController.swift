@@ -24,8 +24,11 @@ class PPAssetsCollectionController: UICollectionViewController  {
     fileprivate var config: PPAssetsActionConfig!
     fileprivate var captureSession: AVCaptureSession?
     fileprivate var captureLayer: AVCaptureVideoPreviewLayer?
-    fileprivate let cameraIsAvailable = UIImagePickerController.isSourceTypeAvailable(.camera)
     
+    //------------------ Threema edit begin ---------------------------
+    fileprivate let cameraIsAvailable = UIImagePickerController.isSourceTypeAvailable(.camera) && AVCaptureDevice.authorizationStatus(for: .video) == .authorized
+    //------------------ Threema edit end ---------------------------
+
     public init(aConfig: PPAssetsActionConfig) {
         flowLayout = PPCollectionViewLayout()
         config = aConfig
@@ -51,8 +54,13 @@ class PPAssetsCollectionController: UICollectionViewController  {
         
         collectionView?.register(PPPhotoViewCell.self, forCellWithReuseIdentifier: PPPhotoViewCell.reuseIdentifier)
         collectionView?.register(PPVideoViewCell.self, forCellWithReuseIdentifier: PPVideoViewCell.reuseIdentifier)
-        collectionView?.register(PPLiveCameraCell.self, forCellWithReuseIdentifier: PPLiveCameraCell.reuseIdentifier)
-        
+       
+        //------------------ Threema edit begin ---------------------------
+        if cameraIsAvailable {
+            collectionView?.register(PPLiveCameraCell.self, forCellWithReuseIdentifier: PPLiveCameraCell.reuseIdentifier)
+        }
+        //------------------ Threema edit end ---------------------------
+
         collectionView?.showsVerticalScrollIndicator = false
         collectionView?.showsHorizontalScrollIndicator = false
         
@@ -102,6 +110,13 @@ class PPAssetsCollectionController: UICollectionViewController  {
         }
     }
     
+    //------------------ Threema edit begin ---------------------------
+    override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
+        updatePreviewOrientation(UIDevice.current.orientation)
+    }
+    //------------------ Threema edit end ---------------------------
+    
+    
     func selectedPHMedia() -> [MediaProvider] {
         return selectedItemRows.map { phAssets[$0] }
     }
@@ -119,10 +134,10 @@ class PPAssetsCollectionController: UICollectionViewController  {
                        initialSpringVelocity: 1.0,
                        options: .curveEaseIn,
                        animations:
-            {
-                // FIXME: iOS10 layout workaround. Think of a better way.
-                self.collectionView?.superview?.superview?.layoutIfNeeded()
-                self.collectionView?.setCollectionViewLayout(flowLayout, animated: true)
+                        {
+            // FIXME: iOS10 layout workaround. Think of a better way.
+            self.collectionView?.superview?.superview?.layoutIfNeeded()
+            self.collectionView?.setCollectionViewLayout(flowLayout, animated: true)
         }) { result in
             self.collectionView?.reloadData()
         }
@@ -258,9 +273,33 @@ extension PPAssetsCollectionController {
             captureLayer = AVCaptureVideoPreviewLayer(session: captureSession!)
             captureLayer?.videoGravity = AVLayerVideoGravity.resizeAspectFill
             captureSession?.startRunning()
+            //------------------ Threema edit begin ---------------------------
+            updatePreviewOrientation(UIDevice.current.orientation)
+            //------------------ Threema edit end ---------------------------
+
             self.collectionView?.reloadData()
         }
     }
+    
+    //------------------ Threema edit begin ---------------------------
+    private func updatePreviewOrientation(_ orientation: UIDeviceOrientation) {
+        
+        let currentOrientation: AVCaptureVideoOrientation
+        
+        // There seems to be a bug with the orientations in landscape
+        switch orientation {
+        case .landscapeRight:
+            currentOrientation =  .landscapeLeft
+        case .landscapeLeft:
+            currentOrientation  = .landscapeRight
+        case .portraitUpsideDown:
+            currentOrientation = .portraitUpsideDown
+        default:
+            currentOrientation = .portrait
+        }
+        captureLayer?.connection?.videoOrientation = currentOrientation
+    }
+    //------------------ Threema edit end ---------------------------
     
     func stopCaptureSession() {
         if let session = captureSession {
@@ -292,6 +331,10 @@ extension PPAssetsCollectionController {
     }
     
     func rowCountForLiveCameraCell() -> Int {
-        return cameraIsAvailable && config.showLiveCameraCell && config.showGalleryPreview ? 1 : 0
+        
+        //------------------ Threema edit begin ---------------------------
+        return cameraIsAvailable && config.showLiveCameraCell && config.showGalleryPreview && PHPhotoLibrary.authorizationStatus() == .authorized ? 1 : 0
+        //------------------ Threema edit end ---------------------------
+
     }
 }

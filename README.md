@@ -38,15 +38,15 @@ Commits are signed using PGP. See [SECURITY.md](SECURITY.md) for more informatio
 
 ## <a name="license-checks"></a>License Checks
 
-While the source code for Threema for iOS is published under an open source license, Threema is still a paid app. To run the app in combination with our official server infrastructure, you must have bought a license on the App Store. 
+While the source code for Threema for iOS is published under an open source license, Threema is still a paid app. To run the app in combination with our official server infrastructure, you must have bought a license on the App Store.
 
 The app uses two different license check types, depending on the target app:
 
 ### App Store Licensing
 
-When creating a new Threema ID using the Threema app bought on the [App Store](https://apps.apple.com/gw/app/threema/id578665578), the app sends the digitally signed App Store receipt to the directory server. This allows the server to verify that you have indeed bought the app, without being able to identify you. 
+When creating a new Threema ID using the Threema app bought on the [App Store](https://apps.apple.com/gw/app/threema/id578665578), the app sends the digitally signed App Store receipt to the directory server. This allows the server to verify that you have indeed bought the app, without being able to identify you.
 
-This means that a self-compiled app using the `Threema` scheme cannot be used to create a new Threema ID. You can, however, use an app that was purchased in the App Store to create an ID and then export a backup. This backup can then be imported into the self-compiled app. 
+This means that a self-compiled app using the `Threema` scheme cannot be used to create a new Threema ID. You can, however, use an app that was purchased in the App Store to create an ID and then export a backup. This backup can then be imported into the self-compiled app.
 
 Note that the ID creation endpoint is monitored for abuse.
 
@@ -54,15 +54,21 @@ Note that the ID creation endpoint is monitored for abuse.
 
 If you build the Threema Work target, credentials from the [Threema Work](https://work.threema.ch/) subscription must be provided in order to use the app.
 
+### Threema OnPrem
+
+If you build the Threema OnPrem target, credentials from the [Threema OnPrem](https://threema.ch/en/onprem/) subscription must be provided in order to use the app.
+
 ## <a name="schemes"></a>Schemes
 
 - `Threema` builds and tests the consumer app. (recommended for local testing)
 - `ThreemaWork` builds and tests the enterprise version of our app.
-
+- `ThreemaOnPrem` builds and tests the OnPrem version of our app.
+- `ThreemaRed` only used for development and testing within Threema.
+- `ThreemaRedWork` only used for development and testing within Threema.
 
 ## <a name="building"></a>Building
 
-To get started you need a [Mac](https://www.apple.com/mac/), [Xcode](https://developer.apple.com/xcode/) (12.2) and a (free) [Apple Developer Account](https://developer.apple.com/programs/).
+To get started you need a [Mac](https://www.apple.com/mac/), [Xcode](https://developer.apple.com/xcode/) (13.0) and a (free) [Apple Developer Account](https://developer.apple.com/programs/).
 
 ### 1. Install Dependencies
 
@@ -86,11 +92,33 @@ To get started you need a [Mac](https://www.apple.com/mac/), [Xcode](https://dev
    ./scripts/build.sh --dependencies
    ```
 
-   This checks out and builds Carthage dependencies, and downloads debug & release WebRTC binaries and SaltyRTC if they are missing. (The script uses a workaround for limitations of [Carthage with Xcode 12](https://github.com/Carthage/Carthage/blob/master/Documentation/Xcode12Workaround.md). If you want to build WebRTC yourself see [BUILD_WEBRTC.md](BUILD_WEBRTC.md).)
+   This checks out and builds Carthage dependencies, and downloads the WebRTC.xcframework if it is missing. (If you want to build WebRTC yourself see [BUILD_WEBRTC.md](BUILD_WEBRTC.md).)
+
+4. Install [Rustup](https://rustup.rs) and the build targets required for building SaltyRTC, which happens during the first compilation of the project
+	1. Install Rust toolchain & initialize
+
+		```sh
+		brew install rustup
+   		rustup-init
+   		```
+   		(You might want to add $HOME/.cargo/bin to your PATH.)   
+   		(If you don't have [homebrew](https://brew.sh) see their [official install instructions](https://rustup.rs).)   
+
+   	2. Add targets
+
+   		```sh
+   		rustup target add aarch64-apple-darwin aarch64-apple-ios aarch64-apple-ios-sim x86_64-apple-ios
+  		```
+
+  	3. Ensure that submodules are checked out
+
+		```sh
+		git submodule update --init
+  		```
 
 ### 2. Setup Project
 
-You can either build the Threema app (recommended) or Threema Work app. 
+You can either build the Threema app (recommended) or Threema Work app.
 
 _Note_: These setups are for running in the simulator.
 
@@ -114,8 +142,6 @@ _Note_: These setups are for running in the simulator.
 
 1. Build and Run
 2. To create a Threema ID see "App Store Licensing" above. (You can cancel the "Sign in with Apple ID" dialogue and import a Threema ID backup.)
-
-_Note_: We currently don't support Apple Silicon based Macs, because of current limitations of [Carthage with Xcode 12](https://github.com/Carthage/Carthage/blob/master/Documentation/Xcode12Workaround.md) and our current WebRTC builds.
 
 
 ## <a name="testing"></a>Testing
@@ -154,17 +180,17 @@ We accept GitHub pull requests. Please refer to <https://threema.ch/open-source/
 
 Threema for iOS is licensed under the GNU Affero General Public License v3.
 
-    Copyright (c) 2012-2021 Threema GmbH
-    
+    Copyright (c) 2012-2022 Threema GmbH
+
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU Affero General Public License, version 3,
     as published by the Free Software Foundation.
-    
+
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
     GNU Affero General Public License for more details.
-    
+
     You should have received a copy of the GNU Affero General Public License
     along with this program. If not, see <https://www.gnu.org/licenses/>.
 

@@ -1,0 +1,19 @@
+/*
+ Localizable.strings
+ Threema
+ 
+ Copyright (c) 2015 Threema GmbH. All rights reserved.
+ */
+
+"need_to_start_app_first_title" = "%@ nog niet geconfigureerd";
+"need_to_start_app_first_message" = "Open eerst de %@-app.";
+
+"cannot_connect_title" = "Geen verbinding";
+"cannot_connect_message" = "Geen verbinding, controleer je internetverbinding.";
+
+"sending_count" = "Versturen… (%1$ld / %2$ld)";
+
+"error_message_no_items_title" = "Ongeldige content";
+"error_message_no_items_message" = "Geen ondersteunde items gevonden.";
+
+"send_as_file" = "Verzenden als origineel";

@@ -104,10 +104,46 @@
                   Identifier = "(null)">
                </Test>
                <Test
+                  Identifier = "AddressBoolLoadTests">
+               </Test>
+               <Test
+                  Identifier = "AppMigrationTests">
+               </Test>
+               <Test
+                  Identifier = "AudioTrackAnalyzerTests">
+               </Test>
+               <Test
+                  Identifier = "ChatAudioMessageCellTests">
+               </Test>
+               <Test
+                  Identifier = "ChatAudioMessageCellTestsOld">
+               </Test>
+               <Test
+                  Identifier = "ChatProfileViewTests">
+               </Test>
+               <Test
+                  Identifier = "ChatScrollPositionTests">
+               </Test>
+               <Test
+                  Identifier = "ChatTableDataSourceTests">
+               </Test>
+               <Test
+                  Identifier = "ChatTextViewPerformanceTest">
+               </Test>
+               <Test
+                  Identifier = "ConversationActionsTest">
+               </Test>
+               <Test
                   Identifier = "DbLoadTests">
                </Test>
                <Test
                   Identifier = "EntityDestroyerTests">
+               </Test>
+               <Test
+                  Identifier = "EntityObserverTests">
+               </Test>
+               <Test
+                  Identifier = "GroupMessageProcessorTests">
                </Test>
                <Test
                   Identifier = "HttpClientDownloadSafeTests">
@@ -119,10 +155,22 @@
                   Identifier = "IDNSafetyHelperTests">
                </Test>
                <Test
+                  Identifier = "MarkupParserTest">
+               </Test>
+               <Test
+                  Identifier = "MentionsHelperTests">
+               </Test>
+               <Test
+                  Identifier = "PendingMessageTests">
+               </Test>
+               <Test
                   Identifier = "PendingMessagesManagerTests">
                </Test>
                <Test
                   Identifier = "PerformanceTests">
+               </Test>
+               <Test
+                  Identifier = "PhotosRightsHelperTest">
                </Test>
                <Test
                   Identifier = "SafeJson">

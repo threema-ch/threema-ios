@@ -22,25 +22,40 @@ import Foundation
 
 class WebConversationsResponse: WebAbstractMessage {
     
-    init(requestId: String?, conversationRequest: WebConversationsRequest?, session: WCSession) {
+    init(requestID: String?, conversationRequest: WebConversationsRequest?, session: WCSession) {
         
-        var conversationArray = Array<[AnyHashable:Any]>();
+        var conversationArray = [[AnyHashable: Any]]()
 
         let entityManager = EntityManager()
         let allConversations = entityManager.entityFetcher.allConversationsSorted() as? [Conversation]
 
-        var index:Int = 1
+        var index = 1
         for conver in allConversations! {
-            if !conver.isGroup() && conver.contact == nil {
+            if !conver.isGroup(), conver.contact == nil {
                 // empty contact in a single conversation, do not send to web
-            } else {
-                let webConversation = WebConversation(conversation: conver, index: index, request: conversationRequest, addAvatar: index < 16 ? true : false, entityManager: entityManager, session: session)
+            }
+            else {
+                let webConversation = WebConversation(
+                    conversation: conver,
+                    index: index,
+                    request: conversationRequest,
+                    addAvatar: index < 16 ? true : false,
+                    entityManager: entityManager,
+                    session: session
+                )
                 conversationArray.append(webConversation.objectDict())
                 index = index + 1
             }
         }
-        let tmpAck = requestId != nil ? WebAbstractMessageAcknowledgement.init(requestId, true, nil) : nil
-        super.init(messageType: "response", messageSubType: "conversations", requestId: nil, ack: tmpAck, args: nil, data: conversationArray)
+        let tmpAck = requestID != nil ? WebAbstractMessageAcknowledgement(requestID, true, nil) : nil
+        super.init(
+            messageType: "response",
+            messageSubType: "conversations",
+            requestID: nil,
+            ack: tmpAck,
+            args: nil,
+            data: conversationArray
+        )
     }
 }
 
@@ -57,68 +72,90 @@ struct WebConversation {
     var isStarred: Bool?
     var isUnread: Bool
     
-    init(conversation: Conversation, index: Int, request: WebConversationsRequest?, addAvatar: Bool, entityManager: EntityManager, session: WCSession) {
+    init(
+        conversation: Conversation,
+        index: Int,
+        request: WebConversationsRequest?,
+        addAvatar: Bool,
+        entityManager: EntityManager,
+        session: WCSession
+    ) {
         if conversation.isGroup() {
-            type = "group"
-            id = conversation.groupId.hexEncodedString()
-            if let groupProxy = GroupProxy.init(for: conversation, entityManager: entityManager) {
-                let group = WebGroup.init(group: groupProxy)
-                receiver = group.objectDict()
+            self.type = "group"
+            self.id = conversation.groupID.hexEncodedString()
+            if let groupProxy = GroupProxy(for: conversation, entityManager: entityManager) {
+                let group = WebGroup(group: groupProxy)
+                self.receiver = group.objectDict()
             }
-        } else {
-            type = "contact"
-            id = conversation.contact.identity
-            let contact = WebContact.init(conversation.contact)
-            receiver = contact.objectDict()
+        }
+        else {
+            self.type = "contact"
+            self.id = conversation.contact.identity
+            let contact = WebContact(conversation.contact)
+            self.receiver = contact.objectDict()
         }
 
-        position = index
-        messageCount = conversation.messages.count
-        unreadCount = conversation.unreadMessageCount as! Int
+        self.position = index
+        self.messageCount = conversation.messages.count
+        self.unreadCount = conversation.unreadMessageCount as! Int
 
-        if conversation.lastMessage != nil && conversation.lastMessage.conversation != nil {
-            let latestMessageObject = WebMessageObject.init(message: conversation.lastMessage, conversation: conversation, forConversationsRequest: true, session: session)
-            latestMessage = latestMessageObject.objectDict()
+        if conversation.lastMessage != nil, conversation.lastMessage.conversation != nil {
+            let latestMessageObject = WebMessageObject(
+                message: conversation.lastMessage,
+                conversation: conversation,
+                forConversationsRequest: true,
+                session: session
+            )
+            self.latestMessage = latestMessageObject.objectDict()
         }
 
         let maxSize = request != nil ? request!.maxSize : 48
         let quality = request != nil ? 0.75 : 0.6
-        if let avatarImage = AvatarMaker.shared().avatar(for: conversation, size: CGFloat(maxSize), masked: false, scaled: false) {
-            avatar = avatarImage.jpegData(compressionQuality:CGFloat(quality))
+        if let avatarImage = AvatarMaker.shared()
+            .avatar(for: conversation, size: CGFloat(maxSize), masked: false, scaled: false) {
+            self.avatar = avatarImage.jpegData(compressionQuality: CGFloat(quality))
         }
 
         if let pushSetting = PushSetting.find(for: conversation) {
-            notifications = WebNotificationSettings.init(pushSetting: pushSetting)
+            self.notifications = WebNotificationSettings(pushSetting: pushSetting)
         }
-        isStarred = conversation.marked.boolValue
-        isUnread = conversation.unreadMessageCount == -1
+        self.isStarred = conversation.marked.boolValue
+        self.isUnread = conversation.unreadMessageCount == -1
     }
 
     init(deletedConversation: Conversation, contact: Contact?) {
         if deletedConversation.isGroup() {
-            type = "group"
-            id = deletedConversation.groupId.hexEncodedString()
-        } else {
-            type = "contact"
+            self.type = "group"
+            self.id = deletedConversation.groupID.hexEncodedString()
+        }
+        else {
+            self.type = "contact"
             if deletedConversation.contact != nil {
-                id = deletedConversation.contact.identity
+                self.id = deletedConversation.contact.identity
             }
             else if contact != nil {
-                id = contact!.identity
+                self.id = contact!.identity
             }
             else {
-                id = ""
+                self.id = ""
             }
         }
 
-        position = 0
-        messageCount = 0
-        unreadCount = 0
-        isUnread = false
+        self.position = 0
+        self.messageCount = 0
+        self.unreadCount = 0
+        self.isUnread = false
     }
 
     func objectDict() -> [String: Any] {
-        var objectDict:[String: Any] = ["type": type, "id": id, "position": position, "messageCount": messageCount, "unreadCount": unreadCount, "isUnread": isUnread]
+        var objectDict: [String: Any] = [
+            "type": type,
+            "id": id,
+            "position": position,
+            "messageCount": messageCount,
+            "unreadCount": unreadCount,
+            "isUnread": isUnread,
+        ]
 
         if latestMessage != nil {
             objectDict.updateValue(latestMessage!, forKey: "latestMessage")
@@ -149,12 +186,12 @@ struct WebNotificationSettings {
     var dnd: WebNotificationDndSetting
 
     init(pushSetting: PushSetting) {
-        sound = WebNotificationSoundSetting.init(pushSetting: pushSetting)
-        dnd = WebNotificationDndSetting.init(pushSetting: pushSetting)
+        self.sound = WebNotificationSoundSetting(pushSetting: pushSetting)
+        self.dnd = WebNotificationDndSetting(pushSetting: pushSetting)
     }
 
     func objectDict() -> [String: Any] {
-        return ["sound": sound.objectDict(), "dnd": dnd.objectDict()]
+        ["sound": sound.objectDict(), "dnd": dnd.objectDict()]
     }
 }
 
@@ -162,11 +199,11 @@ struct WebNotificationSoundSetting {
     var mode: String
 
     init(pushSetting: PushSetting) {
-        mode = pushSetting.silent ? "muted" : "default"
+        self.mode = pushSetting.silent ? "muted" : "default"
     }
 
     func objectDict() -> [String: Any] {
-        return ["mode": mode]
+        ["mode": mode]
     }
 }
 
@@ -176,21 +213,21 @@ struct WebNotificationDndSetting {
     var mention: Bool
 
     init(pushSetting: PushSetting) {
-        until = 0
-        mode = "off"
+        self.until = 0
+        self.mode = "off"
 
         if pushSetting.type == .off {
-            mode = "on"
+            self.mode = "on"
         }
         else if pushSetting.type == .offPeriod {
-            mode = "until"
-            until = Int(pushSetting.periodOffTillDate.timeIntervalSince1970)
+            self.mode = "until"
+            self.until = Int(pushSetting.periodOffTillDate.timeIntervalSince1970)
         }
-        mention = pushSetting.mentions
+        self.mention = pushSetting.mentions
     }
 
     func objectDict() -> [String: Any] {
-        var objectDict:[String: Any] = ["mode": mode]
+        var objectDict: [String: Any] = ["mode": mode]
 
         if mode == "until" {
             objectDict.updateValue(until, forKey: "until")
@@ -204,10 +241,8 @@ struct WebNotificationDndSetting {
     }
 }
 
-extension Data
-{
-    func toString() -> String
-    {
-        return String(data: self, encoding: .utf8)!
+extension Data {
+    func toString() -> String {
+        String(data: self, encoding: .utf8)!
     }
 }

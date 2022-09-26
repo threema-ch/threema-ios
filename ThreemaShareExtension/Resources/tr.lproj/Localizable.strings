@@ -1,0 +1,19 @@
+/*
+ Localizable.strings
+ Threema
+ 
+ Copyright (c) 2015 Threema GmbH. All rights reserved.
+ */
+
+"need_to_start_app_first_title" = "%@ henüz kurulmadı";
+"need_to_start_app_first_message" = "Lütfen önce Threema uygulamasını başlatın.";
+
+"cannot_connect_title" = "Bağlantı yok";
+"cannot_connect_message" = "Bağlanamıyor, lütfen internet bağlantınızı kontrol edin.";
+
+"sending_count" = "Gönderiliyor... ( %1$ld / %2$ld )";
+
+"error_message_no_items_title" = "Geçersiz içerik";
+"error_message_no_items_message" = "Desteklenen öğe bulunamadı.";
+
+"send_as_file" = "Orijinali Gönder";

@@ -196,7 +196,9 @@ public class PPAssetsActionController: UIViewController {
             
             /***** BEGIN THREEMA MODIFICATION: bottom padding *********/
             var bottomConstant: CGFloat = 8
-            if UIApplication.shared.keyWindow?.safeAreaInsets.bottom ?? 0 > 0 {
+            /***** BEGIN THREEMA MODIFICATION: Use windows instead of keyWindow *********/
+            if UIApplication.shared.windows.first?.safeAreaInsets.bottom ?? 0 > 0 {
+            /***** END THREEMA MODIFICATION: Use windows instead of keyWindow *********/
                 bottomConstant = 0
             }
             /***** END THREEMA MODIFICATION: bottom padding *********/

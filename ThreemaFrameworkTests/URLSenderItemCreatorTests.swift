@@ -23,12 +23,12 @@ import XCTest
 
 class URLSenderItemCreatorTests: XCTestCase {
 
-    let testBundle: Bundle = Bundle(for: ImageURLSenderItemCreatorTest.self)
+    let testBundle = Bundle(for: ImageURLSenderItemCreatorTest.self)
     
     override func setUpWithError() throws {
         // Put setup code here. This method is called before the invocation of each test method in the class.
         // necessary for ValidationLogger
-        AppGroup.setGroupId("group.ch.threema") //THREEMA_GROUP_IDENTIFIER @"group.ch.threema"
+        AppGroup.setGroupID("group.ch.threema") // THREEMA_GROUP_IDENTIFIER @"group.ch.threema"
     }
     
     override func tearDownWithError() throws {
@@ -38,11 +38,14 @@ class URLSenderItemCreatorTests: XCTestCase {
     func testCreateSenderFromURL() {
         let imageURLSenderItemCreatorTest = ImageURLSenderItemCreatorTest()
         for item in imageURLSenderItemCreatorTest.testMatrix {
-            guard let testImageUrl = imageURLSenderItemCreatorTest.testBundle.url(forResource: item.0, withExtension: item.1) else {
+            guard let testImageURL = imageURLSenderItemCreatorTest.testBundle.url(
+                forResource: item.0,
+                withExtension: item.1
+            ) else {
                 XCTFail("Could not create testImageURL")
                 return
             }
-            guard let senderItem = URLSenderItemCreator.getSenderItem(for: testImageUrl, maxSize: item.2) else {
+            guard let senderItem = URLSenderItemCreator.getSenderItem(for: testImageURL, maxSize: item.2) else {
                 XCTFail("Could not create senderItem from valid testdata")
                 return
             }
@@ -51,7 +54,7 @@ class URLSenderItemCreatorTests: XCTestCase {
     }
     
     func testGarbageURL() {
-        let urlMatrix : [String] = [
+        let urlMatrix: [String] = [
             "https://threema.ch/en",
             "file://threema.ch/en",
         ]

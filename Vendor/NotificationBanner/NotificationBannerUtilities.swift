@@ -22,7 +22,9 @@ class NotificationBannerUtilities: NSObject {
 
     class func isNotchFeaturedIPhone() -> Bool {
         if #available(iOS 11, *) {
-            if UIApplication.shared.keyWindow?.safeAreaInsets.bottom ?? 0 > CGFloat(0) {
+            /***** BEGIN THREEMA MODIFICATION: Use windows instead of keyWindow *********/
+            if UIApplication.shared.windows.first?.safeAreaInsets.bottom ?? 0 > CGFloat(0) {
+            /***** END THREEMA MODIFICATION: Use windows instead of keyWindow *********/
                 return true
             } else {
                 return false

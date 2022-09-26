@@ -22,7 +22,7 @@ import Foundation
 
 class ZipFileActivityItemProvider: UIActivityItemProvider {
     private var url: URL
-    private var subject: String = ""
+    private var subject = ""
     
     init(url: URL, subject: String) {
         self.url = url
@@ -30,15 +30,21 @@ class ZipFileActivityItemProvider: UIActivityItemProvider {
         super.init(placeholderItem: url)
     }
     
-    public override var item: Any { // customise the item for the current `activityType`
-        return self.url
+    override public var item: Any { // customise the item for the current `activityType`
+        self.url
     }
     
-    override func activityViewController(_ activityViewController: UIActivityViewController, subjectForActivityType activityType: UIActivity.ActivityType?) -> String {
-        return self.subject
+    override func activityViewController(
+        _ activityViewController: UIActivityViewController,
+        subjectForActivityType activityType: UIActivity.ActivityType?
+    ) -> String {
+        subject
     }
     
-    override func activityViewController(_ activityViewController: UIActivityViewController, dataTypeIdentifierForActivityType activityType: UIActivity.ActivityType?) -> String {
-        return "com.pkware.zip-archive"
+    override func activityViewController(
+        _ activityViewController: UIActivityViewController,
+        dataTypeIdentifierForActivityType activityType: UIActivity.ActivityType?
+    ) -> String {
+        "com.pkware.zip-archive"
     }
 }

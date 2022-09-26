@@ -26,7 +26,6 @@
 #import "MessageSender.h"
 #import "TextMessage.h"
 #import "DatabaseManager.h"
-#import "EntityManager.h"
 #import "MediaConverter.h"
 #import "FileMessageSender.h"
 
@@ -236,24 +235,32 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         sender.uploadProgressDelegate = self;
     } else  if ([senderItem isKindOfClass:[NSString class]]) {
         NSString *message = (NSString *)senderItem;
-        
-        // make sure DB object is created in main thread (to fetch KVO for keypath "sent")
-        
         if (message && message.length) {
             dispatch_async(dispatch_get_main_queue(), ^{
                 [_delegate setProgress:[NSNumber numberWithFloat:0.1] forItem:[self progressItemKey:message conversation:conversation]];
-                [MessageSender sendMessage:message inConversation:conversation async:YES quickReply:NO requestId:nil onCompletion:^(TextMessage *message, Conversation *conv) {
-                    [self awaitAckForMessageId:message.id];
+                [MessageSender sendMessage:message inConversation:conversation quickReply:NO requestId:nil onCompletion:^(BaseMessage *message) {
+                    if ([message isKindOfClass:[TextMessage class]]) {
+                        TextMessage *textMsg = (TextMessage *)message;
+                        
+                        [_delegate finishedItem:[self progressItemKey:textMsg.text conversation:textMsg.conversation]];
+                        
+                        [[DatabaseManager dbManager] addDirtyObject:textMsg.conversation];
+                        [[DatabaseManager dbManager] addDirtyObject:textMsg.conversation.lastMessage];
+                        
+                        _sentItemCount++;
+                        [self checkIsFinished];
+                    }
                 }];
             });
-            } else {
-                // increment sent count for unknown types
-                [_delegate finishedItem:[self progressItemKey:message conversation:conversation]];
-                _sentItemCount++;
-                [self checkIsFinished];
-            }
-    
-    } else {
+        }
+        else {
+            // increment sent count for unknown types
+            [_delegate finishedItem:[self progressItemKey:message conversation:conversation]];
+            _sentItemCount++;
+            [self checkIsFinished];
+        }
+    }
+    else {
         NSString *title = NSLocalizedString(@"error_message_no_items_title", nil);
         NSString *message = NSLocalizedString(@"error_message_no_items_message", nil);
         [_delegate showAlertWithTitle:title message:message];

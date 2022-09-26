@@ -25,7 +25,6 @@
 #import "NaClCrypto.h"
 #import "ServerConnector.h"
 #import "MyIdentityStore.h"
-#import "MessageQueue.h"
 #import "ContactStore.h"
 #import "Conversation.h"
 #import "UIDefines.h"
@@ -35,8 +34,7 @@
 #import "StatusNavigationBar.h"
 #import "MyIdentityStore.h"
 #import "PortraitNavigationController.h"
-#import "UserReminder.h"
-#import "Utils.h"
+#import "ThreemaUtilityObjC.h"
 #import "Contact.h"
 #import "ContactsViewController.h"
 #import "ProtocolDefines.h"
@@ -55,12 +53,6 @@
 #import "ErrorNotificationHandler.h"
 #import "SplashViewController.h"
 
-#import "MessageProcessor.h"
-#import "MessageProcessorProxy.h"
-#import "BackgroundTaskManagerProxy.h"
-
-#import "NotificationManager.h"
-
 #import "SDNetworkActivityIndicator.h"
 #import "ActivityIndicatorProxy.h"
 #import "BundleUtil.h"
@@ -78,26 +70,22 @@
 #import "BoxBallotCreateMessage.h"
 #import "BallotMessageDecoder.h"
 #import "BoxImageMessage.h"
-#import "ImageMessage.h"
+#import "ImageMessageEntity.h"
 #import "GroupImageMessage.h"
 #import "BoxVideoMessage.h"
-#import "VideoMessage.h"
 #import "GroupVideoMessage.h"
-#import "DocumentManager.h"
 #import "MessageSender.h"
-#import "EntityManager.h"
 #import "VoIPHelper.h"
 #import "PushPayloadDecryptor.h"
 #import "Threema-Swift.h"
-#import "ConversationUtils.h"
 #import "ThreemaFramework.h"
-
+#import "ThreemaFramework/ThreemaFramework-swift.h"
+#import "MessageDraftStore.h"
+#import "MainTabBarController.h"
 #import <AVFoundation/AVFoundation.h>
 #import <UserNotifications/UserNotifications.h>
 #import <PushKit/PushKit.h>
 #import <Intents/Intents.h>
-
-#import "ValidationLogger.h"
 
 #ifdef DEBUG
 static const DDLogLevel ddLogLevel = DDLogLevelAll;
@@ -122,7 +110,10 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     BOOL shouldLoadUIForEnterForeground;
     BOOL isEnterForeground;
     BOOL startCheckBiometrics;
+    BOOL rootToNotificationSettings;
     UIView *lockView;
+    IncomingMessageManager *incomingMessageManager;
+    NotificationManager *notificationManager;
 }
 
 @synthesize window = _window;
@@ -134,8 +125,8 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 + (void)initialize {
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        [AppGroup setGroupId:THREEMA_GROUP_IDENTIFIER];
-        [AppGroup setAppId:APP_ID];
+        [AppGroup setGroupId:[BundleUtil threemaAppGroupIdentifier]];
+        [AppGroup setAppId:[[BundleUtil mainBundle] bundleIdentifier]];
         
 #ifdef DEBUG
         [LogManager initializeGlobalLoggerWithDebug:YES];
@@ -165,8 +156,6 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 
 + (void)initAppDelegate {
     [ActivityIndicatorProxy wireActivityIndicator:[SDNetworkActivityIndicator sharedActivityIndicator]];
-    [MessageProcessorProxy wireMessageProcessor:[MessageProcessor sharedMessageProcessor]];
-    [BackgroundTaskManagerProxy wireBackgroundTaskManager:[BackgroundTaskManager shared]];
 }
 
 #pragma mark - Launching
@@ -183,25 +172,36 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     [ErrorNotificationHandler setup];
 
     appLaunchDate = [NSDate date];
-
-    [NotificationManager sharedInstance];
     
     DDLogNotice(@"AppState: didFinishLaunchingWithOptions");
 
     /* Instantiate various singletons now */
     [NaClCrypto sharedCrypto];
-    [ServerConnector sharedServerConnector];
+    [[ServerConnector sharedServerConnector] setIsAppInBackground:[self isAppInBackground]];
 
-    [[PendingMessagesManager shared] setup];
-
-    /* Observe connection status */
-    [[ServerConnector sharedServerConnector] addObserver:self forKeyPath:@"connectionState" options:0 context:nil];
+    notificationManager = [[NotificationManager alloc] init];
 
     self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
+    if ([[NSUserDefaults standardUserDefaults] boolForKey:@"FASTLANE_SNAPSHOT"]) {
+        NSString *theme = [[NSUserDefaults standardUserDefaults] objectForKey:@"theme"];
+        [[UserSettings sharedUserSettings] setUseSystemTheme:false];
+        
+        if ([theme isEqualToString:@"dark"]) {
+            [Colors setTheme:ThemeDark];
+        } else {
+            [Colors setTheme:ThemeLight];
+        }
+        [[UserSettings sharedUserSettings] setIncludeCallsInRecents:false];
+    } else {
+        [Colors initTheme];
+    }
     
+    [Colors updateWithWindow:_window];
     pendingShortCutItem = [launchOptions objectForKey:UIApplicationLaunchOptionsShortcutItemKey];
 
     [[UNUserNotificationCenter currentNotificationCenter] setDelegate:self];
+    [[UNUserNotificationCenter currentNotificationCenter] requestAuthorizationWithOptions:(UNAuthorizationOptionBadge | UNAuthorizationOptionSound | UNAuthorizationOptionAlert | UNAuthorizationOptionProvidesAppNotificationSettings) completionHandler:^(__unused BOOL granted, __unused NSError * _Nullable error) {
+    }];
 
     PKPushRegistry *pushRegistry = [[PKPushRegistry alloc] initWithQueue:dispatch_get_main_queue()];
     pushRegistry.delegate = self;
@@ -221,85 +221,51 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
         exit(EXIT_SUCCESS);
     }
 #endif
-    
+
     // if database must migrate and app runs in background (e.g of push request), show local notification to start app in foreground
     DatabaseManager *dbManager = [DatabaseManager dbManager];
     requiresMigration = [dbManager storeRequiresMigration];
-    if (([dbManager storeRequiresImport] || requiresMigration == RequiresMigration) && [self isAppInBackground]) {
-        [NotificationManager showNoAccessToDatabaseNotification:^{
+    if (([dbManager storeRequiresImport] || requiresMigration == RequiresMigration || [AppMigration isMigrationRequiredWithUserSettings:[BusinessInjector new].userSettings] ) && [self isAppInBackground]) {
+        [NotificationManager showNoAccessToDatabaseNotificationWithCompletionHandler:^{
             sleep(2);
             exit(EXIT_SUCCESS);
         }];
         return NO;
     }
-    
+
     if ([dbManager storeRequiresImport]) {
         DDLogVerbose(@"Store will be import and start migration");
         migrating = YES;
         
         [self performSelectorOnMainThread:@selector(launchImportDatabase) withObject:nil waitUntilDone:NO];
     } else {
+        AppSetupState *appSetupState = [[AppSetupState alloc] initWithMyIdentityStore:[MyIdentityStore sharedMyIdentityStore]];
+
         if (requiresMigration == RequiresMigrationError) {
             /* Is protected data is not available, then we show a other notification */
             if ([[MyIdentityStore sharedMyIdentityStore] isKeychainLocked]) {
-                [NotificationManager showNoAccessToDatabaseNotification:^{
+                [NotificationManager showNoAccessToDatabaseNotificationWithCompletionHandler:^{
                     exit(EXIT_SUCCESS);
                 }];
             } else {
-                [Utils sendErrorLocalNotification:[BundleUtil localizedStringForKey:@"error_message_requires_migration_error_title"] body:[BundleUtil localizedStringForKey:@"error_message_requires_migration_error_description"] userInfo:@{@"threema": @{@"cmd": @"error", @"error": @"migration"}} onCompletion:^{
+                [ThreemaUtilityObjC sendErrorLocalNotification:[BundleUtil localizedStringForKey:@"error_message_requires_migration_error_title"] body:[BundleUtil localizedStringForKey:@"error_message_requires_migration_error_description"] userInfo:@{@"threema": @{@"cmd": @"error", @"error": @"migration"}} onCompletion:^{
                     // Wait 2 seconds to be sure the notification is fired
-                    [Utils waitForSeconds:2 finish:^{
+                    [ThreemaUtilityObjC waitForSeconds:2 finish:^{
                         exit(EXIT_SUCCESS);
                     }];
                 }];
             }
-            return NO;
         }
-        else if (requiresMigration == RequiresMigration) {
+        else if (requiresMigration == RequiresMigration || ([AppMigration isMigrationRequiredWithUserSettings:[BusinessInjector new].userSettings] && [appSetupState existsDatabaseFile])) {
             DDLogVerbose(@"Store requires migration");
             migrating = YES;
             
             /* run phase 2 (which involves migration) separately to avoid getting killed with "failed to launch in time" */
             [self performSelectorOnMainThread:@selector(launchPhase2) withObject:nil waitUntilDone:NO];
-        } else {
+        }
+        else {
             /* run phase 3 immediately */
             [self launchPhase3];
-        }
-    }
-
-    if ([[NSUserDefaults standardUserDefaults] boolForKey:@"FASTLANE_SNAPSHOT"]) {
-        NSString *theme = [[NSUserDefaults standardUserDefaults] objectForKey:@"theme"];
-        if ([LicenseStore requiresLicenseKey] == YES) {
-            if ([theme isEqualToString:@"dark"]) {
-                [Colors setTheme:ColorThemeDarkWork];
-            } else {
-                [Colors setTheme:ColorThemeLightWork];
-            }
-        } else {
-            if ([theme isEqualToString:@"dark"]) {
-                [Colors setTheme:ColorThemeDark];
-            } else {
-                [Colors setTheme:ColorThemeLight];
-            }
-        }
-        [[UserSettings sharedUserSettings] setEnableCallKit:false];
-    }
-    
-    if (@available(iOS 13.0, *)) {
-        if ([UserSettings sharedUserSettings].useSystemTheme == false && _window.overrideUserInterfaceStyle == UIUserInterfaceStyleUnspecified) {
-            switch ([Colors getTheme]) {
-                case ColorThemeDark:
-                case ColorThemeDarkWork:
-                    _window.overrideUserInterfaceStyle = UIUserInterfaceStyleDark;
-                    break;
-                default:
-                    _window.overrideUserInterfaceStyle = UIUserInterfaceStyleLight;
-                    break;
-            }
-        } else {
-            if ([UserSettings sharedUserSettings].useSystemTheme == true && _window.overrideUserInterfaceStyle != UIUserInterfaceStyleUnspecified) {
-                _window.overrideUserInterfaceStyle = UIUserInterfaceStyleUnspecified;
-            }
         }
     }
     
@@ -330,7 +296,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     [self.window makeKeyAndVisible];
 
     /* display spinner during copy database */
-    [SVProgressHUD showWithStatus:NSLocalizedString(@"updating_database", nil)];
+    [SVProgressHUD showWithStatus:[BundleUtil localizedStringForKey:@"updating_database"]];
 
     /* run copy database now in background */
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
@@ -339,7 +305,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
         });
         DatabaseManager *dbManager = [DatabaseManager dbManager];
         [dbManager copyImportedDatabase];
-
+        
         NSError *storeError = [dbManager storeError];
         if (storeError != nil) {
             dispatch_async(dispatch_get_main_queue(), ^{
@@ -350,9 +316,9 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
         } else {
             dispatch_async(dispatch_get_main_queue(), ^{
                 if (requiresMigration == RequiresMigrationError) {
-                    [Utils sendErrorLocalNotification:[BundleUtil localizedStringForKey:@"error_message_requires_migration_error_title"] body:[BundleUtil localizedStringForKey:@"error_message_requires_migration_error_description"] userInfo:nil];
+                    [ThreemaUtilityObjC sendErrorLocalNotification:[BundleUtil localizedStringForKey:@"error_message_requires_migration_error_title"] body:[BundleUtil localizedStringForKey:@"error_message_requires_migration_error_description"] userInfo:nil];
                 }
-                else if (requiresMigration == RequiresMigration) {
+                else if (requiresMigration == RequiresMigration || [AppMigration isMigrationRequiredWithUserSettings:[BusinessInjector new].userSettings]) {
                     DDLogVerbose(@"Store requires migration");
                     databaseImported = YES;
                     /* run phase 2 (which involves migration) separately to avoid getting killed with "failed to launch in time" */
@@ -386,24 +352,32 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 
     if (databaseImported == false) {
         /* display spinner during migration */
-        [SVProgressHUD showWithStatus:NSLocalizedString(@"updating_database", nil)];
+        [SVProgressHUD showWithStatus:[BundleUtil localizedStringForKey:@"updating_database"]];
     }
     /* run migration now in background */
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
         dispatch_async(dispatch_get_main_queue(), ^{
             [UIApplication sharedApplication].idleTimerDisabled = YES;
         });
-        DatabaseManager *dbManager = [DatabaseManager dbManager];
-        [dbManager doMigrateDB];
+        
+        NSError *storeError = nil;
+        if (requiresMigration == RequiresMigration) {
+            DatabaseManager *dbManager = [DatabaseManager dbManager];
+            [dbManager doMigrateDB];
+            storeError = [dbManager storeError];
+        }
 
-        NSError *storeError = [dbManager storeError];
         if (storeError != nil) {
             dispatch_async(dispatch_get_main_queue(), ^{
                 [SVProgressHUD dismiss];
-                [ErrorHandler abortWithError: storeError additionalText:NSLocalizedString(@"database_migration_error_hints", nil)];
+                [ErrorHandler abortWithError: storeError additionalText:[BundleUtil localizedStringForKey:@"database_migration_error_hints"]];
                 /* do not run launchPhase3 at this point, as we shouldn't load the main storyboard and cause any database accesses */
             });
         } else {
+            if ([AppMigration isMigrationRequiredWithUserSettings:[BusinessInjector new].userSettings]) {
+                [[[AppMigration alloc] initWithBusinessInjectorObjc:[BusinessInjector new]] run];
+            }
+            
             dispatch_async(dispatch_get_main_queue(), ^{
                 [SVProgressHUD dismiss];
                 [self launchPhase3];
@@ -425,35 +399,36 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
         });
     }
     
+    incomingMessageManager = [IncomingMessageManager new];
+    [incomingMessageManager showIsNotPending];
+    
+    // Register message processor delegate
+    [[ServerConnector sharedServerConnector] registerMessageProcessorDelegate:incomingMessageManager];
+    
     // apply MDM parameter anyway, perhaps company MDM has changed
     MDMSetup *mdmSetup = [[MDMSetup alloc] initWithSetup:NO];
     [mdmSetup loadRenewableValues];
     
     [AppDelegate sharedAppDelegate];
-
-    /* generate key pair and register with server if not existing */
-    AppSetupState *appSetupState = [[AppSetupState alloc] initWithMyIdentityStore:[MyIdentityStore sharedMyIdentityStore]];
-    if (![appSetupState isAppSetupCompleted]) {
-        [self presentKeyGenerationOrProtectedDataUnavailable];
-        [self.window makeKeyAndVisible];
-        return;
-    }
-    
-    if ([[DatabaseManager dbManager] shouldUpdateProtection]) {
-        MyIdentityStore *myIdentityStore = [MyIdentityStore sharedMyIdentityStore];
-        [myIdentityStore updateConnectionRights];
-        [[DatabaseManager dbManager] updateProtection];
-    }
-    
-    [[ContactStore sharedContactStore] updateAllContactsToCNContact];
-        
-    [NotificationManager generatePushSettingForAllGroups];
-    
-    [TypingIndicatorManager sharedInstance];
     
     [[KKPasscodeLock sharedLock] setDefaultSettings];
     [[KKPasscodeLock sharedLock] upgradeAccessibility];
     [KKPasscodeLock sharedLock].attemptsAllowed = 10;
+
+    /* generate key pair and register with server if not existing */
+    AppSetupState *appSetupState = [[AppSetupState alloc] initWithMyIdentityStore:[MyIdentityStore sharedMyIdentityStore]];
+    if (![appSetupState isAppSetupCompleted]) {
+        if ([[KKPasscodeLock sharedLock] isPasscodeRequired]) {
+            [self presentPasscodeView];
+        }
+        else {
+            [self presentKeyGenerationOrProtectedDataUnavailable];
+        }
+        [self.window makeKeyAndVisible];
+        return;
+    }
+
+    [TypingIndicatorManager sharedInstance];
     
     NSInteger state = [[VoIPCallStateManager shared] currentCallState];
     
@@ -463,14 +438,15 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
          [self presentPasscodeView];
      }
     
+#if DEBUG
+    GroupManager *groupManager = [GroupManager new];
+    [groupManager deleteAllSyncRequestRecords];
+#endif
+
     [self.window makeKeyAndVisible];
     
     toaster = [[NewMessageToaster alloc] init];
-    
-    if (shouldLoadUIForEnterForeground == false) {
-        [self performSelectorOnMainThread:@selector(updateAllContacts) withObject:nil waitUntilDone:NO];
-    }
-    
+
     [self checkForInvalidCountryCode];
     
     [IdentityBackupStore syncKeychainWithFile];
@@ -481,10 +457,12 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 #pragma mark - Storyboards
 
 + (UIStoryboard *)getLaunchStoryboard {
-    if ([LicenseStore requiresLicenseKey] == NO) {
-        return [UIStoryboard storyboardWithName:@"ThreemaLaunchScreen" bundle:nil];
-    } else {
+    if ([LicenseStore isOnPrem]) {
+        return [UIStoryboard storyboardWithName:@"ThreemaOnPremLaunchScreen" bundle:nil];
+    } else if ([LicenseStore requiresLicenseKey]) {
         return [UIStoryboard storyboardWithName:@"ThreemaWorkLaunchScreen" bundle:nil];
+    } else {
+        return [UIStoryboard storyboardWithName:@"ThreemaLaunchScreen" bundle:nil];
     }
 }
 
@@ -523,7 +501,8 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 - (void)fixTabBarNotBeingHidden {
     // reselect chat bar in order to trigger hiding of tab bar again
     UITabBarController *mainTabBarController = [AppDelegate getMainTabBarController];
-    if (mainTabBarController.selectedIndex == kChatTabBarIndex) {
+
+    if (!SYSTEM_IS_IPAD && mainTabBarController.selectedIndex == kChatTabBarIndex) {
         mainTabBarController.selectedIndex = kContactsTabBarIndex;
         mainTabBarController.selectedIndex = kChatTabBarIndex;
     }
@@ -533,19 +512,56 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     NSInteger state = [[VoIPCallStateManager shared] currentCallState];
     if ((state != CallStateIdle && state != CallStateSendOffer && state != CallStateReceivedOffer) | ![[KKPasscodeLock sharedLock] isPasscodeRequired]) {
         [self presentApplicationUI];
+        [self checkHasPrivateChats];
     } else {
         [self presentPasscodeView];
     }
+        
     toaster = [[NewMessageToaster alloc] init];
 }
 
+- (void)checkHasPrivateChats {
+   
+    EntityManager *entityManager = [[EntityManager alloc] init];
+    NSArray *conversations = [entityManager.entityFetcher allConversations];
+    BOOL hasPrivate = false;
+    
+    for (Conversation *conversation in conversations) {
+        if (conversation.conversationCategory == ConversationCategoryPrivate) {
+            hasPrivate = true;
+            break;
+        }
+    }
+
+    if (hasPrivate) {
+        [UIAlertTemplate showAlertWithOwner:_window.rootViewController title:[BundleUtil localizedStringForKey:@"privateChat_alert_title"] message:[BundleUtil localizedStringForKey:@"privateChat_setup_alert_message"] titleOk:[BundleUtil localizedStringForKey:@"privateChat_code_alert_confirm"] actionOk:^(UIAlertAction * _Nonnull) {
+            // No passcode is set, so we present it with the option to enable it
+            JKLLockScreenViewController *vc = [[JKLLockScreenViewController alloc] initWithNibName:NSStringFromClass([JKLLockScreenViewController class]) bundle:[BundleUtil frameworkBundle]];
+            vc.lockScreenMode = LockScreenModeNew;
+            
+            UINavigationController *nav = [[ModalNavigationController alloc] initWithRootViewController:vc];
+            nav.navigationBarHidden = YES;
+            nav.modalPresentationStyle = UIModalPresentationFullScreen;
+            [_window.rootViewController presentViewController:nav animated:YES completion:nil];
+            
+        } titleCancel:nil actionCancel:^(UIAlertAction * _Nonnull) {
+            return;
+        }];
+    }
+
+}
+
 - (void)presentApplicationUI {
+    [AppGroup setActive:NO forType:AppGroupTypeNotificationExtension];
     [AppGroup setActive:NO forType:AppGroupTypeShareExtension];
+    
     if ([self isAppInBackground] && isEnterForeground == false) {
         shouldLoadUIForEnterForeground = true;
         UIStoryboard *launchStoryboard = [AppDelegate getLaunchStoryboard];
         self.window.rootViewController = [launchStoryboard instantiateInitialViewController];
     } else {
+        AppSetupState *appSetupState = [[AppSetupState alloc] initWithMyIdentityStore:[MyIdentityStore sharedMyIdentityStore]];
+        
         if (lastViewController != nil) {
             if (lockView != nil) {
                 [lockView removeFromSuperview];
@@ -555,45 +571,53 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 
             lastViewController = nil;
             lockView = nil;
-        } else if (SYSTEM_IS_IPAD) {
-            SplitViewController *splitViewController = [[SplitViewController alloc] init];
-            [splitViewController setup];
-            self.window.rootViewController = splitViewController;
-        } else {
-            UIViewController *currentVC = self.window.rootViewController;
-            if (currentVC != nil) {
-                [currentVC dismissViewControllerAnimated:true completion:nil];
-            }
-            UIStoryboard *mainStoryboard = [AppDelegate getMainStoryboard];
-            self.window.rootViewController = [mainStoryboard instantiateInitialViewController];
         }
-
+        else if ([appSetupState isAppSetupCompleted]) {
+            if (SYSTEM_IS_IPAD) {
+                SplitViewController *splitViewController = [[SplitViewController alloc] init];
+                [splitViewController setup];
+                self.window.rootViewController = splitViewController;
+            } else {
+                UIViewController *currentVC = self.window.rootViewController;
+                if (currentVC != nil) {
+                    [currentVC dismissViewControllerAnimated:true completion:nil];
+                }
+                UIStoryboard *mainStoryboard = [AppDelegate getMainStoryboard];
+                self.window.rootViewController = [mainStoryboard instantiateInitialViewController];
+            }
+        }
+        
+        // Do not use Sentry for onprem
+        // OnPrem target has a macro with DISABLE_SENTRY
+#ifndef DISABLE_SENTRY
         // Start crash report handler
         SentryClient *sentry = [[SentryClient alloc] init];
         [sentry start];
+#endif
         
         [self updateIdentityInfo];
-        [[NotificationManager sharedInstance] updateUnreadMessagesCount:NO];
-
-        [MessageQueue sharedMessageQueue];
+        
+        if (![appSetupState isAppSetupCompleted]) {
+            return;
+        }
+        
+        if (shouldLoadUIForEnterForeground == false) {
+            if ([[WCSessionManager shared] isRunningWCSession] == true){
+                DDLogNotice(@"[Threema Web] presentApplicationUI --> connect all running sessions");
+            }
+            [[WCSessionManager shared] connectAllRunningSessions];
+        }
         
         [AppDelegate setupConnection];
         
         /* Handle notification, if any */
         NSDictionary *remoteNotification = [launchOptions objectForKey:UIApplicationLaunchOptionsRemoteNotificationKey];
         if (remoteNotification != nil) {
-            [self handleRemoteNotification:remoteNotification receivedWhileRunning:NO notification:nil];
+            [notificationManager handleThreemaNotificationWithPayload:remoteNotification receivedWhileRunning:NO notification:nil withCompletionHandler:nil];
         }
-
-        if (shouldLoadUIForEnterForeground == false) {
-            if ([[WCSessionManager shared] isRunningWCSession] == true){
-                DDLogNotice(@"Threema Web: presentApplicationUI --> connect all running sessions");
-            }
-            [[WCSessionManager shared] connectAllRunningSessions];
-        }
-
+        
         /* A good chance to show reminders, if necessary */
-        [[UserReminder sharedUserReminder] checkReminders:^(BOOL check) {
+        [UserReminder checkRemindersOnCompletion:^(BOOL check) {
             if (![UserSettings sharedUserSettings].acceptedPrivacyPolicyDate) {
                 [UserSettings sharedUserSettings].acceptedPrivacyPolicyDate = [NSDate date];
                 [UserSettings sharedUserSettings].acceptedPrivacyPolicyVariant = AcceptPrivacyPolicyVariantUpdate;
@@ -603,11 +627,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
                 [[UserSettings sharedUserSettings] setOpenPlusIconInChat:NO];
                 [[UserSettings sharedUserSettings] setShowGalleryPreview:NO];
             }
-            
-            dispatch_async(dispatch_get_main_queue(), ^{
-                [[UIApplication sharedApplication] unregisterForRemoteNotifications];
-            });
-            
+
             [self handlePresentingScreens];
             shouldLoadUIForEnterForeground = false;
         }];
@@ -628,9 +648,10 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
             if ([[NSUserDefaults standardUserDefaults] boolForKey:@"FASTLANE_SNAPSHOT"]) {
                 // do not show threema safe intro
             } else {
+                              
                 // Check if backup is forced from MDM
                 SafeConfigManager *safeConfigManager = [[SafeConfigManager alloc] init];
-                SafeStore *safeStore = [[SafeStore alloc] initWithSafeConfigManagerAsObject:safeConfigManager serverApiConnector:[[ServerAPIConnector alloc] init]];
+                SafeStore *safeStore = [[SafeStore alloc] initWithSafeConfigManagerAsObject:safeConfigManager serverApiConnector:[[ServerAPIConnector alloc] init] groupManager:[[GroupManager alloc] init]];
                 SafeManager *safeManager = [[SafeManager alloc] initWithSafeConfigManagerAsObject:safeConfigManager safeStore:safeStore safeApiService:[[SafeApiService alloc] init]];
                 MDMSetup *mdmSetup = [[MDMSetup alloc] initWithSetup:NO];
                 
@@ -639,7 +660,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
                     if ([mdmSetup safePassword] == nil) {
                         // show password without cancel button for Threema Safe
                         dispatch_async(dispatch_get_main_queue(), ^{
-                            UIViewController *vc = [UIApplication sharedApplication].keyWindow.rootViewController;
+                            UIViewController *vc = [UIApplication sharedApplication].windows.firstObject.rootViewController;
                             UIStoryboard *storyboard = [AppDelegate getMyIdentityStoryboard];
                             UINavigationController *safeSetupNavigationViewController = [storyboard instantiateViewControllerWithIdentifier:@"SafeIntroNavigationController"];
                             SafeSetupPasswordViewController *safeSetupPasswordViewController = (SafeSetupPasswordViewController*)[safeSetupNavigationViewController topViewController];
@@ -657,9 +678,9 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
                                 customServer = [mdmSetup safeServerUrl];
                                 server = [safeStore composeSafeServerAuthWithServer:[mdmSetup safeServerUrl] user:[mdmSetup safeServerUsername] password:[mdmSetup safeServerPassword]].absoluteString;
                             }
-                            NSError *error;
-                            
-                            [safeManager activateWithIdentity:[MyIdentityStore sharedMyIdentityStore].identity password:[mdmSetup safePassword] customServer:customServer server:server maxBackupBytes:nil retentionDays:nil error:&error];
+                            [safeManager activateWithIdentity:[MyIdentityStore sharedMyIdentityStore].identity password:[mdmSetup safePassword] customServer:customServer server:server maxBackupBytes:nil retentionDays:nil completion:^(NSError * _Nullable error) {
+                                DDLogError(@"Failed to activate Threema Safe: %@", error);
+                            }];
                         });
                     }
                 }
@@ -682,7 +703,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 
                         if (![safeManager isActivated]) {
                             dispatch_async(dispatch_get_main_queue(), ^{
-                                UIViewController *vc = [UIApplication sharedApplication].keyWindow.rootViewController;
+                                UIViewController *vc = [UIApplication sharedApplication].windows.firstObject.rootViewController;
                                 UIStoryboard *storyboard = [AppDelegate getMyIdentityStoryboard];
                                 UIViewController *safeIntroViewController = [storyboard instantiateViewControllerWithIdentifier:@"SafeIntroViewController"];
                                 [vc presentViewController:safeIntroViewController animated:YES completion:nil];
@@ -785,13 +806,14 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
         if ([mdmSetup existsMdmKey:MDM_KEY_DISABLE_MESSAGE_PREVIEW]) {
             [[UserSettings sharedUserSettings] setPushDecrypt:NO];
         } else {
-            UIAlertController * alert = [UIAlertController alertControllerWithTitle:NSLocalizedString(@"decryption_push_title", nil) message:NSLocalizedString(@"decryption_push_text", nil) preferredStyle:UIAlertControllerStyleAlert];
-            UIAlertAction* yesButton = [UIAlertAction actionWithTitle:NSLocalizedString(@"decryption_push_activate", nil) style:UIAlertActionStyleDefault handler:^(UIAlertAction * action) {
+            NSString *message = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"decryption_push_text"], [ThreemaAppObjc currentName]];
+            UIAlertController * alert = [UIAlertController alertControllerWithTitle:[BundleUtil localizedStringForKey:@"decryption_push_title"] message:message preferredStyle:UIAlertControllerStyleAlert];
+            UIAlertAction* yesButton = [UIAlertAction actionWithTitle:[BundleUtil localizedStringForKey:@"decryption_push_activate"] style:UIAlertActionStyleDefault handler:^(__unused UIAlertAction *action) {
                 [[UserSettings sharedUserSettings] setPushDecrypt:YES];
                 [[UserSettings sharedUserSettings] setAskedForPushDecryption:YES];
             }];
             
-            UIAlertAction* noButton = [UIAlertAction actionWithTitle:NSLocalizedString(@"decryption_push_deactivate", nil) style:UIAlertActionStyleDefault handler:^(UIAlertAction * action) {
+            UIAlertAction* noButton = [UIAlertAction actionWithTitle:[BundleUtil localizedStringForKey:@"decryption_push_deactivate"] style:UIAlertActionStyleDefault handler:^(__unused UIAlertAction *action) {
                 [[UserSettings sharedUserSettings] setPushDecrypt:NO];
                 [[UserSettings sharedUserSettings] setAskedForPushDecryption:YES];
             }];
@@ -819,9 +841,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
         return;
     }
     
-    UIStoryboard *storyboard = [UIStoryboard storyboardWithName:@"License" bundle:nil];
-    
-    EnterLicenseViewController *viewController = [storyboard instantiateInitialViewController];
+    EnterLicenseViewController *viewController = [EnterLicenseViewController instantiate];
     dispatch_async(dispatch_get_main_queue(), ^{
         if ([self.window.rootViewController isKindOfClass:[viewController class]] == NO) {
             
@@ -845,6 +865,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 }
 
 - (void)showLockScreen {
+        
     /* replace the root view controller to ensure it's not visible in snapshots */
     if ([[KKPasscodeLock sharedLock] isPasscodeRequired]) {
         if (![lockView isDescendantOfView:self.window]) {
@@ -867,12 +888,19 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
             }
             
             UIViewController *lockCover = nil;
-            if ([LicenseStore requiresLicenseKey] == YES) {
-                lockCover = [[UIViewController alloc] initWithNibName:@"LockCoverWork" bundle:nil];
-            } else {
-                lockCover = [[UIViewController alloc] initWithNibName:@"LockCover" bundle:nil];
+            switch (ThreemaAppObjc.current) {
+                case ThreemaAppWork:
+                case ThreemaAppWorkRed:
+                    lockCover = [[UIViewController alloc] initWithNibName:@"LockCoverWork" bundle:nil];
+                    break;
+                case ThreemaAppOnPrem:
+                    lockCover = [[UIViewController alloc] initWithNibName:@"LockCoverOnprem" bundle:nil];
+                    break;
+                default:
+                    lockCover = [[UIViewController alloc] initWithNibName:@"LockCover" bundle:nil];
+                    break;
             }
-            
+
             lockView = lockCover.view;
             lockView.frame = self.window.bounds;
 
@@ -882,8 +910,33 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
             
             isLockscreenDismissed = false;
         } else {
+            // This Prevents overriding the current view with a lockscreen, thus ending in an infinite loop
+            if ([self.window.rootViewController isKindOfClass:[UINavigationController class]]) {
+                UINavigationController *nav = (UINavigationController *)self.window.rootViewController;
+                if (![[[nav childViewControllers] objectAtIndex:0] isKindOfClass:[JKLLockScreenViewController class]]) {
+                    lastViewController = self.window.rootViewController;
+                }
+            } else {
+                if (![self.window.rootViewController isKindOfClass:[JKLLockScreenViewController class]]) {
+                    lastViewController = self.window.rootViewController;
+                }
+            }
             [self.window bringSubviewToFront:lockView];
             [self.window snapshotViewAfterScreenUpdates:false];
+        }
+    }
+}
+
+- (void)updateTheme API_AVAILABLE(ios(13.0)) {
+    if ([[UserSettings sharedUserSettings] useSystemTheme]) {
+        if (UITraitCollection.currentTraitCollection.userInterfaceStyle == UIUserInterfaceStyleDark) {
+            if (Colors.theme != ThemeDark) {
+                [Colors setTheme:ThemeDark];
+            }
+        } else {
+            if (Colors.theme != ThemeLight) {
+                [Colors setTheme:ThemeLight];
+            }
         }
     }
 }
@@ -893,7 +946,12 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 + (void)setupConnection {
     // Add received pushes into DB
     if (![[AppDelegate sharedAppDelegate] isAppInBackground]) {
-        [[ServerConnector sharedServerConnector] connect];
+        [[ServerConnector sharedServerConnector] setIsAppInBackground:NO];
+
+        // Maybe is already connected, called by identity created
+        if ([[ServerConnector sharedServerConnector] connectionState] == ConnectionStateDisconnecting || [[ServerConnector sharedServerConnector] connectionState] == ConnectionStateDisconnected) {
+            [[ServerConnector sharedServerConnector] connect:ConnectionInitiatorApp];
+        }
     }
     [FeatureMask updateFeatureMask];
 
@@ -903,7 +961,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 + (void)registerForLocalNotifications {
     
     UNUserNotificationCenter *center = [UNUserNotificationCenter currentNotificationCenter];
-    [center requestAuthorizationWithOptions:(UNAuthorizationOptionSound | UNAuthorizationOptionAlert | UNAuthorizationOptionBadge) completionHandler:^(BOOL granted, NSError * _Nullable error)
+    [center requestAuthorizationWithOptions:(UNAuthorizationOptionSound | UNAuthorizationOptionAlert | UNAuthorizationOptionBadge | UNAuthorizationOptionProvidesAppNotificationSettings) completionHandler:^(__unused BOOL granted, NSError * _Nullable error)
      {
          if( !error ) {
              dispatch_async(dispatch_get_main_queue(), ^{
@@ -911,16 +969,16 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
              });
              
              // required to get the app to do anything at all about push notifications
-             UNTextInputNotificationAction *textAction = [UNTextInputNotificationAction actionWithIdentifier:@"REPLY_MESSAGE" title:NSLocalizedString(@"decryption_push_reply", nil) options:UNNotificationActionOptionAuthenticationRequired textInputButtonTitle:NSLocalizedString(@"send", nil) textInputPlaceholder:NSLocalizedString(@"decryption_push_placeholder", nil)];
+             UNTextInputNotificationAction *textAction = [UNTextInputNotificationAction actionWithIdentifier:@"REPLY_MESSAGE" title:[BundleUtil localizedStringForKey:@"decryption_push_reply"] options:UNNotificationActionOptionAuthenticationRequired textInputButtonTitle:[BundleUtil localizedStringForKey:@"send"] textInputPlaceholder:[BundleUtil localizedStringForKey:@"decryption_push_placeholder"]];
              
-             UNNotificationAction *thumbUpAction = [UNNotificationAction actionWithIdentifier:@"THUMB_UP" title:NSLocalizedString(@"decryption_push_agree", nil) options:UNNotificationActionOptionAuthenticationRequired];
-             UNNotificationAction *thumbDownAction = [UNNotificationAction actionWithIdentifier:@"THUMB_DOWN" title:NSLocalizedString(@"decryption_push_disagree", nil) options:UNNotificationActionOptionAuthenticationRequired];
+             UNNotificationAction *thumbUpAction = [UNNotificationAction actionWithIdentifier:@"THUMB_UP" title:[BundleUtil localizedStringForKey:@"decryption_push_agree"] options:UNNotificationActionOptionAuthenticationRequired];
+             UNNotificationAction *thumbDownAction = [UNNotificationAction actionWithIdentifier:@"THUMB_DOWN" title:[BundleUtil localizedStringForKey:@"decryption_push_disagree"] options:UNNotificationActionOptionAuthenticationRequired];
              
-             UNTextInputNotificationAction *callReplyAction = [UNTextInputNotificationAction actionWithIdentifier:@"REPLY_MESSAGE" title:NSLocalizedString(@"decryption_push_reply", nil) options:UNNotificationActionOptionAuthenticationRequired textInputButtonTitle:NSLocalizedString(@"send", nil) textInputPlaceholder:NSLocalizedString(@"decryption_push_placeholder", nil)];
-             UNNotificationAction *callBackAction = [UNNotificationAction actionWithIdentifier:@"CALL" title:NSLocalizedString(@"call_back", nil) options:UNNotificationActionOptionForeground];
+             UNTextInputNotificationAction *callReplyAction = [UNTextInputNotificationAction actionWithIdentifier:@"REPLY_MESSAGE" title:[BundleUtil localizedStringForKey:@"decryption_push_reply"] options:UNNotificationActionOptionAuthenticationRequired textInputButtonTitle:[BundleUtil localizedStringForKey:@"send"] textInputPlaceholder:[BundleUtil localizedStringForKey:@"decryption_push_placeholder"]];
+             UNNotificationAction *callBackAction = [UNNotificationAction actionWithIdentifier:@"CALL" title:[BundleUtil localizedStringForKey:@"call_back"] options:UNNotificationActionOptionForeground];
              
-             UNNotificationAction *acceptCallAction = [UNNotificationAction actionWithIdentifier:@"ACCEPTCALL" title:NSLocalizedString(@"call_accept", nil) options:UNNotificationActionOptionForeground];
-             UNNotificationAction *rejectCallAction = [UNNotificationAction actionWithIdentifier:@"REJECTCALL" title:NSLocalizedString(@"call_reject", nil) options:UNNotificationActionOptionDestructive];
+             UNNotificationAction *acceptCallAction = [UNNotificationAction actionWithIdentifier:@"ACCEPTCALL" title:[BundleUtil localizedStringForKey:@"call_accept"] options:UNNotificationActionOptionForeground];
+             UNNotificationAction *rejectCallAction = [UNNotificationAction actionWithIdentifier:@"REJECTCALL" title:[BundleUtil localizedStringForKey:@"call_reject"] options:UNNotificationActionOptionDestructive];
              
              // Create the category with the custom actions.
              UNNotificationCategory *singleCategory = [UNNotificationCategory categoryWithIdentifier:@"SINGLE" actions:@[textAction, thumbUpAction, thumbDownAction] intentIdentifiers:@[] options:UNNotificationCategoryOptionNone];
@@ -953,7 +1011,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     if ([PhoneNumberNormalizer userRegion] != nil)
         return;
 
-    [UIAlertTemplate showAlertWithOwner:[self currentTopViewController] title:NSLocalizedString(@"invalid_country_code_title", nil) message:NSLocalizedString(@"invalid_country_code_message", nil) actionOk:nil];
+    [UIAlertTemplate showAlertWithOwner:[self currentTopViewController] title:[BundleUtil localizedStringForKey:@"invalid_country_code_title"] message:[BundleUtil localizedStringForKey:@"invalid_country_code_message"] actionOk:nil];
 }
 
 - (void)updateIdentityInfo {
@@ -1028,13 +1086,8 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     self.active = NO;
     
     dispatch_async(dispatch_get_main_queue(), ^{
-        self.firstPushHandled = false;
+        notificationManager.firstPushHandled = false;
     });
-    
-    AppSetupState *appSetupState = [[AppSetupState alloc] initWithMyIdentityStore:[MyIdentityStore sharedMyIdentityStore]];
-    if (![appSetupState isAppSetupCompleted]) {
-        return;
-    }
     
     [self showLockScreen];
 }
@@ -1047,12 +1100,12 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
      */
     DDLogNotice(@"AppState: applicationDidEnterBackground");
     
+    [self showLockScreen];
+    
     AppSetupState *appSetupState = [[AppSetupState alloc] initWithMyIdentityStore:[MyIdentityStore sharedMyIdentityStore]];
     if (![appSetupState isAppSetupCompleted]) {
         return;
     }
-    
-    [self showLockScreen];
 
     if (!isAppLocked) {
         [[KKPasscodeLock sharedLock] updateLastUnlockTime];
@@ -1074,26 +1127,24 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     if (!protectedDataWillBecomeUnavailable) {
         NSString *key = nil;
         int timeout = 0;
-        if ([[WCSessionManager shared] isRunningWCSession] != true) {
+        
+        if ([[VoIPCallStateManager shared] currentCallState] != CallStateIdle) {
+            key = kAppVoIPBackgroundTask;
+            timeout = kAppVoIPIncomCallBackgroundTaskTime;
+        } else if ([[WCSessionManager shared] isRunningWCSession] != true) {
             key = kAppClosedByUserBackgroundTask;
-            timeout = kAppClosedByUserBackgroundTaskTime;
+            timeout = [FileMessageSender hasScheduledUploads] == YES ? kAppWCBackgroundTaskTime : kAppClosedByUserBackgroundTaskTime;
         } else {
             key = kAppWCBackgroundTask;
             timeout = kAppWCBackgroundTaskTime;
         }
         
-        [[BackgroundTaskManager shared] newBackgroundTaskWithKey:key timeout:timeout completionHandler:^{
-            [[MessageQueue sharedMessageQueue] save];
-            [[PendingMessagesManager shared] save];
-            [[WCSessionManager shared] saveSessionsToArchive];
-        }];
+        [[BackgroundTaskManager shared] newBackgroundTaskWithKey:key timeout:timeout completionHandler:nil];
     } else {
         /* Disconnect from server - from now on we want push notifications for new messages */
-        [[ServerConnector sharedServerConnector] disconnectWait];
-        
-        [[MessageQueue sharedMessageQueue] save];
+        [[ServerConnector sharedServerConnector] disconnectWait:ConnectionInitiatorApp];
+
         [[WCSessionManager shared] saveSessionsToArchive];
-        [[PendingMessagesManager shared] save];
     }
 }
 
@@ -1107,6 +1158,11 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     AppSetupState *appSetupState = [[AppSetupState alloc] initWithMyIdentityStore:[MyIdentityStore sharedMyIdentityStore]];
     if (![appSetupState isAppSetupCompleted]) {
         return;
+    }
+
+    // Reload pending user notification cache, because could be changed by Notification Extension in the mean time
+    if (incomingMessageManager) {
+        [incomingMessageManager reloadPendingUserNotificationCache];
     }
 
     [[BackgroundTaskManager shared] cancelBackgroundTaskWithKey:kAppClosedByUserBackgroundTask];
@@ -1142,17 +1198,19 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
         [self performSelectorOnMainThread:@selector(updateAllContacts) withObject:nil waitUntilDone:NO];
     }
 
-    [[DatabaseManager dbManager] refreshDirtyObjects];
-
     /* ensure we're connected when we enter into foreground */
+    [AppGroup setActive:NO forType:AppGroupTypeNotificationExtension];
     [AppGroup setActive:NO forType:AppGroupTypeShareExtension];
     
     if ([[WCSessionManager shared] isRunningWCSession] == true){
-        [[ValidationLogger sharedValidationLogger] logString:@"Threema Web: applicationWillEnterForeground --> connect all running sessions"];
+        DDLogNotice(@"[Threema Web] applicationWillEnterForeground --> connect all running sessions");
     }
+    
     [[WCSessionManager shared] connectAllRunningSessions];
 
-    [[ServerConnector sharedServerConnector] connect];
+    [[DatabaseManager dbManager] refreshDirtyObjects: YES];
+    
+    [[ServerConnector sharedServerConnector] connect:ConnectionInitiatorApp];
     [[TypingIndicatorManager sharedInstance] resetTypingIndicators];
 }
 
@@ -1197,14 +1255,19 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 
     self.active = YES;
     
+    [AppGroup setActive:NO forType:AppGroupTypeNotificationExtension];
     [AppGroup setActive:NO forType:AppGroupTypeShareExtension];
     
     AppSetupState *appSetupState = [[AppSetupState alloc] initWithMyIdentityStore:[MyIdentityStore sharedMyIdentityStore]];
     if (![appSetupState isAppSetupCompleted]) {
         return;
     }
+    
+    [self updateTheme];
 
-    [[NotificationManager sharedInstance] updateUnreadMessagesCount:NO];
+    [[ServerConnector sharedServerConnector] setIsAppInBackground:[application applicationState] == UIApplicationStateBackground];
+
+    [notificationManager updateUnreadMessagesCount];
 
     // Remove notifications from center
     UNUserNotificationCenter *center = [UNUserNotificationCenter currentNotificationCenter];
@@ -1233,7 +1296,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     } else {
         // if not a call, then trigger Threema Safe backup (it will show an alert here, if last successful backup older than 7 days)
         SafeConfigManager *safeConfigManager = [[SafeConfigManager alloc] init];
-        SafeStore *safeStore = [[SafeStore alloc] initWithSafeConfigManagerAsObject:safeConfigManager serverApiConnector:[[ServerAPIConnector alloc] init]];
+        SafeStore *safeStore = [[SafeStore alloc] initWithSafeConfigManagerAsObject:safeConfigManager serverApiConnector:[[ServerAPIConnector alloc] init] groupManager:[[GroupManager alloc] init]];
         SafeManager *safeManager = [[SafeManager alloc] initWithSafeConfigManagerAsObject:safeConfigManager safeStore:safeStore safeApiService:[[SafeApiService alloc] init]];
         [safeManager initTrigger];
     }
@@ -1249,19 +1312,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
      See also applicationDidEnterBackground:.
      */
     DDLogNotice(@"AppState: applicationWillTerminate");
-
-    [[MessageQueue sharedMessageQueue] save];
-    [[PendingMessagesManager shared] save];
     [[WCSessionManager shared] saveSessionsToArchive];
-}
-
-#pragma mark - Observer
-
-- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context {
-    if (object == [ServerConnector sharedServerConnector] && [keyPath isEqualToString:@"connectionState"]) {
-        DDLogInfo(@"Server connection state changed to %@", [[ServerConnector sharedServerConnector] nameForConnectionState:[ServerConnector sharedServerConnector].connectionState]);
-        [[ValidationLogger sharedValidationLogger] logString:[NSString stringWithFormat:@"Server connection state changed to %@", [[ServerConnector sharedServerConnector] nameForConnectionState:[ServerConnector sharedServerConnector].connectionState]]];
-    }
 }
 
 #pragma mark - Audio call intent
@@ -1286,10 +1337,10 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
         if (contact) {
             [FeatureMask checkFeatureMask:FEATURE_MASK_VOIP forContacts:[NSSet setWithObjects:contact, nil] onCompletion:^(NSArray *unsupportedContacts) {
                 if (unsupportedContacts.count == 0) {
-                    VoIPCallUserAction *action = [[VoIPCallUserAction alloc] initWithAction:ActionCall contact:contact callId:nil completion:nil];
+                    VoIPCallUserAction *action = [[VoIPCallUserAction alloc] initWithAction:ActionCall contactIdentity:contact.identity callID:nil completion:nil];
                     [[VoIPCallStateManager shared] processUserAction:action];
                 } else {
-                    [UIAlertTemplate showAlertWithOwner:[self currentTopViewController] title:NSLocalizedString(@"call_voip_not_supported_title", nil) message:NSLocalizedString(@"call_voip_not_supported_text", nil) actionOk:nil];
+                    [UIAlertTemplate showAlertWithOwner:[self currentTopViewController] title:[BundleUtil localizedStringForKey:@"call_voip_not_supported_title"] message:[BundleUtil localizedStringForKey:@"call_voip_not_supported_text"] actionOk:nil];
                 }
             }];
         }
@@ -1298,15 +1349,22 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 }
 
 + (BOOL)hasBottomSafeAreaInsets {
-    if (@available(iOS 11.0, *)) {
-        return [[[[UIApplication sharedApplication] delegate] window] safeAreaInsets].bottom > 0;
-    } else {
-        return false;
-    }
+    return [[[[UIApplication sharedApplication] delegate] window] safeAreaInsets].bottom > 0;
 }
 
 
 #pragma mark - Push notifications
+
+- (void)application:(UIApplication *)application didFailToRegisterForRemoteNotificationsWithError:(NSError *)error {
+    DDLogWarn(@"Push registration failed: %@", error);
+}
+
+- (void)application:(UIApplication *)application didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken {
+    [[ServerConnector sharedServerConnector] setPushToken:deviceToken];
+    [self askForPushDecryption];
+}
+
+#pragma mark - UNUserNotificationCenterDelegate
 
 /**
  Is not allowed when could not evaluate requiers DB migration or DB migration is running or App setup is not finished yet.
@@ -1330,20 +1388,20 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     return YES;
 }
 
-- (void)application:(UIApplication *)application didFailToRegisterForRemoteNotificationsWithError:(NSError *)error {
-    DDLogWarn(@"Push registration failed: %@", error);
-}
-
-- (void)application:(UIApplication *)application didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken {
-    [self askForPushDecryption];
-}
-
 - (void)userNotificationCenter:(UNUserNotificationCenter *)center willPresentNotification:(UNNotification *)notification withCompletionHandler:(void (^)(UNNotificationPresentationOptions options))completionHandler {
     if ([self isHandleNotificationAllowed:^{
         completionHandler(UNNotificationPresentationOptionAlert|UNNotificationPresentationOptionBadge|UNNotificationPresentationOptionSound);
     }] == YES) {
-        NSDictionary *userInfo = notification.request.content.userInfo;
-        [self handleRemoteNotification:userInfo receivedWhileRunning:true notification:notification];
+        if (!_active && ([[VoIPCallStateManager shared] currentCallState] == CallStateIdle || ![[VoIPCallStateManager shared] preCallHandling])) {
+            DDLogNotice(@"[Threema Call] Start NotificationExtension for received push (in the app)");
+            DDLogNotice(@"[Threema Call] App active: %i, CallState: %i, PreCallHandling: %i", _active, [[VoIPCallStateManager shared] currentCallState] == CallStateIdle, [[VoIPCallStateManager shared] preCallHandling]);
+            // Do not handle notifications if the app is not active -> Show notification in iOS, not in the app
+            completionHandler(UNNotificationPresentationOptionAlert|UNNotificationPresentationOptionBadge|UNNotificationPresentationOptionSound);
+        }
+        else {
+            DDLogNotice(@"[Threema Call] Handle notification for received push (in the app)");
+            [notificationManager handleThreemaNotificationWithPayload:notification.request.content.userInfo receivedWhileRunning:YES notification:notification withCompletionHandler:completionHandler];
+        }
     }
 }
 
@@ -1355,85 +1413,13 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     }
 }
 
-- (void)handleRemoteNotification:(NSDictionary*)userInfo receivedWhileRunning:(BOOL)receivedWhileRunning notification:(UNNotification *)notification {
-    EntityManager *entityManager = [[EntityManager alloc] init];
-    if (!receivedWhileRunning) {
-        NSDictionary *threemaDict = [userInfo objectForKey:@"threema"];
-        if (threemaDict != nil) {
-            // Decrypt Threema payload if necessary
-            threemaDict = [PushPayloadDecryptor decryptPushPayload:threemaDict];
-
-            NSString *cmd = [threemaDict objectForKey:@"cmd"];
-            if (cmd != nil) {
-                if ([cmd isEqualToString:@"newmsg"] || [cmd isEqualToString:@"missedcall"]) {
-                    /* New message push - switch to appropriate conversation */
-                    NSString *from = [threemaDict objectForKey:@"from"];
-                    if (from != nil) {
-                        Contact *contact = [entityManager.entityFetcher contactForId:from];
-                        if (contact != nil) {
-                            NSDictionary *info = [NSDictionary dictionaryWithObjectsAndKeys:
-                                                  contact, kKeyContact,
-                                                  [NSNumber numberWithBool:YES], kKeyForceCompose,
-                                                  nil];
-                                dispatch_async(dispatch_get_main_queue(), ^{
-                                    if (!self.firstPushHandled)     {
-                                        [[NSNotificationCenter defaultCenter] postNotificationName:kNotificationShowConversation object:nil userInfo:info];
-                                        self.firstPushHandled = true;
-                                    }
-                                });
-                        }
-                    }
-                } else if ([cmd isEqualToString:@"newgroupmsg"]) {
-                    NSString *from = [threemaDict objectForKey:@"from"];
-                    if (from != nil) {
-                        Contact *contact = [entityManager.entityFetcher contactForId:from];
-                        if (contact != nil) {
-                            /* Try to find an appropriate group - if there is only one conversation in which
-                             the sender is a member, then it must be the right one. Otherwise we cannot know */
-                            NSString *groupId = [threemaDict objectForKey:@"groupId"];
-                            if (groupId != nil) {
-                                
-                                Conversation *conversation = [entityManager.entityFetcher conversationForGroupId:[[NSData alloc] initWithBase64EncodedString:groupId options:0]];
-                                if (conversation != nil) {
-                                    NSDictionary *info = [NSDictionary dictionaryWithObjectsAndKeys:
-                                                          conversation, kKeyConversation,
-                                                          [NSNumber numberWithBool:YES], kKeyForceCompose,
-                                                          nil];
-                                    
-                                        dispatch_async(dispatch_get_main_queue(), ^{
-                                            if (!self.firstPushHandled) {
-                                                [[NSNotificationCenter defaultCenter] postNotificationName:kNotificationShowConversation object:nil userInfo:info];
-                                                self.firstPushHandled = true;
-                                            }
-                                        });
-                                }
-                            } else {
-                                NSArray *groups = [entityManager.entityFetcher conversationsForMember:contact];
-                                if (groups.count == 1) {
-                                    NSDictionary *info = [NSDictionary dictionaryWithObjectsAndKeys:
-                                                          [groups objectAtIndex:0], kKeyConversation,
-                                                          [NSNumber numberWithBool:YES], kKeyForceCompose,
-                                                          nil];
-                                    
-                                        dispatch_async(dispatch_get_main_queue(), ^{
-                                            if (!self.firstPushHandled) {
-                                                [[NSNotificationCenter defaultCenter] postNotificationName:kNotificationShowConversation object:nil userInfo:info];
-                                                self.firstPushHandled = true;
-                                            }
-                                        });
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    } else {
-        if ([[userInfo objectForKey:@"key"] isEqualToString:@"safe-backup-notification"] && notification != nil) {
-            [UIAlertTemplate showAlertWithOwner:[self currentTopViewController] title:notification.request.content.title message:notification.request.content.body actionOk:nil];
-        }
-    }
+- (void)userNotificationCenter:(UNUserNotificationCenter *)center openSettingsForNotification:(UNNotification *)notification {
+    rootToNotificationSettings = true;
+    MainTabBarController *mainTabBarController = [AppDelegate getMainTabBarController];
+    [UIApplication.sharedApplication.windows.firstObject.rootViewController dismissViewControllerAnimated:false completion:nil];
+    [mainTabBarController showNotificationSettings];
 }
+
 
 #pragma mark - URL & shortcut handling
 
@@ -1516,12 +1502,19 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     if (!isAppLocked)
         return;
     
-    [self.window.rootViewController dismissViewControllerAnimated:animated completion:nil];
-    [self presentApplicationUI];
-    
     isAppLocked = NO;
     startCheckBiometrics = false;
     isLockscreenDismissed = true;
+    
+    [self.window.rootViewController dismissViewControllerAnimated:animated completion:nil];
+    
+    AppSetupState *appSetupState = [[AppSetupState alloc] initWithMyIdentityStore:[MyIdentityStore sharedMyIdentityStore]];
+    if (![appSetupState isAppSetupCompleted]) {
+        [self presentKeyGenerationOrProtectedDataUnavailable];
+        return;
+    }
+    
+    [self presentApplicationUI];
     
     if (pendingUrl) {
         [URLHandler handleURL:pendingUrl];
@@ -1537,7 +1530,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
         startCheckBiometrics = true;
     }
     
-    [TouchIdAuthentication tryTouchIdAuthenticationCallback:^(BOOL success, NSError *error) {
+    [TouchIDAuthentication tryTouchIDAuthenticationCallback:^(BOOL success, NSError *error) {
         dispatch_async(dispatch_get_main_queue(), ^{
             if (success) {
                 DDLogVerbose(@"Authenticated using Touch ID.");
@@ -1555,33 +1548,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 
 - (void)shouldEraseApplicationData:(JKLLockScreenViewController *)viewController {
 
-    DDLogWarn(@"Erase all application data");
-
-    [[MyIdentityStore sharedMyIdentityStore] destroy];
-    [[UserReminder sharedUserReminder] markIdentityDeleted];
-
-    /* Remove Core Data stuff */
-    [[DatabaseManager dbManager] eraseDB];
-
-    /* Remove files */
-    [self removeDirectoryContents:[NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) objectAtIndex:0]];
-    [self removeDirectoryContents:[NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES) objectAtIndex:0]];
-    [self removeDirectoryContents:NSTemporaryDirectory()];
-
-    /* Reset defaults and turn off passcode */
-    [NSUserDefaults resetStandardUserDefaults];
-    [AppGroup resetUserDefaults];
-
-    [[KKPasscodeLock sharedLock] disablePasscode];
-
-    [self.window.rootViewController dismissViewControllerAnimated:NO completion:nil];
-
-    NSString *title = [BundleUtil localizedStringForKey:@"all_data_deleted_title"];
-    NSString *message = [BundleUtil localizedStringForKey:@"all_data_deleted_message"];
-
-    [UIAlertTemplate showAlertWithOwner:[self currentTopViewController] title:title message:message actionOk:^(UIAlertAction * _Nonnull okAction) {
-        exit(0);
-    }];
+    [self eraseApplicationData];
 }
 
 - (void)didPasscodeEnteredCorrectly:(JKLLockScreenViewController *)viewController {
@@ -1597,6 +1564,13 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
         [URLHandler handleShortCutItem:pendingShortCutItem];
         pendingShortCutItem = nil;
     }
+    
+    if (rootToNotificationSettings) {
+        MainTabBarController *mainTabBarController = [AppDelegate getMainTabBarController];
+        [UIApplication.sharedApplication.windows.firstObject.rootViewController dismissViewControllerAnimated:false completion:nil];
+        [mainTabBarController showNotificationSettings];
+        rootToNotificationSettings = nil;
+    }
 }
 
 - (void)didPasscodeViewDismiss:(JKLLockScreenViewController *)viewController {
@@ -1608,7 +1582,6 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     if (![appSetupState isAppSetupCompleted]) {
         [self presentKeyGenerationOrProtectedDataUnavailable];
     }
-    
 }
 
 - (BOOL)allowTouchIDLockScreenViewController:(JKLLockScreenViewController *)lockScreenViewController {
@@ -1616,11 +1589,113 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     return [[KKPasscodeLock sharedLock] isTouchIdOn];
 }
 
+
+#pragma mark - Erase Data
+
+- (void)eraseApplicationData {
+    DDLogWarn(@"Erase all application data");
+    [self closeMainTabBarModalViewsWithCompletion:^{
+        [self closeRootViewControllerModalViewsWithCompletion:^{
+            [UIView animateWithDuration:0.0 animations:^{
+                [self removeAllControllersFromRoot];
+            } completion:^(BOOL finished) {
+                [self deleteAllData];
+            }];
+        }];
+    }];
+}
+
+- (void)closeMainTabBarModalViewsWithCompletion:(nonnull void (^)(void))completion {
+    MainTabBarController *mainTabBar = (MainTabBarController *)[AppDelegate getMainTabBarController];
+    
+    if (mainTabBar.presentedViewController != nil) {
+        [mainTabBar dismissViewControllerAnimated:NO completion:completion];
+    } else {
+        completion();
+    }
+}
+
+- (void)closeRootViewControllerModalViewsWithCompletion:(nonnull void (^)(void))completion {
+    if (self.window.rootViewController.presentedViewController != nil) {
+        [self.window.rootViewController dismissViewControllerAnimated:NO completion:completion];
+    } else {
+        completion();
+    }
+}
+
+- (void)deleteAllData {
+    /* Remove Core Data stuff */
+    [[MyIdentityStore sharedMyIdentityStore] destroy];
+    [UserReminder markIdentityAsDeleted];
+    
+    SafeConfigManager *safeConfigManager = [[SafeConfigManager alloc] init];
+    [safeConfigManager destroy];
+    
+    SafeStore *safeStore = [[SafeStore alloc] initWithSafeConfigManagerAsObject:safeConfigManager serverApiConnector:[[ServerAPIConnector alloc] init] groupManager:[[GroupManager alloc] init]];
+    SafeManager *safeManager = [[SafeManager alloc] initWithSafeConfigManagerAsObject:safeConfigManager safeStore:safeStore safeApiService:[[SafeApiService alloc] init]];
+    [safeManager setBackupReminder];
+    
+    [[DatabaseManager dbManager] eraseDB];
+    
+    /* Remove files */
+    [FileUtility removeItemsInDirectoryWithDirectoryURL:FileUtility.appDocumentsDirectory];
+    [FileUtility removeItemsInDirectoryWithDirectoryURL:FileUtility.appDataDirectory];
+    [FileUtility removeItemsInDirectoryWithDirectoryURL:FileUtility.appCachesDirectory];
+    [FileUtility removeItemsInDirectoryWithDirectoryURL:FileUtility.appTemporaryDirectory];
+    
+    /* Reset defaults and turn off passcode */
+    [NSUserDefaults resetStandardUserDefaults];
+    [AppGroup resetUserDefaults];
+    
+    // Unregister APNS Push Token
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [[UIApplication sharedApplication] unregisterForRemoteNotifications];
+    });
+    
+    [[KKPasscodeLock sharedLock] disablePasscode];
+    
+    if ([LicenseStore requiresLicenseKey]) {
+        // Delete the license when we delete the ID, to give the user a chance to use a new license.
+        // The license may have been supplied by MDM, so we load it again.
+        [[LicenseStore sharedLicenseStore] deleteLicense];
+        MDMSetup *mdmSetup = [[MDMSetup alloc] initWithSetup:NO];
+        [mdmSetup loadLicenseInfo];
+        if ([LicenseStore sharedLicenseStore].licenseUsername == nil || [LicenseStore sharedLicenseStore].licensePassword == nil)
+            [[NSNotificationCenter defaultCenter] postNotificationName:kNotificationLicenseMissing object:nil];
+        
+        [mdmSetup deleteThreemaMdm];
+    }
+    
+    UIStoryboard *storyboard = [AppDelegate getMyIdentityStoryboard];
+    UIViewController *deleteIdViewControiller = [storyboard instantiateViewControllerWithIdentifier:@"DeleteIdViewController"];
+    self.window.rootViewController = deleteIdViewControiller;
+}
+
+- (void)removeAllControllersFromRoot {
+    MainTabBarController *mainTabBar = (MainTabBarController *)[AppDelegate getMainTabBarController];
+    for (UINavigationController *navController in mainTabBar.viewControllers) {
+        [navController popToRootViewControllerAnimated:false];
+        navController.viewControllers = @[];
+    }
+    
+    if (SYSTEM_IS_IPAD && [self.window.rootViewController isKindOfClass:[SplitViewController class]]) {
+        SplitViewController *splitViewController = (SplitViewController*)self.window.rootViewController;
+
+        PortraitNavigationController *pNav = splitViewController.viewControllers[0];
+        pNav.viewControllers = @[];
+        
+        splitViewController.viewControllers = @[];
+    }
+    
+    self.window.rootViewController = nil;
+}
+
 #pragma mark - EnterLicenseDelegate
 
 - (void)licenseConfirmed {
     [self.window.rootViewController dismissViewControllerAnimated:YES completion:^{
-        [[ServerConnector sharedServerConnector] connect];
+        [[ServerConnector sharedServerConnector] setIsAppInBackground:[[AppDelegate sharedAppDelegate] isAppInBackground]];
+        [[ServerConnector sharedServerConnector] connect:ConnectionInitiatorApp];
     }];
 }
 
@@ -1640,12 +1715,14 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     }
 
     if (type == PKPushTypeVoIP) {
-        [[ServerConnector sharedServerConnector] setVoIPPushToken:credentials.token];
+        // Remove VoIP toke if on iOS 15 and above, add it if below.
+        if (@available(iOS 15, *)){
+            [[ServerConnector sharedServerConnector] removeVoIPPushToken];
+        }
+        else {
+            [[ServerConnector sharedServerConnector] setVoIPPushToken:credentials.token];
+        }
     }
-}
-
-- (void)pushRegistry:(PKPushRegistry *)registry didReceiveIncomingPushWithPayload:(PKPushPayload *)payload forType:(nonnull PKPushType)type {   
-    [self handlePushPayload:payload withCompletionHandler:^{}];
 }
 
 - (void)pushRegistry:(PKPushRegistry *)registry didReceiveIncomingPushWithPayload:(PKPushPayload *)payload forType:(nonnull PKPushType)type withCompletionHandler:(nonnull void (^)(void))completion {
@@ -1653,17 +1730,85 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 }
 
 - (void)handlePushPayload:(PKPushPayload*)payload withCompletionHandler:(nonnull void (^)(void))completion {
+    // If alive check is received via voip push, do nothing and call the completion block
+    BOOL isAliveCheck = [payload.dictionaryPayload[@"threema"][@"alive-check"] isEqual: @1];
+    VoIPCallStateManager *voIPCallStateManager = [VoIPCallStateManager shared];
+
     AppSetupState *appSetupState = [[AppSetupState alloc] initWithMyIdentityStore:[MyIdentityStore sharedMyIdentityStore]];
-    if (migrating || ![appSetupState isAppSetupCompleted] || requiresMigration != RequiresMigrationNone) {
-        completion();
+    if (migrating ||
+        ![appSetupState isAppSetupCompleted] ||
+        requiresMigration != RequiresMigrationNone ||
+        isAliveCheck) {
+        
+        NSString *appName = [BundleUtil localizedStringForKey: [ThreemaAppObjc currentName]];
+        [voIPCallStateManager startAndCancelCallFrom: appName completion:completion showWebNotification:false];
         return;
     }
     
-    [[ValidationLogger sharedValidationLogger] logString:[NSString stringWithFormat:@"didReceiveIncomingPushWithPayload: %@", payload.dictionaryPayload]];
-    [[BackgroundTaskManager shared] newBackgroundTaskWithKey:kAppPushBackgroundTask timeout:kAppPushBackgroundTaskTime completionHandler:^{
-        [AppGroup setActive:NO forType:AppGroupTypeShareExtension];
-        [[NotificationManager sharedInstance] handleVoIPPush:payload.dictionaryPayload withCompletionHandler:completion];
-    }];
+    DDLogNotice(@"didReceiveIncomingPushWithPayload: %@", payload.dictionaryPayload);
+    [AppGroup setActive:NO forType:AppGroupTypeNotificationExtension];
+    [AppGroup setActive:NO forType:AppGroupTypeShareExtension];
+    
+    BOOL succeeded = [voIPCallStateManager startInitialIncomingCallWithDictionaryPayload: payload.dictionaryPayload completion: completion];
+    
+    if (succeeded) {
+        [notificationManager handleVoipPushWithPayload:payload.dictionaryPayload withCompletionHandler:^(BOOL isThreemaDict, NSDictionary * _Nullable handlerPayload) {
+            if (handlerPayload == nil) {
+                completion();
+                return;
+            }
+            
+            if (!isThreemaDict) {
+                [incomingMessageManager incomingPushWithPayloadDic:handlerPayload completion:completion];
+            }
+            else {
+                [incomingMessageManager incomingPushWithThreemaDic:handlerPayload completion:^{
+                    if (self.isAppInBackground) {
+                        [[ServerConnector sharedServerConnector] connectWait:ConnectionInitiatorThreemaCall];
+                    }
+                    completion();
+                }];
+            }
+        }];
+    }
 }
 
+
+// pragma mark: Other Functions
+
+- (void)eraseApplicationData:(JKLLockScreenViewController *)viewController {
+
+    DDLogWarn(@"Erase all application data");
+
+    [[MyIdentityStore sharedMyIdentityStore] destroy];
+    [UserReminder markIdentityAsDeleted];
+
+    /* Remove Core Data stuff */
+    [[DatabaseManager dbManager] eraseDB];
+
+    /* Remove files */
+    [self removeDirectoryContents:[NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) objectAtIndex:0]];
+    [self removeDirectoryContents:[NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES) objectAtIndex:0]];
+    [self removeDirectoryContents:NSTemporaryDirectory()];
+
+    /* Reset defaults and turn off passcode */
+    [NSUserDefaults resetStandardUserDefaults];
+    [AppGroup resetUserDefaults];
+    
+    // Unregister APNS Push Token
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [[UIApplication sharedApplication] unregisterForRemoteNotifications];
+    });
+
+    [[KKPasscodeLock sharedLock] disablePasscode];
+
+    [self.window.rootViewController dismissViewControllerAnimated:NO completion:nil];
+
+    NSString *title = [BundleUtil localizedStringForKey:@"all_data_deleted_title"];
+    NSString *message = [BundleUtil localizedStringForKey:@"all_data_deleted_message"];
+
+    [UIAlertTemplate showAlertWithOwner:[self currentTopViewController] title:title message:message actionOk:^(UIAlertAction * _Nonnull okAction) {
+        exit(0);
+    }];
+}
 @end

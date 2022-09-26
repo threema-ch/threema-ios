@@ -1,0 +1,19 @@
+/*
+ Localizable.strings
+ Threema
+ 
+ Copyright (c) 2015 Threema GmbH. All rights reserved.
+ */
+
+"need_to_start_app_first_title" = "%@ 還沒有設定完成";
+"need_to_start_app_first_message" = "請先開啟 %@ 應用程式。";
+
+"cannot_connect_title" = "沒有連線";
+"cannot_connect_message" = "無法連線，請檢查您的網路連線。";
+
+"sending_count" = "傳送中... (%1$ld / %2$ld)";
+
+"error_message_no_items_title" = "無效內容";
+"error_message_no_items_message" = "未發現有支援的專案。";
+
+"send_as_file" = "以原始檔案傳送";

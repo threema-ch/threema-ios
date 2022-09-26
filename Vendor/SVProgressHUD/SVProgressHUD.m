@@ -649,7 +649,9 @@ static const CGFloat SVProgressHUDParallaxDepthPoints = 10;
                                                                                userInfo:userInfo];
                              
                              // Tell the rootViewController to update the StatusBar appearance
-                             UIViewController *rootController = [[UIApplication sharedApplication] keyWindow].rootViewController;
+                             /***** BEGIN THREEMA MODIFICATION: Use windows instead of keyWindow *********/
+                             UIViewController *rootController = [[[UIApplication sharedApplication] windows] firstObject].rootViewController;
+                             /***** END THREEMA MODIFICATION: Use windows instead of keyWindow *********/
                              if ([rootController respondsToSelector:@selector(setNeedsStatusBarAppearanceUpdate)]) {
                                  [rootController setNeedsStatusBarAppearanceUpdate];
                              }

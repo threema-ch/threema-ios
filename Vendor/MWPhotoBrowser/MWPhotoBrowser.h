@@ -45,6 +45,8 @@
 - (void)photoBrowser:(MWPhotoBrowser *)photoBrowser deleteButton:(UIBarButtonItem *)deleteButton;
 - (void)photoBrowserResetSelection:(MWPhotoBrowser *)photoBrowser;
 - (void)photoBrowserSelectAll:(MWPhotoBrowser *)photoBrowser;
+- (NSSet *)mediaPhotoSelection;
+- (NSUInteger *)mediaSelectionCount;
 /***** END THREEMA MODIFICATION: add delete button *********/
 - (BOOL)photoBrowser:(MWPhotoBrowser *)photoBrowser isPhotoSelectedAtIndex:(NSUInteger)index;
 - (void)photoBrowser:(MWPhotoBrowser *)photoBrowser photoAtIndex:(NSUInteger)index selectedChanged:(BOOL)selected;

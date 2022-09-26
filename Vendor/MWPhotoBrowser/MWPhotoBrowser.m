@@ -23,7 +23,7 @@
 #import "ForwardURLActivity.h"
 #import "ForwardMultipleURLActivity.h"
 #import "AppGroup.h"
-#import "Utils.h"
+#import "ThreemaUtilityObjC.h"
 #import "ChatViewHeader.h"
 #import "Threema-Swift.h"
 #import "ActivityUtil.h"
@@ -109,13 +109,6 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
     _recycledPages = [[NSMutableSet alloc] init];
     _photos = [[NSMutableArray alloc] init];
     _thumbPhotos = [[NSMutableArray alloc] init];
-    ///***** BEGIN THREEMA MODIFICATION: iOS 11 *********/
-//    _currentGridContentOffset = CGPointMake(0, CGFLOAT_MAX);
-    if (@available(iOS 11.0, *)) {
-    } else {
-        _currentGridContentOffset = CGPointMake(0, CGFLOAT_MAX);
-    }
-    ///***** END THREEMA MODIFICATION: iOS 11 *********/
     _didSavePreviousStateOfNavBar = NO;
     _testCount = 0;
     self.automaticallyAdjustsScrollViewInsets = NO;
@@ -192,7 +185,9 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
     if (!_enableGrid) _startOnGrid = NO;
 	
 	// View
-	self.view.backgroundColor = [UIColor blackColor];
+    ///***** BEGIN THREEMA MODIFICATION *********
+	self.view.backgroundColor = [Colors backgroundView];
+    ///***** END THREEMA MODIFICATION *********
     self.view.clipsToBounds = YES;
 	
 	// Setup paging scrolling view
@@ -203,26 +198,36 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
 	_pagingScrollView.delegate = self;
 	_pagingScrollView.showsHorizontalScrollIndicator = NO;
 	_pagingScrollView.showsVerticalScrollIndicator = NO;
-	_pagingScrollView.backgroundColor = [UIColor blackColor];
+    ///***** BEGIN THREEMA MODIFICATION *********
+    _pagingScrollView.backgroundColor = [Colors backgroundView];
+    ///***** END THREEMA MODIFICATION *********
     _pagingScrollView.contentSize = [self contentSizeForPagingScrollView];
 	[self.view addSubview:_pagingScrollView];
 	
     // Toolbar
     _toolbar = [[UIToolbar alloc] initWithFrame:[self frameForToolbarAtOrientation:[[UIApplication sharedApplication] statusBarOrientation]]];
-    _toolbar.tintColor = [UIColor whiteColor];
+    ///***** BEGIN THREEMA MODIFICATION *********
+    _toolbar.tintColor = [Colors backgroundView];
+    ///***** END THREEMA MODIFICATION *********
     _toolbar.barTintColor = nil;
     [_toolbar setBackgroundImage:nil forToolbarPosition:UIToolbarPositionAny barMetrics:UIBarMetricsDefault];
     [_toolbar setBackgroundImage:nil forToolbarPosition:UIToolbarPositionAny barMetrics:UIBarMetricsCompact];
-    _toolbar.barStyle = UIBarStyleBlackTranslucent;
+    ///***** BEGIN THREEMA MODIFICATION*********
+    _toolbar.barStyle = UIBarStyleDefault;
+    ///***** END THREEMA MODIFICATION *********
     _toolbar.autoresizingMask = UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleWidth;
     
     // Toolbar
     _gridToolbar = [[UIToolbar alloc] initWithFrame:[self frameForToolbarAtOrientation:[[UIApplication sharedApplication] statusBarOrientation]]];
-    _gridToolbar.tintColor = [UIColor whiteColor];
+    ///***** BEGIN THREEMA MODIFICATION *********
+    _gridToolbar.tintColor = [Colors backgroundView];
+    ///***** END THREEMA MODIFICATION *********
     _gridToolbar.barTintColor = nil;
     [_gridToolbar setBackgroundImage:nil forToolbarPosition:UIToolbarPositionAny barMetrics:UIBarMetricsDefault];
     [_gridToolbar setBackgroundImage:nil forToolbarPosition:UIToolbarPositionAny barMetrics:UIBarMetricsCompact];
-    _gridToolbar.barStyle = UIBarStyleBlackTranslucent;
+    ///***** BEGIN THREEMA MODIFICATION *********
+    _gridToolbar.barStyle = UIBarStyleDefault;
+    ///***** END THREEMA MODIFICATION*********
     _gridToolbar.autoresizingMask = UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleWidth;
     
     // Toolbar Items
@@ -470,9 +475,7 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
     
     // Layout
 /***** BEGIN THREEMA MODIFICATION: ios 11 bugfix *********/
-    if (@available(iOS 11.0, *)) {
-        [self layoutVisiblePages];
-    }
+    [self layoutVisiblePages];
 /***** END THREEMA MODIFICATION: ios 11 bu gfix *********/
     [self.view setNeedsLayout];
 }
@@ -565,14 +568,16 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
     UINavigationBar *navBar = self.navigationController.navigationBar;
     navBar.tintColor = [UIColor whiteColor];
     navBar.barTintColor = nil;
+    /***** BEGINN THREEMA MODIFICATION *********/
     navBar.shadowImage = nil;
     navBar.translucent = YES;
-    navBar.barStyle = UIBarStyleBlackTranslucent;
+    /***** END THREEMA MODIFICATION *********/
+    navBar.barStyle = UIBarStyleBlack;
+    navBar.translucent = YES;
     [navBar setBackgroundImage:nil forBarMetrics:UIBarMetricsDefault];
     [navBar setBackgroundImage:nil forBarMetrics:UIBarMetricsCompact];
-    
     /***** BEGIN THREEMA MODIFICATION: adapt to own style *********/
-    [Colors updateNavigationBar: navBar];
+    self.navigationItem.scrollEdgeAppearance = [Colors defaultNavigationBarAppearance];
     /***** END THREEMA MODIFICATION *********/
 }
 
@@ -610,14 +615,6 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
 
 - (void)viewWillLayoutSubviews {
     [super viewWillLayoutSubviews];
-    
-    /***** BEGIN THREEMA MODIFICATION: ios 11 bugfix *********/
-    if (@available(iOS 11.0, *)) {
-        // do nothing
-    } else {
-        [self layoutVisiblePages];
-    }
-    /***** END THREEMA MODIFICATION: ios 11 bugfix *********/
 }
 
 - (void)layoutVisiblePages {
@@ -1172,7 +1169,9 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
     CGFloat adjust = 0;
     if (@available(iOS 11.0, *)) {
         //Account for possible notch
-        UIEdgeInsets safeArea = [[UIApplication sharedApplication] keyWindow].safeAreaInsets;
+        /***** BEGIN THREEMA MODIFICATION: Use windows instead of keyWindow *********/
+        UIEdgeInsets safeArea = [[[UIApplication sharedApplication] windows] firstObject].safeAreaInsets;
+        /***** END THREEMA MODIFICATION: Use windows instead of keyWindow *********/
         adjust = safeArea.bottom;
     }
     return CGRectIntegral(CGRectMake(0, self.view.bounds.size.height - height - adjust, self.view.bounds.size.width, height));
@@ -1469,14 +1468,6 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
     // Init grid controller
     _gridController = [[MWGridViewController alloc] init];
     
-    ///***** BEGIN THREEMA MODIFICATION: iOS 11 *********/
-//    _gridController.initialContentOffset = _currentGridContentOffset;
-    if (@available(iOS 11.0, *)) {
-    } else {
-        _gridController.initialContentOffset = _currentGridContentOffset;
-    }
-    ///***** END THREEMA MODIFICATION: iOS 11 *********/
-    
     /***** BEGIN THREEMA MODIFICATION: add select button *********/
     _selectButton = [[UIBarButtonItem alloc] initWithTitle:[BundleUtil localizedStringForKey:@"mwphotobrowser_select"] style:UIBarButtonItemStylePlain target:self action:@selector(selectButtonPressed:)];
     _selectButton.enabled = [self numberOfPhotos] > 0;
@@ -1527,17 +1518,6 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
 - (void)hideGrid {
     
     if (!_gridController) return;
-    
-    ///***** BEGIN THREEMA MODIFICATION: iOS 11 *********/
-    // Remember previous content offset
-//    _currentGridContentOffset = _gridController.collectionView.contentOffset;
-    
-    if (@available(iOS 11.0, *)) {
-    } else {
-        // Remember previous content offset
-        _currentGridContentOffset = _gridController.collectionView.contentOffset;
-    }
-    ///***** END THREEMA MODIFICATION: iOS 11 *********/
     
     /***** BEGIN THREEMA MODIFICATION: add select button *********/
     self.navigationItem.rightBarButtonItem = nil;
@@ -1640,7 +1620,6 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
                 v.frame = CGRectOffset(captionFrame, 0, animatonOffset);
             }
         }
-        
     }
     [UIView animateWithDuration:animationDuration animations:^(void) {
         
@@ -1728,7 +1707,7 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
 - (BOOL)areControlsHidden { return (_toolbar.alpha == 0); }
 - (void)hideControls { [self setControlsHidden:YES animated:YES permanent:NO]; }
 - (void)showControls { [self setControlsHidden:NO animated:YES permanent:NO]; }
-- (void)toggleControls { [self setControlsHidden:![self areControlsHidden] animated:YES permanent:NO]; }
+- (void)toggleControls { [self setControlsHidden:![self areControlsHidden] animated:YES permanent:NO]; } 
 
 #pragma mark - Properties
 
@@ -1844,7 +1823,7 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
 - (void)deleteMultipleButtonPressed:(id)sender {
     if ([self numberOfPhotos] > 0) {
         NSString *actionTitle;
-        NSUInteger selectionCount = [((ChatViewHeader *)self.delegate) mediaSelectionCount];
+        NSUInteger selectionCount = [self.delegate mediaSelectionCount];
         if (selectionCount == 0) {
             /* clear all */
             actionTitle = NSLocalizedString(@"media_delete_all_confirm", nil);
@@ -1872,7 +1851,8 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
     if ([mdmSetup disableShareMedia] == true) {
         // do nothing
     } else {
-        NSSet *selectedPhotosIndexes = [((ChatViewHeader *)self.delegate) mediaPhotoSelection];
+        NSSet *selectedPhotosIndexes = [self.delegate mediaPhotoSelection];
+        
         NSMutableArray *allSelectedPhotos = [NSMutableArray new];
         [selectedPhotosIndexes enumerateObjectsUsingBlock:^(NSNumber *index, BOOL * _Nonnull stop) {
             MWPhoto *photo = [self photoAtIndex:[index unsignedIntegerValue]];
@@ -1897,17 +1877,21 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
         self.activityViewController.popoverPresentationController.barButtonItem = _actionButton;
         
         NSUserDefaults *defaults = [AppGroup userDefaults];
-        [defaults setDouble:[Utils systemUptime] forKey:@"UIActivityViewControllerOpenTime"];
+        [defaults setDouble:[ThreemaUtilityObjC systemUptime] forKey:@"UIActivityViewControllerOpenTime"];
         [defaults synchronize];
         
         [self.activityViewController setCompletionWithItemsHandler:^(UIActivityType  _Nullable activityType, BOOL completed, NSArray * _Nullable returnedItems, NSError * _Nullable activityError) {
             
             // Fix: iOS 13 close modal view after save image to photos
-            if (@available(iOS 13.0, *) && !@available(iOS 14.3, *)) {
-                if (activityType == UIActivityTypeSaveToCameraRoll && completed){
+            if (@available(iOS 13.0, *)) {
+                if (@available(iOS 14.3, *)) {
                     // do nothing
                 } else {
-                    [weakSelf dismissViewControllerAnimated:NO completion:nil];
+                    if (activityType == UIActivityTypeSaveToCameraRoll && completed) {
+                        // do nothing
+                    } else {
+                        [weakSelf dismissViewControllerAnimated:NO completion:nil];
+                    }
                 }
             }
             
@@ -1922,10 +1906,14 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
         // Fix: iOS 13 close modal view after save image to photos
         UIViewController *fakeVC=[[UIViewController alloc] init];
         
-        if (@available(iOS 13.0, *) && !@available(iOS 14.3, *)) {
-            [self presentViewController:fakeVC animated:NO completion:^{
-                [fakeVC presentViewController:self.activityViewController animated:YES completion:nil];
-            }];
+        if (@available(iOS 13.0, *)) {
+            if (@available(iOS 14.3, *)) {
+                [self presentViewController:self.activityViewController animated:YES completion:nil];
+            } else {
+                [self presentViewController:fakeVC animated:NO completion:^{
+                    [fakeVC presentViewController:self.activityViewController animated:YES completion:nil];
+                }];
+            }
         } else {
             [self presentViewController:self.activityViewController animated:YES completion:nil];
         }
@@ -2033,17 +2021,21 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
         self.activityViewController.popoverPresentationController.barButtonItem = _actionButton;
         
         NSUserDefaults *defaults = [AppGroup userDefaults];
-        [defaults setDouble:[Utils systemUptime] forKey:@"UIActivityViewControllerOpenTime"];
+        [defaults setDouble:[ThreemaUtilityObjC systemUptime] forKey:@"UIActivityViewControllerOpenTime"];
         [defaults synchronize];
         
         [self.activityViewController setCompletionWithItemsHandler:^(UIActivityType  _Nullable activityType, BOOL completed, NSArray * _Nullable returnedItems, NSError * _Nullable activityError) {
             
             // Fix: iOS 13 close modal view after save image to photos
-            if (@available(iOS 13.0, *) && !@available(iOS 14.3, *)) {
-                if (activityType == UIActivityTypeSaveToCameraRoll && completed){
+            if (@available(iOS 13.0, *)) {
+                if (@available(iOS 14.3, *)) {
                     // do nothing
                 } else {
-                    [weakSelf dismissViewControllerAnimated:NO completion:nil];
+                    if (activityType == UIActivityTypeSaveToCameraRoll && completed) {
+                        // do nothing
+                    } else {
+                        [weakSelf dismissViewControllerAnimated:NO completion:nil];
+                    }
                 }
             }
             
@@ -2058,10 +2050,14 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
         // Fix: iOS 13 close modal view after save image to photos
         UIViewController *fakeVC=[[UIViewController alloc] init];
 
-        if (@available(iOS 13.0, *) && !@available(iOS 14.3, *)) {
-            [self presentViewController:fakeVC animated:NO completion:^{
-                [fakeVC presentViewController:self.activityViewController animated:YES completion:nil];
-            }];
+        if (@available(iOS 13.0, *)) {
+            if (@available(iOS 14.3, *)) {
+                [self presentViewController:self.activityViewController animated:YES completion:nil];
+            } else {
+                [self presentViewController:fakeVC animated:NO completion:^{
+                    [fakeVC presentViewController:self.activityViewController animated:YES completion:nil];
+                }];
+            }
         } else {
             [self presentViewController:self.activityViewController animated:YES completion:nil];
         }
@@ -2086,7 +2082,7 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
         NSURL *photoUrl = [photo urlForExportData:filename];
         
         for (Conversation *conversation in conversations) {
-            [URLSender sendUrl:photoUrl asFile:sendAsFile caption:contactPicker.additionalTextToSend conversation:conversation];
+            [URLSender sendURL:photoUrl asFile:sendAsFile caption:contactPicker.additionalTextToSend conversation:conversation];
         }
         [contactPicker dismissViewControllerAnimated:YES completion:nil];
     } else {

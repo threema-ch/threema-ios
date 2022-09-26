@@ -25,7 +25,7 @@ class UTIConverterTests: XCTestCase {
     
     private let rawFilename = "Bild-7"
     
-    let testBundle: Bundle = Bundle(for: UTIConverterTests.self)
+    let testBundle = Bundle(for: UTIConverterTests.self)
     
     override func setUpWithError() throws {
         // Put setup code here. This method is called before the invocation of each test method in the class.
@@ -39,7 +39,7 @@ class UTIConverterTests: XCTestCase {
     /// All items not recognized by macOSs Finder were removed.
     /// - Throws:
     func testGetRawImageMimeType() throws {
-        let matrix : [(String, Bool)] = [
+        let matrix: [(String, Bool)] = [
             ("srf", false),
             ("sr2", true),
             ("raf", false),
@@ -56,14 +56,18 @@ class UTIConverterTests: XCTestCase {
             ("raw", false),
         ]
         for item in matrix {
-            let testImageUrl = testBundle.url(forResource:rawFilename, withExtension: item.0)
-            let uti = UTIConverter.uti(forFileURL: testImageUrl)
+            let testImageURL = testBundle.url(forResource: rawFilename, withExtension: item.0)
+            let uti = UTIConverter.uti(forFileURL: testImageURL)
             let mimeType = UTIConverter.mimeType(fromUTI: uti)
 
-            XCTAssert(UTIConverter.type(uti, conformsTo: kUTTypeImage as String), "\(item.0) with uti \(String(describing: uti)) should conform to image but does not")
-            XCTAssert(UTIConverter.isImageMimeType(mimeType) == item.1, "\(item.0) with mime type \(String(describing: mimeType)) should conform to image \(item.1)")
+            XCTAssert(
+                UTIConverter.type(uti, conformsTo: kUTTypeImage as String),
+                "\(item.0) with uti \(String(describing: uti)) should conform to image but does not"
+            )
+            XCTAssert(
+                UTIConverter.isImageMimeType(mimeType) == item.1,
+                "\(item.0) with mime type \(String(describing: mimeType)) should conform to image \(item.1)"
+            )
         }
     }
-    
-    
 }

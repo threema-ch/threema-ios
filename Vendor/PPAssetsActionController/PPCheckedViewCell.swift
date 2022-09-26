@@ -54,9 +54,7 @@ class PPCheckedViewCell: UICollectionViewCell {
                                      width: width,
                                      height: height)
             /***** BEGIN THREEMA MODIFICATION: accessibilityIgnoresInvertColors *********/
-            if #available(iOS 11.0, *) {
-                self.accessibilityIgnoresInvertColors = true
-            }
+            self.accessibilityIgnoresInvertColors = true
             /***** END THREEMA MODIFICATION: accessibilityIgnoresInvertColors *********/
         }
     }

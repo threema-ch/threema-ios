@@ -18,9 +18,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import CocoaLumberjackSwift
 import Foundation
 import ZipArchive
-import CocoaLumberjackSwift
 
 class ZipFileContainer: NSObject {
     private var zipFilePath: String
@@ -32,8 +32,8 @@ class ZipFileContainer: NSObject {
     init(password: String, name: String) {
         self.zipFilePath = ZipFileContainer.getZipFilePath(name: name)
         self.password = password
-        self.zipFile = SSZipArchive.init(path: self.zipFilePath)
-        self.zipFile.open()
+        self.zipFile = SSZipArchive(path: zipFilePath)
+        zipFile.open()
         super.init()
     }
     
@@ -43,26 +43,33 @@ class ZipFileContainer: NSObject {
     ///   - data: The data that will be added to the zipFile
     ///   - filename: The filename with which data is added to the zip file
     func addData(data: Data, filename: String) -> Bool {
-        let success = self.zipFile.write(data,
-                                         filename: filename,
-                                         compressionLevel: 0,
-                                         password: self.password,
-                                         aes: true)
+        let success = zipFile.write(
+            data,
+            filename: filename,
+            compressionLevel: 0,
+            password: password,
+            aes: true
+        )
         return success
     }
     
     func addMediaData(mediaData: BlobData) -> Bool {
-        return self.addData(data: mediaData.blobGet(), filename: mediaData.blobGetFilename())
+        guard let blobData = mediaData.blobGet(), let blobFilename = mediaData.blobGetFilename() else {
+            return false
+        }
+        
+        return addData(data: blobData, filename: blobFilename)
     }
     
     func deleteFile() {
-        self.zipFile.close()
+        zipFile.close()
         let fileManager = FileManager.default
         
-        if fileManager.isDeletableFile(atPath: self.zipFilePath) {
+        if fileManager.isDeletableFile(atPath: zipFilePath) {
             do {
-                try fileManager.removeItem(atPath: self.zipFilePath)
-            } catch {
+                try fileManager.removeItem(atPath: zipFilePath)
+            }
+            catch {
                 DDLogError("Unable to delete chat export from temporary files.")
             }
         }
@@ -73,22 +80,24 @@ class ZipFileContainer: NSObject {
         if fileManager.fileExists(atPath: directoryPath) {
             do {
                 try fileManager.removeItem(atPath: directoryPath)
-            } catch let error as NSError {
+            }
+            catch let error as NSError {
                 DDLogError("Error: \(error.localizedDescription)")
             }
         }
     }
     
-    func getUrlWithFileName(fileName: String) -> URL? {
-        self.zipFile.close()
+    func getURLWithFileName(fileName: String) -> URL? {
+        zipFile.close()
         
         let path = ZipFileContainer.getZipFilePath(name: fileName)
         let fileManager = FileManager.default
 
         do {
-            try fileManager.moveItem(atPath: self.zipFilePath, toPath: path)
+            try fileManager.moveItem(atPath: zipFilePath, toPath: path)
             return NSURL.fileURL(withPath: path)
-        } catch {
+        }
+        catch {
             DDLogError("An error occurred when moving the zip file within temporary files.")
             DDLogError("Unexpected error: \(error).")
         }
@@ -96,16 +105,20 @@ class ZipFileContainer: NSObject {
     }
     
     private static func getZipFilePath(name: String) -> String {
-        return ZipFileContainer.getDirectoryPath() + name + ".zip"
+        ZipFileContainer.getDirectoryPath() + name + ".zip"
     }
     
     private static func getDirectoryPath() -> String {
         let fileManager = FileManager.default
         if !fileManager.fileExists(atPath: directoryPath) {
             do {
-                try fileManager.createDirectory(atPath: directoryPath,
-                                                withIntermediateDirectories: true, attributes: nil)
-            } catch let error as NSError {
+                try fileManager.createDirectory(
+                    atPath: directoryPath,
+                    withIntermediateDirectories: true,
+                    attributes: nil
+                )
+            }
+            catch let error as NSError {
                 DDLogError("Error: \(error.localizedDescription)")
             }
         }

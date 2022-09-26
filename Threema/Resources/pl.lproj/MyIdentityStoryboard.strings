@@ -1,0 +1,93 @@
+
+/* Class = "UILabel"; text = "Nickname"; ObjectID = "2jc-3N-31S"; */
+"2jc-3N-31S.text" = "Pseudonim";
+
+/* Class = "UITableViewSection"; footerTitle = "Number: +41 79 123 45 67"; ObjectID = "5HP-W8-nFp"; */
+"5HP-W8-nFp.footerTitle" = "Numer: +41 79 123 45 67";
+
+/* Class = "UINavigationItem"; title = "My Profile"; ObjectID = "8Pu-jd-SHn"; */
+"8Pu-jd-SHn.title" = "Mój Profil";
+
+/* Class = "UINavigationItem"; title = "Link Number"; ObjectID = "ELz-zT-AmB"; */
+"ELz-zT-AmB.title" = "Numer Połączenia";
+
+/* Class = "UILabel"; text = "Detail"; ObjectID = "FIY-Hl-kwh"; */
+"FIY-Hl-kwh.text" = "Szczegół";
+
+/* Class = "UITextField"; placeholder = "your phone number"; ObjectID = "FRl-f2-pIa"; */
+"FRl-f2-pIa.placeholder" = "twój numer telefonu";
+
+/* Class = "UILabel"; text = "Detail"; ObjectID = "H7W-RZ-gej"; */
+"H7W-RZ-gej.text" = "Szczegół";
+
+/* Class = "UILabel"; text = "Delete ID"; ObjectID = "ISb-ca-Ste"; */
+"ISb-ca-Ste.text" = "Usuń ID";
+
+/* Class = "UITextField"; placeholder = "code"; ObjectID = "KTz-4x-SnC"; */
+"KTz-4x-SnC.placeholder" = "kod";
+
+/* Class = "UILabel"; text = "Nickname"; ObjectID = "NLA-jz-irZ"; */
+"NLA-jz-irZ.text" = "Pseudonim";
+
+/* Class = "UITableViewSection"; footerTitle = "Linking your email address or phone number to your ID lets other people find you on Threema automatically if they have you in their address book."; ObjectID = "NUr-0t-zng"; */
+"NUr-0t-zng.footerTitle" = "Powiązanie adresu e-mail lub numeru telefonu z ID pozwala innym osobom automatyczne znalezienie Ciebie w Threema, jeśli mają  w swojej książce adresowej.";
+
+/* Class = "UILabel"; text = "Threema ID"; ObjectID = "PG7-5d-WL5"; */
+"PG7-5d-WL5.text" = "Threema ID";
+
+/* Class = "UILabel"; text = "Phone Number"; ObjectID = "QCC-2k-HfZ"; */
+"QCC-2k-HfZ.text" = "Numer Telefonu";
+
+/* Class = "UILabel"; text = "Linked Email"; ObjectID = "Re1-k2-FsT"; */
+"Re1-k2-FsT.text" = "Powiązany Email";
+
+/* Class = "UILabel"; text = "XXXXXXXX"; ObjectID = "RjP-ON-gaW"; */
+"RjP-ON-gaW.text" = "XXXXXXXX";
+
+/* Class = "UILabel"; text = "Request Call"; ObjectID = "RvX-Ht-6JQ"; */
+"RvX-Ht-6JQ.text" = "Żądanie Połączenia";
+
+/* Class = "UILabel"; text = "Linked Number"; ObjectID = "UWU-JO-PcU"; */
+"UWU-JO-PcU.text" = "Powiązany Numer";
+
+/* Class = "UILabel"; text = "ID Revocation Password"; ObjectID = "XOE-qz-Fzh"; */
+"XOE-qz-Fzh.text" = "Hasło Unieważnienia ID";
+
+/* Class = "UILabel"; text = "Nickname"; ObjectID = "bL4-qe-Mh9"; */
+"bL4-qe-Mh9.text" = "Pseudonim";
+
+/* Class = "UILabel"; text = "Backup"; ObjectID = "eS1-Gf-A4o"; */
+"eS1-Gf-A4o.text" = "Eksport ID";
+
+/* Class = "UILabel"; text = "..."; ObjectID = "gan-4f-TrM"; */
+"gan-4f-TrM.text" = "...";
+
+/* Class = "UINavigationItem"; title = "Edit Profile"; ObjectID = "jni-2G-zzz"; */
+"jni-2G-zzz.title" = "Edytuj Profil";
+
+/* Class = "UITextField"; placeholder = "Nickname"; ObjectID = "o3l-bU-add"; */
+"o3l-bU-add.placeholder" = "Pseudonim";
+
+/* Class = "UITableViewSection"; footerTitle = "Linking your email address to your ID lets other people find you on Threema automatically if they have your email in their address book."; ObjectID = "qQD-Gd-ca9"; */
+"qQD-Gd-ca9.footerTitle" = "Powiązanie adresu email z ID umożliwia innym osobom automatyczne znajdowanie Ciebie w Threema, jeśli mają Twój adres email w książce adresowej.";
+
+/* Class = "UINavigationItem"; title = "Enter code"; ObjectID = "tGC-WP-fBC"; */
+"tGC-WP-fBC.title" = "Wpisz kod";
+
+/* Class = "UILabel"; text = "Abort Verification"; ObjectID = "wJP-Jf-Pgx"; */
+"wJP-Jf-Pgx.text" = "Przerwij weryfikację";
+
+/* Class = "UILabel"; text = "05:00"; ObjectID = "xdM-Ja-eNy"; */
+"xdM-Ja-eNy.text" = "05:00";
+
+/* Class = "UILabel"; text = "Enter code"; ObjectID = "xih-kT-hBC"; */
+"xih-kT-hBC.text" = "Wpisz kod";
+
+/* Class = "UILabel"; text = "Detail"; ObjectID = "yaz-xj-2bb"; */
+"yaz-xj-2bb.text" = "Szczegół";
+
+/* Class = "UITableViewSection"; footerTitle = "Linking your phone number to your ID lets other people find you on Threema automatically if they have your phone number in their address book."; ObjectID = "z3E-MB-Mey"; */
+"z3E-MB-Mey.footerTitle" = "Powiązanie numeru telefonu z ID umożliwia innym osobom automatyczne znajdowanie Ciebie w Threema, jeśli mają Twój numer telefonu w swojej książce adresowej.";
+
+/* Class = "UILabel"; text = "00000000000000000000000000000000"; ObjectID = "z90-JB-13a"; */
+"z90-JB-13a.text" = "00000000000000000000000000000000";

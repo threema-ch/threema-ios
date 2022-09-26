@@ -101,6 +101,9 @@
             </BuildableReference>
             <SkippedTests>
                <Test
+                  Identifier = "AudioTrackAnalyzerTests">
+               </Test>
+               <Test
                   Identifier = "DbLoadTests">
                </Test>
                <Test

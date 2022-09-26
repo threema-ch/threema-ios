@@ -233,6 +233,8 @@ open class DKAssetGroupDetailVC: UIViewController, UICollectionViewDelegate, UIC
                 cell.thumbnailImage = image
             }
         }
+        
+        cell.accessibilityLabel = asset.accessibilityLabel
 
 		if let index = self.imagePickerController.selectedAssets.firstIndex(of: asset) {
 			cell.isSelected = true

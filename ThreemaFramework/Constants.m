@@ -26,8 +26,8 @@ ThreemaPushNotificationDictionary const ThreemaPushNotificationDictionaryKey = @
 ThreemaPushNotificationDictionary const ThreemaPushNotificationDictionaryCommandKey = @"cmd";
 ThreemaPushNotificationDictionary const ThreemaPushNotificationDictionaryFromKey = @"from";
 ThreemaPushNotificationDictionary const ThreemaPushNotificationDictionaryNicknameKey = @"nick";
-ThreemaPushNotificationDictionary const ThreemaPushNotificationDictionaryMessageIdKey = @"messageId";
-ThreemaPushNotificationDictionary const ThreemaPushNotificationDictionaryVoipKey = @"voip";
+ThreemaPushNotificationDictionary const ThreemaPushNotificationDictionaryMessageIDKey = @"messageId";
+ThreemaPushNotificationDictionary const ThreemaPushNotificationDictionaryVOIPKey = @"voip";
 
 ThreemaPushNotificationDictionaryBool const ThreemaPushNotificationDictionaryBoolTrue = @"true";
 ThreemaPushNotificationDictionaryBool const ThreemaPushNotificationDictionaryBoolFalse = @"false";

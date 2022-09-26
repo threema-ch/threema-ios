@@ -39,16 +39,22 @@ message DeviceInfo {
     ANDROID = 1;
     // Apple iOS
     IOS = 2;
+    // Desktop application
+    DESKTOP = 3;
     // Web application
-    WEB = 3;
+    WEB = 4;
   }
   Platform platform = 2;
 
-  // App version
-  string app_version = 3;
+  // Platform details (smartphone model / browser), e.g. "Firefox 91.0.2" or "iPhone 11 Pro"
+  string platform_details = 3;
 
-  // Device description (smartphone model / browser)
-  string description = 4;
+  // App version, e.g. "4.52" (Android) or "4.6.12b2653" (iOS)
+  string app_version = 4;
+
+  // User defined device label (e.g. "PC at Work"), may be empty if not set,
+  // max 255 characters
+  string label = 5;
 }
 
 // A transaction scope. Used in the d2m transaction messages.

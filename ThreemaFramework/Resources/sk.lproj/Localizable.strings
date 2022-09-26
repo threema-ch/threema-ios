@@ -1,0 +1,89 @@
+/* 
+  Localizable.strings
+  Threema
+
+  Copyright (c) 2015 Threema GmbH. All rights reserved.
+*//* JKLockScreenViewController */
+"cancel" = "Zrušiť";
+"delete" = "Vymazať";
+
+/* Mentions */
+"mentions_all" = "Všetko";
+
+
+"me" = "Ja";
+"nobody" = "nikto";
+"(unknown)" = "(neznáme)";
+"invalid" = "neplatné";
+"inactive" = "Neaktívne";
+
+"status_acknowledged" = "odsúhlasené";
+"status_read" = "prečítané";
+"status_delivered" = "doručená";
+"status_sent" = "odoslané";
+"status_sending" = "odosielanie";
+"status_failed" = "zlyhalo";
+"status_declined" = "nesúhlasil";
+"blocked" = "zablokované";
+
+"contacts" = "Kontakty";
+"groups" = "Skupiny";
+"recent" = "Nedávne";
+"work" = "Práca";
+"creator" = "Tvorca";
+"%d members" = "%d členov";
+
+"ok" = "OK";
+
+"send" = "Odoslať";
+"addText" = "Pridať text";
+"hide" = "Skryť";
+
+"error_sending_failed" = "Odosielanie zlyhalo";
+"error_constraints_failed" = "Nepodporovaný súbor";
+"error_message_file_too_big" = "Súbor je príliš veľký, maximálna veľkosť súboru je %@.";
+"error_message_invalid_file" = "Chyba pri čítaní súboru.";
+"error_message_generic" = "Nahrávanie zlyhalo.";
+
+"error_title_feature_level" = "Upozornenie";
+"error_message_feature_level" = "Niektorí príjemcovia používajú verziu aplikácie, ktorá ešte nepodporuje správy so súbormi: %@";
+"error_message_none_feature_level" = "Nikto z príjemcov nepoužíva verziu aplikácie, ktorá by podporovala správy so súbormi: %@";
+
+"error_message_requires_migration_error_title" = "Chyba";
+"error_message_requires_migration_error_description" = "Kontrola migrácie zlyhala. Reštartujte prosím aplikáciu.";
+
+"error_other_connection_for_same_identity_title" = "Varovanie";
+"error_other_connection_for_same_identity_message" = "Server zistil dve alebo viac pripojení z rôznych zariadení s rovnakým Threema ID.\n\nRovnaké Threema ID nie je možné používať súčasne na rôznych zariadeniach. Nové správy budú doručené len na zariadenie naposledy pripojené k serveru.\n\nAk ste prešli na nové zariadenie, odinštalujte, alebo deaktivujte aplikáciu %@ na starom zariadení a potom reštartujte vaše súčasné.";
+
+"video_too_long_title" = "Video je príliš dlhé";
+"video_too_long_message" = "Video je príliš dlhé, aby sa dalo odoslať. Maximálna povolená dĺžka je %.0f munút.";
+
+/* KKPasscodeLock */
+"On" = "Zap";
+"Off" = "Vyp";
+"all_data_deleted_title" = "Všetky údaje vymazané";
+"all_data_deleted_message" = "Zadali ste prístupový kód prísliš veľa krát. Všetky údaje tejto aplikácie budú vymazané.";
+"to_unlock_passcode" = "K odomknutiu aplikácie %@";    // Touch ID
+
+/* Notifications Text */
+"new_message" = "Správa";
+/* Notifications Text */
+"new_message_from_x" = "Správa od %@";
+"new_group_message" = "Skupinová správa";
+"new_group_message_from_x" = "Skupinová správa od %@";
+"new_image_message" = "Obrázok";
+"new_video_message" = "Video";
+"new_location_message" = "Poloha";
+"new_audio_message" = "Zvuk";
+"new_ballot_create_message" = "Anketa: %@";
+"new_ballot_closed_message" = "Anketa: dostupné výsledky";
+"new_file_message" = "Súbor: %@";
+
+"mediapreview_options" = "Možnosti";
+
+"testflight_feedback_viewtitle" = "Beta spätná väzba";
+"testflight_feedback_title" = "Pošlite nám spätnú väzbu k beta verzii!";
+"testflight_feedback_description" = "Ďakujeme za testovanie beta verzie Threema. Testovanie je však len polovica rovnice, druhá polovica je poskytovanie spätnej väzby. Ak narazíte na nejaké chyby alebo nezrovnalosti, dajte nám vedieť. Jednoducho prejdite do časti Nastavenia > Spätná väzba k beta verzii a otvorte beta chat.";
+
+"notification.threemaweb.connect.title" = "Desktop/Web";
+"notification.threemaweb.connect.body" = "Klepnutím na toto upozornenie obnovíte pripojenie k počítačovej aplikácii/webovému klientovi.";

@@ -50,9 +50,7 @@
         _imageView.autoresizesSubviews = UIViewAutoresizingFlexibleHeight | UIViewAutoresizingFlexibleWidth;
         _imageView.accessibilityTraits = UIAccessibilityTraitImage;
         /***** BEGIN THREEMA MODIFICATION: accessibilityIgnoresInvertColors *********/
-        if (@available(iOS 11.0, *)) {
-            _imageView.accessibilityIgnoresInvertColors = true;
-        } 
+        _imageView.accessibilityIgnoresInvertColors = true;
         /***** END THREEMA MODIFICATION: accessibilityIgnoresInvertColors *********/
         [self addSubview:_imageView];
         

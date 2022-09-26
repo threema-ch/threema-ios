@@ -26,10 +26,13 @@ static const CGFloat labelPadding = 10;
     if (self) {
         self.userInteractionEnabled = NO;
         _photo = photo;
-        self.barStyle = UIBarStyleBlackTranslucent;
+        ///***** BEGIN THREEMA MODIFICATION*********
+        self.barStyle = UIBarStyleDefault;
         self.tintColor = nil;
-        self.barTintColor = nil;
-        self.barStyle = UIBarStyleBlackTranslucent;
+        self.barTintColor = [Colors backgroundView];
+        self.barStyle = UIBarStyleDefault;
+        self.translucent = YES;
+        ///***** END THREEMA MODIFICATION*********
         [self setBackgroundImage:nil forToolbarPosition:UIBarPositionAny barMetrics:UIBarMetricsDefault];
         self.autoresizingMask = UIViewAutoresizingFlexibleWidth|UIViewAutoresizingFlexibleTopMargin|UIViewAutoresizingFlexibleLeftMargin|UIViewAutoresizingFlexibleRightMargin;
         [self setupCaption];
@@ -59,7 +62,9 @@ static const CGFloat labelPadding = 10;
     _label.lineBreakMode = NSLineBreakByWordWrapping;
 
     _label.numberOfLines = 0;
-    _label.textColor = [UIColor whiteColor];
+    ///***** BEGIN THREEMA MODIFICATION*********
+    _label.textColor = [Colors text];
+    ///***** END THREEMA MODIFICATION*********
     _label.font = [UIFont systemFontOfSize:17];
     if ([_photo respondsToSelector:@selector(caption)]) {
         _label.text = [_photo caption] ? [_photo caption] : @" ";

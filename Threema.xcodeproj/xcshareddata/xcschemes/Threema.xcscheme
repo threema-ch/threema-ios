@@ -56,7 +56,32 @@
             argument = "unit-testing"
             isEnabled = "YES">
          </CommandLineArgument>
+         <CommandLineArgument
+            argument = "-com.apple.CoreData.SQLDebug 1"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "-com.apple.CoreData.ConcurrencyDebug 1"
+            isEnabled = "NO">
+         </CommandLineArgument>
       </CommandLineArguments>
+      <EnvironmentVariables>
+         <EnvironmentVariable
+            key = "SQLITE_ENABLE_THREAD_ASSERTIONS"
+            value = "1"
+            isEnabled = "YES">
+         </EnvironmentVariable>
+         <EnvironmentVariable
+            key = "SQLITE_AUTO_TRACE"
+            value = "1"
+            isEnabled = "NO">
+         </EnvironmentVariable>
+         <EnvironmentVariable
+            key = "SQLITE_ENABLE_FILE_ASSERTIONS"
+            value = "1"
+            isEnabled = "YES">
+         </EnvironmentVariable>
+      </EnvironmentVariables>
       <Testables>
          <TestableReference
             skipped = "NO">
@@ -70,6 +95,33 @@
             <SkippedTests>
                <Test
                   Identifier = "(null)">
+               </Test>
+               <Test
+                  Identifier = "AddressBoolLoadTests">
+               </Test>
+               <Test
+                  Identifier = "ChatProfileViewTests/testBasicInitialization()">
+               </Test>
+               <Test
+                  Identifier = "ChatProfileViewTests/testDoNotObserveRemovedMemberNameChange()">
+               </Test>
+               <Test
+                  Identifier = "ChatProfileViewTests/testObserveGroupNameChange()">
+               </Test>
+               <Test
+                  Identifier = "ChatProfileViewTests/testObserveMemberNameChange()">
+               </Test>
+               <Test
+                  Identifier = "ChatProfileViewTests/testObserveMembersChange()">
+               </Test>
+               <Test
+                  Identifier = "ChatProfileViewTests/testObserveNameChange()">
+               </Test>
+               <Test
+                  Identifier = "ChatProfileViewTests/testObserveVerificationLevelChange()">
+               </Test>
+               <Test
+                  Identifier = "ChatTextViewPerformanceTest">
                </Test>
                <Test
                   Identifier = "DbLoadTests">
@@ -91,16 +143,6 @@
                identifier = "com.apple.dt.IDEFoundation.CurrentLocationScenarioIdentifier"
                referenceType = "1">
             </LocationScenarioReference>
-         </TestableReference>
-         <TestableReference
-            skipped = "NO">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "0A677B8A1C6250CA0019B361"
-               BuildableName = "ThreemaFrameworkTests.xctest"
-               BlueprintName = "ThreemaFrameworkTests"
-               ReferencedContainer = "container:Threema.xcodeproj">
-            </BuildableReference>
          </TestableReference>
          <TestableReference
             skipped = "YES">
@@ -142,9 +184,36 @@
             ReferencedContainer = "container:Threema.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
+      <CommandLineArguments>
+         <CommandLineArgument
+            argument = "-com.apple.CoreData.SQLDebug 1"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "-com.apple.CoreData.ConcurrencyDebug 1"
+            isEnabled = "YES">
+         </CommandLineArgument>
+      </CommandLineArguments>
+      <EnvironmentVariables>
+         <EnvironmentVariable
+            key = "SQLITE_ENABLE_THREAD_ASSERTIONS"
+            value = "1"
+            isEnabled = "YES">
+         </EnvironmentVariable>
+         <EnvironmentVariable
+            key = "SQLITE_AUTO_TRACE"
+            value = "1"
+            isEnabled = "NO">
+         </EnvironmentVariable>
+         <EnvironmentVariable
+            key = "SQLITE_ENABLE_FILE_ASSERTIONS"
+            value = "1"
+            isEnabled = "YES">
+         </EnvironmentVariable>
+      </EnvironmentVariables>
    </LaunchAction>
    <ProfileAction
-      buildConfiguration = "AppStore"
+      buildConfiguration = "AdHoc"
       shouldUseLaunchSchemeArgsEnv = "YES"
       savedToolIdentifier = ""
       useCustomWorkingDirectory = "NO"

@@ -101,13 +101,8 @@
     
     _failedAttemptsCount = [[AppGroup userDefaults] integerForKey:@"FailedCodeAttempts"];
     
-    
-    if ([Colors areCustomized]) {
-        [self.view setBackgroundColor:[Colors background]];
-    } else {
-        [self.view setBackgroundColor:[Colors backgroundDark]];
-    }
-    [Colors updateNavigationBar:self.navigationController.navigationBar];
+    [self.view setBackgroundColor:Colors.backgroundView];
+    [Colors updateWithNavigationBar:self.navigationController.navigationBar];
 }
 
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation {
@@ -617,17 +612,7 @@
 #else
 	headerLabel.textAlignment = NSTextAlignmentCenter;
 #endif
-    
-    if ([Colors areCustomized]) {
-        headerLabel.textColor = [Colors fontNormal];
-        headerLabel.shadowColor = [UIColor colorWithRed:0.3 green:0.3 blue:0.4 alpha:1.0];
         
-        [Colors updateKeyboardAppearanceFor:textField];
-    } else {
-        headerLabel.textColor = [UIColor colorWithRed:0.3 green:0.3 blue:0.4 alpha:1.0];
-        headerLabel.shadowColor = [UIColor colorWithRed:1.0 green:1.0 blue:1.0 alpha:1.0];
-    }
-
 	headerLabel.font = [UIFont boldSystemFontOfSize:17.0];
 	headerLabel.shadowOffset = CGSizeMake(0, 1.0);
 	

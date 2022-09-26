@@ -51,14 +51,6 @@
             (void)(_margin = 0), _gutter = 1;
             (void)(_marginL = 0), _gutterL = 2;
         }
-
-        ///***** BEGIN THREEMA MODIFICATION: iOS 11 *********/
-//        _initialContentOffset = CGPointMake(0, CGFLOAT_MAX);
-        if (@available(iOS 11.0, *)) {
-        } else {
-            _initialContentOffset = CGPointMake(0, CGFLOAT_MAX);
-        }
-        ///***** END THREEMA MODIFICATION: iOS 11 *********/
  
     }
     return self;
@@ -70,7 +62,9 @@
     [super viewDidLoad];
     [self.collectionView registerClass:[MWGridCell class] forCellWithReuseIdentifier:@"GridCell"];
     self.collectionView.alwaysBounceVertical = YES;
-    self.collectionView.backgroundColor = [UIColor blackColor];
+    ///***** BEGIN THREEMA MODIFICATION*********
+        self.collectionView.backgroundColor = [Colors backgroundView];
+    ///***** END THREEMA MODIFICATION*********
 }
 
 - (void)viewWillAppear:(BOOL)animated {
@@ -101,22 +95,6 @@
 
 - (void)adjustOffsetsAsRequired {
     
-    ///***** BEGIN THREEMA MODIFICATION: iOS 11 *********/
-    // Move to previous content offset
-//    if (_initialContentOffset.y != CGFLOAT_MAX) {
-//        self.collectionView.contentOffset = _initialContentOffset;
-//        [self.collectionView layoutIfNeeded]; // Layout after content offset change
-//    }
-    
-    if (@available(iOS 11.0, *)) {
-    } else {
-        if (_initialContentOffset.y != CGFLOAT_MAX) {
-            self.collectionView.contentOffset = _initialContentOffset;
-            [self.collectionView layoutIfNeeded]; // Layout after content offset change
-        }
-    }
-    ///***** END THREEMA MODIFICATION: iOS 11 *********/
-    
     // Check if current item is visible and if not, make it so!
     if (_browser.numberOfPhotos > 0) {
         NSIndexPath *currentPhotoIndexPath = [NSIndexPath indexPathForItem:_browser.currentIndex inSection:0];
@@ -137,13 +115,7 @@
 
 - (void)performLayout {
     ///***** BEGIN THREEMA MODIFICATION: iOS 11 *********/
-        UINavigationBar *navBar = self.navigationController.navigationBar;
-//        self.collectionView.contentInset = UIEdgeInsetsMake(navBar.frame.origin.y + navBar.frame.size.height + [self getGutter], 0, 0, 0);
         CGFloat navBarBottom = 0;
-        if (@available(iOS 11.0, *)) {
-        } else {
-            navBarBottom = navBar.frame.origin.y + navBar.frame.size.height;
-        }
         
     if (_browser.displaySelectionButtons == true) {
         self.collectionView.contentInset = UIEdgeInsetsMake(navBarBottom + [self getGutter], 0, _browser.gridToolbar.frame.size.height, 0);

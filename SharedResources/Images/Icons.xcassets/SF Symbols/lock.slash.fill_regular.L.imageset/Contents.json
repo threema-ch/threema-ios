@@ -1,0 +1,16 @@
+{
+  "images" : [
+    {
+      "filename" : "lock.slash.fill_regular.L.pdf",
+      "idiom" : "universal"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  },
+  "properties" : {
+    "preserves-vector-representation" : true,
+    "template-rendering-intent" : "template"
+  }
+}

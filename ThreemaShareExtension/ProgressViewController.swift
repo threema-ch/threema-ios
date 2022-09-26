@@ -18,9 +18,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-import UIKit
-import ThreemaFramework
 import CocoaLumberjackSwift
+import ThreemaFramework
+import UIKit
 
 protocol ProgressViewDelegate {
     func progressViewDidCancel()
@@ -28,40 +28,42 @@ protocol ProgressViewDelegate {
 
 class ProgressViewController: UIViewController {
     
-    var itemsToSend : NSMutableDictionary?
-    var blurView : UIVisualEffectView?
+    var itemsToSend: NSMutableDictionary?
+    var blurView: UIVisualEffectView?
     
-    var totalCount : Int = 0
+    var totalCount = 0
     
-    var delegate : ProgressViewDelegate?
+    var delegate: ProgressViewDelegate?
     
-    @IBOutlet weak var label: UILabel!
+    @IBOutlet var label: UILabel!
     @IBOutlet var contentView: UIView!
-    @IBOutlet weak var visualEffectsView: UIVisualEffectView!
-    @IBOutlet weak var cancelButton: UIButton!
-    @IBOutlet weak var progressView: UIProgressView!
-    
+    @IBOutlet var visualEffectsView: UIVisualEffectView!
+    @IBOutlet var cancelButton: UIButton!
+    @IBOutlet var progressView: UIProgressView!
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
         itemsToSend = NSMutableDictionary()
-        cancelButton!.setTitle(BundleUtil.localizedString(forKey:"cancel"), for: .normal)
+        cancelButton!.setTitle(BundleUtil.localizedString(forKey: "cancel"), for: .normal)
+        
+        overrideUserInterfaceStyle = UserSettings.shared().darkTheme ? .dark : .light
     }
     
-    func setupColors() {
-        if Colors.getTheme() == ColorThemeDarkWork || Colors.getTheme() == ColorThemeDark {
-            self.view.tintColor = Colors.main()
-            contentView!.backgroundColor = Colors.background()
-            label!.textColor = Colors.fontNormal()
-            self.darkenVisualEffectsView()
+    func updateColors() {
+        view.backgroundColor = Colors.backgroundViewController
+        
+        view.tintColor = Colors.primary
+        contentView!.backgroundColor = view.backgroundColor
+        if Colors.theme == .dark {
+            darkenVisualEffectsView()
         }
         contentView?.layer.cornerRadius = 15.0
-        progressView.tintColor = Colors.main()
+        label.textColor = Colors.text
     }
     
     private func darkenVisualEffectsView() {
-        let rect = CGRect(origin: self.view.bounds.origin, size: self.view.bounds.size)
+        let rect = CGRect(origin: view.bounds.origin, size: view.bounds.size)
         
         let blurEffect = UIBlurEffect(style: .dark)
         blurView = UIVisualEffectView(effect: blurEffect)
@@ -75,11 +77,27 @@ class ProgressViewController: UIViewController {
         visualEffectsView = nil
         
         blurView!.contentView.addSubview(contentView!)
-        self.view.addSubview(blurView!)
+        view.addSubview(blurView!)
         
-        let horizontalConstraint = NSLayoutConstraint(item: contentView!, attribute: .centerX, relatedBy: .equal, toItem: blurView, attribute: .centerX, multiplier: 1, constant: 0)
+        let horizontalConstraint = NSLayoutConstraint(
+            item: contentView!,
+            attribute: .centerX,
+            relatedBy: .equal,
+            toItem: blurView,
+            attribute: .centerX,
+            multiplier: 1,
+            constant: 0
+        )
         
-        let verticalConstraint = NSLayoutConstraint(item: contentView!, attribute: .centerY, relatedBy: .equal, toItem: blurView, attribute: .centerY, multiplier: 1, constant: 0)
+        let verticalConstraint = NSLayoutConstraint(
+            item: contentView!,
+            attribute: .centerY,
+            relatedBy: .equal,
+            toItem: blurView,
+            attribute: .centerY,
+            multiplier: 1,
+            constant: 0
+        )
         
         blurView?.addConstraint(horizontalConstraint)
         blurView?.addConstraint(verticalConstraint)
@@ -88,16 +106,16 @@ class ProgressViewController: UIViewController {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
-        self.navigationController?.isNavigationBarHidden = true
+        navigationController?.isNavigationBarHidden = true
         
-        self.updateProgressLabel()
+        updateProgressLabel()
         progressView?.progress = 0.0
         
-        self.setupColors()
+        updateColors()
     }
     
-    func setProgress(progress : NSNumber, item : Any?) {
-        if (item != nil) {
+    func setProgress(progress: NSNumber, item: Any?) {
+        if item != nil {
             itemsToSend?.setObject(progress, forKey: item as! NSCopying)
         }
         
@@ -107,15 +125,15 @@ class ProgressViewController: UIViewController {
         }
     }
     
-    func finishedItem(item : Any) {
-        self.setProgress(progress: NSNumber(floatLiteral: 1.0), item: item)
+    func finishedItem(item: Any) {
+        setProgress(progress: NSNumber(floatLiteral: 1.0), item: item)
     }
     
     private func updateProgressLabel() {
         var inProgressOrSentCount = 0
         var sentCount = 0
         for key in itemsToSend!.keyEnumerator() {
-            let progress : NSNumber = itemsToSend!.object(forKey: key) as! NSNumber
+            let progress: NSNumber = itemsToSend!.object(forKey: key) as! NSNumber
             if progress.floatValue > 0.0 {
                 inProgressOrSentCount = inProgressOrSentCount + 1
             }
@@ -130,7 +148,8 @@ class ProgressViewController: UIViewController {
         
         if sentCount == totalCount {
             text = BundleUtil.localizedString(forKey: "finished_sending_title")
-        } else {
+        }
+        else {
             let sendingText = BundleUtil.localizedString(forKey: "sending_count")
             text = String(format: sendingText, currentItemCount, totalCount)
         }
@@ -139,15 +158,14 @@ class ProgressViewController: UIViewController {
     }
     
     private func updateProgressView() {
-        var progress : Float = 0.0
+        var progress: Float = 0.0
         for key in itemsToSend!.keyEnumerator() {
-            let itemProgress : NSNumber = itemsToSend?.object(forKey: key) as! NSNumber
+            let itemProgress: NSNumber = itemsToSend?.object(forKey: key) as! NSNumber
             progress += itemProgress.floatValue
         }
         
         progressView?.progress = progress / Float(totalCount)
     }
-    
     
     @IBAction func cancelButtonPressed(_ sender: Any) {
         guard let rootNavController = delegate else {
@@ -156,5 +174,5 @@ class ProgressViewController: UIViewController {
             fatalError(message)
         }
         rootNavController.progressViewDidCancel()
-    }   
+    }
 }

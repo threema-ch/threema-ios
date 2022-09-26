@@ -52,6 +52,7 @@ static const NSUInteger LSPMaxPincodeLength = 6;
 
 - (void)initPincode {
     self.pincode = @"";
+    _wasCompleted = 0;
 }
 
 /**

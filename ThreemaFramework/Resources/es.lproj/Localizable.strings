@@ -1,0 +1,89 @@
+/* 
+  Localizable.strings
+  Threema
+
+  Copyright (c) 2015 Threema GmbH. All rights reserved.
+*//* JKLockScreenViewController */
+"cancel" = "Cancelar";
+"delete" = "Eliminar";
+
+/* Mentions */
+"mentions_all" = "Todo";
+
+
+"me" = "Yo";
+"nobody" = "Nadie";
+"(unknown)" = "(desconocido)";
+"invalid" = "no válido";
+"inactive" = "inactivo";
+
+"status_acknowledged" = "conforme";
+"status_read" = "leído";
+"status_delivered" = "entregado";
+"status_sent" = "enviado";
+"status_sending" = "sending";
+"status_failed" = "failed";
+"status_declined" = "no conforme";
+"blocked" = "bloqueada";
+
+"contacts" = "Contactos";
+"groups" = "Grupos";
+"recent" = "Reciente";
+"work" = "Work";
+"creator" = "Creador";
+"%d members" = "%d miembros";
+
+"ok" = "OK";
+
+"send" = "Enviar";
+"addText" = "Agregar texto";
+"hide" = "Ocultar";
+
+"error_sending_failed" = "Envío fallido";
+"error_constraints_failed" = "Archivo no admitido";
+"error_message_file_too_big" = "Archivo demasiado grande. El tamaño máximo de archivo es %@.";
+"error_message_invalid_file" = "Error al leer el archivo.";
+"error_message_generic" = "Error al subir el archivo.";
+
+"error_title_feature_level" = "Tenga en cuenta";
+"error_message_feature_level" = "Algunos destinatarios tienen instalada una versión de la aplicación que aún no admite mensajes con archivos: %@";
+"error_message_none_feature_level" = "Ninguno de los destinatarios tiene instalada una versión de la aplicación que admita mensajes con archivos: %@";
+
+"error_message_requires_migration_error_title" = "Error";
+"error_message_requires_migration_error_description" = "Error de comprobación de migración. Reinicia la aplicación.";
+
+"error_other_connection_for_same_identity_title" = "Aviso";
+"error_other_connection_for_same_identity_message" = "El servidor ha detectado dos o más conexiones desde diferentes dispositivos con el mismo ID de Threema.\n\nNo se puede utilizar el mismo ID de Threema en varios dispositivos a la vez. Los mensajes nuevos se transmiten solo al dispositivo que se conectó por última vez al servidor.\n\nSi va a cambiar de dispositivo, por favor, desinstale o desactive %@ en el dispositivo antiguo y luego reinicie el nuevo.";
+
+"video_too_long_title" = "El vídeo es demasiado pesado";
+"video_too_long_message" = "Este vídeo no se puede enviar porque es demasiado largo.  La duración máxima permitida es de %.0f minutos.";
+
+/* KKPasscodeLock */
+"On" = "Act.";
+"Off" = "Desact.";
+"all_data_deleted_title" = "Se han eliminado todos los datos";
+"all_data_deleted_message" = "Ha introducido demasiados códigos erróneos. Todos los datos de esta aplicación se han eliminado.";
+"to_unlock_passcode" = "Para desbloquear %@";    // Touch ID
+
+/* Notifications Text */
+"new_message" = "Mensaje";
+/* Notifications Text */
+"new_message_from_x" = "Mensaje de %@";
+"new_group_message" = "Mensaje de grupo";
+"new_group_message_from_x" = "Mensaje de grupo de %@";
+"new_image_message" = "Imagen";
+"new_video_message" = "Vídeo";
+"new_location_message" = "Ubicación";
+"new_audio_message" = "Audio";
+"new_ballot_create_message" = "Sondeo: %@";
+"new_ballot_closed_message" = "Sondeo: Resultados disponibles";
+"new_file_message" = "Archivo: %@";
+
+"mediapreview_options" = "Opciones";
+
+"testflight_feedback_viewtitle" = "Comentarios sobre la versión beta";
+"testflight_feedback_title" = "Por favor, envíenos sus comentarios sobre la versión beta";
+"testflight_feedback_description" = "Gracias por probar la versión beta de Threema. Sin embargo, la prueba es solo la primera parte del trabajo, la segunda parte es proporcionar comentarios. Por favor, coméntenos si encuentra algún error o irregularidad. Solo tiene que ir a Configuración > Comentarios sobre la beta para abrir el chat de la versión beta.";
+
+"notification.threemaweb.connect.title" = "Escritorio/Web";
+"notification.threemaweb.connect.body" = "Toca esta notificación para restablecer la conexión con la aplicación de escritorio/cliente web.";

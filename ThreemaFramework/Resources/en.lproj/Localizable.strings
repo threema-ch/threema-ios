@@ -1,0 +1,89 @@
+/* 
+  Localizable.strings
+  Threema
+
+  Copyright (c) 2015 Threema GmbH. All rights reserved.
+*//* JKLockScreenViewController */
+"cancel" = "Cancel";
+"delete" = "Delete";
+
+/* Mentions */
+"mentions_all" = "All";
+
+
+"me" = "Me";
+"nobody" = "nobody";
+"(unknown)" = "(unknown)";
+"invalid" = "invalid";
+"inactive" = "inactive";
+
+"status_acknowledged" = "agreed";
+"status_read" = "read";
+"status_delivered" = "delivered";
+"status_sent" = "sent";
+"status_sending" = "sending";
+"status_failed" = "failed";
+"status_declined" = "disagreed";
+"blocked" = "blocked";
+
+"contacts" = "Contacts";
+"groups" = "Groups";
+"recent" = "Recent";
+"work" = "Work";
+"creator" = "Creator";
+"%d members" = "%d members";
+
+"ok" = "OK";
+
+"send" = "Send";
+"addText" = "Add Text";
+"hide" = "Hide";
+
+"error_sending_failed" = "Sending failed";
+"error_constraints_failed" = "Unsupported file";
+"error_message_file_too_big" = "File too big, maximum file size is %@.";
+"error_message_invalid_file" = "Error reading file.";
+"error_message_generic" = "Upload failed.";
+
+"error_title_feature_level" = "Please note";
+"error_message_feature_level" = "Some recipients have an app version that does not support file messages yet: %@";
+"error_message_none_feature_level" = "None of the recipients have an app version that supports file messages: %@";
+
+"error_message_requires_migration_error_title" = "Error";
+"error_message_requires_migration_error_description" = "Migration check failed. Please restart the app.";
+
+"error_other_connection_for_same_identity_title" = "Warning";
+"error_other_connection_for_same_identity_message" = "The server has detected two or more connections from different devices with the same Threema ID.\n\nIt is not possible to use the same Threema ID on several devices simultaneously. New messages are only transmitted to the device that last logged in to the server.\n\nIf you’re switching to a new device, please uninstall or disable %@ on the old device and then reboot the new one.";
+
+"video_too_long_title" = "Video too long";
+"video_too_long_message" = "This video is too long to be sent. The maximum allowed length is %.0f Minutes.";
+
+/* KKPasscodeLock */
+"On" = "On";
+"Off" = "Off";
+"all_data_deleted_title" = "All Data Deleted";
+"all_data_deleted_message" = "You have entered an incorrect passcode too many times. All data in this app has been deleted.";
+"to_unlock_passcode" = "To unlock %@";    // Touch ID
+
+/* Notifications Text */
+"new_message" = "Message";
+/* Notifications Text */
+"new_message_from_x" = "Message from %@";
+"new_group_message" = "Group message";
+"new_group_message_from_x" = "Group message from %@";
+"new_image_message" = "Image";
+"new_video_message" = "Video";
+"new_location_message" = "Location";
+"new_audio_message" = "Audio";
+"new_ballot_create_message" = "Poll: %@";
+"new_ballot_closed_message" = "Poll: Result available";
+"new_file_message" = "File: %@";
+
+"mediapreview_options" = "Options";
+
+"testflight_feedback_viewtitle" = "Beta Feedback";
+"testflight_feedback_title" = "Please send us your beta feedback!";
+"testflight_feedback_description" = "Thank you for testing Threema’s beta version. However, testing is only half of the equation, the other half is providing feedback. Please let us know if you encounter any bugs or irregularities. Simply navigate to Settings > Beta Feedback to open the beta chat.";
+
+"notification.threemaweb.connect.title" = "Desktop/Web";
+"notification.threemaweb.connect.body" = "Tap here to re-establish the connection to the desktop app / web client.";

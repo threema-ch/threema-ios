@@ -900,7 +900,7 @@ static const NSTimeInterval kQBPopupMenuAnimationDuration = 0.2;
         CGMutablePathRef path = [self rightSeparatorPathInRect:rect];
         CGContextAddPath(context, path);
         
-        CGContextSetFillColorWithColor(context, [[Colors popupMenuSeparator] CGColor]);
+        CGContextSetFillColorWithColor(context, [Colors.hairLine CGColor]);
         CGContextFillPath(context);
         
         CGPathRelease(path);
@@ -916,7 +916,7 @@ static const NSTimeInterval kQBPopupMenuAnimationDuration = 0.2;
         CGMutablePathRef path = [self leftSeparatorPathInRect:rect];
         CGContextAddPath(context, path);
         
-        CGContextSetFillColorWithColor(context, [[Colors popupMenuSeparator] CGColor]);
+        CGContextSetFillColorWithColor(context, [Colors.hairLine CGColor]);
         CGContextFillPath(context);
         
         CGPathRelease(path);

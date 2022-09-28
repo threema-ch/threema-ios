@@ -61,8 +61,9 @@ final class PushNotificationReminderViewController: NSObject {
     
     @MainActor
     private static func viewDescriptionText() -> String {
-        String(
-            format: BundleUtil.localizedString(forKey: "push_reminder_message"),
+        String.localizedStringWithFormat(
+            BundleUtil.localizedString(forKey: "push_reminder_message"),
+            ThreemaApp.currentName,
             ThreemaApp.currentName,
             ThreemaApp.currentName
         )

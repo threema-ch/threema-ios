@@ -177,12 +177,14 @@ public class PendingUserNotificationManager: NSObject, PendingUserNotificationMa
             if let userNotificationContent = userNotificationManager.userNotificationContent(pendingUserNotification) {
                 // Add notification or suppress it
                 var suppress = false
+                var silent = false
                 if let pushSetting = userNotificationContent.pushSetting {
                     suppress = (!userNotificationContent.isGroupMessage && !pushSetting.canSendPush()) ||
                         (
                             userNotificationContent.isGroupMessage && !pushSetting
                                 .canSendPush(for: userNotificationContent.baseMessage)
                         )
+                    silent = pushSetting.silent
                 }
 
                 if !suppress {
@@ -190,7 +192,7 @@ public class PendingUserNotificationManager: NSObject, PendingUserNotificationMa
                     userNotificationManager.applyContent(
                         userNotificationContent,
                         &notification,
-                        false,
+                        silent,
                         pendingUserNotification.baseMessage
                     )
 

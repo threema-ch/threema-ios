@@ -14,7 +14,7 @@ libc = "0.2"
 log = "0.4"
 log4rs = { version = "1", features = ["console_appender"], default-features = false }
 rmp-serde = "0.13"
-saltyrtc-client = "0.8.0-rc.1"
+saltyrtc-client = "0.9"
 saltyrtc-task-relayed-data = { path = ".." }
 tokio-core = "0.1"
 tokio-timer = "0.1"
@@ -28,3 +28,6 @@ tokio-process = "0.1"
 
 [profile.release]
 lto = true
+
+[patch.crates-io]
+traitobject = { git = "https://github.com/philip-peterson/destructure_traitobject", rev = "d49b0af9087b3b7848d19d5baae43948ebc7fb9d" }

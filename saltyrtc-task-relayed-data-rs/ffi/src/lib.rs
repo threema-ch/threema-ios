@@ -930,7 +930,6 @@ pub unsafe extern "C" fn salty_client_init(
         hostname,
         port,
         Some(tls_connector),
-        &core.handle(),
         client_arc_connect,
     ) {
         Ok(data) => data,

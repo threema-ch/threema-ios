@@ -21,5 +21,6 @@
 import Foundation
 
 protocol TaskDefinitionSendMessageProtocol {
+    var messageAlreadySentToQueue: DispatchQueue { get }
     var messageAlreadySentTo: [String] { get set }
 }

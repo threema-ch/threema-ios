@@ -2,7 +2,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: saltyrtc/circleci-image-rs:1.57
+      - image: saltyrtc/circleci-image-rs:1.63
     steps:
       - checkout
 
@@ -41,9 +41,9 @@ jobs:
       - run:
           name: Build with flags (Rust)
           command: cargo build --features 'msgpack-debugging'
-#      - run:
-#          name: Audit (Rust)
-#          command: cargo audit
+      - run:
+          name: Audit (Rust)
+          command: cargo audit
 
       # Build and test FFI crate
       - run:
@@ -52,9 +52,9 @@ jobs:
       - run:
           name: Test (Rust FFI)
           command: cd ffi && cargo test
-#      - run:
-#          name: Audit (Rust FFI)
-#          command: cd ffi && cargo audit
+      - run:
+          name: Audit (Rust FFI)
+          command: cd ffi && cargo audit
 
       # Show server log
       - run:

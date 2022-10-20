@@ -1,0 +1,33 @@
+[advisories]
+ignore = [
+    # Unmaintained transitive dependencies that do not pose an immediate
+    # security risk
+    'RUSTSEC-2020-0016', # net2
+    'RUSTSEC-2021-0139', # ansi_term
+
+    # Unmaintained direct dependencies that do not pose an immediate
+    # security risk
+    'RUSTSEC-2020-0036', # failure
+
+    # time: Potential segfault: No patch available for 0.1. However, this
+    # is quite an unlikely scenario that requires setting env variables
+    # from a different thread in the same process.
+    'RUSTSEC-2020-0071',
+
+    # tokio: Data race when sending and receiving after closing a oneshot
+    # channel: We are not affected because we do not call
+    # `Receiver::close` anywhere in the codebase.
+    'RUSTSEC-2021-0124',
+
+    # hyper: Integer overflow in hyper's parsing of the Transfer-Encoding
+    # header leads to data loss: We only use hyper for WebSocket
+    # communication. Additionally, the consumer part is in this library,
+    # and we do not send chunk sizes greater than 18 exabytes. Thus, we
+    # should be unaffected.
+    'RUSTSEC-2021-0079',
+
+    # hyper: Lenient header parsing of Content-Length could allow request
+    # smuggling: We're using hyper as a client, not as a server, and thus
+    # should be unaffected.
+    'RUSTSEC-2021-0078',
+]

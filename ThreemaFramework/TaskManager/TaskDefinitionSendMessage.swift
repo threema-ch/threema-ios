@@ -47,6 +47,9 @@ class TaskDefinitionSendMessage: TaskDefinition, TaskDefinitionSendMessageProtoc
     var allGroupMembers: Set<String>?
     var isNoteGroup: Bool?
     var sendContactProfilePicture: Bool?
+
+    private(set) var messageAlreadySentToQueue =
+        DispatchQueue(label: "ch.threema.TaskDefinitionSendMessage.messageAlreadySentToQueue")
     var messageAlreadySentTo = [String]()
     
     private enum CodingKeys: String, CodingKey {
@@ -102,7 +105,14 @@ class TaskDefinitionSendMessage: TaskDefinition, TaskDefinitionSendMessageProtoc
         self.allGroupMembers = try? container.decode(Set<String>.self, forKey: .allGroupMembers)
         self.isNoteGroup = try? container.decode(Bool.self, forKey: .isNoteGroup)
         self.sendContactProfilePicture = try? container.decode(Bool.self, forKey: .sendContactProfilePicture)
-        self.messageAlreadySentTo = try container.decode([String].self, forKey: .messageAlreadySentTo)
+        messageAlreadySentToQueue.sync {
+            do {
+                self.messageAlreadySentTo = try container.decode([String].self, forKey: .messageAlreadySentTo)
+            }
+            catch {
+                self.messageAlreadySentTo = []
+            }
+        }
     }
     
     override func encode(to encoder: Encoder) throws {
@@ -113,7 +123,14 @@ class TaskDefinitionSendMessage: TaskDefinition, TaskDefinitionSendMessageProtoc
         try container.encode(allGroupMembers, forKey: .allGroupMembers)
         try container.encode(isNoteGroup, forKey: .isNoteGroup)
         try container.encode(sendContactProfilePicture, forKey: .sendContactProfilePicture)
-        try container.encode(messageAlreadySentTo, forKey: .messageAlreadySentTo)
+        messageAlreadySentToQueue.sync {
+            do {
+                try container.encode(messageAlreadySentTo, forKey: .messageAlreadySentTo)
+            }
+            catch {
+                // no-op
+            }
+        }
 
         let superencoder = container.superEncoder()
         try super.encode(to: superencoder)

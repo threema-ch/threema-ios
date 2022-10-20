@@ -375,6 +375,16 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
                 spaces = [NSString stringWithFormat:@"%@ ", spaces];
             }
             editedString = [NSString stringWithFormat:@"%@%@",spaces, messageTextForPreview];
+        } else if ([self isSystemVoteMessage:lastMessage]) {
+            // Workaround for not being able to access voterName from obj-c
+            SystemMessage* voteMessage = (SystemMessage *)lastMessage;
+            NSDictionary *dict = [voteMessage argAsDictionary];
+            if (dict != nil && dict[@"ballotTitle"] != nil) {
+                editedString = [NSString localizedStringWithFormat: [BundleUtil localizedStringForKey:@"vote_system_message_hidden"], dict[@"ballotTitle"]];
+            }
+            else {
+                editedString = [BundleUtil localizedStringForKey:@"vote_system_message_default"];
+            }
         } else {
             editedString = messageTextForPreview;
         }
@@ -771,6 +781,15 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
                 return YES;
             default:
                 return NO;
+        }
+    }
+    return NO;
+}
+
+- (BOOL)isSystemVoteMessage:(BaseMessage *)message {
+    if ([message isKindOfClass:[SystemMessage class]]) {
+        if ([((SystemMessage *)message).type integerValue] == kSystemMessageVote) {
+            return YES;
         }
     }
     return NO;

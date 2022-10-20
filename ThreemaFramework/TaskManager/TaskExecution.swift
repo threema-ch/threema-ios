@@ -40,7 +40,7 @@ class TaskExecution: NSObject {
     var taskContext: TaskContextProtocol
     var taskDefinition: TaskDefinitionProtocol
     let frameworkInjector: FrameworkInjectorProtocol
-    
+
     private let responseTimeoutInSeconds = 20
     
     required init(
@@ -201,11 +201,10 @@ class TaskExecution: NSObject {
                     return
                 }
 
-                if let task = self.taskDefinition as? TaskDefinitionSendMessageProtocol,
-                   let toIdentity = message.toIdentity {
-                    guard !task.messageAlreadySentTo.contains(toIdentity) else {
+                if let toIdentity = message.toIdentity {
+                    guard !self.isMessageAlreadySentTo(identity: toIdentity) else {
                         DDLogWarn(
-                            "Message already sent \(String(describing: message.toIdentity)) (\(String(describing: message.loggingDescription)))"
+                            "Message already sent \(toIdentity)) (\(String(describing: message.loggingDescription)))"
                         )
                         seal.fulfill(message)
                         return
@@ -249,9 +248,8 @@ class TaskExecution: NSObject {
                         else {
                             let result = chatMessageAck.wait(timeout: .now() + .seconds(self.responseTimeoutInSeconds))
                             if result == .success {
-                                if var task = self.taskDefinition as? TaskDefinitionSendMessageProtocol,
-                                   let toIdentity = message.toIdentity {
-                                    task.messageAlreadySentTo.append(toIdentity)
+                                if let toIdentity = message.toIdentity {
+                                    self.messageAlreadySentTo(identity: toIdentity)
                                 }
                             }
                             else {
@@ -270,6 +268,28 @@ class TaskExecution: NSObject {
                     seal.fulfill(message)
                 }
             }
+        }
+    }
+
+    private func isMessageAlreadySentTo(identity: String) -> Bool {
+        guard let task = taskDefinition as? TaskDefinitionSendMessageProtocol else {
+            return false
+        }
+
+        var isMessageAlreadySentTo = false
+        task.messageAlreadySentToQueue.sync {
+            isMessageAlreadySentTo = task.messageAlreadySentTo.contains(identity)
+        }
+        return isMessageAlreadySentTo
+    }
+
+    private func messageAlreadySentTo(identity: String) {
+        guard var task = taskDefinition as? TaskDefinitionSendMessageProtocol else {
+            return
+        }
+
+        task.messageAlreadySentToQueue.sync {
+            task.messageAlreadySentTo.append(identity)
         }
     }
 

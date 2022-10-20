@@ -120,7 +120,6 @@ fn integration_test() {
             "localhost",
             8765,
             Some(tls_connector.clone()),
-            &core.handle(),
             initiator.clone(),
         )
         .unwrap();
@@ -135,7 +134,6 @@ fn integration_test() {
             "localhost",
             8765,
             Some(tls_connector.clone()),
-            &core.handle(),
             responder.clone(),
         )
         .unwrap();

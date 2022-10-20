@@ -5,10 +5,9 @@ authors = ["Danilo Bargen <danilo.bargen@threema.ch>"]
 
 [dependencies]
 backtrace = "0.3.55"
-clippy = { version = "*", optional = true }
 failure = "0.1"
 log = "0.4"
-saltyrtc-client = "0.8.0-rc.2"
+saltyrtc-client = "0.9"
 tokio-core = "0.1"
 
 [dev-dependencies]
@@ -16,8 +15,11 @@ byteorder = "1.2"
 data-encoding = "2.1"
 env_logger = "0.9"
 tokio-timer = "0.1"
-clap = "2.30"
+clap = { version = "3", features = ["std", "derive"], default-features = false }
 qrcodegen = "1.2"
 
 [features]
 msgpack-debugging = ["saltyrtc-client/msgpack-debugging"]
+
+[patch.crates-io]
+traitobject = { git = "https://github.com/philip-peterson/destructure_traitobject", rev = "d49b0af9087b3b7848d19d5baae43948ebc7fb9d" }

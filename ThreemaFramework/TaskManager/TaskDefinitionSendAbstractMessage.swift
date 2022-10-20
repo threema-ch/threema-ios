@@ -50,6 +50,9 @@ import Foundation
     
     var message: AbstractMessage!
     private var messageData: Data?
+
+    private(set) var messageAlreadySentToQueue =
+        DispatchQueue(label: "ch.threema.TaskDefinitionSendAbstractMessage.messageAlreadySentToQueue")
     var messageAlreadySentTo = [String]()
 
     private enum CodingKeys: String, CodingKey {
@@ -75,7 +78,14 @@ import Foundation
             let unarchiver = NSKeyedUnarchiver(forReadingWith: data)
             self.message = try unarchiver.decodeTopLevelObject() as? AbstractMessage
         }
-        self.messageAlreadySentTo = try container.decode([String].self, forKey: .messageAlreadySentTo)
+        messageAlreadySentToQueue.sync {
+            do {
+                self.messageAlreadySentTo = try container.decode([String].self, forKey: .messageAlreadySentTo)
+            }
+            catch {
+                self.messageAlreadySentTo = []
+            }
+        }
     }
 
     override func encode(to encoder: Encoder) throws {
@@ -88,7 +98,14 @@ import Foundation
 
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(messageData, forKey: .messageData)
-        try container.encode(messageAlreadySentTo, forKey: .messageAlreadySentTo)
+        messageAlreadySentToQueue.sync {
+            do {
+                try container.encode(messageAlreadySentTo, forKey: .messageAlreadySentTo)
+            }
+            catch {
+                // no-op
+            }
+        }
         
         let superencoder = container.superEncoder()
         try super.encode(to: superencoder)

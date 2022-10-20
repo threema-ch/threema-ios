@@ -45,10 +45,12 @@ let tmpDirectory = "tmpImages/"
                 let photoLibrary = PHPhotoLibrary.shared()
                 var config = PHPickerConfiguration(photoLibrary: photoLibrary)
                 config.selectionLimit = limit
-                config.preferredAssetRepresentationMode = .automatic
+                config.preferredAssetRepresentationMode = .current
+                config.selection = .ordered
+                
                 let picker = PHPickerViewController(configuration: config)
                 picker.delegate = self
-                viewController.present(picker, animated: true, completion: nil)
+                viewController.present(picker, animated: true)
             
                 return
             }
@@ -191,6 +193,19 @@ let tmpDirectory = "tmpImages/"
                         // Unfortunately the progress object returned here immediately shows 100% progress
                         result.itemProvider.loadFileRepresentation(
                             forTypeIdentifier: UTType.image.identifier,
+                            completionHandler: { url, error in
+                                defer { sema.signal() }
+                                photos.append(self.loadImage(from: url))
+                                if error != nil {
+                                    DDLogError("Could not load item \(error!)")
+                                }
+                            }
+                        )
+                    }
+                    else if result.itemProvider.hasItemConformingToTypeIdentifier(UTType.rawImage.identifier) {
+                        // Unfortunately the progress object returned here immediately shows 100% progress
+                        result.itemProvider.loadFileRepresentation(
+                            forTypeIdentifier: UTType.rawImage.identifier,
                             completionHandler: { url, error in
                                 defer { sema.signal() }
                                 photos.append(self.loadImage(from: url))

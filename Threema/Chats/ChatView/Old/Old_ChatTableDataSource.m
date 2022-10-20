@@ -669,6 +669,8 @@
         } else {
             if (message.type.intValue == kSystemMessageContactOtherAppInfo) {
                 height = [ChatContactInfoSystemMessageCell heightFor:message forTableWidth:curTableWidth] + additionalBubbleMarging + 24.0;
+            } else if (message.type.intValue == kSystemMessageVote) {
+                height = [ChatContactInfoSystemMessageCell heightFor:message forTableWidth:curTableWidth] + additionalBubbleMarging + 24.0;
             } else {
                 height = [ChatSystemMessageCell heightFor:message forTableWidth:curTableWidth] + additionalBubbleMarging + 5.0;
             }

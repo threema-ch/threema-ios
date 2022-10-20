@@ -1261,12 +1261,14 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 }
 
 - (void)updateConversationLastMessage {
-    BaseMessage *baseMessage = [messageFetcher lastMessage];
-    if (![baseMessage.objectID isEqual:conversation.lastMessage.objectID]) {
-        [entityManager performSyncBlockAndSafe:^{
-            conversation.lastMessage = [messageFetcher lastMessage];
-        }];
-    }
+    [entityManager performBlockAndWait:^{
+        BaseMessage *baseMessage = [messageFetcher lastMessage];
+        if (![baseMessage.objectID isEqual:conversation.lastMessage.objectID]) {
+            [entityManager performSyncBlockAndSafe:^{
+                conversation.lastMessage = baseMessage;
+            }];
+        }
+    }];
 }
 
 - (void)presentActivityViewController:(UIActivityViewController *)viewControllerToPresent animated:(BOOL)flag fromView:(UIView *)view {

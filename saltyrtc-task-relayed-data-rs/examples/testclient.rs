@@ -76,28 +76,28 @@ fn main() {
 
     // Set up CLI arguments
     let arg_srv_host = Arg::with_name(ARG_SRV_HOST)
-        .short("h")
+        .short('h')
         .takes_value(true)
         .value_name("SRV_HOST")
         .required(true)
         .default_value("server.saltyrtc.org")
         .help("The SaltyRTC server hostname");
     let arg_srv_port = Arg::with_name(ARG_SRV_PORT)
-        .short("p")
+        .short('p')
         .takes_value(true)
         .value_name("SRV_PORT")
         .required(true)
         .default_value("443")
         .help("The SaltyRTC server port");
     let arg_srv_pubkey = Arg::with_name(ARG_SRV_PUBKEY)
-        .short("s")
+        .short('s')
         .takes_value(true)
         .value_name("SRV_PUBKEY")
         .required(true)
         .default_value("f77fe623b6977d470ac8c7bf7011c4ad08a1d126896795db9d2b4b7a49ae1045")
         .help("The SaltyRTC server public permanent key");
     let arg_ping_interval = Arg::with_name(ARG_PING_INTERVAL)
-        .short("i")
+        .short('i')
         .takes_value(true)
         .value_name("SECONDS")
         .required(false)
@@ -116,13 +116,13 @@ fn main() {
         .subcommand(SubCommand::with_name("responder")
             .about("Start client as responder")
             .arg(Arg::with_name(ARG_PATH)
-                .short("k")
+                .short('k')
                 .takes_value(true)
                 .value_name("INITIATOR_PUBKEY")
                 .required(true)
                 .help("The hex encoded public key of the initiator"))
             .arg(Arg::with_name(ARG_AUTHTOKEN)
-                .short("a")
+                .short('a')
                 .alias("token")
                 .alias("authtoken")
                 .takes_value(true)
@@ -135,15 +135,15 @@ fn main() {
             .arg(arg_ping_interval));
 
     // Parse arguments
-    let subcommand = app.get_matches().subcommand.unwrap_or_else(|| {
+    let matches = app.get_matches();
+    let (subcommand_name, args) = matches.subcommand().unwrap_or_else(|| {
         println!("Missing subcommand.");
         println!("Use -h or --help to see usage.");
         process::exit(1);
     });
-    let args = &subcommand.matches;
 
     // Determine role
-    let role = match &*subcommand.name {
+    let role = match subcommand_name {
         "initiator" => Role::Initiator,
         "responder" => Role::Responder,
         other => {
@@ -218,7 +218,6 @@ fn main() {
         server_host,
         server_port,
         Some(tls_connector),
-        &core.handle(),
         client.clone(),
     )
     .unwrap();

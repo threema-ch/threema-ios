@@ -106,11 +106,8 @@ class TaskQueue {
         dispatchQueue.sync {
             if let item = queue.peek(), item.taskDefinition.state == .executing {
                 item.taskDefinition.state = .interrupted
-
-                if item.taskDefinition.isPersistent {
-                    save()
-                }
             }
+            save()
         }
     }
     

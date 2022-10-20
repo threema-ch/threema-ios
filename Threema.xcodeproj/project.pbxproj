@@ -6184,7 +6184,6 @@
 		7EF11124278C4A45006E71DC /* MediatorReflectedIncomingMessageProcessorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediatorReflectedIncomingMessageProcessorTests.swift; sourceTree = "<group>"; };
 		7EF34E832875822D00DCF512 /* AppMigration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppMigration.swift; sourceTree = "<group>"; };
 		7EF34E882875C31000DCF512 /* BusinessInjectorMock.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BusinessInjectorMock.swift; sourceTree = "<group>"; };
-		7EF34E8A2875C51200DCF512 /* DatabasePersistentContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = DatabasePersistentContext.swift; path = SharedTests/Utilities/DatabasePersistentContext.swift; sourceTree = "<group>"; };
 		7EF55F73276786B900CFA32A /* TaskContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskContext.swift; sourceTree = "<group>"; };
 		7EF6BEE7277469B600454704 /* MediatorReflectedSettingsSyncProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediatorReflectedSettingsSyncProcessor.swift; sourceTree = "<group>"; };
 		7EF6BEE927746BC500454704 /* MediatorReflectedContactSyncProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediatorReflectedContactSyncProcessor.swift; sourceTree = "<group>"; };
@@ -9652,10 +9651,9 @@
 		4DD01F5D14C1CCA900EF7690 = {
 			isa = PBXGroup;
 			children = (
-				7EF34E8A2875C51200DCF512 /* DatabasePersistentContext.swift */,
+				E1DB0ACC2578D2BF00791028 /* README.md */,
 				4A980B542806C2C1005929B9 /* xcconfig */,
 				D7953CEC27B511E100CBBF65 /* saltyrtc_task_relayed_data_ffi.h */,
-				E1DB0ACC2578D2BF00791028 /* README.md */,
 				CE48A56B25386ACB0057EC71 /* SplashScreenThreema2.png */,
 				4D82672225FF60030083F039 /* SplashScreenThreemaOnPrem2.png */,
 				CE48A57125386B6E0057EC71 /* SplashScreenThreemaWork2.png */,
@@ -18570,7 +18568,7 @@
 			baseConfigurationReference = 4ACFB15B2805D93700A5E55F /* VersionBuildInfo.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				BUILD_NUMBER = 2790;
+				BUILD_NUMBER = 2795;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ENABLE_MODULES = NO;
 				CLANG_ENABLE_OBJC_ARC = YES;
@@ -22458,7 +22456,7 @@
 			baseConfigurationReference = 4ACFB15B2805D93700A5E55F /* VersionBuildInfo.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				BUILD_NUMBER = 2790;
+				BUILD_NUMBER = 2795;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ENABLE_MODULES = NO;
 				CLANG_ENABLE_OBJC_ARC = YES;
@@ -22591,7 +22589,7 @@
 			baseConfigurationReference = 4ACFB15B2805D93700A5E55F /* VersionBuildInfo.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				BUILD_NUMBER = 2790;
+				BUILD_NUMBER = 2795;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ENABLE_MODULES = NO;
 				CLANG_ENABLE_OBJC_ARC = YES;
@@ -22654,7 +22652,7 @@
 			baseConfigurationReference = 4ACFB15B2805D93700A5E55F /* VersionBuildInfo.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				BUILD_NUMBER = 2790;
+				BUILD_NUMBER = 2795;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ENABLE_MODULES = NO;
 				CLANG_ENABLE_OBJC_ARC = YES;
@@ -23580,7 +23578,7 @@
 			baseConfigurationReference = 4ACFB15B2805D93700A5E55F /* VersionBuildInfo.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				BUILD_NUMBER = 2790;
+				BUILD_NUMBER = 2795;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ENABLE_MODULES = NO;
 				CLANG_ENABLE_OBJC_ARC = YES;

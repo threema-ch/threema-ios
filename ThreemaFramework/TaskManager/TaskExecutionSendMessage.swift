@@ -179,7 +179,7 @@ class TaskExecutionSendMessage: TaskExecution, TaskExecutionProtocol {
             when(fulfilled: sendMessages)
                 .then { sentMessages -> Promise<[AbstractMessage?]> in
                     // Mark (group) message as sent
-                    if let msg = sentMessages.first as? AbstractMessage {
+                    if let msg = sentMessages.compactMap({ $0 }).first {
                         self.frameworkInjector.backgroundEntityManager.performBlockAndWait {
                             self.frameworkInjector.backgroundEntityManager.markMessageAsSent(msg.messageID)
                         }

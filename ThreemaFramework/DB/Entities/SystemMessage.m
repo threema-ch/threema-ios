@@ -79,12 +79,12 @@
             // This depends on the codable keys defined in ´VoteInfo´
             if ([dict[@"showIntermediateResults"] boolValue]) {
                 if (dict[@"voterID"]) {
-                    return [NSString localizedStringWithFormat:[BundleUtil localizedStringForKey:@"vote_system_message"], dict[@"voterName"], dict[@"ballotTitle"]];
+                    return [NSString localizedStringWithFormat:[BundleUtil localizedStringForKey:@"vote_system_message"], dict[@"voterID"], dict[@"ballotTitle"]];
                 } else {
                     return [BundleUtil localizedStringForKey:@"vote_system_message_default"];
                 }
             } else {
-                return [BundleUtil localizedStringForKey:@"vote_system_message_hidden"];
+                return [NSString localizedStringWithFormat: [BundleUtil localizedStringForKey:@"vote_system_message_hidden"], dict[@"ballotTitle"]] ;
             }
             
         case kSystemMessageCallRejectedOffHours:

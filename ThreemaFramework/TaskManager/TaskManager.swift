@@ -41,10 +41,6 @@ typealias TaskCompletionHandler = (TaskDefinitionProtocol, Error?) -> Void
         self.frameworkInjector = frameworkInjector
         super.init()
 
-        // All then-type handlers to run on a background, "finalizers" like done or catch runs on main queue
-        PromiseKit.conf.Q.map = .global()
-        PromiseKit.conf.Q.return = .main
-
         load()
     }
 

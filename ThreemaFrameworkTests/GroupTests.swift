@@ -73,6 +73,7 @@ class GroupTests: XCTestCase {
 
         let group = Group(
             myIdentityStore: myIdentityStoreMock,
+            userSettings: UserSettingsMock(),
             groupEntity: groupEntity,
             conversation: conversation,
             lastSyncRequest: nil
@@ -224,17 +225,18 @@ class GroupTests: XCTestCase {
             "MEMBER06", // MEMBER06
         ]
         
-        let group = Group(
+        let userSettingsMock = UserSettingsMock()
+
+        // Run first name order
+        
+        let groupSortedFirstName = Group(
             myIdentityStore: myIdentityStoreMock,
+            userSettings: userSettingsMock,
             groupEntity: groupEntity,
             conversation: conversation,
             lastSyncRequest: nil
         )
-        let userSettings = UserSettingsMock()
-        
-        // Run first name order
-        
-        let sortedContactsFirstName = group.sortedMembers(userSettings: userSettings)
+        let sortedContactsFirstName = groupSortedFirstName.sortedMembers
         
         // Validate
         XCTAssertEqual(expectedOrderFirstName.count, sortedContactsFirstName.count)
@@ -249,8 +251,15 @@ class GroupTests: XCTestCase {
         
         // Run last name order
         
-        userSettings.sortOrderFirstName = false
-        let sortedContactsLastName = group.sortedMembers(userSettings: userSettings)
+        userSettingsMock.sortOrderFirstName = false
+        let groupSortedLastName = Group(
+            myIdentityStore: myIdentityStoreMock,
+            userSettings: userSettingsMock,
+            groupEntity: groupEntity,
+            conversation: conversation,
+            lastSyncRequest: nil
+        )
+        let sortedContactsLastName = groupSortedLastName.sortedMembers
         
         // Validate
         XCTAssertEqual(expectedOrderLastName.count, sortedContactsLastName.count)
@@ -334,11 +343,12 @@ class GroupTests: XCTestCase {
         // Run
         let group = Group(
             myIdentityStore: myIdentityStoreMock,
+            userSettings: UserSettingsMock(),
             groupEntity: groupEntity,
             conversation: conversation,
             lastSyncRequest: nil
         )
-        let sortedContacts = group.sortedMembers(userSettings: UserSettingsMock())
+        let sortedContacts = group.sortedMembers
 
         // Validate
         XCTAssertEqual(expectedOrder.count, sortedContacts.count)
@@ -354,7 +364,7 @@ class GroupTests: XCTestCase {
         }
     }
     
-    func testSortedMembersMeCreator() throws {
+    func testSortedFirstNameMembersMeCreator() throws {
         let myIdentityStoreMock = MyIdentityStoreMock(
             identity: "ECHOECHO",
             secretKey: BytesUtility.generateRandomBytes(length: Int(32))!
@@ -426,15 +436,9 @@ class GroupTests: XCTestCase {
             "MEMBER01", // Hans Muster
         ]
             
-        let expectedOrderLastName = [
-            "ECHOECHO", // Me (Creator)
-            "MEMBER01", // Hans Muster
-            "MEMBER02", // Amy Xmen
-        ]
-                    
         // Run first name order
             
-        let sortedContactsFirstName = group.sortedMembers(userSettings: userSettings)
+        let sortedContactsFirstName = group.sortedMembers
             
         // Validate
         XCTAssertEqual(expectedOrderFirstName.count, sortedContactsFirstName.count)
@@ -448,11 +452,85 @@ class GroupTests: XCTestCase {
                 XCTFail("Unexpected contact in sorted contacts")
             }
         }
-            
-        // Run last name order
-            
+    }
+
+    func testSortedLastNameMembersMeCreator() throws {
+        let myIdentityStoreMock = MyIdentityStoreMock(
+            identity: "ECHOECHO",
+            secretKey: BytesUtility.generateRandomBytes(length: Int(32))!
+        )
+        let contactStoreMock = ContactStoreMock(callOnCompletion: true)
+        let taskManagerMock = TaskManagerMock()
+        let userSettings = UserSettingsMock()
         userSettings.sortOrderFirstName = false
-        let sortedContactsLastName = group.sortedMembers(userSettings: userSettings)
+        let groupPhotoSenderMock = GroupPhotoSenderMock()
+
+        var members = [Contact]()
+
+        let member01 = dbPreparer.createContact(
+            publicKey: BytesUtility.generateRandomBytes(length: Int(32))!,
+            identity: "MEMBER01",
+            verificationLevel: 0
+        )
+        member01.lastName = "Muster"
+        member01.firstName = "Hans"
+        members.append(member01)
+
+        let member02 = dbPreparer.createContact(
+            publicKey: BytesUtility.generateRandomBytes(length: Int(32))!,
+            identity: "MEMBER02",
+            verificationLevel: 0
+        )
+        member02.lastName = "Xmen"
+        member02.firstName = "Amy"
+        members.append(member02)
+
+        let groupManager = GroupManager(
+            myIdentityStoreMock,
+            contactStoreMock,
+            taskManagerMock,
+            userSettings,
+            EntityManager(databaseContext: dbMainCnx, myIdentityStore: myIdentityStoreMock),
+            groupPhotoSenderMock
+        )
+
+        let groupID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!
+        var group: Group?
+
+        let expec = expectation(description: "Create group")
+
+        groupManager.createOrUpdateDB(
+            groupID: groupID,
+            creator: myIdentityStoreMock.identity,
+            members: Set(members.map(\.identity).compactMap { $0 }),
+            systemMessageDate: Date()
+        )
+        .done { grp in
+            group = grp
+            expec.fulfill()
+        }
+        .catch { error in
+            XCTFail(error.localizedDescription)
+            expec.fulfill()
+        }
+
+        wait(for: [expec], timeout: 3)
+
+        guard let grp = group else {
+            XCTFail("Group create failed")
+            return
+        }
+
+        let expectedOrderLastName = [
+            "ECHOECHO", // Me (Creator)
+            "MEMBER01", // Hans Muster
+            "MEMBER02", // Amy Xmen
+        ]
+
+        // Run last name order
+
+        userSettings.sortOrderFirstName = false
+        let sortedContactsLastName = grp.sortedMembers
 
         // Validate
         XCTAssertEqual(expectedOrderLastName.count, sortedContactsLastName.count)

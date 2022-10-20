@@ -160,12 +160,14 @@ static AvatarMaker *sharedInstance = nil;
 }
 
 - (void)avatarForContact:(Contact*)contact size:(CGFloat)size masked:(BOOL)masked onCompletion:(void (^)(UIImage *avatarImage, NSString *identity))onCompletion {
-    __block NSString *identityString = [contact.identity copy];
+    __block NSManagedObjectID *objectId = contact.objectID;
     [self performOnCurrentEntityManager:^{
-        Contact *privateContact = [_backgroundEntityManager.entityFetcher existingObjectWithID:contact.objectID];
+        Contact *privateContact = [_backgroundEntityManager.entityFetcher existingObjectWithID:objectId];
+        __block NSString *identity = privateContact.identity;
+        
         UIImage *avatarImage = [self avatarForContact:privateContact size:size masked:masked];
         dispatch_async(dispatch_get_main_queue(), ^{
-            onCompletion(avatarImage, identityString);
+            onCompletion(avatarImage, identity);
         });
     }];
 }

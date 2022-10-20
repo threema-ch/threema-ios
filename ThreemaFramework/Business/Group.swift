@@ -62,6 +62,7 @@ public class Group: NSObject {
     public typealias Creator = Member
     
     private let myIdentityStore: MyIdentityStoreProtocol
+    private let userSettings: UserSettingsProtocol
 
     // Tokens for entity subscriptions, will be removed when is deallocated
     private var subscriptionTokens = [EntityObserver.SubscriptionToken]()
@@ -70,9 +71,19 @@ public class Group: NSObject {
 
     /// It's `nil` if i am creator of the group
     private var conversationContact: Contact?
+    private var conversationContactIdentity: String?
+
+    struct MemberContact: Hashable {
+        let identity: String
+        let state: Int
+    }
+
+    private let membersQueue = DispatchQueue(label: "ch.threema.Group.membersQueue")
+    private var memberContacts = Set<MemberContact>()
 
     init(
         myIdentityStore: MyIdentityStoreProtocol,
+        userSettings: UserSettingsProtocol,
         groupEntity: GroupEntity,
         conversation: Conversation,
         lastSyncRequest: Date?
@@ -85,9 +96,11 @@ public class Group: NSObject {
         }
 
         self.myIdentityStore = myIdentityStore
+        self.userSettings = userSettings
         self.conversation = conversation
         self.conversationGroupMyIdentity = conversation.groupMyIdentity
         self.conversationContact = conversation.contact
+        self.conversationContactIdentity = conversation.contact?.identity
         self.groupIdentity = GroupIdentity(
             id: groupEntity.groupID,
             creator: groupEntity.groupCreator ?? myIdentityStore.identity
@@ -95,14 +108,22 @@ public class Group: NSObject {
         self.state = GroupState(rawValue: groupEntity.state.intValue)!
         self.name = conversation.groupName
         self.photo = conversation.groupImage
-        self.members = conversation.members
         self.lastSyncRequest = lastSyncRequest
         self.lastMessageDate = conversation.lastMessage?.date
         self.conversationCategory = conversation.conversationCategory
         self.conversationVisibility = conversation.conversationVisibility
         self.lastPeriodicSync = groupEntity.lastPeriodicSync
 
+        self.members = conversation.members
+        self.memberContacts = Set(conversation.members.map { contact in
+            MemberContact(identity: contact.identity, state: contact.state?.intValue ?? kStateActive)
+        })
+
         super.init()
+
+        self.sortedMembers = allSortedMembers()
+        self.membersList = sortedMembers.map(\.shortDisplayName)
+            .joined(separator: ", ")
 
         // Subscribe group entity for DB updates or deletion
         subscriptionTokens.append(
@@ -136,12 +157,27 @@ public class Group: NSObject {
                     }
                     self?.conversationGroupMyIdentity = conversation.groupMyIdentity
                     self?.conversationContact = conversation.contact
+                    self?.conversationContactIdentity = conversation.contact?.identity
                     self?.name = conversation.groupName
                     self?.photo = conversation.groupImage
-                    self?.members = conversation.members
                     self?.lastMessageDate = conversation.lastMessage?.date
                     self?.conversationCategory = conversation.conversationCategory
                     self?.conversationVisibility = conversation.conversationVisibility
+
+                    // Check has members composition changed
+                    let newMemberContacts = Set(conversation.members.map { contact in
+                        MemberContact(identity: contact.identity, state: contact.state?.intValue ?? kStateActive)
+                    })
+
+                    if self?.memberContacts != newMemberContacts {
+                        self?.membersQueue.sync {
+                            self?.members = conversation.members
+                            self?.memberContacts = newMemberContacts
+                            self?.sortedMembers = self?.allSortedMembers() ?? [Member]()
+                            self?.membersList = self?.sortedMembers.map(\.shortDisplayName)
+                                .joined(separator: ", ") ?? ""
+                        }
+                    }
                 }
             }
         )
@@ -228,8 +264,8 @@ public class Group: NSObject {
     }
     
     @objc public var groupCreatorIdentity: String {
-        if let conversationContact = conversationContact {
-            return conversationContact.identity
+        if let identity = conversationContactIdentity {
+            return identity
         }
         return myIdentityStore.identity
     }
@@ -293,53 +329,24 @@ public class Group: NSObject {
     
     /// A string with all members as comma separated list
     ///
-    /// The order is the same as produces by `sortedMembers(userSettings:)`
-    @objc public var membersList: String {
-        sortedMembers()
-            .map(\.shortDisplayName)
-            .joined(separator: ", ")
-    }
+    /// The order is the same as produced by `sortedMembers`
+    @objc public private(set) var membersList = ""
     
     /// Sorted list of group members
-    ///
-    /// The order is as follows: creator (always), me (if I'm in the group and not the creator), all other members sorted (w/o creator)
-    ///
-    /// - Parameter userSettings: Optional user settings for sorting order
-    /// - Returns: Sorted group members list
-    public func sortedMembers(
-        userSettings: UserSettingsProtocol = UserSettings.shared()
-    ) -> [Member] {
-        var sortedMembers = [Member]()
-        
-        // Always add creator
-        sortedMembers.append(creator)
-        
-        // Add me if I'm a member and not the creator
-        if isSelfMember, !isOwnGroup {
-            sortedMembers.append(.me)
-        }
-        
-        // Add everybody else expect the creator
-        sortedMembers.append(
-            contentsOf: members.sorted(with: userSettings)
-                .map(Member.contact)
-                .filter { $0 != creator }
-        )
-
-        return sortedMembers
-    }
+    public private(set) var sortedMembers = [Member]()
 
     /// All group member identities including me
-    public var allMemberIdentities: Set<String> {
+    @objc public var allMemberIdentities: Set<String> {
         var identities = Set<String>()
-        for member in members {
-            identities.insert(member.identity)
+        membersQueue.sync {
+            for member in memberContacts {
+                identities.insert(member.identity)
+            }
+
+            if state == .active {
+                identities.insert(myIdentityStore.identity)
+            }
         }
-        
-        if state == .active {
-            identities.insert(myIdentityStore.identity)
-        }
-        
         return identities
     }
     
@@ -347,10 +354,38 @@ public class Group: NSObject {
     ///
     /// This is useful to get all members that should receive a group message
     var allActiveMemberIdentitiesWithoutCreator: [String] {
-        members
-            .filter { $0.state != NSNumber(value: kStateInvalid) }
-            .map(\.identity)
+        var identities: [String]!
+        membersQueue.sync {
+            identities = memberContacts
+                .filter { $0.state != kStateInvalid }
+                .map(\.identity)
+        }
+        return identities
     }
     
     private(set) var lastPeriodicSync: Date?
+
+    /// The order is as follows: creator (always), me (if I'm in the group and not the creator), all other members sorted (w/o creator)
+    ///
+    /// - Returns: Sorted group members list
+    private func allSortedMembers() -> [Member] {
+        var allSortedMembers = [Member]()
+
+        // Always add creator
+        allSortedMembers.append(creator)
+
+        // Add me if I'm a member and not the creator
+        if isSelfMember, !isOwnGroup {
+            allSortedMembers.append(.me)
+        }
+
+        // Add everybody else expect the creator
+        allSortedMembers.append(
+            contentsOf: members.sorted(with: userSettings)
+                .map(Member.contact)
+                .filter { $0 != creator }
+        )
+
+        return allSortedMembers
+    }
 }

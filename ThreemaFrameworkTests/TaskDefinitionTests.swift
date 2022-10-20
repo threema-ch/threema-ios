@@ -184,6 +184,7 @@ class TaskDefinitionTests: XCTestCase {
             let groupEntity = dbPreparer.createGroupEntity(groupID: expectedGroupID, groupCreator: expectedGroupCreator)
             group = Group(
                 myIdentityStore: MyIdentityStoreMock(),
+                userSettings: UserSettingsMock(),
                 groupEntity: groupEntity,
                 conversation: conversation,
                 lastSyncRequest: nil
@@ -261,6 +262,7 @@ class TaskDefinitionTests: XCTestCase {
             let groupEntity = dbPreparer.createGroupEntity(groupID: expectedGroupID, groupCreator: expectedGroupCreator)
             group = Group(
                 myIdentityStore: MyIdentityStoreMock(),
+                userSettings: UserSettingsMock(),
                 groupEntity: groupEntity,
                 conversation: conversation,
                 lastSyncRequest: nil
@@ -322,6 +324,7 @@ class TaskDefinitionTests: XCTestCase {
             let groupEntity = dbPreparer.createGroupEntity(groupID: expectedGroupID, groupCreator: expectedGroupCreator)
             group = Group(
                 myIdentityStore: MyIdentityStoreMock(),
+                userSettings: UserSettingsMock(),
                 groupEntity: groupEntity,
                 conversation: conversation,
                 lastSyncRequest: nil
@@ -398,6 +401,7 @@ class TaskDefinitionTests: XCTestCase {
             let groupEntity = dbPreparer.createGroupEntity(groupID: expectedGroupID, groupCreator: expectedGroupCreator)
             group = Group(
                 myIdentityStore: MyIdentityStoreMock(),
+                userSettings: UserSettingsMock(),
                 groupEntity: groupEntity,
                 conversation: conversation,
                 lastSyncRequest: nil

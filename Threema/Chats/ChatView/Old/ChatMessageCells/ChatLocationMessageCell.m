@@ -122,14 +122,8 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     
     NSString *displayText = [ChatLocationMessageCell displayTextForLocationMessage:locationMessage];
     
-    if (locationMessage.poiAddress == nil && locationMessage.poiName == nil) {
-        [activityIndicator startAnimating];
-        pinView.hidden = YES;
-    } else {
-        [activityIndicator stopAnimating];
-        pinView.hidden = NO;
-    }
-    
+    [activityIndicator stopAnimating];
+    pinView.hidden = NO;
     geocodeLabel.text = displayText;
     
     if (self.message.isOwn.boolValue) {
@@ -196,7 +190,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         return locationMessage.reverseGeocodingResult;
     }
     else {
-        return [BundleUtil localizedStringForKey:@"locating"];
+        return locationMessage.previewText;
     }
 }
 

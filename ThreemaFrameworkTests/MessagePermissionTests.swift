@@ -214,6 +214,7 @@ class MessagePermissionTests: XCTestCase {
 
             group = Group(
                 myIdentityStore: myIdentityStoreMock,
+                userSettings: UserSettingsMock(),
                 groupEntity: dbGroup,
                 conversation: dbConversation,
                 lastSyncRequest: nil
@@ -264,6 +265,7 @@ class MessagePermissionTests: XCTestCase {
 
             group = Group(
                 myIdentityStore: myIdentityStoreMock,
+                userSettings: UserSettingsMock(),
                 groupEntity: dbGroup,
                 conversation: dbConversation,
                 lastSyncRequest: nil
@@ -306,6 +308,7 @@ class MessagePermissionTests: XCTestCase {
 
             group = Group(
                 myIdentityStore: myIdentityStoreMock,
+                userSettings: UserSettingsMock(),
                 groupEntity: dbGroup,
                 conversation: dbConversation,
                 lastSyncRequest: nil
@@ -366,6 +369,7 @@ class MessagePermissionTests: XCTestCase {
 
             group = Group(
                 myIdentityStore: MyIdentityStoreMock(),
+                userSettings: UserSettingsMock(),
                 groupEntity: dbGroup,
                 conversation: conversation,
                 lastSyncRequest: nil

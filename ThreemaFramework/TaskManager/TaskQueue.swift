@@ -61,6 +61,7 @@ class TaskQueue {
 
     private var queue = Queue<QueueItem>()
     private let dispatchQueue = DispatchQueue(label: "ch.threema.TaskQueue.dispatchQueue")
+    private let taskScheduleQueue = DispatchQueue(label: "ch.threema.TaskQueue.taskScheduleQueue")
 
     enum TaskQueueError: Error {
         case notSupportedType
@@ -137,62 +138,68 @@ class TaskQueue {
         dispatchQueue.sync {
             queueItem = queue.peek()
         }
-
-        guard let item = queueItem else {
-            DDLogNotice("Task queue (\(queueType.name())) is empty")
-            return
-        }
-
-        if item.taskDefinition.state == .pending || item.taskDefinition.state == .interrupted {
-            DDLogNotice("Task \(item.taskDefinition) state '\(item.taskDefinition.state)' execute")
-
-            item.taskDefinition.state = .executing
+        
+        taskScheduleQueue.sync {
+            guard let item = queueItem else {
+                DDLogNotice("Task queue (\(queueType.name())) is empty")
+                return
+            }
             
-            // Caution:
-            // - Use `self.frameworkInjector` only for testing reason! For every task to execute must be a new instance, because of using EntityManager in background (means it works on private DB context)!
-            // - Do not use `self.frameworkInjector` for incoming message tasks `TaskDefinitionReceiveMessage` and `TaskDefinitionReceiveReflectedMessage`! Must be a new instance because when is running in Notification Extension process (see `NotificationService`) the database context is reseted and than the `EntityManager` could be invalid.
-            let injector: FrameworkInjectorProtocol = renewFrameworkInjector ? BusinessInjector() : frameworkInjector
-
-            item.taskDefinition.create(frameworkInjector: injector).execute()
-                .done {
-                    if let task = item.taskDefinition as? TaskDefinitionReceiveReflectedMessage {
-                        try self.ackReflectedMessage(reflectID: task.reflectID)
-                    }
-
-                    self.done(item: item)
-                }
-                .catch { error in
-                    if (error as NSError).code == kBadMessageErrorCode ||
-                        (error as NSError).code == kUnknownMessageTypeErrorCode {
-                        if let task = item.taskDefinition as? TaskDefinitionReceiveMessage {
-                            self.frameworkInjector.serverConnector.failedProcessingMessage(task.message, error: error)
+            if item.taskDefinition.state == .pending || item.taskDefinition.state == .interrupted {
+                DDLogNotice("Task \(item.taskDefinition) state '\(item.taskDefinition.state)' execute")
+                
+                item.taskDefinition.state = .executing
+                
+                // Caution:
+                // - Use `self.frameworkInjector` only for testing reason! For every task to execute must be a new instance, because of using EntityManager in background (means it works on private DB context)!
+                // - Do not use `self.frameworkInjector` for incoming message tasks `TaskDefinitionReceiveMessage` and `TaskDefinitionReceiveReflectedMessage`! Must be a new instance because when is running in Notification Extension process (see `NotificationService`) the database context is reseted and than the `EntityManager` could be invalid.
+                let injector: FrameworkInjectorProtocol = renewFrameworkInjector ? BusinessInjector() :
+                    frameworkInjector
+                
+                item.taskDefinition.create(frameworkInjector: injector).execute()
+                    .done {
+                        if let task = item.taskDefinition as? TaskDefinitionReceiveReflectedMessage {
+                            try self.ackReflectedMessage(reflectID: task.reflectID)
                         }
+                        
                         self.done(item: item)
                     }
-                    else if (error as NSError).code == kPendingGroupMessageErrorCode {
-                        // Means processed message is pending group message
-                        DDLogWarn("Task \(item.taskDefinition) group not found for incoming message: \(error)")
-                        self.done(item: item)
+                    .catch { error in
+                        if (error as NSError).code == kBadMessageErrorCode ||
+                            (error as NSError).code == kUnknownMessageTypeErrorCode {
+                            if let task = item.taskDefinition as? TaskDefinitionReceiveMessage {
+                                self.frameworkInjector.serverConnector.failedProcessingMessage(
+                                    task.message,
+                                    error: error
+                                )
+                            }
+                            self.done(item: item)
+                        }
+                        else if (error as NSError).code == kPendingGroupMessageErrorCode {
+                            // Means processed message is pending group message
+                            DDLogWarn("Task \(item.taskDefinition) group not found for incoming message: \(error)")
+                            self.done(item: item)
+                        }
+                        else if case MediatorReflectedProcessorError.messageWontProcessed(message: _) = error,
+                                let task = item.taskDefinition as? TaskDefinitionReceiveReflectedMessage {
+                            DDLogWarn("Task \(item.taskDefinition) incoming message wont processed: \(error)")
+                            try? self.ackReflectedMessage(reflectID: task.reflectID)
+                            
+                            self.done(item: item)
+                        }
+                        else if let transactionError = error as? TaskExecutionTransactionError,
+                                transactionError == .shouldSkip {
+                            DDLogNotice("Task \(item.taskDefinition) skipped")
+                            self.done(item: item)
+                        }
+                        else {
+                            self.failed(item: item, error: error)
+                        }
                     }
-                    else if case MediatorReflectedProcessorError.messageWontProcessed(message: _) = error,
-                            let task = item.taskDefinition as? TaskDefinitionReceiveReflectedMessage {
-                        DDLogWarn("Task \(item.taskDefinition) incoming message wont processed: \(error)")
-                        try? self.ackReflectedMessage(reflectID: task.reflectID)
-
-                        self.done(item: item)
-                    }
-                    else if let transactionError = error as? TaskExecutionTransactionError,
-                            transactionError == .shouldSkip {
-                        DDLogNotice("Task \(item.taskDefinition) skipped")
-                        self.done(item: item)
-                    }
-                    else {
-                        self.failed(item: item, error: error)
-                    }
-                }
-        }
-        else {
-            DDLogNotice("Task queue (\(queueType.name())) task is still running")
+            }
+            else {
+                DDLogNotice("Task queue (\(queueType.name())) task is still running")
+            }
         }
     }
 

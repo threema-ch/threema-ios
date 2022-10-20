@@ -61,7 +61,7 @@ public class PendingUserNotificationManager: NSObject, PendingUserNotificationMa
     private let entityManager: EntityManager
 
     private static var pendingUserNotifications: [PendingUserNotification]?
-    private static let pendingQueue = DispatchQueue(label: "ch.threema.PendingUserNotificationManager.pendingQueue")
+    public static let pendingQueue = DispatchQueue(label: "ch.threema.PendingUserNotificationManager.pendingQueue")
 
     private static var processedUserNotifications: [String]?
     private static let processedQueue = DispatchQueue(label: "ch.threema.PendingUserNotificationManager.processedQueue")

@@ -125,12 +125,14 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 }
 
 - (void)addLastMessageObservers {
-    [conversation addObserver:self forKeyPath:@"lastMessage.poiAddress" options:0 context:nil];
-    [conversation addObserver:self forKeyPath:@"lastMessage.userack" options:0 context:nil];
-    [conversation addObserver:self forKeyPath:@"lastMessage.read" options:0 context:nil];
-    [conversation addObserver:self forKeyPath:@"lastMessage.delivered" options:0 context:nil];
-    [conversation addObserver:self forKeyPath:@"lastMessage.sendfailed" options:0 context:nil];
-    [conversation addObserver:self forKeyPath:@"lastMessage.sent" options:0 context:nil];
+    if (conversation.lastMessage) {
+        [conversation addObserver:self forKeyPath:@"lastMessage.poiAddress" options:0 context:nil];
+        [conversation addObserver:self forKeyPath:@"lastMessage.userack" options:0 context:nil];
+        [conversation addObserver:self forKeyPath:@"lastMessage.read" options:0 context:nil];
+        [conversation addObserver:self forKeyPath:@"lastMessage.delivered" options:0 context:nil];
+        [conversation addObserver:self forKeyPath:@"lastMessage.sendfailed" options:0 context:nil];
+        [conversation addObserver:self forKeyPath:@"lastMessage.sent" options:0 context:nil];
+    }
 }
 
 - (void)removeObservers {
@@ -240,7 +242,6 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
         return;
     }
     
-    BaseMessage *lastMessage = conversation.lastMessage;
     if (conversation.isGroup) {
         self.statusIcon.image = [UIImage imageNamed:@"MessageStatus_group" inColor:Colors.textLight];
         self.statusIcon.highlightedImage = self.statusIcon.image;
@@ -250,7 +251,11 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
         NSString *iconName;
         UIColor *color = Colors.textLight;
         
-        if ([self isSystemCallMessage:lastMessage]) {
+        BaseMessage *lastMessage = conversation.lastMessage;
+        if (lastMessage == nil) {
+            iconName = nil;
+        }
+        else if ([self isSystemCallMessage:lastMessage]) {
             iconName = @"call";
         }
         else {
@@ -277,9 +282,6 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
                         iconName = @"sending";
                     }
                 }
-            }
-            else if (lastMessage == nil) {
-                iconName = nil;
             }
             else if (!lastMessage.isOwn.boolValue && conversation.contact.isGatewayId == NO) {
                 iconName = @"reply";
@@ -336,18 +338,11 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 }
 
 - (void)updateLastMessagePreview {
-    BaseMessage *lastMessage = conversation.lastMessage;
-    
     // If is PrivateChat, hide a lot of things
     if ([self handlePrivateConversation]) {
         return;
     }
     
-    NSString *messageTextForPreview = [lastMessage previewText];
-    if (messageTextForPreview == nil) {
-        messageTextForPreview = @"";
-    }
-        
     NSString *orgDraftMessage = [MessageDraftStore loadDraftForConversation:self.conversation];
     int maxLength = MIN((int)orgDraftMessage.length - 1, 100);
     NSString *draftMessage = [orgDraftMessage substringToIndex:NSMaxRange([orgDraftMessage rangeOfComposedCharacterSequenceAtIndex:maxLength])];
@@ -366,8 +361,23 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
         
         _draftLabel.textAlignment = [draftMessage textAlignment];
     } else {
-        self.dateLabel.hidden = NO;
         self.draftLabel.hidden = YES;
+
+        BaseMessage *lastMessage = conversation.lastMessage;
+        if (!lastMessage) {
+            self.messagePreviewLabel.text = @"";
+            self.statusIcon.hidden = YES;
+            _callImageView.hidden = YES;
+            _showStatusIcon = NO;
+            return;
+        }
+
+        NSString *messageTextForPreview = [lastMessage previewText];
+        if (messageTextForPreview == nil) {
+            messageTextForPreview = @"";
+        }
+
+        self.dateLabel.hidden = NO;
         NSString *editedString;
         if ([self isSystemCallMessage:lastMessage]) {
             NSString *spaces = @"";
@@ -413,63 +423,63 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
         
         self.messagePreviewLabel.attributedText = [TextStyleUtils makeMentionsAttributedStringForAttributedString:formattedAttributeString textFont:self.messagePreviewLabel.font atColor:[Colors.textLight colorWithAlphaComponent:0.6] messageInfo:TextStyleUtilsMessageInfoOverview application:[UIApplication sharedApplication]];
         self.messagePreviewLabel.textAlignment = [editedString textAlignment];
-    }
-    
-    if ([self isSystemCallMessage:lastMessage] && !draftMessage) {
-        switch ([((SystemMessage *)lastMessage).type integerValue]) {
-            case kSystemMessageCallEnded:
-                if (((SystemMessage *)lastMessage).haveCallTime) {
-                    if (!((SystemMessage *)lastMessage).isOwn.boolValue) {
-                        _callImageView.image = [UIImage imageNamed:@"CallDownGreen" inColor:Colors.green];
+
+        if ([self isSystemCallMessage:lastMessage]) {
+            switch ([((SystemMessage *)lastMessage).type integerValue]) {
+                case kSystemMessageCallEnded:
+                    if (((SystemMessage *)lastMessage).haveCallTime) {
+                        if (!((SystemMessage *)lastMessage).isOwn.boolValue) {
+                            _callImageView.image = [UIImage imageNamed:@"CallDownGreen" inColor:Colors.green];
+                        } else {
+                            _callImageView.image = [UIImage imageNamed:@"CallUpGreen" inColor:Colors.green];
+                        }
                     } else {
-                        _callImageView.image = [UIImage imageNamed:@"CallUpGreen" inColor:Colors.green];
+                        if (!((SystemMessage *)lastMessage).isOwn.boolValue) {
+                            _callImageView.image = [UIImage imageNamed:@"CallLeftRed"];
+                        } else {
+                            _callImageView.image = [UIImage imageNamed:@"CallUpRed"];
+                        }
                     }
-                } else {
+                    break;
+                case kSystemMessageCallRejected:
+                    if (!((SystemMessage *)lastMessage).isOwn.boolValue) {
+                        _callImageView.image = [UIImage imageNamed:@"CallLeftOrange"];
+                    } else {
+                        _callImageView.image = [UIImage imageNamed:@"CallRightRed"];
+                    }
+                    break;
+                case kSystemMessageCallRejectedBusy:
                     if (!((SystemMessage *)lastMessage).isOwn.boolValue) {
                         _callImageView.image = [UIImage imageNamed:@"CallLeftRed"];
                     } else {
-                        _callImageView.image = [UIImage imageNamed:@"CallUpRed"];
+                        _callImageView.image = [UIImage imageNamed:@"CallRightRed"];
                     }
-                }
-                break;
-            case kSystemMessageCallRejected:
-                if (!((SystemMessage *)lastMessage).isOwn.boolValue) {
-                    _callImageView.image = [UIImage imageNamed:@"CallLeftOrange"];
-                } else {
+                    break;
+                case kSystemMessageCallRejectedTimeout:
+                    if (!((SystemMessage *)lastMessage).isOwn.boolValue) {
+                        _callImageView.image = [UIImage imageNamed:@"CallLeftRed"];
+                    } else {
+                        _callImageView.image = [UIImage imageNamed:@"CallRightRed"];
+                    }
+                    break;
+                case kSystemMessageCallRejectedDisabled:
                     _callImageView.image = [UIImage imageNamed:@"CallRightRed"];
-                }
-                break;
-            case kSystemMessageCallRejectedBusy:
-                if (!((SystemMessage *)lastMessage).isOwn.boolValue) {
+                    break;
+                case kSystemMessageCallMissed:
                     _callImageView.image = [UIImage imageNamed:@"CallLeftRed"];
-                } else {
-                    _callImageView.image = [UIImage imageNamed:@"CallRightRed"];
-                }
-                break;
-            case kSystemMessageCallRejectedTimeout:
-                if (!((SystemMessage *)lastMessage).isOwn.boolValue) {
-                    _callImageView.image = [UIImage imageNamed:@"CallLeftRed"];
-                } else {
-                    _callImageView.image = [UIImage imageNamed:@"CallRightRed"];
-                }
-                break;
-            case kSystemMessageCallRejectedDisabled:
-                _callImageView.image = [UIImage imageNamed:@"CallRightRed"];
-                break;
-            case kSystemMessageCallMissed:
-                _callImageView.image = [UIImage imageNamed:@"CallLeftRed"];
-                break;
-            default:
-                _callImageView.image = [UIImage imageNamed:@"CallUpGreen" inColor:Colors.green];
-                break;
+                    break;
+                default:
+                    _callImageView.image = [UIImage imageNamed:@"CallUpGreen" inColor:Colors.green];
+                    break;
+            }
+
+            _callImageHeight.constant = self.messagePreviewLabel.font.pointSize * 1.2;
+            _callImageView.hidden = NO;
+        } else {
+            _callImageView.hidden = YES;
         }
-        
-        _callImageHeight.constant = self.messagePreviewLabel.font.pointSize * 1.2;
-        _callImageView.hidden = NO;
-    } else {
-        _callImageView.hidden = YES;
     }
-    
+
     _showStatusIcon = self.statusIcon.hidden == NO;
     
     // make sure typing indicator is in sync
@@ -478,6 +488,11 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 
 - (void)updateDateLabel {
     BaseMessage *lastMessage = conversation.lastMessage;
+    if (!lastMessage) {
+        self.dateLabel.text = nil;
+        return;
+    }
+
     if (lastMessage.userackDate && lastMessage.isOwn.boolValue) {
         self.dateLabel.text = [ThreemaUtilityObjC formatShortLastMessageDate:conversation.lastMessage.userackDate];
     } else if (lastMessage.read.boolValue && lastMessage.isOwn.boolValue) {
@@ -639,7 +654,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
         }
     }
     
-    NSString *messagePreview = [conversation.lastMessage previewText];
+    NSString *messagePreview = conversation.lastMessage != nil ? [conversation.lastMessage previewText] : @"";
     NSString *draftPreview = [MessageDraftStore loadDraftForConversation:self.conversation];
     if (draftPreview.length > 0) {
         
@@ -660,7 +675,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
         [text appendFormat:@"%@ ", [BundleUtil localizedStringForKey:@"from"]];
         [text appendFormat:@"%@. ", [BundleUtil localizedStringForKey:@"me"]];
         [text appendFormat:@"%@. ", draftPreview];
-        [text appendFormat:@"%@. ", [conversation.lastMessage accessibilityMessageStatus]];
+        [text appendFormat:@"%@. ", conversation.lastMessage != nil ? [conversation.lastMessage accessibilityMessageStatus] : @""];
         return text;
     }
     
@@ -672,7 +687,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
         return text;
     }
     
-    [text appendFormat:@"%@. ", [DateFormatter accessibilityRelativeDayTime:conversation.lastMessage.displayDate]];
+    [text appendFormat:@"%@. ", conversation.lastMessage != nil ? [DateFormatter accessibilityRelativeDayTime:conversation.lastMessage.displayDate] : @""];
     if (messagePreview.length > 0) {
         if (conversation.unreadMessageCount.intValue > 0) {
             [text appendFormat:@"%@. ", [BundleUtil localizedStringForKey:@"unread"]];

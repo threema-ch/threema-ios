@@ -113,12 +113,15 @@ public class VoIPCallSender {
             )
         
             if wait, !Thread.isMainThread {
-                let dispatchGroup = DispatchGroup()
-                dispatchGroup.enter()
+                var dispatchGroup: DispatchGroup? = DispatchGroup()
+                dispatchGroup?.enter()
+                
                 MessageSender.send(msg, onCompletion: {
-                    dispatchGroup.leave()
+                    dispatchGroup?.leave()
+                    dispatchGroup = nil
                 })
-                dispatchGroup.wait()
+                
+                dispatchGroup?.wait()
             }
             else {
                 MessageSender.send(msg, onCompletion: nil)

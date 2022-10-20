@@ -499,6 +499,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
                 
                 group = Group(
                     myIdentityStore: myIdentityStoreMock,
+                    userSettings: userSettingsMock,
                     groupEntity: groupEntity,
                     conversation: conversation,
                     lastSyncRequest: nil
@@ -644,6 +645,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
 
                 group = Group(
                     myIdentityStore: myIdentityStoreMock,
+                    userSettings: userSettingsMock,
                     groupEntity: groupEntity,
                     conversation: conversation,
                     lastSyncRequest: nil
@@ -768,6 +770,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
                 
                 group = Group(
                     myIdentityStore: myIdentityStoreMock,
+                    userSettings: UserSettingsMock(),
                     groupEntity: groupEntity,
                     conversation: conversation,
                     lastSyncRequest: nil
@@ -915,6 +918,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
                     
                         group = Group(
                             myIdentityStore: myIdentityStoreMock,
+                            userSettings: UserSettingsMock(),
                             groupEntity: groupEntity,
                             conversation: conversation,
                             lastSyncRequest: nil

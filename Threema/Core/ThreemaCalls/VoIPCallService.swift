@@ -1210,134 +1210,138 @@ extension VoIPCallService {
     /// - parameter action: VoIPCallUserAction
     /// - parameter completion: Completion block
     private func createPeerConnectionForInitiator(action: VoIPCallUserAction, completion: @escaping (() -> Void)) {
-        guard let contact = BusinessInjector().entityManager.entityFetcher.contact(for: contactIdentity) else {
-            return
-        }
+        let entityManager = BusinessInjector().entityManager
         
-        FeatureMask.check(Int(FEATURE_MASK_VOIP_VIDEO), forContacts: [contact]) { unsupportedContacts in
-            self.threemaVideoCallAvailable = false
-            if unsupportedContacts!.isEmpty && UserSettings.shared().enableVideoCall {
-                self.threemaVideoCallAvailable = true
-            }
-            self.peerConnectionClient?.peerConnection.close()
-            self.peerConnectionClient = nil
-            let forceTurn: Bool = Int(truncating: contact.verificationLevel) == kVerificationLevelUnverified ||
-                UserSettings.shared()?.alwaysRelayCalls == true
-            let peerConnectionParameters = VoIPCallPeerConnectionClient.PeerConnectionParameters(
-                isVideoCallAvailable: self.threemaVideoCallAvailable,
-                videoCodecHwAcceleration: self.threemaVideoCallAvailable,
-                forceTurn: forceTurn,
-                gatherContinually: true,
-                allowIpv6: UserSettings.shared().enableIPv6,
-                isDataChannelAvailable: false
-            )
-            self.callID = VoIPCallID.generate()
-            
-            DDLogNotice(
-                "VoipCallService: [cid=\(self.callID!.callID)]: Handle new call with \(contact.identity), we are the caller"
-            )
-            
-            if Int(truncating: contact.verificationLevel) == kVerificationLevelUnverified {
-                DDLogNotice("VoipCallService: [cid=\(self.callID!.callID)]: Force TURN since contact is unverified")
-            }
-            if let userSettings = UserSettings.shared(), userSettings.alwaysRelayCalls == true {
-                DDLogNotice("VoipCallService: [cid=\(self.callID!.callID)]: Force TURN as requested by user")
+        entityManager.performBlockAndWait {
+            guard let contact = entityManager.entityFetcher.contact(for: self.contactIdentity) else {
+                return
             }
             
-            VoIPCallPeerConnectionClient.instantiate(
-                contactIdentity: contact.identity,
-                callID: self.callID,
-                peerConnectionParameters: peerConnectionParameters
-            ) { result in
-                do {
-                    self.peerConnectionClient = try result.get()
+            FeatureMask.check(Int(FEATURE_MASK_VOIP_VIDEO), forContacts: [contact]) { unsupportedContacts in
+                self.threemaVideoCallAvailable = false
+                if unsupportedContacts!.isEmpty && UserSettings.shared().enableVideoCall {
+                    self.threemaVideoCallAvailable = true
                 }
-                catch {
-                    self.callID = nil
-                    self.callCantCreateOffer(error: error)
-                    return
+                self.peerConnectionClient?.peerConnection.close()
+                self.peerConnectionClient = nil
+                let forceTurn: Bool = Int(truncating: contact.verificationLevel) == kVerificationLevelUnverified ||
+                    UserSettings.shared()?.alwaysRelayCalls == true
+                let peerConnectionParameters = VoIPCallPeerConnectionClient.PeerConnectionParameters(
+                    isVideoCallAvailable: self.threemaVideoCallAvailable,
+                    videoCodecHwAcceleration: self.threemaVideoCallAvailable,
+                    forceTurn: forceTurn,
+                    gatherContinually: true,
+                    allowIpv6: UserSettings.shared().enableIPv6,
+                    isDataChannelAvailable: false
+                )
+                self.callID = VoIPCallID.generate()
+                
+                DDLogNotice(
+                    "VoipCallService: [cid=\(self.callID!.callID)]: Handle new call with \(contact.identity), we are the caller"
+                )
+                
+                if Int(truncating: contact.verificationLevel) == kVerificationLevelUnverified {
+                    DDLogNotice("VoipCallService: [cid=\(self.callID!.callID)]: Force TURN since contact is unverified")
                 }
-                self.peerConnectionClient?.delegate = self
-
-                if self.callKitManager == nil {
-                    self.callKitManager = VoIPCallKitManager()
+                if let userSettings = UserSettings.shared(), userSettings.alwaysRelayCalls == true {
+                    DDLogNotice("VoipCallService: [cid=\(self.callID!.callID)]: Force TURN as requested by user")
                 }
-
-                self.peerConnectionClient?.offer(completion: { sdp, sdpError in
-                    if let error = sdpError {
+                
+                VoIPCallPeerConnectionClient.instantiate(
+                    contactIdentity: contact.identity,
+                    callID: self.callID,
+                    peerConnectionParameters: peerConnectionParameters
+                ) { result in
+                    do {
+                        self.peerConnectionClient = try result.get()
+                    }
+                    catch {
                         self.callID = nil
                         self.callCantCreateOffer(error: error)
                         return
                     }
-                    guard let sdp = sdp else {
-                        self.callID = nil
-                        self.callCantCreateOffer(error: nil)
-                        return
+                    self.peerConnectionClient?.delegate = self
+
+                    if self.callKitManager == nil {
+                        self.callKitManager = VoIPCallKitManager()
                     }
 
-                    let offerMessage = VoIPCallOfferMessage(
-                        offer: sdp,
-                        contactIdentity: contact.identity,
-                        features: nil,
-                        isVideoAvailable: self.threemaVideoCallAvailable,
-                        callID: self.callID!,
-                        completion: nil
-                    )
-                    self.voIPCallSender.sendVoIPCall(offer: offerMessage)
-                    self.state = .sendOffer
-                    DispatchQueue.main.async {
-                        self.initCallTimeoutTimer = Timer.scheduledTimer(
-                            withTimeInterval: self.kIncomingCallTimeout,
-                            repeats: false,
-                            block: { _ in
-                                BackgroundTaskManager.shared.newBackgroundTask(
-                                    key: kAppVoIPBackgroundTask,
-                                    timeout: Int(kAppPushBackgroundTaskTime)
-                                ) {
-                                    DispatchQueue.global(qos: .userInitiated).async {
-                                        RTCAudioSession.sharedInstance().isAudioEnabled = false
-                                        DDLogNotice("VoipCallService: [cid=\(self.callID!)]: Call ringing timeout")
-                                        let hangupMessage = VoIPCallHangupMessage(
-                                            contactIdentity: contact.identity,
-                                            callID: self.callID!,
-                                            completion: nil
-                                        )
-                                        self.voIPCallSender.sendVoIPCallHangup(hangupMessage: hangupMessage)
-                                        self.state = .ended
-                                        self.disconnectPeerConnection()
-                                        DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(1)) {
-                                            self.dismissCallView(rejected: false, completion: {
-                                                self.callKitManager?.endCall()
-                                                self.invalidateInitCallTimeout()
-                                            
-                                                let rootVC = UIApplication.shared.windows.first!.rootViewController!
-                                                UIAlertTemplate.showAlert(
-                                                    owner: rootVC,
-                                                    title: BundleUtil
-                                                        .localizedString(forKey: "call_voip_not_supported_title"),
-                                                    message: BundleUtil
-                                                        .localizedString(forKey: "call_contact_not_reachable")
-                                                )
-                                            })
+                    self.peerConnectionClient?.offer(completion: { sdp, sdpError in
+                        if let error = sdpError {
+                            self.callID = nil
+                            self.callCantCreateOffer(error: error)
+                            return
+                        }
+                        guard let sdp = sdp else {
+                            self.callID = nil
+                            self.callCantCreateOffer(error: nil)
+                            return
+                        }
+
+                        let offerMessage = VoIPCallOfferMessage(
+                            offer: sdp,
+                            contactIdentity: self.contactIdentity,
+                            features: nil,
+                            isVideoAvailable: self.threemaVideoCallAvailable,
+                            callID: self.callID!,
+                            completion: nil
+                        )
+                        self.voIPCallSender.sendVoIPCall(offer: offerMessage)
+                        self.state = .sendOffer
+                        DispatchQueue.main.async {
+                            self.initCallTimeoutTimer = Timer.scheduledTimer(
+                                withTimeInterval: self.kIncomingCallTimeout,
+                                repeats: false,
+                                block: { _ in
+                                    BackgroundTaskManager.shared.newBackgroundTask(
+                                        key: kAppVoIPBackgroundTask,
+                                        timeout: Int(kAppPushBackgroundTaskTime)
+                                    ) {
+                                        DispatchQueue.global(qos: .userInitiated).async {
+                                            RTCAudioSession.sharedInstance().isAudioEnabled = false
+                                            DDLogNotice("VoipCallService: [cid=\(self.callID!)]: Call ringing timeout")
+                                            let hangupMessage = VoIPCallHangupMessage(
+                                                contactIdentity: contact.identity,
+                                                callID: self.callID!,
+                                                completion: nil
+                                            )
+                                            self.voIPCallSender.sendVoIPCallHangup(hangupMessage: hangupMessage)
+                                            self.state = .ended
+                                            self.disconnectPeerConnection()
+                                            DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(1)) {
+                                                self.dismissCallView(rejected: false, completion: {
+                                                    self.callKitManager?.endCall()
+                                                    self.invalidateInitCallTimeout()
+                                                
+                                                    let rootVC = UIApplication.shared.windows.first!.rootViewController!
+                                                    UIAlertTemplate.showAlert(
+                                                        owner: rootVC,
+                                                        title: BundleUtil
+                                                            .localizedString(forKey: "call_voip_not_supported_title"),
+                                                        message: BundleUtil
+                                                            .localizedString(forKey: "call_contact_not_reachable")
+                                                    )
+                                                })
+                                            }
                                         }
                                     }
                                 }
-                            }
+                            )
+                        }
+                        self.alreadyAccepted = true
+                        self.presentCallView(
+                            contactIdentity: self.contactIdentity!,
+                            alreadyAccepted: true,
+                            isCallInitiator: true,
+                            isThreemaVideoCallAvailable: self.threemaVideoCallAvailable,
+                            videoActive: action.action == .callWithVideo,
+                            receivingVideo: false,
+                            viewWasHidden: false
                         )
-                    }
-                    self.alreadyAccepted = true
-                    self.presentCallView(
-                        contactIdentity: contact.identity,
-                        alreadyAccepted: true,
-                        isCallInitiator: true,
-                        isThreemaVideoCallAvailable: self.threemaVideoCallAvailable,
-                        videoActive: action.action == .callWithVideo,
-                        receivingVideo: false,
-                        viewWasHidden: false
-                    )
-                    self.callKitManager?.startCall(for: contact.identity)
-                    completion()
-                })
+                        self.callKitManager?.startCall(for: self.contactIdentity!)
+                        completion()
+                    })
+                }
             }
         }
     }
@@ -2155,13 +2159,14 @@ extension VoIPCallService {
             
         case .rejected:
             // add call message
-            guard let identity = contactIdentity,
-                  let conversation = entityManager.conversation(for: identity, createIfNotExisting: true) else {
-                return
+            entityManager.performBlockAndWait {
+                guard let identity = self.contactIdentity,
+                      let conversation = entityManager.conversation(for: identity, createIfNotExisting: true) else {
+                    return
+                }
+                self.addRejectedMessageToConversation(contactIdentity: identity, reason: kSystemMessageCallRejected)
+                utilities.unarchive(conversation)
             }
-            addRejectedMessageToConversation(contactIdentity: identity, reason: kSystemMessageCallRejected)
-            utilities.unarchive(conversation)
-
         case .rejectedTimeout:
             // add call message
             guard let identity = contactIdentity,

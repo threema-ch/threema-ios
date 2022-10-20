@@ -157,8 +157,7 @@ import Foundation
             
             if let baseMessage = entityManager.entityFetcher.message(with: self.messageID!.decodeHex()),
                let conversation = baseMessage.conversation,
-               let contact = conversation.contact,
-               let lastMessage = conversation.lastMessage {
+               let contact = conversation.contact {
                 
                 if baseMessage.userackDate == nil || baseMessage.userack.boolValue != true {
 
@@ -176,7 +175,7 @@ import Foundation
                                         baseMessage.userack = NSNumber(value: true)
                                         baseMessage.userackDate = Date()
 
-                                        if baseMessage.id == lastMessage.id {
+                                        if baseMessage.id == conversation.lastMessage?.id {
                                             conversation.lastMessage = baseMessage
                                         }
                                     }

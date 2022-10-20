@@ -437,9 +437,11 @@ final class ChatProfileView: UIStackView {
     
     private func updateGroupMembersListLabel() {
         // TODO: (IOS-2404) Do a cleaner implementation
-        let group = GroupManager(entityManager: EntityManager()).getGroup(conversation: conversation)
-        
-        groupMembersListLabel.text = group?.membersList ?? ""
+        let entityManager = EntityManager()
+        entityManager.performBlockAndWait {
+            let group = GroupManager(entityManager: entityManager).getGroup(conversation: self.conversation)
+            self.groupMembersListLabel.text = group?.membersList ?? ""
+        }
     }
     
     private func updateAccessibilityLabel() {

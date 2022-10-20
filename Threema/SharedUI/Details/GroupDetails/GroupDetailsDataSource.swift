@@ -421,8 +421,11 @@ extension GroupDetailsDataSource {
         let numberOfInlineMembers = configuration.maxNumberOfMembersShownInline
 
         // Add members
-        var sortedMembers = ArraySlice(group.sortedMembers())
-        
+        var sortedMembers: ArraySlice<Group.Member>!
+        entityManager.performBlockAndWait {
+            sortedMembers = ArraySlice(self.group.sortedMembers)
+        }
+
         if limited {
             sortedMembers = sortedMembers.prefix(numberOfInlineMembers)
         }

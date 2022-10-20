@@ -48,6 +48,8 @@ class NotificationService: UNNotificationServiceExtension {
         _ request: UNNotificationRequest,
         withContentHandler contentHandler: @escaping (UNNotificationContent) -> Void
     ) {
+        PromiseKitConfiguration.configurePromiseKit()
+        
         guard !NotificationService.didJustReportCall else {
             businessInjector.serverConnector.disconnect(initiator: .notificationExtension)
             

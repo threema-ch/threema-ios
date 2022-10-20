@@ -26,11 +26,11 @@ public extension Group {
     /// - Returns: Member list without Me or unknown contacts
     @available(*, deprecated, message: "Only use in Objective-C. Otherwise use `sortedMembers(userSettings:)`")
     @objc var _sortedMembersObjC: [Contact] {
-        sortedMembers().compactMap { member in
+        sortedMembers.compactMap { member in
             if case let .contact(contact) = member {
                 return contact
             }
-            
+
             return nil
         }
     }

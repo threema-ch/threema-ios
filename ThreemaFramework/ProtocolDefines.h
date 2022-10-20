@@ -75,7 +75,6 @@ static Float32 const kWebClientMediaQuality = 0.6;
 #define kAudioChannelsLow 1
 #define kAudioChannelsHigh 2
 
-#define kClientTempKeyMaxAge 7*86400
 #define kGroupPeriodicSyncInterval 7*86400
 #define kGroupSyncRequestInterval 1*86400
 

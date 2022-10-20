@@ -114,8 +114,9 @@ import ThreemaFramework
             throw SafeError.invalidMasterKey
         }
         
-        let decryptedData = Data(data)
-        let compressedData: Data = try decryptedData.gzipped()
+        let unencryptedData = Data(data)
+        // Use gzip for backward compatibility, but don't actually compress (to avoid compression oracles)
+        let compressedData: Data = try unencryptedData.gzipped(level: .noCompression)
         
         if let nonce: Data = BytesUtility.generateRandomBytes(length: 24) {
             let crypto = NaClCrypto()
@@ -161,9 +162,9 @@ import ThreemaFramework
             nonce: Data(nonce)
         )!
         
-        let unpressedData = try decryptedData.gunzipped()
+        let uncompressedData = try decryptedData.gunzipped()
         
-        return Array(unpressedData)
+        return Array(uncompressedData)
     }
     
     func isDateOlderThenDays(date: Date?, days: Int) -> Bool {

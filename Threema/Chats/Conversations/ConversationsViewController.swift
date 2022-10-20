@@ -149,10 +149,10 @@ class ConversationsViewController: ThemedTableViewController {
             setSelection(for: selectedConversation)
         }
         
+        updateArchivedButton()
         archivedChatsButton.adjustsImageSizeForAccessibilityContentSizeCategory = true
         archivedChatsButton.titleLabel?.adjustsFontForContentSizeCategory = true
         archivedChatsButton.titleLabel?.adjustsFontSizeToFitWidth = true
-        updateArchivedButton()
     }
     
     override func viewWillDisappear(_ animated: Bool) {

@@ -745,6 +745,7 @@ class UserNotificationManagerTests: XCTestCase {
             
             groupManagerMock.getGroupReturns = Group(
                 myIdentityStore: myIdentityStoreMock,
+                userSettings: userSettingsMock,
                 groupEntity: groupEntity,
                 conversation: conversation,
                 lastSyncRequest: nil
@@ -848,6 +849,7 @@ class UserNotificationManagerTests: XCTestCase {
 
         groupManagerMock.getGroupReturns = Group(
             myIdentityStore: myIdentityStoreMock,
+            userSettings: userSettingsMock,
             groupEntity: groupEntity,
             conversation: conversation,
             lastSyncRequest: nil

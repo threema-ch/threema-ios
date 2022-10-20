@@ -37,10 +37,6 @@ public class MultiDeviceManager: MultiDeviceManagerProtocol {
 
     required init(serverConnector: ServerConnectorProtocol) {
         self.serverConnector = serverConnector
-
-        // All then-type handlers to run on a background, "finalizers" like done or ctach runs on main queue
-        PromiseKit.conf.Q.map = .global()
-        PromiseKit.conf.Q.return = .main
     }
 
     public convenience init() {

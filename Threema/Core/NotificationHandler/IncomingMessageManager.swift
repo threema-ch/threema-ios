@@ -211,11 +211,13 @@ import ThreemaFramework
                 manager
                     .startTimedUserNotification(pendingUserNotification: pendingUserNotification)
                     .done { _ in
-                        self.updateUnreadMessagesCount(
-                            abstractMessage: pendingUserNotification.abstractMessage,
-                            baseMessage: pendingUserNotification.baseMessage
-                        )
-                        seal(false)
+                        PendingUserNotificationManager.pendingQueue.sync {
+                            self.updateUnreadMessagesCount(
+                                abstractMessage: pendingUserNotification.abstractMessage,
+                                baseMessage: pendingUserNotification.baseMessage
+                            )
+                            seal(false)
+                        }
                     }
             }
         }

@@ -41,6 +41,8 @@ class RootNavigationController: UINavigationController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        PromiseKitConfiguration.configurePromiseKit()
+        
         setAppGroup()
         Colors.initTheme()
         overrideUserInterfaceStyle = UserSettings.shared().darkTheme ? .dark : .light

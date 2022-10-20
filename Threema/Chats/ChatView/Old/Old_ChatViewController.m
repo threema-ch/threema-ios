@@ -543,7 +543,9 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     }
     
     if (conversation.isGroup) {
-        [chatBar setupMentions:group._sortedMembersObjC];
+        [entityManager performBlockAndWait:^{
+            [chatBar setupMentions:group._sortedMembersObjC];
+        }];
     }
 }
 
@@ -1224,7 +1226,9 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     [self.chatContent reloadData];
     [self.chatContent layoutIfNeeded];
     if (conversation.isGroup) {
-        [chatBar setupMentions:group._sortedMembersObjC];
+        [entityManager performBlockAndWait:^{
+            [chatBar setupMentions:group._sortedMembersObjC];
+        }];
     }
     
     CGFloat newContentOffset = contentOffsetFromBottom - self.chatContent.frame.size.height + self.chatContent.contentSize.height;
@@ -1261,12 +1265,13 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 }
 
 - (void)updateConversationLastMessage {
-    [entityManager performBlockAndWait:^{
+    [entityManager performSyncBlockAndSafe:^{
         BaseMessage *baseMessage = [messageFetcher lastMessage];
-        if (![baseMessage.objectID isEqual:conversation.lastMessage.objectID]) {
-            [entityManager performSyncBlockAndSafe:^{
-                conversation.lastMessage = baseMessage;
-            }];
+        if (baseMessage && conversation.lastMessage && ![baseMessage.objectID isEqual:conversation.lastMessage.objectID]) {
+            conversation.lastMessage = baseMessage;
+        }
+        else if (!baseMessage) {
+            conversation.lastMessage = nil;
         }
     }];
 }

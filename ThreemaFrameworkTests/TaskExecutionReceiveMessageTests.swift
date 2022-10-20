@@ -183,9 +183,11 @@ class TaskExecutionReceiveMessageTests: XCTestCase {
         conversation.contact = nil
         conversation.groupMyIdentity = myIdentityStoreMock.identity
 
+        let userSettingsMock = UserSettingsMock()
         let groupManagerMock = GroupManagerMock()
         groupManagerMock.getGroupReturns = Group(
             myIdentityStore: MyIdentityStoreMock(),
+            userSettings: userSettingsMock,
             groupEntity: groupEntity,
             conversation: conversation,
             lastSyncRequest: nil
@@ -205,7 +207,7 @@ class TaskExecutionReceiveMessageTests: XCTestCase {
             messageSender: messageSenderMock,
             multiDeviceManager: MultiDeviceManagerMock(),
             myIdentityStore: myIdentityStoreMock,
-            userSettings: UserSettingsMock(),
+            userSettings: userSettingsMock,
             serverConnector: serverConnectorMock,
             mediatorMessageProtocol: mediatorMessageProtocolMock,
             messageProcessor: messageProcessorMock

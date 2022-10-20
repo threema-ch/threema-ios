@@ -120,9 +120,11 @@ public class GroupManager: NSObject, GroupManagerProtocol {
         var removedMembers = [String]()
 
         // If group already exists get old and removed members
-        if let oldConversation = getConversation(for: GroupIdentity(id: groupID, creator: creator)) {
-            oldMembers = oldConversation.members.map(\.identity)
-            removedMembers = oldMembers.filter { !members.contains($0) }
+        entityManager.performBlockAndWait {
+            if let oldConversation = self.getConversation(for: GroupIdentity(id: groupID, creator: creator)) {
+                oldMembers = oldConversation.members.map(\.identity)
+                removedMembers = oldMembers.filter { !members.contains($0) }
+            }
         }
 
         return createOrUpdateDB(
@@ -136,16 +138,18 @@ public class GroupManager: NSObject, GroupManagerProtocol {
             }
 
             var newMembers: Set<String>?
-            if !oldMembers.isEmpty,
-               let conversation = self
-               .getConversation(for: GroupIdentity(id: group.groupID, creator: group.groupCreatorIdentity)) {
-                newMembers = Set(
-                    conversation.members
-                        .filter { !oldMembers.contains($0.identity) }
-                        .map(\.identity)
-                )
-                if newMembers?.isEmpty == true {
-                    newMembers = nil
+            self.entityManager.performBlockAndWait {
+                if !oldMembers.isEmpty,
+                   let conversation = self
+                   .getConversation(for: GroupIdentity(id: group.groupID, creator: group.groupCreatorIdentity)) {
+                    newMembers = Set(
+                        conversation.members
+                            .filter { !oldMembers.contains($0.identity) }
+                            .map(\.identity)
+                    )
+                    if newMembers?.isEmpty == true {
+                        newMembers = nil
+                    }
                 }
             }
 
@@ -407,6 +411,7 @@ public class GroupManager: NSObject, GroupManagerProtocol {
 
                         group = Group(
                             myIdentityStore: self.myIdentityStore,
+                            userSettings: self.userSettings,
                             groupEntity: groupEntity,
                             conversation: conversation,
                             lastSyncRequest: lastSyncRequest?.lastSyncRequest
@@ -458,6 +463,7 @@ public class GroupManager: NSObject, GroupManagerProtocol {
 
                             group = Group(
                                 myIdentityStore: self.myIdentityStore,
+                                userSettings: self.userSettings,
                                 groupEntity: groupEntity,
                                 conversation: conversation,
                                 lastSyncRequest: lastSyncRequest?.lastSyncRequest
@@ -1209,6 +1215,7 @@ public class GroupManager: NSObject, GroupManagerProtocol {
 
         return Group(
             myIdentityStore: myIdentityStore,
+            userSettings: userSettings,
             groupEntity: groupEntity,
             conversation: conversation,
             lastSyncRequest: lastSyncRequest?.lastSyncRequest
@@ -1319,7 +1326,12 @@ public class GroupManager: NSObject, GroupManagerProtocol {
         }
         
         func runGroupPhotoTask() -> Promise<Void> {
-            guard let photoData = group.photo?.data else {
+            var photoData: Data?
+            entityManager.performBlockAndWait {
+                photoData = group.photo?.data
+            }
+
+            guard let data = photoData else {
                 // 7. If the group has no profile picture, send a `delete-profile-picture` group
                 // control message to the sender.
                 let task = createDeletePhotoTask(for: group, to: toMembers)
@@ -1328,7 +1340,7 @@ public class GroupManager: NSObject, GroupManagerProtocol {
             
             // 6. If the group has a profile picture, send a `set-profile-picture` group control
             // message to the sender.
-            return sendPhoto(to: group, imageData: photoData, toMembers: toMembers)
+            return sendPhoto(to: group, imageData: data, toMembers: toMembers)
         }
         
         return firstly {

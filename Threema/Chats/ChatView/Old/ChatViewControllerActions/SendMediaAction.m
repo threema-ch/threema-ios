@@ -329,8 +329,11 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
                         [self hideVideoEncodeProgressHUD];
                     });
                     return;
-                } else {
+                } else if (item) {
                     [itemArray addObject:item];
+                }
+                else {
+                    DDLogError(@"Unknown error wihle processing asset");
                 }
             } else {
                 NSURL *url = assets[i];

@@ -756,8 +756,15 @@ open class MediaPreviewViewController: UIViewController, UIGestureRecognizerDele
                     self.view.layoutIfNeeded()
                 },
                 completion: { _ in
+                    guard self.largeCollectionView.numberOfSections > 0,
+                          self.largeCollectionView.numberOfItems(inSection: 0) > 0 else {
+                        return
+                    }
+                    guard let currentlyVisibleItem = self.getCurrentlyVisibleItem() else {
+                        return
+                    }
                     self.largeCollectionView.scrollToItem(
-                        at: self.getCurrentlyVisibleItem()!,
+                        at: currentlyVisibleItem,
                         at: .centeredHorizontally,
                         animated: false
                     )

@@ -89,9 +89,12 @@ extension VoIPCallKitManager {
         update.supportsHolding = false
         update.supportsDTMF = false
         update.hasVideo = false
-        if let contact = BusinessInjector().entityManager.entityFetcher.contact(for: contactIdentity) {
-            update.localizedCallerName = contact.displayName
-            callerName = contact.displayName
+        let entityManager = BusinessInjector().entityManager
+        entityManager.performBlockAndWait {
+            if let contact = entityManager.entityFetcher.contact(for: contactIdentity) {
+                update.localizedCallerName = contact.displayName
+                self.callerName = contact.displayName
+            }
         }
         
         RTCAudioSession.sharedInstance().useManualAudio = true
@@ -141,9 +144,12 @@ extension VoIPCallKitManager {
             let update = CXCallUpdate()
             update.remoteHandle = CXHandle(type: .generic, value: contactIdentity)
             update.hasVideo = false
-            if let contact = BusinessInjector().entityManager.entityFetcher.contact(for: contactIdentity) {
-                update.localizedCallerName = contact.displayName
-                self.callerName = contact.displayName
+            let entityManager = BusinessInjector().entityManager
+            entityManager.performBlockAndWait {
+                if let contact = entityManager.entityFetcher.contact(for: contactIdentity) {
+                    update.localizedCallerName = contact.displayName
+                    self.callerName = contact.displayName
+                }
             }
             self.provider.reportCall(with: self.uuid!, updated: update)
         })

@@ -127,14 +127,19 @@ class CallViewController: UIViewController {
     private var audioPlayer: AVAudioPlayer?
     
     private var audioRouteChangeObserver: NSObjectProtocol?
-        
+    private var enterForegroundObserver: NSObjectProtocol?
+
     required init?(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)
     }
         
     deinit {
-        if let observer = audioRouteChangeObserver {
-            NotificationCenter.default.removeObserver(observer)
+        if let audioObserver = audioRouteChangeObserver {
+            NotificationCenter.default.removeObserver(audioObserver)
+        }
+        
+        if let foregroundObserver = enterForegroundObserver {
+            NotificationCenter.default.removeObserver(foregroundObserver)
         }
     }
     
@@ -217,6 +222,16 @@ class CallViewController: UIViewController {
                     }
                 default: break
                 }
+            }
+        }
+        
+        enterForegroundObserver = NotificationCenter.default.addObserver(
+            forName: UIApplication.willEnterForegroundNotification,
+            object: nil,
+            queue: .main
+        ) { [unowned self] _ in
+            if !self.isNavigationVisible() {
+                self.localVideoViewConstraintBottom.isActive = true
             }
         }
         

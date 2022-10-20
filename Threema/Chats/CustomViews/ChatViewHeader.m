@@ -327,8 +327,10 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     _groupImagesView.autoresizingMask = UIViewAutoresizingFlexibleWidth;
     [_groupImagesView addSubview: imageContainer];
     _groupImagesView.contentSize = imageContainer.bounds.size;
-    
-    _groupImagesView.accessibilityLabel = _group.membersList;
+
+    [_entityManager performBlockAndWait:^{
+        _groupImagesView.accessibilityLabel = _group.membersList;
+    }];
     _groupImagesView.accessibilityTraits = UIAccessibilityTraitButton;
     _groupImagesView.isAccessibilityElement = YES;
     _groupImagesView.accessibilityIgnoresInvertColors = true;
@@ -363,18 +365,12 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     __block CGRect imageRect = CGRectMake(margin, 0.0, width, width);
     imageRect = [RectUtil rect:imageRect centerVerticalIn:imageContainer.frame];
     
-    NSArray<Contact *> *sortedMembers = _group._sortedMembersObjC;
-    NSMutableArray *memberObjectIds = [[NSMutableArray alloc] initWithCapacity:sortedMembers.count];
-    for (int i = 0; i < sortedMembers.count; i++) {
-        [memberObjectIds insertObject:sortedMembers[i].objectID atIndex:i];
-    }
-    
     EntityManager *backgroundEntityManager = [[EntityManager alloc] initWithChildContextForBackgroundProcess:true];
     EntityManager *mainThreadEntityManager = [[EntityManager alloc] initWithChildContextForBackgroundProcess:false];
     
     [backgroundEntityManager performBlock:^{
-        for (NSManagedObjectID *objectId in memberObjectIds) {
-            Contact *contact = [[backgroundEntityManager entityFetcher] existingObjectWithID:objectId];
+        for (NSString *identity in _group.allMemberIdentities) {
+            Contact *contact = [[backgroundEntityManager entityFetcher] contactForId:identity];
             if (contact == nil) {
                 continue;
             }

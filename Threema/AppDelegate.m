@@ -162,6 +162,8 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)_launchOptions
 {
+    [PromiseKitConfiguration configurePromiseKit];
+    
     shouldLoadUIForEnterForeground = false;
     isEnterForeground = false;
     databaseImported = false;

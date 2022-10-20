@@ -18,8 +18,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-// Configuration settings file format documentation can be found at:
-// https://help.apple.com/xcode/#/dev745c5c974
+import Foundation
 
-VERSION_NUMBER=4.8.3
-BUILD_NUMBER=2799
+@objc public class PromiseKitConfiguration: NSObject {
+    @objc public static func configurePromiseKit() {
+        // All then-type handlers to run on a background, "finalizers" like done or catch runs on main queue
+        PromiseKit.conf.Q.map = .global()
+        PromiseKit.conf.Q.return = .main
+    }
+}

@@ -309,6 +309,7 @@ class MediatorReflectedOutgoingMessageProcessorTests: XCTestCase {
 
             group = Group(
                 myIdentityStore: MyIdentityStoreMock(),
+                userSettings: UserSettingsMock(),
                 groupEntity: groupEntity,
                 conversation: conversation,
                 lastSyncRequest: nil

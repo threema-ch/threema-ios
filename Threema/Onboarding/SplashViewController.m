@@ -806,7 +806,9 @@
 
     AppSetupState *appSetupState = [[AppSetupState alloc] initWithMyIdentityStore:[MyIdentityStore sharedMyIdentityStore]];
     [appSetupState appSetupCompleted];
-
+    
+    [WorkDataFetcher checkUpdateWorkDataForce:YES onCompletion:nil onError:nil];
+    
     [self showApplicaitonUI];
 }
 

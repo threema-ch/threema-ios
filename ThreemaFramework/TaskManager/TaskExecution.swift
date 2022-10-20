@@ -220,10 +220,13 @@ class TaskExecution: NSObject {
                     return
                 }
                 
-                DispatchQueue.global(qos: .userInitiated).async {
+                DispatchQueue.global().async {
                     let chatMessageAck = DispatchGroup()
                     let notificationCenter = NotificationCenter.default
                     var messageAckObserver: NSObjectProtocol?
+                    
+                    let operationQueue = OperationQueue()
+                    operationQueue.qualityOfService = .userInitiated
 
                     messageAckObserver = notificationCenter.addObserver(
                         forName: TaskManager.chatMessageAckObserverName(
@@ -231,7 +234,7 @@ class TaskExecution: NSObject {
                             toIdentity: message.toIdentity
                         ),
                         object: nil,
-                        queue: OperationQueue.current
+                        queue: operationQueue
                     ) { _ in
                         DDLogNotice("\(ltAck.hexString) \(ltAck) \(message.loggingDescription)")
                         notificationCenter.removeObserver(messageAckObserver!)

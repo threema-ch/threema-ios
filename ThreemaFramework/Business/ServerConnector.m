@@ -53,7 +53,6 @@ static const int MAX_BYTES_TO_DECRYPT_NOTIFICATION_EXTENSION = 500000;
 @implementation ServerConnector {
     NSData *clientTempKeyPub;
     NSData *clientTempKeySec;
-    time_t clientTempKeyGenTime;
     NSData *clientCookie;
     
     NSData *serverCookie;
@@ -417,19 +416,14 @@ struct pktExtension {
     clientNonce = 1;
     serverNonce = 1;
     
-    /* Generate a new key pair for the server connection. */
-    time_t uptime = [ThreemaUtilityObjC systemUptime];
-    DDLogVerbose(@"System uptime is %ld", uptime);
-    if (clientTempKeyPub == nil || clientTempKeySec == nil || uptime <= 0 || (uptime - clientTempKeyGenTime) > kClientTempKeyMaxAge) {
-        NSData *publicKey, *secretKey;
-        [[NaClCrypto sharedCrypto] generateKeyPairPublicKey:&publicKey secretKey:&secretKey];
-        clientTempKeyPub = publicKey;
-        clientTempKeySec = secretKey;
-        clientTempKeyGenTime = uptime;
+    /* Generate a new ephemeral key pair for the server connection. */
+    NSData *publicKey, *secretKey;
+    [[NaClCrypto sharedCrypto] generateKeyPairPublicKey:&publicKey secretKey:&secretKey];
+    clientTempKeyPub = publicKey;
+    clientTempKeySec = secretKey;
 #if LOG_KEY_INFO
-        DDLogVerbose(@"Client tempkey_pub = %@, tempkey_sec = %@", clientTempKeyPub, clientTempKeySec);
+    DDLogVerbose(@"Client tempkey_pub = %@, tempkey_sec = %@", clientTempKeyPub, clientTempKeySec);
 #endif
-    }
 
     if (webSocketConnection == NO) {
         [self _connectDirect];
@@ -1642,12 +1636,6 @@ struct pktExtension {
         
         [self _disconnect];
     }
-    
-    /* destroy temporary keys, as we cannot reuse them for the new identity */
-    dispatch_async(socketQueue, ^{
-        clientTempKeyPub = nil;
-        clientTempKeySec = nil;
-    });
 
     /* also flush the queue so that messages stuck in it don't later cause problems
        because they have the wrong from identity */

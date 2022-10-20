@@ -42,7 +42,7 @@
             for (NSObject *delobj in deletionArray) {
                 if ([delobj isKindOfClass:[BaseMessage class]]) {
                     BaseMessage *m = (BaseMessage*)delobj;
-                    if (m.id == self.chatViewController.conversation.lastMessage.id) {
+                    if (self.chatViewController.conversation.lastMessage != nil && m.id == self.chatViewController.conversation.lastMessage.id) {
                         shouldUpdateLastMessage = true;
                     }
                     

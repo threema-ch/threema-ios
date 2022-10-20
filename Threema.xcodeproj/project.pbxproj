@@ -1880,6 +1880,7 @@
 		4A416DB82513AB9900F931D1 /* GroupLocationMessage.h in Headers */ = {isa = PBXBuildFile; fileRef = 4D4B10EF17A43574003CCA1C /* GroupLocationMessage.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		4A416DB92513ABB500F931D1 /* BoxBallotCreateMessage.h in Headers */ = {isa = PBXBuildFile; fileRef = 0A94707919D5BF9C000500C5 /* BoxBallotCreateMessage.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		4A416DBA2513ABBB00F931D1 /* GroupBallotCreateMessage.h in Headers */ = {isa = PBXBuildFile; fileRef = 0A10768219F7767A0029F27E /* GroupBallotCreateMessage.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		4A428B5D28EC7C710024E31C /* PromiseKitConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A428B5C28EC7C710024E31C /* PromiseKitConfiguration.swift */; };
 		4A44E18F2512449500E36B5A /* RootNavigationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A44E18E2512449500E36B5A /* RootNavigationController.swift */; };
 		4A498BA82580F3C4002F08F9 /* Video-1.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = 4A498BA52580F3C3002F08F9 /* Video-1.mp4 */; };
 		4A498BAA2580F3C4002F08F9 /* Video-1-Thumbnail.png in Resources */ = {isa = PBXBuildFile; fileRef = 4A498BA72580F3C3002F08F9 /* Video-1-Thumbnail.png */; };
@@ -5561,6 +5562,7 @@
 		4A3F437E27C7E82B00E33CB6 /* ChatViewControllerActionsProtocol.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ChatViewControllerActionsProtocol.h; sourceTree = "<group>"; };
 		4A3FB88A275FA14E008C5676 /* MentionableIdentity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MentionableIdentity.swift; sourceTree = "<group>"; };
 		4A42708827C52D0F005CF7CF /* KeyboardConstraintHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardConstraintHelper.swift; sourceTree = "<group>"; };
+		4A428B5C28EC7C710024E31C /* PromiseKitConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PromiseKitConfiguration.swift; sourceTree = "<group>"; };
 		4A4318D925EFE5E1002FEE23 /* TaskExecutionUpdateContactSync.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskExecutionUpdateContactSync.swift; sourceTree = "<group>"; };
 		4A44E18E2512449500E36B5A /* RootNavigationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootNavigationController.swift; sourceTree = "<group>"; };
 		4A498BA52580F3C3002F08F9 /* Video-1.mp4 */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Video-1.mp4"; sourceTree = "<group>"; };
@@ -7454,6 +7456,7 @@
 			isa = PBXGroup;
 			children = (
 				4AB6B8EF25F0D7CE00C50E25 /* ArrayChunked.swift */,
+				4A428B5C28EC7C710024E31C /* PromiseKitConfiguration.swift */,
 				0A336B4E1B009C7F002D9809 /* BundleUtil.h */,
 				0A336B4F1B009C7F002D9809 /* BundleUtil.m */,
 				CED7C99127AD7EC000455DA1 /* Environment.swift */,
@@ -12865,6 +12868,7 @@
 				CED325CA27353A4C00CD852E /* OnPremConfigSafe.swift in Sources */,
 				2DD549CF23E9A2780055CE23 /* threema-kdf.c in Sources */,
 				0A38642C1C62570B00924A29 /* NSData+Base32.m in Sources */,
+				4A428B5D28EC7C710024E31C /* PromiseKitConfiguration.swift in Sources */,
 				0A3864081C62567600924A29 /* NBPhoneMetaData.m in Sources */,
 				4D08887A255C0C9C002F3129 /* OnPremConfig.swift in Sources */,
 				7ED29D89277F492000EA6BD8 /* MediatorReflectedOutgoingMessageSentProcessor.swift in Sources */,
@@ -18568,7 +18572,7 @@
 			baseConfigurationReference = 4ACFB15B2805D93700A5E55F /* VersionBuildInfo.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				BUILD_NUMBER = 2795;
+				BUILD_NUMBER = $BUILD_NUMBER;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ENABLE_MODULES = NO;
 				CLANG_ENABLE_OBJC_ARC = YES;
@@ -18617,6 +18621,7 @@
 				SKIP_INSTALL = NO;
 				VALIDATE_PRODUCT = YES;
 				VALIDATE_WORKSPACE = YES;
+				VERSION_NUMBER = $VERSION_NUMBER;
 			};
 			name = "AppStore Sandbox";
 		};
@@ -22456,7 +22461,7 @@
 			baseConfigurationReference = 4ACFB15B2805D93700A5E55F /* VersionBuildInfo.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				BUILD_NUMBER = 2795;
+				BUILD_NUMBER = $BUILD_NUMBER;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ENABLE_MODULES = NO;
 				CLANG_ENABLE_OBJC_ARC = YES;
@@ -22505,6 +22510,7 @@
 				SKIP_INSTALL = NO;
 				VALIDATE_PRODUCT = YES;
 				VALIDATE_WORKSPACE = YES;
+				VERSION_NUMBER = $VERSION_NUMBER;
 			};
 			name = AppStore;
 		};
@@ -22589,7 +22595,7 @@
 			baseConfigurationReference = 4ACFB15B2805D93700A5E55F /* VersionBuildInfo.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				BUILD_NUMBER = 2795;
+				BUILD_NUMBER = $BUILD_NUMBER;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ENABLE_MODULES = NO;
 				CLANG_ENABLE_OBJC_ARC = YES;
@@ -22644,6 +22650,7 @@
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = NO;
 				VALIDATE_WORKSPACE = YES;
+				VERSION_NUMBER = $VERSION_NUMBER;
 			};
 			name = Debug;
 		};
@@ -22652,7 +22659,7 @@
 			baseConfigurationReference = 4ACFB15B2805D93700A5E55F /* VersionBuildInfo.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				BUILD_NUMBER = 2795;
+				BUILD_NUMBER = $BUILD_NUMBER;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ENABLE_MODULES = NO;
 				CLANG_ENABLE_OBJC_ARC = YES;
@@ -22701,6 +22708,7 @@
 				SKIP_INSTALL = NO;
 				VALIDATE_PRODUCT = YES;
 				VALIDATE_WORKSPACE = YES;
+				VERSION_NUMBER = $VERSION_NUMBER;
 			};
 			name = AdHoc;
 		};
@@ -23578,7 +23586,7 @@
 			baseConfigurationReference = 4ACFB15B2805D93700A5E55F /* VersionBuildInfo.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				BUILD_NUMBER = 2795;
+				BUILD_NUMBER = $BUILD_NUMBER;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ENABLE_MODULES = NO;
 				CLANG_ENABLE_OBJC_ARC = YES;
@@ -23633,6 +23641,7 @@
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = NO;
 				VALIDATE_WORKSPACE = YES;
+				VERSION_NUMBER = $VERSION_NUMBER;
 			};
 			name = "Debug Sandbox";
 		};

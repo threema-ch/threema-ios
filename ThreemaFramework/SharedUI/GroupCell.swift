@@ -65,9 +65,13 @@ public final class GroupCell: ThemedCodeTableViewCell {
             }
             
             topMetadataLabel.text = group.membersTitleSummary
-            membersListLabel.text = group.membersList
-            
-            updateAvatar(for: group.conversation)
+
+            let entityManager = EntityManager()
+            entityManager.performBlockAndWait {
+                self.membersListLabel.text = group.membersList
+
+                self.updateAvatar(for: group.conversation)
+            }
         }
     }
     

@@ -855,4 +855,44 @@ class TaskDefinitionTests: XCTestCase {
             }
         }
     }
+    
+    func testTaskDefinitionSendGroupDeliveryReceiptsMessageEncodeDecode() throws {
+        let expectedGroupID = BytesUtility.generateRandomBytes(length: 8)!
+        let expectedGroupCreator = "CREATOR01"
+        let expectedFromMember = "MEMBER01"
+        let expectedToMembers = ["MEMBER03", "MEMBER04"]
+        let expectedReceiptType = UInt8(GroupDeliveryReceipt.DeliveryReceiptType.userAcknowledgment.rawValue)
+        let expectedReceiptMessageIDs = [
+            BytesUtility.generateRandomBytes(length: 32)!,
+            BytesUtility.generateRandomBytes(length: 32)!,
+        ]
+        
+        let task = TaskDefinitionSendGroupDeliveryReceiptsMessage(
+            group: nil,
+            from: expectedFromMember,
+            to: expectedToMembers,
+            receiptType: expectedReceiptType,
+            receiptMessageIDs: expectedReceiptMessageIDs,
+            sendContactProfilePicture: false
+        )
+        
+        task.groupID = expectedGroupID
+        task.groupCreatorIdentity = expectedGroupCreator
+        
+        let encoder = JSONEncoder()
+        let data = try XCTUnwrap(encoder.encode(task))
+        print(String(data: data, encoding: .utf8)!)
+        
+        let decoder = JSONDecoder()
+        let result = try XCTUnwrap(decoder.decode(TaskDefinitionSendGroupDeliveryReceiptsMessage.self, from: data))
+        let groupID = try XCTUnwrap(result.groupID)
+        XCTAssertTrue(expectedGroupID.elementsEqual(groupID))
+        XCTAssertEqual(expectedGroupCreator, result.groupCreatorIdentity)
+        XCTAssertEqual(expectedReceiptType, result.receiptType)
+        XCTAssertEqual(expectedReceiptMessageIDs, result.receiptMessageIDs)
+        XCTAssertEqual(expectedFromMember, result.fromMember)
+        XCTAssertEqual(expectedToMembers, result.toMembers)
+        XCTAssertTrue(result.isPersistent)
+        XCTAssertFalse(result.retry)
+    }
 }

@@ -139,7 +139,7 @@ extension WCConnection {
                         let logTarget = String(cString: uptarget)
                         let logMessage = String(cString: upmessage)
                     
-                        DDLogNotice("Threema Web Salty Log: " + logTarget + ": " + logMessage)
+                        DDLogNotice("[Threema Web] Salty Log: " + logTarget + ": " + logMessage)
                     }
                 }
 
@@ -166,7 +166,7 @@ extension WCConnection {
             let remote = salty_event_loop_get_remote(loop)
             
             guard let initiatorPermanentPublicKey = currentWebClientSession.initiatorPermanentPublicKey else {
-                DDLogError("InitiatorPermanentPublicKey is nil. Can not start web session.")
+                DDLogError("[Threema Web] InitiatorPermanentPublicKey is nil. Can not start web session.")
                 currentWebClientSession.isConnecting = false
                 WCSessionManager.shared.removeWCSessionFromRunning(self.delegate.currentWCSession())
                 return
@@ -431,7 +431,7 @@ extension WCConnection {
                 let event = recv_event.event!
                 switch event.pointee.event_type {
                 case UInt8(EVENT_CONNECTING.rawValue):
-                    ValidationLogger.shared().logString("[Threema Web] EVENT_CONNECTING")
+                    DDLogNotice("[Threema Web] EVENT_CONNECTING")
                     self.connectionStatus = .connecting
                     DDLogVerbose("[Threema Web] EVENT_CONNECTING -> Set connection state to \(self.connectionStatus)")
                 case UInt8(EVENT_SERVER_HANDSHAKE_COMPLETED.rawValue):
@@ -463,7 +463,7 @@ extension WCConnection {
                             )
                         }
                     }
-                    ValidationLogger.shared().logString("[Threema Web] EVENT_SERVER_HANDSHAKE_COMPLETED")
+                    DDLogNotice("[Threema Web] EVENT_SERVER_HANDSHAKE_COMPLETED")
                 case UInt8(EVENT_PEER_HANDSHAKE_COMPLETED.rawValue):
                     self.connectionStatus = .peerHandshake
                     DDLogVerbose(
@@ -472,8 +472,8 @@ extension WCConnection {
                     self.connectionWaitTimer?.invalidate()
                     self.connectionWaitTimer = nil
                     
-                    ValidationLogger.shared().logString("[Threema Web] EVENT_PEER_HANDSHAKE_COMPLETED")
-                    ValidationLogger.shared().logString("[Threema Web] Set current session to active")
+                    DDLogNotice("[Threema Web] EVENT_PEER_HANDSHAKE_COMPLETED")
+                    DDLogNotice("[Threema Web] Set current session to active")
                     DispatchQueue.main.async {
                         if let webClientSession = self.delegate.currentWebClientSession() {
                             WebClientSessionStore.shared.updateWebClientSession(session: webClientSession, active: true)
@@ -541,10 +541,9 @@ extension WCConnection {
                         )
                         
                         if self.connectionStatus == .connectionInfoReceived {
-                            ValidationLogger.shared()?
-                                .logString(
-                                    "[Threema Web] connectionInfoReceived maybeResume state: \(self.connectionStatus.rawValue)"
-                                )
+                            DDLogNotice(
+                                "[Threema Web] connectionInfoReceived maybeResume state: \(self.connectionStatus.rawValue)"
+                            )
                             self.connectionStatus = .ready
                             DDLogVerbose(
                                 "[Threema Web] connectionStatus == .connectionInfoReceived -> Set connection state to \(self.connectionStatus)"
@@ -553,24 +552,23 @@ extension WCConnection {
                             self.connectionInfoRequest?.maybeResume(session: self.delegate.currentWCSession())
                         }
                         else {
-                            ValidationLogger.shared()?
-                                .logString(
-                                    "[Threema Web] connectionInfo not received state: \(self.connectionStatus.rawValue)"
-                                )
+                            DDLogNotice(
+                                "[Threema Web] connectionInfo not received state: \(self.connectionStatus.rawValue)"
+                            )
                         }
-                        ValidationLogger.shared().logString("[Threema Web] Start MsgDispatchQueue")
+                        DDLogNotice("[Threema Web] Start MsgDispatchQueue")
                         self.requestMsgDispatchQueue(responder_receiver: responder_receiver)
                     }
                     else {
                         // stopp session because connectionid is empty
-                        ValidationLogger.shared().logString("[Threema Web] ENCRYPT_DECRYPT_ERROR")
+                        DDLogError("[Threema Web] ENCRYPT_DECRYPT_ERROR")
                         self.close(close: true, forget: false, sendDisconnect: true, reason: .error)
                     }
                 case UInt8(EVENT_PEER_DISCONNECTED.rawValue):
-                    ValidationLogger.shared().logString("[Threema Web] EVENT_PEER_DISCONNECTED")
+                    DDLogNotice("[Threema Web] EVENT_PEER_DISCONNECTED")
                     self.close(close: true, forget: false, sendDisconnect: false, reason: .stop)
                 default:
-                    print("[Threema Web] unexpected event type \(event.pointee.event_type)")
+                    DDLogError("[Threema Web] unexpected event type: \(event.pointee.event_type)")
                 }
                 
                 if event.pointee.event_type != UInt8(EVENT_PEER_DISCONNECTED.rawValue) {
@@ -584,7 +582,7 @@ extension WCConnection {
                 }
             }
             else {
-                print("[Threema Web] received event error ", recv_event.success)
+                DDLogError("[Threema Web] received event error \(recv_event.success)")
             }
             salty_client_recv_event_ret_free(recv_event)
         }

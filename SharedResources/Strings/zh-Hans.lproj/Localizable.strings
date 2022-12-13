@@ -656,9 +656,7 @@
 
 /* reminder messages */
 "push_reminder_title" = "未启用通知";
-"push_reminder_message" = "当 %@ 关闭时，您将不会收到新消息或来电通知。
-
-如要解决此问题，请前往系统设置并为 %@ 启用通知。";
+"push_reminder_message" = "当 %@ 关闭时，您将不会收到新消息或来电通知。\n\n如要解决此问题，请前往系统设置并为 %@ 启用通知。";
 "push_reminder_not_now" = "下次不再提醒我";
 "push_reminder_set_now" = "启用通知";
 
@@ -819,18 +817,18 @@
 "private_chat_accessibility" = "私密会话";
 "make_private" = "标记为私密会话";
 "remove_private" = "取消标记为私密会话";
-"archive" = "封存";
-"unarchive" = "取消封存";
+"archive" = "归档";
+"unarchive" = "取消归档";
 "mark_read" = "标记为已读";
 "mark_unread" = "标记为未读";
-"archived_chats" = "已封存会话";
+"archived_chats" = "已归档会话";
 
-"archived_title" = "已封存";
+"archived_title" = "已归档";
 "conversations_search_placeholder" = "联系人、群组、ID……";
 
 "select_all" = "全选";
 "deselect_all" = "取消全选";
-"no_archived_chats" = "没有封存的会话";
+"no_archived_chats" = "没有归档的会话";
 
 "privateChat_alert_title" = "私密会话";
 "privateChat_code_alert_message" = "如果您想将会话标记为私密会话，并在会话主界面中隐藏，则必须设置密码锁。";
@@ -862,8 +860,8 @@
 "selected_count" = "已选择 %d";
 "all_selected" = "全选";
 
-"archived_alert_title" = "已封存会话";
-"archived_alert_message" = "如要查看您的已封存会话，请点击会话主界面底部的按钮。";
+"archived_alert_title" = "已归档会话";
+"archived_alert_message" = "如要查看您的已归档会话，请点击会话主界面底部的按钮。";
 
 "private_delete_info_alert_message" = "删除私密会话时，新的会话不会再次自动标记为私密会话。";
 
@@ -1119,6 +1117,7 @@
 "settings_appearance_system_theme" = "根据系统设置";
 "settings_appearance_theme_selected" = "%@ 主题启用中";
 "settings_appearance_theme_active" = "启用";
+"settings_appearance_hide_app_icon" = "应用图标";
 "settings_appearance_hide_stale_contacts" = "隐藏不活跃的ID";
 "settings_appearance_show_profile_pictures" = "显示个人头像";
 "settings_appearance_display_order" = "显示顺序";
@@ -1378,3 +1377,28 @@
 
 // ChatBar
 "chat_bar_quote_close_button" = "关闭引用";
+
+// ChatDetailView
+"detailView_title" = "消息详情";
+"detailView_sent" = "已发送";
+"detailView_delivered" = "已送达";
+"detailView_read" = "已读";
+"detailView_ackd" = "已确认";
+"detailView_messageID" = "消息识别码";
+"detailView_group_acknowledged" = "已同意 (%d)";
+"detailView_group_declined" = "不同意 (%d)";
+
+// App icons
+"app_icon_title_celebration" = "庆祝图标";
+"app_icon_description_celebration" = "10周年纪念";
+"app_icon_title_current" = "当前图标";
+"app_icon_description_current" = "2019开始";
+"app_icon_title_second" = "第二个图标";
+"app_icon_description_second" = "2013–2019";
+"app_icon_title_first" = "第一个图标";
+"app_icon_description_first" = "2012–2013";
+
+// 10 Years
+"anniversary_view_title" = "Threema 10周年！";
+"anniversary_view_text" = "到2022年12月12日，Threema就10岁了。作为庆典季的开始，我们对应用图标进行了装饰。";
+"anniversary_view_icon_info" = "想把应用图标改为默认或旧版本，请前往 “设置 > 外观 > 应用图标。”";

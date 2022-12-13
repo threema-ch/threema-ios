@@ -305,8 +305,8 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     return mask;
 }
 
-+ (CGSize)scaleImageSizeToCell:(CGSize)size forTableWidth:(CGFloat)tableWidth {
-    CGFloat maxWidth = [ChatMessageCell maxContentWidthForTableWidth:tableWidth];
++ (CGSize)scaleImageSizeToCell:(CGSize)size forTableWidth:(CGFloat)tableWidth isGroup:(BOOL)isGroup {
+    CGFloat maxWidth = [ChatMessageCell maxContentWidthForTableWidth:tableWidth isGroup:isGroup];
     CGFloat maxHeight;
     CGFloat minWidth = 40.0;
     CGFloat minHeight = 40.0;

@@ -30,7 +30,7 @@
 - (id)initWithCoder:(NSCoder *)aDecoder {
     self = [super initWithCoder:aDecoder];
     if (self) {
-        bzero(digest, sizeof(digest));
+        memset(digest, 0, sizeof(digest));
         self.accessibilityTraits |= UIAccessibilityTraitAllowsDirectInteraction;
     }
     return self;

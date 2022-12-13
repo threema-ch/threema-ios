@@ -222,8 +222,7 @@
     [self setupBasePropertiesForNewMessage: message inConversation: conversation];
     
     message.sent = [NSNumber numberWithBool:YES];
-    conversation.lastUpdate = [NSDate date];
-    
+      
     return (SystemMessage *)message;
 }
 

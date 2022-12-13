@@ -53,36 +53,31 @@ class ConversationActions: NSObject {
     /// - Parameters:
     ///   - conversation: Conversation to read messages
     ///   - isAppInBackground: If app is in background, default gets current status from AppDelegate
+    @discardableResult
     func read(
         _ conversation: Conversation,
         isAppInBackground: Bool = AppDelegate.shared().isAppInBackground()
-    ) -> Promise<Void> {
-        Promise { seal in
+    ) -> Guarantee<Void> {
+        Guarantee { seal in
             entityManager.performBlock {
                 self.unreadMessages.read(for: conversation, isAppInBackground: isAppInBackground)
-                    .then { () -> Promise<Void> in
-                        self.entityManager.performBlockAndWait {
-                            if conversation.unreadMessageCount == -1 {
-                                self.entityManager.performSyncBlockAndSafe {
-                                    conversation.unreadMessageCount = 0
-                                }
-                            }
-                        }
-                        return Promise()
+
+                if conversation.unreadMessageCount == -1 {
+                    self.entityManager.performSyncBlockAndSafe {
+                        conversation.unreadMessageCount = 0
                     }
-                    .done {
-                        self.notificationManager.updateUnreadMessagesCount()
-                        seal.fulfill_()
-                    }
-                    .catch { error in
-                        DDLogError("Failed to mark all messages as read: \(error)")
-                        seal.reject(error)
-                    }
+                }
+
+                self.notificationManager.updateUnreadMessagesCount()
+
+                seal(())
             }
         }
     }
     
-    @objc func readObjc(
+    @objc
+    @discardableResult
+    func readObjc(
         _ conversation: Conversation,
         isAppInBackground: Bool = AppDelegate.shared().isAppInBackground()
     ) -> AnyPromise {

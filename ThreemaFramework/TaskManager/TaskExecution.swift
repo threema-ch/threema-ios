@@ -683,4 +683,30 @@ class TaskExecution: NSObject {
         msg.toIdentity = toMember
         return msg
     }
+    
+    /// Create abstract message for group delivery receipt.
+    ///
+    /// - Parameter groupID: ID of the group
+    /// - Parameter groupCreator: Creator of the group
+    /// - Parameter fromIdentity: Message sender identity
+    /// - Parameter toIdentity: Message receiver identity
+    /// - Returns: Abstract message
+    func getGroupDeliveryReceiptMessage(
+        _ groupID: Data,
+        _ groupCreator: String,
+        _ fromIdentity: String,
+        _ toMember: String,
+        _ receiptType: UInt8,
+        _ receiptMessageIDs: [Data]
+    ) -> GroupDeliveryReceiptMessage {
+        let msg = GroupDeliveryReceiptMessage()
+        msg.groupID = groupID
+        msg.groupCreator = groupCreator
+        msg.fromIdentity = fromIdentity
+        msg.toIdentity = toMember
+        msg.receiptType = receiptType
+        msg.receiptMessageIDs = receiptMessageIDs
+        
+        return msg
+    }
 }

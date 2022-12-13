@@ -117,14 +117,15 @@ public class GroupManager: NSObject, GroupManagerProtocol {
         
         removeUnknownGroupFromAlertList(groupID: groupID, creator: creator)
 
-        var oldMembers = [String]()
+        // Is oldMembers nil, means the group is new and there aren't old members
+        var oldMembers: [String]?
         var removedMembers = [String]()
 
         // If group already exists get old and removed members
         entityManager.performBlockAndWait {
             if let oldConversation = self.getConversation(for: GroupIdentity(id: groupID, creator: creator)) {
                 oldMembers = oldConversation.members.map(\.identity)
-                removedMembers = oldMembers.filter { !members.contains($0) }
+                removedMembers = oldMembers!.filter { !members.contains($0) }
             }
         }
 
@@ -140,7 +141,7 @@ public class GroupManager: NSObject, GroupManagerProtocol {
 
             var newMembers: Set<String>?
             self.entityManager.performBlockAndWait {
-                if !oldMembers.isEmpty,
+                if let oldMembers = oldMembers,
                    let conversation = self
                    .getConversation(for: GroupIdentity(id: group.groupID, creator: group.groupCreatorIdentity)) {
                     newMembers = Set(
@@ -1246,28 +1247,30 @@ public class GroupManager: NSObject, GroupManagerProtocol {
     @objc public func unknownGroup(groupID: Data, creator: String) {
         DispatchQueue.main.async {
             Timer.scheduledTimer(withTimeInterval: 5, repeats: false) { _ in
-                guard self.getGroup(groupID, creator: creator) == nil else {
-                    return
-                }
-                
-                var userInfo: [String: String]?
-                if let contact = self.contactStore.contact(for: creator) {
-                    userInfo = [kKeyContact: contact.displayName]
-                }
-                else {
-                    userInfo = [kKeyContact: creator]
-                }
-                
-                let unknownGroupAlertList = self.userSettings.unknownGroupAlertList!
-                let groupDict: [String: AnyHashable] = ["groupid": groupID, "creator": creator]
-                if !unknownGroupAlertList.contains(groupDict) {
-                    NotificationCenter.default.post(
-                        name: Notification.Name(rawValue: kNotificationErrorUnknownGroup),
-                        object: nil,
-                        userInfo: userInfo
-                    )
-                    unknownGroupAlertList.add(groupDict)
-                    self.userSettings.unknownGroupAlertList = unknownGroupAlertList
+                DispatchQueue.global(qos: .default).async {
+                    guard self.getGroup(groupID, creator: creator) == nil else {
+                        return
+                    }
+                    
+                    var userInfo: [String: String]?
+                    if let contact = self.contactStore.contact(for: creator) {
+                        userInfo = [kKeyContact: contact.displayName]
+                    }
+                    else {
+                        userInfo = [kKeyContact: creator]
+                    }
+                    
+                    let unknownGroupAlertList = self.userSettings.unknownGroupAlertList!
+                    let groupDict: [String: AnyHashable] = ["groupid": groupID, "creator": creator]
+                    if !unknownGroupAlertList.contains(groupDict) {
+                        NotificationCenter.default.post(
+                            name: Notification.Name(rawValue: kNotificationErrorUnknownGroup),
+                            object: nil,
+                            userInfo: userInfo
+                        )
+                        unknownGroupAlertList.add(groupDict)
+                        self.userSettings.unknownGroupAlertList = unknownGroupAlertList
+                    }
                 }
             }
         }

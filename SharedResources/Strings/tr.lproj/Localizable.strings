@@ -656,7 +656,7 @@
 
 /* reminder messages */
 "push_reminder_title" = "Bildirimler Etkinleştirilmedi ";
-"push_reminder_message" = "Yeni mesajlar veya gelen aramalar hakkında bilgilendirilmeyeceksiniz %@ .\n\nBunu düzeltmek için Sistem Ayarlarına gidin ve %@ için Bildirimleri etkinleştirin . ";
+"push_reminder_message" = "%@ kapalıyken yeni mesajlardan veya gelen aramalardan haberdar edilmeyeceksiniz.\n\nBunu düzeltmek için Sistem Ayarlarına gidin ve %@ için Bildirimleri etkinleştirin.";
 "push_reminder_not_now" = "Bana tekrar hatırlatma";
 "push_reminder_set_now" = "Bildirimleri Etkinleştir";
 
@@ -1117,6 +1117,7 @@ Threema Safe'i kullanırken, cihazınıza erişiminizi kaybetmeniz durumunda Thr
 "settings_appearance_system_theme" = "Sistem";
 "settings_appearance_theme_selected" = "%@ tema etkin";
 "settings_appearance_theme_active" = "Aktif";
+"settings_appearance_hide_app_icon" = "Uygulama Simgesi";
 "settings_appearance_hide_stale_contacts" = "Etkin olmayan kimlikleri gizle";
 "settings_appearance_show_profile_pictures" = "Profil resimlerini göster";
 "settings_appearance_display_order" = "Görüntüleme sırası";
@@ -1376,3 +1377,28 @@ Artık dosyaları çöp kutusuna taşıyın ve %@ içinde hiçbir (medya) dosyas
 
 // ChatBar
 "chat_bar_quote_close_button" = "Alıntıyı kapat";
+
+// ChatDetailView
+"detailView_title" = "Mesaj Detayları";
+"detailView_sent" = "Gönderildi";
+"detailView_delivered" = "Teslim edildi";
+"detailView_read" = "Okundu";
+"detailView_ackd" = "Onaylandı";
+"detailView_messageID" = "Mesaj Kimliği";
+"detailView_group_acknowledged" = "Kabul Edildi (%d)";
+"detailView_group_declined" = "Kabul Edilmedi (%d)";
+
+// App icons
+"app_icon_title_celebration" = "Kutlama Simgesi";
+"app_icon_description_celebration" = "10. Yıl Dönümü";
+"app_icon_title_current" = "Mevcut Simge";
+"app_icon_description_current" = "2019'dan beri";
+"app_icon_title_second" = "İkinci Simge";
+"app_icon_description_second" = "2013–2019";
+"app_icon_title_first" = "Birinci Simge";
+"app_icon_description_first" = "2012–2013";
+
+// 10 Years
+"anniversary_view_title" = "Threema'nın 10. Yılı!";
+"anniversary_view_text" = "12 Aralık 2022'de Threema on yaşına girecek. Kutlama döneminin başlangıcını vurgulamak için uygulama simgemizi süsledik.";
+"anniversary_view_icon_info" = "Uygulama simgesini varsayılana veya eski bir sürüme döndürmek için \"Ayarlar > Görünüm > Uygulama Simgesi\"ne gidin.";

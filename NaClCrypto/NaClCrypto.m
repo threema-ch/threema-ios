@@ -182,7 +182,7 @@
     if (ctbuf == NULL) {
         @throw([NSException exceptionWithName:@"MemoryAllocationException" reason:@"Cannot allocate memory" userInfo:nil]);
     }
-    bzero(ctbuf, crypto_box_ZEROBYTES);
+    memset(ctbuf, 0, crypto_box_ZEROBYTES);
     memcpy(&ctbuf[crypto_box_ZEROBYTES], plaintext.bytes, plaintext.length);
     
     NSData *sharedSecret = [self sharedSecretForPublicKey:publicKey secretKey:signKey];
@@ -220,7 +220,7 @@
     char *msgbuf = malloc(clen);
     if (msgbuf == NULL)
         @throw([NSException exceptionWithName:@"MemoryAllocationException" reason:@"Cannot allocate memory" userInfo:nil]);
-    bzero(msgbuf, crypto_box_BOXZEROBYTES);
+    memset(msgbuf, 0, crypto_box_BOXZEROBYTES);
     memcpy(&msgbuf[crypto_box_BOXZEROBYTES], ciphertext.bytes, ciphertext.length);
     
     NSData *sharedSecret = [self sharedSecretForPublicKey:signKey secretKey:secretKey];
@@ -271,7 +271,7 @@
     if (ctbuf == NULL) {
         @throw([NSException exceptionWithName:@"MemoryAllocationException" reason:@"Cannot allocate memory" userInfo:nil]);
     }
-    bzero(ctbuf, crypto_secretbox_ZEROBYTES);
+    memset(ctbuf, 0, crypto_secretbox_ZEROBYTES);
     memcpy(&ctbuf[crypto_secretbox_ZEROBYTES], plaintext.bytes, plaintext.length);
 
     if (crypto_secretbox((unsigned char *)ctbuf, (unsigned char *)ctbuf, mlen, nonce.bytes, key.bytes) != 0) {
@@ -299,7 +299,7 @@
     char *msgbuf = malloc(clen);
     if (msgbuf == NULL)
         @throw([NSException exceptionWithName:@"MemoryAllocationException" reason:@"Cannot allocate memory" userInfo:nil]);
-    bzero(msgbuf, crypto_secretbox_BOXZEROBYTES);
+    memset(msgbuf, 0, crypto_secretbox_BOXZEROBYTES);
     memcpy(&msgbuf[crypto_secretbox_BOXZEROBYTES], ciphertext.bytes, ciphertext.length);
     
     if (crypto_secretbox_open((unsigned char *)msgbuf, (unsigned char *)msgbuf, clen, nonce.bytes, key.bytes) != 0) {
@@ -473,7 +473,7 @@
     if (zero == NULL) {
         @throw([NSException exceptionWithName:@"AllocMemoryForZeroBytesFailed" reason:@"Cannot allocate memory for zero bytes" userInfo:nil]);
     }
-    bzero(zero, len);
+    memset(zero, 0, len);
     return [NSData dataWithBytesNoCopy:zero length:len];
 }
 

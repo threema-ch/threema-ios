@@ -656,9 +656,7 @@
 
 /* reminder messages */
 "push_reminder_title" = "未開啟通知";
-"push_reminder_message" = "當 %@ 關閉時，您將不會收到新訊息或來電通知。
-
-如要解決此問題，請前往系統設定並為 %@ 開啟通知。";
+"push_reminder_message" = "當 %@ 關閉時，您將不會收到新訊息或來電通知。\n\n要解決此問題，請前往系統設定並開啟 %@ 通知。";
 "push_reminder_not_now" = "下次不再提醒我";
 "push_reminder_set_now" = "開啟通知";
 
@@ -1119,6 +1117,7 @@
 "settings_appearance_system_theme" = "根據系統設定";
 "settings_appearance_theme_selected" = "%@ 主題啟用中";
 "settings_appearance_theme_active" = "啟用";
+"settings_appearance_hide_app_icon" = "應用程式圖示";
 "settings_appearance_hide_stale_contacts" = "隱藏非活躍的ID";
 "settings_appearance_show_profile_pictures" = "顯示大頭貼";
 "settings_appearance_display_order" = "顯示順序";
@@ -1378,3 +1377,28 @@
 
 // ChatBar
 "chat_bar_quote_close_button" = "關閉引用";
+
+// ChatDetailView
+"detailView_title" = "訊息詳情";
+"detailView_sent" = "已傳送";
+"detailView_delivered" = "已送達";
+"detailView_read" = "已讀";
+"detailView_ackd" = "已確認";
+"detailView_messageID" = "訊息ID";
+"detailView_group_acknowledged" = "已同意 (%d)";
+"detailView_group_declined" = "不同意 (%d)";
+
+// App icons
+"app_icon_title_celebration" = "歡慶圖示";
+"app_icon_description_celebration" = "10 週年誌慶";
+"app_icon_title_current" = "目前圖示";
+"app_icon_description_current" = "2019 年至今";
+"app_icon_title_second" = "第二款圖示";
+"app_icon_description_second" = "2013-2019";
+"app_icon_title_first" = "第一款圖示";
+"app_icon_description_first" = "2012-2013";
+
+// 10 Years
+"anniversary_view_title" = "Threema 10 週年誌慶！";
+"anniversary_view_text" = "2022 年 12 月 12 日，Threema 正式面世 10 週年！我們率先帶來了精美的應用程式圖示，作為慶祝紀念！";
+"anniversary_view_icon_info" = "要將應用程式的圖示改回預設或較舊版本，請依序點進「設定」>「外觀」>「應用程式圖示」。";

@@ -160,10 +160,8 @@ extension VoIPCallAnswerMessage: VoIPCallMessageProtocol {
     public func encodeAsJson() throws -> Data {
         var json = [AnyHashable: Any]()
         if answer != nil {
-            let entityManager = EntityManager(withChildContextForBackgroundProcess: true)
-            let contact = entityManager.entityFetcher.contact(for: contactIdentity)
-            let extensionConfig: VoIPCallSdpPatcher.RtpHeaderExtensionConfig = contact?
-                .isVideoCallAvailable() ?? false ? .ENABLE_WITH_ONE_AND_TWO_BYTE_HEADER : .DISABLE
+            let extensionConfig: VoIPCallSdpPatcher
+                .RtpHeaderExtensionConfig = isVideoAvailable ? .ENABLE_WITH_ONE_AND_TWO_BYTE_HEADER : .DISABLE
             json = [
                 VoIPCallConstants.callIDKey: callID.callID,
                 VoIPCallAnswerMessage.kActionKey: action.rawValue,

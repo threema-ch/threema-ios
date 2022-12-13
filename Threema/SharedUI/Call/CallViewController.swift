@@ -447,6 +447,10 @@ extension CallViewController {
     func resetStatsTimer() {
         statsTimer?.invalidate()
         statsTimer = nil
+        
+        if let alert = presentedViewController as? UIAlertController {
+            alert.dismiss(animated: false)
+        }
     }
     
     func enableThreemaVideoCall() {

@@ -257,9 +257,7 @@ static NSMutableOrderedSet *pendingGroupMessages;
     @try {
         if ([amsg isKindOfClass:[AbstractGroupMessage class]]) {
             [self processIncomingGroupMessage:(AbstractGroupMessage *)amsg onCompletion:^{
-                [entityManager performSyncBlockAndSafe:^{
-                    [entityManager.entityCreator nonceWithData:[NonceHasher hashedNonce:amsg.nonce]];
-                }];
+                [self processedMessage:amsg];
                 
                 [messageProcessorDelegate incomingMessageFinished:amsg isPendingGroup:false];
                 onCompletion(amsg);
@@ -270,9 +268,7 @@ static NSMutableOrderedSet *pendingGroupMessages;
         } else  {
             [self processIncomingMessage:(AbstractMessage *)amsg onCompletion:^(id<MessageProcessorDelegate> _Nullable delegate) {
                 if (!amsg.immediate) {
-                    [entityManager performSyncBlockAndSafe:^{
-                        [entityManager.entityCreator nonceWithData:[NonceHasher hashedNonce:amsg.nonce]];
-                    }];
+                    [self processedMessage:amsg];
                 }
 
                 if (delegate) {
@@ -311,6 +307,9 @@ Process incoming message.
     }
     
     if ([amsg isKindOfClass:[BoxTextMessage class]]) {
+        if ([self isAlreadyProcessedMessage:amsg onError:onError]) {
+            return;
+        }
         TextMessage *message = [entityManager.entityCreator textMessageFromBox: amsg];
         [self finalizeMessage:message inConversation:conversation fromBoxMessage:amsg onCompletion:^{
             onCompletion(nil);
@@ -324,19 +323,28 @@ Process incoming message.
             onCompletion(nil);
         } onError:onError];
     } else if ([amsg isKindOfClass:[BoxLocationMessage class]]) {
+        if ([self isAlreadyProcessedMessage:amsg onError:onError]) {
+            return;
+        }
         LocationMessage *message = [entityManager.entityCreator locationMessageFromBox:(BoxLocationMessage*)amsg];
-        [self resolveAddressFor:message]
-        .thenInBackground(^{
-            [self finalizeMessage:message inConversation:conversation fromBoxMessage:amsg onCompletion:^{
+        [self finalizeMessage:message inConversation:conversation fromBoxMessage:amsg onCompletion:^{
+            [self resolveAddressFor:message]
+                .thenInBackground(^{
                 onCompletion(nil);
-            }];
-        });
+            });
+        }];
     } else if ([amsg isKindOfClass:[BoxAudioMessage class]]) {
+        if ([self isAlreadyProcessedMessage:amsg onError:onError]) {
+            return;
+        }
         AudioMessageEntity *message = [entityManager.entityCreator audioMessageEntityFromBox:(BoxAudioMessage*) amsg];
         [self finalizeMessage:message inConversation:conversation fromBoxMessage:amsg onCompletion:^{
             onCompletion(nil);
         }];
     } else if ([amsg isKindOfClass:[DeliveryReceiptMessage class]]) {
+        if ([self isAlreadyProcessedMessage:amsg onError:onError]) {
+            return;
+        }
         [self processIncomingDeliveryReceipt:(DeliveryReceiptMessage*)amsg onCompletion:^{
             onCompletion(nil);
         }];
@@ -344,6 +352,9 @@ Process incoming message.
         [self processIncomingTypingIndicator:(TypingIndicatorMessage*)amsg];
         onCompletion(nil);
     } else if ([amsg isKindOfClass:[BoxBallotCreateMessage class]]) {
+        if ([self isAlreadyProcessedMessage:amsg onError:onError]) {
+            return;
+        }
         BallotMessageDecoder *decoder = [[BallotMessageDecoder alloc] initWith:entityManager];
         BallotMessage *ballotMessage = [decoder decodeCreateBallotFromBox:(BoxBallotCreateMessage *)amsg forConversation:conversation];
         if (ballotMessage == nil) {
@@ -356,6 +367,9 @@ Process incoming message.
             onCompletion(nil);
         }];
     } else if ([amsg isKindOfClass:[BoxBallotVoteMessage class]]) {
+        if ([self isAlreadyProcessedMessage:amsg onError:onError]) {
+            return;
+        }
         [self processIncomingBallotVoteMessage:(BoxBallotVoteMessage*)amsg onCompletion:^{
             onCompletion(nil);
         } onError:onError];
@@ -372,14 +386,23 @@ Process incoming message.
             }];
         } onError:onError];
     } else if ([amsg isKindOfClass:[ContactSetPhotoMessage class]]) {
+        if ([self isAlreadyProcessedMessage:amsg onError:onError]) {
+            return;
+        }
         [self processIncomingContactSetPhotoMessage:(ContactSetPhotoMessage *)amsg onCompletion:^{
             onCompletion(nil);
         } onError:onError];
     } else if ([amsg isKindOfClass:[ContactDeletePhotoMessage class]]) {
+        if ([self isAlreadyProcessedMessage:amsg onError:onError]) {
+            return;
+        }
         [self processIncomingContactDeletePhotoMessage:(ContactDeletePhotoMessage *)amsg onCompletion:^{
             onCompletion(nil);
         } onError:onError];
     } else if ([amsg isKindOfClass:[ContactRequestPhotoMessage class]]) {
+        if ([self isAlreadyProcessedMessage:amsg onError:onError]) {
+            return;
+        }
         [self processIncomingContactRequestPhotoMessage:(ContactRequestPhotoMessage *)amsg onCompletion:^{
             onCompletion(nil);
         }];
@@ -454,6 +477,10 @@ Process incoming message.
         Contact *sender = [entityManager.entityFetcher contactForId: amsg.fromIdentity];
         
         if ([amsg isKindOfClass:[GroupRenameMessage class]]) {
+            if ([self isAlreadyProcessedMessage:amsg onError:onError]) {
+                return;
+            }
+
             GroupManager *groupManager = [[GroupManager alloc] initWithEntityManager:entityManager];
             [groupManager setNameObjcWithGroupID:amsg.groupId creator:amsg.groupCreator name:((GroupRenameMessage *)amsg).name systemMessageDate:amsg.date send:YES]
                 .thenInBackground(^{
@@ -463,8 +490,16 @@ Process incoming message.
                     onError(error);
                 });
         } else if ([amsg isKindOfClass:[GroupSetPhotoMessage class]]) {
+            if ([self isAlreadyProcessedMessage:amsg onError:onError]) {
+                return;
+            }
+
             [self processIncomingGroupSetPhotoMessage:(GroupSetPhotoMessage*)amsg onCompletion:onCompletion onError:onError];
         } else if ([amsg isKindOfClass:[GroupDeletePhotoMessage class]]) {
+            if ([self isAlreadyProcessedMessage:amsg onError:onError]) {
+                return;
+            }
+
             GroupManager *groupManager = [[GroupManager alloc] initWithEntityManager:entityManager];
             [groupManager deletePhotoObjcWithGroupID:amsg.groupId creator:amsg.groupCreator sentDate:[amsg date] send:NO]
                 .thenInBackground(^{
@@ -475,33 +510,46 @@ Process incoming message.
                     onError(error);
                 });
         } else if ([amsg isKindOfClass:[GroupTextMessage class]]) {
+            if ([self isAlreadyProcessedMessage:amsg onError:onError]) {
+                return;
+            }
             TextMessage *message = [entityManager.entityCreator textMessageFromGroupBox: (GroupTextMessage *)amsg];
             [self finalizeGroupMessage:message inConversation:conversation fromBoxMessage:amsg sender:sender onCompletion:onCompletion];
         } else if ([amsg isKindOfClass:[GroupLocationMessage class]]) {
+            if ([self isAlreadyProcessedMessage:amsg onError:onError]) {
+                return;
+            }
             LocationMessage *message = [entityManager.entityCreator locationMessageFromGroupBox:(GroupLocationMessage *)amsg];
-            [self resolveAddressFor:message]
-            .thenInBackground(^{
-                [entityManager performBlockAndWait:^{
-                    BaseMessage *dbMessage = [[entityManager entityFetcher] existingObjectWithID:message.objectID];
-                    Conversation *dbConversation = [[entityManager entityFetcher] existingObjectWithID:conversation.objectID];
-                    Contact *dbSender = [[entityManager entityFetcher] existingObjectWithID:sender.objectID];
-                    if (dbMessage == nil || dbConversation == nil || dbSender == nil) {
-                        NSError *error = [ThreemaError threemaError:@"Could not complete reversing geocoding"];
-                        onError(error);
-                        return;
-                    }
-
-                    [self finalizeGroupMessage:dbMessage inConversation:dbConversation fromBoxMessage:amsg sender:dbSender onCompletion:onCompletion];
-                }];
-            });
+            
+            BaseMessage *dbMessage = [[entityManager entityFetcher] existingObjectWithID:message.objectID];
+            Conversation *dbConversation = [[entityManager entityFetcher] existingObjectWithID:conversation.objectID];
+            Contact *dbSender = [[entityManager entityFetcher] existingObjectWithID:sender.objectID];
+            if (dbMessage == nil || dbConversation == nil || dbSender == nil) {
+                NSError *error = [ThreemaError threemaError:@"Could not fetch needed values to finalize group location message."];
+                onError(error);
+                return;
+            }
+            
+            [self finalizeGroupMessage:dbMessage inConversation:dbConversation fromBoxMessage:amsg sender:dbSender onCompletion:^{
+                [self resolveAddressFor:message]
+                    .thenInBackground(^{
+                    onCompletion();
+                });
+            }];
         } else if ([amsg isKindOfClass:[GroupImageMessage class]]) {
             [self processIncomingImageMessage:(GroupImageMessage *)amsg conversation:conversation onCompletion:onCompletion onError:onError];
         } else if ([amsg isKindOfClass:[GroupVideoMessage class]]) {
             [self processIncomingVideoMessage:(GroupVideoMessage*)amsg conversation:conversation onCompletion:onCompletion onError:onError];
         } else if ([amsg isKindOfClass:[GroupAudioMessage class]]) {
+            if ([self isAlreadyProcessedMessage:amsg onError:onError]) {
+                return;
+            }
             AudioMessageEntity *message = [entityManager.entityCreator audioMessageEntityFromGroupBox:(GroupAudioMessage *)amsg];
             [self finalizeGroupMessage:message inConversation:conversation fromBoxMessage:amsg sender:sender onCompletion:onCompletion];
         } else if ([amsg isKindOfClass:[GroupBallotCreateMessage class]]) {
+            if ([self isAlreadyProcessedMessage:amsg onError:onError]) {
+                return;
+            }
             BallotMessageDecoder *decoder = [[BallotMessageDecoder alloc] initWith:entityManager];
             BallotMessage *message = [decoder decodeCreateBallotFromGroupBox:(GroupBallotCreateMessage *)amsg forConversation:conversation];
             if (message == nil) {
@@ -512,6 +560,9 @@ Process incoming message.
             
             [self finalizeGroupMessage:message inConversation:conversation fromBoxMessage:amsg sender:sender onCompletion:onCompletion];
         } else if ([amsg isKindOfClass:[GroupBallotVoteMessage class]]) {
+            if ([self isAlreadyProcessedMessage:amsg onError:onError]) {
+                return;
+            }
             [self processIncomingGroupBallotVoteMessage:(GroupBallotVoteMessage*)amsg onCompletion:onCompletion onError:onError];
         } else if ([amsg isKindOfClass:[GroupFileMessage class]]) {
             [FileMessageDecoder decodeGroupMessageFromBox:(GroupFileMessage *)amsg forConversation:conversation timeoutDownloadThumbnail:timeoutDownloadThumbnail entityManager:entityManager onCompletion:^(BaseMessage *message) {
@@ -519,6 +570,11 @@ Process incoming message.
             } onError:^(NSError *err) {
                 onError(err);
             }];
+        } else if ([amsg isKindOfClass:[GroupDeliveryReceiptMessage class]]) {
+            if ([self isAlreadyProcessedMessage:amsg onError:onError]) {
+                return;
+            }
+            [self processIncomingGroupDeliveryReceipt:(GroupDeliveryReceiptMessage*)amsg onCompletion:onCompletion];
         } else {
             onError([ThreemaError threemaError:@"Invalid message class"]);
         }
@@ -527,7 +583,7 @@ Process incoming message.
     }];
 }
 
-- (void)appendNewMessage:(BaseMessage *)message toConversation:(Conversation *)conversation {
+- (void)appendNewMessage:(BaseMessage *)message toConversation:(Conversation *)conversation fromBoxMessage:(AbstractMessage*)boxMessage {
     [entityManager performSyncBlockAndSafe:^{
         message.conversation = conversation;
         if (message != nil) {
@@ -535,6 +591,8 @@ Process incoming message.
             conversation.lastUpdate = [NSDate date];
         }
         conversation.conversationVisibility = ConversationVisibilityDefault;
+
+        [[entityManager entityCreator] nonceWithData:[NonceHasher hashedNonce:boxMessage.nonce]];
     }];
 
     // Refault managed object to release memory, because Core Data loads `Conversation.messages` of conversation when assign conversation
@@ -542,14 +600,14 @@ Process incoming message.
 }
 
 - (void)finalizeMessage:(BaseMessage*)message inConversation:(Conversation*)conversation fromBoxMessage:(AbstractMessage*)boxMessage onCompletion:(void(^_Nonnull)(void))onCompletion {
-    [self appendNewMessage:message toConversation:conversation];
+    [self appendNewMessage:message toConversation:conversation fromBoxMessage:boxMessage];
     [messageProcessorDelegate incomingMessageChanged:message fromIdentity:boxMessage.fromIdentity];
     onCompletion();
 }
 
 - (void)finalizeGroupMessage:(BaseMessage*)message inConversation:(Conversation*)conversation fromBoxMessage:(AbstractGroupMessage*)boxMessage sender:(Contact *)sender onCompletion:(void(^_Nonnull)(void))onCompletion {
     message.sender = sender;
-    [self appendNewMessage:message toConversation:conversation];
+    [self appendNewMessage:message toConversation:conversation fromBoxMessage:boxMessage];
 
     // Refault managed object to release memory, because Core Data loads `Contact.messages` of sender when assign sender
     [sender.managedObjectContext refreshObject:sender mergeChanges:NO];
@@ -604,7 +662,11 @@ Process incoming message.
         onError([ThreemaError threemaError:@"Could not process image message, sender is missing"]);
         return;
     }
-    
+
+    if ([self isAlreadyProcessedMessage:amsg onError:onError]) {
+        return;
+    }
+
     __block ImageMessageEntity *msg;
     [entityManager performSyncBlockAndSafe:^{
         if (isGroupMessage == NO) {
@@ -668,6 +730,10 @@ Process incoming message.
         return;
     }
 
+    if ([self isAlreadyProcessedMessage:amsg onError:onError]) {
+        return;
+    }
+
     __block VideoMessageEntity *msg;
     __block NSData *thumbnailBlobId;
     [entityManager performSyncBlockAndSafe:^{
@@ -721,46 +787,28 @@ Process incoming message.
     }
 }
 
-- (AnyPromise *)resolveAddressFor:(LocationMessage*)message {
-    return [AnyPromise promiseWithResolverBlock:^(PMKResolver _Nonnull resolve) {
-        /* Reverse geocoding (only necessary if there is no POI adress) */
-        if (message.poiAddress == nil) {
-            double latitude = message.latitude.doubleValue;
-            double longitude = message.longitude.doubleValue;
-            double accuracy = message.accuracy.doubleValue;
-            
-            // It should not result in a different address if we initialize the location with accuracies or not
-            CLLocation *location = [[CLLocation alloc] initWithCoordinate:CLLocationCoordinate2DMake(latitude, longitude) altitude:0 horizontalAccuracy:accuracy verticalAccuracy:-1 timestamp:[NSDate date]];
-            
-            [ThreemaUtility fetchAddressFor:location completion:^(NSString *label){
+- (AnyPromise*)resolveAddressFor:(LocationMessage*)message {
+    // Reverse geocoding (only necessary if there is no POI adress) /
+    if (message.poiAddress != nil) {
+        return [AnyPromise promiseWithResolverBlock:^(PMKResolver _Nonnull resolver) {
+            resolver(nil);
+        }];
+    }
+
+    // It should not result in a different address if we initialize the location with accuracies or not
+    __block CLLocation *location = [[CLLocation alloc] initWithCoordinate:CLLocationCoordinate2DMake(message.latitude.doubleValue, message.longitude.doubleValue) altitude:0 horizontalAccuracy:message.accuracy.doubleValue verticalAccuracy:-1 timestamp:[NSDate date]];
+
+    return [ThreemaUtility fetchAddressObjcFor:location]
+        .thenInBackground(^(NSString *address){
+            [entityManager performSyncBlockAndSafe:^{
                 if ([message wasDeleted]) {
-                    resolve(nil);
                     return;
                 }
-                
-                [entityManager performSyncBlockAndSafe:^{
-                    message.poiAddress = label;
-                }];
 
-                resolve(nil);
-            } onError:^(NSError *error) {
-                DDLogWarn(@"Reverse geocoding failed: %@", error);
-                if ([message wasDeleted]) {
-                    resolve(nil);
-                    return;
-                }
-                
-                [entityManager performSyncBlockAndSafe:^{
-                    message.poiAddress = [NSString stringWithFormat:@"%.5f°, %.5f°", latitude, longitude];
-                }];
-
-                resolve(nil);
+                message.poiAddress = address;
             }];
-        }
-        resolve(nil);
-    }];
+        });
 }
-
 
 - (void)processIncomingDeliveryReceipt:(DeliveryReceiptMessage*)msg onCompletion:(void(^ _Nonnull)(void))onCompletion {
     [entityManager performAsyncBlockAndSafe:^{
@@ -795,6 +843,44 @@ Process incoming message.
                 DDLogWarn(@"Unknown delivery receipt type %d with message ID %@", msg.receiptType, [NSString stringWithHexData:receiptMessageId]);
             }
 
+            [messageProcessorDelegate changedManagedObjectID:dbmsg.objectID];
+        }
+        
+        onCompletion();
+    }];
+}
+
+- (void)processIncomingGroupDeliveryReceipt:(GroupDeliveryReceiptMessage*)msg onCompletion:(void(^ _Nonnull)(void))onCompletion {
+    [entityManager performAsyncBlockAndSafe:^{
+        for (NSData *receiptMessageId in msg.receiptMessageIds) {
+            /* Fetch message from DB */
+            Conversation *conversation = [entityManager.entityFetcher conversationForGroupId:msg.groupId creator:msg.groupCreator];
+            if (conversation == nil) {
+                DDLogWarn(@"Cannot find conversation for message ID %@ (group delivery receipt from %@)", receiptMessageId, msg.fromIdentity);
+                continue;
+            }
+            
+            BaseMessage *dbmsg = [entityManager.entityFetcher messageWithId:receiptMessageId conversation:conversation];
+            if (dbmsg == nil) {
+                /* This can happen if the user deletes the message before the receipt comes in */
+                DDLogWarn(@"Cannot find message ID %@ (delivery receipt from %@)", receiptMessageId, msg.fromIdentity);
+                continue;
+            }
+            
+            if (msg.receiptType == GROUPDELIVERYRECEIPT_MSGUSERACK) {
+                GroupDeliveryReceipt *groupDeliveryReceipt = [[GroupDeliveryReceipt alloc] initWithIdentity:msg.fromIdentity deliveryReceiptType:DeliveryReceiptTypeUserAcknowledgment date:msg.date];
+                [dbmsg addWithGroupDeliveryReceipt:groupDeliveryReceipt];
+                DDLogWarn(@"Message ID %@ has been user acknowledged by %@", [NSString stringWithHexData:receiptMessageId], msg.fromIdentity);
+            }
+            else if (msg.receiptType == GROUPDELIVERYRECEIPT_MSGUSERDECLINE) {
+                GroupDeliveryReceipt *groupDeliveryReceipt = [[GroupDeliveryReceipt alloc] initWithIdentity:msg.fromIdentity deliveryReceiptType:DeliveryReceiptTypeUserDeclined date:msg.date];
+                [dbmsg addWithGroupDeliveryReceipt:groupDeliveryReceipt];
+                DDLogWarn(@"Message ID %@ has been user declined by %@", [NSString stringWithHexData:receiptMessageId], msg.fromIdentity);
+            }
+            else {
+                DDLogWarn(@"Unknown group delivery receipt type %d with message ID %@", msg.receiptType, [NSString stringWithHexData:receiptMessageId]);
+            }
+            
             [messageProcessorDelegate changedManagedObjectID:dbmsg.objectID];
         }
         
@@ -1016,6 +1102,22 @@ Process incoming message.
 
 
 #pragma private methods
+
+- (BOOL)isAlreadyProcessedMessage:(AbstractMessage * _Nonnull)message onError:(void(^ _Nonnull)(NSError *error))onError {
+    if ([entityManager isProcessedWithMessage:message]) {
+        onError([ThreemaError threemaError:@"Message already processed" withCode:kMessageAlreadyProcessedErrorCode]);
+        return YES;
+    }
+    return NO;
+}
+
+- (void)processedMessage:(AbstractMessage *)message {
+    if ([[entityManager entityFetcher] isNonceAlreadyInDb:message] == NO) {
+        [entityManager performSyncBlockAndSafe:^{
+            [[entityManager entityCreator] nonceWithData:[NonceHasher hashedNonce:message.nonce]];
+        }];
+    }
+}
 
 /// Check is the sender in the black list. If it's a group control message and the sender is on the black list, we will process the message if the group is still active on the receiver side
 /// @param amsg Decoded abstract message

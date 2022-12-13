@@ -23,6 +23,7 @@
 #import "BoxTextMessage.h"
 #import "BoxLocationMessage.h"
 #import "DeliveryReceiptMessage.h"
+#import "GroupDeliveryReceiptMessage.h"
 #import "TypingIndicatorMessage.h"
 #import "GroupCreateMessage.h"
 #import "GroupLeaveMessage.h"
@@ -206,19 +207,31 @@
     Contact *contact = [em.entityFetcher contactForId:identity];
     
     if (![MessageSender sendReadReceiptWithContact:contact]) {
-        onCompletion();
+        if (onCompletion) {
+            onCompletion();
+        }
         return;
     }
     
     [self sendReceiptForMessages:messages toIdentity:identity receiptType:DELIVERYRECEIPT_MSGREAD onCompletion:onCompletion];
 }
 
-+ (void)sendUserAckForMessages:(NSArray*)messages toIdentity:(NSString*)identity onCompletion:(void(^)(void))onCompletion {
-    [self sendReceiptForMessages:messages toIdentity:identity receiptType:DELIVERYRECEIPT_MSGUSERACK onCompletion:onCompletion];
++ (void)sendUserAckForMessages:(NSArray*)messages toIdentity:(NSString*)identity group:(Group *)group onCompletion:(void(^)(void))onCompletion {
+    if (group == nil) {
+        [self sendReceiptForMessages:messages toIdentity:identity receiptType:DELIVERYRECEIPT_MSGUSERACK onCompletion:onCompletion];
+    }
+    else {
+        [self sendReceiptForGroupMessages:messages group:group receiptType:GROUPDELIVERYRECEIPT_MSGUSERACK onCompletion:onCompletion];
+    }
 }
 
-+ (void)sendUserDeclineForMessages:(NSArray*)messages toIdentity:(NSString*)identity onCompletion:(void(^)(void))onCompletion {
-    [self sendReceiptForMessages:messages toIdentity:identity receiptType:DELIVERYRECEIPT_MSGUSERDECLINE onCompletion:onCompletion];
++ (void)sendUserDeclineForMessages:(NSArray*)messages toIdentity:(NSString*)identity group:(Group *)group onCompletion:(void(^)(void))onCompletion {
+    if (group == nil) {
+        [self sendReceiptForMessages:messages toIdentity:identity receiptType:DELIVERYRECEIPT_MSGUSERDECLINE onCompletion:onCompletion];
+    }
+    else {
+        [self sendReceiptForGroupMessages:messages group:group receiptType:GROUPDELIVERYRECEIPT_MSGUSERDECLINE onCompletion:onCompletion];
+    }
 }
 
 + (void)sendReceiptForMessages:(NSArray*)messages toIdentity:(NSString*)identity receiptType:(uint8_t)receiptType onCompletion:(void(^)(void))onCompletion {
@@ -261,7 +274,59 @@
             TaskDefinitionSendAbstractMessage *task = [[TaskDefinitionSendAbstractMessage alloc] initWithMessage:deliveryReceipt];
             TaskManager *tm = [[TaskManager alloc] init];
             [tm addObjcWithTaskDefinition:task completionHandler:^(__unused TaskDefinition * _Nonnull taskDefinition, __unused NSError * _Nullable err) {
-                if (err == nil) {
+                if (err == nil && onCompletion) {
+                    onCompletion();
+                }
+            }];
+        }
+        else if (onCompletion) {
+            onCompletion();
+        }
+    }
+}
+
++ (void)sendReceiptForGroupMessages:(NSArray*)messages group:(Group *)group receiptType:(uint8_t)receiptType onCompletion:(void(^)(void))onCompletion {
+    if ([messages count] == 0) {
+        return;
+    }
+    
+    if (receiptType == DELIVERYRECEIPT_MSGREAD || receiptType == DELIVERYRECEIPT_MSGRECEIVED) {
+        // do not send received or read to group members
+        return;
+    }
+
+    // Chunks messages to max count of 800 ID's per delivery message receipt task, so that not exceeds max message size.
+    NSArray *chunks = [messages chunkedInto:800];
+    for (NSArray *chunk in chunks) {
+        NSMutableArray *receiptMessageIds = [NSMutableArray arrayWithCapacity:messages.count];
+        for (BaseMessage *message in chunk) {
+            @try {
+                if (receiptType == DELIVERYRECEIPT_MSGREAD && message.noDeliveryReceiptFlagSet) {
+                    DDLogVerbose(@"Do not send group read receipt (noDeliveryReceiptFlagSet) for message ID: %@", message.id);
+                } else {
+                    [receiptMessageIds addObject:message.id];
+                }
+
+            }
+            @catch (NSException *exception) {
+                DDLogError(@"Exception while marking message as read: %@", exception);
+            }
+        }
+
+        if (receiptMessageIds.count > 0) {
+            DDLogVerbose(@"Sending group read receipt for message IDs: %@", receiptMessageIds);
+            
+            TaskDefinitionSendGroupDeliveryReceiptsMessage *task = [[TaskDefinitionSendGroupDeliveryReceiptsMessage alloc] initWithGroup:group from:[[MyIdentityStore sharedMyIdentityStore] identity] to:group.allMemberIdentities.allObjects receiptType:receiptType receiptMessageIDs:receiptMessageIds sendContactProfilePicture:NO];
+
+            TaskManager *tm = [[TaskManager alloc] init];
+            [tm addObjcWithTaskDefinition:task completionHandler:^(TaskDefinition * _Nullable taskDefinition, NSError * _Nullable error) {
+                if (error) {
+                    DDLogError(@"Error while sending group delivery receipts message %@", error);
+                }
+
+                if ([taskDefinition isKindOfClass:TaskDefinitionSendGroupDeliveryReceiptsMessage.class]) {
+                    TaskDefinitionSendGroupDeliveryReceiptsMessage *groupDeliveryReceiptsTaskDef = (TaskDefinitionSendGroupDeliveryReceiptsMessage *) taskDefinition;
+
                     onCompletion();
                 }
             }];

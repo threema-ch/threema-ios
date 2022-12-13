@@ -61,6 +61,7 @@ static const int MAX_BYTES_TO_DECRYPT_NOTIFICATION_EXTENSION = 500000;
     NSData *chosenServerKeyPub;
     NSData *serverKeyPub;
     NSData *serverAltKeyPub;
+    NSData *tempKeyHash;
     
     NSString *mediatorServerURL;
 
@@ -106,6 +107,8 @@ static const int MAX_BYTES_TO_DECRYPT_NOTIFICATION_EXTENSION = 500000;
     BOOL mediatorServerInInitialQueueSend;
     BOOL isWaitingForReconnect;
     BOOL isRolePromotedToLeader;
+    
+    RogueDeviceMonitor *rogueDeviceMonitor;
 
     dispatch_queue_t queueConnectionStateDelegate;
     NSMutableSet *clientConnectionStateDelegates;
@@ -144,16 +147,13 @@ struct pktServerHello {
     char box[sizeof(struct pktServerHelloBox) + kNaClBoxOverhead];
 };
 
-struct pktVouch {
-    unsigned char client_tempkey_pub[kNaClCryptoPubKeySize];
-};
-
 struct pktLogin {
     char identity[kIdentityLen];
     char client_version[kClientVersionLen];
     unsigned char server_cookie[kCookieLen];
-    unsigned char vouch_nonce[kNaClCryptoNonceSize];
-    char vouch_box[sizeof(struct pktVouch) + kNaClBoxOverhead];
+    unsigned char reserved1[24]; // all-zero
+    unsigned char vouch[kVouchLen];
+    char reserved2[16]; // all-zero
 };
 
 struct pktLoginAck {
@@ -228,6 +228,8 @@ struct pktExtension {
         lastRcvdEchoSeq = 0;
 
         displayedServerAlerts = [NSMutableSet set];
+        
+        rogueDeviceMonitor = [[RogueDeviceMonitor alloc] init];
         
         /* register with reachability API */
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(networkStatusDidChange:) name:kReachabilityChangedNotification object:nil];
@@ -755,6 +757,16 @@ struct pktExtension {
              
             [[NSNotificationCenter defaultCenter] postNotificationName:kNotificationQueueSendComplete object:nil userInfo:nil];
             break;
+        case PLTYPE_LAST_EPHEMERAL_KEY_HASH: {
+            if (datalen != kEphemeralKeyHashLen) {
+                DDLogError(@"Bad ephemeral key hash datalen %d", datalen);
+                [socket disconnect];
+                break;
+            }
+            NSData *lastTempKeyHash = [NSData dataWithBytes:pl->data length:datalen];
+            [rogueDeviceMonitor checkEphemeralKeyHash:lastTempKeyHash];
+            break;
+        }
         default:
             DDLogWarn(@"Unsupported payload type %d", pl->type);
             break;
@@ -782,6 +794,9 @@ struct pktExtension {
         [self ackMessage:boxmsg.messageId fromIdentity:boxmsg.fromIdentity];
     } else if (err.code == kBadMessageErrorCode) {
         DDLogVerbose(@"Message processing error due to bad message format or decryption failure - acking anyway");
+        [self ackMessage:boxmsg.messageId fromIdentity:boxmsg.fromIdentity];
+    } else if (err.code == kMessageAlreadyProcessedErrorCode) {
+        DDLogVerbose(@"Message processing error due to message is already in DB. Probably processed by Notification Extension - acking anyway");
         [self ackMessage:boxmsg.messageId fromIdentity:boxmsg.fromIdentity];
     } else if (err.code == kMessageProcessingErrorCode) {
         DDLogError(@"Message processing error due to being unable to handle message: %@", err);
@@ -827,7 +842,7 @@ struct pktExtension {
         return NO;
     }
     
-    bzero(pl, pllen);
+    memset(pl, 0, pllen);
     
     pl->type = type;
     memcpy(pl->data, data.bytes, data.length);
@@ -885,7 +900,7 @@ struct pktExtension {
     plmsg->flags = message.flags;
     plmsg->reserved = 0;
     plmsg->metadata_len = message.metadataBox.length;
-    bzero(plmsg->push_from_name, kPushFromNameLen);
+    memset(plmsg->push_from_name, 0, kPushFromNameLen);
     if (message.pushFromName != nil) {
         NSData *encodedPushFromName = [ThreemaUtilityObjC truncatedUTF8String:message.pushFromName maxLength:kPushFromNameLen];
         strncpy(plmsg->push_from_name, encodedPushFromName.bytes, encodedPushFromName.length);
@@ -1336,8 +1351,9 @@ struct pktExtension {
             NSData *extensionsBox = [[NaClCrypto sharedCrypto] encryptData:extensionsData withPublicKey:serverTempKeyPub signKey:clientTempKeySec nonce:extensionsNonce];
             
             /* now prepare login packet */
-            NSData *vouchNonce = [[NaClCrypto sharedCrypto] randomBytes:kNaClCryptoNonceSize];
             struct pktLogin login;
+            memset(&login, 0, sizeof(struct pktLogin));
+            
             memcpy(login.identity, [[MyIdentityStore sharedMyIdentityStore].identity dataUsingEncoding:NSASCIIStringEncoding].bytes, kIdentityLen);
             
             memcpy(login.client_version, "threema-clever-extension-field", 30);
@@ -1345,16 +1361,24 @@ struct pktExtension {
             memcpy(&login.client_version[30], &extLen, sizeof(uint16_t));
             
             memcpy(login.server_cookie, serverCookie.bytes, kCookieLen);
-            memcpy(login.vouch_nonce, vouchNonce.bytes, kNaClCryptoNonceSize);
             
-            /* vouch subpacket */
-            struct pktVouch vouch;
-            memcpy(vouch.client_tempkey_pub, clientTempKeyPub.bytes, kNaClCryptoPubKeySize);
-            NSData *vouchBox = [[MyIdentityStore sharedMyIdentityStore] encryptData:[NSData dataWithBytes:&vouch length:sizeof(vouch)] withNonce:vouchNonce publicKey:chosenServerKeyPub];
-            memcpy(login.vouch_box, vouchBox.bytes, sizeof(login.vouch_box));
-            
+            /* vouch calculation */
+            NSData *sharedSecret = [[MyIdentityStore sharedMyIdentityStore] sharedSecretWithPublicKey:chosenServerKeyPub];
+            NSMutableData *vouchInput = [NSMutableData dataWithData:serverCookie];
+            [vouchInput appendData:clientTempKeyPub];
+            ThreemaKDF *kdf = [[ThreemaKDF alloc] initWithPersonal:@"3ma-csp"];
+            NSData *vouchKey = [kdf deriveKeyWithSalt:@"v" key:sharedSecret];
+            NSData *vouch = [ThreemaKDF calculateMacWithKey:vouchKey input:vouchInput];
+            memcpy(login.vouch, vouch.bytes, kVouchLen);
+                        
             /* encrypt login packet */
             NSData *loginBox = [[NaClCrypto sharedCrypto] encryptData:[NSData dataWithBytes:&login length:sizeof(login)] withPublicKey:serverTempKeyPub signKey:clientTempKeySec nonce:loginNonce];
+            
+            /* tell rogue device monitor about the new keys */
+            NSMutableData *ephemeralKeys = [NSMutableData dataWithData:clientTempKeyPub];
+            [ephemeralKeys appendData:serverTempKeyPub];
+            tempKeyHash = [ThreemaKDF hashWithInput:ephemeralKeys];
+            [rogueDeviceMonitor recordEphemeralKeyHash:tempKeyHash postLogin:NO];
             
             /* send it! */
             [socket writeWithData:loginBox tag:0];
@@ -1380,6 +1404,8 @@ struct pktExtension {
             }
             
             /* Don't care about the contents of the login ACK for now; it only needs to decrypt correctly */
+            
+            [rogueDeviceMonitor recordEphemeralKeyHash:tempKeyHash postLogin:YES];
             
             reconnectAttempts = 0;
             [serverConnectorConnectionState loggedInChatServer];

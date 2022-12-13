@@ -59,7 +59,7 @@
 - (void)quoteMessage:(UIMenuController *)menuController;
 - (NSString*)textForQuote;
 
-+ (CGFloat)maxContentWidthForTableWidth:(CGFloat)tableWidth;
++ (CGFloat)maxContentWidthForTableWidth:(CGFloat)tableWidth isGroup:(BOOL)isGroup;
 
 - (void)handleLongPress:(UIGestureRecognizer *)gestureRecognizer;
 

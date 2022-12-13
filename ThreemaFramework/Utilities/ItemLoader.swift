@@ -217,6 +217,8 @@ import PromiseKit
             "public.file-url",
             "public.url",
             "com.apple.is-remote-clipboard",
+            // Copied to clipboard with shortcuts automation
+            "link.contentkit.cachingidentifier",
         ]
         
         if chooseSecondType.contains(where: { $0 == intermediateItem.type }),

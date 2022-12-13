@@ -241,9 +241,6 @@ class ConversationActionsTest: XCTestCase {
             .done {
                 expect.fulfill()
             }
-            .catch { error in
-                XCTFail(error.localizedDescription)
-            }
 
         wait(for: [expect], timeout: 3)
 

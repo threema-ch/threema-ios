@@ -106,6 +106,11 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         self.selectedIndex = kDefaultInitialTabIndex;
         _isFirstAppearance = NO;
         [self showBetaFeedBackVC];
+        
+        // The celebration info screen is only for consumer users
+        if ([ThreemaAppObjc current] == ThreemaAppThreema) {
+            [self showAnniversaryView];
+        }
     }
 }
 
@@ -375,7 +380,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     }
 
     BOOL doNotShowAgain = [[AppGroup userDefaults] boolForKey:kShowedTestFlightFeedbackView];
-    if ([Environment env] != EnvironmentTypeAppStore && !doNotShowAgain) {
+    if ([ThreemaEnvironment env] != EnvironmentTypeAppStore && !doNotShowAgain) {
         dispatch_async(dispatch_get_main_queue(), ^{
             UIViewController *feedbackVC = [FeedbackViewController new];
             if(SYSTEM_IS_IPAD){
@@ -391,6 +396,22 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     }
 }
 
+- (void)showAnniversaryView {
+    if ([[NSUserDefaults standardUserDefaults] boolForKey:@"FASTLANE_SNAPSHOT"]) {
+        return;
+    }
+
+    BOOL doNotShowAgain = [[AppGroup userDefaults] boolForKey:kShowed10YearsAnniversaryView];
+    
+    if (!doNotShowAgain) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            UIViewController *anniversaryInfoViewController = [[InfoScreenHelper shared] anniversaryInfoViewController];
+            if (![anniversaryInfoViewController isBeingPresented]) {
+                [self presentViewController:anniversaryInfoViewController animated:true completion:nil];
+            }
+        });
+    }
+}
 #pragma mark - notifications
 
 - (void)selectedGroup:(NSNotification*)notification {

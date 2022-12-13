@@ -653,9 +653,9 @@
 "new_message_no_access_message" = "Ireki %@ jasotako mezuak berreskuratzeko.";
 "new_message_invalid_license" = "Zure lizentzia amaitu da. Ireki aplikazioa jarraitzeko.";
 /* reminder messages */
-"push_reminder_title" = "Push jakinarazpenak ez daude aktibatuta";
-"push_reminder_message" = "Badirudi %@k ez duela push jakinarazpenak bidaltzeko baimenik. Ondorioz, ez duzu mezu berriei buruzko informaziorik jasoko %@ itxi duzunean. Sar zaitez iOSen konfigurazioan eta «oharrak» atalean, aktibatu %@-ko jakinarazpenak, mezurik ez galtzeko.";
-"updating_database" = "Datu-basea eguneratzen ari da...\n\nEz eten eragiketa hau. Datu-base handietan, baliteke eragiketa horrek zenbait minutu behar izatea.";
+"push_reminder_title" = "Gaitu gabeko jakinarazpenak";
+"push_reminder_message" = "Ez duzu mezu berriei edo sartzen diren deiei buruzko informaziorik jasoko %@ itxi arte.\n\nHori konpontzeko, sartu Sistemaren doikuntzak atalean eta aktibatu %@ko jakinarazpenak.";
+"updating_database" = "Datu-basea eguneratzen ari da...\n\nMesedez, mantendu Threema lehen planoan exekutatzen amaitu arte.\n\nHonek minutu batzuk behar ditu txat historia handia badu.";
 "database_migration_error_hints" = "Mesedez, ziurtatu zure gailuak nahikoa memoria duela eskura, berrabiarazi eta saiatu berriro.";
 "database_migration_storage_warning_title" = "Ez dago nahikoa leku";
 "database_migration_storage_warning_message" = "Datu-basea eguneratzeko, %.1f GB behar dira aldi baterako. Zure gailuak %.1f GB bakarrik ditu erabilgarri une honetan. Mesedez, libratu biltegiratze-tokia <<Erabilera-doikuntzak>> ataleko elementuak ezabatuz, eta saiatu berriro.";
@@ -1365,3 +1365,11 @@ Fitxategi bakartiak zakarrontzira mugitu, eta %@ fitxategirik (multimedia) ez fa
 
 // ChatBar
 "chat_bar_quote_close_button" = "Kuota itxi";
+
+// ChatDetailView
+"detailView_title" = "Mezuaren xehetasunak";
+"detailView_sent" = "Bidalita";
+"detailView_delivered" = "Jasota";
+"detailView_read" = "Irakurrita";
+"detailView_ackd" = "Onartuta";
+"detailView_messageID" = "Mezuaren IDa";

@@ -78,6 +78,8 @@ typedef NS_OPTIONS(NSInteger, BaseMessageFlags) {
 @property (nonatomic, retain) NSString *webRequestId NS_SWIFT_NAME(webRequestID);
 @property (nonatomic, retain) NSNumber *flags;
 
+@property (nonatomic, retain) NSArray *groupDeliveryReceipts;
+
 @property (nonatomic, retain) Conversation *conversation;
 @property (nonatomic, retain) Contact *sender;
 

@@ -60,6 +60,7 @@ import Foundation
     }()
     
     private var enteredCorrectly: (() -> Void)?
+    private var didDismissAfterSuccess: (() -> Void)?
     private var isLockScreenController: Bool
     
     // MARK: - Lifecycle
@@ -71,13 +72,30 @@ import Foundation
     
     // MARK: - JKLLockScreenViewControllerDelegate & JKLLockScreenViewControllerDataSource
     
-    @objc func presentLockScreenView(
+    @objc func presentLockScreenViewObjC(
         viewController: UIViewController,
-        style: UIModalPresentationStyle = .overFullScreen,
-        enteredCorrectly: @escaping () -> Void
+        style: UIModalPresentationStyle,
+        enteredCorrectly: (() -> Void)?,
+        didDismissAfterSuccess: (() -> Void)?
+    ) {
+        
+        presentLockScreenView(
+            viewController: viewController,
+            style: style,
+            enteredCorrectly: enteredCorrectly,
+            didDismissAfterSuccess: didDismissAfterSuccess
+        )
+    }
+    
+    func presentLockScreenView(
+        viewController: UIViewController,
+        style: UIModalPresentationStyle = .automatic,
+        enteredCorrectly: (() -> Void)? = nil,
+        didDismissAfterSuccess: (() -> Void)? = nil
     ) {
         self.enteredCorrectly = enteredCorrectly
-        
+        self.didDismissAfterSuccess = didDismissAfterSuccess
+
         passCodeViewController.modalPresentationStyle = style
         
         // This is used to set a passcode after a safe-restore when tapping on a private conversation
@@ -91,6 +109,10 @@ import Foundation
 
     @objc func didPasscodeEnteredCorrectly(_ viewController: JKLLockScreenViewController!) {
         enteredCorrectly?()
+    }
+    
+    func didPasscodeViewDismiss(_ viewController: JKLLockScreenViewController!) {
+        didDismissAfterSuccess?()
     }
         
     @objc func allowTouchIDLockScreenViewController(_ lockScreenViewController: JKLLockScreenViewController!) -> Bool {

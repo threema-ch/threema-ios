@@ -278,28 +278,18 @@ public class WebAbstractMessage: NSObject {
                 return
             case "ack"?:
                 let requestAck = WebAckRequest(message: self)
-                var baseMessage: BaseMessage?
-                var entityManager: EntityManager?
-                entityManager = EntityManager()
-                baseMessage = entityManager?.entityFetcher.message(with: requestAck.messageID)
-                if baseMessage != nil {
-                    updateAckForMessage(
-                        entityManager: entityManager!,
-                        requestMessage: requestAck,
-                        baseMessage: baseMessage
-                    )
-                    let responseMessage = WebMessagesUpdate(
-                        requestID,
-                        baseMessage: baseMessage!,
-                        conversation: baseMessage!.conversation,
-                        objectMode: .modified,
-                        session: session
-                    )
-                    DDLogVerbose("[Threema Web] MessagePack -> Send update/messages")
-                    completionHandler(responseMessage.messagePack(), false)
-                    return
+                var conversation: Conversation?
+                var entityManager = EntityManager()
+                
+                if requestAck.type == "contact" {
+                    conversation = entityManager.entityFetcher.conversation(forIdentity: requestAck.id)
                 }
                 else {
+                    conversation = entityManager.entityFetcher.conversation(for: requestAck.id.hexadecimal())
+                }
+                
+                guard let baseMessage = entityManager.entityFetcher.message(with: requestAck.messageID),
+                      conversation?.objectID == baseMessage.conversation.objectID else {
                     let confirmResponse = WebConfirmResponse(
                         message: requestAck,
                         success: false,
@@ -309,6 +299,22 @@ public class WebAbstractMessage: NSObject {
                     completionHandler(confirmResponse.messagePack(), false)
                     return
                 }
+                
+                updateAckForMessage(
+                    entityManager: entityManager,
+                    requestMessage: requestAck,
+                    baseMessage: baseMessage
+                )
+                let responseMessage = WebMessagesUpdate(
+                    requestID,
+                    baseMessage: baseMessage,
+                    conversation: baseMessage.conversation,
+                    objectMode: .modified,
+                    session: session
+                )
+                DDLogVerbose("[Threema Web] MessagePack -> Send update/messages")
+                completionHandler(responseMessage.messagePack(), false)
+                return
             case "blob"?:
                 let requestBlob = WebBlobRequest(message: self)
                 var baseMessage: BaseMessage?
@@ -700,11 +706,6 @@ public class WebAbstractMessage: NSObject {
                         let conversationActions = ConversationActions(entityManager: entityManager)
                         // set isAppInBackground to false, because it will send receipts only if app is in foreground
                         conversationActions.read(conversation, isAppInBackground: false)
-                            .catch { error in
-                                DDLogError(
-                                    "[Threema Web] Error while get unread messages for conversation: \(error)"
-                                )
-                            }
                     } onTimeout: {
                         DDLogError("[Threema Web] Sending read receipt message timed out")
                     }
@@ -743,31 +744,80 @@ public class WebAbstractMessage: NSObject {
         baseMessage: BaseMessage!
     ) {
         if baseMessage != nil {
-            if baseMessage.userackDate != nil, baseMessage.userack.boolValue == requestMessage.acknowledged {
+                        
+            guard let conversation = baseMessage.conversation else {
                 return
+            }
+            
+            let groupManager = GroupManager(entityManager: entityManager)
+            let group = groupManager.getGroup(conversation: conversation)
+            var contact: Contact?
+            
+            if conversation.isGroup() {
+                if let groupDeliveryReceipts = baseMessage.groupDeliveryReceipts,
+                   !groupDeliveryReceipts.isEmpty,
+                   let gdr = baseMessage.reaction(for: MyIdentityStore.shared().identity),
+                   gdr
+                   .deliveryReceiptType() ==
+                   (requestMessage.acknowledged ? .userAcknowledgment : .userDeclined) {
+                    return
+                }
+            }
+            else {
+                guard let c = conversation.contact else {
+                    return
+                }
+                contact = c
+                // Only send changed acks
+                if baseMessage.userackDate != nil, let currentAck = baseMessage.userack,
+                   currentAck.boolValue == requestMessage.acknowledged {
+                    return
+                }
             }
             
             ServerConnectorHelper.connectAndWaitUntilConnected(initiator: .threemaWeb, timeout: 10) {
                 if requestMessage.acknowledged {
                     MessageSender.sendUserAck(
-                        forMessages: [baseMessage!],
-                        toIdentity: requestMessage.id,
+                        forMessages: [baseMessage],
+                        toIdentity: contact?.identity,
+                        group: group,
                         onCompletion: {
                             entityManager.performSyncBlockAndSafe {
-                                baseMessage.userack = NSNumber(value: true)
-                                baseMessage.userackDate = Date()
+                                if conversation.isGroup() {
+                                    let groupDeliveryReceipt = GroupDeliveryReceipt(
+                                        identity: MyIdentityStore.shared().identity,
+                                        deliveryReceiptType: .userAcknowledgment,
+                                        date: Date()
+                                    )
+                                    baseMessage.add(groupDeliveryReceipt: groupDeliveryReceipt)
+                                }
+                                else {
+                                    baseMessage.userack = NSNumber(booleanLiteral: requestMessage.acknowledged)
+                                    baseMessage.userackDate = Date()
+                                }
                             }
                         }
                     )
                 }
                 else {
                     MessageSender.sendUserDecline(
-                        forMessages: [baseMessage!],
-                        toIdentity: requestMessage.id,
+                        forMessages: [baseMessage],
+                        toIdentity: contact?.identity,
+                        group: group,
                         onCompletion: {
                             entityManager.performSyncBlockAndSafe {
-                                baseMessage.userack = NSNumber(value: false)
-                                baseMessage.userackDate = Date()
+                                if conversation.isGroup() {
+                                    let groupDeliveryReceipt = GroupDeliveryReceipt(
+                                        identity: MyIdentityStore.shared().identity,
+                                        deliveryReceiptType: .userDeclined,
+                                        date: Date()
+                                    )
+                                    baseMessage.add(groupDeliveryReceipt: groupDeliveryReceipt)
+                                }
+                                else {
+                                    baseMessage.userack = NSNumber(booleanLiteral: requestMessage.acknowledged)
+                                    baseMessage.userackDate = Date()
+                                }
                             }
                         }
                     )

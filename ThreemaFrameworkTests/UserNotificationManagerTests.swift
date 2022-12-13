@@ -453,7 +453,7 @@ class UserNotificationManagerTests: XCTestCase {
                     text: "This is a group message",
                     date: Date(),
                     delivered: true,
-                    id: BytesUtility.generateRandomBytes(length: ThreemaProtocol.messageIDLength)!,
+                    id: Data(BytesUtility.toBytes(hexString: expectedMessageID)!),
                     isOwn: false,
                     read: false,
                     sent: true,
@@ -617,6 +617,7 @@ class UserNotificationManagerTests: XCTestCase {
             // Create abstract message for mocking
             let message = BoxTextMessage()
             message.text = "This is a message"
+            message.messageID = Data(BytesUtility.toBytes(hexString: expectedMessageID)!)
 
             let pendingUserNotification = PendingUserNotification(key: "\(expectedSenderID)\(expectedMessageID)")
             pendingUserNotification
@@ -756,6 +757,7 @@ class UserNotificationManagerTests: XCTestCase {
             message.groupID = groupID
             message.groupCreator = groupCreator
             message.text = "This is a group message"
+            message.messageID = Data(BytesUtility.toBytes(hexString: expectedMessageID)!)
 
             let pendingUserNotification = PendingUserNotification(key: "\(expectedSenderID)\(expectedMessageID)")
             pendingUserNotification
@@ -948,7 +950,7 @@ class UserNotificationManagerTests: XCTestCase {
                             text: "This is a message",
                             date: Date(),
                             delivered: true,
-                            id: BytesUtility.generateRandomBytes(length: ThreemaProtocol.messageIDLength)!,
+                            id: Data(BytesUtility.toBytes(hexString: expectedMessageID)!),
                             isOwn: false,
                             read: false,
                             sent: true,
@@ -1072,7 +1074,7 @@ class UserNotificationManagerTests: XCTestCase {
                             text: "This is a group message",
                             date: Date(),
                             delivered: true,
-                            id: BytesUtility.generateRandomBytes(length: ThreemaProtocol.messageIDLength)!,
+                            id: Data(BytesUtility.toBytes(hexString: expectedMessageID)!),
                             isOwn: false,
                             read: false,
                             sent: true,

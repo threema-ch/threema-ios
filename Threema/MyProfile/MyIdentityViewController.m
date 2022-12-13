@@ -52,6 +52,7 @@
 @interface MyIdentityViewController () <PasswordCallback, UIScrollViewDelegate, ModalNavigationControllerDelegate>
 
 @property RevocationKeyHandler *revocationKeyHandler;
+@property LockScreen *lockScreen;
 
 @end
 
@@ -111,6 +112,7 @@
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(incomingSync) name:kNotificationIncomingProfileSynchronization object:nil];
     
     _revocationKeyHandler = [[RevocationKeyHandler alloc] init];
+    _lockScreen = [[LockScreen alloc] initWithIsLockScreenController:NO];
     
     [BrandingUtils updateTitleLogoOf:self.navigationItem in:self.navigationController];
     
@@ -553,10 +555,28 @@
         }
     }
     else if (indexPath.section == 3 && indexPath.row == 0) {
-        [self createBackup];
+        if ([KKPasscodeLock.sharedLock isPasscodeRequired]) {
+            [_lockScreen presentLockScreenViewObjCWithViewController:self style:UIModalPresentationAutomatic enteredCorrectly:^{
+                [self createBackup];
+            } didDismissAfterSuccess:^{
+                [self createBackup];
+            }];
+        }
+        else {
+            [self createBackup];
+        }
     }
     else if (indexPath.section == 3 && indexPath.row == 1) {
-        [self createRevocationKey];
+        if ([KKPasscodeLock.sharedLock isPasscodeRequired]) {
+            [_lockScreen presentLockScreenViewObjCWithViewController:self style:UIModalPresentationAutomatic enteredCorrectly:^{
+                [self createRevocationKey];
+            } didDismissAfterSuccess:^{
+                [self createRevocationKey];
+            }];
+        }
+        else {
+            [self createRevocationKey];
+        }
     }
     else if (indexPath.section == 4 && indexPath.row == 0) {
         UITableViewCell *cell = [tableView cellForRowAtIndexPath:indexPath];
@@ -572,6 +592,13 @@
         NSString *title = [BundleUtil localizedStringForKey:@"not_connected_for_edit_profile_title"];
         NSString *message = [BundleUtil localizedStringForKey:@"not_connected_for_edit_profile_message"];
         [UIAlertTemplate showAlertWithOwner:self title:title message:message actionOk:nil];
+        return NO;
+    }
+    
+    if ([identifier isEqualToString:SEGUE_SAFE_SETUP] && [KKPasscodeLock.sharedLock isPasscodeRequired]) {
+        [_lockScreen presentLockScreenViewObjCWithViewController:self style:UIModalPresentationAutomatic enteredCorrectly:^{
+            [self performSegueWithIdentifier:SEGUE_SAFE_SETUP sender:self];
+        } didDismissAfterSuccess:nil];
         return NO;
     }
     return YES;

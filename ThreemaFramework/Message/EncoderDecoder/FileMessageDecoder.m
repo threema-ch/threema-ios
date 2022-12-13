@@ -30,6 +30,7 @@
 #import "ServerConnector.h"
 #import "UserSettings.h"
 #import "ActivityIndicatorProxy.h"
+#import "NonceHasher.h"
 
 #ifdef DEBUG
   static const DDLogLevel ddLogLevel = DDLogLevelVerbose;
@@ -141,6 +142,11 @@ typedef void (^ErrorBlock)(NSError *err);
 
 - (void)handleMessage:(AbstractMessage *)message {
     _boxMessage = message;
+
+    if ([entityManager isProcessedWithMessage:message] == YES) {
+        _onError([ThreemaError threemaError:@"Message already processed" withCode:kMessageAlreadyProcessedErrorCode]);
+        return;
+    }
     
     FileMessageEntity *fileMessageEntity = [self createDBMessage];
     [self fetchThumbnail:fileMessageEntity];
@@ -278,6 +284,8 @@ typedef void (^ErrorBlock)(NSError *err);
         if ([_boxMessage isKindOfClass:AbstractGroupMessage.class]) {
             fileMessageEntity.sender = [entityManager.entityFetcher contactForId: _boxMessage.fromIdentity];
         }
+
+        [[entityManager entityCreator] nonceWithData:[NonceHasher hashedNonce:_boxMessage.nonce]];
     }];
     
     return fileMessageEntity;

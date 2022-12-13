@@ -21,9 +21,10 @@
 #import "ErrorNotificationHandler.h"
 #import "Contact.h"
 #import "AppDelegate.h"
+#import "AppGroup.h"
 #import "BundleUtil.h"
 
-@implementation ErrorNotificationHandler 
+@implementation ErrorNotificationHandler
 
 static ErrorNotificationHandler *singleton;
 
@@ -42,6 +43,7 @@ static ErrorNotificationHandler *singleton;
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleConnectionFailed:) name:kNotificationErrorConnectionFailed object:nil];
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleUnknownGroup:) name:kNotificationErrorUnknownGroup object:nil];
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handlePublicKeyMismatch:) name:kNotificationErrorPublicKeyMismatch object:nil];
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleRogueDevice:) name:kNotificationErrorRogueDevice object:nil];
     }
     return self;
 }
@@ -54,7 +56,7 @@ static ErrorNotificationHandler *singleton;
     NSString *title = [notification.userInfo objectForKey:kKeyTitle] ? [notification.userInfo objectForKey:kKeyTitle] : @"Connection error";
     NSString *message = [notification.userInfo objectForKey:kKeyMessage];
     
-    [self showAlertWithTitle:title message:message];
+    [self showAlertWithTitle:title message:message actionOk:nil];
 }
 
 - (void)handleUnknownGroup:(NSNotification*)notification {
@@ -63,27 +65,36 @@ static ErrorNotificationHandler *singleton;
     NSString *title = [BundleUtil localizedStringForKey:@"msg_unknown_group_request_sync_x_title"];
     NSString *message = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"msg_unknown_group_request_sync_x_message"], contactDisplayName];
     
-    [self showAlertWithTitle:title message:message];
+    [self showAlertWithTitle:title message:message actionOk:nil];
 }
 
 - (void)handlePublicKeyMismatch:(NSNotification*)notification {
     NSString *title = [BundleUtil localizedStringForKey:@"public_key_mismatch_title"];
     NSString *message = [BundleUtil localizedStringForKey:@"public_key_mismatch_message"];
     
-    [self showAlertWithTitle:title message:message];
+    [self showAlertWithTitle:title message:message actionOk:nil];
 }
 
 - (void)handleServerMessage:(NSNotification*)notification {
     NSString *title = [BundleUtil localizedStringForKey:@"server_message_title"];
     NSString *message = [notification.userInfo objectForKey:kKeyMessage];
     
-    [self showAlertWithTitle:title message:message];
+    [self showAlertWithTitle:title message:message actionOk:nil];
 }
 
-- (void)showAlertWithTitle:(NSString *)title message:(NSString *)message {
+- (void)handleRogueDevice:(NSNotification*)notification {
+    NSString *title = [BundleUtil localizedStringForKey:@"error_rogue_device_title"];
+    NSString *message = [BundleUtil localizedStringForKey:@"error_rogue_device_message"];
+    
+    [self showAlertWithTitle:title message:message actionOk:^(UIAlertAction * action) {
+        [[AppGroup userDefaults] removeObjectForKey:kShowRogueDeviceWarningFlag];
+    }];
+}
+
+- (void)showAlertWithTitle:(NSString *)title message:(NSString *)message actionOk:(void (^)(UIAlertAction*))actionOk {
     dispatch_async(dispatch_get_main_queue(), ^{
         UIViewController *vc = [[[AppDelegate sharedAppDelegate] window] rootViewController];
-        [UIAlertTemplate showAlertWithOwner:vc title:title message:message actionOk:nil];
+        [UIAlertTemplate showAlertWithOwner:vc title:title message:message actionOk:actionOk];
     });
 }
 @end

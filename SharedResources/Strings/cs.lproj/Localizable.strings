@@ -656,9 +656,7 @@
 
 /* reminder messages */
 "push_reminder_title" = "Oznámení nejsou povolená";
-"push_reminder_message" = "Když zavřete, nebudete dostávat informace o nových zprávách a příchozích hovorech v %@.
-
-Chcete-li to opravit, přejděte do nabídky Nastavení systému a povolte oznámení pro %@.";
+"push_reminder_message" = "Když zavřete, nebudete dostávat informace o nových zprávách a příchozích hovorech v %@.\n\nChcete-li to opravit, přejděte do nabídky Nastavení systému a povolte oznámení pro %@.";
 "push_reminder_not_now" = "Příště nepřipomínat";
 "push_reminder_set_now" = "Povolit oznámení";
 
@@ -1118,6 +1116,7 @@ Chcete-li to opravit, přejděte do nabídky Nastavení systému a povolte ozná
 "settings_appearance_system_theme" = "Systém";
 "settings_appearance_theme_selected" = "Téma %@ je aktivní";
 "settings_appearance_theme_active" = "Aktivní";
+"settings_appearance_hide_app_icon" = "Ikona aplikace";
 "settings_appearance_hide_stale_contacts" = "Skrýt neaktivní ID";
 "settings_appearance_show_profile_pictures" = "Zobrazovat profilové obrázky";
 "settings_appearance_display_order" = "Pořadí zobrazení";
@@ -1377,3 +1376,28 @@ Pokud vám v %@ nechybí žádné (mediální) soubory, vyprázdněte koš, abys
 
 // ChatBar
 "chat_bar_quote_close_button" = "Uzavřít citaci";
+
+// ChatDetailView
+"detailView_title" = "Podrobnosti zprávy";
+"detailView_sent" = "Odesláno";
+"detailView_delivered" = "Doručeno";
+"detailView_read" = "Přečteno";
+"detailView_ackd" = "Vzato na vědomí";
+"detailView_messageID" = "ID zprávy";
+"detailView_group_acknowledged" = "Souhlas (%d)";
+"detailView_group_declined" = "Nesouhlas (%d)";
+
+// App icons
+"app_icon_title_celebration" = "Ikona oslavy";
+"app_icon_description_celebration" = "10leté výročí";
+"app_icon_title_current" = "Aktuální ikona";
+"app_icon_description_current" = "Od roku 2019";
+"app_icon_title_second" = "Druhá ikona";
+"app_icon_description_second" = "2013–2019";
+"app_icon_title_first" = "První ikona";
+"app_icon_description_first" = "2012–2013";
+
+// 10 Years
+"anniversary_view_title" = "10 let Threema!";
+"anniversary_view_text" = "Dne 12. prosince 2022 bude aplikaci Threema deset let. U příležitosti zahájení oslav jsme vyšperkovali naši ikonu.";
+"anniversary_view_icon_info" = "Chcete-li si změnit ikonu zpět na výchozí nebo starou verzi, přejděte do nabídky „Nastavení > Vzhled > Ikona aplikace“.";

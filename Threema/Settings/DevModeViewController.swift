@@ -19,8 +19,8 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import SwiftUI
 import ThreemaFramework
-
 class DevModeViewController: ThemedTableViewController {
     
     @IBOutlet var newChatViewLabel: UILabel!
@@ -40,6 +40,10 @@ class DevModeViewController: ThemedTableViewController {
         
         updateNewChatViewSwitch()
         updateStyleKitDebugViewLabel()
+        if ThreemaApp.current != .threema, ThreemaApp.current != .red {
+            let cell = tableView.cellForRow(at: IndexPath(row: 2, section: 1))
+            cell?.isHidden = true
+        }
     }
 }
 

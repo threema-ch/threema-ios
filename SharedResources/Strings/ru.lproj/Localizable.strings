@@ -656,9 +656,7 @@
 
 /* reminder messages */
 "push_reminder_title" = "Push-уведомления не включены";
-"push_reminder_message" = "Вы не будете получать сообщения о новых сообщениях, если приложение %@ закрыто.
-
-Чтобы исправить это, перейдите в настройки системы и включите уведомления для %@.";
+"push_reminder_message" = "Вы не будете получать сообщения о новых сообщениях, если приложение %@ закрыто.\n\nЧтобы исправить это, перейдите в настройки системы и включите уведомления для %@.";
 "push_reminder_not_now" = "Больше не напоминать";
 "push_reminder_set_now" = "Включить уведомления";
 
@@ -1118,6 +1116,7 @@
 "settings_appearance_system_theme" = "Система";
 "settings_appearance_theme_selected" = "Активная тема: %@";
 "settings_appearance_theme_active" = "Активная";
+"settings_appearance_hide_app_icon" = "Значок приложения";
 "settings_appearance_hide_stale_contacts" = "Скрывать неактивные ID";
 "settings_appearance_show_profile_pictures" = "Показывать аватары";
 "settings_appearance_display_order" = "Отобpaжениe";
@@ -1377,3 +1376,28 @@
 
 // ChatBar
 "chat_bar_quote_close_button" = "Закрыть цитату";
+
+// ChatDetailView
+"detailView_title" = "Сведения о сообщении";
+"detailView_sent" = "Отправлено";
+"detailView_delivered" = "Доставлено";
+"detailView_read" = "Прочитано";
+"detailView_ackd" = "Подтверждено";
+"detailView_messageID" = "Код сообщения";
+"detailView_group_acknowledged" = "Принято (%d)";
+"detailView_group_declined" = "Не принято (%d)";
+
+// App icons
+"app_icon_title_celebration" = "Значок праздника";
+"app_icon_description_celebration" = "10-я годовщина";
+"app_icon_title_current" = "Текущий значок";
+"app_icon_description_current" = "С 2019 г.";
+"app_icon_title_second" = "Второй значок";
+"app_icon_description_second" = "2013–2019";
+"app_icon_title_first" = "Первый значок";
+"app_icon_description_first" = "2012–2013";
+
+// 10 Years
+"anniversary_view_title" = "10 лет Threema!";
+"anniversary_view_text" = "12 декабря 2022 года приложению Threema исполнится 10 лет. Чтобы отметить начало праздненств, мы украсили значок приложения.";
+"anniversary_view_icon_info" = "Чтобы вернуть стандартный или один из старых значков, откройте «Настройки > Внешний вид > Значок приложения».";

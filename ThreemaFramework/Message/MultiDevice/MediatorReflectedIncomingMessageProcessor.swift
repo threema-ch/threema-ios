@@ -91,6 +91,8 @@ class MediatorReflectedIncomingMessageProcessor {
             return try process(groupRenameMessage: amsg as! GroupRenameMessage)
         case is GroupSetPhotoMessage:
             return try process(groupSetPhotoMessage: amsg as! GroupSetPhotoMessage)
+        case is GroupDeliveryReceiptMessage:
+            return try process(incomingMessage: imsg, groupDeliveryReceiptMessage: amsg as! GroupDeliveryReceiptMessage)
         case is GroupAudioMessage:
             return try process(incomingMessage: imsg, groupAudioMessage: amsg as! GroupAudioMessage)
         case is GroupBallotCreateMessage:
@@ -309,6 +311,18 @@ class MediatorReflectedIncomingMessageProcessor {
     ) throws -> Promise<Void> {
         try getGroup(for: amsg)
         return messageStore.save(groupSetPhotoMessage: amsg)
+    }
+    
+    private func process(
+        incomingMessage imsg: D2d_IncomingMessage,
+        groupDeliveryReceiptMessage amsg: GroupDeliveryReceiptMessage
+    ) throws -> Promise<Void> {
+        try messageStore.save(
+            groupDeliveryReceiptMessage: amsg,
+            createdAt: imsg.createdAt,
+            isOutgoing: false
+        )
+        return Promise()
     }
 
     // MARK: Process reflected incoming group message

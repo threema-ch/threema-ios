@@ -40,11 +40,12 @@
 #import "ChatTextMessageCell.h"
 #import "FileMessageSender.h"
 
-#define DATE_LABEL_BG_COLOR [Colors.backgroundView colorWithAlphaComponent:0.9]
+#define DATE_LABEL_BG_COLOR [Colors.backgroundView colorWithAlphaComponent:0.8]
 #define REQUIRED_MENU_HEIGHT 50.0
 #define EMOJI_FONT_SIZE_FACTOR 3
 #define EMOJI_MAX_FONT_SIZE 50
 #define QUOTE_FONT_SIZE_FACTOR 0.8
+#define METADATA_STACK_SPACE 3.0
 
 #ifdef DEBUG
 static const DDLogLevel ddLogLevel = DDLogLevelVerbose;
@@ -60,7 +61,16 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 
 @implementation ChatMessageCell {
     UIImageView *msgBackground;
+    UIStackView *metaDataStackView;
+    UIView *metaDataStackViewBackgroundView;
+    UIStackView *ackStackView;
+    UIStackView *declineStackView;
     UIImageView *statusImage;
+    UIImageView *groupAckImage;
+    UILabel *groupAckCountLabel;
+    UIImageView *groupDeclineImage;
+    UILabel *groupDeclineCountLabel;
+    
     UILabel *dateLabel;
     UIImageView *typingIndicator;
     UIButton *groupSenderImageButton;
@@ -101,20 +111,42 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         // Status image
         statusImage = [[UIImageView alloc] init];
         statusImage.contentMode = UIViewContentModeScaleAspectFit;
-        [self.contentView addSubview:statusImage];
+        
+        // Group ack images image
+        groupAckImage = [[UIImageView alloc] init];
+        groupAckImage.contentMode = UIViewContentModeScaleAspectFit;
+        groupAckImage.image = [[UIImage systemImageNamed:@"hand.thumbsup"] imageWithTintColor:Colors.thumbUp renderingMode:UIImageRenderingModeAlwaysOriginal];
+        groupDeclineImage = [[UIImageView alloc] init];
+        groupDeclineImage.contentMode = UIViewContentModeScaleAspectFit;
+        groupDeclineImage.image = [[UIImage systemImageNamed:@"hand.thumbsdown"] imageWithTintColor:Colors.thumbDown renderingMode:UIImageRenderingModeAlwaysOriginal];
+        
+        groupAckCountLabel = [[UILabel alloc] init];
+        groupAckCountLabel.backgroundColor = [UIColor clearColor];
+        groupAckCountLabel.font = [UIFont systemFontOfSize:MAX(11.0f, MIN(14.0, roundf([UserSettings sharedUserSettings].chatFontSize * 11.0 / 16.0)))];
+        groupAckCountLabel.numberOfLines = 1;
+        
+        groupDeclineCountLabel = [[UILabel alloc] init];
+        groupDeclineCountLabel.backgroundColor = [UIColor clearColor];
+        groupDeclineCountLabel.font = [UIFont systemFontOfSize:MAX(11.0f, MIN(14.0, roundf([UserSettings sharedUserSettings].chatFontSize * 11.0 / 16.0)))];
+        groupDeclineCountLabel.numberOfLines = 1;
+        
+        ackStackView = [[UIStackView alloc] initWithArrangedSubviews:@[groupAckImage, groupAckCountLabel]];
+        ackStackView.axis = UILayoutConstraintAxisHorizontal;
+        ackStackView.distribution = UIStackViewDistributionEqualSpacing;
+        ackStackView.alignment = UIStackViewAlignmentCenter;
+        ackStackView.spacing = 1.0;
+        
+        declineStackView = [[UIStackView alloc] initWithArrangedSubviews:@[groupDeclineImage, groupDeclineCountLabel]];
+        declineStackView.axis = UILayoutConstraintAxisHorizontal;
+        declineStackView.distribution = UIStackViewDistributionEqualSpacing;
+        declineStackView.alignment = UIStackViewAlignmentCenter;
+        declineStackView.spacing = 1.0;
         
         // Date label
-        if (transparent && [UserSettings sharedUserSettings].wallpaper) {
-            dateLabel = [[RoundedRectLabel alloc] init];
-            ((RoundedRectLabel*)dateLabel).cornerRadius = 6;
-            dateLabel.backgroundColor = DATE_LABEL_BG_COLOR;
-        } else {
-            dateLabel = [[UILabel alloc] init];
-            dateLabel.backgroundColor = [UIColor clearColor];
-        }
+        dateLabel = [[UILabel alloc] init];
+        dateLabel.backgroundColor = [UIColor clearColor];
         dateLabel.font = [UIFont systemFontOfSize:MAX(11.0f, MIN(14.0, roundf([UserSettings sharedUserSettings].chatFontSize * 11.0 / 16.0)))];
         dateLabel.numberOfLines = 2;
-        [self.contentView addSubview:dateLabel];
         
         UIImage *quoteImage = [[BundleUtil imageNamed:@"Quote"] imageWithTint:Colors.text];
         quoteSlideIconImage = [[UIImageView alloc] initWithImage:quoteImage];
@@ -125,9 +157,21 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         
         // Typing indicator
         typingIndicator = [[UIImageView alloc] init];
+        typingIndicator.contentMode = UIViewContentModeScaleAspectFit;
         
-        [self.contentView addSubview:typingIndicator];
-                
+        metaDataStackView = [[UIStackView alloc] init];
+        metaDataStackView.axis = UILayoutConstraintAxisHorizontal;
+        metaDataStackView.distribution = UIStackViewDistributionEqualSpacing;
+        metaDataStackView.alignment = UIStackViewAlignmentCenter;
+        metaDataStackView.spacing = METADATA_STACK_SPACE;
+        [self.contentView addSubview:metaDataStackView];
+        
+        metaDataStackViewBackgroundView = [UIView new];
+        metaDataStackViewBackgroundView.backgroundColor = [UIColor clearColor];
+        metaDataStackViewBackgroundView.layer.cornerRadius = 5;
+        metaDataStackViewBackgroundView.layer.masksToBounds = true;
+        [self.contentView insertSubview:metaDataStackViewBackgroundView belowSubview:metaDataStackView];
+        
         pan = [[UIPanGestureRecognizer alloc]initWithTarget:self action:@selector(panGestureCellAction:)];
         pan.delegate = self;
         [self.contentView addGestureRecognizer:pan];
@@ -139,7 +183,8 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 }
 
 - (void)updateColors {
-    dateLabel.textColor = Colors.textLight;
+    groupAckCountLabel.textColor = Colors.thumbUp;
+    groupDeclineCountLabel.textColor = Colors.thumbDown;
     
     typingIndicator.image = [self getStatusImageNamed:@"Typing" withCustomColor:nil];
     
@@ -148,6 +193,16 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     self.selectedBackgroundView = v;
     
     quoteSlideIconImage.image = [[BundleUtil imageNamed:@"Quote"] imageWithTint:Colors.text];
+    
+    if ([UserSettings sharedUserSettings].wallpaper) {
+        metaDataStackViewBackgroundView.backgroundColor = DATE_LABEL_BG_COLOR;
+        dateLabel.textColor = Colors.textChatDateCustomImage;
+    } else {
+        metaDataStackViewBackgroundView.backgroundColor = [UIColor clearColor];
+        dateLabel.textColor = Colors.textLight;
+    }
+    
+    [self setNeedsLayout];
 }
 
 - (void)dealloc {
@@ -157,6 +212,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         [message removeObserver:self forKeyPath:@"sent"];
         [message removeObserver:self forKeyPath:@"userack"];
         [message removeObserver:self forKeyPath:@"userackDate"];
+        [message removeObserver:self forKeyPath:@"groupDeliveryReceipts"];
     }
     @catch(NSException *e) {}
 }
@@ -168,6 +224,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         [message removeObserver:self forKeyPath:@"sent"];
         [message removeObserver:self forKeyPath:@"userack"];
         [message removeObserver:self forKeyPath:@"userackDate"];
+        [message removeObserver:self forKeyPath:@"groupDeliveryReceipts"];
     }
     @catch(NSException *e) {}
     
@@ -179,17 +236,11 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     
     if (message.isOwn.boolValue) { // right bubble
         msgBackground.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin;
-        statusImage.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin;
-        
-        dateLabel.textAlignment = NSTextAlignmentRight;
-        dateLabel.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin;
     } else { // left bubble
         msgBackground.autoresizingMask = UIViewAutoresizingFlexibleRightMargin;
-        statusImage.autoresizingMask = UIViewAutoresizingFlexibleRightMargin;
-        
-        dateLabel.textAlignment = NSTextAlignmentLeft;
-        dateLabel.autoresizingMask = UIViewAutoresizingFlexibleRightMargin;
     }
+    
+    [self configureMetaStackView];
     
     [self updateStatusImage];
     [self updateDateLabel];
@@ -204,6 +255,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         [message addObserver:self forKeyPath:@"sent" options:0 context:nil];
         [message addObserver:self forKeyPath:@"userack" options:0 context:nil];
         [message addObserver:self forKeyPath:@"userackDate" options:0 context:nil];
+        [message addObserver:self forKeyPath:@"groupDeliveryReceipts" options:0 context:nil];
     }
 }
 
@@ -228,65 +280,73 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     CGFloat bgTopOffset = 1.0f;
     CGFloat bgSideMargin = 6.0f;
     
-    CGSize dateLabelSize = [dateLabel sizeThatFits:CGSizeMake(60, 28)];
+    CGSize dateLabelSize = [dateLabel sizeThatFits:CGSizeMake(120, 28)];
     CGFloat dateLabelWidth = ceilf(dateLabelSize.width);
-    CGFloat dateLabelHeight = ceilf(dateLabelSize.height);
     
+    
+    CGFloat metaDataStackViewWidth = 0.0;
+    
+    if (self.message.conversation.isGroup) {
+        if ([self.message groupReactionsCountOf:DeliveryReceiptTypeUserAcknowledgment] > 0) {
+            ackStackView.hidden = NO;
+            metaDataStackViewWidth += 25.0;
+            metaDataStackViewWidth += groupAckCountLabel.frame.size.width + 2.0;
+        } else {
+            ackStackView.hidden = YES;
+        }
+        
+        if ([self.message groupReactionsCountOf:DeliveryReceiptTypeUserDeclined] > 0) {
+            if (metaDataStackViewWidth > 0.0) {
+                metaDataStackViewWidth += METADATA_STACK_SPACE;
+            }
+            declineStackView.hidden = NO;
+            metaDataStackViewWidth += 25.0;
+            metaDataStackViewWidth += groupDeclineCountLabel.frame.size.width + 2.0;
+        } else {
+            declineStackView.hidden = YES;
+        }
+        if (!dateLabel.hidden) {
+            if (metaDataStackViewWidth > 0.0) {
+                metaDataStackViewWidth += METADATA_STACK_SPACE;
+            }
+            metaDataStackViewWidth += dateLabelWidth;
+        }
+    } else {
+        if (!statusImage.hidden) {
+            metaDataStackViewWidth += 25.0;
+        }
+        if (!dateLabel.hidden) {
+            if (metaDataStackViewWidth > 0.0) {
+                metaDataStackViewWidth += METADATA_STACK_SPACE;
+            }
+            metaDataStackViewWidth += dateLabelWidth;
+        }
+        if (!typingIndicator.hidden) {
+            if (metaDataStackViewWidth > 0.0) {
+                metaDataStackViewWidth += METADATA_STACK_SPACE;
+            }
+            metaDataStackViewWidth += 25.0;
+        }
+    }
+        
     if (message.isOwn.boolValue) { // right bubble
         msgBackground.frame = CGRectMake(self.contentView.frame.size.width-bubbleSize.width-bgSideMargin,
                                          bgTopOffset, bubbleSize.width, bubbleSize.height);
     
         CGFloat bubbleMaxY = CGRectGetMaxY(msgBackground.frame);
 
-        statusImage.frame = CGRectMake(msgBackground.frame.origin.x - 8 - 20, bubbleMaxY - 27, 20, 18);
-        dateLabel.frame = CGRectMake(statusImage.frame.origin.x - dateLabelWidth - 8, 0, dateLabelWidth, dateLabelHeight);;
-        
-        typingIndicator.frame = CGRectMake(4, bubbleMaxY - 22, 22, 20);
-        
-        if (statusImage.hidden) {
-            dateLabel.frame = CGRectOffset(dateLabel.frame, 28, 0);
-        }
-        
-        if (dateLabel.hidden == NO) {
-            [self verticalAlignDateLabel];
-        }
+        metaDataStackView.frame = CGRectMake(msgBackground.frame.origin.x - metaDataStackViewWidth - 4, bubbleMaxY - 27, metaDataStackViewWidth, 18);
+        metaDataStackViewBackgroundView.frame = CGRectMake(metaDataStackView.frame.origin.x - 2.0, metaDataStackView.frame.origin.y, metaDataStackView.frame.size.width + 4.0, metaDataStackView.frame.size.height);
     } else { // left bubble
         msgBackground.frame = CGRectMake(bgSideMargin + self.contentLeftOffset, bgTopOffset, bubbleSize.width, bubbleSize.height);
 
         CGFloat bubbleMaxY = CGRectGetMaxY(msgBackground.frame);
 
-        groupSenderImageButton.frame = CGRectMake(12, bubbleMaxY - 31, 27, 27);
+        groupSenderImageButton.frame = CGRectMake(8, bubbleMaxY - 31, 27, 27);
         
-        CGFloat xOffset = msgBackground.frame.origin.x + msgBackground.frame.size.width + 8;
-        
-        if (statusImage.hidden == NO) {
-            statusImage.frame = CGRectMake(xOffset, bubbleMaxY - 27, 20, 18);
-            xOffset += 28;
-        }
-        
-        if (dateLabel.hidden == NO) {
-            dateLabel.frame = CGRectMake(xOffset, bubbleMaxY - dateLabelHeight - 4, dateLabelWidth, dateLabelHeight);
-            xOffset += 44;
-            
-            [self verticalAlignDateLabel];
-        }
-        
-        if (typingIndicator.hidden == NO) {
-            if (xOffset > (self.contentView.frame.size.width - 30)) {
-                xOffset = self.contentView.frame.size.width - 30;
-            }
-
-            typingIndicator.frame = CGRectMake(xOffset, bubbleMaxY - 28, 22, 20);
-        }
-    }    
-}
-
-- (void)verticalAlignDateLabel {
-    if (statusImage.hidden) {
-        CGFloat bubbleMaxY = CGRectGetMaxY(msgBackground.frame);
-        dateLabel.frame = [RectUtil setYPositionOf:dateLabel.frame y:bubbleMaxY - dateLabel.frame.size.height - 11];
-    } else {
-        dateLabel.frame = [RectUtil rect:dateLabel.frame alignVerticalWith:statusImage.frame round:YES];
+        CGFloat xOffset = msgBackground.frame.origin.x + msgBackground.frame.size.width + 4;
+        metaDataStackView.frame = CGRectMake(xOffset, bubbleMaxY - 27, metaDataStackViewWidth, 18);
+        metaDataStackViewBackgroundView.frame = CGRectMake(metaDataStackView.frame.origin.x - 2.0, metaDataStackView.frame.origin.y, metaDataStackView.frame.size.width + 4.0, metaDataStackView.frame.size.height);
     }
 }
 
@@ -299,24 +359,10 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         } else {
             dateLabel.text = [DateFormatter shortStyleTimeNoDate:date];
         }
-        
-        /* set background again as it seems to be lost sometimes with RoundedRectLabel */
-        if (transparent && [UserSettings sharedUserSettings].wallpaper)
-            dateLabel.backgroundColor = DATE_LABEL_BG_COLOR;
-        else
-            dateLabel.backgroundColor = [UIColor clearColor];
-        
-        dateLabel.hidden = NO;
     } else {
         dateLabel.text = [DateFormatter shortStyleTimeNoDate:date];
     }
-    
-    /* set background again as it seems to be lost sometimes with RoundedRectLabel */
-    if (transparent && [UserSettings sharedUserSettings].wallpaper)
-        dateLabel.backgroundColor = DATE_LABEL_BG_COLOR;
-    else
-        dateLabel.backgroundColor = [UIColor clearColor];
-    
+        
     dateLabel.hidden = NO;
     
     /* received message - show timestamp only if setting is enabled */
@@ -331,6 +377,27 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         [self setNeedsLayout];
     } else {
         typingIndicator.hidden = YES;
+        [self setNeedsLayout];
+    }
+}
+
+- (void)updateGroupDeliveryReceipts {
+    NSInteger ackCount = [message groupReactionsCountOf:DeliveryReceiptTypeUserAcknowledgment];
+    NSInteger declineCount = [message groupReactionsCountOf:DeliveryReceiptTypeUserDeclined];
+    
+    groupAckCountLabel.text = [NSString stringWithFormat:@"%li", ackCount];
+    groupDeclineCountLabel.text = [NSString stringWithFormat:@"%li", declineCount];
+    groupAckImage.image = [[UIImage systemImageNamed:@"hand.thumbsup"] imageWithTintColor:Colors.thumbUp renderingMode:UIImageRenderingModeAlwaysOriginal];
+    groupDeclineImage.image = [[UIImage systemImageNamed:@"hand.thumbsdown"] imageWithTintColor:Colors.thumbDown renderingMode:UIImageRenderingModeAlwaysOriginal];
+    
+    GroupDeliveryReceipt *myReaction = [message reactionForMyIdentity];
+    if (myReaction != nil) {
+        if (myReaction.deliveryReceiptType == DeliveryReceiptTypeUserAcknowledgment) {
+            groupAckImage.image = [[UIImage systemImageNamed:@"hand.thumbsup.fill"] imageWithTintColor:Colors.thumbUp renderingMode:UIImageRenderingModeAlwaysOriginal];
+        }
+        else {
+            groupDeclineImage.image = [[UIImage systemImageNamed:@"hand.thumbsdown.fill"] imageWithTintColor:Colors.thumbDown renderingMode:UIImageRenderingModeAlwaysOriginal];
+        }
     }
 }
 
@@ -356,6 +423,34 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     }
 }
 
+- (void)configureMetaStackView {
+    for (UIView *view in metaDataStackView.subviews) {
+        [view removeFromSuperview];
+    }
+    
+    if (message.conversation.isGroup) {
+        if (message.isOwn.boolValue) { // right bubble
+            [metaDataStackView addArrangedSubview:dateLabel];
+            [metaDataStackView addArrangedSubview:ackStackView];
+            [metaDataStackView addArrangedSubview:declineStackView];
+        } else { // left bubble
+            [metaDataStackView addArrangedSubview:ackStackView];
+            [metaDataStackView addArrangedSubview:declineStackView];
+            [metaDataStackView addArrangedSubview:dateLabel];
+        }
+    }
+    else {
+        if (message.isOwn.boolValue) { // right bubble
+            [metaDataStackView addArrangedSubview:typingIndicator];
+            [metaDataStackView addArrangedSubview:dateLabel];
+            [metaDataStackView addArrangedSubview:statusImage];
+        } else { // left bubble
+            [metaDataStackView addArrangedSubview:statusImage];
+            [metaDataStackView addArrangedSubview:dateLabel];
+            [metaDataStackView addArrangedSubview:typingIndicator];
+        }
+    }
+}
 
 - (void)updateStatusImage {
     NSString *iconName;
@@ -384,29 +479,38 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     
     CGFloat alpha = 0.8;
     
-    if (message.userackDate != nil) {
-        if (message.userack.boolValue) {
-            iconName = @"hand.thumbsup.fill_regular.S";
-            color = Colors.thumbUp;
-        } else if (message.userack.boolValue == NO) {
-            iconName = @"hand.thumbsdown.fill_regular.S";
-            color = Colors.thumbDown;
+    if (message.conversation.groupId != nil) {
+        [self updateGroupDeliveryReceipts];
+    }
+    else {
+        ackStackView.hidden = YES;
+        declineStackView.hidden = YES;
+        if (message.userackDate != nil) {
+            if (message.userack.boolValue) {
+                iconName = @"hand.thumbsup.fill";
+                color = Colors.thumbUp;
+            } else if (message.userack.boolValue == NO) {
+                iconName = @"hand.thumbsdown.fill";
+                color = Colors.thumbDown;
+            }
+            alpha = 1.0;
         }
-        
-        alpha = 1.0;
     }
     
+    
     if (iconName) {
-        statusImage.image = [self getStatusImageNamed:iconName withCustomColor:color];
-
+        if ([iconName isEqualToString:@"hand.thumbsup.fill"] || [iconName isEqualToString:@"hand.thumbsdown.fill"]) {
+            statusImage.image = [[UIImage systemImageNamed:iconName] imageWithTintColor:color renderingMode:UIImageRenderingModeAlwaysOriginal];
+        }
+        else {
+            statusImage.image = [self getStatusImageNamed:iconName withCustomColor:color];
+        }
+        
         statusImage.alpha = alpha;
         statusImage.hidden = NO;
     } else {
         statusImage.hidden = YES;
     }
-
-    
-    [self setNeedsLayout];
 }
 
 - (UIImage *)getStatusImageNamed:(NSString *)imageName withCustomColor:(UIColor *)color {
@@ -470,7 +574,14 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     NSMutableArray *menuItems = [NSMutableArray array];
     
     if ([self canPerformAction:@selector(userackMessage:) withSender:nil]) {
-        UIImage *ackImage = [UIImage imageNamed:@"hand.thumbsup.fill_regular.M" inColor:Colors.thumbUp];
+        NSString *iconName = @"hand.thumbsup";
+        GroupDeliveryReceipt *dr = [message reactionForMyIdentity];
+        if (dr != nil) {
+            if (dr.deliveryReceiptType == DeliveryReceiptTypeUserAcknowledgment) {
+                iconName = @"hand.thumbsup.fill";
+            }
+        }
+        UIImage *ackImage = [[UIImage systemImageNamed:iconName] imageWithTintColor:Colors.thumbUp renderingMode:UIImageRenderingModeAlwaysOriginal];
         
         QBPopupMenuItem *item = [QBPopupMenuItem itemWithImage:ackImage target:self action:@selector(userackMessage:)];
         item.accessibilityLabel = [BundleUtil localizedStringForKey:@"acknowledge"];
@@ -478,7 +589,14 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     }
     
     if ([self canPerformAction:@selector(userdeclineMessage:) withSender:nil]) {
-        UIImage *declineImage = [UIImage imageNamed:@"hand.thumbsdown.fill_regular.M" inColor:Colors.thumbDown];
+        NSString *iconName = @"hand.thumbsdown";
+        GroupDeliveryReceipt *dr = [message reactionForMyIdentity];
+        if (dr != nil) {
+            if (dr.deliveryReceiptType == DeliveryReceiptTypeUserDeclined) {
+                iconName = @"hand.thumbsdown.fill";
+            }
+        }
+        UIImage *declineImage = [[UIImage systemImageNamed:iconName] imageWithTintColor:Colors.thumbDown renderingMode:UIImageRenderingModeAlwaysOriginal];
 
         QBPopupMenuItem *item = [QBPopupMenuItem itemWithImage:declineImage target:self action:@selector(userdeclineMessage:)];
         item.accessibilityLabel = [BundleUtil localizedStringForKey:@"decline"];
@@ -554,14 +672,29 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         NSMutableArray *menuItems = [NSMutableArray array];
         NSMutableArray *deleteItems = [NSMutableArray array];
         if ([self canPerformAction:@selector(userackMessage:) withSender:nil]) {
-            UIImage *ackImage = [[UIImage imageNamed:@"hand.thumbsup.fill_regular.M" inColor:Colors.thumbUp] imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal];
+            NSString *iconName = @"hand.thumbsup";
+            GroupDeliveryReceipt *dr = [message reactionForMyIdentity];
+            if (dr != nil) {
+                if (dr.deliveryReceiptType == DeliveryReceiptTypeUserAcknowledgment) {
+                    iconName = @"hand.thumbsup.fill";
+                }
+            }
+            UIImage *ackImage = [[UIImage systemImageNamed:iconName] imageWithTintColor:Colors.thumbUp renderingMode:UIImageRenderingModeAlwaysOriginal];
             UIAction *action = [UIAction actionWithTitle:[BundleUtil localizedStringForKey:@"acknowledge"] image:ackImage identifier:nil handler:^(__unused __kindof UIAction * _Nonnull action) {
                 [self userackMessage:nil];
             }];
             [menuItems addObject:action];
         }
         if ([self canPerformAction:@selector(userdeclineMessage:) withSender:nil]) {
-            UIImage *declineImage = [[UIImage imageNamed:@"hand.thumbsdown.fill_regular.M" inColor:Colors.thumbDown] imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal];
+            NSString *iconName = @"hand.thumbsdown";
+            GroupDeliveryReceipt *dr = [message reactionForMyIdentity];
+            if (dr != nil) {
+                if (dr.deliveryReceiptType == DeliveryReceiptTypeUserDeclined) {
+                    iconName = @"hand.thumbsdown.fill";
+                }
+            }
+            UIImage *declineImage = [[UIImage systemImageNamed:iconName] imageWithTintColor:Colors.thumbDown renderingMode:UIImageRenderingModeAlwaysOriginal];
+            
             UIAction *action = [UIAction actionWithTitle:[BundleUtil localizedStringForKey:@"decline"] image:declineImage identifier:nil handler:^(__unused __kindof UIAction * _Nonnull action) {
                 [self userdeclineMessage:nil];
             }];
@@ -642,14 +775,28 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     NSMutableArray *menuItems = [NSMutableArray array];
     NSMutableArray *deleteItems = [NSMutableArray array];
     if ([self canPerformAction:@selector(userackMessage:) withSender:nil]) {
-        UIImage *ackImage = [[UIImage imageNamed:@"hand.thumbsup.fill_regular.M" inColor:Colors.thumbUp] imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal];
+        NSString *iconName = @"hand.thumbsup";
+        GroupDeliveryReceipt *dr = [message reactionForMyIdentity];
+        if (dr != nil) {
+            if (dr.deliveryReceiptType == DeliveryReceiptTypeUserAcknowledgment) {
+                iconName = @"hand.thumbsup.fill";
+            }
+        }
+        UIImage *ackImage = [[UIImage systemImageNamed:iconName] imageWithTintColor:Colors.thumbUp renderingMode:UIImageRenderingModeAlwaysOriginal];
         UIAction *action = [UIAction actionWithTitle:[BundleUtil localizedStringForKey:@"acknowledge"] image:ackImage identifier:nil handler:^(__unused __kindof UIAction * _Nonnull action) {
             [self userackMessage:nil];
         }];
         [menuItems addObject:action];
     }
     if ([self canPerformAction:@selector(userdeclineMessage:) withSender:nil]) {
-        UIImage *declineImage = [[UIImage imageNamed:@"hand.thumbsdown.fill_regular.M" inColor:Colors.thumbDown] imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal];
+        NSString *iconName = @"hand.thumbsdown";
+        GroupDeliveryReceipt *dr = [message reactionForMyIdentity];
+        if (dr != nil) {
+            if (dr.deliveryReceiptType == DeliveryReceiptTypeUserDeclined) {
+                iconName = @"hand.thumbsdown.fill";
+            }
+        }
+        UIImage *declineImage = [[UIImage systemImageNamed:iconName] imageWithTintColor:Colors.thumbDown renderingMode:UIImageRenderingModeAlwaysOriginal];
         UIAction *action = [UIAction actionWithTitle:[BundleUtil localizedStringForKey:@"decline"] image:declineImage identifier:nil handler:^(__unused __kindof UIAction * _Nonnull action) {
             [self userdeclineMessage:nil];
         }];
@@ -859,24 +1006,47 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 }
 
 - (void)sendUserAck:(BOOL)doAcknowledge {
-    if (message.userackDate != nil && message.userack.boolValue == doAcknowledge) {
+
+    if (!message.conversation.isGroup && message.userackDate != nil && message.userack.boolValue == doAcknowledge) {
         return;
+    }
+    if (message.conversation.isGroup && message.groupDeliveryReceipts != nil) {
+        if (message.groupDeliveryReceipts.count > 0) {
+            GroupDeliveryReceipt *gdr = [message reactionFor:[MyIdentityStore sharedMyIdentityStore].identity];
+            DeliveryReceiptType type = doAcknowledge ? DeliveryReceiptTypeUserAcknowledgment : DeliveryReceiptTypeUserDeclined;
+            if (gdr != nil &&
+                [gdr deliveryReceiptType] == type) {
+                return;
+            }
+        }
     }
     
     EntityManager *entityManager = [[EntityManager alloc] init];
+    GroupManager *groupManager = [[GroupManager alloc] initWithEntityManager:entityManager];
+    Group *group = [groupManager getGroupWithConversation:message.conversation];
     [entityManager performSyncBlockAndSafe:^{
         if (doAcknowledge) {
-            [MessageSender sendUserAckForMessages:@[message] toIdentity:message.conversation.contact.identity onCompletion:^{}];
-            message.userack = @YES;
-            message.userackDate = [NSDate date];
-            [self updateStatusImage];
+            [MessageSender sendUserAckForMessages:@[message] toIdentity:message.conversation.contact.identity group:group onCompletion:^{}];
+            if (group == nil) {
+                message.userack = @YES;
+                message.userackDate = [NSDate date];
+                [self updateStatusImage];
+                [self setNeedsLayout];
+            } else {
+                GroupDeliveryReceipt *groupDeliveryReceipt = [[GroupDeliveryReceipt alloc] initWithIdentity:[MyIdentityStore sharedMyIdentityStore].identity deliveryReceiptType:DeliveryReceiptTypeUserAcknowledgment date:[NSDate date]];
+                [message addWithGroupDeliveryReceipt:groupDeliveryReceipt];
+            }
         } else {
-            [MessageSender sendUserDeclineForMessages:@[message] toIdentity:message.conversation.contact.identity onCompletion:^{
+            [MessageSender sendUserDeclineForMessages:@[message] toIdentity:message.conversation.contact.identity group:group onCompletion:^{}];
+            if (group == nil) {
                 message.userack = @NO;
                 message.userackDate = [NSDate date];
                 [self updateStatusImage];
-
-            }];
+                [self setNeedsLayout];
+            } else {
+                GroupDeliveryReceipt *groupDeliveryReceipt = [[GroupDeliveryReceipt alloc] initWithIdentity:[MyIdentityStore sharedMyIdentityStore].identity deliveryReceiptType:DeliveryReceiptTypeUserDeclined date:[NSDate date]];
+                [message addWithGroupDeliveryReceipt:groupDeliveryReceipt];
+            }
         }
     }];
 }
@@ -922,9 +1092,9 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
             return NO;
         }
         return YES;
-    } else if (action == @selector(userackMessage:) && !message.isOwn.boolValue && message.conversation.groupId == nil) {
+    } else if (action == @selector(userackMessage:) && ((!message.isOwn.boolValue && !message.conversation.isGroup) || message.conversation.isGroup)) {
         return YES;
-    } else if (action == @selector(userdeclineMessage:) && !message.isOwn.boolValue && message.conversation.groupId == nil) {
+    } else if (action == @selector(userdeclineMessage:) && ((!message.isOwn.boolValue && !message.conversation.isGroup) || message.conversation.isGroup)) {
         return YES;
     } else if (action == @selector(deleteMessage:)) {
         return YES;
@@ -952,9 +1122,10 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
                 dispatch_async(dispatch_get_main_queue(), ^{
                     if (self.message.wasDeleted == NO) {
                         [UIView animateWithDuration:0.5 animations:^{
-                            [self updateStatusImage];
                             [self updateDateLabel];
+                            [self updateStatusImage];
                             [self updateTypingIndicator];
+                            [self setNeedsLayout];
                         }];
                     }
                 });
@@ -974,11 +1145,16 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     if (message.sender == nil || message.isOwn.boolValue)
         return 0.0f;
     else
-        return 40.0f;
+        return 30.0f;
 }
 
-+ (CGFloat)maxContentWidthForTableWidth:(CGFloat)tableWidth {
-    return tableWidth - kMessageScreenMargin;
++ (CGFloat)maxContentWidthForTableWidth:(CGFloat)tableWidth isGroup:(BOOL)isGroup {
+    if (isGroup) {
+        return tableWidth - kMessageScreenMarginGroup;
+    }
+    else {
+        return tableWidth - kMessageScreenMargin;
+    }
 }
 
 - (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event {

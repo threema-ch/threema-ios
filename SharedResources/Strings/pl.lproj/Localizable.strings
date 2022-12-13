@@ -657,9 +657,7 @@
 
 /* reminder messages */
 "push_reminder_title" = "Powiadomienia nie są włączone";
-"push_reminder_message" = "Nie otrzymasz informacji o nowych wiadomościach lub nadchodzących połączeniach po zamknięciu %@. 
-
-Aby to rozwiązać, przejdź do Ustawień systemowych i włącz powiadomienia dla %@.";
+"push_reminder_message" = "Nie otrzymasz informacji o nowych wiadomościach lub nadchodzących połączeniach po zamknięciu %@. \n\nAby to rozwiązać, przejdź do Ustawień systemowych i włącz powiadomienia dla %@.";
 "push_reminder_not_now" = "Nie przypominaj mi więcej";
 "push_reminder_set_now" = "Włącz powiadomienia";
 
@@ -729,7 +727,7 @@ Aby to rozwiązać, przejdź do Ustawień systemowych i włącz powiadomienia dl
 "send_notification_message_error_disagree" = "Akceptowanie nie powiódło się.";
 
 /* Device policy */
-"disabled_by_device_policy" = "Niektóre ustawienia zostały wyłączone przez profil urządzenia";
+"disabled_by_device_policy" = "Niektóre ustawienia zostały wyłączone przez administratora";
 
 /* Edit profile */
 "profile_picture_recipients" = "Odbiorcy zdjęcia profilowego";
@@ -1119,6 +1117,7 @@ Aby to rozwiązać, przejdź do Ustawień systemowych i włącz powiadomienia dl
 "settings_appearance_system_theme" = "System";
 "settings_appearance_theme_selected" = "%@ motyw aktywny";
 "settings_appearance_theme_active" = "Aktywny";
+"settings_appearance_hide_app_icon" = "Ikona aplikacji";
 "settings_appearance_hide_stale_contacts" = "Ukryj Nieaktywne IDs";
 "settings_appearance_show_profile_pictures" = "Pokaż Zdjęcia Profilowe";
 "settings_appearance_display_order" = "Kolejność Wyświetlania";
@@ -1377,3 +1376,28 @@ Jeśli w %@ nie brakuje żadnych plików (multimedialnych), opróżnij kosz, aby
 
 // ChatBar
 "chat_bar_quote_close_button" = "Zamknij cytat";
+
+// ChatDetailView
+"detailView_title" = "Szczegóły wiadomości";
+"detailView_sent" = "Wysłano";
+"detailView_delivered" = "Dostarczono";
+"detailView_read" = "Przeczytano";
+"detailView_ackd" = "Potwierdzono";
+"detailView_messageID" = "Identyfikator wiadomości";
+"detailView_group_acknowledged" = "Aprobata (%d)";
+"detailView_group_declined" = "Sprzeciw (%d)";
+
+// App icons
+"app_icon_title_celebration" = "Ikona święta";
+"app_icon_description_celebration" = "10. rocznica";
+"app_icon_title_current" = "Bieżąca ikona";
+"app_icon_description_current" = "Od 2019 r.";
+"app_icon_title_second" = "Druga ikona";
+"app_icon_description_second" = "2013-2019";
+"app_icon_title_first" = "Pierwsza ikona";
+"app_icon_description_first" = "2012-2013";
+
+// 10 Years
+"anniversary_view_title" = "10 lat aplikacji Threema!";
+"anniversary_view_text" = "12 grudnia 2022 r. Threema będzie miała dziesięć lat. Aby uczcić tę okazję, udekorowaliśmy ikonę naszej aplikacji.";
+"anniversary_view_icon_info" = "Aby zmienić ikonę aplikacji na domyślną lub poprzednią, przejdź do „Ustawienia > Wygląd > Ikona aplikacji”.";

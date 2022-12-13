@@ -61,7 +61,7 @@ class MessageStore: MessageStoreProtocol {
             msg?.isOwn = NSNumber(booleanLiteral: false)
 
             conversation.lastMessage = msg
-            conversation.lastUpdate = Date()
+            conversation.lastUpdate = Date.now
         }
         if let err = err {
             throw err
@@ -115,7 +115,7 @@ class MessageStore: MessageStoreProtocol {
                             (msg as? FileMessageEntity)?.origin = NSNumber(booleanLiteral: true)
 
                             conversation.lastMessage = msg
-                            conversation.lastUpdate = Date()
+                            conversation.lastUpdate = Date.now
                         }
 
                         if !isOutgoing {
@@ -171,7 +171,7 @@ class MessageStore: MessageStoreProtocol {
             msg?.isOwn = NSNumber(booleanLiteral: isOutgoing)
 
             conversation.lastMessage = msg
-            conversation.lastUpdate = Date()
+            conversation.lastUpdate = Date.now
         }
         if let err = err {
             throw err
@@ -282,7 +282,7 @@ class MessageStore: MessageStoreProtocol {
             msg?.isOwn = NSNumber(booleanLiteral: false)
 
             conversation.lastMessage = msg
-            conversation.lastUpdate = Date()
+            conversation.lastUpdate = Date.now
         }
         if let err = err {
             throw err
@@ -398,7 +398,7 @@ class MessageStore: MessageStoreProtocol {
                             (msg as? FileMessageEntity)?.origin = NSNumber(booleanLiteral: true)
 
                             conversation.lastMessage = msg
-                            conversation.lastUpdate = Date()
+                            conversation.lastUpdate = Date.now
                         }
 
                         if !isOutgoing {
@@ -498,7 +498,7 @@ class MessageStore: MessageStoreProtocol {
                         msg?.isOwn = NSNumber(booleanLiteral: false)
 
                         conversation.lastMessage = msg
-                        conversation.lastUpdate = Date()
+                        conversation.lastUpdate = Date.now
                     }
                 }
 
@@ -592,7 +592,7 @@ class MessageStore: MessageStoreProtocol {
             msg?.isOwn = NSNumber(booleanLiteral: isOutgoing)
 
             conversation.lastMessage = msg
-            conversation.lastUpdate = Date()
+            conversation.lastUpdate = Date.now
         }
         if let err = err {
             throw err
@@ -654,7 +654,7 @@ class MessageStore: MessageStoreProtocol {
             msg?.isOwn = NSNumber(booleanLiteral: isOutgoing)
 
             conversation.lastMessage = msg
-            conversation.lastUpdate = Date()
+            conversation.lastUpdate = Date.now
         }
         if let err = err {
             throw err
@@ -711,6 +711,59 @@ class MessageStore: MessageStoreProtocol {
                 }
             }
     }
+    
+    func save(
+        groupDeliveryReceiptMessage: GroupDeliveryReceiptMessage,
+        createdAt: UInt64,
+        isOutgoing: Bool
+    ) throws {
+        for id in groupDeliveryReceiptMessage.receiptMessageIDs {
+            if let messageID = id as? Data {
+                if let msg = frameworkInjector.backgroundEntityManager.entityFetcher.message(with: messageID),
+                   msg.conversation.groupID == groupDeliveryReceiptMessage.groupID {
+                    if groupDeliveryReceiptMessage.receiptType == GroupDeliveryReceipt.DeliveryReceiptType
+                        .userAcknowledgment.rawValue {
+                        if isOutgoing {
+                            messageProcessorDelegate.outgoingMessageFinished(groupDeliveryReceiptMessage)
+                        }
+                        else {
+                            frameworkInjector.backgroundEntityManager.performSyncBlockAndSafe {
+                                let receipt = GroupDeliveryReceipt(
+                                    identity: groupDeliveryReceiptMessage.fromIdentity,
+                                    deliveryReceiptType: .userAcknowledgment,
+                                    date: groupDeliveryReceiptMessage.date
+                                )
+                                msg.add(groupDeliveryReceipt: receipt)
+                            }
+                        }
+                    }
+                    
+                    if groupDeliveryReceiptMessage.receiptType == GroupDeliveryReceipt.DeliveryReceiptType.userDeclined
+                        .rawValue {
+                        if isOutgoing {
+                            messageProcessorDelegate.outgoingMessageFinished(groupDeliveryReceiptMessage)
+                        }
+                        else {
+                            frameworkInjector.backgroundEntityManager.performSyncBlockAndSafe {
+                                let receipt = GroupDeliveryReceipt(
+                                    identity: groupDeliveryReceiptMessage.fromIdentity,
+                                    deliveryReceiptType: .userDeclined,
+                                    date: groupDeliveryReceiptMessage.date
+                                )
+                                msg.add(groupDeliveryReceipt: receipt)
+                            }
+                        }
+                    }
+
+                    messageProcessorDelegate.changedManagedObjectID(msg.objectID)
+                }
+                else {
+                    throw MediatorReflectedProcessorError
+                        .messageNotProcessed(message: groupDeliveryReceiptMessage.loggingDescription)
+                }
+            }
+        }
+    }
 
     func save(
         groupTextMessage: GroupTextMessage,
@@ -750,7 +803,7 @@ class MessageStore: MessageStoreProtocol {
             msg?.isOwn = NSNumber(booleanLiteral: isOutgoing)
 
             conversation.lastMessage = msg
-            conversation.lastUpdate = Date()
+            conversation.lastUpdate = Date.now
         }
         if let err = err {
             throw err
@@ -847,7 +900,7 @@ class MessageStore: MessageStoreProtocol {
                         msg?.isOwn = NSNumber(booleanLiteral: false)
 
                         conversation.lastMessage = msg
-                        conversation.lastUpdate = Date()
+                        conversation.lastUpdate = Date.now
                     }
                 }
                 else {
@@ -929,7 +982,7 @@ class MessageStore: MessageStoreProtocol {
             msg?.isOwn = NSNumber(booleanLiteral: isOutgoing)
 
             conversation.lastMessage = msg
-            conversation.lastUpdate = Date()
+            conversation.lastUpdate = Date.now
         }
         if let err = err {
             throw err
@@ -982,7 +1035,7 @@ class MessageStore: MessageStoreProtocol {
             msg?.isOwn = NSNumber(booleanLiteral: isOutgoing)
 
             conversation.lastMessage = msg
-            conversation.lastUpdate = Date()
+            conversation.lastUpdate = Date.now
         }
         if let err = err {
             throw err

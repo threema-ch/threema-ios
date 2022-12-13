@@ -53,7 +53,7 @@ class SettingsViewController: ThemedTableViewController {
     
     private var inviteController: InviteController?
     private var observing = false
-    
+    private lazy var lockScreen = LockScreen(isLockScreenController: false)
     override var shouldAutorotate: Bool {
         true
     }
@@ -307,7 +307,7 @@ extension SettingsViewController {
         
         // Set header height to 0 to get the correct space
         if section == 1,
-           Environment.env() == .appStore {
+           ThreemaEnvironment.env() == .appStore {
             return 0.0
         }
         
@@ -323,10 +323,10 @@ extension SettingsViewController {
     override func tableView(_ tableView: UITableView, heightForFooterInSection section: Int) -> CGFloat {
         // Set footer height to 0 to get the correct space
         if section == 0 {
-            if Environment.env() == .appStore {
+            if ThreemaEnvironment.env() == .appStore {
                 return 0.0
             }
-            else if Environment.env() == .testFlight,
+            else if ThreemaEnvironment.env() == .testFlight,
                     ThreemaApp.current == .onPrem {
                 return 0.0
             }
@@ -345,7 +345,7 @@ extension SettingsViewController {
         if section == 0 {
             let numberOfRows = super.tableView(tableView, numberOfRowsInSection: section)
             
-            switch Environment.env() {
+            switch ThreemaEnvironment.env() {
             case .appStore:
                 // Remove dev mode and beta feedback cells
                 return 0
@@ -368,7 +368,7 @@ extension SettingsViewController {
         if section == 2 {
             let numberOfRows = super.tableView(tableView, numberOfRowsInSection: section)
             
-            switch Environment.env() {
+            switch ThreemaEnvironment.env() {
             case .appStore:
                 return numberOfRows - 1
             case .testFlight:
@@ -431,9 +431,22 @@ extension SettingsViewController {
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         if indexPath.section == 1, indexPath.row == 6 {
-            let vc = KKPasscodeSettingsViewController(style: .grouped)
-            vc.delegate = self
-            navigationController?.pushViewController(vc, animated: true)
+           
+            if KKPasscodeLock.shared().isPasscodeRequired() {
+                lockScreen.presentLockScreenView(
+                    viewController: self,
+                    enteredCorrectly: {
+                        let vc = KKPasscodeSettingsViewController(style: .grouped)
+                        vc.delegate = self
+                        self.navigationController?.pushViewController(vc, animated: true)
+                    }
+                )
+            }
+            else {
+                let vc = KKPasscodeSettingsViewController(style: .grouped)
+                vc.delegate = self
+                navigationController?.pushViewController(vc, animated: true)
+            }
         }
         else if indexPath.section == 0, indexPath.row == 0 {
             if let contact = BusinessInjector().entityManager.entityFetcher

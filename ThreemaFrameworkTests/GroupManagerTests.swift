@@ -172,6 +172,84 @@ class GroupManagerTests: XCTestCase {
         )
     }
     
+    func testSendGroupSetupIamCreatorAddMember() throws {
+        let myIdentityStoreMock = MyIdentityStoreMock()
+        let contactStoreMock = ContactStoreMock(callOnCompletion: true)
+        let taskManagerMock = TaskManagerMock()
+        let userSettingsMock = UserSettingsMock()
+
+        let expectedGroupID: Data = BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!
+        let expectedGroupCreator: String = myIdentityStoreMock.identity
+        let expectedNewMembers: Set<String> = ["MEMBER01"]
+
+        for member in expectedNewMembers {
+            databasePreparer.createContact(
+                publicKey: BytesUtility.generateRandomBytes(length: 32)!,
+                identity: member,
+                verificationLevel: 0
+            )
+        }
+
+        let groupManager = GroupManager(
+            myIdentityStoreMock,
+            contactStoreMock,
+            taskManagerMock,
+            userSettingsMock,
+            EntityManager(databaseContext: databaseCnx, myIdentityStore: myIdentityStoreMock),
+            groupPhotoSenderMock
+        )
+
+        createOrUpdateDBWait(
+            groupManager: groupManager,
+            groupID: expectedGroupID,
+            creator: expectedGroupCreator,
+            members: []
+        )
+
+        var resultGroup: Group?
+        var resultNewMembers: Set<String>?
+
+        let expec = expectation(description: "Group create or update")
+
+        groupManager.createOrUpdate(
+            groupID: expectedGroupID,
+            creator: expectedGroupCreator,
+            members: expectedNewMembers,
+            systemMessageDate: Date()
+        )
+        .done { grp, newMembers in
+            resultGroup = grp
+            resultNewMembers = newMembers
+
+            expec.fulfill()
+        }
+        .catch { error in
+            XCTFail(error.localizedDescription)
+        }
+
+        waitForExpectations(timeout: 1)
+
+        let resultGrp = try XCTUnwrap(resultGroup)
+        XCTAssertEqual(resultGrp.groupID, expectedGroupID)
+        XCTAssertEqual(resultGrp.groupCreatorIdentity, expectedGroupCreator)
+        XCTAssertEqual(resultGrp.allMemberIdentities.count, expectedNewMembers.count + 1)
+        XCTAssertTrue(resultGrp.allMemberIdentities.contains(myIdentityStoreMock.identity))
+        XCTAssertNil(resultGrp.lastSyncRequest)
+
+        XCTAssertEqual(expectedNewMembers, resultNewMembers)
+        XCTAssertEqual(1, taskManagerMock.addedTasks.filter { $0 is TaskDefinitionSendGroupCreateMessage }.count)
+
+        let task = try XCTUnwrap(taskManagerMock.addedTasks.first as? TaskDefinitionSendGroupCreateMessage)
+        XCTAssertTrue(expectedGroupID.elementsEqual(task.groupID!))
+        XCTAssertEqual(expectedGroupCreator, task.groupCreatorIdentity)
+        XCTAssertEqual(expectedNewMembers, task.members)
+        XCTAssertTrue(task.removedMembers?.isEmpty ?? false)
+        XCTAssertEqual(
+            expectedNewMembers.count,
+            task.toMembers.filter { $0.elementsEqual("MEMBER01") }.count
+        )
+    }
+
     func testSendGroupSetupIamCreatorRemoveMember() throws {
         let myIdentityStoreMock = MyIdentityStoreMock()
         let contactStoreMock = ContactStoreMock(callOnCompletion: true)

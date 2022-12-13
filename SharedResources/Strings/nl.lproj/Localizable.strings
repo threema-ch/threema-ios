@@ -656,9 +656,7 @@
 
 /* reminder messages */
 "push_reminder_title" = "Meldingen zijn niet ingeschakeld";
-"push_reminder_message" = "U ontvangt geen meldingen voor berichten of inkomende gesprekken  wanneer %@ is uitgeschakeld. 
-
-Ga naar de systeeminstellingen en schakel meldingen in voor %@ om dit op te lossen.";
+"push_reminder_message" = "U ontvangt geen meldingen voor berichten of inkomende gesprekken  wanneer %@ is uitgeschakeld. \n\nGa naar de systeeminstellingen en schakel meldingen in voor %@ om dit op te lossen.";
 "push_reminder_not_now" = "Herinner me er niet opnieuw aan";
 "push_reminder_set_now" = "Meldingen inschakelen";
 
@@ -1118,6 +1116,7 @@ Ga naar de systeeminstellingen en schakel meldingen in voor %@ om dit op te loss
 "settings_appearance_system_theme" = "Systeem";
 "settings_appearance_theme_selected" = "%@-thema actief";
 "settings_appearance_theme_active" = "Actief";
+"settings_appearance_hide_app_icon" = "App-icoon";
 "settings_appearance_hide_stale_contacts" = "Inactieve ID’s verbergen";
 "settings_appearance_show_profile_pictures" = "Profielafbeeldingen weergeven";
 "settings_appearance_display_order" = "Geef weer";
@@ -1377,3 +1376,28 @@ Als er geen (media)bestanden in %@ ontbreken, maak de prullenbak dan leeg om de 
 
 // ChatBar
 "chat_bar_quote_close_button" = "Citaat afsluiten";
+
+// ChatDetailView
+"detailView_title" = "Berichtdetails";
+"detailView_sent" = "Verstuurd";
+"detailView_delivered" = "Afgeleverd";
+"detailView_read" = "Gelezen";
+"detailView_ackd" = "Erkend";
+"detailView_messageID" = "Bericht-ID";
+"detailView_group_acknowledged" = "Akkoord (%d)";
+"detailView_group_declined" = "Niet akkoord (%d)";
+
+// App icons
+"app_icon_title_celebration" = "Icoon feest";
+"app_icon_description_celebration" = "10 jarig jubileum";
+"app_icon_title_current" = "Huidig icoon";
+"app_icon_description_current" = "Sinds 2019";
+"app_icon_title_second" = "Tweede icoon";
+"app_icon_description_second" = "2013–2019";
+"app_icon_title_first" = "Eerste icoon";
+"app_icon_description_first" = "2012–2013";
+
+// 10 Years
+"anniversary_view_title" = "10 jaar Threema!";
+"anniversary_view_text" = "Op 12 december 2022 wordt Threema tien jaar. Om de start van de feesttijd te markeren, hebben we ons app-icoon versierd.";
+"anniversary_view_icon_info" = "Ga naar \"Instellingen > Uiterlijk > App-icoon\" om het icoon terug te zetten naar standaard of naar een oudere versie.";

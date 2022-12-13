@@ -203,32 +203,81 @@ struct ChatViewContextMenuActionProvider {
 
     ///  Processes sending thumbsUp or thumbsDown
     private static func sendAck(message: BaseMessage, ack: Bool) {
-        
-        guard let contact = message.conversation.contact else {
-            return
-        }
-        // Only send changed acks
-        if message.userackDate != nil, let currentAck = message.userack, currentAck.boolValue == ack {
-            return
-        }
-        
         let entityManager = EntityManager()
-            
-        if ack {
-            MessageSender.sendUserAck(forMessages: [message], toIdentity: contact.identity, onCompletion: {
-                entityManager.performSyncBlockAndSafe {
-                    message.userack = NSNumber(booleanLiteral: ack)
-                    message.userackDate = Date()
-                }
-            })
+        
+        guard let entityMessage = entityManager.entityFetcher.existingObject(with: message.objectID) as? BaseMessage,
+              let conversation = entityMessage.conversation else {
+            return
+        }
+        
+        let groupManager = GroupManager(entityManager: entityManager)
+        let group = groupManager.getGroup(conversation: conversation)
+        var contact: Contact?
+        
+        if conversation.isGroup() {
+            if let groupDeliveryReceipts = entityMessage.groupDeliveryReceipts,
+               !groupDeliveryReceipts.isEmpty,
+               let gdr = entityMessage.reaction(for: MyIdentityStore.shared().identity),
+               gdr.deliveryReceiptType() == (ack ? .userAcknowledgment : .userDeclined) {
+                return
+            }
         }
         else {
-            MessageSender.sendUserDecline(forMessages: [message], toIdentity: contact.identity, onCompletion: {
-                entityManager.performSyncBlockAndSafe {
-                    message.userack = NSNumber(booleanLiteral: ack)
-                    message.userackDate = Date()
+            guard let c = conversation.contact else {
+                return
+            }
+            contact = c
+            // Only send changed acks
+            if entityMessage.userackDate != nil, let currentAck = entityMessage.userack, currentAck.boolValue == ack {
+                return
+            }
+        }
+        
+        if ack {
+            MessageSender.sendUserAck(
+                forMessages: [message],
+                toIdentity: contact?.identity,
+                group: group,
+                onCompletion: {
+                    entityManager.performSyncBlockAndSafe {
+                        if conversation.isGroup() {
+                            let groupDeliveryReceipt = GroupDeliveryReceipt(
+                                identity: MyIdentityStore.shared().identity,
+                                deliveryReceiptType: .userAcknowledgment,
+                                date: Date()
+                            )
+                            message.add(groupDeliveryReceipt: groupDeliveryReceipt)
+                        }
+                        else {
+                            message.userack = NSNumber(booleanLiteral: ack)
+                            message.userackDate = Date()
+                        }
+                    }
                 }
-            })
+            )
+        }
+        else {
+            MessageSender.sendUserDecline(
+                forMessages: [message],
+                toIdentity: contact?.identity,
+                group: group,
+                onCompletion: {
+                    entityManager.performSyncBlockAndSafe {
+                        if conversation.isGroup() {
+                            let groupDeliveryReceipt = GroupDeliveryReceipt(
+                                identity: MyIdentityStore.shared().identity,
+                                deliveryReceiptType: .userDeclined,
+                                date: Date()
+                            )
+                            message.add(groupDeliveryReceipt: groupDeliveryReceipt)
+                        }
+                        else {
+                            message.userack = NSNumber(booleanLiteral: ack)
+                            message.userackDate = Date()
+                        }
+                    }
+                }
+            )
         }
     }
 }

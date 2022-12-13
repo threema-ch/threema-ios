@@ -429,12 +429,13 @@ final class ChatBarView: UIView {
             if type {
                 self.chatTextView.keyboardType = .default
             }
-            
+            // Note: This is a hacky solution to the self.chatTextView.becomeFirstResponder() always being animated
+            // XCode 14.1, filed FB11715663 on 24.10.2022
             if self.chatTextView.isFirstResponder {
-                UIView.performWithoutAnimation {
-                    self.chatTextView.resignFirstResponder()
-                    self.chatTextView.becomeFirstResponder()
-                }
+                self.chatTextView.keyboardType = .alphabet
+                self.chatTextView.reloadInputViews()
+                self.chatTextView.keyboardType = .default
+                self.chatTextView.reloadInputViews()
             }
         }
     }

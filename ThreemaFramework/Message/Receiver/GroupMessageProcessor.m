@@ -70,6 +70,11 @@
 }
 
 - (void)handleMessageOnCompletion:(void (^)(BOOL))onCompletion onError:(void(^)(NSError *error))onError {
+    if ([entityManager isProcessedWithMessage:_message] == YES) {
+        onError([ThreemaError threemaError:@"Message already processed" withCode:kMessageAlreadyProcessedErrorCode]);
+        return;
+    }
+
     if ([_message isKindOfClass:[GroupCreateMessage class]]) {
         GroupCreateMessage *grpCreate = (GroupCreateMessage *)_message;
         [groupManager createOrUpdateDBObjcWithGroupID:grpCreate.groupId creator:grpCreate.groupCreator members:[[NSSet alloc] initWithArray:grpCreate.groupMembers] systemMessageDate:_message.date]
@@ -139,7 +144,7 @@
 }
 
 /**
- Sync group setup to paricular member.
+ Sync group setup to particular member.
  @param toMember: Receiver of GroupCreateMessage
  */
 - (void)sync:(Group *)group toMember:(NSString *)toMember {

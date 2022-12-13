@@ -100,6 +100,7 @@ public protocol NotificationManagerProtocol {
         }
     }
 
+    // This does not necessarily operate on the original push payload from the server (nor its decrypted version)
     @objc func handleThreemaNotification(
         payload: [AnyHashable: Any],
         receivedWhileRunning: Bool,
@@ -157,6 +158,11 @@ public protocol NotificationManagerProtocol {
                                     kKeyForceCompose: true,
                                 ] as [String: Any]
                             }
+                            else {
+                                DDLogError(
+                                    "We do not have a groupID in this notification, don't attempt to guess the correct chat and do nothing instead"
+                                )
+                            }
                         }
                     }
                     
@@ -171,6 +177,9 @@ public protocol NotificationManagerProtocol {
                                 self.firstPushHandled = true
                             }
                         }
+                    }
+                    else {
+                        DDLogError("Could not open chat from notification due to an unknown error.")
                     }
                 }
                 completionHandler?([])

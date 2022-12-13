@@ -371,19 +371,14 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     if (chatInput.isFirstResponder) {
         dispatch_async(dispatch_get_main_queue(), ^{
             self.resettingKeyboard = YES;
-            if ([self.delegate respondsToSelector:@selector(canBecomeFirstResponder)]) {
-                if (delegate.canBecomeFirstResponder) {
-                    [UIView performWithoutAnimation: ^{
-                        [chatInput resignFirstResponder];
-                        [chatInput becomeFirstResponder];
-                    }];
-                }
-            } else {
-                [UIView performWithoutAnimation: ^{
-                    [chatInput resignFirstResponder];
-                    [chatInput becomeFirstResponder];
-                }];
-            }
+            
+            // Note: This is a hacky solution to the self.chatTextView.becomeFirstResponder() always being animated
+            // XCode 14.1, filed FB11715663 on 24.10.2022
+            chatInput.internalTextView.keyboardType = UIKeyboardTypeAlphabet;
+            [chatInput.internalTextView reloadInputViews];
+            chatInput.internalTextView.keyboardType = UIKeyboardTypeDefault;
+            [chatInput.internalTextView reloadInputViews];
+             
             self.resettingKeyboard = NO;
         });
     }

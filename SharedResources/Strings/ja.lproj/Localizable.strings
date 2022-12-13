@@ -658,7 +658,7 @@
 
 /* reminder messages */
 "push_reminder_title" = "プッシュ通知が有効ではありません";
-"push_reminder_message" = "%@が閉じていると、新着メッセージや着信が通知されません。\n\nTo修正するには、システムの設定に移動し、%@の通知を有効にしてください。";
+"push_reminder_message" = "%@が閉じていると、新着メッセージや着信が通知されません。\n\n修正するには、システムの設定に移動し、%@の通知を有効にしてください。";
 "push_reminder_not_now" = "二度と通知しない";
 "push_reminder_set_now" = "通知を有効化";
 
@@ -1119,6 +1119,7 @@
 "settings_appearance_system_theme" = "システム";
 "settings_appearance_theme_selected" = "%@テーマがアクティブ";
 "settings_appearance_theme_active" = "アクティブ";
+"settings_appearance_hide_app_icon" = "アプリアイコン";
 "settings_appearance_hide_stale_contacts" = "有効でないIDを非表示にする";
 "settings_appearance_show_profile_pictures" = "プロフィール写真を表示";
 "settings_appearance_display_order" = "表示順序";
@@ -1378,3 +1379,28 @@ iTunesのバックアップを作成してから行ってください。";
 
 // ChatBar
 "chat_bar_quote_close_button" = "引用終了";
+
+// ChatDetailView
+"detailView_title" = "メッセージ詳細";
+"detailView_sent" = "送信済み";
+"detailView_delivered" = "配信済み";
+"detailView_read" = "既読";
+"detailView_ackd" = "承認済み";
+"detailView_messageID" = "メッセージID";
+"detailView_group_acknowledged" = "同意（%d）";
+"detailView_group_declined" = "反対（%d）";
+
+// App icons
+"app_icon_title_celebration" = "お祝いアイコン";
+"app_icon_description_celebration" = "10周年記念";
+"app_icon_title_current" = "現在のアイコン";
+"app_icon_description_current" = "2019年以降";
+"app_icon_title_second" = "2つ目のアイコン";
+"app_icon_description_second" = "2013～2019年";
+"app_icon_title_first" = "1つ目のアイコン";
+"app_icon_description_first" = "2012～2013年";
+
+// 10 Years
+"anniversary_view_title" = "Threema創設10周年！";
+"anniversary_view_text" = "2022年12月12日、Threemaは10年目を迎えます。この祝福すべき期間の開始を記念して、アプリアイコンを花づな装飾にしました。";
+"anniversary_view_icon_info" = "アプリアイコンをデフォルトまたはレガシーバージョンに戻すには、設定 > 外観 > アプリアイコンを選択してください。";

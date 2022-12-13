@@ -108,6 +108,12 @@ protocol MessageStoreProtocol {
     func save(groupBallotVoteMessage: GroupBallotVoteMessage) throws
 
     func save(groupSetPhotoMessage amsg: GroupSetPhotoMessage) -> Promise<Void>
+    
+    func save(
+        groupDeliveryReceiptMessage: GroupDeliveryReceiptMessage,
+        createdAt: UInt64,
+        isOutgoing: Bool
+    ) throws
 
     func save(
         groupTextMessage: GroupTextMessage,

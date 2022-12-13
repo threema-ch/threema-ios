@@ -495,6 +495,7 @@ class TaskQueueTests: XCTestCase {
                 TaskDefinitionSendGroupLeaveMessage.self,
                 TaskDefinitionSendGroupRenameMessage.self,
                 TaskDefinitionSendGroupSetPhotoMessage.self,
+                TaskDefinitionSendGroupDeliveryReceiptsMessage.self,
                 TaskDefinitionDeleteContactSync.self,
                 TaskDefinitionProfileSync.self,
                 TaskDefinitionUpdateContactSync.self,
@@ -685,12 +686,30 @@ class TaskQueueTests: XCTestCase {
         )
 
         try! tq.enqueue(task: taskGroupDeletePhoto, completionHandler: nil)
+        
+        // Add TaskDefinitionSendGroupDeliveryReceiptMessage
+        let expectedReceiptType = UInt8(GroupDeliveryReceipt.DeliveryReceiptType.userAcknowledgment.rawValue)
+        let expectedReceiptMessageIDs = [
+            BytesUtility.generateRandomBytes(length: 32)!,
+            BytesUtility.generateRandomBytes(length: 32)!,
+        ]
+        
+        let taskGroupDeliveryReceipt = TaskDefinitionSendGroupDeliveryReceiptsMessage(
+            group: nil,
+            from: expectedFromMember,
+            to: expectedToMembers,
+            receiptType: expectedReceiptType,
+            receiptMessageIDs: expectedReceiptMessageIDs,
+            sendContactProfilePicture: false
+        )
+        
+        try! tq.enqueue(task: taskGroupDeliveryReceipt, completionHandler: nil)
 
         // Add TaskDefintionDeleteContactSync
         let deleteableContacts = ["ECHOECHO"]
         let taskDeleteContactSync = TaskDefinitionDeleteContactSync(contacts: deleteableContacts)
         try! tq.enqueue(task: taskDeleteContactSync, completionHandler: nil)
-
+        
         // Add TaskDefinitionProfileSync
         var syncUserProfile = Sync_UserProfile()
         syncUserProfile.profilePicture.updated = Common_Image()
@@ -766,13 +785,13 @@ class TaskQueueTests: XCTestCase {
         try! tq.enqueue(task: taskReceiveReflectedMessage, completionHandler: nil)
         
         // Check non-persistent tasks
-        let expectedItemCount = 16
+        let expectedItemCount = 17
         guard tq.list.count == expectedItemCount else {
             XCTFail("TaskList has wrong number of items. Expected \(expectedItemCount) but was \(tq.list.count)")
             return
         }
 
-        if let task = tq.list[11].taskDefinition as? TaskDefinitionProfileSync {
+        if let task = tq.list[12].taskDefinition as? TaskDefinitionProfileSync {
             XCTAssertEqual(TaskExecutionState.pending, task.state)
             XCTAssertEqual(task.scope, .userProfileSync)
             XCTAssertEqual(task.profileImage, profileImage)
@@ -787,7 +806,7 @@ class TaskQueueTests: XCTestCase {
             XCTFail()
         }
 
-        if let task = tq.list[13].taskDefinition as? TaskDefinitionSettingsSync {
+        if let task = tq.list[14].taskDefinition as? TaskDefinitionSettingsSync {
             XCTAssertEqual(TaskExecutionState.pending, task.state)
             XCTAssertEqual(task.scope, .settingsSync)
             XCTAssertEqual(task.syncSettings.contactSyncPolicy, .sync)
@@ -804,7 +823,7 @@ class TaskQueueTests: XCTestCase {
             XCTFail()
         }
 
-        if let task = tq.list[14].taskDefinition as? TaskDefinitionReceiveMessage {
+        if let task = tq.list[15].taskDefinition as? TaskDefinitionReceiveMessage {
             XCTAssertEqual(TaskExecutionState.pending, task.state)
             XCTAssertNotNil(task.message)
             XCTAssertEqual(task.receivedAfterInitialQueueSend, true)
@@ -816,7 +835,7 @@ class TaskQueueTests: XCTestCase {
             XCTFail()
         }
 
-        if let task = tq.list[15].taskDefinition as? TaskDefinitionReceiveReflectedMessage {
+        if let task = tq.list[16].taskDefinition as? TaskDefinitionReceiveReflectedMessage {
             XCTAssertEqual(TaskExecutionState.pending, task.state)
             XCTAssertNotNil(task.message)
             XCTAssertEqual(task.receivedAfterInitialQueueSend, false)
@@ -842,7 +861,7 @@ class TaskQueueTests: XCTestCase {
         tq.decode(data)
 
         // Check persistent tasks
-        let expectedItemCountAfterDecode = 12
+        let expectedItemCountAfterDecode = 13
         guard tq.list.count == expectedItemCountAfterDecode else {
             XCTFail(
                 "TaskList has wrong number of items. Expected \(expectedItemCountAfterDecode) but was \(tq.list.count)"
@@ -953,8 +972,20 @@ class TaskQueueTests: XCTestCase {
         else {
             XCTFail()
         }
+        
+        if let task = tq.list[10].taskDefinition as? TaskDefinitionSendGroupDeliveryReceiptsMessage {
+            XCTAssertEqual(.interrupted, task.state)
+            XCTAssertEqual(expectedFromMember, task.fromMember)
+            XCTAssertEqual(expectedToMembers, task.toMembers)
+            XCTAssertEqual(expectedReceiptType, task.receiptType)
+            XCTAssertEqual(expectedReceiptMessageIDs, task.receiptMessageIDs)
+            XCTAssertFalse(task.retry)
+        }
+        else {
+            XCTFail()
+        }
 
-        if let task = tq.list[10].taskDefinition as? TaskDefinitionDeleteContactSync {
+        if let task = tq.list[11].taskDefinition as? TaskDefinitionDeleteContactSync {
             XCTAssertEqual(.interrupted, task.state)
             XCTAssertEqual(task.scope, .contactSync)
             XCTAssertEqual(task.contacts, deleteableContacts)
@@ -964,7 +995,7 @@ class TaskQueueTests: XCTestCase {
             XCTFail()
         }
 
-        if let task = tq.list[11].taskDefinition as? TaskDefinitionUpdateContactSync {
+        if let task = tq.list[12].taskDefinition as? TaskDefinitionUpdateContactSync {
             XCTAssertEqual(.interrupted, task.state)
             XCTAssertEqual(task.scope, .contactSync)
             XCTAssertEqual(task.deltaSyncContacts.count, updateableContacts.count)

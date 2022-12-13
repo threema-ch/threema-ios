@@ -77,7 +77,7 @@ static Theme currentTheme;
 
 + (CGFloat)heightForMessage:(BaseMessage*)message forTableWidth:(CGFloat)tableWidth {
     CGSize size;
-    CGSize maxSize = CGSizeMake([ChatMessageCell maxContentWidthForTableWidth:tableWidth], CGFLOAT_MAX);
+    CGSize maxSize = CGSizeMake([ChatMessageCell maxContentWidthForTableWidth:tableWidth isGroup:message.conversation.isGroup], CGFLOAT_MAX);
     TextMessage *textMessage = (TextMessage*)message;
     NSString *text = [textMessage text];
     NSString *quotedText = nil;
@@ -235,7 +235,7 @@ static Theme currentTheme;
 }
 
 - (void)layoutSubviews {
-    CGFloat messageTextWidth = [ChatMessageCell maxContentWidthForTableWidth:self.safeAreaLayoutGuide.layoutFrame.size.width];
+    CGFloat messageTextWidth = [ChatMessageCell maxContentWidthForTableWidth:self.safeAreaLayoutGuide.layoutFrame.size.width isGroup:self.message.conversation.isGroup];
     CGSize textSize = [textLabel sizeThatFits:CGSizeMake(messageTextWidth, CGFLOAT_MAX)];
     
     CGSize quoteSize = CGSizeMake(0, 0);

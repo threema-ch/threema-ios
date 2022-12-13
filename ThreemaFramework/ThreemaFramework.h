@@ -81,6 +81,7 @@
 #import <ThreemaFramework/GroupBallotVoteMessage.h>
 #import <ThreemaFramework/GroupCreateMessage.h>
 #import <ThreemaFramework/GroupDeletePhotoMessage.h>
+#import <ThreemaFramework/GroupDeliveryReceiptMessage.h>
 #import <ThreemaFramework/GroupFileMessage.h>
 #import <ThreemaFramework/GroupImageMessage.h>
 #import <ThreemaFramework/GroupLeaveMessage.h>

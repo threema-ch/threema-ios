@@ -1129,4 +1129,57 @@ class AbstractMessageEncodeDecodeTests: XCTestCase {
         XCTAssertEqual(NSNumber(integerLiteral: expectedFlags), (result?.flags)!)
         XCTAssertFalse((result?.receivedAfterInitialQueueSend)!)
     }
+    
+    func testGroupDeliveryReceiptMessage() throws {
+        let expectedGroupID: Data = BytesUtility.generateRandomBytes(length: 8)!
+        let expectedGroupCreator = "CREATOR1"
+        let expectedReceiptType: UInt8 = 1
+        let expectedReceiptMessageIDs: [Data] = [
+            BytesUtility.generateRandomBytes(length: 8)!,
+            BytesUtility.generateRandomBytes(length: 8)!,
+        ]
+        
+        let msg: GroupDeliveryReceiptMessage = abstractMessage(
+            expectedFromIdentity,
+            expectedToIdentity,
+            expectedMessageID,
+            expectedPushFromName,
+            expectedDate,
+            expectedDeliveryDate,
+            expectedDelivered,
+            expectedUserAck,
+            expectedSendUserAck,
+            expectedNonce,
+            expectedFlags,
+            expectedReceivedAfterInitialQueueSend
+        )
+        
+        msg.groupID = expectedGroupID
+        msg.groupCreator = expectedGroupCreator
+        msg.receiptType = expectedReceiptType
+        msg.receiptMessageIDs = expectedReceiptMessageIDs
+        
+        let result: GroupDeliveryReceiptMessage? = encodeDecode(message: msg)
+        
+        XCTAssertNotNil(result)
+              
+        XCTAssertTrue(expectedGroupID.elementsEqual((result?.groupID)!))
+        XCTAssertEqual(expectedGroupCreator, result?.groupCreator)
+        XCTAssertEqual(expectedReceiptType, result?.receiptType)
+        XCTAssertEqual(2, result?.receiptMessageIDs.count)
+        XCTAssertTrue(expectedReceiptMessageIDs[0].elementsEqual(result?.receiptMessageIDs[0] as! Data))
+        XCTAssertTrue(expectedReceiptMessageIDs[1].elementsEqual(result?.receiptMessageIDs[1] as! Data))
+
+        XCTAssertEqual(expectedFromIdentity, result?.fromIdentity)
+        XCTAssertEqual(expectedToIdentity, result?.toIdentity)
+        XCTAssertEqual(expectedMessageID, result?.messageID)
+        XCTAssertEqual(expectedPushFromName, result?.pushFromName)
+        XCTAssertEqual(expectedDate, result?.date)
+        XCTAssertEqual(NSNumber(booleanLiteral: expectedDelivered), result?.delivered)
+        XCTAssertEqual(NSNumber(booleanLiteral: expectedUserAck), result?.userAck)
+        XCTAssertEqual(NSNumber(booleanLiteral: expectedSendUserAck), result?.sendUserAck)
+        XCTAssertTrue(expectedNonce.elementsEqual((result?.nonce)!))
+        XCTAssertEqual(NSNumber(integerLiteral: expectedFlags), (result?.flags)!)
+        XCTAssertFalse((result?.receivedAfterInitialQueueSend)!)
+    }
 }

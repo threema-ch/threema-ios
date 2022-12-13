@@ -120,7 +120,36 @@ public class EntityManager: NSObject {
     public func managedObjectID(forURIRepresentation url: URL) -> NSManagedObjectID? {
         dbContext.current.persistentStoreCoordinator?.managedObjectID(forURIRepresentation: url)
     }
-    
+
+    /// Check message is already processed (on main thread and main DB context).
+    ///
+    /// This is useful during incoming message processing to check
+    /// if a message is already processed to prevent race conditions
+    /// between App and Notification Extension.
+    ///
+    /// - Parameter message: Message to check
+    /// - Returns: True message is already processed
+    @objc public func isProcessed(message: AbstractMessage) -> Bool {
+        var isProcessed = false
+
+        let isNonceAlreadyInDB: (AbstractMessage) -> Void = { message in
+            let entityFetcherOnMain = EntityFetcher(self.dbContext.main, myIdentityStore: MyIdentityStore.shared())
+            self.dbContext.main.performAndWait {
+                isProcessed = entityFetcherOnMain?.isNonceAlready(inDb: message) ?? false
+            }
+        }
+
+        if Thread.isMainThread {
+            isNonceAlreadyInDB(message)
+        }
+        else {
+            DispatchQueue.main.sync {
+                isNonceAlreadyInDB(message)
+            }
+        }
+        return isProcessed
+    }
+
     @objc public func conversation(forContact: Contact, createIfNotExisting: Bool) -> Conversation? {
         let conversation = entityFetcher.conversation(forIdentity: forContact.identity)
         

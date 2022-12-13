@@ -20,6 +20,7 @@
 
 import CocoaLumberjackSwift
 import Foundation
+import SwiftUI
 
 class AppearanceSettingsViewController: ThemedTableViewController {
     
@@ -42,9 +43,11 @@ class AppearanceSettingsViewController: ThemedTableViewController {
     @IBOutlet var showProfilePicturesLabel: UILabel!
     @IBOutlet var displayOrderLabel: UILabel!
     @IBOutlet var showGalleryPreviewLabel: UILabel!
-    
+    @IBOutlet var appIconLabel: UILabel!
+
     @IBOutlet var themeCell: UITableViewCell!
-    
+    @IBOutlet var AppIconCell: UITableViewCell!
+
     private var colorThemeObserver: NSObjectProtocol?
     
     deinit {
@@ -148,6 +151,8 @@ class AppearanceSettingsViewController: ThemedTableViewController {
         else {
             updateButtonShadowForCurrentTheme()
         }
+        
+        appIconLabel.text = BundleUtil.localizedString(forKey: "settings_appearance_hide_app_icon")
     }
     
     private func updateButtonShadowForCurrentTheme() {
@@ -179,7 +184,7 @@ class AppearanceSettingsViewController: ThemedTableViewController {
 }
 
 extension AppearanceSettingsViewController {
-        
+    
     override func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         if indexPath.section == 0, indexPath.row == 0 {
             return 230.0
@@ -195,7 +200,31 @@ extension AppearanceSettingsViewController {
     }
     
     override func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
-        UITableView.automaticDimension
+        if section == 1 {
+            switch ThreemaApp.current {
+            case .threema:
+                return UITableView.automaticDimension
+            case .workRed:
+                return UITableView.automaticDimension
+            default:
+                return 0
+            }
+        }
+        return UITableView.automaticDimension
+    }
+    
+    override func tableView(_ tableView: UITableView, heightForFooterInSection section: Int) -> CGFloat {
+        if section == 1 {
+            switch ThreemaApp.current {
+            case .threema:
+                return UITableView.automaticDimension
+            case .workRed:
+                return UITableView.automaticDimension
+            default:
+                return 0
+            }
+        }
+        return UITableView.automaticDimension
     }
     
     override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
@@ -206,7 +235,7 @@ extension AppearanceSettingsViewController {
     }
     
     override func tableView(_ tableView: UITableView, titleForFooterInSection section: Int) -> String? {
-        if section == 1 {
+        if section == 2 {
             return UserSettings.shared().hideStaleContacts ? BundleUtil
                 .localizedString(forKey: "show_stale_contacts_on") : BundleUtil
                 .localizedString(forKey: "show_stale_contacts_off")
@@ -214,8 +243,35 @@ extension AppearanceSettingsViewController {
         return nil
     }
     
+    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        switch section {
+        case 0:
+            return 1
+        case 1:
+            switch ThreemaApp.current {
+            case .threema:
+                return 1
+            default:
+                return 0
+            }
+        case 2:
+            return 1
+        case 3:
+            return 2
+        case 4:
+            return 2
+        default:
+            return 0
+        }
+    }
+    
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
+        
+        if indexPath.section == 1 {
+            let iconSettingsViewController = UIHostingController(rootView: AppIconSettingsView())
+            navigationController?.pushViewController(iconSettingsViewController, animated: true)
+        }
     }
 }
 

@@ -80,14 +80,11 @@ enum MetadataCoderError: Error {
     }
     
     private func deriveMetadataKey(publicKey: Data) throws -> Data {
-        guard myIdentityStore.keySecret() != nil else {
+        guard let sharedSecret = myIdentityStore.sharedSecret(withPublicKey: publicKey) else {
             throw MetadataCoderError.missingPrivateKey
         }
         
-        let sharedSecret = NaClCrypto.shared()
-            .sharedSecret(forPublicKey: publicKey, secretKey: myIdentityStore.keySecret())!
-        
         let kdf = ThreemaKDF(personal: "3ma-csp")
-        return kdf.deriveKey(salt: "mm", secretKey: sharedSecret)!
+        return kdf.deriveKey(salt: "mm", key: sharedSecret)!
     }
 }

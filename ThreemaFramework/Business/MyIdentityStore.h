@@ -35,6 +35,7 @@
 
 - (NSData*)encryptData:(NSData*)data withNonce:(NSData*)nonce publicKey:(NSData*)publicKey;
 - (NSData*)decryptData:(NSData*)data withNonce:(NSData*)nonce publicKey:(NSData*)_publicKey;
+- (NSData*)sharedSecretWithPublicKey:(NSData*)publicKey;
 - (NSData*)keySecret;
 - (BOOL)isKeychainLocked;
 
@@ -92,6 +93,9 @@
 
 @property (strong, nonatomic, readwrite) NSDictionary *lastWorkUpdateRequest;
 @property (strong, nonatomic, readwrite) NSDate *lastWorkUpdateDate;
+
+@property (strong, nonatomic, readwrite) NSString *lastWorkInfoLanguage;
+@property (strong, nonatomic, readwrite) NSString *lastWorkInfoMdmDescription;
 
 + (MyIdentityStore*)sharedMyIdentityStore;
 + (void)resetSharedInstance;

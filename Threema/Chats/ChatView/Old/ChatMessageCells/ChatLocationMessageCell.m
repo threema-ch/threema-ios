@@ -43,7 +43,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     LocationMessage *locationMessage = (LocationMessage*)message;
     NSString *text = [ChatLocationMessageCell displayTextForLocationMessage:locationMessage];
     
-    CGSize size = [text boundingRectWithSize:CGSizeMake([ChatMessageCell maxContentWidthForTableWidth:tableWidth] - 25, CGFLOAT_MAX) options:NSStringDrawingUsesLineFragmentOrigin attributes:@{NSFontAttributeName : [ChatMessageCell textFont]} context:nil].size;
+    CGSize size = [text boundingRectWithSize:CGSizeMake([ChatMessageCell maxContentWidthForTableWidth:tableWidth isGroup:locationMessage.conversation.isGroup] - 25, CGFLOAT_MAX) options:NSStringDrawingUsesLineFragmentOrigin attributes:@{NSFontAttributeName : [ChatMessageCell textFont]} context:nil].size;
     size.height = ceilf(size.height);
     
     return MAX(size.height, 34.0f);
@@ -89,7 +89,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 }
 
 - (void)layoutSubviews {
-    CGFloat messageTextWidth = [ChatMessageCell maxContentWidthForTableWidth:self.safeAreaLayoutGuide.layoutFrame.size.width];
+    CGFloat messageTextWidth = [ChatMessageCell maxContentWidthForTableWidth:self.safeAreaLayoutGuide.layoutFrame.size.width isGroup:self.message.conversation.isGroup];
     CGSize textSize = [geocodeLabel.text boundingRectWithSize:CGSizeMake(messageTextWidth - 25, CGFLOAT_MAX) options:NSStringDrawingUsesLineFragmentOrigin attributes:@{NSFontAttributeName : [ChatMessageCell textFont]} context:nil].size;
     
     textSize.width = ceilf(textSize.width);

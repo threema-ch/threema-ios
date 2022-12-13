@@ -1649,7 +1649,7 @@
                                                     <nil key="highlightedColor"/>
                                                 </label>
                                                 <activityIndicatorView opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" fixedFrame="YES" style="gray" translatesAutoresizingMaskIntoConstraints="NO" id="lKc-iX-W6R">
-                                                    <rect key="frame" x="171" y="4" width="22" height="20"/>
+                                                    <rect key="frame" x="171" y="3" width="22" height="20"/>
                                                     <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
                                                 </activityIndicatorView>
                                             </subviews>
@@ -1718,7 +1718,7 @@
                                                     <nil key="highlightedColor"/>
                                                 </label>
                                                 <activityIndicatorView opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" fixedFrame="YES" style="gray" translatesAutoresizingMaskIntoConstraints="NO" id="bIS-aK-BKb">
-                                                    <rect key="frame" x="171" y="4" width="22" height="20"/>
+                                                    <rect key="frame" x="171" y="3" width="22" height="20"/>
                                                     <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
                                                 </activityIndicatorView>
                                             </subviews>
@@ -2061,6 +2061,27 @@
                                     </tableViewCell>
                                 </cells>
                             </tableViewSection>
+                            <tableViewSection footerTitle="" id="ZvB-qw-lI9">
+                                <cells>
+                                    <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" preservesSuperviewLayoutMargins="YES" selectionStyle="default" accessoryType="disclosureIndicator" indentationWidth="10" textLabel="NEA-Uo-wL8" style="IBUITableViewCellStyleDefault" id="eRj-xb-OAa">
+                                        <rect key="frame" x="0.0" y="320.5" width="375" height="43.5"/>
+                                        <autoresizingMask key="autoresizingMask"/>
+                                        <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" preservesSuperviewLayoutMargins="YES" insetsLayoutMarginsFromSafeArea="NO" tableViewCell="eRj-xb-OAa" id="PmD-Oy-kyA">
+                                            <rect key="frame" x="0.0" y="0.0" width="348.5" height="43.5"/>
+                                            <autoresizingMask key="autoresizingMask"/>
+                                            <subviews>
+                                                <label opaque="NO" multipleTouchEnabled="YES" contentMode="left" insetsLayoutMarginsFromSafeArea="NO" text="App Icons" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontForContentSizeCategory="YES" adjustsFontSizeToFit="NO" id="NEA-Uo-wL8">
+                                                    <rect key="frame" x="16" y="0.0" width="324.5" height="43.5"/>
+                                                    <autoresizingMask key="autoresizingMask"/>
+                                                    <fontDescription key="fontDescription" style="UICTFontTextStyleBody"/>
+                                                    <nil key="textColor"/>
+                                                    <nil key="highlightedColor"/>
+                                                </label>
+                                            </subviews>
+                                        </tableViewCellContentView>
+                                    </tableViewCell>
+                                </cells>
+                            </tableViewSection>
                             <tableViewSection footerTitle="" id="JVM-dV-raQ">
                                 <cells>
                                     <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" selectionStyle="none" indentationWidth="10" textLabel="C7N-a6-E8Y" style="IBUITableViewCellStyleDefault" id="cqw-A1-TA9">
@@ -2219,6 +2240,8 @@
                     </tableView>
                     <navigationItem key="navigationItem" title="Appearance" largeTitleDisplayMode="never" id="ZYa-QO-V4r"/>
                     <connections>
+                        <outlet property="AppIconCell" destination="eRj-xb-OAa" id="MUV-j8-lv1"/>
+                        <outlet property="AppIconLabel" destination="NEA-Uo-wL8" id="laU-of-9tJ"/>
                         <outlet property="darkThemeButton" destination="qzu-kK-UV3" id="rGi-gf-qUn"/>
                         <outlet property="darkThemeLabel" destination="V5m-Tp-tcN" id="4di-cO-jaq"/>
                         <outlet property="displayOrderLabel" destination="SeE-st-lWM" id="zbn-Wk-cvs"/>
@@ -3278,8 +3301,8 @@
                                             <rect key="frame" x="0.0" y="0.0" width="375" height="43.5"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                             <subviews>
-                                                <label opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="left" text="Reregister Push Notifications" textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontForContentSizeCategory="YES" adjustsFontSizeToFit="NO" id="QxW-cG-j9L" userLabel="Reregister Push Notifications Label">
-                                                    <rect key="frame" x="16" y="0.0" width="343" height="43.5"/>
+                                                <label opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="left" ambiguous="YES" text="Reregister Push Notifications" textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontForContentSizeCategory="YES" adjustsFontSizeToFit="NO" id="QxW-cG-j9L" userLabel="Reregister Push Notifications Label">
+                                                    <rect key="frame" x="8" y="0.0" width="359" height="43.5"/>
                                                     <autoresizingMask key="autoresizingMask"/>
                                                     <fontDescription key="fontDescription" style="UICTFontTextStyleBody"/>
                                                     <color key="textColor" red="0.0" green="0.47843137250000001" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>

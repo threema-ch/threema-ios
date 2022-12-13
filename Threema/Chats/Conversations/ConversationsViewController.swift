@@ -904,13 +904,16 @@ extension ConversationsViewController {
         
         if chatViewController.conversation.conversationCategory == .private {
             
-            lockScreen.presentLockScreenView(viewController: self) {
-                guard let navigationController = self.navigationController else {
-                    return
+            lockScreen.presentLockScreenView(
+                viewController: self,
+                enteredCorrectly: {
+                    guard let navigationController = self.navigationController else {
+                        return
+                    }
+                    navigationController.popToViewController(self, animated: false)
+                    navigationController.pushViewController(chatViewController, animated: false)
                 }
-                navigationController.popToViewController(self, animated: false)
-                navigationController.pushViewController(chatViewController, animated: false)
-            }
+            )
         }
         else {
             navigationController?.popToViewController(self, animated: false)
@@ -946,14 +949,17 @@ extension ConversationsViewController {
         if oldChatViewController.isPrivateConversation() {
             self.oldChatViewController = oldChatViewController
             
-            lockScreen.presentLockScreenView(viewController: self) {
-                guard let chatViewController = self.oldChatViewController,
-                      let navigationController = self.navigationController else {
-                    return
+            lockScreen.presentLockScreenView(
+                viewController: self,
+                enteredCorrectly: {
+                    guard let chatViewController = self.oldChatViewController,
+                          let navigationController = self.navigationController else {
+                        return
+                    }
+                    navigationController.popToViewController(self, animated: false)
+                    navigationController.pushViewController(chatViewController, animated: false)
                 }
-                navigationController.popToViewController(self, animated: false)
-                navigationController.pushViewController(chatViewController, animated: false)
-            }
+            )
         }
         else {
             navigationController?.popToViewController(self, animated: false)

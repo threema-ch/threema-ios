@@ -192,6 +192,7 @@ typealias TaskCompletionHandler = (TaskDefinitionProtocol, Error?) -> Void
                         TaskDefinitionSendGroupLeaveMessage.self,
                         TaskDefinitionSendGroupRenameMessage.self,
                         TaskDefinitionSendGroupSetPhotoMessage.self,
+                        TaskDefinitionSendGroupDeliveryReceiptsMessage.self,
                         TaskDefinitionDeleteContactSync.self,
                         TaskDefinitionProfileSync.self,
                         TaskDefinitionUpdateContactSync.self,

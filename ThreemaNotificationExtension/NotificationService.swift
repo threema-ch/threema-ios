@@ -328,7 +328,7 @@ class NotificationService: UNNotificationServiceExtension {
 
             let content = UNMutableNotificationContent()
             content.body = BundleUtil.localizedString(forKey: "new_message_db_requires_migration")
-            applyContent(content)
+            contentHandler?(content)
 
             return false
         }
@@ -662,7 +662,10 @@ extension NotificationService: MessageProcessorDelegate {
                     systemMessage?.isOwn = NSNumber(booleanLiteral: false)
                     systemMessage?.conversation = conversation
                     conversation.lastMessage = systemMessage
-                    conversation.lastUpdate = Date()
+                    if reason == kSystemMessageCallMissed {
+                        conversation.lastUpdate = Date.now
+                    }
+
                     let databaseManager = DatabaseManager()
                     databaseManager.addDirtyObject(conversation)
                     databaseManager.addDirtyObject(systemMessage)

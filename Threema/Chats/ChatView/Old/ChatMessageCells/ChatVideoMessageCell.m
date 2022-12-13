@@ -48,7 +48,7 @@
 
 + (CGFloat)heightForMessage:(BaseMessage*)message forTableWidth:(CGFloat)tableWidth {
     VideoMessageEntity *videoMessageEntity = (VideoMessageEntity*)message;
-    CGSize scaledSize = [ChatVideoMessageCell scaleImageSizeToCell:CGSizeMake(videoMessageEntity.thumbnail.width.floatValue, videoMessageEntity.thumbnail.height.floatValue) forTableWidth:tableWidth];
+    CGSize scaledSize = [ChatVideoMessageCell scaleImageSizeToCell:CGSizeMake(videoMessageEntity.thumbnail.width.floatValue, videoMessageEntity.thumbnail.height.floatValue) forTableWidth:tableWidth isGroup:videoMessageEntity.conversation.isGroup];
     if (scaledSize.height != scaledSize.height || scaledSize.height < 0) {
         scaledSize.height = 120.0;
     }
@@ -116,7 +116,7 @@
     CGSize size = CGSizeMake(videoMessageEntity.thumbnail.width.floatValue, videoMessageEntity.thumbnail.height.floatValue);
     
     /* scale to fit maximum cell size */
-    size = [ChatVideoMessageCell scaleImageSizeToCell:size forTableWidth:self.frame.size.width];
+    size = [ChatVideoMessageCell scaleImageSizeToCell:size forTableWidth:self.frame.size.width isGroup:videoMessageEntity.conversation.isGroup];
     if (size.height != size.height) {
         size.height = 120.0;
     }

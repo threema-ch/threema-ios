@@ -108,6 +108,10 @@ class MessageStoreMock: MessageStoreProtocol {
     func save(groupRenameMessage amsg: GroupRenameMessage) -> Promise<Void> {
         Promise()
     }
+    
+    func save(groupDeliveryReceiptMessage: GroupDeliveryReceiptMessage, createdAt: UInt64, isOutgoing: Bool) throws {
+        // no-op
+    }
 
     func save(
         groupFileMessage: GroupFileMessage,

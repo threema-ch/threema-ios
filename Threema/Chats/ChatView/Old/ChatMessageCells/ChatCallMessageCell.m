@@ -56,7 +56,7 @@ static Theme currentTheme;
 + (CGFloat)heightForMessage:(BaseMessage*)message forTableWidth:(CGFloat)tableWidth {
     CGSize titleSize;
     CGSize descriptionSize;
-    CGSize maxSize = CGSizeMake([ChatMessageCell maxContentWidthForTableWidth:tableWidth] - ZSWTappableLabelSpace - sideMargin, CGFLOAT_MAX);
+    CGSize maxSize = CGSizeMake([ChatMessageCell maxContentWidthForTableWidth:tableWidth isGroup:message.conversation.isGroup] - ZSWTappableLabelSpace - sideMargin, CGFLOAT_MAX);
     NSString *text = [(SystemMessage *)message format];
     NSString *description = [(SystemMessage *)message callDetail];
     
@@ -154,7 +154,7 @@ static Theme currentTheme;
 }
 
 - (void)layoutSubviews {
-    CGFloat messageTextWidth = [ChatMessageCell maxContentWidthForTableWidth:self.safeAreaLayoutGuide.layoutFrame.size.width];
+    CGFloat messageTextWidth = [ChatMessageCell maxContentWidthForTableWidth:self.safeAreaLayoutGuide.layoutFrame.size.width isGroup:self.message.conversation.isGroup];
     CGSize titleSize = [titleLabel sizeThatFits:CGSizeMake(messageTextWidth, CGFLOAT_MAX)];
     CGSize descriptionSize = [descriptionLabel sizeThatFits:CGSizeMake(messageTextWidth, CGFLOAT_MAX)];
     CGFloat callImageWidth = 40.0f;

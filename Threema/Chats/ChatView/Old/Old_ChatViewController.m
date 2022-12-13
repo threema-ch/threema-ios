@@ -33,7 +33,6 @@
 #import "VideoMessageLoader.h"
 #import "PreviewImageViewController.h"
 #import "LocationViewController.h"
-#import "MessageDetailsViewController.h"
 #import "ImageMessageLoader.h"
 #import "PlayRecordAudioViewController.h"
 #import "NonFirstResponderActionSheet.h"
@@ -175,14 +174,29 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 #pragma mark NSObject
 
 - (void)dealloc {
-    for (ImageMessageEntity *message in _imageMessageObserverList) {
-        [message removeObserver:self forKeyPath:@"thumbnail"];
+    for (NSManagedObjectID *objectID in _imageMessageObserverList) {
+        [entityManager performBlockAndWait:^{
+            BaseMessage *baseMessage = [[entityManager entityFetcher] getManagedObjectById:objectID];
+            if (baseMessage) {
+                @try {
+                    [baseMessage removeObserver:self forKeyPath:@"thumbnail"];
+                } @catch (NSException * __unused exception) {}
+            }
+        }];
     }
     [_imageMessageObserverList removeAllObjects];
-    
-    for (LocationMessage *message in _locationMessageObserverList) {
-        [message removeObserver:self forKeyPath:@"poiAddress"];
+        
+    for (NSManagedObjectID *objectID in _locationMessageObserverList) {
+        [entityManager performBlockAndWait:^{
+            BaseMessage *baseMessage = [[entityManager entityFetcher] getManagedObjectById:objectID];
+            if (baseMessage) {
+                @try {
+                    [baseMessage removeObserver:self forKeyPath:@"poiAddress"];
+                } @catch (NSException * __unused exception) {}
+            }
+        }];
     }
+    
     [_locationMessageObserverList removeAllObjects];
     
     if (sentMessageSound) {
@@ -1066,6 +1080,59 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     }];
 }
 
+- (void)removeImageMessageObserverFor:(NSManagedObjectID *)objectID {
+    [entityManager performBlockAndWait:^{
+        BaseMessage *baseMessage = [[entityManager entityFetcher] getManagedObjectById:objectID];
+        if (baseMessage != nil) {
+            @try {
+                [baseMessage removeObserver:self forKeyPath:@"thumbnail"];
+            } @catch (NSException * __unused exception) {}
+            
+        }
+        
+        // Saved objectID in the _imageMessageObserverList can be a temporaryID. That's why we have to loop through the array and load all objects in the list to compare.
+        NSManagedObjectID *foundObjectID = nil;
+        for (NSManagedObjectID *listObjectID in _imageMessageObserverList) {
+            BaseMessage *listMessage = [[entityManager entityFetcher] getManagedObjectById:listObjectID];
+            if (listMessage != nil) {
+                if (baseMessage.objectID == listMessage.objectID) {
+                    foundObjectID = listObjectID;
+                }
+            }
+        }
+        
+        if (foundObjectID != nil) {
+            [_imageMessageObserverList removeObject:foundObjectID];
+        }
+    }];
+}
+
+- (void)removeLocationMessageObserverFor:(NSManagedObjectID *)objectID {
+    [entityManager performBlockAndWait:^{
+        BaseMessage *baseMessage = [[entityManager entityFetcher] getManagedObjectById:objectID];
+        if (baseMessage != nil) {
+            @try {
+                [baseMessage removeObserver:self forKeyPath:@"poiAddress"];
+            } @catch (NSException * __unused exception) {}
+        }
+        
+        // Saved objectID in the _locationMessageObserverList can be a temporaryID. That's why we have to loop through the array and load all objects in the list to compare.
+        NSManagedObjectID *foundObjectID = nil;
+        for (NSManagedObjectID *listObjectID in _locationMessageObserverList) {
+            BaseMessage *listMessage = [[entityManager entityFetcher] getManagedObjectById:listObjectID];
+            if (listMessage != nil) {
+                if (baseMessage.objectID == listMessage.objectID) {
+                    foundObjectID = listObjectID;
+                }
+            }
+        }
+        
+        if (foundObjectID != nil) {
+            [_locationMessageObserverList removeObject:foundObjectID];
+        }
+    }];
+}
+
 - (CGFloat)topOffsetForVisibleContent {
     return self.view.safeAreaLayoutGuide.layoutFrame.origin.y;
 }
@@ -1371,26 +1438,32 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     /* workaround for image messages: if this image hasn't been loaded yet, we must observe it
      and refresh the cell when the image becomes available (height changes). This cannot be done
      in ChatImageMessageCell due to race condition issues */
-    if ([message isKindOfClass:[ImageMessageEntity class]]) {
-        ImageMessageEntity *imageMessageEntity = (ImageMessageEntity*)message;
-        if (imageMessageEntity.thumbnail == nil) {
-            
-            [imageMessageEntity addObserver:self forKeyPath:@"thumbnail" options:0 context:nil];
-            [_imageMessageObserverList addObject:imageMessageEntity];
+    __block NSManagedObjectID *objectID = [message objectID];
+    [entityManager performBlockAndWait:^{
+        BaseMessage *baseMessage = [[entityManager entityFetcher] getManagedObjectById:objectID];
+        if (baseMessage != nil) {
+            if ([baseMessage isKindOfClass:[ImageMessageEntity class]]) {
+                ImageMessageEntity *imageMessageEntity = (ImageMessageEntity*)baseMessage;
+                if (imageMessageEntity.thumbnail == nil) {
+                    
+                    [imageMessageEntity addObserver:self forKeyPath:@"thumbnail" options:0 context:nil];
+                    [_imageMessageObserverList addObject:objectID];
+                }
+            } else if ([baseMessage isKindOfClass:[FileMessageEntity class]]) {
+                FileMessageEntity *fileMessageEntity = (FileMessageEntity*)baseMessage;
+                if (fileMessageEntity.data == nil) {
+                    [fileMessageEntity addObserver:self forKeyPath:@"thumbnail" options:0 context:nil];
+                    [_imageMessageObserverList addObject:objectID];
+                }
+            } else if ([baseMessage isKindOfClass:[LocationMessage class]]) {
+                LocationMessage *locationMessage = (LocationMessage*)baseMessage;
+                if (locationMessage.poiName == nil && locationMessage.poiAddress == nil) {
+                    [locationMessage addObserver:self forKeyPath:@"poiAddress" options:0 context:nil];
+                    [_locationMessageObserverList addObject:objectID];
+                }
+            }
         }
-    } else if ([message isKindOfClass:[FileMessageEntity class]]) {
-        FileMessageEntity *fileMessageEntity = (FileMessageEntity*)message;
-        if (fileMessageEntity.data == nil) {
-            [fileMessageEntity addObserver:self forKeyPath:@"thumbnail" options:0 context:nil];
-            [_imageMessageObserverList addObject:fileMessageEntity];
-        }
-    } else if ([message isKindOfClass:[LocationMessage class]]) {
-        LocationMessage *locationMessage = (LocationMessage*)message;
-        if (locationMessage.poiName == nil && locationMessage.poiAddress == nil) {
-            [locationMessage addObserver:self forKeyPath:@"poiAddress" options:0 context:nil];
-            [_locationMessageObserverList addObject:locationMessage];
-        }
-    }
+    }];
 }
 
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context {
@@ -1435,11 +1508,17 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         }
     }
     else if ([object isKindOfClass:[ImageMessageEntity class]] && [keyPathCopy isEqualToString:@"thumbnail"]) {
-        [self updateObjectWithID:[(ImageMessageEntity *)object objectID]];
+        NSManagedObjectID *objectID = [(ImageMessageEntity *)object objectID];
+        [self updateObjectWithID:objectID];
+        [self removeImageMessageObserverFor:objectID];
     } else if ([object isKindOfClass:[LocationMessage class]] && [keyPathCopy isEqualToString:@"poiAddress"]) {
-        [self updateObjectWithID:[(LocationMessage *)object objectID]];
+        NSManagedObjectID *objectID = [(LocationMessage *)object objectID];
+        [self updateObjectWithID:objectID];
+        [self removeLocationMessageObserverFor:objectID];
     } else if ([object isKindOfClass:[FileMessageEntity class]] && [keyPathCopy isEqualToString:@"thumbnail"]) {
-        [self updateObjectWithID:[(FileMessageEntity *)object objectID]];
+        NSManagedObjectID *objectID = [(FileMessageEntity *)object objectID];
+        [self updateObjectWithID:objectID];
+        [self removeImageMessageObserverFor:objectID];
     } else if ([object isKindOfClass:[Contact class]] && [keyPathCopy isEqualToString:@"displayName"]) {
         dispatch_async(dispatch_get_main_queue(), ^{
             if ([changeCopy[@"old"] isKindOfClass:NSString.class] && [changeCopy[@"old"] length] != 0) {
@@ -1451,19 +1530,19 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 
 - (void)updateObjectWithID:(NSManagedObjectID *)objectID {
     NSManagedObjectID *objID = [objectID copy];
-    dispatch_async(dispatch_get_main_queue(), ^{
+    [entityManager performBlockAndWait:^{
         id obj = [entityManager.entityFetcher existingObjectWithID:objID];
         
         if (obj != nil) {
             /* find cell in cell map and call table view update */
-            NSIndexPath *indexPath = [_tableDataSource indexPathForMessage:obj];
-            if (indexPath) {
+            __block NSIndexPath *indexPath = [_tableDataSource indexPathForMessage:obj];
+            dispatch_async(dispatch_get_main_queue(), ^{
                 [_tableDataSource removeObjectFromCellHeightCache:indexPath];
                 [self.chatContent reloadRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationAutomatic];
                 [self.chatContent scrollToRowAtIndexPath:indexPath atScrollPosition:UITableViewScrollPositionBottom animated:YES];
-            }
+            });
         }
-    });
+    }];
 }
 
 - (void)insertMessages:(NSArray *)newMessages {
@@ -1558,19 +1637,13 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 
 - (void)readUnreadMessages {
     ConversationActions *conversationActions = [[ConversationActions alloc] initWithEntityManager:entityManager];
-    [conversationActions readObjc:conversation isAppInBackground:![AppDelegate sharedAppDelegate].active]
-        .catch(^(NSError *error) {
-            DDLogError(@"Error while get unread messages for conversation: %@", error.localizedDescription);
-        });
+    [conversationActions readObjc:conversation isAppInBackground:![AppDelegate sharedAppDelegate].active];
 }
 
 - (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
     if ([segue.identifier isEqualToString:@"ShowLocation"]) {
         LocationViewController *locationView = (LocationViewController*)segue.destinationViewController;
         locationView.locationMessage = locationToShow;
-    } else if ([segue.identifier isEqualToString:@"ShowDetails"]) {
-        MessageDetailsViewController *detailsView = (MessageDetailsViewController*)segue.destinationViewController;
-        detailsView.message = detailsMessage;
     }
 }
 
@@ -2321,7 +2394,8 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 
 - (void)showMessageDetails:(BaseMessage *)message {
     detailsMessage = message;
-    [self performSegueWithIdentifier:@"ShowDetails" sender:self];
+    MessageDetailsViewController *messageDetail = [[MessageDetailsViewController alloc] initWithMessageID:detailsMessage.objectID];
+    [self.navigationController pushViewController:messageDetail animated:YES];
 }
 
 - (void)audioMessageTapped:(AudioMessageEntity*)message {

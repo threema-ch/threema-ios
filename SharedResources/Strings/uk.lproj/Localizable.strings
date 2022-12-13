@@ -656,7 +656,7 @@
 
 /* reminder messages */
 "push_reminder_title" = "Push-сповіщення не ввімкнено";
-"push_reminder_message" = "Ви не отримуватимете сповіщення про нові повідомлення чи вхідні дзвінки, коли застосунок %@ закрито.\n\nПерейдіть у розділ «Системні налаштування» і увімкніть сповіщення для %@.";
+"push_reminder_message" = "Ви не отримуватимете сповіщення про нові повідомлення чи вхідні дзвінки, коли застосунок %@ закрито.\n\nЩоб виправити це, перейдіть у розділ «Системні налаштування» і увімкніть сповіщення для %@.";
 "push_reminder_not_now" = "Більше не нагадувати мені";
 "push_reminder_set_now" = "Активувати сповіщення";
 
@@ -1082,7 +1082,7 @@
 "settings_chat" = "Діалог";
 "settings_media" = "Медіа";
 "settings_storage_management" = "Керування сховищем";
-"settings_passcode_lock" = "Блокування паролем";
+"settings_passcode_lock" = "Блокування за допомогою пароля";
 "settings_threema_calls" = "Виклики Threema";
 "settings_threema_web" = "Застосунок / Вебверсія";
 "settings_network_status" = "Стан мережі";
@@ -1117,6 +1117,7 @@
 "settings_appearance_system_theme" = "Системна";
 "settings_appearance_theme_selected" = "Обрана тема %@";
 "settings_appearance_theme_active" = "Активна";
+"settings_appearance_hide_app_icon" = "Значок застосунку";
 "settings_appearance_hide_stale_contacts" = "Сховати неактивні ID";
 "settings_appearance_show_profile_pictures" = "Показувати зображення профілю";
 "settings_appearance_display_order" = "Порядок показування";
@@ -1376,3 +1377,28 @@
 
 // ChatBar
 "chat_bar_quote_close_button" = "Закрити цитату";
+
+// ChatDetailView
+"detailView_title" = "Деталі повідомлення";
+"detailView_sent" = "Надіслано";
+"detailView_delivered" = "Доставлено";
+"detailView_read" = "Прочитано";
+"detailView_ackd" = "Підтверджено";
+"detailView_messageID" = "Ідентифікатор повідомлення";
+"detailView_group_acknowledged" = "Прийнято (%d)";
+"detailView_group_declined" = "Не прийнято (%d)";
+
+// App icons
+"app_icon_title_celebration" = "Святковий значок";
+"app_icon_description_celebration" = "10-та річниця";
+"app_icon_title_current" = "Поточний значок";
+"app_icon_description_current" = "З 2019 року";
+"app_icon_title_second" = "Другий значок";
+"app_icon_description_second" = "2013–2019";
+"app_icon_title_first" = "Перший значок";
+"app_icon_description_first" = "2012–2013";
+
+// 10 Years
+"anniversary_view_title" = "10 років Threema!";
+"anniversary_view_text" = "12 грудня 2022 року Threema виповниться 10 років. Щоб позначити початок періоду святкувань, ми змінили значок застосунку на святковий.";
+"anniversary_view_icon_info" = "Щоб повернути один із попередніх значків або стандартний значок, перейдіть у меню «Налаштування > Вигляд > Значок застосунку».";

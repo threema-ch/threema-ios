@@ -55,10 +55,7 @@ public class UserNotificationContent {
     var cmd: String! {
         var commandValue: ThreemaPushNotification.Command?
             
-        if let command = pendingUserNotification.threemaPushNotification?.command {
-            commandValue = command
-        }
-        else if let baseMsg = pendingUserNotification.baseMessage {
+        if let baseMsg = pendingUserNotification.baseMessage {
             commandValue = baseMsg.conversation.isGroup() ? ThreemaPushNotification.Command
                 .newGroupMessage : ThreemaPushNotification.Command.newMessage
         }
@@ -66,12 +63,15 @@ public class UserNotificationContent {
             commandValue = abstractMsg.isGroup() ? ThreemaPushNotification.Command
                 .newGroupMessage : ThreemaPushNotification.Command.newMessage
         }
+        else if let command = pendingUserNotification.threemaPushNotification?.command {
+            commandValue = command
+        }
             
         return commandValue?.rawValue
     }
     
     var categoryIdentifier: String {
-        pendingUserNotification.isGroupMessage! ? "GROUP" : "SINGLE"
+        (pendingUserNotification.isGroupMessage ?? false) ? "GROUP" : "SINGLE"
     }
     
     var groupID: String?

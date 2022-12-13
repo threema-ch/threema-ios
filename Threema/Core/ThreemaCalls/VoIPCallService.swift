@@ -596,6 +596,14 @@ extension VoIPCallService {
             }
 
             let pushSettingManager = PushSettingManager(UserSettings.shared(), LicenseStore.requiresLicenseKey())
+            
+            let entityManager = BusinessInjector().entityManager
+            
+            entityManager.performSyncBlockAndSafe {
+                if let conversation = entityManager.entityFetcher.conversation(forIdentity: offer.contactIdentity) {
+                    conversation.lastUpdate = Date.now
+                }
+            }
 
             if state == .idle {
                 if !pushSettingManager.canMasterDndSendPush() {
@@ -1085,6 +1093,16 @@ extension VoIPCallService {
                 AVAudioSession.sharedInstance().requestRecordPermission { granted in
                     if granted {
                         self.callInitiator = true
+                        
+                        let entityManager = BusinessInjector().entityManager
+                        
+                        entityManager.performSyncBlockAndSafe {
+                            if let conversation = entityManager.entityFetcher
+                                .conversation(forIdentity: action.contactIdentity) {
+                                conversation.lastUpdate = Date.now
+                            }
+                        }
+                        
                         self.contactIdentity = action.contactIdentity
                         self.createPeerConnectionForInitiator(action: action, completion: completion)
                         ServerConnector.shared().connect(initiator: .threemaCall)
@@ -1362,65 +1380,68 @@ extension VoIPCallService {
         peerConnectionClient = nil
         
         let entityManager = BusinessInjector().entityManager
-        
-        guard let offer = incomingOffer,
-              let identity = offer.contactIdentity,
-              let contact = entityManager.entityFetcher.contact(for: identity) else {
-            state = .idle
-            completion()
-            return
-        }
-        
-        FeatureMask.check(Int(FEATURE_MASK_VOIP_VIDEO), forContacts: [contact]) { _ in
-            if self.incomingOffer?.isVideoAvailable ?? false && UserSettings.shared().enableVideoCall {
-                self.threemaVideoCallAvailable = true
-                self.callViewController?.enableThreemaVideoCall()
-            }
-            else {
-                self.threemaVideoCallAvailable = false
-                self.callViewController?.disableThreemaVideoCall()
+        entityManager.performBlockAndWait {
+            
+            guard let offer = self.incomingOffer,
+                  let identity = offer.contactIdentity,
+                  let contact = entityManager.entityFetcher.contact(for: identity) else {
+                self.state = .idle
+                completion()
+                return
             }
             
-            let forceTurn = Int(truncating: contact.verificationLevel) == kVerificationLevelUnverified || UserSettings
-                .shared().alwaysRelayCalls
-            let peerConnectionParameters = VoIPCallPeerConnectionClient.PeerConnectionParameters(
-                isVideoCallAvailable: self.threemaVideoCallAvailable,
-                videoCodecHwAcceleration: self.threemaVideoCallAvailable,
-                forceTurn: forceTurn,
-                gatherContinually: true,
-                allowIpv6: UserSettings.shared().enableIPv6,
-                isDataChannelAvailable: false
-            )
-            
-            VoIPCallPeerConnectionClient.instantiate(
-                contactIdentity: contact.identity,
-                callID: offer.callID,
-                peerConnectionParameters: peerConnectionParameters
-            ) { result in
-                do {
-                    self.peerConnectionClient = try result.get()
+            FeatureMask.check(Int(FEATURE_MASK_VOIP_VIDEO), forContacts: [contact]) { _ in
+                if self.incomingOffer?.isVideoAvailable ?? false && UserSettings.shared().enableVideoCall {
+                    self.threemaVideoCallAvailable = true
+                    self.callViewController?.enableThreemaVideoCall()
                 }
-                catch {
-                    print("Can't instantiate client: \(error)")
+                else {
+                    self.threemaVideoCallAvailable = false
+                    self.callViewController?.disableThreemaVideoCall()
                 }
-                self.peerConnectionClient?.delegate = self
                 
-                self.peerConnectionClient?.set(remoteSdp: offer.offer!, completion: { error in
-                    if error == nil {
-                        completion()
+                let forceTurn = Int(truncating: contact.verificationLevel) == kVerificationLevelUnverified ||
+                    UserSettings
+                    .shared().alwaysRelayCalls
+                let peerConnectionParameters = VoIPCallPeerConnectionClient.PeerConnectionParameters(
+                    isVideoCallAvailable: self.threemaVideoCallAvailable,
+                    videoCodecHwAcceleration: self.threemaVideoCallAvailable,
+                    forceTurn: forceTurn,
+                    gatherContinually: true,
+                    allowIpv6: UserSettings.shared().enableIPv6,
+                    isDataChannelAvailable: false
+                )
+                
+                VoIPCallPeerConnectionClient.instantiate(
+                    contactIdentity: identity,
+                    callID: offer.callID,
+                    peerConnectionParameters: peerConnectionParameters
+                ) { result in
+                    do {
+                        self.peerConnectionClient = try result.get()
                     }
-                    else {
-                        // reject because we can't add offer
-                        print("We can't add the offer \(String(describing: error))")
-                        let action = VoIPCallUserAction(
-                            action: .reject,
-                            contactIdentity: contact.identity,
-                            callID: offer.callID,
-                            completion: offer.completion
-                        )
-                        self.rejectCall(action: action)
+                    catch {
+                        print("Can't instantiate client: \(error)")
                     }
-                })
+                    self.peerConnectionClient?.delegate = self
+                    
+                    self.peerConnectionClient?.set(remoteSdp: offer.offer!, completion: { error in
+                        if error == nil {
+                            completion()
+                        }
+                        else {
+                            // reject because we can't add offer
+                            print("We can't add the offer \(String(describing: error))")
+                            let action = VoIPCallUserAction(
+                                action: .reject,
+                                contactIdentity: identity,
+                                callID: offer.callID,
+                                completion: offer.completion
+                            )
+                            self.rejectCall(action: action)
+                        }
+                    })
+                }
             }
         }
     }
@@ -2136,6 +2157,7 @@ extension VoIPCallService {
                 if !self.isCallInitiator(),
                    self.callDurationTime == 0 {
                     messageRead = false
+                    conversation?.lastUpdate = Date.now
                 }
                                 
                 do {
@@ -2148,7 +2170,6 @@ extension VoIPCallService {
                         systemMessage?.readDate = Date()
                     }
                     conversation?.lastMessage = systemMessage
-                    conversation?.lastUpdate = Date()
                     utilities.unarchive(conversation!)
                 }
                 catch {
@@ -2176,61 +2197,71 @@ extension VoIPCallService {
             }
         case .rejectedTimeout:
             // add call message
-            guard let identity = contactIdentity,
-                  let conversation = entityManager.conversation(for: identity, createIfNotExisting: true) else {
-                return
-            }
-            let reason = isCallInitiator() ? kSystemMessageCallRejectedTimeout : kSystemMessageCallMissed
-            addRejectedMessageToConversation(contactIdentity: identity, reason: reason)
-            utilities.unarchive(conversation)
-
-        case .rejectedBusy:
-            // add call message
-            guard let identity = contactIdentity,
-                  let conversation = entityManager.conversation(for: identity, createIfNotExisting: true) else {
-                return
-            }
-            let reason = isCallInitiator() ? kSystemMessageCallRejectedBusy : kSystemMessageCallMissed
-            addRejectedMessageToConversation(contactIdentity: identity, reason: reason)
-            utilities.unarchive(conversation)
-
-        case .rejectedOffHours:
-            // add call message
-            guard let identity = contactIdentity,
-                  let conversation = entityManager.conversation(for: identity, createIfNotExisting: true) else {
-                return
-            }
-            let reason = isCallInitiator() ? kSystemMessageCallRejectedOffHours : kSystemMessageCallMissed
-            addRejectedMessageToConversation(contactIdentity: identity, reason: reason)
-            utilities.unarchive(conversation)
-
-        case .rejectedUnknown:
-            // add call message
-            guard let identity = contactIdentity,
-                  let conversation = entityManager.conversation(for: identity, createIfNotExisting: true) else {
-                return
-            }
-            let reason = isCallInitiator() ? kSystemMessageCallRejectedUnknown : kSystemMessageCallMissed
-            addRejectedMessageToConversation(contactIdentity: identity, reason: reason)
-            utilities.unarchive(conversation)
-
-        case .rejectedDisabled:
-            // add call message
-            if callInitiator {
-                guard let identity = contactIdentity,
+            entityManager.performBlockAndWait {
+                guard let identity = self.contactIdentity,
                       let conversation = entityManager.conversation(for: identity, createIfNotExisting: true) else {
                     return
                 }
-                addRejectedMessageToConversation(contactIdentity: identity, reason: kSystemMessageCallRejectedDisabled)
+                let reason = self.isCallInitiator() ? kSystemMessageCallRejectedTimeout : kSystemMessageCallMissed
+                self.addRejectedMessageToConversation(contactIdentity: identity, reason: reason)
                 utilities.unarchive(conversation)
             }
-            
-        case .microphoneDisabled:
-            guard let identity = contactIdentity,
-                  let conversation = entityManager.conversation(for: identity, createIfNotExisting: true) else {
-                return
+        case .rejectedBusy:
+            entityManager.performBlockAndWait {
+                // add call message
+                guard let identity = self.contactIdentity,
+                      let conversation = entityManager.conversation(for: identity, createIfNotExisting: true) else {
+                    return
+                }
+                let reason = self.isCallInitiator() ? kSystemMessageCallRejectedBusy : kSystemMessageCallMissed
+                self.addRejectedMessageToConversation(contactIdentity: identity, reason: reason)
+                utilities.unarchive(conversation)
             }
-            utilities.unarchive(conversation)
+        case .rejectedOffHours:
+            entityManager.performBlockAndWait {
+                // add call message
+                guard let identity = self.contactIdentity,
+                      let conversation = entityManager.conversation(for: identity, createIfNotExisting: true) else {
+                    return
+                }
+                let reason = self.isCallInitiator() ? kSystemMessageCallRejectedOffHours : kSystemMessageCallMissed
+                self.addRejectedMessageToConversation(contactIdentity: identity, reason: reason)
+                utilities.unarchive(conversation)
+            }
+        case .rejectedUnknown:
+            entityManager.performBlockAndWait {
+                // add call message
+                guard let identity = self.contactIdentity,
+                      let conversation = entityManager.conversation(for: identity, createIfNotExisting: true) else {
+                    return
+                }
+                let reason = self.isCallInitiator() ? kSystemMessageCallRejectedUnknown : kSystemMessageCallMissed
+                self.addRejectedMessageToConversation(contactIdentity: identity, reason: reason)
+                utilities.unarchive(conversation)
+            }
+        case .rejectedDisabled:
+            // add call message
+            entityManager.performBlockAndWait {
+                if self.callInitiator {
+                    guard let identity = self.contactIdentity,
+                          let conversation = entityManager.conversation(for: identity, createIfNotExisting: true) else {
+                        return
+                    }
+                    self.addRejectedMessageToConversation(
+                        contactIdentity: identity,
+                        reason: kSystemMessageCallRejectedDisabled
+                    )
+                    utilities.unarchive(conversation)
+                }
+            }
+        case .microphoneDisabled:
+            entityManager.performBlockAndWait {
+                guard let identity = self.contactIdentity,
+                      let conversation = entityManager.conversation(for: identity, createIfNotExisting: true) else {
+                    return
+                }
+                utilities.unarchive(conversation)
+            }
         }
     }
     
@@ -2252,12 +2283,15 @@ extension VoIPCallService {
                     systemMessage?.isOwn = NSNumber(booleanLiteral: self.isCallInitiator())
                     systemMessage?.conversation = conversation
                     conversation.lastMessage = systemMessage
-                    conversation.lastUpdate = Date()
                     if reason == kSystemMessageCallMissed || reason == kSystemMessageCallRejectedBusy || reason ==
                         kSystemMessageCallRejectedTimeout || reason == kSystemMessageCallRejectedDisabled { }
                     else {
                         systemMessage?.read = true
                         systemMessage?.readDate = Date()
+                    }
+                    
+                    if reason == kSystemMessageCallMissed {
+                        conversation.lastUpdate = Date.now
                     }
                 }
                 catch {

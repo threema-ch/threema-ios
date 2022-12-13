@@ -65,7 +65,7 @@
 @implementation ChatFileMessageCell
 
 + (CGFloat)heightForMessage:(BaseMessage*)message forTableWidth:(CGFloat)tableWidth {
-    CGSize maxSize = CGSizeMake([ChatMessageCell maxContentWidthForTableWidth:tableWidth] - NAME_LABEL_PADDING, CGFLOAT_MAX);
+    CGSize maxSize = CGSizeMake([ChatMessageCell maxContentWidthForTableWidth:tableWidth isGroup:message.conversation.isGroup] - NAME_LABEL_PADDING, CGFLOAT_MAX);
 
     static UILabel *dummyLabel = nil;
     
@@ -180,7 +180,7 @@
 }
 
 - (void)layoutSubviews {
-    CGFloat messageTextWidth = [ChatMessageCell maxContentWidthForTableWidth:self.safeAreaLayoutGuide.layoutFrame.size.width];
+    CGFloat messageTextWidth = [ChatMessageCell maxContentWidthForTableWidth:self.safeAreaLayoutGuide.layoutFrame.size.width isGroup:self.message.conversation.isGroup];
     CGSize textSize = [_nameLabel sizeThatFits:CGSizeMake(messageTextWidth - NAME_LABEL_PADDING, CGFLOAT_MAX)];
     
     CGFloat thumbnailSize = [ChatFileMessageCell thumbnailSizeForMessage:(FileMessageEntity*)self.message];

@@ -70,8 +70,7 @@
     }
     
     [self sendSignedRequestPhase1:request toApiPath:apiPath onCompletion:^(NSDictionary *response) {
-        NSData *nonce = [@"createIdentity response." dataUsingEncoding:NSASCIIStringEncoding];
-        [self sendSignedRequestPhase2:request toApiPath:apiPath phase1Response:response withNonce:nonce forStore:identityStore onCompletion:^(NSDictionary *response) {
+        [self sendSignedRequestPhase2:request toApiPath:apiPath phase1Response:response forStore:identityStore onCompletion:^(NSDictionary *response) {
             identityStore.identity = response[@"identity"];
             identityStore.serverGroup = response[@"serverGroup"];
             [identityStore storeInKeychain];
@@ -147,7 +146,8 @@
     }
     
     NSDictionary *request = @{
-        @"identity": identityStore.identity
+        @"identity": identityStore.identity,
+        @"appVariant": [LicenseStore requiresLicenseKey] ? @"work" : @"consumer"
     };
 
     [self sendSignedRequest:request toApiPath:@"identity/fetch_priv" forStore:identityStore onCompletion:^(id jsonObject) {
@@ -718,37 +718,20 @@
 
 - (void)sendSignedRequestPhase2:(NSDictionary*)request toApiPath:(NSString*)apiPath phase1Response:(id)phase1Response forStore:(MyIdentityStore*)identityStore onCompletion:(void(^)(NSDictionary *response))onCompletion onError:(void(^)(NSError *error))onError {
     
-    NSData *nonce = [[NaClCrypto sharedCrypto] randomBytes:kNaClCryptoNonceSize];
-    [self sendSignedRequestPhase2:request toApiPath:apiPath phase1Response:phase1Response withNonce:nonce forStore:identityStore onCompletion:onCompletion onError:onError];
-}
-
-- (void)sendSignedRequestPhase2:(NSDictionary*)request toApiPath:(NSString*)apiPath phase1Response:(id)phase1Response withNonce:(NSData*)nonce forStore:(MyIdentityStore*)identityStore onCompletion:(void(^)(NSDictionary *response))onCompletion onError:(void(^)(NSError *error))onError {
-    
     NSDictionary *resp1 = (NSDictionary*)phase1Response;
     
     NSString *tokenStr = resp1[@"token"];
     NSData *token = [[NSData alloc] initWithBase64EncodedString:tokenStr options:0];
     NSData *tokenRespKeyPub = [[NSData alloc] initWithBase64EncodedString:resp1[@"tokenRespKeyPub"] options:0];
     
-    /* token must start with 0xff and be longer than 32 bytes to avoid payload confusion */
-    if (token.length <= 32 || (((const uint8_t*)token.bytes)[0] != MSGTYPE_AUTH_TOKEN)) {
-        onError([ThreemaError threemaError:@"Bad token"]);
-        return;
-    }
-    
-    /* sign token with our secret key */
-    NSData *response = [identityStore encryptData:token withNonce:nonce publicKey:tokenRespKeyPub];
-    if (response == nil) {
-        NSError *error = [ThreemaError threemaError:@"could not encrypt response"];
-        DDLogVerbose(@"Send API request %@ phase 2 failed: %@", apiPath, error);
-        onError(error);
-        return;
-    }
+    /* Create authenticator for token */
+    NSData *sharedSecret = [identityStore sharedSecretWithPublicKey:tokenRespKeyPub];
+    NSData *responseKey = [[[ThreemaKDF alloc] initWithPersonal:@"3ma-csp"] deriveKeyWithSalt:@"dir" key:sharedSecret];
+    NSData *response = [ThreemaKDF calculateMacWithKey:responseKey input:token];
     
     NSMutableDictionary *signedRequest = [NSMutableDictionary dictionaryWithDictionary:request];
     signedRequest[@"token"] = tokenStr;
     signedRequest[@"response"] = [response base64EncodedStringWithOptions:0];
-    signedRequest[@"nonce"] = [nonce base64EncodedStringWithOptions:0];
     
     [ServerAPIRequest postJSONToAPIPath:apiPath data:signedRequest onCompletion:^(id jsonObject) {
         DDLogVerbose(@"Send API request %@ phase 2 success: %@", apiPath, jsonObject);

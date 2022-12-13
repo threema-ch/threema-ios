@@ -137,7 +137,10 @@ extension ChatFileAudioMessageCell {
         
         let text = ChatFileAudioMessageCell.displayText(fileMessageEntity: fileMessageEntity)
         let size = text.sizeOfString(
-            maxWidth: ChatFileAudioMessageCell.maxContentWidth(forTableWidth: tableWidth) - 25,
+            maxWidth: ChatFileAudioMessageCell.maxContentWidth(
+                forTableWidth: tableWidth,
+                isGroup: fileMessageEntity.conversation.isGroup()
+            ) - 25,
             font: ChatFileAudioMessageCell.textFont()
         )
         var cellHeight = CGFloat(ceilf(Float(size.height)))
@@ -146,7 +149,10 @@ extension ChatFileAudioMessageCell {
             let x: CGFloat = 30.0
             
             let maxSize = CGSize(
-                width: ChatFileAudioMessageCell.maxContentWidth(forTableWidth: tableWidth) - x,
+                width: ChatFileAudioMessageCell.maxContentWidth(
+                    forTableWidth: tableWidth,
+                    isGroup: fileMessageEntity.conversation.isGroup()
+                ) - x,
                 height: CGFloat.greatestFiniteMagnitude
             )
             var textSize: CGSize?
@@ -220,7 +226,8 @@ extension ChatFileAudioMessageCell {
 
         var captionTextSize = CGSize(width: 0.0, height: 0.0)
         let messageTextWidth: CGFloat = ChatMessageCell.maxContentWidth(
-            forTableWidth: safeAreaLayoutGuide.layoutFrame.size.width
+            forTableWidth: safeAreaLayoutGuide.layoutFrame.size.width,
+            isGroup: fileMessageEntity.conversation.isGroup()
         )
         
         if let caption = fileMessageEntity.caption, !caption.isEmpty {

@@ -655,12 +655,12 @@
 "new_message_db_requires_migration" = "Aggiornare la banca dati. Aprire l'app per proseguire.";
 
 /* reminder messages */
-"push_reminder_title" = "Le notifiche push non sono attivate";
-"push_reminder_message" = "A quanto pare %@ non è autorizzata a inviarti notifiche push. Ciò significa che non puoi ricevere le notifiche sui nuovi messaggi quando %@ è chiusa. Vai sulle impostazioni iOS e attiva alla voce \"Notifiche\" le notifiche per %@, così non ti perderai più un messaggio.";
+"push_reminder_title" = "Le notifiche non sono attivate";
+"push_reminder_message" = "Non riceverai nuovi messaggi o chiamate in arrivo quando %@ è chiusa. Per modificarlo, accedi alle impostazioni di sistema e attiva alla voce \"Notifiche\" le notifiche per %@.";
 "push_reminder_not_now" = "Non ricordarmelo più";
 "push_reminder_set_now" = "Attivare le notifiche";
 
-"updating_database" = "Aggiornamento banca dati in corso...\n\nNon interrompere il processo. In caso di banche dati molto ampie, l’operazione può richiedere alcuni minuti.";
+"updating_database" = "Aggiornamento banca dati in corso...\n\nMantieni Threema attivo fino al completamento.\n\nNel caso di una cronologia chat di grandi dimensioni, potrebbero volerci diversi minuti.";
 "database_migration_error_hints" = "Assicurati di disporre di memoria a sufficienza sul dispositivo, riavvialo e riprova.";
 "database_migration_storage_warning_title" = "Memoria a disposizione non sufficiente";
 "database_migration_storage_warning_message" = "L’update del database richiede temporaneamente almeno %.1f GB di memoria disponibile. Al momento il tuo dispositivo può contare soltanto su %.1f GB. Rendi disponibile un po’ più di spazio eliminando file nelle Impostazioni d’uso, poi riprova.";
@@ -1116,6 +1116,7 @@
 "settings_appearance_system_theme" = "Sistema";
 "settings_appearance_theme_selected" = "Tema %@ attivo";
 "settings_appearance_theme_active" = "Attivo";
+"settings_appearance_hide_app_icon" = "Icona app";
 "settings_appearance_hide_stale_contacts" = "Nascondi ID inattive";
 "settings_appearance_show_profile_pictures" = "Mostra immagini di profilo";
 "settings_appearance_display_order" = "Visualizza per";
@@ -1230,8 +1231,8 @@ Se non mancano media e/o file in %@, svuota il cestino per cancellare definitiva
 "pasteErrorMessageMessage" = "A causa di un errore sconosciuto non è stato possibile inserire il file. Riprova.";
 "media_preview_preview_button_accessibility_label" = "Visualizza file";
 "preview" = "Anteprima";
-"could_not_add_all_items_memory_constrained_title" = "File non elaborato";
-"could_not_add_all_items_memory_constrained_message" = "A causa di restrizioni tecniche uno o più file non sono stati elaborati. Per inviare il file, aprilo direttamente nell'app.";
+"could_not_add_all_items_memory_constrained_title" = "Usa l'app";
+"could_not_add_all_items_memory_constrained_message" = "A causa di restrizioni tecniche i file oltre una data dimensione possono solo essere inviati all'interno dell'app.";
 "image_preview_cell_cannot_preview" = "Impossibile visualizzare l'anteprima.";
 
 // Share Extension
@@ -1318,7 +1319,7 @@ Se non mancano media e/o file in %@, svuota il cestino per cancellare definitiva
 "multi_device_linked_devices_title" = "Dispositivi collegati";
 "multi_device_linked_devices_refresh" = "Scorri giù per aggiornare";
 "multi_device_linked_devices_loading_failed" = "Errore durante il caricamento dei dispositivi: %@";
-"multi_device_linked_devices_failed_to_load_title" = "Errore durante il caricamento della lista dei dispositivi";
+"multi_device_linked_devices_failed_to_load_title" = "Impossibile caricare la lista dei dispositivi";
 "multi_device_linked_devices_failed_to_load_message" = "Impossibile caricare i dispositivi collegati. Verifica la connessione a Internet e riprova.";
 "multi_device_linked_devices_this" = "Questo dispositivo";
 "multi_device_linked_devices_others" = "Altri dispositivi";
@@ -1375,3 +1376,28 @@ Se non mancano media e/o file in %@, svuota il cestino per cancellare definitiva
 
 // ChatBar
 "chat_bar_quote_close_button" = "Chiudi citazione";
+
+// ChatDetailView
+"detailView_title" = "Dettagli messaggio";
+"detailView_sent" = "Inviato";
+"detailView_delivered" = "Consegnato";
+"detailView_read" = "Letto";
+"detailView_ackd" = "Confermato";
+"detailView_messageID" = "ID messaggio";
+"detailView_group_acknowledged" = "Confermato (%d)";
+"detailView_group_declined" = "Respinto (%d)";
+
+// App icons
+"app_icon_title_celebration" = "Icona dei festeggiamenti";
+"app_icon_description_celebration" = "10 anni Threema";
+"app_icon_title_current" = "Icona attuale";
+"app_icon_description_current" = "Dal 2019";
+"app_icon_title_second" = "Seconda icona";
+"app_icon_description_second" = "2013–2019";
+"app_icon_title_first" = "Prima icona";
+"app_icon_description_first" = "2012–2013";
+
+// 10 Years
+"anniversary_view_title" = "10 anni Threema!";
+"anniversary_view_text" = "Il 12 dicembre 2022 Threema festeggerà il suo decimo compleanno. Per dare inizio ai festeggiamenti abbiamo creato un'icona festiva.";
+"anniversary_view_icon_info" = "Per ripristinare la versione standard dell'icona o sostituirla con una versione precedente vai a «Impostazioni > Aspetto > Icona app»";

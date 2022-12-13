@@ -208,16 +208,18 @@ class PrivacySettingsViewController: ThemedTableViewController {
     
     @IBAction func hidePrivacyChatsSwitchChanged(_ sender: Any) {
         if userSettings.hidePrivateChats {
-            lockScreenWrapper.presentLockScreenView(viewController: self) {
-                
-                self.userSettings.hidePrivateChats = false
-                self.hidePrivateChatsSwitch.isOn = false
-                NotificationCenter.default.post(
-                    name: Notification.Name(kNotificationChangedHidePrivateChat),
-                    object: nil,
-                    userInfo: nil
-                )
-            }
+            lockScreenWrapper.presentLockScreenView(
+                viewController: self,
+                enteredCorrectly: {
+                    self.userSettings.hidePrivateChats = false
+                    self.hidePrivateChatsSwitch.isOn = false
+                    NotificationCenter.default.post(
+                        name: Notification.Name(kNotificationChangedHidePrivateChat),
+                        object: nil,
+                        userInfo: nil
+                    )
+                }
+            )
             hidePrivateChatsSwitch.isOn = true
         }
         else {

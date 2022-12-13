@@ -69,7 +69,11 @@ extension ChatImageMessageCell {
                 let width = CGFloat(imageMessageEntity.thumbnail.width.floatValue)
                 let height = CGFloat(imageMessageEntity.thumbnail.height.floatValue)
                 let size = CGSize(width: width, height: height)
-                scaledSize = ChatImageMessageCell.scaleImageSize(toCell: size, forTableWidth: tableWidth)
+                scaledSize = ChatImageMessageCell.scaleImageSize(
+                    toCell: size,
+                    forTableWidth: tableWidth,
+                    isGroup: imageMessageEntity.conversation.isGroup()
+                )
                 if scaledSize.height != scaledSize.height || scaledSize.height < 0 {
                     scaledSize.height = 40.0
                 }
@@ -157,7 +161,8 @@ extension ChatImageMessageCell {
                 let imageMessageSize = CGSize(width: width, height: height)
                 size = ChatFileImageMessageCell.scaleImageSize(
                     toCell: imageMessageSize,
-                    forTableWidth: frame.size.width
+                    forTableWidth: frame.size.width,
+                    isGroup: imageMessageEntity.conversation.isGroup()
                 )
                 
                 if let image = imageMessageEntity.image, let caption = image.getCaption(), !caption.isEmpty {
@@ -437,7 +442,11 @@ extension ChatImageMessageCell {
                 let width = CGFloat(imageMessageEntity.thumbnail.width.floatValue)
                 let height = CGFloat(imageMessageEntity.thumbnail.height.floatValue)
                 let imageMessageSize = CGSize(width: width, height: height)
-                size = ChatImageMessageCell.scaleImageSize(toCell: imageMessageSize, forTableWidth: frame.size.width)
+                size = ChatImageMessageCell.scaleImageSize(
+                    toCell: imageMessageSize,
+                    forTableWidth: frame.size.width,
+                    isGroup: imageMessageEntity.conversation.isGroup()
+                )
             }
             
             _imageView?.frame.size = size

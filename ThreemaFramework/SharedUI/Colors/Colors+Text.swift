@@ -110,4 +110,13 @@ public extension Colors {
     @objc class var textWizardLink: UIColor {
         primaryWizard
     }
+    
+    @objc class var textChatDateCustomImage: UIColor {
+        switch theme {
+        case .light, .undefined:
+            return Asset.SharedColors.gray650.color
+        case .dark:
+            return Asset.SharedColors.gray300.color
+        }
+    }
 }

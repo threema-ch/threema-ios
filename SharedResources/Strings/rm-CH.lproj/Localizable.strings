@@ -1367,3 +1367,12 @@ Svida il chanaster da palpiri, sche naginas medias e/u datotecas na mancan per s
 
 // ChatBar
 "chat_bar_quote_close_button" = "Serrar il citat";
+
+// ChatDetailView
+"detailView_title" = "Detagls dal messadi";
+"detailView_sent" = "Tramess";
+"detailView_delivered" = "Consegnà";
+"detailView_read" = "Legì";
+"detailView_ackd" = "Confermà";
+"detailView_messageID" = "ID dals messadis";
+

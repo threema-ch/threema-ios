@@ -40,17 +40,36 @@ class DateFormatterTests_en_US: XCTestCase {
     
     let expectedGetShortDate_en_US = "2/1/2020"
     let expectedGetDayMonthAndYear_en_US = "Sat, Feb 01, 2020"
-    let expectedGetFullDateFor_en_US = "Sat, Feb 01, 2020, 1:14 PM"
+    let expectedGetFullDateFor_en_US: String = {
+        if #available(iOS 16.0, *) {
+            return "Sat, Feb 01, 2020 at 1:14 PM"
+        }
+        else {
+            return "Sat, Feb 01, 2020, 1:14 PM"
+        }
+    }()
+
+    let expectedGetYearFor_en_US = "2020"
     
     let expectedRelativeMediumDateYesterday_en_US = "Yesterday"
     let expectedRelativeMediumDateThisYear_en_US = ", Jan 01"
     let expectedRelativeMediumDateLastCalendarYear_en_US = ", Dec 31, "
     let expectedRelativeMediumDateMoreThanAYearAgo_en_US = "Fri, Feb 01, 2019"
+    let expectedRelativeTimeTodayAndMediumDateOtherwiseToday_en_US = "1:14 PM"
+    let expectedRelativeTimeTodayAndMediumDateOtherwiseYesterday_en_US = "Yesterday"
     
     let expectedRelativeLongStyleDateShortStyleTimeTomorrow_en_US = "Tomorrow at 2:03 AM"
     let expectedRelativeLongStyleDateShortStyleTimeToday_en_US = "Today at 1:14 PM"
     
-    let expectedAccessibilityDateTime_en_US = "February 1, 2020, 1:14 PM"
+    let expectedAccessibilityDateTime_en_US: String = {
+        if #available(iOS 16.0, *) {
+            return "February 1, 2020 at 1:14 PM"
+        }
+        else {
+            return "February 1, 2020, 1:14 PM"
+        }
+    }()
+
     let expectedAccessibilityRelativeDayTime_en_US = "February 1, 2020 at 1:14 PM"
     
     // MARK: - Test formats provided by the system
@@ -92,6 +111,18 @@ class DateFormatterTests_en_US: XCTestCase {
         XCTAssertEqual(actual, expectedShortStyleTimeNoDate_en_US)
     }
     
+    func testRelativeLongStyleDateShortStyleTimeTomorrow() {
+        let actual = DateFormatter.relativeLongStyleDateShortStyleTime(DateFormatterTests.testDateTomorrowAt20304)
+        
+        XCTAssertEqual(actual, expectedRelativeLongStyleDateShortStyleTimeTomorrow_en_US)
+    }
+    
+    func testRelativeLongStyleDateShortStyleTimeToday() {
+        let actual = DateFormatter.relativeLongStyleDateShortStyleTime(DateFormatterTests.testDateTodayAt131415)
+        
+        XCTAssertEqual(actual, expectedRelativeLongStyleDateShortStyleTimeToday_en_US)
+    }
+    
     // MARK: - Test custom formats
     
     func testGetShortDate() {
@@ -119,6 +150,12 @@ class DateFormatterTests_en_US: XCTestCase {
         let actual = DateFormatter.getFullDate(for: DateFormatterTests.testDate)
         
         XCTAssertEqual(actual, expectedGetFullDateFor_en_US)
+    }
+    
+    func testGetYear() {
+        let actual = DateFormatter.getYear(for: DateFormatterTests.testDate)
+        
+        XCTAssertEqual(actual, expectedGetYearFor_en_US)
     }
     
     // MARK: - Test to `Date` converter
@@ -184,16 +221,19 @@ class DateFormatterTests_en_US: XCTestCase {
         XCTAssertEqual(actual, expectedRelativeMediumDateMoreThanAYearAgo_en_US)
     }
     
-    func testRelativeLongStyleDateShortStyleTimeTomorrow() {
-        let actual = DateFormatter.relativeLongStyleDateShortStyleTime(DateFormatterTests.testDateTomorrowAt20304)
+    func testRelativeTimeTodayAndMediumDateOtherwiseToday() {
+        let actual = DateFormatter
+            .relativeTimeTodayAndMediumDateOtherwise(for: DateFormatterTests.testDateTodayAt131415)
         
-        XCTAssertEqual(actual, expectedRelativeLongStyleDateShortStyleTimeTomorrow_en_US)
+        XCTAssertEqual(actual, expectedRelativeTimeTodayAndMediumDateOtherwiseToday_en_US)
     }
     
-    func testRelativeLongStyleDateShortStyleTimeToday() {
-        let actual = DateFormatter.relativeLongStyleDateShortStyleTime(DateFormatterTests.testDateTodayAt131415)
+    func testRelativeTimeTodayAndMediumDateOtherwiseYesterday() throws {
+        let twentyFourHoursAgo = Date(timeIntervalSinceNow: -(60 * 60 * 24))
         
-        XCTAssertEqual(actual, expectedRelativeLongStyleDateShortStyleTimeToday_en_US)
+        let actual = DateFormatter.relativeTimeTodayAndMediumDateOtherwise(for: twentyFourHoursAgo)
+        
+        XCTAssertEqual(actual, expectedRelativeTimeTodayAndMediumDateOtherwiseYesterday_en_US)
     }
     
     // MARK: - Test accessibility formats

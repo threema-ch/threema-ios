@@ -451,7 +451,6 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     
     // Listen for connection status changes so we can enable/disable the call button
     [[ServerConnector sharedServerConnector] registerConnectionStateDelegate:self];
-    [[VoIPHelper shared] addObserver:self forKeyPath:@"isCallActiveInBackground" options:0 context:nil];
 }
 
 - (void)removeObservers {
@@ -462,11 +461,6 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
         [[ServerConnector sharedServerConnector] unregisterConnectionStateDelegate:self];
     } @catch(id anException) {
         // ServerConnector observer does not exist
-    }
-    @try {
-        [[VoIPHelper shared] removeObserver:self forKeyPath:@"isCallActiveInBackground"];
-    } @catch(id anException) {
-        // VoIPHelper observer does not exist
     }
     
     [[NSNotificationCenter defaultCenter] removeObserver: self];

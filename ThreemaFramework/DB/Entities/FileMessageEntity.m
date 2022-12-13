@@ -237,6 +237,14 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     
     if (fileName != nil) {
         NSString *extension = [UTIConverter preferredFileExtensionForMimeType:self.mimeType];
+        
+        // Workaround for audio messages from Android
+        // The extension would be `nil` otherwise and then Files.app cannot play the file.
+        // This should be fixed in more detail with IOS-3075
+        if ([self.mimeType isEqual:@"audio/aac"]) {
+            extension = @"m4a";
+        }
+        
         // The mime type might not return an extension. If it does not, we check the path extension. If there is none, we use an empty extension.
         if (extension == nil && !(extension = fileName.pathExtension)) {
             extension = @"";

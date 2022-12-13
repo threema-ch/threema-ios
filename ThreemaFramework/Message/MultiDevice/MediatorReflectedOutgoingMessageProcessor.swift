@@ -95,6 +95,8 @@ class MediatorReflectedOutgoingMessageProcessor {
             return try process(outgoingMessage: omsg, groupRenameMessage: amsg as! GroupRenameMessage)
         case is GroupSetPhotoMessage:
             return try process(outgoingMessage: omsg, groupSetPhotoMessage: amsg as! GroupSetPhotoMessage)
+        case is GroupDeliveryReceiptMessage:
+            return try process(outgoingMessage: omsg, groupDeliveryReceiptMessage: amsg as! GroupDeliveryReceiptMessage)
         case is GroupAudioMessage:
             throw MediatorReflectedProcessorError.outgoingMessageTypeIsDeprecated(type: omsg.type)
         case is GroupBallotCreateMessage:
@@ -285,6 +287,18 @@ class MediatorReflectedOutgoingMessageProcessor {
     ) throws -> Promise<Void> {
         try getGroup(for: omsg)
         return messageStore.save(groupSetPhotoMessage: amsg)
+    }
+    
+    private func process(
+        outgoingMessage omsg: D2d_OutgoingMessage,
+        groupDeliveryReceiptMessage amsg: GroupDeliveryReceiptMessage
+    ) throws -> Promise<Void> {
+        try messageStore.save(
+            groupDeliveryReceiptMessage: amsg,
+            createdAt: omsg.createdAt,
+            isOutgoing: true
+        )
+        return Promise()
     }
 
     // MARK: Process reflected outgoing group message

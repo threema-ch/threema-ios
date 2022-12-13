@@ -31,12 +31,15 @@
 #define kBlobIdLen 16
 #define kBlobKeyLen 32
 #define kGroupIdLen 8
+#define kGroupCreatorLen 8
 #define kBallotIdLen 8
 #define kDeviceGroupPathKeyLen 32
 #define kDeviceIdLen 8
 #define kExtensionTypeLength = 1
 #define kExtensionLengthLength = 2
 #define kExtensionDataMaxLength = 256
+#define kVouchLen 32
+#define kEphemeralKeyHashLen 32
 
 #define kConnectTimeout 15
 #define kReadTimeout 20
@@ -109,6 +112,7 @@ static Float32 const kWebClientMediaQuality = 0.6;
 #define MSGTYPE_VOIP_CALL_HANGUP 0x63
 #define MSGTYPE_VOIP_CALL_RINGING 0x64
 #define MSGTYPE_DELIVERY_RECEIPT 0x80
+#define MSGTYPE_GROUP_DELIVERY_RECEIPT 0x81
 #define MSGTYPE_TYPING_INDICATOR 0x90
 #define MSGTYPE_AUTH_TOKEN 0xff
 
@@ -124,6 +128,10 @@ static Float32 const kWebClientMediaQuality = 0.6;
 #define DELIVERYRECEIPT_MSGREAD 0x02
 #define DELIVERYRECEIPT_MSGUSERACK 0x03
 #define DELIVERYRECEIPT_MSGUSERDECLINE 0x04
+#define DELIVERYRECEIPT_MSGCONSUMED 0x05
+
+#define GROUPDELIVERYRECEIPT_MSGUSERACK 0x03
+#define GROUPDELIVERYRECEIPT_MSGUSERDECLINE 0x04
 
 #define PLTYPE_ECHO_REQUEST 0x00
 #define PLTYPE_ECHO_REPLY 0x80
@@ -139,6 +147,7 @@ static Float32 const kWebClientMediaQuality = 0.6;
 #define PLTYPE_VOIP_PUSH_NOTIFICATION_TOKEN 0x24
 #define PLTYPE_PUSH_OVERRIDE_TIMEOUT 0x31
 #define PLTYPE_QUEUE_SEND_COMPLETE 0xd0
+#define PLTYPE_LAST_EPHEMERAL_KEY_HASH 0xd1
 #define PLTYPE_ERROR 0xe0
 #define PLTYPE_ALERT 0xe1
 
@@ -169,6 +178,7 @@ static Float32 const kWebClientMediaQuality = 0.6;
 #define kUnknownMessageTypeErrorCode    668
 #define kMessageProcessingErrorCode     669
 #define kPendingGroupMessageErrorCode   670
+#define kMessageAlreadyProcessedErrorCode 671
 
 #define kJPEGCompressionQualityLow 0.8
 #define kJPEGCompressionQualityHigh 0.99

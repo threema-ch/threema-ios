@@ -176,7 +176,8 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     appLaunchDate = [NSDate date];
     
     DDLogNotice(@"AppState: didFinishLaunchingWithOptions");
-
+    DDLogNotice(@"Current App Version: %@", [ThreemaUtility clientVersion]);
+    
     /* Instantiate various singletons now */
     [NaClCrypto sharedCrypto];
     [[ServerConnector sharedServerConnector] setIsAppInBackground:[self isAppInBackground]];
@@ -581,11 +582,14 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
                 self.window.rootViewController = splitViewController;
             } else {
                 UIViewController *currentVC = self.window.rootViewController;
-                if (currentVC != nil) {
-                    [currentVC dismissViewControllerAnimated:true completion:nil];
+                
+                if (![currentVC isKindOfClass:[MainTabBarController class]]) {
+                    if (currentVC != nil) {
+                        [currentVC dismissViewControllerAnimated:true completion:nil];
+                    }
+                    UIStoryboard *mainStoryboard = [AppDelegate getMainStoryboard];
+                    self.window.rootViewController = [mainStoryboard instantiateInitialViewController];
                 }
-                UIStoryboard *mainStoryboard = [AppDelegate getMainStoryboard];
-                self.window.rootViewController = [mainStoryboard instantiateInitialViewController];
             }
         }
         
@@ -992,7 +996,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
              
              // Create the category with the custom actions.
              UNNotificationCategory *singleCategory = [UNNotificationCategory categoryWithIdentifier:@"SINGLE" actions:@[textAction, thumbUpAction, thumbDownAction] intentIdentifiers:@[] options:UNNotificationCategoryOptionNone];
-             UNNotificationCategory *groupCategory = [UNNotificationCategory categoryWithIdentifier:@"GROUP" actions:@[textAction] intentIdentifiers:@[] options:UNNotificationCategoryOptionNone];
+             UNNotificationCategory *groupCategory = [UNNotificationCategory categoryWithIdentifier:@"GROUP" actions:@[textAction, thumbUpAction, thumbDownAction] intentIdentifiers:@[] options:UNNotificationCategoryOptionNone];
              UNNotificationCategory *callCategory = [UNNotificationCategory categoryWithIdentifier:@"CALL" actions:@[callReplyAction, callBackAction] intentIdentifiers:@[] options:UNNotificationCategoryOptionNone];
              UNNotificationCategory *incomCallCategory = [UNNotificationCategory categoryWithIdentifier:@"INCOMCALL" actions:@[acceptCallAction, rejectCallAction] intentIdentifiers:@[] options:UNNotificationCategoryOptionNone];
              
@@ -1272,6 +1276,9 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     if (![appSetupState isAppSetupCompleted]) {
         return;
     }
+    
+    // set language and mdm description for client version string
+    (void)[ThreemaUtility clientVersion];
     
     [self updateTheme];
 

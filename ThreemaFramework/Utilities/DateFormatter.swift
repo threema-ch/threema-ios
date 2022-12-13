@@ -414,6 +414,21 @@ public class DateFormatter: NSObject {
         }
     }
     
+    /// Localized relative time or date
+    ///
+    /// If `date` is in today it will show the time. Otherwise a relative date like `relativeMediumDate(for:)`.
+    ///
+    /// - Parameter date: Date to format
+    /// - Returns: Localized relative time or date
+    public static func relativeTimeTodayAndMediumDateOtherwise(for date: Date) -> String {
+        if isDateInToday(date) {
+            return shortStyleTimeNoDate(date)
+        }
+        else {
+            return relativeMediumDate(for: date)
+        }
+    }
+    
     // MARK: - Accessibility formats
     
     /// Localized date and time for accessibility
@@ -640,10 +655,18 @@ public class DateFormatter: NSObject {
     
     // MARK: - Private relative date helper
     
+    /// Checks if `date` is in today
+    ///
+    /// - Parameter date: Date to check
+    /// - Returns: `true` if the date is in today, `false` otherwise
+    private static func isDateInToday(_ date: Date) -> Bool {
+        Calendar.current.isDateInToday(date)
+    }
+    
     /// Checks if `date` is in today or yesterday
     ///
     /// - Parameter date: Date to check
-    /// - Returns: `True` if the date is in today or yesterday, `False` otherwise
+    /// - Returns: `true` if the date is in today or yesterday, `false` otherwise
     private static func isDateInTodayOrYesterday(_ date: Date) -> Bool {
         Calendar.current.isDateInToday(date) || Calendar.current.isDateInYesterday(date)
     }
@@ -651,7 +674,7 @@ public class DateFormatter: NSObject {
     /// Checks if `date` is in this calendar year
     ///
     /// - Parameter date: Date to check
-    /// - Returns: `True` if the date is in this calendar year, `False` otherwise
+    /// - Returns: `true` if the date is in this calendar year, `false` otherwise
     private static func isDateInThisCalendarYear(_ date: Date) -> Bool {
         var dateComponents = Calendar.current.dateComponents([.year], from: Date())
         
@@ -664,38 +687,12 @@ public class DateFormatter: NSObject {
         return date > lastNewYearsEveJustBeforeMidnight
     }
     
-    /// Checks if `date` is younger than one year
-    ///
-    /// - Parameter date: Date to check
-    /// - Returns: `False` if the date is a year ago or older, or not determinable in the current calendar, otherwise `True`
-    private static func isDateInLastYear(_ date: Date) -> Bool {
-        var dateComponents = Calendar.current.dateComponents([.year, .month, .day], from: Date())
-        
-        guard let yearComponent = dateComponents.year else {
-            return false
-        }
-        
-        dateComponents.year = yearComponent - 1
-        
-        guard let dayComponent = dateComponents.day else {
-            return false
-        }
-        
-        dateComponents.day = dayComponent + 1
-        
-        guard let aYearAgoMidnight = Calendar.current.date(from: dateComponents) else {
-            return false
-        }
-        
-        return date > aYearAgoMidnight
-    }
-    
     /// Checks if `date` is in last six days
     ///
     /// i.e. if today is _Wednesday_ this function returns `true` for all dates up to and including last _Thursday_
     ///
     /// - Parameter date: Date to check
-    /// - Returns: `False` if the date is in last 6 days, or not determinable in the current calendar, otherwise `True`
+    /// - Returns: `false` if the date is in last 6 days, or not determinable in the current calendar, otherwise `true`
     private static func isDateInLastSixDays(_ date: Date) -> Bool {
         var dateComponents = Calendar.current.dateComponents([.year, .month, .day], from: Date())
         

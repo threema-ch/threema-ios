@@ -82,14 +82,16 @@ public class PendingUserNotification: NSObject, NSCoding {
     }
         
     public var isGroupMessage: Bool? {
-        if let push = threemaPushNotification {
-            return push.command == .newGroupMessage
+        // `flagGroupMessage` is deprecated. If it is missing we don't know whether it is a group message or not
+        // We thus do not use it for determining whether this is a group message or not
+        if let msg = baseMessage {
+            return msg.conversation.isGroup()
         }
         else if let msg = abstractMessage {
             return msg.isGroup()
         }
-        else if let msg = baseMessage {
-            return msg.conversation.isGroup()
+        else if let push = threemaPushNotification {
+            return push.command == .newGroupMessage
         }
         else {
             return nil
@@ -97,14 +99,14 @@ public class PendingUserNotification: NSObject, NSCoding {
     }
 
     public var messageID: String? {
-        if let id = threemaPushNotification?.messageID {
-            return id
+        if let id = baseMessage?.id {
+            return id.hexString
         }
         else if let id = abstractMessage?.messageID {
             return id.hexString
         }
-        else if let id = baseMessage?.id {
-            return id.hexString
+        else if let id = threemaPushNotification?.messageID {
+            return id
         }
         else {
             return nil

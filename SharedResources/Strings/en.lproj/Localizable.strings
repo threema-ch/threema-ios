@@ -1117,6 +1117,7 @@ When using Threema Safe, your can restore your Threema ID, contacts ,and groups 
 "settings_appearance_system_theme" = "System";
 "settings_appearance_theme_selected" = "%@ theme active";
 "settings_appearance_theme_active" = "Active";
+"settings_appearance_hide_app_icon" = "App Icon";
 "settings_appearance_hide_stale_contacts" = "Hide Inactive IDs";
 "settings_appearance_show_profile_pictures" = "Show Profile Pictures";
 "settings_appearance_display_order" = "Display Order";
@@ -1376,3 +1377,28 @@ If there are no (media) files missing in %@, empty the trash bin to permanently 
 
 // ChatBar
 "chat_bar_quote_close_button" = "Close quote";
+
+// ChatDetailView
+"detailView_title" = "Message Details";
+"detailView_sent" = "Sent";
+"detailView_delivered" = "Delivered";
+"detailView_read" = "Read";
+"detailView_ackd" = "Acknowleged";
+"detailView_messageID" = "Message-ID";
+"detailView_group_acknowledged" = "Agreed (%d)";
+"detailView_group_declined" = "Disagreed (%d)";
+
+// App icons
+"app_icon_title_celebration" = "Celebration Icon";
+"app_icon_description_celebration" = "10 Year Anniversary";
+"app_icon_title_current" = "Current Icon";
+"app_icon_description_current" = "Since 2019";
+"app_icon_title_second" = "Second Icon";
+"app_icon_description_second" = "2013–2019";
+"app_icon_title_first" = "First Icon";
+"app_icon_description_first" = "2012–2013";
+
+// 10 Years
+"anniversary_view_title" = "10 Years of Threema!";
+"anniversary_view_text" = "On December 12, 2022, Threema will turn ten. To mark the start of the celebration period, we have festooned our app icon.";
+"anniversary_view_icon_info" = "To change the app icon back to the default or to a legacy version, go to “Settings > Appearance > App Icon.”";

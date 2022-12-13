@@ -433,6 +433,7 @@ static UserSettings *instance;
     pushSettingsList = newPushSettingsList;
     [defaults setObject:pushSettingsList.array forKey:@"PushSettingsList"];
     [defaults synchronize];
+    [[NSNotificationCenter defaultCenter] postNotificationName:kNotificationChangedPushSettingsList object:nil];
 }
 
 - (void)setSendTypingIndicator:(BOOL)newSendTypingIndicator {

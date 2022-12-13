@@ -541,10 +541,13 @@ class ConversationsViewControllerHelper {
             
             // If private, show Passcode, else show alert with info
             if isPrivate {
-                lockScreenWrapper.presentLockScreenView(viewController: viewController) {
-                    let utilities = ConversationActions(entityManager: entityManager)
-                    utilities.makeNotPrivate(conversation)
-                }
+                lockScreenWrapper.presentLockScreenView(
+                    viewController: viewController,
+                    enteredCorrectly: {
+                        let utilities = ConversationActions(entityManager: entityManager)
+                        utilities.makeNotPrivate(conversation)
+                    }
+                )
             }
             else {
                 ConversationsViewControllerHelper.showPrivateChatInfoAlert(

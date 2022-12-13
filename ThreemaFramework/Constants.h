@@ -86,9 +86,10 @@
 
 #define kNotificationServerMessage @"ThreemaServerMessage"
 #define kNotificationQueueSendComplete @"ThreemaQueueSendComplete"
-#define kNotificationErrorConnectionFailed @"ThreemaErrorConnectionFaild"
+#define kNotificationErrorConnectionFailed @"ThreemaErrorConnectionFailed"
 #define kNotificationErrorUnknownGroup @"ThreemaErrorUnknownGroup"
 #define kNotificationErrorPublicKeyMismatch @"ThreemaErrorPublicKeyMismatch"
+#define kNotificationErrorRogueDevice @"ThreemaErrorRogueDevice"
 
 #define kNotificationDBRefreshedDirtyObject @"ThreemaDBRefreshedDirtyObject"
 
@@ -96,6 +97,7 @@
 #define kNotificationAddressbookSyncronized @"AddressbookSyncronized"
 #define kNotificationRefreshContactSortIndices @"RefreshContactSortIndices"
 #define kNotificationChangedHidePrivateChat @"ChangedHidePrivateChat"
+#define kNotificationChangedPushSettingsList @"ChangedPushSettingsList"
 
 #define kVoIPCallStartRinging @"ThreemaVoIPCallStartRinging"
 #define kVoIPCallStatusChanged @"ThreemaVoIPCallStatusChanged"
@@ -169,6 +171,9 @@ static NSString * const kThreemaVideoCallsQualitySettingChanged = @"ThreemaVideo
 #pragma mark - UserDefault Keys
 #define kLastPushOverrideSendDate @"LastPushOverrideSendDate"
 #define kShowedTestFlightFeedbackView @"ShowedTestFlightFeedbackView"
+#define kLastEphemeralKeyHashes @"LastEphemeralKeyHashes"
+#define kShowRogueDeviceWarningFlag @"ShowRogueDeviceWarningFlag"
+#define kShowed10YearsAnniversaryView @"Showed10YearsAnniversaryView"
 
 #pragma mark - Push notification keys
 

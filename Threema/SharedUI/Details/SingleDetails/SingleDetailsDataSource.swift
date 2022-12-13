@@ -617,8 +617,12 @@ extension SingleDetailsDataSource {
                     message: localizedMessage,
                     titleDestructive: localizedDelete,
                     actionDestructive: { _ in
-                        _ = strongSelf.entityManager.entityDestroyer.deleteMessages(of: conversation)
-                        strongSelf.reload(sections: [.contentActions])
+                        strongSelf.entityManager.performSyncBlockAndSafe {
+                            _ = strongSelf.entityManager.entityDestroyer
+                                .deleteMessages(of: conversation)
+                            conversation.lastMessage = nil
+                            strongSelf.reload(sections: [.contentActions])
+                        }
                     }
                 )
             }

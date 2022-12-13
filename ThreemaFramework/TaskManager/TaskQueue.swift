@@ -166,7 +166,8 @@ class TaskQueue {
                     }
                     .catch { error in
                         if (error as NSError).code == kBadMessageErrorCode ||
-                            (error as NSError).code == kUnknownMessageTypeErrorCode {
+                            (error as NSError).code == kUnknownMessageTypeErrorCode ||
+                            (error as NSError).code == kMessageAlreadyProcessedErrorCode {
                             if let task = item.taskDefinition as? TaskDefinitionReceiveMessage {
                                 self.frameworkInjector.serverConnector.failedProcessingMessage(
                                     task.message,
@@ -296,6 +297,11 @@ class TaskQueue {
                     case String(describing: type(of: TaskDefinitionSendGroupDeletePhotoMessage.self)):
                         taskDefinition = unarchiver.decodeDecodable(
                             TaskDefinitionSendGroupDeletePhotoMessage.self,
+                            forKey: "\(className)_\(i)"
+                        )
+                    case String(describing: type(of: TaskDefinitionSendGroupDeliveryReceiptsMessage.self)):
+                        taskDefinition = unarchiver.decodeDecodable(
+                            TaskDefinitionSendGroupDeliveryReceiptsMessage.self,
                             forKey: "\(className)_\(i)"
                         )
                     case String(describing: type(of: TaskDefinitionUpdateContactSync.self)):

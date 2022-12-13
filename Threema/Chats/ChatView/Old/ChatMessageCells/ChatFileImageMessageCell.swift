@@ -68,7 +68,11 @@ extension ChatFileImageMessageCell {
             let width = CGFloat(thumbnail.width.floatValue)
             let height = CGFloat(thumbnail.height.floatValue)
             let size = CGSize(width: width, height: height)
-            scaledSize = ChatFileImageMessageCell.scaleImageSize(toCell: size, forTableWidth: tableWidth)
+            scaledSize = ChatFileImageMessageCell.scaleImageSize(
+                toCell: size,
+                forTableWidth: tableWidth,
+                isGroup: fileMessageEntity.conversation.isGroup()
+            )
             if scaledSize.height != scaledSize.height || scaledSize.height < 0 {
                 scaledSize.height = 40.0
             }
@@ -95,7 +99,11 @@ extension ChatFileImageMessageCell {
                 let width = CGFloat(thumbnail.width.floatValue)
                 let height = CGFloat(thumbnail.height.floatValue)
                 let fileMessageSize = CGSize(width: width, height: height)
-                size = ChatFileImageMessageCell.scaleImageSize(toCell: fileMessageSize, forTableWidth: frame.size.width)
+                size = ChatFileImageMessageCell.scaleImageSize(
+                    toCell: fileMessageSize,
+                    forTableWidth: frame.size.width,
+                    isGroup: fileMessageEntity.conversation.isGroup()
+                )
                 
                 if let caption = fileMessageEntity.caption, !caption.isEmpty {
                     textSize = _captionLabel!
@@ -385,7 +393,11 @@ extension ChatFileImageMessageCell {
                 let width = CGFloat(thumbnail.width.floatValue)
                 let height = CGFloat(thumbnail.height.floatValue)
                 let fileMessageSize = CGSize(width: width, height: height)
-                size = ChatFileImageMessageCell.scaleImageSize(toCell: fileMessageSize, forTableWidth: frame.size.width)
+                size = ChatFileImageMessageCell.scaleImageSize(
+                    toCell: fileMessageSize,
+                    forTableWidth: frame.size.width,
+                    isGroup: fileMessageEntity.conversation.isGroup()
+                )
             }
             
             _imageView?.frame.size = size

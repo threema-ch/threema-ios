@@ -49,6 +49,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 @property Group *group;
 @property NSTimer *lastMessageIconsAndDateTimer;
 @property EntityManager *entityManager;
+@property BaseMessage *lastMessage;
 
 @end
 
@@ -58,6 +59,13 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 
 - (void)dealloc {
     [self removeObservers];
+    conversation = nil;
+    _pushSetting = nil;
+    _group = nil;
+    [_lastMessageIconsAndDateTimer invalidate];
+    _lastMessageIconsAndDateTimer = nil;
+    _entityManager = nil;
+    _lastMessage = nil;
 }
 
 - (void)awakeFromNib {
@@ -86,6 +94,12 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     [super prepareForReuse];
     
     [self removeObservers];
+    conversation = nil;
+    _pushSetting = nil;
+    _group = nil;
+    [_lastMessageIconsAndDateTimer invalidate];
+    _lastMessageIconsAndDateTimer = nil;
+    _lastMessage = nil;
 }
 
 - (void)updateColors {
@@ -115,39 +129,41 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 - (void)addObservers {
     /* observe this conversation as the last message text could change */
     [self addLastMessageObservers];
-    [conversation addObserver:self forKeyPath:@"groupImage" options:0 context:nil];
-    [conversation addObserver:self forKeyPath:@"contact.displayName" options:0 context:nil];
-    [conversation addObserver:self forKeyPath:@"contact.imageData" options:NSKeyValueObservingOptionNew|NSKeyValueObservingOptionOld context:nil];
-    [conversation addObserver:self forKeyPath:@"contact.contactImage" options:NSKeyValueObservingOptionNew|NSKeyValueObservingOptionOld context:nil];
-    [_group addObserver:self forKeyPath:@"state" options:0 context:nil];
-    [[UserSettings sharedUserSettings] addObserver:self forKeyPath:@"pushSettingsList" options:0 context:nil];
+    if (conversation != nil) {
+        [conversation addObserver:self forKeyPath:@"groupImage" options:0 context:nil];
+        [conversation addObserver:self forKeyPath:@"contact.displayName" options:0 context:nil];
+        [conversation addObserver:self forKeyPath:@"contact.imageData" options:NSKeyValueObservingOptionNew|NSKeyValueObservingOptionOld context:nil];
+        [conversation addObserver:self forKeyPath:@"contact.contactImage" options:NSKeyValueObservingOptionNew|NSKeyValueObservingOptionOld context:nil];
+    }
     
+    if (_group != nil) {
+        [_group addObserver:self forKeyPath:@"state" options:0 context:nil];
+    }
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(pushSettingsListChanged:) name:kNotificationChangedPushSettingsList object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(avatarChanged:) name:kNotificationIdentityAvatarChanged object:nil];
-    
+
     [self updateAllViewsAndReset:false];
 }
 
 - (void)addLastMessageObservers {
-    if (conversation.lastMessage) {
-        [conversation addObserver:self forKeyPath:@"lastMessage.poiAddress" options:0 context:nil];
-        [conversation addObserver:self forKeyPath:@"lastMessage.userack" options:0 context:nil];
-        [conversation addObserver:self forKeyPath:@"lastMessage.read" options:0 context:nil];
-        [conversation addObserver:self forKeyPath:@"lastMessage.delivered" options:0 context:nil];
-        [conversation addObserver:self forKeyPath:@"lastMessage.sendfailed" options:0 context:nil];
-        [conversation addObserver:self forKeyPath:@"lastMessage.sent" options:0 context:nil];
+    if (_lastMessage) {
+        [_lastMessage addObserver:self forKeyPath:@"poiAddress" options:0 context:nil];
+        [_lastMessage addObserver:self forKeyPath:@"userack" options:0 context:nil];
+        [_lastMessage addObserver:self forKeyPath:@"read" options:0 context:nil];
+        [_lastMessage addObserver:self forKeyPath:@"delivered" options:0 context:nil];
+        [_lastMessage addObserver:self forKeyPath:@"sendfailed" options:0 context:nil];
+        [_lastMessage addObserver:self forKeyPath:@"sent" options:0 context:nil];
     }
 }
 
 - (void)removeObservers {
+    [self removeLastMessageObservers];
     if (conversation != nil) {
-        [self removeLastMessageObservers];
         @try{
             [conversation removeObserver:self forKeyPath:@"groupImage"];
             [conversation removeObserver:self forKeyPath:@"contact.displayName"];
             [conversation removeObserver:self forKeyPath:@"contact.imageData"];
             [conversation removeObserver:self forKeyPath:@"contact.contactImage"];
-            [_group removeObserver:self forKeyPath:@"state"];
-            [[UserSettings sharedUserSettings] removeObserver:self forKeyPath:@"pushSettingsList"];
         } @catch(id anException) {
             //do nothing, observer wasn't registered because an exception was thrown
             if ([anException isKindOfClass:[NSException class]]) {
@@ -155,31 +171,48 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
             }
         }
     }
-    [[NSNotificationCenter defaultCenter] removeObserver: self];
-}
-
-- (void)removeLastMessageObservers {
+    
+    if (_group != nil) {
+        @try{
+            [_group removeObserver:self forKeyPath:@"state"];
+        } @catch(id anException) {
+            //do nothing, observer wasn't registered because an exception was thrown
+            if ([anException isKindOfClass:[NSException class]]) {
+                DDLogVerbose(@"Can't remove group observers: %@", [((NSException *)anException) description]);
+            }
+        }
+    }
+    
     @try{
-        [conversation removeObserver:self forKeyPath:@"lastMessage.poiAddress"];
-        [conversation removeObserver:self forKeyPath:@"lastMessage.userack"];
-        [conversation removeObserver:self forKeyPath:@"lastMessage.read"];
-        [conversation removeObserver:self forKeyPath:@"lastMessage.delivered"];
-        [conversation removeObserver:self forKeyPath:@"lastMessage.sendfailed"];
-        [conversation removeObserver:self forKeyPath:@"lastMessage.sent"];
+        [[NSNotificationCenter defaultCenter] removeObserver: self];
     } @catch(id anException) {
         //do nothing, observer wasn't registered because an exception was thrown
         if ([anException isKindOfClass:[NSException class]]) {
-            DDLogVerbose(@"Can't remove conversation lastMessage observers: %@", [((NSException *)anException) description]);
+            DDLogVerbose(@"Can't remove self observers: %@", [((NSException *)anException) description]);
+        }
+    }
+}
+
+- (void)removeLastMessageObservers {
+    if (_lastMessage) {
+        @try{
+            [_lastMessage removeObserver:self forKeyPath:@"poiAddress"];
+            [_lastMessage removeObserver:self forKeyPath:@"userack"];
+            [_lastMessage removeObserver:self forKeyPath:@"read"];
+            [_lastMessage removeObserver:self forKeyPath:@"delivered"];
+            [_lastMessage removeObserver:self forKeyPath:@"sendfailed"];
+            [_lastMessage removeObserver:self forKeyPath:@"sent"];
+        } @catch(id anException) {
+            //do nothing, observer wasn't registered because an exception was thrown
+            if ([anException isKindOfClass:[NSException class]]) {
+                DDLogVerbose(@"Can't remove conversation lastMessage observers: %@", [((NSException *)anException) description]);
+            }
         }
     }
 }
 
 - (void)setConversation:(Conversation *)newConversation {
-    
-    if (conversation == newConversation) {
-        [self updateAllViewsAndReset:false];
-        return;
-    }
+    [self removeObservers];
     
     GroupManager *groupManager = [[GroupManager alloc] initWithEntityManager:_entityManager];
     Conversation *dbConversation = [[_entityManager entityFetcher] getManagedObjectById:newConversation.objectID];
@@ -187,8 +220,10 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     if (groupCreator == nil) {
         groupCreator = [[MyIdentityStore sharedMyIdentityStore] identity];
     }
+    
     _group = [groupManager getGroup:dbConversation.groupId creator:groupCreator];
     conversation = dbConversation;
+    _lastMessage = dbConversation.lastMessage;
     
     [self updateAllViewsAndReset:true];
 }
@@ -197,6 +232,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     
     if (changedValuesForCurrentEvent[@"lastMessage"] != nil) {
         [self removeLastMessageObservers];
+        _lastMessage = conversation.lastMessage;
         [self addLastMessageObservers];
         [self updateLastMessageIcons];
         [self updateLastMessagePreview];
@@ -258,7 +294,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
         NSString *iconName;
         UIColor *color = Colors.textLight;
         
-        BaseMessage *lastMessage = conversation.lastMessage;
+        BaseMessage *lastMessage = _lastMessage;
         if (lastMessage == nil) {
             iconName = nil;
         }
@@ -310,10 +346,10 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
                 self.statusIcon.image = [UIImage imageNamed:@"ThreemaPhone" inColor:color];
             }
             else if ([iconName isEqualToString:@"thumb_up"]) {
-                self.statusIcon.image = [[UIImage imageNamed:@"hand.thumbsup.fill_regular.S" inColor:color] imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal];
+                self.statusIcon.image = [[UIImage systemImageNamed:@"hand.thumbsup.fill"] imageWithTintColor:Colors.thumbUp renderingMode:UIImageRenderingModeAlwaysOriginal];
             }
             else if ([iconName isEqualToString:@"thumb_down"]) {
-                self.statusIcon.image = [[UIImage imageNamed:@"hand.thumbsdown.fill_regular.S" inColor:color] imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal];
+                self.statusIcon.image = [[UIImage systemImageNamed:@"hand.thumbsdown.fill"] imageWithTintColor:Colors.thumbDown renderingMode:UIImageRenderingModeAlwaysOriginal];
             }
             else {
                 self.statusIcon.image = [UIImage imageNamed:[NSString stringWithFormat:@"MessageStatus_%@", iconName] inColor:color];
@@ -370,7 +406,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     } else {
         self.draftLabel.hidden = YES;
 
-        BaseMessage *lastMessage = conversation.lastMessage;
+        BaseMessage *lastMessage = _lastMessage;
         if (!lastMessage) {
             self.messagePreviewLabel.text = @"";
             self.statusIcon.hidden = YES;
@@ -494,20 +530,20 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 }
 
 - (void)updateDateLabel {
-    BaseMessage *lastMessage = conversation.lastMessage;
+    BaseMessage *lastMessage = _lastMessage;
     if (!lastMessage) {
         self.dateLabel.text = nil;
         return;
     }
 
     if (lastMessage.userackDate && lastMessage.isOwn.boolValue) {
-        self.dateLabel.text = [ThreemaUtilityObjC formatShortLastMessageDate:conversation.lastMessage.userackDate];
+        self.dateLabel.text = [ThreemaUtilityObjC formatShortLastMessageDate:lastMessage.userackDate];
     } else if (lastMessage.read.boolValue && lastMessage.isOwn.boolValue) {
-        self.dateLabel.text = [ThreemaUtilityObjC formatShortLastMessageDate:conversation.lastMessage.readDate];
+        self.dateLabel.text = [ThreemaUtilityObjC formatShortLastMessageDate:lastMessage.readDate];
     } else if (lastMessage.delivered.boolValue && lastMessage.isOwn.boolValue) {
-        self.dateLabel.text = [ThreemaUtilityObjC formatShortLastMessageDate:conversation.lastMessage.deliveryDate];
+        self.dateLabel.text = [ThreemaUtilityObjC formatShortLastMessageDate:lastMessage.deliveryDate];
     } else {
-        self.dateLabel.text = [ThreemaUtilityObjC formatShortLastMessageDate:conversation.lastMessage.remoteSentDate];
+        self.dateLabel.text = [ThreemaUtilityObjC formatShortLastMessageDate:lastMessage.remoteSentDate];
     }
     
     if (conversation.conversationCategory == ConversationCategoryPrivate) {
@@ -661,7 +697,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
         }
     }
     
-    NSString *messagePreview = conversation.lastMessage != nil ? [conversation.lastMessage previewText] : @"";
+    NSString *messagePreview = _lastMessage != nil ? [_lastMessage previewText] : @"";
     NSString *draftPreview = [MessageDraftStore loadDraftForConversation:self.conversation];
     if (draftPreview.length > 0) {
         
@@ -682,7 +718,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
         [text appendFormat:@"%@ ", [BundleUtil localizedStringForKey:@"from"]];
         [text appendFormat:@"%@. ", [BundleUtil localizedStringForKey:@"me"]];
         [text appendFormat:@"%@. ", draftPreview];
-        [text appendFormat:@"%@. ", conversation.lastMessage != nil ? [conversation.lastMessage accessibilityMessageStatus] : @""];
+        [text appendFormat:@"%@. ", _lastMessage != nil ? [_lastMessage accessibilityMessageStatus] : @""];
         return text;
     }
     
@@ -694,15 +730,15 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
         return text;
     }
     
-    [text appendFormat:@"%@. ", conversation.lastMessage != nil ? [DateFormatter accessibilityRelativeDayTime:conversation.lastMessage.displayDate] : @""];
+    [text appendFormat:@"%@. ", _lastMessage != nil ? [DateFormatter accessibilityRelativeDayTime:_lastMessage.displayDate] : @""];
     if (messagePreview.length > 0) {
         if (conversation.unreadMessageCount.intValue > 0) {
             [text appendFormat:@"%@. ", [BundleUtil localizedStringForKey:@"unread"]];
         }
         [text appendFormat:@"%@ ", [BundleUtil localizedStringForKey:@"from"]];
-        [text appendFormat:@"%@. ", [conversation.lastMessage accessibilityMessageSender]];
+        [text appendFormat:@"%@. ", [_lastMessage accessibilityMessageSender]];
         [text appendFormat:@"%@. ", messagePreview];
-        [text appendFormat:@"%@. ", [DateFormatter accessibilityRelativeDayTime:conversation.lastMessage.displayDate]];
+        [text appendFormat:@"%@. ", [DateFormatter accessibilityRelativeDayTime:_lastMessage.displayDate]];
     }
     
     if ([conversation.marked isEqualToNumber:[NSNumber numberWithBool:YES]]) {
@@ -744,16 +780,28 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
                         [self updateTypingIndicator];
                     } else if ([keyPathCopy isEqualToString:@"unreadMessageCount"]) {
                         [self updateBadgeView];
-                    } else if ([keyPathCopy isEqualToString:@"lastMessage.poiAdress"]) {
+                    } else if ([keyPathCopy hasPrefix:@"tags"]) {
+                        [self updateTagsView];
+                    }
+                });
+            }
+        } @catch (NSException *exception) {
+            DDLogError(@"[Observer] Can't cast object into conversation");
+        }
+    }
+    else if ([object isKindOfClass:[BaseMessage class]]) {
+        @try {
+            BaseMessage *lastMessageObject = (BaseMessage *)object;
+            if (lastMessageObject.objectID == _lastMessage.objectID) {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                     if ([keyPathCopy isEqualToString:@"poiAddress"]) {
                         [self updateLastMessageIcons];
                         [self updateLastMessagePreview];
                         [self updateDateLabel];
-                    } else if ([keyPathCopy hasPrefix:@"lastMessage."]) {
+                    } else {
                         [_lastMessageIconsAndDateTimer invalidate];
                         _lastMessageIconsAndDateTimer = [NSTimer timerWithTimeInterval:0.4 target:self selector:@selector(updateLastMessageIconsAndDate) userInfo:nil repeats:NO];
                         [[NSRunLoop mainRunLoop] addTimer:_lastMessageIconsAndDateTimer forMode:NSDefaultRunLoopMode];
-                    } else if ([keyPathCopy hasPrefix:@"tags"]) {
-                        [self updateTagsView];
                     }
                 });
             }
@@ -774,13 +822,6 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
         } @catch (NSException *exception) {
             DDLogError(@"[Observer] Can't cast object into group");
         }
-    }
-    else if ([object isKindOfClass:[UserSettings class]]) {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            if ([keyPathCopy isEqualToString:@"pushSettingsList"]) {
-                [self updateNotificationIcon];
-            }
-        });
     }
 }
 
@@ -818,6 +859,12 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 }
 
 #pragma mark - Notification
+
+- (void)pushSettingsListChanged:(NSNotification*)notification {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self updateNotificationIcon];
+    });
+}
 
 - (void)avatarChanged:(NSNotification*)notification
 {

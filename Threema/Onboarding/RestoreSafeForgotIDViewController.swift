@@ -33,6 +33,9 @@ class RestoreSafeForgotIDViewController: IDCreationPageViewController {
     var locatedIdentities: [String]?
     var selectedIdentity: String?
     
+    /// True while we are waiting for the callback from the server
+    private var isSearchingIdentity = false
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -71,11 +74,18 @@ class RestoreSafeForgotIDViewController: IDCreationPageViewController {
     // MARK: - Private methods
     
     private func searchIdentity() {
+        guard !isSearchingIdentity else {
+            return
+        }
+        
+        isSearchingIdentity = true
+        
         if let email = emailAddressField.text,
            let mobileNo = mobileNumberField.text,
            !email.isEmpty || !mobileNo.isEmpty {
             
             ContactStore.shared().linkedIdentities(for: email, and: mobileNo, onCompletion: { [weak self] result in
+                defer { self?.isSearchingIdentity = false }
                 guard let strongSelf = self else {
                     return
                 }
@@ -137,6 +147,7 @@ extension RestoreSafeForgotIDViewController: SetupTextFieldDelegate {
             emailAddressField.becomeFirstResponder()
         }
         else if sender == emailAddressField {
+            sender.resignFirstResponder()
             searchIdentity()
         }
     }

@@ -154,51 +154,96 @@ import Foundation
     private func handleThumbUp() {
         ServerConnectorHelper.waitUntilConnected(timeout: 20, onConnect: {
             let entityManager = EntityManager()
-            
-            if let baseMessage = entityManager.entityFetcher.message(with: self.messageID!.decodeHex()),
-               let conversation = baseMessage.conversation,
-               let contact = conversation.contact {
-                
-                if baseMessage.userackDate == nil || baseMessage.userack.boolValue != true {
-
-                    MessageSender.sendReadReceipt(
-                        forMessages: [baseMessage],
-                        toIdentity: contact.identity,
-                        onCompletion: {
-                            self.updateMessageAsRead(for: baseMessage, entityManager: entityManager)
-
-                            MessageSender.sendUserAck(
-                                forMessages: [baseMessage],
-                                toIdentity: contact.identity,
-                                onCompletion: {
-                                    entityManager.performSyncBlockAndSafe {
-                                        baseMessage.userack = NSNumber(value: true)
-                                        baseMessage.userackDate = Date()
-
-                                        if baseMessage.id == conversation.lastMessage?.id {
-                                            conversation.lastMessage = baseMessage
-                                        }
-                                    }
-                                    self.finishResponse()
-                                }
-                            )
-                        }
-                    )
-                }
-                else {
-                    self.sendThumbUpError()
-                    self.finishResponse()
-                }
-            }
-            else {
+            guard let baseMessage = entityManager.entityFetcher.message(with: self.messageID!.decodeHex()),
+                  let conversation = baseMessage.conversation else {
                 self.sendThumbUpError()
                 self.finishResponse()
+                return
             }
+           
+            let isGroup = conversation.isGroup()
+            
+            if isGroup {
+                if let groupDeliveryReceipts = baseMessage.groupDeliveryReceipts,
+                   !groupDeliveryReceipts.isEmpty,
+                   let gdr = baseMessage.reaction(for: MyIdentityStore.shared().identity),
+                   gdr.deliveryReceiptType() == .userAcknowledgment {
+                    self.finishResponse()
+                    return
+                }
+                let groupManager = GroupManager(entityManager: entityManager)
+                let group = groupManager.getGroup(conversation: conversation)
 
+                self.sendUserAck(
+                    for: baseMessage,
+                    conversation: conversation,
+                    contact: nil,
+                    group: group,
+                    entityManager: entityManager
+                )
+            }
+            else {
+                guard let contact = conversation.contact else {
+                    self.sendThumbUpError()
+                    self.finishResponse()
+                    return
+                }
+                // Only send changed acks
+                if baseMessage.userackDate != nil, let currentAck = baseMessage.userack, currentAck.boolValue {
+                    self.finishResponse()
+                    return
+                }
+                MessageSender.sendReadReceipt(forMessages: [baseMessage], toIdentity: contact.identity) {
+                    self.sendUserAck(
+                        for: baseMessage,
+                        conversation: conversation,
+                        contact: contact,
+                        group: nil,
+                        entityManager: entityManager
+                    )
+                }
+            }
+            
         }) {
             self.sendThumbUpError()
             self.finishResponse()
         }
+    }
+    
+    private func sendUserAck(
+        for baseMessage: BaseMessage,
+        conversation: Conversation,
+        contact: Contact?,
+        group: Group?,
+        entityManager: EntityManager
+    ) {
+        updateMessageAsRead(for: baseMessage, entityManager: entityManager)
+        
+        MessageSender.sendUserAck(
+            forMessages: [baseMessage],
+            toIdentity: contact?.identity,
+            group: group,
+            onCompletion: {
+                entityManager.performSyncBlockAndSafe {
+                    if conversation.isGroup() {
+                        let groupDeliveryReceipt = GroupDeliveryReceipt(
+                            identity: MyIdentityStore.shared().identity,
+                            deliveryReceiptType: .userAcknowledgment,
+                            date: Date()
+                        )
+                        baseMessage.add(groupDeliveryReceipt: groupDeliveryReceipt)
+                    }
+                    else {
+                        baseMessage.userack = NSNumber(value: true)
+                        baseMessage.userackDate = Date()
+                    }
+                    if baseMessage.id == conversation.lastMessage?.id {
+                        conversation.lastMessage = baseMessage
+                    }
+                }
+                self.finishResponse()
+            }
+        )
     }
 
     private func sendThumbUpError() {
@@ -212,51 +257,98 @@ import Foundation
     private func handleThumbDown() {
         ServerConnectorHelper.waitUntilConnected(timeout: 20, onConnect: {
             let entityManager = EntityManager()
-
-            if let baseMessage = entityManager.entityFetcher.message(with: self.messageID!.decodeHex()),
-               let conversation = baseMessage.conversation {
-                
-                if baseMessage.userackDate == nil || baseMessage.userack.boolValue != false,
-                   let contact = conversation.contact {
-
-                    MessageSender.sendReadReceipt(
-                        forMessages: [baseMessage],
-                        toIdentity: contact.identity,
-                        onCompletion: {
-                            self.updateMessageAsRead(for: baseMessage, entityManager: entityManager)
-
-                            MessageSender.sendUserDecline(
-                                forMessages: [baseMessage],
-                                toIdentity: contact.identity,
-                                onCompletion: {
-                                    entityManager.performSyncBlockAndSafe {
-                                        baseMessage.userack = NSNumber(value: false)
-                                        baseMessage.userackDate = Date()
-
-                                        if baseMessage.id == conversation.lastMessage?.id {
-                                            conversation.lastMessage = baseMessage
-                                        }
-                                    }
-                                    self.finishResponse()
-                                }
-                            )
-                        }
-                    )
-                }
-                else {
-                    self.sendThumbDownError()
-                    self.finishResponse()
-                }
-            }
-            else {
+            guard let baseMessage = entityManager.entityFetcher.message(with: self.messageID!.decodeHex()),
+                  let conversation = baseMessage.conversation else {
                 self.sendThumbDownError()
                 self.finishResponse()
+                return
             }
+           
+            if conversation.isGroup() {
+                if let groupDeliveryReceipts = baseMessage.groupDeliveryReceipts,
+                   !groupDeliveryReceipts.isEmpty,
+                   let gdr = baseMessage.reaction(for: MyIdentityStore.shared().identity),
+                   gdr.deliveryReceiptType() == .userDeclined {
+                    self.finishResponse()
+                    return
+                }
+                
+                let groupManager = GroupManager(entityManager: entityManager)
+                let group = groupManager.getGroup(conversation: conversation)
 
+                self.sendUserDecline(
+                    for: baseMessage,
+                    conversation: conversation,
+                    contact: nil,
+                    group: group,
+                    entityManager: entityManager
+                )
+            }
+            else {
+                guard let contact = conversation.contact else {
+                    self.sendThumbDownError()
+                    self.finishResponse()
+                    return
+                }
+                // Only send changed acks
+                if baseMessage.userackDate != nil, let currentAck = baseMessage.userack, !currentAck.boolValue {
+                    self.finishResponse()
+                    return
+                }
+                
+                MessageSender.sendReadReceipt(
+                    forMessages: [baseMessage],
+                    toIdentity: contact.identity,
+                    onCompletion: {
+                        self.sendUserDecline(
+                            for: baseMessage,
+                            conversation: conversation,
+                            contact: contact,
+                            group: nil,
+                            entityManager: entityManager
+                        )
+                    }
+                )
+            }
         }) {
             self.sendThumbDownError()
             self.finishResponse()
         }
+    }
+    
+    private func sendUserDecline(
+        for baseMessage: BaseMessage,
+        conversation: Conversation,
+        contact: Contact?,
+        group: Group?,
+        entityManager: EntityManager
+    ) {
+        updateMessageAsRead(for: baseMessage, entityManager: entityManager)
+        MessageSender.sendUserDecline(
+            forMessages: [baseMessage],
+            toIdentity: contact?.identity,
+            group: group,
+            onCompletion: {
+                entityManager.performSyncBlockAndSafe {
+                    if conversation.isGroup() {
+                        let groupDeliveryReceipt = GroupDeliveryReceipt(
+                            identity: MyIdentityStore.shared().identity,
+                            deliveryReceiptType: .userDeclined,
+                            date: Date()
+                        )
+                        baseMessage.add(groupDeliveryReceipt: groupDeliveryReceipt)
+                    }
+                    else {
+                        baseMessage.userack = NSNumber(value: false)
+                        baseMessage.userackDate = Date()
+                    }
+                    if baseMessage.id == conversation.lastMessage?.id {
+                        conversation.lastMessage = baseMessage
+                    }
+                }
+                self.finishResponse()
+            }
+        )
     }
 
     private func sendThumbDownError() {

@@ -269,6 +269,10 @@ extension WCSessionManager {
     }
     
     @objc public func connect(authToken: Data?, wca: String?, webClientSession: WebClientSession) {
+        DDLogNotice(
+            "[Threema Web] Connect to host \(webClientSession.saltyRTCHost ?? "?"); port: \(webClientSession.saltyRTCPort?.stringValue ?? "?") selfHosted: \(webClientSession.selfHosted?.stringValue ?? "?"); permanent: \(webClientSession.permanent?.stringValue ?? "?"); version: \(webClientSession.version?.stringValue ?? "?")"
+        )
+        
         if webClientSession.isConnecting {
             DDLogError("[Threema Web] WebClientSession try already to connect")
             return
@@ -300,7 +304,7 @@ extension WCSessionManager {
                             scannedHostName: webClientSession.saltyRTCHost!,
                             whiteList: webHosts
                         ) == false {
-                            DDLogNotice("[Threema Web] Scanned qr code host is not white listed")
+                            DDLogError("[Threema Web] Scanned qr code host is not white listed")
                             if AppDelegate.shared().isAppInBackground() {
                                 ThreemaUtilityObjC.sendErrorLocalNotification(
                                     BundleUtil.localizedString(forKey: "webClient_scan_error_mdm_host_title"),
@@ -948,7 +952,7 @@ extension WCSessionManager {
             
             if (
                 changedValues.keys.contains("lastMessage") || changedValues.keys.contains("marked") || changedValues
-                    .keys.contains("unreadMessageCount") || changedValues.keys.contains("lastUpdated")
+                    .keys.contains("unreadMessageCount") || changedValues.keys.contains("lastUpdate")
                     || dirtyObjects
             ) && currentConversation.lastMessage != nil {
                 let objectMode: WebConversationUpdate.ObjectMode = .modified

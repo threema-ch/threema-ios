@@ -42,6 +42,7 @@
 #import "GroupAudioMessage.h"
 #import "GroupSetPhotoMessage.h"
 #import "GroupRequestSyncMessage.h"
+#import "GroupDeliveryReceiptMessage.h"
 #import "UnknownTypeMessage.h"
 #import "BoxBallotCreateMessage.h"
 #import "BoxBallotVoteMessage.h"
@@ -538,6 +539,30 @@
             videomsg.thumbnailSize = *((uint32_t*)(body.bytes + i)); i += sizeof(uint32_t);
             videomsg.encryptionKey = [NSData dataWithBytes:(body.bytes + i) length:kBlobKeyLen];
             msg = videomsg;
+            break;
+        }
+        case MSGTYPE_GROUP_DELIVERY_RECEIPT: {
+            long len = [body length];
+            if (len < kGroupCreatorLen + kGroupIdLen + kMessageIdLen + 1 || ((len - kGroupCreatorLen - kGroupIdLen - 1) % kMessageIdLen) != 0) {
+                DDLogWarn(@"Wrong length %lu for group request sync message", (unsigned long)len);
+                break;
+            }
+            GroupDeliveryReceiptMessage *groupReceiptMsg = [[GroupDeliveryReceiptMessage alloc] init];
+            int i = 0;
+            groupReceiptMsg.groupCreator = [[NSString alloc] initWithData:[NSData dataWithBytes:body.bytes length:kIdentityLen] encoding:NSASCIIStringEncoding]; i += kIdentityLen;
+            groupReceiptMsg.groupId = [NSData dataWithBytes:(body.bytes + i) length:kGroupIdLen]; i+= kGroupIdLen;
+
+            groupReceiptMsg.receiptType = *((uint8_t*)body.bytes+i);
+            
+            long numMsgIds = ((len - i - 1) / kMessageIdLen);
+            NSMutableArray *receiptMessageIds = [NSMutableArray arrayWithCapacity:numMsgIds];
+            for (long j = 0; j < numMsgIds; j++) {
+                NSData *receiptMessageId = [NSData dataWithBytes:(body.bytes + 1 + i + j*kMessageIdLen) length:kMessageIdLen];
+                [receiptMessageIds addObject:receiptMessageId];
+            }
+            
+            groupReceiptMsg.receiptMessageIds = receiptMessageIds;
+            msg = groupReceiptMsg;
             break;
         }
         case MSGTYPE_IMAGE: {

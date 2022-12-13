@@ -26,17 +26,9 @@
 @class Conversation;
 @class ConversationCell;
 
-@protocol ConversationCellDelegate <NSObject>
-
-- (void)voiceOverDeleteConversation:(ConversationCell *)cell;
-- (void)voiceOverLeaveGroup:(ConversationCell *)cell;
-
-@end
-
 @interface ConversationCell: UITableViewCell
 
 @property (strong, nonatomic) Conversation* conversation;
-@property id<ConversationCellDelegate> conversationCellDelegate;
 
 @property (weak, nonatomic) IBOutlet UILabel *nameLabel;
 @property (weak, nonatomic) IBOutlet TTTAttributedLabel *messagePreviewLabel;

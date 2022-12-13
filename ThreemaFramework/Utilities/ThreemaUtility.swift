@@ -18,8 +18,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import CocoaLumberjackSwift
 import CoreLocation
 import Foundation
+import PromiseKit
 
 public final class ThreemaUtility: NSObject {
     
@@ -54,7 +56,7 @@ public final class ThreemaUtility: NSObject {
         let suffix = mainBundle.object(forInfoDictionaryKey: "ThreemaVersionSuffix") as! String
         let build = mainBundle.object(forInfoDictionaryKey: kCFBundleVersionKey as String) as! String
         
-        return "\(version)\(suffix)b\(build)\(Environment.env().description())"
+        return "\(version)\(suffix)b\(build)\(ThreemaEnvironment.env().description())"
     }()
     
     /// Format: 4.7 (2687)
@@ -69,46 +71,77 @@ public final class ThreemaUtility: NSObject {
         let suffix = mainBundle.object(forInfoDictionaryKey: "ThreemaVersionSuffix") as! String
         let build = mainBundle.object(forInfoDictionaryKey: kCFBundleVersionKey as String) as! String
         
-        return "\(version)\(suffix) (\(build)\(Environment.env().description()))"
+        return "\(version)\(suffix) (\(build)\(ThreemaEnvironment.env().description()))"
     }()
     
     /// Format: 4.7b2687;de/CH;iPhone7,2;15.1
     @objc public static let clientVersion: String = {
+        var language = Locale.current.languageCode ?? "?"
+        var mdmDescription = MDMSetup().supportDescriptionString()?.appending(";") ?? ""
         let countryCode = (Locale.current as NSLocale).object(forKey: .countryCode)
-        let mdmDescription = MDMSetup().supportDescriptionString()?.appending(";") ?? ""
-        return "\(appAndBuildVersion);\(mdmDescription)I;\(Locale.current.languageCode ?? "?")/\(countryCode ?? "?");\(ThreemaUtility.modelName);\(UIDevice.current.systemVersion)"
-    }()
-    
-    /// Fetches an Address of a given Location and creates a localized Address-String
-    /// - Parameters:
-    ///   - location: Location of Address to be fetched
-    ///   - completion: Closure that returns the formatted Address-String or nil if no address was resolved for the location
-    ///   - onError: Closure that gets called when an error occurs
-    @objc public static func fetchAddress(
-        for location: CLLocation,
-        completion: @escaping (String?) -> Void,
-        onError: @escaping (Error) -> Void
-    ) {
-        
-        // Don't fetch address if POI are disabled in privacy settings
-        guard UserSettings.shared().enablePoi else {
-            completion(nil)
-            return
+
+        if AppGroup.getActiveType() == AppGroupTypeApp {
+            let lang = MyIdentityStore.shared().lastWorkInfoLanguage
+            if language != lang {
+                MyIdentityStore.shared().lastWorkInfoLanguage = language
+            }
+            
+            let mdmDes = MyIdentityStore.shared().lastWorkInfoMdmDescription
+            if mdmDescription != mdmDes {
+                MyIdentityStore.shared().lastWorkInfoMdmDescription = mdmDescription
+            }
+        }
+        else {
+            if let lang = MyIdentityStore.shared().lastWorkInfoLanguage {
+                language = lang
+            }
+            if let mdmDesc = MyIdentityStore.shared().lastWorkInfoMdmDescription {
+                mdmDescription = mdmDesc
+            }
         }
         
-        CLGeocoder().reverseGeocodeLocation(location, preferredLocale: Locale.current) { placemarks, error in
-            
-            if let error = error {
-                onError(error)
+        return "\(appAndBuildVersion);\(mdmDescription)I;\(language)/\(countryCode ?? "?");\(ThreemaUtility.modelName);\(UIDevice.current.systemVersion)"
+    }()
+    
+    /// Fetches the address given a location if the privacy setting is enabled, else returns coordinate string
+    /// - Parameter location: Location to fetch address for
+    /// - Returns: AnyPromise with address or coordinate string
+    @objc static func fetchAddressObjc(for location: CLLocation) -> AnyPromise {
+        AnyPromise(fetchAddress(for: location))
+    }
+
+    /// Fetches the address given a location if the privacy setting is enabled, else returns coordinate string
+    /// - Parameter location: Location to fetch address for
+    /// - Returns: Guarantee with address or coordinate string
+    static func fetchAddress(for location: CLLocation) -> Guarantee<String> {
+        Guarantee { seal in
+            let coordinates = String(
+                format: "%.5f°, %.5f°",
+                location.coordinate.latitude,
+                location.coordinate.longitude
+            )
+
+            // Don't fetch address if POI are disabled in privacy settings
+            guard UserSettings.shared().enablePoi else {
+                seal(coordinates)
                 return
             }
-            
-            guard let placemark = placemarks?.first, let postalAddress = placemark.postalAddress else {
-                completion(nil)
-                return
+
+            CLGeocoder().reverseGeocodeLocation(location, preferredLocale: Locale.current) { placemarks, error in
+
+                if let error = error {
+                    DDLogError("Reverse geocoding failed: \(error)")
+                    seal(coordinates)
+                    return
+                }
+
+                guard let placemark = placemarks?.first, let postalAddress = placemark.postalAddress else {
+                    seal(coordinates)
+                    return
+                }
+                // Format address and return it
+                seal(postalAddressFormatter.string(from: postalAddress))
             }
-            // Format address and return it
-            completion(postalAddressFormatter.string(from: postalAddress))
         }
     }
     

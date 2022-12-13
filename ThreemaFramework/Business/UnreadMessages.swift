@@ -23,7 +23,7 @@ import Foundation
 import PromiseKit
 
 public protocol UnreadMessagesProtocol: UnreadMessagesProtocolObjc {
-    func read(for conversation: Conversation, isAppInBackground: Bool) -> Promise<Void>
+    func read(for conversation: Conversation, isAppInBackground: Bool)
 }
 
 @objc public protocol UnreadMessagesProtocolObjc {
@@ -125,12 +125,12 @@ public protocol UnreadMessagesProtocol: UnreadMessagesProtocolObjc {
     /// - Parameters:
     ///   - conversation: Conversation to send receipts
     ///   - isAppInBackground: If App is in background
-    public func read(for conversation: Conversation, isAppInBackground: Bool) -> Promise<Void> {
+    public func read(for conversation: Conversation, isAppInBackground: Bool) {
 
         // Only send receipt if not Group and App is in foreground
         guard !isAppInBackground,
               let messages = entityManager.entityFetcher.unreadMessages(for: conversation) else {
-            return Promise()
+            return
         }
 
         // Unread messages are only incoming messages
@@ -146,31 +146,21 @@ public protocol UnreadMessagesProtocol: UnreadMessagesProtocolObjc {
         }
 
         guard !unreadMessages.isEmpty else {
-            return Promise()
+            return
         }
 
-        if conversation.isGroup() {
-            // Just update message read
-            updateMessageRead(messages: unreadMessages)
-        }
-        else if let contact = conversation.contact {
-            // Send read receipt and update message read
-            return Promise { seal in
-                MessageSender.sendReadReceipt(
-                    forMessages: unreadMessages,
-                    toIdentity: contact.identity,
-                    onCompletion: {
-                        self.updateMessageRead(messages: unreadMessages)
-                        self.totalCount(doCalcUnreadMessagesCountOf: [conversation])
-                        seal.fulfill_()
-                    }
-                )
-            }
-        }
-
+        // Update message read
+        updateMessageRead(messages: unreadMessages)
         totalCount(doCalcUnreadMessagesCountOf: [conversation])
 
-        return Promise()
+        if let contact = conversation.contact {
+            // Send read receipt
+            MessageSender.sendReadReceipt(
+                forMessages: unreadMessages,
+                toIdentity: contact.identity,
+                onCompletion: nil
+            )
+        }
     }
 
     private func updateMessageRead(messages: [BaseMessage]) {

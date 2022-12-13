@@ -582,6 +582,25 @@ class MessageDecoderTests: XCTestCase {
         XCTAssertEqual(result?.groupID, msg.groupID)
     }
     
+    func testDecodeGroupDeliveryReceiptMessage() {
+        let msg = GroupDeliveryReceiptMessage()
+        msg.groupID = Data(BytesUtility.padding([], pad: 0x13, length: ThreemaProtocol.groupIDLength))
+        msg.groupCreator = "TESTID12"
+        msg.receiptMessageIDs = [Data(BytesUtility.padding([], pad: 0xEF, length: ThreemaProtocol.messageIDLength))]
+        msg.receiptType = UInt8(DELIVERYRECEIPT_MSGREAD)
+        
+        let result = MessageDecoder.decode(
+            MSGTYPE_GROUP_DELIVERY_RECEIPT,
+            body: msg.body()
+        ) as? GroupDeliveryReceiptMessage
+        
+        XCTAssertNotNil(result)
+        XCTAssertEqual(result?.groupCreator, msg.groupCreator)
+        XCTAssertEqual(result?.groupID, msg.groupID)
+        XCTAssertEqual(result?.receiptMessageIDs.count, 1)
+        XCTAssertEqual(result?.receiptType, msg.receiptType)
+    }
+    
     func testDecodeGroupFileMessage() {
         let msg = GroupFileMessage()
         msg.groupCreator = "TESTID12"

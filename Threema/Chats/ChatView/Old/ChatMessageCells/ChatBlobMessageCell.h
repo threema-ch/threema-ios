@@ -40,6 +40,6 @@
 
 - (BOOL)showProgressBar;
 
-+ (CGSize)scaleImageSizeToCell:(CGSize)size forTableWidth:(CGFloat)tableWidth;
++ (CGSize)scaleImageSizeToCell:(CGSize)size forTableWidth:(CGFloat)tableWidth isGroup:(BOOL)isGroup;
 
 @end

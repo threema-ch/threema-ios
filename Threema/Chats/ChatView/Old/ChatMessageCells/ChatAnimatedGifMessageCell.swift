@@ -170,7 +170,11 @@ extension ChatAnimatedGifMessageCell {
             let width = CGFloat(thumbnail.width.floatValue)
             let height = CGFloat(thumbnail.height.floatValue)
             let size = CGSize(width: width, height: height)
-            scaledSize = ChatAnimatedGifMessageCell.scaleImageSize(toCell: size, forTableWidth: tableWidth)
+            scaledSize = ChatAnimatedGifMessageCell.scaleImageSize(
+                toCell: size,
+                forTableWidth: tableWidth,
+                isGroup: message.conversation.isGroup()
+            )
             if scaledSize.height != scaledSize.height || scaledSize.height < 0 {
                 scaledSize.height = 40.0
             }
@@ -197,7 +201,11 @@ extension ChatAnimatedGifMessageCell {
             let x: CGFloat = 30.0
             
             // scale to fit maximum cell size
-            size = ChatAnimatedGifMessageCell.scaleImageSize(toCell: size, forTableWidth: frame.size.width)
+            size = ChatAnimatedGifMessageCell.scaleImageSize(
+                toCell: size,
+                forTableWidth: frame.size.width,
+                isGroup: fileMessageEntity.conversation.isGroup()
+            )
             if size.height != size.height {
                 size.height = 120.0
             }
@@ -524,7 +532,8 @@ extension ChatAnimatedGifMessageCell {
                 let fileMessageSize = CGSize(width: width, height: height)
                 size = ChatAnimatedGifMessageCell.scaleImageSize(
                     toCell: fileMessageSize,
-                    forTableWidth: frame.size.width
+                    forTableWidth: frame.size.width,
+                    isGroup: fileMessageEntity.conversation.isGroup()
                 )
             }
             

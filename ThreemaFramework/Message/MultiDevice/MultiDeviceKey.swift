@@ -32,10 +32,10 @@ import Foundation
         }
         
         let kdf = ThreemaKDF(personal: "3ma-mdev")
-        guard let mk = kdf.deriveKey(salt: "mk", secretKey: secretKey) else {
+        guard let mk = kdf.deriveKey(salt: "mk", key: secretKey) else {
             return nil
         }
-        let mpk = kdf.deriveKey(salt: "mpk", secretKey: mk)
+        let mpk = kdf.deriveKey(salt: "mpk", key: mk)
         
         return mpk
     }

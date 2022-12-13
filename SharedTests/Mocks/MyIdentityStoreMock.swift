@@ -43,6 +43,10 @@ class MyIdentityStoreMock: NSObject, MyIdentityStoreProtocol {
         NaClCrypto.shared()?.decryptData(data, withSecretKey: secretKey, signKey: _publicKey, nonce: nonce)
     }
     
+    func sharedSecret(withPublicKey publicKey: Data!) -> Data! {
+        NaClCrypto.shared()?.sharedSecret(forPublicKey: publicKey, secretKey: secretKey)
+    }
+    
     private let secretKey: Data!
     
     init(identity: String, secretKey: Data) {

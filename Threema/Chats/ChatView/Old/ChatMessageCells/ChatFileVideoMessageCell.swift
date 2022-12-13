@@ -104,7 +104,11 @@ extension ChatFileVideoMessageCell {
             let width = CGFloat(thumbnail.width.floatValue)
             let height = CGFloat(thumbnail.height.floatValue)
             let size = CGSize(width: width, height: height)
-            scaledSize = ChatFileVideoMessageCell.scaleImageSize(toCell: size, forTableWidth: tableWidth)
+            scaledSize = ChatFileVideoMessageCell.scaleImageSize(
+                toCell: size,
+                forTableWidth: tableWidth,
+                isGroup: fileMessageEntity.conversation.isGroup()
+            )
             if scaledSize.height != scaledSize.height || scaledSize.height < 0 {
                 scaledSize.height = 120.0
             }
@@ -128,7 +132,11 @@ extension ChatFileVideoMessageCell {
             let x: CGFloat = 30.0
             
             // scale to fit maximum cell size
-            size = ChatFileVideoMessageCell.scaleImageSize(toCell: size, forTableWidth: frame.size.width)
+            size = ChatFileVideoMessageCell.scaleImageSize(
+                toCell: size,
+                forTableWidth: frame.size.width,
+                isGroup: fileMessageEntity.conversation.isGroup()
+            )
             if size.height != size.height {
                 size.height = 120.0
             }

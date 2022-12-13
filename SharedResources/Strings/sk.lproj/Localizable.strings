@@ -656,12 +656,12 @@ Nahláste prosím tento incident na security@threema.ch a ak je to možné, posk
 "new_message_db_requires_migration" = "Je potrebná migrácia databázy. Ak chcete pokračovať, otvorte aplikáciu.";
 
 /* reminder messages */
-"push_reminder_title" = "Push hlásenia nie sú povolené";
+"push_reminder_title" = "Notifikácie nie sú povolené";
 "push_reminder_message" = "Keď bude aplikácia %@ zatvorená, nebudeme vás informovať o nových správach ani prichádzajúcich hovoroch.\n\nAk to chcete vyriešiť, prejdite do nastavení systému a zapnite pre aplikáciu %@ upozornenia.";
 "push_reminder_not_now" = "Viac mi to nepripomínať";
 "push_reminder_set_now" = "Zapnúť upozornenia";
 
-"updating_database" = "Aktualizácia databáze...\n\nNeprerušujte prosím túto operáciu! U veľkých databáz správ to môže trvať niekoľko minút.";
+"updating_database" = "Aktualizuje sa databáza…\n\nNechajte Threema spustenú v popredí až do skončenia.\n\nAk máte veľkú históriu konverzácií, môže to trvať niekoľko minút.";
 "database_migration_error_hints" = "Uistite sa, že máte vo vašom zariadení dostatok voľného miesta, reštartujte zariadenie a potom to skúste znovu.";
 "database_migration_storage_warning_title" = "Nedostatok miesta na disku";
 "database_migration_storage_warning_message" = "Aktualiácia databázy dočasne vyžaduje aspoň %.1f GB voľného miesta. Vaše zariadenie má iba %.1f GB voľného miesta. Zabezpečte prosím dostatok voľného miesta v \"Nastavenia > Všeobecné > Úložisko\" a skúste to znovu.";
@@ -1118,6 +1118,7 @@ V prípade, že stratíte prístup k vašemu zariadeniu, pomocou Trezoru Threema
 "settings_appearance_system_theme" = "Systémový";
 "settings_appearance_theme_selected" = "Aktívny motív %@";
 "settings_appearance_theme_active" = "Aktívny";
+"settings_appearance_hide_app_icon" = "Ikona aplikácie";
 "settings_appearance_hide_stale_contacts" = "Skryť neaktívne ID";
 "settings_appearance_show_profile_pictures" = "Zobrazťiť profilové obrázky";
 "settings_appearance_display_order" = "Poradie zobrazenia";
@@ -1377,3 +1378,28 @@ Pokiaľ vám v %@ nechýbajú žiadne (mediálne) súbory, vyprázdnite kôš, a
 
 // ChatBar
 "chat_bar_quote_close_button" = "Uzavrieť citát";
+
+// ChatDetailView
+"detailView_title" = "Podrobnosti správ";
+"detailView_sent" = "Odoslané";
+"detailView_delivered" = "Doručené";
+"detailView_read" = "Prečítané";
+"detailView_ackd" = "Potvrdené";
+"detailView_messageID" = "ID správy";
+"detailView_group_acknowledged" = "Odsúhlasené (%d)";
+"detailView_group_declined" = "Neodsúhlasené (%d)";
+
+// App icons
+"app_icon_title_celebration" = "Ikona oslavy";
+"app_icon_description_celebration" = "10-ročné výročie";
+"app_icon_title_current" = "Aktuálna ikona";
+"app_icon_description_current" = "Od roku 2019";
+"app_icon_title_second" = "Druhá ikona";
+"app_icon_description_second" = "2013 – 2019";
+"app_icon_title_first" = "Prvá ikona";
+"app_icon_description_first" = "2012 – 2013";
+
+// 10 Years
+"anniversary_view_title" = "10 rokov aplikácie Threema!";
+"anniversary_view_text" = "12. decembra 2022 oslávi Threema desať rokov. Na znak oslavy tohto obdobia sme vytvorili sviatočnú verziu ikony aplikácie.";
+"anniversary_view_icon_info" = "Ak chcete ikonu aplikácie zmeniť späť na predvolenú alebo starú verziu, prejdite do sekcie Nastavenia > Vzhľad > Ikona aplikácie.";

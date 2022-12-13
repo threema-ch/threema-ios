@@ -268,6 +268,8 @@ static MyIdentityStore *instance;
     [[AppGroup userDefaults] removeObjectForKey:@"MessageDrafts"];
     [[AppGroup userDefaults] removeObjectForKey:@"PushNotificationEncryptionKey"];
     [[AppGroup userDefaults] removeObjectForKey:@"MatchToken"];
+    [[AppGroup userDefaults] removeObjectForKey:kLastEphemeralKeyHashes];
+    [[AppGroup userDefaults] removeObjectForKey:kShowRogueDeviceWarningFlag];
     [[AppGroup userDefaults] synchronize];
 }
 
@@ -539,6 +541,24 @@ static MyIdentityStore *instance;
     [[AppGroup userDefaults] synchronize];
 }
 
+- (NSString *)lastWorkInfoLanguage {
+    return [[AppGroup userDefaults] objectForKey:@"lastWorkInfoLanguage"];
+}
+
+- (void)setLastWorkInfoLanguage:(NSString *)newLastWorkInfoLanguage {
+    [[AppGroup userDefaults] setObject:newLastWorkInfoLanguage forKey:@"lastWorkInfoLanguage"];
+    [[AppGroup userDefaults] synchronize];
+}
+
+- (NSString *)lastWorkInfoMdmDescription {
+    return [[AppGroup userDefaults] objectForKey:@"lastWorkInfoMdmDescription"];
+}
+
+- (void)setLastWorkInfoMdmDescription:(NSString *)newLastWorkInfoMdmDescription {
+    [[AppGroup userDefaults] setObject:newLastWorkInfoMdmDescription forKey:@"lastWorkInfoMdmDescription"];
+    [[AppGroup userDefaults] synchronize];
+}
+
 - (NSData*)keySecret {
     NSData *mySecretKey = [self _obtainSecretKey];
     return mySecretKey;
@@ -578,6 +598,14 @@ static MyIdentityStore *instance;
         DDLogError(@"Cannot decrypt: %@", [exception reason]);
         return nil;
     }
+}
+
+- (NSData*)sharedSecretWithPublicKey:(NSData*)publicKey {
+    NSData *mySecretKey = [self _obtainSecretKey];
+    if (mySecretKey == nil) {
+        return nil;
+    }
+    return [[NaClCrypto sharedCrypto] sharedSecretForPublicKey:publicKey secretKey:[self _obtainSecretKey]];
 }
 
 - (NSData*)_obtainSecretKey {

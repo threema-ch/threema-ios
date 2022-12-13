@@ -108,6 +108,7 @@ struct WebClientInfoCapabilities {
     var recurrentPushes = true
     var imageFormat = WebClientInfoImageFormat()
     var quotesV2Support = true
+    var groupReactions = true
     
     var mdm = WebClientInfoMdmRestrictions()
     
@@ -119,6 +120,7 @@ struct WebClientInfoCapabilities {
             "recurrentPushes": recurrentPushes,
             "imageFormat": imageFormat.objectDict(),
             "quotesV2": quotesV2Support,
+            "groupReactions": groupReactions,
         ]
         
         if MDMSetup(setup: false).isManaged() {

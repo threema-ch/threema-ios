@@ -19,6 +19,9 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #include "threema-kdf.h"
+#include "blake2.h"
+#include "blake2-impl.h"
+#include "blake2-kat.h"
 
 // Implementation based on `blake2b_init_key` and `blake2b`.
 int blake2b_key_salt_personal(
@@ -73,6 +76,94 @@ int blake2b_key_salt_personal(
         secure_zero_memory(block, BLAKE2B_BLOCKBYTES); // Burn the key from stack
     }
 
-    blake2b_final(S, out, THREEMA_KDF_SUBKEYBYTES);
+    if (blake2b_final(S, out, THREEMA_KDF_SUBKEYBYTES) < 0) {
+        return -1;
+    }
     return 0;
+}
+
+int blake2b_mac(
+    const uint8_t *key,
+    const uint8_t *input,
+    size_t input_len,
+    uint8_t *out
+) {
+    blake2b_state S[1];
+    if (blake2b_init_key(S, THREEMA_KDF_MAC_LENGTH, key, THREEMA_KDF_SUBKEYBYTES) < 0) {
+        return -1;
+    }
+    blake2b_update(S, input, input_len);
+    if (blake2b_final(S, out, THREEMA_KDF_MAC_LENGTH) < 0) {
+        return -1;
+    }
+    return 0;
+}
+
+int blake2b_hash(
+    const uint8_t *input,
+    size_t input_len,
+    uint8_t *out
+) {
+    return blake2b(out, 32, input, input_len, NULL, 0);
+}
+
+int blake2b_self_test() {
+    uint8_t key[BLAKE2B_KEYBYTES];
+    uint8_t buf[BLAKE2_KAT_LENGTH];
+    size_t i, step;
+
+    for( i = 0; i < BLAKE2B_KEYBYTES; ++i )
+      key[i] = ( uint8_t )i;
+
+    for( i = 0; i < BLAKE2_KAT_LENGTH; ++i )
+      buf[i] = ( uint8_t )i;
+
+    /* Test simple API */
+    for( i = 0; i < BLAKE2_KAT_LENGTH; ++i )
+    {
+      uint8_t hash[BLAKE2B_OUTBYTES];
+      blake2b( hash, BLAKE2B_OUTBYTES, buf, i, key, BLAKE2B_KEYBYTES );
+
+      if( 0 != memcmp( hash, blake2b_keyed_kat[i], BLAKE2B_OUTBYTES ) )
+      {
+        goto fail;
+      }
+    }
+
+    /* Test streaming API */
+    for(step = 1; step < BLAKE2B_BLOCKBYTES; ++step) {
+      for (i = 0; i < BLAKE2_KAT_LENGTH; ++i) {
+        uint8_t hash[BLAKE2B_OUTBYTES];
+        blake2b_state S;
+        uint8_t * p = buf;
+        size_t mlen = i;
+        int err = 0;
+
+        if( (err = blake2b_init_key(&S, BLAKE2B_OUTBYTES, key, BLAKE2B_KEYBYTES)) < 0 ) {
+          goto fail;
+        }
+
+        while (mlen >= step) {
+          if ( (err = blake2b_update(&S, p, step)) < 0 ) {
+            goto fail;
+          }
+          mlen -= step;
+          p += step;
+        }
+        if ( (err = blake2b_update(&S, p, mlen)) < 0) {
+          goto fail;
+        }
+        if ( (err = blake2b_final(&S, hash, BLAKE2B_OUTBYTES)) < 0) {
+          goto fail;
+        }
+
+        if (0 != memcmp(hash, blake2b_keyed_kat[i], BLAKE2B_OUTBYTES)) {
+          goto fail;
+        }
+      }
+    }
+
+    return 0;
+  fail:
+    return -1;
 }

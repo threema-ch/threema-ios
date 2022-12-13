@@ -435,9 +435,15 @@ extension ThreemaWebViewController: QRScannerViewControllerDelegate {
             session.updateValue(a[99] as! NSString, forKey: "saltyRTCHost")
             
             if let overrideSaltyRtcHost = overrideSaltyRtcHost {
+                DDLogNotice(
+                    "[Threema Web] override SaltyRtcHost from \(session["saltyRTCHost"] ?? "?") to \(overrideSaltyRtcHost)"
+                )
                 session.updateValue(overrideSaltyRtcHost, forKey: "saltyRTCHost")
             }
             if let overrideSaltyRtcPort = overrideSaltyRtcPort {
+                DDLogNotice(
+                    "[Threema Web] override altyRtcPort from \(session["saltyRTCPort"] ?? "?") to \(overrideSaltyRtcPort)"
+                )
                 session.updateValue(overrideSaltyRtcPort, forKey: "saltyRTCPort")
             }
             

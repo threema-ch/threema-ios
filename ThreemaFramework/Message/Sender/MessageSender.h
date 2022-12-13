@@ -29,6 +29,7 @@
 
 @class Conversation;
 @class Contact;
+@class Group;
 
 @protocol MessageSenderProtocol <NSObject>
 
@@ -67,9 +68,9 @@
  */
 + (void)sendMessage:(AbstractMessage * _Nonnull)message onCompletion:(void(^_Nullable)(void))onCompletion;
 
-+ (void)sendReadReceiptForMessages:(NSArray*_Nonnull)messages toIdentity:(NSString*_Nonnull)identity onCompletion:(void(^_Nonnull)(void))onCompletion;
-+ (void)sendUserAckForMessages:(NSArray*_Nonnull)messages toIdentity:(NSString*_Nonnull)identity onCompletion:(void(^_Nonnull)(void))onCompletion;
-+ (void)sendUserDeclineForMessages:(NSArray*_Nonnull)messages toIdentity:(NSString*_Nonnull)identity onCompletion:(void(^_Nonnull)(void))onCompletion;
++ (void)sendReadReceiptForMessages:(NSArray*_Nonnull)messages toIdentity:(NSString*_Nonnull)identity onCompletion:(void(^_Nullable)(void))onCompletion;
++ (void)sendUserAckForMessages:(NSArray*_Nonnull)messages toIdentity:(NSString*_Nullable)identity group:(Group *_Nullable)group onCompletion:(void(^_Nonnull)(void))onCompletion;
++ (void)sendUserDeclineForMessages:(NSArray*_Nonnull)messages toIdentity:(NSString*_Nullable)identity group:(Group *_Nullable)group onCompletion:(void(^_Nonnull)(void))onCompletion;
 
 + (void)sendTypingIndicatorMessage:(BOOL)typing toIdentity:(NSString*_Nonnull)identity;
 

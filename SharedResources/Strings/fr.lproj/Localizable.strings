@@ -656,9 +656,7 @@
 
 /* reminder messages */
 "push_reminder_title" = "Notifications non activées";
-"push_reminder_message" = "Vous ne serez pas informé de l’arrivée de nouveaux messages ou des appels entrants si %@ est fermée.
-
-Pour corriger cela, accédez aux paramètres système et activez les notifications pour %@.";
+"push_reminder_message" = "Vous ne serez pas informé de l’arrivée de nouveaux messages ou des appels entrants si %@ est fermée.\n\nPour corriger cela, accédez aux paramètres système et activez les notifications pour %@.";
 "push_reminder_not_now" = "Ne plus me le rappeler";
 "push_reminder_set_now" = "Activer les notifications";
 
@@ -1118,6 +1116,7 @@ Pour corriger cela, accédez aux paramètres système et activez les notificatio
 "settings_appearance_system_theme" = "Système";
 "settings_appearance_theme_selected" = "%@ thème actif";
 "settings_appearance_theme_active" = "Activé";
+"settings_appearance_hide_app_icon" = "Icône de l'application";
 "settings_appearance_hide_stale_contacts" = "Cacher les ID inactifs";
 "settings_appearance_show_profile_pictures" = "Afficher les images de profil";
 "settings_appearance_display_order" = "Ordre d’affichage";
@@ -1377,3 +1376,28 @@ S’il ne manque aucun fichier (média) dans %@, videz la corbeille pour supprim
 
 // ChatBar
 "chat_bar_quote_close_button" = "Fin de citation";
+
+// ChatDetailView
+"detailView_title" = "Détails du message";
+"detailView_sent" = "Envoyé";
+"detailView_delivered" = "Livré";
+"detailView_read" = "Lu";
+"detailView_ackd" = "Reconnu";
+"detailView_messageID" = "Identifiant du message";
+"detailView_group_acknowledged" = "Accepté (%d)";
+"detailView_group_declined" = "Refusé (%d)";
+
+// App icons
+"app_icon_title_celebration" = "Icône de célébration";
+"app_icon_description_celebration" = "10e anniversaire";
+"app_icon_title_current" = "Icône actuelle";
+"app_icon_description_current" = "Depuis 2019";
+"app_icon_title_second" = "Deuxième icône";
+"app_icon_description_second" = "2013–2019";
+"app_icon_title_first" = "Première icône";
+"app_icon_description_first" = "2012–2013";
+
+// 10 Years
+"anniversary_view_title" = "10 ans de Threema !";
+"anniversary_view_text" = "Le 12 décembre 2022, Threema soufflera sa dixième bougie. Pour marquer le début de la période de la célébration, nous avons décoré l'icône de notre application.";
+"anniversary_view_icon_info" = "Pour restaurer l'icône par défaut de l'application ou arborer une version rétro, accédez aux « Paramètres > Apparence > Icône de l'application ».";

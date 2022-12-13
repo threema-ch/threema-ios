@@ -43,6 +43,7 @@ class WebMessageObject: NSObject {
     var audio: [AnyHashable: Any]?
     var location: [AnyHashable: Any]?
     var voip: [AnyHashable: Any]?
+    var reactions: [AnyHashable: [String]]?
     
     init(message: BaseMessage, conversation: Conversation, forConversationsRequest: Bool, session: WCSession) {
         self.baseMessage = message
@@ -91,6 +92,10 @@ class WebMessageObject: NSObject {
             self.state = "user-dec"
         case .failed:
             self.state = "send-failed"
+        }
+        
+        if conversation.isGroup() {
+            self.reactions = message.groupReactionsDictForWeb()
         }
         
         super.init()
@@ -206,6 +211,10 @@ class WebMessageObject: NSObject {
         
         if voip != nil {
             objectDict.updateValue(voip!, forKey: "voip")
+        }
+        
+        if let reactions = reactions {
+            objectDict.updateValue(reactions, forKey: "reactions")
         }
         
         return objectDict

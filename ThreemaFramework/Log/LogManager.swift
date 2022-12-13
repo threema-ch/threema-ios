@@ -94,7 +94,7 @@ import Foundation
         return FileUtility.fileSizeInBytes(fileURL: logFile) ?? 0
     }
 
-    /// Get Log Level depence on debug environment or not.
+    /// Get Log Level dependent on if is in debug environment or not.
     ///
     /// - Returns: Log Level
     private static func logLevel() -> DDLogLevel {

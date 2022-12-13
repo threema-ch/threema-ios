@@ -86,4 +86,4 @@
 "testflight_feedback_description" = "Grazie per testare la versione beta di Threema. Ma non basta testarla, abbiamo anche bisogno del tuo feedback. Facci quindi sapere se riscontri bug o irregolarità. Vai alla voce \"Impostazioni > Feedback beta\" per aprire la chat beta.";
 
 "notification.threemaweb.connect.title" = "Desktop/Web";
-"notification.threemaweb.connect.body" = "Tocca la notifica per ripristinare il collegamento con l'app desktop e il client web.";
+"notification.threemaweb.connect.body" = "Tocca qui per ripristinare il collegamento con l'app desktop e il client web.";

@@ -26,6 +26,7 @@ static CGFloat const kSystemMessageMaxFontSize = 17.0f;
 static CGFloat const kChatContactMinFontSize = 12.0f;
 static CGFloat const kChatContactMaxFontSize = 17.0f;
 static CGFloat const kMessageScreenMargin = 140.0f;
+static CGFloat const kMessageScreenMarginGroup = 180.0f;
 static CGFloat const kLandscapeWidthThreshold = 321.0f;
 static CGFloat const kMessageImageWidth = 240.0f;
 static CGFloat const kMessageImageHeight = 240.0f;

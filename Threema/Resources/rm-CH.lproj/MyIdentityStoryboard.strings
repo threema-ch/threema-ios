@@ -57,7 +57,7 @@
 "bL4-qe-Mh9.text" = "Surnum";
 
 /* Class = "UILabel"; text = "Backup"; ObjectID = "eS1-Gf-A4o"; */
-"eS1-Gf-A4o.text" = "Backup";
+"eS1-Gf-A4o.text" = "Export da l'ID";
 
 /* Class = "UILabel"; text = "..."; ObjectID = "gan-4f-TrM"; */
 "gan-4f-TrM.text" = "...";

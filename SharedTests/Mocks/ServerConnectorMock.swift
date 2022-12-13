@@ -178,6 +178,10 @@ class ServerConnectorMock: NSObject, ServerConnectorProtocol {
     
     func incomingMessageFinished(_ message: AbstractMessage, isPendingGroup: Bool) { }
     
+    func incomingMessageFailed(_ message: BoxedMessage) {
+        // no-op
+    }
+
     func taskQueueEmpty(_ queueTypeName: String) {
         messageProcessorDelegate?.taskQueueEmpty(queueTypeName)
     }

@@ -2767,6 +2767,7 @@
 		7E0E1C2327184C3E00E49382 /* TaskDefinitionTransactionProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E0E1C2227184C3E00E49382 /* TaskDefinitionTransactionProtocol.swift */; };
 		7E10B887269884DC00B69F50 /* TaskDefinitionReceiveMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E10B886269884DC00B69F50 /* TaskDefinitionReceiveMessage.swift */; };
 		7E10B88A26988F9300B69F50 /* TaskQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E10B88926988F9300B69F50 /* TaskQueue.swift */; };
+		7E230A8D2901732B006B81BB /* PendingUserNotificationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E230A8C2901732B006B81BB /* PendingUserNotificationTests.swift */; };
 		7E24DC0C276CC8310033B3DA /* MessagePermission.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E24DC0B276CC8310033B3DA /* MessagePermission.swift */; };
 		7E24DC0F276CD4510033B3DA /* MessagePermissionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E24DC0E276CD4510033B3DA /* MessagePermissionTests.swift */; };
 		7E2E2CCE26B2E32A00704C35 /* QueueTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E2E2CCD26B2E32A00704C35 /* QueueTests.swift */; };
@@ -6116,6 +6117,7 @@
 		7E0E1C2227184C3E00E49382 /* TaskDefinitionTransactionProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskDefinitionTransactionProtocol.swift; sourceTree = "<group>"; };
 		7E10B886269884DC00B69F50 /* TaskDefinitionReceiveMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskDefinitionReceiveMessage.swift; sourceTree = "<group>"; };
 		7E10B88926988F9300B69F50 /* TaskQueue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskQueue.swift; sourceTree = "<group>"; };
+		7E230A8C2901732B006B81BB /* PendingUserNotificationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PendingUserNotificationTests.swift; sourceTree = "<group>"; };
 		7E24DC0B276CC8310033B3DA /* MessagePermission.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessagePermission.swift; sourceTree = "<group>"; };
 		7E24DC0E276CD4510033B3DA /* MessagePermissionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessagePermissionTests.swift; sourceTree = "<group>"; };
 		7E2E2CCD26B2E32A00704C35 /* QueueTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QueueTests.swift; sourceTree = "<group>"; };
@@ -7822,6 +7824,7 @@
 				2D58B76823F406210072E062 /* NSData+ConvertUInt64Tests.m */,
 				4D088B21255C0DC8002F3129 /* OnPremConfigTests.swift */,
 				2DEA6EB4266F678800B73428 /* PendingUserNotificationManagerTests.swift */,
+				7E230A8C2901732B006B81BB /* PendingUserNotificationTests.swift */,
 				2D1E44A723B0C4FE008AD579 /* PhoneNumberNormalizerTests.m */,
 				7EFC205226C2970D009614E9 /* PhotosRightsHelperTest.swift */,
 				7E2E2CCD26B2E32A00704C35 /* QueueTests.swift */,
@@ -13361,6 +13364,7 @@
 				E1FBA1BB27A2A97600910217 /* BaseMessageStateTests.swift in Sources */,
 				2D1E449D23B0A9A4008AD579 /* MdmSetupTests.m in Sources */,
 				2D4258DE2656A33F008E4C8A /* MessageProcessorMock.swift in Sources */,
+				7E230A8D2901732B006B81BB /* PendingUserNotificationTests.swift in Sources */,
 				2DCA7BA8244824D400B75CE1 /* GroupManagerTests.swift in Sources */,
 				2D05FC4323ABB7C200D721FB /* DatabasePreparerProtocol.swift in Sources */,
 				2D75492624B3599C003F70FA /* TaskExecutionSendMessageTests.swift in Sources */,

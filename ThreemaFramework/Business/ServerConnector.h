@@ -116,6 +116,7 @@ typedef NS_CLOSED_ENUM(NSInteger, ConnectionInitiator) {
  @param pushToken Token from registration of Apple Notification Service
  */
 - (void)setPushToken:(NSData *)pushToken;
+- (void)removePushToken;
 
 /**
  Set Voip Push Notification and send it as type of apple, for receiving Voip Push Notifications.

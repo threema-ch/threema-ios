@@ -56,6 +56,13 @@
 - (void)incomingMessageFinished:(AbstractMessage * _Nonnull)message isPendingGroup:(BOOL)isPendingGroup;
 
 /**
+ Processing of incoming message is failed.
+
+ @param message Incoming message
+ */
+- (void)incomingMessageFailed:(BoxedMessage * _Nonnull)message;
+
+/**
  Will be called from TaskQueue if is queue empty.
 
  @param queueTypeName Name of queue type (SeeAlso Enum TaskQueueType)

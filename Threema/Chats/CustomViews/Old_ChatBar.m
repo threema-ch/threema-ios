@@ -645,16 +645,19 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 }
 
 - (void)stopTyping {
-    if ([MessageSender sendTypingIndicatorWithConversation:conversation]) {
-        DDLogVerbose(@"stopTyping");
-        if (typing) {
-            typing = NO;
-            dispatch_async(dispatch_get_main_queue(), ^{
-                [delegate old_chatBarDidStopTyping:self];
-            });
-            dispatch_suspend(typing_timer);
+    EntityManager *em = [EntityManager new];
+    [em performBlock:^{
+        if ([MessageSender sendTypingIndicatorWithConversation:conversation]) {
+            DDLogVerbose(@"stopTyping");
+            if (typing) {
+                typing = NO;
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [delegate old_chatBarDidStopTyping:self];
+                });
+                dispatch_suspend(typing_timer);
+            }
         }
-    }
+    }];
 }
 
 - (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldReceiveTouch:(UITouch *)touch {

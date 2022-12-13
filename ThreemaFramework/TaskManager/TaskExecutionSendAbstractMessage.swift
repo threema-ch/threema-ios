@@ -48,8 +48,13 @@ class TaskExecutionSendAbstractMessage: TaskExecution, TaskExecutionProtocol {
             return Promise()
         }
         .then { _ -> Promise<Void> in
-            // Send message is outgoing message
+            // Send CSP message
             Promise { seal in
+                guard !task.doOnlyReflect else {
+                    seal.fulfill_()
+                    return
+                }
+
                 self.frameworkInjector.backgroundEntityManager.performBlockAndWait {
                     if let toIdentity = task.message.toIdentity,
                        toIdentity != self.frameworkInjector.myIdentityStore.identity,
@@ -65,10 +70,10 @@ class TaskExecutionSendAbstractMessage: TaskExecution, TaskExecutionProtocol {
                         .catch { error in
                             seal.reject(error)
                         }
-                        return
                     }
-
-                    seal.fulfill_()
+                    else {
+                        seal.reject(TaskExecutionError.messageReceiverBlockedOrUnknown)
+                    }
                 }
             }
         }

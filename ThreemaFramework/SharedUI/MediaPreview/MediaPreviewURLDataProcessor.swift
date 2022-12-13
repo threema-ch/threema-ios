@@ -57,12 +57,29 @@ import Foundation
         case is URL, is NSURL:
             let url = item as! URL
             let fileSize = Double(FileUtility.fileSizeInBytes(fileURL: url) ?? Int64(kMaxFileSize))
+            let uti = UTIConverter.uti(forFileURL: url)
+            let mimeType = UTIConverter.mimeType(fromUTI: uti)
+            let isVideo = UTIConverter.isVideoMimeType(mimeType) || UTIConverter.isMovieMimeType(mimeType)
+            let estimatedVideoFileSize = VideoConversionHelper.getEstimatedVideoFileSize(for: url)
             
-            guard Double(kMaxFileSize) > fileSize else {
+            let isValidVideoDuration: Bool
+            if isVideo {
+                isValidVideoDuration = MediaConverter.isVideoDurationValid(at: url)
+            }
+            else {
+                isValidVideoDuration = false
+            }
+            
+            guard Double(kMaxFileSize) > fileSize || (isVideo && isValidVideoDuration) else {
                 throw PhotosPickerError.fileTooLargeForSending
             }
             
-            guard !memoryConstrained || kShareExtensionMaxFileShareSize > fileSize else {
+            guard !memoryConstrained ||
+                kShareExtensionMaxFileShareSize > fileSize ||
+                (
+                    isVideo && kShareExtensionMaxFileShareSize >
+                        (estimatedVideoFileSize ?? Double.greatestFiniteMagnitude)
+                ) else {
                 throw PhotosPickerError.fileTooLargeForShareExtension
             }
             

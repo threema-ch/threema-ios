@@ -9,7 +9,7 @@
 "5Ca-aK-dv0.text" = "Detay";
 
 /* Class = "UITabBarItem"; title = "My Profile"; ObjectID = "5lj-oy-IYs"; */
-"5lj-oy-IYs.title" = "Benim profilim";
+"5lj-oy-IYs.title" = "Profilim";
 
 /* Class = "UILabel"; text = "Detail"; ObjectID = "6On-uo-xuU"; */
 "6On-uo-xuU.text" = "Detay";
@@ -18,7 +18,7 @@
 "6bQ-Vj-jcf.text" = "Detay";
 
 /* Class = "UISegmentedControl"; 77n-al-llJ.segmentTitles[0] = "Contacts"; ObjectID = "77n-al-llJ"; */
-"77n-al-llJ.segmentTitles[0]" = "İletişim";
+"77n-al-llJ.segmentTitles[0]" = "Kişiler";
 
 /* Class = "UISegmentedControl"; 77n-al-llJ.segmentTitles[1] = "Groups"; ObjectID = "77n-al-llJ"; */
 "77n-al-llJ.segmentTitles[1]" = "Gruplar";
@@ -30,16 +30,16 @@
 "9mW-FX-ba3.segmentTitles[1]" = "Grup";
 
 /* Class = "UILabel"; text = "Message-ID"; ObjectID = "CyG-aF-qUX"; */
-"CyG-aF-qUX.text" = "Mesaj Kimliği";
+"CyG-aF-qUX.text" = "Mesaj kimliği";
 
 /* Class = "UINavigationItem"; title = "Add Contact"; ObjectID = "Eq0-ED-f11"; */
-"Eq0-ED-f11.title" = "Kişi Ekle";
+"Eq0-ED-f11.title" = "Kişi ekle";
 
 /* Class = "UINavigationItem"; title = "Contacts"; ObjectID = "Ll3-Ew-izw"; */
-"Ll3-Ew-izw.title" = "İletişim";
+"Ll3-Ew-izw.title" = "Kişiler";
 
 /* Class = "UINavigationItem"; title = "Message Details"; ObjectID = "LsJ-Ts-xZd"; */
-"LsJ-Ts-xZd.title" = "Mesaj Detayları";
+"LsJ-Ts-xZd.title" = "Mesaj detayları";
 
 /* Class = "UISegmentedControl"; M1P-ix-V2L.segmentTitles[0] = "Standard"; ObjectID = "M1P-ix-V2L"; */
 "M1P-ix-V2L.segmentTitles[0]" = "Standart";
@@ -60,31 +60,31 @@
 "UbM-As-itV.text" = "XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX";
 
 /* Class = "UILabel"; text = "Acknowledged"; ObjectID = "VRy-nm-s0X"; */
-"VRy-nm-s0X.text" = "Tanınan";
+"VRy-nm-s0X.text" = "Alındı";
 
 /* Class = "UIButton"; normalTitle = "Load Earlier Messages"; ObjectID = "WuX-yK-0RJ"; */
-"WuX-yK-0RJ.normalTitle" = "Daha Önceki Mesajları Yükle";
+"WuX-yK-0RJ.normalTitle" = "Önceki mesajları yükle";
 
 /* Class = "UILabel"; text = "Date"; ObjectID = "XTa-xS-cOR"; */
 "XTa-xS-cOR.text" = "Tarih";
 
 /* Class = "UILabel"; text = "Scan an ID"; ObjectID = "YPC-ic-pTa"; */
-"YPC-ic-pTa.text" = "Kimlik tarama";
+"YPC-ic-pTa.text" = "Kimlik tara";
 
 /* Class = "UITextField"; placeholder = "ID"; ObjectID = "YoS-Np-Z37"; */
-"YoS-Np-Z37.placeholder" = "ID";
+"YoS-Np-Z37.placeholder" = "Kimlik";
 
 /* Class = "UILabel"; text = "Your ID backup"; ObjectID = "ZIq-dn-JdH"; */
-"ZIq-dn-JdH.text" = "Kimlik dışa aktarma işleminiz";
+"ZIq-dn-JdH.text" = "Dışa aktarılan kimliğiniz";
 
 /* Class = "UILabel"; text = "Read"; ObjectID = "Zrm-eG-ewD"; */
-"Zrm-eG-ewD.text" = "Okuma";
+"Zrm-eG-ewD.text" = "Oku";
 
 /* Class = "UIBarButtonItem"; title = "Send"; ObjectID = "aQb-a9-JtU"; */
 "aQb-a9-JtU.title" = "Gönder";
 
 /* Class = "UILabel"; text = "Name"; ObjectID = "aU9-dp-bDt"; */
-"aU9-dp-bDt.text" = "Ad";
+"aU9-dp-bDt.text" = "İsim";
 
 /* Class = "UITabBarItem"; title = "Settings"; ObjectID = "b04-Gg-ZdB"; */
 "b04-Gg-ZdB.title" = "Ayarlar";
@@ -93,22 +93,22 @@
 "bsh-sy-Xwu.text" = "MacBook Office 10 7";
 
 /* Class = "UINavigationItem"; title = "Choose contact"; ObjectID = "cNq-Pt-Uma"; */
-"cNq-Pt-Uma.title" = "Kişi seçin";
+"cNq-Pt-Uma.title" = "Kişi seç";
 
 /* Class = "UILabel"; text = "Include in phone backup"; ObjectID = "d2g-FC-ibo"; */
 "d2g-FC-ibo.text" = "Telefon yedeklemesine dahil et";
 
 /* Class = "UITableViewSection"; footerTitle = "#do not translate#This data, along with the password that you have chosen, can be used to restore your ID on another device. You can copy & paste it to a suitable location, email it to yourself or scan the QR code using another device."; ObjectID = "dgK-0J-UrZ"; */
-"dgK-0J-UrZ.footerTitle" = "#do not translate# Bu veriler, seçtiğiniz şifreyle birlikte başka bir cihaza kimliğinizi geri yüklemek için kullanılabilir. Uygun bir yere kopyalayıp yapıştırabilir, kendinize e-posta ile gönderebilir veya başka bir cihaz kullanarak QR kodunu tarayabilirsiniz.";
+"dgK-0J-UrZ.footerTitle" = "#do not translate#Bu veriler, seçtiğiniz şifreyle birlikte kimliğinizi başka bir cihazda geri yüklemek için kullanılabilir. Uygun bir yere kopyalayıp yapıştırabilir, kendinize e-posta ile gönderebilir veya başka bir cihaz kullanarak QR kodunu tarayabilirsiniz. ";
 
 /* Class = "UITableViewSection"; footerTitle = "#do not translate#The encrypted ID backup will be included when you back up your phone via iTunes or iCloud."; ObjectID = "eEV-l3-MXP"; */
-"eEV-l3-MXP.footerTitle" = "#do not translate# Telefonunuzu iTunes veya iCloud ile yedeklediğinizde şifreli kimlik yedeği eklenir.";
+"eEV-l3-MXP.footerTitle" = "#do not translate#Telefonunuzu iTunes veya iCloud aracılığıyla yedeklediğinizde şifreli kimlik yedeği dahil edilecektir. ";
 
 /* Class = "UILabel"; text = "Detail"; ObjectID = "eK9-D8-pFP"; */
 "eK9-D8-pFP.text" = "Detay";
 
 /* Class = "UINavigationItem"; title = "Location"; ObjectID = "eXF-nx-MbG"; */
-"eXF-nx-MbG.title" = "Yer";
+"eXF-nx-MbG.title" = "Konum";
 
 /* Class = "UILabel"; text = "Label"; ObjectID = "gsp-ed-V8R"; */
 "gsp-ed-V8R.text" = "Etiket";
@@ -129,40 +129,40 @@
 "n7x-y4-2CM.text" = "KİMLİK";
 
 /* Class = "UITabBarItem"; title = "Contacts"; ObjectID = "JXW-2V-ftV"; */
-"JXW-2V-ftV.title" = "İletişim";
+"JXW-2V-ftV.title" = "Kişiler";
 
 /* Class = "UILabel"; text = "Nickname"; ObjectID = "p0V-dq-HkU"; */
-"p0V-dq-HkU.text" = "Takma ad";
+"p0V-dq-HkU.text" = "Takma isim";
 
 /* Class = "UILabel"; text = "Label"; ObjectID = "pVJ-rQ-2qD"; */
 "pVJ-rQ-2qD.text" = "Etiket";
 
 /* Class = "UILabel"; text = "Delivered"; ObjectID = "qNO-eF-kmI"; */
-"qNO-eF-kmI.text" = "Teslim";
+"qNO-eF-kmI.text" = "Teslim edildi";
 
 /* Class = "UINavigationItem"; title = "Backup"; ObjectID = "tUV-iz-VQc"; */
-"tUV-iz-VQc.title" = "Kimlik Dışa Aktarma";
+"tUV-iz-VQc.title" = "Kimlik dışa aktarma";
 
 /* Class = "UILabel"; text = "Nickname"; ObjectID = "tr2-Ia-imu"; */
-"tr2-Ia-imu.text" = "Takma ad";
+"tr2-Ia-imu.text" = "Takma isim";
 
 /* Class = "UINavigationItem"; title = "Location"; ObjectID = "uA6-FU-2ms"; */
-"uA6-FU-2ms.title" = "Yer";
+"uA6-FU-2ms.title" = "Konum";
 
 /* Class = "UILabel"; text = "X contacts"; ObjectID = "uT9-uH-vrD"; */
-"uT9-uH-vrD.text" = "X Kişi";
+"uT9-uH-vrD.text" = "X kişi";
 
 /* Class = "UINavigationItem"; title = "Preview"; ObjectID = "wPu-F7-kf1"; */
 "wPu-F7-kf1.title" = "Ön izleme";
 
 /* Class = "UILabel"; text = "Invite a Friend"; ObjectID = "xRZ-tM-3dS"; */
-"xRZ-tM-3dS.text" = "Bir arkadaş davet et";
+"xRZ-tM-3dS.text" = "Arkadaşınızı davet edin";
 
 /* Class = "UILabel"; text = "Sent"; ObjectID = "yWO-wH-mIW"; */
-"yWO-wH-mIW.text" = "Gönderilen";
+"yWO-wH-mIW.text" = "Gönderildi";
 
 /* Class = "UILabel"; text = "You don't have any contacts. Turn on synchronization, or add contacts manually using the + button."; ObjectID = "zFq-Zo-ECJ"; */
-"zFq-Zo-ECJ.text" = "Hiç kişiniz yok. Senkronizasyonu açın veya + düğmesini kullanarak kişileri manuel olarak ekleyin.";
+"zFq-Zo-ECJ.text" = "Henüz hiç kişiniz yok. Eşitlemeyi açın veya + düğmesini kullanarak kişileri manuel olarak ekleyin.";
 
 /* Class = "UILabel"; text = "Enter ID manually"; ObjectID = "zYA-qz-iwe"; */
 "zYA-qz-iwe.text" = "Kimliği manuel olarak girin";

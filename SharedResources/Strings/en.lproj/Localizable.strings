@@ -1101,6 +1101,9 @@ When using Threema Safe, your can restore your Threema ID, contacts ,and groups 
 
 "settings_advanced_flush_message_queue" = "Flush Message Queue";
 "settings_advanced_orphaned_files_cleanup" = "Delete Orphaned Files";
+"settings_advanced_reregister_push_notifications_header_title" = "Push Notifications";
+"settings_advanced_reregister_push_notifications_footer_title" = "If incoming messages do not show up outside of the app as notifications, you can reregister for notifications.";
+"settings_advanced_reregister_notifications_label" = "Reregister Push Notifications";
 
 // Dev Mode
 "settings_devmode_quote_v2" = "Quote V2";

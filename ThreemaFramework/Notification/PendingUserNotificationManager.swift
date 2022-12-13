@@ -39,6 +39,8 @@ public protocol PendingUserNotificationManagerProtocol {
     ) -> PendingUserNotification?
     func pendingUserNotification(for baseMessage: BaseMessage, fromIdentity: String, stage: UserNotificationStage)
         -> PendingUserNotification?
+    func pendingUserNotification(for boxedMessage: BoxedMessage, stage: UserNotificationStage)
+        -> PendingUserNotification?
     func startTimedUserNotification(pendingUserNotification: PendingUserNotification) -> Guarantee<Bool>
     func startTestUserNotification(payload: [AnyHashable: Any], completion: @escaping () -> Void)
     func editThreemaWebNotification(
@@ -55,7 +57,7 @@ public protocol PendingUserNotificationManagerProtocol {
 }
 
 public class PendingUserNotificationManager: NSObject, PendingUserNotificationManagerProtocol {
-    
+
     private let userNotificationManager: UserNotificationManagerProtocol
     private let userNotificationCenterManager: UserNotificationCenterManagerProtocol
     private let entityManager: EntityManager
@@ -154,6 +156,22 @@ public class PendingUserNotificationManager: NSObject, PendingUserNotificationMa
         return pendingUserNotification
     }
     
+    public func pendingUserNotification(
+        for boxedMessage: BoxedMessage,
+        stage: UserNotificationStage
+    ) -> PendingUserNotification? {
+        var pendingUserNotification: PendingUserNotification?
+        if let key = key(boxedMessage.fromIdentity, boxedMessage.messageID) {
+            PendingUserNotificationManager.pendingQueue.sync {
+                pendingUserNotification = getPendingUserNotification(key: key)
+                pendingUserNotification?.stage = stage
+                pendingUserNotification?.isPendingGroup = false
+                PendingUserNotificationManager.savePendingUserNotifications()
+            }
+        }
+        return pendingUserNotification
+    }
+
     /// Start timed notification for incoming message.
     /// - Parameter pendingUserNotification: Informations about incoming message
     /// - Returns: True pending user notification successfully processed, showed or suppressed notification

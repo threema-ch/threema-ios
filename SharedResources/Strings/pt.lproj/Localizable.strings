@@ -652,14 +652,17 @@
 "new_message_no_access_title" = "Novas mensagens";
 "new_message_no_access_message" = "Abra o %@ para obter as mensagens recebidas.";
 "new_message_invalid_license" = "Sua licença expirou. Abra o app para continuar.";
+"new_message_db_requires_migration" = "É necessária uma migração de banco de dados. Abra o aplicativo para continuar.";
 
 /* reminder messages */
-"push_reminder_title" = "Notificações push não ativadas";
-"push_reminder_message" = "Parece que o %@ não tem permissão para lhe enviar notificações push. Você não será informado(a) de novas mensagens quando o %@ estiver fechado. Vá até os Ajustes do iOS > Notificações e ative as notificações para o %@ para não perder nenhuma mensagem.";
-"not_now" = "Não agora";
-"set_now" = "Definir agora";
+"push_reminder_title" = "Notificações não ativadas";
+"push_reminder_message" = "Você não será informado sobre novas mensagens ou chamadas recebidas quando %@ estiver fechado.
 
-"updating_database" = "Atualizando banco de dados...\n\nPor favor, não interrompa esta operação! Pode levar alguns minutos para banco de dados com mensagens grandes.";
+Para corrigir isso, acesse os Ajustes do Sistema e ative as Notificações para %@.";
+"push_reminder_not_now" = "Não me lembrar novamente";
+"push_reminder_set_now" = "Ativar notificações";
+
+"updating_database" = "Atualizando banco de dados…\n\nMantenha o Threema rodando em primeiro plano até a conclusão.\n\nIsso pode levar vários minutos se você tiver um histórico de bate-papo grande.";
 "database_migration_error_hints" = "Por favor, assegure que você tem memória disponível suficiente em seu aparelho, reinicie-o e tente novamente.";
 "database_migration_storage_warning_title" = "Memória disponível insuficiente";
 "database_migration_storage_warning_message" = "A atualização do banco de dados temporariamente necessita de %.1f GB de memória disponível. Seu aparelho atualmente tem somente %.1f GB disponíveis. Libere mais espaço excluindo itens nas Configurações de Uso e tente novamente.";
@@ -834,6 +837,7 @@
 "privateChat_code_alert_confirm" = "Definir agora";
 "privateChat_set_alert_title" = "Deseja marcar este bate-papo como privado?";
 "privateChat_set_alert_message" = "Você pode alternar a visibilidade dos bate-papos privados nas configurações de Privacidade.";
+"privateChat_setup_alert_message" = "Seu backup do Threema Safe continha bate-papos privados. Você deve definir uma senha para acessá-los.";
 "hide_private_toggle" = "Ocultar bate-papos privados";
 "privacy_footer" = "Oculta todos os bate-papos privados na visão geral do bate-papo. Você precisa definir uma senha para ativar esta configuração.";
 
@@ -1098,6 +1102,9 @@
 
 "settings_advanced_flush_message_queue" = "Liberar Fila de Mensagens";
 "settings_advanced_orphaned_files_cleanup" = "Excluir arquivos órfãos";
+"settings_advanced_reregister_push_notifications_header_title" = "Notificações push";
+"settings_advanced_reregister_push_notifications_footer_title" = "Se as mensagens recebidas não aparecerem fora do aplicativo como notificações, você poderá se registrar novamente para receber notificações.";
+"settings_advanced_reregister_notifications_label" = "Registrar novamente as notificações push";
 
 // Dev Mode
 "settings_devmode_quote_v2" = "Citar V2";
@@ -1225,8 +1232,8 @@ Caso não haja nenhum arquivo (de mídia) faltando no %@, esvazie a lixeira para
 "pasteErrorMessageMessage" = "O item não pôde ser colado devido a um erro desconhecido. Tente novamente.";
 "media_preview_preview_button_accessibility_label" = "Exibir pré-visualização";
 "preview" = "Pré-visualização";
-"could_not_add_all_items_memory_constrained_title" = "Arquivo não processado";
-"could_not_add_all_items_memory_constrained_message" = "Um ou mais arquivos não puderam ser processados devido a limitações técnicas. Tente enviar esses arquivos diretamente de dentro do próprio aplicativo.";
+"could_not_add_all_items_memory_constrained_title" = "Use o aplicativo";
+"could_not_add_all_items_memory_constrained_message" = "Por motivos técnicos, arquivos acima de um determinado tamanho só podem ser enviados no aplicativo.";
 "image_preview_cell_cannot_preview" = "Não é possível exibir a pré-visualização.";
 
 // Share Extension
@@ -1313,11 +1320,11 @@ Caso não haja nenhum arquivo (de mídia) faltando no %@, esvazie a lixeira para
 "multi_device_linked_devices_title" = "Dispositivos vinculados";
 "multi_device_linked_devices_refresh" = "Puxe para atualizar";
 "multi_device_linked_devices_loading_failed" = "Falha ao carregar dispositivos: %@";
-"multi_device_linked_devices_failed_to_load_title" = "Falha ao carregar lista de dispositivos";
+"multi_device_linked_devices_failed_to_load_title" = "Falha ao carregar a lista de dispositivos";
 "multi_device_linked_devices_failed_to_load_message" = "Não foi possível carregar os dispositivos vinculados. Verifique sua conexão com a internet e tente novamente.";
 "multi_device_linked_devices_this" = "Este dispositivo";
 "multi_device_linked_devices_others" = "Outros dispositivos";
-"multi_device_linked_devices_remove_failed" = "Falha ao remover dispositivo: %@";
+"multi_device_linked_devices_remove_failed" = "Falha ao remover o dispositivo: %@";
 "multi_device_linked_devices_failed_remove_title" = "Falha ao remover dispositivo";
 "multi_device_linked_devices_failed_remove_message" = "Não foi possível remover o dispositivo vinculado. Tente novamente.";
 "multi_device_linked_devices_failed_remove_message_2" = "Não foi possível remover dispositivo vinculado. Verifique sua conexão com a internet e tente novamente.";

@@ -240,6 +240,10 @@ import ThreemaFramework
         newToast(title: title, body: body, bannerStyle: .danger)
     }
     
+    @objc class func newSuccessToast(title: String, body: String) {
+        newToast(title: title, body: body, bannerStyle: .success)
+    }
+    
     private class func newToast(title: String, body: String, bannerStyle: BannerStyle) {
         DispatchQueue.main.async {
             let titleFontDescriptor = UIFontDescriptor.preferredFontDescriptor(withTextStyle: .headline)

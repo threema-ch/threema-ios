@@ -128,12 +128,14 @@ static NSMutableOrderedSet *pendingGroupMessages;
                 AbstractMessage *amsg = [MessageDecoder decodeFromBoxed:boxmsg withPublicKey:publicKey];
                 if (amsg == nil) {
                     // Can't process message at this time, try it later
+                    [messageProcessorDelegate incomingMessageFailed:boxmsg];
                     adapter(nil, [ThreemaError threemaError:@"Bad message format or decryption error" withCode:kBadMessageErrorCode]);
                     return;
                 }
 
                 if ([amsg isKindOfClass: [UnknownTypeMessage class]]) {
                     // Can't process message at this time, try it later
+                    [messageProcessorDelegate incomingMessageFailed:boxmsg];
                     adapter(nil, [ThreemaError threemaError:@"Unknown message type" withCode:kUnknownMessageTypeErrorCode]);
                     return;
                 }
@@ -143,6 +145,7 @@ static NSMutableOrderedSet *pendingGroupMessages;
                     DDLogWarn(@"Ignoring message from blocked ID %@", boxmsg.fromIdentity);
 
                     // Do not process message, send server ack
+                    [messageProcessorDelegate incomingMessageFailed:boxmsg];
                     adapter(nil, nil);
                     return;
                 }
@@ -157,6 +160,7 @@ static NSMutableOrderedSet *pendingGroupMessages;
                     }
 
                     // Do not process message, send server ack
+                    [messageProcessorDelegate incomingMessageFailed:boxmsg];
                     adapter(nil, nil);
                     return;
                 } else {
@@ -169,6 +173,7 @@ static NSMutableOrderedSet *pendingGroupMessages;
                         }
 
                         // Do not process message, send server ack
+                        [messageProcessorDelegate incomingMessageFailed:boxmsg];
                         adapter(nil, nil);
                         return;
                     } else {
@@ -181,6 +186,7 @@ static NSMutableOrderedSet *pendingGroupMessages;
                             }
 
                             // Do not process message, send server ack
+                            [messageProcessorDelegate incomingMessageFailed:boxmsg];
                             adapter(nil, nil);
                             return;
                         } else {

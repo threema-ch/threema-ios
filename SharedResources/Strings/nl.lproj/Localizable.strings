@@ -652,14 +652,17 @@
 "new_message_no_access_title" = "Nieuwe berichten";
 "new_message_no_access_message" = "Open %@ om binnenkomende berichten op te halen.";
 "new_message_invalid_license" = "Je licentie is verlopen. Open de app om door te gaan.";
+"new_message_db_requires_migration" = "Er is een database migratie vereist, open de app om door te gaan.";
 
 /* reminder messages */
-"push_reminder_title" = "Pushberichten niet ingeschakeld";
-"push_reminder_message" = "Zo te zien heeft %@ geen toestemming om u push-meldingen te sturen. U ontvangt geen meldingen voor berichten wanneer %@ is uitgeschakeld. Ga naar iOS Instellingen > Berichten en schakel meldingen in voor %@ om nooit een bericht te missen.";
-"not_now" = "Niet nu";
-"set_now" = "Instellen";
+"push_reminder_title" = "Meldingen zijn niet ingeschakeld";
+"push_reminder_message" = "U ontvangt geen meldingen voor berichten of inkomende gesprekken  wanneer %@ is uitgeschakeld. 
 
-"updating_database" = "Database bijwerken...\n\nOnderbreek deze handeling niet! Als de database erg groot is, kan kan het een paar minuten.";
+Ga naar de systeeminstellingen en schakel meldingen in voor %@ om dit op te lossen.";
+"push_reminder_not_now" = "Herinner me er niet opnieuw aan";
+"push_reminder_set_now" = "Meldingen inschakelen";
+
+"updating_database" = "Database wordt bijgewerkt...\n\nZorg ervoor dat Threema actief is op de voorgrond totdat het proces is voltooid.\n\nAls u een grote chatgeschiedenis hebt, kan dit een paar minuten duren.";
 "database_migration_error_hints" = "Zorg ervoor dat je genoeg vrije opslagruimte op je apparaat hebt, herstart je apparaat en probeer het opnieuw.";
 "database_migration_storage_warning_title" = "Niet genoeg beschikbare opslagruimte";
 "database_migration_storage_warning_message" = "Het bijwerken van de database kost tijdelijk ten minste %.1f GB aan beschikbare opslagruimte. Je apparaat heeft momenteel slechts %.1f GB beschikbaar. Maak meer opslagruimte vrij door zaken te verwijderen via Gebruiksinstellingen en probeer het opnieuw.";
@@ -834,6 +837,7 @@
 "privateChat_code_alert_confirm" = "Instellen";
 "privateChat_set_alert_title" = "Wil je deze chat aanmerken als privé?";
 "privateChat_set_alert_message" = "Je kunt de zichtbaarheid van privéchats in- en uitschakelen via de Privacy-instellingen.";
+"privateChat_setup_alert_message" = "Uw Threema Safe back-up bevat privéchats, u moet een wachtwoord instellen om toegang te krijgen.";
 "hide_private_toggle" = "Privéchats verbergen";
 "privacy_footer" = "Dit verbergt alle privéchats in het chatoverzicht. Je moet een beveiligingscode instellen om deze optie te activeren.";
 
@@ -1098,6 +1102,9 @@
 
 "settings_advanced_flush_message_queue" = "Berichtenwachtrij leegmaken";
 "settings_advanced_orphaned_files_cleanup" = "Zwevende bestanden verwijderen";
+"settings_advanced_reregister_push_notifications_header_title" = "Pushberichten";
+"settings_advanced_reregister_push_notifications_footer_title" = "Indien inkomende berichten niet buiten de app als meldingen worden getoond, kunt u zich opnieuw voor meldingen registreren.";
+"settings_advanced_reregister_notifications_label" = "Pushmeldingen opnieuw registreren";
 
 // Dev Mode
 "settings_devmode_quote_v2" = "Quote V2";
@@ -1225,8 +1232,8 @@ Als er geen (media)bestanden in %@ ontbreken, maak de prullenbak dan leeg om de 
 "pasteErrorMessageMessage" = "Item kon niet worden geplakt vanwege een onbekende fout. Probeer het opnieuw.";
 "media_preview_preview_button_accessibility_label" = "Voorbeeld weergeven";
 "preview" = "Voorbeeld";
-"could_not_add_all_items_memory_constrained_title" = "Bestand niet verwerkt";
-"could_not_add_all_items_memory_constrained_message" = "Een of meer bestanden konden vanwege technische beperkingen niet worden verwerkt. Probeer dit/deze bestand(en) rechtstreeks via de app zelf te verzenden.";
+"could_not_add_all_items_memory_constrained_title" = "Gelieve de app te gebruiken";
+"could_not_add_all_items_memory_constrained_message" = "Omwille van technische redenen kunnen bestanden boven een bepaalde grootte alleen in de app worden verzonden.";
 "image_preview_cell_cannot_preview" = "Kan voorbeeld niet weergeven.";
 
 // Share Extension
@@ -1313,14 +1320,14 @@ Als er geen (media)bestanden in %@ ontbreken, maak de prullenbak dan leeg om de 
 "multi_device_linked_devices_title" = "Gekoppelde apparaten";
 "multi_device_linked_devices_refresh" = "Vegen om te verversen";
 "multi_device_linked_devices_loading_failed" = "Apparaten niet geladen: %@";
-"multi_device_linked_devices_failed_to_load_title" = "Apparatenlijst niet geladen";
-"multi_device_linked_devices_failed_to_load_message" = "Kon de gekoppelde apparaten niet laden. Controleer je internetverbinding en probeer het opnieuw.";
-"multi_device_linked_devices_this" = "Deze apparaten";
+"multi_device_linked_devices_failed_to_load_title" = "Apparatenlijst is niet geladen";
+"multi_device_linked_devices_failed_to_load_message" = "De gekoppelde apparaten zijn niet geladen. Controleer uw internetverbinding en probeer het opnieuw.";
+"multi_device_linked_devices_this" = "Dit apparaat";
 "multi_device_linked_devices_others" = "Overige apparaten";
-"multi_device_linked_devices_remove_failed" = "Apparaat niet verwijderd: %@";
-"multi_device_linked_devices_failed_remove_title" = "Apparaat niet verwijderd";
+"multi_device_linked_devices_remove_failed" = "Apparaat is niet verwijderd: %@";
+"multi_device_linked_devices_failed_remove_title" = "Apparaat is niet verwijderd";
 "multi_device_linked_devices_failed_remove_message" = "Het gekoppelde apparaat is niet verwijderd. Probeer het opnieuw.";
-"multi_device_linked_devices_failed_remove_message_2" = "Het gekoppelde apparaat is niet verwijderd. Controleer je internetverbinding en probeer het opnieuw.";
+"multi_device_linked_devices_failed_remove_message_2" = "Het gekoppelde apparaat is niet verwijderd. Controleer uw internetverbinding en probeer het opnieuw.";
 
 "myprofile_link_email_phone_footer" = "Als je je e-mailadres of telefoonnummer aan je ID koppelt, kunnen anderen je automatisch op %@ vinden als je in hun adresboek staat.";
 "myprofile_link_email_footer" = "Als je je e-mailadres aan je ID koppelt, kunnen anderen je automatisch op %@ vinden als je e-mailadres in hun adresboek staat.";

@@ -23,9 +23,6 @@ import XCTest
 
 class PendingUserNotificationManagerTests: XCTestCase {
 
-//    private var databaseCnx: DatabaseContext!
-//    private var databasePreparer: DatabasePreparer!
-
     override func setUpWithError() throws {
         // Necessary for ValidationLogger
         AppGroup.setGroupID("group.ch.threema") // THREEMA_GROUP_IDENTIFIER @"group.ch.threema"
@@ -34,10 +31,6 @@ class PendingUserNotificationManagerTests: XCTestCase {
         FileUtility.delete(at: URL(fileURLWithPath: PendingUserNotificationManager.pathProcessedUserNotifications))
         
         PendingUserNotificationManager.clear()
-
-//        let (_, objCnx) = DatabasePersistentContext.devNullContext()
-//        databaseCnx = DatabaseContext(objectContext: objCnx)
-//        databasePreparer = DatabasePreparer(context: objCnx)
     }
     
     func testPendingUserNotificationAbstractMessage() throws {

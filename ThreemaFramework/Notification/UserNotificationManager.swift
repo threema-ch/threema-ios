@@ -288,7 +288,9 @@ public class UserNotificationManager: UserNotificationManagerProtocol {
         to.title = from.title ?? ""
         to.body = from.body ?? ""
         
-        if isPrivate(content: from) {
+        let isPrivate = isPrivate(content: from)
+        
+        if isPrivate {
             to.title = BundleUtil.localizedString(forKey: "private_message_label")
             to.body = ""
         }
@@ -297,7 +299,7 @@ public class UserNotificationManager: UserNotificationManagerProtocol {
             to.sound = UNNotificationSound(named: UNNotificationSoundName(rawValue: "\(pushSound).caf"))
         }
         
-        if let attachmentName = from.attachmentName, let attachmentURL = from.attachmentURL {
+        if !isPrivate, let attachmentName = from.attachmentName, let attachmentURL = from.attachmentURL {
             if let attachment = try? UNNotificationAttachment(
                 identifier: attachmentName,
                 url: attachmentURL,

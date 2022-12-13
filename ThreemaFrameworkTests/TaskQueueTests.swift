@@ -55,7 +55,7 @@ class TaskQueueTests: XCTestCase {
         let msg = BoxTextMessage()
         msg.messageID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.messageIDLength)
 
-        let task = TaskDefinitionSendAbstractMessage(message: msg, isPersistent: false)
+        let task = TaskDefinitionSendAbstractMessage(message: msg, doOnlyReflect: false, isPersistent: false)
 
         let tq = TaskQueue(
             queueType: .outgoing,
@@ -133,7 +133,7 @@ class TaskQueueTests: XCTestCase {
 
         let expec = expectation(description: "spool")
 
-        let task = TaskDefinitionSendAbstractMessage(message: message, isPersistent: false)
+        let task = TaskDefinitionSendAbstractMessage(message: message, doOnlyReflect: false, isPersistent: false)
         try? tq.enqueue(task: task) { _, error in
             XCTAssertNil(error)
             DDLog.flushLog()
@@ -294,7 +294,7 @@ class TaskQueueTests: XCTestCase {
 
             let expec = expectation(description: "spool")
 
-            let task = TaskDefinitionSendAbstractMessage(message: message, isPersistent: false)
+            let task = TaskDefinitionSendAbstractMessage(message: message, doOnlyReflect: false, isPersistent: false)
             task.retry = test[0] as! Bool
 
             try? tq.enqueue(task: task) { _, error in

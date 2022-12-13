@@ -55,6 +55,7 @@ class TaskExecutionReceiveMessage: TaskExecution, TaskExecutionProtocol {
                     processedMsg,
                     TaskDefinitionSendAbstractMessage(
                         message: processedMsg,
+                        doOnlyReflect: true,
                         isPersistent: false
                     )
                 )

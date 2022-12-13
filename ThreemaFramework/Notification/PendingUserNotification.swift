@@ -59,7 +59,7 @@ public class PendingUserNotification: NSObject, NSCoding {
             of: [ThreemaPushNotification.self],
             forKey: Keys.threemaPushNotification
         ) as? ThreemaPushNotification
-        self.abstractMessage = coder.decodeObject(
+        self.abstractMessage = try? coder.decodeTopLevelObject(
             of: [AbstractMessage.self],
             forKey: Keys.abstractMessage
         ) as? AbstractMessage

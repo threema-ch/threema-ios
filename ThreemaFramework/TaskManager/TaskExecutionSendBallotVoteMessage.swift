@@ -55,7 +55,7 @@ class TaskExecutionSendBallotVoteMessage: TaskExecution, TaskExecutionProtocol {
                     }
                     else {
                         guard let contact = conversation.contact else {
-                            seal.reject(TaskExecutionError.createAbsractMessageFailed)
+                            seal.reject(TaskExecutionError.messageReceiverBlockedOrUnknown)
                             return
                         }
                         identity = contact.identity
@@ -82,115 +82,116 @@ class TaskExecutionSendBallotVoteMessage: TaskExecution, TaskExecutionProtocol {
 
                 seal.fulfill_()
             }
-        }.then { _ -> Promise<Data?> in
+        }
+        .then { _ -> Promise<[Promise<AbstractMessage?>]> in
+            // Send CSP (group) message(s)
             Promise { seal in
+                var sendMessages = [Promise<AbstractMessage?>]()
+
                 self.frameworkInjector.backgroundEntityManager.performBlockAndWait {
                     if task.isGroupMessage {
                         // Do not send message for note group
                         if task.isNoteGroup ?? false {
-                            seal.fulfill(nil)
+                            task.sendContactProfilePicture = false
                         }
                         else if let allGroupMembers = task.allGroupMembers {
                             for member in allGroupMembers {
-                                if member != self.frameworkInjector.myIdentityStore.identity,
-                                   let msg = self.getAbstractMessage(
-                                       task,
-                                       self.frameworkInjector.myIdentityStore.identity,
-                                       member
-                                   ) {
-
-                                    if self.frameworkInjector.userSettings.blacklist.contains(member) {
-                                        continue
-                                    }
-                                   
-                                    if let identity = task.groupCreatorIdentity,
-                                       !self.canSendGroupMessageToGatewayID(
-                                           groupCreatorIdentity: identity,
-                                           groupName: task.groupName,
-                                           message: msg
-                                       ) {
-                                        continue
-                                    }
-
-                                    do {
-                                        try self.sendMessage(
-                                            message: msg,
-                                            ltSend: self.taskContext.logSendMessageToChat,
-                                            ltAck: self.taskContext.logReceiveMessageAckFromChat
-                                        )
-                                    }
-                                    catch {
-                                        seal.reject(error)
-                                        return
-                                    }
-
-                                    if let sendContactProfilePicture = task.sendContactProfilePicture,
-                                       sendContactProfilePicture {
-                                        // TODO: Inject for testing
-                                        ContactPhotoSender(self.frameworkInjector.backgroundEntityManager)
-                                            .sendProfilePicture(msg)
-                                    }
-                                    seal.fulfill(msg.messageID)
+                                if member == self.frameworkInjector.myIdentityStore.identity {
+                                    continue
                                 }
-                            }
-                        }
-                        else {
-                            DDLogError("No members for group message")
-                            seal.reject(TaskExecutionError.missingGroupInformation)
-                        }
-                    }
-                    else {
-                        if let conversation = self.getConversation(task),
-                           let contactIdentity = conversation.contact?.identity,
-                           contactIdentity != self.frameworkInjector.myIdentityStore.identity,
-                           !self.frameworkInjector.userSettings.blacklist.contains(contactIdentity) {
 
-                            if let msg = self.getAbstractMessage(
-                                task,
-                                self.frameworkInjector.myIdentityStore.identity,
-                                contactIdentity
-                            ) {
+                                if self.frameworkInjector.userSettings.blacklist.contains(member) {
+                                    continue
+                                }
 
-                                do {
-                                    try self.sendMessage(
+                                guard let msg = self.getAbstractMessage(
+                                    task,
+                                    self.frameworkInjector.myIdentityStore.identity,
+                                    member
+                                ) else {
+                                    seal.reject(TaskExecutionError.createAbsractMessageFailed)
+                                    return
+                                }
+
+                                if let identity = task.groupCreatorIdentity,
+                                   !self.canSendGroupMessageToGatewayID(
+                                       groupCreatorIdentity: identity,
+                                       groupName: task.groupName,
+                                       message: msg
+                                   ) {
+                                    continue
+                                }
+
+                                sendMessages.append(
+                                    self.sendMessage(
                                         message: msg,
                                         ltSend: self.taskContext.logSendMessageToChat,
                                         ltAck: self.taskContext.logReceiveMessageAckFromChat
                                     )
-                                }
-                                catch {
-                                    seal.reject(error)
-                                    return
-                                }
-
-                                if let sendContactProfilePicture = task.sendContactProfilePicture,
-                                   sendContactProfilePicture {
-                                    // TODO: Inject for testing
-                                    ContactPhotoSender(self.frameworkInjector.backgroundEntityManager)
-                                        .sendProfilePicture(msg)
-                                }
-                                seal.fulfill(msg.messageID)
-                            }
-                            else {
-                                seal.reject(TaskExecutionError.createAbsractMessageFailed)
-                                return
+                                )
                             }
                         }
                         else {
-                            seal.reject(TaskExecutionError.sendMessageFailed(message: "(unknown receiver)"))
+                            DDLogError("No members for group message")
+                        }
+                    }
+                    else {
+                        guard let conversation = self.getConversation(task),
+                              let contactIdentity = conversation.contact?.identity,
+                              contactIdentity != self.frameworkInjector.myIdentityStore.identity,
+                              !self.frameworkInjector.userSettings.blacklist.contains(contactIdentity)
+                        else {
+                            seal.reject(TaskExecutionError.messageReceiverBlockedOrUnknown)
                             return
                         }
+
+                        guard let msg = self.getAbstractMessage(
+                            task,
+                            self.frameworkInjector.myIdentityStore.identity,
+                            contactIdentity
+                        )
+                        else {
+                            seal.reject(TaskExecutionError.createAbsractMessageFailed)
+                            return
+                        }
+
+                        sendMessages.append(
+                            self.sendMessage(
+                                message: msg,
+                                ltSend: self.taskContext.logSendMessageToChat,
+                                ltAck: self.taskContext.logReceiveMessageAckFromChat
+                            )
+                        )
+                    }
+
+                    seal.fulfill(sendMessages)
+                }
+            }
+        }
+        .then { sendMessages -> Promise<[AbstractMessage?]> in
+            // Send messages parallel
+            when(fulfilled: sendMessages)
+                .then { sentMessages -> Promise<[AbstractMessage?]> in
+                    Promise { $0.fulfill(sentMessages) }
+                }
+        }
+        .then { sentMessages -> Promise<Void> in
+            for sentMessage in sentMessages.filter({ msg in
+                msg != nil
+            }) {
+                // Send profile picture to all message receiver
+                if let sentMessage = sentMessage,
+                   let sendContactProfilePicture = task.sendContactProfilePicture,
+                   sendContactProfilePicture {
+                    // TODO: Inject for testing
+                    self.frameworkInjector.backgroundEntityManager.performBlockAndWait {
+                        ContactPhotoSender(self.frameworkInjector.backgroundEntityManager)
+                            .sendProfilePicture(sentMessage)
                     }
                 }
             }
-        }.then { messageID -> Promise<Void> in
-            Promise { seal in
-                if let messageID = messageID {
-                    self.frameworkInjector.backgroundEntityManager.markMessageAsSent(messageID)
-                }
-                
-                seal.fulfill_()
-            }
+
+            return Promise()
         }
     }
 }

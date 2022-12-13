@@ -1094,7 +1094,9 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
                 for (CNContainer *container in containers) {
                     NSPredicate *predicate = [CNContact predicateForContactsInContainerWithIdentifier:container.identifier];
                     NSArray *cnContacts = [cnAddressBook unifiedContactsMatchingPredicate:predicate keysToFetch:kCNContactKeys error:&error];
-                    [allCNContacts addObjectsFromArray:cnContacts];
+                    if (cnContacts != nil) {
+                        [allCNContacts addObjectsFromArray:cnContacts];
+                    }
                 }
                 
                 [self processAddressBookContacts:allCNContacts fullServerSync:fullServerSync ignoreMinimumInterval:ignoreMinimumInterval onCompletion:onCompletion onError:onError];

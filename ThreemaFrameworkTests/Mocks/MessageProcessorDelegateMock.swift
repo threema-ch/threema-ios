@@ -42,6 +42,10 @@ class MessageProcessorDelegateMock: NSObject, MessageProcessorDelegate {
         // no-op
     }
 
+    func incomingMessageFailed(_ message: BoxedMessage) {
+        // no-op
+    }
+
     func taskQueueEmpty(_ queueTypeName: String) {
         // no-op
     }

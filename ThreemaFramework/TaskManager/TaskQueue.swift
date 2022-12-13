@@ -187,6 +187,14 @@ class TaskQueue {
                             
                             self.done(item: item)
                         }
+                        else if case TaskExecutionError.createAbsractMessageFailed = error {
+                            DDLogError("Task \(item.taskDefinition) outgoing message failed: \(error)")
+                            self.done(item: item)
+                        }
+                        else if case TaskExecutionError.messageReceiverBlockedOrUnknown = error {
+                            DDLogError("Task \(item.taskDefinition) outgoing message failed: \(error)")
+                            self.done(item: item)
+                        }
                         else if let transactionError = error as? TaskExecutionTransactionError,
                                 transactionError == .shouldSkip {
                             DDLogNotice("Task \(item.taskDefinition) skipped")

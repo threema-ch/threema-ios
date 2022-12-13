@@ -418,7 +418,11 @@ import ThreemaFramework
             
             for item in conversations {
                 guard let conversation = item as? Conversation,
-                      let group = self.groupManager.getGroup(conversation: conversation)
+                      let groupID = conversation.groupID,
+                      let group = self.groupManager.getGroup(
+                          groupID,
+                          creator: conversation.contact?.identity ?? MyIdentityStore.shared().identity
+                      )
                 else {
                     continue
                 }

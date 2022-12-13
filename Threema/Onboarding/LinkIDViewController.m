@@ -157,7 +157,9 @@
     NSMutableArray *codes = [NSMutableArray array];
     _country2Region = [NSMutableDictionary dictionary];
     
-    [NBMetadataHelper.CCode2CNMap enumerateKeysAndObjectsUsingBlock:^(id  _Nonnull key, id  _Nonnull obj, BOOL * _Nonnull stop) {
+    NBMetadataHelper *metadataHelper = [[NBMetadataHelper alloc] init];
+    
+    [[metadataHelper countryCodeToCountryNumberDictionary] enumerateKeysAndObjectsUsingBlock:^(id  _Nonnull key, id  _Nonnull obj, BOOL * _Nonnull stop) {
         NSString *countryName = [self countryNameForRegion:key];
         if (countryName) {
             [countries addObject:countryName];
@@ -441,8 +443,9 @@
 
 - (NSString *)codeForCountry:(NSString *)countryName {
     NSString *region = [_country2Region objectForKey:countryName];
+    NBMetadataHelper *metadataHelper = [[NBMetadataHelper alloc] init];
     
-    NSString *code = [NBMetadataHelper.CCode2CNMap objectForKey:region];
+    NSString *code = [[metadataHelper countryCodeToCountryNumberDictionary] objectForKey:region];
     return [NSString stringWithFormat:@"+%@", code];
 }
 

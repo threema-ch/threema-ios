@@ -943,7 +943,7 @@ extension ConversationsViewController {
             return
         }
         
-        if oldChatViewController.conversation.conversationCategory == .private {
+        if oldChatViewController.isPrivateConversation() {
             self.oldChatViewController = oldChatViewController
             
             lockScreen.presentLockScreenView(viewController: self) {

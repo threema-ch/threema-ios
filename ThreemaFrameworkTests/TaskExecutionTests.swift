@@ -99,7 +99,7 @@ class TaskExecutionTests: XCTestCase {
         msg2.toIdentity = expectedToIdentity2
         msg2.text = "Test message 1"
 
-        let task = TaskDefinitionSendAbstractMessage(message: msg1, isPersistent: false)
+        let task = TaskDefinitionSendAbstractMessage(message: msg1, doOnlyReflect: false, isPersistent: false)
         task.messageAlreadySentTo.append(expectedToIdentity1)
 
         let taskExecution = TaskExecution(
@@ -175,7 +175,7 @@ class TaskExecutionTests: XCTestCase {
         msg2.toIdentity = expectedToIdentity2
         msg2.text = "Test message 1"
 
-        let task = TaskDefinitionSendAbstractMessage(message: msg1, isPersistent: false)
+        let task = TaskDefinitionSendAbstractMessage(message: msg1, doOnlyReflect: false, isPersistent: false)
 
         let taskExecution = TaskExecution(
             taskContext: cnx,
@@ -242,7 +242,7 @@ class TaskExecutionTests: XCTestCase {
         msg2.toIdentity = "TESTER02"
         msg2.text = "Test message 2"
 
-        let task = TaskDefinitionSendAbstractMessage(message: msg1, isPersistent: false)
+        let task = TaskDefinitionSendAbstractMessage(message: msg1, doOnlyReflect: false, isPersistent: false)
 
         let taskExecution = TaskExecution(
             taskContext: cnx,

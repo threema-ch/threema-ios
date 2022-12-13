@@ -194,7 +194,7 @@
 
 + (void)sendMessage:(AbstractMessage *)message onCompletion:(void (^)(void))onCompletion {
     TaskManager *tm = [[TaskManager alloc] init];
-    [tm addObjcWithTaskDefinition: [[TaskDefinitionSendAbstractMessage alloc] initWithMessage:message isPersistent:NO] completionHandler:^(__unused TaskDefinition * task, __unused NSError * error) {
+    [tm addObjcWithTaskDefinition: [[TaskDefinitionSendAbstractMessage alloc] initWithMessage:message doOnlyReflect:NO isPersistent:NO] completionHandler:^(__unused TaskDefinition * task, __unused NSError * error) {
         if (onCompletion != nil) {
             onCompletion();
         }
@@ -286,7 +286,7 @@
     typingIndicatorMessage.typing = typing;
     typingIndicatorMessage.toIdentity = identity;
     
-    TaskDefinitionSendAbstractMessage *task = [[TaskDefinitionSendAbstractMessage alloc] initWithMessage:typingIndicatorMessage isPersistent:NO];
+    TaskDefinitionSendAbstractMessage *task = [[TaskDefinitionSendAbstractMessage alloc] initWithMessage:typingIndicatorMessage doOnlyReflect:NO isPersistent:NO];
     TaskManager *tm = [[TaskManager alloc] init];
     [tm addObjcWithTaskDefinition:task];
 }

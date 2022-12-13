@@ -136,6 +136,10 @@ extension MediatorMessageProcessorTests: MessageProcessorDelegate {
     
     func incomingMessageFinished(_ message: AbstractMessage, isPendingGroup: Bool) { }
     
+    func incomingMessageFailed(_ message: BoxedMessage) {
+        // no-op
+    }
+
     func outgoingMessageFinished(_ message: AbstractMessage) { }
 
     func taskQueueEmpty(_ queueTypeName: String) { }

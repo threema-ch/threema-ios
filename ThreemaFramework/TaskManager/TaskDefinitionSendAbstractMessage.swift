@@ -47,7 +47,7 @@ import Foundation
     override var description: String {
         "<\(type(of: self)) \(message.loggingDescription)>"
     }
-    
+
     var message: AbstractMessage!
     private var messageData: Data?
 
@@ -55,17 +55,20 @@ import Foundation
         DispatchQueue(label: "ch.threema.TaskDefinitionSendAbstractMessage.messageAlreadySentToQueue")
     var messageAlreadySentTo = [String]()
 
+    var doOnlyReflect = false
+
     private enum CodingKeys: String, CodingKey {
-        case messageData, messageAlreadySentTo
+        case messageData, messageAlreadySentTo, doOnlyReflect
     }
 
-    @objc init(message: AbstractMessage, isPersistent: Bool) {
+    @objc init(message: AbstractMessage, doOnlyReflect: Bool, isPersistent: Bool) {
         super.init(isPersistent: isPersistent)
+        self.doOnlyReflect = doOnlyReflect
         self.message = message
     }
     
     @objc convenience init(message: AbstractMessage) {
-        self.init(message: message, isPersistent: true)
+        self.init(message: message, doOnlyReflect: false, isPersistent: true)
     }
     
     required init(from decoder: Decoder) throws {
@@ -86,6 +89,7 @@ import Foundation
                 self.messageAlreadySentTo = []
             }
         }
+        self.doOnlyReflect = try container.decode(Bool.self, forKey: .doOnlyReflect)
     }
 
     override func encode(to encoder: Encoder) throws {
@@ -106,7 +110,8 @@ import Foundation
                 // no-op
             }
         }
-        
+        try container.encode(doOnlyReflect, forKey: .doOnlyReflect)
+
         let superencoder = container.superEncoder()
         try super.encode(to: superencoder)
     }

@@ -1,15 +1,15 @@
 /* Localized versions of Info.plist keys */
 
-"New message" = "Yeni Mesaj";
-"Scan QR code" = "QR kodunu tara";
-"My ID" = "Benim profilim";
+"New message" = "Yeni mesaj";
+"Scan QR code" = "Kare kodunu tara";
+"My ID" = "Profilim";
 
-"NSCameraUsageDescription" = "Fotoğraf veya video çekip sohbete gönderdiğinizde ve QR kodlarını taramak için kameranız kullanılır.";
-"NSContactsUsageDescription" = "Kişiler, senkronizasyon açıkken diğer Threema kullanıcılarını bulmak için kullanılır. Telefon numaraları ve e-posta adreslerinin karmaları bu amaçla bir Threema sunucusuna yüklenecektir. Bu bilgiler sunucularda depolanmaz.";
-"NSLocationWhenInUseUsageDescription" = "Konumunuz, sohbette gönderdiğinizde ve harita üzerinde kendi konumunuzu görüntülemek için kullanılır.";
+"NSCameraUsageDescription" = "Bir fotoğraf veya video çekip sohbete gönderdiğinizde, ayrıca kare kodlarını taramak için kameranız kullanılır.";
+"NSContactsUsageDescription" = "Kişiler, eşitleme açıkken diğer Threema kullanıcılarını bulmak için kullanılır. Telefon numaralarının ve e-posta adreslerinin karma değerleri bu amaçla bir Threema sunucusuna yüklenecektir. Bu bilgiler sunucularda saklanmaz.";
+"NSLocationWhenInUseUsageDescription" = "Konumunuz, sohbette gönderdiğinizde ve haritada kendi lokasyonunuzu görüntülemek için kullanılır.";
 "NSMicrophoneUsageDescription" = "Mikrofon sesli mesajları kaydetmek için kullanılır.";
-"NSPhotoLibraryUsageDescription" = "Fotoğraf kitaplığınız, ondan bir resim seçtiğinizde ve bir sohbette gönderdiğinizde kullanılır.";
+"NSPhotoLibraryUsageDescription" = "Fotoğraf kitaplığınız, bir görüntü seçip sohbete gönderdiğinizde kullanılır.";
 /* Explanation why Threema needs the iOS permission to save photos to the "camera roll" (in the user's photo library). */
-"NSPhotoLibraryAddUsageDescription" = "Threema gelen medya dosyalarını otomatik olarak Fotoğraflar uygulamasına kaydedebilir.";
-"NSFaceIDUsageDescription" = "Kodunuzu girmeden Threema’nın kilidini açmak için Face ID’yi kullanabilirsiniz.";
-"NSLocalNetworkUsageDescription" = "Threema, Çağrı bağlantıları için yerel ağı kullanır.";
+"NSPhotoLibraryAddUsageDescription" = "Threema, gelen medya dosyalarını Fotoğraflar uygulamasına otomatik olarak kaydedebilir.";
+"NSFaceIDUsageDescription" = "Threema'nın kilidini açmak için Face ID'yi kullanabilirsiniz.";
+"NSLocalNetworkUsageDescription" = "Threema, aramalar için yerel ağı kullanır.";

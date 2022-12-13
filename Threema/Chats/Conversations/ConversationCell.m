@@ -48,6 +48,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 @property PushSetting *pushSetting;
 @property Group *group;
 @property NSTimer *lastMessageIconsAndDateTimer;
+@property EntityManager *entityManager;
 
 @end
 
@@ -61,6 +62,8 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 
 - (void)awakeFromNib {
     [super awakeFromNib];
+    
+    _entityManager = [[EntityManager alloc] init];
     
     /* very minor adjustment to make base lines of name, date and draft align on Retina displays */
     if ([UIScreen mainScreen].scale == 2.0) {
@@ -178,10 +181,14 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
         return;
     }
     
-    conversation = newConversation;
-    EntityManager *entityManager = [[EntityManager alloc] init];
-    GroupManager *groupManager = [[GroupManager alloc] initWithEntityManager:entityManager];
-    _group = [groupManager getGroupWithConversation:conversation];
+    GroupManager *groupManager = [[GroupManager alloc] initWithEntityManager:_entityManager];
+    Conversation *dbConversation = [[_entityManager entityFetcher] getManagedObjectById:newConversation.objectID];
+    NSString *groupCreator = dbConversation.contact.identity;
+    if (groupCreator == nil) {
+        groupCreator = [[MyIdentityStore sharedMyIdentityStore] identity];
+    }
+    _group = [groupManager getGroup:dbConversation.groupId creator:groupCreator];
+    conversation = dbConversation;
     
     [self updateAllViewsAndReset:true];
 }
@@ -814,9 +821,8 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 
 - (void)avatarChanged:(NSNotification*)notification
 {
-    EntityManager *entityManager = [EntityManager new];
-    [entityManager performBlockAndWait:^{
-        Conversation *dbConversation = [[entityManager entityFetcher] getManagedObjectById:conversation.objectID];
+    [_entityManager performBlockAndWait:^{
+        Conversation *dbConversation = [[_entityManager entityFetcher] getManagedObjectById:conversation.objectID];
         if (dbConversation && notification.object && [dbConversation.contact.identity isEqualToString:notification.object] ) {
             [self updateContactImageAndReset:true];
         }

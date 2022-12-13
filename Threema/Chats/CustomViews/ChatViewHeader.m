@@ -938,17 +938,19 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 }
 
 - (BOOL)needsUpdateAvatarsForNotification:(NSNotification *)notification {
-    if (_conversation.isGroup) {
-        for (Contact *contact in _conversation.members) {
-            if ([contact.identity isEqualToString:notification.object]) {
-                return YES;
+    __block BOOL needsUpdate = NO;
+    [_entityManager performBlockAndWait:^{
+        if (_conversation.isGroup) {
+            for (Contact *contact in _conversation.members) {
+                if ([contact.identity isEqualToString:notification.object]) {
+                    needsUpdate = YES;
+                }
             }
+        } else {
+            needsUpdate = [_conversation.contact.identity isEqualToString:notification.object];
         }
-        
-        return NO;
-    } else {
-        return [_conversation.contact.identity isEqualToString:notification.object];
-    }
+    }];
+    return needsUpdate;
 }
 
 @end

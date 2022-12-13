@@ -965,6 +965,14 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     UNUserNotificationCenter *center = [UNUserNotificationCenter currentNotificationCenter];
     [center requestAuthorizationWithOptions:(UNAuthorizationOptionSound | UNAuthorizationOptionAlert | UNAuthorizationOptionBadge | UNAuthorizationOptionProvidesAppNotificationSettings) completionHandler:^(__unused BOOL granted, NSError * _Nullable error)
      {
+        
+        if (!granted) {
+            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 10 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+                [[ServerConnector sharedServerConnector] removePushToken];
+            });
+            return;
+        }
+        
          if( !error ) {
              dispatch_async(dispatch_get_main_queue(), ^{
                  [[UIApplication sharedApplication] registerForRemoteNotifications];
@@ -1649,9 +1657,12 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     [NSUserDefaults resetStandardUserDefaults];
     [AppGroup resetUserDefaults];
     
-    // Unregister APNS Push Token
     dispatch_async(dispatch_get_main_queue(), ^{
+        // Unregister APNS Push Token
         [[UIApplication sharedApplication] unregisterForRemoteNotifications];
+
+        // Set icon badge for unread message count to 0
+        [[UIApplication sharedApplication] setApplicationIconBadgeNumber:0];
     });
     
     [[KKPasscodeLock sharedLock] disablePasscode];
@@ -1667,7 +1678,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
         
         [mdmSetup deleteThreemaMdm];
     }
-    
+
     UIStoryboard *storyboard = [AppDelegate getMyIdentityStoryboard];
     UIViewController *deleteIdViewControiller = [storyboard instantiateViewControllerWithIdentifier:@"DeleteIdViewController"];
     self.window.rootViewController = deleteIdViewControiller;

@@ -15,7 +15,7 @@
 "nobody" = "誰にもしない";
 "(unknown)" = "(不明)";
 "invalid" = "無効";
-"inactive" = "非アクディブ";
+"inactive" = "非アクティブ";
 
 "status_acknowledged" = "同意した";
 "status_read" = "既読";

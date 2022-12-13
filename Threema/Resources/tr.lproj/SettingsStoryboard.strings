@@ -3,7 +3,7 @@
 "2Ve-Rz-Jab.text" = "Detay";
 
 /* Class = "UILabel"; text = "0.0 (000)"; ObjectID = "2a3-K6-cFL"; */
-"2a3-K6-cFL.text" = "0,0 (000)";
+"2a3-K6-cFL.text" = "0.0 (000)";
 
 /* Class = "UILabel"; text = "Exclusion List"; ObjectID = "5hd-D5-keA"; */
 "5hd-D5-keA.text" = "Hariç listesi";
@@ -15,22 +15,22 @@
 "8hI-GF-46C.text" = "Bağlı";
 
 /* Class = "UITableViewSection"; headerTitle = "Threema Call"; ObjectID = "9Jg-qG-CuX"; */
-"9Jg-qG-CuX.headerTitle" = "Threema Çağrıları";
+"9Jg-qG-CuX.headerTitle" = "Threema aramaları";
 
 /* Class = "UILabel"; text = "Sound name"; ObjectID = "9WQ-EZ-toz"; */
-"9WQ-EZ-toz.text" = "Ses Adı";
+"9WQ-EZ-toz.text" = "Ses adı";
 
 /* Class = "UILabel"; text = "Sound name"; ObjectID = "B1c-wM-V4d"; */
-"B1c-wM-V4d.text" = "Ses Adı";
+"B1c-wM-V4d.text" = "Ses adı";
 
 /* Class = "UINavigationItem"; title = "Privacy"; ObjectID = "BH4-Z9-imt"; */
 "BH4-Z9-imt.title" = "Gizlilik";
 
 /* Class = "UILabel"; text = "Proximity monitoring"; ObjectID = "BK0-LJ-WwY"; */
-"BK0-LJ-WwY.text" = "Yakınlık İzleme";
+"BK0-LJ-WwY.text" = "Yakınlık izleme";
 
 /* Class = "UILabel"; text = "Hide Stale Contacts"; ObjectID = "C7N-a6-E8Y"; */
-"C7N-a6-E8Y.text" = "Eski Kişileri Gizle";
+"C7N-a6-E8Y.text" = "Eski kişileri gizle";
 
 /* Class = "UINavigationItem"; title = "License"; ObjectID = "Cuk-M6-y9N"; */
 "Cuk-M6-y9N.title" = "Lisans";
@@ -45,7 +45,7 @@
 "GCE-65-OPQ.text" = "Detay";
 
 /* Class = "UILabel"; text = "Push Token"; ObjectID = "HoL-yt-ghu"; */
-"HoL-yt-ghu.text" = "Push Simgesi";
+"HoL-yt-ghu.text" = "Push token";
 
 /* Class = "UILabel"; text = "Detail"; ObjectID = "IzO-Nl-ekz"; */
 "IzO-Nl-ekz.text" = "Detay";
@@ -54,19 +54,19 @@
 "JeY-ke-mv9.text" = "Başlık";
 
 /* Class = "UILabel"; text = "Clear Log"; ObjectID = "KvG-gM-I5I"; */
-"KvG-gM-I5I.text" = "Günlüğü Temizle";
+"KvG-gM-I5I.text" = "Günlüğü temizle";
 
 /* Class = "UILabel"; text = "First, last"; ObjectID = "L3v-Ts-9T0"; */
-"L3v-Ts-9T0.text" = "İlk Son";
+"L3v-Ts-9T0.text" = "İlk, son";
 
 /* Class = "UITableViewSection"; headerTitle = "Sensor"; ObjectID = "N0M-ec-m5Y"; */
 "N0M-ec-m5Y.headerTitle" = "Sensör";
 
 /* Class = "UILabel"; text = "Send Typing Indicator"; ObjectID = "O7I-2W-NWv"; */
-"O7I-2W-NWv.text" = "Yazma Göstergesini Gönder";
+"O7I-2W-NWv.text" = "Yazma göstergesini gönder";
 
 /* Class = "UINavigationItem"; title = "Exclusion List"; ObjectID = "OfE-jH-kl6"; */
-"OfE-jH-kl6.title" = "Hariç Listesi";
+"OfE-jH-kl6.title" = "Hariç listesi";
 
 /* Class = "UILabel"; text = "Title"; ObjectID = "PX2-6n-WIX"; */
 "PX2-6n-WIX.text" = "Başlık";
@@ -81,34 +81,34 @@
 "R1G-2w-yDd.headerTitle" = "Sohbet";
 
 /* Class = "UINavigationItem"; title = "Privacy Policy"; ObjectID = "SQX-77-CzT"; */
-"SQX-77-CzT.title" = "Gizlilik Politikası";
+"SQX-77-CzT.title" = "Gizlilik politikası";
 
 /* Class = "UILabel"; text = "Add exclusion..."; ObjectID = "Sow-GN-gms"; */
-"Sow-GN-gms.text" = "Hariç Tutulacak Ekle ...";
+"Sow-GN-gms.text" = "Hariç tutulacak ekle...";
 
 /* Class = "UILabel"; text = "Show gallery preview"; ObjectID = "TyO-Dl-3LV"; */
-"TyO-Dl-3LV.text" = "Galeri Önizlemesini Göster";
+"TyO-Dl-3LV.text" = "Galeri önizlemesini göster";
 
 /* Class = "UINavigationItem"; title = "Media"; ObjectID = "U7Q-cL-ZiA"; */
 "U7Q-cL-ZiA.title" = "Medya";
 
 /* Class = "UINavigationItem"; title = "Advanced"; ObjectID = "UsC-dS-qae"; */
-"UsC-dS-qae.title" = "İleri";
+"UsC-dS-qae.title" = "Gelişmiş";
 
 /* Class = "UITableViewSection"; headerTitle = "Validation logging"; ObjectID = "VzU-Hf-fg5"; */
 "VzU-Hf-fg5.headerTitle" = "Hata ayıklama günlüğü";
 
 /* Class = "UILabel"; text = "Sync Contacts"; ObjectID = "Wdo-iP-Jy2"; */
-"Wdo-iP-Jy2.text" = "Kişileri Senkronize Et";
+"Wdo-iP-Jy2.text" = "Kişileri eşitle";
 
 /* Class = "UILabel"; text = "Validation Logging"; ObjectID = "WeM-6s-Xpj"; */
 "WeM-6s-Xpj.text" = "Hata ayıklama günlüğü";
 
 /* Class = "UILabel"; text = "Group Notifications"; ObjectID = "XNU-cf-XDO"; */
-"XNU-cf-XDO.text" = "Grup Bildirimleri";
+"XNU-cf-XDO.text" = "Grup bildirimleri";
 
 /* Class = "UILabel"; text = "Save Media to Camera Roll"; ObjectID = "XgJ-Fv-QL5"; */
-"XgJ-Fv-QL5.text" = "“Fotoğraflar” Uygulamasına Medyayı Otomatik Olarak Kaydet";
+"XgJ-Fv-QL5.text" = "“Fotoğraflar” uygulamasına medyayı otomatik olarak kaydet";
 
 /* Class = "UINavigationItem"; title = "Support"; ObjectID = "Yb8-8D-YgU"; */
 "Yb8-8D-YgU.title" = "Destek";
@@ -123,10 +123,10 @@
 "bGr-LK-G1Y.headerTitle" = "Destek bilgileri";
 
 /* Class = "UILabel"; text = "WebRTC Diagnostics"; ObjectID = "eN8-vV-OIw"; */
-"eN8-vV-OIw.text" = "WebRTC Teşhisi";
+"eN8-vV-OIw.text" = "WebRTC Tanılama";
 
 /* Class = "UILabel"; text = "xx pt"; ObjectID = "eXp-kk-t9y"; */
-"eXp-kk-t9y.text" = "xx PT";
+"eXp-kk-t9y.text" = "xx pt";
 
 /* Class = "UILabel"; text = "Size"; ObjectID = "f2r-1x-GtL"; */
 "f2r-1x-GtL.text" = "Boyut";
@@ -138,7 +138,7 @@
 "icP-dl-OGv.text" = "Video kalitesi";
 
 /* Class = "UILabel"; text = "max. 640 x 640 pixels"; ObjectID = "ij7-I7-TzW"; */
-"ij7-I7-TzW.text" = "En Fazla 640 x 640 piksel";
+"ij7-I7-TzW.text" = "maksimum 640 x 640 piksel";
 
 /* Class = "UINavigationItem"; title = "Chat"; ObjectID = "jI2-1V-LmF"; */
 "jI2-1V-LmF.title" = "Sohbet";
@@ -150,40 +150,40 @@
 "jrN-Cn-NEr.text" = "Detay";
 
 /* Class = "UILabel"; text = "Log Size"; ObjectID = "k9C-Wp-8hl"; */
-"k9C-Wp-8hl.text" = "Günlük Boyutu";
+"k9C-Wp-8hl.text" = "Günlük boyutu";
 
 /* Class = "UILabel"; text = "Email Log"; ObjectID = "m9f-E9-TK7"; */
-"m9f-E9-TK7.text" = "Günlüğü Paylaş";
+"m9f-E9-TK7.text" = "Günlüğü paylaş";
 
 /* Class = "UILabel"; text = "Choose POIs"; ObjectID = "mWM-cJ-vcw"; */
-"mWM-cJ-vcw.text" = "POI Seç";
+"mWM-cJ-vcw.text" = "İÇN (ilgi çekici nokta) seçin";
 
 /* Class = "UILabel"; text = "Send Read Receipts"; ObjectID = "pd4-eC-QZk"; */
-"pd4-eC-QZk.text" = "Okundu bilgisi Gönder";
+"pd4-eC-QZk.text" = "Okundu bilgisini gönder";
 
 /* Class = "UILabel"; text = "Detail"; ObjectID = "qCc-Eb-8rc"; */
 "qCc-Eb-8rc.text" = "Detay";
 
 /* Class = "UILabel"; text = "Sound name"; ObjectID = "qT1-va-5Fb"; */
-"qT1-va-5Fb.text" = "Ses Adı";
+"qT1-va-5Fb.text" = "Ses adı";
 
 /* Class = "UITableViewSection"; headerTitle = "Wallpaper"; ObjectID = "ri0-wl-hNq"; */
 "ri0-wl-hNq.headerTitle" = "Duvar kağıdı";
 
 /* Class = "UILabel"; text = "Push Token"; ObjectID = "sC4-2F-pcW"; */
-"sC4-2F-pcW.text" = "Push Simgesi";
+"sC4-2F-pcW.text" = "Push token";
 
 /* Class = "UILabel"; text = "Block Unknown"; ObjectID = "t3A-s5-ui3"; */
-"t3A-s5-ui3.text" = "Bilinmeyenleri Engelle";
+"t3A-s5-ui3.text" = "Bilinmeyenleri engelle";
 
 /* Class = "UITableViewSection"; headerTitle = "Networking"; ObjectID = "ukQ-aK-GUe"; */
 "ukQ-aK-GUe.headerTitle" = "Ağ";
 
 /* Class = "UITableViewSection"; footerTitle = "Anybody can send you a message. New contacts will be added automatically when their first message arrives."; ObjectID = "vhK-tc-aH5"; */
-"vhK-tc-aH5.footerTitle" = "Herkes size mesaj gönderebilir. İlk mesaj geldiğinde yeni kişiler otomatik olarak eklenir.";
+"vhK-tc-aH5.footerTitle" = "Herhangi biri size mesaj gönderebilir. Yeni kişiler, ilk mesajları geldiğinde otomatik olarak eklenecektir.";
 
 /* Class = "UITableViewSection"; headerTitle = "Contacts"; ObjectID = "vhK-tc-aH5"; */
-"vhK-tc-aH5.headerTitle" = "İletişim";
+"vhK-tc-aH5.headerTitle" = "Kişiler";
 
 /* Class = "UILabel"; text = "Image Size"; ObjectID = "xhX-4h-CHj"; */
 "xhX-4h-CHj.text" = "Görüntü boyutu";
@@ -192,4 +192,4 @@
 "yFW-ty-9QR.text" = "Detay";
 
 /* Class = "UINavigationItem"; title = "Threema Call Sound"; ObjectID = "yts-q5-Yzc"; */
-"yts-q5-Yzc.title" = "Threema Çağrı Sesi";
+"yts-q5-Yzc.title" = "Threema arama sesi";

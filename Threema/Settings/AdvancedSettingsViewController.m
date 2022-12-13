@@ -29,6 +29,8 @@
 #import "ThreemaFramework/ThreemaFramework-swift.h"
 #import "ActivityUtil.h"
 #import "ThreemaUtilityObjC.h"
+#import <MBProgressHUD/MBProgressHUD.h>
+#import "Threema-Swift.h"
 
 #ifdef DEBUG
 static const DDLogLevel ddLogLevel = DDLogLevelAll;
@@ -57,6 +59,8 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 #endif
     
     self.orphanedFilesCleanupLabel.text = [BundleUtil localizedStringForKey:@"settings_advanced_orphaned_files_cleanup"];
+    
+    self.reregisterPushNotificationsLabel.text = [BundleUtil localizedStringForKey:@"settings_advanced_reregister_notifications_label"];
     
     [self.tableView reloadData];
 }
@@ -164,7 +168,19 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
         }
     }
     
+    if (section == 6) {
+        return [BundleUtil localizedStringForKey:@"settings_advanced_reregister_push_notifications_footer_title"];
+    }
+    
     return nil;
+}
+
+- (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section {
+    if (section == 6) {
+        return [BundleUtil localizedStringForKey:@"settings_advanced_reregister_push_notifications_header_title"];
+    } else {
+        return [super tableView:tableView titleForHeaderInSection:section];
+    }
 }
 
 - (void)tableView:(UITableView *)tableView willDisplayCell:(UITableViewCell *)cell forRowAtIndexPath:(NSIndexPath *)indexPath {
@@ -215,9 +231,30 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
         [TaskManager flushWithQueueType:TaskQueueTypeOutgoing];
         TaskManager *tm = [TaskManager new];
         [tm spool];
+        [NotificationBannerHelper newSuccessToastWithTitle:[BundleUtil localizedStringForKey:@"settings_advanced_flush_message_queue"] body:[BundleUtil localizedStringForKey:@"ok"]];
+    } else if (indexPath.section == 6 && indexPath.row == 0) {
+        [self reregisterPushNotifications];
     }
     
     [self.tableView deselectRowAtIndexPath:indexPath animated:YES];
+}
+
+-(void)reregisterPushNotifications {
+    [UIApplication.sharedApplication unregisterForRemoteNotifications];
+    DDLogInfo(@"Unregistered for remote notifications");
+    [MBProgressHUD showHUDAddedTo:self.navigationController.view animated:true];
+    
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 1 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+        BOOL stillRegistered = [UIApplication.sharedApplication isRegisteredForRemoteNotifications];
+        DDLogInfo(@"We are still registered for notifications %d", stillRegistered);
+        [UIApplication.sharedApplication registerForRemoteNotifications];
+        DDLogInfo(@"Reregistered for remote notifications");
+    });
+    
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 5 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+        [MBProgressHUD hideHUDForView:self.navigationController.view animated:true];
+        [NotificationBannerHelper newSuccessToastWithTitle:[BundleUtil localizedStringForKey:@"settings_advanced_reregister_notifications_label"] body:[BundleUtil localizedStringForKey:@"ok"]];
+    });
 }
 
 @end

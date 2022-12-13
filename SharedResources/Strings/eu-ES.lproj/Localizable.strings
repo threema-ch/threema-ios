@@ -652,13 +652,9 @@
 "new_message_no_access_title" = "Mezu berriak";
 "new_message_no_access_message" = "Ireki %@ jasotako mezuak berreskuratzeko.";
 "new_message_invalid_license" = "Zure lizentzia amaitu da. Ireki aplikazioa jarraitzeko.";
-
 /* reminder messages */
 "push_reminder_title" = "Push jakinarazpenak ez daude aktibatuta";
 "push_reminder_message" = "Badirudi %@k ez duela push jakinarazpenak bidaltzeko baimenik. Ondorioz, ez duzu mezu berriei buruzko informaziorik jasoko %@ itxi duzunean. Sar zaitez iOSen konfigurazioan eta «oharrak» atalean, aktibatu %@-ko jakinarazpenak, mezurik ez galtzeko.";
-"not_now" = "Orain ez";
-"set_now" = "Ezarri orain";
-
 "updating_database" = "Datu-basea eguneratzen ari da...\n\nEz eten eragiketa hau. Datu-base handietan, baliteke eragiketa horrek zenbait minutu behar izatea.";
 "database_migration_error_hints" = "Mesedez, ziurtatu zure gailuak nahikoa memoria duela eskura, berrabiarazi eta saiatu berriro.";
 "database_migration_storage_warning_title" = "Ez dago nahikoa leku";
@@ -1098,7 +1094,6 @@
 
 "settings_advanced_flush_message_queue" = "Mezu ilara hustu";
 "settings_advanced_orphaned_files_cleanup" = "Artxibo bakartiak ezabatu";
-
 // Dev Mode
 "settings_devmode_quote_v2" = "Quote V2";
 "settings_devmode_new_chat_view" = "Txat ikuspegi berria";
@@ -1225,8 +1220,8 @@ Fitxategi bakartiak zakarrontzira mugitu, eta %@ fitxategirik (multimedia) ez fa
 "pasteErrorMessageMessage" = "Ezin izan da elementua itsatsi errore ezezagun baten ondorioz. Saiatu berriro.";
 "media_preview_preview_button_accessibility_label" = "Aurrebista erakutsi";
 "preview" = "Aurrebista";
-"could_not_add_all_items_memory_constrained_title" = "Fitxategia ez da prozesatu";
-"could_not_add_all_items_memory_constrained_message" = "Ezin izan dira fitxategi bat edo gehiago prozesatu muga teknikoengatik. Mesedez, saiatu fitxategi hauek zuzenean bidaltzen aplikaziotik bertatik.";
+"could_not_add_all_items_memory_constrained_title" = "Mesedez aplikazioa erabili";
+"could_not_add_all_items_memory_constrained_message" = "Arrazoi teknikoengatik, tamaina jakin batetik gorako fitxategiak aplikazioan soilik bidali daitezke.";
 "image_preview_cell_cannot_preview" = "Ezin da bistaratu aurrebista.";
 
 // Share Extension

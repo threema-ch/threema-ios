@@ -622,6 +622,11 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         });
         prevAudioCategory = nil;
     }
+    else {
+        NSError *setCategoryErr = nil;
+        [[AVAudioSession sharedInstance] setCategory: AVAudioSessionCategoryPlayback error:&setCategoryErr];
+        prevAudioCategory = AVAudioSessionCategoryPlayback;
+    }
     [headerView showThreemaVideoCallInfo];
 }
 
@@ -1080,27 +1085,42 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 }
 
 - (void)setConversation:(Conversation *)newConversation {
-    if (conversation == newConversation)
-        return;
-    
-    [self removeConversationObservers];
-    conversation = newConversation;
-    
-    [self addConversationObservers];
-    
-    if (conversation.isGroup) {
-        GroupManager *groupManager = [[GroupManager alloc] init];
-        group = [groupManager getGroupWithConversation:conversation];
-    }
-    
-    numberOfPages = 1;
-    
-    shouldScrollDown = YES;
-    _isDirty = YES;
-    
-    messageFetcher = [[MessageFetcher alloc] initFor:conversation with:entityManager];
-    
-    currentOffset = -1;
+    [entityManager performBlockAndWait:^{
+        if (newConversation == nil) {
+            return;
+        }
+        
+        if (conversation.objectID == newConversation.objectID) {
+            return;
+        }
+
+        [self removeConversationObservers];
+        conversation = [entityManager.entityFetcher getManagedObjectById:newConversation.objectID];
+        
+        [self addConversationObservers];
+        
+        if (conversation.isGroup) {
+            GroupManager *groupManager = [[GroupManager alloc] initWithEntityManager:entityManager];
+            group = [groupManager getGroupWithConversation:conversation];
+        }
+        
+        numberOfPages = 1;
+        
+        shouldScrollDown = YES;
+        _isDirty = YES;
+        
+        messageFetcher = [[MessageFetcher alloc] initFor:conversation with:entityManager];
+        
+        currentOffset = -1;
+    }];
+}
+
+- (BOOL)isPrivateConversation {
+    __block BOOL isPrivate = NO;
+    [entityManager performBlockAndWait:^{
+        isPrivate = conversation.conversationCategory == ConversationCategoryPrivate;
+    }];
+    return isPrivate;
 }
 
 - (NSInteger)messageOffset {

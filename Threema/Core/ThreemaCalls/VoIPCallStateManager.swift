@@ -226,7 +226,10 @@ import UserNotifications
         
         // Due to changes in the iOS 15 SDK, the app crashed because we took too long to report an incoming call to call kit when the app was in background. Therefore we start an initial call which then gets updated later, when the offer message is received from the server.
         // This must not fail to report a call.
-        callService.reportInitialCall()
+        callService.reportInitialCall(
+            from: dictionaryPayload["NotificationExtensionOffer"] as! String,
+            name: dictionaryPayload["NotificationExtensionCallerName"] as? String
+        )
         return true
     }
     

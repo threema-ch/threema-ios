@@ -2403,6 +2403,67 @@ class GroupManagerTests: XCTestCase {
         XCTAssertFalse(unknownGroupAlertList.map { $0 as! [String: AnyHashable] == groupDict }.contains(true))
     }
 
+    func testCreateOrUpdateBlockUnknownContact() throws {
+        let myIdentityStoreMock = MyIdentityStoreMock()
+
+        let userSettingsMock = UserSettingsMock()
+        userSettingsMock.blockUnknown = true
+
+        let errorBlockUnknown = NSError(domain: "ThreemaErrorDomain", code: Int(kBlockUnknownContactErrorCode))
+        let contactStoreMock = ContactStoreMock(callOnCompletion: true, nil, errorHandler: errorBlockUnknown)
+
+        let taskManagerMock = TaskManagerMock()
+
+        let expectedGroupID: Data = BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!
+        let expectedGroupCreator = "CREATOR01"
+        let expectedGroupMembers = Set(["MEMBER01", "MEMBER02", "MEMBER03", myIdentityStoreMock.identity])
+
+        databasePreparer.save {
+            databasePreparer.createContact(
+                publicKey: BytesUtility.generateRandomBytes(length: 32)!,
+                identity: expectedGroupCreator,
+                verificationLevel: 0
+            )
+
+            databasePreparer.createContact(
+                publicKey: BytesUtility.generateRandomBytes(length: 32)!,
+                identity: "MEMBER02",
+                verificationLevel: 0
+            )
+        }
+
+        let groupManager = GroupManager(
+            myIdentityStoreMock,
+            contactStoreMock,
+            taskManagerMock,
+            userSettingsMock,
+            EntityManager(databaseContext: databaseCnx, myIdentityStore: myIdentityStoreMock),
+            groupPhotoSenderMock
+        )
+
+        let expec = expectation(description: "Group create")
+
+        var result: Group?
+        groupManager.createOrUpdateDB(
+            groupID: expectedGroupID,
+            creator: expectedGroupCreator,
+            members: expectedGroupMembers,
+            systemMessageDate: nil
+        )
+        .done { group in
+            result = group
+            expec.fulfill()
+        }
+        .catch { error in
+            XCTFail("\(error)")
+        }
+
+        wait(for: [expec], timeout: 60)
+
+        let group = try XCTUnwrap(result)
+        XCTAssertEqual(3, group.numberOfMembers)
+    }
+
     /// Create or update group in DB and wait until finished.
     @discardableResult private func createOrUpdateDBWait(
         groupManager: GroupManagerProtocol,

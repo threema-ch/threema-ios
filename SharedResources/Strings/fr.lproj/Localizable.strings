@@ -652,14 +652,17 @@
 "new_message_no_access_title" = "Nouveaux messages";
 "new_message_no_access_message" = "Veuillez ouvrir %@ pour récupérer les messages entrants.";
 "new_message_invalid_license" = "Votre licence a expiré, veuillez ouvrir l'application pour continuer.";
+"new_message_db_requires_migration" = "Une migration de la base de données est nécessaire, veuillez ouvrir l'application pour continuer.";
 
 /* reminder messages */
-"push_reminder_title" = "Notifications Push non activées";
-"push_reminder_message" = "Il semble que %@ ne soit pas autorisé à vous envoyer de notifications Push. Vous ne serez pas informé de l’arrivée de nouveaux messages si %@ est fermé. Accédez à Paramètres iOS > Notifications et activez les notifications de %@ afin de ne rater aucun message.";
-"not_now" = "Pas maintenant";
-"set_now" = "Définir maintenant";
+"push_reminder_title" = "Notifications non activées";
+"push_reminder_message" = "Vous ne serez pas informé de l’arrivée de nouveaux messages ou des appels entrants si %@ est fermée.
 
-"updating_database" = "Mise à jour de la base de données...\n\nVeuillez ne pas interrompre cette opération !";
+Pour corriger cela, accédez aux paramètres système et activez les notifications pour %@.";
+"push_reminder_not_now" = "Ne plus me le rappeler";
+"push_reminder_set_now" = "Activer les notifications";
+
+"updating_database" = "Mise à jour de la base de données…\n\nVeuillez garder Threema en premier plan jusqu'à la fin de l'opération.\n\nCela pourrait prendre plusieurs minutes si vous avez un grand historique de chat.";
 "database_migration_error_hints" = "Veuillez vous assurer d’avoir assez d’espace libre sur votre appareil. Redémarrez votre appareil et réessayez.";
 "database_migration_storage_warning_title" = "Esapce de stockage disponible insuffisant";
 "database_migration_storage_warning_message" = "La base de données nécessite actuellement au moins %.1f Go de stockage disponible. Votre appareil ne comporte actuellement que %.1f Go disponibles. Veuillez libérer de l’espace en supprimant des éléments dans les Réglages d’Utilisation, puis réessayez.";
@@ -834,6 +837,7 @@
 "privateChat_code_alert_confirm" = "Configurer maintenant";
 "privateChat_set_alert_title" = "Voulez-vous marquer cette discussion comme privée ?";
 "privateChat_set_alert_message" = "Vous pouvez activer/désactiver la visibilité des discussions privées dans les paramètres de confidentialité.";
+"privateChat_setup_alert_message" = "Votre sauvegarde Threema Safe comporte des chats privés, vous devez définir un code d'accès pour y accéder.";
 "hide_private_toggle" = "Masquer les discussions privées";
 "privacy_footer" = "Masquez toutes les discussions privées dans l'aperçu des discussions. Vous devez définir un code afin d'activer ce paramètre.";
 
@@ -1098,6 +1102,9 @@
 
 "settings_advanced_flush_message_queue" = "Vider la queue des messages";
 "settings_advanced_orphaned_files_cleanup" = "Supprimer les fichiers orphelins";
+"settings_advanced_reregister_push_notifications_header_title" = "Notifications Push";
+"settings_advanced_reregister_push_notifications_footer_title" = "Si les messages entrants ne s'affichent pas en dehors de l'application en tant que notifications, vous pouvez vous inscrire de nouveau pour accéder aux notifications.";
+"settings_advanced_reregister_notifications_label" = "Inscrire de nouveau les notifications Push";
 
 // Dev Mode
 "settings_devmode_quote_v2" = "Citation v2";
@@ -1225,8 +1232,8 @@ S’il ne manque aucun fichier (média) dans %@, videz la corbeille pour supprim
 "pasteErrorMessageMessage" = "Impossible de coller l’élément à cause d’une erreur inconnue. Veuillez réessayer.";
 "media_preview_preview_button_accessibility_label" = "Afficher l’aperçu";
 "preview" = "Prévisualiser";
-"could_not_add_all_items_memory_constrained_title" = "Fichier non traité";
-"could_not_add_all_items_memory_constrained_message" = "Un ou plusieurs fichiers n'ont pas pu être traités à cause des limitations techniques. Veuillez essayer d'envoyer ces fichiers directement depuis l'application elle-même.";
+"could_not_add_all_items_memory_constrained_title" = "Veuillez utiliser l'application";
+"could_not_add_all_items_memory_constrained_message" = "Pour des raisons techniques, les fichiers dépassant une certaine taille ne peuvent être envoyés que dans l'application.";
 "image_preview_cell_cannot_preview" = "Impossible d'afficher l'aperçu.";
 
 // Share Extension
@@ -1317,7 +1324,7 @@ S’il ne manque aucun fichier (média) dans %@, videz la corbeille pour supprim
 "multi_device_linked_devices_failed_to_load_message" = "Impossible de charger les appareils liés, veuillez vérifier votre connexion Internet et réessayer.";
 "multi_device_linked_devices_this" = "Cet appareil";
 "multi_device_linked_devices_others" = "Autres appareils";
-"multi_device_linked_devices_remove_failed" = "Échec de retrait de l'appareil : %@";
+"multi_device_linked_devices_remove_failed" = "Échec de retrait de l'appareil : %@";
 "multi_device_linked_devices_failed_remove_title" = "Échec de retrait de l'appareil";
 "multi_device_linked_devices_failed_remove_message" = "Impossible de retirer l'appareil lié, veuillez réessayer.";
 "multi_device_linked_devices_failed_remove_message_2" = "Impossible de retirer l'appareil lié, veuillez vérifier votre connexion Internet et réessayer.";

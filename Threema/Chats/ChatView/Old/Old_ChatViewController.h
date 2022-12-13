@@ -133,4 +133,6 @@ typedef void (^Old_ChatViewControllerCompletionBlock)(Old_ChatViewController *ch
 - (void)showSingleDetails;
 - (void)showGroupDetails;
 
+- (BOOL)isPrivateConversation;
+
 @end

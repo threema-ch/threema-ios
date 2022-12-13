@@ -90,7 +90,8 @@
 - (NSString *)regionalPartForPhoneNumber:(NSString *)phoneNumber {
     NSString *region = [self regionForPhoneNumber:phoneNumber];
     if (region) {
-        NSString *code = [NBMetadataHelper.CCode2CNMap objectForKey:region];
+        NBMetadataHelper *metadataHelper = [[NBMetadataHelper alloc] init];
+        NSString *code = [[metadataHelper countryCodeToCountryNumberDictionary] objectForKey:region];
     
         NSRange codeRange = [phoneNumber rangeOfString:code];
         if (codeRange.location != NSNotFound) {

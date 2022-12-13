@@ -481,7 +481,8 @@ extension VoIPCallService {
     }
     
     /// Reports a new call to CallKit with an unknown caller
-    func reportInitialCall() {
+    /// - threemaID: Threema ID of the caller. If it's nil, it use the unkonwn caller string
+    func reportInitialCall(from identity: String, name: String?) {
         if let callKitManager = callKitManager {
             if callKitManager.currentUUID() != nil {
                 callKitManager.endCall()
@@ -496,15 +497,20 @@ extension VoIPCallService {
             fatalError()
         }
         
-        reportInitialCall(on: callKitManager)
+        reportInitialCall(
+            from: identity,
+            contactName: name ?? BundleUtil.localizedString(forKey: "identity_not_found_title"),
+            on: callKitManager
+        )
     }
     
-    private func reportInitialCall(on callKitManager: VoIPCallKitManager) {
+    private func reportInitialCall(from identity: String, contactName: String, on callKitManager: VoIPCallKitManager) {
         VoIPCallStateManager.shared.preCallHandling = true
         
         callKitManager.reportIncomingCall(
             uuid: UUID(),
-            contactIdentity: BundleUtil.localizedString(forKey: "identity_not_found_title")
+            contactIdentity: identity,
+            contactName: contactName
         )
     }
     
@@ -620,7 +626,8 @@ extension VoIPCallService {
                 else {
                     callKitManager?.reportIncomingCall(
                         uuid: UUID(),
-                        contactIdentity: offer.contactIdentity!
+                        contactIdentity: offer.contactIdentity!,
+                        contactName: nil
                     )
                 }
                 

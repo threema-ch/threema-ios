@@ -972,9 +972,12 @@ struct pktExtension {
 }
 
 - (void)setPushToken:(NSData *)pushToken {
+    NSData *previousPushToken = [[AppGroup userDefaults] objectForKey:kPushNotificationDeviceToken];
     [[AppGroup userDefaults] setObject:pushToken forKey:kPushNotificationDeviceToken];
     [[AppGroup userDefaults] synchronize];
-    [self sendPushToken];
+    
+    // Force updating the push token if it changes
+    [self sendPushTokenForce:![previousPushToken isEqualToData:pushToken]];
 }
 
 - (void)setVoIPPushToken:(NSData *)voIPPushToken {
@@ -983,9 +986,9 @@ struct pktExtension {
     [self sendVoIPPushToken];
 }
 
-- (void)sendPushToken {
+- (void)sendPushTokenForce:(BOOL)force {
     dispatch_sync(sendPushTokenQueue, ^{
-        if (isSentPushToken == YES) {
+        if (isSentPushToken == YES && !force) {
             DDLogInfo(@"Already sent push notification token (apple mc)");
             return;
         }
@@ -1006,6 +1009,39 @@ struct pktExtension {
         
         NSMutableData *payloadData = [NSMutableData dataWithBytes:&pushTokenType length:1];
         [payloadData appendData:pushToken];
+        [payloadData appendData:[@"|" dataUsingEncoding:NSUTF8StringEncoding]];
+        [payloadData appendData:[[[NSBundle mainBundle] bundleIdentifier] dataUsingEncoding:NSASCIIStringEncoding]];
+        [payloadData appendData:[@"|" dataUsingEncoding:NSUTF8StringEncoding]];
+        [payloadData appendData:[PushPayloadDecryptor pushEncryptionKey]];
+        [self sendPayloadWithType:PLTYPE_PUSH_NOTIFICATION_TOKEN data:payloadData];
+
+        isSentPushToken = YES;
+    });
+}
+
+- (void)removePushToken {
+    dispatch_sync(sendPushTokenQueue, ^{
+        NSData *previousPushToken = [[AppGroup userDefaults] objectForKey:kPushNotificationDeviceToken];
+        
+        if (previousPushToken != nil) {
+            [[AppGroup userDefaults] setObject:nil forKey:kPushNotificationDeviceToken];
+            [[AppGroup userDefaults] synchronize];
+        }
+        
+        if (isSentPushToken == YES && previousPushToken == nil) {
+            DDLogInfo(@"Already sent push notification token (apple mc)");
+            return;
+        }
+        
+        if ([self shouldRegisterPush] == NO) {
+            return;
+        }
+
+        DDLogInfo(@"Clearing push notification token (apple mc)");
+
+        uint8_t voIPPushTokenType = PUSHTOKEN_TYPE_NONE;
+        
+        NSMutableData *payloadData = [NSMutableData dataWithBytes:&voIPPushTokenType length:1];
         [payloadData appendData:[@"|" dataUsingEncoding:NSUTF8StringEncoding]];
         [payloadData appendData:[[[NSBundle mainBundle] bundleIdentifier] dataUsingEncoding:NSASCIIStringEncoding]];
         [payloadData appendData:[@"|" dataUsingEncoding:NSUTF8StringEncoding]];
@@ -1348,7 +1384,7 @@ struct pktExtension {
             reconnectAttempts = 0;
             [serverConnectorConnectionState loggedInChatServer];
 
-            [self sendPushToken];
+            [self sendPushTokenForce:false];
             
             [self sendPushAllowedIdentities];
             [self sendPushSound];
@@ -1539,6 +1575,12 @@ struct pktExtension {
 - (void)incomingMessageFinished:(AbstractMessage * _Nonnull)message isPendingGroup:(BOOL)isPendingGroup {
     dispatch_async(queueMessageProcessorDelegate, ^{
         [clientMessageProcessorDelegate incomingMessageFinished:message isPendingGroup:isPendingGroup];
+    });
+}
+
+- (void)incomingMessageFailed:(BoxedMessage *)message {
+    dispatch_async(queueMessageProcessorDelegate, ^{
+        [clientMessageProcessorDelegate incomingMessageFailed:message];
     });
 }
 

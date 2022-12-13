@@ -652,14 +652,17 @@
 "new_message_no_access_title" = "新消息";
 "new_message_no_access_message" = "请打开 %@ 获取接收到的消息。";
 "new_message_invalid_license" = "您的许可证已过期，请打开应用程序以继续。";
+"new_message_db_requires_migration" = "需要进行数据库迁移，请打开应用程序以继续。";
 
 /* reminder messages */
-"push_reminder_title" = "未启用推送通知";
-"push_reminder_message" = "%@ 似乎没有权限向您推送通知。当 %@ 关闭时，您不会收到新消息的通知。请前往 iOS 系统 “设置” > “通知”，然后为 %@ 启用通知，这样您就不会错过任何消息。";
-"not_now" = "现在不要";
-"set_now" = "立即设置";
+"push_reminder_title" = "未启用通知";
+"push_reminder_message" = "当 %@ 关闭时，您将不会收到新消息或来电通知。
 
-"updating_database" = "正在更新数据库...\n\n请不要中断此操作！对于大型消息数据库，可能需要几分钟的时间才能完成。";
+如要解决此问题，请前往系统设置并为 %@ 启用通知。";
+"push_reminder_not_now" = "下次不再提醒我";
+"push_reminder_set_now" = "启用通知";
+
+"updating_database" = "正在更新数据库...\n\n请保持 Threema 在前台运行直到完成为止。\n\n如果您有大量的聊天记录，可能需要几分钟的时间才能完成。";
 "database_migration_error_hints" = "请确保设备上有足够的可用存储空间，重启设备后再试。";
 "database_migration_storage_warning_title" = "可用存储空间不足";
 "database_migration_storage_warning_message" = "数据库更新暂时需要至少 %.1f GB 的可用存储空间。您的设备目前只有 %.1f GB 的可用存储空间。请在 “储存空间” 中删除项目以获得更多可用的存储空间，然后再试。";
@@ -834,6 +837,7 @@
 "privateChat_code_alert_confirm" = "立即设置";
 "privateChat_set_alert_title" = "您要将此会话标记为私密会话吗？";
 "privateChat_set_alert_message" = "你可以在隐私设置中切换私密会话的可见性。";
+"privateChat_setup_alert_message" = "您的 Threema Safe 备份包含私密聊天记录，您必须设置密码才能访问备份内容。";
 "hide_private_toggle" = "隐藏私密会话";
 "privacy_footer" = "在会话界面中隐藏所有私密会话，您需要设置密码锁才能启用此设置。";
 
@@ -1099,6 +1103,9 @@
 
 "settings_advanced_flush_message_queue" = "刷新消息队列";
 "settings_advanced_orphaned_files_cleanup" = "删除孤立文件";
+"settings_advanced_reregister_push_notifications_header_title" = "推送通知";
+"settings_advanced_reregister_push_notifications_footer_title" = "如果此应用关闭后，仍然没有收到新消息通知，您可以重新注册通知推送权限。";
+"settings_advanced_reregister_notifications_label" = "重新注册推送通知";
 
 // Dev Mode
 "settings_devmode_quote_v2" = "引用 V2";
@@ -1226,8 +1233,8 @@
 "pasteErrorMessageMessage" = "由于未知的错误，无法粘贴项目。请再试一次。";
 "media_preview_preview_button_accessibility_label" = "显示预览";
 "preview" = "预览";
-"could_not_add_all_items_memory_constrained_title" = "文件未处理";
-"could_not_add_all_items_memory_constrained_message" = "由于技术限制，无法处理一个或多个文件。请尝试直接从应用程序中发送这些文件，而不是通过分享功能发送。";
+"could_not_add_all_items_memory_constrained_title" = "请在此应用程序内发送文件";
+"could_not_add_all_items_memory_constrained_message" = "由于技术限制，超过一定大小的文件只能在此应用程序内发送，而不是通过分享功能发送。";
 "image_preview_cell_cannot_preview" = "无法显示预览。";
 
 // Share Extension

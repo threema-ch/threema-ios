@@ -652,14 +652,17 @@
 "new_message_no_access_title" = "Mensajes nuevos";
 "new_message_no_access_message" = "Abra %@ para recuperar los mensajes recibidos.";
 "new_message_invalid_license" = "Tu licencia ha expirado. Abre la aplicación para continuar.";
+"new_message_db_requires_migration" = "Se requiere una migración de la base de datos. Abra la app para continuar.";
 
 /* reminder messages */
-"push_reminder_title" = "Las notificaciones push no están activadas";
-"push_reminder_message" = "Parece que %@ no tiene permiso para enviar notificaciones push. En consecuencia, no recibirá información sobre mensajes nuevos cuando haya cerrado %@. Entre en la configuración de iOS y en «Notas», active las notificaciones de %@ para no perderse ningún mensaje.";
-"not_now" = "Ahora no";
-"set_now" = "Establecer ahora";
+"push_reminder_title" = "Notificaciones no activadas";
+"push_reminder_message" = "No recibirá información sobre mensajes nuevos o llamadas entrantes cuando haya cerrado %@. 
 
-"updating_database" = "La base de datos se está actualizando...\n\nNo interrumpa esta operación. En las bases de datos grandes, esta operación puede requerir varios minutos.";
+Para solucionarlo, entre en Ajustes del sistema y active las notificaciones de %@.";
+"push_reminder_not_now" = "No volver a recordármelo";
+"push_reminder_set_now" = "Activar notificaciones";
+
+"updating_database" = "Actualizando la base de datos...\n\nMantenga Threema funcionando en segundo plano hasta que se complete la actualización. \n\nPodría tardar varios minutos si su historial de chats es grande.";
 "database_migration_error_hints" = "Por favor, asegúrese de que su dispositivo tiene suficiente memoria disponible, reinícielo y vuelva a intentarlo.";
 "database_migration_storage_warning_title" = "No hay suficiente espacio disponible";
 "database_migration_storage_warning_message" = "La actualización de la base de datos necesita de forma temporal %.1f GB de espacio disponible. Su dispositivo sólo tiene disponibles %.1f GB en este momento. Por favor, libere espacio de almacenamiento borrando elementos en Ajustes de uso e inténtelo de nuevo.";
@@ -834,6 +837,7 @@
 "privateChat_code_alert_confirm" = "Configurar ahora";
 "privateChat_set_alert_title" = "¿Quieres marcar este chat como privado?";
 "privateChat_set_alert_message" = "Puedes modificar la visibilidad de los chats privados en los ajustes de privacidad.";
+"privateChat_setup_alert_message" = "Su copia de seguridad de Threema Safe contenía chats privados. Tiene que establecer una contraseña para acceder a ellos.";
 "hide_private_toggle" = "Ocultar chats privados";
 "privacy_footer" = "Oculta todos los chats privados en el resumen de chats. Tienes que establecer un código para activar este ajuste.";
 
@@ -1098,6 +1102,9 @@
 
 "settings_advanced_flush_message_queue" = "Vaciar cola de mensajes";
 "settings_advanced_orphaned_files_cleanup" = "Eliminar archivos huérfanos";
+"settings_advanced_reregister_push_notifications_header_title" = "Notificaciones automáticas";
+"settings_advanced_reregister_push_notifications_footer_title" = "Si los mensajes entrantes no se muestran fuera de la app como notificaciones, puede volver a registrar las notificaciones.";
+"settings_advanced_reregister_notifications_label" = "Volver a registrar las notificaciones automáticas";
 
 // Dev Mode
 "settings_devmode_quote_v2" = "Quote V2";
@@ -1225,8 +1232,8 @@ Si no faltan archivos (multimedia) en %@, vacíe la papelera de reciclaje para e
 "pasteErrorMessageMessage" = "No se pudo pegar el elemento debido a un error desconocido. Vuelve a intentarlo.";
 "media_preview_preview_button_accessibility_label" = "Mostrar vista previa";
 "preview" = "Vista previa";
-"could_not_add_all_items_memory_constrained_title" = "Archivo no procesado";
-"could_not_add_all_items_memory_constrained_message" = "Uno o más archivos no han podido procesarse por limitaciones técnicas. Intenta enviar estos archivos directamente desde la propia aplicación.";
+"could_not_add_all_items_memory_constrained_title" = "Utilice la app";
+"could_not_add_all_items_memory_constrained_message" = "Por motivos de seguridad, solo pueden enviarse archivos que superen un tamaño determinado en la app.";
 "image_preview_cell_cannot_preview" = "No se puede mostrar la vista previa.";
 
 // Share Extension
@@ -1314,13 +1321,13 @@ Si no faltan archivos (multimedia) en %@, vacíe la papelera de reciclaje para e
 "multi_device_linked_devices_refresh" = "Desliza para actualizar";
 "multi_device_linked_devices_loading_failed" = "Error al cargar dispositivos: %@";
 "multi_device_linked_devices_failed_to_load_title" = "Error al cargar la lista de dispositivos";
-"multi_device_linked_devices_failed_to_load_message" = "No se han podido cargar los dispositivos vinculados. Comprueba tu conexión a Internet e inténtalo de nuevo.";
-"multi_device_linked_devices_this" = "Estos dispositivos";
+"multi_device_linked_devices_failed_to_load_message" = "No se han podido cargar los dispositivos vinculados. Compruebe su conexión a Internet e inténtelo de nuevo.";
+"multi_device_linked_devices_this" = "Este dispositivo";
 "multi_device_linked_devices_others" = "Otros dispositivos";
 "multi_device_linked_devices_remove_failed" = "Error al eliminar el dispositivo: %@";
 "multi_device_linked_devices_failed_remove_title" = "Error al eliminar el dispositivo";
 "multi_device_linked_devices_failed_remove_message" = "No se ha podido eliminar el dispositivo vinculado. Inténtalo de nuevo.";
-"multi_device_linked_devices_failed_remove_message_2" = "No se ha podido eliminar el dispositivo vinculado. Comprueba tu conexión a Internet e inténtalo de nuevo.";
+"multi_device_linked_devices_failed_remove_message_2" = "No se ha podido eliminar el dispositivo vinculado. Compruebe su conexión a Internet e inténtelo de nuevo.";
 
 "myprofile_link_email_phone_footer" = "Si vincula su dirección de correo electrónico o número de teléfono móvil con su ID, otras personas podrán encontrarle automáticamente en %@ siempre que lo tengan en la libreta de direcciones.";
 "myprofile_link_email_footer" = "Si vincula su dirección de correo electrónico con su ID, otras personas podrán encontrarle automáticamente en %@, siempre que le tengan en la libreta de direcciones.";

@@ -653,14 +653,17 @@
 "new_message_no_access_title" = "Nowe wiadomości";
 "new_message_no_access_message" = "Otwórz %@, aby odebrać przychodzące wiadomości.";
 "new_message_invalid_license" = "Twoja licencja wygasła, otwórz aplikację, aby kontynuować.";
+"new_message_db_requires_migration" = "Wymagana migracja bazy danych, otwórz aplikację, aby kontynuować.";
 
 /* reminder messages */
-"push_reminder_title" = "Powiadomienia push nie są włączone";
-"push_reminder_message" = "Wygląda na to, że %@ nie ma uprawnień do wysyłania Tobie powiadomień push. Nie będziesz informowany o nowych wiadomościach po zamknięciu %@. Idź do Ustawienia iOS> Powiadomienia i włącz powiadomienia dla %@, aby nie przegapić żadnych wiadomości.";
-"not_now" = "Nie teraz";
-"set_now" = "Ustaw teraz";
+"push_reminder_title" = "Powiadomienia nie są włączone";
+"push_reminder_message" = "Nie otrzymasz informacji o nowych wiadomościach lub nadchodzących połączeniach po zamknięciu %@. 
 
-"updating_database" = "Aktualizacja bazy danych...\n\nProszę nie przerywać tej operacji! W przypadku dużych baz danych z wiadomościami może to potrwać kilka minut.";
+Aby to rozwiązać, przejdź do Ustawień systemowych i włącz powiadomienia dla %@.";
+"push_reminder_not_now" = "Nie przypominaj mi więcej";
+"push_reminder_set_now" = "Włącz powiadomienia";
+
+"updating_database" = "Aktualizacja bazy danych...\n\nThreema musi cały czas działać na pierwszym planie aż do zakończenia aktualizacji.\n\nW przypadku długiej historii czatu może to potrwać kilka minut.";
 "database_migration_error_hints" = "Upewnij się, że masz wystarczającą ilość wolnego miejsca w urządzeniu, zrestartuj urządzenie, a następnie spróbuj ponownie.";
 "database_migration_storage_warning_title" = "Za mało dostępnego miejsca do przechowywania.";
 "database_migration_storage_warning_message" = "Aktualizacja bazy danych wymaga tymczasowo co najmniej %.1f GB dostępnej pamięci. Obecnie urządzenie ma tylko dostępne %.1f GB. Proszę udostępnić więcej pamięci poprzez usunięcie elementów w Ustawieniach użytkowania, a następnie spróbować ponownie.";
@@ -835,6 +838,7 @@
 "privateChat_code_alert_confirm" = "Skonfiguruj teraz";
 "privateChat_set_alert_title" = "Czy chcesz oznaczyć ten czat jako prywatny?";
 "privateChat_set_alert_message" = "Możesz przełączyć widoczność prywatnych czatów w ustawieniach prywatności.";
+"privateChat_setup_alert_message" = "Kopia zapasowa Threema Safe zawierała prywatne czaty, musisz ustawić kod dostępu, aby uzyskać do nich dostęp.";
 "hide_private_toggle" = "Ukryj prywatne czaty";
 "privacy_footer" = "Ukrywa wszystkie prywatne czaty w podglądzie czatu. Musisz ustawić kod dostępu, aby włączyć to ustawienie.";
 
@@ -1099,6 +1103,9 @@
 
 "settings_advanced_flush_message_queue" = "Opróżnij Kolejkę Wiadomości";
 "settings_advanced_orphaned_files_cleanup" = "Usuń Osierocone Pliki";
+"settings_advanced_reregister_push_notifications_header_title" = "Powiadomienia push";
+"settings_advanced_reregister_push_notifications_footer_title" = "Jeśli nadchodzące wiadomości nie pojawiają się poza aplikacją jako powiadomienia, możesz ponownie zarejestrować powiadomienia.";
+"settings_advanced_reregister_notifications_label" = "Ponownie zarejestruj powiadomienia push";
 
 // Dev Mode
 "settings_devmode_quote_v2" = "Cytat V2";
@@ -1225,8 +1232,8 @@ Jeśli w %@ nie brakuje żadnych plików (multimedialnych), opróżnij kosz, aby
 "pasteErrorMessageMessage" = "Nie udało się wkleić pozycji z powodu nieznanego błędu. Spróbuj ponownie.";
 "media_preview_preview_button_accessibility_label" = "Pokaż podgląd";
 "preview" = "Podgląd";
-"could_not_add_all_items_memory_constrained_title" = "NIe przetworzono pliku";
-"could_not_add_all_items_memory_constrained_message" = "Nie można było przetworzyć co najmniej jednego pliku z powodu ograniczeń technicznych. Spróbuj wysłać te pliki bezpośrednio z aplikacji.";
+"could_not_add_all_items_memory_constrained_title" = "Użyj aplikacji";
+"could_not_add_all_items_memory_constrained_message" = "Z powodów technicznych pliki powyżej określonego rozmiaru mogą być wysyłane tylko z aplikacji.";
 "image_preview_cell_cannot_preview" = "Nie można wyświetlić podglądu.";
 
 // Share Extension
@@ -1317,7 +1324,7 @@ Jeśli w %@ nie brakuje żadnych plików (multimedialnych), opróżnij kosz, aby
 "multi_device_linked_devices_failed_to_load_message" = "Nie można załadować listy połączonych urządzeń, sprawdź swoje połączenie internetowe i spróbuj ponownie.";
 "multi_device_linked_devices_this" = "To urządzenie";
 "multi_device_linked_devices_others" = "Inne urządzenia";
-"multi_device_linked_devices_remove_failed" = "Usuwanie urządzenia nie powiodło się: %@";
+"multi_device_linked_devices_remove_failed" = "Usuwanie urządzenia: %@ nie powiodło się";
 "multi_device_linked_devices_failed_remove_title" = "Usunięcie urządzenia nie powiodło się";
 "multi_device_linked_devices_failed_remove_message" = "Nie można usunąć połączonego urządzenia, spróbuj ponownie.";
 "multi_device_linked_devices_failed_remove_message_2" = "Nie można usunąć połączonego urządzenia, sprawdź połączenie internetowe i spróbuj ponownie.";

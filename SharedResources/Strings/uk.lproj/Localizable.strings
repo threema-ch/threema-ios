@@ -652,14 +652,15 @@
 "new_message_no_access_title" = "Нове повідомлення";
 "new_message_no_access_message" = "Будь ласка, відкрийте %@ для отримання вхідних повідомлень.";
 "new_message_invalid_license" = "Ваша ліцензія закінчилась, для продовження відкрийте застосунок, будь ласка.";
+"new_message_db_requires_migration" = "Потрібно перенести базу даних. Відкрийте застосунок, щоб продовжити.";
 
 /* reminder messages */
-"push_reminder_title" = "Push-сповіщення не увімкнено";
-"push_reminder_message" = "Схоже, %@ не має дозволу надсилати вам push-сповіщення. Ви не отримуватимете сповіщення про нові повідомлення, коли %@ закритий. Перейдіть до Налаштування iOS > Сповіщення та увімкніть сповіщення для %@, щоб не пропустити жодного повідомлення.";
-"not_now" = "Не зараз";
-"set_now" = "Задати зараз";
+"push_reminder_title" = "Push-сповіщення не ввімкнено";
+"push_reminder_message" = "Ви не отримуватимете сповіщення про нові повідомлення чи вхідні дзвінки, коли застосунок %@ закрито.\n\nПерейдіть у розділ «Системні налаштування» і увімкніть сповіщення для %@.";
+"push_reminder_not_now" = "Більше не нагадувати мені";
+"push_reminder_set_now" = "Активувати сповіщення";
 
-"updating_database" = "Оновлення бази даних... \n\nБудь ласка, не переривайте цю операцію! Для великих баз даних повідомлень це може зайняти кілька хвилин.";
+"updating_database" = "Оновлення бази даних... \n\nЗастосунок Threema повинен працювати на передньому плані до завершення.\n\nЯкщо у вас велика історія чату, це може зайняти кілька хвилин.";
 "database_migration_error_hints" = "Переконайтеся, що на вашому пристрої достатньо місця, перезавантажте пристрій і повторіть спробу.";
 "database_migration_storage_warning_title" = "Недостатньо місця";
 "database_migration_storage_warning_message" = "Для оновлення бази даних тимчасово потрібно принаймні %.1f ГБ вільного місця. Зараз на вашому пристрої доступно лише %.1f ГБ. Звільніть більше місця, видаливши елементи в налаштуваннях використаного місця, та повторіть спробу.";
@@ -834,6 +835,7 @@
 "privateChat_code_alert_confirm" = "Налаштувати зараз";
 "privateChat_set_alert_title" = "Ви бажаєте зробити цей діалог приватним?";
 "privateChat_set_alert_message" = "Ви можете налаштувати видимість приватних діалогів у налаштуваннях приватності.";
+"privateChat_setup_alert_message" = "Резервна копія Threema Safe містить чати. Вам потрібно встановити пароль для доступу до них.";
 "hide_private_toggle" = "Сховати приватні діалоги";
 "privacy_footer" = "Ховає усі приватні діалоги з переліку діалогів. Ви повинні задати пароль для увімкнення цього налаштування.";
 
@@ -1080,7 +1082,7 @@
 "settings_chat" = "Діалог";
 "settings_media" = "Медіа";
 "settings_storage_management" = "Керування сховищем";
-"settings_passcode_lock" = "Блокування за допомогою пароля";
+"settings_passcode_lock" = "Блокування паролем";
 "settings_threema_calls" = "Виклики Threema";
 "settings_threema_web" = "Застосунок / Вебверсія";
 "settings_network_status" = "Стан мережі";
@@ -1099,6 +1101,9 @@
 
 "settings_advanced_flush_message_queue" = "Очистити чергу повідомлень";
 "settings_advanced_orphaned_files_cleanup" = "Видалити загублені файли";
+"settings_advanced_reregister_push_notifications_header_title" = "Push-сповіщення";
+"settings_advanced_reregister_push_notifications_footer_title" = "Якщо вхідні повідомлення не з’являються за межами застосунку як сповіщення, ви можете зареєструватися для отримання сповіщень.";
+"settings_advanced_reregister_notifications_label" = "Повторно зареєструватися для отримання push-сповіщень";
 
 // Dev Mode
 "settings_devmode_quote_v2" = "Цитування Версія 2";
@@ -1226,8 +1231,8 @@
 "pasteErrorMessageMessage" = "Не вдалось вставити файл через невідому помилку. Будь ласка, спробуйте пізніше.";
 "media_preview_preview_button_accessibility_label" = "Попередній перегляд";
 "preview" = "Попередній перегляд";
-"could_not_add_all_items_memory_constrained_title" = "Файл не оброблено";
-"could_not_add_all_items_memory_constrained_message" = "Один або кілька файлів не вдалося обробити через технічні обмеження. Спробуйте надіслати ці файли безпосередньо із застосунку.";
+"could_not_add_all_items_memory_constrained_title" = "Скористайтеся застосунком";
+"could_not_add_all_items_memory_constrained_message" = "Через технічні обмеження в застосунку можна відправляти лише ті файли, розмір яких більший за визначений.";
 "image_preview_cell_cannot_preview" = "Попередній перегляд неможливий.";
 
 // Share Extension
@@ -1314,14 +1319,14 @@
 "multi_device_linked_devices_title" = "Прив'язані пристрої";
 "multi_device_linked_devices_refresh" = "Потягніть для оновлення";
 "multi_device_linked_devices_loading_failed" = "Не вдалось завантажити пристрої: %@";
-"multi_device_linked_devices_failed_to_load_title" = "Не вдалось завантажити список пристроїв";
-"multi_device_linked_devices_failed_to_load_message" = "Не вдалось завантажити прив'язані пристрої. Будь ласка, перевірте інтернет-з'єднання та спробуйте ще раз.";
-"multi_device_linked_devices_this" = "Ці пристрої";
+"multi_device_linked_devices_failed_to_load_title" = "Не вдалося завантажити список пристроїв";
+"multi_device_linked_devices_failed_to_load_message" = "Не вдалося завантажити прив’язані пристрої. Перевірте інтернет-з'єднання та спробуйте ще раз.";
+"multi_device_linked_devices_this" = "Цей пристрій";
 "multi_device_linked_devices_others" = "Інші пристрої";
-"multi_device_linked_devices_remove_failed" = "Видалення пристрою не вдалось: %@";
-"multi_device_linked_devices_failed_remove_title" = "Не вдалось видалити пристрій";
+"multi_device_linked_devices_remove_failed" = "Не вдалося видалити пристрій: %@";
+"multi_device_linked_devices_failed_remove_title" = "Не вдалося видалити пристрій";
 "multi_device_linked_devices_failed_remove_message" = "Не вдалось видалити прив'язаний пристрій. Будь ласка, спробуйте ще.";
-"multi_device_linked_devices_failed_remove_message_2" = "Не вдалось видалити прив'язаний пристрій. Будь ласка, перевірте інтернет-з'єднання та спробуйте ще раз.";
+"multi_device_linked_devices_failed_remove_message_2" = "Не вдалося видалити прив'язаний пристрій. Перевірте інтернет-з'єднання та спробуйте ще раз.";
 
 "myprofile_link_email_phone_footer" = "Прив'язання електронної пошти або мобільного номеру до вашого ID дозволить іншим користувачам знаходити вас у %@ автоматично якщо ваш номер збережено у їхніх контактах.";
 "myprofile_link_email_footer" = "Прив'язання електронної пошти до вашого ID дозволить іншим користувачам знаходити вас у %@ автоматично якщо ваш номер збережено у їхніх контактах.";

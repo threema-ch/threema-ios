@@ -15,7 +15,7 @@
 "8hI-GF-46C.text" = "Collià";
 
 /* Class = "UITableViewSection"; headerTitle = "Threema Call"; ObjectID = "9Jg-qG-CuX"; */
-"9Jg-qG-CuX.headerTitle" = "Telefonat da Threema";
+"9Jg-qG-CuX.headerTitle" = "Telefonats da Threema";
 
 /* Class = "UILabel"; text = "Sound name"; ObjectID = "9WQ-EZ-toz"; */
 "9WQ-EZ-toz.text" = "Num dal tun";
@@ -96,19 +96,19 @@
 "UsC-dS-qae.title" = "Extendì";
 
 /* Class = "UITableViewSection"; headerTitle = "Validation logging"; ObjectID = "VzU-Hf-fg5"; */
-"VzU-Hf-fg5.headerTitle" = "Protocol da validaziun";
+"VzU-Hf-fg5.headerTitle" = "Debug Log";
 
 /* Class = "UILabel"; text = "Sync Contacts"; ObjectID = "Wdo-iP-Jy2"; */
 "Wdo-iP-Jy2.text" = "Sincronisar ils contacts";
 
 /* Class = "UILabel"; text = "Validation Logging"; ObjectID = "WeM-6s-Xpj"; */
-"WeM-6s-Xpj.text" = "Protocol da validaziun";
+"WeM-6s-Xpj.text" = "Debug Log";
 
 /* Class = "UILabel"; text = "Group Notifications"; ObjectID = "XNU-cf-XDO"; */
 "XNU-cf-XDO.text" = "Avis da gruppas";
 
 /* Class = "UILabel"; text = "Save Media to Camera Roll"; ObjectID = "XgJ-Fv-QL5"; */
-"XgJ-Fv-QL5.text" = "Memorisar automaticamain las medias en las registraziuns";
+"XgJ-Fv-QL5.text" = "Memorisar automaticamain las medias en l'app «Fotos»";
 
 /* Class = "UINavigationItem"; title = "Support"; ObjectID = "Yb8-8D-YgU"; */
 "Yb8-8D-YgU.title" = "Support";

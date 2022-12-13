@@ -653,12 +653,13 @@ Nahláste prosím tento incident na security@threema.ch a ak je to možné, posk
 "new_message_no_access_title" = "Nová správa";
 "new_message_no_access_message" = "Pre stiahnutie prichádzajúcich správ otvorte %@.";
 "new_message_invalid_license" = "Platnosť vašej licencie vypršala. Ak chcete pokračovať, otvorte aplikáciu.";
+"new_message_db_requires_migration" = "Je potrebná migrácia databázy. Ak chcete pokračovať, otvorte aplikáciu.";
 
 /* reminder messages */
 "push_reminder_title" = "Push hlásenia nie sú povolené";
-"push_reminder_message" = "Zdá sa, že %@ nemá povolenie odosielať vám push hlásenia. Ak je aplikácia %@ zatvorená, nebudete informovaný o nových správach. Ak chcete povoliť hlásenia a nezmeškať tak žiadne správy, voďte do iOS Nastavenia > Hlásenia a hlásenia povolte.";
-"not_now" = "Teraz nie";
-"set_now" = "Nastaviť teraz";
+"push_reminder_message" = "Keď bude aplikácia %@ zatvorená, nebudeme vás informovať o nových správach ani prichádzajúcich hovoroch.\n\nAk to chcete vyriešiť, prejdite do nastavení systému a zapnite pre aplikáciu %@ upozornenia.";
+"push_reminder_not_now" = "Viac mi to nepripomínať";
+"push_reminder_set_now" = "Zapnúť upozornenia";
 
 "updating_database" = "Aktualizácia databáze...\n\nNeprerušujte prosím túto operáciu! U veľkých databáz správ to môže trvať niekoľko minút.";
 "database_migration_error_hints" = "Uistite sa, že máte vo vašom zariadení dostatok voľného miesta, reštartujte zariadenie a potom to skúste znovu.";
@@ -835,6 +836,7 @@ Nahláste prosím tento incident na security@threema.ch a ak je to možné, posk
 "privateChat_code_alert_confirm" = "Nastaviť teraz";
 "privateChat_set_alert_title" = "Chcete označiť túto konverzáciu ako súkromnú?";
 "privateChat_set_alert_message" = "Viditeľnosť súkromných konverzácií môžete prepnúť v nastaveniach ochrany osobných údajov.";
+"privateChat_setup_alert_message" = "Vaša bezpečná záloha aplikácie Threema obsahovala súkromné čety. Ak k nim chcete získať prístup, musíte si nastaviť prístupový kód.";
 "hide_private_toggle" = "Skryť súkromné konverzácie";
 "privacy_footer" = "Skryje všetky súkromné konverzácie v prehľade konverzácií. Ak chcete aktivovať toto nastavenie, musíte nastaviť prístupový kód.";
 
@@ -1100,6 +1102,9 @@ V prípade, že stratíte prístup k vašemu zariadeniu, pomocou Trezoru Threema
 
 "settings_advanced_flush_message_queue" = "Vyčistiť frontu správ";
 "settings_advanced_orphaned_files_cleanup" = "Vymazať osamotené súbory";
+"settings_advanced_reregister_push_notifications_header_title" = "Automatické upozornenia";
+"settings_advanced_reregister_push_notifications_footer_title" = "Ak sa prichádzajúce správy nezobrazujú mimo aplikácie ako upozornenia, môžete sa znova registrovať na upozornenia.";
+"settings_advanced_reregister_notifications_label" = "Znova registrovať automatické upozornenia";
 
 // Dev Mode
 "settings_devmode_quote_v2" = "Citovať V2";
@@ -1227,8 +1232,8 @@ Pokiaľ vám v %@ nechýbajú žiadne (mediálne) súbory, vyprázdnite kôš, a
 "pasteErrorMessageMessage" = "Položka sa nedá vložiť kvôli neznámej chybe. Skúste to znovu.";
 "media_preview_preview_button_accessibility_label" = "Zobraziť náhľad";
 "preview" = "Náhľad";
-"could_not_add_all_items_memory_constrained_title" = "Súbor nebol spracovaný";
-"could_not_add_all_items_memory_constrained_message" = "Jeden alebo viacero súborov nebolo možné spracovať z dôvodu technických obmedzení. Skúste odoslať tieto súbory priamo zo samotnej aplikácie.";
+"could_not_add_all_items_memory_constrained_title" = "Použite, prosím, aplikáciu";
+"could_not_add_all_items_memory_constrained_message" = "Z technických dôvodov je možné súbory, ktoré presahujú určitú veľkosť, poslať iba v aplikácii.";
 "image_preview_cell_cannot_preview" = "Nie je možné zobraziť náhľad.";
 
 // Share Extension
@@ -1319,7 +1324,7 @@ Pokiaľ vám v %@ nechýbajú žiadne (mediálne) súbory, vyprázdnite kôš, a
 "multi_device_linked_devices_failed_to_load_message" = "Nepodarilo sa načítať prepojené zariadenia, skontrolujte svoje internetové pripojenie a skúste to znova.";
 "multi_device_linked_devices_this" = "Toto zariadenie";
 "multi_device_linked_devices_others" = "Iné zariadenia";
-"multi_device_linked_devices_remove_failed" = "Odstránenie zariadenia zlyhalo: %@";
+"multi_device_linked_devices_remove_failed" = "Zariadenie sa nepodarilo odstrániť: %@";
 "multi_device_linked_devices_failed_remove_title" = "Zariadenie sa nepodarilo odstrániť";
 "multi_device_linked_devices_failed_remove_message" = "Prepojené zariadenie sa nepodarilo odstrániť, skúste to znova.";
 "multi_device_linked_devices_failed_remove_message_2" = "Prepojené zariadenie sa nepodarilo odstrániť. Skontrolujte svoje internetové pripojenie a skúste to znova.";

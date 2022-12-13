@@ -99,10 +99,8 @@ import Foundation
         }
         
         for rate in possibleRates {
-            let totAudioRate = (rate.audioRate * rate.audioChannels) / 8
-            let totVideoRate = rate.videoRate / 8
-            let fileSize = Int(totVideoRate + totAudioRate) * duration
-            DDLogInfo("Video File Size is \(fileSize)")
+            let fileSize = Int(VideoConversionHelper.estimatedFileSize(for: rate, with: Int64(duration)))
+            DDLogVerbose("Video File Size is \(fileSize)")
             if fileSize <= kMaxFileSize {
                 return rate
             }
@@ -113,14 +111,36 @@ import Foundation
     @objc public static func videoHasAllowedSize(at url: URL) -> Bool {
         let asset = AVURLAsset(url: url)
         
-        return assetHasAllowedSize(asset: asset)
+        return maybeGetMovieRate(for: asset) != nil
     }
     
-    @objc public static func assetHasAllowedSize(asset: AVAsset) -> Bool {
+    public static func getEstimatedVideoFileSize(for url: URL) -> Double? {
+        let asset = AVURLAsset(url: url)
+        
+        return getEstimatedVideoFileSize(for: asset)
+    }
+    
+    public static func getEstimatedVideoFileSize(for asset: AVAsset) -> Double? {
+        guard let rate = maybeGetMovieRate(for: asset) else {
+            return nil
+        }
+        let duration = asset.duration.seconds
+        return Double(estimatedFileSize(for: rate, with: Int64(duration)))
+    }
+    
+    private static func estimatedFileSize(for rate: MovieRate, with duration: Int64) -> Int64 {
+        let totAudioRate = Int64((rate.audioRate * rate.audioChannels) / 8)
+        let totVideoRate = Int64(rate.videoRate / 8)
+        let estimatedFileSize = (totVideoRate + totAudioRate) * duration + fileOverhead
+        
+        return estimatedFileSize
+    }
+    
+    private static func maybeGetMovieRate(for asset: AVAsset) -> MovieRate? {
         let duration = Int(asset.duration.seconds)
         
         guard let videoTrack = asset.tracks(withMediaType: .video).first else {
-            return false
+            return nil
         }
         
         let audioTrack = asset.tracks(withMediaType: .audio).first
@@ -135,14 +155,12 @@ import Foundation
             audioRate = Int(audioTrack!.estimatedDataRate)
         }
         
-        let bitRate = VideoConversionHelper.getHighestPossibleBitrate(
+        return VideoConversionHelper.getHighestPossibleBitrate(
             duration: duration,
             audioBitrate: audioRate,
             videoBitrate: videoRate,
             videoSize: videoSize
         )
-        
-        return bitRate != nil
     }
     
     @objc public static func getMaxdurationFor(videoBitrate: Int64, audioBitrate: Int64) -> Int64 {

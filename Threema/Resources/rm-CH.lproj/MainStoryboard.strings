@@ -75,7 +75,7 @@
 "YoS-Np-Z37.placeholder" = "ID";
 
 /* Class = "UILabel"; text = "Your ID backup"; ObjectID = "ZIq-dn-JdH"; */
-"ZIq-dn-JdH.text" = "Il backup da tia ID";
+"ZIq-dn-JdH.text" = "L'export da tia ID";
 
 /* Class = "UILabel"; text = "Read"; ObjectID = "Zrm-eG-ewD"; */
 "Zrm-eG-ewD.text" = "Legì";
@@ -141,7 +141,7 @@
 "qNO-eF-kmI.text" = "Consegnà";
 
 /* Class = "UINavigationItem"; title = "Backup"; ObjectID = "tUV-iz-VQc"; */
-"tUV-iz-VQc.title" = "Backup";
+"tUV-iz-VQc.title" = "Export da l'ID";
 
 /* Class = "UILabel"; text = "Nickname"; ObjectID = "tr2-Ia-imu"; */
 "tr2-Ia-imu.text" = "Surnum";

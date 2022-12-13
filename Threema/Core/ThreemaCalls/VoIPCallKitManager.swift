@@ -78,9 +78,9 @@ extension VoIPCallKitManager {
         uuid
     }
     
-    func reportIncomingCall(uuid: UUID, contactIdentity: String) {
+    func reportIncomingCall(uuid: UUID, contactIdentity: String, contactName: String?) {
         self.uuid = uuid
-        callerName = contactIdentity
+        callerName = contactName ?? contactIdentity
         provider.configuration = VoIPCallKitManager.providerConfiguration(for: contactIdentity)
         let update = CXCallUpdate()
         update.remoteHandle = CXHandle(type: .generic, value: contactIdentity)
@@ -116,12 +116,15 @@ extension VoIPCallKitManager {
         update.supportsHolding = false
         update.supportsDTMF = false
         update.hasVideo = false
-        if let contact = BusinessInjector().entityManager.entityFetcher.contact(for: contactIdentity) {
-            update.localizedCallerName = contact.displayName
-            callerName = contact.displayName
-        }
-        else {
-            callerName = contactIdentity
+        let entityManager = BusinessInjector().entityManager
+        entityManager.performBlock {
+            if let contact = BusinessInjector().entityManager.entityFetcher.contact(for: contactIdentity) {
+                update.localizedCallerName = contact.displayName
+                self.callerName = contact.displayName
+            }
+            else {
+                self.callerName = contactIdentity
+            }
         }
         
         RTCAudioSession.sharedInstance().useManualAudio = true

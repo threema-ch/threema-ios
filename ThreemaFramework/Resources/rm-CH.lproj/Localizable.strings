@@ -41,7 +41,7 @@
 
 "error_sending_failed" = "Betg reussì da trametter";
 "error_constraints_failed" = "La datoteca na vegn betg sustegnida";
-"error_message_file_too_big" = "La datoteca è memia gronda, ella dastga esser maximalmain 50MB.";
+"error_message_file_too_big" = "La datoteca è memia gronda, ella dastga esser maximalmain %@.";
 "error_message_invalid_file" = "La datoteca na po betg vegnir legida.";
 "error_message_generic" = "Betg reussì da chargiar si.";
 
@@ -85,3 +85,5 @@
 "testflight_feedback_title" = "P.pl. trametter a nus tes feedback Beta";
 "testflight_feedback_description" = "Grazia fitg che ti testeschas la versiun Threema Beta. Mo testar na tanscha però betg, nus duvrain tes resun. Fa p.pl. da savair, sche ti chattas bugs u irregularitads. Va simplamain sin «Configuraziuns > Feedback Beta» per avrir il chat da Beta.";
 
+"notification.threemaweb.connect.title" = "Desktop/web";
+"notification.threemaweb.connect.body" = "Cliccar qua per restituir la colliaziun cun l'app da desktop/il Web Client.";

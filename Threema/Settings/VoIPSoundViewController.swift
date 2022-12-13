@@ -40,6 +40,8 @@ class VoIPSoundViewController: ThemedTableViewController {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
+        title = BundleUtil.localizedString(forKey: "settings_threema_calls_call_sound")
+        
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(applicationDidEnterBackground(application:)),

@@ -60,7 +60,7 @@ class TaskExecutionSendMessage: TaskExecution, TaskExecutionProtocol {
                     }
                     else {
                         guard let contact = conversation.contact else {
-                            seal.reject(TaskExecutionError.createAbsractMessageFailed)
+                            seal.reject(TaskExecutionError.messageReceiverBlockedOrUnknown)
                             return
                         }
                         identity = contact.identity
@@ -97,6 +97,7 @@ class TaskExecutionSendMessage: TaskExecution, TaskExecutionProtocol {
                     if task.isGroupMessage {
                         // Do not send message for note group
                         if task.isNoteGroup ?? false {
+                            task.sendContactProfilePicture = false
                             if let messageID = (task as? TaskDefinitionSendBaseMessage)?.messageID {
                                 self.frameworkInjector.backgroundEntityManager.markMessageAsSent(messageID)
                             }
@@ -148,7 +149,7 @@ class TaskExecutionSendMessage: TaskExecution, TaskExecutionProtocol {
                               contactIdentity != self.frameworkInjector.myIdentityStore.identity,
                               !self.frameworkInjector.userSettings.blacklist.contains(contactIdentity)
                         else {
-                            seal.reject(TaskExecutionError.sendMessageFailed(message: "(unknown receiver)"))
+                            seal.reject(TaskExecutionError.messageReceiverBlockedOrUnknown)
                             return
                         }
 

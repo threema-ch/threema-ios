@@ -41,6 +41,7 @@ public class GroupManager: NSObject, GroupManagerProtocol {
     private enum FetchedContactOrError: Equatable {
         case added
         case revokedOrInvalid(String)
+        case blocked(String)
         case localNotFound
         case error
     }
@@ -162,25 +163,17 @@ public class GroupManager: NSObject, GroupManagerProtocol {
                     members: members
                 )
 
-                return Promise { seal in
-                    self.taskManager.add(taskDefinition: task) { _, error in
-                        if let error = error {
-                            seal.reject(error)
-                        }
-                        else {
-                            self.sendGroupBallotIsNotClosed(group, newMembers)
-                            seal.fulfill_()
-                        }
+                self.taskManager.add(taskDefinition: task) { _, error in
+                    if error == nil {
+                        self.sendGroupBallotIsNotClosed(group, newMembers)
                     }
-                }
-                .then {
-                    Promise { $0.fulfill((group, newMembers)) }
                 }
             }
             else {
                 self.sendGroupBallotIsNotClosed(group, newMembers)
-                return Promise { $0.fulfill((group, newMembers)) }
             }
+
+            return Promise { $0.fulfill((group, newMembers)) }
         }
     }
 
@@ -357,11 +350,14 @@ public class GroupManager: NSObject, GroupManagerProtocol {
                                     if case .revokedOrInvalid(memberIdentity) = contactState {
                                         return true
                                     }
+                                    else if case .blocked(memberIdentity) = contactState {
+                                        return true
+                                    }
                                     return false
                                 }
                                 if isIdentityRevoked {
-                                    // Do nothing because the contact never existed or was revoked
-                                    DDLogVerbose("Skip invalid or revoked contact")
+                                    // Do nothing because the contact never existed or was revoked or blocked
+                                    DDLogVerbose("Skip invalid, revoked or blocked contact")
                                     continue
                                 }
                                 else {
@@ -512,6 +508,9 @@ public class GroupManager: NSObject, GroupManagerProtocol {
                             if let nsError = error as? NSError, nsError.domain == NSURLErrorDomain,
                                nsError.code == 404 {
                                 singleContactSeal.fulfill(.revokedOrInvalid(identity))
+                            }
+                            else if let nsError = error as? NSError, nsError.code == kBlockUnknownContactErrorCode {
+                                singleContactSeal.fulfill(.blocked(identity))
                             }
                             else {
                                 singleContactSeal.fulfill(.error)

@@ -654,14 +654,15 @@
 "new_message_no_access_title" = "新しいメッセージ";
 "new_message_no_access_message" = "%@を開いて受信メッセージを取得してください。";
 "new_message_invalid_license" = "ライセンスの有効期限が切れています。アプリを開いて続行してください。";
+"new_message_db_requires_migration" = "データベースの移行が必要です。アプリを開いて続行してください。";
 
 /* reminder messages */
 "push_reminder_title" = "プッシュ通知が有効ではありません";
-"push_reminder_message" = "%@はあなたにプッシュ通知を送る許可を得ていないようです。%@が閉じていると、新しいメッセージが通知されません。iOSの設定 ＞ 通知で、%@の通知を有効にして、メッセージを見逃さないようにしましょう。";
-"not_now" = "あとで";
-"set_now" = "今設定する";
+"push_reminder_message" = "%@が閉じていると、新着メッセージや着信が通知されません。\n\nTo修正するには、システムの設定に移動し、%@の通知を有効にしてください。";
+"push_reminder_not_now" = "二度と通知しない";
+"push_reminder_set_now" = "通知を有効化";
 
-"updating_database" = "データベースの更新中...\n\nこの操作を中断しないでください。メッセージデータベースが大きい場合は、数分かかることがあります。";
+"updating_database" = "データベースの更新中...\n\n完了するまでフォアグラウンドでThreemaを実行したままにしてください。\n\nチャット履歴が多い場合、完了まで数分かかることがあります。";
 "database_migration_error_hints" = "お使いの端末に十分な空き容量があることを確認し、端末を再起動してから再度お試しください。";
 "database_migration_storage_warning_title" = "利用可能なストレージが不足しています";
 "database_migration_storage_warning_message" = "データベースの更新には，少なくとも %.1f GB の利用可能なストレージが一時的に必要です。お使いのデバイスには、現在 %.1f GB の空き容量しかありません。使用状況の設定でアイテムを削除するなどしてストレージの空き容量を増やしてから、再度お試しください。";
@@ -836,6 +837,7 @@
 "privateChat_code_alert_confirm" = "今設定する";
 "privateChat_set_alert_title" = "このトークをプライベートとしてマークしますか？";
 "privateChat_set_alert_message" = "プライバシー設定で、プライベートトークの表示／非表示を切り替えることができます。";
+"privateChat_setup_alert_message" = "Threema Safeのバックアップにはプライベートチャットが含まれているため、アクセスするにはパスコードを設定する必要があります。";
 "hide_private_toggle" = "プライベートトークを隠す";
 "privacy_footer" = "トークの概要ですべてのプライベートトークを非表示にします。この設定を有効にするには、パスコードを設定する必要があります。";
 
@@ -1101,6 +1103,9 @@
 
 "settings_advanced_flush_message_queue" = "メッセージキューのフラッシュ処理";
 "settings_advanced_orphaned_files_cleanup" = "オーファンファイルの削除";
+"settings_advanced_reregister_push_notifications_header_title" = "プッシュ通知";
+"settings_advanced_reregister_push_notifications_footer_title" = "受信したメッセージがアプリ外に通知として表示されない場合は、通知を再登録することができます。";
+"settings_advanced_reregister_notifications_label" = "プッシュ通知を再登録";
 
 // Dev Mode
 "settings_devmode_quote_v2" = "Quote V2";
@@ -1228,7 +1233,7 @@ iTunesのバックアップを作成してから行ってください。";
 "pasteErrorMessageMessage" = "不明なエラーが発生したため、アイテムを貼り付けることができませんでした。もう一度お試しください。";
 "media_preview_preview_button_accessibility_label" = "プレビューを表示";
 "preview" = "プレビュー";
-"could_not_add_all_items_memory_constrained_title" = "ファイルが処理されていません";
+"could_not_add_all_items_memory_constrained_title" = "アプリを使用してください";
 "could_not_add_all_items_memory_constrained_message" = "技術的な制約により、1つまたは複数のファイルを処理できませんでした。これらのファイルをアプリケーションから直接送信してください。";
 "image_preview_cell_cannot_preview" = "プレビューを表示できません。";
 

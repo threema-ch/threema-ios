@@ -540,6 +540,17 @@ extension NotificationService: MessageProcessorDelegate {
             }
         }
     }
+
+    func incomingMessageFailed(_ message: BoxedMessage) {
+        if let pendingUserNotification = pendingUserNotificationManager?.pendingUserNotification(
+            for: message,
+            stage: .initial
+        ) {
+            pendingUserNotificationManager?.addAsProcessed(pendingUserNotification: pendingUserNotification)
+            pendingUserNotificationManager?
+                .removeAllTimedUserNotifications(pendingUserNotification: pendingUserNotification)
+        }
+    }
     
     func taskQueueEmpty(_ queueTypeName: String) {
         let queueType = TaskQueueType.queue(name: queueTypeName)
@@ -584,6 +595,7 @@ extension NotificationService: MessageProcessorDelegate {
     ) {
         switch message {
         case is VoIPCallOfferMessage:
+            let offerMessage = message as! VoIPCallOfferMessage
             guard let identity = identity else {
                 DDLogError("No contact for processing VoIP call offer.")
                 onCompletion?(self)
@@ -591,15 +603,16 @@ extension NotificationService: MessageProcessorDelegate {
             }
             if #available(iOSApplicationExtension 15, *) {
                 guard businessInjector.userSettings.enableThreemaCall else {
-                    let offerMessage = message as! VoIPCallOfferMessage
                     offerMessage.contactIdentity = identity
                     rejectCall(offer: offerMessage)
                     onCompletion?(self)
                     return
                 }
                 
+                let displayName = businessInjector.entityManager.entityFetcher.displayName(for: identity)!
+                
                 reportVoIPCall(
-                    for: ["NotificationExtensionOffer": identity],
+                    for: ["NotificationExtensionOffer": identity, "NotificationExtensionCallerName": displayName],
                     message: message as! VoIPCallOfferMessage,
                     from: identity,
                     onCompletion: onCompletion

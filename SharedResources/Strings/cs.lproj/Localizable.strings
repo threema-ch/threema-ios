@@ -652,14 +652,17 @@
 "new_message_no_access_title" = "Nové zprávy";
 "new_message_no_access_message" = "Otevřete %@ a stáhněte si příchozí zprávy.";
 "new_message_invalid_license" = "Platnost vaší licence skončila, pro pokračování otevřete aplikaci.";
+"new_message_db_requires_migration" = "Je vyžadováno převedení databáze, pokračujte otevřením aplikace.";
 
 /* reminder messages */
-"push_reminder_title" = "Nabízená oznámení nejsou povolená";
-"push_reminder_message" = "Zdá se, že %@ nemá oprávnění k posílání nabízených oznámení. Když %@ zavřete, nebudete dostávat informace o nových zprávách. Přejděte do nabídky Nastavení iOS > Oznámení a povolte oznámení pro %@, abyste žádné zprávy nezmeškali.";
-"not_now" = "Teď ne";
-"set_now" = "Nastavit";
+"push_reminder_title" = "Oznámení nejsou povolená";
+"push_reminder_message" = "Když zavřete, nebudete dostávat informace o nových zprávách a příchozích hovorech v %@.
 
-"updating_database" = "Aktualizace databáze...\n\nNepřerušujte prosím tuto operaci! U velkých databází zpráv může trvat i několik minut.";
+Chcete-li to opravit, přejděte do nabídky Nastavení systému a povolte oznámení pro %@.";
+"push_reminder_not_now" = "Příště nepřipomínat";
+"push_reminder_set_now" = "Povolit oznámení";
+
+"updating_database" = "Aktualizace databáze…\n\nNechte aplikaci Threema spuštěnou v popředí, dokud operace nedoběhne do konce.\n\nMáte-li velkou historii chatu, může tato akce trvat i několik minut.";
 "database_migration_error_hints" = "Zkontrolujte, zda máte na zařízení dostatek volného místa, restartujte zařízení a zkuste to znovu.";
 "database_migration_storage_warning_title" = "Nedostatek místa na úložišti";
 "database_migration_storage_warning_message" = "Aktualizace databáze dočasně potřebuje alespoň %.1f GB volného místa na úložišti. Na vašem zařízení je k dispozici jen %.1f GB. Uvolněte prosím místo smazáním položek v nabídce Nastavení využití a zkuste to znovu.";
@@ -834,6 +837,7 @@
 "privateChat_code_alert_confirm" = "Nastavit nyní";
 "privateChat_set_alert_title" = "Chcete tento chat označit jako soukromý?";
 "privateChat_set_alert_message" = "Viditelnost soukromých chatů můžete přepnout v nastavení Soukromí.";
+"privateChat_setup_alert_message" = "Záloha vašeho Trezoru Threema obsahovala soukromé konverzace, pro jejich otevření musíte nastavit přístupový kód.";
 "hide_private_toggle" = "Skrýt soukromé chaty";
 "privacy_footer" = "Skryje všechny soukromé chaty v přehledu chatů. Pro aktivaci tohoto nastavení je třeba nastavit přístupový kód.";
 
@@ -1098,6 +1102,9 @@
 
 "settings_advanced_flush_message_queue" = "Pročistit frontu zpráv";
 "settings_advanced_orphaned_files_cleanup" = "Odstranit nepotřebné soubory";
+"settings_advanced_reregister_push_notifications_header_title" = "Nabízená oznámení";
+"settings_advanced_reregister_push_notifications_footer_title" = "Pokud se vám příchozí zprávy nezobrazují mimo aplikaci jako oznámení, můžete si je znovu aktivovat.";
+"settings_advanced_reregister_notifications_label" = "Znovu aktivovat nabízená oznámení";
 
 // Dev Mode
 "settings_devmode_quote_v2" = "Citování V2";
@@ -1225,8 +1232,8 @@ Pokud vám v %@ nechybí žádné (mediální) soubory, vyprázdněte koš, abys
 "pasteErrorMessageMessage" = "Položku nelze vložit z důvodu neznámé chyby. Prosím, zkuste to znovu.";
 "media_preview_preview_button_accessibility_label" = "Zobrazit náhled";
 "preview" = "Náhled";
-"could_not_add_all_items_memory_constrained_title" = "Soubor nezpracován";
-"could_not_add_all_items_memory_constrained_message" = "Jeden nebo více souborů nebylo možné zpracovat z důvodu technických omezení. Zkuste tyto soubory odeslat přímo z aplikace.";
+"could_not_add_all_items_memory_constrained_title" = "Použijte aplikaci";
+"could_not_add_all_items_memory_constrained_message" = "Z technických důvodů mohou být soubory přesahující určitou velikost poslány pouze přes aplikaci.";
 "image_preview_cell_cannot_preview" = "Nelze zobrazit náhled.";
 
 // Share Extension
@@ -1315,9 +1322,9 @@ Pokud vám v %@ nechybí žádné (mediální) soubory, vyprázdněte koš, abys
 "multi_device_linked_devices_loading_failed" = "Načtení zařízení se nezdařilo: %@";
 "multi_device_linked_devices_failed_to_load_title" = "Nepodařilo se načíst seznam zařízení";
 "multi_device_linked_devices_failed_to_load_message" = "Nelze načíst propojená zařízení, zkontrolujte připojení k internetu a zkuste to znovu.";
-"multi_device_linked_devices_this" = "Tato zařízení";
+"multi_device_linked_devices_this" = "Toto zařízení";
 "multi_device_linked_devices_others" = "Jiná zařízení";
-"multi_device_linked_devices_remove_failed" = "Odebrání zařízení se nezdařilo: %@";
+"multi_device_linked_devices_remove_failed" = "Nepodařilo se odebrat zařízení: %@";
 "multi_device_linked_devices_failed_remove_title" = "Nepodařilo se odebrat zařízení";
 "multi_device_linked_devices_failed_remove_message" = "Nelze odebrat propojené zařízení, zkuste to znovu.";
 "multi_device_linked_devices_failed_remove_message_2" = "Nelze odebrat propojené zařízení, zkontrolujte připojení k internetu a zkuste to znovu.";

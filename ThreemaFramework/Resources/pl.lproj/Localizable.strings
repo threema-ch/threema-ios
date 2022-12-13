@@ -86,4 +86,4 @@
 "testflight_feedback_description" = "Dziękujemy za testowanie wersji beta Threema. Jednak testy to nie wszystko, potrzebne są również opinie na ich temat. Daj nam znać, jeśli napotkasz jakieś błędy lub nieprawidłowości. Po prostu przejdź do opcji Ustawienia > Opinie o wersji beta, aby otworzyć czat dotyczący tej wersji.";
 
 "notification.threemaweb.connect.title" = "Komputer/sieć";
-"notification.threemaweb.connect.body" = "Dotknij to powiadomienie, aby ponownie nawiązać połączenie z klientem aplikacji komputerowej/sieciowej.";
+"notification.threemaweb.connect.body" = "Dotknij tutaj, aby ponownie nawiązać połączenie z klientem aplikacji komputerowej/sieciowej.";

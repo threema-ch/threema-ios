@@ -652,12 +652,13 @@
 "new_message_no_access_title" = "Nuovi messaggi";
 "new_message_no_access_message" = "Apri %@ per ricevere i messaggi in arrivo.";
 "new_message_invalid_license" = "La tua licenza non è valida. Apri l'app per procedere.";
+"new_message_db_requires_migration" = "Aggiornare la banca dati. Aprire l'app per proseguire.";
 
 /* reminder messages */
 "push_reminder_title" = "Le notifiche push non sono attivate";
 "push_reminder_message" = "A quanto pare %@ non è autorizzata a inviarti notifiche push. Ciò significa che non puoi ricevere le notifiche sui nuovi messaggi quando %@ è chiusa. Vai sulle impostazioni iOS e attiva alla voce \"Notifiche\" le notifiche per %@, così non ti perderai più un messaggio.";
-"not_now" = "Non ora";
-"set_now" = "Crea ora";
+"push_reminder_not_now" = "Non ricordarmelo più";
+"push_reminder_set_now" = "Attivare le notifiche";
 
 "updating_database" = "Aggiornamento banca dati in corso...\n\nNon interrompere il processo. In caso di banche dati molto ampie, l’operazione può richiedere alcuni minuti.";
 "database_migration_error_hints" = "Assicurati di disporre di memoria a sufficienza sul dispositivo, riavvialo e riprova.";
@@ -834,6 +835,7 @@
 "privateChat_code_alert_confirm" = "Imposta adesso";
 "privateChat_set_alert_title" = "Vuoi segnare questa chat come privata?";
 "privateChat_set_alert_message" = "Puoi stabilire la visibilità delle chat private nelle impostazioni alla voce Sfera privata.";
+"privateChat_setup_alert_message" = "Il tuo backup Threema Save contiene delle chat private. Per aprirle devi definire un codice d'accesso.";
 "hide_private_toggle" = "Nascondi chat private";
 "privacy_footer" = "Le chat private non vengono elencate nella lista delle chat. Per attivare questa impostazione occorre attivare il blocco codice.";
 
@@ -1098,6 +1100,9 @@
 
 "settings_advanced_flush_message_queue" = "Scarica coda messaggi";
 "settings_advanced_orphaned_files_cleanup" = "Cancella file abbandonati";
+"settings_advanced_reregister_push_notifications_header_title" = "Notifiche push";
+"settings_advanced_reregister_push_notifications_footer_title" = "Se non ricevi le notifiche dei messaggi in entrata al di fuori dell'app puoi iscriverti di nuovo per ricevere le notifiche push.";
+"settings_advanced_reregister_notifications_label" = "Registrare ancora una volta le notifiche push";
 
 // Dev Mode
 "settings_devmode_quote_v2" = "Quote V2";
@@ -1314,8 +1319,14 @@ Se non mancano media e/o file in %@, svuota il cestino per cancellare definitiva
 "multi_device_linked_devices_refresh" = "Scorri giù per aggiornare";
 "multi_device_linked_devices_loading_failed" = "Errore durante il caricamento dei dispositivi: %@";
 "multi_device_linked_devices_failed_to_load_title" = "Errore durante il caricamento della lista dei dispositivi";
+"multi_device_linked_devices_failed_to_load_message" = "Impossibile caricare i dispositivi collegati. Verifica la connessione a Internet e riprova.";
 "multi_device_linked_devices_this" = "Questo dispositivo";
 "multi_device_linked_devices_others" = "Altri dispositivi";
+"multi_device_linked_devices_remove_failed" = "Errore di eliminazione del dispositivo: %@";
+"multi_device_linked_devices_failed_remove_title" = "Impossibile eliminare il dispositivo";
+"multi_device_linked_devices_failed_remove_message" = "Impossibile eliminare il dispositivo collegato. Riprova.";
+"multi_device_linked_devices_failed_remove_message_2" = "Impossibile eliminare il dispositivo collegato. Verifica la connessione a Internet e riprova.";
+
 "myprofile_link_email_phone_footer" = "Collegando il tuo indirizzo e-mail o numero di telefono al tuo ID, altre persone possono trovarti automaticamente su %@ se figuri nella loro rubrica.";
 "myprofile_link_email_footer" = "Collegando il tuo indirizzo e-mail al tuo ID, altri utenti possono trovarti automaticamente su %@, se figuri nella loro rubrica.";
 "myprofile_link_email_onprem_footer" = "Collegando il tuo indirizzo e-mail al tuo Threema ID, altri utenti di questo server (%@) possono trovarti automaticamente su %@, se il tuo indirizzo e-mail è memorizzato nella loro rubrica.";

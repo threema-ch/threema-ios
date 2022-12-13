@@ -26,6 +26,7 @@ enum TaskExecutionError: Error {
     case createAbsractMessageFailed
     case createReflectedMessageFailed
     case noDeviceGroupPathKey
+    case messageReceiverBlockedOrUnknown
     case missingGroupInformation
     case missingMessageInformation
     case processIncomingMessageFailed(message: String?)

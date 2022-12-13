@@ -86,4 +86,4 @@
 "testflight_feedback_description" = "Děkujeme vám za testování beta verze Threema. Testování je však jen polovina rovnice, druhou polovinou je poskytování zpětné vazby. Dejte nám prosím vědět, pokud narazíte na nějaké chyby nebo nesrovnalosti. Stačí přejít do Nastavení > Zpětná vazba k beta verzi a otevřít chat k beta verzi.";
 
 "notification.threemaweb.connect.title" = "Desktop/Web";
-"notification.threemaweb.connect.body" = "Klepnutím na toto oznámení obnovíte připojení k desktopové aplikaci / webovému klientovi.";
+"notification.threemaweb.connect.body" = "Klepnutím sem obnovíte připojení k desktopové aplikaci / webovému klientovi.";

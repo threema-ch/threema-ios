@@ -332,6 +332,17 @@ extension IncomingMessageManager: MessageProcessorDelegate {
         }
     }
     
+    func incomingMessageFailed(_ message: BoxedMessage) {
+        if let pendingUserNotification = pendingUserNotificationManager.pendingUserNotification(
+            for: message,
+            stage: .initial
+        ) {
+            pendingUserNotificationManager.addAsProcessed(pendingUserNotification: pendingUserNotification)
+            pendingUserNotificationManager
+                .removeAllTimedUserNotifications(pendingUserNotification: pendingUserNotification)
+        }
+    }
+
     public func taskQueueEmpty(_ queueTypeName: String) {
         let queueType = TaskQueueType.queue(name: queueTypeName)
         if queueType == .incoming {

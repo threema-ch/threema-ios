@@ -18,6 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import CocoaLumberjackSwift
 import Foundation
 
 public extension BaseMessage {
@@ -198,8 +199,8 @@ public extension BaseMessage {
             return .none
         }
         
-        if conversation.isGroup() ||
-            conversation.contact?.isGatewayID() ?? false {
+        if isGroupMessage ||
+            conversation?.contact?.isGatewayID() ?? false {
             return displayStateForGatewayOrGroupMessage
         }
         else {
@@ -260,6 +261,11 @@ public extension BaseMessage {
         // If user delete a message, the conversation property in the message is nil
         // We have to use the date if it's on state willBeDeleted
         if willBeDeleted {
+            guard let date else {
+                DDLogError("No display date. Will deleted is true and date nil")
+                return Date()
+            }
+            
             return date
         }
 
@@ -267,11 +273,21 @@ public extension BaseMessage {
             return userackDate
         }
             
-        if conversation.isGroup() {
+        if isGroupMessage {
             if isOwnMessage {
+                guard let date else {
+                    DDLogError("No display date. Date nil")
+                    return .now
+                }
+                
                 return date
             }
             else {
+                guard let remoteSentDate else {
+                    DDLogError("No display date. Remote sent date nil")
+                    return .now
+                }
+                
                 return remoteSentDate
             }
         }
@@ -290,12 +306,15 @@ public extension BaseMessage {
                 return deliveryDate
             }
             // Sent and everything else
-            else {
+            else if let date {
                 return date
             }
         }
-        else {
+        else if let remoteSentDate {
             return remoteSentDate
         }
+        
+        DDLogError("Unable to get date for displayDateForSingleMessage")
+        return .now
     }
 }

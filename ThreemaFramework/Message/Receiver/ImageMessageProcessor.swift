@@ -181,7 +181,7 @@ import PromiseKit
                         msg.thumbnail = thumbnail
 
                         // Mark blob as done, if is group message and Multi Device is activated then always on `local` origin
-                        if !msg.conversation.isGroup() {
+                        if !msg.isGroupMessage {
                             MessageSender.markBlobAsDone(blobID: msg.imageBlobID, origin: msg.blobGetOrigin())
                         }
                         else if self.serverConnector.isMultiDeviceActivated {

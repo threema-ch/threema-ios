@@ -121,7 +121,7 @@ public class UserNotificationManager: UserNotificationManagerProtocol {
         if let identity = pendingUserNotification.senderIdentity,
            let sender = entityManager.entityFetcher.contact(for: identity) {
             userNotificationContent.fromName = userSettings.pushShowNickname ?
-                nickname(for: pendingUserNotification) : sender.displayName
+                sender.publicNickname ?? identity : sender.displayName
         }
         else {
             guard !userSettings.blockUnknown else {
@@ -130,20 +130,20 @@ public class UserNotificationManager: UserNotificationManagerProtocol {
             
             userNotificationContent.fromName = nickname(for: pendingUserNotification)
         }
-        
-        // Apply content from threema push
+
+        // Apply content from Threema push
         userNotificationContent.body = String.localizedStringWithFormat(
             BundleUtil.localizedString(
                 forKey: pendingUserNotification.isGroupMessage! ? "new_group_message_from_x" : "new_message_from_x"
             ),
-            userNotificationContent.fromName!
+            userNotificationContent.fromName ?? pendingUserNotification.senderIdentity ?? "unknown"
         )
         
         if userSettings.pushDecrypt {
             if let baseMessage = pendingUserNotification.baseMessage {
                 // Apply content from base message
                 if userNotificationContent.isGroupMessage {
-                    userNotificationContent.title = baseMessage.conversation.groupName ?? userNotificationContent
+                    userNotificationContent.title = baseMessage.conversation?.groupName ?? userNotificationContent
                         .fromName
                     userNotificationContent.body = TextStyleUtils
                         .makeMentionsString(
@@ -376,27 +376,21 @@ public class UserNotificationManager: UserNotificationManagerProtocol {
 
 extension UserNotificationManager {
     private func nickname(for pendingUserNotification: PendingUserNotification) -> String? {
-        guard pendingUserNotification.threemaPushNotification != nil else {
-            if let baseMessage = pendingUserNotification.baseMessage,
-               let conversation = baseMessage.conversation {
-                if conversation.isGroup() {
-                    if let contact = entityManager.entityFetcher.contact(for: pendingUserNotification.senderIdentity),
-                       let publicNickname = contact.publicNickname {
-                        return publicNickname
-                    }
-                }
-                else {
-                    if let contact = conversation.contact,
-                       let publicNickname = contact.publicNickname {
-                        return publicNickname
-                    }
+        if let baseMessage = pendingUserNotification.baseMessage,
+           let conversation = baseMessage.conversation {
+            if conversation.isGroup() {
+                if let contact = entityManager.entityFetcher.contact(for: pendingUserNotification.senderIdentity),
+                   let publicNickname = contact.publicNickname {
+                    return publicNickname
                 }
             }
-            return pendingUserNotification.senderIdentity
+            else {
+                if let contact = conversation.contact,
+                   let publicNickname = contact.publicNickname {
+                    return publicNickname
+                }
+            }
         }
-        
-        return pendingUserNotification.threemaPushNotification?.nickname == nil || pendingUserNotification
-            .threemaPushNotification?.nickname?.isEmpty == true ? pendingUserNotification
-            .senderIdentity : pendingUserNotification.threemaPushNotification?.nickname
+        return pendingUserNotification.senderIdentity
     }
 }

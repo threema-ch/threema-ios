@@ -212,7 +212,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
         [actionSheet addAction:[UIAlertAction actionWithTitle:[BundleUtil localizedStringForKey:@"debug_log_clear"] style:UIAlertActionStyleDestructive handler:^(UIAlertAction * action) {
             
             [LogManager deleteLogFile:[LogManager debugLogFile]];
-            
+            [LogManager deleteLogFile:[LogManager validationLogFile]];
             [self updateLogSize];
         }]];
         [actionSheet addAction:[UIAlertAction actionWithTitle:[BundleUtil localizedStringForKey:@"cancel"] style:UIAlertActionStyleCancel handler:nil]];

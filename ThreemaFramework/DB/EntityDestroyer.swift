@@ -411,7 +411,6 @@ import Foundation
             if let deletedIDs = deleteResult?.result as? [NSManagedObjectID], !deletedIDs.isEmpty {
                 let dbManager = DatabaseManager()
                 dbManager.refreshDirtyObjectIDs([NSDeletedObjectsKey: deletedIDs], into: objCnx)
-                objCnx.reset()
             }
             else {
                 // Fallback for when the batch delete request misses the objects stored in the DB
@@ -533,6 +532,11 @@ import Foundation
     /// - Parameters:
     ///    - list: List of filenames to delete
     private func deleteExternalFiles(list: [String]) {
+        // It seams, since iOS version 15 is this not necessary anymore. Core Data deleting now the external files.
+        // If we do that yet Core Data crashs with: "External data reference can't find underlying file."
+        // swiftformat:disable:next all
+        return
+
         if !list.isEmpty {
             for filename in list {
                 let fileURL = FileUtility.appDataDirectory?

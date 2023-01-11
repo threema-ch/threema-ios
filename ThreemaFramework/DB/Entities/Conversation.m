@@ -68,7 +68,12 @@ static NSString *fieldVisibility = @"visibility";
             return @""; // The group has no name
         }
     } else {
-        return self.contact.displayName;
+        if (self.contact != nil) {
+            return self.contact.displayName;
+        }
+        
+        return @""; // display name is not available
+
     }
 }
 

@@ -501,7 +501,7 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
         NSLayoutConstraint.activate(ownMessageConstraints)
         
         // The `isGroup` is needed as long the top and bottom margins are not equal around system messages
-        let isGroup = messageAndNeighbors.message?.conversation.isGroup() ?? false
+        let isGroup = messageAndNeighbors.message?.isGroupMessage ?? false
         
         setUpdatedInsets(isGroup: isGroup)
         
@@ -515,7 +515,7 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
     }
     
     private func setLayoutForOtherMessage() {
-        let isGroup = messageAndNeighbors.message?.conversation.isGroup() ?? false
+        let isGroup = messageAndNeighbors.message?.isGroupMessage ?? false
         
         // Set base layout
         if isGroup {
@@ -673,7 +673,7 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
             
             DispatchQueue.main.async { [self] in
                 guard let message = messageAndNeighbors.message,
-                      message.sender?.identity == identity || message.conversation.contact?.identity == identity
+                      message.sender?.identity == identity || message.conversation?.contact?.identity == identity
                 else {
                     DDLogVerbose("Not the correct avatar anymore")
                     avatarImageView.image = AvatarMaker.shared().unknownPersonImage()
@@ -719,7 +719,7 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
         // TODO: (IOS-2943) Do we have to check if one is a system message...?
         
         // It needs to have the same sender
-        if lhs.conversation.isGroup() { // We assume both messages are in the same conversation
+        if lhs.isGroupMessage { // We assume both messages are in the same conversation
             // Either the sender should be identical in a group or both messages should be ours
             if let lhsMessageIdentity = lhs.sender?.identity,
                let rhsMessageIdentity = rhs.sender?.identity {
@@ -781,7 +781,7 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
         
         // Has reactions?
         if (message.messageDisplayState == .userAcknowledged || message.messageDisplayState == .userDeclined) ||
-            (message.conversation.isGroup() && message.messageGroupReactionState != .none) {
+            (message.isGroupMessage && message.messageGroupReactionState != .none) {
             return false
         }
         

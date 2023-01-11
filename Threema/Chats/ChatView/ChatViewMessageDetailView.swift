@@ -209,7 +209,7 @@ class ChatViewMessageDetailView: ThemedCodeModernGroupedTableViewController {
             showAck = true
         }
         
-        if !message.conversation.isGroup() {
+        if !message.isGroupMessage {
             showFs = true
         }
 

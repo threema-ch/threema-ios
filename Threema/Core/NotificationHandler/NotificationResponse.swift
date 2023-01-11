@@ -364,7 +364,7 @@ import Foundation
             if let baseMessage = entityManager.entityFetcher.message(with: self.messageID!.decodeHex()),
                let conversation = baseMessage.conversation {
 
-                if !baseMessage.conversation.isGroup(),
+                if !baseMessage.isGroupMessage,
                    let contact = conversation.contact {
                     MessageSender.sendReadReceipt(
                         forMessages: [baseMessage],

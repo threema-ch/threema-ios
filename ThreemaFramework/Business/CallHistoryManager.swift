@@ -77,8 +77,8 @@ public extension CallHistoryManager {
     }
     
     static func removeCallsOlderThanChatServerTimeout(businessInjector: BusinessInjectorProtocol) {
-        businessInjector.entityManager.performSyncBlockAndSafe {
-            businessInjector.entityManager.entityDestroyer.deleteMissedCallsCacheOlderThanTwoWeeks()
+        businessInjector.backgroundEntityManager.performAsyncBlockAndSafe {
+            businessInjector.backgroundEntityManager.entityDestroyer.deleteMissedCallsCacheOlderThanTwoWeeks()
         }
     }
     

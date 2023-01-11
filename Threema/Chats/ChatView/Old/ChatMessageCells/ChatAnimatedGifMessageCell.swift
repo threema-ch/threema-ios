@@ -173,7 +173,7 @@ extension ChatAnimatedGifMessageCell {
             scaledSize = ChatAnimatedGifMessageCell.scaleImageSize(
                 toCell: size,
                 forTableWidth: tableWidth,
-                isGroup: message.conversation.isGroup()
+                isGroup: message.isGroupMessage
             )
             if scaledSize.height != scaledSize.height || scaledSize.height < 0 {
                 scaledSize.height = 40.0
@@ -204,7 +204,7 @@ extension ChatAnimatedGifMessageCell {
             size = ChatAnimatedGifMessageCell.scaleImageSize(
                 toCell: size,
                 forTableWidth: frame.size.width,
-                isGroup: fileMessageEntity.conversation.isGroup()
+                isGroup: fileMessageEntity.isGroupMessage
             )
             if size.height != size.height {
                 size.height = 120.0
@@ -533,7 +533,7 @@ extension ChatAnimatedGifMessageCell {
                 size = ChatAnimatedGifMessageCell.scaleImageSize(
                     toCell: fileMessageSize,
                     forTableWidth: frame.size.width,
-                    isGroup: fileMessageEntity.conversation.isGroup()
+                    isGroup: fileMessageEntity.isGroupMessage
                 )
             }
             

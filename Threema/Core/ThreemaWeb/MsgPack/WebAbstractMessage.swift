@@ -665,7 +665,7 @@ public class WebAbstractMessage: NSObject {
                 conversation = entityManager.entityFetcher.conversation(for: baseMessage.conversation.groupID)
             }
             else {
-                if let contact = baseMessage.conversation.contact {
+                if let contact = baseMessage.conversation?.contact {
                     conversation = entityManager.entityFetcher.conversation(forIdentity: contact.identity)
                 }
             }

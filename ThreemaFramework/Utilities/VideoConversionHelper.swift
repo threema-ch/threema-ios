@@ -41,6 +41,7 @@ import Foundation
         var videoYCbCrMatrixKey: String
         var audioRate: Int32
         var audioChannels: Int32
+        var isOriginal = false
     }
     
     // MARK: Private Properties
@@ -156,9 +157,17 @@ import Foundation
             audioRate = Int(audioTrack.estimatedDataRate)
         }
         
+        var audioTrackChannels: UInt32 = 1
+        if let audioTrackDescription = audioTrack?.formatDescriptions.first,
+           let description =
+           CMAudioFormatDescriptionGetStreamBasicDescription(audioTrackDescription as! CMAudioFormatDescription) {
+            audioTrackChannels = description.pointee.mChannelsPerFrame
+        }
+        
         return VideoConversionHelper.getHighestPossibleBitrate(
             duration: duration,
             audioBitrate: audioRate,
+            audioChannels: Int(audioTrackChannels),
             videoBitrate: videoRate,
             videoSize: videoSize
         )
@@ -179,7 +188,14 @@ import Foundation
         guard let videoTrack = asset.tracks(withMediaType: .video).first else {
             return nil
         }
-        let audioTrackRate = asset.tracks(withMediaType: .audio).first?.estimatedDataRate ?? 0
+        let audioTrack = asset.tracks(withMediaType: .audio).first
+        let audioTrackRate = audioTrack?.estimatedDataRate ?? 0
+        var audioTrackChannels: UInt32 = 1
+        if let audioTrackDescription = audioTrack?.formatDescriptions.first,
+           let description =
+           CMAudioFormatDescriptionGetStreamBasicDescription(audioTrackDescription as! CMAudioFormatDescription) {
+            audioTrackChannels = description.pointee.mChannelsPerFrame
+        }
         
         var srcVideoSize = __CGSizeApplyAffineTransform(videoTrack.naturalSize, videoTrack.preferredTransform)
         let videoSize = Int(max(srcVideoSize.height, srcVideoSize.width))
@@ -196,6 +212,7 @@ import Foundation
         guard let rate = VideoConversionHelper.getHighestPossibleBitrate(
             duration: duration,
             audioBitrate: Int(audioTrackRate),
+            audioChannels: Int(audioTrackChannels),
             videoBitrate: Int(
                 videoTrack
                     .estimatedDataRate
@@ -222,6 +239,11 @@ import Foundation
             return nil
         }
         
+        // Video conversation fails if the 3.1 profile was chosen for a video bigger than 720p. We suspect that this is because of the contradictory video size information but couldn't conform this.
+        // The error code given was error -12900 without any message
+        let profileLevelKey = rate
+            .isOriginal ? AVVideoProfileLevelH264BaselineAutoLevel : AVVideoProfileLevelH264Baseline31
+        
         exportSession.outputURL = outputURL
         exportSession.shouldOptimizeForNetworkUse = true
         exportSession.outputFileType = AVFileType.mp4.rawValue
@@ -232,7 +254,7 @@ import Foundation
             AVVideoHeightKey: NSNumber(value: videoHeight),
             AVVideoCompressionPropertiesKey: [
                 AVVideoAverageBitRateKey: rate.videoRate,
-                AVVideoProfileLevelKey: AVVideoProfileLevelH264Baseline31,
+                AVVideoProfileLevelKey: profileLevelKey,
                 AVVideoColorPrimariesKey: rate.videoColorPrimariesKey,
                 AVVideoTransferFunctionKey: rate.videoTransferFunctionKey,
                 AVVideoYCbCrMatrixKey: rate.videoYCbCrMatrixKey,
@@ -263,6 +285,7 @@ import Foundation
     private static func getHighestPossibleBitrate(
         duration: Int,
         audioBitrate: Int,
+        audioChannels: Int,
         videoBitrate: Int,
         videoSize: Int
     ) -> MovieRate? {
@@ -270,6 +293,7 @@ import Foundation
             userChosenQuality: VideoConversionHelper.videoQualitySetting,
             duration: duration,
             audioBitrate: audioBitrate,
+            audioChannels: audioChannels,
             videoBitrate: videoBitrate,
             videoSize: videoSize
         )
@@ -281,18 +305,19 @@ import Foundation
         userChosenQuality: VideoQualitySetting,
         duration: Int,
         audioBitrate: Int,
+        audioChannels: Int,
         videoBitrate: Int,
         videoSize: Int
     ) -> MovieRate? {
         
-        if userChosenQuality == .low {
+        if UserSettings.shared()?.videoQuality == "low" {
             return rates.last
         }
         
         // There seems to be a minimum value of 32k for AVEncoderBitRateKey
         let audioBitrate = max(Int(movieRateLow.audioRate), audioBitrate)
         
-        let originalSize = Int((videoBitrate + audioBitrate) / 8) * duration
+        let originalSize = Int((videoBitrate + audioBitrate * audioChannels) / 8) * duration
         
         let userChosenMovieRate = VideoConversionHelper.possibleRatesForUserSetting.first!
         
@@ -308,7 +333,8 @@ import Foundation
                 videoTransferFunctionKey: movieRateHigh.videoTransferFunctionKey,
                 videoYCbCrMatrixKey: movieRateHigh.videoYCbCrMatrixKey,
                 audioRate: Int32(audioBitrate),
-                audioChannels: 2
+                audioChannels: Int32(audioChannels),
+                isOriginal: true
             )
         }
         

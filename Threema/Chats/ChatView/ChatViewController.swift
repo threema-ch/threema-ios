@@ -1232,7 +1232,12 @@ extension ChatViewController {
             return
         }
         
-        dataSource.loadMessages(around: message.date).done { [weak self] in
+        guard let messageDate = message.date else {
+            DDLogWarn("Unable to load date for message (\(messageObjectID.uriRepresentation())) to jump to.")
+            return
+        }
+        
+        dataSource.loadMessages(around: messageDate).done { [weak self] in
             guard let indexPath = self?.dataSource.indexPath(
                 for: ChatViewDataSource.CellType.message(objectID: message.objectID)
             ) else {
@@ -1349,7 +1354,13 @@ extension ChatViewController {
         onError: (() -> Void)? = nil
     ) {
         isJumping = true
-        dataSource.loadMessages(around: message.date).done {
+        
+        guard let messageDate = message.date else {
+            DDLogWarn("Unable to load date for message (\(message.objectID.uriRepresentation())) to jump to.")
+            return
+        }
+        
+        dataSource.loadMessages(around: messageDate).done {
             // TODO: This is a workaround that will be resolved with IOS-2720
             /// With a one second delay we aim to be more sure that the loaded messages have been actually applied in the tableView
             DispatchQueue.main.async {

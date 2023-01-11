@@ -432,7 +432,7 @@ extension ConversationExporter {
             if let displayName = quoteMessage.sender?.displayName {
                 log.append("\(displayName): ")
             }
-            else if let isOwn = quoteMessage.isOwn, !isOwn.boolValue, let contact = quoteMessage.conversation.contact {
+            else if let isOwn = quoteMessage.isOwn, !isOwn.boolValue, let contact = quoteMessage.conversation?.contact {
                 log.append("\(contact.displayName): ")
             }
             else {

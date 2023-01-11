@@ -54,13 +54,13 @@ public extension BaseMessage {
     var isUserAckEnabled: Bool {
         // single chats can't ack their own messages
         if isOwnMessage,
-           !conversation.isGroup() {
+           !isGroupMessage {
             return false
         }
         
-        // group chats can only ack theis own messages if it's sent
+        // Group chats can only ack their own messages if it's sent
         if isOwnMessage,
-           conversation.isGroup(),
+           isGroupMessage,
            messageState == .failed || messageState == .sending {
             return false
         }

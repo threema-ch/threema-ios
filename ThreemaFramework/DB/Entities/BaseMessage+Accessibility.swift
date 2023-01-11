@@ -37,7 +37,7 @@ public extension BaseMessage {
             )
         }
         // Sent by other, style: "Phil's Message"
-        else if message.conversation.isGroup() {
+        else if message.isGroupMessage {
             text = String.localizedStringWithFormat(
                 BundleUtil.localizedString(forKey: "accessibility_senderDescription_otherMessage_group"),
                 message.accessibilityMessageTypeDescription,
@@ -73,13 +73,13 @@ public extension BaseMessage {
             return BundleUtil.localizedString(forKey: "me")
         }
         
-        if conversation.isGroup() {
+        if isGroupMessage {
             if let sender = sender {
                 return sender.displayName
             }
             return nil
         }
         
-        return conversation.displayName
+        return conversation?.displayName
     }
 }

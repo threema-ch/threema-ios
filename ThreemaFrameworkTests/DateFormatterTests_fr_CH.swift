@@ -178,8 +178,8 @@ class DateFormatterTests_fr_CH: XCTestCase {
     
     func testRelativeMediumDateThisYear() throws {
         try XCTSkipIf(
-            DateFormatterTests.todayIsFirstTwoDaysOfTheYear,
-            "Because the date is relative and based on the current year this will not work properly if today is January 1st or 2nd"
+            DateFormatterTests.todayIsInTheFirstSevenDaysOfTheYear,
+            "Because the date is relative and based on the current year this will not work properly if today is in the first week of the year"
         )
         
         let expected =
@@ -190,7 +190,12 @@ class DateFormatterTests_fr_CH: XCTestCase {
         XCTAssertEqual(actual, expected)
     }
     
-    func testRelativeMediumDateLastCalendarYear() {
+    func testRelativeMediumDateLastCalendarYear() throws {
+        try XCTSkipIf(
+            DateFormatterTests.todayIsInTheFirstSevenDaysOfTheYear,
+            "Because the date is relative and based on the current year this will not work properly if today is in the first week of the year"
+        )
+        
         let expected =
             "\(DateFormatterTests.formattedShortWeekday(DateFormatterTests.testDateLastCalendarYear, localeIdentifier))\(expectedRelativeMediumDateLastCalendarYear_fr_CH)\(DateFormatterTests.formattedFullYear(DateFormatterTests.testDateLastCalendarYear, localeIdentifier))"
 

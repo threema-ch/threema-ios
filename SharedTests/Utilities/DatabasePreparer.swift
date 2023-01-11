@@ -51,12 +51,28 @@ class DatabasePreparer {
         return ballotMessage
     }
     
-    @discardableResult func createContact(publicKey: Data, identity: String, verificationLevel: Int) -> Contact {
+    @discardableResult func createContact(
+        publicKey: Data,
+        identity: String,
+        verificationLevel: Int,
+        nickname: String?
+    ) -> Contact {
         let contact = createEntity(objectType: Contact.self)
         contact.publicKey = publicKey
         contact.identity = identity
         contact.verificationLevel = NSNumber(integerLiteral: verificationLevel)
+        if let nickname = nickname {
+            contact.publicNickname = nickname
+        }
         return contact
+    }
+    
+    @discardableResult func createContact(
+        publicKey: Data,
+        identity: String,
+        verificationLevel: Int
+    ) -> Contact {
+        createContact(publicKey: publicKey, identity: identity, verificationLevel: verificationLevel, nickname: nil)
     }
     
     @discardableResult func createConversation(

@@ -63,7 +63,7 @@ import ThreemaFramework
             var body = message.previewText()
             body = TextStyleUtils.makeMentionsString(forText: body)
             
-            if message.conversation.isGroup() {
+            if message.isGroupMessage {
                 // Quickfix: Sender should never be `nil` for an incoming group message
                 if let sender = message.sender {
                     body = "\(sender.displayName): \(body ?? "")"
@@ -75,7 +75,7 @@ import ThreemaFramework
                 body = " "
                 thumbnailImageView = nil
                 
-                if message.conversation.isGroup() {
+                if message.isGroupMessage {
                     contactImageView = UIImageView(image: AvatarMaker.shared().unknownGroupImage())
                 }
                 else {
@@ -97,11 +97,11 @@ import ThreemaFramework
                 sideViewSize: 50.0
             )
             
-            if let groupID = message.conversation.groupID {
+            if let groupID = message.conversation?.groupID {
                 banner.identifier = groupID.hexEncodedString()
             }
             else {
-                if let contact = message.conversation.contact {
+                if let contact = message.conversation?.contact {
                     banner.identifier = contact.identity
                 }
             }

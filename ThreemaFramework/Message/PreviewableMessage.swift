@@ -110,7 +110,7 @@ public extension PreviewableMessage {
         }
         
         // Add the sender name if specified in PreviewableMessageConfiguration
-        let containsName = configuration.includeSender && conversation.isGroup()
+        let containsName = configuration.includeSender && (conversation?.isGroup() ?? false)
 
         if containsName {
             let attributedName: NSAttributedString

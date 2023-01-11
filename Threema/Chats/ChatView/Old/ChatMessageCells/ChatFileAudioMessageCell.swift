@@ -139,7 +139,7 @@ extension ChatFileAudioMessageCell {
         let size = text.sizeOfString(
             maxWidth: ChatFileAudioMessageCell.maxContentWidth(
                 forTableWidth: tableWidth,
-                isGroup: fileMessageEntity.conversation.isGroup()
+                isGroup: fileMessageEntity.isGroupMessage
             ) - 25,
             font: ChatFileAudioMessageCell.textFont()
         )
@@ -151,7 +151,7 @@ extension ChatFileAudioMessageCell {
             let maxSize = CGSize(
                 width: ChatFileAudioMessageCell.maxContentWidth(
                     forTableWidth: tableWidth,
-                    isGroup: fileMessageEntity.conversation.isGroup()
+                    isGroup: fileMessageEntity.isGroupMessage
                 ) - x,
                 height: CGFloat.greatestFiniteMagnitude
             )

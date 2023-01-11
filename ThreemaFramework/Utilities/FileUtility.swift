@@ -396,45 +396,4 @@ import Foundation
             }
         }
     }
-    
-    /// Writes the contents of an existing debug log file at a URL to a new file at a given URL
-    /// - Parameters:
-    ///   - from: URL of the existing log file
-    ///   - to: URL to write the contents to
-    public static func migrateDebugLogFileContents(from: URL?, to: URL?) throws {
-        
-        // Check if URLs are valid
-        guard let from = from,
-              let to = to else {
-            throw FileUtilityError.badURL
-        }
-        
-        // Check if there is a legacy debug log
-        if !FileManager.default.fileExists(atPath: from.path) {
-            return
-        }
-        
-        // Read contents of old log file
-        guard let contents = FileManager.default.contents(atPath: from.path),
-              let text = String(data: contents, encoding: .utf8) else {
-            throw FileUtilityError.badContent
-        }
-        
-        guard FileUtility.write(fileURL: to, text: text) else {
-            throw FileUtilityError.writingFailed
-        }
-        
-        FileUtility.delete(at: from)
-        
-        if FileManager.default.fileExists(atPath: from.path) {
-            throw FileUtilityError.deletingFailed
-        }
-    }
-}
-
-public enum FileUtilityError: Error {
-    case badURL
-    case badContent
-    case writingFailed
-    case deletingFailed
 }

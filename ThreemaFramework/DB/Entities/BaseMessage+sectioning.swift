@@ -18,6 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import CocoaLumberjackSwift
 import Foundation
 
 extension BaseMessage {
@@ -30,12 +31,15 @@ extension BaseMessage {
     
     /// Date that sectioning is based on. (See `sectionDateString`)
     public var sectionDate: Date {
-        if let date = date {
+        if let date {
             return date
         }
-        else {
+        else if let remoteSentDate {
             return remoteSentDate
         }
+        
+        DDLogError("Unable to load correct sectioning date")
+        return .now
     }
     
     /// Key paths of properties used for sectioning. Use them to prefetch this information.

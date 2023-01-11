@@ -50,10 +50,13 @@ typedef NS_OPTIONS(NSInteger, BaseMessageFlags) {
 
 @interface BaseMessage : TMAManagedObject
 
-// All these properties are in theory nullable.
+// All these properties are in theory nullable. Thus we try to treat them everywhere as such and don't annotate any
+// property with nonnull.
+//
 // Maybe test if we can check "Use Scalar Type" so Bools are converted correctly: https://www.objc.io/issues/4-core-data/core-data-models-and-model-objects/
 
-@property (nonatomic, retain) NSData *id; // Non-optional by Core Data
+// Non-optional by Core Data. For easier use in Swift we keep this a force-unwrapped value
+@property (nonatomic, retain) NSData *id;
 
 /// Is this a message I sent?
 ///
@@ -62,8 +65,6 @@ typedef NS_OPTIONS(NSInteger, BaseMessageFlags) {
 
 
 /// Creation date of this message in Core Data
-///
-/// This should never be `nil`!
 @property (nonatomic, retain) NSDate *date; // Non-optional by Core Data
 
 /// Remote sent date of message. This is never `nil`.
@@ -99,6 +100,7 @@ typedef NS_OPTIONS(NSInteger, BaseMessageFlags) {
 - (NSString *)previewText;
 - (NSString *)quotePreviewText DEPRECATED_MSG_ATTRIBUTE("Deprecated in redesign. Use .quoteMessageType instead");
 
+/// If this is true you can expect every property on the object to be `nil`
 - (BOOL)wasDeleted;
 
 - (BOOL)noDeliveryReceiptFlagSet;

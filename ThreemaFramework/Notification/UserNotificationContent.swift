@@ -56,8 +56,7 @@ public class UserNotificationContent {
         var commandValue: ThreemaPushNotification.Command?
             
         if let baseMsg = pendingUserNotification.baseMessage {
-            commandValue = baseMsg.conversation.isGroup() ? ThreemaPushNotification.Command
-                .newGroupMessage : ThreemaPushNotification.Command.newMessage
+            commandValue = baseMsg.isGroupMessage ? .newGroupMessage : .newMessage
         }
         else if let abstractMsg = pendingUserNotification.abstractMessage {
             commandValue = abstractMsg.flagGroupMessage() ? ThreemaPushNotification.Command

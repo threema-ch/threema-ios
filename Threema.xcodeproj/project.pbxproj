@@ -4522,7 +4522,7 @@
 		E11F0943269DE4CD00EF8D4D /* DeleteContactAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = E11F0940269DE4CD00EF8D4D /* DeleteContactAction.swift */; };
 		E11F0944269DE4CD00EF8D4D /* DeleteContactAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = E11F0940269DE4CD00EF8D4D /* DeleteContactAction.swift */; };
 		E11F0945269DE4CD00EF8D4D /* DeleteContactAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = E11F0940269DE4CD00EF8D4D /* DeleteContactAction.swift */; };
-		E12022E127AA91B700C1BF43 /* BaseMessage+isOwnMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = E12022E027AA91B700C1BF43 /* BaseMessage+isOwnMessage.swift */; };
+		E12022E127AA91B700C1BF43 /* BaseMessage+OwnGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = E12022E027AA91B700C1BF43 /* BaseMessage+OwnGroup.swift */; };
 		E12022E327AA95E400C1BF43 /* BaseMessageDisplayTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E12022E227AA95E400C1BF43 /* BaseMessageDisplayTests.swift */; };
 		E12022EB27AABE0300C1BF43 /* ChatScrollPositionDataProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = E12022EA27AABE0300C1BF43 /* ChatScrollPositionDataProvider.swift */; };
 		E12022EC27AABE0300C1BF43 /* ChatScrollPositionDataProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = E12022EA27AABE0300C1BF43 /* ChatScrollPositionDataProvider.swift */; };
@@ -7508,7 +7508,7 @@
 		E11E2AFF2653F79A004AFD0B /* GroupDetailsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupDetailsViewController.swift; sourceTree = "<group>"; };
 		E11E2B052653FCB9004AFD0B /* GroupDetailsDataSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupDetailsDataSource.swift; sourceTree = "<group>"; };
 		E11F0940269DE4CD00EF8D4D /* DeleteContactAction.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DeleteContactAction.swift; sourceTree = "<group>"; };
-		E12022E027AA91B700C1BF43 /* BaseMessage+isOwnMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BaseMessage+isOwnMessage.swift"; sourceTree = "<group>"; };
+		E12022E027AA91B700C1BF43 /* BaseMessage+OwnGroup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BaseMessage+OwnGroup.swift"; sourceTree = "<group>"; };
 		E12022E227AA95E400C1BF43 /* BaseMessageDisplayTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BaseMessageDisplayTests.swift; sourceTree = "<group>"; };
 		E12022EA27AABE0300C1BF43 /* ChatScrollPositionDataProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatScrollPositionDataProvider.swift; sourceTree = "<group>"; };
 		E12022F027AAE88600C1BF43 /* DefaultMessageContentStackView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DefaultMessageContentStackView.swift; sourceTree = "<group>"; };
@@ -10288,7 +10288,7 @@
 				245274182907BC2F00BDF5CA /* BaseMessage+Accessibility.swift */,
 				E1FBA1BC27A2D4F100910217 /* BaseMessage+display.swift */,
 				F24057272908120900CBA15A /* BaseMessage+groupDeliveryReceipts.swift */,
-				E12022E027AA91B700C1BF43 /* BaseMessage+isOwnMessage.swift */,
+				E12022E027AA91B700C1BF43 /* BaseMessage+OwnGroup.swift */,
 				7E0630802701E421003AA6EF /* BaseMessage+loggingDescription.swift */,
 				D750ECD12807F0F9006FEB9C /* BaseMessage+sender.swift */,
 				E1442D09274BD8FF0072E107 /* BaseMessage+sectioning.swift */,
@@ -14303,7 +14303,7 @@
 				E1E4884727CDFB6F00EFAE07 /* FileMessageEntity+FileMessageProvider.swift in Sources */,
 				0A3864AC1C63439B00924A29 /* GroupAudioMessage.m in Sources */,
 				4DC9F44528C0D82B009EB7F5 /* csp-e2e-fs.pb.swift in Sources */,
-				E12022E127AA91B700C1BF43 /* BaseMessage+isOwnMessage.swift in Sources */,
+				E12022E127AA91B700C1BF43 /* BaseMessage+OwnGroup.swift in Sources */,
 				2DAE363B24C8922800886897 /* HTTPClient.swift in Sources */,
 				0A38641E1C6256EF00924A29 /* xor.c in Sources */,
 				2DF1F23225AEF653006DEA25 /* VoIPCallMessageDecoder.swift in Sources */,

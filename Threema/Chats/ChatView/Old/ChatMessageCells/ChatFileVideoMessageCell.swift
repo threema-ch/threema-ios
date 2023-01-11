@@ -114,7 +114,7 @@ extension ChatFileVideoMessageCell {
             scaledSize = ChatFileVideoMessageCell.scaleImageSize(
                 toCell: size,
                 forTableWidth: tableWidth,
-                isGroup: fileMessageEntity.conversation.isGroup()
+                isGroup: fileMessageEntity.isGroupMessage
             )
             if scaledSize.height != scaledSize.height || scaledSize.height < 0 {
                 scaledSize.height = 120.0
@@ -142,7 +142,7 @@ extension ChatFileVideoMessageCell {
             size = ChatFileVideoMessageCell.scaleImageSize(
                 toCell: size,
                 forTableWidth: frame.size.width,
-                isGroup: fileMessageEntity.conversation.isGroup()
+                isGroup: fileMessageEntity.isGroupMessage
             )
             if size.height != size.height {
                 size.height = 120.0

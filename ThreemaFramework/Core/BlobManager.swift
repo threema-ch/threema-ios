@@ -481,7 +481,7 @@ public actor BlobManager: BlobManagerProtocol {
             else {
                 return
             }
-            isGroupMessage = fetchedMessage.conversation.isGroup()
+            isGroupMessage = fetchedMessage.isGroupMessage
         }
         
         guard let isGroupMessage = isGroupMessage, !isGroupMessage else {

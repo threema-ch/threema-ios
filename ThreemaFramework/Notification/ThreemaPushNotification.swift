@@ -58,9 +58,6 @@ public class ThreemaPushNotification: NSObject {
     /// Needed to open the correct chat
     public let from: String
     
-    /// Nickname set by sender (for themself)
-    public let nickname: String?
-    
     public let messageID: String
     
     /// Indicates if the push notification is related to an incoming voip call
@@ -75,7 +72,6 @@ public class ThreemaPushNotification: NSObject {
         self.command = try Command(from: commandString)
         
         self.from = try ThreemaPushNotification.decode(String.self, forKey: .fromKey, in: dictionary)
-        self.nickname = try? ThreemaPushNotification.decode(String.self, forKey: .nicknameKey, in: dictionary)
         self.messageID = try ThreemaPushNotification.decode(String.self, forKey: .messageIDKey, in: dictionary)
         
         // For backwards compatiblity the voip key is also a string,
@@ -126,8 +122,6 @@ public class ThreemaPushNotification: NSObject {
         }
         self.from = from
         
-        self.nickname = coder.decodeObject(forKey: ThreemaPushNotificationDictionary.nicknameKey.rawValue) as? String
-        
         guard let messageID = coder.decodeObject(forKey: ThreemaPushNotificationDictionary.messageIDKey.rawValue)
             as? String else {
             return nil
@@ -149,7 +143,6 @@ extension ThreemaPushNotification: NSCoding {
     public func encode(with coder: NSCoder) {
         coder.encode(command.rawValue, forKey: ThreemaPushNotificationDictionary.commandKey.rawValue)
         coder.encode(from, forKey: ThreemaPushNotificationDictionary.fromKey.rawValue)
-        coder.encode(nickname, forKey: ThreemaPushNotificationDictionary.nicknameKey.rawValue)
         coder.encode(messageID, forKey: ThreemaPushNotificationDictionary.messageIDKey.rawValue)
         coder.encode(voip, forKey: ThreemaPushNotificationDictionary.voipKey.rawValue)
     }

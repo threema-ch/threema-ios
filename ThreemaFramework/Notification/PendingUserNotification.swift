@@ -87,7 +87,7 @@ public class PendingUserNotification: NSObject, NSCoding {
         // `flagGroupMessage` is deprecated. If it is missing we don't know whether it is a group message or not
         // We thus do not use it for determining whether this is a group message or not
         if let msg = baseMessage {
-            return msg.conversation.isGroup()
+            return msg.isGroupMessage
         }
         else if let msg = abstractMessage {
             return msg.flagGroupMessage()

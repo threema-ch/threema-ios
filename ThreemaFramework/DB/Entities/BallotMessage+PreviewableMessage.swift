@@ -18,11 +18,17 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import CocoaLumberjackSwift
 import Foundation
 
 extension BallotMessage: PreviewableMessage {
     public var previewText: String {
-        ballot.title
+        guard let ballotTitle = ballot?.title else {
+            DDLogError("Ballot title is nil")
+            return ""
+        }
+        
+        return ballotTitle
     }
     
     public var previewSymbolName: String? {

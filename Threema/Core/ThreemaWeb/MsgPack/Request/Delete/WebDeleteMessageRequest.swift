@@ -52,7 +52,7 @@ class WebDeleteMessageRequest: WebAbstractMessage {
         if message != nil {
             let groupID = message!.conversation.groupID
             var identity: String?
-            if let contact = message!.conversation.contact {
+            if let contact = message?.conversation?.contact {
                 identity = contact.identity
             }
             

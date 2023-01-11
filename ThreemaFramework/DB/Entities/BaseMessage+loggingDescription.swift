@@ -22,6 +22,6 @@ import Foundation
 
 extension BaseMessage: LoggingDescriptionProtocol {
     public var loggingDescription: String {
-        "(type: \(type(of: self)); id: \(id.hexString))"
+        "(type: \(type(of: self)); id: \(id?.hexString ?? "(none)"))"
     }
 }

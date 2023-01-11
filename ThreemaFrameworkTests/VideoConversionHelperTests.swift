@@ -45,6 +45,7 @@ class VideoConversationHelperTests: XCTestCase {
             userChosenQuality: qualitySetting,
             duration: duration,
             audioBitrate: originalAudioBitrate,
+            audioChannels: originalAudioChannels,
             videoBitrate: originalVideoBitrate,
             videoSize: videoSize
         )
@@ -64,6 +65,7 @@ class VideoConversationHelperTests: XCTestCase {
             userChosenQuality: qualitySetting,
             duration: duration,
             audioBitrate: originalAudioBitrate,
+            audioChannels: originalAudioChannels,
             videoBitrate: originalVideoBitrate,
             videoSize: videoSize
         ) else {
@@ -94,6 +96,7 @@ class VideoConversationHelperTests: XCTestCase {
             userChosenQuality: qualitySetting,
             duration: duration,
             audioBitrate: originalAudioBitrate,
+            audioChannels: originalAudioChannels,
             videoBitrate: originalVideoBitrate,
             videoSize: videoSize
         ) else {
@@ -106,6 +109,7 @@ class VideoConversationHelperTests: XCTestCase {
     
     func testIntegrityStillAllowed() throws {
         let originalVideoBitrate: Int64 = 250_000
+        let originalAudioChannels = 1
         let originalAudioBitrate: Int64 = 50000
         let videoSize: Int32 = 500
         
@@ -118,6 +122,7 @@ class VideoConversationHelperTests: XCTestCase {
             userChosenQuality: VideoConversionHelper.VideoQualitySetting.original,
             duration: Int(duration),
             audioBitrate: Int(originalAudioBitrate),
+            audioChannels: originalAudioChannels,
             videoBitrate: Int(originalVideoBitrate),
             videoSize: Int(videoSize)
         ) else {
@@ -131,6 +136,7 @@ class VideoConversationHelperTests: XCTestCase {
     func testIntegrityNotAllowedAnymore() throws {
         let originalVideoBitrate: Int64 = 250_000
         let originalAudioBitrate: Int64 = 50000
+        let originalAudioChannels = 2
         let videoSize: Int32 = 500
         
         let duration = VideoConversionHelper.getMaxdurationInMinutes(
@@ -142,6 +148,7 @@ class VideoConversationHelperTests: XCTestCase {
             userChosenQuality: VideoConversionHelper.VideoQualitySetting.original,
             duration: Int(duration),
             audioBitrate: Int(originalAudioBitrate),
+            audioChannels: 2,
             videoBitrate: Int(originalVideoBitrate),
             videoSize: Int(videoSize)
         )

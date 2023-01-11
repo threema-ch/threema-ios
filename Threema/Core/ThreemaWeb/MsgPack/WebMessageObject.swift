@@ -243,7 +243,7 @@ class WebMessageObject: NSObject {
                 if let sender = quotedMessage.sender, !quotedMessage.isOwnMessage {
                     quotedIdentity = sender.identity
                 }
-                else if let contact = quotedMessage.conversation.contact, !quotedMessage.isOwnMessage {
+                else if let contact = quotedMessage.conversation?.contact, !quotedMessage.isOwnMessage {
                     quotedIdentity = contact.identity
                 }
                 

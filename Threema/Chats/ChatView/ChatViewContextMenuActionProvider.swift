@@ -209,7 +209,7 @@ struct ChatViewContextMenuActionProvider {
     private static func thumbsUpAction(message: BaseMessage) -> UIAction {
         var image: UIImage?
         
-        if message.conversation.isGroup() {
+        if message.isGroupMessage {
             image = message.groupReactionsThumbsUpImage
         }
         else {
@@ -229,7 +229,7 @@ struct ChatViewContextMenuActionProvider {
     private static func thumbsDownAction(message: BaseMessage) -> UIAction {
         var image: UIImage?
         
-        if message.conversation.isGroup() {
+        if message.isGroupMessage {
             image = message.groupReactionsThumbsDownImage
         }
         else {

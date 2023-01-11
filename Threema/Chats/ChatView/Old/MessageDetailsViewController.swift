@@ -187,7 +187,7 @@ import UIKit
             showAck = true
         }
         
-        if !message.conversation.isGroup() {
+        if !message.isGroupMessage {
             showFs = true
         }
 

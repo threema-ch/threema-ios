@@ -266,7 +266,7 @@ public extension SystemMessage {
                 )?
                     .withTintColor(Colors.green, renderingMode: .alwaysOriginal)
             case .rejectedIncoming:
-                return UIImage(named: "threema.phone.fill.arrow.bend.left")?
+                return UIImage(systemName: "phone.fill")?
                     .withTintColor(Colors.orange, renderingMode: .alwaysOriginal)
                 
             case .endedIncomingUnsuccessful,
@@ -276,7 +276,7 @@ public extension SystemMessage {
                  .rejectedDisabledIncoming,
                  .rejectedUnknownIncoming,
                  .rejectedOffHoursIncoming:
-                return UIImage(named: "threema.phone.fill.arrow.bend.left")?
+                return UIImage(systemName: "phone.fill")?
                     .withTintColor(Colors.red, renderingMode: .alwaysOriginal)
                 
             // Outgoing
@@ -299,7 +299,7 @@ public extension SystemMessage {
                  .rejectedDisabledOutgoing,
                  .rejectedUnknownOutgoing,
                  .rejectedOffHoursOutgoing:
-                return UIImage(named: "threema.phone.fill.arrow.bend.right")?
+                return UIImage(systemName: "phone.fill")?
                     .withTintColor(Colors.red, renderingMode: .alwaysOriginal)
             }
         }
@@ -311,7 +311,7 @@ public extension SystemMessage {
             case .endedIncomingSuccessful:
                 return "phone.fill.arrow.down.left"
             case .rejectedIncoming:
-                return "threema.phone.fill.arrow.bend.left"
+                return "phone.fill"
                 
             case .endedIncomingUnsuccessful,
                  .missedIncoming,
@@ -320,7 +320,7 @@ public extension SystemMessage {
                  .rejectedDisabledIncoming,
                  .rejectedUnknownIncoming,
                  .rejectedOffHoursIncoming:
-                return "threema.phone.fill.arrow.bend.left"
+                return "phone.fill"
                 
             // Outgoing
             case .endedOutgoingSuccessful:
@@ -328,7 +328,7 @@ public extension SystemMessage {
                 
             case .endedOutgoingUnsuccessful:
                 return "phone.fill.arrow.up.right"
-                
+
             case .missedOutgoing,
                  .rejectedOutgoing,
                  .rejectedBusyOutgoing,
@@ -336,7 +336,7 @@ public extension SystemMessage {
                  .rejectedDisabledOutgoing,
                  .rejectedUnknownOutgoing,
                  .rejectedOffHoursOutgoing:
-                return "threema.phone.fill.arrow.bend.right"
+                return "phone.fill"
             }
         }
         

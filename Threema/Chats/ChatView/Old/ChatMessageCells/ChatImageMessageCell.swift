@@ -72,7 +72,7 @@ extension ChatImageMessageCell {
                 scaledSize = ChatImageMessageCell.scaleImageSize(
                     toCell: size,
                     forTableWidth: tableWidth,
-                    isGroup: imageMessageEntity.conversation.isGroup()
+                    isGroup: imageMessageEntity.isGroupMessage
                 )
                 if scaledSize.height != scaledSize.height || scaledSize.height < 0 {
                     scaledSize.height = 40.0
@@ -162,7 +162,7 @@ extension ChatImageMessageCell {
                 size = ChatFileImageMessageCell.scaleImageSize(
                     toCell: imageMessageSize,
                     forTableWidth: frame.size.width,
-                    isGroup: imageMessageEntity.conversation.isGroup()
+                    isGroup: imageMessageEntity.isGroupMessage
                 )
                 
                 if let image = imageMessageEntity.image, let caption = image.getCaption(), !caption.isEmpty {
@@ -445,7 +445,7 @@ extension ChatImageMessageCell {
                 size = ChatImageMessageCell.scaleImageSize(
                     toCell: imageMessageSize,
                     forTableWidth: frame.size.width,
-                    isGroup: imageMessageEntity.conversation.isGroup()
+                    isGroup: imageMessageEntity.isGroupMessage
                 )
             }
             

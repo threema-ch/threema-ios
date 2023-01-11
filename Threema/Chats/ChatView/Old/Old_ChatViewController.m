@@ -160,6 +160,9 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     BOOL _assetActionHelperWillPresent;
 
     NSTimer *updateConversationTimer;
+
+    dispatch_queue_t queueImageMessageObserverList;
+    dispatch_queue_t queueLocationMessageObserverList;
 }
 
 @synthesize sentMessageSound;
@@ -176,30 +179,34 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 - (void)dealloc {
     [self removeConversationObservers];
     
-    for (NSManagedObjectID *objectID in _imageMessageObserverList) {
-        [entityManager performBlockAndWait:^{
-            BaseMessage *baseMessage = [[entityManager entityFetcher] getManagedObjectById:objectID];
-            if (baseMessage) {
-                @try {
-                    [baseMessage removeObserver:self forKeyPath:@"thumbnail"];
-                } @catch (NSException * __unused exception) {}
-            }
-        }];
-    }
-    [_imageMessageObserverList removeAllObjects];
-        
-    for (NSManagedObjectID *objectID in _locationMessageObserverList) {
-        [entityManager performBlockAndWait:^{
-            BaseMessage *baseMessage = [[entityManager entityFetcher] getManagedObjectById:objectID];
-            if (baseMessage) {
-                @try {
-                    [baseMessage removeObserver:self forKeyPath:@"poiAddress"];
-                } @catch (NSException * __unused exception) {}
-            }
-        }];
-    }
-    [_locationMessageObserverList removeAllObjects];
-        
+    dispatch_sync(queueImageMessageObserverList, ^{
+        for (NSManagedObjectID *objectID in _imageMessageObserverList) {
+            [entityManager performBlockAndWait:^{
+                BaseMessage *baseMessage = [[entityManager entityFetcher] getManagedObjectById:objectID];
+                if (baseMessage) {
+                    @try {
+                        [baseMessage removeObserver:self forKeyPath:@"thumbnail"];
+                    } @catch (NSException * __unused exception) {}
+                }
+            }];
+        }
+        [_imageMessageObserverList removeAllObjects];
+    });
+
+    dispatch_sync(queueLocationMessageObserverList, ^{
+        for (NSManagedObjectID *objectID in _locationMessageObserverList) {
+            [entityManager performBlockAndWait:^{
+                BaseMessage *baseMessage = [[entityManager entityFetcher] getManagedObjectById:objectID];
+                if (baseMessage) {
+                    @try {
+                        [baseMessage removeObserver:self forKeyPath:@"poiAddress"];
+                    } @catch (NSException * __unused exception) {}
+                }
+            }];
+        }
+        [_locationMessageObserverList removeAllObjects];
+    });
+
     if (sentMessageSound) {
         AudioServicesDisposeSystemSoundID(sentMessageSound);
     }
@@ -218,7 +225,9 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     if (self) {
         entityManager = [[EntityManager alloc] init];
         
+        queueImageMessageObserverList = dispatch_queue_create("ch.threema.Old_ChatViewController.queueImageMessageObserverList", NULL);
         _imageMessageObserverList = [NSMutableArray new];
+        queueLocationMessageObserverList = dispatch_queue_create("ch.threema.Old_ChatViewController.queueLocationMessageObserverList", NULL);
         _locationMessageObserverList = [NSMutableArray new];
         
         _isOpenWithForceTouch = NO;
@@ -954,8 +963,8 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
             _backgroundView.backgroundColor = [UIColor clearColor];
             _backgroundView.image = bgImage;
         } else {
-            _backgroundView.backgroundColor = [[UIColor alloc] initWithPatternImage:bgImage];
-            _backgroundView.image = nil;
+            _backgroundView.backgroundColor = [UIColor clearColor];
+            _backgroundView.image = [bgImage resizableImageWithCapInsets:UIEdgeInsetsZero resizingMode:UIImageResizingModeTile];
         }
         
         [containerView addSubview:_backgroundView];
@@ -968,6 +977,12 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     if (_backgroundView == nil) {
         [self setupBackground];
     }
+    
+    if (lastInterfaceOrientation == toInterfaceOrientation) {
+        return;
+    }
+    
+    lastInterfaceOrientation = toInterfaceOrientation;
     
     if ([UserSettings sharedUserSettings].wallpaper || _backgroundView == nil) {
         // do not rotate for custom wallpapers
@@ -1095,21 +1110,23 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
             }
             
         }
-        
-        // Saved objectID in the _imageMessageObserverList can be a temporaryID. That's why we have to loop through the array and load all objects in the list to compare.
-        NSManagedObjectID *foundObjectID = nil;
-        for (NSManagedObjectID *listObjectID in _imageMessageObserverList) {
-            BaseMessage *listMessage = [[entityManager entityFetcher] getManagedObjectById:listObjectID];
-            if (listMessage != nil) {
-                if (baseMessage.objectID == listMessage.objectID) {
-                    foundObjectID = listObjectID;
+
+        dispatch_sync(queueImageMessageObserverList, ^{
+            // Saved objectID in the _imageMessageObserverList can be a temporaryID. That's why we have to loop through the array and load all objects in the list to compare.
+            NSManagedObjectID *foundObjectID = nil;
+            for (NSManagedObjectID *listObjectID in _imageMessageObserverList) {
+                BaseMessage *listMessage = [[entityManager entityFetcher] getManagedObjectById:listObjectID];
+                if (listMessage != nil) {
+                    if (baseMessage.objectID == listMessage.objectID) {
+                        foundObjectID = listObjectID;
+                    }
                 }
             }
-        }
-        
-        if (foundObjectID != nil) {
-            [_imageMessageObserverList removeObject:foundObjectID];
-        }
+
+            if (foundObjectID != nil) {
+                [_imageMessageObserverList removeObject:foundObjectID];
+            }
+        });
     }];
 }
 
@@ -1124,20 +1141,22 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
             }
         }
         
-        // Saved objectID in the _locationMessageObserverList can be a temporaryID. That's why we have to loop through the array and load all objects in the list to compare.
-        NSManagedObjectID *foundObjectID = nil;
-        for (NSManagedObjectID *listObjectID in _locationMessageObserverList) {
-            BaseMessage *listMessage = [[entityManager entityFetcher] getManagedObjectById:listObjectID];
-            if (listMessage != nil) {
-                if (baseMessage.objectID == listMessage.objectID) {
-                    foundObjectID = listObjectID;
+        dispatch_sync(queueLocationMessageObserverList, ^{
+            // Saved objectID in the _locationMessageObserverList can be a temporaryID. That's why we have to loop through the array and load all objects in the list to compare.
+            NSManagedObjectID *foundObjectID = nil;
+            for (NSManagedObjectID *listObjectID in _locationMessageObserverList) {
+                BaseMessage *listMessage = [[entityManager entityFetcher] getManagedObjectById:listObjectID];
+                if (listMessage != nil) {
+                    if (baseMessage.objectID == listMessage.objectID) {
+                        foundObjectID = listObjectID;
+                    }
                 }
             }
-        }
-        
-        if (foundObjectID != nil) {
-            [_locationMessageObserverList removeObject:foundObjectID];
-        }
+
+            if (foundObjectID != nil) {
+                [_locationMessageObserverList removeObject:foundObjectID];
+            }
+        });
     }];
 }
 
@@ -1461,19 +1480,25 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
                 if (imageMessageEntity.thumbnail == nil) {
                     
                     [imageMessageEntity addObserver:self forKeyPath:@"thumbnail" options:0 context:nil];
-                    [_imageMessageObserverList addObject:objectID];
+                    dispatch_sync(queueImageMessageObserverList, ^{
+                        [_imageMessageObserverList addObject:objectID];
+                    });
                 }
             } else if ([baseMessage isKindOfClass:[FileMessageEntity class]]) {
                 FileMessageEntity *fileMessageEntity = (FileMessageEntity*)baseMessage;
                 if (fileMessageEntity.data == nil) {
                     [fileMessageEntity addObserver:self forKeyPath:@"thumbnail" options:0 context:nil];
-                    [_imageMessageObserverList addObject:objectID];
+                    dispatch_sync(queueImageMessageObserverList, ^{
+                        [_imageMessageObserverList addObject:objectID];
+                    });
                 }
             } else if ([baseMessage isKindOfClass:[LocationMessage class]]) {
                 LocationMessage *locationMessage = (LocationMessage*)baseMessage;
                 if (locationMessage.poiName == nil && locationMessage.poiAddress == nil) {
                     [locationMessage addObserver:self forKeyPath:@"poiAddress" options:0 context:nil];
-                    [_locationMessageObserverList addObject:objectID];
+                    dispatch_sync(queueLocationMessageObserverList, ^{
+                        [_locationMessageObserverList addObject:objectID];
+                    });
                 }
             }
         }

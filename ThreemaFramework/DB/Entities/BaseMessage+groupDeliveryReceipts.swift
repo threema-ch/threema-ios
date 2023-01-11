@@ -37,7 +37,7 @@ public extension BaseMessage {
             return .none
         }
         
-        guard conversation.isGroup() else {
+        guard isGroupMessage else {
             return .none
         }
         
@@ -141,7 +141,7 @@ public extension BaseMessage {
     func old_reactionForMyIdentity() -> GroupDeliveryReceipt? {
         if let deliveryReceipts = groupDeliveryReceipts as? [GroupDeliveryReceipt],
            let index = deliveryReceipts.firstIndex(where: { $0.identity == MyIdentityStore.shared().identity }) {
-            return groupDeliveryReceipts[index] as? GroupDeliveryReceipt
+            return deliveryReceipts[index]
         }
         return nil
     }

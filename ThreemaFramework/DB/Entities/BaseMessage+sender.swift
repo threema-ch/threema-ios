@@ -32,7 +32,7 @@ public extension BaseMessage {
                 return sender.displayName
             }
             else {
-                return conversation.contact?.displayName ?? ""
+                return conversation?.contact?.displayName ?? ""
             }
         }
     }
@@ -46,7 +46,7 @@ public extension BaseMessage {
                 return sender.idColor
             }
             else {
-                return conversation.contact?.idColor ?? Colors.primary
+                return conversation?.contact?.idColor ?? Colors.primary
             }
         }
     }

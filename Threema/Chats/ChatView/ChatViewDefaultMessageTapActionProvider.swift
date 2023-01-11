@@ -150,7 +150,7 @@ class ChatViewDefaultMessageTapActionProvider: NSObject {
     private func startVoIPCall(callMessage: SystemMessage) {
         // Starts a VoIP Call if contact supports it
         if UserSettings.shared()?.enableThreemaCall == true,
-           let contact = callMessage.conversation.contact {
+           let contact = callMessage.conversation?.contact {
             let contactSet = Set<Contact>([contact])
 
             FeatureMask.check(Int(FEATURE_MASK_VOIP), forContacts: contactSet) { unsupportedContacts in

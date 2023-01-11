@@ -26,13 +26,11 @@ class ThreemaPushNotificationTests: XCTestCase {
     
     func testCompleteDictionaryDecoding() throws {
         let from = "ABCDEFGH"
-        let nick = "Hansmuster"
         let messageID = "0123456789abcdef"
         
         let payload = [
             "cmd": "newmsg",
             "from": from,
-            "nick": nick,
             "messageId": messageID,
             "voip": "true",
         ]
@@ -40,7 +38,6 @@ class ThreemaPushNotificationTests: XCTestCase {
         let threemaPushNotification = try ThreemaPushNotification(from: payload)
         
         XCTAssertEqual(threemaPushNotification.from, from)
-        XCTAssertEqual(threemaPushNotification.nickname, nick)
         XCTAssertEqual(threemaPushNotification.messageID, messageID)
         let actualVoip = try XCTUnwrap(threemaPushNotification.voip)
         XCTAssertTrue(actualVoip)
@@ -52,7 +49,6 @@ class ThreemaPushNotificationTests: XCTestCase {
         let payload = [
             "cmd": "newmsg",
             "from": "ABCDEFGH",
-            "nick": "Hansmuster",
             "messageId": "0123456789abcdef",
             "voip": "true",
         ]
@@ -66,7 +62,6 @@ class ThreemaPushNotificationTests: XCTestCase {
         let payload = [
             "cmd": "newgroupmsg",
             "from": "ABCDEFGH",
-            "nick": "Hansmuster",
             "messageId": "0123456789abcdef",
             "voip": "true",
         ]
@@ -82,7 +77,6 @@ class ThreemaPushNotificationTests: XCTestCase {
         let payload = [
             "cmd": "newmsg",
             "from": "ABCDEFGH",
-            "nick": "Hansmuster",
             "messageId": "0123456789abcdef",
         ]
         
@@ -95,7 +89,6 @@ class ThreemaPushNotificationTests: XCTestCase {
         let payload = [
             "cmd": "newmsg",
             "from": "ABCDEFGH",
-            "nick": "Hansmuster",
             "messageId": "0123456789abcdef",
             "voip": "false",
         ]
@@ -110,7 +103,6 @@ class ThreemaPushNotificationTests: XCTestCase {
         let payload = [
             "cmd": "newmsg",
             "from": "ABCDEFGH",
-            "nick": "Hansmuster",
             "messageId": "0123456789abcdef",
             "voip": "true",
         ]
@@ -125,7 +117,6 @@ class ThreemaPushNotificationTests: XCTestCase {
         let payload: [String: Any] = [
             "cmd": "newmsg",
             "from": "ABCDEFGH",
-            "nick": "Hansmuster",
             "messageId": "0123456789abcdef",
             "voip": true,
         ]
@@ -140,7 +131,6 @@ class ThreemaPushNotificationTests: XCTestCase {
         let payload: [String: Any] = [
             "cmd": "newmsg",
             "from": "ABCDEFGH",
-            "nick": "Hansmuster",
             "messageId": "0123456789abcdef",
             "voip": false,
         ]
@@ -150,21 +140,6 @@ class ThreemaPushNotificationTests: XCTestCase {
         let actualVoip = try XCTUnwrap(threemaPushNotification.voip)
         XCTAssertFalse(actualVoip)
     }
-
-    // MARK: Missing nick test
-    
-    func testMissingNickDictionaryDecoding() throws {
-        let payload = [
-            "cmd": "newmsg",
-            "from": "ABCDEFGH",
-            "messageId": "0123456789abcdef",
-            "voip": "true",
-        ]
-        
-        let threemaPushNotification = try ThreemaPushNotification(from: payload)
-        
-        XCTAssertNil(threemaPushNotification.nickname)
-    }
     
     // MARK: Failing payloads
     
@@ -172,7 +147,6 @@ class ThreemaPushNotificationTests: XCTestCase {
         let payload = [
             "cmds": "newmsg",
             "from": "ABCDEFGH",
-            "nick": "Hansmuster",
             "messageId": "0123456789abcdef",
             "voip": "true",
         ]
@@ -188,7 +162,6 @@ class ThreemaPushNotificationTests: XCTestCase {
     func testMissingCommandDictionaryDecoding() throws {
         let payload = [
             "from": "ABCDEFGH",
-            "nick": "Hansmuster",
             "messageId": "0123456789abcdef",
             "voip": "true",
         ]
@@ -207,7 +180,6 @@ class ThreemaPushNotificationTests: XCTestCase {
         let payload = [
             "cmd": command,
             "from": "ABCDEFGH",
-            "nick": "Hansmuster",
             "messageId": "0123456789abcdef",
             "voip": "true",
         ]
@@ -221,7 +193,6 @@ class ThreemaPushNotificationTests: XCTestCase {
         let payload = [
             "cmd": "newmsg",
             "from": "ABCDEFGH",
-            "nick": "Hansmuster",
             "voip": "true",
         ]
                 

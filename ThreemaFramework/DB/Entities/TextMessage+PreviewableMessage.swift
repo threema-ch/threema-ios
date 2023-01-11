@@ -18,10 +18,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import CocoaLumberjackSwift
 import Foundation
 
 extension TextMessage: PreviewableMessage {
     public var previewText: String {
-        text
+        guard let text else {
+            DDLogError("Text message text is nil")
+            return ""
+        }
+        
+        return text
     }
 }

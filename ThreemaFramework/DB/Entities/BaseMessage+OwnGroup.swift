@@ -18,6 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import CocoaLumberjackSwift
 import Foundation
 
 public extension BaseMessage {
@@ -28,5 +29,14 @@ public extension BaseMessage {
         }
         
         return isOwn
+    }
+    
+    var isGroupMessage: Bool {
+        guard let isGroup = conversation?.isGroup() else {
+            DDLogError("Conversation is nil so we report that this message is now group")
+            return false
+        }
+        
+        return isGroup
     }
 }

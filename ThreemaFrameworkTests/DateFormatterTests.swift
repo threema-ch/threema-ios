@@ -91,25 +91,6 @@ class DateFormatterTests: XCTestCase {
         return Calendar.current.date(from: dateComponents)!
     }
     
-    // Helper to detect January 1st and 2nd
-    static var todayIsFirstTwoDaysOfTheYear: Bool {
-        var january1stComponents = DateComponents()
-        january1stComponents.day = 1
-        january1stComponents.month = 1
-    
-        var january2ndComponents = DateComponents()
-        january2ndComponents.day = 2
-        january2ndComponents.month = 1
-        
-        return Calendar.current.date(
-            Date(),
-            matchesComponents: january1stComponents
-        ) || Calendar.current.date(
-            Date(),
-            matchesComponents: january2ndComponents
-        )
-    }
-    
     // 31.12.xxxx 22:23:24.00025 GMT+1
     // xxxx is last year
     static var testDateLastCalendarYear: Date {
@@ -126,6 +107,34 @@ class DateFormatterTests: XCTestCase {
         dateComponents.timeZone = TimeZone(abbreviation: "GMT+1")
         
         return Calendar.current.date(from: dateComponents)!
+    }
+    
+    // Detect if today is in the first seven days of the year
+    static var todayIsInTheFirstSevenDaysOfTheYear: Bool {
+        var january1stComponents = Calendar.current.dateComponents([.year], from: Date())
+        january1stComponents.day = 1
+        january1stComponents.month = 1
+        
+        january1stComponents.hour = 0
+        january1stComponents.minute = 0
+        january1stComponents.second = 0
+        january1stComponents.nanosecond = 0
+        
+        january1stComponents.timeZone = TimeZone(abbreviation: "GMT+1")
+        
+        var january6thComponents = Calendar.current.dateComponents([.year], from: Date())
+        january6thComponents.day = 6
+        january6thComponents.month = 1
+        
+        january6thComponents.hour = 23
+        january6thComponents.minute = 59
+        january6thComponents.second = 59
+        january6thComponents.nanosecond = 999
+        
+        january6thComponents.timeZone = TimeZone(abbreviation: "GMT+1")
+        
+        return Calendar.current.date(from: january1stComponents)! < Date() &&
+            Date() < Calendar.current.date(from: january6thComponents)!
     }
     
     // Helper to format expected strings from relative formatting

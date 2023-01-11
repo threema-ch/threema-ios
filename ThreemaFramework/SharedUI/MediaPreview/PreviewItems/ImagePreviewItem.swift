@@ -41,10 +41,6 @@ open class ImagePreviewItem: MediaPreviewItem {
                 return Promise { $0.reject(MediaPreviewItem.LoadError.memoryConstrained) }
             }
             
-            guard !self.memoryConstrained else {
-                return Promise { $0.reject(MediaPreviewItem.LoadError.memoryConstrained) }
-            }
-            
             return Promise { seal in
                 guard let imageData = try? Data(contentsOf: itemURL) else {
                     seal.reject(MediaPreviewItem.LoadError.unknown)

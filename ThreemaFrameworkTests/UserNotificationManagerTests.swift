@@ -46,7 +46,6 @@ class UserNotificationManagerTests: XCTestCase {
                 "messageId": "94c605d0e3150619",
                 "voip": false,
                 "cmd": "newmsg",
-                "nick": "red99",
             ])
 
         let userNotificationManager = UserNotificationManager(
@@ -73,7 +72,6 @@ class UserNotificationManagerTests: XCTestCase {
                 "messageId": "94c605d0e3150619",
                 "voip": false,
                 "cmd": "newmsg",
-                "nick": "red99",
             ])
 
         let userNotificationManager = UserNotificationManager(
@@ -97,7 +95,6 @@ class UserNotificationManagerTests: XCTestCase {
                 "messageId": "94c605d0e3150619",
                 "voip": false,
                 "cmd": "newmsg",
-                "nick": "red99",
             ])
         pendingUserNotification.abstractMessage = TypingIndicatorMessage()
 
@@ -122,7 +119,6 @@ class UserNotificationManagerTests: XCTestCase {
                 "messageId": "94c605d0e3150619",
                 "voip": false,
                 "cmd": "newmsg",
-                "nick": "red99",
             ])
         pendingUserNotification.abstractMessage = BoxTextMessage()
 
@@ -154,7 +150,6 @@ class UserNotificationManagerTests: XCTestCase {
                     "messageId": "94c605d0e3150619",
                     "voip": false,
                     "cmd": "newmsg",
-                    "nick": "red99",
                 ])
 
             let userNotificationManager = UserNotificationManager(
@@ -204,7 +199,6 @@ class UserNotificationManagerTests: XCTestCase {
                     "messageId": "94c605d0e3150619",
                     "voip": false,
                     "cmd": "newmsg",
-                    "nick": "red99",
                 ])
 
             let userNotificationManager = UserNotificationManager(
@@ -245,7 +239,12 @@ class UserNotificationManagerTests: XCTestCase {
 
         // Create contact for mocking
         let entityManager = EntityManager(databaseContext: databaseCnx)
-        databasePreparer.createContact(publicKey: Data([1]), identity: expectedSenderID, verificationLevel: 0)
+        databasePreparer.createContact(
+            publicKey: Data([1]),
+            identity: expectedSenderID,
+            verificationLevel: 0,
+            nickname: expectedFromName
+        )
         let contact = entityManager.entityFetcher.contact(for: expectedSenderID)
         let contactStoreMock = ContactStoreMock(callOnCompletion: false, contact)
 
@@ -255,7 +254,6 @@ class UserNotificationManagerTests: XCTestCase {
             "messageId": expectedMessageID,
             "voip": false,
             "cmd": expectedCmd,
-            "nick": expectedFromName,
         ])
 
         let userNotificationManager = UserNotificationManager(
@@ -297,7 +295,8 @@ class UserNotificationManagerTests: XCTestCase {
                 let contact = databasePreparer.createContact(
                     publicKey: Data([1]),
                     identity: "ECHOECHO",
-                    verificationLevel: 0
+                    verificationLevel: 0,
+                    nickname: "red99"
                 )
                 databasePreparer
                     .createConversation(marked: false, typing: false, unreadMessageCount: 0) { conversation in
@@ -327,7 +326,6 @@ class UserNotificationManagerTests: XCTestCase {
                     "messageId": "94c605d0e3150619",
                     "voip": false,
                     "cmd": "newmsg",
-                    "nick": "red99",
                 ])
             pendingUserNotification.baseMessage = textMessage
 
@@ -347,9 +345,9 @@ class UserNotificationManagerTests: XCTestCase {
     func testUserNotificationContentPushSettingSendPushSingleChat() throws {
         let expectedMessageID = "94c605d0e3150619"
         let expectedSenderID = "0S9AE6CP"
-        let expectedFromName = "red99"
+        let expectedFromName = "0S9AE6CP"
         let expectedTitle: String? = nil
-        let expectedBody = "Message from red99"
+        let expectedBody = "Message from 0S9AE6CP"
         let expectedAttachmentName: String? = nil
         let expectedAttachmentURL: URL? = nil
         let expectedCmd = "newmsg"
@@ -374,7 +372,6 @@ class UserNotificationManagerTests: XCTestCase {
             "messageId": expectedMessageID,
             "voip": false,
             "cmd": expectedCmd,
-            "nick": expectedFromName,
         ])
 
         let userNotificationManager = UserNotificationManager(
@@ -442,7 +439,8 @@ class UserNotificationManagerTests: XCTestCase {
             let contact = databasePreparer.createContact(
                 publicKey: Data([1]),
                 identity: expectedSenderID,
-                verificationLevel: 0
+                verificationLevel: 0,
+                nickname: expectedFromName
             )
             let group = databasePreparer.createGroupEntity(groupID: groupID, groupCreator: groupCreator)
             databasePreparer.createConversation(marked: false, typing: false, unreadMessageCount: 0) { conversation in
@@ -471,7 +469,6 @@ class UserNotificationManagerTests: XCTestCase {
             "messageId": expectedMessageID,
             "voip": false,
             "cmd": expectedCmd,
-            "nick": expectedFromName,
         ])
         pendingUserNotification.baseMessage = textMessage
 
@@ -509,9 +506,9 @@ class UserNotificationManagerTests: XCTestCase {
     func testUserNotificationContentPushOnly() throws {
         let expectedMessageID = "94c605d0e3150619"
         let expectedSenderID = "0S9AE6CP"
-        let expectedFromName = "red99"
+        let expectedFromName = "0S9AE6CP"
         let expectedTitle: String? = nil
-        let expectedBody = "Message from red99"
+        let expectedBody = "Message from 0S9AE6CP"
         let expectedAttachmentName: String? = nil
         let expectedAttachmentURL: URL? = nil
         let expectedCmd = "newmsg"
@@ -528,7 +525,6 @@ class UserNotificationManagerTests: XCTestCase {
             "messageId": expectedMessageID,
             "voip": false,
             "cmd": expectedCmd,
-            "nick": expectedFromName,
         ])
 
         let userNotificationManager = UserNotificationManager(
@@ -603,7 +599,8 @@ class UserNotificationManagerTests: XCTestCase {
                 contact = databasePreparer.createContact(
                     publicKey: Data([1]),
                     identity: expectedSenderID,
-                    verificationLevel: 0
+                    verificationLevel: 0,
+                    nickname: "red99"
                 )
                 contact.firstName = "Hans"
                 contact.lastName = "Muster"
@@ -629,7 +626,6 @@ class UserNotificationManagerTests: XCTestCase {
                     "messageId": expectedMessageID,
                     "voip": false,
                     "cmd": expectedCmd,
-                    "nick": "red99",
                 ])
             pendingUserNotification.abstractMessage = message
 
@@ -720,7 +716,8 @@ class UserNotificationManagerTests: XCTestCase {
                 contact = databasePreparer.createContact(
                     publicKey: BytesUtility.generateRandomBytes(length: 32)!,
                     identity: expectedSenderID,
-                    verificationLevel: 0
+                    verificationLevel: 0,
+                    nickname: "red99"
                 )
                 contact.firstName = "Hans"
                 contact.lastName = "Muster"
@@ -728,7 +725,8 @@ class UserNotificationManagerTests: XCTestCase {
                 creatorContact = databasePreparer.createContact(
                     publicKey: BytesUtility.generateRandomBytes(length: 32)!,
                     identity: groupCreator,
-                    verificationLevel: 0
+                    verificationLevel: 0,
+                    nickname: "red99"
                 )
 
                 groupEntity = databasePreparer.createGroupEntity(groupID: groupID, groupCreator: groupCreator)
@@ -769,7 +767,6 @@ class UserNotificationManagerTests: XCTestCase {
                     "messageId": expectedMessageID,
                     "voip": false,
                     "cmd": expectedCmd,
-                    "nick": "red99",
                 ])
             pendingUserNotification.abstractMessage = message
 
@@ -823,7 +820,8 @@ class UserNotificationManagerTests: XCTestCase {
             contact = databasePreparer.createContact(
                 publicKey: BytesUtility.generateRandomBytes(length: 32)!,
                 identity: expectedSenderID,
-                verificationLevel: 0
+                verificationLevel: 0,
+                nickname: "red99"
             )
             contact.firstName = "Hans"
             contact.lastName = "Muster"
@@ -831,7 +829,8 @@ class UserNotificationManagerTests: XCTestCase {
             creatorContact = databasePreparer.createContact(
                 publicKey: BytesUtility.generateRandomBytes(length: 32)!,
                 identity: groupCreator,
-                verificationLevel: 0
+                verificationLevel: 0,
+                nickname: "red99"
             )
 
             groupEntity = databasePreparer.createGroupEntity(groupID: groupID, groupCreator: groupCreator)
@@ -873,7 +872,6 @@ class UserNotificationManagerTests: XCTestCase {
                 "messageId": expectedMessageID,
                 "voip": false,
                 "cmd": expectedCmd,
-                "nick": "red99",
             ])
         pendingUserNotification.abstractMessage = message
 
@@ -939,7 +937,8 @@ class UserNotificationManagerTests: XCTestCase {
                 contact = databasePreparer.createContact(
                     publicKey: Data([1]),
                     identity: expectedSenderID,
-                    verificationLevel: 0
+                    verificationLevel: 0,
+                    nickname: "red99"
                 )
                 contact.firstName = "Hans"
                 contact.lastName = "Muster"
@@ -978,7 +977,6 @@ class UserNotificationManagerTests: XCTestCase {
                     "messageId": expectedMessageID,
                     "voip": false,
                     "cmd": expectedCmd,
-                    "nick": "red99",
                 ])
             pendingUserNotification.baseMessage = message
 
@@ -1062,7 +1060,8 @@ class UserNotificationManagerTests: XCTestCase {
                 contact = databasePreparer.createContact(
                     publicKey: Data([1]),
                     identity: expectedSenderID,
-                    verificationLevel: 0
+                    verificationLevel: 0,
+                    nickname: "red99"
                 )
                 contact.firstName = "Hans"
                 contact.lastName = "Muster"
@@ -1103,7 +1102,6 @@ class UserNotificationManagerTests: XCTestCase {
                     "messageId": expectedMessageID,
                     "voip": false,
                     "cmd": expectedCmd,
-                    "nick": "red99",
                 ])
             pendingUserNotification.baseMessage = message
 
@@ -1266,7 +1264,6 @@ class UserNotificationManagerTests: XCTestCase {
                 "messageId": "94c605d0e3150619",
                 "voip": true,
                 "cmd": testData["cmd"] as! String,
-                "nick": "red99",
             ])
             
             let userNotificationContent = UserNotificationContent(pendingUserNotification)

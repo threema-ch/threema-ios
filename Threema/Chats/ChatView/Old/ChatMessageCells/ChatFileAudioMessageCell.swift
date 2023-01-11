@@ -221,13 +221,18 @@ extension ChatFileAudioMessageCell {
     }
     
     override public func layoutSubviews() {
-        let fileMessageEntity = message as! FileMessageEntity
+        guard let fileMessageEntity = message as? FileMessageEntity,
+              let conversation = fileMessageEntity.conversation else {
+            super.layoutSubviews()
+            return
+        }
+
         let x: CGFloat = 30.0
 
         var captionTextSize = CGSize(width: 0.0, height: 0.0)
         let messageTextWidth: CGFloat = ChatMessageCell.maxContentWidth(
             forTableWidth: safeAreaLayoutGuide.layoutFrame.size.width,
-            isGroup: fileMessageEntity.conversation.isGroup()
+            isGroup: conversation.isGroup()
         )
         
         if let caption = fileMessageEntity.caption, !caption.isEmpty {

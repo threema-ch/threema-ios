@@ -1244,7 +1244,9 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         self.editing = NO;
     }
     
-    [self updateConversationLastMessage];
+    [entityManager performSyncBlockAndSafe:^{
+        [self updateConversationLastMessage];
+    }];
     
     headerView.conversation = conversation;
     [self setupNavigationBar];
@@ -1361,17 +1363,18 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     }
 }
 
+/**
+ Caution: This function must be called within `entityManager.performSyncBlockAndSafe`!
+ */
 - (void)updateConversationLastMessage {
-    [entityManager performSyncBlockAndSafe:^{
-        BaseMessage *baseMessage = [messageFetcher lastMessage];
-        if ((baseMessage && !conversation.lastMessage)
-            || (baseMessage && conversation.lastMessage && ![baseMessage.objectID isEqual:conversation.lastMessage.objectID])) {
-            conversation.lastMessage = baseMessage;
-        }
-        else if (!baseMessage && conversation.lastMessage) {
-            conversation.lastMessage = nil;
-        }
-    }];
+    BaseMessage *baseMessage = [messageFetcher lastMessage];
+    if ((baseMessage && !conversation.lastMessage)
+        || (baseMessage && conversation.lastMessage && ![baseMessage.objectID isEqual:conversation.lastMessage.objectID])) {
+        conversation.lastMessage = baseMessage;
+    }
+    else if (!baseMessage && conversation.lastMessage) {
+        conversation.lastMessage = nil;
+    }
 }
 
 - (void)presentActivityViewController:(UIActivityViewController *)viewControllerToPresent animated:(BOOL)flag fromView:(UIView *)view {

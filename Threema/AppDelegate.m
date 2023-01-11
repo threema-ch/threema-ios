@@ -409,6 +409,9 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
             return;
         });
     }
+
+    EntityManager *em = [EntityManager new];
+    [em repairDatabaseIntegrity];
     
     incomingMessageManager = [IncomingMessageManager new];
     [incomingMessageManager showIsNotPending];

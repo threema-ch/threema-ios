@@ -121,6 +121,30 @@ public class EntityManager: NSObject {
         dbContext.current.persistentStoreCoordinator?.managedObjectID(forURIRepresentation: url)
     }
 
+    /// Check and repair database integrity at the moment just the relationship of `Conversation.lastMessage`.
+    @objc public func repairDatabaseIntegrity() {
+        performSyncBlockAndSafe {
+            guard let conversations = self.entityFetcher.allConversations() as? [Conversation] else {
+                return
+            }
+
+            for conversation in conversations {
+                guard let lastMessage = conversation.lastMessage else {
+                    continue
+                }
+
+                if let msgID = lastMessage.id {
+                    if self.entityFetcher.message(with: msgID, conversation: conversation) == nil {
+                        conversation.lastMessage = nil
+                    }
+                }
+                else {
+                    conversation.lastMessage = nil
+                }
+            }
+        }
+    }
+
     /// Check (on main thread and main DB context) is message nonce already in DB.
     ///
     /// This is useful during incoming message processing to check

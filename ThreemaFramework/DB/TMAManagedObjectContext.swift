@@ -18,6 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import CocoaLumberjackSwift
 import Foundation
 
 @objc public class TMAManagedObjectContext: NSManagedObjectContext {
@@ -81,7 +82,8 @@ import Foundation
         fetchConversations.predicate = NSPredicate(format: "lastMessage = %@", message)
 
         guard let prevConversations = try? count(for: fetchConversations), prevConversations == 0 else {
-            fatalError()
+            DDLogWarn("Delete message failed, it has still a reference to Conversation.lastMessage")
+            return
         }
 
         return super.delete(message)

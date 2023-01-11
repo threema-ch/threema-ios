@@ -101,7 +101,7 @@
             } else {
                 return [BundleUtil localizedStringForKey:@"call_missed"];
             }
-        case kSystemMessageCallEnded:
+        case kSystemMessageCallEnded: {
             dict = [self argAsDictionary];
             NSString *callTime = dict[@"CallTime"];
             if (callTime && callTime.length > 0) {
@@ -117,6 +117,31 @@
                     return [BundleUtil localizedStringForKey:@"call_missed"];
                 }
             }
+        }
+        case kSystemMessageFsMessageWithoutForwardSecurity:
+            return [BundleUtil localizedStringForKey:@"forward_security_message_without"];
+        case kSystemMessageFsSessionEstablished:
+            return [BundleUtil localizedStringForKey:@"forward_security_session_established"];
+        case kSystemMessageFsSessionEstablishedRcvd:
+            return [BundleUtil localizedStringForKey:@"forward_security_session_established_rx"];
+        case kSystemMessageFsMessagesSkipped: {
+            NSInteger numSkipped = [[self argAsUTF8String] integerValue];
+            if (numSkipped == 1) {
+                return [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"forward_security_messages_skipped_x"], numSkipped];
+            } else {
+                return [BundleUtil localizedStringForKey:@"forward_security_messages_skipped_1"];
+            }
+        }
+        case kSystemMessageFsSessionReset:
+            return [BundleUtil localizedStringForKey:@"forward_security_session_reset"];
+        case kSystemMessageFsOutOfOrder:
+            return [BundleUtil localizedStringForKey:@"forward_security_message_out_of_order"];
+        case kSystemMessageFsEnabledOutgoing:
+            return [BundleUtil localizedStringForKey:@"forward_security_status_enabled_outgoing"];
+        case kSystemMessageFsDisabledOutgoing:
+            return [BundleUtil localizedStringForKey:@"forward_security_status_disabled_outgoing"];
+        case kSystemMessageFsNotSupportedAnymore:
+            return [BundleUtil localizedStringForKey:@"forward_security_contact_has_downgraded_to_an_incompatible_version"];
     }
     
     return nil;

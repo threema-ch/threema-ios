@@ -99,7 +99,7 @@
 "d2g-FC-ibo.text" = "包括在電話備份中";
 
 /* Class = "UITableViewSection"; footerTitle = "#do not translate#This data, along with the password that you have chosen, can be used to restore your ID on another device. You can copy & paste it to a suitable location, email it to yourself or scan the QR code using another device."; ObjectID = "dgK-0J-UrZ"; */
-"dgK-0J-UrZ.footerTitle" = "#do not translate#這些資料和您選擇的密碼，可用於在另一台裝置上還原您的ID。您可以將其複製並貼上至合適的位置，透過電子郵件傳送給自己或使用其他裝置掃描QR碼。";
+"dgK-0J-UrZ.footerTitle" = "#do not translate#這些資料和您選擇的密碼，可用於在另一部裝置上還原您的ID。您可以將其複製並貼上至合適的位置，透過電子郵件傳送給自己或使用其他裝置掃描QR碼。";
 
 /* Class = "UITableViewSection"; footerTitle = "#do not translate#The encrypted ID backup will be included when you back up your phone via iTunes or iCloud."; ObjectID = "eEV-l3-MXP"; */
 "eEV-l3-MXP.footerTitle" = "#do not translate#透過 iTunes 或 iCloud 備份電話時，將包括已加密的ID匯出。";
@@ -114,7 +114,7 @@
 "gsp-ed-V8R.text" = "標籤";
 
 /* Class = "UILabel"; text = "No places found in current location"; ObjectID = "jSK-DO-xV2"; */
-"jSK-DO-xV2.text" = "在當前位置找不到地點";
+"jSK-DO-xV2.text" = "在目前位置找不到地點";
 
 /* Class = "UILabel"; text = "Draft"; ObjectID = "jlK-CM-mIS"; */
 "jlK-CM-mIS.text" = "草稿";

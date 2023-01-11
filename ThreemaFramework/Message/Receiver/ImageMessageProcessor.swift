@@ -25,6 +25,7 @@ import PromiseKit
 @objc class ImageMessageProcessor: NSObject {
     
     private let blobDownloader: BlobDownloader
+    private let serverConnector: ServerConnectorProtocol
     private let myIdentityStore: MyIdentityStoreProtocol
     private let userSettings: UserSettingsProtocol
     private let entityManager: EntityManager
@@ -36,12 +37,14 @@ import PromiseKit
     
     @objc required init(
         blobDownloader: BlobDownloader,
+        serverConnector: ServerConnectorProtocol,
         myIdentityStore: MyIdentityStoreProtocol,
         userSettings: UserSettingsProtocol,
         entityManager: EntityManager
     ) {
         
         self.blobDownloader = blobDownloader
+        self.serverConnector = serverConnector
         self.myIdentityStore = myIdentityStore
         self.userSettings = userSettings
         self.entityManager = entityManager
@@ -50,6 +53,7 @@ import PromiseKit
     @objc func downloadImage(
         imageMessageID: Data,
         imageBlobID: Data,
+        origin: BlobOrigin,
         imageBlobEncryptionKey: Data?,
         imageBlobNonce: Data?,
         senderPublicKey: Data,
@@ -62,6 +66,7 @@ import PromiseKit
                 downloadImage(
                     imageMessageID: imageMessageID,
                     imageBlobID: imageBlobID,
+                    origin: origin,
                     imageBlobEncryptionKey: imageBlobEncryptionKey,
                     imageBlobNonce: imageBlobNonce,
                     senderPublicKey: senderPublicKey,
@@ -80,6 +85,7 @@ import PromiseKit
             downloadImage(
                 imageMessageID: imageMessageID,
                 imageBlobID: imageBlobID,
+                origin: origin,
                 imageBlobEncryptionKey: imageBlobEncryptionKey,
                 imageBlobNonce: imageBlobNonce,
                 senderPublicKey: senderPublicKey,
@@ -97,13 +103,14 @@ import PromiseKit
     func downloadImage(
         imageMessageID: Data,
         imageBlobID: Data,
+        origin: BlobOrigin,
         imageBlobEncryptionKey: Data?,
         imageBlobNonce: Data?,
         senderPublicKey: Data?,
         maxBytesToDecrypt: Int
     ) -> Promise<Void> {
         Promise { seal in
-            blobDownloader.download(blobID: imageBlobID) { data, error in
+            blobDownloader.download(blobID: imageBlobID, origin: origin) { data, error in
                 if let error = error {
                     seal.reject(
                         ImageMessageProcessorError
@@ -126,12 +133,11 @@ import PromiseKit
                 // Decrypt blob
                 var imageData: Data?
                 if let imageBlobEncryptionKey = imageBlobEncryptionKey {
-                    // swiftformat:disable:next wrap wrapArguments
-                    let nonce = Data([0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                                      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                                      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01]) // kNonce_1
-                    imageData = NaClCrypto.shared()!
-                        .symmetricDecryptData(data, withKey: imageBlobEncryptionKey, nonce: nonce)
+                    imageData = NaClCrypto.shared()!.symmetricDecryptData(
+                        data,
+                        withKey: imageBlobEncryptionKey,
+                        nonce: ThreemaProtocol.nonce01
+                    )
                 }
                 else if let imageBlobNonce = imageBlobNonce {
                     imageData = self.myIdentityStore.decryptData(
@@ -174,9 +180,12 @@ import PromiseKit
                         
                         msg.thumbnail = thumbnail
 
-                        // Mark blob as done, is not a group message
+                        // Mark blob as done, if is group message and Multi Device is activated then always on `local` origin
                         if !msg.conversation.isGroup() {
-                            MessageSender.markBlob(asDone: msg.imageBlobID, localOrigin: false)
+                            MessageSender.markBlobAsDone(blobID: msg.imageBlobID, origin: msg.blobGetOrigin())
+                        }
+                        else if self.serverConnector.isMultiDeviceActivated {
+                            MessageSender.markBlobAsDone(blobID: msg.imageBlobID, origin: .local)
                         }
 
                         seal.fulfill_()

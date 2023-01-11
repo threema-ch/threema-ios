@@ -182,6 +182,7 @@ typealias TaskCompletionHandler = (TaskDefinitionProtocol, Error?) -> Void
                 TaskManager.outgoingQueue = TaskQueue(
                     queueType: .outgoing,
                     supportedTypes: [
+                        TaskDefinitionGroupDissolve.self,
                         TaskDefinitionSendAbstractMessage.self,
                         TaskDefinitionSendBallotVoteMessage.self,
                         TaskDefinitionSendBaseMessage.self,
@@ -193,6 +194,7 @@ typealias TaskCompletionHandler = (TaskDefinitionProtocol, Error?) -> Void
                         TaskDefinitionSendGroupRenameMessage.self,
                         TaskDefinitionSendGroupSetPhotoMessage.self,
                         TaskDefinitionSendGroupDeliveryReceiptsMessage.self,
+                        TaskDefinitionSendIncomingMessageUpdate.self,
                         TaskDefinitionDeleteContactSync.self,
                         TaskDefinitionProfileSync.self,
                         TaskDefinitionUpdateContactSync.self,

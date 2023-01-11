@@ -46,7 +46,7 @@ class ItemSender: NSObject {
     var shouldCancel = false
     
     private var uploadSema = DispatchSemaphore(value: 0)
-    private var sender: FileMessageSender?
+    private var sender: Old_FileMessageSender?
     
     weak var delegate: SenderItemDelegate?
     
@@ -187,7 +187,7 @@ class ItemSender: NSObject {
     }
     
     private func sendURLSenderItem(senderItem: URLSenderItem, toConversation: Conversation, correlationID: String?) {
-        sender = FileMessageSender()
+        sender = Old_FileMessageSender()
         sender!.uploadProgressDelegate = self
         sender!.send(senderItem, in: toConversation, requestID: nil, correlationID: correlationID)
         toConversation.conversationVisibility = .default
@@ -256,7 +256,7 @@ class ItemSender: NSObject {
         if sentItemCount == totalSendCount {
             let when = DispatchTime.now() + 0.75
             DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: when) {
-                DispatchQueue.main.async { [self] in
+                DispatchQueue.main.async {
                     self.delegate?.setFinished()
                 }
             }
@@ -267,19 +267,22 @@ class ItemSender: NSObject {
 // MARK: - UploadProgressDelegate
 
 extension ItemSender: UploadProgressDelegate {
-    public func blobMessageSenderUploadShouldCancel(_ blobMessageSender: BlobMessageSender!) -> Bool {
+    public func blobMessageSenderUploadShouldCancel(_ blobMessageSender: Old_BlobMessageSender!) -> Bool {
         shouldCancel
     }
     
     public func blobMessageSender(
-        _ blobMessageSender: BlobMessageSender!,
+        _ blobMessageSender: Old_BlobMessageSender!,
         uploadProgress progress: NSNumber!,
         for message: BaseMessage!
     ) {
         delegate?.setProgress(progress: progress, forItem: message.id!)
     }
     
-    public func blobMessageSender(_ blobMessageSender: BlobMessageSender!, uploadSucceededFor message: BaseMessage) {
+    public func blobMessageSender(
+        _ blobMessageSender: Old_BlobMessageSender!,
+        uploadSucceededFor message: BaseMessage
+    ) {
         sentItemCount! += 1
         delegate?.finishedItem(item: message.id!)
 
@@ -293,7 +296,7 @@ extension ItemSender: UploadProgressDelegate {
     }
     
     public func blobMessageSender(
-        _ blobMessageSender: BlobMessageSender!,
+        _ blobMessageSender: Old_BlobMessageSender!,
         uploadFailedFor message: BaseMessage!,
         error: UploadError
     ) {
@@ -303,7 +306,7 @@ extension ItemSender: UploadProgressDelegate {
         sentItemCount! += 1
         
         let errorTitle = BundleUtil.localizedString(forKey: "error_sending_failed")
-        let errorMessage = FileMessageSender.message(forError: error)
+        let errorMessage = Old_FileMessageSender.message(forError: error)
         
         delegate?.showAlert(with: errorTitle, message: errorMessage!)
         

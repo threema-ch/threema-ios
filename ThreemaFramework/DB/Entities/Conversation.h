@@ -61,6 +61,9 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, retain) NSSet<Contact *> *members;
 @property (nonatomic, retain, nullable) NSSet *tags;
 
+// Derived properties
+
+
 // Computed Properties
 @property (readonly, nullable) NSString* displayName;
 

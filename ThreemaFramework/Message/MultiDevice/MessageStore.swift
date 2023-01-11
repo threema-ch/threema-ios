@@ -35,6 +35,7 @@ class MessageStore: MessageStoreProtocol {
         self.messageProcessorDelegate = messageProcessorDelegate
     }
     
+    @available(*, deprecated, message: "Just for incoming (deprecated) audio message, blob origin is always public!")
     func save(
         audioMessage: BoxAudioMessage,
         conversationIdentity: String,
@@ -103,16 +104,13 @@ class MessageStore: MessageStoreProtocol {
                 FileMessageDecoder.decodeMessage(
                     fromBox: fileMessage,
                     forConversation: conversation,
+                    isReflectedMessage: true,
                     timeoutDownloadThumbnail: Int32(timeoutDownloadThumbnail),
                     entityManager: self.frameworkInjector.backgroundEntityManager,
                     onCompletion: { msg in
                         self.frameworkInjector.backgroundEntityManager.performSyncBlockAndSafe {
                             msg?.id = fileMessage.messageID
                             msg?.date = timestamp
-                            msg?.isOwn = NSNumber(booleanLiteral: isOutgoing)
-
-                            // Origin of blob for reflected file message is always local
-                            (msg as? FileMessageEntity)?.origin = NSNumber(booleanLiteral: true)
 
                             conversation.lastMessage = msg
                             conversation.lastUpdate = Date.now
@@ -193,26 +191,30 @@ class MessageStore: MessageStoreProtocol {
     }
 
     func save(contactSetPhotoMessage: ContactSetPhotoMessage) -> Promise<Void> {
-        syncLoadBlob(blobID: contactSetPhotoMessage.blobID, encryptionKey: contactSetPhotoMessage.encryptionKey)
-            .then { (data: Data?) -> Promise<Void> in
-                guard let data = data else {
-                    throw MediatorReflectedProcessorError.downloadFailed(message: "Blob download failed, no data.")
-                }
-
-                self.frameworkInjector.backgroundEntityManager.performBlockAndWait {
-                    let contact = self.frameworkInjector.backgroundEntityManager.entityFetcher
-                        .contact(for: contactSetPhotoMessage.fromIdentity)
-                    self.frameworkInjector.contactStore.updateProfilePicture(
-                        contact?.identity,
-                        imageData: data,
-                        shouldReflect: false,
-                        didFailWithError: nil
-                    )
-                }
-
-                self.changedContact(with: contactSetPhotoMessage.fromIdentity)
-                return Promise()
+        syncLoadBlob(
+            blobID: contactSetPhotoMessage.blobID,
+            encryptionKey: contactSetPhotoMessage.encryptionKey,
+            origin: .local
+        )
+        .then { (data: Data?) -> Promise<Void> in
+            guard let data = data else {
+                throw MediatorReflectedProcessorError.downloadFailed(message: "Blob download failed, no data.")
             }
+
+            self.frameworkInjector.backgroundEntityManager.performBlockAndWait {
+                let contact = self.frameworkInjector.backgroundEntityManager.entityFetcher
+                    .contact(for: contactSetPhotoMessage.fromIdentity)
+                self.frameworkInjector.contactStore.updateProfilePicture(
+                    contact?.identity,
+                    imageData: data,
+                    shouldReflect: false,
+                    didFailWithError: nil
+                )
+            }
+
+            self.changedContact(with: contactSetPhotoMessage.fromIdentity)
+            return Promise()
+        }
     }
 
     func save(
@@ -220,6 +222,8 @@ class MessageStore: MessageStoreProtocol {
         createdAt: UInt64,
         isOutgoing: Bool
     ) throws {
+        var messageReadConversations = Set<Conversation>()
+
         for id in deliveryReceiptMessage.receiptMessageIDs {
             if let messageID = id as? Data {
                 if let msg = frameworkInjector.backgroundEntityManager.entityFetcher.message(with: messageID) {
@@ -230,15 +234,29 @@ class MessageStore: MessageStoreProtocol {
                         }
                     }
                     else if deliveryReceiptMessage.receiptType == DELIVERYRECEIPT_MSGREAD {
-                        if isOutgoing {
-                            messageProcessorDelegate.outgoingMessageFinished(deliveryReceiptMessage)
+                        frameworkInjector.backgroundEntityManager.performSyncBlockAndSafe {
+                            msg.read = true
+                            msg.readDate = deliveryReceiptMessage.date
+
+                            messageReadConversations.insert(msg.conversation)
                         }
-                        else {
-                            frameworkInjector.backgroundEntityManager.performSyncBlockAndSafe {
-                                msg.read = true
-                                msg.readDate = deliveryReceiptMessage.date
-                            }
+                    }
+                    else if deliveryReceiptMessage.receiptType == DELIVERYRECEIPT_MSGUSERACK {
+                        frameworkInjector.backgroundEntityManager.performSyncBlockAndSafe {
+                            msg.userack = true
+                            msg.userackDate = deliveryReceiptMessage.date
                         }
+                    }
+                    else if deliveryReceiptMessage.receiptType == DELIVERYRECEIPT_MSGUSERDECLINE {
+                        frameworkInjector.backgroundEntityManager.performSyncBlockAndSafe {
+                            msg.userack = false
+                            msg.userackDate = deliveryReceiptMessage.date
+                        }
+                    }
+                    else {
+                        DDLogWarn(
+                            "Unknown delivery receipt type \(deliveryReceiptMessage.receiptType) with message ID \(messageID.hexString)"
+                        )
                     }
                     messageProcessorDelegate.changedManagedObjectID(msg.objectID)
                 }
@@ -248,8 +266,17 @@ class MessageStore: MessageStoreProtocol {
                 }
             }
         }
-    }
 
+        if !messageReadConversations.isEmpty {
+            messageProcessorDelegate.readMessage(inConversations: messageReadConversations)
+        }
+    }
+    
+    @available(
+        *,
+        deprecated,
+        message: "Just for incoming (deprecated) audio group message, blob origin is always public!"
+    )
     func save(
         groupAudioMessage: GroupAudioMessage,
         senderIdentity: String,
@@ -269,7 +296,7 @@ class MessageStore: MessageStoreProtocol {
             }
             guard let sender = self.frameworkInjector.backgroundEntityManager.entityFetcher
                 .contact(for: senderIdentity) else {
-                err = MediatorReflectedProcessorError.contactNotFound(message: groupAudioMessage.loggingDescription)
+                err = MediatorReflectedProcessorError.contactNotFound(identity: senderIdentity)
                 return
             }
 
@@ -295,16 +322,40 @@ class MessageStore: MessageStoreProtocol {
         messageProcessorDelegate.incomingMessageFinished(groupAudioMessage, isPendingGroup: false)
     }
 
-    func save(groupCreateMessage amsg: GroupCreateMessage) {
-        frameworkInjector.backgroundEntityManager.performBlockAndWait {
-            self.frameworkInjector.backgroundGroupManager.createOrUpdateDB(
-                groupID: amsg.groupID,
-                creator: amsg.groupCreator,
-                members: Set<String>(amsg.groupMembers.map { $0 as! String }),
-                systemMessageDate: nil
-            )
+    func save(groupCreateMessage amsg: GroupCreateMessage) -> Promise<Void> {
+        // Validate members, all members must be known contacts, otherwise device is not in sync
+        var internalError: Error?
+        frameworkInjector.entityManager.performBlockAndWait {
+            for identity in (amsg.groupMembers as! [String])
+                .filter({ $0 != self.frameworkInjector.myIdentityStore.identity }) {
+                guard self.frameworkInjector.entityManager.entityFetcher.contact(for: identity) != nil else {
+                    DDLogWarn("Unknown group member, device not in sync anymore")
+                    internalError = MediatorReflectedProcessorError.contactNotFound(identity: identity)
+                    return
+                }
+            }
         }
-        changedConversationAndGroupEntity(groupID: amsg.groupID, groupCreatorIdentity: amsg.groupCreator)
+        if let internalError = internalError {
+            return Promise(error: internalError)
+        }
+
+        return frameworkInjector.backgroundGroupManager.createOrUpdateDB(
+            groupID: amsg.groupID,
+            creator: amsg.groupCreator,
+            members: Set<String>(amsg.groupMembers.map { $0 as! String }),
+            systemMessageDate: amsg.date,
+            sourceCaller: .sync
+        )
+        .then { group -> Promise<Void> in
+            guard group != nil else {
+                throw MediatorReflectedProcessorError.groupCreateFailed(
+                    groupID: "\(amsg.groupID?.hexString ?? "-")",
+                    groupCreatorIdentity: "\(amsg.groupCreator ?? "-")"
+                )
+            }
+            self.changedConversationAndGroupEntity(groupID: amsg.groupID, groupCreatorIdentity: amsg.groupCreator)
+            return Promise()
+        }
     }
 
     func save(groupDeletePhotoMessage amsg: GroupDeletePhotoMessage) -> Promise<Void> {
@@ -375,7 +426,7 @@ class MessageStore: MessageStoreProtocol {
                         seal
                             .reject(
                                 MediatorReflectedProcessorError
-                                    .contactNotFound(message: groupFileMessage.loggingDescription)
+                                    .contactNotFound(identity: senderIdentity)
                             )
                         return
                     }
@@ -384,18 +435,14 @@ class MessageStore: MessageStoreProtocol {
                 FileMessageDecoder.decodeGroupMessage(
                     fromBox: groupFileMessage,
                     forConversation: conversation,
+                    isReflectedMessage: true,
                     timeoutDownloadThumbnail: Int32(timeoutDownloadThumbnail),
                     entityManager: self.frameworkInjector.backgroundEntityManager,
                     onCompletion: { msg in
                         self.frameworkInjector.backgroundEntityManager.performSyncBlockAndSafe {
                             msg?.id = groupFileMessage.messageID
                             msg?.sender = sender
-
                             msg?.date = timestamp
-                            msg?.isOwn = NSNumber(booleanLiteral: isOutgoing)
-
-                            // Origin of blob for reflected file message is always local
-                            (msg as? FileMessageEntity)?.origin = NSNumber(booleanLiteral: true)
 
                             conversation.lastMessage = msg
                             conversation.lastUpdate = Date.now
@@ -425,6 +472,11 @@ class MessageStore: MessageStoreProtocol {
         }
     }
 
+    @available(
+        *,
+        deprecated,
+        message: "Just for incoming (deprecated) image (group) message, blob origin is always public!"
+    )
     func save(
         imageMessage: AbstractMessage,
         senderIdentity: String,
@@ -473,11 +525,10 @@ class MessageStore: MessageStoreProtocol {
                     // TOCHECK: Is there always a sender?
                     guard let sender = self.frameworkInjector.backgroundEntityManager.entityFetcher
                         .contact(for: senderIdentity) else {
-                        seal
-                            .reject(
-                                MediatorReflectedProcessorError
-                                    .contactNotFound(message: imageMessage.loggingDescription)
-                            )
+                        seal.reject(
+                            MediatorReflectedProcessorError
+                                .contactNotFound(identity: senderIdentity)
+                        )
                         return
                     }
                     senderPublicKey = sender.publicKey
@@ -505,16 +556,15 @@ class MessageStore: MessageStoreProtocol {
                 if let msg = msg {
                     self.messageProcessorDelegate.incomingMessageChanged(msg, fromIdentity: senderIdentity)
 
-                    // An ImageMessage never has a local blob because all note group cabable devices send everything as FileMessage
                     let downloadQueue = DispatchQueue.global(qos: .default)
 
                     let processor = ImageMessageProcessor(
                         blobDownloader: BlobDownloader(blobURL: BlobURL(
-                            serverConnector: ServerConnector.shared(),
+                            serverConnector: self.frameworkInjector.serverConnector,
                             userSettings: self.frameworkInjector.userSettings,
-                            localOrigin: false,
                             queue: DispatchQueue.global(qos: .userInitiated)
                         ), queue: downloadQueue),
+                        serverConnector: self.frameworkInjector.serverConnector,
                         myIdentityStore: self.frameworkInjector.myIdentityStore,
                         userSettings: self.frameworkInjector.userSettings,
                         entityManager: self.frameworkInjector.backgroundEntityManager
@@ -522,6 +572,7 @@ class MessageStore: MessageStoreProtocol {
                     processor.downloadImage(
                         imageMessageID: msg.id,
                         imageBlobID: msg.imageBlobID,
+                        origin: msg.blobGetOrigin(),
                         imageBlobEncryptionKey: msg.blobGetEncryptionKey(),
                         imageBlobNonce: msg.imageNonce,
                         senderPublicKey: senderPublicKey,
@@ -578,7 +629,7 @@ class MessageStore: MessageStoreProtocol {
                 sender = self.frameworkInjector.backgroundEntityManager.entityFetcher.contact(for: senderIdentity)
                 if sender == nil {
                     err = MediatorReflectedProcessorError
-                        .contactNotFound(message: groupLocationMessage.loggingDescription)
+                        .contactNotFound(identity: senderIdentity)
                     return
                 }
             }
@@ -610,7 +661,7 @@ class MessageStore: MessageStoreProtocol {
                 }
             }
             .catch { error in
-                DDLogError(String(format: "Set POI address failed %@", error.localizedDescription))
+                DDLogError("Set POI address failed \(error.localizedDescription)")
             }
     }
 
@@ -640,7 +691,7 @@ class MessageStore: MessageStoreProtocol {
                 sender = self.frameworkInjector.backgroundEntityManager.entityFetcher.contact(for: senderIdentity)
                 if sender == nil {
                     err = MediatorReflectedProcessorError
-                        .contactNotFound(message: groupBallotCreateMessage.loggingDescription)
+                        .contactNotFound(identity: senderIdentity)
                     return
                 }
             }
@@ -686,7 +737,7 @@ class MessageStore: MessageStoreProtocol {
     }
 
     func save(groupSetPhotoMessage amsg: GroupSetPhotoMessage) -> Promise<Void> {
-        syncLoadBlob(blobID: amsg.blobID, encryptionKey: amsg.encryptionKey)
+        syncLoadBlob(blobID: amsg.blobID, encryptionKey: amsg.encryptionKey, origin: .public)
             .then { (data: Data?) -> Promise<Void> in
                 guard let data = data else {
                     throw MediatorReflectedProcessorError.downloadFailed(message: "Blob download failed, no data.")
@@ -717,49 +768,41 @@ class MessageStore: MessageStoreProtocol {
         createdAt: UInt64,
         isOutgoing: Bool
     ) throws {
+
+        guard groupDeliveryReceiptMessage.receiptType == GROUPDELIVERYRECEIPT_MSGUSERACK ||
+            groupDeliveryReceiptMessage.receiptType == GROUPDELIVERYRECEIPT_MSGUSERDECLINE else {
+            DDLogWarn("Unknown group delivery receipt type \(groupDeliveryReceiptMessage.receiptType)")
+            return
+        }
+
+        let receiptType: GroupDeliveryReceipt.DeliveryReceiptType =
+            groupDeliveryReceiptMessage.receiptType == GROUPDELIVERYRECEIPT_MSGUSERACK ? .acknowledged : .declined
+
         for id in groupDeliveryReceiptMessage.receiptMessageIDs {
             if let messageID = id as? Data {
-                if let msg = frameworkInjector.backgroundEntityManager.entityFetcher.message(with: messageID),
-                   msg.conversation.groupID == groupDeliveryReceiptMessage.groupID {
-                    if groupDeliveryReceiptMessage.receiptType == GroupDeliveryReceipt.DeliveryReceiptType
-                        .userAcknowledgment.rawValue {
-                        if isOutgoing {
-                            messageProcessorDelegate.outgoingMessageFinished(groupDeliveryReceiptMessage)
-                        }
-                        else {
-                            frameworkInjector.backgroundEntityManager.performSyncBlockAndSafe {
-                                let receipt = GroupDeliveryReceipt(
-                                    identity: groupDeliveryReceiptMessage.fromIdentity,
-                                    deliveryReceiptType: .userAcknowledgment,
-                                    date: groupDeliveryReceiptMessage.date
-                                )
-                                msg.add(groupDeliveryReceipt: receipt)
-                            }
-                        }
-                    }
-                    
-                    if groupDeliveryReceiptMessage.receiptType == GroupDeliveryReceipt.DeliveryReceiptType.userDeclined
-                        .rawValue {
-                        if isOutgoing {
-                            messageProcessorDelegate.outgoingMessageFinished(groupDeliveryReceiptMessage)
-                        }
-                        else {
-                            frameworkInjector.backgroundEntityManager.performSyncBlockAndSafe {
-                                let receipt = GroupDeliveryReceipt(
-                                    identity: groupDeliveryReceiptMessage.fromIdentity,
-                                    deliveryReceiptType: .userDeclined,
-                                    date: groupDeliveryReceiptMessage.date
-                                )
-                                msg.add(groupDeliveryReceipt: receipt)
-                            }
-                        }
-                    }
+                var err: Error?
 
-                    messageProcessorDelegate.changedManagedObjectID(msg.objectID)
+                frameworkInjector.backgroundEntityManager.performBlockAndWait {
+                    if let msg = self.frameworkInjector.backgroundEntityManager.entityFetcher.message(with: messageID),
+                       msg.conversation.groupID == groupDeliveryReceiptMessage.groupID {
+                        self.frameworkInjector.backgroundEntityManager.performSyncBlockAndSafe {
+                            let receipt = GroupDeliveryReceipt(
+                                identity: groupDeliveryReceiptMessage.fromIdentity,
+                                deliveryReceiptType: receiptType,
+                                date: groupDeliveryReceiptMessage.date
+                            )
+                            msg.add(groupDeliveryReceipt: receipt)
+                        }
+                        self.messageProcessorDelegate.changedManagedObjectID(msg.objectID)
+                    }
+                    else {
+                        err = MediatorReflectedProcessorError
+                            .messageNotProcessed(message: groupDeliveryReceiptMessage.loggingDescription)
+                    }
                 }
-                else {
-                    throw MediatorReflectedProcessorError
-                        .messageNotProcessed(message: groupDeliveryReceiptMessage.loggingDescription)
+
+                if let err = err {
+                    throw err
                 }
             }
         }
@@ -789,7 +832,7 @@ class MessageStore: MessageStoreProtocol {
             if !isOutgoing {
                 sender = self.frameworkInjector.backgroundEntityManager.entityFetcher.contact(for: senderIdentity)
                 if sender == nil {
-                    err = MediatorReflectedProcessorError.contactNotFound(message: groupTextMessage.loggingDescription)
+                    err = MediatorReflectedProcessorError.contactNotFound(identity: senderIdentity)
                     return
                 }
             }
@@ -818,6 +861,11 @@ class MessageStore: MessageStoreProtocol {
         }
     }
 
+    @available(
+        *,
+        deprecated,
+        message: "Just for incoming (deprecated) video (group) message, blob origin is always public!"
+    )
     func save(
         videoMessage: AbstractMessage,
         senderIdentity: String,
@@ -868,7 +916,7 @@ class MessageStore: MessageStoreProtocol {
                         seal
                             .reject(
                                 MediatorReflectedProcessorError
-                                    .contactNotFound(message: videoMessage.loggingDescription)
+                                    .contactNotFound(identity: senderIdentity)
                             )
                         return
                     }
@@ -917,14 +965,16 @@ class MessageStore: MessageStoreProtocol {
                     let downloadQueue = DispatchQueue.global(qos: .default)
                     let videoProcessor = VideoMessageProcessor(
                         blobDownloader: BlobDownloader(blobURL: BlobURL(
-                            serverConnector: ServerConnector.shared(),
+                            serverConnector: self.frameworkInjector.serverConnector,
                             userSettings: self.frameworkInjector.userSettings,
-                            localOrigin: false,
                             queue: DispatchQueue.global(qos: .userInitiated)
-                        ), queue: downloadQueue), entityManager: self.frameworkInjector.backgroundEntityManager
+                        ), queue: downloadQueue),
+                        serverConnector: self.frameworkInjector.serverConnector,
+                        entityManager: self.frameworkInjector.backgroundEntityManager
                     )
                     videoProcessor.downloadVideoThumbnail(
                         videoMessageID: msg.id,
+                        origin: msg.blobGetOrigin(),
                         thumbnailBlobID: thumbnailBlobID,
                         maxBytesToDecrypt: maxBytesToDecrypt
                     )
@@ -1000,7 +1050,7 @@ class MessageStore: MessageStoreProtocol {
                 }
             }
             .catch { error in
-                DDLogError(String(format: "Set POI address failed %@", error.localizedDescription))
+                DDLogError("Set POI address failed \(error.localizedDescription)")
             }
     }
 
@@ -1091,7 +1141,7 @@ class MessageStore: MessageStoreProtocol {
                             seal.fulfill_()
                         }
                     ) { error in
-                        DDLogWarn(String(format: "Reverse geocoding failed: %@", error?.localizedDescription ?? ""))
+                        DDLogWarn("Reverse geocoding failed: \(error?.localizedDescription ?? "")")
 
                         self.frameworkInjector.backgroundEntityManager.performSyncBlockAndSafe {
                             message.poiAddress = String(format: "%.5f°, %.5f°", latitude, longitude)
@@ -1106,10 +1156,10 @@ class MessageStore: MessageStoreProtocol {
         }
     }
 
-    func syncLoadBlob(blobID: Data, encryptionKey: Data) -> Promise<Data?> {
+    func syncLoadBlob(blobID: Data, encryptionKey: Data, origin: BlobOrigin) -> Promise<Data?> {
         Promise { seal in
             let profilePictureLoader = ContactGroupPhotoLoader()
-            profilePictureLoader.start(with: blobID, encryptionKey: encryptionKey) { data in
+            profilePictureLoader.start(with: blobID, encryptionKey: encryptionKey, origin: origin) { data in
                 seal.fulfill(data)
             } error: { error in
                 seal.reject(MediatorReflectedProcessorError.downloadFailed(message: error?.localizedDescription ?? ""))

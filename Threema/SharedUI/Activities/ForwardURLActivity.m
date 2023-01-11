@@ -23,7 +23,7 @@
 #import "MessageSender.h"
 #import "ModalNavigationController.h"
 #import "UTIConverter.h"
-#import "FileMessageSender.h"
+#import "Old_FileMessageSender.h"
 #import "BundleUtil.h"
 
 @interface ForwardURLActivity () <ContactGroupPickerDelegate, ModalNavigationControllerDelegate>

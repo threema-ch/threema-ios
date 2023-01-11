@@ -19,12 +19,12 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import <Foundation/Foundation.h>
-#import "BlobUploadDelegate.h"
+#import "Old_BlobUploadDelegate.h"
 #import "AbstractMessage.h"
 
 @class Conversation, Contact;
 
-@interface ContactPhotoSender : NSObject <BlobUploadDelegate>
+@interface ContactPhotoSender : NSObject <Old_BlobUploadDelegate>
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -34,7 +34,12 @@ NS_ASSUME_NONNULL_BEGIN
 
 + (void)sendProfilePictureRequest:(NSString *)toIdentity;
 
-- (void)sendProfilePicture:(AbstractMessage *)message;
+/**
+ Send my profile picture to the sender of the given received message if necessary.
+
+ @param message: Sender of message is receiver of profile picture
+ */
+- (void)sendProfilePicture:(AbstractMessage *)message NS_SWIFT_NAME(sendProfilePicture(message:));
 
 - (void)startWithImageToMember:(Contact*)toMember onCompletion:(void (^ _Nullable)(void))onCompletion onError:(void (^ _Nullable) ( NSError * _Nullable ))onError;
 

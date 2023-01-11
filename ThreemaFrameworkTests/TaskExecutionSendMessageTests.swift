@@ -29,6 +29,8 @@ class TaskExecutionSendMessageTests: XCTestCase {
 
     private var ddLoggerMock: DDLoggerMock!
 
+    private var deviceGroupKeys: DeviceGroupKeys!
+
     override func setUpWithError() throws {
         // Necessary for ValidationLogger
         AppGroup.setGroupID("group.ch.threema") // THREEMA_GROUP_IDENTIFIER @"group.ch.threema"
@@ -41,6 +43,15 @@ class TaskExecutionSendMessageTests: XCTestCase {
         ddLoggerMock = DDLoggerMock()
         DDTTYLogger.sharedInstance?.logFormatter = LogFormatterCustom()
         DDLog.add(ddLoggerMock)
+
+        deviceGroupKeys = DeviceGroupKeys(
+            dgpk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
+            dgrk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
+            dgdik: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
+            dgsddk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
+            dgtsk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
+            deviceGroupIDFirstByteHex: "a1"
+        )
     }
 
     override func tearDownWithError() throws {
@@ -89,7 +100,8 @@ class TaskExecutionSendMessageTests: XCTestCase {
                     read: false,
                     sent: false,
                     userack: false,
-                    sender: contact
+                    sender: contact,
+                    remoteSentDate: nil
                 )
             }
         }
@@ -127,6 +139,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
                     1,
                     serverConnectorMock.sendMessageCalls.filter { $0.messageID.elementsEqual(expectedMessageID) }.count
                 )
+                XCTAssertEqual(textMessage.sent.boolValue, false)
             }
         }
     }
@@ -173,7 +186,8 @@ class TaskExecutionSendMessageTests: XCTestCase {
                     read: false,
                     sent: false,
                     userack: false,
-                    sender: contact
+                    sender: contact,
+                    remoteSentDate: nil
                 )
             }
         }
@@ -203,6 +217,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
                     1,
                     serverConnectorMock.sendMessageCalls.filter { $0.messageID.elementsEqual(expectedMessageID) }.count
                 )
+                XCTAssertEqual(textMessage.sent.boolValue, true)
             }
         }
     }
@@ -252,7 +267,8 @@ class TaskExecutionSendMessageTests: XCTestCase {
                     read: false,
                     sent: false,
                     userack: false,
-                    sender: contact
+                    sender: contact,
+                    remoteSentDate: nil
                 )
             }
         }
@@ -275,15 +291,21 @@ class TaskExecutionSendMessageTests: XCTestCase {
                 XCTFail(error.localizedDescription)
             }
             else {
-                XCTAssertTrue(
-                    self.ddLoggerMock
-                        .exists(
-                            message: "Do not sending message to invalid identity Optional(\"\(expectedToIdentity)\") ((type: text; id: \(expectedMessageID.hexString)))"
-                        )
-                )
-                XCTAssertNil(expecError)
+                if let expecError = expecError,
+                   case let TaskExecutionError.invalidContact(message: message) = expecError {
+                    XCTAssertEqual(
+                        message,
+                        "Do not sending message to invalid identity Optional(\"\(expectedToIdentity)\") ((type: text; id: \(expectedMessageID.hexString)))"
+                    )
+                }
+                else {
+                    XCTFail()
+                }
+                
                 XCTAssertEqual(0, serverConnectorMock.reflectMessageCalls.count)
                 XCTAssertEqual(0, serverConnectorMock.sendMessageCalls.count)
+                XCTAssertEqual(textMessage.sent.boolValue, false)
+                XCTAssertEqual(textMessage.remoteSentDate, textMessage.date)
             }
         }
     }
@@ -300,7 +322,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
         let serverConnectorMock = ServerConnectorMock(
             connectionState: .loggedIn,
             deviceID: BytesUtility.generateRandomBytes(length: ThreemaProtocol.deviceIDLength)!,
-            deviceGroupPathKey: BytesUtility.generateRandomBytes(length: 32)!
+            deviceGroupKeys: deviceGroupKeys
         )
         serverConnectorMock.reflectMessageClosure = { _ in
             if serverConnectorMock.connectionState == .loggedIn {
@@ -313,6 +335,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
             }
             return false
         }
+        let deviceGroupKeys = try XCTUnwrap(serverConnectorMock.deviceGroupKeys, "Device group keys missing")
         let frameworkInjectorMock = BusinessInjectorMock(
             backgroundEntityManager: EntityManager(databaseContext: dbBackgroundCnx),
             backgroundGroupManager: GroupManagerMock(),
@@ -327,7 +350,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
             userSettings: UserSettingsMock(),
             serverConnector: serverConnectorMock,
             mediatorMessageProtocol: MediatorMessageProtocolMock(
-                deviceGroupPathKey: serverConnectorMock.deviceGroupPathKey,
+                deviceGroupKeys: deviceGroupKeys,
                 returnValues: [
                     MediatorMessageProtocolMock.ReflectData(
                         id: expectedMessageReflectID,
@@ -362,7 +385,8 @@ class TaskExecutionSendMessageTests: XCTestCase {
                     read: false,
                     sent: false,
                     userack: false,
-                    sender: contact
+                    sender: contact,
+                    remoteSentDate: nil
                 )
             }
         }
@@ -401,6 +425,8 @@ class TaskExecutionSendMessageTests: XCTestCase {
                     1,
                     serverConnectorMock.sendMessageCalls.filter { $0.messageID.elementsEqual(expectedMessageID) }.count
                 )
+                XCTAssertEqual(textMessage.sent.boolValue, true)
+                XCTAssertNotEqual(textMessage.remoteSentDate, textMessage.date)
             }
         }
     }
@@ -419,7 +445,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
         let serverConnectorMock = ServerConnectorMock(
             connectionState: .loggedIn,
             deviceID: BytesUtility.generateRandomBytes(length: ThreemaProtocol.deviceIDLength)!,
-            deviceGroupPathKey: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupPathKeyLen))!
+            deviceGroupKeys: deviceGroupKeys
         )
         serverConnectorMock.reflectMessageClosure = { _ in
             if serverConnectorMock.connectionState == .loggedIn {
@@ -433,6 +459,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
             return false
         }
         let myIdentityStoreMock = MyIdentityStoreMock()
+        let deviceGroupKeys = try XCTUnwrap(serverConnectorMock.deviceGroupKeys, "Device group keys missing")
         let frameworkInjectorMock = BusinessInjectorMock(
             backgroundEntityManager: EntityManager(databaseContext: dbBackgroundCnx),
             backgroundGroupManager: GroupManagerMock(),
@@ -447,7 +474,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
             userSettings: userSettingsMock,
             serverConnector: serverConnectorMock,
             mediatorMessageProtocol: MediatorMessageProtocolMock(
-                deviceGroupPathKey: serverConnectorMock.deviceGroupPathKey,
+                deviceGroupKeys: deviceGroupKeys,
                 returnValues: [
                     MediatorMessageProtocolMock.ReflectData(
                         id: expectedMessageReflectID,
@@ -494,7 +521,8 @@ class TaskExecutionSendMessageTests: XCTestCase {
                     read: false,
                     sent: false,
                     userack: false,
-                    sender: nil
+                    sender: nil,
+                    remoteSentDate: nil
                 )
                 
                 group = Group(
@@ -547,6 +575,168 @@ class TaskExecutionSendMessageTests: XCTestCase {
                 )
                 XCTAssertEqual(1, serverConnectorMock.sendMessageCalls.filter { $0.toIdentity == "MEMBER01" }.count)
                 XCTAssertEqual(1, serverConnectorMock.sendMessageCalls.filter { $0.toIdentity == "MEMBER03" }.count)
+                XCTAssertEqual(textMessage.sent.boolValue, true)
+                XCTAssertNotEqual(textMessage.remoteSentDate, textMessage.date)
+            }
+        }
+    }
+    
+    func testExecuteGroupTextMessageWithReflectingAndOneInvalidContact() throws {
+        let expectedMessageReflectID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.messageIDLength)!
+        let expectedMessageReflect = BytesUtility.generateRandomBytes(length: 16)!
+        let expectedMessageSentReflectID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.messageIDLength)!
+        let expectedMessageSentReflect = BytesUtility.generateRandomBytes(length: 16)!
+        let expectedMessageID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.messageIDLength)!
+        let expectedText = "Test 123"
+        let expectedMembers: Set<String> = ["MEMBER01", "MEMBER02", "MEMBER03", "MEMBER04"]
+        var expectedReflectIDs = [expectedMessageReflectID, expectedMessageSentReflectID]
+
+        let userSettingsMock = UserSettingsMock(blacklist: ["MEMBER02"])
+        let serverConnectorMock = ServerConnectorMock(
+            connectionState: .loggedIn,
+            deviceID: BytesUtility.generateRandomBytes(length: ThreemaProtocol.deviceIDLength)!,
+            deviceGroupKeys: deviceGroupKeys
+        )
+        serverConnectorMock.reflectMessageClosure = { _ in
+            if serverConnectorMock.connectionState == .loggedIn {
+                let expectedReflectID = expectedReflectIDs.remove(at: 0)
+                NotificationCenter.default.post(
+                    name: TaskManager.mediatorMessageAckObserverName(reflectID: expectedReflectID),
+                    object: expectedReflectID
+                )
+                return true
+            }
+            return false
+        }
+        let myIdentityStoreMock = MyIdentityStoreMock()
+        let deviceGroupKeys = try XCTUnwrap(serverConnectorMock.deviceGroupKeys, "Device group keys missing")
+        let frameworkInjectorMock = BusinessInjectorMock(
+            backgroundEntityManager: EntityManager(databaseContext: dbBackgroundCnx),
+            backgroundGroupManager: GroupManagerMock(),
+            backgroundUnreadMessages: UnreadMessagesMock(),
+            contactStore: ContactStoreMock(),
+            entityManager: EntityManager(databaseContext: dbMainCnx),
+            groupManager: GroupManagerMock(),
+            licenseStore: LicenseStore.shared(),
+            messageSender: MessageSenderMock(),
+            multiDeviceManager: MultiDeviceManagerMock(),
+            myIdentityStore: myIdentityStoreMock,
+            userSettings: userSettingsMock,
+            serverConnector: serverConnectorMock,
+            mediatorMessageProtocol: MediatorMessageProtocolMock(
+                deviceGroupKeys: deviceGroupKeys,
+                returnValues: [
+                    MediatorMessageProtocolMock.ReflectData(
+                        id: expectedMessageReflectID,
+                        message: expectedMessageReflect
+                    ),
+                    MediatorMessageProtocolMock.ReflectData(
+                        id: expectedMessageSentReflectID,
+                        message: expectedMessageSentReflect
+                    ),
+                ]
+            ),
+            messageProcessor: MessageProcessorMock()
+        )
+
+        var textMessage: TextMessage!
+        var group: Group!
+        dbPreparer.save {
+            var members = Set<Contact>()
+            for member in expectedMembers {
+                let contact = dbPreparer.createContact(
+                    publicKey: BytesUtility.generateRandomBytes(length: 32)!,
+                    identity: member,
+                    verificationLevel: 0
+                )
+                members.insert(contact)
+                
+                if member == "MEMBER04" {
+                    contact.state = NSNumber(integerLiteral: kStateInvalid)
+                }
+            }
+            
+            let groupEntity = dbPreparer.createGroupEntity(
+                groupID: BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!,
+                groupCreator: "MEMBER01"
+            )
+            dbPreparer.createConversation(marked: false, typing: false, unreadMessageCount: 0) { conversation in
+                conversation.groupID = groupEntity.groupID
+                conversation.contact = members.first(where: { $0.identity == "MEMBER01" })
+                conversation.addMembers(members)
+                
+                textMessage = self.dbPreparer.createTextMessage(
+                    conversation: conversation,
+                    text: expectedText,
+                    date: Date(),
+                    delivered: false,
+                    id: expectedMessageID,
+                    isOwn: true,
+                    read: false,
+                    sent: false,
+                    userack: false,
+                    sender: nil,
+                    remoteSentDate: nil
+                )
+                
+                group = Group(
+                    myIdentityStore: myIdentityStoreMock,
+                    userSettings: userSettingsMock,
+                    groupEntity: groupEntity,
+                    conversation: conversation,
+                    lastSyncRequest: nil
+                )
+            }
+        }
+
+        let expec = expectation(description: "TaskDefinitionSendBaseMessage")
+        var expecError: Error?
+
+        let task = TaskDefinitionSendBaseMessage(
+            message: textMessage,
+            group: group,
+            sendContactProfilePicture: false
+        )
+        task.create(frameworkInjector: frameworkInjectorMock).execute()
+            .done {
+                expec.fulfill()
+            }
+            .catch { error in
+                expecError = error
+                expec.fulfill()
+            }
+
+        waitForExpectations(timeout: 6) { error in
+            if let error = error {
+                XCTFail(error.localizedDescription)
+            }
+            else {
+                XCTAssertTrue(
+                    self.ddLoggerMock
+                        .exists(
+                            message: "Do not sending message to invalid identity Optional(\"MEMBER04\") ((type: groupText; id: \(expectedMessageID.hexString)))"
+                        )
+                )
+                XCTAssertNil(expecError)
+                XCTAssertEqual(2, serverConnectorMock.reflectMessageCalls.count)
+                XCTAssertEqual(
+                    1,
+                    serverConnectorMock.reflectMessageCalls.filter { $0.elementsEqual(expectedMessageReflect) }.count
+                )
+                XCTAssertEqual(
+                    1,
+                    serverConnectorMock.reflectMessageCalls.filter { $0.elementsEqual(expectedMessageSentReflect) }
+                        .count
+                )
+                XCTAssertEqual(2, serverConnectorMock.sendMessageCalls.count)
+                XCTAssertEqual(
+                    2,
+                    serverConnectorMock.sendMessageCalls.filter { $0.messageID.elementsEqual(expectedMessageID) }.count
+                )
+                XCTAssertEqual(1, serverConnectorMock.sendMessageCalls.filter { $0.toIdentity == "MEMBER01" }.count)
+                XCTAssertEqual(1, serverConnectorMock.sendMessageCalls.filter { $0.toIdentity == "MEMBER03" }.count)
+                XCTAssertEqual(textMessage.sent.boolValue, true)
+                XCTAssertNotEqual(textMessage.remoteSentDate, textMessage.date)
             }
         }
     }
@@ -565,7 +755,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
         let serverConnectorMock = ServerConnectorMock(
             connectionState: .loggedIn,
             deviceID: BytesUtility.generateRandomBytes(length: ThreemaProtocol.deviceIDLength)!,
-            deviceGroupPathKey: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupPathKeyLen))!
+            deviceGroupKeys: deviceGroupKeys
         )
         serverConnectorMock.reflectMessageClosure = { _ in
             if serverConnectorMock.connectionState == .loggedIn {
@@ -593,7 +783,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
             userSettings: userSettingsMock,
             serverConnector: serverConnectorMock,
             mediatorMessageProtocol: MediatorMessageProtocolMock(
-                deviceGroupPathKey: serverConnectorMock.deviceGroupPathKey,
+                deviceGroupKeys: deviceGroupKeys,
                 returnValues: [
                     MediatorMessageProtocolMock.ReflectData(
                         id: expectedMessageReflectID,
@@ -640,7 +830,8 @@ class TaskExecutionSendMessageTests: XCTestCase {
                     read: false,
                     sent: false,
                     userack: false,
-                    sender: nil
+                    sender: nil,
+                    remoteSentDate: nil
                 )
 
                 group = Group(
@@ -706,7 +897,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
         let serverConnectorMock = ServerConnectorMock(
             connectionState: .loggedIn,
             deviceID: BytesUtility.generateRandomBytes(length: ThreemaProtocol.deviceIDLength)!,
-            deviceGroupPathKey: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupPathKeyLen))!
+            deviceGroupKeys: deviceGroupKeys
         )
         serverConnectorMock.reflectMessageClosure = { _ in
             if serverConnectorMock.connectionState == .loggedIn {
@@ -718,7 +909,9 @@ class TaskExecutionSendMessageTests: XCTestCase {
             }
             return false
         }
+
         let myIdentityStoreMock = MyIdentityStoreMock()
+        let deviceGroupKeys = try XCTUnwrap(serverConnectorMock.deviceGroupKeys, "Device group keys missing")
         let frameworkInjectorMock = BusinessInjectorMock(
             backgroundEntityManager: EntityManager(databaseContext: dbBackgroundCnx),
             backgroundGroupManager: GroupManagerMock(),
@@ -733,7 +926,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
             userSettings: UserSettingsMock(),
             serverConnector: serverConnectorMock,
             mediatorMessageProtocol: MediatorMessageProtocolMock(
-                deviceGroupPathKey: serverConnectorMock.deviceGroupPathKey,
+                deviceGroupKeys: deviceGroupKeys,
                 returnValues: [
                     MediatorMessageProtocolMock
                         .ReflectData(
@@ -765,7 +958,8 @@ class TaskExecutionSendMessageTests: XCTestCase {
                     read: false,
                     sent: false,
                     userack: false,
-                    sender: nil
+                    sender: nil,
+                    remoteSentDate: nil
                 )
                 
                 group = Group(
@@ -811,6 +1005,9 @@ class TaskExecutionSendMessageTests: XCTestCase {
                     0,
                     serverConnectorMock.sendMessageCalls.filter { $0.messageID.elementsEqual(expectedMessageID) }.count
                 )
+                XCTAssertEqual(textMessage.sent.boolValue, true)
+                // Local messages don't have a remote sent date
+                XCTAssertEqual(textMessage.remoteSentDate, textMessage.date)
             }
         }
     }
@@ -836,7 +1033,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
             let serverConnectorMock = ServerConnectorMock(
                 connectionState: .loggedIn,
                 deviceID: BytesUtility.generateRandomBytes(length: ThreemaProtocol.deviceIDLength)!,
-                deviceGroupPathKey: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupPathKeyLen))!
+                deviceGroupKeys: deviceGroupKeys
             )
             serverConnectorMock.reflectMessageClosure = { _ in
                 if serverConnectorMock.connectionState == .loggedIn {
@@ -850,6 +1047,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
                 return false
             }
             let myIdentityStoreMock = MyIdentityStoreMock()
+            let deviceGroupKeys = try XCTUnwrap(serverConnectorMock.deviceGroupKeys, "Device group keys missing")
             let frameworkInjectorMock = BusinessInjectorMock(
                 backgroundEntityManager: EntityManager(databaseContext: dbBackgroundCnx),
                 backgroundGroupManager: GroupManagerMock(),
@@ -864,7 +1062,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
                 userSettings: UserSettingsMock(),
                 serverConnector: serverConnectorMock,
                 mediatorMessageProtocol: MediatorMessageProtocolMock(
-                    deviceGroupPathKey: serverConnectorMock.deviceGroupPathKey,
+                    deviceGroupKeys: deviceGroupKeys,
                     returnValues: [
                         MediatorMessageProtocolMock.ReflectData(
                             id: expectedMessageReflectID,
@@ -913,7 +1111,8 @@ class TaskExecutionSendMessageTests: XCTestCase {
                             read: false,
                             sent: false,
                             userack: false,
-                            sender: members.first
+                            sender: members.first,
+                            remoteSentDate: nil
                         )
                     
                         group = Group(
@@ -973,6 +1172,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
                         broadcastGroupTest[2] as! Int,
                         serverConnectorMock.sendMessageCalls.filter { $0.toIdentity == "*ADMIN01" }.count
                     )
+                    XCTAssert(textMessage.sent.boolValue)
                 }
             }
         }
@@ -987,8 +1187,9 @@ class TaskExecutionSendMessageTests: XCTestCase {
         let serverConnectorMock = ServerConnectorMock(
             connectionState: .disconnected,
             deviceID: BytesUtility.generateRandomBytes(length: ThreemaProtocol.deviceIDLength)!,
-            deviceGroupPathKey: BytesUtility.generateRandomBytes(length: 32)!
+            deviceGroupKeys: deviceGroupKeys
         )
+        let deviceGroupKeys = try XCTUnwrap(serverConnectorMock.deviceGroupKeys, "Device group keys missing")
         let frameworkInjectorMock = BusinessInjectorMock(
             backgroundEntityManager: EntityManager(databaseContext: dbBackgroundCnx),
             backgroundGroupManager: GroupManagerMock(),
@@ -1003,7 +1204,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
             userSettings: UserSettingsMock(),
             serverConnector: serverConnectorMock,
             mediatorMessageProtocol: MediatorMessageProtocolMock(
-                deviceGroupPathKey: serverConnectorMock.deviceGroupPathKey,
+                deviceGroupKeys: deviceGroupKeys,
                 returnValues: [
                     MediatorMessageProtocolMock
                         .ReflectData(
@@ -1035,7 +1236,8 @@ class TaskExecutionSendMessageTests: XCTestCase {
                     read: false,
                     sent: false,
                     userack: false,
-                    sender: contact
+                    sender: contact,
+                    remoteSentDate: nil
                 )
             }
         }
@@ -1062,5 +1264,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
         )
         XCTAssertEqual(1, serverConnectorMock.reflectMessageCalls.count)
         XCTAssertEqual(0, serverConnectorMock.sendMessageCalls.count)
+        XCTAssertEqual(textMessage.sent.boolValue, false)
+        XCTAssertEqual(textMessage.remoteSentDate, textMessage.date)
     }
 }

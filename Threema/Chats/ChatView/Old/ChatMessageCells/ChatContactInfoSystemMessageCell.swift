@@ -50,7 +50,7 @@ import Foundation
         _msgBackground.layer.cornerRadius = 5
         contentView.addSubview(_msgBackground)
         
-        _threemaTypeIcon.image = ThreemaUtilityObjC.threemaTypeIcon()
+        _threemaTypeIcon.image = ThreemaUtility.otherThreemaTypeIcon
         _threemaTypeIcon.accessibilityIgnoresInvertColors = true
         _threemaTypeIcon.frame = CGRect(x: 20.0, y: _iconY, width: _iconSize, height: _iconSize)
         contentView.addSubview(_threemaTypeIcon)
@@ -100,7 +100,7 @@ extension ChatContactInfoSystemMessageCell {
         let height = (dummySystemLabel?.sizeThatFits(maxSize).height)!
         
         let threemaTypeIcon = UIImageView()
-        threemaTypeIcon.image = ThreemaUtilityObjC.threemaTypeIcon()
+        threemaTypeIcon.image = ThreemaUtility.otherThreemaTypeIcon
         if height > threemaTypeIcon.frame.size.height {
             return height
         }

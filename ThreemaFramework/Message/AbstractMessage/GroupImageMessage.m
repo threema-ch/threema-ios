@@ -41,7 +41,7 @@
     return body;
 }
 
-- (BOOL)shouldPush {
+- (BOOL)flagShouldPush {
     return YES;
 }
 

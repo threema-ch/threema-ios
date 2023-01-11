@@ -45,18 +45,20 @@ public enum KeyboardConstraintHelper {
         
         var delay = TimeInterval(0)
         
-        constraint.constant = 0.0
+        var constraintConstant = 0.0
         
         if let endFrame = endFrame, endFrameY < UIScreen.main.bounds.size.height {
             let convertedEndframe = view.convert(endFrame, from: UIScreen.main.coordinateSpace)
             let intersection = view.frame.intersection(convertedEndframe).height
-            constraint.constant = -max(
+            constraintConstant = -max(
                 intersection,
                 0
             )
             
             delay = TimeInterval(view.safeAreaInsets.bottom * (0.25 / intersection) / 3)
         }
+        
+        constraint.constant = constraintConstant
         
         UIView.animate(
             withDuration: duration,

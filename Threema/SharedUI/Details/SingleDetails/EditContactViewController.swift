@@ -18,7 +18,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-import DiffableDataSources
 import UIKit
 
 /// Show an edit view for the provided contact
@@ -40,7 +39,7 @@ final class EditContactViewController: ThemedCodeModernGroupedTableViewControlle
     
     // MARK: - Private properties
         
-    private lazy var dataSource = TableViewDiffableDataSource<Section, Row>(
+    private lazy var dataSource = UITableViewDiffableDataSource<Section, Row>(
         tableView: tableView
     ) { [weak self] tableView, indexPath, row -> UITableViewCell? in
         
@@ -204,7 +203,7 @@ final class EditContactViewController: ThemedCodeModernGroupedTableViewControlle
     }
 
     private func configureSnapshot() {
-        var snapshot = DiffableDataSourceSnapshot<Section, Row>()
+        var snapshot = NSDiffableDataSourceSnapshot<Section, Row>()
         
         snapshot.appendSections([.editName])
         snapshot.appendItems([.firstName, .lastName])
@@ -302,31 +301,12 @@ final class EditContactViewController: ThemedCodeModernGroupedTableViewControlle
 extension EditContactViewController {
     private func saveChanges() {
         // Save the data
-        entityManager.performSyncBlockAndSafe {
-            // Go through all the data and check if anything changed
-            
-            var didChange = false
-            
-            if self.avatarImageData != self.contact.imageData {
-                didChange = true
-            }
-            self.contact.imageData = self.avatarImageData
-            
-            if self.firstName != self.contact.firstName {
-                didChange = true
-            }
-            self.contact.firstName = self.firstName
-            
-            if self.lastName != self.contact.lastName {
-                didChange = true
-            }
-            self.contact.lastName = self.lastName
-            
-            // If there was a change reflect the data
-            if didChange {
-                ContactStore.shared().reflect(self.contact)
-            }
-        }
+        BusinessInjector().contactStore.updateContact(
+            withIdentity: contact.identity,
+            avatar: avatarImageData,
+            firstName: firstName,
+            lastName: lastName
+        )
     }
 }
 

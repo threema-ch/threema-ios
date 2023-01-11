@@ -133,7 +133,7 @@ class TaskQueue {
             DDLogWarn("Task queue spool interrupt, because not logged in to server")
             return
         }
-
+        
         var queueItem: QueueItem?
         dispatchQueue.sync {
             queueItem = queue.peek()
@@ -188,6 +188,10 @@ class TaskQueue {
                             
                             self.done(item: item)
                         }
+                        else if case MediatorReflectedProcessorError.doNotAckIncomingVoIPMessage = error {
+                            DDLogWarn("Task \(item.taskDefinition) incoming VoIP message wont not ack: \(error)")
+                            self.done(item: item)
+                        }
                         else if case TaskExecutionError.createAbsractMessageFailed = error {
                             DDLogError("Task \(item.taskDefinition) outgoing message failed: \(error)")
                             self.done(item: item)
@@ -201,6 +205,16 @@ class TaskQueue {
                             DDLogNotice("Task \(item.taskDefinition) skipped")
                             self.done(item: item)
                         }
+                        else if case TaskExecutionError.invalidContact(message: _) = error {
+                            DDLogNotice("Task \(item.taskDefinition) skipped. As the contact is invalid: \(error)")
+                            self.done(item: item)
+                        }
+                        else if let task = item.taskDefinition as? TaskDefinitionReceiveReflectedMessage {
+                            DDLogWarn("Task \(item.taskDefinition) discard incoming reflected message: \(error)")
+                            try? self.ackReflectedMessage(reflectID: task.reflectID)
+                            
+                            self.done(item: item)
+                        }
                         else {
                             self.failed(item: item, error: error)
                         }
@@ -211,7 +225,7 @@ class TaskQueue {
             }
         }
     }
-
+            
     func encode() -> Data? {
         guard !queue.list.isEmpty else {
             return nil
@@ -249,6 +263,11 @@ class TaskQueue {
                 types.forEach { className in
                     var taskDefinition: TaskDefinition?
                     switch "\(className).Type" {
+                    case String(describing: type(of: TaskDefinitionGroupDissolve.self)):
+                        taskDefinition = unarchiver.decodeDecodable(
+                            TaskDefinitionGroupDissolve.self,
+                            forKey: "\(className)_\(i)"
+                        )
                     case String(describing: type(of: TaskDefinitionSendAbstractMessage.self)):
                         taskDefinition = unarchiver.decodeDecodable(
                             TaskDefinitionSendAbstractMessage.self,
@@ -262,6 +281,11 @@ class TaskQueue {
                     case String(describing: type(of: TaskDefinitionSendBaseMessage.self)):
                         taskDefinition = unarchiver.decodeDecodable(
                             TaskDefinitionSendBaseMessage.self,
+                            forKey: "\(className)_\(i)"
+                        )
+                    case String(describing: type(of: TaskDefinitionSendIncomingMessageUpdate.self)):
+                        taskDefinition = unarchiver.decodeDecodable(
+                            TaskDefinitionSendIncomingMessageUpdate.self,
                             forKey: "\(className)_\(i)"
                         )
                     case String(describing: type(of: TaskDefinitionSendLocationMessage.self)):
@@ -373,7 +397,7 @@ class TaskQueue {
         var retry = false
 
         dispatchQueue.sync {
-            DDLogNotice("Task \(item.taskDefinition) failed \(error)")
+            DDLogError("Task \(item.taskDefinition) failed \(error)")
 
             retry = false
 

@@ -44,7 +44,7 @@ class SafeDeactivatedViewController: ThemedViewController {
         super.updateColors()
         
         Colors.setTextColor(Colors.text, in: view)
-        view.backgroundColor = Colors.backgroundViewController
+        view.backgroundColor = Colors.backgroundGroupedViewController
         
         introCircle.backgroundColor = UIColor(red: 235.0 / 255.0, green: 235.0 / 255.0, blue: 235.0 / 255.0, alpha: 1.0)
         let explainImage = explainButton.imageView?.image!.withTint(Colors.primary)

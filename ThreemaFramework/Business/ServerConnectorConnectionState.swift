@@ -24,8 +24,8 @@ import Foundation
 /// Managed connection state chat and mediator server.
 class ServerConnectorConnectionState: NSObject {
 
+    private let userSettings: UserSettingsProtocol
     private let connectionStateDelegate: ConnectionStateDelegate
-    private let isMultiDeviceEnabled: Bool
 
     private enum ServerConnection {
         case any
@@ -38,9 +38,9 @@ class ServerConnectorConnectionState: NSObject {
 
     private let disconnectCondition: NSCondition
 
-    @objc init(connectionStateDelegate: ConnectionStateDelegate, isMultiDeviceEnabled: Bool) {
+    @objc init(userSettings: UserSettingsProtocol, connectionStateDelegate: ConnectionStateDelegate) {
+        self.userSettings = userSettings
         self.connectionStateDelegate = connectionStateDelegate
-        self.isMultiDeviceEnabled = isMultiDeviceEnabled
 
         self.connectionStateChatServer = .disconnected
         self.connectionStateMediatorServer = .disconnected
@@ -50,7 +50,7 @@ class ServerConnectorConnectionState: NSObject {
     /// Representing connection state for chat and mediator server.
     /// - Returns: Connection State
     @objc var connectionState: ConnectionState {
-        if !isMultiDeviceEnabled {
+        if !userSettings.enableMultiDevice {
             return connectionStateChatServer
         }
         else {
@@ -122,7 +122,7 @@ class ServerConnectorConnectionState: NSObject {
         if server == .any || server == .chat {
             connectionStateChatServer = value
         }
-        if isMultiDeviceEnabled, server == .any || server == .mediator {
+        if userSettings.enableMultiDevice, server == .any || server == .mediator {
             connectionStateMediatorServer = value
         }
         if state != connectionState {

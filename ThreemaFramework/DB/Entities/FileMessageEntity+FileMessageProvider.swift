@@ -18,6 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import CocoaLumberjackSwift
 import Foundation
 
 // MARK: - FileMessageEntity + FileMessageProvider
@@ -30,13 +31,13 @@ extension FileMessageEntity: FileMessageProvider {
         case .stickerMessage:
             return .sticker(self)
         case .animatedImageMessage:
-            return .placeholder(self)
+            return .animatedImage(self)
         case .animatedStickerMessage:
-            return .placeholder(self)
+            return .animatedSticker(self)
         case .videoMessage:
-            return .placeholder(self)
-        case .audioMessage:
-            return .placeholder(self)
+            return .video(self)
+        case .voiceMessage:
+            return .voice(self)
         case .fileMessage:
             return .file(self)
         }
@@ -60,6 +61,7 @@ extension FileMessageEntity: CommonFileMessageMetadata {
 // MARK: - FileMessageEntity + ImageMessage, StickerMessage
 
 extension FileMessageEntity: ImageMessage, StickerMessage {
+       
     public var thumbnailImage: UIImage? {
         thumbnail?.uiImage
     }
@@ -81,6 +83,56 @@ extension FileMessageEntity: ImageMessage, StickerMessage {
         
         // Show as square otherwise
         return 1
+    }
+}
+
+// MARK: - FileMessageEntity + VideoMessage, VoiceMessage
+
+extension FileMessageEntity: VideoMessage, VoiceMessage {
+   
+    // Info: This will always return 0 on simulators, last tested Xcode 14.1
+    public var durationTimeInterval: TimeInterval? {
+        guard let duration = duration else {
+            return nil
+        }
+        
+        return duration.doubleValue
+    }
+
+    public var temporaryBlobDataURL: URL? {
+        guard let data = data?.data else {
+            return nil
+        }
+
+        guard var mimeType = mimeType else {
+            return nil
+        }
+        
+        // Since the AVAudioPlayer can not handle aac files, we save them as mp4.
+        if mimeType == "audio/aac" {
+            mimeType = "audio/mp4"
+        }
+        
+        guard let ext = UTIConverter.preferredFileExtension(forMimeType: mimeType) else {
+            return nil
+        }
+        
+        let filename = "v1-fileMessage-\(objectID.hashValue)".hashValue
+        guard let url = FileUtility.appTemporaryDirectory?.appendingPathComponent("\(filename).\(ext)") else {
+            return nil
+        }
+        
+        if !FileUtility.isExists(fileURL: url) {
+            do {
+                try data.write(to: url)
+            }
+            catch {
+                DDLogWarn("Writing blob data to temporary file failed: \(error)")
+                return nil
+            }
+        }
+        
+        return url
     }
 }
 

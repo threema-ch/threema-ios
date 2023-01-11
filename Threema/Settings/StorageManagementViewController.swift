@@ -77,8 +77,8 @@ class StorageManagementViewController: ThemedTableViewController {
         storageTotal.text = BundleUtil.localizedString(forKey: "storage_total")
         storageTotalInUse.text = BundleUtil.localizedString(forKey: "storage_total_in_use")
         storageTotalFree.text = BundleUtil.localizedString(forKey: "storage_total_free")
-        storageThreema.text = String(
-            format: BundleUtil.localizedString(forKey: "storage_threema"),
+        storageThreema.text = String.localizedStringWithFormat(
+            BundleUtil.localizedString(forKey: "storage_threema"),
             ThreemaApp.currentName
         )
         storageThreemaActivityIndicator.hidesWhenStopped = true
@@ -327,7 +327,7 @@ class StorageManagementViewController: ThemedTableViewController {
         switch option {
         case .oneYear, .sixMonths, .threeMonths, .oneMonth, .oneWeek:
             let defaultString = BundleUtil.localizedString(forKey: "delete_media_confirm")
-            return String(format: defaultString, description(for: option))
+            return String.localizedStringWithFormat(defaultString, description(for: option))
         case .everything:
             return BundleUtil.localizedString(forKey: "delete_media_confirm_all")
         }
@@ -337,7 +337,7 @@ class StorageManagementViewController: ThemedTableViewController {
         switch option {
         case .oneYear, .sixMonths, .threeMonths, .oneMonth, .oneWeek:
             let defaultString = BundleUtil.localizedString(forKey: "delete_messages_confirm")
-            return String(format: defaultString, description(for: option))
+            return String.localizedStringWithFormat(defaultString, description(for: option))
         case .everything:
             return BundleUtil.localizedString(forKey: "delete_messages_confirm_all")
         }
@@ -450,7 +450,7 @@ class StorageManagementViewController: ThemedTableViewController {
             // Recalculate unread messages count for all conversations
             if let conversations = entityManager.entityFetcher.notArchivedConversations() as? [Conversation] {
                 let unreadMessages = UnreadMessages(entityManager: entityManager)
-                unreadMessages.totalCount(doCalcUnreadMessagesCountOf: conversations)
+                unreadMessages.totalCount(doCalcUnreadMessagesCountOf: Set(conversations))
             }
 
             let notificationManager = NotificationManager()

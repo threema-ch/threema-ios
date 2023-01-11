@@ -14,6 +14,10 @@ DerivedData/
 !default.perspectivev3
 xcuserdata/
 
+## Test Files
+ThreemaUITests/safeID
+ThreemaUITests/safeIDPW
+
 ## Swift Package Manager
 .swiftpm
 .build/
@@ -32,4 +36,5 @@ fastlane/AppStore/ThreemaForWork/screenshots
 fastlane/Preview.html
 fastlane/test_output
 fastlane/report.xml
+fastlane/fastlane-symbols/*
 export/

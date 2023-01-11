@@ -25,6 +25,10 @@ class UnreadMessagesMock: UnreadMessagesProtocol {
     func read(for conversation: Conversation, isAppInBackground: Bool) {
         // no-op
     }
+    
+    func read(for messages: [BaseMessage], in conversation: Conversation, isAppInBackground: Bool) {
+        // no-op
+    }
 
     func count(for conversation: Conversation) -> Int {
         0
@@ -34,7 +38,7 @@ class UnreadMessagesMock: UnreadMessagesProtocol {
         0
     }
     
-    func totalCount(doCalcUnreadMessagesCountOf conversation: [Conversation]) -> Int {
+    func totalCount(doCalcUnreadMessagesCountOf conversation: Set<Conversation>) -> Int {
         0
     }
 }

@@ -54,7 +54,10 @@ class PrivacySettingsTableViewCell: ThemedCodeStackTableViewCell {
                     stateLabel.text = BundleUtil.localizedString(forKey: "dont_send")
                     
                 default:
-                    stateLabel.text = String(format: BundleUtil.localizedString(forKey: "default_send"), defaultString)
+                    stateLabel.text = String.localizedStringWithFormat(
+                        BundleUtil.localizedString(forKey: "default_send"),
+                        defaultString
+                    )
                 }
             }
             else {
@@ -69,7 +72,10 @@ class PrivacySettingsTableViewCell: ThemedCodeStackTableViewCell {
                     stateLabel.text = BundleUtil.localizedString(forKey: "dont_send")
                     
                 default:
-                    stateLabel.text = String(format: BundleUtil.localizedString(forKey: "default_send"), defaultString)
+                    stateLabel.text = String.localizedStringWithFormat(
+                        BundleUtil.localizedString(forKey: "default_send"),
+                        defaultString
+                    )
                 }
             }
         }

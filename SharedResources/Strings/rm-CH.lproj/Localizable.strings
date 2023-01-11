@@ -103,7 +103,6 @@
 "threema_id" = "ID da Threema";
 "nickname" = "Surnum";
 "add_button" = "Agiuntar";
-
 "chat_back_button_accessibility" = "Betg legì %d";
 
 "show_in_google_maps" = "Mussar en Google Maps";
@@ -145,7 +144,6 @@
 "high" = "aut";
 "max_1_minute" = "max. 1 minuta";
 "max_x_minutes" = "max. %d minutas";
-
 /* Sound names */
 "push_sound_title" = "Tun da push";
 "push_group_sound_title" = "Tun da push da las gruppas";
@@ -292,6 +290,7 @@
 "conversation_delete_confirm" = "Es ti segir che ti vuls stizzar quest chat sin quest apparat?";
 "delete_all" = "Stizzar tuts";
 "delete_n" = "Stizzar (%d)";
+
 "message_cannot_play_movie" = "Il film na po betg vegnir mussà.";
 
 "identity_not_found_title" = "ID nunenconuschenta";
@@ -381,10 +380,6 @@
 "contact_invalid_cannot_send" = "Ti na pos betg trametter messadis a quest contact, el è nunvalaivel.";
 "contact_betafeedback_cannot_send" = "Ti n'utiliseschas betg ina versiun beta, p.pl. trametter in feedback a *SUPPORT.";
 "group_sync_button" = "Sincronisar la gruppa";
-"group_sync_title" = "Sincronisar la gruppa";
-"group_sync_message" = "L'infurmaziun actuala davart la gruppa è vegnida tramessa a tut ils commembers.";
-"group_sync_error_title" = "Betg reussì da sincronisar la gruppa";
-"group_sync_error_message" = "P.pl. empruvar pli tard anc ina giada.";
 "group_clone_button" = "Clonar la gruppa";
 "group_clone_title" = "Clonar la gruppa";
 "group_clone_message" = "Ti creeschas ina copia da la gruppa actuala cun tai sco administratur. Cuntinuar?";
@@ -425,7 +420,6 @@
 "tap_to_change" = "Tippar per modifitgar";
 "next" = "Enavant";
 "unread_messages" = "Messadis betg legids";
-
 /* Verification level popovers in chat view */
 "verification_level_title" = "Stgalim da segirezza";
 /* Verification level popovers in chat view */
@@ -446,7 +440,6 @@
 "level4_explanation" = "L’administratur da Threema Work ha verifitgà l’identitad da questa persuna.";
 
 "id_verified_title" = "Verifitgà l’ID";
-"id_verified_message" = "L'ID e la clav publica da  %@ èn vegnidas verifitgadas.";
 
 /* Invalid country code alert */
 "invalid_country_code_title" = "Regiun nunvalaivla";
@@ -468,9 +461,6 @@
 "backgrounding_off" = "L'app interrumpa immediat la colliaziun davosvart.";
 "proximity_monitoring_off" = "Display activà, cura ch’il sensur è cuvert.";
 "proximity_monitoring_on" = "Display deactivà, cura ch’il sensur è cuvert.";
-"validation_logging_expl" = "Il protocol da validaziun po vegnir duvrà per controllar independentamain la moda da funcziun da la codaziun da fin a fin en Threema.\nDetagls: https://threema.ch/validation";
-
-"validation_log_clear" = "Stizzar il protocol";
 "log_empty_message" = "Il protocol da validaziun è per il mument vid.";
 "cannot_send_mail_message" = "Nagin conto dad e-mail è configurà sin quest apparat.";
 
@@ -508,8 +498,6 @@
 "release_profilepicture_to" = "Cundivider il maletg da profil cun";
 "contact_added_to_profile_picture_list" = "Quest contact survegn tes maletg da profil, sche ti scrivas ad el.";
 "contact_removed_from_profile_picture_list" = "Quest contact na survegn betg pli tes maletg da profil.";
-"contact_send_profile_picture_success" = "Tes maletg da profil è vegnì tramess cun success al contact.";
-"contact_send_profile_picture_error" = "Tes maletg da profil n'ha betg pudì vegnir tramess. P.pl. empruvar pli tard anc ina giada.";
 
 "sync_group" = "Sincronisar la gruppa";
 
@@ -781,9 +769,6 @@ Endatescha p.pl. tias datas d’access. Contactescha tes administratur, sche ti 
 "call_status_unknown" = "Nunenconuschent";
 "call_status_blocked" = "Contact bloccà";
 "call_status_failed_title" = "Telefonats da Threema";
-"call_status_failed_connected_message" = "La colliaziun è interrutta";
-"call_status_failed_initializing_message" = "Betg stà pussaivel da sa colliar";
-"call_status_failed_sdp_patch_message" = "Betg stà pussaivel da cumenzar il telefon da Threema";
 
 "call_threema_initiator_video_info" = "Cliccar qua per activar la camera";
 "call_threema_remote_video_activated_info_title" = "Videotelefonat";
@@ -1070,6 +1055,7 @@ Endatescha p.pl. tias datas d’access. Contactescha tes administratur, sche ti 
 "file_deleted_title" = "Stizzà la datoteca";
 "file_not_found_title" = "Betg chattà la datoteca";
 
+"messages" = "Messadis";
 // Settings
 "settings_privacy" = "Sfera privata";
 "settings_appearance" = "Cumparsa";
@@ -1100,7 +1086,6 @@ Endatescha p.pl. tias datas d’access. Contactescha tes administratur, sche ti 
 "settings_devmode_quote_v2" = "Quote V2";
 "settings_devmode_new_chat_view" = "New Chat View";
 "settings_devmode_stylekit_debug_view" = "StyleKit Debug View";
-
 // Appearance
 "settings_appearance_theme_section" = "Stil dal design";
 "settings_appearance_light_theme" = "Cler";
@@ -1232,9 +1217,6 @@ Svida il chanaster da palpiri, sche naginas medias e/u datotecas na mancan per s
 "unknown_file_type" = "Tip da datoteca betg enconuschent";
 "unknown_file_size" = "Grondezza da la datoteca betg enconuschenta";
 "unknown_file_name" = "Num da datoteca betg enconuschent";
-
-"ballots_with_open_count_accessibility" = "Enquistas (%d avertas)";
-
 /* Ballot */
 "ballot" = "Enquista";
 "ballots" = "Enquistas";
@@ -1285,6 +1267,8 @@ Svida il chanaster da palpiri, sche naginas medias e/u datotecas na mancan per s
 "voteCancelMessage" = "Ti stizzas tia vusch e na la transmettas betg. Tscherna «Vuschar» per dar giu tia vusch.";
 "discardVoteTitle" = "Stizzar";
 
+"ballots_with_open_count_accessibility" = "Enquistas (%d avertas)";
+
 /* Custom Privacy Settings */
 "privacySetting_header" = "Sfera privata";
 "send_readReceipts" = "Conferma da lectura";
@@ -1318,12 +1302,12 @@ Svida il chanaster da palpiri, sche naginas medias e/u datotecas na mancan per s
 "multi_device_linked_devices_failed_remove_title" = "Betg stà pussaivel da deconnectar l'apparat";
 "multi_device_linked_devices_failed_remove_message" = "Betg stà pussaivel da deconnectar l'apparat collià. P.pl. empruvar anc ina giada.";
 "multi_device_linked_devices_failed_remove_message_2" = "Betg stà pussaivel da deconnectar l'apparat collià. P.pl. controllar tia colliaziun d'internet ed empruvar anc ina giada.";
-
 "myprofile_link_email_phone_footer" = "Sche ti colliescha tia adressa dad e-mail u tes numer da telefon cun tia ID, ta chattan autras persunas automaticamain sin %@, sche ti es en lur cudeschs d’adressas.";
 "myprofile_link_email_footer" = "Sche ti colliescha tia adressa dad e-mail cun tia ID, ta chattan autras persunas automaticamain sin %@, sche ti es en lur cudeschs d’adressas.";
 "myprofile_link_email_onprem_footer" = "Sche ti collias in'adressa dad e-mail cun tia ID da Threema chattan auters utilisaders da quest server (%@) automaticamain tai sin %@, sch'els han memorisà tia adressa dad e-mail en lur cudesch d'adressas.";
 "myprofile_link_phone_footer" = "Sche ti colliescha tes numer da telefon cun tia ID, ta chattan autras persunas automaticamain sin %@, sche ti es en lur cudeschs d’adressas.";
 "myprofile_link_phone_onprem_footer" = "Sche ti collias in numer da telefon cun tia ID da Threema chattan auters utilisaders da quest server (%@) automaticamain tai sin %@, sch'els han memorisà tes numer da telefon en lur cudesch d'adressas.";
+
 "mentions_table_view_cell_accessibility_hint" = "Tippar per menziunar";
 
 // POI
@@ -1375,4 +1359,3 @@ Svida il chanaster da palpiri, sche naginas medias e/u datotecas na mancan per s
 "detailView_read" = "Legì";
 "detailView_ackd" = "Confermà";
 "detailView_messageID" = "ID dals messadis";
-

@@ -69,6 +69,10 @@ class MakeScreenshots: XCTestCase {
         //  app!.launchArguments.removeFirst(4)
         //  app!.launchArguments += ["-AppleLanguages", "(de)"]
         //  app!.launchArguments += ["-AppleLocale", "\"de_DE\""]
+        
+        language = "en"
+        app!.launchArguments += ["-AppleLanguages", "(en)"]
+        app!.launchArguments += ["AppleLocale", "\"en_US\""]
         // **
         
         app!.launch()
@@ -83,7 +87,7 @@ class MakeScreenshots: XCTestCase {
         }
         
         var ios = "ios-"
-        ios.append(ProcessInfo().environment["SIMULATOR_DEVICE_NAME"]!)
+//        ios.append(ProcessInfo().environment["SIMULATOR_DEVICE_NAME"]!)
         
         // add os, device, appversion, locale, theme
         var lang = language

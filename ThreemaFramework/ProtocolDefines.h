@@ -33,7 +33,7 @@
 #define kGroupIdLen 8
 #define kGroupCreatorLen 8
 #define kBallotIdLen 8
-#define kDeviceGroupPathKeyLen 32
+#define kDeviceGroupKeyLen 32
 #define kDeviceIdLen 8
 #define kExtensionTypeLength = 1
 #define kExtensionLengthLength = 2
@@ -114,13 +114,14 @@ static Float32 const kWebClientMediaQuality = 0.6;
 #define MSGTYPE_DELIVERY_RECEIPT 0x80
 #define MSGTYPE_GROUP_DELIVERY_RECEIPT 0x81
 #define MSGTYPE_TYPING_INDICATOR 0x90
+#define MSGTYPE_FORWARD_SECURITY 0xa0
 #define MSGTYPE_AUTH_TOKEN 0xff
 
-#define MESSAGE_FLAG_PUSH 0x01
-#define MESSAGE_FLAG_IMMEDIATE 0x02
-#define MESSAGE_FLAG_NOACK 0x04
+#define MESSAGE_FLAG_SEND_PUSH 0x01
+#define MESSAGE_FLAG_DONT_QUEUE 0x02
+#define MESSAGE_FLAG_DONT_ACK 0x04
 #define MESSAGE_FLAG_GROUP 0x10
-#define MESSAGE_FLAG_VOIP 0x20
+#define MESSAGE_FLAG_IMMEDIATE_DELIVERY 0x20
 // Note: This flag will only be set from server
 #define MESSAGE_FLAG_NO_DELIVERY_RECEIPT 0x80
 
@@ -147,7 +148,8 @@ static Float32 const kWebClientMediaQuality = 0.6;
 #define PLTYPE_VOIP_PUSH_NOTIFICATION_TOKEN 0x24
 #define PLTYPE_PUSH_OVERRIDE_TIMEOUT 0x31
 #define PLTYPE_QUEUE_SEND_COMPLETE 0xd0
-#define PLTYPE_LAST_EPHEMERAL_KEY_HASH 0xd1
+#define PLTYPE_DEVICE_COOKIE_CHANGE_INDICATION 0xd2
+#define PLTYPE_CLEAR_DEVICE_COOKIE_CHANGE_INDICATION 0xd3
 #define PLTYPE_ERROR 0xe0
 #define PLTYPE_ALERT 0xe1
 
@@ -157,15 +159,16 @@ static Float32 const kWebClientMediaQuality = 0.6;
 #define PUSHTOKEN_TYPE_APPLE_PROD_MC    0x05
 #define PUSHTOKEN_TYPE_APPLE_SANDBOX_MC 0x06
 
-#define kWithoutVoIPFeatureMask     0x0f
-#define kCurrentFeatureMask         0x3f
+#define kCurrentFeatureMask                       0x3f
+#define kCurrentFeatureMaskWithForwardSecurity    0x7f
 
-#define FEATURE_MASK_AUDIO_MSG      0x01
-#define FEATURE_MASK_GROUP_CHAT     0x02
-#define FEATURE_MASK_BALLOT         0x04
-#define FEATURE_MASK_FILE_TRANSFER  0x08
-#define FEATURE_MASK_VOIP           0x10
-#define FEATURE_MASK_VOIP_VIDEO     0x20
+#define FEATURE_MASK_AUDIO_MSG          0x01
+#define FEATURE_MASK_GROUP_CHAT         0x02
+#define FEATURE_MASK_BALLOT             0x04
+#define FEATURE_MASK_FILE_TRANSFER      0x08
+#define FEATURE_MASK_VOIP               0x10
+#define FEATURE_MASK_VOIP_VIDEO         0x20
+#define FEATURE_MASK_FORWARD_SECURITY   0x40
 
 #define PUSHFILTER_TYPE_NONE            0
 #define PUSHFILTER_TYPE_ALLOW_LISTED	1
@@ -219,6 +222,17 @@ struct plOutgoingMessageAck {
     char to_identity[kIdentityLen];
     char message_id[kMessageIdLen];
 };
+
+typedef enum ForwardSecurityMode: NSUInteger {
+    kForwardSecurityModeNone = 0,
+    kForwardSecurityModeTwoDH = 1,
+    kForwardSecurityModeFourDH = 2
+} ForwardSecurityMode;
+
+typedef enum ForwardSecurityState: NSUInteger {
+    kForwardSecurityStateOff = 0,
+    kForwardSecurityStateOn = 1
+} ForwardSecurityState;
 
 #pragma pack(pop)
 

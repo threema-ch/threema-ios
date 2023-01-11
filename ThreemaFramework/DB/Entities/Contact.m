@@ -35,11 +35,12 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 static NSString *fieldTypingIndicators = @"typingIndicators";
 static NSString *fieldReadReceipts = @"readReceipts";
 static NSString *fieldImportStatus = @"importStatus";
+static NSString *fieldHidden = @"hidden";
+static NSString *fieldFeatureLevel = @"featureLevel";
 
 @implementation Contact
 
 @dynamic abRecordId;
-@dynamic featureLevel;
 @dynamic firstName;
 @dynamic identity;
 @dynamic imageData;
@@ -59,9 +60,10 @@ static NSString *fieldImportStatus = @"importStatus";
 @dynamic profilePictureUpload;
 @dynamic cnContactId;
 @dynamic workContact;
-@dynamic hidden;
 @dynamic createdAt;
 @dynamic profilePictureBlobID;
+@dynamic forwardSecurityEnabled;
+@dynamic forwardSecurityState;
 
 // TODO: This will only be used after IOS-1495 has been merged and database model v30 has been actived.
 //@dynamic abFirstName;
@@ -188,6 +190,58 @@ static NSString *fieldImportStatus = @"importStatus";
     }
 }
 
+- (BOOL)isContactHidden {
+    return [self valueForKey:fieldHidden] != nil ? [[self valueForKey:fieldHidden] boolValue] : NO;
+}
+
+- (void)setIsContactHidden:(BOOL)isContactHidden {
+    [self willChangeValueForKey:fieldHidden];
+    [self setPrimitiveValue:[NSNumber numberWithBool:isContactHidden] forKey:fieldHidden];
+    [self didChangeValueForKey:fieldHidden];
+}
+
+- (NSNumber *)featureMask {
+    return [self valueForKey:fieldFeatureLevel] != nil ? (NSNumber *)[self valueForKey:fieldFeatureLevel] : @0;
+}
+
+- (void)setFeatureMask:(NSNumber *)featureMask {
+    // Post a system message if we have an existing chat and enabled PFS for this contact
+    // but he has downgraded to a version which does not yet support PFS.
+    // This can happen in regular operation for example when someone switches between the release version
+    // and the multi device beta.
+    // This is tracked as part of SE-267
+    if ([self.conversations count] > 0) {
+        if ([self forwardSecurityEnabled].boolValue) {
+            if ((FEATURE_MASK_FORWARD_SECURITY & [self.featureMask intValue])) {
+                // Old value had forward security
+                if (!(FEATURE_MASK_FORWARD_SECURITY & [featureMask intValue])) {
+                    // New value does not have forward security
+                    // Post system message
+                    [self postPFSNotSupportedSystemMessage];
+                }
+            }
+        }
+    }
+    
+    [self willChangeValueForKey:fieldFeatureLevel];
+    [self setPrimitiveValue:featureMask != nil ? featureMask : @0 forKey:fieldFeatureLevel];
+    [self didChangeValueForKey:fieldFeatureLevel];
+}
+
+- (void)postPFSNotSupportedSystemMessage {
+    EntityManager *entityManager = [[EntityManager alloc] init];
+    [entityManager performSyncBlockAndSafe:^{
+            Conversation *conversation = [[entityManager entityFetcher] conversationForContact:self];
+        if (conversation != nil) {
+            SystemMessage *systemMessage = [entityManager.entityCreator systemMessageForConversation:conversation];
+            systemMessage.type = [NSNumber numberWithInt:kSystemMessageFsNotSupportedAnymore];
+            systemMessage.remoteSentDate = [NSDate date];
+            conversation.lastMessage = systemMessage;
+            conversation.lastUpdate = [NSDate date];
+        }
+    }];
+}
+
 - (TypingIndicator)typingIndicator {
     if ([self valueForKey:fieldTypingIndicators] != nil) {
         switch ([[self valueForKey:fieldTypingIndicators] intValue]) {
@@ -284,18 +338,6 @@ static NSString *fieldImportStatus = @"importStatus";
     return self.profilePictureSended;
 }
 
-- (void)setFeatureMask:(NSNumber *)featureMask {
-    if (featureMask != nil) {
-        self.featureLevel = featureMask;
-    } else {
-        self.featureLevel = @0;
-    }
-}
-
-- (NSNumber *)featureMask {
-    return self.featureLevel;
-}
-
 // This only means it's a verified contact from the admin (in the same work package)
 // To check if this contact is a work ID, use the workidentities list in usersettings
 // bad naming because of the history...
@@ -380,6 +422,10 @@ static NSString *fieldImportStatus = @"importStatus";
 
 - (BOOL)isVideoCallAvailable {
     return [self.featureMask integerValue] & FEATURE_MASK_VOIP_VIDEO;
+}
+
+- (BOOL)isForwardSecurityAvailable {
+    return [self.featureMask integerValue] & FEATURE_MASK_FORWARD_SECURITY;
 }
 
 - (BOOL)isProfilePictureSet {

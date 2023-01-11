@@ -19,10 +19,11 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import <Foundation/Foundation.h>
+#import "FileMessageEntity.h"
 
 @interface ContactGroupPhotoLoader : NSObject <NSURLSessionDelegate, NSURLConnectionDataDelegate>
 
-- (void)startWithBlobId:(NSData*)blobId encryptionKey:(NSData*)encryptionKey onCompletion:(void (^)(NSData *))onCompletion onError:(void (^)(NSError *))onError
-    NS_SWIFT_NAME(start(with:encryptionKey:completion:error:));
+- (void)startWithBlobId:(NSData*)_blobId encryptionKey:(NSData*)_encryptionKey origin:(BlobOrigin)origin onCompletion:(void (^)(NSData *))_onCompletion onError:(void (^)(NSError *))_onError
+    NS_SWIFT_NAME(start(with:encryptionKey:origin:completion:error:));
 
 @end

@@ -34,9 +34,12 @@ class ServerConnectorConnectionStateTests: XCTestCase {
         for isMultiDeviceEnabled in [true, false] {
             changedCalls.removeAll()
 
+            let userSettingsMock = UserSettingsMock()
+            userSettingsMock.enableMultiDevice = isMultiDeviceEnabled
+
             let serverConnectionState = ServerConnectorConnectionState(
-                connectionStateDelegate: self,
-                isMultiDeviceEnabled: isMultiDeviceEnabled
+                userSettings: userSettingsMock,
+                connectionStateDelegate: self
             )
             serverConnectionState.connected()
 
@@ -50,9 +53,12 @@ class ServerConnectorConnectionStateTests: XCTestCase {
         for isMultiDeviceEnabled in [true, false] {
             changedCalls.removeAll()
 
+            let userSettingsMock = UserSettingsMock()
+            userSettingsMock.enableMultiDevice = isMultiDeviceEnabled
+
             let serverConnectionState = ServerConnectorConnectionState(
-                connectionStateDelegate: self,
-                isMultiDeviceEnabled: isMultiDeviceEnabled
+                userSettings: userSettingsMock,
+                connectionStateDelegate: self
             )
             serverConnectionState.connecting()
 
@@ -64,9 +70,12 @@ class ServerConnectorConnectionStateTests: XCTestCase {
 
     func testDisconnected() {
         for isMultiDeviceEnabled in [true, false] {
+            let userSettingsMock = UserSettingsMock()
+            userSettingsMock.enableMultiDevice = isMultiDeviceEnabled
+
             let serverConnectionState = ServerConnectorConnectionState(
-                connectionStateDelegate: self,
-                isMultiDeviceEnabled: isMultiDeviceEnabled
+                userSettings: userSettingsMock,
+                connectionStateDelegate: self
             )
             serverConnectionState.connected() // Set to connected first
             changedCalls.removeAll()
@@ -83,9 +92,12 @@ class ServerConnectorConnectionStateTests: XCTestCase {
         for isMultiDeviceEnabled in [true, false] {
             changedCalls.removeAll()
 
+            let userSettingsMock = UserSettingsMock()
+            userSettingsMock.enableMultiDevice = isMultiDeviceEnabled
+
             let serverConnectionState = ServerConnectorConnectionState(
-                connectionStateDelegate: self,
-                isMultiDeviceEnabled: isMultiDeviceEnabled
+                userSettings: userSettingsMock,
+                connectionStateDelegate: self
             )
             serverConnectionState.disconnecting()
 
@@ -97,9 +109,12 @@ class ServerConnectorConnectionStateTests: XCTestCase {
 
     func testWaitForStateDisconnected() {
         for isMultiDeviceEnabled in [true, false] {
+            let userSettingsMock = UserSettingsMock()
+            userSettingsMock.enableMultiDevice = isMultiDeviceEnabled
+
             let serverConnectionState = ServerConnectorConnectionState(
-                connectionStateDelegate: self,
-                isMultiDeviceEnabled: isMultiDeviceEnabled
+                userSettings: userSettingsMock,
+                connectionStateDelegate: self
             )
             serverConnectionState.loggedInChatServer()
             serverConnectionState.loggedInMediatorServer()
@@ -125,9 +140,12 @@ class ServerConnectorConnectionStateTests: XCTestCase {
         for isMultiDeviceEnabled in [true, false] {
             changedCalls.removeAll()
 
+            let userSettingsMock = UserSettingsMock()
+            userSettingsMock.enableMultiDevice = isMultiDeviceEnabled
+
             let serverConnectionState = ServerConnectorConnectionState(
-                connectionStateDelegate: self,
-                isMultiDeviceEnabled: isMultiDeviceEnabled
+                userSettings: userSettingsMock,
+                connectionStateDelegate: self
             )
             serverConnectionState.loggedInChatServer()
 
@@ -147,9 +165,12 @@ class ServerConnectorConnectionStateTests: XCTestCase {
         for isMultiDeviceEnabled in [true, false] {
             changedCalls.removeAll()
 
+            let userSettingsMock = UserSettingsMock()
+            userSettingsMock.enableMultiDevice = isMultiDeviceEnabled
+
             let serverConnectionState = ServerConnectorConnectionState(
-                connectionStateDelegate: self,
-                isMultiDeviceEnabled: isMultiDeviceEnabled
+                userSettings: userSettingsMock,
+                connectionStateDelegate: self
             )
             serverConnectionState.loggedInMediatorServer()
 
@@ -162,9 +183,12 @@ class ServerConnectorConnectionStateTests: XCTestCase {
         for isMultiDeviceEnabled in [true, false] {
             changedCalls.removeAll()
 
+            let userSettingsMock = UserSettingsMock()
+            userSettingsMock.enableMultiDevice = isMultiDeviceEnabled
+
             let serverConnectionState = ServerConnectorConnectionState(
-                connectionStateDelegate: self,
-                isMultiDeviceEnabled: isMultiDeviceEnabled
+                userSettings: userSettingsMock,
+                connectionStateDelegate: self
             )
             serverConnectionState.loggedInChatServer()
             serverConnectionState.loggedInMediatorServer()

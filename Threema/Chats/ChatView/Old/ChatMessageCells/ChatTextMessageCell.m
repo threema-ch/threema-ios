@@ -211,9 +211,7 @@ static Theme currentTheme;
         textLabel = [ChatTextMessageCell makeAttributedLabelWithFrame:self.bounds];
         textLabel.tapDelegate = self;
         textLabel.longPressDelegate = self;
-        
-        [self.chatVc registerForPreviewingWithDelegate:self sourceView:textLabel];
-        
+                
         [self.contentView addSubview:textLabel];
         entityManager = [[EntityManager alloc] init];
     }
@@ -236,6 +234,7 @@ static Theme currentTheme;
 
 - (void)layoutSubviews {
     CGFloat messageTextWidth = [ChatMessageCell maxContentWidthForTableWidth:self.safeAreaLayoutGuide.layoutFrame.size.width isGroup:self.message.conversation.isGroup];
+    
     CGSize textSize = [textLabel sizeThatFits:CGSizeMake(messageTextWidth, CGFLOAT_MAX)];
     
     CGSize quoteSize = CGSizeMake(0, 0);
@@ -520,10 +519,36 @@ static Theme currentTheme;
 }
 
 - (BOOL)canPerformAction:(SEL)action withSender:(id)sender {
+    if (action == @selector(resendMessage:) && self.message.isOwn) {
+        return self.message.sendFailed != nil && self.message.sendFailed.boolValue;
+    }
     if (action == @selector(speakMessage:)) {
         return YES;
     } else {
         return [super canPerformAction:action withSender:sender];
+    }
+}
+
+- (void)resendMessage:(UIMenuController*)menuController {
+    TextMessage *textMessage = (TextMessage*)self.message;
+    
+    EntityManager *temporaryEntityManager = [[EntityManager alloc] init];
+    [temporaryEntityManager performSyncBlockAndSafe:^{
+        TextMessage *textMessage = [[entityManager entityFetcher] existingObjectWithID:self.message.objectID];
+        textMessage.id = [[NaClCrypto sharedCrypto] randomBytes:kMessageIdLen];
+    }];
+    
+    [MessageSender sendBaseMessage:textMessage];
+}
+
+- (void)updateStatusImage {
+    if (!self.message.sent.boolValue && self.message.sendFailed.boolValue) {
+        self.statusImage.image = [UIImage imageNamed:@"MessageStatus_sendfailed"];
+        self.statusImage.alpha = 0.8;
+        self.statusImage.hidden = NO;
+        [self setNeedsLayout];
+    } else {
+        [super updateStatusImage];
     }
 }
 
@@ -559,9 +584,7 @@ static Theme currentTheme;
 }
 
 - (void)speakMessage:(UIMenuController *)menuController {
-    AVSpeechUtterance *utterance = [AVSpeechUtterance speechUtteranceWithString:origText];
-    AVSpeechSynthesizer *syn = [[AVSpeechSynthesizer alloc] init];
-    [syn speakUtterance:utterance];
+    [[[SpeechSynthesizerManger alloc] init] speak:origText];
 }
 
 - (NSString *)textForQuote {

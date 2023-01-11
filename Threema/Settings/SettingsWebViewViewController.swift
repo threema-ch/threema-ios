@@ -51,12 +51,10 @@ class SettingsWebViewViewController: UIViewController, WKNavigationDelegate {
         
         webView.backgroundColor = Colors.backgroundViewController
         
-        var lang: String? = Bundle.main.preferredLocalizations.first
-        if lang == nil {
-            lang = "en"
-        }
+        let lang = Bundle.main.preferredLocalizations.first ?? "en"
+        let version = AppInfo.appVersion.version ?? "-"
         
-        var theme: String! = ""
+        var theme: String
         switch Colors.theme {
         case .dark:
             theme = "dark"
@@ -80,12 +78,7 @@ class SettingsWebViewViewController: UIViewController, WKNavigationDelegate {
             fatalError()
         }
         
-        let urlString = String(
-            format: "\(url)?lang=%@&version=%@&platform=ios&theme=%@",
-            lang!,
-            AppInfo.appVersion.version ?? "-",
-            theme
-        )
+        let urlString = "\(url)?lang=\(lang)&version=\(version)&platform=ios&theme=\(theme)"
         let fullURL = URL(string: urlString)!
         
         MBProgressHUD.showAdded(to: view, animated: true)

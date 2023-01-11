@@ -19,12 +19,11 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import CocoaLumberjackSwift
-import DifferenceKit
 import OSLog
 import ThreemaFramework
 import UIKit
 
-// Used to instrument new ChatView (TODO: Remove before release)
+// TODO: IOS-2860 Remove before release. Used to instrument new ChatView
 class PointsOfInterestSignpost: NSObject {
     @objc static let log = OSLog(subsystem: "ch.threema.iapp.newChatView", category: .pointsOfInterest)
 }
@@ -32,10 +31,18 @@ class PointsOfInterestSignpost: NSObject {
 /// The chat view!
 ///
 /// TODO: Describe "architecture/dependencies"
+///
+/// For the view hierarchy see `configureLayout()`
 final class ChatViewController: ThemedViewController {
     
+    // MARK: - Internal
+    
+    /// Used to determine whether ChatTextView is currently resetting the keyboard
+    /// Resetting the keyboard may cause animations to be cancelled which is not great when new messages are added
+    var isResettingKeyboard = false
+    
     // MARK: - Model
-
+    
     /// Conversation shown in this chat view
     /// This should not be accessed outside of this class. It will be marked as private as soon as ChatViewControllerActions have been refactor to incorporate this.
     @available(
@@ -47,13 +54,92 @@ final class ChatViewController: ThemedViewController {
     
     private let entityManager: EntityManager
     
-    public lazy var photoBrowserWrapper = MWPhotoBrowserWrapper(
-        for: conversation,
-        in: self,
-        entityManager: entityManager
-    )
+    // MARK: - Debug
+    
+    private let initTime = CACurrentMediaTime()
+    
+    private let flippedTableView = UserSettings.shared().flippedTableView
+    // TODO: Remove with `flippedTableView`
+    private var scrollPositionRestoreFinished = false
     
     // MARK: - UI
+    
+    /// A serial queue used for queueing scrollToRow when initiating scroll to bottom from `didApplySnapshot`.
+    /// The queue is needed since we're need to wait until snapshot apply is done before actually programmatically scrolling.
+    private let scrollToQueue = DispatchQueue(label: "ch.threema.chatView.scrollQueue", qos: .userInteractive)
+    
+    /// Mode the chat view user interface is in
+    private enum UserInterfaceMode {
+        /// Default chat view
+        case `default`
+        
+        /// Chat search
+        case search
+        
+        /// Multiselect
+        case multiselect
+    }
+    
+    private var userInterfaceMode: UserInterfaceMode = .default {
+        didSet {
+            updateNavigationItem()
+
+            switch userInterfaceMode {
+            case .default:
+                hideToolbar(animated: true)
+                showScrollToBottomButtonAndChatBar()
+                
+                tableView.setEditing(false, animated: true)
+                dataSource.deselectAllMessages()
+                
+                updateContentInsets()
+                enableKeyboardDismissGestureRecognizer()
+                
+                NSLayoutConstraint.deactivate(multiselectScrollToBottomButtonConstraints)
+                NSLayoutConstraint.activate(defaultScrollToBottomButtonConstraints)
+                
+            case .search:
+                // The toolbar hiding and showing will be handled by the search functionality
+                hideScrollToBottomButtonAndChatBar()
+                
+                tableView.setEditing(false, animated: true)
+                dataSource.deselectAllMessages()
+
+                updateContentInsets()
+                enableKeyboardDismissGestureRecognizer()
+
+                NSLayoutConstraint.deactivate(defaultScrollToBottomButtonConstraints)
+                NSLayoutConstraint.activate(multiselectScrollToBottomButtonConstraints)
+                
+            case .multiselect:
+                hideToolbar(animated: true)
+                hideScrollToBottomButtonAndChatBar()
+                
+                tableView.setEditing(true, animated: true)
+                dataSource.deselectAllMessages()
+                
+                updateContentInsets()
+                disableKeyboardDismissGestureRecognizer()
+                
+                NSLayoutConstraint.deactivate(defaultScrollToBottomButtonConstraints)
+                NSLayoutConstraint.activate(multiselectScrollToBottomButtonConstraints)
+            }
+        }
+    }
+    
+    private lazy var chatViewBackgroundImageProvider = ChatViewBackgroundImageProvider()
+    
+    /// Provides the background image for the chat view
+    private lazy var backgroundView: UIImageView = {
+        let backgroundView = UIImageView(frame: .infinite)
+        
+        backgroundView.contentMode = .scaleAspectFill
+        backgroundView.clipsToBounds = true
+        
+        return backgroundView
+    }()
+    
+    weak var selectedTextView: MessageTextView?
     
     // MARK: Header
     
@@ -62,31 +148,70 @@ final class ChatViewController: ThemedViewController {
         chatViewController: self
     )
     
-    private lazy var chatProfileView: ChatProfileView = {
-        let profileView = ChatProfileView(for: conversation)
-        profileView.delegate = self
-        return profileView
+    private lazy var chatProfileView = ChatProfileView(
+        for: conversation,
+        entityManager: entityManager
+    ) { [weak self] in
+        self?.chatProfileViewTapped()
+    }
+    
+    private lazy var deleteBarButton: UIBarButtonItem = {
+        let button = UIBarButtonItem(
+            title: BundleUtil.localizedString(forKey: "messages_delete_all_button"),
+            style: .plain,
+            target: self,
+            action: #selector(showDeleteMessagesAlert)
+        )
+        button.tintColor = Colors.red
+        return button
     }()
     
+    private lazy var cancelBarButton = UIBarButtonItem(
+        title: BundleUtil.localizedString(forKey: "cancel"),
+        style: .done,
+        target: self,
+        action: #selector(endMultiselect)
+    )
+    
     private lazy var callBarButtonItem = UIBarButtonItem(
-        image: BundleUtil.imageNamed("ThreemaPhone"),
+        image: BundleUtil.imageNamed(ChatViewConfiguration.Profile.callSymbolName),
         style: .plain,
         target: self,
         action: #selector(startVoIPCall)
     )
     
-    private lazy var ballotButton = BallotWithOpenCountButton(target: self, action: #selector(showBallots))
+    private lazy var ballotBarButton = BallotWithOpenCountButton { [weak self] _ in
+        self?.showBallots()
+    }
     
     // MARK: Table view
     
-    private lazy var tableView: UITableView = {
-        let tableView = UITableView(frame: .zero, style: .plain)
+    private lazy var tableView: DebugTableView = {
+        let tableView = DebugTableView(frame: .infinite, style: .plain)
         
-        tableView.allowsSelection = false
-        tableView.allowsMultipleSelection = false
+        tableView.backgroundColor = .clear
+
+        // TODO: (IOS-3048) This should be interactive. But then we need additional changes to the ChatBarView
+        tableView.keyboardDismissMode = .onDrag
+        
+        // Remove any section header padding
+        tableView.sectionHeaderTopPadding = 0
+        
+        if self.flippedTableView {
+            tableView.transform = CGAffineTransform(scaleX: 1, y: -1)
+            tableView.alpha = 0.0
+        }
+
+        // This also enables programmatic selection
+        // Manual selection only allowed in multiselct mode which is ensured by implementing
+        // `tableView(_:willSelectRowAt:)`
+        tableView.allowsSelection = true
+        
         tableView.allowsMultipleSelectionDuringEditing = true
         
         tableView.separatorStyle = .none
+        
+        tableView.allowsMultipleSelectionDuringEditing = true
         
         tableView.delegate = self
         
@@ -97,16 +222,41 @@ final class ChatViewController: ThemedViewController {
         for: conversation,
         in: tableView,
         delegate: self,
-        chatViewTableViewCellDelegate: self,
+        chatViewTableViewCellDelegate: chatViewTableViewCellDelegate,
+        chatViewTableViewVoiceMessageCellDelegate: chatViewTableViewVoiceMessageCellDelegate,
         entityManager: entityManager,
-        loadAround: chatScrollPositionProvider.chatScrollPosition(for: conversation)?.messageDate
-    ) { [weak self] in
-        // TODO: (IS-2014) Maybe don't show messages until restoration completes to disable flickering if restoration
-        // fails and we load messages at the bottom
-        self?.restoreScrollPosition()
-    }
+        loadAround: { [weak self] in
+            self?.chatViewDataSourceLoadAround()
+        },
+        afterFirstSnapshotApply: { [weak self] in
+            self?.chatViewDataSourceAfterFirstSnapshotApply()
+        },
+        unreadMessagesSnapshot: unreadMessagesSnapshot
+    )
+    
+    /// Coordinates the number of unread messages that should be displayed and whether the unread message line should be shown at all
+    /// The chatViewDataSource uses this through its delegate to check whether a new snapshot should include the unread message line or not.
+    ///
+    /// The unread message line is displayed if the chat is opened and there are unread messages in it or
+    /// if the scroll position is not at the very bottom and new messages are received.
+    /// It is hidden if the user manually scrolls to the bottom of the chat view either through the scroll to bottom button or by dragging the scrollView.
+    private lazy var unreadMessagesSnapshot = UnreadMessagesStateManager(
+        conversation: self.conversation,
+        entityManager: self.entityManager
+    )
     
     private let chatScrollPositionProvider: ChatScrollPositionProvider
+    
+    private lazy var chatSearchController = ChatSearchController(for: conversation, delegate: self)
+    
+    private lazy var chatViewTableViewCellDelegate = ChatViewTableViewCellDelegate(
+        chatViewController: self,
+        tableView: tableView,
+        entityManager: entityManager
+    )
+    
+    private lazy var chatViewTableViewVoiceMessageCellDelegate =
+        ChatViewTableViewVoiceMessageCellDelegate(chatViewController: self)
     
     // Cell height caching
     private let cellHeightCache = CellHeightCache()
@@ -116,10 +266,88 @@ final class ChatViewController: ThemedViewController {
     lazy var chatBarCoordinator = ChatBarCoordinator(
         conversation: conversation,
         chatViewControllerActionsHelper: chatViewActionsHelper,
-        chatViewController: self
+        chatViewController: self,
+        chatBarCoordinatorDelegate: self,
+        chatViewTableViewVoiceMessageCellDelegate: chatViewTableViewVoiceMessageCellDelegate
     )
-
-    private var bottomComposeConstraint: NSLayoutConstraint?
+    
+    private lazy var scrollToBottomButton = ScrollToBottomView(
+        unreadMessagesSnapshot: unreadMessagesSnapshot
+    ) { [weak self] in
+        guard let self = self else {
+            return
+        }
+        
+        // We cannot do a layout pass during scrolling (otherwise scrolling might be stopped when updating content insets)
+        // Thus we do one now
+        self.view.layoutIfNeeded()
+        
+        // If the unread message line is currently visible, we scroll to the very bottom of the view
+        let unreadMessageLineVisible = !self.tableView.visibleCells
+            .filter { $0 is ChatViewUnreadMessageLineCell }
+            .isEmpty
+        if unreadMessageLineVisible {
+            self.jumpToBottom()
+            return
+        }
+        
+        let snapshot = self.dataSource.snapshot()
+        
+        guard let newestUnreadMessageObjectID = self.unreadMessagesSnapshot.unreadMessagesState?
+            .oldestConsecutiveUnreadMessage else {
+            self.jumpToBottom()
+            return
+        }
+        
+        // We either scroll to the previously newest unread message or the unread message line
+        for item in snapshot.itemIdentifiers {
+            if case let ChatViewDataSource.CellType.message(objectID: objectID) = item,
+               objectID == newestUnreadMessageObjectID {
+                self.jumpToBottom()
+                break
+            }
+            if case let ChatViewDataSource.CellType.unreadLine(state: state) = item {
+                guard let newestUnreadMessageObjectID = state.oldestConsecutiveUnreadMessage else {
+                    
+                    self.jumpToBottom()
+                    return
+                }
+                guard let message = self.entityManager.entityFetcher
+                    .existingObject(with: newestUnreadMessageObjectID) as? BaseMessage else {
+                    
+                    self.jumpToBottom()
+                    return
+                }
+                
+                self.jump(toUnreadMessage: message.id) { _ in
+                    if self.isAtBottomOfView {
+                        self.userIsAtBottomOfTableView = true
+                    }
+                }
+                break
+            }
+        }
+    }
+    
+    private lazy var bottomComposeConstraint = chatBarCoordinator.chatBarContainerView.bottomAnchor
+        .constraint(equalTo: view.bottomAnchor)
+    
+    private lazy var defaultScrollToBottomButtonConstraints: [NSLayoutConstraint] = {
+        [
+            scrollToBottomButton.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            scrollToBottomButton.bottomAnchor.constraint(
+                equalTo: chatBarCoordinator.chatBarContainerView.topAnchor,
+                constant: -ChatViewConfiguration.ScrollToBottomButton.distanceToChatBar
+            ),
+        ]
+    }()
+    
+    private lazy var multiselectScrollToBottomButtonConstraints: [NSLayoutConstraint] = {
+        [
+            scrollToBottomButton.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            scrollToBottomButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
+        ]
+    }()
     
     // MARK: Loading messages
     
@@ -130,7 +358,33 @@ final class ChatViewController: ThemedViewController {
     private let bottomOffsetThreshold: CGFloat = 1500
     
     /// Threshold when `isAtBottomOfView` should report that we scrolled all the way to the bottom of the view
-    private let isAtBottomOfViewThreshold: CGFloat = 10
+    private let isAtBottomOfViewThreshold: CGFloat = 25 + ChatViewConfiguration.bottomInset
+    
+    /// Completion handler to be called after scrolling did end. Updated by `didApplySnapshot`
+    private var scrollCompletion: (() -> Void)?
+    
+    /// Will cancel `willEnterForegroundCompletion` if it isn't executed before the timer finishes
+    private var willEnterForeGroundCompletionTimer: Timer?
+    
+    /// Upon reentering foreground we might want to scroll the unread message line but it might not be loaded
+    /// This allows us to add a task which is then executed either immediately if the unread message line is already showing
+    /// or on next `didApplySnapshot`.
+    private var willEnterForegroundCompletion: (((() -> Void)?) -> Void)? {
+        didSet {
+            if willEnterForegroundCompletion == nil {
+                willEnterForeGroundCompletionTimer?.invalidate()
+                willEnterForeGroundCompletionTimer = nil
+            }
+            else {
+                willEnterForeGroundCompletionTimer = Timer.scheduledTimer(
+                    withTimeInterval: ChatViewConfiguration.UnreadMessageLine.completionTimeout,
+                    repeats: false
+                ) { _ in
+                    self.willEnterForegroundCompletion = nil
+                }
+            }
+        }
+    }
     
     /// Are we scrolled to the newest message at the bottom and should we scroll down when the next snapshot is applied?
     private var shouldScrollToBottomAfterNextSnapshotApply = false
@@ -139,6 +393,53 @@ final class ChatViewController: ThemedViewController {
     ///
     /// Use `completeJumping()` to reset this value to `false`.
     private var isJumping = false
+    
+    private var isScrolling = false
+    /// This is true while we are programmatically scrolling to bottom or when the scrolling was cancelled and we are not scrolling anymore
+    /// Before setting `isProgrammaticallyScrollingToBottom` `isScrolling` must always been set to true
+    private var isProgrammaticallyScrollingToBottom = false {
+        didSet {
+            if ChatViewConfiguration.strictMode, isProgrammaticallyScrollingToBottom, !isScrolling {
+                fatalError("Consistency error for scrolling variables")
+            }
+        }
+    }
+    
+    /// When the keyboard was shown before the ContextMenu opened, we need to block inset updates. Otherwise the layout will break when we enter the multi select mode through it.
+    private var insetUpdatesBlockedByContextMenu = false
+    
+    /// True between `willApplySnapshot` and `didApplySnapshot`
+    private var isApplyingSnapshot = false
+    
+    /// These are used to determine whether it is safe to load new messages.
+    /// During dragging adding new table view cells might throw of the scroll position.
+    private var isDragging = false
+    /// During an in-progress load request new load requests should not be issued
+    private var isLoading = false
+    
+    private var isUserInteractiveScroll = false
+    
+    private var isApplicationInForeground = true
+    var willDisappear = false {
+        didSet {
+            DDLogVerbose("\(#function) willDisappear \(willDisappear)")
+        }
+    }
+    
+    private var userIsAtBottomOfTableView = false {
+        didSet {
+            self.unreadMessagesSnapshot.userIsAtBottomOfTableView = userIsAtBottomOfTableView
+            DDLogVerbose("userIsAtBottomOfTableView \(userIsAtBottomOfTableView)")
+        }
+    }
+    
+    // MARK: - Gesture recognizer
+    
+    lazy var keyboardDismissGesture: UITapGestureRecognizer = {
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(didTapOnChatView))
+        tapGesture.cancelsTouchesInView = true
+        return tapGesture
+    }()
     
     // MARK: Experimenting and measuring
     
@@ -170,6 +471,12 @@ final class ChatViewController: ThemedViewController {
         else {
             hidesBottomBarWhenPushed = true
         }
+        
+        // Configure tableView as early as possible to allow background fetching to take full effect
+        configureTableView()
+        if UserSettings.shared().initialScrollPositionAlt1 {
+            CATransaction.begin()
+        }
     }
     
     /// Create a new chat view
@@ -200,47 +507,81 @@ final class ChatViewController: ThemedViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        addObservers()
-        addGestureRecognizers()
+        DDLogNotice("\(#function)")
         
-        configureNavigationBar()
-        configureTableView()
+        addObservers()
+        tableView.addGestureRecognizer(keyboardDismissGesture)
         
         configureLayout()
-        updateColors()
+        configureNavigationItem()
+        configureToolbar()
+        
+        // No need to call `updateColors()` here as `ThemedViewController.viewWillAppear()` will call it, too.
     }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
-        updateContentInsets()
+        DDLogNotice("\(#function)")
+        
         chatBarCoordinator.updateSettings()
+        
+        // This and the opposite in `viewWillDisappear` is needed to make a search controller work that is added in a
+        // child view controller using the same navigation bar. See ChatSearchController for details.
+        definesPresentationContext = true
     }
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         
+        DDLogNotice("\(#function)")
+        
+        willDisappear = false
+        
         tableView.flashScrollIndicators()
-        readUnreadMessages()
+        
+        let endTime = CACurrentMediaTime()
+        DDLogVerbose("ChatViewController duration init to viewDidAppear \(endTime - initTime) s")
     }
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         
+        DDLogNotice("\(#function)")
+        
+        willDisappear = true
+        scrollCompletion?()
+        scrollCompletion = nil
+        
         chatBarCoordinator.saveDraft()
         chatBarCoordinator.sendTypingIndicator(startTyping: false)
+        
+        chatViewTableViewVoiceMessageCellDelegate.stopPlayingAndDoCleanup()
+        
+        // This and the opposite in `viewWillAppear` is needed to make a search controller work that is added in a
+        // child view controller using the same navigation bar. See ChatSearchController for details.
+        definesPresentationContext = false
     }
     
     override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
         
+        DDLogNotice("\(#function)")
+        
         saveCurrentScrollPosition()
+        
+        unreadMessagesSnapshot.resetState()
     }
     
     deinit {
-        DDLogDebug("\(#function)")
+        DDLogNotice("\(#function)")
         
         NotificationCenter.default.removeObserver(self)
+        
+        DispatchQueue.global().async {
+            /// Clean up temporary files that might be leftover from playing voice messages
+            FileUtility.cleanTemporaryDirectory()
+        }
     }
     
     // MARK: - Configuration
@@ -250,6 +591,13 @@ final class ChatViewController: ThemedViewController {
             self,
             selector: #selector(applicationDidEnterBackground),
             name: UIApplication.didEnterBackgroundNotification,
+            object: nil
+        )
+        
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(applicationWillEnterForeground),
+            name: UIApplication.willEnterForegroundNotification,
             object: nil
         )
         
@@ -282,52 +630,121 @@ final class ChatViewController: ThemedViewController {
         )
     }
     
-    private func addGestureRecognizers() {
-        // TODO: Is this really needed?
-        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(hideKeyboard))
-        tapGesture.cancelsTouchesInView = true
-        tableView.addGestureRecognizer(tapGesture)
+    private func enableKeyboardDismissGestureRecognizer() {
+        keyboardDismissGesture.isEnabled = true
+    }
+    
+    private func disableKeyboardDismissGestureRecognizer() {
+        keyboardDismissGesture.isEnabled = false
     }
     
     private func configureLayout() {
-        // TODO: Configure layout such that the table view scrolls behind the compose bar & we can set the table view
-        // to be the view of the VC instead of another general view (see `loadView`)
+        // # View hierarchy
+        //
+        // The main `view` of the VC hosts all views. From back to front:
+        // - Background view *
+        // - Table view
+        // - Chat bar
+        // - Scroll to bottom button
+        //
+        // This is chosen on purpose, because the loading & layout (with scrolling to the correct position) of the
+        // table view normally takes longer than the start of the transition to the VC. This allows us to load and show
+        // all other views before the table view is ready. Thus a user could already start writing a message after the
+        // transition completes, but before the table view is ready for interaction. If the table view would be the
+        // main view of the VC the animation would be choppy.
+        //
+        // * this is preferred over `tableView.backgroundView` as this would not show the background until the table
+        //   view is loaded and setting it the scroll position to infinity leads to weird background layout.
         
+        view.addSubview(backgroundView)
         view.addSubview(tableView)
-        tableView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(chatBarCoordinator.chatBarContainerView)
+        view.addSubview(scrollToBottomButton)
+
+        backgroundView.translatesAutoresizingMaskIntoConstraints = false
+        tableView.translatesAutoresizingMaskIntoConstraints = false
         chatBarCoordinator.chatBarContainerView.translatesAutoresizingMaskIntoConstraints = false
+        scrollToBottomButton.translatesAutoresizingMaskIntoConstraints = false
         
         NSLayoutConstraint.activate([
+            backgroundView.topAnchor.constraint(equalTo: view.topAnchor),
+            backgroundView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            backgroundView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            backgroundView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            
             tableView.topAnchor.constraint(equalTo: view.topAnchor),
             tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
             tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-        ])
-        
-        bottomComposeConstraint = chatBarCoordinator.chatBarContainerView.bottomAnchor
-            .constraint(equalTo: view.bottomAnchor)
-        
-        NSLayoutConstraint.activate([
+            
             chatBarCoordinator.chatBarContainerView.leadingAnchor.constraint(equalTo: tableView.leadingAnchor),
             chatBarCoordinator.chatBarContainerView.trailingAnchor.constraint(equalTo: tableView.trailingAnchor),
-            bottomComposeConstraint!,
+            bottomComposeConstraint,
         ])
+        
+        if UIDevice.current.userInterfaceIdiom == .pad {
+            // This removes a small gap that would open up between the chat bar and the keyboard accessory view if an iPad is used with an external keyboard
+            NSLayoutConstraint.activate([
+                chatBarCoordinator.chatBarContainerView.blurEffectView.bottomAnchor
+                    .constraint(equalTo: view.bottomAnchor),
+            ])
+        }
+        
+        NSLayoutConstraint.activate(defaultScrollToBottomButtonConstraints)
     }
     
     // MARK: - Overrides
     
     override func viewWillLayoutSubviews() {
+        DDLogVerbose("\(#function)")
         super.viewWillLayoutSubviews()
         updateChatProfileViewSettings()
     }
     
     override func viewDidLayoutSubviews() {
-        updateContentInsets()
+        DDLogVerbose("\(#function)")
+        super.viewDidLayoutSubviews()
+        
+        // Scrolling gets stopped if we update the insets during it
+        if !isScrolling {
+            updateContentInsets()
+        }
+        
+        // Scrolling might get stopped during layout updates
+        // If we were programmatically scrolling to bottom before the update continue or start scrolling again
+        if isProgrammaticallyScrollingToBottom {
+            scrollToBottom(animated: true)
+        }
+        
+        /// This immediately starts loading cells at the very bottom even before we call `didApplySnapshot`.
+        /// As a nice side-effect to preloading the cells at the bottom of the view; we also get the effect that cells only appear after the scroll position has been correctly set.
+        ///
+        /// Unfortunately this loads cells at the bottom even when restoring the scroll position later somewhere else in the chat view, these cells are never displayed and thus go to waste.
+        /// Calling `setContentOffset` and setting the content offset immediately to the approximately correct value of the scroll position still gives a jumpy animation on slow devices.
+        /// We thus accept this limitation and waste a few cells on each scroll position restore.
+        ///
+        /// This workaround is also present in `updateContentInsets(force:retry:)`
+        if !dataSource.initialSetupCompleted, tableView.contentSize.height > 0,
+           !UserSettings.shared().initialScrollPositionAlt1 {
+            if UserSettings.shared().flippedTableView {
+//                tableView.setContentOffset(
+//                    CGPoint(x: 0, y: CGFLOAT_MIN),
+//                    animated: false
+//                )
+            }
+            else {
+                tableView.setContentOffset(
+                    CGPoint(x: 0, y: CGFLOAT_MAX),
+                    animated: false
+                )
+            }
+        }
     }
     
     override func updateColors() {
         super.updateColors()
+        
+        chatProfileView.updateColors()
         
         for cell in tableView.visibleCells {
             if let chatViewBaseCell = cell as? ChatViewBaseTableViewCell {
@@ -337,10 +754,25 @@ final class ChatViewController: ThemedViewController {
             else if let systemMessageCell = cell as? ChatViewSystemMessageTableViewCell {
                 systemMessageCell.updateColors()
             }
+            else if let workConsumerSystemMessageCell = cell as? ChatViewWorkConsumerInfoSystemMessageTableViewCell {
+                workConsumerSystemMessageCell.updateColors()
+            }
+            else if let unreadMessageCell = cell as? ChatViewUnreadMessageLineCell {
+                unreadMessageCell.updateColors()
+            }
         }
         
-        view.backgroundColor = .clear
+        backgroundView.image = chatViewBackgroundImageProvider.backgroundImage
+        view.backgroundColor = Colors.backgroundChat
+        
         chatBarCoordinator.updateColors()
+        
+        scrollToBottomButton.updateColors()
+        
+        // We don't want a transparent navigation bar appearance if we are in the process of restoring the scroll
+        // position as this leads to a weird transition when the chat view is pushed in.
+        // Thus we don't use one at all.
+        navigationItem.scrollEdgeAppearance = Colors.defaultNavigationBarAppearance()
     }
     
     override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
@@ -348,20 +780,56 @@ final class ChatViewController: ThemedViewController {
         super.viewWillTransition(to: size, with: coordinator)
     }
     
-    // MARK: - Private Functions
-    
-    private func readUnreadMessages() {
-        let conversationActions = ConversationActions(entityManager: entityManager)
-        conversationActions.read(conversation)
-    }
-    
     // MARK: - Notifications
     
     @objc private func applicationDidEnterBackground() {
         saveCurrentScrollPosition()
+        
+        chatViewTableViewVoiceMessageCellDelegate.pausePlaying()
+        
+        unreadMessagesSnapshot.resetState()
+        dataSource.removeUnreadMessageLine()
+        
+        isApplicationInForeground = false
     }
     
-    @objc func hideKeyboard() {
+    @objc private func applicationWillEnterForeground() {
+        isApplicationInForeground = true
+        
+        userIsAtBottomOfTableView = isAtBottomOfView
+        
+        DispatchQueue.global(qos: .userInteractive).async { [self] in
+            // `synchronousReconfiguration` may not run on the main thread
+            unreadMessagesSnapshot.synchronousReconfiguration()
+            
+            entityManager.performBlock {
+                if let newestUnreadMessage = self.unreadMessagesSnapshot.unreadMessagesState?
+                    .oldestConsecutiveUnreadMessage,
+                    let message = self.entityManager.entityFetcher
+                    .getManagedObject(by: newestUnreadMessage) as? BaseMessage {
+                    // We either succeed right away or do this on the next snapshot apply
+                    DDLogVerbose("willEnterForegroundCompletion setup")
+                    self.willEnterForegroundCompletion = { completion in
+                        self.jump(to: message.id, animated: true, completion: { _ in
+                            completion?()
+                        })
+                    }
+                    
+                    self.jump(to: message.id, animated: true) { _ in
+                        self.willEnterForegroundCompletion = nil
+                    }
+                }
+            }
+        }
+    }
+    
+    @objc func didTapOnChatView() {
+        hideKeyboard()
+        
+        selectedTextView?.resetTextSelection()
+    }
+    
+    func hideKeyboard() {
         chatBarCoordinator.endEditing()
     }
     
@@ -370,11 +838,6 @@ final class ChatViewController: ThemedViewController {
     }
     
     @objc func updateLayoutForKeyboard(notification: NSNotification) {
-        guard let bottomComposeConstraint = bottomComposeConstraint else {
-            assertionFailure("Must have bottomComposeConstraint in order to react to keyboard show/hide notifications.")
-            return
-        }
-        
         // This avoids updating the constraint when a modally presented shows the keyboard
         // We still want to update the constraint when PPAssetsActionController is presented.
         // See MR of IOS-2403 for a more detailed discussion.
@@ -387,24 +850,25 @@ final class ChatViewController: ThemedViewController {
             constraint: bottomComposeConstraint,
             notification: notification,
             action: {
-                self.updateContentInsets()
+                DDLogVerbose("\(#function) will updateLayoutForKeyboard")
+                self.updateContentInsets(force: true)
                 self.view.layoutIfNeeded()
                 
-                // It is unclear why this is needed but if we do not relayout the chatbar here, its height will not be updated.
+                // It is unclear why this is needed but if we do not relayout the chat bar here, its height will not be updated.
                 self.chatBarCoordinator.chatBarContainerView.setNeedsLayout()
                 self.chatBarCoordinator.chatBarContainerView.layoutIfNeeded()
+                DDLogVerbose("\(#function) did updateLayoutForKeyboard")
             },
             completion: nil
         )
     }
 }
 
-// MARK: - ChatProfileViewDelegate
+// MARK: - Navigation Item
 
-extension ChatViewController: ChatProfileViewDelegate {
-    // MARK: Chat Navigation Bar
+extension ChatViewController {
     
-    private func configureNavigationBar() {
+    private func configureNavigationItem() {
         
         // Note: The back button is set in `ConversationsViewController` and cannot be overridden here
         
@@ -413,18 +877,28 @@ extension ChatViewController: ChatProfileViewDelegate {
         
         navigationItem.largeTitleDisplayMode = .never
         
-        updateChatProfileViewSettings()
-        navigationItem.titleView = chatProfileView
-        
-        // Configure right bar button item
-        
-        if conversation.isGroup() {
-            updateOpenBallotsButton()
-        }
-        else {
+        updateNavigationItem()
+    }
+    
+    private func updateNavigationItem() {
+        switch userInterfaceMode {
+        case .default:
+            updateChatProfileViewSettings()
+            
+            navigationItem.titleView = chatProfileView
+            
+            navigationItem.hidesBackButton = false
+            
+            navigationItem.leftBarButtonItem = nil
+            
+            navigationItem.rightBarButtonItems = nil
+            
+            if conversation.isGroup() {
+                updateOpenBallotsButton()
+            }
             // Only show call icon if Threema calls are enabled and contact supports them
-            if UserSettings.shared()?.enableThreemaCall == true,
-               let contact = conversation.contact {
+            else if UserSettings.shared()?.enableThreemaCall == true,
+                    let contact = conversation.contact {
                 let contactSet = Set<Contact>([contact])
                 
                 FeatureMask.check(Int(FEATURE_MASK_VOIP), forContacts: contactSet) { unsupportedContacts in
@@ -434,6 +908,26 @@ extension ChatViewController: ChatProfileViewDelegate {
                     }
                 }
             }
+            
+        case .search:
+            navigationItem.titleView = chatSearchController.searchBar
+            
+            navigationItem.hidesBackButton = true
+            
+            navigationItem.leftBarButtonItem = nil
+
+            navigationItem.rightBarButtonItems = nil
+            
+        case .multiselect:
+            navigationItem.titleView = nil
+            
+            navigationItem.hidesBackButton = true
+            
+            navigationItem.leftBarButtonItem = deleteBarButton
+            updateSelectionTitle()
+            
+            navigationItem.rightBarButtonItems = nil
+            navigationItem.rightBarButtonItem = cancelBarButton
         }
     }
     
@@ -453,7 +947,7 @@ extension ChatViewController: ChatProfileViewDelegate {
     /// As it is complicated to observe ballot changes we just call this function on every instance creation of the view or new (ballot)
     /// message received.
     private func updateOpenBallotsButton() {
-        guard conversation.isGroup() else {
+        guard conversation.isGroup(), userInterfaceMode == .default else {
             return
         }
         
@@ -461,10 +955,10 @@ extension ChatViewController: ChatProfileViewDelegate {
         
         // Only show ballots icon if we have open polls
         if numberOfOpenBallots > 0 {
-            ballotButton.openBallotsCount = UInt(numberOfOpenBallots)
+            ballotBarButton.openBallotsCount = UInt(numberOfOpenBallots)
             
             if navigationItem.rightBarButtonItems == nil {
-                navigationItem.rightBarButtonItems = ballotButton.asRightBarButtonItems()
+                navigationItem.rightBarButtonItems = ballotBarButton.rightBarButtonItems
             }
         }
         else {
@@ -473,7 +967,7 @@ extension ChatViewController: ChatProfileViewDelegate {
     }
     
     /// `ChatProfileViewDelegate` method
-    func chatProfileViewTapped(_ chatProfileView: ChatProfileView) {
+    func chatProfileViewTapped() {
         let detailsViewController: UIViewController
         
         if conversation.isGroup() {
@@ -481,10 +975,10 @@ extension ChatViewController: ChatProfileViewDelegate {
                 fatalError("No group conversation found for this conversation")
             }
             
-            detailsViewController = GroupDetailsViewController(for: group, displayMode: .conversation)
+            detailsViewController = GroupDetailsViewController(for: group, displayMode: .conversation, delegate: self)
         }
         else {
-            detailsViewController = SingleDetailsViewController(for: conversation)
+            detailsViewController = SingleDetailsViewController(for: conversation, delegate: self)
         }
         
         let navigationController = ModalNavigationController(rootViewController: detailsViewController)
@@ -497,7 +991,9 @@ extension ChatViewController: ChatProfileViewDelegate {
     /// Start VoIP call
     ///
     /// - Note: Only call this if you previously checked if `conversation.contact` supports calls
-    @objc private func startVoIPCall() {
+    @objc func startVoIPCall() {
+        
+        chatViewTableViewVoiceMessageCellDelegate.pausePlaying()
         
         guard let contact = conversation.contact else {
             DDLogError("Conversation.Contact is unexpectedly nil")
@@ -516,7 +1012,11 @@ extension ChatViewController: ChatProfileViewDelegate {
     @objc private func showBallots() {
         guard let ballotViewController = BallotListTableViewController.ballotListViewController(for: conversation)
         else {
-            UIAlertTemplate.showAlert(owner: self, title: "Polls unavailable", message: nil)
+            UIAlertTemplate.showAlert(
+                owner: self,
+                title: BundleUtil.localizedString(forKey: "ballot_load_error"),
+                message: nil
+            )
             return
         }
         
@@ -524,6 +1024,35 @@ extension ChatViewController: ChatProfileViewDelegate {
         // presentation
         let navigationController = ThemedNavigationController(rootViewController: ballotViewController)
         present(navigationController, animated: true)
+    }
+    
+    @objc private func showDeleteMessagesAlert() {
+        let alertTitle: String
+        var alertMessage: String?
+        
+        if dataSource.hasSelectedObjectIDs() {
+            alertTitle = BundleUtil.localizedString(forKey: "messages_delete_selected_confirm")
+        }
+        else {
+            alertTitle = BundleUtil.localizedString(forKey: "messages_delete_all_confirm_title")
+            alertMessage = BundleUtil.localizedString(forKey: "messages_delete_all_confirm_message")
+        }
+        
+        UIAlertTemplate.showDestructiveAlert(
+            owner: self,
+            title: alertTitle,
+            message: alertMessage,
+            titleDestructive: BundleUtil.localizedString(forKey: "delete")
+        ) { _ in
+            
+            if self.dataSource.hasSelectedObjectIDs() {
+                self.dataSource.deleteSelectedMessages()
+            }
+            else {
+                self.dataSource.deleteAllMessages()
+            }
+            self.endMultiselect()
+        }
     }
 }
 
@@ -533,14 +1062,27 @@ extension ChatViewController {
     private func configureTableView() {
         // This needs to be done here and not in the lazy `tableView` initializer. Otherwise we get an infinite loop.
         tableView.dataSource = dataSource
-        // TODO: This should be interactive. But then we need additional changes to the ChatBarView
-        tableView.keyboardDismissMode = .onDrag
     }
     
     // MARK: Scroll
     
-    private func scrollToBottom(animated: Bool) {
+    /// Scrolls to the bottom of the tableView
+    /// *The animation and the scroll may be cancelled if the tableView is updated with new data, the view layouts its subviews in an unfortunate way or the contentOffset is changed.
+    /// The caller must make sure that the animation isn't cancelled by such updates.*
+    ///
+    /// Use `jumpToBottom` if the messages at the bottom are not guaranteed to be already loaded.
+    ///
+    /// See `dataSource.apply` for more information about the current implementation of locking updates.
+    /// - Parameter animated: Whether scrolling is animated or not
+    private func scrollToBottom(animated: Bool, force: Bool = false) {
+        DDLogVerbose("\(#function)")
         // TODO: (IOS-2014) Should we check if we're already scrolling to the bottom here?
+        
+        // Do not cancel user scroll
+        guard ((!isUserInteractiveScroll && !isAtBottomOfView) || !dataSource.initialSetupCompleted) || force else {
+            DDLogVerbose("\(#function) do not cancel user interactive scroll")
+            return
+        }
         
         guard let bottomIndexPath = dataSource.bottomIndexPath else {
             // Use scroll view API to go to bottom instead of table view if now index path is available
@@ -557,38 +1099,235 @@ extension ChatViewController {
             return
         }
         
-        DDLogVerbose("Scroll to bottom index path...")
-        tableView.scrollToRow(at: bottomIndexPath, at: .bottom, animated: animated)
+        DDLogVerbose("Scroll to bottom index path \(bottomIndexPath) ...")
         
-        // Continue scrolling to the bottom if a new index path showed up at the bottom
-        // If loading new messages is faster than 400 ms this allows scrolling all the way to the bottom
-        DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(400)) {
-            if let newBottomIndexPath = self.dataSource.bottomIndexPath,
-               bottomIndexPath != newBottomIndexPath {
-                DDLogVerbose("Continue scrolling to bottom...")
-                self.scrollToBottom(animated: animated)
+        if ChatViewConfiguration.ScrollCompletionBehavior.useCustomViewAnimationBlock {
+            if animated {
+                scrollToBottomWithCustomAnimation(bottomIndexPath)
+            }
+            else {
+                contentSizeChangeSafeScrollToRow(at: bottomIndexPath, at: .bottom, animated: false)
+            }
+        }
+        else {
+            contentSizeChangeSafeScrollToRow(at: bottomIndexPath, at: .bottom, animated: animated)
+        }
+    }
+    
+    /// Helper function for `scrollToBottom(animated: Bool)`
+    /// - Parameter bottomIndexPath: indexPath to scroll to
+    private func scrollToBottomWithCustomAnimation(_ bottomIndexPath: IndexPath) {
+        UIView.animate(
+            withDuration: ChatViewConfiguration.ScrollCompletionBehavior.animationDuration,
+            delay: 0.0,
+            options: [.curveEaseInOut, .allowUserInteraction]
+        ) {
+            let scrollPosition: UITableView.ScrollPosition = self.flippedTableView ? .top : .bottom
+            self.contentSizeChangeSafeScrollToRow(at: bottomIndexPath, at: scrollPosition, animated: false)
+        } completion: { _ in
+            defer {
+                self.scrollViewDidEndScrolling()
+            }
+            
+            if !self.isUserInteractiveScroll, !self.isAtBottomOfView,
+               bottomIndexPath == self.dataSource.bottomIndexPath {
+                let msg = "After scrolling to bottom we are not at the bottom of the view"
+                if ChatViewConfiguration.strictMode {
+                    fatalError(msg)
+                }
+                else {
+                    DDLogError(msg)
+                    assertionFailure(msg)
+                }
             }
         }
     }
     
+    /// Calls `tableView.scrollToRow(at:at:animated:)` but protects against scrolling being not successful due to changing cell sizes after scrolling
+    /// In general you will not need this. Use `jump(to:animated:highlight:))` or `scrollToBottom(animated:)` instead.
+    /// For more information see comment below
+    /// - Parameters:
+    ///   - indexPath: Identifies the row to scroll to
+    ///   - scrollPosition: final scroll position
+    ///   - animated: whether to animate the scrolling or not
+    private func contentSizeChangeSafeScrollToRow(
+        at indexPath: IndexPath,
+        at scrollPosition: UITableView.ScrollPosition,
+        animated: Bool
+    ) {
+        if flippedTableView {
+            // This is not ideal since we might still jump a bit after the first scroll (see below)
+            // But if the first scroll is successful the second one might not do anything at all and
+            // we'll miss the chance to update our alpha.
+            scrollPositionRestoreFinished = true
+        }
+        tableView.scrollToRow(at: indexPath, at: scrollPosition, animated: animated)
+        // At this point we are at the correct contentOffset for showing the cell at the very bottom
+        // however the tableView might change its contentSize due to newly rendered cells whose exact height
+        // (which was previously determined as automatic) is only now known causing the new contentOffset to be incorrect
+        // To alleviate this issue we do another layout pass on tableView (which in general should do nothing) and scroll to bottom again.
+        tableView.layoutIfNeeded()
+        if UserSettings.shared().initialScrollPositionAlt1 {
+            CATransaction.commit()
+        }
+        if flippedTableView {
+            scrollPositionRestoreFinished = true
+        }
+        tableView.scrollToRow(at: indexPath, at: scrollPosition, animated: animated)
+    }
+
     // MARK: Jump
     
-    private func completeJumping() {
+    /// Jumps to the given messageID, the jump can either scroll in an animated way or be abrupt and highlight the jumped to cell for a short amount of time (will set highlight and unset highlight after a short time interval).
+    /// - Parameters:
+    ///   - messageID: A valid messageID
+    ///   - animated: whether the jump is scrolled/animated
+    ///   - highlight: whether the cell should be highlighted for a short amount of time after jumping has been approximately completed
+    func jump(to messageID: Data, animated: Bool, highlight: Bool = false) {
+        jump(to: messageID, animated: animated) { message in
+            guard highlight else {
+                return
+            }
+            
+            guard let message = message else {
+                DDLogError("Message was unexpectedly nil")
+                return
+            }
+            
+            guard !self.dataSource.isSelected(objectID: message.objectID) else {
+                DDLogWarn("Message is already selected so we don't highlight")
+                return
+            }
+            
+            DispatchQueue.main.asyncAfter(
+                deadline: .now() + ChatViewConfiguration.ChatBubble.HighlightedAnimation.highlightDelayAfterScroll
+            ) { [weak self] in
+                
+                guard let indexPath = self?.dataSource
+                    .indexPath(for: ChatViewDataSource.CellType.message(objectID: message.objectID)) else {
+                    DDLogError("Couldn't get indexPath")
+                    return
+                }
+                
+                guard let cell = self?.tableView.cellForRow(at: indexPath) as? ChatViewBaseTableViewCell
+                else {
+                    DDLogError("Couldn't get cell")
+                    return
+                }
+                cell.blinkCell(
+                    duration: ChatViewConfiguration.ChatBubble.HighlightedAnimation
+                        .highlightedDurationLong
+                )
+            }
+        }
+    }
+    
+    func jumpToAndSelect(_ messageObjectID: NSManagedObjectID) {
+        isJumping = true
+        
+        guard let message = entityManager.entityFetcher.existingObject(with: messageObjectID) as? BaseMessage else {
+            DDLogWarn(
+                "Unable to load message (\(messageObjectID.uriRepresentation())) to jump to."
+            )
+            return
+        }
+        
+        dataSource.loadMessages(around: message.date).done { [weak self] in
+            guard let indexPath = self?.dataSource.indexPath(
+                for: ChatViewDataSource.CellType.message(objectID: message.objectID)
+            ) else {
+                DDLogError("Couldn't get indexPath")
+                return
+            }
+            
+            self?.dataSource.deselectAllMessages()
+            self?.dataSource.didSelectRow(at: indexPath)
+            
+            // If scrollPosition is set to `.none` it will not scroll
+            self?.tableView.selectRow(at: indexPath, animated: true, scrollPosition: .middle)
+        }
+        .ensure {
+            self.completeJumping()
+        }
+        .catch { error in
+            DDLogError("Unable to load messages for jumpToAndSelect: \(error)")
+        }
+    }
+    
+    private func completeJumping(to message: BaseMessage? = nil, completion: ((BaseMessage?) -> Void)? = nil) {
         // Wait a bit until scrolling should be somewhat completed
         DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(400)) {
             self.isJumping = false
+            completion?(message)
+        }
+    }
+    
+    private func jumpToTop() {
+        isJumping = true
+        dataSource.loadOldestMessages().ensure {
+            self.view.layoutIfNeeded()
+            if self.flippedTableView {
+                if let topIndexPath = self.dataSource.topIndexPath {
+                    self.tableView.scrollToRow(at: topIndexPath, at: .bottom, animated: true)
+                }
+                else {
+                    DDLogError("Could not get topIndexPath from data source")
+                }
+            }
+            else {
+                self.tableView.scrollToRow(at: IndexPath(row: 0, section: 0), at: .top, animated: true)
+            }
+            self.completeJumping { _ in
+                self.userIsAtBottomOfTableView = self.isAtBottomOfView
+            }
+        }
+        .catch { error in
+            DDLogError("Unable to load messages for jumpToTop: \(error)")
         }
     }
     
     private func jumpToBottom() {
         isJumping = true
-        dataSource.loadNewestMessages().done {
-            self.scrollToBottom(animated: true)
-            self.completeJumping()
+        dataSource.loadNewestMessages().ensure {
+            self.view.layoutIfNeeded()
+            self.isScrolling = true
+            self.scrollToBottom(animated: true, force: true)
+            self.completeJumping { _ in
+                self.userIsAtBottomOfTableView = true
+            }
+        }
+        .catch { error in
+            DDLogError("Unable to load messages for jumpToBottom: \(error)")
         }
     }
     
-    private func jump(to messageID: Data) {
+    private func jump(toUnreadMessage unreadMessageMessageID: Data, completion: ((BaseMessage?) -> Void)? = nil) {
+        dataSource.initialSetupCompleted = true
+        jump(to: unreadMessageMessageID, at: .top, completion: { baseMessage in
+            completion?(baseMessage)
+            self.userIsAtBottomOfTableView = self.isAtBottomOfView
+        })
+    }
+    
+    private func jumpContentLoadUnsafe(to unreadMessageMessageObjectID: NSManagedObjectID) {
+        isJumping = true
+        defer { completeJumping() }
+        if let indexPath = dataSource
+            .indexPath(for: ChatViewDataSource.CellType.message(objectID: unreadMessageMessageObjectID)) {
+            contentSizeChangeSafeScrollToRow(at: indexPath, at: .top, animated: false)
+        }
+        else {
+            DDLogError("\(#function): Timing Error. Message was not yet applied")
+        }
+    }
+    
+    private func jump(
+        to messageID: Data,
+        at scrollPosition: UITableView.ScrollPosition = .middle,
+        animated: Bool = false,
+        completion: ((BaseMessage?) -> Void)? = nil,
+        onError: (() -> Void)? = nil
+    ) {
         guard let message = entityManager.entityFetcher.message(
             with: messageID,
             conversation: conversation
@@ -599,13 +1338,34 @@ extension ChatViewController {
             return
         }
         
+        jump(to: message, at: scrollPosition, animated: animated, completion: completion, onError: onError)
+    }
+    
+    private func jump(
+        to message: BaseMessage,
+        at scrollPosition: UITableView.ScrollPosition = .middle,
+        animated: Bool,
+        completion: ((BaseMessage?) -> Void)?,
+        onError: (() -> Void)? = nil
+    ) {
         isJumping = true
         dataSource.loadMessages(around: message.date).done {
-            if let indexPath = self.dataSource.indexPath(for: message.objectID) {
-                self.tableView.scrollToRow(at: indexPath, at: .none, animated: true)
+            // TODO: This is a workaround that will be resolved with IOS-2720
+            /// With a one second delay we aim to be more sure that the loaded messages have been actually applied in the tableView
+            DispatchQueue.main.async {
+                if let indexPath = self.dataSource
+                    .indexPath(for: ChatViewDataSource.CellType.message(objectID: message.objectID)) {
+                    self.contentSizeChangeSafeScrollToRow(at: indexPath, at: scrollPosition, animated: animated)
+                    self.completeJumping(to: message, completion: completion)
+                }
+                else {
+                    DDLogError("Timing Error: Message was not yet applied")
+                    self.isJumping = false
+                    onError?()
+                }
             }
-            
-            self.completeJumping()
+        }.catch { _ in
+            DDLogError("Initial loading was cancelled")
         }
     }
     
@@ -626,12 +1386,57 @@ extension ChatViewController {
     }
     
     private func insetAdjustedBottomOffset(for scrollView: UIScrollView) -> CGFloat {
+        #if DEBUG
+            if !dataSource.initialSetupCompleted {
+                DDLogWarn(
+                    "Initial setup was not yet completed `insetAdjustedBottomOffset` might return unreliable results."
+                )
+            }
+        #endif
+        
+        guard !flippedTableView else {
+            let x = scrollView.contentOffset.y + scrollView.adjustedContentInset.top
+            DDLogVerbose("\(#function) \(x)")
+            return x
+        }
+        
         let currentContentOffsetY = scrollView.contentOffset.y
         // Content offset is below the top adjusted content inset so we only need to adjust for the bottom inset
         let currentAdjustedHeight = scrollView.frame.height - scrollView.adjustedContentInset.bottom
         let currentContentHeight = scrollView.contentSize.height
-        
+
         return currentContentHeight - (currentContentOffsetY + currentAdjustedHeight)
+    }
+    
+    // MARK: Scroll to bottom button & chat bar and Toolbar
+    
+    private func showScrollToBottomButtonAndChatBar() {
+        
+        chatBarCoordinator.showChatBar()
+        updateContentInsets()
+        
+        scrollToBottomButton.isHidden = false
+    }
+    
+    private func hideScrollToBottomButtonAndChatBar() {
+        updateContentInsets(force: true)
+        chatBarCoordinator.hideChatBar()
+        scrollToBottomButton.isHidden = true
+    }
+    
+    private func configureToolbar() {
+        // This is needed for search results. Otherwise the toolbar has no background
+        let defaultAppearance = UIToolbarAppearance()
+        defaultAppearance.configureWithDefaultBackground()
+        navigationController?.toolbar.scrollEdgeAppearance = defaultAppearance
+    }
+    
+    private func showToolbar(animated: Bool) {
+        navigationController?.setToolbarHidden(false, animated: animated)
+    }
+    
+    private func hideToolbar(animated: Bool) {
+        navigationController?.setToolbarHidden(true, animated: animated)
     }
 }
 
@@ -639,27 +1444,79 @@ extension ChatViewController {
 
 extension ChatViewController: UITableViewDelegate {
     
+    // MARK: Section headers
+    
+    func tableView(_ tableView: UITableView, viewForFooterInSection section: Int) -> UIView? {
+        guard flippedTableView else {
+            return nil
+        }
+        
+        guard dataSource.snapshot().sectionIdentifiers.count > section else {
+            return nil
+        }
+        
+        return ChatViewSectionHeaderView(text: dataSource.snapshot().sectionIdentifiers[section])
+    }
+    
+    func tableView(_ tableView: UITableView, estimatedHeightForFooterInSection section: Int) -> CGFloat {
+        if flippedTableView {
+            return UITableView.automaticDimension
+        }
+        else {
+            return 0
+        }
+    }
+    
+    func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
+        if !flippedTableView {
+            return UITableView.automaticDimension
+        }
+        else {
+            return 0
+        }
+    }
+    
+    func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
+        guard !flippedTableView else {
+            return nil
+        }
+        guard dataSource.snapshot().sectionIdentifiers.count > section else {
+            return nil
+        }
+        
+        return ChatViewSectionHeaderView(text: dataSource.snapshot().sectionIdentifiers[section])
+    }
+    
     // MARK: Cell height caching
     
     func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
-        // Cache height calculated by the system
-        if let objectID = dataSource.itemIdentifier(for: indexPath) {
+        // Cache height calculated by the system, select if table view is editing and cell was selected before
+        if let cellType = dataSource.itemIdentifier(for: indexPath),
+           case let ChatViewDataSource.CellType.message(objectID: objectID) = cellType {
             cellHeightCache.storeCellHeight(cell.frame.height, for: objectID)
+            
+            if userInterfaceMode == .multiselect,
+               dataSource.isSelected(objectID: objectID) {
+                tableView.selectRow(at: indexPath, animated: true, scrollPosition: .none)
+            }
         }
         
-        // TODO: Just for measuring speed. Remove after completion
+        // TODO: IOS-2860 Just for measuring speed. Remove after completion
         if !firstCellShown {
             os_signpost(.end, log: PointsOfInterestSignpost.log, name: "showChat")
             firstCellShown = true
+            let endTime = CACurrentMediaTime()
+            DDLogVerbose("ChatViewController duration init to first cell shown \(endTime - initTime) s")
+            
+            if UserSettings.shared().initialScrollPositionAlt1 {
+                CATransaction.commit()
+            }
         }
     }
     
     func tableView(_ tableView: UITableView, estimatedHeightForRowAt indexPath: IndexPath) -> CGFloat {
-        guard ChatViewConfiguration.enableEstimatedCellHeightCaching else {
-            return UITableView.automaticDimension
-        }
-        
-        guard let objectID = dataSource.itemIdentifier(for: indexPath) else {
+        guard let cellType = dataSource.itemIdentifier(for: indexPath),
+              case let ChatViewDataSource.CellType.message(objectID: objectID) = cellType else {
             return UITableView.automaticDimension
         }
         
@@ -667,6 +1524,14 @@ extension ChatViewController: UITableViewDelegate {
         
         if let height = cellHeightCache.cellHeight(for: objectID) {
             return height
+        }
+        
+        guard ChatViewConfiguration.enableEstimatedCellHeightCaching else {
+            return UITableView.automaticDimension
+        }
+        
+        guard dataSource.initialSetupCompleted else {
+            return UITableView.automaticDimension
         }
         
         if let estimatedHeight = cellHeightCache.estimatedCellHeight(for: objectID) {
@@ -680,13 +1545,19 @@ extension ChatViewController: UITableViewDelegate {
         }
         
         let tableViewWidth = tableView.frame.width
-       
+        
         // Used to solve breaking constraints before table view is visible
         if tableViewWidth == 0 {
             return UITableView.automaticDimension
         }
         
-        let estimatedHeight = ChatViewCellSizeProvider.estimatedCellHeight(for: message, with: tableViewWidth)
+        let neighbors = ChatViewDataSource.neighbors(of: objectID, in: tableView)
+        
+        let estimatedHeight = ChatViewCellSizeProvider.estimatedCellHeight(
+            for: message,
+            with: neighbors,
+            and: tableViewWidth
+        )
         cellHeightCache.storeEstimatedCellHeight(estimatedHeight, for: objectID)
         
         return estimatedHeight
@@ -697,7 +1568,8 @@ extension ChatViewController: UITableViewDelegate {
             return UITableView.automaticDimension
         }
         
-        guard let objectID = dataSource.itemIdentifier(for: indexPath) else {
+        guard let cell = dataSource.itemIdentifier(for: indexPath),
+              case let ChatViewDataSource.CellType.message(objectID: objectID) = cell else {
             return UITableView.automaticDimension
         }
         
@@ -709,13 +1581,62 @@ extension ChatViewController: UITableViewDelegate {
         return UITableView.automaticDimension
     }
     
+    // MARK: - Multi-Select
+    
+    public func startMultiselect() {
+        userInterfaceMode = .multiselect
+    }
+    
+    @objc func endMultiselect() {
+        userInterfaceMode = .default
+    }
+    
+    func tableView(_ tableView: UITableView, willSelectRowAt indexPath: IndexPath) -> IndexPath? {
+        // This is needed so a cell cannot be accidentally selected by tapping in another mode than multiselect as long
+        // as `tableView.allowsSelection` is enabled.
+        
+        guard userInterfaceMode == .multiselect else {
+            return nil
+        }
+        
+        return indexPath
+    }
+    
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        dataSource.didSelectRow(at: indexPath)
+        updateSelectionTitle()
+    }
+    
+    func tableView(_ tableView: UITableView, didDeselectRowAt indexPath: IndexPath) {
+        dataSource.didDeselectRow(at: indexPath)
+        updateSelectionTitle()
+    }
+    
+    private func updateSelectionTitle() {
+        
+        guard dataSource.hasSelectedObjectIDs() else {
+            deleteBarButton.title = BundleUtil.localizedString(forKey: "messages_delete_all_button")
+            return
+        }
+        
+        let count = dataSource.selectedObjectIDsCount()
+        deleteBarButton.title = String.localizedStringWithFormat(
+            BundleUtil.localizedString(forKey: "delete_n"),
+            count
+        )
+    }
+    
     // MARK: ContextMenu
-
+    
     func tableView(
         _ tableView: UITableView,
         contextMenuConfigurationForRowAt indexPath: IndexPath,
         point: CGPoint
     ) -> UIContextMenuConfiguration? {
+        
+        guard userInterfaceMode == .default else {
+            return nil
+        }
         
         // Check if cell conforms to `ContextMenuAction`
         guard let cell = tableView.cellForRow(at: indexPath) as? ContextMenuAction else {
@@ -723,6 +1644,45 @@ extension ChatViewController: UITableViewDelegate {
         }
         
         return cell.buildContextMenu(at: indexPath)
+    }
+    
+    func tableView(
+        _ tableView: UITableView,
+        willDisplayContextMenu configuration: UIContextMenuConfiguration,
+        animator: UIContextMenuInteractionAnimating?
+    ) {
+        
+        if chatBarCoordinator.chatBar.isTextViewFirstResponder {
+            insetUpdatesBlockedByContextMenu = true
+        }
+        
+        UIView.animate(withDuration: ChatViewConfiguration.contextMenuBackgroundShowHideAnimationDuration) {
+            self.hideScrollToBottomButtonAndChatBar()
+            self.chatBarCoordinator.chatBar.resignFirstResponder()
+        }
+    }
+    
+    func tableView(
+        _ tableView: UITableView,
+        willEndContextMenuInteraction configuration: UIContextMenuConfiguration,
+        animator: UIContextMenuInteractionAnimating?
+    ) {
+        
+        // Show keyboard again if it was before
+        if insetUpdatesBlockedByContextMenu {
+            chatBarCoordinator.chatBar.becomeFirstResponder()
+            insetUpdatesBlockedByContextMenu = false
+        }
+        
+        UIView.animate(withDuration: ChatViewConfiguration.contextMenuBackgroundShowHideAnimationDuration) {
+            if self.userInterfaceMode != .multiselect {
+                self.showScrollToBottomButtonAndChatBar()
+            }
+            else {
+                self.chatBarCoordinator.chatBar.resignFirstResponder()
+                self.updateContentInsets()
+            }
+        }
     }
     
     func tableView(
@@ -763,31 +1723,101 @@ extension ChatViewController: ChatViewDataSourceDelegate {
     func willApplySnapshot(currentDoesIncludeNewestMessage: Bool) {
         DDLogVerbose("willApplySnapshot")
         
+        isApplyingSnapshot = true
+        
         // Don't scroll to bottom if we jump from the bottom
         guard !isJumping else {
             shouldScrollToBottomAfterNextSnapshotApply = false
             return
         }
         
-        // This might be called again before the previous snapshot was applied so we still want to
-        // to scroll to the bottom.
-        guard !shouldScrollToBottomAfterNextSnapshotApply else {
-            return
-        }
-        
         shouldScrollToBottomAfterNextSnapshotApply = currentDoesIncludeNewestMessage && isAtBottomOfView
+            && dataSource.initialSetupCompleted && isApplicationInForeground
+        
+        _ = unreadMessagesSnapshot.tick(willStayAtBottomOfView: shouldScrollToBottomAfterNextSnapshotApply)
     }
     
-    func didApplySnapshot() {
-        DDLogVerbose("didApplySnapshot")
+    func didApplySnapshot(delegateScrollCompletion: @escaping (() -> Void)) {
+        DDLogVerbose("\(#function)")
         
-        if shouldScrollToBottomAfterNextSnapshotApply {
-            scrollToBottom(animated: true)
+        defer {
+            isApplyingSnapshot = false
         }
         
-        shouldScrollToBottomAfterNextSnapshotApply = false
+        /// #  Scroll Behaviour
+        /// ## Determining whether we can scroll after knowing whether we should
+        ///
+        /// `shouldScrollToBottomAfterNextSnapshotApply` cannot actually determine whether we are able to scroll here.
+        /// Determining the ability to scroll is important for the `scrollCompletion` callback because it is only called if we actually scroll
+        /// and not if we request to scroll with `scrollToBottom` but do not scroll because we are still at the bottom
+        ///
+        /// If we indeed need to scroll then the offset to the bottom has changed enough after applying the last snapshot
+        ///  (i.e. between `willApplySnapshot` and `didApplySnapshot`) such that we are not at the bottom anymore (as a new cell has been added).
+        /// We use this to determine whether we will scroll on calling `scrollToBottom` and only scroll in that case.
+        let hasNewlyAddedCellsInThisSnapshot = !isAtBottomOfView && willEnterForegroundCompletion == nil
         
-        readUnreadMessages()
+        if let willEnterForegroundCompletion {
+            DDLogVerbose("\(#function) willEnterForegroundCompletion != nil")
+            willEnterForegroundCompletion {
+                self.willEnterForegroundCompletion = nil
+            }
+        }
+        else {
+            DDLogVerbose("\(#function) willEnterForegroundCompletion == nil")
+        }
+        
+        if shouldScrollToBottomAfterNextSnapshotApply, hasNewlyAddedCellsInThisSnapshot, !isUserInteractiveScroll {
+            DDLogVerbose("\(#function) Scrolling animated")
+            
+            DDLogVerbose("[ChatViewDataSourceDelegate] \(#function)  Scrolling animated")
+            view.layoutIfNeeded()
+            scrollToQueue.async { [self] in
+                
+                if dataSource.initialSetupCompleted {
+                    DDLogVerbose("\(#function) dataSource.snapshotApplyLock.lock()")
+                    dataSource.snapshotApplyLock.lock()
+                }
+                
+                DispatchQueue.main.async {
+                    if self.scrollCompletion != nil, ChatViewConfiguration.strictMode {
+                        fatalError("\(#function) Cancelling previous scroll completion")
+                    }
+                    self.scrollCompletion = { [weak self] in
+                        delegateScrollCompletion()
+                        self?.scrollToQueue.sync {
+                            self?.dataSource.snapshotApplyLock.unlock()
+                        }
+                    }
+                    self.isScrolling = true
+                    self.isProgrammaticallyScrollingToBottom = true
+                    
+                    self.scrollToBottom(animated: true)
+                }
+            }
+        }
+        else {
+            DDLogVerbose("\(#function) DataSource hasn't added new messages we are not requesting to scroll")
+            delegateScrollCompletion()
+            if scrollCompletion != nil, ChatViewConfiguration.strictMode {
+                fatalError("\(#function) Previous scroll is still pending")
+            }
+            scrollCompletion = nil
+        }
+        
+        updateOpenBallotsButton()
+    }
+    
+    func lastMessageChanged(messageIdentifier: NSManagedObjectID) {
+        DispatchQueue.main.async {
+            guard let message = self.entityManager.entityFetcher.getManagedObject(
+                by: messageIdentifier
+            ) as? BaseMessage,
+                message.isOwnMessage else {
+                return
+            }
+            
+            self.unreadMessagesSnapshot.resetState()
+        }
     }
 }
 
@@ -846,15 +1876,35 @@ private extension ChatViewController {
         // `dataSource.initialSetupCompleted` should be set to `true` to complete the setup and allow loading of more
         // messages.
         
+        defer {
+            if self.flippedTableView, isAtBottomOfView {
+                // There will be no scroll completion callback if we are already at the bottom of the view
+                self.tableView.alpha = 1.0
+            }
+        }
+        
         guard let previousScrollPosition = chatScrollPositionProvider.chatScrollPosition(
             for: conversation
         ) else {
             DDLogVerbose("No previous scroll position. Scroll to bottom.")
             
+            guard tableView.numberOfSections > 0 else {
+                return
+            }
+            
             // The newest messages should be loaded so we just scroll to the bottom to optimize
             // performance.
+            view.layoutIfNeeded()
+            isScrolling = true
             scrollToBottom(animated: false)
             dataSource.initialSetupCompleted = true
+            userIsAtBottomOfTableView = true
+            
+            if flippedTableView, isAtBottomOfView {
+                // There will be no scroll completion callback if we are already at the bottom of the view
+                tableView.alpha = 1.0
+            }
+            
             return
         }
         
@@ -868,8 +1918,20 @@ private extension ChatViewController {
             
             // Ensure that we have the bottom data & then scroll to bottom
             dataSource.loadNewestMessages().done {
+                self.view.layoutIfNeeded()
+                self.isScrolling = true
                 self.scrollToBottom(animated: false)
                 self.dataSource.initialSetupCompleted = true
+                self.userIsAtBottomOfTableView = true
+                
+                if self.flippedTableView, self.isAtBottomOfView {
+                    // There will be no scroll completion callback if we are already at the bottom of the view
+                    self.tableView.alpha = 1.0
+                }
+                
+            }.catch { err in
+                DDLogError("Could not load messages at bottom due to an error: \(err.localizedDescription)")
+                assertionFailure()
             }
         }
         
@@ -878,32 +1940,54 @@ private extension ChatViewController {
         ) else {
             DDLogWarn("Unable to restore message object ID")
             restoreAtBottom()
+            userIsAtBottomOfTableView = true
             return
         }
         
-        guard let indexPath = dataSource.indexPath(for: messageObjectID) else {
+        guard let indexPath = dataSource.indexPath(for: ChatViewDataSource.CellType.message(objectID: messageObjectID))
+        else {
             DDLogWarn("Message not found in data source")
             restoreAtBottom()
+            userIsAtBottomOfTableView = true
             return
         }
         
         // Needed to make the cell available in `cellForRow(at:)`
+        if UserSettings.shared().initialScrollPositionAlt1 {
+            CATransaction.begin()
+        }
+        view.layoutIfNeeded()
+        if UserSettings.shared().initialScrollPositionAlt1 {
+            CATransaction.commit()
+        }
+        isScrolling = true
+        tableView.scrollToRow(at: indexPath, at: .none, animated: false)
+        if UserSettings.shared().initialScrollPositionAlt1 {
+            CATransaction.commit()
+        }
+        if flippedTableView {
+            scrollPositionRestoreFinished = true
+        }
         tableView.scrollToRow(at: indexPath, at: .none, animated: false)
         
         // Get cell to adjust offset accordingly
         guard let cell = tableView.cellForRow(at: indexPath) else {
             assertionFailure("Unable to find cell for scroll position restoration")
             restoreAtBottom()
+            userIsAtBottomOfTableView = true
             return
         }
         
         // This leads to a little change of offset if restoration happens in another orientation.
         // TODO: (IOS-2014) Is this still a problem? Should we accommodate for that?
+        // TODO: Also go through the protocol for correct behavior
         let newOffset = cell.frame.minY - previousScrollPosition.offsetFromTop
         tableView.contentOffset.y = newOffset
         
         chatScrollPositionProvider.removeSavedPosition(for: conversation)
         dataSource.initialSetupCompleted = true
+        
+        userIsAtBottomOfTableView = isAtBottomOfView
     }
 }
 
@@ -911,7 +1995,14 @@ private extension ChatViewController {
 
 extension ChatViewController: UIScrollViewDelegate {
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        DDLogVerbose("\(#function)")
         // Check if we should load more messages...
+        
+        DDLogVerbose("\(#function) \(scrollView.contentOffset.y)")
+        
+        if flippedTableView, scrollPositionRestoreFinished {
+            tableView.alpha = 1.0
+        }
         
         // Wait for initial setup to complete
         guard dataSource.initialSetupCompleted else {
@@ -928,13 +2019,78 @@ extension ChatViewController: UIScrollViewDelegate {
             return
         }
         
+        // Do not reload on dragging as this might throw the scroll position off
+        // `scrollViewWillEndDragging` does an additional call to us to make sure we load messages after dragging.
+        guard !isDragging else {
+            return
+        }
+        
+        // Do not load new messages if our last load request was not yet fulfilled by an applied snapshot
+        guard !isLoading else {
+            return
+        }
+        
         // As we normally scroll from bottom to top we first check the top...
         
         // Not really needed, but allows for more consistency across all devices
-        let insetAdjustedTopOffset = scrollView.contentOffset.y + scrollView.adjustedContentInset.top
+        let insetAdjustedTopOffset: CGFloat
+        
+        if flippedTableView {
+            let currentContentOffsetY = scrollView.contentOffset.y
+            // Content offset is below the top adjusted content inset so we only need to adjust for the bottom inset
+            let currentAdjustedHeight = scrollView.frame.height - scrollView.adjustedContentInset.top
+            let currentContentHeight = scrollView.contentSize.height
+
+            insetAdjustedTopOffset = currentContentHeight - (currentContentOffsetY + currentAdjustedHeight)
+        }
+        else {
+            insetAdjustedTopOffset = scrollView.contentOffset.y + scrollView.adjustedContentInset.top
+        }
         
         if insetAdjustedTopOffset < topOffsetThreshold {
-            dataSource.loadMessagesAtTop()
+            isLoading = true
+            
+            // Needed for the WORKAROUND after loading is completed
+            let currentHeight = scrollView.contentSize.height
+            // If offset is less than 0 due to refresh up gesture, assume 0
+            let initialContentOffSet = max(tableView.contentOffset.y, 0)
+            
+            dataSource.loadMessagesAtTop().done {
+                DDLogVerbose("loadMessagesAtTop completed")
+            }
+            .ensure {
+                // `contentSize` may not be up to date immediately; we reschedule this for a later point
+                DispatchQueue.main.async {
+                    // WORKAROUND (IOS-2865)
+                    // This resets the scroll position to something (currently 100) below the very top of the tableView
+                    // before the last snapshot apply as long as there where some new messages loaded (the content size
+                    // increases).
+                    // This is useful if we managed to scroll to the top without loading older messages. Without this
+                    // workaround the new messages would then be added at the bottom instead of the top of the exiting
+                    // messages in the view and so we basically skip all the newly loaded messaged from scrolling past
+                    // and just jump to the top again. This leads to loading ALL messages at the top (or a memory
+                    // overflow)
+                    // WARN: This most likely only works due to accidental scheduling.
+                    if initialContentOffSet < 100 {
+                        let heightDiff = self.tableView.contentSize.height - currentHeight
+                        
+                        // Do not add the offset when all messages are loaded otherwise we cannot scroll all the way
+                        // to the top.
+                        guard heightDiff > 0 else {
+                            return
+                        }
+                        
+                        let newOffset = initialContentOffSet + heightDiff - scrollView.adjustedContentInset.top
+                        self.tableView.setContentOffset(CGPoint(x: 0, y: newOffset), animated: false)
+                    }
+                }
+                
+                self.isLoading = false
+            }
+            .catch { error in
+                DDLogWarn("An error occurred when loading messages at top: \(error.localizedDescription)")
+            }
+            
             return
         }
         
@@ -948,16 +2104,118 @@ extension ChatViewController: UIScrollViewDelegate {
         }
     }
     
+    // The functions below are used to detect when the scroll view is scrolling, we must not update content insets during this.
+    func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
+        DDLogVerbose("[UIScrollViewDelegate] \(#function)")
+        isScrolling = true
+        isDragging = true
+        isUserInteractiveScroll = true
+        isProgrammaticallyScrollingToBottom = false
+    }
+
+    func scrollViewWillEndDragging(
+        _ scrollView: UIScrollView,
+        withVelocity velocity: CGPoint,
+        targetContentOffset: UnsafeMutablePointer<CGPoint>
+    ) {
+        DDLogVerbose("[UIScrollViewDelegate] \(#function)")
+        /// Do one last call to didScroll to make sure we are loading messages if we're supposed to.
+        scrollViewDidScroll(scrollView)
+    }
+    
+    func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
+        DDLogVerbose("[UIScrollViewDelegate] \(#function)")
+        isDragging = false
+        
+        if !decelerate {
+            scrollViewDidEndScrolling()
+        }
+        
+        if dataSource.initialSetupCompleted {
+            if isAtBottomOfView {
+                userIsAtBottomOfTableView = true
+            }
+            else {
+                userIsAtBottomOfTableView = false
+            }
+        }
+    }
+    
+    func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
+        scrollViewDidEndScrolling()
+    }
+    
+    func scrollViewDidEndScrollingAnimation(_ scrollView: UIScrollView) {
+        DDLogVerbose("[UIScrollViewDelegate] \(#function)")
+        scrollViewDidEndScrolling()
+    }
+    
+    /// This isn't a delegate method
+    func scrollViewDidEndScrolling() {
+        DDLogVerbose("[UIScrollViewDelegate] \(#function)")
+        isProgrammaticallyScrollingToBottom = false
+        isScrolling = false
+        
+        if dataSource.initialSetupCompleted {
+            if isAtBottomOfView {
+                userIsAtBottomOfTableView = true
+            }
+            else {
+                userIsAtBottomOfTableView = false
+            }
+        }
+        
+        isUserInteractiveScroll = isDragging
+        
+        // We do this immediately after scrolling is done to avoid cells resizing themselves in the meantime causing animation glitches
+        updateContentInsets()
+        
+        // We keep a slight delay before unlocking the lock and calling scrollCompletion
+        // This isn't strictly necessary but feels like it could solve some of our issues
+        let delay = ChatViewConfiguration.ScrollCompletionBehavior.completionBlockCallDelay
+        let deadline: DispatchTime = .now() + .milliseconds(delay)
+        DispatchQueue.main.asyncAfter(deadline: deadline) {
+            self.scrollCompletion?()
+            self.scrollCompletion = nil
+        }
+    }
+    
     // TODO: (IOS-2014) Maybe store scroll position after scrolling finished for a bit (and no new scrolling started).
     //                  Maybe with a timer.
     
     // Scroll to bottom when tapping on top (& scroll view is not at top)
     func scrollViewShouldScrollToTop(_ scrollView: UIScrollView) -> Bool {
-        jumpToBottom()
+        jumpToTop()
         return false
     }
     
-    func updateContentInsets() {
+    override func viewSafeAreaInsetsDidChange() {
+        DDLogVerbose("\(view.safeAreaInsets)")
+        updateContentInsets(force: true)
+    }
+    
+    func updateContentInsets(force: Bool = false, retry: Bool = true) {
+        DDLogVerbose("\(#function)")
+        guard !insetUpdatesBlockedByContextMenu else {
+            DDLogVerbose("\(#function) Do not run updateContentInsets as we're showing the context menu")
+            return
+        }
+        
+        guard !isScrolling || (force && !isResettingKeyboard) else {
+            DDLogVerbose("\(#function) Do not run updateContentInsets as we're scrolling")
+            if retry {
+                DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(100)) {
+                    self.updateContentInsets(retry: false)
+                }
+            }
+            return
+        }
+        
+        guard !isJumping || force else {
+            DDLogVerbose("\(#function) Do not run updateContentInsets as we're jumping")
+            return
+        }
+        
         if !Thread.isMainThread {
             assertionFailure("Constraints must be updated on main thread")
         }
@@ -967,53 +2225,120 @@ extension ChatViewController: UIScrollViewDelegate {
         let wasAtBottomOfView = isAtBottomOfView
         let oldYOffset = tableView.contentOffset.y
         
-        let oldInsets = tableView.contentInset
-        var newInsets = oldInsets
+        let oldInset = tableView.contentInset
         
-        newInsets.bottom = view.frame.maxY - chatBarCoordinator.chatBarContainerView.frame.minY - view.safeAreaInsets
-            .bottom
+        var newContentInset = oldInset
+        var newScrollbarIndicatorInset = oldInset
         
-        tableView.contentInset = newInsets
-        tableView.scrollIndicatorInsets = newInsets
+        // Tweak the insets
         
-        if wasAtBottomOfView {
-            scrollToBottom(animated: false)
+        if userInterfaceMode == .default {
+            let newBottomInset: CGFloat
+            
+            if flippedTableView {
+                newBottomInset = view.frame.maxY
+                    - chatBarCoordinator.chatBarContainerView.frame.minY
+                    - view.safeAreaInsets.bottom
+                    - (view.safeAreaInsets.top - view.safeAreaInsets.bottom)
+            }
+            else {
+                newBottomInset = view.frame.maxY
+                    - chatBarCoordinator.chatBarContainerView.frame.minY
+                    - view.safeAreaInsets.bottom
+            }
+            
+            // We need some extra space to the chat bar for the content/chat bubbles to compensate for the missing
+            // spacing from the top of the next bubble.
+            if conversation.isGroup() {
+                if flippedTableView {
+                    newContentInset.top = newBottomInset + ChatViewConfiguration.groupBottomInset
+                }
+                else {
+                    newContentInset.bottom = newBottomInset + ChatViewConfiguration.groupBottomInset
+                }
+            }
+            else {
+                if flippedTableView {
+                    newContentInset.top = newBottomInset + ChatViewConfiguration.bottomInset
+                }
+                else {
+                    newContentInset.bottom = newBottomInset + ChatViewConfiguration.bottomInset
+                }
+            }
+            
+            // We just use the default inset for the scroll bars
+            if flippedTableView {
+                newScrollbarIndicatorInset.top = newBottomInset
+            }
+            else {
+                newScrollbarIndicatorInset.bottom = newBottomInset
+            }
         }
         else {
-            let insetChange = newInsets.bottom - oldInsets.bottom
+            if conversation.isGroup() {
+                newContentInset.bottom = ChatViewConfiguration.groupBottomInset
+            }
+            else {
+                newContentInset.bottom = ChatViewConfiguration.bottomInset
+            }
+
+            newScrollbarIndicatorInset.bottom = 0.0
+        }
+        
+        // Also (and always) tweak the top inset. (This also influences the sticky section header inset.)
+        if flippedTableView {
+            newContentInset.bottom = ChatViewConfiguration.topInset + view.safeAreaInsets.top - view.safeAreaInsets
+                .bottom
+            newScrollbarIndicatorInset.bottom = view.safeAreaInsets.top - view.safeAreaInsets.bottom
+        }
+        else {
+            newContentInset.top = ChatViewConfiguration.topInset
+        }
+        
+        guard !dataSource.initialSetupCompleted || tableView.contentInset != newContentInset else {
+            DDLogVerbose("\(#function) Do not update content insets because they haven't changed")
+            return
+        }
+        
+        DDLogVerbose("\(#function) will updateContentInsets to \(newContentInset)")
+        
+        // Apply the insets
+        
+        tableView.contentInset = newContentInset
+        tableView.scrollIndicatorInsets = newScrollbarIndicatorInset
+                         
+        DDLogVerbose("\(#function) did updateContentInsets")
+        
+        if wasAtBottomOfView {
+            DDLogVerbose("\(#function) wasAtBottomOfView")
+            if dataSource.initialSetupCompleted {
+                // Do not scroll to bottom before initial scroll position was set and `initialSetupCompleted` was set
+                // in `restoreScrollPosition`.
+                scrollToBottom(animated: false, force: true)
+            }
+            else if tableView.contentSize.height > 0, !UserSettings.shared().initialScrollPositionAlt1 {
+                // This replicates the workaround in `viewDidLayoutSubviews`
+                if UserSettings.shared().flippedTableView {
+//                    tableView.setContentOffset(
+//                        CGPoint(x: 0, y: CGFLOAT_MIN),
+//                        animated: false
+//                    )
+                }
+                else {
+                    tableView.setContentOffset(
+                        CGPoint(x: 0, y: CGFLOAT_MAX),
+                        animated: false
+                    )
+                }
+            }
+        }
+        else {
+            DDLogVerbose("\(#function) !wasAtBottomOfView")
+            let insetChange = newContentInset.bottom - oldInset.bottom
             let newYOffset = (oldYOffset + insetChange)
             
             tableView.setContentOffset(CGPoint(x: 0, y: newYOffset), animated: false)
         }
-    }
-}
-
-// MARK: - ChatViewTableViewCellDelegate
-
-extension ChatViewController: ChatViewTableViewCellDelegate {
-    func clearCellHeightCache(for objectID: NSManagedObjectID) {
-        cellHeightCache.clearCellHeightCache(for: objectID)
-    }
-    
-    func show(identity: String) {
-        guard let contact = BusinessInjector().entityManager.entityFetcher.contact(for: identity) else {
-            DDLogError("Can't find contact for tapped mention")
-            return
-        }
-        let detailsViewController = SingleDetailsViewController(for: contact)
-        let navigationController = ThemedNavigationController(rootViewController: detailsViewController)
-        navigationController.modalPresentationStyle = .formSheet
-        
-        present(navigationController, animated: true)
-    }
-    
-    func didTap(message: BaseMessage?) {
-        photoBrowserWrapper.openPhotoBrowser(for: message)
-        // TODO: Remove with IOS-2466
-    }
-    
-    func showQuoteView(message: QuoteMessage) {
-        chatBarCoordinator.showQuoteView(for: message)
     }
 }
 
@@ -1024,5 +2349,123 @@ extension ChatViewController: ModalNavigationControllerDelegate {
         if conversation.willBeDeleted {
             navigationController?.popViewController(animated: true)
         }
+        
+        chatBarCoordinator.updateSettings()
+    }
+}
+
+// MARK: - DetailsDelegate
+
+extension ChatViewController: DetailsDelegate {
+    func detailsDidDisappear() {
+        if userInterfaceMode == .search {
+            chatSearchController.activateSearch()
+        }
+    }
+    
+    func showChatSearch() {
+        userInterfaceMode = .search
+    }
+}
+
+// MARK: - ChatSearchControllerDelegate
+
+extension ChatViewController: ChatSearchControllerDelegate {
+    func chatSearchController(
+        select messageObjectID: NSManagedObjectID,
+        highlighting searchText: String,
+        in filteredSearchResults: [NSManagedObjectID]
+    ) {
+        var indexPaths = [IndexPath]()
+        
+        for section in 0..<tableView.numberOfSections {
+            for row in 0..<tableView.numberOfRows(inSection: section) {
+                indexPaths.append(IndexPath(row: row, section: section))
+            }
+        }
+        
+        chatViewTableViewCellDelegate.currentSearchText = searchText
+        
+        dataSource.reconfigure(filteredSearchResults)
+        
+        jumpToAndSelect(messageObjectID)
+    }
+    
+    func chatSearchController(removeSelectionFrom messageObjectID: NSManagedObjectID) {
+        guard let indexPath = dataSource.indexPath(for: ChatViewDataSource.CellType.message(objectID: messageObjectID))
+        else {
+            DDLogNotice("No index path found to remove selection from")
+            return
+        }
+        
+        tableView.deselectRow(at: indexPath, animated: true)
+    }
+    
+    func chatSearchController(showToolbarWith barButtonItems: [UIBarButtonItem], animated: Bool) {
+        setToolbarItems(barButtonItems, animated: animated)
+        showToolbar(animated: animated)
+    }
+    
+    func chatSearchController(updateToolbarWith barButtonItems: [UIBarButtonItem]) {
+        // If animated is true the text blinks when switching between results
+        setToolbarItems(barButtonItems, animated: false)
+    }
+    
+    func chatSearchControllerHideToolbar(animated: Bool) {
+        hideToolbar(animated: animated)
+        setToolbarItems(nil, animated: animated)
+    }
+    
+    func chatSearchControllerHideSearch() {
+        chatViewTableViewCellDelegate.currentSearchText = nil
+        
+        dataSource.reconfigure()
+        
+        userInterfaceMode = .default
+    }
+}
+
+// MARK: - Helper functions for ChatViewDataSource initialization
+
+// The compiler posts weird errors if something is wrong in the closures directly put into the initializer
+// Thus we move these closures into their own functions
+extension ChatViewController {
+    private func chatViewDataSourceAfterFirstSnapshotApply() {
+        // TODO: (IOS-2014) Maybe don't show messages until restoration completes to disable flickering if restoration
+        // fails and we load messages at the bottom
+        if let newestUnreadMessage = unreadMessagesSnapshot.unreadMessagesState?.oldestConsecutiveUnreadMessage {
+            jumpContentLoadUnsafe(to: newestUnreadMessage)
+            dataSource.initialSetupCompleted = true
+            
+            if flippedTableView, isAtBottomOfView {
+                // There will be no scroll completion callback if we are already at the bottom of the view
+                tableView.alpha = 1.0
+            }
+        }
+        else {
+            restoreScrollPosition()
+        }
+        
+        let endTime = CACurrentMediaTime()
+        DDLogVerbose("ChatViewController duration init to dataSource ready \(endTime - initTime)")
+    }
+    
+    private func chatViewDataSourceLoadAround() -> Date? {
+        if let newestUnreadMessage = unreadMessagesSnapshot.unreadMessagesState?.oldestConsecutiveUnreadMessage,
+           let message = entityManager.entityFetcher
+           .getManagedObject(by: newestUnreadMessage) as? BaseMessage {
+            return message.date
+        }
+        else {
+            return chatScrollPositionProvider.chatScrollPosition(for: conversation)?.messageDate
+        }
+    }
+}
+
+// MARK: - ChatBarCoordinatorDelegate
+
+extension ChatViewController: ChatBarCoordinatorDelegate {
+    func didDismissQuoteView() {
+        updateContentInsets(force: true)
     }
 }

@@ -103,6 +103,14 @@
 "threema_id" = "Threema ID";
 "nickname" = "昵称";
 "add_button" = "添加";
+"chatview_contextmenu_more" = "更多…";
+
+"file_message_image" = "图片";
+"file_message_sticker" = "表情包";
+"file_message_animated_image" = "GIF";
+"file_message_video" = "视频";
+"file_message_voice" = "语音消息";
+"file_message_file" = "文件";
 
 "chat_back_button_accessibility" = "%d条未读消息";
 
@@ -145,6 +153,7 @@
 "high" = "高视频尺寸";
 "max_1_minute" = "最长1分钟";
 "max_x_minutes" = "最长%d分钟";
+"still_compressed_note" = "就算设置为未压缩，体积非常大的视频都有可能被压缩。";
 
 /* Sound names */
 "push_sound_title" = "推送音效";
@@ -195,23 +204,23 @@
 
 "no_contacts_access_title" = "无法访问联系人";
 "no_contacts_access_message" = "请打开 “设置” 并允许 “通讯录” 访问。";
-"no_linked_contact_access_title" = "无法访问已关联的联系人";
-"no_linked_contact_access_message" = "请打开 “设置” 并允许 “通讯录” 访问以查看已关联的联系人，或者永久取消关联联系人。";
-"no_linked_contact_access_edit_message" = "请打开 “设置” 并允许 “通讯录” 访问以编辑已关联的联系人，或者编辑永久取消关联的联系人。";
+"no_linked_contact_access_title" = "无法访问已链接的联系人";
+"no_linked_contact_access_message" = "请打开 “设置” 并允许 “通讯录” 访问以查看已链接的联系人，或者永久取消链接联系人。";
+"no_linked_contact_access_edit_message" = "请打开 “设置” 并允许 “通讯录” 访问以编辑已链接的联系人，或者编辑永久取消链接的联系人。";
 "restricted_contacts_access_title" = "通讯录访问受限";
 "restricted_contacts_access_message" = "请您的主管授予访问通讯录的权限。";
-"restricted_linked_contact_access_message" = "由于系统访问限制，%@ 无法访问您的已关联的联系人。请向您的主管授予访问通讯录的权限，或者永久取消关联联系人。";
-"restricted_linked_contact_access_edit_message" = "由于系统访问限制，Threema 无法访问您的已关联的联系人。请向您的主管授予访问通讯录的权限，或者编辑永久取消关联的联系人。";
-"linked_contact_not_found_title" = "未找到已关联的联系人";
-"linked_contact_not_found_message" = "未找到已关联的联系人，您可以编辑永久取消关联的联系人。";
+"restricted_linked_contact_access_message" = "由于系统访问限制，%@ 无法访问您的已链接的联系人。请向您的主管授予访问通讯录的权限，或者永久取消链接联系人。";
+"restricted_linked_contact_access_edit_message" = "由于系统访问限制，%@ 无法访问您的已链接的联系人。请向您的主管授予访问通讯录的权限，或者编辑永久取消链接的联系人。";
+"linked_contact_not_found_title" = "未找到已链接的联系人";
+"linked_contact_not_found_message" = "未找到已链接的联系人，您可以编辑永久取消链接的联系人。";
 
 "unlink_contact" = "取消链接联系人";
-"unlink_and_edit_contact" = "取消关联和编辑联系人";
+"unlink_and_edit_contact" = "取消链接和编辑联系人";
 "link_new_contact" = "链接到新的联系人";
-"show_linked_contact" = "显示已关联的联系人";
+"show_linked_contact" = "显示已链接的联系人";
 
 "link_contact" = "链接到联系人";
-"linked_contact" = "已关联的联系人";
+"linked_contact" = "已链接的联系人";
 "[no access]" = "[无法访问]";
 "[not found]" = "[未找到]";
 "[restricted]" = "[受限]";
@@ -252,8 +261,8 @@
 "call_me_message" = "如果您选择继续，我们将尝试立即致电给您。您的验证码将被朗读两次。请注意，您只有一次致电的机会，因此在继续之前，请确定您已准备就绪。";
 "number" = "电话号码";
 
-"mobileno_linked_title" = "电话号码已关联";
-"mobileno_linked_message" = "您的电话号码已成功关联到您的ID。";
+"mobileno_linked_title" = "电话号码已链接";
+"mobileno_linked_message" = "您的电话号码已成功链接到您的ID。";
 
 "link_email_title" = "链接电子邮件";
 "link_your_email" = "您的电子邮件地址";
@@ -267,7 +276,7 @@
 "public_key_mismatch_message" = "已经有一个具有此ID的联系人，但公共密钥不匹配！ 这可能表明有人试图欺骗您，让您向错误的接收者发送消息。\n新的公钥尚未保存；如果您确定它是正确的，请删除现有的联系人，然后再试。";
 
 "public_key_server_mismatch_title" = "公钥不匹配";
-"public_key_server_mismatch_message" = "您扫描的公钥与服务器返回的 ID 的密钥不匹配。这说明有人恶意修改了您扫描的代码，无论如何都不能相信该密钥。请将此事件报告至 security@threema.ch 。如有可能，请详细说明该 ID 和情况。";
+"public_key_server_mismatch_message" = "您扫描的公钥与服务器返回的 ID 的密钥不匹配。这说明有人恶意修改了您扫描的代码，无论如何都不能相信该密钥。请将此事件报告至 security@threema.ch 。如果可以的话，请详细说明该 ID 和情况。";
 
 "password_again" = "再次输入密码";
 "password_too_short_title" = "密码太短";
@@ -292,6 +301,7 @@
 "conversation_delete_confirm" = "在此设备中删除此会话吗？";
 "delete_all" = "删除所有";
 "delete_n" = "删除 (%d)";
+
 "message_cannot_play_movie" = "无法播放视频。";
 
 "identity_not_found_title" = "未知ID";
@@ -381,10 +391,6 @@
 "contact_invalid_cannot_send" = "您无法发送消息到这个联系人，因为他是无效的联系人。";
 "contact_betafeedback_cannot_send" = "这不是测试版，请将反馈信息发送到 *SUPPORT。";
 "group_sync_button" = "同步群组";
-"group_sync_title" = "群组已同步";
-"group_sync_message" = "当前的群组数据已经发送到所有成员。";
-"group_sync_error_title" = "同步群组失败";
-"group_sync_error_message" = "请稍后再试。";
 "group_clone_button" = "克隆群组";
 "group_clone_title" = "克隆群组";
 "group_clone_message" = "这将创建一个由您作为管理员的群组克隆。";
@@ -413,6 +419,10 @@
 "add_note_group_info" = "*在此会话中只有您一个人能访问*\n将此会话作为保存文本、媒体和文件的安全笔记本。";
 "end_note_group_info" = "*在此会话中不再只有您一个人能访问*\n新消息将被发送到所有群组成员。";
 
+"chat_search_searching" = "搜索中…";
+"chat_search_no_matches" = "没有匹配项";
+"chat_search_matches" = "%d 个匹配项，共 %d 个";
+
 "choose_recipient" = "选择接收者";
 
 "msg_unknown_group_request_sync_x_title" = "在未知群组中收到的消息";
@@ -425,6 +435,7 @@
 "tap_to_change" = "点击更改";
 "next" = "下一步";
 "unread_messages" = "未读消息";
+"unread_messages_line_with_count" = "未读消息 (%d)";
 
 /* Verification level popovers in chat view */
 "verification_level_title" = "验证级别";
@@ -446,11 +457,10 @@
 "level4_explanation" = "通过扫描二维码，您能亲自验证内部联系人的身份和公钥。";
 
 "id_verified_title" = "ID已验证";
-"id_verified_message" = "已验证 %@ 的身份和公钥。";
 
 /* Invalid country code alert */
 "invalid_country_code_title" = "无效的区域格式";
-"invalid_country_code_message" = "您的设备上的 “地区” 似乎设置为无效值。 请打开 “设置”，转到 “通用” > “语言与地区”，然后重新选择 “地区”，以避免电话号码匹配出现问题。";
+"invalid_country_code_message" = "您的设备上的 “地区” 似乎设置为无效值。 请打开系统 “设置”，转到 “通用” > “语言与地区”，然后重新选择 “地区”，以避免电话号码匹配出现问题。";
 
 /* Settings */
 "block_unknown_on" = "只有在通讯录的联系人才能向您发送消息。";
@@ -468,9 +478,7 @@
 "backgrounding_off" = "移动到后台后，Threema 将立即断开连接。";
 "proximity_monitoring_off" = "当近距离传感器被覆盖时，屏幕不会关闭。";
 "proximity_monitoring_on" = "当进行语音通话时，以及录制或播放语音消息时，如果近距离传感器被覆盖，则屏幕会关闭。";
-"validation_logging_expl" = "调试日志可以用来独立验证 Threema 的端到端加密。\n详情：https://threema.ch/validation";
-
-"validation_log_clear" = "清空日志";
+"debug_log_clear" = "清除日志";
 "log_empty_message" = "调试日志为空白。";
 "cannot_send_mail_message" = "此设备上未配置电子邮件帐户。";
 
@@ -508,8 +516,6 @@
 "release_profilepicture_to" = "将个人头像发布到";
 "contact_added_to_profile_picture_list" = "当您向此联系人发送消息时，他会看到您的个人头像。";
 "contact_removed_from_profile_picture_list" = "此联系人将不能看到您的个人资料。";
-"contact_send_profile_picture_success" = "您的个人头像已成功发送到联系人。";
-"contact_send_profile_picture_error" = "您的头像无法发送。请稍后再试。";
 
 "sync_group" = "同步群组";
 
@@ -535,6 +541,13 @@
 "exclude_deleted_id_title" = "将 Threema ID 为“%@“的人排除在同步范围之外？";
 "exclude_deleted_id_message" = "您可以在隐私设置中管理排除项。";
 "exclude_deleted_id_exclude_button" = "排除";
+
+"forward_security" = "完全正向保密";
+"forward_security_none" = "无保密";
+"forward_security_2dh" = "单向保密";
+"forward_security_4dh" = "完整保密";
+"forward_security_clear_sessions" = "清除所有会话";
+"forward_security_explainer_footer" = "完全正向保密（PFS）可以保护会话记录不被追溯解密，即使长期加密密钥已被盗用。\n如果双方的应用程序都支持完全正向保密的话，就可以启用此选项。";
 
 /* create id */
 "lets_get_started" = "让我们开始吧";
@@ -652,7 +665,7 @@
 "new_message_no_access_title" = "新消息";
 "new_message_no_access_message" = "请打开 %@ 获取接收到的消息。";
 "new_message_invalid_license" = "您的许可证已过期，请打开应用程序以继续。";
-"new_message_db_requires_migration" = "需要进行数据库迁移，请打开应用程序以继续。";
+"new_message_db_requires_migration" = "Threema 已更新，请打开应用程序完成更新。";
 
 /* reminder messages */
 "push_reminder_title" = "未启用通知";
@@ -693,7 +706,7 @@
 "draft" = "草稿";
 "new_message_accessibility" = "新消息： ";
 "scoll_down_text" = "向下滚动";
-"quote_interaction_hint" = "点击跳转到引用的信息。";
+"quote_interaction_hint" = "跳转到引用的信息";
 
 /* TTOpenInAppActivity */
 "Open in ..." = "在...打开";
@@ -784,17 +797,14 @@
 "call_status_unknown" = "未知";
 "call_status_blocked" = "被屏蔽的联系人";
 "call_status_failed_title" = "Threema 通话";
-"call_status_failed_connected_message" = "连接中断";
-"call_status_failed_initializing_message" = "无法建立连接";
-"call_status_failed_sdp_patch_message" = "无法建立 Threema 通话";
 
 "call_threema_initiator_video_info" = "点击这里打开摄像头";
 "call_threema_remote_video_activated_info_title" = "视频通话";
 "call_threema_remote_video_activated_info" = "对方已发起视频通话，点击这里打开摄像头。";
 "call_threema_speaker_info" = "点击这里打开免提电话";
-"call_threema_camera_disabled_info" = "这个联系人没有使用当前的 %@ 版本，或者不允许进行视频通话。";
+"call_threema_camera_disabled_info" = "这个联系人没有使用最新的应用版本，或者不允许进行视频通话。";
 
-"call_threema_video_in_chat_info_title" = "新增：视频通话";
+"call_threema_video_in_chat_info_title" = "新功能：视频通话";
 "call_threema_video_in_chat_info_description" = "除了防窃听的语音通话之外，%@ 现在还提供端到端加密视频通话。";
 
 "call_threema_cellular_instead_of_wifi_title" = "通过移动数据通话";
@@ -1075,6 +1085,13 @@
 "file_deleted_title" = "文件已删除";
 "file_not_found_title" = "未找到文件";
 
+"manage_all_conversations" = "管理所有会话";
+"manage_media_and_files" = "管理文件";
+"manage_messages" = "管理消息";
+"messages" = "消息";
+"files" = "文件";
+
+
 // Settings
 "settings_privacy" = "隐私";
 "settings_appearance" = "外观";
@@ -1109,6 +1126,7 @@
 "settings_devmode_quote_v2" = "引用 V2";
 "settings_devmode_new_chat_view" = "新的聊天界面";
 "settings_devmode_stylekit_debug_view" = "StyleKit 调试视图";
+"settings_devmode_id_colors_debug_view" = "ID 颜色调试视图";
 
 // Appearance
 "settings_appearance_theme_section" = "设计主题";
@@ -1118,6 +1136,9 @@
 "settings_appearance_theme_selected" = "%@ 主题启用中";
 "settings_appearance_theme_active" = "启用";
 "settings_appearance_hide_app_icon" = "应用图标";
+"settings_appicon_default_header" = "默认图标";
+"settings_appicon_legacy_header" = "Threema 图标";
+"settings_appicon_special_header" = "特殊图标";
 "settings_appearance_hide_stale_contacts" = "隐藏不活跃的ID";
 "settings_appearance_show_profile_pictures" = "显示个人头像";
 "settings_appearance_display_order" = "显示顺序";
@@ -1242,8 +1263,7 @@
 "unknown_file_type" = "未知文件类型";
 "unknown_file_size" = "未知文件大小";
 "unknown_file_name" = "未知文件名";
-
-"ballots_with_open_count_accessibility" = "投票（现开放 %d）";
+"sending_to" = "收件人";
 
 /* Ballot */
 "ballot" = "投票";
@@ -1295,6 +1315,10 @@
 "voteCancelMessage" = "如果您在投票前退出，投票记录将被丢弃。";
 "discardVoteTitle" = "放弃";
 
+"ballot_load_error" = "投票无法使用";
+
+"ballots_with_open_count_accessibility" = "投票（现公开 %d）";
+
 /* Custom Privacy Settings */
 "privacySetting_header" = "隐私";
 "send_readReceipts" = "已读回执";
@@ -1317,23 +1341,33 @@
 "reset_overrides_alert_action" = "重置所有内容";
 
 /* Multi Decvice */
-"multi_device_linked_devices_title" = "链接设备";
+"multi_device_linked_devices_title" = "多设备预览";
+"multi_device_linked_devices_desc" = "为这个设备激活或关闭多设备预览。";
 "multi_device_linked_devices_refresh" = "下拉刷新";
 "multi_device_linked_devices_loading_failed" = "加载设备失败：%@";
 "multi_device_linked_devices_failed_to_load_title" = "加载设备列表失败";
 "multi_device_linked_devices_failed_to_load_message" = "无法加载已连接的设备，请检查您的互联网连接并重试。";
 "multi_device_linked_devices_this" = "此设备";
 "multi_device_linked_devices_others" = "其他设备";
+"multi_device_linked_devices_last_login" = "最后登录时间：%@";
 "multi_device_linked_devices_remove_failed" = "移除设备失败：%@";
+"multi_device_linked_devices_removed_devices_title" = "禁用多设备登录？";
+"multi_device_linked_devices_removed_devices_message" = "这将删除所有连接的设备并禁用多设备登录。";
+"multi_device_linked_devices_removed_devices_ok" = "禁用";
+"multi_device_linked_duplicate_contacts_title" = "重复的联系人";
+"multi_device_linked_duplicate_contacts_desc" = "由于存在重复的联系人(%@)，您无法链接此设备。请联系我们的支持人员。";
+
 "multi_device_linked_devices_failed_remove_title" = "移除设备失败";
 "multi_device_linked_devices_failed_remove_message" = "无法移除已连接的设备，请重试。";
 "multi_device_linked_devices_failed_remove_message_2" = "无法移除已连接的设备，请检查您的互联网连接并重试。";
+"multi_device_slot_state_mismatch_alert" = "此设备已取消链接，这意味着您现时不能再发送或接收新消息。如果您没有主动取消链接，这可能是由于技术预览版的技术问题而发生错误。对此给您带来的不便我们深感抱歉。如要重新链接，请参阅常见问题解答：https://three.ma/faq";
 
 "myprofile_link_email_phone_footer" = "将您的电子邮件地址或电话号码与您的ID链接，如果其他人的通讯录中有保存您的资料，他们将在 %@ 上自动找到您。";
 "myprofile_link_email_footer" = "将您的电子邮件地址与您的ID链接，如果其他人的通讯录中有保存您的电子邮件地址，他们将在 %@ 上自动找到您。";
 "myprofile_link_email_onprem_footer" = "将您的电子邮件地址与您的ID链接，如果其他人的通讯录中有保存您的电子邮件地址，使用这个服务器（%@）的其他用户在 %@ 上将自动找到您。";
 "myprofile_link_phone_footer" = "将您的电话号码与您的ID链接，如果其他人的通讯录中有保存您的电话号码，他们将在 %@ 上自动找到您。";
 "myprofile_link_phone_onprem_footer" = "将您的电话号码与您的ID链接，如果其他人的通讯录中有保存您的电话号码，使用这个服务器（%@）的其他用户在 %@ 上将自动找到您。";
+
 "mentions_table_view_cell_accessibility_hint" = "点击创建 @提及";
 
 // POI
@@ -1368,7 +1402,7 @@
 // New Ballot Message Cell
 "ballot_message_local_votes" = "您投了%@一票。";
 "ballot_message_most_votes" = "%@ 获得最多票数。";
-"ballot_message_closed" = "投票已关闭。";
+"ballot_message_closed" = "投票已关闭";
 "ballot_message_did_vote" = "%@位参与者中的第%@位。";
 "ballot_message_no_votes" = "没有收到投票。";
 "vote_system_message" = "“%@” 投了 “%@” 一票";
@@ -1387,6 +1421,140 @@
 "detailView_messageID" = "消息识别码";
 "detailView_group_acknowledged" = "已同意 (%d)";
 "detailView_group_declined" = "不同意 (%d)";
+
+// In-app notifications
+"notification_copying_succeeded" = "项目已复制";
+"notification_copying_failed" = "复制失败";
+
+"notification_saving_succeeded" = "项目已保存";
+"notification_saving_failed" = "保存失败";
+
+"notification_sending_failed" = "发送失败";
+
+"notification_deleted_messages_count" = "%d条消息已删除";
+
+"notification_cannot_play_video" = "无法播放视频";
+
+"notification_call_failed_connected" = "连接中断";
+"notification_call_failed_not_connected" = "建立连接失败";
+"notification_call_creation_failed" = "呼叫创建失败";
+
+"notification_sending_profile_picture_succeeded" = "头像已发送";
+"notification_sending_profile_picture_failed" = "发送失败";
+
+"notification_sending_profile_picture_failed_settings_sync_message" = "设置已同步";
+
+"notification_group_sync_succeeded" = "群组已同步";
+"notification_group_sync_failed" = "群组同步失败";
+
+// Forward security status messages
+"forward_security_message_without" = "您收到一条没有完全正向保密的消息，您可以验证发件人是否主动禁用完全正向保密。";
+"forward_security_session_established" = "此会话中的消息现正受完全正向保密的保护。";
+"forward_security_session_established_rx" = "在此会话中收到的消息现正受完全正向保密的保护，您可以在联系人详细信息中启用完全正向保密来保护以后发送的消息。";
+"forward_security_messages_skipped_1" = "自上一条信息以来，有一条信息已经丢失。";
+"forward_security_messages_skipped_x" = "自上一条信息以来，有%d条信息已经丢失。";
+"forward_security_session_reset" = "与此联系人的完全正向保密会话已被重置。如果联系人更换了设备或重新安装了此应用程序，就会重置会话。";
+"forward_security_message_out_of_order" = "收到的消息发生故障，无法解密。";
+"forward_security_status_enabled_outgoing" = "已为发出消息开启完全正向保密。";
+"forward_security_status_disabled_outgoing" = "已为发出消息关闭完全正向保密。";
+"forward_security_contact_has_downgraded_to_an_incompatible_version" = "由于这个联系人正在使用的应用版本不支持完全正向保密，因此从现在开始之后发送的消息将没有保密。";
+
+// Profile view
+"accessibility_profile_button_hint_contact" = "打开联系人详细消息";
+"accessibility_profile_button_hint_group" = "打开群组详细消息";
+
+// Chat bar
+"accessibility_chatbar_label" = "聊天输入框";
+"accessibility_chatbar_hint" = "撰写消息";
+"accessibility_chatbar_value" = "当前文本：%@";
+"accessibility_chatbar_quote_label" = "所选的引用消息：%@。";
+"accessibility_chatbar_close_quote_button_label" = "结束引用";
+"accessibility_chatbar_close_quote_button_hint" = "结束引用所选消息";
+
+// Message senders
+"accessibility_senderDescription_ownMessage" = "您的%@";
+"accessibility_senderDescription_otherMessage_group" = "来自%@的%@";
+"accessibility_senderDescription_systemMessage" = "资讯：%@";
+
+// Message types
+"accessibility_textMessage_description" = "消息";
+"accessibility_locationMessage_description" = "位置";
+"accessibility_systemCallMessage_description" = "通话";
+"accessibility_fileMessage_description" = "文件";
+"accessibility_imageMessage_description" = "图片";
+"accessibility_videoMessage_description" = "视频";
+"accessibility_animatedImageMessage_description" = "GIF";
+"accessibility_stickerMessage_description" = "表情包";
+"accessibility_voiceMessage_description" = "语音消息";
+"accessibility_pollMessage_description" = "投票";
+
+// Message hints
+"accessibility_audioMessage_hint" = "播放语音消息。";
+"accessibility_locationMessage_hint" = "打开位置";
+"accessibility_systemCallMessage_hint" = "开始通话";
+"accessibility_imageMessage_hint" = "打开图片";
+"accessibility_videoMessage_hint" = "播放视频";
+"accessibility_fileMessage_hint" = "打开文件预览";
+"accessibility_animatedImageMessage_hint" = "启用GIF动画";
+"accessibility_animatedStickerMessage_hint" = "启用表情包动画";
+"accessibility_ballotMessage_hint_open" = "开放所有人投票";
+"accessibility_ballotMessage_hint_closed" = "显示投票结果";
+"accessibility_voiceMessage_speed_hint" = "更改播放速度";
+
+// Other
+"accessibility_caption" = "描述：%@";
+"accessibility_poll_content_open" = "%@. 标题：%@, %@";
+"accessibility_poll_open" = "投票已开放";
+"accessibility_poll_closed" = "投票已关闭";
+"accessibility_file_duration" = "时长：%@";
+
+// Message status types
+"accessibility_status_acknowledged_plus_time" = "已确认, %@";
+"accessibility_status_declined_plus_time" = "已拒绝, %@";
+"accessibility_status_sending_plus_time" = "发送中, %@";
+"accessibility_status_sent_plus_time" = "已发送, %@";
+"accessibility_status_delivered_plus_time" = "已送达, %@";
+"accessibility_status_read_plus_time" = "已阅读, %@";
+"accessibility_status_failed_plus_time" = "失败, %@";
+
+// Multi-Device Wizard
+"md_wizard_header" = "多设备预览";
+"md_wizard_start" = "连接到我的电脑";
+"md_wizard_cancel" = "取消";
+"md_wizard_next" = "下一步";
+"md_wizard_close" = "关闭";
+"md_wizard_back_identity" = "显示 Threema ID";
+
+"md_wizard_connection_info" = "在连接过程中，通话和通知暂时禁用。";
+
+"md_wizard_terms_note_text" = "这次技术预览版是为测试人员提前测试即将到来的 “多设备支持” 功能而设。请注意，这些功能是限时提供的。由于这是测试版，因此有时可能会出现小错误。";
+
+"md_wizard_terms_backup" = "使用技术预览版可能会发生数据丢失的问题，请在加入测试之前创建备份。\n[创建备份步骤](https://threema.ch/docs/threema/ios_backup_manual_en.pdf)";
+"md_wizard_terms_support" = "这次技术预览版支持文本信息。请定期更新 iOS 上和电脑版的应用程序，以获得最新的功能和改进。 ";
+"md_wizard_terms_issues" = "已知的问题和限制可以在[这里](https://threema.ch/faq/md_limit)找到。";
+"md_wizard_terms_bugs" = "请通过 “设置” > “测试版反馈” 报告使用此应用程序时遇到的问题。";
+
+"md_wizard_terms_accept" = "我已经创建了备份，并想继续进行下一步。";
+
+"md_wizard_info_download_title" = "下载";
+"md_wizard_info_download_text" = "在您电脑上的 Threema 技术预览版：";
+"md_wizard_info_linking_title" = "将您的电脑连接到此设备";
+"md_wizard_info_linking_text" = "当您的电脑连接时，您的基本 Threema 数据（例如您的ID、联系人和群组）将被加密并暂时存储在[你目前使用的 Threema Safe 服务器](https://threema.ch/en/faq/threema_safe_webdav)。(当前设置：%@)。";
+
+"md_wizard_preparation_status" = "准备中…";
+
+"md_wizard_start_desktop" = "请您先在电脑上打开 Threema 技术预览版，然后输入您的 Threema ID。";
+"md_wizard_identity_text" = "您的 Threema ID：";
+
+"md_wizard_code_text" = "链接代码：";
+
+"md_wizard_success_title" = "设备链接成功";
+"md_wizard_success_text" = "现在，您可以在电脑上使用 Threema 技术预览版（即使此 iOS 设备已关机）。";
+
+"md_wizard_error_title" = "链接失败，因为 Threema 应用程序已关闭";
+"md_wizard_timeout_title" = "链接失败，因为花了太长时间";
+"md_wizard_could_not_connect_title" = "链接失败，因为无法连接到服务器";
+"md_wizard_error_text" = "请通过 “设置” > “多设备预览” 以重新尝试。";
 
 // App icons
 "app_icon_title_celebration" = "庆祝图标";

@@ -22,62 +22,155 @@ import CocoaLumberjackSwift
 import Foundation
 import PromiseKit
 
+protocol BlobDownloaderDelegate: AnyObject {
+    func blobDownloader(for objectID: NSManagedObjectID, didUpdate progress: Progress) async
+}
+
+/// Used to keep track of URLSessionTasks and their progress. Should not be called directly but rather through BlobManager.
 class BlobDownloader: NSObject {
-    
-    private let blobURL: BlobURL
-    private let queue: DispatchQueue
     
     enum BlobDownloaderError: Error {
         case downloadFailed(message: String)
+        case invalidDownloadURL
     }
+    
+    private let blobURL: BlobURL
+    private let queue: DispatchQueue
+    private var urlSessionManager: URLSessionManager
+    
+    private var progressObservers = [NSManagedObjectID: NSKeyValueObservation]()
+    private var activeTasks = [NSManagedObjectID: URLSessionTask]()
 
+    // MARK: - Lifecycle
+    
+    init(
+        blobURL: BlobURL,
+        queue: DispatchQueue = DispatchQueue.main,
+        sessionManager: URLSessionManager = .shared
+    ) {
+        self.blobURL = blobURL
+        self.queue = queue
+        self.urlSessionManager = sessionManager
+        super.init()
+    }
+    
     @objc init(blobURL: BlobURL, queue: DispatchQueue = DispatchQueue.main) {
         self.blobURL = blobURL
         self.queue = queue
+        self.urlSessionManager = .shared
+        super.init()
     }
-
-    func download(blobID: Data) -> Promise<Data?> {
-        Promise { seal in
-            download(blobID: blobID) { data, error in
+    
+    // MARK: - Download
+    
+    /// Downloads given data and provides progress updates to its delegate
+    /// - Parameters:
+    ///   - blobData: Data to be downloaded
+    ///   - origin: Origin of the Blob
+    ///   - objectID: ObjectID used to track progress
+    ///   - delegate: Delegate to send progress updates to
+    /// - Returns: Received data from server
+    func download(
+        blobID: Data,
+        origin: BlobOrigin,
+        objectID: NSManagedObjectID,
+        delegate: BlobDownloaderDelegate? = nil
+    ) async throws -> Data {
+        try await withCheckedThrowingContinuation { continuation in
+            
+            blobURL.download(blobID: blobID, origin: origin) { downloadURL, error in
                 if let error = error {
-                    seal.reject(error)
+                    continuation.resume(throwing: error)
+                    return
                 }
-                else {
-                    seal.fulfill(data)
+                
+                guard let downloadURL = downloadURL else {
+                    continuation.resume(throwing: BlobDownloaderError.invalidDownloadURL)
+                    return
                 }
+
+                let task = self.startDownload(for: downloadURL) { data, error in
+                    // Download was completed
+                    if let error = error {
+                        continuation.resume(throwing: error)
+                    }
+                    else if let data = data {
+                        continuation.resume(returning: data)
+                    }
+                    else {
+                        continuation
+                            .resume(throwing: BlobDownloaderError.downloadFailed(message: "[Blob] No data downloaded"))
+                    }
+                    
+                    // Remove completed Task
+                    self.progressObservers.removeValue(forKey: objectID)
+                    self.activeTasks.removeValue(forKey: objectID)
+                }
+                
+                // Add created task to keep track
+                let observer = task.progress.observe(\.fractionCompleted) { progress, _ in
+                    Task {
+                        await delegate?.blobDownloader(for: objectID, didUpdate: progress)
+                    }
+                }
+
+                self.progressObservers[objectID] = observer
+                self.activeTasks[objectID] = task
             }
         }
     }
  
-    @objc func download(blobID: Data, completion: @escaping (Data?, Error?) -> Swift.Void) {
-        blobURL.download(blobID: blobID) { downloadURL, error in
+    @objc func download(blobID: Data, origin: BlobOrigin, completion: @escaping (Data?, Error?) -> Void) {
+        blobURL.download(blobID: blobID, origin: origin) { downloadURL, _ in
             guard let downloadURL = downloadURL else {
+                completion(nil, BlobDownloaderError.invalidDownloadURL)
                 return
             }
             
-            let httpClient = HttpClient()
-            httpClient.downloadData(url: downloadURL, contentType: .octetStream) { data, response, error in
-                var downloadError: Error?
-                
-                if let error = error {
-                    downloadError = error
+            self.startDownload(for: downloadURL, completion: completion)
+        }
+    }
+    
+    @discardableResult
+    private func startDownload(for url: URL, completion: @escaping (Data?, Error?) -> Void) -> URLSessionDataTask {
+        let httpClient = HTTPClient(sessionManager: urlSessionManager)
+        let task = httpClient.downloadData(url: url, contentType: .octetStream) { data, response, error in
+            var downloadError: Error?
+            
+            if let error = error {
+                downloadError = error
+            }
+            else {
+                if response is HTTPURLResponse {
+                    if let response = response as? HTTPURLResponse,
+                       !(200...299).contains(response.statusCode) {
+                        downloadError = BlobDownloaderError
+                            .downloadFailed(
+                                message: "[BlobDownloader] Download failed with response code: \(response.statusCode)."
+                            )
+                    }
                 }
                 else {
-                    if response is HTTPURLResponse {
-                        if let response = response as? HTTPURLResponse,
-                           !(200...299).contains(response.statusCode) {
-                            downloadError = BlobDownloaderError
-                                .downloadFailed(message: "Response code \(response.statusCode)")
-                        }
-                    }
-                    else {
-                        downloadError = BlobDownloaderError.downloadFailed(message: "Response is missing")
-                    }
-                }
-                self.queue.async {
-                    completion(data, downloadError)
+                    downloadError = BlobDownloaderError.downloadFailed(message: "[BlobDownloader] Response is missing.")
                 }
             }
+            self.queue.async {
+                completion(data, downloadError)
+            }
         }
+        return task
+    }
+    
+    /// Cancels a download for a given objectID if it exists
+    /// - Parameters:
+    ///   - objectID: ObjectID of Blob
+    public func cancelDownload(for objectID: NSManagedObjectID) {
+        guard let task = activeTasks[objectID] else {
+            return
+        }
+        
+        task.cancel()
+        activeTasks.removeValue(forKey: objectID)
+        progressObservers.removeValue(forKey: objectID)
     }
 }

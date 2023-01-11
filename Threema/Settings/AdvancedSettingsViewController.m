@@ -209,7 +209,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     } else if (indexPath.section == 2 && indexPath.row == 3) {
         /* clear log */
         UIAlertController *actionSheet = [UIAlertController alertControllerWithTitle:nil message:nil preferredStyle:UIAlertControllerStyleActionSheet];
-        [actionSheet addAction:[UIAlertAction actionWithTitle:[BundleUtil localizedStringForKey:@"validation_log_clear"] style:UIAlertActionStyleDestructive handler:^(UIAlertAction * action) {
+        [actionSheet addAction:[UIAlertAction actionWithTitle:[BundleUtil localizedStringForKey:@"debug_log_clear"] style:UIAlertActionStyleDestructive handler:^(UIAlertAction * action) {
             
             [LogManager deleteLogFile:[LogManager debugLogFile]];
             

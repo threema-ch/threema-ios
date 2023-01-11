@@ -129,12 +129,20 @@ class TaskExecutionTransactionTests: XCTestCase {
             
             let expec = XCTestExpectation(description: "")
             
-            let deviceGroupPathKey = BytesUtility.generateRandomBytes(length: Int(kDeviceGroupPathKeyLen))!
+            let deviceGroupKeys = DeviceGroupKeys(
+                dgpk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
+                dgrk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
+                dgdik: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
+                dgsddk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
+                dgtsk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
+                deviceGroupIDFirstByteHex: "a1"
+            )
+
             let deviceID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.deviceIDLength)!
             let serverConnectorMock = ServerConnectorMock(
                 connectionState: .loggedIn,
                 deviceID: deviceID,
-                deviceGroupPathKey: deviceGroupPathKey
+                deviceGroupKeys: deviceGroupKeys
             )
             serverConnectorMock.reflectMessageClosure = { _ in
                 if serverConnectorMock.connectionState == .loggedIn {
@@ -255,12 +263,12 @@ class TaskExecutionTransactionTests: XCTestCase {
     func testNoMediatorKey() {
         let expec = XCTestExpectation(description: "")
         
-        let deviceGroupPathKey: Data? = nil
+        let deviceGroupKeys: DeviceGroupKeys? = nil
         let deviceID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.deviceIDLength)!
         let serverConnectorMock = ServerConnectorMock(
             connectionState: .loggedIn,
             deviceID: deviceID,
-            deviceGroupPathKey: deviceGroupPathKey
+            deviceGroupKeys: deviceGroupKeys
         )
         let frameworkInjectorMock = BusinessInjectorMock(
             backgroundEntityManager: EntityManager(databaseContext: databaseBackgroundCnx),

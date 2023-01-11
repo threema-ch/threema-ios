@@ -1,0 +1,30 @@
+[
+    {
+        "name": "Zürich HB",
+        "address": null,
+        "latitude": 47.378832,
+        "longitude": 8.536650,
+        "accuracy": 5.0,
+    },
+    {
+        "name": "Bundeshaus",
+        "address": "Bundesplatz 3\n3003 Bern",
+        "latitude": 46.94662,
+        "longitude": 7.44423,
+        "accuracy": 20.0,
+    },
+    {
+        "name": "Geografischer Mittelpunkt der Schweiz",
+        "address": "Aelggistrasse 1\n6072 Sachseln",
+        "latitude": 46.79849,
+        "longitude": 8.23178,
+        "accuracy": 0.0,
+    },
+    {
+        "name": null,
+        "address": "Rennweg 43\n8001 Zurich\nSwitzerland",
+        "latitude": 47.373487,
+        "longitude": 8.538929,
+        "accuracy": 5.0,
+    },
+]

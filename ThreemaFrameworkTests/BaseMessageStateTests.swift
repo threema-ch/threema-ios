@@ -58,7 +58,8 @@ class BaseMessageStateTests: XCTestCase {
                 read: false,
                 sent: false,
                 userack: false,
-                sender: nil
+                sender: nil,
+                remoteSentDate: nil
             )
         }
         
@@ -100,7 +101,8 @@ class BaseMessageStateTests: XCTestCase {
                 read: false,
                 sent: false,
                 userack: false,
-                sender: nil
+                sender: nil,
+                remoteSentDate: Date(timeIntervalSinceNow: -100)
             )
         }
         
@@ -144,7 +146,8 @@ class BaseMessageStateTests: XCTestCase {
                 read: false,
                 sent: false,
                 userack: false,
-                sender: nil
+                sender: nil,
+                remoteSentDate: nil
             )
         }
         
@@ -186,7 +189,8 @@ class BaseMessageStateTests: XCTestCase {
                 read: false,
                 sent: false,
                 userack: false,
-                sender: nil
+                sender: nil,
+                remoteSentDate: Date(timeIntervalSinceNow: -100)
             )
         }
         
@@ -214,4 +218,3 @@ class BaseMessageStateTests: XCTestCase {
         XCTAssertEqual(.userDeclined, baseMessage.messageState)
     }
 }
-    

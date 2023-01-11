@@ -123,29 +123,45 @@ static AvatarMaker *sharedInstance = nil;
         for (NSManagedObject *object in insertedObjects) {
             // isKindOf:Conversation.class would always return nil. Thus we use string comparison here
             if([[[object entity] name] isEqualToString:Conversation.entity.name] || [[[object entity] name] isEqualToString:Contact.entity.name]) {
-                [self invalidateBackgroundEntityManager];
+                [self setInvalidateBackgroundEntityManager:@YES];
             }
         }
     }
 }
 
--(void)invalidateBackgroundEntityManager {
+- (NSNumber *)invalidateBackgroundEntityManager {
     @synchronized (_invalidatedBackgroundEntityManager) {
-        _invalidatedBackgroundEntityManager = @YES;
+        return _invalidatedBackgroundEntityManager;
+    }
+}
+
+- (void)setInvalidateBackgroundEntityManager:(NSNumber *)code {
+    @synchronized (_invalidatedBackgroundEntityManager) {
+        _invalidatedBackgroundEntityManager = code;
     }
 }
 
 - (void)performOnCurrentEntityManager:(void (^)(void))block {
-    @synchronized (_invalidatedBackgroundEntityManager) {
-        if ([_invalidatedBackgroundEntityManager isEqualToNumber:@YES]) {
-            @synchronized (_backgroundEntityManager) {
+    // Waiting for locks on the main thread is a bad idea in general
+    // But especially bad here because in order to leave the critical section
+    // `_backgroundEntityManager` might need to synchronously call into main thread
+    // itself causing this to deadlock.
+    if ([NSThread isMainThread] ) {
+        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
+            [self performOnCurrentEntityManager:block];
+        });
+    } else {
+        @synchronized (_backgroundEntityManager) {
+            if ([[self invalidatedBackgroundEntityManager] isEqualToNumber:@YES]) {
                 _backgroundEntityManager = [[EntityManager alloc] initWithChildContextForBackgroundProcess:YES];
-                _invalidatedBackgroundEntityManager = @NO;
+                [self setInvalidateBackgroundEntityManager:@NO];
+
+                [_backgroundEntityManager performBlockAndWait:block];
+
+            } else {
+                [_backgroundEntityManager performBlockAndWait:block];
             }
         }
-    }
-    @synchronized (_backgroundEntityManager) {
-        [_backgroundEntityManager performBlock:block];
     }
 }
 

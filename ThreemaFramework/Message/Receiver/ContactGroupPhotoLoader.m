@@ -44,7 +44,7 @@
     void(^onError)(NSError *error);
 }
 
-- (void)startWithBlobId:(NSData*)_blobId encryptionKey:(NSData*)_encryptionKey onCompletion:(void (^)(NSData *))_onCompletion onError:(void (^)(NSError *))_onError {
+- (void)startWithBlobId:(NSData*)_blobId encryptionKey:(NSData*)_encryptionKey origin:(BlobOrigin)origin onCompletion:(void (^)(NSData *))_onCompletion onError:(void (^)(NSError *))_onError {
     
     onCompletion = _onCompletion;
     onError = _onError;
@@ -52,8 +52,8 @@
     encryptionKey = _encryptionKey;
     
     /* Fetch image data */
-    BlobURL *blobUrl = [[BlobURL alloc] initWithServerConnector:[ServerConnector sharedServerConnector] userSettings:[UserSettings sharedUserSettings] localOrigin:false];
-    [blobUrl downloadWithBlobID:blobId completionHandler:^(NSURL * _Nullable downloadUrl, NSError * _Nullable error) {
+    BlobURL *blobUrl = [[BlobURL alloc] initWithServerConnector:[ServerConnector sharedServerConnector] userSettings:[UserSettings sharedUserSettings]];
+    [blobUrl downloadWithBlobID:blobId origin:origin completionHandler:^(NSURL * _Nullable downloadUrl, NSError * _Nullable error) {
         if (downloadUrl == nil) {
             onError(error);
             return;

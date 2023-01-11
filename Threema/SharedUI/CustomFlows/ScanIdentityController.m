@@ -176,7 +176,7 @@ static void soundCompletionCallback(SystemSoundID soundId, __unused void* __null
                 [self playSuccessSound];
                 [[ContactStore sharedContactStore] upgradeContact:existingContact toVerificationLevel:kVerificationLevelFullyVerified];
                 [self dismissContainingViewControllerFullyVerified:YES completion:^{
-                    [NotificationBannerHelper newInfoToastWithTitle:[BundleUtil localizedStringForKey:@"id_verified_title"] body:[NSString stringWithFormat:[BundleUtil localizedStringForKey:@"id_verified_message"], existingContact.displayName]];
+                    [[NotificationPresenterWrapper shared] presentIDVerified];
                     [[NSNotificationCenter defaultCenter] postNotificationName:kNotificationShowContact object:nil userInfo:@{kKeyContact: existingContact}];
                 }];
             }
@@ -202,7 +202,7 @@ static void soundCompletionCallback(SystemSoundID soundId, __unused void* __null
                         
                         [UIAlertTemplate showAlertWithOwner:[[AppDelegate sharedAppDelegate] currentTopViewController] title:[BundleUtil localizedStringForKey:@"public_key_server_mismatch_title"] message:[BundleUtil localizedStringForKey:@"public_key_server_mismatch_message"] actionOk:nil];
                     } else {
-                        [[ContactStore sharedContactStore] addContactWithIdentity:scannedIdentity publicKey:publicKey cnContactId:nil verificationLevel:kVerificationLevelFullyVerified state:state type:type featureMask:featureMask alerts:YES onCompletion:^(Contact * _Nullable contact) {
+                        [[ContactStore sharedContactStore] addContactWithIdentity:scannedIdentity publicKey:publicKey cnContactId:nil verificationLevel:kVerificationLevelFullyVerified state:state type:type featureMask:featureMask acquaintanceLevel:ContactAcquaintanceLevelDirect alerts:YES onCompletion:^(Contact * _Nullable contact) {
 
                             if (contact == nil) {
                                 DDLogError(@"Unable to store scanned contact: %@", scannedIdentity);

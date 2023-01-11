@@ -140,14 +140,14 @@ final class DetailsHeaderProfileView: UIStackView {
     private lazy var threemaTypeIcon: UIButton = {
         let button = UIButton()
         
-        button.setImage(ThreemaUtilityObjC.threemaTypeIcon(), for: .normal)
+        button.setImage(ThreemaUtility.otherThreemaTypeIcon, for: .normal)
         button.isHidden = true
         // Aspect ratio: 1:1
         button.widthAnchor.constraint(equalTo: button.heightAnchor).isActive = true
         
         button.addTarget(self, action: #selector(showThreemaTypeInfo(autoDismiss:)), for: .touchUpInside)
         
-        button.accessibilityLabel = ThreemaUtilityObjC.threemaTypeIconAccessibilityLabel()
+        button.accessibilityLabel = ThreemaUtility.otherThreemaTypeAccessibilityLabel
         button.accessibilityIgnoresInvertColors = true
         
         return button
@@ -396,7 +396,7 @@ final class DetailsHeaderProfileView: UIStackView {
         get {
             var threemaTypeIconAccessibilityLabel = ""
             if !threemaTypeIcon.isHidden {
-                threemaTypeIconAccessibilityLabel = ThreemaUtilityObjC.threemaTypeIconAccessibilityLabel()
+                threemaTypeIconAccessibilityLabel = ThreemaUtility.otherThreemaTypeAccessibilityLabel
             }
             
             return [

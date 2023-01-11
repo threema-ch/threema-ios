@@ -65,6 +65,8 @@
     _headerView.frame = _headerPlaceholderView.bounds;
     [_headerPlaceholderView addSubview: _headerView];
     
+    [_doneButton setTitle:[BundleUtil localizedStringForKey:@"Done"]];
+    
     if ([_ballot isClosed]) {
         [self setTitle:[BundleUtil localizedStringForKey:@"ballot_results"]];
     } else {
@@ -117,6 +119,11 @@
     _matrixView.ballot = _ballot;
     
     [_resultView addSubview: _matrixView];
+}
+
+
+- (IBAction)dismiss:(id)sender {
+    [self.navigationController dismissViewControllerAnimated:YES completion:nil];
 }
 
 @end

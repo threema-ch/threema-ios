@@ -24,6 +24,11 @@ import UIKit
 /// Quote content stack
 final class MessageQuoteStackView: UIStackView {
     
+    enum ThumbnailDistribution {
+        case fill
+        case spaced
+    }
+    
     /// Message to quote
     ///
     /// Reset it when the message had any changes to update the displayed quote
@@ -32,128 +37,223 @@ final class MessageQuoteStackView: UIStackView {
             guard let quoteMessage = quoteMessage else {
                 return
             }
+            
             updateQuote(quoteMessage: quoteMessage)
         }
     }
     
-    // MARK: - Properties
+    /// If set to `.spaced` the `MessageQuoteStackView` will use the maximum allowed width for space between name / text and thumbnail for this cell
+    /// Don't use this if there is no thumbnail.
+    /// Defaults to no spacing.
+    var thumbnailDistribution: ThumbnailDistribution = .fill {
+        didSet {
+            switch thumbnailDistribution {
+            case .fill:
+                removeArrangedSubview(spacerView)
+            case .spaced:
+                if !arrangedSubviews.contains(where: { $0 == spacerView }) {
+                    insertArrangedSubview(spacerView, at: 2)
+                }
+            }
+        }
+    }
+    
+    // MARK: - Private properties
     
     private lazy var quoteBar: UIView = {
         let barView = UIView()
+        
         barView.layer.cornerRadius = ChatViewConfiguration.Quote.quoteBarWidth / 2
+        
         barView.widthAnchor.constraint(equalToConstant: ChatViewConfiguration.Quote.quoteBarWidth).isActive = true
+        
         return barView
+    }()
+    
+    private lazy var nameLabel: RTLAligningLabel = {
+        let nameLabel = RTLAligningLabel()
+        nameLabel.font = ChatViewConfiguration.Quote.nameFont
+        nameLabel.adjustsFontForContentSizeCategory = true
+        nameLabel.numberOfLines = 0
+      
+        return nameLabel
+    }()
+    
+    private lazy var quoteLabel: RTLAligningLabel = {
+        let quoteLabel = RTLAligningLabel()
+        quoteLabel.adjustsFontForContentSizeCategory = true
+        quoteLabel.numberOfLines = ChatViewConfiguration.Quote.maxQuoteLines
+        
+        return quoteLabel
     }()
     
     private lazy var nameAndQuoteStackView: UIStackView = {
         let stackView = UIStackView(arrangedSubviews: [nameLabel, quoteLabel])
+        
         stackView.axis = .vertical
+
         return stackView
     }()
     
-    private lazy var nameLabel: UILabel = {
-        let nameLabel = UILabel()
-        nameLabel.font = ChatViewConfiguration.Quote.nameFont
-        nameLabel.adjustsFontForContentSizeCategory = true
-        nameLabel.numberOfLines = 0
-        return nameLabel
+    private lazy var spacerView: UIView = {
+        let spacerView = UIView()
+        
+        let spacerViewWidthConstraint = spacerView.widthAnchor.constraint(equalToConstant: .greatestFiniteMagnitude)
+        spacerViewWidthConstraint.priority = .defaultLow
+        spacerViewWidthConstraint.isActive = true
+        
+        return spacerView
     }()
     
-    private lazy var quoteLabel: UILabel = {
-        let quoteLabel = UILabel()
-        quoteLabel.font = ChatViewConfiguration.Quote.quoteFont
-        quoteLabel.adjustsFontForContentSizeCategory = true
-        quoteLabel.numberOfLines = 0
-        return quoteLabel
+    private lazy var quoteThumbnailView: UIImageView = {
+        let thumbnailView = UIImageView(image: nil)
+
+        thumbnailView.contentMode = .scaleAspectFill
+        thumbnailView.clipsToBounds = true
+
+        thumbnailView.layer.cornerRadius = ChatViewConfiguration.Quote.thumbnailCornerRadius
+        thumbnailView.layer.cornerCurve = .continuous
+
+        thumbnailView.heightAnchor.constraint(lessThanOrEqualToConstant: scaledSize).isActive = true
+        thumbnailView.widthAnchor.constraint(equalTo: thumbnailView.heightAnchor).isActive = true
+        thumbnailView.setContentHuggingPriority(.defaultHigh, for: .horizontal)
+        
+        thumbnailView.accessibilityIgnoresInvertColors = true
+        
+        return thumbnailView
     }()
+    
+    private lazy var playButtonView = BlurCircleView(sfSymbolName: "play.fill", configuration: .thumbnail)
+    
+    private lazy var playButtonViewConstraints = [
+        playButtonView.centerXAnchor.constraint(equalTo: quoteThumbnailView.centerXAnchor),
+        playButtonView.centerYAnchor.constraint(equalTo: quoteThumbnailView.centerYAnchor),
+    ]
+    
+    private var scaledSize: CGFloat {
+        let defaultSize: CGFloat = ChatViewConfiguration.Quote.thumbnailDefaultSize
+        return UIFontMetrics(forTextStyle: .footnote).scaledValue(for: defaultSize)
+    }
     
     // MARK: - Lifecycle
     
     override init(frame: CGRect) {
         super.init(frame: frame)
         configureStackView()
-    }
-    
-    required init(coder: NSCoder) {
-        super.init(coder: coder)
-        configureStackView()
+        configureLayout()
+        
+        updateContent()
+        updateLayout()
     }
     
     convenience init() {
         self.init(frame: .zero)
     }
     
+    @available(*, unavailable)
+    required init(coder: NSCoder) {
+        fatalError("Not implemented")
+    }
+
+    // MARK: - Configuration
+    
     private func configureStackView() {
         axis = .horizontal
-        spacing = ChatViewConfiguration.Quote
-            .quoteBarTextDistance
+        spacing = ChatViewConfiguration.Quote.quoteBarTextDistance
+        alignment = .top
         
+        isLayoutMarginsRelativeArrangement = true
+
         // Add subviews
         addArrangedSubview(quoteBar)
         addArrangedSubview(nameAndQuoteStackView)
+        addArrangedSubview(quoteThumbnailView)
     }
     
+    private func configureLayout() {
+        // Quote Bar
+        NSLayoutConstraint.activate([
+            quoteBar.topAnchor.constraint(equalTo: layoutMarginsGuide.topAnchor),
+            quoteBar.bottomAnchor.constraint(equalTo: layoutMarginsGuide.bottomAnchor),
+        ])
+    }
+    
+    // MARK: - Updates
+
     private func updateQuote(quoteMessage: QuoteMessage) {
-        
-        // Assign Values
-        nameLabel.text = quoteMessage.quotedSender
-        quoteLabel.attributedText = attributedText(for: quoteMessage)
+        // Assign Values & configure layout
+        nameLabel.text = quoteMessage.localizedSenderName
+        updateQuoteBarColor()
+
+        updateContent()
+        updateLayout()
     }
     
     func updateColors() {
-        quoteBar.backgroundColor = Colors.primary
+        updateQuoteBarColor()
+        
+        // The image in the quote only gets updated if we set it new again
+        updateContent()
         
         Colors.setTextColor(Colors.textLight, label: nameLabel)
-        // We need to assign the text of the quote label again to update the color of the icon properly
-        quoteLabel.attributedText = attributedText(for: quoteMessage)
         Colors.setTextColor(Colors.textLight, label: quoteLabel)
     }
     
-    /// Creates a trimmed attributed from a quoteMessage
-    /// - Parameters:
-    ///   - quoteMessage: Message to get text from
-    /// - Returns: AttributedString with an optional icon
-    private func attributedText(for quoteMessage: QuoteMessage?) -> NSAttributedString? {
-        let quoteText: String
-        let quoteIconName: String?
-        
-        // Assign values depending on type of quoted message
-        switch quoteMessage?.quoteMessageType {
-        case let .text(text):
-            quoteText = text
-            quoteIconName = nil
-            
-        case let .location(text, iconName), let .ballot(text, iconName), let .error(text, iconName):
-            quoteText = text
-            quoteIconName = iconName
-            
-            // TODO: Add other message types
-            
-        default:
-            return nil
-        }
-        
-        // Trim text as swift string to prevent emoji cropping
-        let trimmedText = String(quoteText.prefix(ChatViewConfiguration.Quote.maxQuoteLength))
-        let attributedText = NSMutableAttributedString(string: trimmedText)
+    private func updateQuoteBarColor() {
+        quoteBar.backgroundColor = quoteMessage?.senderIDColor ?? Colors.primary
+    }
     
-        // If icon can't be found, we just return the text
-        guard let iconName = quoteIconName,
-              let image = UIImage(systemName: iconName) else {
-            return attributedText
-        }
-            
-        // Create string containing icon
-        let icon = NSTextAttachment()
-        icon.image = image.withConfiguration(ChatViewConfiguration.Quote.symbolConfiguration)
-            .withTint(Colors.textLight)
-        let iconString = NSAttributedString(attachment: icon)
-            
-        // Add icon and empty space to text
-        let attributedSpace = NSAttributedString(string: " ")
-        attributedText.insert(attributedSpace, at: 0)
-        attributedText.insert(iconString, at: 0)
+    private func updateContent() {
         
-        return attributedText
+        guard let quoteMessage = quoteMessage else {
+            return
+        }
+        
+        if nameLabel.text != nil {
+            nameAndQuoteStackView.spacing = ChatViewConfiguration.Quote.quoteNameTextDistance
+        }
+        else {
+            nameAndQuoteStackView.spacing = 0
+        }
+        
+        quoteLabel.attributedText = quoteMessage.previewAttributedText(for: .quote)
+        
+        // We need to set the font explicitly to make the label set its height correctly
+        quoteLabel.font = PreviewableMessageConfiguration.quote.font
+        
+        if let (thumbnail, _) = quoteMessage.mediaPreview {
+            quoteThumbnailView.image = thumbnail
+        }
+    }
+    
+    private func updateLayout() {
+        
+        // Don't show thumbnail with accessibility fonts
+        if traitCollection.preferredContentSizeCategory.isAccessibilityCategory {
+            playButtonView.removeFromSuperview()
+            quoteThumbnailView.image = nil
+            quoteThumbnailView.isHidden = true
+            return
+        }
+        
+        if let (_, isPlayable) = quoteMessage?.mediaPreview {
+            
+            quoteThumbnailView.isHidden = false
+
+            if isPlayable {
+                playButtonView.translatesAutoresizingMaskIntoConstraints = false
+                quoteThumbnailView.addSubview(playButtonView)
+                NSLayoutConstraint.activate(playButtonViewConstraints)
+            }
+            else {
+                playButtonView.removeFromSuperview()
+            }
+        }
+        else {
+            // Reset everything concerning the thumbnail
+            playButtonView.removeFromSuperview()
+            quoteThumbnailView.image = nil
+            quoteThumbnailView.isHidden = true
+        }
     }
 }

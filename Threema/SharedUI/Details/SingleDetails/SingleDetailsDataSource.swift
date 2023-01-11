@@ -19,8 +19,8 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import CocoaLumberjackSwift
-import DiffableDataSources
 import PromiseKit
+import ThreemaFramework
 
 extension SingleDetailsDataSource {
     struct Configuration {
@@ -29,7 +29,7 @@ extension SingleDetailsDataSource {
     }
 }
 
-final class SingleDetailsDataSource: TableViewDiffableDataSource<SingleDetails.Section, SingleDetails.Row> {
+final class SingleDetailsDataSource: UITableViewDiffableDataSource<SingleDetails.Section, SingleDetails.Row> {
     
     // MARK: - Properties
     
@@ -84,7 +84,7 @@ final class SingleDetailsDataSource: TableViewDiffableDataSource<SingleDetails.S
     @available(*, unavailable)
     override init(
         tableView: UITableView,
-        cellProvider: @escaping TableViewDiffableDataSource<SingleDetails.Section, SingleDetails.Row>.CellProvider
+        cellProvider: @escaping UITableViewDiffableDataSource<SingleDetails.Section, SingleDetails.Row>.CellProvider
     ) {
         fatalError("Just use init(tableView:).")
     }
@@ -162,7 +162,7 @@ final class SingleDetailsDataSource: TableViewDiffableDataSource<SingleDetails.S
     
     /// This only should be called once. We'll register an observer for every call
     func configureData() {
-        var snapshot = DiffableDataSourceSnapshot<SingleDetails.Section, SingleDetails.Row>()
+        var snapshot = NSDiffableDataSourceSnapshot<SingleDetails.Section, SingleDetails.Row>()
         
         if case let .conversationDetails(contact: _, conversation: conversation) = state {
             // This is the only table view section that is not shown in contact details
@@ -176,7 +176,7 @@ final class SingleDetailsDataSource: TableViewDiffableDataSource<SingleDetails.S
     }
     
     // Sections are shown independent of `state`
-    private func appendDefaultSection(to snapshot: inout DiffableDataSourceSnapshot<
+    private func appendDefaultSection(to snapshot: inout NSDiffableDataSourceSnapshot<
         SingleDetails.Section,
         SingleDetails.Row
     >) {
@@ -198,6 +198,10 @@ final class SingleDetailsDataSource: TableViewDiffableDataSource<SingleDetails.S
         snapshot.appendItems(notificationRows)
         snapshot.appendSections([.privacySettings])
         snapshot.appendItems(privacySettingsActions)
+        if ThreemaUtility.supportsForwardSecurity {
+            snapshot.appendSections([.fsActions])
+            snapshot.appendItems(fsActions)
+        }
         snapshot.appendSections([.shareAction])
         snapshot.appendItems(shareRows)
         snapshot.appendSections([.contactActions])
@@ -247,6 +251,8 @@ final class SingleDetailsDataSource: TableViewDiffableDataSource<SingleDetails.S
                 localSnapshot.appendItems(contactActions, toSection: .contactActions)
             case .privacySettings:
                 localSnapshot.appendItems(privacySettingsActions, toSection: .privacySettings)
+            case .fsActions:
+                localSnapshot.appendItems(fsActions, toSection: .fsActions)
             default:
                 fatalError("Unable to update section: \(section)")
             }
@@ -277,6 +283,9 @@ final class SingleDetailsDataSource: TableViewDiffableDataSource<SingleDetails.S
                 return BundleUtil.localizedString(forKey: "contact_removed_from_profile_picture_list")
             }
         }
+        else if section == .fsActions {
+            return BundleUtil.localizedString(forKey: "forward_security_explainer_footer")
+        }
         
         return nil
     }
@@ -290,8 +299,8 @@ extension SingleDetailsDataSource {
         switch state {
         case .contactDetails(contact: _):
             return contactQuickActions(in: viewController)
-        case .conversationDetails(contact: _, conversation: _):
-            return conversationQuickActions(in: viewController)
+        case let .conversationDetails(contact: _, conversation: conversation):
+            return conversationQuickActions(in: viewController, for: conversation)
         }
     }
     
@@ -322,14 +331,73 @@ extension SingleDetailsDataSource {
         return contactDetailsQuickActions
     }
     
-    private func conversationQuickActions(in viewController: UIViewController) -> [QuickAction] {
+    private func conversationQuickActions(
+        in viewController: UIViewController,
+        for conversation: Conversation
+    ) -> [QuickAction] {
         var conversationDetailsQuickActions = [QuickAction]()
         
         conversationDetailsQuickActions.append(doNotDisturbQuickAction(in: viewController))
+        conversationDetailsQuickActions.append(contentsOf: searchChatQuickAction(in: viewController, for: conversation))
         conversationDetailsQuickActions.append(contentsOf: callQuickAction(in: viewController))
         conversationDetailsQuickActions.append(contentsOf: scanIdentityQuickAction(in: viewController))
         
         return conversationDetailsQuickActions
+    }
+    
+    private func doNotDisturbQuickAction(in viewController: UIViewController) -> QuickAction {
+        
+        let dndImageNameProvider: QuickAction.ImageNameProvider = { [weak self] in
+            guard let strongSelf = self else {
+                return "bell.fill"
+            }
+            
+            let pushSetting = PushSetting(for: strongSelf.contact)
+            return pushSetting.sfSymbolNameForPushSetting
+        }
+        
+        return QuickAction(
+            imageNameProvider: dndImageNameProvider,
+            title: BundleUtil.localizedString(forKey: "doNotDisturb_title")
+        ) { [weak self, weak viewController] quickAction in
+            guard let strongSelf = self,
+                  let strongViewController = viewController
+            else {
+                return
+            }
+            
+            let dndViewController = DoNotDisturbViewController(for: strongSelf.contact) { _ in
+                quickAction.reload()
+                strongSelf.reload(sections: [.notifications])
+            }
+            let dndNavigationController = ThemedNavigationController(rootViewController: dndViewController)
+            dndNavigationController.modalPresentationStyle = .formSheet
+            
+            strongViewController.present(dndNavigationController, animated: true)
+        }
+    }
+    
+    private func searchChatQuickAction(
+        in viewController: UIViewController,
+        for conversation: Conversation
+    ) -> [QuickAction] {
+        let messageFetcher = MessageFetcher(for: conversation, with: entityManager)
+        guard messageFetcher.count() > 0 else {
+            return []
+        }
+        
+        guard let singleDetailsViewController = viewController as? SingleDetailsViewController else {
+            return []
+        }
+        
+        let quickAction = QuickAction(
+            imageName: "magnifyingglass",
+            title: BundleUtil.localizedString(forKey: "search")
+        ) { [weak singleDetailsViewController] _ in
+            singleDetailsViewController?.startChatSearch()
+        }
+        
+        return [quickAction]
     }
     
     private func callQuickAction(in viewController: UIViewController) -> [QuickAction] {
@@ -382,38 +450,6 @@ extension SingleDetailsDataSource {
         }
         
         return [quickAction]
-    }
-    
-    private func doNotDisturbQuickAction(in viewController: UIViewController) -> QuickAction {
-        
-        let dndImageNameProvider: QuickAction.ImageNameProvider = { [weak self] in
-            guard let strongSelf = self else {
-                return "bell.fill"
-            }
-            
-            let pushSetting = PushSetting(for: strongSelf.contact)
-            return pushSetting.sfSymbolNameForPushSetting
-        }
-        
-        return QuickAction(
-            imageNameProvider: dndImageNameProvider,
-            title: BundleUtil.localizedString(forKey: "doNotDisturb_title")
-        ) { [weak self, weak viewController] quickAction in
-            guard let strongSelf = self,
-                  let strongViewController = viewController
-            else {
-                return
-            }
-            
-            let dndViewController = DoNotDisturbViewController(for: strongSelf.contact) { _ in
-                quickAction.reload()
-                strongSelf.reload(sections: [.notifications])
-            }
-            let dndNavigationController = ThemedNavigationController(rootViewController: dndViewController)
-            dndNavigationController.modalPresentationStyle = .formSheet
-            
-            strongViewController.present(dndNavigationController, animated: true)
-        }
     }
     
     private func scanIdentityQuickAction(in viewController: UIViewController) -> [QuickAction] {
@@ -475,8 +511,11 @@ extension SingleDetailsDataSource {
             quickActions.append(mediaQuickAction(for: conversation, in: viewController))
         }
         
-        // TODO: Implement!
-        // quickActions.append(contentsOf: ballotsQuickAction(for: conversation, in: viewController))
+        entityManager.performBlockAndWait {
+            if self.entityManager.entityFetcher.countBallots(for: conversation) > 0 {
+                quickActions.append(contentsOf: self.ballotsQuickAction(for: conversation, in: viewController))
+            }
+        }
         
         return quickActions
     }
@@ -503,11 +542,7 @@ extension SingleDetailsDataSource {
         for conversation: Conversation,
         in viewController: UIViewController
     ) -> [QuickAction] {
-        guard entityManager.entityFetcher.countBallots(for: conversation) > 0 else {
-            return []
-        }
         
-        // This will fix itself when "IOS-1683" is implemented
         let localizedBallotsString = BundleUtil.localizedString(forKey: "ballots")
         
         return [QuickAction(
@@ -520,8 +555,11 @@ extension SingleDetailsDataSource {
             
             guard let ballotViewController = BallotListTableViewController.ballotListViewController(for: conversation)
             else {
-                // TODO: Localize String
-                UIAlertTemplate.showAlert(owner: weakViewController, title: "Polls unavailable", message: nil)
+                UIAlertTemplate.showAlert(
+                    owner: weakViewController,
+                    title: BundleUtil.localizedString(forKey: "ballot_load_error"),
+                    message: nil
+                )
                 return
             }
             
@@ -620,7 +658,6 @@ extension SingleDetailsDataSource {
                         strongSelf.entityManager.performSyncBlockAndSafe {
                             _ = strongSelf.entityManager.entityDestroyer
                                 .deleteMessages(of: conversation)
-                            conversation.lastMessage = nil
                             strongSelf.reload(sections: [.contentActions])
                         }
                     }
@@ -718,94 +755,6 @@ extension SingleDetailsDataSource {
         return rows
     }
     
-    private var shareRows: [SingleDetails.Row] {
-        let shareAction = Details.Action(
-            title: BundleUtil.localizedString(forKey: "share_contact_id_button")
-        ) { [weak self, weak singleDetailsViewController] cell in
-            guard let strongSelf = self,
-                  let strongSingleDetailsViewController = singleDetailsViewController
-            else {
-                return
-            }
-            
-            let identity = strongSelf.contact.identity
-            
-            // Pick up activity items
-            var activityItems = [Any]()
-            
-            let contactShareLink = "\(THREEMA_ID_SHARE_LINK)\(identity)"
-            if let url = URL(string: contactShareLink) {
-                activityItems.append(url)
-            }
-            else {
-                activityItems.append(contactShareLink)
-            }
-            
-            activityItems.append(strongSelf.contact.displayName)
-            
-            // Create our Share Sheet
-            let activityViewController = UIActivityViewController(
-                activityItems: activityItems,
-                applicationActivities: nil
-            )
-            
-            // Show
-            ModalPresenter.present(
-                activityViewController,
-                on: strongSingleDetailsViewController,
-                from: cell.frame,
-                in: strongSingleDetailsViewController.view
-            )
-        }
-        
-        return [.action(shareAction)]
-    }
-    
-    private var contactActions: [SingleDetails.Row] {
-        
-        let blockContactBooleanAction = Details.BooleanAction(
-            title: BundleUtil.localizedString(forKey: "block_contact"),
-            destructive: true,
-            boolProvider: { [weak self] in
-                self?.contact.isBlocked ?? false
-            }, action: { [weak self, weak singleDetailsViewController] isSet in
-                guard let strongSelf = self,
-                      let strongSingleDetailsViewController = singleDetailsViewController
-                else {
-                    return
-                }
-                
-                strongSelf.contact.block(isSet, in: strongSingleDetailsViewController)
-                    .catch { error in
-                        DDLogWarn("Unable to block contact: \(error.localizedDescription)")
-                        
-                        // Reset block state if we could not save the current state
-                        strongSelf.refresh(sections: [.contactActions])
-                    }
-            }
-        )
-        
-        let deleteContactAction = Details.Action(
-            title: BundleUtil.localizedString(forKey: "delete_contact_button"),
-            imageName: nil,
-            destructive: true
-        ) { [weak self, weak singleDetailsViewController] view in
-            guard let strongSelf = self,
-                  let strongSingleDetailsViewController = singleDetailsViewController
-            else {
-                return
-            }
-            
-            let action = DeleteContactAction(for: strongSelf.contact)
-            action.execute(in: view, of: strongSingleDetailsViewController)
-        }
-        
-        return [
-            .booleanAction(blockContactBooleanAction),
-            .action(deleteContactAction),
-        ]
-    }
-    
     private var privacySettingsActions: [SingleDetails.Row] {
         var rows = [SingleDetails.Row]()
         
@@ -843,7 +792,10 @@ extension SingleDetailsDataSource {
             }
             
             let action3 = UIAlertAction(
-                title: String(format: BundleUtil.localizedString(forKey: "use_default_send"), defaultString),
+                title: String.localizedStringWithFormat(
+                    BundleUtil.localizedString(forKey: "use_default_send"),
+                    defaultString
+                ),
                 style: .default
             ) { _ in
                 strongSelf.entityManager.performSyncBlockAndSafe {
@@ -898,7 +850,10 @@ extension SingleDetailsDataSource {
             }
             
             let action3 = UIAlertAction(
-                title: String(format: BundleUtil.localizedString(forKey: "use_default_send"), defaultString),
+                title: String.localizedStringWithFormat(
+                    BundleUtil.localizedString(forKey: "use_default_send"),
+                    defaultString
+                ),
                 style: .default
             ) { _ in
                 strongSelf.entityManager.performSyncBlockAndSafe {
@@ -956,23 +911,188 @@ extension SingleDetailsDataSource {
                     return
                 }
                 ContactPhotoSender(BusinessInjector().entityManager).startWithImage(toMember: strongSelf.contact) {
-                    NotificationBannerHelper.newInfoToast(
-                        title: BundleUtil.localizedString(forKey: "my_profile_picture_title"),
-                        body: BundleUtil.localizedString(forKey: "contact_send_profile_picture_success")
-                    )
+                    NotificationPresenterWrapper.shared.present(type: .profilePictureSentSuccess)
                 } onError: { error in
                     DDLogError("Unable to send profile picture on user request: \(error?.localizedDescription ?? "")")
                     
-                    NotificationBannerHelper.newErrorToast(
-                        title: BundleUtil.localizedString(forKey: "my_profile_picture_title"),
-                        body: BundleUtil.localizedString(forKey: "contact_send_profile_picture_error")
-                    )
+                    NotificationPresenterWrapper.shared.present(type: .profilePictureSentError)
                 }
             }
             rows.append(.action(sendPictureNowAction))
         }
         
         return rows
+    }
+    
+    private var shareRows: [SingleDetails.Row] {
+        let shareAction = Details.Action(
+            title: BundleUtil.localizedString(forKey: "share_contact_id_button")
+        ) { [weak self, weak singleDetailsViewController] cell in
+            guard let strongSelf = self,
+                  let strongSingleDetailsViewController = singleDetailsViewController
+            else {
+                return
+            }
+            
+            let identity = strongSelf.contact.identity
+            
+            // Pick up activity items
+            var activityItems = [Any]()
+            
+            let contactShareLink = "\(THREEMA_ID_SHARE_LINK)\(identity)"
+            if let url = URL(string: contactShareLink) {
+                activityItems.append(url)
+            }
+            else {
+                activityItems.append(contactShareLink)
+            }
+            
+            activityItems.append(strongSelf.contact.displayName)
+            
+            // Create our Share Sheet
+            let activityViewController = UIActivityViewController(
+                activityItems: activityItems,
+                applicationActivities: nil
+            )
+            
+            // Show
+            ModalPresenter.present(
+                activityViewController,
+                on: strongSingleDetailsViewController,
+                from: cell.frame,
+                in: strongSingleDetailsViewController.view
+            )
+        }
+        
+        return [.action(shareAction)]
+    }
+    
+    private var contactActions: [SingleDetails.Row] {
+        let blockContactBooleanAction = Details.BooleanAction(
+            title: BundleUtil.localizedString(forKey: "block_contact"),
+            destructive: true,
+            boolProvider: { [weak self] in
+                self?.contact.isBlocked ?? false
+            }, action: { [weak self, weak singleDetailsViewController] isSet in
+                guard let strongSelf = self,
+                      let strongSingleDetailsViewController = singleDetailsViewController
+                else {
+                    return
+                }
+                
+                strongSelf.contact.block(isSet, in: strongSingleDetailsViewController)
+                    .catch { error in
+                        DDLogWarn("Unable to block contact: \(error.localizedDescription)")
+                        
+                        // Reset block state if we could not save the current state
+                        strongSelf.refresh(sections: [.contactActions])
+                    }
+            }
+        )
+        
+        let deleteContactAction = Details.Action(
+            title: BundleUtil.localizedString(forKey: "delete_contact_button"),
+            imageName: nil,
+            destructive: true
+        ) { [weak self, weak singleDetailsViewController] view in
+            guard let strongSelf = self,
+                  let strongSingleDetailsViewController = singleDetailsViewController
+            else {
+                return
+            }
+            
+            let action = DeleteContactAction(for: strongSelf.contact)
+            action.execute(in: view, of: strongSingleDetailsViewController)
+        }
+        
+        var actions: [SingleDetails.Row] = []
+        actions.append(.booleanAction(blockContactBooleanAction))
+        actions.append(.action(deleteContactAction))
+        return actions
+    }
+    
+    private var fsActions: [SingleDetails.Row] {
+        let forwardSecurityBooleanAction = Details.BooleanAction(
+            title: BundleUtil.localizedString(forKey: "forward_security"),
+            destructive: false,
+            disabled: !contact.isForwardSecurityAvailable(),
+            boolProvider: { [weak self] in
+                self?.contact.forwardSecurityEnabled.boolValue ?? false
+            }, action: { [weak self] isEnabled in
+                guard let strongSelf = self else {
+                    return
+                }
+                
+                strongSelf.entityManager.performSyncBlockAndSafe {
+                    strongSelf.contact.forwardSecurityEnabled = isEnabled as NSNumber
+                    strongSelf.refresh(sections: [.fsActions])
+                    
+                    // Post a system message if possible
+                    
+                    guard case let .conversationDetails(_, conversation) = strongSelf.state else {
+                        // Only post a system message if there exists a conversation with this contact
+                        return
+                    }
+                    
+                    guard let systemMessage = strongSelf.entityManager.entityCreator.systemMessage(for: conversation)
+                    else {
+                        DDLogNotice("Unable to create system message for changing PFS state")
+                        return
+                    }
+                    
+                    if isEnabled {
+                        systemMessage.type = NSNumber(value: kSystemMessageFsEnabledOutgoing)
+                    }
+                    else {
+                        systemMessage.type = NSNumber(value: kSystemMessageFsDisabledOutgoing)
+                    }
+                    
+                    conversation.lastMessage = systemMessage
+                    conversation.lastUpdate = Date()
+                }
+            }
+        )
+        
+        var fsClearSessionsDisabled = true
+        do {
+            fsClearSessionsDisabled = try BusinessInjector().dhSessionStore
+                .bestDHSession(myIdentity: MyIdentityStore.shared().identity, peerIdentity: contact.identity) == nil
+        }
+        catch {
+            DDLogWarn("Could not check DH store: \(error)")
+        }
+        
+        let clearForwardSecurityAction = Details.Action(
+            title: BundleUtil.localizedString(forKey: "forward_security_clear_sessions"),
+            imageName: nil,
+            destructive: false,
+            disabled: fsClearSessionsDisabled
+        ) { [weak self] _ in
+            guard let strongSelf = self else {
+                return
+            }
+            
+            DispatchQueue.main.async {
+                do {
+                    try BusinessInjector().dhSessionStore.deleteAllDHSessions(
+                        myIdentity: MyIdentityStore.shared().identity,
+                        peerIdentity: strongSelf.contact.identity
+                    )
+                    strongSelf.reload(sections: [.fsActions])
+                    strongSelf.refresh(sections: [.fsActions])
+                }
+                catch {
+                    DDLogWarn("Could not delete DH sessions: \(error)")
+                }
+            }
+        }
+        
+        var actions: [SingleDetails.Row] = []
+        actions.append(.booleanAction(forwardSecurityBooleanAction))
+        if ThreemaEnvironment.env() != .appStore {
+            actions.append(.action(clearForwardSecurityAction))
+        }
+        return actions
     }
 }
 

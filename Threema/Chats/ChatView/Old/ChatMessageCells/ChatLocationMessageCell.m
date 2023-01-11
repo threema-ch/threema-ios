@@ -26,6 +26,7 @@
 #import "UIImage+ColoredImage.h"
 #import "ActivityUtil.h"
 #import "BundleUtil.h"
+#import "Threema-Swift.h"
 
 #ifdef DEBUG
 static const DDLogLevel ddLogLevel = DDLogLevelInfo;
@@ -161,9 +162,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 - (void)speakMessage:(UIMenuController *)menuController {
     LocationMessage *locationMessage = (LocationMessage*)self.message;
     NSString *displayText = [ChatLocationMessageCell displayTextForLocationMessage:locationMessage];
-    AVSpeechUtterance *utterance = [AVSpeechUtterance speechUtteranceWithString:displayText];
-    AVSpeechSynthesizer *syn = [[AVSpeechSynthesizer alloc] init];
-    [syn speakUtterance:utterance];
+    [[[SpeechSynthesizerManger alloc] init] speak:displayText];
 }
 
 
@@ -201,6 +200,17 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 
 - (NSString *)textForQuote {
     return geocodeLabel.text;
+}
+
+- (void)resendMessage:(UIMenuController*)menuController {
+    EntityManager *entityManager = [[EntityManager alloc] init];
+    [entityManager performSyncBlockAndSafe:^{
+        LocationMessage *locationMessage = [[entityManager entityFetcher] existingObjectWithID:self.message.objectID];
+        locationMessage.id = [[NaClCrypto sharedCrypto] randomBytes:kMessageIdLen];
+    }];
+    
+    LocationMessage *locationMessage = (LocationMessage*)self.message;
+    [MessageSender sendBaseMessage:locationMessage];
 }
 
 @end

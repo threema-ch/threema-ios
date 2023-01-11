@@ -1,12 +1,3 @@
-syntax = "proto3";
-
-package join;
-
-option java_package = "ch.threema.protobuf.d2d.join";
-
-import "common.proto";
-import "md-d2d-sync.proto";
-
 // ## Device Join Protocol
 //
 // This protocol specifies how to add a new device to an existing device
@@ -22,7 +13,7 @@ import "md-d2d-sync.proto";
 //
 //     PSK = scrypt(
 //       password=<passphrase>,
-//       salt='3ma-mdev-join',
+//       salt=<random-32-byte-salt>,
 //       key-length=32,
 //       parameters={r=8, N=65536, p=1}
 //     )
@@ -83,8 +74,8 @@ import "md-d2d-sync.proto";
 // encrypted as defined by the Connection Rendezvous Protocol. All transmitted
 // messages are to be wrapped in:
 //
-// - `TowardsExistingDeviceEnvelope` when sending from ND to ED, and
-// - `TowardsNewDeviceEnvlope` when sending from ED to ND.
+// - `FromNewDeviceEnvelope` when sending from ND to ED, and
+// - `FromExistingDeviceEnvelope` when sending from ED to ND.
 //
 // #### Device Join Flow
 //
@@ -107,10 +98,18 @@ import "md-d2d-sync.proto";
 // the History Exchange Protocol. Any further messages ED receives from ND
 // will transition into the History Exchange Protocol.
 
+syntax = "proto3";
 
+package join;
 
-// Root message envelope for messages towards the existing device (ED).
-message TowardsExistingDeviceEnvelope {
+option java_package = "ch.threema.protobuf.d2d.join";
+
+import "common.proto";
+import "md-d2d-sync.proto";
+
+// Root message envelope for messages from the new device (ND) to the existing
+// device (ED).
+message FromNewDeviceEnvelope {
   // The enveloped message
   oneof content {
     Begin begin = 1;
@@ -118,8 +117,9 @@ message TowardsExistingDeviceEnvelope {
   }
 }
 
-// Root message envelope for messages towards the new device (ND).
-message TowardsNewDeviceEnvelope {
+// Root message envelope for messages from the existing device (ED) to the new
+// device (ND).
+message FromExistingDeviceEnvelope {
   // The enveloped message
   oneof content {
     common.BlobData blob_data = 1;
@@ -153,19 +153,17 @@ message Begin {}
 //    abort these steps.
 // 2. If any Blob ID is missing from the previously received set of
 //    `common.BlobData`, close the connection and abort these steps.
-// 3. If any `DeltaImage` is set to _unchanged_, close the connection and
-//    abort these steps.
-// 4. Store the data in the device's database.
-// 5. Generate a random Mediator Device ID and a random CSP Device ID and
+// 3. Store the data in the device's database.
+// 4. Generate a random Mediator Device ID and a random CSP Device ID and
 //    store both in the device's database.
-// 6. Establish a D2M connection by connecting to the provided mediator
+// 5. Establish a D2M connection by connecting to the provided mediator
 //    server.
-// 7. Wait until the `ServerInfo` has been received on the D2M connection.
+// 6. Wait until the `ServerInfo` has been received on the D2M connection.
 //    Validate that the provided `DeviceSlotState` is `NEW`. Otherwise, close
 //    both the D2M connection (normally) and the connection to ED and
 //    abort these steps.
-// 8. Send a `Registered` message to ED.
-// 9. Ask the user whether conversation history data should be requested from
+// 7. Send a `Registered` message to ED.
+// 8. Ask the user whether conversation history data should be requested from
 //    ND:
 //    1. If the user wants to request conversation history data from ED, leave
 //       the connection running and start the History Exchange Protocol. Abort
@@ -187,8 +185,8 @@ message EssentialData {
   }
   MediatorServer mediator_server = 1;
 
-  // The private key associated with the Threema ID
-  bytes private_key = 2;
+  // The secret client key associated with the Threema ID
+  bytes client_key = 2;
 
   // The user's profile
   sync.UserProfile user_profile = 3;

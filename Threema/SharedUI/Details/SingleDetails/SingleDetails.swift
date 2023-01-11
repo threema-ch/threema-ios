@@ -33,6 +33,7 @@ enum SingleDetails {
         case shareAction
         case contactActions
         case privacySettings
+        case fsActions
     }
     
     enum Row: Hashable {

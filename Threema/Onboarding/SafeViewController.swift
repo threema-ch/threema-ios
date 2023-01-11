@@ -123,8 +123,8 @@ import UIKit
                         .logString("Threema Safe: Can't check safe password because regex is invalid")
                     let alert = IntroQuestionViewHelper(parent: self, onAnswer: nil)
                     alert.showAlert(
-                        String(
-                            format: BundleUtil.localizedString(forKey: "password_bad_regex"),
+                        String.localizedStringWithFormat(
+                            BundleUtil.localizedString(forKey: "password_bad_regex"),
                             ThreemaApp.currentName
                         ),
                         title: BundleUtil.localizedString(forKey: "Password")

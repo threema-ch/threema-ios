@@ -33,7 +33,7 @@ class TaskExecutionSendBallotVoteMessageTests: XCTestCase {
 
     private var ddLoggerMock: DDLoggerMock!
 
-//    private var deviceGroupKeys: DeviceGroupKeys!
+    private var deviceGroupKeys: DeviceGroupKeys!
 
     override func setUpWithError() throws {
         // Necessary for ValidationLogger
@@ -47,24 +47,30 @@ class TaskExecutionSendBallotVoteMessageTests: XCTestCase {
         ddLoggerMock = DDLoggerMock()
         DDTTYLogger.sharedInstance?.logFormatter = LogFormatterCustom()
         DDLog.add(ddLoggerMock)
+
+        deviceGroupKeys = DeviceGroupKeys(
+            dgpk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
+            dgrk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
+            dgdik: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
+            dgsddk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
+            dgtsk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
+            deviceGroupIDFirstByteHex: "a1"
+        )
     }
 
     override func tearDownWithError() throws {
         DDLog.remove(ddLoggerMock)
     }
     
-    func testExecuteNoticeGroupTextMessageWithReflecting() throws {
+    func testExecuteNoticeGroupBallotVoteMessageWithReflecting() throws {
         let expectedReflectID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.messageIDLength)!
         let expectedReflectMessage = BytesUtility.generateRandomBytes(length: 16)!
-        let deviceGroupPathKey = BytesUtility.generateRandomBytes(length: Int(kDeviceGroupPathKeyLen))!
 
         let serverConnectorMock = ServerConnectorMock(
             connectionState: .loggedIn,
-            deviceID: BytesUtility
-                .generateRandomBytes(length: ThreemaProtocol.deviceIDLength)!,
-            deviceGroupPathKey: deviceGroupPathKey
+            deviceID: BytesUtility.generateRandomBytes(length: ThreemaProtocol.deviceIDLength)!,
+            deviceGroupKeys: deviceGroupKeys
         )
-        
         serverConnectorMock.reflectMessageClosure = { _ in
             if serverConnectorMock.connectionState == .loggedIn {
                 NotificationCenter.default.post(
@@ -90,7 +96,7 @@ class TaskExecutionSendBallotVoteMessageTests: XCTestCase {
             userSettings: UserSettingsMock(),
             serverConnector: serverConnectorMock,
             mediatorMessageProtocol: MediatorMessageProtocolMock(
-                deviceGroupPathKey: serverConnectorMock.deviceGroupPathKey,
+                deviceGroupKeys: serverConnectorMock.deviceGroupKeys!,
                 returnValues: [
                     MediatorMessageProtocolMock
                         .ReflectData(
@@ -101,7 +107,7 @@ class TaskExecutionSendBallotVoteMessageTests: XCTestCase {
             ),
             messageProcessor: MessageProcessorMock()
         )
-        
+
         var ballot: Ballot!
         var group: Group!
         
@@ -160,18 +166,17 @@ class TaskExecutionSendBallotVoteMessageTests: XCTestCase {
         }
     }
     
-    func testExecuteTextMessageWithReflecting() throws {
+    func testExecuteBallotVoteMessageWithReflecting() throws {
         let expectedMessageReflectID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.messageIDLength)!
         let expectedMessageReflect = BytesUtility.generateRandomBytes(length: 16)!
         let expectedMessageSentReflectID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.messageIDLength)!
         let expectedMessageSentReflect = BytesUtility.generateRandomBytes(length: 16)!
         var expectedReflectIDs = [expectedMessageReflectID, expectedMessageSentReflectID]
-        let deviceGroupPathKey = BytesUtility.generateRandomBytes(length: Int(kDeviceGroupPathKeyLen))!
         
         let serverConnectorMock = ServerConnectorMock(
             connectionState: .loggedIn,
             deviceID: BytesUtility.generateRandomBytes(length: ThreemaProtocol.deviceIDLength)!,
-            deviceGroupPathKey: deviceGroupPathKey
+            deviceGroupKeys: deviceGroupKeys
         )
         serverConnectorMock.reflectMessageClosure = { _ in
             if serverConnectorMock.connectionState == .loggedIn {
@@ -199,7 +204,7 @@ class TaskExecutionSendBallotVoteMessageTests: XCTestCase {
             userSettings: UserSettingsMock(),
             serverConnector: serverConnectorMock,
             mediatorMessageProtocol: MediatorMessageProtocolMock(
-                deviceGroupPathKey: serverConnectorMock.deviceGroupPathKey,
+                deviceGroupKeys: serverConnectorMock.deviceGroupKeys!,
                 returnValues: [
                     MediatorMessageProtocolMock.ReflectData(
                         id: expectedMessageReflectID,
@@ -267,20 +272,19 @@ class TaskExecutionSendBallotVoteMessageTests: XCTestCase {
         }
     }
     
-    func testExecuteGroupTextMessageWithReflecting() throws {
+    func testExecuteGroupBallotVoteMessageWithReflecting() throws {
         let expectedMessageReflectID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.messageIDLength)!
         let expectedMessageReflect = BytesUtility.generateRandomBytes(length: 16)!
         let expectedMessageSentReflectID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.messageIDLength)!
         let expectedMessageSentReflect = BytesUtility.generateRandomBytes(length: 16)!
         let expectedMembers: Set<String> = ["MEMBER01", "MEMBER02", "MEMBER03"]
         var expectedReflectIDs = [expectedMessageReflectID, expectedMessageSentReflectID]
-        let deviceGroupPathKey = BytesUtility.generateRandomBytes(length: Int(kDeviceGroupPathKeyLen))!
-        
+
         let userSettingsMock = UserSettingsMock(blacklist: ["MEMBER02"])
         let serverConnectorMock = ServerConnectorMock(
             connectionState: .loggedIn,
             deviceID: BytesUtility.generateRandomBytes(length: ThreemaProtocol.deviceIDLength)!,
-            deviceGroupPathKey: deviceGroupPathKey
+            deviceGroupKeys: deviceGroupKeys
         )
         serverConnectorMock.reflectMessageClosure = { _ in
             if serverConnectorMock.connectionState == .loggedIn {
@@ -308,7 +312,7 @@ class TaskExecutionSendBallotVoteMessageTests: XCTestCase {
             userSettings: userSettingsMock,
             serverConnector: serverConnectorMock,
             mediatorMessageProtocol: MediatorMessageProtocolMock(
-                deviceGroupPathKey: serverConnectorMock.deviceGroupPathKey,
+                deviceGroupKeys: serverConnectorMock.deviceGroupKeys!,
                 returnValues: [
                     MediatorMessageProtocolMock.ReflectData(
                         id: expectedMessageReflectID,

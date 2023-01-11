@@ -120,8 +120,10 @@ class MessagePermissionTests: XCTestCase {
             groupManager: GroupManagerMock(),
             entityManager: EntityManager(databaseContext: dbMainCnx)
         )
-
+        
         let reason = UnsafeMutablePointer<NSString?>.allocate(capacity: 2048)
+        var string: NSString?
+        reason.initialize(from: &string, count: 1)
         defer {
             reason.deallocate()
         }
@@ -157,6 +159,8 @@ class MessagePermissionTests: XCTestCase {
         )
 
         let reason = UnsafeMutablePointer<NSString?>.allocate(capacity: 2048)
+        var string: NSString?
+        reason.initialize(from: &string, count: 1)
         defer {
             reason.deallocate()
         }

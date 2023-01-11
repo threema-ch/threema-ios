@@ -32,8 +32,8 @@ class MediatorReflectedUserProfileSyncProcessor {
 
     func process(userProfileSync: D2d_UserProfileSync) -> Promise<Void> {
         switch userProfileSync.action {
-        case let .set(set):
-            return update(with: set.userProfile)
+        case let .update(sync):
+            return update(with: sync.userProfile)
         default:
             break
         }
@@ -50,7 +50,7 @@ class MediatorReflectedUserProfileSyncProcessor {
         .then { hasProfilePicture -> Promise<Data?> in
             if hasProfilePicture {
                 let downloader = ImageBlobDownloader(frameworkInjector: self.frameworkInjector)
-                return downloader.download(userProfile.profilePicture.updated.blob)
+                return downloader.download(userProfile.profilePicture.updated.blob, origin: .local)
             }
             else {
                 return Promise { $0.fulfill(nil) }

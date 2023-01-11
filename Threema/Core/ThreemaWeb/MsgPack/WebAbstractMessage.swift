@@ -683,7 +683,8 @@ public class WebAbstractMessage: NSObject {
                        message.id == requestMessage.messageID || foundMessageID {
                         readReceiptQueue.append(message)
                         if conversation.isGroup() {
-                            let key = message.sender.identity + message.id.hexEncodedString()
+                            // Quickfix: Sender should never be `nil` for incoming group messages
+                            let key = message.sender!.identity + message.id.hexEncodedString()
                             for stage in UserNotificationStage.allCases {
                                 readNotificationsKeys.append(key + "-\(stage)")
                             }
@@ -756,10 +757,7 @@ public class WebAbstractMessage: NSObject {
             if conversation.isGroup() {
                 if let groupDeliveryReceipts = baseMessage.groupDeliveryReceipts,
                    !groupDeliveryReceipts.isEmpty,
-                   let gdr = baseMessage.reaction(for: MyIdentityStore.shared().identity),
-                   gdr
-                   .deliveryReceiptType() ==
-                   (requestMessage.acknowledged ? .userAcknowledgment : .userDeclined) {
+                   baseMessage.isMyReaction(requestMessage.acknowledged ? .acknowledged : .declined) {
                     return
                 }
             }
@@ -786,7 +784,7 @@ public class WebAbstractMessage: NSObject {
                                 if conversation.isGroup() {
                                     let groupDeliveryReceipt = GroupDeliveryReceipt(
                                         identity: MyIdentityStore.shared().identity,
-                                        deliveryReceiptType: .userAcknowledgment,
+                                        deliveryReceiptType: .acknowledged,
                                         date: Date()
                                     )
                                     baseMessage.add(groupDeliveryReceipt: groupDeliveryReceipt)
@@ -809,7 +807,7 @@ public class WebAbstractMessage: NSObject {
                                 if conversation.isGroup() {
                                     let groupDeliveryReceipt = GroupDeliveryReceipt(
                                         identity: MyIdentityStore.shared().identity,
-                                        deliveryReceiptType: .userDeclined,
+                                        deliveryReceiptType: .declined,
                                         date: Date()
                                     )
                                     baseMessage.add(groupDeliveryReceipt: groupDeliveryReceipt)

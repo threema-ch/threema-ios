@@ -19,11 +19,12 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import NaturalLanguage
 
 public extension NSString {
     @objc func textAlignment() -> NSTextAlignment {
-        if let lang = NSLinguisticTagger.dominantLanguage(for: self as String) {
-            let direction = NSLocale.characterDirection(forLanguage: lang as String)
+        if let lang = NLLanguageRecognizer.dominantLanguage(for: self as String)?.rawValue {
+            let direction = NSLocale.characterDirection(forLanguage: lang)
 
             if direction == .rightToLeft {
                 return .right

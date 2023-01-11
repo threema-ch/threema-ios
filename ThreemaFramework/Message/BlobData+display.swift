@@ -89,6 +89,24 @@ public enum BlobDisplayState: CustomStringConvertible, Equatable {
             return "exclamationmark"
         }
     }
+    
+    /// System symbol name for current state if appropriate
+    public var circleFillSymbolName: String? {
+        switch self {
+        case .remote:
+            return "arrow.down.circle.fill"
+        case .downloading, .uploading:
+            return "stop.circle.fill"
+        case .processed, .uploaded:
+            return nil
+        case .pending:
+            return "arrow.up.circle.fill"
+        case .dataDeleted:
+            return "rectangle.slash.fill"
+        case .fileNotFound:
+            return "exclamationmark.circle.fill"
+        }
+    }
 }
 
 public extension BlobData {

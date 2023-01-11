@@ -33,12 +33,12 @@
 #import "UIImage+ColoredImage.h"
 #import "QBPopupMenu.h"
 #import "RectUtil.h"
-#import "BaseMessage+Accessibility.h"
+#import "BaseMessage+OLD_Accessibility.h"
 #import "BundleUtil.h"
 #import "Threema-Swift.h"
 #import "ContactGroupPickerViewController.h"
 #import "ChatTextMessageCell.h"
-#import "FileMessageSender.h"
+#import "Old_FileMessageSender.h"
 
 #define DATE_LABEL_BG_COLOR [Colors.backgroundView colorWithAlphaComponent:0.8]
 #define REQUIRED_MENU_HEIGHT 50.0
@@ -100,12 +100,12 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     if (self) {        
         transparent = _transparent;
         
-        self.backgroundColor = transparent ? [UIColor clearColor] : Colors.backgroundViewController; // clearColor slows performance
+        self.backgroundColor = transparent ? [UIColor clearColor] : Colors.backgroundGroupedViewController; // clearColor slows performance
         
         // Create message background image view
         msgBackground = [[UIImageView alloc] init];
         msgBackground.clearsContextBeforeDrawing = NO;
-        msgBackground.backgroundColor = transparent ? [UIColor clearColor] : Colors.backgroundViewController; // clearColor slows performance
+        msgBackground.backgroundColor = transparent ? [UIColor clearColor] : Colors.backgroundGroupedViewController; // clearColor slows performance
         [self.contentView addSubview:msgBackground];
         
         // Status image
@@ -175,6 +175,8 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         pan = [[UIPanGestureRecognizer alloc]initWithTarget:self action:@selector(panGestureCellAction:)];
         pan.delegate = self;
         [self.contentView addGestureRecognizer:pan];
+        
+        [self setupResendButton];
 
         [self updateColors];
     }
@@ -246,6 +248,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     [self updateDateLabel];
     [self updateTypingIndicator];
     [self updateGroupSenderImage];
+    [self updateResendButton];
     
     [self setNeedsLayout];
     
@@ -287,7 +290,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     CGFloat metaDataStackViewWidth = 0.0;
     
     if (self.message.conversation.isGroup) {
-        if ([self.message groupReactionsCountOf:DeliveryReceiptTypeUserAcknowledgment] > 0) {
+        if ([self.message old_groupReactionsCountOf:DeliveryReceiptTypeAcknowledged] > 0) {
             ackStackView.hidden = NO;
             metaDataStackViewWidth += 25.0;
             metaDataStackViewWidth += groupAckCountLabel.frame.size.width + 2.0;
@@ -295,7 +298,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
             ackStackView.hidden = YES;
         }
         
-        if ([self.message groupReactionsCountOf:DeliveryReceiptTypeUserDeclined] > 0) {
+        if ([self.message old_groupReactionsCountOf:DeliveryReceiptTypeDeclined] > 0) {
             if (metaDataStackViewWidth > 0.0) {
                 metaDataStackViewWidth += METADATA_STACK_SPACE;
             }
@@ -337,6 +340,61 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 
         metaDataStackView.frame = CGRectMake(msgBackground.frame.origin.x - metaDataStackViewWidth - 4, bubbleMaxY - 27, metaDataStackViewWidth, 18);
         metaDataStackViewBackgroundView.frame = CGRectMake(metaDataStackView.frame.origin.x - 2.0, metaDataStackView.frame.origin.y, metaDataStackView.frame.size.width + 4.0, metaDataStackView.frame.size.height);
+        
+        // Add Retry Button for all Cells
+        if (![self isKindOfClass: [ChatBlobMessageCell class]]) {
+            [metaDataStackView setHidden:false];
+            
+            CGFloat minX = metaDataStackView.frame.origin.x;
+            CGFloat maxX = metaDataStackView.frame.origin.x + metaDataStackView.frame.size.width;
+            
+            CGFloat minY = metaDataStackView.frame.origin.y;
+            CGFloat maxY = metaDataStackView.frame.origin.y + metaDataStackView.frame.size.height;
+            
+            CGFloat midY = bgTopOffset + (bubbleSize.height / 2);
+            
+            [_resendButton sizeToFit];
+            
+            CGFloat width = _resendButton.frame.size.width;
+            CGFloat height = _resendButton.frame.size.height;
+            
+            CGFloat padding = 5;
+            
+            CGFloat originX = minX - width - padding;
+            
+            if (!_resendButton.hidden) {
+                // If we go over the left edge, reset x coordinate of the origin and add some padding
+                if (minX - width - padding < 0) {
+                    originX = padding;
+                }
+                
+                // If we go over the message bubble on the right side, we allow us to take up two lines
+                // and update our width and height to the new value
+                if (originX + width > CGRectGetMinX(msgBackground.frame)) {
+                    [_resendButton.titleLabel setNumberOfLines:2];
+                    
+                    [_resendButton sizeToFit];
+                    
+                    width = _resendButton.frame.size.width;
+                    height = _resendButton.frame.size.height;
+                }
+                
+                // If we still go over the message bubble on the right side, artificially restrict our width
+                // forcing us to cut text if necessary
+                if (originX + width > CGRectGetMinX(msgBackground.frame)) {
+                    width = CGRectGetMinX(self.msgBackground.frame) - (2 * padding);
+                }
+                
+                // If go over the metaDataStackView we just hide it as all info will still be available in the message details.
+                if (originX + width > CGRectGetMinX(metaDataStackView.frame) && (metaDataStackView.frame.origin.y < (midY) && (metaDataStackView.frame.origin.y + metaDataStackView.frame.size.height > (midY)))) {
+                    [metaDataStackView setHidden:true];
+                }
+            }
+             
+            CGRect newFrame = CGRectMake(originX, midY - (height / 2), width, maxY - minY);
+            _resendButton.frame = newFrame;
+        }
+        
     } else { // left bubble
         msgBackground.frame = CGRectMake(bgSideMargin + self.contentLeftOffset, bgTopOffset, bubbleSize.width, bubbleSize.height);
 
@@ -350,11 +408,40 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     }
 }
 
+- (void)setupResendButton {
+    _resendButton = [UIButton buttonWithType:UIButtonTypeRoundedRect];
+    _resendButton.clearsContextBeforeDrawing = NO;
+    [_resendButton setTitle:[BundleUtil localizedStringForKey:@"try_again"] forState:UIControlStateNormal];
+
+    _resendButton.titleLabel.font = [UIFont boldSystemFontOfSize:12.0];
+    _resendButton.titleLabel.lineBreakMode = NSLineBreakByTruncatingTail;
+    [_resendButton addTarget:self action:@selector(resendButtonTapped:) forControlEvents:UIControlEventTouchUpInside];
+    
+    _resendButton.hidden = YES;
+    
+    [self.contentView addSubview:_resendButton];
+}
+
+- (void)updateResendButton {
+    if (self.message.isOwn.boolValue && (self.message.sendFailed.boolValue)) {
+        _resendButton.hidden = NO;
+    } else {
+        _resendButton.hidden = YES;
+        [metaDataStackView setHidden:NO];
+    }
+    
+    [self layoutSubviews];
+}
+
+- (void)resendButtonTapped:(id)sender {
+    [self resendMessage:nil];
+}
+
 - (void)updateDateLabel {
     NSDate *date = [message displayDate];
 
     if (date != nil) {
-        if (![ThreemaUtilityObjC isSameDayWithDate1:date date2:message.remoteSentDate]) {
+        if (![ThreemaUtilityObjC isSameDayWithDate1:date date2:message.date]) {
             dateLabel.text = [DateFormatter shortStyleDateTime:date];
         } else {
             dateLabel.text = [DateFormatter shortStyleTimeNoDate:date];
@@ -369,6 +456,9 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     if (!message.isOwn.boolValue) {
         dateLabel.hidden = ([UserSettings sharedUserSettings].showReceivedTimestamps == NO) && ([UserSettings sharedUserSettings].newChatViewActive == NO);
     }
+    
+    // Reset metaDataStackView hiding
+    [metaDataStackView setHidden:NO];
 }
 
 - (void)updateTypingIndicator {    
@@ -382,17 +472,17 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 }
 
 - (void)updateGroupDeliveryReceipts {
-    NSInteger ackCount = [message groupReactionsCountOf:DeliveryReceiptTypeUserAcknowledgment];
-    NSInteger declineCount = [message groupReactionsCountOf:DeliveryReceiptTypeUserDeclined];
+    NSInteger ackCount = [message old_groupReactionsCountOf:DeliveryReceiptTypeAcknowledged];
+    NSInteger declineCount = [message old_groupReactionsCountOf:DeliveryReceiptTypeDeclined];
     
     groupAckCountLabel.text = [NSString stringWithFormat:@"%li", ackCount];
     groupDeclineCountLabel.text = [NSString stringWithFormat:@"%li", declineCount];
     groupAckImage.image = [[UIImage systemImageNamed:@"hand.thumbsup"] imageWithTintColor:Colors.thumbUp renderingMode:UIImageRenderingModeAlwaysOriginal];
     groupDeclineImage.image = [[UIImage systemImageNamed:@"hand.thumbsdown"] imageWithTintColor:Colors.thumbDown renderingMode:UIImageRenderingModeAlwaysOriginal];
     
-    GroupDeliveryReceipt *myReaction = [message reactionForMyIdentity];
+    GroupDeliveryReceipt *myReaction = [message old_reactionForMyIdentity];
     if (myReaction != nil) {
-        if (myReaction.deliveryReceiptType == DeliveryReceiptTypeUserAcknowledgment) {
+        if (myReaction.deliveryReceiptType == DeliveryReceiptTypeAcknowledged) {
             groupAckImage.image = [[UIImage systemImageNamed:@"hand.thumbsup.fill"] imageWithTintColor:Colors.thumbUp renderingMode:UIImageRenderingModeAlwaysOriginal];
         }
         else {
@@ -454,7 +544,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 
 - (void)updateStatusImage {
     NSString *iconName;
-    UIColor *color;
+    UIColor *color = nil;
     
     if (message.conversation.groupId != nil || message.conversation.contact.isGatewayId) {
         /* group messages & gateway IDs don't have delivered/read status */
@@ -467,12 +557,12 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
                 iconName = @"MessageStatus_read";
             } else if (message.delivered.boolValue) {
                 iconName = @"MessageStatus_delivered";
+            } else if (message.sendFailed.boolValue) {
+                iconName = @"MessageStatus_sendfailed";
+            } else if (message.sent.boolValue) {
+                iconName = @"MessageStatus_sent";
             } else {
-                if (message.sent.boolValue) {
-                    iconName = @"MessageStatus_sent";
-                } else {
-                    iconName = @"MessageStatus_sending";
-                }
+                iconName = @"MessageStatus_sending";
             }
         }
     }
@@ -501,6 +591,9 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     if (iconName) {
         if ([iconName isEqualToString:@"hand.thumbsup.fill"] || [iconName isEqualToString:@"hand.thumbsdown.fill"]) {
             statusImage.image = [[UIImage systemImageNamed:iconName] imageWithTintColor:color renderingMode:UIImageRenderingModeAlwaysOriginal];
+        }
+        else if ([iconName isEqualToString:@"MessageStatus_sendfailed"]) {
+            statusImage.image = [UIImage imageNamed:@"MessageStatus_sendfailed"];
         }
         else {
             statusImage.image = [self getStatusImageNamed:iconName withCustomColor:color];
@@ -575,9 +668,9 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     
     if ([self canPerformAction:@selector(userackMessage:) withSender:nil]) {
         NSString *iconName = @"hand.thumbsup";
-        GroupDeliveryReceipt *dr = [message reactionForMyIdentity];
+        GroupDeliveryReceipt *dr = [message old_reactionForMyIdentity];
         if (dr != nil) {
-            if (dr.deliveryReceiptType == DeliveryReceiptTypeUserAcknowledgment) {
+            if (dr.deliveryReceiptType == DeliveryReceiptTypeAcknowledged) {
                 iconName = @"hand.thumbsup.fill";
             }
         }
@@ -590,9 +683,9 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     
     if ([self canPerformAction:@selector(userdeclineMessage:) withSender:nil]) {
         NSString *iconName = @"hand.thumbsdown";
-        GroupDeliveryReceipt *dr = [message reactionForMyIdentity];
+        GroupDeliveryReceipt *dr = [message old_reactionForMyIdentity];
         if (dr != nil) {
-            if (dr.deliveryReceiptType == DeliveryReceiptTypeUserDeclined) {
+            if (dr.deliveryReceiptType == DeliveryReceiptTypeDeclined) {
                 iconName = @"hand.thumbsdown.fill";
             }
         }
@@ -673,9 +766,9 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         NSMutableArray *deleteItems = [NSMutableArray array];
         if ([self canPerformAction:@selector(userackMessage:) withSender:nil]) {
             NSString *iconName = @"hand.thumbsup";
-            GroupDeliveryReceipt *dr = [message reactionForMyIdentity];
+            GroupDeliveryReceipt *dr = [message old_reactionForMyIdentity];
             if (dr != nil) {
-                if (dr.deliveryReceiptType == DeliveryReceiptTypeUserAcknowledgment) {
+                if (dr.deliveryReceiptType == DeliveryReceiptTypeAcknowledged) {
                     iconName = @"hand.thumbsup.fill";
                 }
             }
@@ -687,9 +780,9 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         }
         if ([self canPerformAction:@selector(userdeclineMessage:) withSender:nil]) {
             NSString *iconName = @"hand.thumbsdown";
-            GroupDeliveryReceipt *dr = [message reactionForMyIdentity];
+            GroupDeliveryReceipt *dr = [message old_reactionForMyIdentity];
             if (dr != nil) {
-                if (dr.deliveryReceiptType == DeliveryReceiptTypeUserDeclined) {
+                if (dr.deliveryReceiptType == DeliveryReceiptTypeDeclined) {
                     iconName = @"hand.thumbsdown.fill";
                 }
             }
@@ -776,9 +869,9 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     NSMutableArray *deleteItems = [NSMutableArray array];
     if ([self canPerformAction:@selector(userackMessage:) withSender:nil]) {
         NSString *iconName = @"hand.thumbsup";
-        GroupDeliveryReceipt *dr = [message reactionForMyIdentity];
+        GroupDeliveryReceipt *dr = [message old_reactionForMyIdentity];
         if (dr != nil) {
-            if (dr.deliveryReceiptType == DeliveryReceiptTypeUserAcknowledgment) {
+            if (dr.deliveryReceiptType == DeliveryReceiptTypeAcknowledged) {
                 iconName = @"hand.thumbsup.fill";
             }
         }
@@ -790,9 +883,9 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     }
     if ([self canPerformAction:@selector(userdeclineMessage:) withSender:nil]) {
         NSString *iconName = @"hand.thumbsdown";
-        GroupDeliveryReceipt *dr = [message reactionForMyIdentity];
+        GroupDeliveryReceipt *dr = [message old_reactionForMyIdentity];
         if (dr != nil) {
-            if (dr.deliveryReceiptType == DeliveryReceiptTypeUserDeclined) {
+            if (dr.deliveryReceiptType == DeliveryReceiptTypeDeclined) {
                 iconName = @"hand.thumbsdown.fill";
             }
         }
@@ -1012,8 +1105,8 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     }
     if (message.conversation.isGroup && message.groupDeliveryReceipts != nil) {
         if (message.groupDeliveryReceipts.count > 0) {
-            GroupDeliveryReceipt *gdr = [message reactionFor:[MyIdentityStore sharedMyIdentityStore].identity];
-            DeliveryReceiptType type = doAcknowledge ? DeliveryReceiptTypeUserAcknowledgment : DeliveryReceiptTypeUserDeclined;
+            GroupDeliveryReceipt *gdr = [message old_reactionForMyIdentity];
+            DeliveryReceiptType type = doAcknowledge ? DeliveryReceiptTypeAcknowledged : DeliveryReceiptTypeDeclined;
             if (gdr != nil &&
                 [gdr deliveryReceiptType] == type) {
                 return;
@@ -1033,7 +1126,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
                 [self updateStatusImage];
                 [self setNeedsLayout];
             } else {
-                GroupDeliveryReceipt *groupDeliveryReceipt = [[GroupDeliveryReceipt alloc] initWithIdentity:[MyIdentityStore sharedMyIdentityStore].identity deliveryReceiptType:DeliveryReceiptTypeUserAcknowledgment date:[NSDate date]];
+                GroupDeliveryReceipt *groupDeliveryReceipt = [[GroupDeliveryReceipt alloc] initWithIdentity:[MyIdentityStore sharedMyIdentityStore].identity deliveryReceiptType:DeliveryReceiptTypeAcknowledged date:[NSDate date]];
                 [message addWithGroupDeliveryReceipt:groupDeliveryReceipt];
             }
         } else {
@@ -1044,7 +1137,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
                 [self updateStatusImage];
                 [self setNeedsLayout];
             } else {
-                GroupDeliveryReceipt *groupDeliveryReceipt = [[GroupDeliveryReceipt alloc] initWithIdentity:[MyIdentityStore sharedMyIdentityStore].identity deliveryReceiptType:DeliveryReceiptTypeUserDeclined date:[NSDate date]];
+                GroupDeliveryReceipt *groupDeliveryReceipt = [[GroupDeliveryReceipt alloc] initWithIdentity:[MyIdentityStore sharedMyIdentityStore].identity deliveryReceiptType:DeliveryReceiptTypeDeclined date:[NSDate date]];
                 [message addWithGroupDeliveryReceipt:groupDeliveryReceipt];
             }
         }
@@ -1125,6 +1218,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
                             [self updateDateLabel];
                             [self updateStatusImage];
                             [self updateTypingIndicator];
+                            [self updateResendButton];
                             [self setNeedsLayout];
                         }];
                     }
@@ -1149,6 +1243,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 }
 
 + (CGFloat)maxContentWidthForTableWidth:(CGFloat)tableWidth isGroup:(BOOL)isGroup {
+    CGFloat additionalInset = 0;
     if (isGroup) {
         return tableWidth - kMessageScreenMarginGroup;
     }
@@ -1422,7 +1517,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         NSData *data = [audioMessageEntity.audio.data copy];
         for (Conversation *conversation in conversations) {
             URLSenderItem *item = [URLSenderItem itemWithData:data fileName:@"audio.m4a" type:UTTYPE_AUDIO renderType:@1 sendAsFile:true];
-            FileMessageSender *sender = [[FileMessageSender alloc] init];
+            Old_FileMessageSender *sender = [[Old_FileMessageSender alloc] init];
             [sender sendItem:item inConversation:conversation requestId:nil];
             
             if (contactPicker.additionalTextToSend) {
@@ -1454,7 +1549,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
                 senderItem.caption = contactPicker.additionalTextToSend;
             }
             
-            FileMessageSender *sender = [[FileMessageSender alloc] init];
+            Old_FileMessageSender *sender = [[Old_FileMessageSender alloc] init];
             [sender sendItem:senderItem inConversation:conversation requestId:nil];
         }
         [contactPicker dismissViewControllerAnimated:YES completion:^(){
@@ -1487,7 +1582,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         item.caption = contactPicker.additionalTextToSend;
     }
     for (Conversation *conversation in conversations) {
-        FileMessageSender *urlSender = [[FileMessageSender alloc] init];
+        Old_FileMessageSender *urlSender = [[Old_FileMessageSender alloc] init];
         [urlSender sendItem:item inConversation:conversation];
     }
     [contactPicker dismissViewControllerAnimated:YES completion:nil];
@@ -1495,17 +1590,17 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 
 - (void)forwardImageMessage:(ImageMessageEntity *)imageMessage toConversations:(NSSet *)conversations additionalTextToSend:(NSString *)additionalText {
     // Images in ImageMessage are always jpg
-    CFStringRef uti = kUTTypeJPEG;
+    NSString* uti = UTTypeJPEG.identifier;
 
     for (Conversation *conversation in conversations) {
         ImageURLSenderItemCreator *imageSender = [[ImageURLSenderItemCreator alloc] init];
-        URLSenderItem *item = [imageSender senderItemFrom:imageMessage.image.data uti:(__bridge NSString *)uti];
+        URLSenderItem *item = [imageSender senderItemFrom:imageMessage.image.data uti:uti];
         
         if (additionalText) {
             item.caption = additionalText;
         }
         
-        FileMessageSender *sender = [[FileMessageSender alloc] init];
+        Old_FileMessageSender *sender = [[Old_FileMessageSender alloc] init];
         [sender sendItem:item inConversation:conversation];
     }
 }

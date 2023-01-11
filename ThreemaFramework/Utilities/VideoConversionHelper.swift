@@ -23,9 +23,17 @@ import Foundation
 
 @objc public class VideoConversionHelper: NSObject {
     
-    private static let fileOverhead: Int64 = 48 * 1024
+    // MARK: - Internal Nested Types
     
-    private struct MovieRate {
+    /// Internal for easier testing
+    enum VideoQualitySetting {
+        case low
+        case high
+        case original
+    }
+    
+    /// Internal for easier testing
+    struct MovieRate {
         var videoRate: Int32
         var videoSize: Int32
         var videoColorPrimariesKey: String
@@ -35,7 +43,14 @@ import Foundation
         var audioChannels: Int32
     }
     
-    private static let movieRateHigh = MovieRate(
+    // MARK: Private Properties
+    
+    /// Estimated file overhead for the video (same as in Android)
+    /// Use for estimating final file size of the video
+    private static let fileOverhead: Int64 = 48 * 1024
+    
+    /// Internal for easier testing
+    static let movieRateHigh = MovieRate(
         videoRate: kVideoBitrateHigh,
         videoSize: kMaxVideoSizeHigh,
         videoColorPrimariesKey: AVVideoColorPrimaries_ITU_R_709_2,
@@ -45,7 +60,8 @@ import Foundation
         audioChannels: kAudioChannelsHigh
     )
     
-    private static let movieRateMedium = MovieRate(
+    /// Internal for easier testing
+    static let movieRateMedium = MovieRate(
         videoRate: kVideoBitrateMedium,
         videoSize: kMaxVideoSizeHigh,
         videoColorPrimariesKey: AVVideoColorPrimaries_ITU_R_709_2,
@@ -55,7 +71,8 @@ import Foundation
         audioChannels: kAudioChannelsHigh
     )
     
-    private static let movieRateLow = MovieRate(
+    /// Internal for easier testing
+    static let movieRateLow = MovieRate(
         videoRate: kVideoBitrateLow,
         videoSize: kMaxVideoSizeLow,
         videoColorPrimariesKey: AVVideoColorPrimaries_SMPTE_C,
@@ -68,45 +85,29 @@ import Foundation
     // Must be sorted from highest to lowest bit rate
     private static let rates = [movieRateHigh, movieRateMedium, movieRateLow]
     
-    private static func getHighestPossibleBitrate(
-        duration: Int,
-        audioBitrate: Int,
-        videoBitrate: Int,
-        videoSize: Int
-    ) -> MovieRate? {
-        
-        if UserSettings.shared()?.videoQuality == "low" {
-            return rates.last
+    private static var videoQualitySetting: VideoQualitySetting {
+        guard let videoQualitySettingsString = UserSettings.shared()?.videoQuality else {
+            return .high
         }
         
-        let originalSize = Int((videoBitrate + audioBitrate) / 8) * duration
-        
-        // Filter all bitrates resulting in a larger file.
-        let possibleRates = rates
-            .filter { Int(($0.videoRate + $0.audioRate * $0.audioChannels) / 8) * duration <= originalSize }
-        
-        // If the original size is smaller than our lowest rate, choose the original rate.
-        if possibleRates.isEmpty, originalSize <= kMaxFileSize {
-            return MovieRate(
-                videoRate: Int32(videoBitrate),
-                videoSize: Int32(videoSize),
-                videoColorPrimariesKey: movieRateLow.videoColorPrimariesKey,
-                videoTransferFunctionKey: movieRateLow.videoTransferFunctionKey,
-                videoYCbCrMatrixKey: movieRateLow.videoYCbCrMatrixKey,
-                audioRate: Int32(audioBitrate),
-                audioChannels: 1
-            )
+        switch videoQualitySettingsString {
+        case "low": return .low
+        case "high": return .high
+        case "original": return .original
+        default: return .low
         }
-        
-        for rate in possibleRates {
-            let fileSize = Int(VideoConversionHelper.estimatedFileSize(for: rate, with: Int64(duration)))
-            DDLogVerbose("Video File Size is \(fileSize)")
-            if fileSize <= kMaxFileSize {
-                return rate
-            }
-        }
-        return nil
     }
+    
+    /// Return values must be ordered from highest to lowest
+    static var possibleRatesForUserSetting: [MovieRate] {
+        switch VideoConversionHelper.videoQualitySetting {
+        case .low: return [movieRateLow]
+        case .high: return [movieRateMedium, movieRateLow]
+        case .original: return [movieRateHigh, movieRateMedium, movieRateLow]
+        }
+    }
+    
+    // MARK: - Functions
     
     @objc public static func videoHasAllowedSize(at url: URL) -> Bool {
         let asset = AVURLAsset(url: url)
@@ -151,8 +152,8 @@ import Foundation
         
         var audioRate = 0
         
-        if audioTrack != nil {
-            audioRate = Int(audioTrack!.estimatedDataRate)
+        if let audioTrack = audioTrack {
+            audioRate = Int(audioTrack.estimatedDataRate)
         }
         
         return VideoConversionHelper.getHighestPossibleBitrate(
@@ -163,8 +164,14 @@ import Foundation
         )
     }
     
-    @objc public static func getMaxdurationFor(videoBitrate: Int64, audioBitrate: Int64) -> Int64 {
-        Int64(kMaxFileSize) / (videoBitrate + audioBitrate + fileOverhead)
+    /// Calculates the maximum duration of a video with the given audio and video bit rates in minutes
+    /// - Parameters:
+    ///   - videoBitrate:
+    ///   - audioBitrate:
+    /// - Returns: The maximum duration of a video with the given audio and video bit rates in minutes
+    @objc public static func getMaxdurationInMinutes(videoBitrate: Int64, audioBitrate: Int64) -> Int64 {
+        let maxFileSizeInBits = Int64(kMaxFileSize * 8)
+        return (maxFileSizeInBits - fileOverhead) / ((videoBitrate + audioBitrate) * 60)
     }
     
     @objc public static func getAVAssetExportSession(from asset: AVAsset, outputURL: URL) -> SDAVAssetExportSession? {
@@ -240,5 +247,82 @@ import Foundation
         ]
         
         return exportSession
+    }
+    
+    // MARK: - Helper Functions
+    
+    /// Respecting the user settings returns the highest possible bitrate for a video of duration `d` with given audio and video bitrates
+    /// or nil if the video cannot fit within the global file size limit.
+    /// - Parameters:
+    ///   - duration: Duration of the video in seconds
+    ///   - audioBitrate: original estimated audio bitrate of the video
+    ///   - videoBitrate: original estimated video bitrate of the video
+    ///   - videoSize: original video size in pixels
+    /// - Returns: The highest possible video bitrate which fits in the global file size limit or the maximum allowed by the user or nil if
+    /// the video cannot fit into the global file size limit.
+    private static func getHighestPossibleBitrate(
+        duration: Int,
+        audioBitrate: Int,
+        videoBitrate: Int,
+        videoSize: Int
+    ) -> MovieRate? {
+        getHighestPossibleBitrate(
+            userChosenQuality: VideoConversionHelper.videoQualitySetting,
+            duration: duration,
+            audioBitrate: audioBitrate,
+            videoBitrate: videoBitrate,
+            videoSize: videoSize
+        )
+    }
+    
+    /// See `getHighestPossibleBitrate` above for more information
+    /// Only marked as `internal` for testing.
+    static func getHighestPossibleBitrate(
+        userChosenQuality: VideoQualitySetting,
+        duration: Int,
+        audioBitrate: Int,
+        videoBitrate: Int,
+        videoSize: Int
+    ) -> MovieRate? {
+        
+        if userChosenQuality == .low {
+            return rates.last
+        }
+        
+        // There seems to be a minimum value of 32k for AVEncoderBitRateKey
+        let audioBitrate = max(Int(movieRateLow.audioRate), audioBitrate)
+        
+        let originalSize = Int((videoBitrate + audioBitrate) / 8) * duration
+        
+        let userChosenMovieRate = VideoConversionHelper.possibleRatesForUserSetting.first!
+        
+        // If it is possible to send the video in its original bitrate and the user has chosen original we choose the original bitrate
+        // If the user configured bitrate is higher than the one used in the video and the video fits in the max file size we also use the original bit rate to avoid increasing video file size
+        if originalSize <= kMaxFileSize,
+           VideoConversionHelper.videoQualitySetting == .original ||
+           (userChosenMovieRate.videoRate > videoBitrate && userChosenMovieRate.audioRate > audioBitrate) {
+            return MovieRate(
+                videoRate: Int32(videoBitrate),
+                videoSize: Int32(videoSize),
+                videoColorPrimariesKey: movieRateHigh.videoColorPrimariesKey,
+                videoTransferFunctionKey: movieRateHigh.videoTransferFunctionKey,
+                videoYCbCrMatrixKey: movieRateHigh.videoYCbCrMatrixKey,
+                audioRate: Int32(audioBitrate),
+                audioChannels: 2
+            )
+        }
+        
+        // Get the highest possible rate while still respecting the user settings
+        for rate in VideoConversionHelper.possibleRatesForUserSetting {
+            let totAudioRate = (rate.audioRate * rate.audioChannels) / 8
+            let totVideoRate = rate.videoRate / 8
+            let fileSize = Int(totVideoRate + totAudioRate) * duration
+            if fileSize <= kMaxFileSize {
+                return rate
+            }
+        }
+        
+        // Return nil if nothing fits
+        return nil
     }
 }

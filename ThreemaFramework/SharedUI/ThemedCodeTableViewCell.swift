@@ -23,6 +23,13 @@ import UIKit
 /// Base class for `UITableViewCells` that are implemented in code
 open class ThemedCodeTableViewCell: UITableViewCell {
     
+    /// Constraint for default minimal cell height
+    ///
+    /// You should normally leave this as-is.
+    public lazy var defaultMinimalHeightConstraint: NSLayoutConstraint = contentView.heightAnchor.constraint(
+        greaterThanOrEqualToConstant: 44
+    )
+    
     private var themeUsedInLastColorsUpdate = Colors.theme
     
     // Normally you don't need to override `init`. Just do you configuration in `configureCell()`.
@@ -40,8 +47,8 @@ open class ThemedCodeTableViewCell: UITableViewCell {
     
     /// Called during initialization
     open func configureCell() {
-        // The min cell height should always be 44 pt
-        contentView.heightAnchor.constraint(greaterThanOrEqualToConstant: 44).isActive = true
+        // The min cell height should normally be 44 pt
+        defaultMinimalHeightConstraint.isActive = true
     }
     
     override open func prepareForReuse() {

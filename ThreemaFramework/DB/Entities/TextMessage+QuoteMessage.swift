@@ -34,8 +34,4 @@ extension TextMessage: QuoteMessageProvider {
 
 // MARK: - TextMessage + QuoteMessage
 
-extension TextMessage: QuoteMessage {
-    public var quoteMessageType: QuoteMessageType {
-        .text(text)
-    }
-}
+extension TextMessage: QuoteMessage { }

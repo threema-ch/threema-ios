@@ -21,10 +21,9 @@
 import Foundation
 import PromiseKit
 
-enum MessageReceiverError: Error {
+public enum MessageReceiverError: Error {
     case reflectMessageFailed
     case responseTimeout
-    case wrongResponseType
     case encodingFailed
     case decodingFailed
 }
@@ -33,7 +32,7 @@ final class MessageReceiver {
     private let serverConnector: ServerConnectorProtocol
     private let mediatorMessageProtocol: MediatorMessageProtocolProtocol
 
-    private let responseTimeoutInSeconds = 25
+    private let responseTimeoutInSeconds = 10
 
     required init(serverConnector: ServerConnectorProtocol, mediatorMessageProtocol: MediatorMessageProtocolProtocol) {
         self.serverConnector = serverConnector
@@ -41,11 +40,12 @@ final class MessageReceiver {
     }
 
     /// Send get devices info to Mediator server and get linked/paired devices.
+    /// - Parameter deviceID: Owen device ID for calculating other devices
     /// - Returns: Linked/paired other devices
     /// - Throws: MultiDeviceManagerError.multiDeviceNotActivated, MessageReceiverError
-    func requestDevicesInfo() -> Promise<[DeviceInfo]> {
-        let dispatchMessageListener = DispatchGroup()
-        let messageListener = MessageListener(dispatchMessageListener: dispatchMessageListener)
+    func requestDevicesInfo(thisDeviceID deviceID: Data) -> Promise<[DeviceInfo]> {
+        var dispatchMessageListener: DispatchGroup? = DispatchGroup()
+        var messageListener: MessageListener?
 
         return firstly {
             Guarantee { $0(serverConnector.isMultiDeviceActivated) }
@@ -62,26 +62,40 @@ final class MessageReceiver {
                 throw MessageReceiverError.encodingFailed
             }
 
-            dispatchMessageListener.enter()
+            var devicesInfo: D2m_DevicesInfo?
 
-            self.serverConnector.registerMessageListenerDelegate(delegate: messageListener)
+            messageListener = MessageListener(response: { listener, type, data in
+                guard messageListener === listener else {
+                    return
+                }
+
+                guard type == MediatorMessageProtocol.MEDIATOR_MESSAGE_TYPE_DEVICE_INFO else {
+                    return
+                }
+
+                devicesInfo = self.mediatorMessageProtocol.decodeDevicesInfo(message: data)
+
+                // Prevent multiple calls on `leave` function
+                DispatchQueue.global().async {
+                    dispatchMessageListener?.leave()
+                    dispatchMessageListener = nil
+                }
+            })
+
+            dispatchMessageListener?.enter()
+
+            self.serverConnector.registerMessageListenerDelegate(delegate: messageListener!)
 
             if !self.serverConnector.reflectMessage(getDevicesList) {
                 throw MessageReceiverError.reflectMessageFailed
             }
 
-            let result = dispatchMessageListener.wait(timeout: .now() + .seconds(self.responseTimeoutInSeconds))
+            let result = dispatchMessageListener?.wait(timeout: .now() + .seconds(self.responseTimeoutInSeconds))
             if result != .success {
                 throw MessageReceiverError.responseTimeout
             }
 
-            guard let responseType = messageListener.responseType,
-                  responseType == MediatorMessageProtocol.MEDIATOR_MESSAGE_TYPE_DEVICE_INFO else {
-                throw MessageReceiverError.wrongResponseType
-            }
-
-            guard let responseData = messageListener.responseData,
-                  let devicesInfo = self.mediatorMessageProtocol.decodeDevicesInfo(message: responseData) else {
+            guard let devicesInfo = devicesInfo else {
                 throw MessageReceiverError.decodingFailed
             }
 
@@ -89,13 +103,16 @@ final class MessageReceiver {
             var devices: [DeviceInfo] = []
 
             for item in devicesInfo.augmentedDeviceInfo
-                .filter({ NSData.convertBytes($0.key).hexString != self.serverConnector.deviceID.hexString }) {
+                .filter({ NSData.convertBytes($0.key).hexString != deviceID.hexString }) {
                 var label: String!
                 var platform: Platform = .unspecified
                 var platformDetails = "Unknown"
                 if !item.value.encryptedDeviceInfo.isEmpty,
                    let decryptedDeviceInfo = self.mediatorMessageProtocol
-                   .decryptByte(data: item.value.encryptedDeviceInfo),
+                   .decryptByte(
+                       data: item.value.encryptedDeviceInfo,
+                       key: self.serverConnector.deviceGroupKeys!.dgdik
+                   ),
                    let decodedDeviceInfo = self.mediatorMessageProtocol.decodeDeviceInfo(message: decryptedDeviceInfo) {
                     label = "\(decodedDeviceInfo.label) \(decodedDeviceInfo.appVersion)"
                     platform = Platform(rawValue: decodedDeviceInfo.platform.rawValue) ?? .unspecified
@@ -109,7 +126,7 @@ final class MessageReceiver {
                 devices.append(DeviceInfo(
                     deviceID: item.key,
                     label: label,
-                    lastLoginAt: Date(milliseconds: Int64(item.value.lastLoginAt)),
+                    lastLoginAt: Date(milliseconds: item.value.lastLoginAt),
                     badge: badge,
                     platform: platform,
                     platformDetails: platformDetails
@@ -119,16 +136,18 @@ final class MessageReceiver {
             return Promise { $0.fulfill(devices) }
         }
         .ensure {
-            self.serverConnector.unregisterMessageListenerDelegate(delegate: messageListener)
+            if let messageListener = messageListener {
+                self.serverConnector.unregisterMessageListenerDelegate(delegate: messageListener)
+            }
         }
     }
 
     /// Send drop device to Mediator server.
     /// - Parameter device: Linked/paired device that will be dropped
     /// - Throws: MultiDeviceManagerError.multiDeviceNotActivated, MessageReceiverError
-    func requestDropDevice(device: DeviceInfo) -> Promise<Bool> {
-        let dispatchMessageListener = DispatchGroup()
-        let messageListener = MessageListener(dispatchMessageListener: dispatchMessageListener)
+    func requestDropDevice(device: DeviceInfo) -> Promise<Void> {
+        var dispatchMessageListener: DispatchGroup? = DispatchGroup()
+        var messageListener: MessageListener?
 
         return firstly {
             Guarantee { $0(serverConnector.isMultiDeviceActivated) }
@@ -140,56 +159,67 @@ final class MessageReceiver {
 
             return Guarantee { $0(self.mediatorMessageProtocol.encodeDropDevice(deviceID: device.deviceID)) }
         }
-        .then { (dropDevice: Data?) -> Promise<Bool> in
+        .then { (dropDevice: Data?) -> Promise<Void> in
             guard let dropDevice = dropDevice else {
                 throw MessageReceiverError.encodingFailed
             }
 
-            dispatchMessageListener.enter()
+            messageListener = MessageListener(response: { listener, type, data in
+                guard messageListener === listener else {
+                    return
+                }
 
-            self.serverConnector.registerMessageListenerDelegate(delegate: messageListener)
+                guard type == MediatorMessageProtocol.MEDIATOR_MESSAGE_TYPE_DROP_DEVICE_ACK else {
+                    return
+                }
+
+                guard let dropDeviceAck = self.mediatorMessageProtocol.decodeDropDeviceAck(message: data),
+                      dropDeviceAck.deviceID == device.deviceID
+                else {
+                    return
+                }
+
+                // Prevent multiple calls on `leave` function
+                DispatchQueue.global().async {
+                    dispatchMessageListener?.leave()
+                    dispatchMessageListener = nil
+                }
+            })
+
+            dispatchMessageListener?.enter()
+
+            self.serverConnector.registerMessageListenerDelegate(delegate: messageListener!)
 
             if !self.serverConnector.reflectMessage(dropDevice) {
                 throw MessageReceiverError.reflectMessageFailed
             }
 
-            let result = dispatchMessageListener.wait(timeout: .now() + .seconds(self.responseTimeoutInSeconds))
+            let result = dispatchMessageListener?.wait(timeout: .now() + .seconds(self.responseTimeoutInSeconds))
             if result != .success {
                 throw MessageReceiverError.responseTimeout
             }
 
-            guard let responseType = messageListener.responseType,
-                  responseType == MediatorMessageProtocol.MEDIATOR_MESSAGE_TYPE_DROP_DEVICE_ACK else {
-                throw MessageReceiverError.wrongResponseType
-            }
-
-            guard let responseData = messageListener.responseData,
-                  let dropDeviceAck = self.mediatorMessageProtocol.decodeDropDeviceAck(message: responseData) else {
-                throw MessageReceiverError.decodingFailed
-            }
-
-            return Promise { seal in seal.fulfill(device.deviceID == dropDeviceAck.deviceID) }
+            return Promise()
         }
         .ensure {
-            self.serverConnector.unregisterMessageListenerDelegate(delegate: messageListener)
+            if let messageListener = messageListener {
+                self.serverConnector.unregisterMessageListenerDelegate(delegate: messageListener)
+            }
         }
     }
 
     private class MessageListener: NSObject, MessageListenerDelegate {
-        private let dispatchMessageListener: DispatchGroup
+        typealias MessageListenerResponse = (MessageListenerDelegate, UInt8, Data) -> Void
 
-        required init(dispatchMessageListener: DispatchGroup) {
-            self.dispatchMessageListener = dispatchMessageListener
+        private var response: MessageListenerResponse
+
+        required init(response: @escaping MessageListenerResponse) {
+            self.response = response
             super.init()
         }
 
-        var responseType: UInt8?
-        var responseData: Data?
-
-        func messageReceived(type: UInt8, data: Data) {
-            responseType = type
-            responseData = data
-            dispatchMessageListener.leave()
+        func messageReceived(listener: MessageListenerDelegate, type: UInt8, data: Data) {
+            response(listener, type, data)
         }
     }
 }

@@ -114,6 +114,7 @@ class ArchivedConversationsViewController: ThemedTableViewController {
         tableView.allowsMultipleSelectionDuringEditing = true
         // Removes empty cells
         tableView.tableFooterView = UIView(frame: .zero)
+        tableView.register(ConversationTableViewCell.self, forCellReuseIdentifier: "ConversationTableViewCell")
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -144,37 +145,17 @@ extension ArchivedConversationsViewController {
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         guard let cell = tableView.dequeueReusableCell(
-            withIdentifier: "ConversationCell",
+            withIdentifier: "ConversationTableViewCell",
             for: indexPath
-        ) as? ConversationCell else {
-            DDLogError("Unable to create ConversationCell for cell at IndexPath: + \(indexPath)")
-            fatalError("Unable to create ConversationCell for cell at IndexPath: + \(indexPath)")
+        ) as? ConversationTableViewCell else {
+            DDLogError("Unable to create ConversationTableViewCell for cell at IndexPath: + \(indexPath)")
+            fatalError("Unable to create ConversationTableViewCell for cell at IndexPath: + \(indexPath)")
         }
-        cell.conversation = fetchedResultsController.object(at: indexPath) as? Conversation
+        cell.setConversation(to: fetchedResultsController.object(at: indexPath) as? Conversation)
         
         return cell
     }
-    
-    override func tableView(
-        _ tableView: UITableView,
-        willDisplay cell: UITableViewCell,
-        forRowAt indexPath: IndexPath
-    ) {
-        if let conversationCell = cell as? ConversationCell {
-            conversationCell.addObservers()
-        }
-    }
-    
-    override func tableView(
-        _ tableView: UITableView,
-        didEndDisplaying cell: UITableViewCell,
-        forRowAt indexPath: IndexPath
-    ) {
-        if let conversationCell = cell as? ConversationCell {
-            conversationCell.removeObservers()
-        }
-    }
-    
+        
     override func numberOfSections(in tableView: UITableView) -> Int {
         fetchedResultsController.sections?.count ?? 0
     }
@@ -696,7 +677,7 @@ extension ArchivedConversationsViewController {
     @objc private func updateDraftForCell() {
         guard let selectedConversation = selectedConversation,
               let indexPath = fetchedResultsController.indexPath(forObject: selectedConversation),
-              let cell = tableView.cellForRow(at: indexPath) as? ConversationCell else {
+              let cell = tableView.cellForRow(at: indexPath) as? ConversationTableViewCell else {
             return
         }
         
@@ -799,28 +780,11 @@ extension ArchivedConversationsViewController: NSFetchedResultsControllerDelegat
             }
             
         case .update:
-            guard let indexPath = indexPath,
-                  let cell = tableView.cellForRow(at: indexPath) as? ConversationCell,
-                  let conversation = anObject as? Conversation else {
-                return
-            }
-            let changedValues = conversation.changedValuesForCurrentEvent()
-            if !changedValues.isEmpty {
-                cell.changedValues(forConversation: changedValues)
-            }
+            break
             
         case .move:
             if let indexPath = indexPath,
                let newIndexPath = newIndexPath {
-                if let conversation = anObject as? Conversation,
-                   let oldCell = tableView.cellForRow(at: indexPath) as? ConversationCell {
-                    
-                    let changedValues = conversation.changedValuesForCurrentEvent()
-                    if !changedValues.isEmpty {
-                        oldCell.removeObservers()
-                    }
-                }
-                
                 tableView.deleteRows(at: [indexPath], with: .automatic)
                 tableView.insertRows(at: [newIndexPath], with: .automatic)
             }
@@ -845,11 +809,6 @@ extension ArchivedConversationsViewController: Old_ChatViewControllerDelegate {
     }
     
     func pushSettingChanged(_ conversation: Conversation) {
-        guard let path = fetchedResultsController.indexPath(forObject: conversation),
-              let cell: ConversationCell = tableView.cellForRow(at: path) as? ConversationCell else {
-            return
-        }
-        
-        cell.conversation = conversation
+        // do nothing, because cell is observe this by it self
     }
 }

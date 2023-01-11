@@ -26,12 +26,13 @@
 // Implementation based on `blake2b_init_key` and `blake2b`.
 int blake2b_key_salt_personal(
     const uint8_t* key,
+    const int      key_length,
     const uint8_t* salt,
     const uint8_t* personal,
     uint8_t*       out
 ) {
     // Verify parameters
-    if (!key || !salt || !personal || !out) {
+    if (!key || !salt || !personal || !out || key_length < 32 || key_length > 64) {
         return -1;
     }
 
@@ -42,7 +43,7 @@ int blake2b_key_salt_personal(
     // Everything except for `salt` and `personal` is set like in `blake2b_init_key`.
     blake2b_param P[1];
     P->digest_length = (uint8_t) THREEMA_KDF_SUBKEYBYTES;
-    P->key_length    = (uint8_t) THREEMA_KDF_KEYBYTES;
+    P->key_length    = (uint8_t) key_length;
     P->fanout        = 1;
     P->depth         = 1;
     store32(&P->leaf_length, 0);
@@ -71,14 +72,12 @@ int blake2b_key_salt_personal(
     {
         uint8_t block[BLAKE2B_BLOCKBYTES];
         memset(block, 0, BLAKE2B_BLOCKBYTES);
-        memcpy(block, key, THREEMA_KDF_KEYBYTES);
+        memcpy(block, key, key_length);
         blake2b_update(S, block, BLAKE2B_BLOCKBYTES);
         secure_zero_memory(block, BLAKE2B_BLOCKBYTES); // Burn the key from stack
     }
 
-    if (blake2b_final(S, out, THREEMA_KDF_SUBKEYBYTES) < 0) {
-        return -1;
-    }
+    blake2b_final(S, out, THREEMA_KDF_SUBKEYBYTES);
     return 0;
 }
 
@@ -102,9 +101,10 @@ int blake2b_mac(
 int blake2b_hash(
     const uint8_t *input,
     size_t input_len,
-    uint8_t *out
+    uint8_t *output,
+    size_t output_len
 ) {
-    return blake2b(out, 32, input, input_len, NULL, 0);
+    return blake2b(output, output_len, input, input_len, NULL, 0);
 }
 
 int blake2b_self_test() {

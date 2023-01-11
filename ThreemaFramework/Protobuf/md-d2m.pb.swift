@@ -76,6 +76,53 @@ extension D2m_DeviceSlotExpirationPolicy: CaseIterable {
 
 #endif  // swift(>=4.2)
 
+/// Device registration state on the mediator server.
+enum D2m_DeviceSlotState: SwiftProtobuf.Enum {
+  typealias RawValue = Int
+
+  /// A new device slot has been allocated for the device (i.e. the device's
+  /// id was not registered on the server).
+  case new // = 0
+
+  /// An existing device slot has been reused for the device (i.e. the
+  /// device's id is already registered on the server).
+  case existing // = 1
+  case UNRECOGNIZED(Int)
+
+  init() {
+    self = .new
+  }
+
+  init?(rawValue: Int) {
+    switch rawValue {
+    case 0: self = .new
+    case 1: self = .existing
+    default: self = .UNRECOGNIZED(rawValue)
+    }
+  }
+
+  var rawValue: Int {
+    switch self {
+    case .new: return 0
+    case .existing: return 1
+    case .UNRECOGNIZED(let i): return i
+    }
+  }
+
+}
+
+#if swift(>=4.2)
+
+extension D2m_DeviceSlotState: CaseIterable {
+  // The compiler won't synthesize support with the UNRECOGNIZED case.
+  static var allCases: [D2m_DeviceSlotState] = [
+    .new,
+    .existing,
+  ]
+}
+
+#endif  // swift(>=4.2)
+
 /// Send along client information when connecting to the mediator server.
 ///
 /// This message is serialized, hex-encoded (lowercase) and then used as the
@@ -91,9 +138,12 @@ struct D2m_ClientUrlInfo {
   /// 32 byte device group id (`DGPK.public`)
   var deviceGroupID: Data = Data()
 
-  /// Server group, as assigned by the server when the Threema identity has
-  /// been created.
+  /// DEPRECATED: Use `server_group_string` instead.
   var serverGroup: UInt32 = 0
+
+  /// Server group, as assigned by the server when the Threema identity has been
+  /// created. Must consist of only digits or ASCII letters (`^[0-9a-zA-Z]+$`).
+  var serverGroupString: String = String()
 
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
@@ -156,8 +206,22 @@ struct D2m_ClientHello {
   /// Policy determining the device slot's lifetime
   var deviceSlotExpirationPolicy: D2m_DeviceSlotExpirationPolicy = .volatile
 
-  /// Device info (`d2d.DeviceInfo`), encrypted by `DGDIK.secret` and a random
-  /// nonce.
+  /// The expected device slot state on the server.
+  ///
+  /// If set, and if the expected device slot state does not match the actual
+  /// device slot state, the device will be dropped by the mediator server with
+  /// the close code `4115` before being registered.
+  var expectedDeviceSlotState: D2m_DeviceSlotState {
+    get {return _expectedDeviceSlotState ?? .new}
+    set {_expectedDeviceSlotState = newValue}
+  }
+  /// Returns true if `expectedDeviceSlotState` has been explicitly set.
+  var hasExpectedDeviceSlotState: Bool {return self._expectedDeviceSlotState != nil}
+  /// Clears the value of `expectedDeviceSlotState`. Subsequent reads from it will return its default value.
+  mutating func clearExpectedDeviceSlotState() {self._expectedDeviceSlotState = nil}
+
+  /// Device info (`d2d.DeviceInfo`), encrypted by `DGDIK.secret` and prefixed
+  /// with a random nonce.
   var encryptedDeviceInfo: Data = Data()
 
   var unknownFields = SwiftProtobuf.UnknownStorage()
@@ -197,6 +261,8 @@ struct D2m_ClientHello {
   }
 
   init() {}
+
+  fileprivate var _expectedDeviceSlotState: D2m_DeviceSlotState? = nil
 }
 
 #if swift(>=4.2)
@@ -231,63 +297,17 @@ struct D2m_ServerInfo {
   /// Maximum number of device slots
   var maxDeviceSlots: UInt32 = 0
 
-  var deviceSlotState: D2m_ServerInfo.DeviceSlotState = .new
+  /// Informs the device about its device slot state on the server
+  var deviceSlotState: D2m_DeviceSlotState = .new
 
   /// Device data shared among devices (`SharedDeviceData`), encrypted by
-  /// `DGSDDK.secret` and a random nonce.
+  /// `DGSDDK.secret` and prefixed with a random nonce.
   var encryptedSharedDeviceData: Data = Data()
 
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  /// Informs the device about its device slot state on the server
-  enum DeviceSlotState: SwiftProtobuf.Enum {
-    typealias RawValue = Int
-
-    /// A new device slot has been allocated for the device (i.e. the device's
-    /// id was not registered on the server).
-    case new // = 0
-
-    /// An existing device slot has been reused for the device (i.e. the
-    /// device's id is already registered on the server).
-    case existing // = 1
-    case UNRECOGNIZED(Int)
-
-    init() {
-      self = .new
-    }
-
-    init?(rawValue: Int) {
-      switch rawValue {
-      case 0: self = .new
-      case 1: self = .existing
-      default: self = .UNRECOGNIZED(rawValue)
-      }
-    }
-
-    var rawValue: Int {
-      switch self {
-      case .new: return 0
-      case .existing: return 1
-      case .UNRECOGNIZED(let i): return i
-      }
-    }
-
-  }
-
   init() {}
 }
-
-#if swift(>=4.2)
-
-extension D2m_ServerInfo.DeviceSlotState: CaseIterable {
-  // The compiler won't synthesize support with the UNRECOGNIZED case.
-  static var allCases: [D2m_ServerInfo.DeviceSlotState] = [
-    .new,
-    .existing,
-  ]
-}
-
-#endif  // swift(>=4.2)
 
 /// The device's reflection queue on the server has been fully transmitted to
 /// the device.
@@ -355,8 +375,8 @@ struct D2m_DevicesInfo {
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
-    /// Device info (`d2d.DeviceInfo`), encrypted by `DGDIK.secret` and a
-    /// random nonce.
+    /// Device info (`d2d.DeviceInfo`), encrypted by `DGDIK.secret` and prefixed
+    /// with a random nonce.
     var encryptedDeviceInfo: Data = Data()
 
     /// Unix-ish timestamp in milliseconds containing the most recent login
@@ -419,7 +439,7 @@ struct D2m_SetSharedDeviceData {
   // methods supported on all messages.
 
   /// Device data shared among devices (`d2d.SharedDeviceData`), encrypted by
-  /// `DGSDDK.secret` and a random nonce.
+  /// `DGSDDK.secret` and prefixed with a random nonce.
   var encryptedSharedDeviceData: Data = Data()
 
   var unknownFields = SwiftProtobuf.UnknownStorage()
@@ -441,8 +461,13 @@ struct D2m_BeginTransaction {
   // methods supported on all messages.
 
   /// The transaction scope (`d2d.TransactionScope`), encrypted by
-  /// `DGTSK.secret` and a random nonce.
+  /// `DGTSK.secret` and prefixed with a random nonce.
   var encryptedScope: Data = Data()
+
+  /// Time-to-live in seconds for this transaction. Once the TTL is reached, the
+  /// mediator server will abort the transaction and disconnect the client. When
+  /// set to `0`, the server's maximum transaction TTL will be used.
+  var ttl: UInt32 = 0
 
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
@@ -506,7 +531,8 @@ struct D2m_TransactionRejected {
   /// The device that currently holds the lock
   var deviceID: UInt64 = 0
 
-  /// The encrypted transaction scope associated with the currently locked transaction
+  /// The encrypted transaction scope associated with the currently locked
+  /// transaction
   var encryptedScope: Data = Data()
 
   var unknownFields = SwiftProtobuf.UnknownStorage()
@@ -531,7 +557,8 @@ struct D2m_TransactionEnded {
   /// The device that held the lock up until now
   var deviceID: UInt64 = 0
 
-  /// The encrypted transaction scope associated with the transaction that just ended
+  /// The encrypted transaction scope associated with the transaction that just
+  /// ended
   var encryptedScope: Data = Data()
 
   var unknownFields = SwiftProtobuf.UnknownStorage()
@@ -550,11 +577,19 @@ extension D2m_DeviceSlotExpirationPolicy: SwiftProtobuf._ProtoNameProviding {
   ]
 }
 
+extension D2m_DeviceSlotState: SwiftProtobuf._ProtoNameProviding {
+  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    0: .same(proto: "NEW"),
+    1: .same(proto: "EXISTING"),
+  ]
+}
+
 extension D2m_ClientUrlInfo: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".ClientUrlInfo"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "device_group_id"),
     2: .standard(proto: "server_group"),
+    3: .standard(proto: "server_group_string"),
   ]
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -565,6 +600,7 @@ extension D2m_ClientUrlInfo: SwiftProtobuf.Message, SwiftProtobuf._MessageImplem
       switch fieldNumber {
       case 1: try { try decoder.decodeSingularBytesField(value: &self.deviceGroupID) }()
       case 2: try { try decoder.decodeSingularUInt32Field(value: &self.serverGroup) }()
+      case 3: try { try decoder.decodeSingularStringField(value: &self.serverGroupString) }()
       default: break
       }
     }
@@ -577,12 +613,16 @@ extension D2m_ClientUrlInfo: SwiftProtobuf.Message, SwiftProtobuf._MessageImplem
     if self.serverGroup != 0 {
       try visitor.visitSingularUInt32Field(value: self.serverGroup, fieldNumber: 2)
     }
+    if !self.serverGroupString.isEmpty {
+      try visitor.visitSingularStringField(value: self.serverGroupString, fieldNumber: 3)
+    }
     try unknownFields.traverse(visitor: &visitor)
   }
 
   static func ==(lhs: D2m_ClientUrlInfo, rhs: D2m_ClientUrlInfo) -> Bool {
     if lhs.deviceGroupID != rhs.deviceGroupID {return false}
     if lhs.serverGroup != rhs.serverGroup {return false}
+    if lhs.serverGroupString != rhs.serverGroupString {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
@@ -640,6 +680,7 @@ extension D2m_ClientHello: SwiftProtobuf.Message, SwiftProtobuf._MessageImplemen
     3: .standard(proto: "device_id"),
     4: .standard(proto: "device_slots_exhausted_policy"),
     5: .standard(proto: "device_slot_expiration_policy"),
+    7: .standard(proto: "expected_device_slot_state"),
     6: .standard(proto: "encrypted_device_info"),
   ]
 
@@ -655,6 +696,7 @@ extension D2m_ClientHello: SwiftProtobuf.Message, SwiftProtobuf._MessageImplemen
       case 4: try { try decoder.decodeSingularEnumField(value: &self.deviceSlotsExhaustedPolicy) }()
       case 5: try { try decoder.decodeSingularEnumField(value: &self.deviceSlotExpirationPolicy) }()
       case 6: try { try decoder.decodeSingularBytesField(value: &self.encryptedDeviceInfo) }()
+      case 7: try { try decoder.decodeSingularEnumField(value: &self._expectedDeviceSlotState) }()
       default: break
       }
     }
@@ -679,6 +721,9 @@ extension D2m_ClientHello: SwiftProtobuf.Message, SwiftProtobuf._MessageImplemen
     if !self.encryptedDeviceInfo.isEmpty {
       try visitor.visitSingularBytesField(value: self.encryptedDeviceInfo, fieldNumber: 6)
     }
+    if let v = self._expectedDeviceSlotState {
+      try visitor.visitSingularEnumField(value: v, fieldNumber: 7)
+    }
     try unknownFields.traverse(visitor: &visitor)
   }
 
@@ -688,6 +733,7 @@ extension D2m_ClientHello: SwiftProtobuf.Message, SwiftProtobuf._MessageImplemen
     if lhs.deviceID != rhs.deviceID {return false}
     if lhs.deviceSlotsExhaustedPolicy != rhs.deviceSlotsExhaustedPolicy {return false}
     if lhs.deviceSlotExpirationPolicy != rhs.deviceSlotExpirationPolicy {return false}
+    if lhs._expectedDeviceSlotState != rhs._expectedDeviceSlotState {return false}
     if lhs.encryptedDeviceInfo != rhs.encryptedDeviceInfo {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
@@ -749,13 +795,6 @@ extension D2m_ServerInfo: SwiftProtobuf.Message, SwiftProtobuf._MessageImplement
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
-}
-
-extension D2m_ServerInfo.DeviceSlotState: SwiftProtobuf._ProtoNameProviding {
-  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "NEW"),
-    1: .same(proto: "EXISTING"),
-  ]
 }
 
 extension D2m_ReflectionQueueDry: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
@@ -991,6 +1030,7 @@ extension D2m_BeginTransaction: SwiftProtobuf.Message, SwiftProtobuf._MessageImp
   static let protoMessageName: String = _protobuf_package + ".BeginTransaction"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "encrypted_scope"),
+    2: .same(proto: "ttl"),
   ]
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -1000,6 +1040,7 @@ extension D2m_BeginTransaction: SwiftProtobuf.Message, SwiftProtobuf._MessageImp
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
       case 1: try { try decoder.decodeSingularBytesField(value: &self.encryptedScope) }()
+      case 2: try { try decoder.decodeSingularUInt32Field(value: &self.ttl) }()
       default: break
       }
     }
@@ -1009,11 +1050,15 @@ extension D2m_BeginTransaction: SwiftProtobuf.Message, SwiftProtobuf._MessageImp
     if !self.encryptedScope.isEmpty {
       try visitor.visitSingularBytesField(value: self.encryptedScope, fieldNumber: 1)
     }
+    if self.ttl != 0 {
+      try visitor.visitSingularUInt32Field(value: self.ttl, fieldNumber: 2)
+    }
     try unknownFields.traverse(visitor: &visitor)
   }
 
   static func ==(lhs: D2m_BeginTransaction, rhs: D2m_BeginTransaction) -> Bool {
     if lhs.encryptedScope != rhs.encryptedScope {return false}
+    if lhs.ttl != rhs.ttl {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

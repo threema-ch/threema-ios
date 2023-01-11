@@ -347,7 +347,8 @@ extension WCConnection {
         
         if client_ret!.success != 0 {
             delegate.currentWebClientSession()!.isConnecting = false
-            let errorString = String(format: "[Threema Web] salty relayed data responder error", (client_ret?.success)!)
+            let errorString =
+                "[Threema Web] salty relayed data responder error \(String(describing: client_ret?.success))"
             ValidationLogger.shared().logString(errorString)
             WCSessionManager.shared.removeWCSessionFromRunning(delegate.currentWCSession())
             return
@@ -395,7 +396,7 @@ extension WCConnection {
                 
             delegate.currentWebClientSession()!.isConnecting = false
             context?.cancelTimer()
-            let errorString = String(format: "[Threema Web] Connection ended with exit code %i", connect_success)
+            let errorString = "[Threema Web] Connection ended with exit code \(connect_success)"
             connectionStatus = .disconnected
             DDLogVerbose("[Threema Web] connectToWebClient -> Set connection state to \(connectionStatus)")
             ValidationLogger.shared().logString(errorString)
@@ -418,7 +419,7 @@ extension WCConnection {
         }
         else {
             delegate.currentWebClientSession()!.isConnecting = false
-            let errorString = String(format: "[Threema Web] salty client init error", salty_client_init_ret.success)
+            let errorString = "[Threema Web] salty client init error \(salty_client_init_ret.success)"
             ValidationLogger.shared().logString(errorString)
             WCSessionManager.shared.removeWCSessionFromRunning(delegate.currentWCSession())
         }

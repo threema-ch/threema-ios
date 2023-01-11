@@ -18,7 +18,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-import DifferenceKit
 import Foundation
 
 protocol MentionsTableViewDelegate: AnyObject {
@@ -27,28 +26,92 @@ protocol MentionsTableViewDelegate: AnyObject {
     func shouldHideMentionsTableView(_ hide: Bool)
 }
 
-class MentionsTableViewController: ThemedTableViewController {
+class MentionsTableViewController: ThemedViewController {
+    
+    private enum Section: Hashable {
+        case main
+    }
+    
     private var currMentions: [MentionableIdentity]
     private var allMentions: [MentionableIdentity]
     private var currSearchString = ""
     private weak var mentionsDelegate: MentionsTableViewDelegate?
+    
+    /// The table view set as root view
+    lazy var tableView: UITableView = {
+        let tableView = UITableView(frame: .zero)
+        tableView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        
+        return tableView
+    }()
+    
+    private lazy var dataSource = UITableViewDiffableDataSource<
+        Section,
+        MentionableIdentity
+    >(tableView: tableView) { tableView, indexPath, identity in
+        let cell: MentionsTableViewCell = tableView.dequeueCell(for: indexPath)
+        
+        cell.iconImageView.image = identity.contactImage
+        cell.iconImageView.contentMode = .scaleAspectFill
+        cell.nameLabel.text = identity.displayName
+        
+        cell.backgroundColor = Colors.backgroundChatBar
+        
+        return cell
+    }
+    
+    // MARK: - Lifecycle
     
     init(mentionsDelegate: MentionsTableViewDelegate, mentions: [MentionableIdentity]) {
         self.mentionsDelegate = mentionsDelegate
         self.currMentions = mentions
         self.allMentions = mentions
         
-        super.init(style: .plain)
+        super.init(nibName: nil, bundle: nil)
         
         view.backgroundColor = Colors.backgroundChatBar
     }
     
+    @available(*, unavailable)
+    override init(nibName nibNameOrNil: String?, bundle nibBundleOrNil: Bundle?) {
+        fatalError("No available")
+    }
+    
+    @available(*, unavailable)
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    override func loadView() {
+        // DON'T call super
+        view = tableView
+    }
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        
+        configureTableView()
+        updateMentions(allMentions)
+    }
+    
+    // MARK: - Configuration
+    
+    private func configureTableView() {
+        tableView.delegate = self
+        tableView.dataSource = dataSource
+        
+        tableView.registerCell(MentionsTableViewCell.self)
+    }
+    
+    // MARK: - Updates
+    
     private func updateMentions(_ mentions: [MentionableIdentity]) {
-        let source = currMentions
-        let target = mentions
-        let changeSet = StagedChangeset(source: source, target: target)
-        tableView.reload(using: changeSet, with: .automatic) { contacts in
-            self.currMentions = contacts
+        var snapshot = NSDiffableDataSourceSnapshot<Section, MentionableIdentity>()
+        snapshot.appendSections([.main])
+        snapshot.appendItems(mentions)
+        
+        dataSource.apply(snapshot) {
+            self.currMentions = mentions
         }
     }
     
@@ -65,31 +128,12 @@ class MentionsTableViewController: ThemedTableViewController {
         
         return !filteredMentions.isEmpty
     }
-    
-    @available(*, unavailable)
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-    
-    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        currMentions.count
-    }
-    
-    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let identity = currMentions[indexPath.row]
-        
-        let cell = MentionsTableViewCell(reuseIdentifier: identity.identity + currSearchString)
-        
-        cell.iconImageView.image = identity.contactImage
-        cell.iconImageView.contentMode = .scaleAspectFill
-        cell.nameLabel.text = identity.displayName
-        
-        cell.backgroundColor = Colors.backgroundChatBar
-        
-        return cell
-    }
-    
-    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+}
+
+// MARK: - UITableViewDelegate
+
+extension MentionsTableViewController: UITableViewDelegate {
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         mentionsDelegate?.contactSelected(contact: currMentions[indexPath.row])
     }
 }

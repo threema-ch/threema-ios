@@ -22,7 +22,7 @@ import CocoaLumberjackSwift
 import Foundation
 import PromiseKit
 
-public class GroupManager: NSObject, GroupManagerProtocol {
+public final class GroupManager: NSObject, GroupManagerProtocol {
     
     public enum GroupError: Error {
         case creatorNotFound
@@ -45,7 +45,8 @@ public class GroupManager: NSObject, GroupManagerProtocol {
         case localNotFound
         case error
     }
-    
+
+    private let serverConnector: ServerConnectorProtocol
     private let myIdentityStore: MyIdentityStoreProtocol
     private let contactStore: ContactStoreProtocol
     private let taskManager: TaskManagerProtocol
@@ -54,6 +55,7 @@ public class GroupManager: NSObject, GroupManagerProtocol {
     private let groupPhotoSender: GroupPhotoSenderProtocol
     
     init(
+        _ serverConnector: ServerConnectorProtocol,
         _ myIdentityStore: MyIdentityStoreProtocol,
         _ contactStore: ContactStoreProtocol,
         _ taskManager: TaskManagerProtocol,
@@ -61,6 +63,7 @@ public class GroupManager: NSObject, GroupManagerProtocol {
         _ entityManager: EntityManager,
         _ groupPhotoSender: GroupPhotoSenderProtocol
     ) {
+        self.serverConnector = serverConnector
         self.myIdentityStore = myIdentityStore
         self.contactStore = contactStore
         self.taskManager = taskManager
@@ -71,6 +74,7 @@ public class GroupManager: NSObject, GroupManagerProtocol {
     
     @objc public convenience init(entityManager: EntityManager) {
         self.init(
+            ServerConnector.shared(),
             MyIdentityStore.shared(),
             ContactStore.shared(),
             TaskManager(),
@@ -82,6 +86,7 @@ public class GroupManager: NSObject, GroupManagerProtocol {
     
     override public convenience init() {
         self.init(
+            ServerConnector.shared(),
             MyIdentityStore.shared(),
             ContactStore.shared(),
             TaskManager(),
@@ -133,7 +138,8 @@ public class GroupManager: NSObject, GroupManagerProtocol {
             groupID: groupID,
             creator: creator,
             members: members,
-            systemMessageDate: systemMessageDate
+            systemMessageDate: systemMessageDate,
+            sourceCaller: .local
         ).then { group -> Promise<(Group, Set<String>?)> in
             guard let group = group else {
                 return Promise(error: GroupError.groupNotFound)
@@ -202,13 +208,15 @@ public class GroupManager: NSObject, GroupManagerProtocol {
     ///   - creator: Creator (identity) of the group, unique with ID
     ///   - members: Members (identity list) of the group
     ///   - systemMessageDate: Date for new system message(s), if `nil` no message is posted
+    ///   - sourceCaller: Delete member (is hidden contact) only is not `SourceCaller.sync`
     /// - Returns: Created or updated group or is Nil when group is deleted
     /// - Throws: GroupError.contactForCreatorMissing, GroupError.contactForMemberMissing
     public func createOrUpdateDB(
         groupID: Data,
         creator: String,
         members: Set<String>,
-        systemMessageDate: Date?
+        systemMessageDate: Date?,
+        sourceCaller: SourceCaller
     ) -> Promise<Group?> {
         if !creator.elementsEqual(myIdentityStore.identity) {
             // Record a pseudo sync request so we won't trigger another one if we process
@@ -334,6 +342,13 @@ public class GroupManager: NSObject, GroupManagerProtocol {
                                         member: memberContact,
                                         type: kSystemMessageGroupMemberForcedLeave,
                                         date: systemMessageDate
+                                    )
+                                }
+
+                                if sourceCaller != .sync, memberContact.isContactHidden {
+                                    self.contactStore.deleteContact(
+                                        identity: memberIdentity,
+                                        entityManagerObject: self.entityManager
                                     )
                                 }
                             }
@@ -479,16 +494,22 @@ public class GroupManager: NSObject, GroupManagerProtocol {
         groupID: Data,
         creator: String,
         members: Set<String>,
-        systemMessageDate: Date?
+        systemMessageDate: Date?,
+        sourceCaller: SourceCaller
     ) -> AnyPromise {
         AnyPromise(createOrUpdateDB(
             groupID: groupID,
             creator: creator,
             members: members,
-            systemMessageDate: systemMessageDate
+            systemMessageDate: systemMessageDate,
+            sourceCaller: sourceCaller
         ))
     }
     
+    /// Individually fetches the contacts with the listed identities from the database or requests them individually from the directory server.
+    /// Use `fetchContacts` to fetch multiple contacts
+    /// - Parameter identities: identities to fetch from the database or directory server
+    /// - Returns: The fetched contact or an error
     private func fetchContacts(identities: [String]) -> Promise<[Promise<FetchedContactOrError>]> {
         Promise { seal in
             self.contactStore.prefetchIdentityInfo(Set(identities)) {
@@ -496,6 +517,7 @@ public class GroupManager: NSObject, GroupManagerProtocol {
                     Promise<FetchedContactOrError> { singleContactSeal in
                         self.contactStore.fetchPublicKey(
                             for: identity,
+                            acquaintanceLevel: .group,
                             entityManager: self.entityManager,
                             onCompletion: { _ in
                                 guard self.entityManager.entityFetcher.contact(for: identity) != nil else {
@@ -526,38 +548,6 @@ public class GroupManager: NSObject, GroupManagerProtocol {
         }
     }
     
-    /// Individually fetches the contacts with the listed identities from the database or requests them individually from the directory server.
-    /// Use `fetchContacts` to fetch multiple contacts
-    /// - Parameter identites: identities to fetch from the database or directory server
-    /// - Returns: The fetched contact or an error
-    private func directFetchContacts(identites: [String]) -> [Promise<FetchedContactOrError>] {
-        var fetchResults = [Promise<FetchedContactOrError>]()
-
-        for identity in identites {
-            fetchResults.append(
-                Promise<FetchedContactOrError> { seal in
-                    self.contactStore.fetchPublicKey(for: identity, entityManager: entityManager, onCompletion: { _ in
-                        guard self.entityManager.entityFetcher.contact(for: identity) != nil else {
-                            seal.fulfill(.localNotFound)
-                            return
-                        }
-                        seal.fulfill(.added)
-                    }) { error in
-                        DDLogError("Error fetch public key")
-                        if let nsError = error as? NSError, nsError.domain == NSURLErrorDomain, nsError.code == 404 {
-                            seal.fulfill(.revokedOrInvalid(identity))
-                        }
-                        else {
-                            seal.fulfill(.error)
-                        }
-                    }
-                }
-            )
-        }
-
-        return fetchResults
-    }
-
     // MARK: - Set name
     
     @discardableResult public func setName(
@@ -788,7 +778,7 @@ public class GroupManager: NSObject, GroupManagerProtocol {
     
     // MARK: - Leave
     
-    /// Send group leave and leave the group, admin of the group may not allowd to leave the group.
+    /// Send group leave and leave the group, admin of the group may not allowed to leave the group.
     ///
     /// - Parameters:
     ///   - groupID: ID (8 bytes) of the group, unique with creator
@@ -801,18 +791,26 @@ public class GroupManager: NSObject, GroupManagerProtocol {
             return
         }
 
-        var sendToMembers = [String]()
-        if let toMembers = toMembers {
-            sendToMembers = toMembers
-        }
-        else {
-            if let conversation = getConversation(for: GroupIdentity(id: groupID, creator: creator)) {
-                sendToMembers = conversation.members.map(\.identity)
+        // Leave must be called even the group not exists
+        if let group = getGroup(groupID, creator: creator) {
+            guard group.state != .left, group.state != .forcedLeft else {
+                DDLogWarn("I can't left the group, I'm not member of this group anymore")
+                return
             }
         }
 
+        var currentMembers = [String]()
+        var hiddenContacts = [String]()
+        entityManager.performBlockAndWait {
+            if let conversation = self.getConversation(for: GroupIdentity(id: groupID, creator: creator)) {
+                currentMembers = conversation.members.map(\.identity)
+                hiddenContacts = conversation.members.filter(\.isContactHidden).map(\.identity)
+            }
+        }
+
+        var sendToMembers = toMembers ?? currentMembers
         if sendToMembers.isEmpty {
-            // Add Me as receiver to relflect group leave message
+            // Add Me as receiver to reflect group leave message
             sendToMembers.append(myIdentityStore.identity)
         }
 
@@ -821,6 +819,7 @@ public class GroupManager: NSObject, GroupManagerProtocol {
         task.groupCreatorIdentity = creator
         task.fromMember = myIdentityStore.identity
         task.toMembers = sendToMembers
+        task.hiddenContacts = hiddenContacts
         taskManager.add(taskDefinition: task)
 
         leaveDB(
@@ -924,26 +923,16 @@ public class GroupManager: NSObject, GroupManagerProtocol {
                     return
                 }
 
-                // Group found, kick identities or all members except me, and left the group
-                var removeMembers: Set<String>
+                // Add task to kick all active members (and reflect left group), and left the group
+                let task = TaskDefinitionGroupDissolve(group: group)
                 if let identities = identities {
-                    removeMembers = identities.filter { $0 != self.myIdentityStore.identity }
+                    task.toMembers = Array(identities)
                 }
                 else {
-                    removeMembers = group.allMemberIdentities.filter { $0 != self.myIdentityStore.identity }
+                    task.toMembers = group.allActiveMemberIdentitiesWithoutCreator
                 }
 
-                if !removeMembers.isEmpty {
-                    self.taskManager.add(
-                        taskDefinition: TaskDefinitionSendGroupCreateMessage(
-                            group: group,
-                            to: [],
-                            removed: Array(removeMembers),
-                            members: group.allMemberIdentities,
-                            sendContactProfilePicture: false
-                        )
-                    )
-                }
+                self.taskManager.add(taskDefinition: task)
 
                 if group.state == .active {
                     // I leave the group
@@ -1067,15 +1056,20 @@ public class GroupManager: NSObject, GroupManagerProtocol {
         DDLogWarn("Group ID \(groupID.hexString) (creator \(creator)) not found. Requesting sync from creator.")
         
         // Fetch creator first, contact could be missing
-        contactStore.fetchPublicKey(for: creator, entityManager: entityManager, onCompletion: { _ in
-            if self.entityManager.entityFetcher.contact(for: creator) != nil {
-                self.recordSendSyncRequest(groupID, creator)
-                self.sendGroupSyncRequest(groupID, creator)
+        contactStore.fetchPublicKey(
+            for: creator,
+            acquaintanceLevel: .group,
+            entityManager: entityManager,
+            onCompletion: { _ in
+                if self.entityManager.entityFetcher.contact(for: creator) != nil {
+                    self.recordSendSyncRequest(groupID, creator)
+                    self.sendGroupSyncRequest(groupID, creator)
+                }
+                else {
+                    DDLogError("Could not send group request sync, because of missing group creator \(creator) contact")
+                }
             }
-            else {
-                DDLogError("Could not send group request sync, because of missing group creator \(creator) contact")
-            }
-        }) { _ in
+        ) { _ in
             DDLogError("Could not fetch public key for \(creator)")
         }
     }
@@ -1300,7 +1294,8 @@ public class GroupManager: NSObject, GroupManagerProtocol {
         to toMembers: [String],
         withoutCreateMessage: Bool
     ) -> Promise<Void> {
-        guard !toMembers.isEmpty else {
+        /// Sync group if `toMembers` empty to reflect note groups if multi device activated.
+        guard !(toMembers.isEmpty && !serverConnector.isMultiDeviceActivated) else {
             return Promise()
         }
 

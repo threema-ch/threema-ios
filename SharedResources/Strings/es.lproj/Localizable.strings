@@ -82,7 +82,7 @@
 "audio" = "Audio";
 "file" = "Archivo";
 "location" = "Ubicación";
-"locating" = "Establecer ubicación...";
+"locating" = "Ubicando...";
 "unknown_location" = "Ubicación desconocida";
 "open" = "Abrir";
 "call" = "Llamar"; /* Short version for "Start Threema Call" */
@@ -103,6 +103,14 @@
 "threema_id" = "ID de Threema";
 "nickname" = "Alias público";
 "add_button" = "Añadir";
+"chatview_contextmenu_more" = "Más";
+
+"file_message_image" = "Imagen";
+"file_message_sticker" = "Sticker";
+"file_message_animated_image" = "GIF";
+"file_message_video" = "Vídeo";
+"file_message_voice" = "Mensaje de voz";
+"file_message_file" = "Archivo";
 
 "chat_back_button_accessibility" = "%d no leídos";
 
@@ -145,6 +153,7 @@
 "high" = "alto";
 "max_1_minute" = "Máx. 1 minuto";
 "max_x_minutes" = "Máx. %d minutos";
+"still_compressed_note" = "Los vídeos muy largos podrían comprimirse independientemente de este ajuste.";
 
 /* Sound names */
 "push_sound_title" = "Sonido de notificación automática";
@@ -292,6 +301,7 @@
 "conversation_delete_confirm" = "¿Eliminar este chat de este dispositivo?";
 "delete_all" = "Eliminar todos";
 "delete_n" = "Eliminar (%d)";
+
 "message_cannot_play_movie" = "No se puede reproducir el vídeo.";
 
 "identity_not_found_title" = "ID desconocida";
@@ -381,10 +391,6 @@
 "contact_invalid_cannot_send" = "No puede enviar un mensaje a este contacto porque éste no es válido.";
 "contact_betafeedback_cannot_send" = "Esta no es una versión beta, por favor envíe sus comentarios a *ASISTENCIA.";
 "group_sync_button" = "Sincronizar miembros";
-"group_sync_title" = "Grupo sincronizado";
-"group_sync_message" = "Los datos actuales de este grupo se han enviado a todos los miembros.";
-"group_sync_error_title" = "Error de sincronización de grupo";
-"group_sync_error_message" = "Inténtalo de nuevo más tarde.";
 "group_clone_button" = "Clonar grupo";
 "group_clone_title" = "Clonar grupo";
 "group_clone_message" = "Se creará un clon del grupo contigo como admiistrador. ¿Continuar?";
@@ -413,6 +419,10 @@
 "add_note_group_info" = "*No está solo aquí*\nUse este chat como cuaderno seguro para apuntar mensajes de texto, medios documentos.";
 "end_note_group_info" = "*Ya no está solo en este chat*\nLos nuevos mensajes se enviarán a todos los miembros del grupo.";
 
+"chat_search_searching" = "Buscando...";
+"chat_search_no_matches" = "No hay coincidencias";
+"chat_search_matches" = "%d de %d coincidencias";
+
 "choose_recipient" = "Elegir destinatario";
 
 "msg_unknown_group_request_sync_x_title" = "Mensaje recibido en un grupo desconocido";
@@ -425,6 +435,7 @@
 "tap_to_change" = "Tocar para cambiar";
 "next" = "Siguiente";
 "unread_messages" = "Mensajes no leídos";
+"unread_messages_line_with_count" = "Mensajes no leídos (%d)";
 
 /* Verification level popovers in chat view */
 "verification_level_title" = "Nivel de seguridad";
@@ -446,7 +457,6 @@
 "level4_explanation" = "Contacto interno con una identidad y clave pública se han validado personalmente escaneando su código QR.";
 
 "id_verified_title" = "ID validado";
-"id_verified_message" = "Se ha verificado la identidad y clave pública de %@.";
 
 /* Invalid country code alert */
 "invalid_country_code_title" = "Región no válida";
@@ -468,9 +478,7 @@
 "backgrounding_off" = "La aplicación se desconectará inmediatamente en segundo plano.";
 "proximity_monitoring_off" = "No se apagará la pantalla al cubrir el sensor de proximidad.";
 "proximity_monitoring_on" = "Durante una llamada de voz y al grabar o reproducir mensajes de voz, la pantalla se apaga si se cubre el sensor de proximidad.";
-"validation_logging_expl" = "El registro de depuración puede utilizarse para validar de forma independiente el cifrado de extremo a extremo de Threema.\nDetalles: https://threema.ch/validation";
-
-"validation_log_clear" = "Eliminar registro";
+"debug_log_clear" = "Borrar registro";
 "log_empty_message" = "El registro de depuración está vacío.";
 "cannot_send_mail_message" = "No se ha configurado ninguna cuenta de correo electrónico en este dispositivo.";
 
@@ -508,8 +516,6 @@
 "release_profilepicture_to" = "Liberar la foto de perfil para";
 "contact_added_to_profile_picture_list" = "Este contacto recibirá tu imagen de perfil cuando le escribas.";
 "contact_removed_from_profile_picture_list" = "Este contacto ya no recibirá tu imagen de perfil.";
-"contact_send_profile_picture_success" = "Tu imagen de perfil se ha enviado correctamente al contacto.";
-"contact_send_profile_picture_error" = "No se pudo enviar tu imagen de perfil. Por favor, inténtalo de nuevo más tarde.";
 
 "sync_group" = "Sincronizar grupos";
 
@@ -535,6 +541,13 @@
 "exclude_deleted_id_title" = "¿Excluir ID de Threema de «%@» de la sincronización?";
 "exclude_deleted_id_message" = "Puede administrar las exclusiones en la configuración de esfera privada.";
 "exclude_deleted_id_exclude_button" = "Excluir";
+
+"forward_security" = "Secreto perfecto hacia adelante (PFS)";
+"forward_security_none" = "Ninguno";
+"forward_security_2dh" = "Unilateral";
+"forward_security_4dh" = "Completo";
+"forward_security_clear_sessions" = "Borrar todas las sesiones";
+"forward_security_explainer_footer" = "Secreto perfecto hacia adelante (PFS) protege una comunicación grabada del descifrado retroactivo aunque la clave de cifrado a largo plazo se vea comprometida.\nLa opción se puede activar si la aplicación de ambas partes es compatible con PFS.";
 
 /* create id */
 "lets_get_started" = "Vamos a empezar";
@@ -652,7 +665,7 @@
 "new_message_no_access_title" = "Mensajes nuevos";
 "new_message_no_access_message" = "Abra %@ para recuperar los mensajes recibidos.";
 "new_message_invalid_license" = "Tu licencia ha expirado. Abre la aplicación para continuar.";
-"new_message_db_requires_migration" = "Se requiere una migración de la base de datos. Abra la app para continuar.";
+"new_message_db_requires_migration" = "Threema se ha actualizado. Abra la aplicación para completar la actualización.";
 
 /* reminder messages */
 "push_reminder_title" = "Notificaciones no activadas";
@@ -693,7 +706,7 @@
 "draft" = "Borrador";
 "new_message_accessibility" = "Nuevo mensaje: ";
 "scoll_down_text" = "Scroll down";
-"quote_interaction_hint" = "Pulsa para saltar al mensaje citado.";
+"quote_interaction_hint" = "Salta al mensaje citado";
 
 /* TTOpenInAppActivity */
 "Open in ..." = "Abrir en...";
@@ -784,9 +797,6 @@
 "call_status_unknown" = "Desconocido";
 "call_status_blocked" = "Contacto bloqueado";
 "call_status_failed_title" = "Threema Voz";
-"call_status_failed_connected_message" = "Conexión perdida";
-"call_status_failed_initializing_message" = "No se ha podido establecer la conexión";
-"call_status_failed_sdp_patch_message" = "No se pudo crear Threema Voz";
 
 "call_threema_initiator_video_info" = "Toque aquí para activar la cámara";
 "call_threema_remote_video_activated_info_title" = "Videollamadas";
@@ -840,7 +850,7 @@
 "privacy_footer" = "Oculta todos los chats privados en el resumen de chats. Tienes que establecer un código para activar este ajuste.";
 
 "group_leave_sheet_title" = "¿Abandonar \"%@\"?";
-"group_leave_sheet_message" = "Si solo abandonas el grupo, no podrás seguir participando en la conversación, pero podrás seguir accediendo al historial del chat.";
+"group_leave_sheet_message" = "Si abandona el grupo, no podrá seguir participando en la conversación, pero podrá seguir viendo el historial de chat.";
 
 "group_leave_delete_sheet_title" = "¿Abandonar y eliminar \"%@\"?";
 "group_leave_delete_sheet_message" = "Si abandonas y eliminas el grupo, no podrás volver a participar en la conversación y se eliminará el historial del chat.";
@@ -863,7 +873,7 @@
 "archived_alert_title" = "Chats archivados";
 "archived_alert_message" = "Para ver tus chats archivados, toca el botón de la parte inferior del resumen de chats.";
 
-"private_delete_info_alert_message" = "Al eliminar un chat privado, no se marcará otro chat como privado automáticamente.";
+"private_delete_info_alert_message" = "Al eliminar un chat privado, no se volverá a marcar otro chat como privado.";
 
 /* End Edit */
 
@@ -1074,6 +1084,13 @@
 "file_deleted_title" = "Archivo eliminado";
 "file_not_found_title" = "Archivo no encontrado";
 
+"manage_all_conversations" = "Gestionar todos los chats";
+"manage_media_and_files" = "Gestionar archivos";
+"manage_messages" = "Gestionar mensajes";
+"messages" = "Mensajes";
+"files" = "Archivos";
+
+
 // Settings
 "settings_privacy" = "Esfera privada";
 "settings_appearance" = "Apariencia";
@@ -1108,6 +1125,7 @@
 "settings_devmode_quote_v2" = "Quote V2";
 "settings_devmode_new_chat_view" = "Nueva vista de chat";
 "settings_devmode_stylekit_debug_view" = "Vista de depuración de StyleKit";
+"settings_devmode_id_colors_debug_view" = "Vista de depuración de ID Colors";
 
 // Appearance
 "settings_appearance_theme_section" = "Tema";
@@ -1117,6 +1135,9 @@
 "settings_appearance_theme_selected" = "%@ tema activo";
 "settings_appearance_theme_active" = "Activo";
 "settings_appearance_hide_app_icon" = "Icono de la app";
+"settings_appicon_default_header" = "Icono predeterminado";
+"settings_appicon_legacy_header" = "Iconos de Threema";
+"settings_appicon_special_header" = "Iconos especiales";
 "settings_appearance_hide_stale_contacts" = "Ocultar ID inactivos";
 "settings_appearance_show_profile_pictures" = "Mostrar las fotos de perfil";
 "settings_appearance_display_order" = "Mostrar como";
@@ -1241,8 +1262,7 @@ Si no faltan archivos (multimedia) en %@, vacíe la papelera de reciclaje para e
 "unknown_file_type" = "Tipo de archivo desconocido";
 "unknown_file_size" = "Tamaño de archivo desconocido";
 "unknown_file_name" = "Nombre de archivo desconocido";
-
-"ballots_with_open_count_accessibility" = "Encuestas (%d abiertas)";
+"sending_to" = "Destinatarios";
 
 /* Ballot */
 "ballot" = "Sondeo";
@@ -1260,8 +1280,8 @@ Si no faltan archivos (multimedia) en %@, vacíe la papelera de reciclaje para e
 "ballot_clone_warning_title" = "Atención";
 "ballot_clone_warning_message" = "Se invalidarán todos los datos introducidos.";
 "ballot_feature_level_warning_title" = "Tenga en cuenta";
-"ballot_feature_level_warning_message" = "Algunos de los participantes tienen una versión de la aplicación que todavía no soporta sondeos: %@";
-"ballot_feature_level_error_message" = "Ninguno de los participantes tiene una versión de la aplicación que soporte sondeos: %@";
+"ballot_feature_level_warning_message" = "Algunos de los participantes tienen una versión de la aplicación que todavía no admite sondeos: %@";
+"ballot_feature_level_error_message" = "Ninguno de los participantes tiene una versión de la aplicación que admita sondeos: %@";
 
 "ballot_add_choice" = "Agregar elección";
 "ballot_create" = "Crear sondeo";
@@ -1294,6 +1314,10 @@ Si no faltan archivos (multimedia) en %@, vacíe la papelera de reciclaje para e
 "voteCancelMessage" = "Si sales antes de emitir tu voto, se descartará.";
 "discardVoteTitle" = "Descartar";
 
+"ballot_load_error" = "Los sondeos no están disponibles";
+
+"ballots_with_open_count_accessibility" = "Encuestas (%d abiertas)";
+
 /* Custom Privacy Settings */
 "privacySetting_header" = "Privacidad";
 "send_readReceipts" = "Acuses de recibo";
@@ -1316,23 +1340,33 @@ Si no faltan archivos (multimedia) en %@, vacíe la papelera de reciclaje para e
 "reset_overrides_alert_action" = "Restablecer todo";
 
 /* Multi Decvice */
-"multi_device_linked_devices_title" = "Dispositivos vinculados";
+"multi_device_linked_devices_title" = "Vista previa multidispositivo";
+"multi_device_linked_devices_desc" = "Activa o desactiva la Vista previa multidispositivo para este dispositivo.";
 "multi_device_linked_devices_refresh" = "Desliza para actualizar";
 "multi_device_linked_devices_loading_failed" = "Error al cargar dispositivos: %@";
 "multi_device_linked_devices_failed_to_load_title" = "Error al cargar la lista de dispositivos";
 "multi_device_linked_devices_failed_to_load_message" = "No se han podido cargar los dispositivos vinculados. Compruebe su conexión a Internet e inténtelo de nuevo.";
 "multi_device_linked_devices_this" = "Este dispositivo";
 "multi_device_linked_devices_others" = "Otros dispositivos";
+"multi_device_linked_devices_last_login" = "Último acceso: %@";
 "multi_device_linked_devices_remove_failed" = "Error al eliminar el dispositivo: %@";
+"multi_device_linked_devices_removed_devices_title" = "¿Desactivar multidispositivo?";
+"multi_device_linked_devices_removed_devices_message" = "Se eliminarán todos los dispositivos conectados y se desactivará multidispositivo";
+"multi_device_linked_devices_removed_devices_ok" = "Desactivar";
+"multi_device_linked_duplicate_contacts_title" = "Duplicar contactos";
+"multi_device_linked_duplicate_contacts_desc" = "No puede vincular este dispositivo porque hay contactos duplicados (%@). Póngase en contacto con nuestro equipo de asistencia.";
+
 "multi_device_linked_devices_failed_remove_title" = "Error al eliminar el dispositivo";
 "multi_device_linked_devices_failed_remove_message" = "No se ha podido eliminar el dispositivo vinculado. Inténtalo de nuevo.";
 "multi_device_linked_devices_failed_remove_message_2" = "No se ha podido eliminar el dispositivo vinculado. Compruebe su conexión a Internet e inténtelo de nuevo.";
+"multi_device_slot_state_mismatch_alert" = "Se ha desvinculado este dispositivo. Eso significa que actualmente no puede enviar ni recibir mensajes nuevos. Si no ha sido usted quien lo ha hecho, tenga en cuenta que podría haber sucedido por razones técnicas durante la fase de Vista previa técnica. Le pedimos disculpas por las molestias. Para volver a vincular el dispositivo, consulte las preguntas frecuentes: https://three.ma/faq";
 
 "myprofile_link_email_phone_footer" = "Si vincula su dirección de correo electrónico o número de teléfono móvil con su ID, otras personas podrán encontrarle automáticamente en %@ siempre que lo tengan en la libreta de direcciones.";
 "myprofile_link_email_footer" = "Si vincula su dirección de correo electrónico con su ID, otras personas podrán encontrarle automáticamente en %@, siempre que le tengan en la libreta de direcciones.";
 "myprofile_link_email_onprem_footer" = "Si vincula su dirección de correo electrónico con su ID, otras personas de este servidor (%@) podrán encontrarle automáticamente en %@, siempre que le tengan en la libreta de direcciones.";
 "myprofile_link_phone_footer" = "Si vincula su número de teléfono móvil con su ID, otras personas podrán encontrarle automáticamente en %@ siempre que lo tengan en la libreta de direcciones.";
 "myprofile_link_phone_onprem_footer" = "Si vincula su número de teléfono móvil con su ID, otras personas de este servidor (%@) podrán encontrarle automáticamente en %@, siempre que le tengan en la libreta de direcciones.";
+
 "mentions_table_view_cell_accessibility_hint" = "Pulsa para crear una mención";
 
 // POI
@@ -1386,6 +1420,141 @@ Si no faltan archivos (multimedia) en %@, vacíe la papelera de reciclaje para e
 "detailView_messageID" = "ID del mensaje";
 "detailView_group_acknowledged" = "Conforme (%d)";
 "detailView_group_declined" = "No conforme (%d)";
+
+// In-app notifications
+"notification_copying_succeeded" = "Elemento copiado";
+"notification_copying_failed" = "Error al copiar";
+
+"notification_saving_succeeded" = "Elemento guardado";
+"notification_saving_failed" = "Error al guardar";
+
+"notification_sending_failed" = "Error al enviar";
+
+"notification_deleted_messages_count" = "%d mensajes eliminados";
+
+"notification_cannot_play_video" = "No se puede reproducir el vídeo";
+
+"notification_call_failed_connected" = "Se ha perdido la conexión";
+"notification_call_failed_not_connected" = "Error al establecer la conexión";
+"notification_call_creation_failed" = "Error al crear la llamada";
+
+"notification_sending_profile_picture_succeeded" = "Foto de perfil enviada";
+"notification_sending_profile_picture_failed" = "Error al enviar";
+
+"notification_sending_profile_picture_failed_settings_sync_message" = "Ajustes sincronizados";
+
+"notification_group_sync_succeeded" = "Grupo sincronizado";
+"notification_group_sync_failed" = "Error al sincronizar grupo";
+
+// Forward security status messages
+"forward_security_message_without" = "Se ha recibido un mensaje sin Secreto perfecto hacia adelante (PFS). Compruebe que el remitente haya desactivado PFS intencionadamente.";
+"forward_security_session_established" = "A partir de ahora, los mensajes de este chat están protegidos por Secreto perfecto hacia adelante (PFS).";
+"forward_security_session_established_rx" = "A partir de ahora, los mensajes recibidos en este chat están protegidos por Secreto perfecto hacia adelante (PFS). Active PFS en la información del contacto para proteger también los mensajes enviados.";
+"forward_security_messages_skipped_1" = "Se ha perdido un mensaje desde el último mensaje.";
+"forward_security_messages_skipped_x" = "Se han perdido %d mensajes desde el último mensaje.";
+"forward_security_session_reset" = "Se ha restablecido la sesión de Secreto perfecto hacia adelante (PFS) con este contacto. Esto puede ocurrir si el contacto ha cambiado de dispositivo o ha reinstalado la aplicación.";
+"forward_security_message_out_of_order" = "Se ha recibido un mensaje fuera de servicio y no ha podido descifrarse.";
+"forward_security_status_enabled_outgoing" = "Secreto perfecto hacia adelante (PFS) activado para mensajes salientes.";
+"forward_security_status_disabled_outgoing" = "Secreto perfecto hacia adelante (PFS) desactivado para mensajes salientes.";
+"forward_security_contact_has_downgraded_to_an_incompatible_version" = "Este contacto ha empezado a utilizar una versión de la aplicación que no admite Secreto perfecto hacia adelante (PFS). A partir de ahora, los mensajes se enviarán sin PFS.";
+
+// Profile view
+"accessibility_profile_button_hint_contact" = "Abre la información del contacto";
+"accessibility_profile_button_hint_group" = "Abre la información del grupo";
+
+// Chat bar
+"accessibility_chatbar_label" = "Campo de entrada del chat.";
+"accessibility_chatbar_hint" = "Redactar mensaje.";
+"accessibility_chatbar_value" = "Texto actual: %@";
+"accessibility_chatbar_quote_label" = "Mensaje citado seleccionado: %@.";
+"accessibility_chatbar_close_quote_button_label" = "Finalizar cita.";
+"accessibility_chatbar_close_quote_button_hint" = "Finaliza la cita del mensaje seleccionado.";
+
+// Message senders
+"accessibility_senderDescription_ownMessage" = "Su %@";
+"accessibility_senderDescription_otherMessage_group" = "%@ de %@";
+"accessibility_senderDescription_systemMessage" = "Información: %@";
+
+// Message types
+"accessibility_textMessage_description" = "Mensaje";
+"accessibility_locationMessage_description" = "Ubicación";
+"accessibility_systemCallMessage_description" = "Llamada";
+"accessibility_fileMessage_description" = "Archivo";
+"accessibility_imageMessage_description" = "Imagen";
+"accessibility_videoMessage_description" = "Vídeo";
+"accessibility_animatedImageMessage_description" = "GIF";
+"accessibility_stickerMessage_description" = "Sticker";
+"accessibility_voiceMessage_description" = "Mensaje de voz";
+"accessibility_pollMessage_description" = "Sondeo";
+
+// Message hints
+"accessibility_audioMessage_hint" = "Reproducir mensaje de voz.";
+"accessibility_locationMessage_hint" = "Abrir ubicación.";
+"accessibility_systemCallMessage_hint" = "Iniciar llamada";
+"accessibility_imageMessage_hint" = "Abrir imagen.";
+"accessibility_videoMessage_hint" = "Reproducir vídeo.";
+"accessibility_fileMessage_hint" = "Abrir vista previa del archivo.";
+"accessibility_animatedImageMessage_hint" = "Cambiar animación GIF";
+"accessibility_animatedStickerMessage_hint" = "Cambiar animación en sticker.";
+"accessibility_ballotMessage_hint_open" = "Abrir sondeo para votar.";
+"accessibility_ballotMessage_hint_closed" = "Mostrar resultados del sondeo.";
+"accessibility_voiceMessage_speed_hint" = "Cambiar velocidad de reproducción.";
+
+// Other
+"accessibility_caption" = "Subtítulo: %@";
+"accessibility_poll_content_open" = "%@. Título: %@, %@";
+"accessibility_poll_open" = "Abrir";
+"accessibility_poll_closed" = "Cerrado";
+"accessibility_file_duration" = "Duración: %@.";
+
+// Message status types
+"accessibility_status_acknowledged_plus_time" = "Aprobado, %@";
+"accessibility_status_declined_plus_time" = "Rechazado, %@";
+"accessibility_status_sending_plus_time" = "Enviando, %@";
+"accessibility_status_sent_plus_time" = "Enviado, %@";
+"accessibility_status_delivered_plus_time" = "Entregado, %@";
+"accessibility_status_read_plus_time" = "Leído, %@";
+"accessibility_status_failed_plus_time" = "Con errores, %@";
+
+// Multi-Device Wizard
+"md_wizard_header" = "Vista previa multidispositivo";
+"md_wizard_start" = "Vincular mi ordenador";
+"md_wizard_cancel" = "Cancelar";
+"md_wizard_next" = "Siguiente";
+"md_wizard_close" = "Cerrar";
+"md_wizard_back_identity" = "Mostrar ID de Threema";
+
+"md_wizard_connection_info" = "Durante el proceso de vinculación, se desactivan las llamadas y las notificaciones.";
+
+"md_wizard_terms_note_text" = "El objetivo de esta vista previa técnica es permitirle probar el próximo soporte multidispositivo con antelación. Tenga en cuenta que las funciones son limitadas y, dado que se trata de un software alfa, podría necesitar mejoras.";
+
+"md_wizard_terms_backup" = "Es posible que se pierdan datos. Cree una copia de seguridad antes de continuar.\n[Instrucciones de la copia de seguridad](https://threema.ch/docs/threema/ios_backup_manual_en.pdf)";
+"md_wizard_terms_support" = "Esta vista previa admite mensajes de texto. Actualice regularmente las aplicaciones para iOS y escritorio y disfrute de las funciones y mejoras más recientes. ";
+"md_wizard_terms_issues" = "Consulte los problemas y las limitaciones conocidos [aquí] (https://threema.ch/faq/md_limit).";
+"md_wizard_terms_bugs" = "Por favor, informe de los problemas que encuentre en esta aplicación a través de \"Ajustes > Comentarios Beta\".";
+
+"md_wizard_terms_accept" = "He creado una copia de seguridad y quiero continuar.";
+
+"md_wizard_info_download_title" = "Descargar";
+"md_wizard_info_download_text" = "Vista previa técnica de Threema en su ordenador:";
+"md_wizard_info_linking_title" = "Vincule su ordenador a este dispositivo";
+"md_wizard_info_linking_text" = "Al vincular su ordenador, sus datos básicos de Threema (su ID, contactos y grupos) se cifrarán y almacenarán temporalmente en el [servidor seguro de Threema que utiliza actualmente]
+(https://threema.ch/en/faq/threema_safe_webdav). (Ajuste actual: %@).";
+
+"md_wizard_preparation_status" = "En preparación...";
+
+"md_wizard_start_desktop" = "Abra la Vista previa técnica de Threema en su ordenador e introduzca su ID de Threema.";
+"md_wizard_identity_text" = "Su ID de Threema:";
+
+"md_wizard_code_text" = "Código de vinculación:";
+
+"md_wizard_success_title" = "Dispositivo vinculado correctamente";
+"md_wizard_success_text" = "Ya puede utilizar la Vista previa técnica de Threema en su ordenador (incluso cuando este dispositivo iOS esté apagado).";
+
+"md_wizard_error_title" = "Ha habido un error al vincular porque se cerró la aplicación de Threema";
+"md_wizard_timeout_title" = "Ha habido un error al vincular porque tardó demasiado";
+"md_wizard_could_not_connect_title" = "Ha habido un error al vincular porque no se pudo conectar con el servidor";
+"md_wizard_error_text" = "Inténtelo de nuevo en \"Ajustes > Resumen multidispositivo\".";
 
 // App icons
 "app_icon_title_celebration" = "Icono de celebración";

@@ -87,7 +87,10 @@ class VideoAssetPreviewItem: VideoPreviewItem {
             return nil
         }
         let datetime = DateFormatter.accessibilityDateTime(date)
-        let text = String(format: BundleUtil.localizedString(forKey: "video_date"), "\(String(describing: datetime))")
+        let text = String.localizedStringWithFormat(
+            BundleUtil.localizedString(forKey: "video_date"),
+            datetime
+        )
         return text
     }
 }

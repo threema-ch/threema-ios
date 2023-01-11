@@ -22,38 +22,59 @@ import CocoaLumberjackSwift
 import Foundation
 import PromiseKit
 
-public class HttpClient: NSObject {
+// MARK: - Enums
 
-    private var authenticationMethod: String?
+public enum ContentType: String {
+    case json = "application/json"
+    case octetStream = "application/octet-stream"
+    case multiPart = "multipart/form-data; boundary=---------------------------Boundary_Line"
+}
+
+public enum HTTPMethod: String {
+    case get = "GET"
+    case head = "HEAD"
+    case post = "POST"
+    case put = "PUT"
+    case delete = "DELETE"
+    case connect = "CONNECT"
+    case options = "OPTIONS"
+    case trace = "TRACE"
+    case patch = "PATCH"
+}
+
+public enum HTTPHeaderField: String {
+    case accept = "Accept"
+    case contentType = "Content-Type"
+    case userAgent = "User-Agent"
+    case authorization = "Authorization"
+}
+
+public class HTTPClient: NSObject {
+    
+    // MARK: - Properties
+
     fileprivate var user: String?
     fileprivate var password: String?
+    private var authenticationMethod: String?
     private var authorization: String?
-    
-    public enum ContentType {
-        case json
-        case octetStream
-        func propertyValue() -> String {
-            switch self {
-            case .json:
-                return "application/json"
-            case .octetStream:
-                return "application/octet-stream"
-            }
-        }
+    private let urlSessionManager: URLSessionManager
+
+    // MARK: - Lifecycle
+
+    override public convenience init() {
+        self.init(sessionManager: .shared)
     }
     
-    private static let bgSessionsMutationLock = DispatchQueue(label: "bgSessionsMutationLock")
-    private static var bgSessions = [Int: URLSession]()
-    
-    override public init() {
-        super.init()
+    public init(sessionManager: URLSessionManager = .shared) {
         self.authenticationMethod = NSURLAuthenticationMethodDefault
+        self.urlSessionManager = sessionManager
+        super.init()
     }
     
     /// Initialize HttpClient with Basic Authentication
     /// - parameter user: Username for Basic Authentication
     /// - parameter password: Password for Basic Authentication
-    public init(user: String?, password: String?) {
+    public init(user: String?, password: String?, sessionManager: URLSessionManager = .shared) {
         if let user = user, let password = password {
             self.authenticationMethod = NSURLAuthenticationMethodHTTPBasic
             self.user = user
@@ -62,67 +83,124 @@ public class HttpClient: NSObject {
         else {
             self.authenticationMethod = NSURLAuthenticationMethodDefault
         }
+        self.urlSessionManager = sessionManager
+        super.init()
     }
     
     /// Initialize HttpClient with Authorization header
     /// - parameter authorization: Authorization header value
-    public init(authorization: String?) {
+    public init(authorization: String?, sessionManager: URLSessionManager = .shared) {
         self.authorization = authorization
         self.authenticationMethod = NSURLAuthenticationMethodDefault
+        self.urlSessionManager = sessionManager
+        super.init()
     }
     
+    // MARK: - Delete
+
     public func delete(url: URL, completionHandler: @escaping (Data?, URLResponse?, Error?) -> Swift.Void) {
-        let request = getRequest(url: url, httpMethod: "DELETE")
-        let task = getSession(
-            delegate: authenticationMethod != NSURLAuthenticationMethodHTTPBasic ? nil : self,
-            background: false
-        ).dataTask(with: request, completionHandler: completionHandler)
+        let request = urlRequest(for: url, httpMethod: .delete)
+        let delegate = authenticationMethod != NSURLAuthenticationMethodHTTPBasic ? nil : self
+        
+        let task = urlSessionManager.storedSession(for: delegate, createAsBackgroundSession: false)
+            .dataTask(with: request, completionHandler: completionHandler)
         task.resume()
     }
+    
+    // MARK: - Download
 
+    @discardableResult
     public func downloadData(
         url: URL,
         contentType: ContentType,
-        completionHandler: @escaping (Data?, URLResponse?, Error?) -> Swift.Void
-    ) {
-        var request = getRequest(url: url, httpMethod: "GET")
-        request.setValue(contentType.propertyValue(), forHTTPHeaderField: "Accept")
+        completionHandler: @escaping (Data?, URLResponse?, Error?) -> Void
+    ) -> URLSessionDataTask {
+        var request = urlRequest(for: url, httpMethod: .get)
+        request.setValue(contentType.rawValue, forHTTPHeaderField: HTTPHeaderField.accept.rawValue)
         
-        let task = getSession(
-            delegate: authenticationMethod != NSURLAuthenticationMethodHTTPBasic ? nil : self,
-            background: false
-        ).dataTask(with: request, completionHandler: completionHandler)
+        let delegate = authenticationMethod != NSURLAuthenticationMethodHTTPBasic ? nil : self
+        
+        let task = urlSessionManager.storedSession(for: delegate, createAsBackgroundSession: false)
+            .dataTask(with: request, completionHandler: completionHandler)
         task.resume()
+        
+        return task
     }
 
+    /// Only used for testing.
     public func downloadData(url: URL, delegate: URLSessionDelegate) {
-        var request = getRequest(url: url, httpMethod: "GET")
-        request.setValue("application/octet-stream", forHTTPHeaderField: "Accept")
+        var request = urlRequest(for: url, httpMethod: .get)
+        request.setValue(ContentType.octetStream.rawValue, forHTTPHeaderField: HTTPHeaderField.accept.rawValue)
         
-        let task = getSession(delegate: delegate, background: true).dataTask(with: request)
+        let task = urlSessionManager.storedSession(for: delegate, createAsBackgroundSession: true)
+            .dataTask(with: request)
         task.resume()
     }
     
+    public func sendDone(url: URL) async throws {
+        let request = urlRequest(for: url, httpMethod: .post)
+        let delegate = authenticationMethod != NSURLAuthenticationMethodHTTPBasic ? nil : self
+        
+        // It's just important that there was no error here
+        let _ = try await urlSessionManager.storedSession(for: delegate, createAsBackgroundSession: true)
+            .data(for: request)
+    }
+    
+    // MARK: - Upload
+
     public func uploadData(
         url: URL,
         data: Data,
         completionHandler: @escaping (Data?, URLResponse?, Error?) -> Swift.Void
     ) {
-        var request = getRequest(url: url, httpMethod: "PUT")
-        request.setValue(ContentType.octetStream.propertyValue(), forHTTPHeaderField: "Content-Type")
+        var request = urlRequest(for: url, httpMethod: .put)
+        request.setValue(
+            ContentType.octetStream.rawValue,
+            forHTTPHeaderField: HTTPHeaderField.contentType.rawValue
+        )
+        let delegate = authenticationMethod != NSURLAuthenticationMethodHTTPBasic ? nil : self
         
-        let task = getSession(
-            delegate: authenticationMethod != NSURLAuthenticationMethodHTTPBasic ? nil : self,
-            background: false
-        ).uploadTask(with: request, from: data, completionHandler: completionHandler)
+        let task = urlSessionManager.storedSession(for: delegate, createAsBackgroundSession: false)
+            .uploadTask(
+                with: request,
+                from: data,
+                completionHandler: completionHandler
+            )
         task.resume()
     }
     
-    public func uploadData(url: URL, file: URL, delegate: URLSessionDelegate) {
-        var request = getRequest(url: url, httpMethod: "PUT")
-        request.setValue(ContentType.octetStream.propertyValue(), forHTTPHeaderField: "Content-Type")
+    @discardableResult
+    public func uploadData(
+        url: URL,
+        data: Data,
+        contentType: ContentType,
+        completionHandler: @escaping (Data?, URLResponse?, Error?) -> Void
+    ) -> URLSessionDataTask {
+        var request = urlRequest(for: url, httpMethod: .post)
+        request.setValue(contentType.rawValue, forHTTPHeaderField: HTTPHeaderField.contentType.rawValue)
+
+        let delegate = authenticationMethod != NSURLAuthenticationMethodHTTPBasic ? nil : self
         
-        let task = getSession(delegate: delegate, background: true).uploadTask(with: request, fromFile: file)
+        var task: URLSessionUploadTask!
+        task = urlSessionManager.storedSession(for: delegate, createAsBackgroundSession: false).uploadTask(
+            with: request,
+            from: data,
+            completionHandler: completionHandler
+        )
+        task.resume()
+        return task
+    }
+    
+    /// Only used for testing.
+    public func uploadData(url: URL, file: URL, delegate: URLSessionDelegate) {
+        var request = urlRequest(for: url, httpMethod: .put)
+        request.setValue(
+            ContentType.octetStream.rawValue,
+            forHTTPHeaderField: HTTPHeaderField.contentType.rawValue
+        )
+        
+        let task = urlSessionManager.storedSession(for: delegate, createAsBackgroundSession: true)
+            .uploadTask(with: request, fromFile: file)
         task.resume()
     }
     
@@ -135,6 +213,7 @@ public class HttpClient: NSObject {
     /// - Parameter completionHandler: CompletionHandler of session
     ///
     /// - Returns: Upload task
+    @available(*, deprecated, message: "Only use with Old_BlobUploader, but you should use BlobManager instead anyway")
     @discardableResult public func uploadDataMultipart(
         taskDescription: String,
         url: URL,
@@ -144,11 +223,11 @@ public class HttpClient: NSObject {
         completionHandler: @escaping (URLSessionUploadTask?, Data?, URLResponse?, Error?) -> Swift.Void
     ) -> URLSessionUploadTask {
         
-        var request = getRequest(url: url, httpMethod: "POST")
-        request.setValue(contentType, forHTTPHeaderField: "Content-Type")
+        var request = urlRequest(for: url, httpMethod: .post)
+        request.setValue(contentType, forHTTPHeaderField: HTTPHeaderField.contentType.rawValue)
 
         var task: URLSessionUploadTask!
-        task = getSession(delegate: delegate, background: false).uploadTask(
+        task = urlSessionManager.storedSession(for: delegate, createAsBackgroundSession: false).uploadTask(
             with: request,
             from: data,
             completionHandler: { data, response, error in
@@ -160,83 +239,34 @@ public class HttpClient: NSObject {
         return task
     }
     
-    private func getRequest(url: URL, httpMethod: String) -> URLRequest {
+    // MARK: - Request
+    
+    private func urlRequest(for url: URL, httpMethod: HTTPMethod) -> URLRequest {
         var request = URLRequest(
             url: url,
             cachePolicy: URLRequest.CachePolicy.reloadIgnoringLocalAndRemoteCacheData,
             timeoutInterval: 90.0
         )
-        request.httpMethod = httpMethod
-        request.setValue("Threema", forHTTPHeaderField: "User-Agent")
+        request.httpMethod = httpMethod.rawValue
+        request.setValue("Threema", forHTTPHeaderField: HTTPHeaderField.userAgent.rawValue)
+        
         if let authorization = authorization {
-            request.setValue(authorization, forHTTPHeaderField: "Authorization")
+            request.setValue(authorization, forHTTPHeaderField: HTTPHeaderField.authorization.rawValue)
         }
+        
         return request
     }
     
-    /// Get session for delegate instance.
-    ///
-    /// - Returns: Session for delegate
-    public static func getSession(_ forDelegate: URLSessionDelegate) -> URLSession? {
-        HttpClient.bgSessionsMutationLock.sync {
-            let identifier: Int = forDelegate.hash
-            return HttpClient.bgSessions[identifier]
-        }
-    }
-    
-    /// Get session for delegate (one session per delegate instance)
-    ///
-    /// - Returns: Session for delegate
-    private func getSession(identifier: Int, delegate: URLSessionDelegate, background: Bool) -> URLSession {
-        var bgSession: URLSession?
-
-        HttpClient.bgSessionsMutationLock.sync {
-            
-            if let session = HttpClient.bgSessions[identifier] {
-                bgSession = session
-            }
-            else {
-                let configuration = background ? URLSessionConfiguration
-                    .background(withIdentifier: String(identifier)) : URLSessionConfiguration.ephemeral
-                configuration.allowsCellularAccess = true
-                configuration.sessionSendsLaunchEvents = true
-                configuration.urlCache = nil
-                configuration.urlCredentialStorage = nil
-                
-                let session = URLSession(
-                    configuration: configuration,
-                    delegate: delegate,
-                    delegateQueue: OperationQueue.current
-                )
-                HttpClient.bgSessions[identifier] = session
-                
-                bgSession = session
-            }
-        }
-        
-        return bgSession!
-    }
-
-    /// Get session, if no delegate instance the shared session will be returned.
-    ///
-    /// - Returns: Session for delegate or shared session
-    private func getSession(delegate: URLSessionDelegate?, background: Bool) -> URLSession {
-        if let delegate = delegate {
-            let objectHash: Int = delegate.hash
-            return getSession(identifier: objectHash, delegate: delegate, background: background)
-        }
-
-        URLSession.shared.configuration.allowsCellularAccess = true
-        URLSession.shared.configuration.urlCache = nil
-        URLSession.shared.configuration.urlCredentialStorage = nil
-        URLSession.shared.configuration.waitsForConnectivity = true
-        return URLSession.shared
+    /// Invalidates and cancels session for a given delegate
+    /// - Parameter delegate: URLSessionDelegate of to be canceled session
+    public static func invalidateAndCancelSession(for delegate: URLSessionDelegate) {
+        URLSessionManager.shared.invalidateAndCancelSession(for: delegate)
     }
 }
 
 // MARK: - URLSessionTaskDelegate
 
-extension HttpClient: URLSessionTaskDelegate {
+extension HTTPClient: URLSessionTaskDelegate {
     
     public func urlSession(
         _ session: URLSession,
@@ -274,7 +304,6 @@ extension HttpClient: URLSessionTaskDelegate {
         didReceive challenge: URLAuthenticationChallenge,
         completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void
     ) {
-         
         SSLCAHelper.session(session, didReceive: challenge, completion: completionHandler)
     }
 }

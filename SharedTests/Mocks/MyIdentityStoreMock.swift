@@ -44,7 +44,7 @@ class MyIdentityStoreMock: NSObject, MyIdentityStoreProtocol {
     }
     
     func sharedSecret(withPublicKey publicKey: Data!) -> Data! {
-        NaClCrypto.shared()?.sharedSecret(forPublicKey: publicKey, secretKey: secretKey)
+        NaClCrypto.shared().sharedSecret(forPublicKey: publicKey, secretKey: secretKey)
     }
     
     private let secretKey: Data!
@@ -70,6 +70,10 @@ class MyIdentityStoreMock: NSObject, MyIdentityStoreProtocol {
 
     func updateConnectionRights() {
         // no-op
+    }
+    
+    var publicKey: Data {
+        NaClCrypto.shared().derivePublicKey(fromSecretKey: secretKey)
     }
     
     func isProvisioned() -> Bool {

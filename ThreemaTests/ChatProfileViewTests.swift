@@ -52,10 +52,13 @@ class ChatProfileViewTests: XCTestCase {
         databasePreparer.save {
             contact = databasePreparer.createContact(publicKey: Data([1]), identity: "ECHOECHO", verificationLevel: 0)
             
-            conversation = databasePreparer
-                .createConversation(marked: false, typing: false, unreadMessageCount: 0) { conversation in
-                    conversation.contact = contact
-                }
+            conversation = databasePreparer.createConversation(
+                marked: false,
+                typing: false,
+                unreadMessageCount: 0
+            ) { conversation in
+                conversation.contact = contact
+            }
         }
         
         return (contact, conversation)
@@ -67,9 +70,11 @@ class ChatProfileViewTests: XCTestCase {
         contact.firstName = "Emily"
         
         let expectedAccessibilityLabel =
-            "\(contact.displayName ?? ""). \(contact.verificationLevelAccessibilityLabel() ?? "")"
+            "\(contact.displayName). \(contact.verificationLevelAccessibilityLabel())"
 
-        let chatProfileView = ChatProfileView(for: conversation)
+        let chatProfileView = ChatProfileView(for: conversation, entityManager: EntityManager()) {
+            // no-op
+        }
         
         waitForMainThread()
         
@@ -79,11 +84,13 @@ class ChatProfileViewTests: XCTestCase {
     func testObserveNameChange() throws {
         let (contact, conversation) = createConversation()
 
-        let chatProfileView = ChatProfileView(for: conversation)
+        let chatProfileView = ChatProfileView(for: conversation, entityManager: EntityManager()) {
+            // no-op
+        }
         
         conversation.contact!.firstName = "Emily"
         let expectedAccessibilityLabel =
-            "\(conversation.displayName ?? ""). \(contact.verificationLevelAccessibilityLabel() ?? "")"
+            "\(contact.displayName). \(contact.verificationLevelAccessibilityLabel())"
         
         waitForMainThread()
         
@@ -93,11 +100,13 @@ class ChatProfileViewTests: XCTestCase {
     func testObserveVerificationLevelChange() throws {
         let (contact, conversation) = createConversation()
 
-        let chatProfileView = ChatProfileView(for: conversation)
+        let chatProfileView = ChatProfileView(for: conversation, entityManager: EntityManager()) {
+            // no-op
+        }
         
         contact.verificationLevel = 3
         let expectedAccessibilityLabel =
-            "\(contact.displayName ?? ""). \(contact.verificationLevelAccessibilityLabel() ?? "")"
+            "\(contact.displayName). \(contact.verificationLevelAccessibilityLabel())"
         
         waitForMainThread()
         
@@ -119,14 +128,17 @@ class ChatProfileViewTests: XCTestCase {
         }
         
         databasePreparer.save {
-            conversation = databasePreparer
-                .createConversation(marked: false, typing: false, unreadMessageCount: 0) { conversation in
-                    // Needed such that `conversation.isGroup()` returns true
-                    conversation.groupID = groupID
+            conversation = databasePreparer.createConversation(
+                marked: false,
+                typing: false,
+                unreadMessageCount: 0
+            ) { conversation in
+                // Needed such that `conversation.isGroup()` returns true
+                conversation.groupID = groupID
                 
-                    conversation.groupName = groupName
-                    conversation.members = Set(members)
-                }
+                conversation.groupName = groupName
+                conversation.members = Set(members)
+            }
         }
         
         return conversation
@@ -136,7 +148,9 @@ class ChatProfileViewTests: XCTestCase {
         let groupName = "Group1"
         
         let conversation = createGroupConversation()
-        let chatProfileView = ChatProfileView(for: conversation)
+        let chatProfileView = ChatProfileView(for: conversation, entityManager: EntityManager()) {
+            // no-op
+        }
         
         conversation.groupName = groupName
         
@@ -147,7 +161,9 @@ class ChatProfileViewTests: XCTestCase {
     
     func testObserveMembersChange() throws {
         let conversation = createGroupConversation()
-        _ = ChatProfileView(for: conversation)
+        _ = ChatProfileView(for: conversation, entityManager: EntityManager()) {
+            // no-op
+        }
         
         conversation.members.removeFirst()
         
@@ -157,7 +173,9 @@ class ChatProfileViewTests: XCTestCase {
     
     func testObserveMemberNameChange() throws {
         let conversation = createGroupConversation()
-        _ = ChatProfileView(for: conversation)
+        _ = ChatProfileView(for: conversation, entityManager: EntityManager()) {
+            // no-op
+        }
         
         let contact = try XCTUnwrap(conversation.members.first)
         contact.lastName = "1stMember"
@@ -168,7 +186,9 @@ class ChatProfileViewTests: XCTestCase {
     
     func testDoNotObserveRemovedMemberNameChange() throws {
         let conversation = createGroupConversation()
-        _ = ChatProfileView(for: conversation)
+        _ = ChatProfileView(for: conversation, entityManager: EntityManager()) {
+            // no-op
+        }
         
         let contact = try XCTUnwrap(conversation.members.removeFirst())
         contact.lastName = "1stRemovedMember"

@@ -18,6 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import CocoaLumberjackSwift
 import Foundation
 
 @objc class CompanyDirectoryViewController: ThemedViewController {
@@ -484,23 +485,28 @@ extension CompanyDirectoryViewController: UITableViewDelegate {
         }
         else {
             let directoryContact = contactsWithSections[indexPath.section][indexPath.row]
-            let contact = ContactStore.shared().addWorkContact(
+            ContactStore.shared().addWorkContact(
                 with: directoryContact.id,
                 publicKey: directoryContact.pk,
                 firstname: directoryContact.first,
                 lastname: directoryContact.last,
-                shouldUpdateFeatureMask: true
+                acquaintanceLevel: .direct
             )
-            // show chat
-            if contact != nil {
-                navigationController?.dismiss(animated: true, completion: {
-                    let info = [kKeyContact: contact!, kKeyForceCompose: true] as [String: Any]
-                    NotificationCenter.default.post(
-                        name: NSNotification.Name(rawValue: kNotificationShowConversation),
-                        object: nil,
-                        userInfo: info
-                    )
-                })
+            .done { contact in
+                // show chat
+                if let contact = contact {
+                    self.navigationController?.dismiss(animated: true, completion: {
+                        let info = [kKeyContact: contact, kKeyForceCompose: true] as [String: Any]
+                        NotificationCenter.default.post(
+                            name: NSNotification.Name(rawValue: kNotificationShowConversation),
+                            object: nil,
+                            userInfo: info
+                        )
+                    })
+                }
+            }
+            .catch { error in
+                DDLogError("Add work contact failed \(error)")
             }
         }
     }

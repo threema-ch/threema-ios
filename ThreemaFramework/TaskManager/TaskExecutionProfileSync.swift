@@ -36,13 +36,12 @@ class TaskExecutionProfileSync: TaskExecutionBlobTransaction {
                 break
             case .updated:
                 let encryptionKey = NaClCrypto.shared()?.randomBytes(kBlobKeyLen)
-                let nonce = Data([
-                    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01,
-                ]) // kNonce_1
-                let encryptedProfileImageData = NaClCrypto.shared()?
-                    .symmetricEncryptData(task.profileImage, withKey: encryptionKey, nonce: nonce)
+                let nonce = ThreemaProtocol.nonce01
+                let encryptedProfileImageData = NaClCrypto.shared()?.symmetricEncryptData(
+                    task.profileImage,
+                    withKey: encryptionKey,
+                    nonce: nonce
+                )
 
                 return uploadBlobs(blobs: [encryptedProfileImageData!])
                     .then { blobIDs -> Promise<Void> in

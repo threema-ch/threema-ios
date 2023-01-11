@@ -61,6 +61,8 @@
 #import "LastLoadedMessageIndex.h"
 #import "RequestedThumbnail.h"
 
+#import "CallEntity.h"
+
 @interface EntityCreator : NSObject
 
 - (instancetype)init NS_UNAVAILABLE;
@@ -135,5 +137,7 @@
 - (LastLoadedMessageIndex *)lastLoadedMessageIndexWithBaseMessageId:(NSData *)baseMessageId index:(NSInteger)index webClientSession:(WebClientSession*)webClientSession;
 
 - (RequestedThumbnail *)requestedThumbnailWithMessageId:(NSData *)messageId webClientSession:(WebClientSession*)webClientSession;
+
+- (CallEntity *)callEntity;
 
 @end

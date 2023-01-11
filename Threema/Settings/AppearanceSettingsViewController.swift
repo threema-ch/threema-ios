@@ -129,8 +129,8 @@ class AppearanceSettingsViewController: ThemedTableViewController {
         hideStaleContactsSwitch.isOn = UserSettings.shared().hideStaleContacts
         
         previewLimitSlider.value = UserSettings.shared().previewLimit
-        previewLimitLabel.text = String(
-            format: BundleUtil.localizedString(forKey: "preview_limit"),
+        previewLimitLabel.text = String.localizedStringWithFormat(
+            BundleUtil.localizedString(forKey: "preview_limit"),
             previewLimitSlider.value
         )
         previewLimitLabel.isEnabled = showGalleryPreviewSwitch.isOn
@@ -343,7 +343,10 @@ extension AppearanceSettingsViewController {
     @IBAction func previewLimitChanged(sender: UISlider) {
         let roundedValue = round(sender.value / 5) * 5
         sender.value = roundedValue
-        previewLimitLabel.text = String(format: BundleUtil.localizedString(forKey: "preview_limit"), sender.value)
+        previewLimitLabel.text = String.localizedStringWithFormat(
+            BundleUtil.localizedString(forKey: "preview_limit"),
+            sender.value
+        )
         UserSettings.shared()?.previewLimit = sender.value
     }
 }

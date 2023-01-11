@@ -89,7 +89,7 @@ public class SettingsStore {
 
                 let actualBlacklist = userSettings.blacklist ?? NSOrderedSet(array: [String]())
                 if !actualBlacklist.isEqual(to: NSOrderedSet(array: Array(settings.blacklist))) {
-                    syncSettings.blockedIdentities.identifies = Array(settings.blacklist)
+                    syncSettings.blockedIdentities.identities = Array(settings.blacklist)
                 }
 
                 if userSettings.alwaysRelayCalls != settings.alwaysRelayCalls {
@@ -105,12 +105,12 @@ public class SettingsStore {
                 }
 
                 if userSettings.sendTypingIndicator != settings.sendTypingIndicator {
-                    syncSettings.composeMessagePolicy = settings
-                        .sendTypingIndicator ? .sendTypingIndicator : .ignoreCompose
+                    syncSettings.typingIndicatorPolicy = settings
+                        .sendTypingIndicator ? .sendTypingIndicator : .dontSendTypingIndicator
                 }
 
                 if userSettings.syncExclusionList as? [String] != settings.syncExclusionList {
-                    syncSettings.excludeFromSyncIdentities.identifies = settings.syncExclusionList
+                    syncSettings.excludeFromSyncIdentities.identities = settings.syncExclusionList
                 }
 
                 if userSettings.blockUnknown != settings.blockUnknown {
@@ -118,7 +118,7 @@ public class SettingsStore {
                 }
 
                 if userSettings.sendReadReceipts != settings.sendReadReceipts {
-                    syncSettings.readMessagePolicy = settings.sendReadReceipts ? .sendReadReceipt : .ignoreRead
+                    syncSettings.readReceiptPolicy = settings.sendReadReceipts ? .sendReadReceipt : .dontSendReadReceipt
                 }
 
                 let task = TaskDefinitionSettingsSync(syncSettings: syncSettings)
@@ -153,7 +153,7 @@ public class SettingsStore {
     /// - Parameter syncSettings: Delta updates of user settings
     func save(syncSettings: Sync_Settings) {
         if syncSettings.hasBlockedIdentities {
-            userSettings.blacklist = NSOrderedSet(array: syncSettings.blockedIdentities.identifies)
+            userSettings.blacklist = NSOrderedSet(array: syncSettings.blockedIdentities.identities)
         }
 
         if syncSettings.hasCallConnectionPolity {
@@ -168,20 +168,20 @@ public class SettingsStore {
             userSettings.syncContacts = syncSettings.contactSyncPolicy == .sync
         }
 
-        if syncSettings.hasComposeMessagePolicy {
-            userSettings.sendTypingIndicator = syncSettings.composeMessagePolicy == .sendTypingIndicator
+        if syncSettings.hasTypingIndicatorPolicy {
+            userSettings.sendTypingIndicator = syncSettings.typingIndicatorPolicy == .sendTypingIndicator
         }
 
         if syncSettings.hasExcludeFromSyncIdentities {
-            userSettings.syncExclusionList = syncSettings.excludeFromSyncIdentities.identifies
+            userSettings.syncExclusionList = syncSettings.excludeFromSyncIdentities.identities
         }
 
         if syncSettings.hasUnknownContactPolicy {
             userSettings.blockUnknown = syncSettings.unknownContactPolicy == .blockUnknown
         }
 
-        if syncSettings.hasReadMessagePolicy {
-            userSettings.sendReadReceipts = syncSettings.readMessagePolicy == .sendReadReceipt
+        if syncSettings.hasReadReceiptPolicy {
+            userSettings.sendReadReceipts = syncSettings.readReceiptPolicy == .sendReadReceipt
         }
     }
 }

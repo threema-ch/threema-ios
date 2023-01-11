@@ -24,7 +24,6 @@
 
 @property UIActivityIndicatorView *activityIndicator;
 @property UIProgressView *progressBar;
-@property UIButton *resendButton;
 
 - (void)updateResendButton;
 

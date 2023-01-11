@@ -31,4 +31,31 @@ public enum AppInfo {
         }
         return (version, build)
     }
+
+    public static var version: (major: Int, minor: Int, maintenance: Int, build: Int) {
+        var major = 0
+        var minor = 0
+        var maintenance = 0
+        var build = 0
+
+        let (appVersion, appBuild) = appVersion
+
+        if let versionDigits = appVersion?.split(separator: ".") {
+            if versionDigits.count >= 1 {
+                major = Int(versionDigits[0]) ?? 0
+                if versionDigits.count >= 2 {
+                    minor = Int(versionDigits[1]) ?? 0
+                    if versionDigits.count >= 3 {
+                        maintenance = Int(versionDigits[2]) ?? 0
+                    }
+                }
+            }
+        }
+
+        if let appBuild {
+            build = Int(appBuild) ?? 0
+        }
+
+        return (major, minor, maintenance, build)
+    }
 }

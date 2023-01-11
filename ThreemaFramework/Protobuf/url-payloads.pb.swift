@@ -46,20 +46,20 @@ struct Url_GroupInvite {
   // methods supported on all messages.
 
   /// The admin's Threema ID (8 bytes ASCII)
-  var adminIdentity: Data = Data()
+  var adminIdentity: String = String()
 
   /// A random 16-byte token
   var token: Data = Data()
 
-  var inviteType: Url_GroupInvite.InviteType = .automatic
+  var confirmationMode: Url_GroupInvite.ConfirmationMode = .automatic
 
   /// The group name
   var groupName: String = String()
 
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  /// The invite type
-  enum InviteType: SwiftProtobuf.Enum {
+  /// The invite confirmation mode
+  enum ConfirmationMode: SwiftProtobuf.Enum {
     typealias RawValue = Int
 
     /// The admin will auto-accept join requests.
@@ -98,9 +98,9 @@ struct Url_GroupInvite {
 
 #if swift(>=4.2)
 
-extension Url_GroupInvite.InviteType: CaseIterable {
+extension Url_GroupInvite.ConfirmationMode: CaseIterable {
   // The compiler won't synthesize support with the UNRECOGNIZED case.
-  static var allCases: [Url_GroupInvite.InviteType] = [
+  static var allCases: [Url_GroupInvite.ConfirmationMode] = [
     .automatic,
     .manual,
   ]
@@ -114,10 +114,6 @@ extension Url_GroupInvite.InviteType: CaseIterable {
 /// `threema` scheme in the following way:
 ///
 ///     threema://device-family/join#<url-safe-base64(DeviceFamilyJoinRequestOrOffer)>
-///
-/// Example with 7 IP addresses:
-///
-///     threema://device-family/join#CgIKABLKAm5ubm5ubm5ubm5ubm5ubm5ubm5ubm5ubltbedCrlvAz-e33vj2g8EZr0Y4GjtDGLCT7TlR-FqBKDZ5wGehaWUQGm8FoAGjmYBzbixy_ao-aJ4g6z-VoZHwvpPhKEkkqFmgHKQx4nlNa5pfeb8iCyAFULFRIV_mLDhRdjOz86olrV6HxCaj3-gaIg3-WKTiq9aTbIcfUFT0ffsrhPY0Vf9NdXF9MuuEOWg7CN6O2cPgPSRMV3LF4S3zoWsydl1B32YbELdL47qu_VO_OKOn9lCbMVY2hAyLJ0Xmph0RertLXymRg2BmsS_4_4sbbyhuPv2vhx8Xynp1D_FwAcbkpTu_-D59AnmYUqK9Cy2UE8E3tViERDpHqSefEvPp2Y4hfkFgsY-9WzncP38lPHTPG6mvUdTEpFWot7dIovV4QZblbk3xwVhlNzJriNg==
 struct Url_DeviceFamilyJoinRequestOrOffer {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
@@ -131,6 +127,10 @@ struct Url_DeviceFamilyJoinRequestOrOffer {
   var hasVariant: Bool {return self._variant != nil}
   /// Clears the value of `variant`. Subsequent reads from it will return its default value.
   mutating func clearVariant() {self._variant = nil}
+
+  /// The 32-byte random salt used for deriving the user's passphrase (`PSK`)
+  /// as defined by the Device Join Protocol.
+  var pskSalt: Data = Data()
 
   /// Contains rendezvous data (`rendezvous.RendezvousInit`) encrypted by a
   /// random nonce and the key derived from the user's passphrase (`PSK`) as
@@ -163,7 +163,7 @@ struct Url_DeviceFamilyJoinRequestOrOffer {
     }
 
     /// A device intends to let another device join the (multi-)device family.
-    /// `data` is to be handled according to the _Device Join Protocol_ with 
+    /// `data` is to be handled according to the _Device Join Protocol_ with
     /// `ED` being the initiator.
     var offerToJoin: Common_Unit {
       get {
@@ -181,7 +181,7 @@ struct Url_DeviceFamilyJoinRequestOrOffer {
       /// initiator.
       case requestToJoin(Common_Unit)
       /// A device intends to let another device join the (multi-)device family.
-      /// `data` is to be handled according to the _Device Join Protocol_ with 
+      /// `data` is to be handled according to the _Device Join Protocol_ with
       /// `ED` being the initiator.
       case offerToJoin(Common_Unit)
 
@@ -222,7 +222,7 @@ extension Url_GroupInvite: SwiftProtobuf.Message, SwiftProtobuf._MessageImplemen
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "admin_identity"),
     2: .same(proto: "token"),
-    3: .standard(proto: "invite_type"),
+    3: .standard(proto: "confirmation_mode"),
     4: .standard(proto: "group_name"),
   ]
 
@@ -232,9 +232,9 @@ extension Url_GroupInvite: SwiftProtobuf.Message, SwiftProtobuf._MessageImplemen
       // allocates stack space for every case branch when no optimizations are
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
-      case 1: try { try decoder.decodeSingularBytesField(value: &self.adminIdentity) }()
+      case 1: try { try decoder.decodeSingularStringField(value: &self.adminIdentity) }()
       case 2: try { try decoder.decodeSingularBytesField(value: &self.token) }()
-      case 3: try { try decoder.decodeSingularEnumField(value: &self.inviteType) }()
+      case 3: try { try decoder.decodeSingularEnumField(value: &self.confirmationMode) }()
       case 4: try { try decoder.decodeSingularStringField(value: &self.groupName) }()
       default: break
       }
@@ -243,13 +243,13 @@ extension Url_GroupInvite: SwiftProtobuf.Message, SwiftProtobuf._MessageImplemen
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     if !self.adminIdentity.isEmpty {
-      try visitor.visitSingularBytesField(value: self.adminIdentity, fieldNumber: 1)
+      try visitor.visitSingularStringField(value: self.adminIdentity, fieldNumber: 1)
     }
     if !self.token.isEmpty {
       try visitor.visitSingularBytesField(value: self.token, fieldNumber: 2)
     }
-    if self.inviteType != .automatic {
-      try visitor.visitSingularEnumField(value: self.inviteType, fieldNumber: 3)
+    if self.confirmationMode != .automatic {
+      try visitor.visitSingularEnumField(value: self.confirmationMode, fieldNumber: 3)
     }
     if !self.groupName.isEmpty {
       try visitor.visitSingularStringField(value: self.groupName, fieldNumber: 4)
@@ -260,14 +260,14 @@ extension Url_GroupInvite: SwiftProtobuf.Message, SwiftProtobuf._MessageImplemen
   static func ==(lhs: Url_GroupInvite, rhs: Url_GroupInvite) -> Bool {
     if lhs.adminIdentity != rhs.adminIdentity {return false}
     if lhs.token != rhs.token {return false}
-    if lhs.inviteType != rhs.inviteType {return false}
+    if lhs.confirmationMode != rhs.confirmationMode {return false}
     if lhs.groupName != rhs.groupName {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
 }
 
-extension Url_GroupInvite.InviteType: SwiftProtobuf._ProtoNameProviding {
+extension Url_GroupInvite.ConfirmationMode: SwiftProtobuf._ProtoNameProviding {
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     0: .same(proto: "AUTOMATIC"),
     1: .same(proto: "MANUAL"),
@@ -278,7 +278,8 @@ extension Url_DeviceFamilyJoinRequestOrOffer: SwiftProtobuf.Message, SwiftProtob
   static let protoMessageName: String = _protobuf_package + ".DeviceFamilyJoinRequestOrOffer"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "variant"),
-    2: .standard(proto: "encrypted_rendezvous_data"),
+    2: .standard(proto: "psk_salt"),
+    3: .standard(proto: "encrypted_rendezvous_data"),
   ]
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -288,7 +289,8 @@ extension Url_DeviceFamilyJoinRequestOrOffer: SwiftProtobuf.Message, SwiftProtob
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
       case 1: try { try decoder.decodeSingularMessageField(value: &self._variant) }()
-      case 2: try { try decoder.decodeSingularBytesField(value: &self.encryptedRendezvousData) }()
+      case 2: try { try decoder.decodeSingularBytesField(value: &self.pskSalt) }()
+      case 3: try { try decoder.decodeSingularBytesField(value: &self.encryptedRendezvousData) }()
       default: break
       }
     }
@@ -298,14 +300,18 @@ extension Url_DeviceFamilyJoinRequestOrOffer: SwiftProtobuf.Message, SwiftProtob
     if let v = self._variant {
       try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
     }
+    if !self.pskSalt.isEmpty {
+      try visitor.visitSingularBytesField(value: self.pskSalt, fieldNumber: 2)
+    }
     if !self.encryptedRendezvousData.isEmpty {
-      try visitor.visitSingularBytesField(value: self.encryptedRendezvousData, fieldNumber: 2)
+      try visitor.visitSingularBytesField(value: self.encryptedRendezvousData, fieldNumber: 3)
     }
     try unknownFields.traverse(visitor: &visitor)
   }
 
   static func ==(lhs: Url_DeviceFamilyJoinRequestOrOffer, rhs: Url_DeviceFamilyJoinRequestOrOffer) -> Bool {
     if lhs._variant != rhs._variant {return false}
+    if lhs.pskSalt != rhs.pskSalt {return false}
     if lhs.encryptedRendezvousData != rhs.encryptedRendezvousData {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true

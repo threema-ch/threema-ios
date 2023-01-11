@@ -114,6 +114,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     UIView *lockView;
     IncomingMessageManager *incomingMessageManager;
     NotificationManager *notificationManager;
+    DeviceLinking *deviceLinking;
 }
 
 @synthesize window = _window;
@@ -121,6 +122,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 @synthesize appLaunchDate;
 @synthesize isAppLocked;
 @synthesize isLockscreenDismissed;
+@synthesize orientationLock;
 
 + (void)initialize {
     static dispatch_once_t onceToken;
@@ -162,6 +164,11 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)_launchOptions
 {
+    // If we are in Preview mode for Swift-UI, we directly return to not make previews crash after a second
+    if ([[[NSProcessInfo processInfo] environment][@"XCODE_RUNNING_FOR_PREVIEWS"] isEqualToString: @"1"]) {
+        return YES;
+    }
+    
     [PromiseKitConfiguration configurePromiseKit];
     
     shouldLoadUIForEnterForeground = false;
@@ -170,6 +177,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     startCheckBiometrics = false;
     launchOptions = _launchOptions;
     isLockscreenDismissed = true;
+    orientationLock = UIInterfaceOrientationMaskAll;
 
     [ErrorNotificationHandler setup];
 
@@ -613,7 +621,10 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
             }
             [[WCSessionManager shared] connectAllRunningSessions];
         }
-        
+
+        deviceLinking = [DeviceLinking new];
+        [deviceLinking disableMultiDeviceForVersionLessThan5];
+
         [AppDelegate setupConnection];
         
         /* Handle notification, if any */
@@ -959,6 +970,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
             [[ServerConnector sharedServerConnector] connect:ConnectionInitiatorApp];
         }
     }
+        
     [FeatureMask updateFeatureMask];
 
     [AppDelegate registerForLocalNotifications];
@@ -1069,6 +1081,10 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
             [FileUtility cleanTemporaryDirectoryWithOlderThan:nil];
         });
+        
+        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+            [CallHistoryManager removeCallsOlderThanChatServerTimeout];
+        });
     }
 }
 
@@ -1147,7 +1163,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
             timeout = kAppVoIPIncomCallBackgroundTaskTime;
         } else if ([[WCSessionManager shared] isRunningWCSession] != true) {
             key = kAppClosedByUserBackgroundTask;
-            timeout = [FileMessageSender hasScheduledUploads] == YES ? kAppWCBackgroundTaskTime : kAppClosedByUserBackgroundTaskTime;
+            timeout = [Old_FileMessageSender hasScheduledUploads] == YES ? kAppWCBackgroundTaskTime : kAppClosedByUserBackgroundTaskTime;
         } else {
             key = kAppWCBackgroundTask;
             timeout = kAppWCBackgroundTaskTime;
@@ -1226,6 +1242,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     
     [[ServerConnector sharedServerConnector] connect:ConnectionInitiatorApp];
     [[TypingIndicatorManager sharedInstance] resetTypingIndicators];
+    
 }
 
 - (void)applicationProtectedDataWillBecomeUnavailable:(UIApplication *)application {
@@ -1319,6 +1336,11 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     }
     
     [self cleanPushDirectory];
+
+    // Checks is device linking not finished yet
+    if ([[UserSettings sharedUserSettings] blockCommunication]) {
+        [[MultiDeviceWizardManager shared] continueLinking];
+    }
 }
 
 - (void)applicationWillTerminate:(UIApplication *)application
@@ -1330,6 +1352,10 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
      */
     DDLogNotice(@"AppState: applicationWillTerminate");
     [[WCSessionManager shared] saveSessionsToArchive];
+}
+
+- (UIInterfaceOrientationMask)application:(UIApplication *)application supportedInterfaceOrientationsForWindow:(nullable UIWindow *)window {
+    return orientationLock;
 }
 
 #pragma mark - Audio call intent
@@ -1735,13 +1761,8 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     }
 
     if (type == PKPushTypeVoIP) {
-        // Remove VoIP toke if on iOS 15 and above, add it if below.
-        if (@available(iOS 15, *)){
-            [[ServerConnector sharedServerConnector] removeVoIPPushToken];
-        }
-        else {
-            [[ServerConnector sharedServerConnector] setVoIPPushToken:credentials.token];
-        }
+        // Remove VoIP push token (since min OS version is iOS 15 or above)
+        [[ServerConnector sharedServerConnector] removeVoIPPushToken];
     }
 }
 

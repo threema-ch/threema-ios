@@ -330,7 +330,7 @@ static Theme currentTheme;
 
 - (void)handleTap:(UIGestureRecognizer *)gestureRecognizer {
     CGPoint p = [gestureRecognizer locationInView:self];
-    if (CGRectContainsPoint(self.msgBackground.frame, p) && [UserSettings sharedUserSettings].enableThreemaCall  && is64Bit == 1) {
+    if (CGRectContainsPoint(self.msgBackground.frame, p) && [UserSettings sharedUserSettings].enableThreemaCall) {
         if (gestureRecognizer.state == UIGestureRecognizerStateEnded && self.editing == NO) {
             [self showAlert];
         } else {

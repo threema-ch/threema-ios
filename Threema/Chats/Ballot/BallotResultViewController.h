@@ -27,6 +27,9 @@
 @property (weak, nonatomic) IBOutlet UIView *headerPlaceholderView;
 @property (weak, nonatomic) IBOutlet UIView *resultView;
 
+@property (weak, nonatomic) IBOutlet UIBarButtonItem *doneButton;
+
+
 
 @property Ballot *ballot;
 

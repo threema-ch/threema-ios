@@ -35,11 +35,4 @@ extension BallotMessage: QuoteMessageProvider {
 
 // MARK: - BallotMessage + QuoteMessage
 
-extension BallotMessage: QuoteMessage {
-    public var quoteMessageType: QuoteMessageType {
-        guard let ballot = ballot else {
-            return .error(BundleUtil.localizedString(forKey: "quote_not_found"), "exclamationmark.triangle.fill")
-        }
-        return .ballot(ballot.title, "chart.pie.fill")
-    }
-}
+extension BallotMessage: QuoteMessage { }

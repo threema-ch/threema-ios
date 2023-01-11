@@ -18,6 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import CocoaLumberjackSwift
 import Foundation
 
 public class BusinessInjector: NSObject, FrameworkInjectorProtocol {
@@ -27,6 +28,7 @@ public class BusinessInjector: NSObject, FrameworkInjectorProtocol {
     @objc public lazy var backgroundEntityManager = EntityManager(withChildContextForBackgroundProcess: true)
 
     public lazy var backgroundGroupManager: GroupManagerProtocol = GroupManager(
+        serverConnector,
         myIdentityStore,
         contactStore,
         TaskManager(frameworkInjector: self),
@@ -34,12 +36,13 @@ public class BusinessInjector: NSObject, FrameworkInjectorProtocol {
         backgroundEntityManager,
         GroupPhotoSender()
     )
-
+    
     public lazy var contactStore: ContactStoreProtocol = ContactStore.shared()
     
     public lazy var entityManager = EntityManager()
 
     public lazy var groupManager: GroupManagerProtocol = GroupManager(
+        serverConnector,
         myIdentityStore,
         contactStore,
         TaskManager(frameworkInjector: self),
@@ -65,20 +68,52 @@ public class BusinessInjector: NSObject, FrameworkInjectorProtocol {
 
     private var mediatorReflectedProcessorInstance: MediatorReflectedProcessorProtocol?
     private var messageProcessorInstance: MessageProcessorProtocol?
+    private var fsmpInstance: ForwardSecurityMessageProcessor?
+    private var fsStatusSender: ForwardSecurityStatusSender?
+    
+    private static var dhSessionStoreInstance: DHSessionStoreProtocol = try! SQLDHSessionStore()
 
     public lazy var backgroundUnreadMessages: UnreadMessagesProtocol = UnreadMessages(
         entityManager: backgroundEntityManager
     )
 
     lazy var mediatorMessageProtocol: MediatorMessageProtocolProtocol = MediatorMessageProtocol(
-        deviceGroupPathKey: self
-            .serverConnector.deviceGroupPathKey
+        deviceGroupKeys: self
+            .serverConnector.deviceGroupKeys
     )
     
     var messageProcessor: MessageProcessorProtocol {
         if messageProcessorInstance == nil {
-            messageProcessorInstance = MessageProcessor(serverConnector, entityManager: backgroundEntityManager)
+            messageProcessorInstance = MessageProcessor(
+                serverConnector,
+                entityManager: backgroundEntityManager,
+                fsmp: fsmp
+            )
         }
         return messageProcessorInstance!
+    }
+    
+    var fsmp: ForwardSecurityMessageProcessor {
+        if fsmpInstance == nil {
+            fsmpInstance = ForwardSecurityMessageProcessor(
+                dhSessionStore: dhSessionStore,
+                identityStore: myIdentityStore,
+                messageSender: MessageSenderAdapter()
+            )
+            
+            fsStatusSender = ForwardSecurityStatusSender(entityManager: entityManager)
+            fsmpInstance?.addListener(listener: fsStatusSender!)
+        }
+        return fsmpInstance!
+    }
+    
+    public var dhSessionStore: DHSessionStoreProtocol {
+        BusinessInjector.dhSessionStoreInstance
+    }
+    
+    class MessageSenderAdapter: ForwardSecurityMessageSenderProtocol {
+        func send(message: AbstractMessage) {
+            MessageSender.send(message, isPersistent: true)
+        }
     }
 }

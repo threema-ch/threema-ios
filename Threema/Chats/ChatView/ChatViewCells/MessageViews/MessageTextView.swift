@@ -18,11 +18,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import CocoaLumberjackSwift
 import ThreemaFramework
 import UIKit
 
 protocol MessageTextViewDelegate: AnyObject {
+    var currentSearchText: String? { get }
+
     func showContact(identity: String)
+    func didSelectText(in textView: MessageTextView?)
 }
 
 extension MessageTextViewDelegate {
@@ -34,53 +38,97 @@ extension MessageTextViewDelegate {
 /// Label with correct font for a text message or caption
 ///
 /// With IOS-2392 this will automatically format text and show big emojis if enabled.
-final class MessageTextView: UITextView {
+final class MessageTextView: RTLAligningTextView {
+    private struct MessageTextViewRenderState {
+        enum RenderState {
+            case textUnchanged(SearchTextRenderState)
+            case textChanged(SearchTextRenderState)
+        }
+        
+        enum SearchTextRenderState {
+            case empty
+            case textUnchanged
+            case textChanged
+        }
+        
+        var currentText = ""
+        var currentSearchText: String?
+        
+        func renderState(for newText: String, highlighting searchText: String?) -> RenderState {
+            let currentSearchTextRenderState: SearchTextRenderState
+            if let searchText {
+                currentSearchTextRenderState = (searchText == currentSearchText) ? .textUnchanged : .textChanged
+            }
+            else {
+                currentSearchTextRenderState = .empty
+            }
+            
+            guard currentText == newText else {
+                DDLogVerbose("Text Unchanged")
+                return .textChanged(currentSearchTextRenderState)
+            }
+            DDLogVerbose("Text changed")
+            return .textUnchanged(currentSearchTextRenderState)
+        }
+    }
     
     /// Delegate used to handle cell delegates
-    private var messageTextViewDelegate: MessageTextViewDelegate
+    private weak var messageTextViewDelegate: MessageTextViewDelegate?
     
     private lazy var markupParser = MarkupParser()
     
-    /// It will parse the string and will set automaticly the attributed text
+    private var currentRenderState = MessageTextViewRenderState()
+    
+    private var hasHighlightedSearchResult = false
+    
+    /// Displayed raw text
+    ///
+    /// When set it will parse the string and automatically set the attributed text
     override public var text: String! {
         get {
-            super.text
+            currentRenderState.currentText
         }
         set {
-            guard let newValue = newValue else {
-                super.text = nil
-                return
-            }
-            if newValue.containsOnlyEmoji,
-               newValue.emojis.count <= 3 {
-                attributedText = NSAttributedString(
-                    string: newValue,
-                    attributes: [
-                        NSAttributedString.Key.foregroundColor: Colors.text,
-                        NSAttributedString.Key.font: ChatViewConfiguration.Text.emojiFont,
-                    ]
+            let currentSearchText = messageTextViewDelegate?.currentSearchText
+            
+            defer {
+                currentRenderState = MessageTextViewRenderState(
+                    currentText: newValue,
+                    currentSearchText: currentSearchText
                 )
             }
-            else {
-                let attributedString = NSAttributedString(
-                    string: newValue,
-                    attributes: [
-                        NSAttributedString.Key.foregroundColor: Colors.text,
-                        NSAttributedString.Key.font: ChatViewConfiguration.Text.font,
-                    ]
-                )
-                attributedText = markupParser.markify(
-                    attributedString: attributedString,
-                    font: ChatViewConfiguration.Text.font,
-                    removeMarkups: true
-                ) as! NSMutableAttributedString
+            
+            switch currentRenderState.renderState(
+                for: newValue,
+                highlighting: currentSearchText
+            ) {
+            case let .textUnchanged(searchTextState):
+                switch searchTextState {
+                case .empty: break //  This is the general case when reconfiguring the parent cell
+                case .textChanged:
+                    // This only happens when searching
+                    //
+                    // If the search text has changed we need to do a full markify round because we don't know what exactly has changed
+                    // and then highlight the text again.
+                    setAttributedText(to: markify(newValue), maybeHighlighting: currentSearchText)
+                case .textUnchanged:
+                    // This only happens when searching
+                    //
+                    // Even if both text and search text are unchanged we need to re-markify this text because
+                    // of Colors overwriting our previously set colors. See `updateColors` of this class for the other part of the workaround
+                    // where we set text to the same value again.
+                    setAttributedText(to: attributedText, maybeHighlighting: currentSearchText)
+                }
+            case .textChanged:
+                // This is the general case when setting a new message to the parent cell
+                setAttributedText(to: markify(newValue), maybeHighlighting: currentSearchText)
             }
         }
     }
         
     // MARK: - Lifecycle
 
-    init(frame: CGRect, textContainer: NSTextContainer?, messageTextViewDelegate: MessageTextViewDelegate) {
+    init(frame: CGRect, textContainer: NSTextContainer?, messageTextViewDelegate: MessageTextViewDelegate?) {
         self.messageTextViewDelegate = messageTextViewDelegate
         super.init(frame: frame, textContainer: textContainer)
         configureTextView()
@@ -94,7 +142,7 @@ final class MessageTextView: UITextView {
         updateColors()
     }
     
-    convenience init(messageTextViewDelegate: MessageTextViewDelegate) {
+    convenience init(messageTextViewDelegate: MessageTextViewDelegate?) {
         self.init(frame: .zero, textContainer: nil, messageTextViewDelegate: messageTextViewDelegate)
     }
     
@@ -104,23 +152,103 @@ final class MessageTextView: UITextView {
     }
     
     private func configureTextView() {
-        font = ChatViewConfiguration.Text.font
+        font = UIFont.preferredFont(forTextStyle: ChatViewConfiguration.Text.textStyle)
         adjustsFontForContentSizeCategory = true
         isScrollEnabled = false
         isEditable = false
         isSelectable = true
+        dataDetectorTypes = [.link, .phoneNumber]
         isUserInteractionEnabled = true
         backgroundColor = .clear
         textContainerInset = .zero
         textContainer.lineBreakMode = .byWordWrapping
         textContainer.lineFragmentPadding = 0.0
         delegate = self
+        isAccessibilityElement = false
+        accessibilityElementsHidden = true
     }
         
     // MARK: - Update
     
     func updateColors() {
         Colors.setTextColor(Colors.text, in: self)
+        if messageTextViewDelegate?.currentSearchText != nil {
+            // Works around `Colors` resetting our colors when we actually want to highlight text
+            text = text
+        }
+    }
+    
+    // MARK: - Private Helper Functions
+    
+    private func setAttributedText(to text: NSAttributedString, maybeHighlighting searchText: String? = nil) {
+        if let searchText {
+            attributedText = highlight(
+                searchText,
+                in: NSMutableAttributedString(attributedString: text)
+            )
+        }
+        else {
+            attributedText = text
+        }
+    }
+    
+    private func highlight(_ searchText: String, in attributedString: NSMutableAttributedString) -> NSAttributedString {
+        #if DEBUG
+            DDLogVerbose("Start \(#function) for \(Unmanaged.passUnretained(self).toOpaque())")
+            let startTime = CACurrentMediaTime()
+            defer {
+                let endTime = CACurrentMediaTime()
+                DDLogVerbose(
+                    "End \(#function) for \(Unmanaged.passUnretained(self).toOpaque()) in \(endTime - startTime)"
+                )
+            }
+        #endif
+        
+        return markupParser.highlightOccurrences(of: searchText, in: attributedString)
+    }
+    
+    private func markify(_ text: String) -> NSAttributedString {
+        #if DEBUG
+            DDLogVerbose("Start \(#function) for \(Unmanaged.passUnretained(self).toOpaque())")
+            let startTime = CACurrentMediaTime()
+            defer {
+                let endTime = CACurrentMediaTime()
+                DDLogVerbose(
+                    "End \(#function) for \(Unmanaged.passUnretained(self).toOpaque()) in \(endTime - startTime)"
+                )
+            }
+        #endif
+        
+        if text.containsOnlyEmoji,
+           text.emojis.count <= 3 {
+            return NSAttributedString(
+                string: text,
+                attributes: [
+                    NSAttributedString.Key.foregroundColor: Colors.text,
+                    NSAttributedString.Key.font: UIFont
+                        .preferredFont(forTextStyle: ChatViewConfiguration.Text.emojiTextStyle),
+                ]
+            )
+        }
+        else {
+            let attributedString = NSAttributedString(
+                string: text,
+                attributes: [
+                    NSAttributedString.Key.foregroundColor: Colors.text,
+                    NSAttributedString.Key.font: UIFont
+                        .preferredFont(forTextStyle: ChatViewConfiguration.Text.textStyle),
+                ]
+            )
+            return markupParser.markify(
+                attributedString: attributedString,
+                font: UIFont.preferredFont(forTextStyle: ChatViewConfiguration.Text.textStyle),
+                removeMarkups: true
+            ) as! NSMutableAttributedString
+        }
+    }
+    
+    func resetTextSelection() {
+        selectedTextRange = nil
     }
 }
 
@@ -140,6 +268,14 @@ extension MessageTextView: UITextViewDelegate {
         if URL.absoluteString.starts(with: "ThreemaId:") {
             if interaction == .invokeDefaultAction {
                 let threemaID = String(URL.absoluteString.suffix(8))
+                
+                guard let messageTextViewDelegate = messageTextViewDelegate else {
+                    let msg = "messageTextViewDelegate is unexpectedly nil"
+                    assertionFailure(msg)
+                    DDLogError(msg)
+                    return false
+                }
+                
                 messageTextViewDelegate.showContact(identity: threemaID)
             }
             return false
@@ -160,5 +296,13 @@ extension MessageTextView: UITextViewDelegate {
         interaction: UITextItemInteraction
     ) -> Bool {
         false
+    }
+    
+    func textViewDidChangeSelection(_ textView: UITextView) {
+        guard selectedTextRange != nil else {
+            messageTextViewDelegate?.didSelectText(in: nil)
+            return
+        }
+        messageTextViewDelegate?.didSelectText(in: self)
     }
 }

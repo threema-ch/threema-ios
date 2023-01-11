@@ -89,6 +89,7 @@
     navigationController.showLeftDoneButton = YES;
     navigationController.dismissOnTapOutside = YES;
     navigationController.showFullScreenOnIPad = YES;
+    navigationController.navigationBar.scrollEdgeAppearance = [Colors defaultNavigationBarAppearance];
     return navigationController;
 }
 

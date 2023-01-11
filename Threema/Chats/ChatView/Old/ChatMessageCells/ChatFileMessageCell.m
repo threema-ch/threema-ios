@@ -21,7 +21,7 @@
 #import "ChatFileMessageCell.h"
 #import "FileMessageEntity.h"
 #import "ImageData.h"
-#import "FileMessageSender.h"
+#import "Old_FileMessageSender.h"
 #import "RectUtil.h"
 #import "ThreemaUtilityObjC.h"
 #import "BlobMessageLoader.h"
@@ -249,14 +249,12 @@
     CGFloat thumbnailSize = [ChatFileMessageCell thumbnailSizeForMessage:(FileMessageEntity*)self.message];
     _thumbnailView.frame = [RectUtil setSizeOf:_thumbnailView.frame width:thumbnailSize height:thumbnailSize];
     _thumbnailView.frame = [RectUtil rect:_thumbnailView.frame centerIn:self.msgBackground.frame];
-    
     _thumbnailView.image = thumbnailImage;
 }
 
 - (void)loadThumbnail:(FileMessageEntity *)fileMessageEntity {
-    BOOL local = fileMessageEntity.origin.intValue == 1;
-    BlobURL *blobUrl = [[BlobURL alloc] initWithServerConnector:[ServerConnector sharedServerConnector] userSettings:[UserSettings sharedUserSettings] localOrigin:local];
-    [blobUrl downloadWithBlobID:fileMessageEntity.blobThumbnailId completionHandler:^(NSURL * _Nullable downloadUrl, NSError * _Nullable error) {
+    BlobURL *blobUrl = [[BlobURL alloc] initWithServerConnector:[ServerConnector sharedServerConnector] userSettings:[UserSettings sharedUserSettings]];
+    [blobUrl downloadWithBlobID:fileMessageEntity.blobThumbnailId origin:fileMessageEntity.blobGetOrigin completionHandler:^(NSURL * _Nullable downloadUrl, NSError * _Nullable error) {
         if (downloadUrl == nil) {
             DDLogDebug(@"Can't load thumbnail: %@", error);
             return;
@@ -378,8 +376,14 @@
 }
 
 - (void)resendMessage:(UIMenuController*)menuController {
+    EntityManager *entityManager = [[EntityManager alloc] init];
+    [entityManager performSyncBlockAndSafe:^{
+        FileMessageEntity *fileMessageEntity = [[entityManager entityFetcher] existingObjectWithID:self.message.objectID];
+        fileMessageEntity.id = [[NaClCrypto sharedCrypto] randomBytes:kMessageIdLen];
+    }];
+    
     FileMessageEntity *fileMessageEntity = (FileMessageEntity*)self.message;
-    FileMessageSender *sender = [[FileMessageSender alloc] init];
+    Old_FileMessageSender *sender = [[Old_FileMessageSender alloc] init];
     [sender retryMessage:fileMessageEntity];
 }
 

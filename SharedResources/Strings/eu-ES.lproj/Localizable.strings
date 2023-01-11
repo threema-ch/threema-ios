@@ -103,7 +103,6 @@
 "threema_id" = "Threemaren IDa";
 "nickname" = "Ezizen publikoa";
 "add_button" = "Gehitu";
-
 "chat_back_button_accessibility" = "%d ez dira irakurri";
 
 "show_in_google_maps" = "Google Mapsen erakutsi";
@@ -145,7 +144,6 @@
 "high" = "Handia";
 "max_1_minute" = "Geh. 1 minutu";
 "max_x_minutes" = "Gehi. %d minutu";
-
 /* Sound names */
 "push_sound_title" = "Jakinarazpen automatikoaren soinua";
 "push_group_sound_title" = "Taldearen jakinarazpen automatikoaren soinua";
@@ -292,6 +290,7 @@
 "conversation_delete_confirm" = "Txat hau gailu honetatik kendu nahi duzu?";
 "delete_all" = "Ezabatu guztiak";
 "delete_n" = "Ezabatu (%d)";
+
 "message_cannot_play_movie" = "Ezin da bideoa erreproduzitu.";
 
 "identity_not_found_title" = "IDa ezezaguna";
@@ -381,10 +380,6 @@
 "contact_invalid_cannot_send" = "Ezin duzu mezu bat bidali kontaktu honetara, ez baita baliozkoa.";
 "contact_betafeedback_cannot_send" = "Hau ez da beta bertsio bat, bidali iruzkinak* SUPPORT helbidera.";
 "group_sync_button" = "Kideak sinkronizatu";
-"group_sync_title" = "Talde sinkronizatua";
-"group_sync_message" = "Talde honen egungo datuak kide guztiei bidali zaizkie.";
-"group_sync_error_title" = "Taldearen sinkronizazio-errorea";
-"group_sync_error_message" = "Mesedez, saiatu berriro geroago.";
 "group_clone_button" = "Taldea klonatu";
 "group_clone_title" = "Klonatu taldea";
 "group_clone_message" = "Taldearen klon bat sortuko da zu administratzaile gisa. Jarraitu nahi duzu?";
@@ -425,7 +420,6 @@
 "tap_to_change" = "Sakatu aldatzeko";
 "next" = "Hurrengoa";
 "unread_messages" = "Irakurri gabeko mezuak";
-
 /* Verification level popovers in chat view */
 "verification_level_title" = "Segurtasun-maila";
 /* Verification level popovers in chat view */
@@ -446,7 +440,6 @@
 "level4_explanation" = "Pertsonalki egiaztatu duzun barne-harremana zein den egiaztatu duzu zure QR kodea eskaneatuz.";
 
 "id_verified_title" = "IDa baliozkotua";
-"id_verified_message" = "%@-ren nortasuna eta gako publikoa egiaztatu dira.";
 
 /* Invalid country code alert */
 "invalid_country_code_title" = "Eskualdeak ez du balio";
@@ -468,9 +461,6 @@
 "backgrounding_off" = "Aplikazioa berehala bigarren maila batera deskonektatuko da.";
 "proximity_monitoring_off" = "Hurbiltasun-sentsorea estaltzean ez da pantaila itzaliko.";
 "proximity_monitoring_on" = "Ahots-dei batean eta ahots-mezuak grabatu edo erreproduzitzean, pantaila itzaliko da hurbiltasun-sentsorea estaltzen bada.";
-"validation_logging_expl" = "Arazketa-erregistroa Threemaren muturretik muturrerako zifratua modu independentean baliozkotzeko erabil daiteke.\nXehetasunak: https://threema.ch/validation";
-
-"validation_log_clear" = "Erregistroa ezabatu";
 "log_empty_message" = "Arazketa-erregistroa hutsik dago.";
 "cannot_send_mail_message" = "Gailu honetan ez da posta elektronikoko konturik konfiguratu.";
 
@@ -508,8 +498,6 @@
 "release_profilepicture_to" = "Askatu profileko argazkia";
 "contact_added_to_profile_picture_list" = "Kontaktu honek zure profileko argazkia jasoko du idazten diezunean.";
 "contact_removed_from_profile_picture_list" = "Kontaktu honek ez du zure profila jasoko.";
-"contact_send_profile_picture_success" = "Zure profileko argazkia arrakastaz bidali da kontaktura.";
-"contact_send_profile_picture_error" = "Ezin izan da zure profileko argazkia bidali. Mesedez, saiatu berriro geroago.";
 
 "sync_group" = "Taldeak sinkronizatu";
 
@@ -688,7 +676,7 @@
 "draft" = "Zirriborroa";
 "new_message_accessibility" = "Mezu berria: ";
 "scoll_down_text" = "Joan behera";
-"quote_interaction_hint" = "Sakatu aipatutako mezura salto egiteko.";
+"quote_interaction_hint" = "Joan aipatutako mezura";
 
 /* TTOpenInAppActivity */
 "Open in ..." = "Ireki hemen...";
@@ -779,9 +767,6 @@
 "call_status_unknown" = "Ezezaguna";
 "call_status_blocked" = "Kontaktua blokeatuta";
 "call_status_failed_title" = "Threema Ahots deia";
-"call_status_failed_connected_message" = "Konexio galdu da";
-"call_status_failed_initializing_message" = "Ezin izan da konexioa ezarri";
-"call_status_failed_sdp_patch_message" = "Ezin izan da Threema Ahots deia egin";
 
 "call_threema_initiator_video_info" = "Sakatu hemen kamera aktibatzeko";
 "call_threema_remote_video_activated_info_title" = "Bideo-deiak";
@@ -1068,6 +1053,7 @@
 "file_deleted_title" = "Fitxategia ezabatu da";
 "file_not_found_title" = "Fitxategia ez da aurkitu";
 
+"messages" = "Mezuak";
 // Settings
 "settings_privacy" = "Eremu pribatua";
 "settings_appearance" = "Itxura";
@@ -1098,7 +1084,6 @@
 "settings_devmode_quote_v2" = "Quote V2";
 "settings_devmode_new_chat_view" = "Txat ikuspegi berria";
 "settings_devmode_stylekit_debug_view" = "StyleKit Debug View";
-
 // Appearance
 "settings_appearance_theme_section" = "Gaia";
 "settings_appearance_light_theme" = "Argia";
@@ -1230,9 +1215,6 @@ Fitxategi bakartiak zakarrontzira mugitu, eta %@ fitxategirik (multimedia) ez fa
 "unknown_file_type" = "Fitxategi-mota ezezaguna";
 "unknown_file_size" = "Fitxategiaren tamaina ezezaguna";
 "unknown_file_name" = "Fitxategiaren izena ezezaguna";
-
-"ballots_with_open_count_accessibility" = "Inkestak (%d irekita)";
-
 /* Ballot */
 "ballot" = "Inkesta";
 "ballots" = "Inkestak";
@@ -1283,6 +1265,8 @@ Fitxategi bakartiak zakarrontzira mugitu, eta %@ fitxategirik (multimedia) ez fa
 "voteCancelMessage" = "Botoa eman aurretik erretiratzen bazara, baztertu egingo zaitugu.";
 "discardVoteTitle" = "Baztertu";
 
+"ballots_with_open_count_accessibility" = "Inkestak (%d irekita)";
+
 /* Custom Privacy Settings */
 "privacySetting_header" = "Pribatutasuna";
 "send_readReceipts" = "Ordainagiriak irakurri";
@@ -1305,7 +1289,7 @@ Fitxategi bakartiak zakarrontzira mugitu, eta %@ fitxategirik (multimedia) ez fa
 "reset_overrides_alert_action" = "Berrezarri dena";
 
 /* Multi Decvice */
-"multi_device_linked_devices_title" = "Lotutako gailuak";
+"multi_device_linked_devices_title" = "Gailu anitzeko aurretiko ikuspegia";
 "multi_device_linked_devices_refresh" = "Irristatu eguneratzeko";
 "multi_device_linked_devices_loading_failed" = "Errorea gailuak kargatzean: %@";
 "multi_device_linked_devices_failed_to_load_title" = "Errorea gailuen zerrenda kargatzean";
@@ -1316,12 +1300,12 @@ Fitxategi bakartiak zakarrontzira mugitu, eta %@ fitxategirik (multimedia) ez fa
 "multi_device_linked_devices_failed_remove_title" = "Errorea gailua ezabatzean";
 "multi_device_linked_devices_failed_remove_message" = "Ezin izan da ezabatu lotutako gailua. Saiatu berriro.";
 "multi_device_linked_devices_failed_remove_message_2" = "Ezin izan da ezabatu lotutako gailua. Egiaztatu Interneterako konexioa eta saiatu berriro.";
-
 "myprofile_link_email_phone_footer" = "Zure helbide elektronikoa edo telefono mugikorraren zenbakia zure IDrekin lotzen baduzu, beste pertsona batzuek automatikoki aurkitu ahal izango zaituzte %@ helbide-libretan.";
 "myprofile_link_email_footer" = "Zure helbide elektronikoa zure IDrekin lotzen baduzu, beste pertsona batzuek automatikoki aurkitu ahal izango zaituzte %@ helbidean, betiere helbide-libretan bazaituzte.";
 "myprofile_link_email_onprem_footer" = "Zure helbide elektronikoa zure IDrekin lotzen baduzu, zerbitzari honetako beste pertsona batzuek (%@) automatikoki aurkitu ahal izango dute %@-en, betiere helbide-libretan bazaituzte.";
 "myprofile_link_phone_footer" = "Zure telefono mugikorraren zenbakia zure IDrekin lotzen baduzu, beste pertsona batzuek automatikoki aurkitu ahal izango zaituzte %@ helbide-libretan.";
 "myprofile_link_phone_onprem_footer" = "Zure telefono mugikorraren zenbakia zure IDrekin lotzen baduzu, zerbitzari honetako beste pertsona batzuek (%@) automatikoki aurkitu ahal izango zaituzte %@ helbide-libretan.";
+
 "mentions_table_view_cell_accessibility_hint" = "Egin klik aipamen bat sortzeko";
 
 // POI

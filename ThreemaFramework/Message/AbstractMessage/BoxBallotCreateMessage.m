@@ -34,7 +34,7 @@
     return body;
 }
 
-- (BOOL)shouldPush {
+- (BOOL)flagShouldPush {
     return YES;
 }
 
@@ -43,6 +43,10 @@
 }
 
 - (BOOL)allowSendingProfile {
+    return YES;
+}
+
+- (BOOL)supportsForwardSecurity {
     return YES;
 }
 

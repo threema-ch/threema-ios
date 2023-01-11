@@ -24,9 +24,13 @@
 
 + (void)updateFeatureMask;
 
++ (void)updateFeatureMaskOnCompletion:(void (^)(void))onCompletion;
+
 + (void)checkFeatureMask:(NSInteger)featureMask forConversations:(NSSet *)conversations onCompletion:(void (^)(NSArray *unsupportedContacts))onCompletion;
 
 + (void)checkFeatureMask:(NSInteger)featureMask forContacts:(NSSet *)contacts onCompletion:(void (^)(NSArray *unsupportedContacts))onCompletion;
+
++ (void)checkFeatureMask:(NSInteger)featureMask forContacts:(NSSet *)contacts forceRefresh:(BOOL)forceRefresh onCompletion:(void (^)(NSArray *unsupportedContacts))onCompletion;
 
 + (void)updateFeatureMaskForAllContacts:(NSArray *)allContacts onCompletion:(void(^)(void))onCompletion;
 

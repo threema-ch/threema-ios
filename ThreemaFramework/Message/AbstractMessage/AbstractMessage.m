@@ -50,10 +50,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     return self;
 }
 
-- (BoxedMessage*)makeBox:(Contact *  _Nonnull)toContact myIdentityStore:(id<MyIdentityStoreProtocol> _Nonnull)myIdentityStore entityManager:(NSObject * _Nonnull)entityManagerObject {
-    NSAssert([entityManagerObject isKindOfClass:[EntityManager class]], @"Parameter entityManagerObject should be type of EntityManager");
-    EntityManager *entityManager = (EntityManager *)entityManagerObject;
-    
+- (BoxedMessage*)makeBox:(Contact *  _Nonnull)toContact myIdentityStore:(id<MyIdentityStoreProtocol> _Nonnull)myIdentityStore {
     /* prepare data for box */
     uint8_t type = self.type;
     NSData *_body = self.body;
@@ -95,12 +92,6 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     /* make random nonce and save to database */
     NSData *nonce = [[NaClCrypto sharedCrypto] randomBytes:kNaClCryptoNonceSize];
 
-    if (!self.immediate) {
-        [entityManager performAsyncBlockAndSafe:^{
-            [entityManager.entityCreator nonceWithData:[NonceHasher hashedNonce:nonce]];
-        }];
-    }
-    
     /* sign/encrypt with our secret key */
     NSData *boxedData = [myIdentityStore encryptData:boxData withNonce:nonce publicKey:toContact.publicKey];
     
@@ -110,20 +101,20 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     boxmsg.messageId = self.messageId;
     boxmsg.date = self.date;
     boxmsg.flags = 0;
-    if (self.shouldPush) {
-        boxmsg.flags |= MESSAGE_FLAG_PUSH;
+    if (self.flagShouldPush) {
+        boxmsg.flags |= MESSAGE_FLAG_SEND_PUSH;
     }
-    if (self.immediate) {
-        boxmsg.flags |= MESSAGE_FLAG_IMMEDIATE;
+    if (self.flagDontQueue) {
+        boxmsg.flags |= MESSAGE_FLAG_DONT_QUEUE;
     }
-    if (self.noAck) {
-        boxmsg.flags |= MESSAGE_FLAG_NOACK;
+    if (self.flagDontAck) {
+        boxmsg.flags |= MESSAGE_FLAG_DONT_ACK;
     }
-    if (self.isGroup) {
+    if (self.flagGroupMessage) {
         boxmsg.flags |= MESSAGE_FLAG_GROUP;
     }
-    if (self.isVoIP) {
-        boxmsg.flags |= MESSAGE_FLAG_VOIP;
+    if (self.flagImmediateDeliveryRequired) {
+        boxmsg.flags |= MESSAGE_FLAG_IMMEDIATE_DELIVERY;
     }
     boxmsg.nonce = nonce;
     boxmsg.box = boxedData;
@@ -133,8 +124,9 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     if (self.allowSendingProfile) {
         metadataNickname = myIdentityStore.pushFromName;
         
-        /* Include in header as well for the time being until most clients support the metadata box */
-        boxmsg.pushFromName = myIdentityStore.pushFromName;
+        if ([boxmsg.toIdentity hasPrefix:@"*"]) {
+            boxmsg.pushFromName = myIdentityStore.pushFromName;
+        }
     }
     MessageMetadata *metadata = [[MessageMetadata alloc] initWithNickname:metadataNickname messageID:self.messageId createdAt:self.date];
     boxmsg.metadataBox = [[MetadataCoder new] encodeWithMetadata:metadata nonce:nonce publicKey:toContact.publicKey];
@@ -162,23 +154,31 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     return YES;
 }
 
-- (BOOL)shouldPush {
+- (BOOL)flagShouldPush {
     return NO;
 }
 
-- (BOOL)immediate {
+- (BOOL)flagDontQueue {
     return NO;
 }
 
-- (BOOL)noAck {
+- (BOOL)flagDontAck {
     return NO;
 }
 
-- (BOOL)isGroup {
+- (BOOL)flagGroupMessage {
     return NO;
 }
 
-- (BOOL)isVoIP {
+- (BOOL)flagImmediateDeliveryRequired {
+    return NO;
+}
+
+- (BOOL)flagIsVoIP {
+    return NO;
+}
+
+- (BOOL)supportsForwardSecurity {
     return NO;
 }
 

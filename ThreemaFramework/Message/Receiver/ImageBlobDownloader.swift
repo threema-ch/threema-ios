@@ -23,6 +23,7 @@ import Foundation
 import PromiseKit
 import SwiftProtobuf
 
+@available(*, deprecated, message: "Extend or port functionalities to `BlobManager` instead of using this class.")
 class ImageBlobDownloader {
 
     private let frameworkInjector: FrameworkInjectorProtocol
@@ -32,30 +33,28 @@ class ImageBlobDownloader {
     }
 
     /// Download and decrypt image blob.
-    /// - Parameter blob: Common multi device blob
+    /// - Parameters:
+    ///    - blob: Common multi device blob
+    ///    - origin: Download blob from local or public endpoint
     /// - Returns: Image blob data or nil if download failed
-    func download(_ blob: Common_Blob) -> Promise<Data?> {
+    func download(_ blob: Common_Blob, origin: BlobOrigin) -> Promise<Data?> {
         Promise { seal in
             let blobURL = BlobURL(
                 serverConnector: self.frameworkInjector.serverConnector,
-                userSettings: self.frameworkInjector.userSettings,
-                localOrigin: true
+                userSettings: self.frameworkInjector.userSettings
             )
             let downloader = BlobDownloader(blobURL: blobURL)
-            downloader.download(blobID: blob.id) { data, error in
+            downloader.download(blobID: blob.id, origin: origin) { data, error in
                 if let error = error {
                     DDLogError("An error occurred while downloading a blob: \(error.localizedDescription)")
                 }
 
                 if let data = data {
-                    let encryptionKey = blob.key
-                    // swiftformat:disable:next wrap wrapArguments
-                    let nonce = Data([0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                                      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                                      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01]) // kNonce_1
-                    if let imageData = NaClCrypto.shared()!
-                        .symmetricDecryptData(data, withKey: encryptionKey, nonce: nonce) {
-
+                    if let imageData = NaClCrypto.shared()!.symmetricDecryptData(
+                        data,
+                        withKey: blob.key,
+                        nonce: ThreemaProtocol.nonce01
+                    ) {
                         seal.fulfill(imageData)
                         return
                     }

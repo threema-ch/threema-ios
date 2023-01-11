@@ -30,7 +30,7 @@ class MediatorReflectedSettingsSyncProcessor {
     }
 
     func process(settingsSync: D2d_SettingsSync) -> Promise<Void> {
-        let syncSettings = settingsSync.set.settings
+        let syncSettings = settingsSync.update.settings
 
         let settingsStore = SettingsStore(
             serverConnector: frameworkInjector.serverConnector,

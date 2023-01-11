@@ -22,10 +22,13 @@ import XCTest
 @testable import ThreemaFramework
 
 class MediatorSyncableContactsTests: XCTestCase {
+    private let testBundle = Bundle(for: MediatorSyncableContactsTests.self)
+
     private var databasePreparer: DatabasePreparer!
     private var databaseBackgroundCnx: DatabaseContext!
-    let testBundle = Bundle(for: MediatorSyncableContactsTests.self)
-    
+
+    private var deviceGroupKeys: DeviceGroupKeys!
+
     private var blobDict = [Data: Data]()
     
     override func setUpWithError() throws {
@@ -35,16 +38,26 @@ class MediatorSyncableContactsTests: XCTestCase {
         let (_, mainCnx, backgroundCnx) = DatabasePersistentContext.devNullContext()
         databasePreparer = DatabasePreparer(context: mainCnx)
         databaseBackgroundCnx = DatabaseContext(mainContext: mainCnx, backgroundContext: backgroundCnx)
+
+        deviceGroupKeys = DeviceGroupKeys(
+            dgpk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
+            dgrk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
+            dgdik: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
+            dgsddk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
+            dgtsk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
+            deviceGroupIDFirstByteHex: "a1"
+        )
     }
 
     func testUpdateAllSyncChunkCount() {
         let taskManagerMock = TaskManagerMock()
 
         let mediatorSyncableContacts = MediatorSyncableContacts(
+            UserSettingsMock(),
             ServerConnectorMock(
                 connectionState: .loggedIn,
                 deviceID: BytesUtility.generateRandomBytes(length: Int(8))!,
-                deviceGroupPathKey: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupPathKeyLen))!
+                deviceGroupKeys: deviceGroupKeys
             ),
             taskManagerMock,
             EntityManager(databaseContext: databaseBackgroundCnx, myIdentityStore: MyIdentityStoreMock())
@@ -54,7 +67,7 @@ class MediatorSyncableContactsTests: XCTestCase {
         for _ in 0..<noContacts {
             let contact = getMinimalContact()
 
-            mediatorSyncableContacts.updateAll(identity: contact.identity, withoutProfileImage: true)
+            mediatorSyncableContacts.updateAll(identity: contact.identity, added: false, withoutProfileImage: true)
         }
 
         let expec = expectation(description: "Sync")
@@ -75,18 +88,19 @@ class MediatorSyncableContactsTests: XCTestCase {
     func testUpdateAllSync() {
         for contactCount in [1, 2, 5, 50, 100, 1000] {
             let serverConnectorMock = ServerConnectorMock()
-            serverConnectorMock.deviceGroupPathKey = BytesUtility
-                .generateRandomBytes(length: Int(kDeviceGroupPathKeyLen))!
+            serverConnectorMock.deviceGroupKeys = deviceGroupKeys
+
             let taskManagerMock = TaskManagerMock()
             
             let mediatorSyncableContacts = MediatorSyncableContacts(
+                UserSettingsMock(),
                 serverConnectorMock,
                 taskManagerMock,
                 EntityManager(databaseContext: databaseBackgroundCnx)
             )
             for _ in 0..<contactCount {
                 let contact = getMinimalContact()
-                mediatorSyncableContacts.updateAll(identity: contact.identity, withoutProfileImage: true)
+                mediatorSyncableContacts.updateAll(identity: contact.identity, added: false, withoutProfileImage: true)
             }
 
             let expec = XCTestExpectation(description: "Sync completes successfully")
@@ -116,10 +130,12 @@ class MediatorSyncableContactsTests: XCTestCase {
     
     func testDeleteContact() {
         let serverConnectorMock = ServerConnectorMock()
-        serverConnectorMock.deviceGroupPathKey = BytesUtility.generateRandomBytes(length: Int(kDeviceGroupPathKeyLen))!
+        serverConnectorMock.deviceGroupKeys = deviceGroupKeys
+
         let taskManagerMock = TaskManagerMock()
         
         let mediatorSyncableContacts = MediatorSyncableContacts(
+            UserSettingsMock(),
             serverConnectorMock,
             taskManagerMock,
             EntityManager(databaseContext: databaseBackgroundCnx)
@@ -148,6 +164,8 @@ class MediatorSyncableContactsTests: XCTestCase {
     }
     
     func testIntegrationWithTaskExecution() {
+        let userSettingsMock = UserSettingsMock()
+
         struct TestInput {
             var contact: Contact
         }
@@ -158,47 +176,52 @@ class MediatorSyncableContactsTests: XCTestCase {
         var table = [(name: String, input: TestInput, output: TestOutput)]()
         
         // Test 1: Basic Test
-        let testContact1 = getBaseContact(setProfilePicture: true, setContactProfilePicture: true)
+        let testContact1 = getBaseContact(setProfilePicture: true, setContactProfilePicture: true, isWorkContact: false)
         let test1 = (
             "Basic Test",
             TestInput(contact: testContact1),
-            TestOutput(delta: getDeltaSyncContact(from: testContact1))
+            TestOutput(delta: expectedDeltaSyncContact(from: testContact1, userSettings: userSettingsMock))
         )
         table.append(test1)
         
         // Test 2: No Profile Picture Test
-        let testContact2 = getBaseContact(setProfilePicture: false, setContactProfilePicture: false)
+        let testContact2 = getBaseContact(
+            setProfilePicture: false,
+            setContactProfilePicture: false,
+            isWorkContact: false
+        )
         let test2 = (
             "No Profile Picture Test",
             TestInput(contact: testContact2),
-            TestOutput(delta: getDeltaSyncContact(from: testContact2))
+            TestOutput(delta: expectedDeltaSyncContact(from: testContact2, userSettings: userSettingsMock))
         )
         table.append(test2)
 
         // Test 3: Only User Profile Picture Test
-        let testContact3 = getBaseContact(setProfilePicture: true, setContactProfilePicture: false)
+        let testContact3 = getBaseContact(setProfilePicture: true, setContactProfilePicture: false, isWorkContact: true)
         let test3 = (
             "Only User Profile Picture Test",
             TestInput(contact: testContact3),
-            TestOutput(delta: getDeltaSyncContact(from: testContact3))
+            TestOutput(delta: expectedDeltaSyncContact(from: testContact3, userSettings: userSettingsMock))
         )
         table.append(test3)
 
         // Test 4: Only Contact Profile Picture Test
-        let testContact4 = getBaseContact(setProfilePicture: false, setContactProfilePicture: true)
+        let testContact4 = getBaseContact(setProfilePicture: false, setContactProfilePicture: true, isWorkContact: true)
         let test4 = (
             "Only Contact Profile Picture Test",
             TestInput(contact: testContact4),
-            TestOutput(delta: getDeltaSyncContact(from: testContact4))
+            TestOutput(delta: expectedDeltaSyncContact(from: testContact4, userSettings: userSettingsMock))
         )
         table.append(test4)
         
         let serverConnectorMock = ServerConnectorMock()
-        serverConnectorMock.deviceGroupPathKey = BytesUtility.generateRandomBytes(length: Int(kDeviceGroupPathKeyLen))!
+        serverConnectorMock.deviceGroupKeys = deviceGroupKeys
         
         for test in table {
             let taskManagerMock = TaskManagerMock()
             let mediatorSyncableContacts = MediatorSyncableContacts(
+                userSettingsMock,
                 serverConnectorMock,
                 taskManagerMock,
                 EntityManager(databaseContext: databaseBackgroundCnx)
@@ -207,7 +230,11 @@ class MediatorSyncableContactsTests: XCTestCase {
             let expec =
                 XCTestExpectation(description: "Completion is executed immediately if multi device is not enabled")
             
-            mediatorSyncableContacts.updateAll(identity: test.input.contact.identity, withoutProfileImage: false)
+            mediatorSyncableContacts.updateAll(
+                identity: test.input.contact.identity,
+                added: false,
+                withoutProfileImage: false
+            )
 
             mediatorSyncableContacts.sync()
                 .done {
@@ -222,6 +249,28 @@ class MediatorSyncableContactsTests: XCTestCase {
                         }
 
                         for delta in contactUpdateTask.deltaSyncContacts {
+
+                            XCTAssertTrue(delta.syncContact.hasPublicKey, "\(test.name)")
+                            XCTAssertTrue(delta.syncContact.hasCreatedAt, "\(test.name)")
+                            XCTAssertTrue(delta.syncContact.hasFirstName, "\(test.name)")
+                            XCTAssertTrue(delta.syncContact.hasLastName, "\(test.name)")
+                            XCTAssertTrue(delta.syncContact.hasNickname, "\(test.name)")
+                            XCTAssertTrue(delta.syncContact.hasVerificationLevel, "\(test.name)")
+                            XCTAssertTrue(delta.syncContact.hasWorkVerificationLevel, "\(test.name)")
+                            XCTAssertTrue(delta.syncContact.hasIdentityType, "\(test.name)")
+                            XCTAssertTrue(delta.syncContact.hasAcquaintanceLevel, "\(test.name)")
+                            XCTAssertTrue(delta.syncContact.hasActivityState, "\(test.name)")
+                            XCTAssertTrue(delta.syncContact.hasFeatureMask, "\(test.name)")
+                            XCTAssertTrue(delta.syncContact.hasSyncState, "\(test.name)")
+                            XCTAssertTrue(delta.syncContact.hasReadReceiptPolicyOverride, "\(test.name)")
+                            XCTAssertTrue(delta.syncContact.hasTypingIndicatorPolicyOverride, "\(test.name)")
+                            XCTAssertTrue(delta.syncContact.hasNotificationTriggerPolicyOverride, "\(test.name)")
+                            XCTAssertTrue(delta.syncContact.hasNotificationSoundPolicyOverride, "\(test.name)")
+                            XCTAssertFalse(delta.syncContact.hasUserDefinedProfilePicture, "\(test.name)")
+                            XCTAssertFalse(delta.syncContact.hasContactDefinedProfilePicture, "\(test.name)")
+                            XCTAssertTrue(delta.syncContact.hasConversationCategory, "\(test.name)")
+                            XCTAssertTrue(delta.syncContact.hasConversationVisibility, "\(test.name)")
+
                             XCTAssertEqual(
                                 delta.syncContact.identity,
                                 test.output.delta.syncContact.identity,
@@ -252,6 +301,7 @@ class MediatorSyncableContactsTests: XCTestCase {
                                 test.output.delta.syncContact.activityState,
                                 "\(test.name)"
                             )
+                            XCTAssertEqual(delta.syncContact.featureMask, test.output.delta.syncContact.featureMask)
                             XCTAssertEqual(
                                 delta.syncContact.conversationCategory,
                                 test.output.delta.syncContact.conversationCategory,
@@ -282,10 +332,11 @@ class MediatorSyncableContactsTests: XCTestCase {
                                 test.output.delta.syncContact.createdAt,
                                 "\(test.name)"
                             )
-                            XCTAssertFalse(delta.syncContact.hasAcquaintanceLevel, "\(test.name)")
-                            XCTAssertFalse(delta.syncContact.hasUserDefinedProfilePicture, "\(test.name)")
-                            XCTAssertFalse(delta.syncContact.hasContactDefinedProfilePicture, "\(test.name)")
-
+                            XCTAssertEqual(
+                                delta.syncContact.acquaintanceLevel,
+                                test.output.delta.syncContact.acquaintanceLevel,
+                                "\(test.name)"
+                            )
                             XCTAssertEqual(delta.profilePicture, test.output.delta.profilePicture, "\(test.name)")
                             XCTAssertEqual(
                                 delta.contactProfilePicture,
@@ -307,11 +358,14 @@ class MediatorSyncableContactsTests: XCTestCase {
         }
     }
 
-    // Implementation like MediatorSyncableContacts.updateAll(...) -> makes this sence for testing???
-    private func getDeltaSyncContact(from contact: Contact) -> DeltaSyncContact {
+    // Expected result of `MediatorSyncableContacts.updateAll(...)` implementation -> makes this sense for testing???
+    private func expectedDeltaSyncContact(
+        from contact: Contact,
+        userSettings: UserSettingsProtocol
+    ) -> DeltaSyncContact {
         let conversation = contact.conversations!.first as? Conversation
         
-        var delta = DeltaSyncContact(syncContact: Sync_Contact())
+        var delta = DeltaSyncContact(syncContact: Sync_Contact(), syncAction: .update)
         delta.syncContact.identity = contact.identity
         delta.syncContact.publicKey = contact.publicKey
 
@@ -329,7 +383,9 @@ class MediatorSyncableContactsTests: XCTestCase {
             delta.syncContact.clearLastName()
         }
 
-        delta.syncContact.identityType = contact.workContact.boolValue ? .work : .regular
+        let workIdentities = userSettings.workIdentities ?? NSOrderedSet(array: [String]())
+        delta.syncContact.identityType = workIdentities.contains(contact.identity) ? .work : .regular
+        delta.syncContact.workVerificationLevel = contact.workContact.boolValue ? .workSubscriptionVerified : .none
 
         if let nickname = contact.publicNickname {
             delta.syncContact.nickname = nickname
@@ -359,6 +415,8 @@ class MediatorSyncableContactsTests: XCTestCase {
             delta.syncContact.clearActivityState()
         }
 
+        delta.syncContact.featureMask = contact.featureMask.uint32Value
+
         switch contact.importedStatus {
         case .initial:
             delta.syncContact.syncState = .initial
@@ -371,13 +429,13 @@ class MediatorSyncableContactsTests: XCTestCase {
         if let visibility = conversation?.conversationVisibility {
             switch visibility {
             case .archived:
-                delta.syncContact.conversationVisibility = .archive
+                delta.syncContact.conversationVisibility = .archived
             default:
-                delta.syncContact.conversationVisibility = .show
+                delta.syncContact.conversationVisibility = conversation?.marked.boolValue ?? false ? .pinned : .normal
             }
         }
         else {
-            delta.syncContact.clearConversationVisibility()
+            delta.syncContact.conversationVisibility = conversation?.marked.boolValue ?? false ? .pinned : .normal
         }
 
         if let category = conversation?.conversationCategory {
@@ -394,6 +452,28 @@ class MediatorSyncableContactsTests: XCTestCase {
             delta.syncContact.clearConversationCategory()
         }
 
+        if let category = conversation?.conversationCategory {
+            switch category {
+            case .private:
+                delta.syncContact.conversationCategory = .protected
+            case .default:
+                delta.syncContact.conversationCategory = .default
+            @unknown default:
+                // Show an alert with a sync error
+                print("Conversation category has a unknown value")
+            }
+        }
+        else {
+            delta.syncContact.conversationCategory = .default
+        }
+
+        delta.syncContact.notificationSoundPolicyOverride.default = Common_Unit()
+        delta.syncContact.notificationTriggerPolicyOverride.default = Common_Unit()
+        delta.syncContact.typingIndicatorPolicyOverride.default = Common_Unit()
+        delta.syncContact.readReceiptPolicyOverride.default = Common_Unit()
+        delta.syncContact.acquaintanceLevel = contact.isContactHidden ? .group : .direct
+        delta.syncContact.createdAt = UInt64(contact.createdAt?.millisecondsSince1970 ?? 0)
+
         delta.profilePicture = contact.imageData != nil ? .updated : .removed
         delta.contactProfilePicture = contact.contactImage?.data != nil ? .updated : .removed
         delta.image = contact.imageData
@@ -402,7 +482,11 @@ class MediatorSyncableContactsTests: XCTestCase {
         return delta
     }
     
-    private func getBaseContact(setProfilePicture: Bool, setContactProfilePicture: Bool) -> Contact {
+    private func getBaseContact(
+        setProfilePicture: Bool,
+        setContactProfilePicture: Bool,
+        isWorkContact: Bool
+    ) -> Contact {
         let contact: Contact = getMinimalContact()
         databasePreparer.save {
             let imageURL = testBundle.url(forResource: "Bild-1-0", withExtension: "jpg")
@@ -415,7 +499,7 @@ class MediatorSyncableContactsTests: XCTestCase {
             )
 
             contact.createdAt = Date()
-            contact.hidden = NSNumber(value: 0)
+            contact.isContactHidden = false
             // Optional
             contact.importedStatus = .initial
             // Optional
@@ -434,6 +518,7 @@ class MediatorSyncableContactsTests: XCTestCase {
             contact.lastName = "Appleseed"
             contact.imageData = setProfilePicture ? imageData : nil
             contact.contactImage = setContactProfilePicture ? contactImage : nil
+            contact.workContact = NSNumber(booleanLiteral: isWorkContact)
         }
         return contact
     }

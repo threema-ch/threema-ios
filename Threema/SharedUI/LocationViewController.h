@@ -39,4 +39,6 @@
 - (IBAction)gotoUserLocationButtonTapped:(id)sender;
 - (IBAction)gotoLocationButtonTapped:(id)sender;
 
+- (instancetype)initWithLocationMessage:(LocationMessage *)locationMessage;
+
 @end

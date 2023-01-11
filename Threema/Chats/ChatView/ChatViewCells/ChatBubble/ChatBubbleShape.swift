@@ -25,9 +25,18 @@ enum ChatBubbleShape {
     
     /// A rect with rounded corners filling `frame`
     /// - Parameter frame: Frame to fill with rect
+    /// - Parameter traitCollection: Trait collection of environment the rounded rect will be shown in
     /// - Returns: Bezier path of rect
-    static func roundedRect(for frame: CGRect) -> UIBezierPath {
-        UIBezierPath(roundedRect: frame, cornerRadius: ChatViewConfiguration.ChatBubble.cornerRadius)
+    static func roundedRect(for frame: CGRect, with traitCollection: UITraitCollection) -> UIBezierPath {
+        if traitCollection.preferredContentSizeCategory < .large {
+            return UIBezierPath(
+                roundedRect: frame,
+                cornerRadius: ChatViewConfiguration.ChatBubble.smallerContentSizeConfigurationCornerRadius
+            )
+        }
+        else {
+            return UIBezierPath(roundedRect: frame, cornerRadius: ChatViewConfiguration.ChatBubble.cornerRadius)
+        }
     }
     
     /// Leading arrow in `frame`
@@ -39,7 +48,7 @@ enum ChatBubbleShape {
     /// - Returns: Bezier path of arrow
     static func leadingArrow(for frame: CGRect) -> UIBezierPath {
         let leadingArrowPath = UIBezierPath()
-        
+
         leadingArrowPath.move(to: CGPoint(x: frame.minX + 18, y: frame.maxY - 19))
         leadingArrowPath.addCurve(
             to: CGPoint(x: frame.minX - 1, y: frame.maxY),
@@ -63,6 +72,34 @@ enum ChatBubbleShape {
         leadingArrowPath.usesEvenOddFillRule = true
         
         return leadingArrowPath
+    }
+    
+    static func bubbles(for frame: CGRect) -> [UIBezierPath] {
+        typealias AttachedBubbleConfig = ChatViewConfiguration.TypingIndicator.AttachedBubble
+        typealias SmallBubbleConfig = ChatViewConfiguration.TypingIndicator.SmallBubble
+        
+        let attachedBubbleRect = CGRect(
+            x: frame.minX + AttachedBubbleConfig.xOffset,
+            y: frame.maxY + AttachedBubbleConfig.yOffset,
+            width: AttachedBubbleConfig.width,
+            height: AttachedBubbleConfig.height
+        )
+        
+        let smallBubbleRect = CGRect(
+            x: frame.minX + SmallBubbleConfig.xOffset,
+            y: frame.maxY + SmallBubbleConfig.yOffset,
+            width: SmallBubbleConfig.width,
+            height: SmallBubbleConfig.height
+        )
+        
+        let attachedBubblePath = UIBezierPath(ovalIn: attachedBubbleRect)
+        attachedBubblePath.fill()
+        
+        let smallBubblePath =
+            UIBezierPath(ovalIn: smallBubbleRect)
+        smallBubblePath.fill()
+        
+        return [smallBubblePath, attachedBubblePath]
     }
     
     /// Trailing arrow in `frame`

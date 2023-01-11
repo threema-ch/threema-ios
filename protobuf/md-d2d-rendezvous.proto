@@ -1,16 +1,14 @@
-syntax = "proto3";
-
-package rendezvous;
-
-option java_package = "ch.threema.protobuf.d2d.rendezvous";
-
 // ## Connection Rendezvous Protocol (Supplementary)
 //
 // This is a supplementary section to the corresponding structbuf section
 // with complementary protobuf messages. All defined messages here follow the
 // same logic.
 
+syntax = "proto3";
 
+package rendezvous;
+
+option java_package = "ch.threema.protobuf.d2d.rendezvous";
 
 // Network cost
 enum NetworkCost {
@@ -29,7 +27,7 @@ enum NetworkCost {
 // wait for them to finish:
 //
 // 1. If the device is able to create a TCP server socket:
-//    1. Bind to *any* IP address with a random port number. Silently ignore
+//    1. Bind to _any_ IP address with a random port number. Silently ignore
 //       failures.
 //    2. If successful, let `addresses` be the list of available IP addresses
 //       on network interfaces the server has been bound to.
@@ -98,13 +96,8 @@ message RendezvousInit {
       // Network cost
       NetworkCost network_cost = 2;
 
-      oneof ip {
-        // 4 byte IPv4 address in little-endian encoding.
-        bytes ipv4 = 3;
-
-        // 16 byte IPv6 address in little-endian encoding.
-        bytes ipv6 = 4;
-      }
+      // IPv4 or IPv6 address
+      string ip = 3;
     }
   }
   DirectTcpServer direct_tcp_server = 3;

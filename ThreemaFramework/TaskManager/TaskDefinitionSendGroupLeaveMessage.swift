@@ -50,10 +50,10 @@ class TaskDefinitionSendGroupLeaveMessage: TaskDefinitionSendMessage {
 
     var fromMember: String!
     var toMembers: [String]!
+    var hiddenContacts = [String]()
 
     private enum CodingKeys: String, CodingKey {
-        case fromMember
-        case toMembers
+        case fromMember, toMembers, hiddenContacts
     }
     
     override init(sendContactProfilePicture: Bool) {
@@ -71,12 +71,14 @@ class TaskDefinitionSendGroupLeaveMessage: TaskDefinitionSendMessage {
 
         self.fromMember = try container.decode(String.self, forKey: .fromMember)
         self.toMembers = try container.decode([String].self, forKey: .toMembers)
+        self.hiddenContacts = try container.decode([String].self, forKey: .hiddenContacts)
     }
     
     override func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(fromMember, forKey: .fromMember)
         try container.encode(toMembers, forKey: .toMembers)
+        try container.encode(hiddenContacts, forKey: .hiddenContacts)
 
         let superencoder = container.superEncoder()
         try super.encode(to: superencoder)

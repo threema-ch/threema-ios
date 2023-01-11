@@ -51,6 +51,7 @@
     id<UserSettingsProtocol> userSettings;
     id<GroupManagerProtocolObjc> groupManager;
     EntityManager *entityManager;
+    NonceGuard *nonceGuard;
 }
 
 - (nonnull instancetype)initWithMessage:(nonnull AbstractGroupMessage *)message myIdentityStore:(id<MyIdentityStoreProtocol> _Nonnull)myIdentityStore userSettings:(id<UserSettingsProtocol> _Nonnull)userSettings groupManager:(nonnull NSObject *)groupManagerObject entityManager:(nonnull NSObject *)entityManagerObject
@@ -64,21 +65,22 @@
         self->userSettings = userSettings;
         self->groupManager = (id<GroupManagerProtocolObjc>)groupManagerObject;
         self->entityManager = (EntityManager *)entityManagerObject;
+        self->nonceGuard = [[NonceGuard alloc] initWithEntityManager:self->entityManager];
     }
 
     return self;
 }
 
 - (void)handleMessageOnCompletion:(void (^)(BOOL))onCompletion onError:(void(^)(NSError *error))onError {
-    if ([entityManager isProcessedWithMessage:_message] == YES) {
+    if ([nonceGuard isProcessedWithMessage:_message isReflected:NO] == YES) {
         onError([ThreemaError threemaError:@"Message already processed" withCode:kMessageAlreadyProcessedErrorCode]);
         return;
     }
 
     if ([_message isKindOfClass:[GroupCreateMessage class]]) {
         GroupCreateMessage *grpCreate = (GroupCreateMessage *)_message;
-        [groupManager createOrUpdateDBObjcWithGroupID:grpCreate.groupId creator:grpCreate.groupCreator members:[[NSSet alloc] initWithArray:grpCreate.groupMembers] systemMessageDate:_message.date]
-        .then(^(Group *group){
+        [groupManager createOrUpdateDBObjcWithGroupID:grpCreate.groupId creator:grpCreate.groupCreator members:[[NSSet alloc] initWithArray:grpCreate.groupMembers] systemMessageDate:_message.date sourceCaller:SourceCallerRemote]
+        .thenInBackground(^(Group *group){
             onCompletion(YES);
         })
         .catch(^(NSError *error){

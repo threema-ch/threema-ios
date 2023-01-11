@@ -100,19 +100,7 @@ public final class ContactCell: ThemedCodeTableViewCell {
         return imageView
     }()
     
-    private lazy var threemaTypeIcon: UIImageView = {
-        let imageView = UIImageView(image: ThreemaUtilityObjC.threemaTypeIcon())
-        
-        // We shouldn't accidentally show it
-        imageView.isHidden = true
-        
-        // Aspect ratio: 1:1
-        imageView.widthAnchor.constraint(equalTo: imageView.heightAnchor).isActive = true
-        
-        imageView.accessibilityIgnoresInvertColors = true
-        
-        return imageView
-    }()
+    private lazy var otherThreemaTypeIcon = OtherThreemaTypeImageView()
     
     private lazy var nameLabel: ContactNameLabel = {
         let label = ContactNameLabel()
@@ -179,7 +167,7 @@ public final class ContactCell: ThemedCodeTableViewCell {
     }()
     
     private lazy var accessibilityContentSizeStack: UIStackView = {
-        let stackView = UIStackView(arrangedSubviews: [verificationLevelImageView, threemaTypeIcon])
+        let stackView = UIStackView(arrangedSubviews: [verificationLevelImageView, otherThreemaTypeIcon])
         
         stackView.spacing = 8
         stackView.axis = .horizontal
@@ -235,24 +223,24 @@ public final class ContactCell: ThemedCodeTableViewCell {
         
         // Type icon configuration
         
-        threemaTypeIcon.translatesAutoresizingMaskIntoConstraints = false
+        otherThreemaTypeIcon.translatesAutoresizingMaskIntoConstraints = false
         
         if traitCollection.preferredContentSizeCategory.isAccessibilityCategory {
             // Approximation for a similar size to verification level image
             // Setting the size to the size of the verification level image view didn't work.
-            threemaTypeIcon.widthAnchor.constraint(equalToConstant: 20).isActive = true
+            otherThreemaTypeIcon.widthAnchor.constraint(equalToConstant: 20).isActive = true
         }
         else {
             // The avatar view combined with the type icon is only shown for non accessibility content
             // sizes, thus we only should set it as a subview with constraints then
-            avatarImageView.addSubview(threemaTypeIcon)
+            avatarImageView.addSubview(otherThreemaTypeIcon)
             NSLayoutConstraint.activate([
                 // 0.35x of the avatar image size
-                threemaTypeIcon.widthAnchor.constraint(equalTo: avatarImageView.widthAnchor, multiplier: 0.35),
+                otherThreemaTypeIcon.widthAnchor.constraint(equalTo: avatarImageView.widthAnchor, multiplier: 0.35),
                 
                 // In the bottom left of the avatar view (in ltr)
-                threemaTypeIcon.leadingAnchor.constraint(equalTo: avatarImageView.leadingAnchor),
-                threemaTypeIcon.bottomAnchor.constraint(equalTo: avatarImageView.bottomAnchor),
+                otherThreemaTypeIcon.leadingAnchor.constraint(equalTo: avatarImageView.leadingAnchor),
+                otherThreemaTypeIcon.bottomAnchor.constraint(equalTo: avatarImageView.bottomAnchor),
             ])
         }
         
@@ -288,7 +276,7 @@ public final class ContactCell: ThemedCodeTableViewCell {
             avatarImageView.image = AvatarMaker.shared().unknownPersonImage()
         }
         
-        threemaTypeIcon.isHidden = true
+        otherThreemaTypeIcon.isHidden = true
         
         nameLabel.contact = nil // BundleUtil.localizedString(forKey: "me")
         verificationLevelImageView.image = nil
@@ -323,7 +311,7 @@ public final class ContactCell: ThemedCodeTableViewCell {
                 }
             }
         
-        threemaTypeIcon.isHidden = ThreemaUtilityObjC.hideThreemaTypeIcon(for: contact)
+        otherThreemaTypeIcon.isHidden = !contact.showOtherThreemaTypeIcon
         
         nameLabel.contact = contact
         
@@ -359,7 +347,7 @@ public final class ContactCell: ThemedCodeTableViewCell {
     private func configureUnknownContactCell() {
         avatarImageView.image = AvatarMaker.shared().unknownPersonImage()
         
-        threemaTypeIcon.isHidden = true
+        otherThreemaTypeIcon.isHidden = true
         
         nameLabel.text = BundleUtil.localizedString(forKey: "(unknown)")
         
@@ -413,15 +401,15 @@ public final class ContactCell: ThemedCodeTableViewCell {
     
     override public var accessibilityValue: String? {
         get {
-            var threemaTypeIconAccessibilityLabel = ""
-            if !threemaTypeIcon.isHidden {
-                threemaTypeIconAccessibilityLabel = ThreemaUtilityObjC.threemaTypeIconAccessibilityLabel()
+            var otherThreemaTypeIconAccessibilityLabel: String?
+            if !otherThreemaTypeIcon.isHidden {
+                otherThreemaTypeIconAccessibilityLabel = otherThreemaTypeIcon.accessibilityLabel
             }
             
             return [
                 metadataLabel.text,
                 identityLabel.text,
-                threemaTypeIconAccessibilityLabel,
+                otherThreemaTypeIconAccessibilityLabel,
                 verificationLevelImageView.accessibilityLabel,
             ]
             .compactMap { $0 }

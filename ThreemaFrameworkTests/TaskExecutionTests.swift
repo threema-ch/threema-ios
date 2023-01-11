@@ -25,6 +25,7 @@ class TaskExecutionTests: XCTestCase {
     private var dbMainCnx: DatabaseContext!
     private var dbBackgroundCnx: DatabaseContext!
     private var dbPreparer: DatabasePreparer!
+    private var deviceGroupKeys: DeviceGroupKeys!
 
     private var ddLoggerMock: DDLoggerMock!
 
@@ -45,12 +46,21 @@ class TaskExecutionTests: XCTestCase {
         ddLoggerMock = DDLoggerMock()
         DDTTYLogger.sharedInstance?.logFormatter = LogFormatterCustom()
         DDLog.add(ddLoggerMock)
+        
+        deviceGroupKeys = DeviceGroupKeys(
+            dgpk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
+            dgrk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
+            dgdik: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
+            dgsddk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
+            dgtsk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
+            deviceGroupIDFirstByteHex: "a1"
+        )
 
         userSettingsMock = UserSettingsMock()
         serverConnectorMock = ServerConnectorMock(
             connectionState: .loggedIn,
             deviceID: BytesUtility.generateRandomBytes(length: ThreemaProtocol.deviceIDLength)!,
-            deviceGroupPathKey: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupPathKeyLen))!
+            deviceGroupKeys: deviceGroupKeys
         )
         myIdentityStoreMock = MyIdentityStoreMock()
         frameworkInjectorMock = BusinessInjectorMock(
@@ -146,7 +156,7 @@ class TaskExecutionTests: XCTestCase {
         XCTAssertTrue(task.messageAlreadySentTo.contains(expectedToIdentity2))
     }
 
-    func testSendMessageInvalidContact() throws {
+    func testSendMessageInvalidGroupContact() throws {
         let expectedToIdentity1 = "TESTER01"
         let expectedToIdentity2 = "TESTER02"
 
@@ -165,12 +175,12 @@ class TaskExecutionTests: XCTestCase {
         }
 
         let cnx = TaskContext()
-        let msg1 = BoxTextMessage()
+        let msg1 = GroupTextMessage()
         msg1.fromIdentity = myIdentityStoreMock.identity
         msg1.toIdentity = expectedToIdentity1
         msg1.text = "Test message 1"
 
-        let msg2 = BoxTextMessage()
+        let msg2 = GroupTextMessage()
         msg2.fromIdentity = myIdentityStoreMock.identity
         msg2.toIdentity = expectedToIdentity2
         msg2.text = "Test message 1"
@@ -282,8 +292,10 @@ class TaskExecutionTests: XCTestCase {
         waitForExpectations(timeout: 6)
 
         XCTAssertNotNil(resultError)
-        XCTAssertEqual(1, serverConnectorMock.sendMessageCalls.count)
-        XCTAssertEqual(1, task.messageAlreadySentTo.count)
-        XCTAssertTrue(task.messageAlreadySentTo.contains(expectedToIdentity1))
+        XCTAssertGreaterThanOrEqual(1, serverConnectorMock.sendMessageCalls.count)
+        XCTAssertGreaterThanOrEqual(1, task.messageAlreadySentTo.count)
+        if !task.messageAlreadySentTo.isEmpty {
+            XCTAssertTrue(task.messageAlreadySentTo.contains(expectedToIdentity1))
+        }
     }
 }

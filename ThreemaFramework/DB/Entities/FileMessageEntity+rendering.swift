@@ -34,13 +34,14 @@ public extension FileMessageEntity {
         case animatedStickerMessage
         /// A video represented by a playable thumbnail
         case videoMessage
-        /// An audio message that can be played inline
-        case audioMessage
+        /// An voice message that can be played inline
+        case voiceMessage
         /// A file that can be opened
         case fileMessage
     }
     
     /// How should this message be rendered?
+    /// When changing this you should also change `(NSArray *)filesMessagesFilteredForPhotoBrowserForConversation:(Conversation *)conversation` in `EntityFetcher`
     var renderType: RenderType {
         if UTIConverter.isImageMimeType(mimeType), UTIConverter.isRenderingImageMimeType(mimeType) {
             if type?.intValue == 1 {
@@ -71,7 +72,7 @@ public extension FileMessageEntity {
         }
         else if UTIConverter.isRenderingAudioMimeType(mimeType) {
             if type?.intValue == 1 || type?.intValue == 2 {
-                return .audioMessage
+                return .voiceMessage
             }
             
             return .fileMessage

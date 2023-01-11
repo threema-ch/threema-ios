@@ -84,7 +84,8 @@ class GroupManagerMock: NSObject, GroupManagerProtocol {
         groupID: Data,
         creator: String,
         members: Set<String>,
-        systemMessageDate: Date?
+        systemMessageDate: Date?,
+        sourceCaller: SourceCaller
     ) -> Promise<Group?> {
         Promise { $0.fulfill(nil) }
     }
@@ -93,13 +94,15 @@ class GroupManagerMock: NSObject, GroupManagerProtocol {
         groupID: Data,
         creator: String,
         members: Set<String>,
-        systemMessageDate: Date?
+        systemMessageDate: Date?,
+        sourceCaller: SourceCaller
     ) -> AnyPromise {
         AnyPromise(createOrUpdateDBObjc(
             groupID: groupID,
             creator: creator,
             members: members,
-            systemMessageDate: systemMessageDate
+            systemMessageDate: systemMessageDate,
+            sourceCaller: sourceCaller
         ))
     }
 

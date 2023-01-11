@@ -120,7 +120,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     UIImage *phoneImage = [ImageUtils imageWithImage:origPhoneImage scaledToSize:CGSizeMake(30, 30)];
     
     _callButton.imageView.contentMode = UIViewContentModeCenter;
-    _callButton.enabled = [UserSettings sharedUserSettings].enableThreemaCall && is64Bit == 1;
+    _callButton.enabled = [UserSettings sharedUserSettings].enableThreemaCall;
     [_callButton setImage:phoneImage forState:UIControlStateNormal];
     
     _verticalDividerLine1.backgroundColor = Colors.hairLine;
@@ -419,7 +419,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     }
     
     _callButton.alpha = 1.0;
-    _callButton.enabled = [UserSettings sharedUserSettings].enableThreemaCall && is64Bit == 1;
+    _callButton.enabled = [UserSettings sharedUserSettings].enableThreemaCall;
     
     _threemaTypeIcon.hidden = [ThreemaUtilityObjC hideThreemaTypeIconForContact:_conversation.contact];
 }
@@ -475,7 +475,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     if ([[NSUserDefaults standardUserDefaults] boolForKey:@"FASTLANE_SNAPSHOT"]) {
         _callButton.enabled = YES;
     } else {
-        _callButton.enabled = [UserSettings sharedUserSettings].enableThreemaCall && is64Bit == 1 && [ServerConnector sharedServerConnector].connectionState == ConnectionStateLoggedIn && [VoIPHelper shared].isCallActiveInBackground == NO;
+        _callButton.enabled = [UserSettings sharedUserSettings].enableThreemaCall && [ServerConnector sharedServerConnector].connectionState == ConnectionStateLoggedIn && [VoIPHelper shared].isCallActiveInBackground == NO;
     }
 }
 
@@ -492,7 +492,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
         VoIPCallUserAction *action = [[VoIPCallUserAction alloc] initWithAction:withVideo ? ActionCallWithVideo : ActionCall contactIdentity:self.conversation.contact.identity callID:nil completion:nil];
         [[VoIPCallStateManager shared] processUserAction:action];
     } else {
-        if ([UserSettings sharedUserSettings].enableThreemaCall && is64Bit == 1) {
+        if ([UserSettings sharedUserSettings].enableThreemaCall) {
             [_chatViewController startVoipCall:withVideo];
         }
     }

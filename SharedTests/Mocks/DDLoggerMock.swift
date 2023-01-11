@@ -25,7 +25,9 @@ class DDLoggerMock: DDAbstractLogger {
     var logMessages = [DDLogMessage]()
     
     func exists(message: String) -> Bool {
-        !logMessages.filter { logMsg in
+        DDLog.flushLog()
+
+        return !logMessages.filter { logMsg in
             logMsg.message == message
         }.isEmpty
     }

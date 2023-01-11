@@ -353,25 +353,24 @@
 }
     
 - (UIImage *)imageForPushSetting {
-    UIImage *pushSettingIcon = [self imageForEditedPushSetting];
+    UIImage *pushSettingIcon = [self imageForEditedPushSettingWith:nil];
     if (pushSettingIcon == nil) {
         pushSettingIcon = [UIImage imageNamed:@"Bell"];
     }
     return pushSettingIcon;
 }
 
-- (UIImage *)imageForEditedPushSetting {
+- (UIImage * _Nullable)imageForEditedPushSettingWith:( UIImageConfiguration * _Nullable )config {
     UIImage *pushSettingIcon = nil;
     
-    
     if (!self.mentions && (self.type == kPushSettingTypeOffPeriod || self.type == kPushSettingTypeOff)) {
-        pushSettingIcon = [UIImage imageNamed:@"NotificationOff"];
+        pushSettingIcon = [UIImage systemImageNamed:@"minus.circle.fill" withConfiguration:config];
     }
     else if (self.mentions && (self.type == kPushSettingTypeOffPeriod || self.type == kPushSettingTypeOff)) {
-        pushSettingIcon = [UIImage imageNamed:@"At"];
+        pushSettingIcon = [UIImage systemImageNamed:@"at.circle.fill" withConfiguration:config];
     }
     else if (self.type == kPushSettingTypeOn && self.silent) {
-        pushSettingIcon = [UIImage imageNamed:@"BellOff"];
+        pushSettingIcon = [UIImage systemImageNamed:@"bell.circle.slash.fill" withConfiguration:config];
     }
     
     return pushSettingIcon;

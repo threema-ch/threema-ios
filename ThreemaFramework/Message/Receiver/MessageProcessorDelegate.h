@@ -56,11 +56,26 @@
 - (void)incomingMessageFinished:(AbstractMessage * _Nonnull)message isPendingGroup:(BOOL)isPendingGroup;
 
 /**
+ Message was marked as read.
+
+ @param inConversations Recalculate count of unread messages in this conversations
+ */
+- (void)readMessage:(nullable NSSet<Conversation *> *)inConversations
+NS_SWIFT_NAME(readMessage(inConversations:));
+
+/**
+ Will be called from TaskQueue if queue is empty.
  Processing of incoming message is failed.
 
  @param message Incoming message
  */
 - (void)incomingMessageFailed:(BoxedMessage * _Nonnull)message;
+
+/// Called when processing of the abstract message has failed
+///
+/// This typically occurs when a PFS wrapped message cannot be decrypted due to missing or incorrectsession state
+/// @param message
+- (void)incomingAbstractMessageFailed:(AbstractMessage * _Nonnull)message;
 
 /**
  Will be called from TaskQueue if is queue empty.
@@ -68,13 +83,6 @@
  @param queueTypeName Name of queue type (SeeAlso Enum TaskQueueType)
  */
 - (void)taskQueueEmpty:(NSString * _Nonnull)queueTypeName;
-
-/**
- Processing of outgoing reflected message is finished.
- 
- @param message Outgoing reflected message
- */
-- (void)outgoingMessageFinished:(AbstractMessage * _Nonnull)message;
 
 - (void)chatQueueDry;
 - (void)reflectionQueueDry;

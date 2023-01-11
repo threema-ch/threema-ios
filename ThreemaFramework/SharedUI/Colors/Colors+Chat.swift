@@ -34,7 +34,7 @@ public extension Colors {
     @objc class var backgroundChatLines: UIColor {
         switch theme {
         case .light, .undefined:
-            return Asset.SharedColors.gray550.color
+            return Asset.SharedColors.gray500.color
         case .dark:
             return Asset.SharedColors.gray450.color
         }
@@ -202,7 +202,7 @@ public extension Colors {
     @objc class var newSystemMessageBackground: UIColor {
         switch theme {
         case .light, .undefined:
-            return Asset.SharedColors.gray200.color
+            return Asset.SharedColors.gray150.color
         case .dark:
             return Asset.SharedColors.gray900.color
         }

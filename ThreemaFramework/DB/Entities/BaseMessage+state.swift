@@ -51,6 +51,23 @@ public extension BaseMessage {
         }
     }
     
+    var isUserAckEnabled: Bool {
+        // single chats can't ack their own messages
+        if isOwnMessage,
+           !conversation.isGroup() {
+            return false
+        }
+        
+        // group chats can only ack theis own messages if it's sent
+        if isOwnMessage,
+           conversation.isGroup(),
+           messageState == .failed || messageState == .sending {
+            return false
+        }
+        
+        return true
+    }
+    
     // MARK: - Private helper
     
     private var ownMessageState: State {

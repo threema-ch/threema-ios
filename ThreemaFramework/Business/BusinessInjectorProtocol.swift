@@ -38,6 +38,8 @@ public protocol BusinessInjectorProtocol {
 protocol BusinessInternalInjectorProtocol {
     var mediatorMessageProtocol: MediatorMessageProtocolProtocol { get }
     var messageProcessor: MessageProcessorProtocol { get }
+    var dhSessionStore: DHSessionStoreProtocol { get }
+    var fsmp: ForwardSecurityMessageProcessor { get }
 }
 
 typealias FrameworkInjectorProtocol = BusinessInjectorProtocol & BusinessInternalInjectorProtocol

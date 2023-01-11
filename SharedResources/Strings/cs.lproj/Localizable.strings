@@ -82,7 +82,7 @@
 "audio" = "Zvuk";
 "file" = "Soubor";
 "location" = "Poloha";
-"locating" = "Zaměřování...";
+"locating" = "Zaměřování…";
 "unknown_location" = "neznámá poloha";
 "open" = "Otevřít";
 "call" = "Volání"; /* Short version for "Start Threema Call" */
@@ -103,6 +103,14 @@
 "threema_id" = "Threema ID";
 "nickname" = "Přezdívka";
 "add_button" = "Přidat";
+"chatview_contextmenu_more" = "Více…";
+
+"file_message_image" = "Obrázek";
+"file_message_sticker" = "Nálepka";
+"file_message_animated_image" = "GIF";
+"file_message_video" = "Video";
+"file_message_voice" = "Hlasová zpráva";
+"file_message_file" = "Soubor";
 
 "chat_back_button_accessibility" = "%d nepřečteno";
 
@@ -145,6 +153,7 @@
 "high" = "Vyšší";
 "max_1_minute" = "Max. 1 minuta";
 "max_x_minutes" = "Max. %d min.";
+"still_compressed_note" = "Velmi velká videa mohou být komprimována bez ohledu na toto nastavení.";
 
 /* Sound names */
 "push_sound_title" = "Zvuk oznámení";
@@ -292,6 +301,7 @@
 "conversation_delete_confirm" = "Smazat tento chat z tohoto zařízení?";
 "delete_all" = "Smazat vše";
 "delete_n" = "Smazat (%d)";
+
 "message_cannot_play_movie" = "Video nelze přehrát.";
 
 "identity_not_found_title" = "Neznámé ID";
@@ -381,10 +391,6 @@
 "contact_invalid_cannot_send" = "Tomuto kontaktu nemůžete poslat žádnou zprávu, protože je neplatný.";
 "contact_betafeedback_cannot_send" = "Nejedná se o beta verzi, pošlete prosím zpětnou vazbu na *SUPPORT.";
 "group_sync_button" = "Synchronizovat skupinu";
-"group_sync_title" = "Skupina byla synchronizována";
-"group_sync_message" = "Aktuální data skupiny byla odeslána všem členům.";
-"group_sync_error_title" = "Synchronizace skupiny se nezdařila";
-"group_sync_error_message" = "Zkuste to později.";
 "group_clone_button" = "Klonovat skupinu";
 "group_clone_title" = "Klonovat skupinu";
 "group_clone_message" = "Tímto vytvoříte klon dané skupiny a budete jejím správcem. Chcete pokračovat?";
@@ -413,6 +419,10 @@
 "add_note_group_info" = "* Jste tu sami *\nPoužijte tento chat jako svůj zabezpečený poznámkový blok pro text, média a dokumenty.";
 "end_note_group_info" = "* V tomto chatu už nejste sami *\nNové zprávy budou odeslány všem členům skupiny.";
 
+"chat_search_searching" = "Vyhledávání...";
+"chat_search_no_matches" = "Žádné shody";
+"chat_search_matches" = "%d z %d shod";
+
 "choose_recipient" = "Vyberte příjemce";
 
 "msg_unknown_group_request_sync_x_title" = "Přijetí zprávy v neznámé skupině";
@@ -425,6 +435,7 @@
 "tap_to_change" = "Klepnutím změnit";
 "next" = "Další";
 "unread_messages" = "Nepřečtené zprávy";
+"unread_messages_line_with_count" = "Nepřečtené zprávy (%d)";
 
 /* Verification level popovers in chat view */
 "verification_level_title" = "Úroveň ověření";
@@ -446,7 +457,6 @@
 "level4_explanation" = "Interní kontakt, jehož identitu a veřejný klíč jste osobně ověřili naskenováním jejich QR kódu.";
 
 "id_verified_title" = "ID ověřeno";
-"id_verified_message" = "Identita a veřejný klíč patřící k %@ byly ověřeny.";
 
 /* Invalid country code alert */
 "invalid_country_code_title" = "Neplatný formát regionu";
@@ -468,9 +478,7 @@
 "backgrounding_off" = "Aplikace se odpojí okamžitě po přesunutí na pozadí.";
 "proximity_monitoring_off" = "Obrazovka se při zakrytí senzoru přiblížení nevypne.";
 "proximity_monitoring_on" = "Pokud dojde k zakrytí senzoru přiblížení během probíhajícího hovoru nebo záznamu či přehrávání hlasových zpráv, obrazovka se vypne.";
-"validation_logging_expl" = "Záznam pro hledání chyb lze využít k nezávislému ověření šifrování aplikace Threema mezi dvěma koncovými body.\nPodrobnosti: https://threema.ch/validation";
-
-"validation_log_clear" = "Smazat záznam";
+"debug_log_clear" = "Smazat záznam";
 "log_empty_message" = "Záznam pro hledání chyb je prázdný.";
 "cannot_send_mail_message" = "Na tomto zařízení není nastavený žádný e-mailový účet.";
 
@@ -508,8 +516,6 @@
 "release_profilepicture_to" = "Uvolnit profilový obrázek pro";
 "contact_added_to_profile_picture_list" = "Když tomuto kontaktu napíšete, obdrží váš profilový obrázek.";
 "contact_removed_from_profile_picture_list" = "Tento kontakt již nebude příjemcem vašeho profilu.";
-"contact_send_profile_picture_success" = "Odeslání vašeho profilového obrázku kontaktu proběhlo úspěšně.";
-"contact_send_profile_picture_error" = "Odeslání vašeho profilového obrázku se nezdařilo. Zkuste to později.";
 
 "sync_group" = "Synchronizovat skupinu";
 
@@ -535,6 +541,13 @@
 "exclude_deleted_id_title" = "Vyřadit Threema ID „%@“ ze synchronizace?";
 "exclude_deleted_id_message" = "Vyřazení můžete spravovat v nastavení soukromí.";
 "exclude_deleted_id_exclude_button" = "Vyřadit";
+
+"forward_security" = "Dopředná bezpečnost";
+"forward_security_none" = "Žádná";
+"forward_security_2dh" = "Jednostranná";
+"forward_security_4dh" = "Kompletní";
+"forward_security_clear_sessions" = "Vymazat všechny relace";
+"forward_security_explainer_footer" = "Dopředná bezpečnost (Perfect Forward Secrecy - PFS) chrání zaznamenanou komunikaci před zpětným dešifrováním, i když je dlouhodobý šifrovací klíč prozrazen.\nTuto možnost lze povolit, pokud aplikace na obou stranách podporuje PFS.";
 
 /* create id */
 "lets_get_started" = "Pojďme na to";
@@ -652,7 +665,7 @@
 "new_message_no_access_title" = "Nové zprávy";
 "new_message_no_access_message" = "Otevřete %@ a stáhněte si příchozí zprávy.";
 "new_message_invalid_license" = "Platnost vaší licence skončila, pro pokračování otevřete aplikaci.";
-"new_message_db_requires_migration" = "Je vyžadováno převedení databáze, pokračujte otevřením aplikace.";
+"new_message_db_requires_migration" = "Aplikace Threema byla aktualizována, otevřete ji a dokončete aktualizaci.";
 
 /* reminder messages */
 "push_reminder_title" = "Oznámení nejsou povolená";
@@ -693,7 +706,7 @@
 "draft" = "Koncept";
 "new_message_accessibility" = "Nová zpráva: ";
 "scoll_down_text" = "Sjeďte dolů";
-"quote_interaction_hint" = "Klepnutím přejdete na citovanou zprávu.";
+"quote_interaction_hint" = "Přeskočí na citovanou zprávu";
 
 /* TTOpenInAppActivity */
 "Open in ..." = "Otevřít v...";
@@ -784,9 +797,6 @@
 "call_status_unknown" = "Není známo";
 "call_status_blocked" = "Blokovaný kontakt";
 "call_status_failed_title" = "Hovor Threema";
-"call_status_failed_connected_message" = "Ztráta spojení";
-"call_status_failed_initializing_message" = "Spojení nebylo navázáno";
-"call_status_failed_sdp_patch_message" = "Threema volání nelze vytvořit";
 
 "call_threema_initiator_video_info" = "Klepnutím sem, zapnete kameru";
 "call_threema_remote_video_activated_info_title" = "Videohovor";
@@ -840,7 +850,7 @@
 "privacy_footer" = "Skryje všechny soukromé chaty v přehledu chatů. Pro aktivaci tohoto nastavení je třeba nastavit přístupový kód.";
 
 "group_leave_sheet_title" = "Opustit „%@“?";
-"group_leave_sheet_message" = "Pokud jen odejdete, nemůžete se již konverzace účastnit, ale stále máte přístup k historii chatu.";
+"group_leave_sheet_message" = "Pokud prostě odejdete, nemůžete se již konverzace účastnit, ale stále máte přístup k historii chatu a můžete si ji prohlížet.";
 
 "group_leave_delete_sheet_title" = "Opustit a smazat „%@“?";
 "group_leave_delete_sheet_message" = "Pokud skupinu opustíte a smažete, nebudete se již moci konverzace účastnit a historie chatu bude smazána.";
@@ -863,7 +873,7 @@
 "archived_alert_title" = "Archivované chaty";
 "archived_alert_message" = "Chcete-li zobrazit archivované chaty, klepněte na tlačítko v dolní části přehledu chatů.";
 
-"private_delete_info_alert_message" = "Po smazání soukromého chatu nebude nový automaticky znovu označen jako soukromý.";
+"private_delete_info_alert_message" = "Po smazání soukromého chatu nebude nový chat automaticky znovu označen jako soukromý.";
 
 /* End Edit */
 
@@ -1074,6 +1084,13 @@
 "file_deleted_title" = "Soubor smazán";
 "file_not_found_title" = "Soubor nenalezen";
 
+"manage_all_conversations" = "Spravovat všechny chaty";
+"manage_media_and_files" = "Spravovat soubory";
+"manage_messages" = "Spravovat zprávy";
+"messages" = "Zprávy";
+"files" = "Soubory";
+
+
 // Settings
 "settings_privacy" = "Soukromí";
 "settings_appearance" = "Vzhled";
@@ -1108,6 +1125,7 @@
 "settings_devmode_quote_v2" = "Citování V2";
 "settings_devmode_new_chat_view" = "Zobrazení nového chatu";
 "settings_devmode_stylekit_debug_view" = "Kontrolní zobrazení StyleKit";
+"settings_devmode_id_colors_debug_view" = "Zobrazit ladění barev ID";
 
 // Appearance
 "settings_appearance_theme_section" = "Vizuální motiv";
@@ -1117,6 +1135,9 @@
 "settings_appearance_theme_selected" = "Téma %@ je aktivní";
 "settings_appearance_theme_active" = "Aktivní";
 "settings_appearance_hide_app_icon" = "Ikona aplikace";
+"settings_appicon_default_header" = "Výchozí ikona";
+"settings_appicon_legacy_header" = "Ikony Threema";
+"settings_appicon_special_header" = "Speciální ikony";
 "settings_appearance_hide_stale_contacts" = "Skrýt neaktivní ID";
 "settings_appearance_show_profile_pictures" = "Zobrazovat profilové obrázky";
 "settings_appearance_display_order" = "Pořadí zobrazení";
@@ -1241,8 +1262,7 @@ Pokud vám v %@ nechybí žádné (mediální) soubory, vyprázdněte koš, abys
 "unknown_file_type" = "Neznámý typ souboru";
 "unknown_file_size" = "Neznámá velikost souboru";
 "unknown_file_name" = "Neznámý název souboru";
-
-"ballots_with_open_count_accessibility" = "Hlasování (%d otevřené)";
+"sending_to" = "Příjemci";
 
 /* Ballot */
 "ballot" = "Anketa";
@@ -1258,10 +1278,10 @@ Pokud vám v %@ nechybí žádné (mediální) soubory, vyprázdněte koš, abys
 "ballot_multiple_choice" = "Více možností";
 "ballot_clone" = "Zkopírovat stávající hlasování";
 "ballot_clone_warning_title" = "Upozornění";
-"ballot_clone_warning_message" = "Všechna aktuálně zadaná data budou přepsána.";
+"ballot_clone_warning_message" = "Všechny stávající vstupy budou přepsány.";
 "ballot_feature_level_warning_title" = "Upozornění";
-"ballot_feature_level_warning_message" = "Někteří účastníci mají verzi aplikace, která zatím neumožňuje hlasování: %@";
-"ballot_feature_level_error_message" = "Žádný z uživatelů nemá verzi aplikace, která umožňuje hlasování: %@";
+"ballot_feature_level_warning_message" = "Někteří účastníci mají verzi aplikace, která zatím neumožňuje ankety: %@";
+"ballot_feature_level_error_message" = "Žádný z účastníků nemá verzi aplikace, která umožňuje ankety: %@";
 
 "ballot_add_choice" = "Přidat možnost";
 "ballot_create" = "Vytvořit anketu";
@@ -1294,6 +1314,10 @@ Pokud vám v %@ nechybí žádné (mediální) soubory, vyprázdněte koš, abys
 "voteCancelMessage" = "Pokud před odesláním hlasu odejdete, bude zahozen.";
 "discardVoteTitle" = "Vyřadit";
 
+"ballot_load_error" = "Ankety nejsou k dispozici";
+
+"ballots_with_open_count_accessibility" = "Hlasování (%d otevřené)";
+
 /* Custom Privacy Settings */
 "privacySetting_header" = "Soukromí";
 "send_readReceipts" = "Potvrzení o přečtení";
@@ -1316,23 +1340,33 @@ Pokud vám v %@ nechybí žádné (mediální) soubory, vyprázdněte koš, abys
 "reset_overrides_alert_action" = "Resetovat vše";
 
 /* Multi Decvice */
-"multi_device_linked_devices_title" = "Propojená zařízení";
+"multi_device_linked_devices_title" = "Náhled pro více zařízení";
+"multi_device_linked_devices_desc" = "Aktivujte nebo deaktivujte náhled pro více zařízení pro toto zařízení.";
 "multi_device_linked_devices_refresh" = "Potažením dolů obnovit";
 "multi_device_linked_devices_loading_failed" = "Načtení zařízení se nezdařilo: %@";
 "multi_device_linked_devices_failed_to_load_title" = "Nepodařilo se načíst seznam zařízení";
 "multi_device_linked_devices_failed_to_load_message" = "Nelze načíst propojená zařízení, zkontrolujte připojení k internetu a zkuste to znovu.";
 "multi_device_linked_devices_this" = "Toto zařízení";
 "multi_device_linked_devices_others" = "Jiná zařízení";
+"multi_device_linked_devices_last_login" = "Poslední přihlášení: %@";
 "multi_device_linked_devices_remove_failed" = "Nepodařilo se odebrat zařízení: %@";
+"multi_device_linked_devices_removed_devices_title" = "Zakázat více zařízení?";
+"multi_device_linked_devices_removed_devices_message" = "Tím odeberete všechna připojená zařízení a zakážete více zařízení.";
+"multi_device_linked_devices_removed_devices_ok" = "Deaktivovat";
+"multi_device_linked_duplicate_contacts_title" = "Duplicitní kontakty";
+"multi_device_linked_duplicate_contacts_desc" = "Toto zařízení nelze propojit kvůli duplicitním kontaktům (%@). Obraťte se prosím na naši podporu.";
+
 "multi_device_linked_devices_failed_remove_title" = "Nepodařilo se odebrat zařízení";
 "multi_device_linked_devices_failed_remove_message" = "Nelze odebrat propojené zařízení, zkuste to znovu.";
 "multi_device_linked_devices_failed_remove_message_2" = "Nelze odebrat propojené zařízení, zkontrolujte připojení k internetu a zkuste to znovu.";
+"multi_device_slot_state_mismatch_alert" = "Toto zařízení bylo odpojeno. To znamená, že v současné době nelze odesílat ani přijímat nové zprávy. Pokud jste tuto akci nevyvolali vy, mějte na paměti, že k tomu může dojít z technických důvodů ve fázi Tech Preview. Za nepříjemnosti se omlouváme. Ohledně opětovného propojení se podívejte do často kladených otázek: https://three.ma/faq.";
 
 "myprofile_link_email_phone_footer" = "Propojení e-mailové adresy nebo telefonního čísla s vaším ID umožňuje ostatním lidem automaticky vás najít na %@, pokud vás mají v adresáři.";
 "myprofile_link_email_footer" = "Propojení e-mailové adresy s vaším ID umožní ostatním uživatelům, aby vás na %@ automaticky našli, pokud mají váš e-mail v adresáři.";
 "myprofile_link_email_onprem_footer" = "Propojení vaší e-mailové adresy s vaším ID umožňuje ostatním uživatelům tohoto serveru (%@) automaticky vás najít na %@, pokud mají váš e-mail v adresáři.";
 "myprofile_link_phone_footer" = "Propojení vašeho telefonního čísla s vaším ID umožňuje ostatním uživatelům automaticky vás najít na %@, pokud mají vaše telefonní číslo v adresáři.";
 "myprofile_link_phone_onprem_footer" = "Propojení vašeho telefonního čísla s vaším ID umožňuje ostatním uživatelům tohoto serveru (%@) automaticky vás najít na %@, pokud mají vaše číslo v adresáři.";
+
 "mentions_table_view_cell_accessibility_hint" = "Klepnutím vytvoříte zmínku";
 
 // POI
@@ -1386,6 +1420,140 @@ Pokud vám v %@ nechybí žádné (mediální) soubory, vyprázdněte koš, abys
 "detailView_messageID" = "ID zprávy";
 "detailView_group_acknowledged" = "Souhlas (%d)";
 "detailView_group_declined" = "Nesouhlas (%d)";
+
+// In-app notifications
+"notification_copying_succeeded" = "Položka zkopírována";
+"notification_copying_failed" = "Kopírování se nezdařilo";
+
+"notification_saving_succeeded" = "Položka uložena";
+"notification_saving_failed" = "Uložení se nezdařilo";
+
+"notification_sending_failed" = "Odeslání se nezdařilo";
+
+"notification_deleted_messages_count" = "Smazáno zpráv: %d";
+
+"notification_cannot_play_video" = "Nelze přehrát video";
+
+"notification_call_failed_connected" = "Ztráta spojení";
+"notification_call_failed_not_connected" = "Navázání spojení se nezdařilo";
+"notification_call_creation_failed" = "Vytvoření hovoru se nezdařilo";
+
+"notification_sending_profile_picture_succeeded" = "Profilový obrázek odeslán";
+"notification_sending_profile_picture_failed" = "Odesílání se nezdařilo";
+
+"notification_sending_profile_picture_failed_settings_sync_message" = "Nastavení synchronizována";
+
+"notification_group_sync_succeeded" = "Skupina synchronizována";
+"notification_group_sync_failed" = "Synchronizace skupiny se nezdařila";
+
+// Forward security status messages
+"forward_security_message_without" = "Byla přijata zpráva bez dopředné bezpečnosti. Ověřte, zda odesílatel záměrně vypnul funkci PFS.";
+"forward_security_session_established" = "Zprávy v tomto chatu jsou nyní chráněny technologií dopředné bezpečnosti.";
+"forward_security_session_established_rx" = "Zprávy přijaté v tomto chatu jsou nyní chráněny technologií dopředné bezpečnosti. Povolením funkce PFS v kontaktních údajích ochráníte i odeslané zprávy.";
+"forward_security_messages_skipped_1" = "Od poslední zprávy se jedna zpráva ztratila.";
+"forward_security_messages_skipped_x" = "Od poslední zprávy se ztratily zprávy v počtu %d.";
+"forward_security_session_reset" = "Relace dopředné bezpečnosti s tímto kontaktem byla resetována. K tomu může dojít, pokud kontakt změnil zařízení nebo znovu nainstaloval aplikaci.";
+"forward_security_message_out_of_order" = "Zpráva byla přijata mimo pořadí a nemohla být dešifrována.";
+"forward_security_status_enabled_outgoing" = "Pro odchozí zprávy je povolena funkce dopředné bezpečnosti.";
+"forward_security_status_disabled_outgoing" = "Pro odchozí zprávy je zakázána funkce dopředné bezpečnosti.";
+"forward_security_contact_has_downgraded_to_an_incompatible_version" = "Tento kontakt začal používat verzi aplikace, která nepodporuje dopřednou bezpečnost. Zprávy budou od této chvíle odesílány bez PFS.";
+
+// Profile view
+"accessibility_profile_button_hint_contact" = "Otevře kontaktní údaje";
+"accessibility_profile_button_hint_group" = "Otevře podrobnosti o skupině";
+
+// Chat bar
+"accessibility_chatbar_label" = "Vstupní pole chatu.";
+"accessibility_chatbar_hint" = "Sestavení zprávy.";
+"accessibility_chatbar_value" = "Aktuální text: %@";
+"accessibility_chatbar_quote_label" = "Vybraná citace zprávy: %@.";
+"accessibility_chatbar_close_quote_button_label" = "Konec citace.";
+"accessibility_chatbar_close_quote_button_hint" = "Ukončí citování vybrané zprávy.";
+
+// Message senders
+"accessibility_senderDescription_ownMessage" = "Vaše %@";
+"accessibility_senderDescription_otherMessage_group" = "%@ od %@";
+"accessibility_senderDescription_systemMessage" = "Informace: %@";
+
+// Message types
+"accessibility_textMessage_description" = "Zpráva";
+"accessibility_locationMessage_description" = "Poloha";
+"accessibility_systemCallMessage_description" = "Volání";
+"accessibility_fileMessage_description" = "Soubor";
+"accessibility_imageMessage_description" = "Obrázek";
+"accessibility_videoMessage_description" = "Video";
+"accessibility_animatedImageMessage_description" = "GIF";
+"accessibility_stickerMessage_description" = "Nálepka";
+"accessibility_voiceMessage_description" = "Hlasová zpráva";
+"accessibility_pollMessage_description" = "Anketa";
+
+// Message hints
+"accessibility_audioMessage_hint" = "Přehrát hlasovou zprávu.";
+"accessibility_locationMessage_hint" = "Otevřít polohu.";
+"accessibility_systemCallMessage_hint" = "Zahájení hovoru";
+"accessibility_imageMessage_hint" = "Open image.";
+"accessibility_videoMessage_hint" = "Přehrát video.";
+"accessibility_fileMessage_hint" = "Otevřít náhled souboru.";
+"accessibility_animatedImageMessage_hint" = "Přepnout animaci GIF";
+"accessibility_animatedStickerMessage_hint" = "Přepnout animaci nálepky.";
+"accessibility_ballotMessage_hint_open" = "Otevřít anketu pro hlasování.";
+"accessibility_ballotMessage_hint_closed" = "Zobrazit výsledky ankety.";
+"accessibility_voiceMessage_speed_hint" = "Změnit rychlosti přehrávání.";
+
+// Other
+"accessibility_caption" = "Titulek: %@";
+"accessibility_poll_content_open" = "%@. Název: %@, %@";
+"accessibility_poll_open" = "Otevřeno";
+"accessibility_poll_closed" = "Zavřeno";
+"accessibility_file_duration" = "Trvání: %@.";
+
+// Message status types
+"accessibility_status_acknowledged_plus_time" = "Vzato na vědomí, %@";
+"accessibility_status_declined_plus_time" = "Odmítnuto, %@";
+"accessibility_status_sending_plus_time" = "Odesílání, %@";
+"accessibility_status_sent_plus_time" = "Odesláno, %@";
+"accessibility_status_delivered_plus_time" = "Doručeno, %@";
+"accessibility_status_read_plus_time" = "Přečteno, %@";
+"accessibility_status_failed_plus_time" = "Neúspěch, %@";
+
+// Multi-Device Wizard
+"md_wizard_header" = "Náhled pro více zařízení";
+"md_wizard_start" = "Propojit můj počítač";
+"md_wizard_cancel" = "Zrušit";
+"md_wizard_next" = "Další";
+"md_wizard_close" = "Zavřít";
+"md_wizard_back_identity" = "Zobrazit ID Threema";
+
+"md_wizard_connection_info" = "Během procesu propojování jsou hovory a oznámení zakázány.";
+
+"md_wizard_terms_note_text" = "Tento technický náhled slouží k tomu, abyste si mohli předem vyzkoušet nadcházející podporu více zařízení. Vezměte prosím na vědomí, že funkce jsou omezené, a protože se jedná o alfa verzi softwaru, může být poněkud nedotažená.";
+
+"md_wizard_terms_backup" = "Může dojít ke ztrátě dat. Než budete pokračovat, vytvořte si zálohu.\n[Pokyny k zálohování](https://threema.ch/docs/threema/ios_backup_manual_en.pdf)";
+"md_wizard_terms_support" = "Tento náhled podporuje textové zprávy. Pravidelně aktualizujte aplikace pro iOS a počítač, abyste získali nejnovější funkce a vylepšení. ";
+"md_wizard_terms_issues" = "Známé problémy a omezení najdete [zde].(https://threema.ch/faq/md_limit).";
+"md_wizard_terms_bugs" = "Problémy, se kterými se v této aplikaci setkáte, nahlaste prostřednictvím „Nastavení > Zpětná vazba k betaverzi“.";
+
+"md_wizard_terms_accept" = "Vytvořil/a jsem zálohu a chci pokračovat.";
+
+"md_wizard_info_download_title" = "Stáhnout";
+"md_wizard_info_download_text" = "Technický náhled Threema v počítači:";
+"md_wizard_info_linking_title" = "Propojení počítače s tímto zařízením";
+"md_wizard_info_linking_text" = "Při propojení vašeho počítače budou vaše základní údaje v Threema (vaše ID, kontakty a skupiny) zašifrovány a dočasně uloženy na [server Threema Safe, který právě používáte](https://threema.ch/en/faq/threema_safe_webdav). (Aktuální nastavení: %@).";
+
+"md_wizard_preparation_status" = "Příprava…";
+
+"md_wizard_start_desktop" = "V počítači otevřete Technický náhled Threema a zadejte své Threema ID.";
+"md_wizard_identity_text" = "Vaše Threema ID";
+
+"md_wizard_code_text" = "Propojovací kód:";
+
+"md_wizard_success_title" = "Zařízení úspěšně propojeno";
+"md_wizard_success_text" = "Nyní můžete používat na počítači Technický náhled Threema (i když je zařízení iOS vypnuté).";
+
+"md_wizard_error_title" = "Propojení se nezdařilo, protože aplikace Threema byla uzavřena";
+"md_wizard_timeout_title" = "Propojení se nezdařilo, protože to trvalo příliš dlouho";
+"md_wizard_could_not_connect_title" = "Propojení se nezdařilo, protože se nepodařilo navázat spojení se serverem";
+"md_wizard_error_text" = "Zkuste to znovu přes „Nastavení > Náhled pro více zařízení“.";
 
 // App icons
 "app_icon_title_celebration" = "Ikona oslavy";

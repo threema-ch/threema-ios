@@ -19,40 +19,10 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import CocoaLumberjackSwift
+import ThreemaFramework
 import UIKit
 
-protocol ChatProfileViewDelegate: AnyObject {
-    func chatProfileViewTapped(_ chatProfileView: ChatProfileView)
-}
-
-extension ChatProfileView {
-    /// Configuration parameters for `ChatProfileView`
-    ///
-    /// This is encapsulated to prevent name space pollution and to show relation.
-    struct Configuration {
-        /// Show debug background colors
-        let debug = false
-        
-        /// Combined leading and trailing offset from the navigation width
-        let combinedLeadingAndTrailingOffset: CGFloat = 2 * 60
-        
-        /// All content is offset by these margins
-        let margins = NSDirectionalEdgeInsets(
-            top: 4,
-            leading: 0,
-            bottom: 4,
-            trailing: 0
-        )
-        
-        let maxAvatarSize: CGFloat = 36
-        let avatarTrailingMargin: CGFloat = 8
-        let verificationLevelHeight: CGFloat = 8
-        let nameVerificationAndDescriptionRegularSpacing: CGFloat = 0
-        let nameVerificationAndDescriptionCompactSpacing: CGFloat = 8
-    }
-}
-
-/// Chat Profile View showed in the navigation bar of a chat
+/// Chat profile view showed in the navigation bar of a chat
 ///
 /// # The Problem
 ///
@@ -62,7 +32,7 @@ extension ChatProfileView {
 ///
 /// `UINavigationBar` allows a custom title view to be set through the front most `UINavigationItem`. In a normal setup (like
 /// this) where the navigation bar is handled by a `UINavigationViewController` this can configured in the `navigationItem`
-/// property of the front most navigation controller.
+/// property of the front most view controller.
 ///
 /// The problem with a navigation bar title view is that it is centered until ist spans the complete width and there is no direct public API to
 /// figure out the maximum width (or height for that matter) of the title view. Also no public API exists to access the width of left and
@@ -73,7 +43,7 @@ extension ChatProfileView {
 /// # Solution chosen
 ///
 /// We set the profile view to a fixed width, based on the width of the whole navigation bar minus an offset on both ends
-/// (`combinedLeadingAndTrailingOffset` in `ChatProfileView.Configuration`). This offset is a compromise to stay at
+/// (`combinedLeadingAndTrailingOffset` in `ChatViewConfiguration.Profile`). This offset is a compromise to stay at
 /// a fixed leading offset for all unread counts from none to 99. For more than 99 unread messages the profile is slightly pushed to the
 /// trailing edge and might change its offset on any unread count change.
 ///
@@ -83,7 +53,7 @@ extension ChatProfileView {
 /// # Other solutions considered
 ///
 /// - **Custom right/left bar button item**: This would allow us to control the exact size including shown buttons on the trailing end.
-///     Unfortunately, the default animation of bar button items is just a fade in and they aren't already part of the navigation bar during
+///     Unfortunately, the default animation of bar button items is just a fade in if they aren't already part of the navigation bar during
 ///     transition (compared to the title view). It is unclear how hard it would be to replicate the default animation of the title view, but it
 ///     might need adjustments on OS updates if the default animation gets tweaked.
 /// - **Use the full width available to the navigation bar title view**: This can be achieved by returning
@@ -96,8 +66,9 @@ extension ChatProfileView {
 /// - With the addition of `UINavigationBarAppearance` in iOS 13 there is more possibility to control the navigation bar appearance
 ///     this might allow us to control the size of the back button area or at least set the back button text (unread count) to monospaced digits.
 /// - Workaround to get the right and left bar button items: https://stackoverflow.com/a/46965131
-///
 final class ChatProfileView: UIStackView {
+    
+    typealias TapAction = () -> Void
     
     // MARK: - Public property
     
@@ -106,76 +77,169 @@ final class ChatProfileView: UIStackView {
     /// This is used to calculate the width of this view. The default value is for an iPhone X screen size.
     var safeAreaAdjustedNavigationBarWidth: CGFloat = 375 {
         didSet {
-            guard safeAreaAdjustedNavigationBarWidth != oldValue,
-                  let widthConstraint = widthConstraint else {
+            guard safeAreaAdjustedNavigationBarWidth != oldValue else {
                 return
             }
 
-            widthConstraint
-                .constant = (safeAreaAdjustedNavigationBarWidth - configuration.combinedLeadingAndTrailingOffset)
+            widthConstraint.constant = (
+                safeAreaAdjustedNavigationBarWidth - ChatViewConfiguration.Profile.combinedLeadingAndTrailingOffset
+            )
+            
             setNeedsLayout() // "Commit" update
         }
     }
     
-    /// Delegate for this instance
-    weak var delegate: ChatProfileViewDelegate?
-    
     // MARK: - Private properties
     
+    /// Enable colored backgrounds to help debugging
+    private static let debug = false
+    
     private let conversation: Conversation
-    private let configuration: ChatProfileView.Configuration
+    private let entityManager: EntityManager
+    private lazy var group: Group? = GroupManager(
+        entityManager: entityManager
+    ).getGroup(conversation: conversation)
 
     // We need to hold on to the observers until the object is deallocated.
     // `invalidate()` is automatically called on destruction of them (according to the `invalidate()` header documentation).
     private var observers = [NSKeyValueObservation]()
     private lazy var memberObservers = [NSKeyValueObservation]()
 
-    private var widthConstraint: NSLayoutConstraint?
+    private lazy var widthConstraint = widthAnchor.constraint(
+        equalToConstant: safeAreaAdjustedNavigationBarWidth -
+            ChatViewConfiguration.Profile.combinedLeadingAndTrailingOffset
+    )
+    
+    private let tapAction: TapAction
     
     private lazy var touchAnimator = UIViewPropertyAnimator.barButtonHighlightAnimator(for: self)
     
-    // MARK: Subviews
+    // MARK: Views
     
     /// Avatar of contact or group
-    private let avatarImageView = UIImageView(image: BundleUtil.imageNamed("Unknown"))
+    private let avatarImageView: UIImageView = {
+        let imageView = UIImageView(image: BundleUtil.imageNamed("Unknown"))
+        
+        imageView.contentMode = .scaleAspectFit
+        
+        // 1:1 aspect ratio
+        imageView.widthAnchor.constraint(equalTo: imageView.heightAnchor).isActive = true
+        imageView.setContentHuggingPriority(.defaultHigh, for: .horizontal)
+        
+        imageView.isAccessibilityElement = false
+        imageView.accessibilityIgnoresInvertColors = true
+        
+        return imageView
+    }()
+    
+    private lazy var otherThreemaTypeImageView = OtherThreemaTypeImageView()
     
     /// Name of contact or group
-    private let nameLabel = UILabel()
+    private let nameLabel: UILabel = {
+        let label = UILabel()
+        
+        label.font = ChatViewConfiguration.Profile.nameFont
+        label.setContentHuggingPriority(.defaultHigh, for: .horizontal)
+        
+        if debug {
+            label.backgroundColor = .systemGreen
+        }
+        
+        label.isAccessibilityElement = false
+        
+        return label
+    }()
     
     /// Verification level image of person
-    private let verificationLevelImageView = UIImageView()
+    private let verificationLevelImageView: UIImageView = {
+        let imageView = UIImageView()
+        
+        imageView.contentMode = .scaleAspectFit
+        NSLayoutConstraint.activate([
+            imageView.heightAnchor.constraint(
+                equalToConstant: ChatViewConfiguration.Profile.verificationLevelHeight
+            ),
+            // We set the aspect ratio to the size of the verification level image so we have not extra
+            // leading or trailing space when the image gets resized.
+            imageView.widthAnchor.constraint(
+                equalTo: imageView.heightAnchor,
+                multiplier: StyleKit.verificationSmallSize.width / StyleKit.verificationSmallSize.height
+            ),
+        ])
+        imageView.setContentHuggingPriority(.defaultHigh, for: .horizontal)
+        
+        if debug {
+            imageView.backgroundColor = .systemYellow
+        }
+        
+        imageView.isAccessibilityElement = false
+
+        return imageView
+    }()
     
     /// Label of group members list
     ///
     /// This might be truncated when displayed.
     ///
     /// - Note: This should never be hidden or set to an empty text. Otherwise the height of `verificationAndGroupMembersListStack` collapses.
-    private let groupMembersListLabel = UILabel()
+    private let groupMembersListLabel: UILabel = {
+        let label = UILabel()
+        
+        label.font = ChatViewConfiguration.Profile.groupMembersListFont
+        
+        label.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        
+        label.isAccessibilityElement = false
+
+        return label
+    }()
     
-    /// Stack with verification level image and group members list label
+    /// Stack with name & members for group chats
     ///
-    /// This is used to assure a consistent height of the line below the name label, based on the text size of group members list label.
-    private let verificationAndGroupMembersListStack = UIStackView()
-    
-    /// Stack with name & related info (i.e. verification level for single chat and members for group chats)
-    private let nameAndVerificationGroupMembersListStack = UIStackView()
+    /// For single chats the verification level is shown on top and the group members list string with just a space.
+    private lazy var nameAndGroupMembersListStack: UIStackView = {
+        let stack = UIStackView(arrangedSubviews: [
+            nameLabel,
+            groupMembersListLabel,
+        ])
+        
+        stack.distribution = .fill
+        
+        if ChatProfileView.debug {
+            stack.backgroundColor = .systemBlue
+        }
+        
+        stack.isAccessibilityElement = false
+
+        return stack
+    }()
     
     /// Button overlaying the whole view to make it react to tapping
-    ///
-    /// Maybe there is a more elegant solution to that
-    private let viewButton = UIButton()
+    private lazy var viewButton: UIButton = {
+        let button = UIButton()
+        button.isAccessibilityElement = false
+        return button
+    }()
     
     // MARK: - Initialization
     
-    init(for conversation: Conversation, with configuration: ChatProfileView.Configuration = Configuration()) {
+    init(
+        for conversation: Conversation,
+        entityManager: EntityManager,
+        tapAction: @escaping TapAction
+    ) {
         self.conversation = conversation
-        self.configuration = configuration
+        self.entityManager = entityManager
+        self.tapAction = tapAction
         
         super.init(frame: .zero)
+        
+        self.isAccessibilityElement = true
         
         configureView()
         configureButton()
         configureContentObservers()
+        updateColors()
     }
     
     @available(*, unavailable, message: "Use init(for:)")
@@ -197,88 +261,62 @@ final class ChatProfileView: UIStackView {
     // MARK: - Configuration
     
     private func configureView() {
-        // Configure avatar view
-        avatarImageView.contentMode = .scaleAspectFit
-        avatarImageView.accessibilityIgnoresInvertColors = true
-        avatarImageView.widthAnchor.constraint(equalTo: avatarImageView.heightAnchor).isActive = true
-        avatarImageView.setContentHuggingPriority(.defaultHigh, for: .horizontal)
-        
-        // Configure name label
-        nameLabel.font = UIFont.preferredFont(forTextStyle: .headline)
-        nameLabel.adjustsFontForContentSizeCategory = true
-        nameLabel.setContentHuggingPriority(.defaultHigh, for: .horizontal)
-        
-        if configuration.debug {
-            nameLabel.backgroundColor = .systemGreen
-        }
-        
-        // Configure verification level image
-        verificationLevelImageView.contentMode = .scaleAspectFit
-        verificationLevelImageView.heightAnchor.constraint(equalToConstant: configuration.verificationLevelHeight)
-            .isActive = true
-        verificationLevelImageView.setContentHuggingPriority(.defaultHigh, for: .horizontal)
-        
-        if configuration.debug {
-            verificationLevelImageView.backgroundColor = .systemYellow
-        }
-        
-        // Configure group member list label
-        groupMembersListLabel.font = UIFont.preferredFont(forTextStyle: .footnote)
-        groupMembersListLabel.textColor = Colors.textLight
-        groupMembersListLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
-        
-        // Configure verification and description stack
-        verificationAndGroupMembersListStack.axis = .horizontal
-        verificationAndGroupMembersListStack.alignment = .center
-        verificationAndGroupMembersListStack.distribution = .fill
-        // This spacing should never be visible to a user, because either verificationLevelImageView
-        // is hidden or groupMembersListLabel contains a single space
-        verificationAndGroupMembersListStack.spacing = 8
-        
-        if configuration.debug {
-            verificationAndGroupMembersListStack.backgroundColor = .systemRed
-        }
-        
-        verificationAndGroupMembersListStack.addArrangedSubview(verificationLevelImageView)
-        verificationAndGroupMembersListStack.addArrangedSubview(groupMembersListLabel)
+        if conversation.contact?.showOtherThreemaTypeIcon ?? false {
+            // Only add other Threema type icon if we actually want to show it
+            avatarImageView.addSubview(otherThreemaTypeImageView)
+            otherThreemaTypeImageView.translatesAutoresizingMaskIntoConstraints = false
+            NSLayoutConstraint.activate([
+                otherThreemaTypeImageView.widthAnchor.constraint(
+                    equalTo: avatarImageView.widthAnchor,
+                    multiplier: 0.35
+                ),
                 
+                otherThreemaTypeImageView.leadingAnchor.constraint(equalTo: avatarImageView.leadingAnchor),
+                otherThreemaTypeImageView.bottomAnchor.constraint(equalTo: avatarImageView.bottomAnchor),
+            ])
+        }
+        
+        // Add arranged subviews
+        addArrangedSubview(avatarImageView)
+        addArrangedSubview(nameAndGroupMembersListStack)
+        
+        // The verification level is vertically centered in the groupMembersListLabel which is never hidden
+        // for a consistent appearance
+        
+        addSubview(verificationLevelImageView)
+        verificationLevelImageView.translatesAutoresizingMaskIntoConstraints = false
+        
+        NSLayoutConstraint.activate([
+            verificationLevelImageView.centerYAnchor.constraint(equalTo: groupMembersListLabel.centerYAnchor),
+            verificationLevelImageView.leadingAnchor.constraint(equalTo: groupMembersListLabel.leadingAnchor),
+        ])
+        
         // Configure name and description verification stack
         updateNameAndVerificationDescriptionStack()
-        nameAndVerificationGroupMembersListStack.distribution = .fill
-        
-        if configuration.debug {
-            nameAndVerificationGroupMembersListStack.backgroundColor = .systemBlue
-        }
-        
-        nameAndVerificationGroupMembersListStack.addArrangedSubview(nameLabel)
-        nameAndVerificationGroupMembersListStack.addArrangedSubview(verificationAndGroupMembersListStack)
         
         // Configure self (stack)
         axis = .horizontal
         alignment = .center
         distribution = .fill
-        spacing = configuration.avatarTrailingMargin
-         
-        directionalLayoutMargins = configuration.margins
-        isLayoutMarginsRelativeArrangement = true
-
-        widthConstraint = widthAnchor
-            .constraint(
-                equalToConstant: safeAreaAdjustedNavigationBarWidth - configuration
-                    .combinedLeadingAndTrailingOffset
-            )
-        widthConstraint?.isActive = true
+        spacing = ChatViewConfiguration.Profile.avatarAndInfoSpace
         
-        if configuration.debug {
+        // The leading and training insets are directly handled when `safeAreaAdjustedNavigationBarWidth` is set
+        directionalLayoutMargins = NSDirectionalEdgeInsets(
+            top: ChatViewConfiguration.Profile.topAndBottomInset,
+            leading: 0,
+            bottom: ChatViewConfiguration.Profile.topAndBottomInset,
+            trailing: 0
+        )
+        isLayoutMarginsRelativeArrangement = true
+        
+        widthConstraint.isActive = true
+        
+        if ChatProfileView.debug {
             backgroundColor = .systemOrange
         }
-        
-        // Add arranged subviews
-        addArrangedSubview(avatarImageView)
-        addArrangedSubview(nameAndVerificationGroupMembersListStack)
     }
     
-    /// Make to whole view tappable and react to it by imitating the button behavior of navigation bar buttons
+    // Make to whole view tappable and react to it by imitating the button behavior of navigation bar buttons
     private func configureButton() {
         // Make the view tappable
         viewButton.addTarget(self, action: #selector(viewTapped), for: .touchUpInside)
@@ -319,34 +357,28 @@ final class ChatProfileView: UIStackView {
     
     private func configureNameObserver() {
         // Thanks to `keyPathsForValuesAffectingDisplayName` we should be subscribed to all relevant properties
-        observeConversation(\.displayName) { [weak self] in
+        observe(conversation, \.displayName) { [weak self] in
             self?.nameLabel.text = self?.conversation.displayName
-            self?.updateAccessibilityLabel()
         }
     }
     
     private func configureSingleChatObservers() {
-        
-        guard let _ = conversation.contact else {
+        guard let contact = conversation.contact else {
             return
         }
         
-        observeConversation(\.contact!.imageData) { [weak self] in
+        // No need to call on creation as we already do the update when calling `updateColors`
+        observe(contact, \.imageData, callOnCreation: false) { [weak self] in
             self?.updateAvatar()
         }
         
-        // No need to call on creation as we did that above
-        observeConversation(\.contact!.contactImage, callOnCreation: false) { [weak self] in
+        // No need to call on creation as we already do the update when calling `updateColors`
+        observe(contact, \.contactImage, callOnCreation: false) { [weak self] in
             self?.updateAvatar()
         }
         
-        observeConversation(\.contact!.verificationLevel) { [weak self] in
-            guard let verificationLevelImage = self?.conversation.contact?.verificationLevelImageSmall() else {
-                return
-            }
-            
-            self?.verificationLevelImageView.image = verificationLevelImage
-            self?.updateAccessibilityLabel()
+        observe(contact, \.verificationLevel) { [weak self] in
+            self?.verificationLevelImageView.image = self?.conversation.contact?.verificationLevelImageSmall()
         }
         
         // Needed to get appropriate height for verification and description stack (see `verificationAndGroupMembersListStack`)
@@ -354,12 +386,17 @@ final class ChatProfileView: UIStackView {
     }
     
     private func configureGroupChatObservers() {
-        observeConversation(\.groupImage) { [weak self] in
+        guard let group = group else {
+            return
+        }
+        
+        // No need to call on creation as we already do the update when calling `updateColors`
+        observe(group, \.photo, callOnCreation: false) { [weak self] in
             self?.updateAvatar()
         }
         
         // Observe changes of the member list and the name of each member
-        observeConversation(\.members) { [weak self] in
+        observe(group, \.members) { [weak self] in
             guard let weakSelf = self else {
                 return
             }
@@ -373,7 +410,7 @@ final class ChatProfileView: UIStackView {
             weakSelf.memberObservers.removeAll()
             
             // 3. Observe name changes of all current members (we need to update the name list on a change)
-            weakSelf.addMemberObservers(for: weakSelf.conversation)
+            weakSelf.addMemberObservers(for: weakSelf.group)
             
             // 4. Update label
             weakSelf.updateGroupMembersListLabel()
@@ -382,9 +419,12 @@ final class ChatProfileView: UIStackView {
         verificationLevelImageView.isHidden = true
     }
     
-    private func addMemberObservers(for conversation: Conversation) {
-        
-        for member in conversation.members {
+    private func addMemberObservers(for group: Group?) {
+        guard let group = group else {
+            return
+        }
+
+        for member in group.members {
             let memberNameObserver = member.observe(\.displayName) { [weak self] _, _ in
                 DispatchQueue.main.async {
                     self?.updateGroupMembersListLabel()
@@ -394,24 +434,26 @@ final class ChatProfileView: UIStackView {
         }
     }
     
-    /// Helper to add observers to the `conversation` property
+    /// Helper to add observers
     ///
-    /// All observers are store in the `observers` property.
+    /// All observers are stored in the `observers` property.
     ///
     /// - Parameters:
-    ///   - keyPath: Key path in `Conversation` to observe
+    ///   - object: Object to observe key path on
+    ///   - keyPath: Key path in `object` to observe
     ///   - callOnCreation: Should the handler be called during observer creation?
     ///   - changeHandler: Handler called on each observed change (and initially if `callOnCreation` is `true`).
     ///                     Don't forget to capture `self` weakly! Dispatched on the main queue.
-    private func observeConversation<Value>(
-        _ keyPath: KeyPath<Conversation, Value>,
+    private func observe<Object: NSObject, Value>(
+        _ object: Object,
+        _ keyPath: KeyPath<Object, Value>,
         callOnCreation: Bool = true,
         changeHandler: @escaping () -> Void
     ) {
         
         let options: NSKeyValueObservingOptions = callOnCreation ? .initial : []
         
-        let observer = conversation.observe(keyPath, options: options) { _, _ in
+        let observer = object.observe(keyPath, options: options) { _, _ in
             // Because `changeHandler` updates UI elements we need to ensure that it runs on the main queue
             DispatchQueue.main.async(execute: changeHandler)
         }
@@ -421,18 +463,28 @@ final class ChatProfileView: UIStackView {
     
     // MARK: - Update functions
     
+    func updateColors() {
+        updateAvatar()
+        
+        Colors.setTextColor(Colors.text, label: nameLabel)
+        Colors.setTextColor(Colors.textLight, label: groupMembersListLabel)
+    }
+    
     @objc private func updateAvatar() {
-        AvatarMaker.shared()
-            .avatar(for: conversation, size: configuration.maxAvatarSize, masked: true) { avatarImage, _ in
-                guard let avatarImage = avatarImage else {
-                    // We have a default avatar. No worries.
-                    return
-                }
-            
-                DispatchQueue.main.async {
-                    self.avatarImageView.image = avatarImage
-                }
+        AvatarMaker.shared().avatar(
+            for: conversation,
+            size: ChatViewConfiguration.Profile.maxAvatarSize,
+            masked: true
+        ) { avatarImage, _ in
+            guard let avatarImage = avatarImage else {
+                // We have a default avatar. No worries.
+                return
             }
+            
+            DispatchQueue.main.async {
+                self.avatarImageView.image = avatarImage
+            }
+        }
     }
     
     private func updateGroupMembersListLabel() {
@@ -440,24 +492,15 @@ final class ChatProfileView: UIStackView {
         let entityManager = EntityManager()
         entityManager.performBlockAndWait {
             let group = GroupManager(entityManager: entityManager).getGroup(conversation: self.conversation)
-            self.groupMembersListLabel.text = group?.membersList ?? ""
-        }
-    }
-    
-    private func updateAccessibilityLabel() {
-        if !conversation.isGroup() {
-            accessibilityLabel =
-                "\(conversation.displayName ?? ""). \(conversation.contact?.verificationLevelAccessibilityLabel() ?? "")"
-        }
-        else {
-            accessibilityLabel = conversation.displayName
+            // We always want at least one space in the label to keep it at a constant height
+            self.groupMembersListLabel.text = group?.membersList ?? " "
         }
     }
     
     // MARK: - Actions
     
     @objc private func viewTapped() {
-        delegate?.chatProfileViewTapped(self)
+        tapAction()
     }
     
     @objc private func touchDown() {
@@ -486,27 +529,80 @@ final class ChatProfileView: UIStackView {
     ///
     /// This is due to the fact that the navigation bar height is smaller with a compact vertical size class (e.g. landscape on most iPhones).
     private func updateNameAndVerificationDescriptionStack() {
+        // Note: We cannot really adapt to any accessibility content size categories as they are not reported after
+        // the view is added to a navigation bar `titleView`.
         if traitCollection.verticalSizeClass == .compact {
             // Compact configuration
-            nameAndVerificationGroupMembersListStack.axis = .horizontal
-            nameAndVerificationGroupMembersListStack.alignment = .firstBaseline
-            nameAndVerificationGroupMembersListStack.spacing = configuration
-                .nameVerificationAndDescriptionCompactSpacing
+            nameAndGroupMembersListStack.axis = .horizontal
+            nameAndGroupMembersListStack.alignment = .firstBaseline
+            nameAndGroupMembersListStack.spacing = ChatViewConfiguration.Profile.nameAndMembersListCompactSpacing
         }
         else {
             // Default configuration
-            nameAndVerificationGroupMembersListStack.axis = .vertical
-            nameAndVerificationGroupMembersListStack.alignment = .leading
-            nameAndVerificationGroupMembersListStack.spacing = configuration
-                .nameVerificationAndDescriptionRegularSpacing
+            nameAndGroupMembersListStack.axis = .vertical
+            nameAndGroupMembersListStack.alignment = .leading
+            nameAndGroupMembersListStack.spacing = ChatViewConfiguration.Profile.nameAndMembersListRegularSpacing
         }
     }
     
     // MARK: - Accessibility
-
+    
     override var accessibilityLabel: String? {
-        didSet {
-            viewButton.accessibilityLabel = accessibilityLabel
+        get {
+            conversation.displayName
+        }
+        set {
+            // Do nothing
+        }
+    }
+    
+    override var accessibilityValue: String? {
+        get {
+            if !conversation.isGroup() {
+                var otherThreemaAccessibilityLabel: String?
+                if let contact = conversation.contact, contact.showOtherThreemaTypeIcon {
+                    otherThreemaAccessibilityLabel = otherThreemaTypeImageView.accessibilityLabel
+                }
+                
+                let accessibilityValue = [
+                    conversation.contact?.verificationLevelAccessibilityLabel(),
+                    otherThreemaAccessibilityLabel,
+                ]
+                .compactMap { $0 }
+                .filter { !$0.isEmpty }
+                .joined(separator: ". ")
+                
+                return accessibilityValue
+            }
+            else {
+                return nil
+            }
+        }
+        set {
+            // Do nothing
+        }
+    }
+    
+    override var accessibilityTraits: UIAccessibilityTraits {
+        get {
+            .button
+        }
+        set {
+            // Do nothing
+        }
+    }
+    
+    override var accessibilityHint: String? {
+        get {
+            if conversation.isGroup() {
+                return BundleUtil.localizedString(forKey: "accessibility_profile_button_hint_group")
+            }
+            else {
+                return BundleUtil.localizedString(forKey: "accessibility_profile_button_hint_contact")
+            }
+        }
+        set {
+            // Do nothing
         }
     }
 }

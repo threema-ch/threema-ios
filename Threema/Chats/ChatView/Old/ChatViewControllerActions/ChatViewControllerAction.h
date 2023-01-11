@@ -24,6 +24,7 @@
 @interface ChatViewControllerAction : NSObject
 
 @property (weak) NSObject<ChatViewControllerActionsProtocol> *chatViewController;
+@property void (*completionHandler)(void);
 
 + (instancetype)actionForChatViewController:(NSObject<ChatViewControllerActionsProtocol> *)chatViewController NS_SWIFT_NAME(init(for:));
 

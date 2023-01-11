@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import <Foundation/Foundation.h>
+#import "FileMessageEntity.h"
 
 @protocol HTTPSURLLoaderDelegate <NSObject>
 
@@ -34,7 +35,7 @@
 
 @property id<HTTPSURLLoaderDelegate> delegate;
 
-- (void)startWithBlobId:(NSData*)blobId localOrigin:(BOOL) localOrigin onCompletion:(void (^)(NSData *))onCompletion onError:(void (^)(NSError *))onError;
+- (void)startWithBlobId:(NSData*)blobId origin:(BlobOrigin)origin onCompletion:(void (^)(NSData *))onCompletion onError:(void (^)(NSError *))onError;
 
 - (void)startWithURLRequest:(NSURLRequest*)urlRequest onCompletion:(void (^)(NSData *data))onCompletion onError:(void (^)(NSError *error))onError;
 

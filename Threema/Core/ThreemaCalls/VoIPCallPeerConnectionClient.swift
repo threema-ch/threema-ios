@@ -34,11 +34,12 @@ protocol VoIPCallPeerConnectionClientDelegate: AnyObject {
     func peerConnectionClient(_ client: VoIPCallPeerConnectionClient, addedCandidate: RTCIceCandidate)
     func peerConnectionClient(
         _ client: VoIPCallPeerConnectionClient,
-        didChangeConnectionState state: RTCIceConnectionState
+        didChangeConnectionState state: RTCPeerConnectionState
     )
     func peerConnectionClient(_ client: VoIPCallPeerConnectionClient, receivingVideo: Bool)
     func peerConnectionClient(_ client: VoIPCallPeerConnectionClient, didReceiveData: Data)
     func peerConnectionClient(_ client: VoIPCallPeerConnectionClient, shouldShowCellularCallWarning: Bool)
+    func peerconnectionClient(_ client: VoIPCallPeerConnectionClient, startTransportExpectedStableTimer: Bool)
 }
 
 final class VoIPCallPeerConnectionClient: NSObject {
@@ -734,6 +735,7 @@ extension VoIPCallPeerConnectionClient {
     }
     
     func set(remoteSdp: RTCSessionDescription, completion: @escaping (Error?) -> Void) {
+        delegate?.peerconnectionClient(self, startTransportExpectedStableTimer: true)
         peerConnection.setRemoteDescription(remoteSdp, completionHandler: completion)
     }
     
@@ -776,12 +778,12 @@ extension VoIPCallPeerConnectionClient: RTCPeerConnectionDelegate {
         DDLogNotice("VoipCallService: [cid=\(callID?.callID ?? 0)]: Renegotiation needed")
     }
     
-    func peerConnection(_ peerConnection: RTCPeerConnection, didChange newState: RTCIceConnectionState) {
+    func peerConnection(_ peerConnection: RTCPeerConnection, didChange newState: RTCPeerConnectionState) {
         DDLogNotice(
-            "VoipCallService: [cid=\(callID?.callID ?? 0)]: ICE connection state change to \(newState.debugDescription)"
+            "VoipCallService: [cid=\(callID?.callID ?? 0)]: Peer connection state change to \(newState.debugDescription)"
         )
         
-        if newState == .checking {
+        if newState == .connecting {
             // Schedule 'connecting' stats timer
             let options = VoIPStatsOptions()
             options.selectedCandidatePair = true
@@ -795,7 +797,7 @@ extension VoIPCallPeerConnectionClient: RTCPeerConnectionDelegate {
         }
         
         if VoIPCallStateManager.shared.currentCallState() == .initializing,
-           newState == .connected || newState == .completed {
+           newState == .connected {
             let options = VoIPStatsOptions()
             options.selectedCandidatePair = true
             options.transport = true
@@ -816,10 +818,16 @@ extension VoIPCallPeerConnectionClient: RTCPeerConnectionDelegate {
                 )
             }
         }
-                        
+        
         delegate?.peerConnectionClient(self, didChangeConnectionState: newState)
     }
     
+    func peerConnection(_ peerConnection: RTCPeerConnection, didChange newState: RTCIceConnectionState) {
+        DDLogNotice(
+            "VoipCallService: [cid=\(callID?.callID ?? 0)]: ICE connection state change to \(newState.debugDescription)"
+        )
+    }
+        
     func peerConnection(_ peerConnection: RTCPeerConnection, didChange newState: RTCIceGatheringState) {
         DDLogNotice(
             "VoipCallService: [cid=\(callID?.callID ?? 0)]: ICE gathering state change to \(newState.debugDescription)"

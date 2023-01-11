@@ -29,7 +29,7 @@ class MWPhotoBrowserWrapper: NSObject, MWPhotoBrowserDelegate, MWVideoDelegate, 
     weak var parentViewController: UIViewController?
     let entityManager: EntityManager
     
-    init(for conversation: Conversation, in parentViewController: UIViewController, entityManager: EntityManager) {
+    init(for conversation: Conversation, in parentViewController: UIViewController?, entityManager: EntityManager) {
         self.conversation = conversation
         self.parentViewController = parentViewController
         self.entityManager = entityManager
@@ -58,7 +58,9 @@ class MWPhotoBrowserWrapper: NSObject, MWPhotoBrowserDelegate, MWVideoDelegate, 
                 return
             }
             
-            openPhotoBrowser(currentMediaIndex: UInt(index), showGrid: false)
+            let autoPlayOnAppear = message.renderType == .videoMessage
+            
+            openPhotoBrowser(currentMediaIndex: UInt(index), showGrid: false, autoPlayOnAppear: autoPlayOnAppear)
         
         default:
             print("Message Type not implemented yet")
@@ -261,11 +263,13 @@ class MWPhotoBrowserWrapper: NSObject, MWPhotoBrowserDelegate, MWVideoDelegate, 
         }
     }
     
-    func openPhotoBrowser(currentMediaIndex: UInt?, showGrid: Bool = true) {
-        
+    func openPhotoBrowser(currentMediaIndex: UInt?, showGrid: Bool = true, autoPlayOnAppear: Bool = false) {
+        // TODO: (IOS-2844) When opening videos two modals get opened at the same time
+
         if photoBrowser == nil {
             photoBrowser = createPhotoBrowser()
         }
+        photoBrowser?.autoPlayOnAppear = autoPlayOnAppear
         
         guard let photoBrowser = photoBrowser else {
             DDLogError("Could not create MWPhotoBrowser")
@@ -298,20 +302,12 @@ class MWPhotoBrowserWrapper: NSObject, MWPhotoBrowserDelegate, MWVideoDelegate, 
         let videoMessages = entityManager.entityFetcher
             .videoMessages(for: conversation) as? [VideoMessage] ?? [VideoMessage]()
         let fileMessages = entityManager.entityFetcher
-            .fileMessages(for: conversation) as? [FileMessageEntity] ?? [FileMessageEntity]()
+            .filesMessagesFilteredForPhotoBrowser(for: conversation) as? [FileMessageEntity] ?? [FileMessageEntity]()
 
         finalMessages.append(contentsOf: imageMessages)
         finalMessages.append(contentsOf: videoMessages)
-        
-        // Ignore audio messages, stickers & GIFs
-        // This could have really bad performance and we should change it to a own fetch request with predicates in the future
-        for fileMessage in fileMessages {
-            if !fileMessage.renderFileAudioMessage(), !fileMessage.renderStickerFileMessage(),
-               !fileMessage.renderFileGifMessage() {
-                finalMessages.append(fileMessage)
-            }
-        }
-        
+        finalMessages.append(contentsOf: fileMessages)
+
         mediaMessages = finalMessages.sorted { $0.date < $1.date }
     }
     

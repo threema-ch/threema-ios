@@ -39,6 +39,7 @@
 @dynamic sender;
 @dynamic webRequestId;
 @dynamic flags;
+@dynamic forwardSecurityMode;
 @dynamic groupDeliveryReceipts;
 
 - (NSString*)logText {

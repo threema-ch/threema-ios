@@ -49,7 +49,7 @@ class MeContactDetailsViewController: ThemedTableViewController {
         let tapRecognizer = UITapGestureRecognizer(target: self, action: #selector(tappedImage))
         imageView.addGestureRecognizer(tapRecognizer)
         
-        threemaTypeIcon.image = ThreemaUtilityObjC.threemaTypeIcon()
+        threemaTypeIcon.image = ThreemaUtility.otherThreemaTypeIcon
         
         updateColors()
     }
@@ -96,7 +96,7 @@ class MeContactDetailsViewController: ThemedTableViewController {
         if name == nil {
             name = MyIdentityStore.shared().identity
         }
-        title = String(format: "@%@", BundleUtil.localizedString(forKey: "me"))
+        title = "@\(BundleUtil.localizedString(forKey: "me"))"
         nameLabel.text = name
         headerView.accessibilityLabel = name
         

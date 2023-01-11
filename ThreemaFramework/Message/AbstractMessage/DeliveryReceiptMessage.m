@@ -42,7 +42,7 @@
     return receiptBody;
 }
 
-- (BOOL)shouldPush {
+- (BOOL)flagShouldPush {
     return NO;
 }
 

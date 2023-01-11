@@ -41,24 +41,19 @@ class WebClientSessionCell: UITableViewCell {
             browserLabel.text = BundleUtil.localizedString(forKey: "webClientSession_unnamed")
         }
         
-        var info: String?
-        if let lastConenction = webClientSession.lastConnection {
-            info = String(
-                format: "%@: %@\n%@",
-                BundleUtil.localizedString(forKey: "webClientSession_lastUse"),
-                DateFormatter.shortStyleDateTime(lastConenction),
-                (webClientSession.permanent?.boolValue)! ? BundleUtil
-                    .localizedString(forKey: "webClientSession_saved") :
-                    BundleUtil.localizedString(forKey: "webClientSession_notSaved")
-            )
+        let info: String
+        let localizedSavedString = (webClientSession.permanent?.boolValue ?? false) ? BundleUtil
+            .localizedString(forKey: "webClientSession_saved") : BundleUtil
+            .localizedString(forKey: "webClientSession_notSaved")
+        if let lastConnenction = webClientSession.lastConnection {
+            info = """
+                \(BundleUtil.localizedString(forKey: "webClientSession_lastUse")): \(DateFormatter
+                .shortStyleDateTime(lastConnenction))
+                \(localizedSavedString)
+                """
         }
         else {
-            info = String(
-                format: "\n%@",
-                (webClientSession.permanent?.boolValue)! ? BundleUtil
-                    .localizedString(forKey: "webClientSession_saved") :
-                    BundleUtil.localizedString(forKey: "webClientSession_notSaved")
-            )
+            info = "\n\(localizedSavedString)"
         }
         infoLabel.text = info
         
@@ -88,10 +83,8 @@ class WebClientSessionCell: UITableViewCell {
         
         var cellAccessibility: String! = browserLabel.text
         var cellAccessibilityActions = [UIAccessibilityCustomAction]()
-        if let sessionInfo = info {
-            cellAccessibility.append(". ")
-            cellAccessibility.append(sessionInfo)
-        }
+        cellAccessibility.append(". ")
+        cellAccessibility.append(info)
         
         if (webClientSession.active?.boolValue)! {
             accessoryType = .none

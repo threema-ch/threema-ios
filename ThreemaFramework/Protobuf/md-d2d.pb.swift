@@ -92,8 +92,8 @@ enum D2d_MessageType: SwiftProtobuf.Enum {
   /// Announce a group's setup
   case groupSetup // = 74
 
-  /// Rename a group
-  case groupRename // = 75
+  /// (Re)name a group
+  case groupName // = 75
 
   /// Leave a group
   case groupLeave // = 76
@@ -130,6 +130,9 @@ enum D2d_MessageType: SwiftProtobuf.Enum {
 
   /// Cast a vote on a group poll
   case groupPollVote // = 83
+
+  /// Group delivery receipt
+  case groupDeliveryReceipt // = 129
   case UNRECOGNIZED(Int)
 
   init() {
@@ -157,7 +160,7 @@ enum D2d_MessageType: SwiftProtobuf.Enum {
     case 69: self = .groupAudio
     case 70: self = .groupFile
     case 74: self = .groupSetup
-    case 75: self = .groupRename
+    case 75: self = .groupName
     case 76: self = .groupLeave
     case 80: self = .groupSetProfilePicture
     case 81: self = .groupRequestSync
@@ -170,6 +173,7 @@ enum D2d_MessageType: SwiftProtobuf.Enum {
     case 99: self = .callHangup
     case 100: self = .callRinging
     case 128: self = .deliveryReceipt
+    case 129: self = .groupDeliveryReceipt
     case 144: self = .typingIndicator
     default: self = .UNRECOGNIZED(rawValue)
     }
@@ -196,7 +200,7 @@ enum D2d_MessageType: SwiftProtobuf.Enum {
     case .groupAudio: return 69
     case .groupFile: return 70
     case .groupSetup: return 74
-    case .groupRename: return 75
+    case .groupName: return 75
     case .groupLeave: return 76
     case .groupSetProfilePicture: return 80
     case .groupRequestSync: return 81
@@ -209,6 +213,7 @@ enum D2d_MessageType: SwiftProtobuf.Enum {
     case .callHangup: return 99
     case .callRinging: return 100
     case .deliveryReceipt: return 128
+    case .groupDeliveryReceipt: return 129
     case .typingIndicator: return 144
     case .UNRECOGNIZED(let i): return i
     }
@@ -241,7 +246,7 @@ extension D2d_MessageType: CaseIterable {
     .contactDeleteProfilePicture,
     .contactRequestProfilePicture,
     .groupSetup,
-    .groupRename,
+    .groupName,
     .groupLeave,
     .groupSetProfilePicture,
     .groupDeleteProfilePicture,
@@ -254,6 +259,7 @@ extension D2d_MessageType: CaseIterable {
     .groupFile,
     .groupPollSetup,
     .groupPollVote,
+    .groupDeliveryReceipt,
   ]
 }
 
@@ -299,7 +305,8 @@ struct D2d_DeviceInfo {
 
   var platform: D2d_DeviceInfo.Platform = .unspecified
 
-  /// Platform details (smartphone model / browser), e.g. "Firefox 91.0.2" or "iPhone 11 Pro"
+  /// Platform details (smartphone model / browser), e.g. "Firefox 91.0.2" or
+  /// "iPhone 11 Pro"
   var platformDetails: String = String()
 
   /// App version, e.g. "4.52" (Android) or "4.6.12b2653" (iOS)
@@ -453,73 +460,87 @@ struct D2d_Envelope {
   // methods supported on all messages.
 
   /// Random amount of padding, ignored by the receiver
-  var padding: Data = Data()
+  var padding: Data {
+    get {return _storage._padding}
+    set {_uniqueStorage()._padding = newValue}
+  }
 
   /// The enveloped reflected message
-  var content: D2d_Envelope.OneOf_Content? = nil
+  var content: OneOf_Content? {
+    get {return _storage._content}
+    set {_uniqueStorage()._content = newValue}
+  }
 
   var outgoingMessage: D2d_OutgoingMessage {
     get {
-      if case .outgoingMessage(let v)? = content {return v}
+      if case .outgoingMessage(let v)? = _storage._content {return v}
       return D2d_OutgoingMessage()
     }
-    set {content = .outgoingMessage(newValue)}
+    set {_uniqueStorage()._content = .outgoingMessage(newValue)}
   }
 
-  var outgoingMessageSent: D2d_OutgoingMessageSent {
+  var outgoingMessageUpdate: D2d_OutgoingMessageUpdate {
     get {
-      if case .outgoingMessageSent(let v)? = content {return v}
-      return D2d_OutgoingMessageSent()
+      if case .outgoingMessageUpdate(let v)? = _storage._content {return v}
+      return D2d_OutgoingMessageUpdate()
     }
-    set {content = .outgoingMessageSent(newValue)}
+    set {_uniqueStorage()._content = .outgoingMessageUpdate(newValue)}
   }
 
   var incomingMessage: D2d_IncomingMessage {
     get {
-      if case .incomingMessage(let v)? = content {return v}
+      if case .incomingMessage(let v)? = _storage._content {return v}
       return D2d_IncomingMessage()
     }
-    set {content = .incomingMessage(newValue)}
+    set {_uniqueStorage()._content = .incomingMessage(newValue)}
+  }
+
+  var incomingMessageUpdate: D2d_IncomingMessageUpdate {
+    get {
+      if case .incomingMessageUpdate(let v)? = _storage._content {return v}
+      return D2d_IncomingMessageUpdate()
+    }
+    set {_uniqueStorage()._content = .incomingMessageUpdate(newValue)}
   }
 
   var userProfileSync: D2d_UserProfileSync {
     get {
-      if case .userProfileSync(let v)? = content {return v}
+      if case .userProfileSync(let v)? = _storage._content {return v}
       return D2d_UserProfileSync()
     }
-    set {content = .userProfileSync(newValue)}
+    set {_uniqueStorage()._content = .userProfileSync(newValue)}
   }
 
   var contactSync: D2d_ContactSync {
     get {
-      if case .contactSync(let v)? = content {return v}
+      if case .contactSync(let v)? = _storage._content {return v}
       return D2d_ContactSync()
     }
-    set {content = .contactSync(newValue)}
+    set {_uniqueStorage()._content = .contactSync(newValue)}
   }
 
   var groupSync: D2d_GroupSync {
     get {
-      if case .groupSync(let v)? = content {return v}
+      if case .groupSync(let v)? = _storage._content {return v}
       return D2d_GroupSync()
     }
-    set {content = .groupSync(newValue)}
+    set {_uniqueStorage()._content = .groupSync(newValue)}
   }
 
   var distributionListSync: D2d_DistributionListSync {
     get {
-      if case .distributionListSync(let v)? = content {return v}
+      if case .distributionListSync(let v)? = _storage._content {return v}
       return D2d_DistributionListSync()
     }
-    set {content = .distributionListSync(newValue)}
+    set {_uniqueStorage()._content = .distributionListSync(newValue)}
   }
 
   var settingsSync: D2d_SettingsSync {
     get {
-      if case .settingsSync(let v)? = content {return v}
+      if case .settingsSync(let v)? = _storage._content {return v}
       return D2d_SettingsSync()
     }
-    set {content = .settingsSync(newValue)}
+    set {_uniqueStorage()._content = .settingsSync(newValue)}
   }
 
   var unknownFields = SwiftProtobuf.UnknownStorage()
@@ -527,8 +548,9 @@ struct D2d_Envelope {
   /// The enveloped reflected message
   enum OneOf_Content: Equatable {
     case outgoingMessage(D2d_OutgoingMessage)
-    case outgoingMessageSent(D2d_OutgoingMessageSent)
+    case outgoingMessageUpdate(D2d_OutgoingMessageUpdate)
     case incomingMessage(D2d_IncomingMessage)
+    case incomingMessageUpdate(D2d_IncomingMessageUpdate)
     case userProfileSync(D2d_UserProfileSync)
     case contactSync(D2d_ContactSync)
     case groupSync(D2d_GroupSync)
@@ -545,12 +567,16 @@ struct D2d_Envelope {
         guard case .outgoingMessage(let l) = lhs, case .outgoingMessage(let r) = rhs else { preconditionFailure() }
         return l == r
       }()
-      case (.outgoingMessageSent, .outgoingMessageSent): return {
-        guard case .outgoingMessageSent(let l) = lhs, case .outgoingMessageSent(let r) = rhs else { preconditionFailure() }
+      case (.outgoingMessageUpdate, .outgoingMessageUpdate): return {
+        guard case .outgoingMessageUpdate(let l) = lhs, case .outgoingMessageUpdate(let r) = rhs else { preconditionFailure() }
         return l == r
       }()
       case (.incomingMessage, .incomingMessage): return {
         guard case .incomingMessage(let l) = lhs, case .incomingMessage(let r) = rhs else { preconditionFailure() }
+        return l == r
+      }()
+      case (.incomingMessageUpdate, .incomingMessageUpdate): return {
+        guard case .incomingMessageUpdate(let l) = lhs, case .incomingMessageUpdate(let r) = rhs else { preconditionFailure() }
         return l == r
       }()
       case (.userProfileSync, .userProfileSync): return {
@@ -580,57 +606,59 @@ struct D2d_Envelope {
   }
 
   init() {}
+
+  fileprivate var _storage = _StorageClass.defaultInstance
 }
 
-/// A message receiver can be a single user or a group.
-struct D2d_MessageReceiver {
+/// Unique conversation identifier.
+struct D2d_ConversationId {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  /// The recipient's Threema ID or a group identity.
-  var receiver: D2d_MessageReceiver.OneOf_Receiver? = nil
+  /// A contact's Threema ID, distribution list ID or group identity to identify the conversation.
+  var id: D2d_ConversationId.OneOf_ID? = nil
 
-  var identity: String {
+  var contact: String {
     get {
-      if case .identity(let v)? = receiver {return v}
+      if case .contact(let v)? = id {return v}
       return String()
     }
-    set {receiver = .identity(newValue)}
+    set {id = .contact(newValue)}
   }
 
   var distributionList: UInt64 {
     get {
-      if case .distributionList(let v)? = receiver {return v}
+      if case .distributionList(let v)? = id {return v}
       return 0
     }
-    set {receiver = .distributionList(newValue)}
+    set {id = .distributionList(newValue)}
   }
 
   var group: Common_GroupIdentity {
     get {
-      if case .group(let v)? = receiver {return v}
+      if case .group(let v)? = id {return v}
       return Common_GroupIdentity()
     }
-    set {receiver = .group(newValue)}
+    set {id = .group(newValue)}
   }
 
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  /// The recipient's Threema ID or a group identity.
-  enum OneOf_Receiver: Equatable {
-    case identity(String)
+  /// A contact's Threema ID, distribution list ID or group identity to identify the conversation.
+  enum OneOf_ID: Equatable {
+    case contact(String)
     case distributionList(UInt64)
     case group(Common_GroupIdentity)
 
   #if !swift(>=4.1)
-    static func ==(lhs: D2d_MessageReceiver.OneOf_Receiver, rhs: D2d_MessageReceiver.OneOf_Receiver) -> Bool {
+    static func ==(lhs: D2d_ConversationId.OneOf_ID, rhs: D2d_ConversationId.OneOf_ID) -> Bool {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch (lhs, rhs) {
-      case (.identity, .identity): return {
-        guard case .identity(let l) = lhs, case .identity(let r) = rhs else { preconditionFailure() }
+      case (.contact, .contact): return {
+        guard case .contact(let l) = lhs, case .contact(let r) = rhs else { preconditionFailure() }
         return l == r
       }()
       case (.distributionList, .distributionList): return {
@@ -656,76 +684,147 @@ struct D2d_OutgoingMessage {
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  /// Recipient of the enclosed message.
+  /// Conversation ID of the enclosed message.
   ///
-  /// Note: If the receiver is a group identity, group and group creator id of
-  ///       the enclosed message must match the values of the supplied group
-  ///       identity. Otherwise, the message must be considered invalid.
-  var receiver: D2d_MessageReceiver {
-    get {return _receiver ?? D2d_MessageReceiver()}
-    set {_receiver = newValue}
+  /// Note: If the conversation is of type group, group and group creator id of
+  ///       the enclosed CSP E2E message must match the values of the supplied
+  ///       group identity. Otherwise, the message must be considered invalid.
+  var conversation: D2d_ConversationId {
+    get {return _conversation ?? D2d_ConversationId()}
+    set {_conversation = newValue}
   }
-  /// Returns true if `receiver` has been explicitly set.
-  var hasReceiver: Bool {return self._receiver != nil}
-  /// Clears the value of `receiver`. Subsequent reads from it will return its default value.
-  mutating func clearReceiver() {self._receiver = nil}
+  /// Returns true if `conversation` has been explicitly set.
+  var hasConversation: Bool {return self._conversation != nil}
+  /// Clears the value of `conversation`. Subsequent reads from it will return its default value.
+  mutating func clearConversation() {self._conversation = nil}
 
   /// Unique ID of the enclosed message
   var messageID: UInt64 = 0
 
-  /// Unix-ish timestamp in milliseconds for when the message has been created
+  /// Optional thread message ID (the message ID of the last incoming message in
+  /// the current conversation)
+  var threadMessageID: UInt64 {
+    get {return _threadMessageID ?? 0}
+    set {_threadMessageID = newValue}
+  }
+  /// Returns true if `threadMessageID` has been explicitly set.
+  var hasThreadMessageID: Bool {return self._threadMessageID != nil}
+  /// Clears the value of `threadMessageID`. Subsequent reads from it will return its default value.
+  mutating func clearThreadMessageID() {self._threadMessageID = nil}
+
+  /// Unix-ish timestamp in milliseconds for when the enclosed message has been
+  /// created
+  ///
+  /// Note: Take this value from the
+  ///       `csp.payload.legacy-message`/`csp.payload.message-with-metadata-box`
+  ///       that enclosed the message.
   var createdAt: UInt64 = 0
 
-  /// Enclosed message's type
+  /// Enclosed message's type, mapped from `csp.e2e.container.type`
   var type: D2d_MessageType = .invalid
 
-  /// The message's body as defined for `Message` (0x01/0x02) of the Chat
-  /// Server Protocol.
+  /// The message's body, i.e. the unpadded `csp.e2e.container.padded-data`
   var body: Data = Data()
 
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
   init() {}
 
-  fileprivate var _receiver: D2d_MessageReceiver? = nil
+  fileprivate var _conversation: D2d_ConversationId? = nil
+  fileprivate var _threadMessageID: UInt64? = nil
 }
 
-/// An outgoing message has been acknowledged by the chat server.
-///
-/// Note 1: The timestamp of the `reflect`/`reflect-ack` determines the
-///         timestamp for when the message has been sent.
-/// Note 2: This indicates that the message has been successfully stored in the
-///         message queue of the server. It does NOT indicate that the message
-///         has been delivered to the intended receiver.
-struct D2d_OutgoingMessageSent {
+/// Update one or more existing outgoing messages.
+struct D2d_OutgoingMessageUpdate {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  /// Recipient of the sent message.
-  var receiver: D2d_MessageReceiver {
-    get {return _receiver ?? D2d_MessageReceiver()}
-    set {_receiver = newValue}
-  }
-  /// Returns true if `receiver` has been explicitly set.
-  var hasReceiver: Bool {return self._receiver != nil}
-  /// Clears the value of `receiver`. Subsequent reads from it will return its default value.
-  mutating func clearReceiver() {self._receiver = nil}
-
-  /// Unique ID of the sent message
-  var messageID: UInt64 = 0
+  /// Updates
+  var updates: [D2d_OutgoingMessageUpdate.Update] = []
 
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  init() {}
+  /// Mark the referred message as sent (acknowledged by the chat server).
+  ///
+  /// Note 1: The timestamp of the `reflect-ack`/`reflected` message determines the
+  ///         timestamp for when the referred message has been sent.
+  ///
+  /// Note 2: This indicates that the referred message has been successfully
+  ///         stored in the message queue of the server. It does NOT indicate
+  ///         that the referred message has been delivered to the intended
+  ///         receiver.
+  struct Sent {
+    // SwiftProtobuf.Message conformance is added in an extension below. See the
+    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+    // methods supported on all messages.
 
-  fileprivate var _receiver: D2d_MessageReceiver? = nil
+    var unknownFields = SwiftProtobuf.UnknownStorage()
+
+    init() {}
+  }
+
+  struct Update {
+    // SwiftProtobuf.Message conformance is added in an extension below. See the
+    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+    // methods supported on all messages.
+
+    /// Conversation ID of the referred message.
+    var conversation: D2d_ConversationId {
+      get {return _conversation ?? D2d_ConversationId()}
+      set {_conversation = newValue}
+    }
+    /// Returns true if `conversation` has been explicitly set.
+    var hasConversation: Bool {return self._conversation != nil}
+    /// Clears the value of `conversation`. Subsequent reads from it will return its default value.
+    mutating func clearConversation() {self._conversation = nil}
+
+    /// Unique ID of the referred message
+    var messageID: UInt64 = 0
+
+    /// Update type
+    var update: D2d_OutgoingMessageUpdate.Update.OneOf_Update? = nil
+
+    /// Mark the referred message as sent
+    var sent: D2d_OutgoingMessageUpdate.Sent {
+      get {
+        if case .sent(let v)? = update {return v}
+        return D2d_OutgoingMessageUpdate.Sent()
+      }
+      set {update = .sent(newValue)}
+    }
+
+    var unknownFields = SwiftProtobuf.UnknownStorage()
+
+    /// Update type
+    enum OneOf_Update: Equatable {
+      /// Mark the referred message as sent
+      case sent(D2d_OutgoingMessageUpdate.Sent)
+
+    #if !swift(>=4.1)
+      static func ==(lhs: D2d_OutgoingMessageUpdate.Update.OneOf_Update, rhs: D2d_OutgoingMessageUpdate.Update.OneOf_Update) -> Bool {
+        // The use of inline closures is to circumvent an issue where the compiler
+        // allocates stack space for every case branch when no optimizations are
+        // enabled. https://github.com/apple/swift-protobuf/issues/1034
+        switch (lhs, rhs) {
+        case (.sent, .sent): return {
+          guard case .sent(let l) = lhs, case .sent(let r) = rhs else { preconditionFailure() }
+          return l == r
+        }()
+        }
+      }
+    #endif
+    }
+
+    init() {}
+
+    fileprivate var _conversation: D2d_ConversationId? = nil
+  }
+
+  init() {}
 }
 
 /// An incoming message, reflected to other devices.
-///
-/// Note: The timestamp of the `reflect`/`reflect-ack` determines the timestamp
-///       for when the message has been received.
 struct D2d_IncomingMessage {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
@@ -737,18 +836,111 @@ struct D2d_IncomingMessage {
   /// Unique ID of the enclosed message
   var messageID: UInt64 = 0
 
-  /// Unix-ish timestamp in milliseconds for when the message has been created
-  /// Note: Take this value from the CSP `message` struct.
+  /// Unix-ish timestamp in milliseconds for when the enclosed message has been
+  /// created.
+  ///
+  /// Note: Take this value from the
+  ///       `csp.payload.legacy-message`/`csp.payload.message-with-metadata-box`
+  ///       that enclosed the message.
   var createdAt: UInt64 = 0
 
-  /// Enclosed message's type
+  /// Enclosed message's type, mapped from `csp.e2e.container.type`
   var type: D2d_MessageType = .invalid
 
-  /// The message's body as defined for `Message` (0x01/0x02) of the Chat
-  /// Server Protocol.
+  /// The message's body, i.e. the unpadded `csp.e2e.container.padded-data`
   var body: Data = Data()
 
   var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  init() {}
+}
+
+/// Update one or more existing incoming messages.
+struct D2d_IncomingMessageUpdate {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  /// Updates
+  var updates: [D2d_IncomingMessageUpdate.Update] = []
+
+  var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  /// Mark the referred message as read.
+  ///
+  /// Note: This may only be used when _read receipts_ have been turned off, i.e.
+  ///       as a replacement for reflecting `delivery-receipt` type _read_
+  ///       (`0x02`).
+  struct Read {
+    // SwiftProtobuf.Message conformance is added in an extension below. See the
+    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+    // methods supported on all messages.
+
+    /// Unix-ish timestamp in milliseconds for when the referred message has been
+    /// read.
+    var at: UInt64 = 0
+
+    var unknownFields = SwiftProtobuf.UnknownStorage()
+
+    init() {}
+  }
+
+  struct Update {
+    // SwiftProtobuf.Message conformance is added in an extension below. See the
+    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+    // methods supported on all messages.
+
+    /// Conversation ID of the referred message.
+    var conversation: D2d_ConversationId {
+      get {return _conversation ?? D2d_ConversationId()}
+      set {_conversation = newValue}
+    }
+    /// Returns true if `conversation` has been explicitly set.
+    var hasConversation: Bool {return self._conversation != nil}
+    /// Clears the value of `conversation`. Subsequent reads from it will return its default value.
+    mutating func clearConversation() {self._conversation = nil}
+
+    /// Unique ID of the referred message
+    var messageID: UInt64 = 0
+
+    /// Update type
+    var update: D2d_IncomingMessageUpdate.Update.OneOf_Update? = nil
+
+    /// Mark the referred message as read
+    var read: D2d_IncomingMessageUpdate.Read {
+      get {
+        if case .read(let v)? = update {return v}
+        return D2d_IncomingMessageUpdate.Read()
+      }
+      set {update = .read(newValue)}
+    }
+
+    var unknownFields = SwiftProtobuf.UnknownStorage()
+
+    /// Update type
+    enum OneOf_Update: Equatable {
+      /// Mark the referred message as read
+      case read(D2d_IncomingMessageUpdate.Read)
+
+    #if !swift(>=4.1)
+      static func ==(lhs: D2d_IncomingMessageUpdate.Update.OneOf_Update, rhs: D2d_IncomingMessageUpdate.Update.OneOf_Update) -> Bool {
+        // The use of inline closures is to circumvent an issue where the compiler
+        // allocates stack space for every case branch when no optimizations are
+        // enabled. https://github.com/apple/swift-protobuf/issues/1034
+        switch (lhs, rhs) {
+        case (.read, .read): return {
+          guard case .read(let l) = lhs, case .read(let r) = rhs else { preconditionFailure() }
+          return l == r
+        }()
+        }
+      }
+    #endif
+    }
+
+    init() {}
+
+    fileprivate var _conversation: D2d_ConversationId? = nil
+  }
 
   init() {}
 }
@@ -762,19 +954,19 @@ struct D2d_UserProfileSync {
   /// Synchronisation type
   var action: D2d_UserProfileSync.OneOf_Action? = nil
 
-  var set: D2d_UserProfileSync.Set {
+  var update: D2d_UserProfileSync.Update {
     get {
-      if case .set(let v)? = action {return v}
-      return D2d_UserProfileSync.Set()
+      if case .update(let v)? = action {return v}
+      return D2d_UserProfileSync.Update()
     }
-    set {action = .set(newValue)}
+    set {action = .update(newValue)}
   }
 
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
   /// Synchronisation type
   enum OneOf_Action: Equatable {
-    case set(D2d_UserProfileSync.Set)
+    case update(D2d_UserProfileSync.Update)
 
   #if !swift(>=4.1)
     static func ==(lhs: D2d_UserProfileSync.OneOf_Action, rhs: D2d_UserProfileSync.OneOf_Action) -> Bool {
@@ -782,8 +974,8 @@ struct D2d_UserProfileSync {
       // allocates stack space for every case branch when no optimizations are
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch (lhs, rhs) {
-      case (.set, .set): return {
-        guard case .set(let l) = lhs, case .set(let r) = rhs else { preconditionFailure() }
+      case (.update, .update): return {
+        guard case .update(let l) = lhs, case .update(let r) = rhs else { preconditionFailure() }
         return l == r
       }()
       }
@@ -792,7 +984,7 @@ struct D2d_UserProfileSync {
   }
 
   /// Update the user's profile
-  struct Set {
+  struct Update {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
@@ -825,13 +1017,22 @@ struct D2d_ContactSync {
   /// Synchronisation type
   var action: D2d_ContactSync.OneOf_Action? = nil
 
-  /// Create or update a Threema contact
-  var set: D2d_ContactSync.Set {
+  /// Create a Threema contact
+  var create: D2d_ContactSync.Create {
     get {
-      if case .set(let v)? = action {return v}
-      return D2d_ContactSync.Set()
+      if case .create(let v)? = action {return v}
+      return D2d_ContactSync.Create()
     }
-    set {action = .set(newValue)}
+    set {action = .create(newValue)}
+  }
+
+  /// Update a Threema contact
+  var update: D2d_ContactSync.Update {
+    get {
+      if case .update(let v)? = action {return v}
+      return D2d_ContactSync.Update()
+    }
+    set {action = .update(newValue)}
   }
 
   /// Delete a Threema contact
@@ -847,8 +1048,10 @@ struct D2d_ContactSync {
 
   /// Synchronisation type
   enum OneOf_Action: Equatable {
-    /// Create or update a Threema contact
-    case set(D2d_ContactSync.Set)
+    /// Create a Threema contact
+    case create(D2d_ContactSync.Create)
+    /// Update a Threema contact
+    case update(D2d_ContactSync.Update)
     /// Delete a Threema contact
     case delete(D2d_ContactSync.Delete)
 
@@ -858,8 +1061,12 @@ struct D2d_ContactSync {
       // allocates stack space for every case branch when no optimizations are
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch (lhs, rhs) {
-      case (.set, .set): return {
-        guard case .set(let l) = lhs, case .set(let r) = rhs else { preconditionFailure() }
+      case (.create, .create): return {
+        guard case .create(let l) = lhs, case .create(let r) = rhs else { preconditionFailure() }
+        return l == r
+      }()
+      case (.update, .update): return {
+        guard case .update(let l) = lhs, case .update(let r) = rhs else { preconditionFailure() }
         return l == r
       }()
       case (.delete, .delete): return {
@@ -872,8 +1079,30 @@ struct D2d_ContactSync {
   #endif
   }
 
-  /// Create or update a Threema contact.
-  struct Set {
+  /// Create a Threema contact.
+  struct Create {
+    // SwiftProtobuf.Message conformance is added in an extension below. See the
+    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+    // methods supported on all messages.
+
+    var contact: Sync_Contact {
+      get {return _contact ?? Sync_Contact()}
+      set {_contact = newValue}
+    }
+    /// Returns true if `contact` has been explicitly set.
+    var hasContact: Bool {return self._contact != nil}
+    /// Clears the value of `contact`. Subsequent reads from it will return its default value.
+    mutating func clearContact() {self._contact = nil}
+
+    var unknownFields = SwiftProtobuf.UnknownStorage()
+
+    init() {}
+
+    fileprivate var _contact: Sync_Contact? = nil
+  }
+
+  /// Update a Threema contact.
+  struct Update {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
@@ -919,13 +1148,22 @@ struct D2d_GroupSync {
   /// Synchronisation type
   var action: D2d_GroupSync.OneOf_Action? = nil
 
-  /// Create or update a group
-  var set: D2d_GroupSync.Set {
+  /// Create a group
+  var create: D2d_GroupSync.Create {
     get {
-      if case .set(let v)? = action {return v}
-      return D2d_GroupSync.Set()
+      if case .create(let v)? = action {return v}
+      return D2d_GroupSync.Create()
     }
-    set {action = .set(newValue)}
+    set {action = .create(newValue)}
+  }
+
+  /// Update a group
+  var update: D2d_GroupSync.Update {
+    get {
+      if case .update(let v)? = action {return v}
+      return D2d_GroupSync.Update()
+    }
+    set {action = .update(newValue)}
   }
 
   /// Delete a group
@@ -941,8 +1179,10 @@ struct D2d_GroupSync {
 
   /// Synchronisation type
   enum OneOf_Action: Equatable {
-    /// Create or update a group
-    case set(D2d_GroupSync.Set)
+    /// Create a group
+    case create(D2d_GroupSync.Create)
+    /// Update a group
+    case update(D2d_GroupSync.Update)
     /// Delete a group
     case delete(D2d_GroupSync.Delete)
 
@@ -952,8 +1192,12 @@ struct D2d_GroupSync {
       // allocates stack space for every case branch when no optimizations are
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch (lhs, rhs) {
-      case (.set, .set): return {
-        guard case .set(let l) = lhs, case .set(let r) = rhs else { preconditionFailure() }
+      case (.create, .create): return {
+        guard case .create(let l) = lhs, case .create(let r) = rhs else { preconditionFailure() }
+        return l == r
+      }()
+      case (.update, .update): return {
+        guard case .update(let l) = lhs, case .update(let r) = rhs else { preconditionFailure() }
         return l == r
       }()
       case (.delete, .delete): return {
@@ -966,8 +1210,30 @@ struct D2d_GroupSync {
   #endif
   }
 
-  /// Create or update a group.
-  struct Set {
+  /// Create a group.
+  struct Create {
+    // SwiftProtobuf.Message conformance is added in an extension below. See the
+    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+    // methods supported on all messages.
+
+    var group: Sync_Group {
+      get {return _group ?? Sync_Group()}
+      set {_group = newValue}
+    }
+    /// Returns true if `group` has been explicitly set.
+    var hasGroup: Bool {return self._group != nil}
+    /// Clears the value of `group`. Subsequent reads from it will return its default value.
+    mutating func clearGroup() {self._group = nil}
+
+    var unknownFields = SwiftProtobuf.UnknownStorage()
+
+    init() {}
+
+    fileprivate var _group: Sync_Group? = nil
+  }
+
+  /// Update a group.
+  struct Update {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
@@ -1023,13 +1289,22 @@ struct D2d_DistributionListSync {
   /// Synchronisation type
   var action: D2d_DistributionListSync.OneOf_Action? = nil
 
-  /// Create or update a distribution list
-  var set: D2d_DistributionListSync.Set {
+  /// Create a distribution list
+  var create: D2d_DistributionListSync.Create {
     get {
-      if case .set(let v)? = action {return v}
-      return D2d_DistributionListSync.Set()
+      if case .create(let v)? = action {return v}
+      return D2d_DistributionListSync.Create()
     }
-    set {action = .set(newValue)}
+    set {action = .create(newValue)}
+  }
+
+  /// Update a distribution list
+  var update: D2d_DistributionListSync.Update {
+    get {
+      if case .update(let v)? = action {return v}
+      return D2d_DistributionListSync.Update()
+    }
+    set {action = .update(newValue)}
   }
 
   /// Delete a distribution list
@@ -1045,8 +1320,10 @@ struct D2d_DistributionListSync {
 
   /// Synchronisation type
   enum OneOf_Action: Equatable {
-    /// Create or update a distribution list
-    case set(D2d_DistributionListSync.Set)
+    /// Create a distribution list
+    case create(D2d_DistributionListSync.Create)
+    /// Update a distribution list
+    case update(D2d_DistributionListSync.Update)
     /// Delete a distribution list
     case delete(D2d_DistributionListSync.Delete)
 
@@ -1056,8 +1333,12 @@ struct D2d_DistributionListSync {
       // allocates stack space for every case branch when no optimizations are
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch (lhs, rhs) {
-      case (.set, .set): return {
-        guard case .set(let l) = lhs, case .set(let r) = rhs else { preconditionFailure() }
+      case (.create, .create): return {
+        guard case .create(let l) = lhs, case .create(let r) = rhs else { preconditionFailure() }
+        return l == r
+      }()
+      case (.update, .update): return {
+        guard case .update(let l) = lhs, case .update(let r) = rhs else { preconditionFailure() }
         return l == r
       }()
       case (.delete, .delete): return {
@@ -1070,8 +1351,30 @@ struct D2d_DistributionListSync {
   #endif
   }
 
-  /// Create or update a distribution list.
-  struct Set {
+  /// Create a distribution list.
+  struct Create {
+    // SwiftProtobuf.Message conformance is added in an extension below. See the
+    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+    // methods supported on all messages.
+
+    var distributionList: Sync_DistributionList {
+      get {return _distributionList ?? Sync_DistributionList()}
+      set {_distributionList = newValue}
+    }
+    /// Returns true if `distributionList` has been explicitly set.
+    var hasDistributionList: Bool {return self._distributionList != nil}
+    /// Clears the value of `distributionList`. Subsequent reads from it will return its default value.
+    mutating func clearDistributionList() {self._distributionList = nil}
+
+    var unknownFields = SwiftProtobuf.UnknownStorage()
+
+    init() {}
+
+    fileprivate var _distributionList: Sync_DistributionList? = nil
+  }
+
+  /// Update a distribution list.
+  struct Update {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
@@ -1118,19 +1421,19 @@ struct D2d_SettingsSync {
   /// Synchronisation type
   var action: D2d_SettingsSync.OneOf_Action? = nil
 
-  var set: D2d_SettingsSync.Set {
+  var update: D2d_SettingsSync.Update {
     get {
-      if case .set(let v)? = action {return v}
-      return D2d_SettingsSync.Set()
+      if case .update(let v)? = action {return v}
+      return D2d_SettingsSync.Update()
     }
-    set {action = .set(newValue)}
+    set {action = .update(newValue)}
   }
 
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
   /// Synchronisation type
   enum OneOf_Action: Equatable {
-    case set(D2d_SettingsSync.Set)
+    case update(D2d_SettingsSync.Update)
 
   #if !swift(>=4.1)
     static func ==(lhs: D2d_SettingsSync.OneOf_Action, rhs: D2d_SettingsSync.OneOf_Action) -> Bool {
@@ -1138,8 +1441,8 @@ struct D2d_SettingsSync {
       // allocates stack space for every case branch when no optimizations are
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch (lhs, rhs) {
-      case (.set, .set): return {
-        guard case .set(let l) = lhs, case .set(let r) = rhs else { preconditionFailure() }
+      case (.update, .update): return {
+        guard case .update(let l) = lhs, case .update(let r) = rhs else { preconditionFailure() }
         return l == r
       }()
       }
@@ -1147,8 +1450,8 @@ struct D2d_SettingsSync {
   #endif
   }
 
-  /// Apply settings
-  struct Set {
+  /// Update settings.
+  struct Update {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
@@ -1197,7 +1500,7 @@ extension D2d_MessageType: SwiftProtobuf._ProtoNameProviding {
     69: .same(proto: "GROUP_AUDIO"),
     70: .same(proto: "GROUP_FILE"),
     74: .same(proto: "GROUP_SETUP"),
-    75: .same(proto: "GROUP_RENAME"),
+    75: .same(proto: "GROUP_NAME"),
     76: .same(proto: "GROUP_LEAVE"),
     80: .same(proto: "GROUP_SET_PROFILE_PICTURE"),
     81: .same(proto: "GROUP_REQUEST_SYNC"),
@@ -1210,6 +1513,7 @@ extension D2d_MessageType: SwiftProtobuf._ProtoNameProviding {
     99: .same(proto: "CALL_HANGUP"),
     100: .same(proto: "CALL_RINGING"),
     128: .same(proto: "DELIVERY_RECEIPT"),
+    129: .same(proto: "GROUP_DELIVERY_RECEIPT"),
     144: .same(proto: "TYPING_INDICATOR"),
   ]
 }
@@ -1372,8 +1676,9 @@ extension D2d_Envelope: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementat
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "padding"),
     2: .standard(proto: "outgoing_message"),
-    3: .standard(proto: "outgoing_message_sent"),
+    10: .standard(proto: "outgoing_message_update"),
     4: .standard(proto: "incoming_message"),
+    11: .standard(proto: "incoming_message_update"),
     5: .standard(proto: "user_profile_sync"),
     6: .standard(proto: "contact_sync"),
     7: .standard(proto: "group_sync"),
@@ -1381,179 +1686,230 @@ extension D2d_Envelope: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementat
     9: .standard(proto: "settings_sync"),
   ]
 
+  fileprivate class _StorageClass {
+    var _padding: Data = Data()
+    var _content: D2d_Envelope.OneOf_Content?
+
+    static let defaultInstance = _StorageClass()
+
+    private init() {}
+
+    init(copying source: _StorageClass) {
+      _padding = source._padding
+      _content = source._content
+    }
+  }
+
+  fileprivate mutating func _uniqueStorage() -> _StorageClass {
+    if !isKnownUniquelyReferenced(&_storage) {
+      _storage = _StorageClass(copying: _storage)
+    }
+    return _storage
+  }
+
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
-    while let fieldNumber = try decoder.nextFieldNumber() {
-      // The use of inline closures is to circumvent an issue where the compiler
-      // allocates stack space for every case branch when no optimizations are
-      // enabled. https://github.com/apple/swift-protobuf/issues/1034
-      switch fieldNumber {
-      case 1: try { try decoder.decodeSingularBytesField(value: &self.padding) }()
-      case 2: try {
-        var v: D2d_OutgoingMessage?
-        var hadOneofValue = false
-        if let current = self.content {
-          hadOneofValue = true
-          if case .outgoingMessage(let m) = current {v = m}
+    _ = _uniqueStorage()
+    try withExtendedLifetime(_storage) { (_storage: _StorageClass) in
+      while let fieldNumber = try decoder.nextFieldNumber() {
+        // The use of inline closures is to circumvent an issue where the compiler
+        // allocates stack space for every case branch when no optimizations are
+        // enabled. https://github.com/apple/swift-protobuf/issues/1034
+        switch fieldNumber {
+        case 1: try { try decoder.decodeSingularBytesField(value: &_storage._padding) }()
+        case 2: try {
+          var v: D2d_OutgoingMessage?
+          var hadOneofValue = false
+          if let current = _storage._content {
+            hadOneofValue = true
+            if case .outgoingMessage(let m) = current {v = m}
+          }
+          try decoder.decodeSingularMessageField(value: &v)
+          if let v = v {
+            if hadOneofValue {try decoder.handleConflictingOneOf()}
+            _storage._content = .outgoingMessage(v)
+          }
+        }()
+        case 4: try {
+          var v: D2d_IncomingMessage?
+          var hadOneofValue = false
+          if let current = _storage._content {
+            hadOneofValue = true
+            if case .incomingMessage(let m) = current {v = m}
+          }
+          try decoder.decodeSingularMessageField(value: &v)
+          if let v = v {
+            if hadOneofValue {try decoder.handleConflictingOneOf()}
+            _storage._content = .incomingMessage(v)
+          }
+        }()
+        case 5: try {
+          var v: D2d_UserProfileSync?
+          var hadOneofValue = false
+          if let current = _storage._content {
+            hadOneofValue = true
+            if case .userProfileSync(let m) = current {v = m}
+          }
+          try decoder.decodeSingularMessageField(value: &v)
+          if let v = v {
+            if hadOneofValue {try decoder.handleConflictingOneOf()}
+            _storage._content = .userProfileSync(v)
+          }
+        }()
+        case 6: try {
+          var v: D2d_ContactSync?
+          var hadOneofValue = false
+          if let current = _storage._content {
+            hadOneofValue = true
+            if case .contactSync(let m) = current {v = m}
+          }
+          try decoder.decodeSingularMessageField(value: &v)
+          if let v = v {
+            if hadOneofValue {try decoder.handleConflictingOneOf()}
+            _storage._content = .contactSync(v)
+          }
+        }()
+        case 7: try {
+          var v: D2d_GroupSync?
+          var hadOneofValue = false
+          if let current = _storage._content {
+            hadOneofValue = true
+            if case .groupSync(let m) = current {v = m}
+          }
+          try decoder.decodeSingularMessageField(value: &v)
+          if let v = v {
+            if hadOneofValue {try decoder.handleConflictingOneOf()}
+            _storage._content = .groupSync(v)
+          }
+        }()
+        case 8: try {
+          var v: D2d_DistributionListSync?
+          var hadOneofValue = false
+          if let current = _storage._content {
+            hadOneofValue = true
+            if case .distributionListSync(let m) = current {v = m}
+          }
+          try decoder.decodeSingularMessageField(value: &v)
+          if let v = v {
+            if hadOneofValue {try decoder.handleConflictingOneOf()}
+            _storage._content = .distributionListSync(v)
+          }
+        }()
+        case 9: try {
+          var v: D2d_SettingsSync?
+          var hadOneofValue = false
+          if let current = _storage._content {
+            hadOneofValue = true
+            if case .settingsSync(let m) = current {v = m}
+          }
+          try decoder.decodeSingularMessageField(value: &v)
+          if let v = v {
+            if hadOneofValue {try decoder.handleConflictingOneOf()}
+            _storage._content = .settingsSync(v)
+          }
+        }()
+        case 10: try {
+          var v: D2d_OutgoingMessageUpdate?
+          var hadOneofValue = false
+          if let current = _storage._content {
+            hadOneofValue = true
+            if case .outgoingMessageUpdate(let m) = current {v = m}
+          }
+          try decoder.decodeSingularMessageField(value: &v)
+          if let v = v {
+            if hadOneofValue {try decoder.handleConflictingOneOf()}
+            _storage._content = .outgoingMessageUpdate(v)
+          }
+        }()
+        case 11: try {
+          var v: D2d_IncomingMessageUpdate?
+          var hadOneofValue = false
+          if let current = _storage._content {
+            hadOneofValue = true
+            if case .incomingMessageUpdate(let m) = current {v = m}
+          }
+          try decoder.decodeSingularMessageField(value: &v)
+          if let v = v {
+            if hadOneofValue {try decoder.handleConflictingOneOf()}
+            _storage._content = .incomingMessageUpdate(v)
+          }
+        }()
+        default: break
         }
-        try decoder.decodeSingularMessageField(value: &v)
-        if let v = v {
-          if hadOneofValue {try decoder.handleConflictingOneOf()}
-          self.content = .outgoingMessage(v)
-        }
-      }()
-      case 3: try {
-        var v: D2d_OutgoingMessageSent?
-        var hadOneofValue = false
-        if let current = self.content {
-          hadOneofValue = true
-          if case .outgoingMessageSent(let m) = current {v = m}
-        }
-        try decoder.decodeSingularMessageField(value: &v)
-        if let v = v {
-          if hadOneofValue {try decoder.handleConflictingOneOf()}
-          self.content = .outgoingMessageSent(v)
-        }
-      }()
-      case 4: try {
-        var v: D2d_IncomingMessage?
-        var hadOneofValue = false
-        if let current = self.content {
-          hadOneofValue = true
-          if case .incomingMessage(let m) = current {v = m}
-        }
-        try decoder.decodeSingularMessageField(value: &v)
-        if let v = v {
-          if hadOneofValue {try decoder.handleConflictingOneOf()}
-          self.content = .incomingMessage(v)
-        }
-      }()
-      case 5: try {
-        var v: D2d_UserProfileSync?
-        var hadOneofValue = false
-        if let current = self.content {
-          hadOneofValue = true
-          if case .userProfileSync(let m) = current {v = m}
-        }
-        try decoder.decodeSingularMessageField(value: &v)
-        if let v = v {
-          if hadOneofValue {try decoder.handleConflictingOneOf()}
-          self.content = .userProfileSync(v)
-        }
-      }()
-      case 6: try {
-        var v: D2d_ContactSync?
-        var hadOneofValue = false
-        if let current = self.content {
-          hadOneofValue = true
-          if case .contactSync(let m) = current {v = m}
-        }
-        try decoder.decodeSingularMessageField(value: &v)
-        if let v = v {
-          if hadOneofValue {try decoder.handleConflictingOneOf()}
-          self.content = .contactSync(v)
-        }
-      }()
-      case 7: try {
-        var v: D2d_GroupSync?
-        var hadOneofValue = false
-        if let current = self.content {
-          hadOneofValue = true
-          if case .groupSync(let m) = current {v = m}
-        }
-        try decoder.decodeSingularMessageField(value: &v)
-        if let v = v {
-          if hadOneofValue {try decoder.handleConflictingOneOf()}
-          self.content = .groupSync(v)
-        }
-      }()
-      case 8: try {
-        var v: D2d_DistributionListSync?
-        var hadOneofValue = false
-        if let current = self.content {
-          hadOneofValue = true
-          if case .distributionListSync(let m) = current {v = m}
-        }
-        try decoder.decodeSingularMessageField(value: &v)
-        if let v = v {
-          if hadOneofValue {try decoder.handleConflictingOneOf()}
-          self.content = .distributionListSync(v)
-        }
-      }()
-      case 9: try {
-        var v: D2d_SettingsSync?
-        var hadOneofValue = false
-        if let current = self.content {
-          hadOneofValue = true
-          if case .settingsSync(let m) = current {v = m}
-        }
-        try decoder.decodeSingularMessageField(value: &v)
-        if let v = v {
-          if hadOneofValue {try decoder.handleConflictingOneOf()}
-          self.content = .settingsSync(v)
-        }
-      }()
-      default: break
       }
     }
   }
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    if !self.padding.isEmpty {
-      try visitor.visitSingularBytesField(value: self.padding, fieldNumber: 1)
-    }
-    // The use of inline closures is to circumvent an issue where the compiler
-    // allocates stack space for every case branch when no optimizations are
-    // enabled. https://github.com/apple/swift-protobuf/issues/1034
-    switch self.content {
-    case .outgoingMessage?: try {
-      guard case .outgoingMessage(let v)? = self.content else { preconditionFailure() }
-      try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
-    }()
-    case .outgoingMessageSent?: try {
-      guard case .outgoingMessageSent(let v)? = self.content else { preconditionFailure() }
-      try visitor.visitSingularMessageField(value: v, fieldNumber: 3)
-    }()
-    case .incomingMessage?: try {
-      guard case .incomingMessage(let v)? = self.content else { preconditionFailure() }
-      try visitor.visitSingularMessageField(value: v, fieldNumber: 4)
-    }()
-    case .userProfileSync?: try {
-      guard case .userProfileSync(let v)? = self.content else { preconditionFailure() }
-      try visitor.visitSingularMessageField(value: v, fieldNumber: 5)
-    }()
-    case .contactSync?: try {
-      guard case .contactSync(let v)? = self.content else { preconditionFailure() }
-      try visitor.visitSingularMessageField(value: v, fieldNumber: 6)
-    }()
-    case .groupSync?: try {
-      guard case .groupSync(let v)? = self.content else { preconditionFailure() }
-      try visitor.visitSingularMessageField(value: v, fieldNumber: 7)
-    }()
-    case .distributionListSync?: try {
-      guard case .distributionListSync(let v)? = self.content else { preconditionFailure() }
-      try visitor.visitSingularMessageField(value: v, fieldNumber: 8)
-    }()
-    case .settingsSync?: try {
-      guard case .settingsSync(let v)? = self.content else { preconditionFailure() }
-      try visitor.visitSingularMessageField(value: v, fieldNumber: 9)
-    }()
-    case nil: break
+    try withExtendedLifetime(_storage) { (_storage: _StorageClass) in
+      if !_storage._padding.isEmpty {
+        try visitor.visitSingularBytesField(value: _storage._padding, fieldNumber: 1)
+      }
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch _storage._content {
+      case .outgoingMessage?: try {
+        guard case .outgoingMessage(let v)? = _storage._content else { preconditionFailure() }
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
+      }()
+      case .incomingMessage?: try {
+        guard case .incomingMessage(let v)? = _storage._content else { preconditionFailure() }
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 4)
+      }()
+      case .userProfileSync?: try {
+        guard case .userProfileSync(let v)? = _storage._content else { preconditionFailure() }
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 5)
+      }()
+      case .contactSync?: try {
+        guard case .contactSync(let v)? = _storage._content else { preconditionFailure() }
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 6)
+      }()
+      case .groupSync?: try {
+        guard case .groupSync(let v)? = _storage._content else { preconditionFailure() }
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 7)
+      }()
+      case .distributionListSync?: try {
+        guard case .distributionListSync(let v)? = _storage._content else { preconditionFailure() }
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 8)
+      }()
+      case .settingsSync?: try {
+        guard case .settingsSync(let v)? = _storage._content else { preconditionFailure() }
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 9)
+      }()
+      case .outgoingMessageUpdate?: try {
+        guard case .outgoingMessageUpdate(let v)? = _storage._content else { preconditionFailure() }
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 10)
+      }()
+      case .incomingMessageUpdate?: try {
+        guard case .incomingMessageUpdate(let v)? = _storage._content else { preconditionFailure() }
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 11)
+      }()
+      case nil: break
+      }
     }
     try unknownFields.traverse(visitor: &visitor)
   }
 
   static func ==(lhs: D2d_Envelope, rhs: D2d_Envelope) -> Bool {
-    if lhs.padding != rhs.padding {return false}
-    if lhs.content != rhs.content {return false}
+    if lhs._storage !== rhs._storage {
+      let storagesAreEqual: Bool = withExtendedLifetime((lhs._storage, rhs._storage)) { (_args: (_StorageClass, _StorageClass)) in
+        let _storage = _args.0
+        let rhs_storage = _args.1
+        if _storage._padding != rhs_storage._padding {return false}
+        if _storage._content != rhs_storage._content {return false}
+        return true
+      }
+      if !storagesAreEqual {return false}
+    }
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
 }
 
-extension D2d_MessageReceiver: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  static let protoMessageName: String = _protobuf_package + ".MessageReceiver"
+extension D2d_ConversationId: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = _protobuf_package + ".ConversationId"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "identity"),
+    1: .same(proto: "contact"),
     2: .standard(proto: "distribution_list"),
     3: .same(proto: "group"),
   ]
@@ -1568,29 +1924,29 @@ extension D2d_MessageReceiver: SwiftProtobuf.Message, SwiftProtobuf._MessageImpl
         var v: String?
         try decoder.decodeSingularStringField(value: &v)
         if let v = v {
-          if self.receiver != nil {try decoder.handleConflictingOneOf()}
-          self.receiver = .identity(v)
+          if self.id != nil {try decoder.handleConflictingOneOf()}
+          self.id = .contact(v)
         }
       }()
       case 2: try {
         var v: UInt64?
         try decoder.decodeSingularFixed64Field(value: &v)
         if let v = v {
-          if self.receiver != nil {try decoder.handleConflictingOneOf()}
-          self.receiver = .distributionList(v)
+          if self.id != nil {try decoder.handleConflictingOneOf()}
+          self.id = .distributionList(v)
         }
       }()
       case 3: try {
         var v: Common_GroupIdentity?
         var hadOneofValue = false
-        if let current = self.receiver {
+        if let current = self.id {
           hadOneofValue = true
           if case .group(let m) = current {v = m}
         }
         try decoder.decodeSingularMessageField(value: &v)
         if let v = v {
           if hadOneofValue {try decoder.handleConflictingOneOf()}
-          self.receiver = .group(v)
+          self.id = .group(v)
         }
       }()
       default: break
@@ -1602,17 +1958,17 @@ extension D2d_MessageReceiver: SwiftProtobuf.Message, SwiftProtobuf._MessageImpl
     // The use of inline closures is to circumvent an issue where the compiler
     // allocates stack space for every case branch when no optimizations are
     // enabled. https://github.com/apple/swift-protobuf/issues/1034
-    switch self.receiver {
-    case .identity?: try {
-      guard case .identity(let v)? = self.receiver else { preconditionFailure() }
+    switch self.id {
+    case .contact?: try {
+      guard case .contact(let v)? = self.id else { preconditionFailure() }
       try visitor.visitSingularStringField(value: v, fieldNumber: 1)
     }()
     case .distributionList?: try {
-      guard case .distributionList(let v)? = self.receiver else { preconditionFailure() }
+      guard case .distributionList(let v)? = self.id else { preconditionFailure() }
       try visitor.visitSingularFixed64Field(value: v, fieldNumber: 2)
     }()
     case .group?: try {
-      guard case .group(let v)? = self.receiver else { preconditionFailure() }
+      guard case .group(let v)? = self.id else { preconditionFailure() }
       try visitor.visitSingularMessageField(value: v, fieldNumber: 3)
     }()
     case nil: break
@@ -1620,8 +1976,8 @@ extension D2d_MessageReceiver: SwiftProtobuf.Message, SwiftProtobuf._MessageImpl
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  static func ==(lhs: D2d_MessageReceiver, rhs: D2d_MessageReceiver) -> Bool {
-    if lhs.receiver != rhs.receiver {return false}
+  static func ==(lhs: D2d_ConversationId, rhs: D2d_ConversationId) -> Bool {
+    if lhs.id != rhs.id {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
@@ -1630,8 +1986,9 @@ extension D2d_MessageReceiver: SwiftProtobuf.Message, SwiftProtobuf._MessageImpl
 extension D2d_OutgoingMessage: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".OutgoingMessage"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "receiver"),
+    1: .same(proto: "conversation"),
     2: .standard(proto: "message_id"),
+    6: .standard(proto: "thread_message_id"),
     3: .standard(proto: "created_at"),
     4: .same(proto: "type"),
     5: .same(proto: "body"),
@@ -1643,18 +2000,19 @@ extension D2d_OutgoingMessage: SwiftProtobuf.Message, SwiftProtobuf._MessageImpl
       // allocates stack space for every case branch when no optimizations are
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
-      case 1: try { try decoder.decodeSingularMessageField(value: &self._receiver) }()
+      case 1: try { try decoder.decodeSingularMessageField(value: &self._conversation) }()
       case 2: try { try decoder.decodeSingularFixed64Field(value: &self.messageID) }()
       case 3: try { try decoder.decodeSingularUInt64Field(value: &self.createdAt) }()
       case 4: try { try decoder.decodeSingularEnumField(value: &self.type) }()
       case 5: try { try decoder.decodeSingularBytesField(value: &self.body) }()
+      case 6: try { try decoder.decodeSingularFixed64Field(value: &self._threadMessageID) }()
       default: break
       }
     }
   }
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    if let v = self._receiver {
+    if let v = self._conversation {
       try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
     }
     if self.messageID != 0 {
@@ -1669,12 +2027,16 @@ extension D2d_OutgoingMessage: SwiftProtobuf.Message, SwiftProtobuf._MessageImpl
     if !self.body.isEmpty {
       try visitor.visitSingularBytesField(value: self.body, fieldNumber: 5)
     }
+    if let v = self._threadMessageID {
+      try visitor.visitSingularFixed64Field(value: v, fieldNumber: 6)
+    }
     try unknownFields.traverse(visitor: &visitor)
   }
 
   static func ==(lhs: D2d_OutgoingMessage, rhs: D2d_OutgoingMessage) -> Bool {
-    if lhs._receiver != rhs._receiver {return false}
+    if lhs._conversation != rhs._conversation {return false}
     if lhs.messageID != rhs.messageID {return false}
+    if lhs._threadMessageID != rhs._threadMessageID {return false}
     if lhs.createdAt != rhs.createdAt {return false}
     if lhs.type != rhs.type {return false}
     if lhs.body != rhs.body {return false}
@@ -1683,11 +2045,10 @@ extension D2d_OutgoingMessage: SwiftProtobuf.Message, SwiftProtobuf._MessageImpl
   }
 }
 
-extension D2d_OutgoingMessageSent: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  static let protoMessageName: String = _protobuf_package + ".OutgoingMessageSent"
+extension D2d_OutgoingMessageUpdate: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = _protobuf_package + ".OutgoingMessageUpdate"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "receiver"),
-    2: .standard(proto: "message_id"),
+    1: .same(proto: "updates"),
   ]
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -1696,26 +2057,96 @@ extension D2d_OutgoingMessageSent: SwiftProtobuf.Message, SwiftProtobuf._Message
       // allocates stack space for every case branch when no optimizations are
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
-      case 1: try { try decoder.decodeSingularMessageField(value: &self._receiver) }()
-      case 2: try { try decoder.decodeSingularFixed64Field(value: &self.messageID) }()
+      case 1: try { try decoder.decodeRepeatedMessageField(value: &self.updates) }()
       default: break
       }
     }
   }
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    if let v = self._receiver {
+    if !self.updates.isEmpty {
+      try visitor.visitRepeatedMessageField(value: self.updates, fieldNumber: 1)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  static func ==(lhs: D2d_OutgoingMessageUpdate, rhs: D2d_OutgoingMessageUpdate) -> Bool {
+    if lhs.updates != rhs.updates {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension D2d_OutgoingMessageUpdate.Sent: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = D2d_OutgoingMessageUpdate.protoMessageName + ".Sent"
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap()
+
+  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let _ = try decoder.nextFieldNumber() {
+    }
+  }
+
+  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  static func ==(lhs: D2d_OutgoingMessageUpdate.Sent, rhs: D2d_OutgoingMessageUpdate.Sent) -> Bool {
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension D2d_OutgoingMessageUpdate.Update: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = D2d_OutgoingMessageUpdate.protoMessageName + ".Update"
+  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .same(proto: "conversation"),
+    2: .standard(proto: "message_id"),
+    3: .same(proto: "sent"),
+  ]
+
+  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularMessageField(value: &self._conversation) }()
+      case 2: try { try decoder.decodeSingularFixed64Field(value: &self.messageID) }()
+      case 3: try {
+        var v: D2d_OutgoingMessageUpdate.Sent?
+        var hadOneofValue = false
+        if let current = self.update {
+          hadOneofValue = true
+          if case .sent(let m) = current {v = m}
+        }
+        try decoder.decodeSingularMessageField(value: &v)
+        if let v = v {
+          if hadOneofValue {try decoder.handleConflictingOneOf()}
+          self.update = .sent(v)
+        }
+      }()
+      default: break
+      }
+    }
+  }
+
+  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if let v = self._conversation {
       try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
     }
     if self.messageID != 0 {
       try visitor.visitSingularFixed64Field(value: self.messageID, fieldNumber: 2)
     }
+    if case .sent(let v)? = self.update {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 3)
+    }
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  static func ==(lhs: D2d_OutgoingMessageSent, rhs: D2d_OutgoingMessageSent) -> Bool {
-    if lhs._receiver != rhs._receiver {return false}
+  static func ==(lhs: D2d_OutgoingMessageUpdate.Update, rhs: D2d_OutgoingMessageUpdate.Update) -> Bool {
+    if lhs._conversation != rhs._conversation {return false}
     if lhs.messageID != rhs.messageID {return false}
+    if lhs.update != rhs.update {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
@@ -1777,10 +2208,130 @@ extension D2d_IncomingMessage: SwiftProtobuf.Message, SwiftProtobuf._MessageImpl
   }
 }
 
+extension D2d_IncomingMessageUpdate: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = _protobuf_package + ".IncomingMessageUpdate"
+  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .same(proto: "updates"),
+  ]
+
+  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeRepeatedMessageField(value: &self.updates) }()
+      default: break
+      }
+    }
+  }
+
+  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if !self.updates.isEmpty {
+      try visitor.visitRepeatedMessageField(value: self.updates, fieldNumber: 1)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  static func ==(lhs: D2d_IncomingMessageUpdate, rhs: D2d_IncomingMessageUpdate) -> Bool {
+    if lhs.updates != rhs.updates {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension D2d_IncomingMessageUpdate.Read: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = D2d_IncomingMessageUpdate.protoMessageName + ".Read"
+  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .same(proto: "at"),
+  ]
+
+  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularUInt64Field(value: &self.at) }()
+      default: break
+      }
+    }
+  }
+
+  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if self.at != 0 {
+      try visitor.visitSingularUInt64Field(value: self.at, fieldNumber: 1)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  static func ==(lhs: D2d_IncomingMessageUpdate.Read, rhs: D2d_IncomingMessageUpdate.Read) -> Bool {
+    if lhs.at != rhs.at {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension D2d_IncomingMessageUpdate.Update: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = D2d_IncomingMessageUpdate.protoMessageName + ".Update"
+  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .same(proto: "conversation"),
+    2: .standard(proto: "message_id"),
+    3: .same(proto: "read"),
+  ]
+
+  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularMessageField(value: &self._conversation) }()
+      case 2: try { try decoder.decodeSingularFixed64Field(value: &self.messageID) }()
+      case 3: try {
+        var v: D2d_IncomingMessageUpdate.Read?
+        var hadOneofValue = false
+        if let current = self.update {
+          hadOneofValue = true
+          if case .read(let m) = current {v = m}
+        }
+        try decoder.decodeSingularMessageField(value: &v)
+        if let v = v {
+          if hadOneofValue {try decoder.handleConflictingOneOf()}
+          self.update = .read(v)
+        }
+      }()
+      default: break
+      }
+    }
+  }
+
+  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if let v = self._conversation {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
+    }
+    if self.messageID != 0 {
+      try visitor.visitSingularFixed64Field(value: self.messageID, fieldNumber: 2)
+    }
+    if case .read(let v)? = self.update {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 3)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  static func ==(lhs: D2d_IncomingMessageUpdate.Update, rhs: D2d_IncomingMessageUpdate.Update) -> Bool {
+    if lhs._conversation != rhs._conversation {return false}
+    if lhs.messageID != rhs.messageID {return false}
+    if lhs.update != rhs.update {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
 extension D2d_UserProfileSync: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".UserProfileSync"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "set"),
+    1: .same(proto: "update"),
   ]
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -1790,16 +2341,16 @@ extension D2d_UserProfileSync: SwiftProtobuf.Message, SwiftProtobuf._MessageImpl
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
       case 1: try {
-        var v: D2d_UserProfileSync.Set?
+        var v: D2d_UserProfileSync.Update?
         var hadOneofValue = false
         if let current = self.action {
           hadOneofValue = true
-          if case .set(let m) = current {v = m}
+          if case .update(let m) = current {v = m}
         }
         try decoder.decodeSingularMessageField(value: &v)
         if let v = v {
           if hadOneofValue {try decoder.handleConflictingOneOf()}
-          self.action = .set(v)
+          self.action = .update(v)
         }
       }()
       default: break
@@ -1808,7 +2359,7 @@ extension D2d_UserProfileSync: SwiftProtobuf.Message, SwiftProtobuf._MessageImpl
   }
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    if case .set(let v)? = self.action {
+    if case .update(let v)? = self.action {
       try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
     }
     try unknownFields.traverse(visitor: &visitor)
@@ -1821,8 +2372,8 @@ extension D2d_UserProfileSync: SwiftProtobuf.Message, SwiftProtobuf._MessageImpl
   }
 }
 
-extension D2d_UserProfileSync.Set: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  static let protoMessageName: String = D2d_UserProfileSync.protoMessageName + ".Set"
+extension D2d_UserProfileSync.Update: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = D2d_UserProfileSync.protoMessageName + ".Update"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "user_profile"),
   ]
@@ -1846,7 +2397,7 @@ extension D2d_UserProfileSync.Set: SwiftProtobuf.Message, SwiftProtobuf._Message
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  static func ==(lhs: D2d_UserProfileSync.Set, rhs: D2d_UserProfileSync.Set) -> Bool {
+  static func ==(lhs: D2d_UserProfileSync.Update, rhs: D2d_UserProfileSync.Update) -> Bool {
     if lhs._userProfile != rhs._userProfile {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
@@ -1856,8 +2407,9 @@ extension D2d_UserProfileSync.Set: SwiftProtobuf.Message, SwiftProtobuf._Message
 extension D2d_ContactSync: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".ContactSync"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "set"),
-    2: .same(proto: "delete"),
+    1: .same(proto: "create"),
+    2: .same(proto: "update"),
+    3: .same(proto: "delete"),
   ]
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -1867,19 +2419,32 @@ extension D2d_ContactSync: SwiftProtobuf.Message, SwiftProtobuf._MessageImplemen
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
       case 1: try {
-        var v: D2d_ContactSync.Set?
+        var v: D2d_ContactSync.Create?
         var hadOneofValue = false
         if let current = self.action {
           hadOneofValue = true
-          if case .set(let m) = current {v = m}
+          if case .create(let m) = current {v = m}
         }
         try decoder.decodeSingularMessageField(value: &v)
         if let v = v {
           if hadOneofValue {try decoder.handleConflictingOneOf()}
-          self.action = .set(v)
+          self.action = .create(v)
         }
       }()
       case 2: try {
+        var v: D2d_ContactSync.Update?
+        var hadOneofValue = false
+        if let current = self.action {
+          hadOneofValue = true
+          if case .update(let m) = current {v = m}
+        }
+        try decoder.decodeSingularMessageField(value: &v)
+        if let v = v {
+          if hadOneofValue {try decoder.handleConflictingOneOf()}
+          self.action = .update(v)
+        }
+      }()
+      case 3: try {
         var v: D2d_ContactSync.Delete?
         var hadOneofValue = false
         if let current = self.action {
@@ -1902,13 +2467,17 @@ extension D2d_ContactSync: SwiftProtobuf.Message, SwiftProtobuf._MessageImplemen
     // allocates stack space for every case branch when no optimizations are
     // enabled. https://github.com/apple/swift-protobuf/issues/1034
     switch self.action {
-    case .set?: try {
-      guard case .set(let v)? = self.action else { preconditionFailure() }
+    case .create?: try {
+      guard case .create(let v)? = self.action else { preconditionFailure() }
       try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
+    }()
+    case .update?: try {
+      guard case .update(let v)? = self.action else { preconditionFailure() }
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
     }()
     case .delete?: try {
       guard case .delete(let v)? = self.action else { preconditionFailure() }
-      try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 3)
     }()
     case nil: break
     }
@@ -1922,8 +2491,8 @@ extension D2d_ContactSync: SwiftProtobuf.Message, SwiftProtobuf._MessageImplemen
   }
 }
 
-extension D2d_ContactSync.Set: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  static let protoMessageName: String = D2d_ContactSync.protoMessageName + ".Set"
+extension D2d_ContactSync.Create: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = D2d_ContactSync.protoMessageName + ".Create"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "contact"),
   ]
@@ -1947,7 +2516,39 @@ extension D2d_ContactSync.Set: SwiftProtobuf.Message, SwiftProtobuf._MessageImpl
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  static func ==(lhs: D2d_ContactSync.Set, rhs: D2d_ContactSync.Set) -> Bool {
+  static func ==(lhs: D2d_ContactSync.Create, rhs: D2d_ContactSync.Create) -> Bool {
+    if lhs._contact != rhs._contact {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension D2d_ContactSync.Update: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = D2d_ContactSync.protoMessageName + ".Update"
+  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .same(proto: "contact"),
+  ]
+
+  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularMessageField(value: &self._contact) }()
+      default: break
+      }
+    }
+  }
+
+  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if let v = self._contact {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  static func ==(lhs: D2d_ContactSync.Update, rhs: D2d_ContactSync.Update) -> Bool {
     if lhs._contact != rhs._contact {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
@@ -1989,8 +2590,9 @@ extension D2d_ContactSync.Delete: SwiftProtobuf.Message, SwiftProtobuf._MessageI
 extension D2d_GroupSync: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".GroupSync"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "set"),
-    2: .same(proto: "delete"),
+    1: .same(proto: "create"),
+    2: .same(proto: "update"),
+    3: .same(proto: "delete"),
   ]
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -2000,19 +2602,32 @@ extension D2d_GroupSync: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementa
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
       case 1: try {
-        var v: D2d_GroupSync.Set?
+        var v: D2d_GroupSync.Create?
         var hadOneofValue = false
         if let current = self.action {
           hadOneofValue = true
-          if case .set(let m) = current {v = m}
+          if case .create(let m) = current {v = m}
         }
         try decoder.decodeSingularMessageField(value: &v)
         if let v = v {
           if hadOneofValue {try decoder.handleConflictingOneOf()}
-          self.action = .set(v)
+          self.action = .create(v)
         }
       }()
       case 2: try {
+        var v: D2d_GroupSync.Update?
+        var hadOneofValue = false
+        if let current = self.action {
+          hadOneofValue = true
+          if case .update(let m) = current {v = m}
+        }
+        try decoder.decodeSingularMessageField(value: &v)
+        if let v = v {
+          if hadOneofValue {try decoder.handleConflictingOneOf()}
+          self.action = .update(v)
+        }
+      }()
+      case 3: try {
         var v: D2d_GroupSync.Delete?
         var hadOneofValue = false
         if let current = self.action {
@@ -2035,13 +2650,17 @@ extension D2d_GroupSync: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementa
     // allocates stack space for every case branch when no optimizations are
     // enabled. https://github.com/apple/swift-protobuf/issues/1034
     switch self.action {
-    case .set?: try {
-      guard case .set(let v)? = self.action else { preconditionFailure() }
+    case .create?: try {
+      guard case .create(let v)? = self.action else { preconditionFailure() }
       try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
+    }()
+    case .update?: try {
+      guard case .update(let v)? = self.action else { preconditionFailure() }
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
     }()
     case .delete?: try {
       guard case .delete(let v)? = self.action else { preconditionFailure() }
-      try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 3)
     }()
     case nil: break
     }
@@ -2055,8 +2674,8 @@ extension D2d_GroupSync: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementa
   }
 }
 
-extension D2d_GroupSync.Set: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  static let protoMessageName: String = D2d_GroupSync.protoMessageName + ".Set"
+extension D2d_GroupSync.Create: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = D2d_GroupSync.protoMessageName + ".Create"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "group"),
   ]
@@ -2080,7 +2699,39 @@ extension D2d_GroupSync.Set: SwiftProtobuf.Message, SwiftProtobuf._MessageImplem
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  static func ==(lhs: D2d_GroupSync.Set, rhs: D2d_GroupSync.Set) -> Bool {
+  static func ==(lhs: D2d_GroupSync.Create, rhs: D2d_GroupSync.Create) -> Bool {
+    if lhs._group != rhs._group {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension D2d_GroupSync.Update: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = D2d_GroupSync.protoMessageName + ".Update"
+  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .same(proto: "group"),
+  ]
+
+  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularMessageField(value: &self._group) }()
+      default: break
+      }
+    }
+  }
+
+  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if let v = self._group {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  static func ==(lhs: D2d_GroupSync.Update, rhs: D2d_GroupSync.Update) -> Bool {
     if lhs._group != rhs._group {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
@@ -2122,8 +2773,9 @@ extension D2d_GroupSync.Delete: SwiftProtobuf.Message, SwiftProtobuf._MessageImp
 extension D2d_DistributionListSync: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".DistributionListSync"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "set"),
-    2: .same(proto: "delete"),
+    1: .same(proto: "create"),
+    2: .same(proto: "update"),
+    3: .same(proto: "delete"),
   ]
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -2133,19 +2785,32 @@ extension D2d_DistributionListSync: SwiftProtobuf.Message, SwiftProtobuf._Messag
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
       case 1: try {
-        var v: D2d_DistributionListSync.Set?
+        var v: D2d_DistributionListSync.Create?
         var hadOneofValue = false
         if let current = self.action {
           hadOneofValue = true
-          if case .set(let m) = current {v = m}
+          if case .create(let m) = current {v = m}
         }
         try decoder.decodeSingularMessageField(value: &v)
         if let v = v {
           if hadOneofValue {try decoder.handleConflictingOneOf()}
-          self.action = .set(v)
+          self.action = .create(v)
         }
       }()
       case 2: try {
+        var v: D2d_DistributionListSync.Update?
+        var hadOneofValue = false
+        if let current = self.action {
+          hadOneofValue = true
+          if case .update(let m) = current {v = m}
+        }
+        try decoder.decodeSingularMessageField(value: &v)
+        if let v = v {
+          if hadOneofValue {try decoder.handleConflictingOneOf()}
+          self.action = .update(v)
+        }
+      }()
+      case 3: try {
         var v: D2d_DistributionListSync.Delete?
         var hadOneofValue = false
         if let current = self.action {
@@ -2168,13 +2833,17 @@ extension D2d_DistributionListSync: SwiftProtobuf.Message, SwiftProtobuf._Messag
     // allocates stack space for every case branch when no optimizations are
     // enabled. https://github.com/apple/swift-protobuf/issues/1034
     switch self.action {
-    case .set?: try {
-      guard case .set(let v)? = self.action else { preconditionFailure() }
+    case .create?: try {
+      guard case .create(let v)? = self.action else { preconditionFailure() }
       try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
+    }()
+    case .update?: try {
+      guard case .update(let v)? = self.action else { preconditionFailure() }
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
     }()
     case .delete?: try {
       guard case .delete(let v)? = self.action else { preconditionFailure() }
-      try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 3)
     }()
     case nil: break
     }
@@ -2188,8 +2857,8 @@ extension D2d_DistributionListSync: SwiftProtobuf.Message, SwiftProtobuf._Messag
   }
 }
 
-extension D2d_DistributionListSync.Set: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  static let protoMessageName: String = D2d_DistributionListSync.protoMessageName + ".Set"
+extension D2d_DistributionListSync.Create: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = D2d_DistributionListSync.protoMessageName + ".Create"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "distribution_list"),
   ]
@@ -2213,7 +2882,39 @@ extension D2d_DistributionListSync.Set: SwiftProtobuf.Message, SwiftProtobuf._Me
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  static func ==(lhs: D2d_DistributionListSync.Set, rhs: D2d_DistributionListSync.Set) -> Bool {
+  static func ==(lhs: D2d_DistributionListSync.Create, rhs: D2d_DistributionListSync.Create) -> Bool {
+    if lhs._distributionList != rhs._distributionList {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension D2d_DistributionListSync.Update: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = D2d_DistributionListSync.protoMessageName + ".Update"
+  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .standard(proto: "distribution_list"),
+  ]
+
+  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularMessageField(value: &self._distributionList) }()
+      default: break
+      }
+    }
+  }
+
+  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if let v = self._distributionList {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  static func ==(lhs: D2d_DistributionListSync.Update, rhs: D2d_DistributionListSync.Update) -> Bool {
     if lhs._distributionList != rhs._distributionList {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
@@ -2255,7 +2956,7 @@ extension D2d_DistributionListSync.Delete: SwiftProtobuf.Message, SwiftProtobuf.
 extension D2d_SettingsSync: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".SettingsSync"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "set"),
+    1: .same(proto: "update"),
   ]
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -2265,16 +2966,16 @@ extension D2d_SettingsSync: SwiftProtobuf.Message, SwiftProtobuf._MessageImpleme
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
       case 1: try {
-        var v: D2d_SettingsSync.Set?
+        var v: D2d_SettingsSync.Update?
         var hadOneofValue = false
         if let current = self.action {
           hadOneofValue = true
-          if case .set(let m) = current {v = m}
+          if case .update(let m) = current {v = m}
         }
         try decoder.decodeSingularMessageField(value: &v)
         if let v = v {
           if hadOneofValue {try decoder.handleConflictingOneOf()}
-          self.action = .set(v)
+          self.action = .update(v)
         }
       }()
       default: break
@@ -2283,7 +2984,7 @@ extension D2d_SettingsSync: SwiftProtobuf.Message, SwiftProtobuf._MessageImpleme
   }
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    if case .set(let v)? = self.action {
+    if case .update(let v)? = self.action {
       try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
     }
     try unknownFields.traverse(visitor: &visitor)
@@ -2296,8 +2997,8 @@ extension D2d_SettingsSync: SwiftProtobuf.Message, SwiftProtobuf._MessageImpleme
   }
 }
 
-extension D2d_SettingsSync.Set: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  static let protoMessageName: String = D2d_SettingsSync.protoMessageName + ".Set"
+extension D2d_SettingsSync.Update: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = D2d_SettingsSync.protoMessageName + ".Update"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "settings"),
   ]
@@ -2321,7 +3022,7 @@ extension D2d_SettingsSync.Set: SwiftProtobuf.Message, SwiftProtobuf._MessageImp
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  static func ==(lhs: D2d_SettingsSync.Set, rhs: D2d_SettingsSync.Set) -> Bool {
+  static func ==(lhs: D2d_SettingsSync.Update, rhs: D2d_SettingsSync.Update) -> Bool {
     if lhs._settings != rhs._settings {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true

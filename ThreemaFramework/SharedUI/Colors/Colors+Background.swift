@@ -22,6 +22,10 @@ import Foundation
 
 public extension Colors {
     @objc class var backgroundViewController: UIColor {
+        .systemBackground
+    }
+    
+    @objc class var backgroundGroupedViewController: UIColor {
         .systemGroupedBackground
     }
     
@@ -66,6 +70,10 @@ public extension Colors {
         case .dark:
             return Asset.SharedColors.gray700.color
         }
+    }
+    
+    @objc class var backgroundChatBarButton: UIColor {
+        .systemGray
     }
     
     @objc class var backgroundQuickActionButton: UIColor {
@@ -121,6 +129,15 @@ public extension Colors {
             return Asset.SharedColors.black.color.withAlphaComponent(0.45)
         case .dark:
             return Asset.SharedColors.gray700.color.withAlphaComponent(0.45)
+        }
+    }
+
+    class var backgroundWizardBox: UIColor {
+        switch theme {
+        case .light, .undefined:
+            return Asset.SharedColors.gray500.color
+        case .dark:
+            return Asset.SharedColors.gray700.color
         }
     }
 }

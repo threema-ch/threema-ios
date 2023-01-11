@@ -25,23 +25,9 @@ public protocol QuoteMessageProvider: BaseMessage {
 }
 
 /// A quoted message
-public protocol QuoteMessage {
-    /// Represents type of quote message and contains info of it.
-    var quoteMessageType: QuoteMessageType { get }
+public protocol QuoteMessage: PreviewableMessage {
     /// Readable name of the author of the quoted message.
-    var quotedSender: String { get }
-}
-
-/// Contains the different types of quoted messages, used in new chat view cells for quotes
-public enum QuoteMessageType {
-    // TODO: Add file message types
-    
-    /// A quoted text message
-    case text(String)
-    /// A quoted location. First a string for the location, second an SF Symbols name.
-    case location(String, String)
-    /// A quoted ballot. First a string for the name of the ballot, second an SF Symbols name.
-    case ballot(String, String)
-    /// An error message for quotes. First a string for the error message, second an SF Symbols name.
-    case error(String, String)
+    var localizedSenderName: String { get }
+    /// ID Color of the sender
+    var senderIDColor: UIColor { get }
 }

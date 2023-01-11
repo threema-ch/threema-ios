@@ -57,10 +57,7 @@ class SyncExclusionListViewController: ThemedTableViewController {
     
     @objc func incomingUpdate() {
         updateView()
-        NotificationBannerHelper.newInfoToast(
-            title: BundleUtil.localizedString(forKey: "incoming_settings_sync_title"),
-            body: BundleUtil.localizedString(forKey: "incoming_settings_sync_message")
-        )
+        NotificationPresenterWrapper.shared.present(type: .settingsSyncSuccess)
     }
     
     func updateView() {
@@ -70,7 +67,7 @@ class SyncExclusionListViewController: ThemedTableViewController {
     }
     
     func attemptSave() {
-        if ServerConnector.shared()?.isMultiDeviceActivated ?? false {
+        if ServerConnector.shared().isMultiDeviceActivated {
             let syncHelper = UISyncHelper(
                 viewController: self,
                 progressString: BundleUtil.localizedString(forKey: "syncing_settings")

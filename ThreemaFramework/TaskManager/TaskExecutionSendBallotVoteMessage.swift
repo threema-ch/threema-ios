@@ -92,7 +92,7 @@ class TaskExecutionSendBallotVoteMessage: TaskExecution, TaskExecutionProtocol {
                     if task.isGroupMessage {
                         // Do not send message for note group
                         if task.isNoteGroup ?? false {
-                            task.sendContactProfilePicture = false
+                            seal.fulfill(sendMessages)
                         }
                         else if let allGroupMembers = task.allGroupMembers {
                             for member in allGroupMembers {
@@ -133,6 +133,8 @@ class TaskExecutionSendBallotVoteMessage: TaskExecution, TaskExecutionProtocol {
                         }
                         else {
                             DDLogError("No members for group message")
+                            seal.reject(TaskExecutionError.missingGroupInformation)
+                            return
                         }
                     }
                     else {
@@ -186,7 +188,7 @@ class TaskExecutionSendBallotVoteMessage: TaskExecution, TaskExecutionProtocol {
                     // TODO: Inject for testing
                     self.frameworkInjector.backgroundEntityManager.performBlockAndWait {
                         ContactPhotoSender(self.frameworkInjector.backgroundEntityManager)
-                            .sendProfilePicture(sentMessage)
+                            .sendProfilePicture(message: sentMessage)
                     }
                 }
             }

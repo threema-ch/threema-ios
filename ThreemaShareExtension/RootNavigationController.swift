@@ -20,6 +20,7 @@
 
 import CocoaLumberjackSwift
 import Foundation
+import Intents
 import PromiseKit
 import ThreemaFramework
 
@@ -30,13 +31,15 @@ class RootNavigationController: UINavigationController {
     var passcodeTryCount = 0
     var isAuthorized = false
     
+    var selectedIdentity: Conversation?
+    
     let itemLoader = ItemLoader()
     var itemSender = ItemSender()
     
     unowned var previewViewController: MediaPreviewViewController?
     unowned var picker: ContactGroupPickerViewController?
     unowned var progressViewController: ProgressViewController?
-    unowned var textPreview: TextPreviewViewController?
+    var textPreview: TextPreviewViewController?
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -47,6 +50,9 @@ class RootNavigationController: UINavigationController {
         Colors.initTheme()
         overrideUserInterfaceStyle = UserSettings.shared().darkTheme ? .dark : .light
         
+        // Check if we already have a suggested contact
+        setContactsFromIntent()
+        
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(didBecomeActive),
@@ -56,6 +62,35 @@ class RootNavigationController: UINavigationController {
         
         if extensionIsReady() {
             startExtension()
+        }
+    }
+    
+    func setContactsFromIntent() {
+        if let intent = extensionContext?.intent as? INSendMessageIntent,
+           let selectedIdentity = intent.conversationIdentifier as String? {
+            if let singleConversation = EntityManager().entityFetcher.conversation(forIdentity: selectedIdentity) {
+                self.selectedIdentity = singleConversation
+                if var recipientConversations = recipientConversations {
+                    recipientConversations.insert(singleConversation)
+                }
+                else {
+                    recipientConversations = Set<Conversation>()
+                    recipientConversations?.insert(singleConversation)
+                }
+            }
+            else {
+                if let groupID = Data(base64Encoded: selectedIdentity),
+                   let group = EntityManager().entityFetcher.conversation(for: groupID) {
+                    self.selectedIdentity = group
+                    if var recipientConversations = recipientConversations {
+                        recipientConversations.insert(group)
+                    }
+                    else {
+                        recipientConversations = Set<Conversation>()
+                        recipientConversations?.insert(group)
+                    }
+                }
+            }
         }
     }
     
@@ -78,19 +113,146 @@ class RootNavigationController: UINavigationController {
     }
     
     private func startExtension() {
-        ServerConnector.shared()?.connect(initiator: .shareExtension)
+        ServerConnector.shared().connect(initiator: .shareExtension)
         
         _ = loadItemsFromContext()
         
+        if let selectedIdentity = selectedIdentity {
+            recipientConversations = Set<Conversation>()
+            recipientConversations?.insert(selectedIdentity)
+            presentMediaOrTextPreview()
+        }
+        else {
+            presentContactPicker()
+        }
+    }
+    
+    private func loadMediaItems() {
+        _ = itemLoader.loadItems().done { items in
+            self.presentMediaPreview(with: items as [Any])
+        }.catch { err in
+            DDLogError("Error: \(err)")
+            self.finishAndClose(success: false)
+        }
+    }
+    
+    private func optionsEnabled(itemCount: Int, item: Any?) -> Bool {
+        guard itemCount == 1 else {
+            return true
+        }
+        guard let urlItem = item as? URL else {
+            return true
+        }
+        let uti = UTIConverter.uti(forFileURL: urlItem)
+        return (
+            UTIConverter.type(uti, conformsTo: UTType.image.identifier) || UTIConverter
+                .type(uti, conformsTo: UTType.movie.identifier)
+        )
+    }
+    
+    private func presentMediaPreview(with data: [Any]) {
+        let storyboardName = "MediaShareStoryboard"
+        let storyboardBundle = Bundle(for: MediaPreviewViewController.self)
+        let sb = UIStoryboard(name: storyboardName, bundle: storyboardBundle)
+        previewViewController = sb
+            .instantiateViewController(withIdentifier: "MediaShareController") as? MediaPreviewViewController
+        
+        guard let previewViewController = previewViewController else {
+            let err = "Could not create preview view controller!"
+            DDLogError(err)
+            fatalError(err)
+        }
+        
+        previewViewController.backIsCancel = true
+        previewViewController.sendIsChoose = false
+        previewViewController.disableAdd = true
+        previewViewController.optionsEnabled = optionsEnabled(itemCount: data.count, item: data.first)
+        previewViewController.memoryConstrained = true
+        
+        if let recipientConversations = recipientConversations {
+            previewViewController.conversationDescription = ShareExtensionHelpers
+                .getDescription(for: Array(recipientConversations).compactMap { $0 })
+        }
+        
+        let dataProcessor = MediaPreviewURLDataProcessor()
+        dataProcessor.cancelAction = { [weak self] in self?.cancelTapped() }
+        dataProcessor.memoryConstrained = true
+        
+        previewViewController.initWithMedia(
+            dataArray: data,
+            delegate: self,
+            completion: { [weak self] data, sendAsFile, captions in
+                guard let dataItems = data as? [URL] else {
+                    let err = "Invalid format for data items from media preview"
+                    DDLogError(err)
+                    fatalError(err)
+                }
+                
+                guard let strongSelf = self else {
+                    fatalError()
+                }
+                
+                strongSelf.itemSender.sendAsFile = sendAsFile
+                strongSelf.itemSender.itemsToSend = dataItems
+                strongSelf.itemSender.captions = captions
+                
+                strongSelf.startSending()
+            },
+            itemDelegate: dataProcessor
+        )
+        
+        pushViewController(previewViewController, animated: true)
+        let title = BundleUtil.localizedString(forKey: "cancel")
+        previewViewController.navigationItem.leftBarButtonItem = UIBarButtonItem(
+            title: title,
+            style: .plain,
+            target: self,
+            action: #selector(cancelTapped)
+        )
+    }
+    
+    @objc private func cancelTapped() {
+        finishAndClose(success: false)
+    }
+    
+    private func presentContactPicker() {
+        guard let pickerController = ContactGroupPickerViewController.pickerFromStoryboard(withDelegate: self) else {
+            let err = "Could not create sharing UI"
+            DDLogError(err)
+            fatalError(err)
+        }
+        
+        picker = pickerController.topViewController as? ContactGroupPickerViewController
+        guard let picker = picker else {
+            let err = "Could not create Contact Picker"
+            DDLogError(err)
+            fatalError(err)
+        }
+        picker.delegate = self
+        picker.enableMultiSelection = true
+        picker.enableTextInput = false
+        picker.enableControlView = false
+        picker.rightBarButtonTitle = BundleUtil.localizedString(forKey: "next")
+        picker.delegateDisablesSearchController = true
+        
+        navigationItem.backBarButtonItem = nil
+        
+        pushViewController(picker, animated: true)
+    }
+    
+    @objc private func presentMediaOrTextPreview() {
         let itemType = itemLoader.checkItemType()
         
         if itemType == .TextOnly {
             itemLoader.filterTextItems()
             let items = itemLoader.loadItems()
             _ = itemLoader.generatePreviewText(items: items).done { text, range in
-                self.presentTextPreview()
-                self.textPreview?.previewText = text
-                self.textPreview?.selectedText = range
+                var convs: [Conversation]?
+                if let recipientConversations = self.recipientConversations {
+                    convs = Array(recipientConversations)
+                }
+                
+                self.presentTextPreview(previewText: text, selectedText: range, conversations: convs)
             }.catch { err in
                 // iOS 12 does not allow us to detect whether we are receiving a text file or a regular
                 // string. Thus the item loader throws an error if the text turns out to be a file url.
@@ -114,83 +276,6 @@ class RootNavigationController: UINavigationController {
         }
     }
     
-    private func loadMediaItems() {
-        _ = itemLoader.loadItems().done { items in
-            self.presentMediaPreview(with: items as [Any])
-        }.catch { err in
-            DDLogError("Error: \(err)")
-            self.finishAndClose(success: false)
-        }
-    }
-    
-    private func optionsEnabled(itemCount: Int, item: Any?) -> Bool {
-        guard itemCount == 1 else {
-            return true
-        }
-        guard let urlItem = item as? URL else {
-            return true
-        }
-        let uti = UTIConverter.uti(forFileURL: urlItem)
-        return (
-            UTIConverter.type(uti, conformsTo: kUTTypeImage as String) || UTIConverter
-                .type(uti, conformsTo: kUTTypeMovie as String)
-        )
-    }
-    
-    private func presentMediaPreview(with data: [Any]) {
-        let storyboardName = "MediaShareStoryboard"
-        let storyboardBundle = Bundle(for: MediaPreviewViewController.self)
-        let sb = UIStoryboard(name: storyboardName, bundle: storyboardBundle)
-        previewViewController = sb
-            .instantiateViewController(withIdentifier: "MediaShareController") as? MediaPreviewViewController
-        
-        guard let previewViewController = previewViewController else {
-            let err = "Could not create preview view controller!"
-            DDLogError(err)
-            fatalError(err)
-        }
-        
-        previewViewController.backIsCancel = true
-        previewViewController.sendIsChoose = true
-        previewViewController.disableAdd = true
-        previewViewController.optionsEnabled = optionsEnabled(itemCount: data.count, item: data.first)
-        previewViewController.memoryConstrained = true
-        
-        let dataProcessor = MediaPreviewURLDataProcessor()
-        dataProcessor.cancelAction = { [weak self] in self?.cancelAndClose() }
-        dataProcessor.memoryConstrained = true
-        
-        previewViewController.initWithMedia(
-            dataArray: data,
-            delegate: self,
-            completion: { [weak self] data, sendAsFile, captions in
-                guard let dataItems = data as? [URL] else {
-                    let err = "Invalid format for data items from media preview"
-                    DDLogError(err)
-                    fatalError(err)
-                }
-                self?.itemSender.sendAsFile = sendAsFile
-                self?.itemSender.itemsToSend = dataItems
-                self?.itemSender.captions = captions
-                self?.chooseContacts()
-            },
-            itemDelegate: dataProcessor
-        )
-        
-        pushViewController(previewViewController, animated: true)
-        let title = BundleUtil.localizedString(forKey: "cancel")
-        previewViewController.navigationItem.leftBarButtonItem = UIBarButtonItem(
-            title: title,
-            style: .plain,
-            target: self,
-            action: #selector(cancelTapped)
-        )
-    }
-    
-    @objc private func cancelTapped() {
-        finishAndClose(success: false)
-    }
-    
     @objc private func chooseContacts() {
         guard let pickerController = ContactGroupPickerViewController.pickerFromStoryboard(withDelegate: self) else {
             let err = "Could not create sharing UI"
@@ -209,6 +294,10 @@ class RootNavigationController: UINavigationController {
         picker.enableTextInput = false
         picker.enableControlView = false
         
+        if let selectedConversation = selectedIdentity {
+            picker.preselectedConversations = [selectedConversation]
+        }
+        
         let backButton = UIBarButtonItem()
         backButton.title = BundleUtil.localizedString(forKey: "back")
         navigationItem.backBarButtonItem = backButton
@@ -220,13 +309,10 @@ class RootNavigationController: UINavigationController {
         }
         
         pushViewController(picker, animated: true)
+        
         recolorBarButtonItems()
         
         isModalInPresentation = true
-    }
-    
-    @objc private func popBack() {
-        popViewController(animated: true)
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -255,29 +341,50 @@ class RootNavigationController: UINavigationController {
         }
     }
     
-    private func presentTextPreview() {
-        let storyboard = UIStoryboard(name: "ThreemaShareStoryboard", bundle: nil)
-        textPreview = (
-            storyboard
-                .instantiateViewController(withIdentifier: "TextPreviewViewController") as! TextPreviewViewController
+    private func presentTextPreview(previewText: String?, selectedText: NSRange?, conversations: [Conversation?]?) {
+        var selectedConversations: [Conversation]?
+        
+        if let conversations = conversations {
+            selectedConversations = conversations.compactMap { $0 }
+        }
+        
+        textPreview = TextPreviewViewController(
+            previewText: previewText,
+            selectedText: selectedText,
+            selectedConversations: selectedConversations
         )
-        textPreview!.navigationItem.rightBarButtonItem = UIBarButtonItem(
-            title: BundleUtil.localizedString(forKey: "next"),
+        
+        guard let textPreview = textPreview else {
+            return
+        }
+        
+        textPreview.navigationItem.rightBarButtonItem = UIBarButtonItem(
+            title: BundleUtil.localizedString(forKey: "send"),
             style: .done,
             target: self,
-            action: #selector(chooseContacts)
+            action: #selector(sendText)
         )
-        textPreview!.navigationItem.leftBarButtonItem = UIBarButtonItem(
+        
+        textPreview.navigationItem.leftBarButtonItem = UIBarButtonItem(
             title: BundleUtil.localizedString(forKey: "cancel"),
             style: .plain,
             target: self,
             action: #selector(cancelTapped)
         )
         
-        pushViewController(textPreview!, animated: true)
+        pushViewController(textPreview, animated: true)
         recolorBarButtonItems()
         
-        BrandingUtils.updateTitleLogo(of: textPreview!.navigationItem, in: self)
+        BrandingUtils.updateTitleLogo(of: textPreview.navigationItem, in: self)
+    }
+    
+    @objc private func sendText() {
+        guard let textPreview = textPreview else {
+            return
+        }
+        
+        itemSender.textToSend = textPreview.previewText
+        startSending()
     }
     
     private func isDBReady() -> Bool {
@@ -298,12 +405,12 @@ class RootNavigationController: UINavigationController {
     }
     
     private func showNeedStartAppFirst() {
-        let title = String(
-            format: BundleUtil.localizedString(forKey: "need_to_start_app_first_title"),
+        let title = String.localizedStringWithFormat(
+            BundleUtil.localizedString(forKey: "need_to_start_app_first_title"),
             ThreemaApp.currentName
         )
-        let message = String(
-            format: BundleUtil.localizedString(forKey: "need_to_start_app_first_message"),
+        let message = String.localizedStringWithFormat(
+            BundleUtil.localizedString(forKey: "need_to_start_app_first_message"),
             ThreemaApp.currentName
         )
         showAlert(with: title, message: message, closeOnOK: true)
@@ -398,6 +505,10 @@ class RootNavigationController: UINavigationController {
             showNeedStartAppFirst()
             return false
         }
+
+        if UserSettings.shared().blockCommunication {
+            return false
+        }
         
         if !checkPasscode() {
             return false
@@ -458,7 +569,7 @@ class RootNavigationController: UINavigationController {
     }
     
     private func canConnect() -> Bool {
-        if ServerConnector.shared()?.connectionState == .loggedIn {
+        if ServerConnector.shared().connectionState == .loggedIn {
             return true
         }
         
@@ -466,7 +577,7 @@ class RootNavigationController: UINavigationController {
             setAppGroup()
         }
         
-        ServerConnector.shared()?.connect(initiator: .shareExtension)
+        ServerConnector.shared().connect(initiator: .shareExtension)
         return false
     }
     
@@ -536,10 +647,10 @@ class RootNavigationController: UINavigationController {
     private func completionHandler(expired: Bool) {
         if expired {
             itemSender.shouldCancel = true
-            ServerConnector.shared()?.disconnect(initiator: .shareExtension)
+            ServerConnector.shared().disconnect(initiator: .shareExtension)
         }
         else {
-            ServerConnector.shared()?.disconnectWait(initiator: .shareExtension)
+            ServerConnector.shared().disconnectWait(initiator: .shareExtension)
         }
         commonCompletionHandler()
     }
@@ -603,15 +714,16 @@ extension RootNavigationController: ContactGroupPickerDelegate {
         if contactPicker.additionalTextToSend != nil {
             itemSender.addText(text: contactPicker.additionalTextToSend)
         }
+        
         for case let conversation as Conversation in conversations {
             recipientConversations?.insert(conversation)
         }
         
-        startSending()
+        presentMediaOrTextPreview()
     }
     
     func contactPickerDidCancel(_ contactPicker: ContactGroupPickerViewController!) {
-        popViewController(animated: true)
+        cancelAndClose()
     }
     
     override func popViewController(animated: Bool) -> UIViewController? {

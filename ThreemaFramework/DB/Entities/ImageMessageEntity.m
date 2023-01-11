@@ -82,6 +82,10 @@
     return self.imageBlobId;
 }
 
+- (void)blobSetDataID:(nonnull NSData *)dataID {
+    self.imageBlobId = dataID;
+}
+
 - (NSData *)blobGetThumbnailId {
     return nil;
 }
@@ -103,6 +107,14 @@
     self.image = dbData;
 }
 
+- (void)blobSetThumbnail:(NSData *)data {
+    ImageData *dbData = [NSEntityDescription
+                        insertNewObjectForEntityForName:@"ImageData"
+                        inManagedObjectContext:self.managedObjectContext];
+    
+    dbData.data = data;
+    self.thumbnail = dbData;
+}
 
 - (NSData *)blobGetThumbnail {
     if (self.thumbnail) {
@@ -110,6 +122,14 @@
     }
     
     return nil;
+}
+
+- (void)blobSetOrigin:(BlobOrigin)origin {
+    // no-op
+}
+
+- (BlobOrigin)blobGetOrigin {
+    return BlobOriginPublic;
 }
 
 - (NSString *)blobGetUTI {

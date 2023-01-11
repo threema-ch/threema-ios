@@ -25,6 +25,17 @@ import UIKit
 /// Contains the chatbar and any accessory views related to the chatbar
 final class ChatBarContainerView: UIView {
     
+    // MARK: - Properties
+    
+    /// Blur effect for chat bar background
+    /// Is only internal to allow a workaround for iPads with external keyboards
+    /// See `configureLayout` of `ChatViewController` for more details
+    lazy var blurEffectView: UIVisualEffectView = {
+        let blurEffect = UIBlurEffect(style: .systemMaterial)
+        let blurEffectView = UIVisualEffectView(effect: blurEffect)
+        return blurEffectView
+    }()
+    
     // MARK: - Private properties
     
     private weak var chatBarView: ChatBarView?
@@ -32,17 +43,13 @@ final class ChatBarContainerView: UIView {
     private weak var quoteView: ChatBarQuoteView?
     private weak var mentionsTableView: MentionsTableViewController?
     
+    private var catchTapOnDisabledView: UIView?
+    
     private lazy var accessoryView: UIStackView = {
         let stackView = UIStackView(arrangedSubviews: [topHairlineView])
         stackView.axis = .vertical
         
         return stackView
-    }()
-    
-    private lazy var blurEffectView: UIVisualEffectView = {
-        let blurEffect = UIBlurEffect(style: .systemMaterial)
-        let blurEffectView = UIVisualEffectView(effect: blurEffect)
-        return blurEffectView
     }()
     
     private lazy var topHairlineView = UIView()
@@ -89,9 +96,16 @@ final class ChatBarContainerView: UIView {
         NSLayoutConstraint.activate([
             blurEffectView.topAnchor.constraint(equalTo: topAnchor),
             blurEffectView.leadingAnchor.constraint(equalTo: leadingAnchor),
-            blurEffectView.bottomAnchor.constraint(equalTo: bottomAnchor),
             blurEffectView.trailingAnchor.constraint(equalTo: trailingAnchor),
         ])
+        
+        if UIDevice.current.userInterfaceIdiom != .pad {
+            // This removes a small gap that would open up between the chat bar and the keyboard accessory view if an iPad is used with an external keyboard
+            // See the definition of `blurEffectView` for more information.
+            NSLayoutConstraint.activate([
+                blurEffectView.bottomAnchor.constraint(equalTo: bottomAnchor),
+            ])
+        }
     }
     
     // MARK: Updates
@@ -180,8 +194,41 @@ final class ChatBarContainerView: UIView {
         layoutIfNeeded()
     }
     
+    /// Disables interaction with any view shown by the ContainerView by adding a view on top of it
+    /// - Parameter newCatchTapOnDisabledView: The view used to lay over everything else in the ContainerView
+    func disableInteraction(with newCatchTapOnDisabledView: UIView) {
+        guard catchTapOnDisabledView != newCatchTapOnDisabledView else {
+            return
+        }
+        
+        if catchTapOnDisabledView != nil {
+            enableInteraction()
+        }
+        
+        catchTapOnDisabledView = newCatchTapOnDisabledView
+        
+        guard let catchTapOnDisabledView = catchTapOnDisabledView else {
+            return
+        }
+        
+        addSubview(catchTapOnDisabledView)
+        bringSubviewToFront(catchTapOnDisabledView)
+        
+        NSLayoutConstraint.activate([
+            catchTapOnDisabledView.topAnchor.constraint(equalTo: topAnchor),
+            catchTapOnDisabledView.leadingAnchor.constraint(equalTo: leadingAnchor),
+            catchTapOnDisabledView.bottomAnchor.constraint(equalTo: bottomAnchor),
+            catchTapOnDisabledView.trailingAnchor.constraint(equalTo: trailingAnchor),
+        ])
+    }
+    
+    /// Remove any views added with disableInteraction
+    func enableInteraction() {
+        catchTapOnDisabledView?.removeFromSuperview()
+    }
+    
     func updateColors() {
-        topHairlineView.backgroundColor = Colors.backgroundButton
+        topHairlineView.backgroundColor = Colors.hairLine
         
         if UIAccessibility.isReduceTransparencyEnabled {
             backgroundColor = Colors.backgroundChatBar

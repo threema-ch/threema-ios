@@ -144,7 +144,7 @@ typedef NS_ENUM(NSInteger, PeriodOffTime) {
 - (nullable UIImage *)imageForPushSetting;
 
 /// Icon to display if setting is not set to the defaults
-- (nullable UIImage *)imageForEditedPushSetting;
+- (UIImage * _Nullable)imageForEditedPushSettingWith:(UIImageConfiguration * _Nullable)config;
 
 #pragma mark - Setup or migration
 

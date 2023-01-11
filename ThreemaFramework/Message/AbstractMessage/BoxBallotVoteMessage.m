@@ -35,7 +35,7 @@
     return body;
 }
 
-- (BOOL)shouldPush {
+- (BOOL)flagShouldPush {
     return NO;
 }
 
@@ -48,6 +48,10 @@
 }
 
 - (BOOL)noDeliveryReceiptFlagSet {
+    return YES;
+}
+
+- (BOOL)supportsForwardSecurity {
     return YES;
 }
 

@@ -64,7 +64,7 @@ protocol MessageStoreProtocol {
         timestamp: Date
     ) throws
 
-    func save(groupCreateMessage amsg: GroupCreateMessage)
+    func save(groupCreateMessage amsg: GroupCreateMessage) -> Promise<Void>
 
     func save(groupDeletePhotoMessage amsg: GroupDeletePhotoMessage) -> Promise<Void>
 

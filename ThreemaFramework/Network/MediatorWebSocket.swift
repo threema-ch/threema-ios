@@ -22,7 +22,7 @@ import CocoaLumberjackSwift
 import Foundation
 import Starscream
 
-@objc public class MediatorWebSocket: NSObject, SocketProtocol {
+@objc final class MediatorWebSocket: NSObject, SocketProtocol {
     
     enum MediatorWebSocketError: Error {
         case invalidServerURL
@@ -109,16 +109,19 @@ extension MediatorWebSocket: WebSocketDelegate {
     }
     
     public func websocketDidDisconnect(socket: WebSocketClient, error: Error?) {
+        var code = 0
         if let error = error as? WSError {
+            code = error.code
             DDLogError(
-                "Disconnect with error: \(error.localizedDescription). Error code: \(error.code); Error Message: \(error.message)"
+                "Disconnect from mediator server with error: \(error.localizedDescription). Error code: \(error.code); Error Message: \(error.message)"
             )
         }
         else if let error = error {
-            DDLogError("Disconnect with error: \(error.localizedDescription)")
+            DDLogError("Disconnect from mediator server with error: \(error)")
         }
         
-        delegate.didDisconnect()
+        DDLogInfo("Disconnected from \(server)")
+        delegate.didDisconnect(errorCode: code)
     }
     
     public func websocketDidReceiveMessage(socket: WebSocketClient, text: String) {

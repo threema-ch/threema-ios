@@ -30,6 +30,9 @@ import Foundation
         else if let contact = object as? Contact {
             delete(contact)
         }
+        else if let message = object as? BaseMessage {
+            delete(message)
+        }
         else {
             super.delete(object)
         }
@@ -71,6 +74,17 @@ import Foundation
         // We allow `contact.groupConversations` to be not empty as this will be properly handled by CoreData (nullify on delete of contact)
         
         super.delete(contact)
+    }
+
+    private func delete(_ message: BaseMessage) {
+        let fetchConversations = NSFetchRequest<NSFetchRequestResult>(entityName: "Conversation")
+        fetchConversations.predicate = NSPredicate(format: "lastMessage = %@", message)
+
+        guard let prevConversations = try? count(for: fetchConversations), prevConversations == 0 else {
+            fatalError()
+        }
+
+        return super.delete(message)
     }
     
     /// Verifies that no messages exist with a relation to the conversation

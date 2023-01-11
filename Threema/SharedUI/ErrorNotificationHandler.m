@@ -23,6 +23,7 @@
 #import "AppDelegate.h"
 #import "AppGroup.h"
 #import "BundleUtil.h"
+#import "ServerConnector.h"
 
 @implementation ErrorNotificationHandler
 
@@ -87,7 +88,7 @@ static ErrorNotificationHandler *singleton;
     NSString *message = [BundleUtil localizedStringForKey:@"error_rogue_device_message"];
     
     [self showAlertWithTitle:title message:message actionOk:^(UIAlertAction * action) {
-        [[AppGroup userDefaults] removeObjectForKey:kShowRogueDeviceWarningFlag];
+        [[ServerConnector sharedServerConnector] clearDeviceCookieChangedIndicator];
     }];
 }
 

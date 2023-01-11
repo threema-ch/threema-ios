@@ -100,8 +100,6 @@ class SafeSetupPasswordViewController: ThemedTableViewController {
             target: self,
             action: #selector(done)
         )
-        
-        isModalInPresentation = true
     }
     
     // MARK: - Navigation
@@ -219,8 +217,8 @@ class SafeSetupPasswordViewController: ThemedTableViewController {
                     UIAlertTemplate.showAlert(
                         owner: self,
                         title: BundleUtil.localizedString(forKey: "Password"),
-                        message: String(
-                            format: BundleUtil.localizedString(forKey: "password_bad_regex"),
+                        message: String.localizedStringWithFormat(
+                            BundleUtil.localizedString(forKey: "password_bad_regex"),
                             ThreemaApp.currentName
                         )
                     )

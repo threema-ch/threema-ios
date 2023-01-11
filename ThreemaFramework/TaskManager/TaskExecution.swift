@@ -35,6 +35,7 @@ enum TaskExecutionError: Error {
     case sendMessageFailed(message: String)
     case sendMessageTimeout(message: String)
     case wrongTaskDefinitionType
+    case invalidContact(message: String)
 }
 
 class TaskExecution: NSObject {
@@ -77,7 +78,7 @@ class TaskExecution: NSObject {
 
         // Get envelope and its Reflect ID. It's sender me, than must be an outcoming message!
         if message.fromIdentity == frameworkInjector.myIdentityStore.identity {
-            if message.isGroup() {
+            if message.flagGroupMessage() {
                 guard let groupID = (message as? AbstractGroupMessage)?.groupID,
                       let groupCreator = (message as? AbstractGroupMessage)?.groupCreator else {
                     throw TaskExecutionError.reflectMessageFailed(message: message.loggingDescription)
@@ -193,16 +194,22 @@ class TaskExecution: NSObject {
                     )
                     return
                 }
-
+                
                 guard toContact.isValid() else {
-                    DDLogWarn(
+                    let msg =
                         "Do not sending message to invalid identity \(String(describing: message.toIdentity)) (\(String(describing: message.loggingDescription)))"
-                    )
+                    guard message.flagGroupMessage() else {
+                        seal.reject(TaskExecutionError.invalidContact(message: msg))
+                        return
+                    }
+                    DDLogWarn(msg)
+                    
                     seal.fulfill(nil)
                     return
                 }
-
-                if let toIdentity = message.toIdentity {
+                
+                if let task = self.taskDefinition as? TaskDefinitionSendMessageProtocol,
+                   let toIdentity = message.toIdentity {
                     guard !self.isMessageAlreadySentTo(identity: toIdentity) else {
                         DDLogWarn(
                             "Message already sent \(toIdentity)) (\(String(describing: message.loggingDescription)))"
@@ -212,66 +219,185 @@ class TaskExecution: NSObject {
                     }
                 }
                 
-                guard let boxMsg = message.makeBox(
-                    toContact,
-                    myIdentityStore: self.frameworkInjector.myIdentityStore,
-                    entityManager: self.frameworkInjector.backgroundEntityManager
-                ) else {
-                    seal.reject(TaskExecutionError.sendMessageFailed(message: message.loggingDescription))
-                    return
+                var messageToSend = message
+                var auxMessage: ForwardSecurityEnvelopeMessage?
+                var sendCompletion: (() throws -> Void)?
+                var sendAuxFailure: (() -> Void)?
+                
+                // Check whether the message and the destination contact support forward security
+                if ThreemaUtility.supportsForwardSecurity, message.supportsForwardSecurity(),
+                   toContact.forwardSecurityEnabled.boolValue,
+                   toContact.isForwardSecurityAvailable() {
+                    do {
+                        let fsContact = ForwardSecurityContact(
+                            identity: toContact.identity,
+                            publicKey: toContact.publicKey
+                        )
+                        (
+                            auxMessage: auxMessage,
+                            message: messageToSend,
+                            sendCompletion: sendCompletion,
+                            sendAuxFailure: sendAuxFailure
+                        ) = try self
+                            .frameworkInjector.fsmp.makeMessage(
+                                contact: fsContact,
+                                innerMessage: message
+                            )
+                    }
+                    catch {
+                        seal.reject(error)
+                        return
+                    }
                 }
                 
                 DispatchQueue.global().async {
-                    let chatMessageAck = DispatchGroup()
-                    let notificationCenter = NotificationCenter.default
-                    var messageAckObserver: NSObjectProtocol?
-                    
-                    let operationQueue = OperationQueue()
-                    operationQueue.qualityOfService = .userInitiated
-
-                    messageAckObserver = notificationCenter.addObserver(
-                        forName: TaskManager.chatMessageAckObserverName(
-                            messageID: message.messageID,
-                            toIdentity: message.toIdentity
-                        ),
-                        object: nil,
-                        queue: operationQueue
-                    ) { _ in
-                        DDLogNotice("\(ltAck.hexString) \(ltAck) \(message.loggingDescription)")
-                        notificationCenter.removeObserver(messageAckObserver!)
-                        chatMessageAck.leave()
-                    }
-
-                    chatMessageAck.enter()
-
-                    DDLogNotice("\(ltSend.hexString) \(ltSend) \(message.loggingDescription)")
-                    if self.frameworkInjector.serverConnector.send(boxMsg) {
-                        if message.noAck() {
-                            notificationCenter.removeObserver(messageAckObserver!)
+                    if let auxMessage = auxMessage {
+                        var boxAuxMsg: BoxedMessage?
+                        // We have an auxiliary (control) message to send before the actual message
+                        self.frameworkInjector.backgroundEntityManager.performBlockAndWait {
+                            boxAuxMsg = auxMessage.makeBox(
+                                toContact,
+                                myIdentityStore: self.frameworkInjector.myIdentityStore
+                            )
                         }
-                        else {
-                            let result = chatMessageAck.wait(timeout: .now() + .seconds(self.responseTimeoutInSeconds))
-                            if result == .success {
-                                if let toIdentity = message.toIdentity {
-                                    self.messageAlreadySentTo(identity: toIdentity)
-                                }
+                        
+                        guard let boxAuxMsg else {
+                            sendAuxFailure?()
+                            let err = TaskExecutionError.sendMessageFailed(message: auxMessage.loggingDescription)
+                            seal.reject(err)
+                            return
+                        }
+                        
+                        do {
+                            try self.sendAndWait(
+                                abstractMessage: auxMessage,
+                                boxMessage: boxAuxMsg,
+                                ltSend: ltSend,
+                                ltAck: ltAck,
+                                isAuxMessage: true
+                            )
+                        }
+                        catch {
+                            sendAuxFailure?()
+                            let err = TaskExecutionError.sendMessageFailed(message: auxMessage.loggingDescription)
+                            seal.reject(err)
+                            return
+                        }
+                    }
+                    self.frameworkInjector.backgroundEntityManager.performBlockAndWait {
+                        // Save forward security mode in any case (could also be a message first sent with FS and then resent without)
+                        self.frameworkInjector.backgroundEntityManager.setForwardSecurityMode(
+                            message.messageID,
+                            forwardSecurityMode: messageToSend.forwardSecurityMode
+                        )
+                        
+                        guard let boxMsg = messageToSend.makeBox(
+                            toContact,
+                            myIdentityStore: self.frameworkInjector.myIdentityStore
+                        ) else {
+                            seal.reject(TaskExecutionError.sendMessageFailed(message: message.loggingDescription))
+                            return
+                        }
+                        
+                        if !message.flagDontQueue() {
+                            do {
+                                let nonceGuard = NonceGuard(
+                                    entityManager: self.frameworkInjector
+                                        .backgroundEntityManager
+                                )
+                                try nonceGuard.processed(boxedMessage: boxMsg)
                             }
-                            else {
-                                notificationCenter.removeObserver(messageAckObserver!)
-                                seal.reject(TaskExecutionError.sendMessageTimeout(message: message.loggingDescription))
+                            catch {
+                                seal.reject(error)
                                 return
                             }
                         }
+                        
+                        DispatchQueue.global().async {
+                            do {
+                                try self.sendAndWait(
+                                    abstractMessage: messageToSend,
+                                    boxMessage: boxMsg,
+                                    ltSend: ltSend,
+                                    ltAck: ltAck,
+                                    isAuxMessage: false
+                                )
+                                
+                                do {
+                                    try sendCompletion?()
+                                }
+                                catch {
+                                    let msg = "An error occurred when saving PFS state: \(error)"
+                                    DDLogError(msg)
+                                    assertionFailure(msg)
+                                }
+                            }
+                            catch {
+                                seal.reject(error)
+                                return
+                            }
+                            
+                            seal.fulfill(message)
+                        }
                     }
-                    else {
-                        notificationCenter.removeObserver(messageAckObserver!)
-                        seal.reject(TaskExecutionError.sendMessageFailed(message: message.loggingDescription))
-                        return
-                    }
-
-                    seal.fulfill(message)
                 }
             }
+        }
+    }
+    
+    private func sendAndWait(
+        abstractMessage: AbstractMessage,
+        boxMessage: BoxedMessage,
+        ltSend: LoggingTag,
+        ltAck: LoggingTag,
+        isAuxMessage: Bool
+    ) throws {
+        assert(abstractMessage.fromIdentity == nil || abstractMessage.fromIdentity == boxMessage.fromIdentity)
+        assert(abstractMessage.toIdentity == boxMessage.toIdentity)
+        
+        let chatMessageAck = DispatchGroup()
+        let notificationCenter = NotificationCenter.default
+        var messageAckObserver: NSObjectProtocol?
+        
+        let operationQueue = OperationQueue()
+        operationQueue.qualityOfService = .userInitiated
+        
+        messageAckObserver = notificationCenter.addObserver(
+            forName: TaskManager.chatMessageAckObserverName(
+                messageID: abstractMessage.messageID,
+                toIdentity: abstractMessage.toIdentity
+            ),
+            object: nil,
+            queue: operationQueue
+        ) { _ in
+            DDLogNotice("\(ltAck.hexString) \(ltAck) \(abstractMessage.loggingDescription)")
+            notificationCenter.removeObserver(messageAckObserver!)
+            chatMessageAck.leave()
+        }
+        
+        chatMessageAck.enter()
+        
+        DDLogNotice("\(ltSend.hexString) \(ltSend) \(abstractMessage.loggingDescription)")
+        if frameworkInjector.serverConnector.send(boxMessage) {
+            if abstractMessage.flagDontAck() {
+                notificationCenter.removeObserver(messageAckObserver!)
+            }
+            else {
+                let result = chatMessageAck.wait(timeout: .now() + .seconds(responseTimeoutInSeconds))
+                if result == .success {
+                    if !isAuxMessage, let toIdentity = abstractMessage.toIdentity {
+                        messageAlreadySentTo(identity: toIdentity)
+                    }
+                }
+                else {
+                    notificationCenter.removeObserver(messageAckObserver!)
+                    throw TaskExecutionError.sendMessageTimeout(message: abstractMessage.loggingDescription)
+                }
+            }
+        }
+        else {
+            notificationCenter.removeObserver(messageAckObserver!)
+            throw TaskExecutionError.sendMessageFailed(message: abstractMessage.loggingDescription)
         }
     }
 
@@ -312,7 +438,7 @@ class TaskExecution: NSObject {
            !(groupName?.hasPrefix("☁") ?? false), !(message is GroupLeaveMessage),
            !(message is GroupRequestSyncMessage) {
             DDLogWarn("Drop message to gateway id without store-incoming-message")
-            frameworkInjector.backgroundEntityManager.markMessageAsSent(message.messageID)
+            frameworkInjector.backgroundEntityManager.markMessageAsSent(message.messageID, isLocal: true)
 
             return false
         }

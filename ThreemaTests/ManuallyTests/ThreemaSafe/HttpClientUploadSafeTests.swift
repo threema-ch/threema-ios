@@ -51,7 +51,7 @@ class HttpClientUploadSafeTests: XCTestCase {
                 
                 let backupURL =
                     URL(string: "https://safe.threema.ch/backups/\(BytesUtility.toHexString(bytes: backupID))")
-                let client = HttpClient()
+                let client = HTTPClient()
                 client.uploadData(url: backupURL!, data: Data(encryptedData)) { data, response, error in
                     if let error = error {
                         print("http client upload error: \(error)")
@@ -114,7 +114,7 @@ class HttpClientUploadSafeTests: XCTestCase {
                 
                 let backupURL =
                     URL(string: "https://safe.threema.ch/backups/\(BytesUtility.toHexString(bytes: backupID))")
-                let client = HttpClient()
+                let client = HTTPClient()
                 client.uploadData(url: backupURL!, file: backupFileURL, delegate: self)
             }
             else {

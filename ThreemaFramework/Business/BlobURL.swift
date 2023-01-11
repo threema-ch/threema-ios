@@ -21,78 +21,56 @@
 import Foundation
 
 @objc public class BlobURL: NSObject {
-    enum BlobOrigin {
-        case publicBlob
-        case localBlob
-    }
-    
     private let serverConnector: ServerConnectorProtocol
     private let userSettings: UserSettingsProtocol
     private let serverInfoProvider: ServerInfoProvider
-    private let origin: BlobOrigin
     private let queue: DispatchQueue
     
     @objc public init(
         serverConnector: ServerConnectorProtocol,
         userSettings: UserSettingsProtocol,
         serverInfoProvider: ServerInfoProvider,
-        localOrigin: Bool = false,
-        queue: DispatchQueue?
+        queue: DispatchQueue? = nil
     ) {
         self.serverConnector = serverConnector
         self.userSettings = userSettings
         self.serverInfoProvider = serverInfoProvider
-        self.origin = localOrigin ? .localBlob : .publicBlob
         self.queue = queue ?? DispatchQueue.main
     }
     
     @objc public convenience init(
         serverConnector: ServerConnectorProtocol,
         userSettings: UserSettingsProtocol,
-        localOrigin: Bool,
         queue: DispatchQueue?
     ) {
         self.init(
             serverConnector: serverConnector,
             userSettings: userSettings,
             serverInfoProvider: ServerInfoProviderFactory.makeServerInfoProvider(),
-            localOrigin: localOrigin,
             queue: queue
         )
     }
     
     @objc public convenience init(
         serverConnector: ServerConnectorProtocol,
-        userSettings: UserSettingsProtocol,
-        localOrigin: Bool
+        userSettings: UserSettingsProtocol
     ) {
         self.init(
             serverConnector: serverConnector,
             userSettings: userSettings,
             serverInfoProvider: ServerInfoProviderFactory.makeServerInfoProvider(),
-            localOrigin: localOrigin,
             queue: DispatchQueue.main
         )
     }
     
-    @objc public convenience init(serverConnector: ServerConnectorProtocol, userSettings: UserSettingsProtocol) {
-        self.init(
-            serverConnector: serverConnector,
-            userSettings: userSettings,
-            serverInfoProvider: ServerInfoProviderFactory.makeServerInfoProvider(),
-            localOrigin: false,
-            queue: DispatchQueue.main
-        )
-    }
-    
-    @objc public func download(blobID: Data, completionHandler: @escaping (URL?, Error?) -> Void) {
-        genericBlobURL(blobID: blobID, extractURL: { blobServerInfo -> String in
+    @objc public func download(blobID: Data, origin: BlobOrigin, completionHandler: @escaping (URL?, Error?) -> Void) {
+        genericBlobURL(blobID: blobID, origin: origin, extractURL: { blobServerInfo -> String in
             blobServerInfo.downloadURL
         }, completionHandler: completionHandler)
     }
     
-    @objc public func upload(completionHandler: @escaping (URL?, String?, Error?) -> Void) {
-        genericBlobURL(blobID: nil) { blobServerInfo -> String in
+    @objc public func upload(origin: BlobOrigin, completionHandler: @escaping (URL?, String?, Error?) -> Void) {
+        genericBlobURL(blobID: nil, origin: origin) { blobServerInfo -> String in
             blobServerInfo.uploadURL
         } completionHandler: { url, error in
             AuthTokenManager.shared().obtainToken { authToken, err in
@@ -112,39 +90,57 @@ import Foundation
         }
     }
     
-    @objc public func done(blobID: Data, completionHandler: @escaping (URL?, Error?) -> Void) {
-        genericBlobURL(blobID: blobID, extractURL: { blobServerInfo -> String in
+    @objc public func done(blobID: Data, origin: BlobOrigin, completionHandler: @escaping (URL?, Error?) -> Void) {
+        genericBlobURL(blobID: blobID, origin: origin, extractURL: { blobServerInfo -> String in
             blobServerInfo.doneURL
         }, completionHandler: completionHandler)
     }
     
+    public func done(blobID: Data, origin: BlobOrigin) async throws -> URL? {
+        try await withCheckedThrowingContinuation { continuation in
+            self.done(blobID: blobID, origin: origin) { url, error in
+                
+                guard error == nil, let url = url else {
+                    continuation.resume(throwing: error!)
+                    return
+                }
+                continuation.resume(returning: url)
+            }
+        }
+    }
+    
     private func genericBlobURL(
         blobID: Data?,
+        origin: BlobOrigin,
         extractURL: @escaping (BlobServerInfo) -> String,
         completionHandler: @escaping (URL?, Error?) -> Void
     ) {
-        if let deviceGroupPathKey = serverConnector.deviceGroupPathKey,
+        if let deviceGroupKeys = serverConnector.deviceGroupKeys,
            let deviceID = serverConnector.deviceID,
-           let deviceGroupID = NaClCrypto.shared()?.derivePublicKey(fromSecretKey: deviceGroupPathKey) {
+           let deviceGroupID = NaClCrypto.shared()?.derivePublicKey(fromSecretKey: deviceGroupKeys.dgpk) {
             
-            serverInfoProvider.mediatorServer { mediatorServerInfo, err in
-                if mediatorServerInfo == nil {
-                    completionHandler(nil, err)
-                    return
-                }
+            serverInfoProvider
+                .mediatorServer(
+                    deviceGroupIDFirstByteHex: deviceGroupKeys
+                        .deviceGroupIDFirstByteHex
+                ) { mediatorServerInfo, err in
+                    if mediatorServerInfo == nil {
+                        completionHandler(nil, err)
+                        return
+                    }
                 
-                let url = self.substituteBlobID(
-                    url: self.substituteDeviceID(
-                        url: self.substituteOrigin(url: extractURL(mediatorServerInfo!.blob)),
-                        deviceID: deviceID,
-                        deviceGroupID: deviceGroupID
-                    ),
-                    blobID: blobID
-                )
-                self.queue.async {
-                    completionHandler(url, nil)
+                    let url = self.substituteBlobID(
+                        url: self.substituteDeviceID(
+                            url: self.substituteOrigin(url: extractURL(mediatorServerInfo!.blob), with: origin),
+                            deviceID: deviceID,
+                            deviceGroupID: deviceGroupID
+                        ),
+                        blobID: blobID
+                    )
+                    self.queue.async {
+                        completionHandler(url, nil)
+                    }
                 }
-            }
         }
         else {
             serverInfoProvider.blobServer(ipv6: userSettings.enableIPv6) { blobServerInfo, err in
@@ -186,11 +182,10 @@ import Foundation
             .replacingOccurrences(of: "{deviceGroupId}", with: deviceGroupID.hexString)
     }
     
-    private func substituteOrigin(url: String) -> String {
-        serverConnector.isMultiDeviceActivated ? url.replacingOccurrences(of: "{origin}", with: originString()) : url
-    }
-    
-    private func originString() -> String {
-        origin == .localBlob ? "local" : "public"
+    private func substituteOrigin(url: String, with origin: BlobOrigin) -> String {
+        serverConnector.isMultiDeviceActivated ? url.replacingOccurrences(
+            of: "{origin}",
+            with: origin.originString
+        ) : url
     }
 }

@@ -133,7 +133,7 @@ class CallDiagnosticViewController: UIViewController, RTCPeerConnectionDelegate 
         descriptionLabel.font = UIFont.systemFont(ofSize: 17.0)
         finishLabel.font = UIFont.systemFont(ofSize: 17.0)
                
-        view.backgroundColor = Colors.backgroundViewController
+        view.backgroundColor = Colors.backgroundGroupedViewController
         
         activityIndicator.style = Colors.activityIndicatorViewStyle
         switch Colors.theme {

@@ -106,6 +106,12 @@
                     if (curChatVc.conversation.objectID == message.conversation.objectID)
                         return;
                 }
+                
+                if ([chatNavVc.topViewController isKindOfClass:[ChatViewController class]]) {
+                    ChatViewController *curChatVc = (ChatViewController*)chatNavVc.topViewController;
+                    if (curChatVc.conversation.objectID == message.conversation.objectID)
+                        return;
+                }
 
                 [NotificationBannerHelper newBannerWithBaseMessage: message];
             }

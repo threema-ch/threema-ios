@@ -31,7 +31,9 @@ class SwitchDetailsTableViewCell: ThemedCodeStackTableViewCell {
             }
             
             labelLabel.text = action.title
+            labelLabel.isEnabled = !action.disabled
             switchControl.isOn = action.currentBool()
+            switchControl.isEnabled = !action.disabled
             
             updateColors()
         }

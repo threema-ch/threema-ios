@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scheme
-   LastUpgradeVersion = "1020"
+   LastUpgradeVersion = "1410"
    version = "1.7">
    <BuildAction
       parallelizeBuildables = "YES"
@@ -82,6 +82,15 @@
             isEnabled = "YES">
          </EnvironmentVariable>
       </EnvironmentVariables>
+      <TestPlans>
+         <TestPlanReference
+            reference = "container:ThreemaUITests/ThreemaUITests.xctestplan">
+         </TestPlanReference>
+         <TestPlanReference
+            reference = "container:ThreemaTests/ThreemaTestPlan.xctestplan"
+            default = "YES">
+         </TestPlanReference>
+      </TestPlans>
       <Testables>
          <TestableReference
             skipped = "NO">
@@ -161,6 +170,16 @@
                   Identifier = "ScreenshotsWithData">
                </Test>
             </SkippedTests>
+         </TestableReference>
+         <TestableReference
+            skipped = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "24489950289A46680067CE28"
+               BuildableName = "ThreemaUITests.xctest"
+               BlueprintName = "ThreemaUITests"
+               ReferencedContainer = "container:Threema.xcodeproj">
+            </BuildableReference>
          </TestableReference>
       </Testables>
    </TestAction>

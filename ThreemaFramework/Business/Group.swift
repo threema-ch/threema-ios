@@ -18,7 +18,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import CocoaLumberjackSwift
 import Foundation
+import Intents
 
 public struct GroupIdentity {
     let id: Data
@@ -370,22 +372,22 @@ public class Group: NSObject {
     /// - Returns: Sorted group members list
     private func allSortedMembers() -> [Member] {
         var allSortedMembers = [Member]()
-
+        
         // Always add creator
         allSortedMembers.append(creator)
-
+        
         // Add me if I'm a member and not the creator
         if isSelfMember, !isOwnGroup {
             allSortedMembers.append(.me)
         }
-
+        
         // Add everybody else expect the creator
         allSortedMembers.append(
             contentsOf: members.sorted(with: userSettings)
                 .map(Member.contact)
                 .filter { $0 != creator }
         )
-
+        
         return allSortedMembers
     }
 }

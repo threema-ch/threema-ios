@@ -23,16 +23,17 @@ import ThreemaFramework
 import UIKit
 
 /// Display a call message
-final class ChatViewCallSystemMessageTableViewCell: ChatViewBaseTableViewCell, MeasurableCell, MessageTextViewDelegate {
+final class ChatViewCallSystemMessageTableViewCell: ChatViewBaseTableViewCell, MeasurableCell {
     static var sizingCell = ChatViewCallSystemMessageTableViewCell()
     
     /// Call message to display
     ///
     /// Reset it when the message had any changes to update data shown in the views (e.g. date or status symbol).
-    var callMessage: SystemMessage? {
+    var callMessageAndNeighbors: (message: SystemMessage, neighbors: ChatViewDataSource.MessageNeighbors)? {
         didSet {
-            super.setMessage(to: callMessage)
-            updateCell(for: callMessage)
+            updateCell(for: callMessageAndNeighbors?.message)
+            
+            super.setMessage(to: callMessageAndNeighbors?.message, with: callMessageAndNeighbors?.neighbors)
         }
     }
     
@@ -45,7 +46,7 @@ final class ChatViewCallSystemMessageTableViewCell: ChatViewBaseTableViewCell, M
         return imageView
     }()
     
-    private lazy var messageTextView = MessageTextView(messageTextViewDelegate: self)
+    private lazy var messageTextView = MessageTextView(messageTextViewDelegate: nil)
     private lazy var metaDataLabel: UILabel = {
         let label = UILabel(frame: .zero)
         label.numberOfLines = 0
@@ -77,13 +78,24 @@ final class ChatViewCallSystemMessageTableViewCell: ChatViewBaseTableViewCell, M
     private lazy var iconMessageContentView = IconMessageContentView(iconView: iconView, arrangedSubviews: [
         messageTextView,
         metaDataStackView,
-    ])
+    ]) {
+        [weak self] in
+            guard let strongSelf = self else {
+                return
+            }
+        
+            strongSelf.chatViewTableViewCellDelegate?.didTap(
+                message: strongSelf.callMessageAndNeighbors?.message,
+                in: strongSelf
+            )
+    }
     
     // MARK: - Configuration
     
     override func configureCell() {
         super.configureCell()
-        
+         
+        messageTextView.isUserInteractionEnabled = false
         super.addContent(rootView: iconMessageContentView)
     }
     
@@ -91,12 +103,18 @@ final class ChatViewCallSystemMessageTableViewCell: ChatViewBaseTableViewCell, M
     
     override func updateColors() {
         super.updateColors()
-        if case let .callMessage(type: call) = callMessage?.systemMessageType {
+        if case let .callMessage(type: call) = callMessageAndNeighbors?.message.systemMessageType {
             iconView.image = call.symbol
         }
         messageTextView.updateColors()
         Colors.setTextColor(Colors.textLight, label: metaDataLabel)
         stateAndDateView.updateColors()
+    }
+    
+    override func setEditing(_ editing: Bool, animated: Bool) {
+        super.setEditing(editing, animated: animated)
+        
+        iconMessageContentView.isUserInteractionEnabled = !editing
     }
     
     private func updateCell(for callMessage: SystemMessage?) {
@@ -120,6 +138,7 @@ final class ChatViewCallSystemMessageTableViewCell: ChatViewBaseTableViewCell, M
         }
         else {
             metaDataStackView.removeArrangedSubview(metaDataLabel)
+            metaDataLabel.removeFromSuperview()
         }
         
         // Fixes a bug where the call icon could be miss-aligned in iOS 13
@@ -166,7 +185,7 @@ final class ChatViewCallSystemMessageTableViewCell: ChatViewBaseTableViewCell, M
     // MARK: - Accessibility
     
     private func updateAccessibility() {
-        guard let callTime = callMessage?.callTime() else {
+        guard let callTime = callMessageAndNeighbors?.message.callTime() else {
             return
         }
     
@@ -187,18 +206,20 @@ extension ChatViewCallSystemMessageTableViewCell: ContextMenuAction {
     
     func buildContextMenu(at indexPath: IndexPath) -> UIContextMenuConfiguration? {
 
-        guard let message = callMessage else {
+        guard let message = callMessageAndNeighbors?.message else {
             return nil
         }
 
         typealias Provider = ChatViewContextMenuActionProvider
-    
-        let detailsAction = Provider.detailsAction(message: message)
+            
+        let editAction = Provider.editAction {
+            self.chatViewTableViewCellDelegate?.startMultiselect()
+        }
+        
         let deleteAction = Provider.deleteAction(message: message)
         
-        // TODO: IOS-2601: Add details again
         // Build menu
-        let menu = UIMenu(children: [deleteAction])
+        let menu = UIMenu(children: [editAction, deleteAction])
         
         return UIContextMenuConfiguration(identifier: indexPath as NSCopying, previewProvider: nil) { _ in
             menu

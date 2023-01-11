@@ -25,8 +25,22 @@ import Foundation
     
     private static var isDebug = false
     
-    @objc public static let debugLogFile: URL? = FileUtility.appDataDirectory?
-        .appendingPathComponent("validation_log.txt")
+    @objc public static let debugLogFile: URL? = {
+        let debugURL = FileUtility.appDataDirectory?
+            .appendingPathComponent("debug_log.txt")
+        let validationURL = FileUtility.appDataDirectory?
+            .appendingPathComponent("validation_log.txt")
+
+        do {
+            try FileUtility.migrateDebugLogFileContents(from: validationURL, to: debugURL)
+            
+            return debugURL
+        }
+        catch {
+            // We cannot log here, or it will lead to an infinite loop
+            return validationURL
+        }
+    }()
 
     /// Log levels definition for Swift. Includes new Notice Log level at the end, to not break the standard Log levels like in <CocoaLumberjack/DDLog.h>
     public enum DDLogLevelCustom: UInt {

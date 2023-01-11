@@ -23,6 +23,7 @@ import Foundation
 
 @objc open class MediaPreviewURLDataProcessor: NSObject {
     
+    @objc public var addMore: (([Any], [MediaPreviewItem]) -> Void)?
     public var cancelAction: (() -> Void)?
     public var memoryConstrained = false
     public var sendAsFile = false
@@ -154,8 +155,6 @@ import Foundation
     }
     
     open func executeCancelAction() {
-        if cancelAction != nil {
-            cancelAction!()
-        }
+        cancelAction?()
     }
 }

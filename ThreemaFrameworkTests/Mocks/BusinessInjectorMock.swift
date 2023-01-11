@@ -54,6 +54,10 @@ class BusinessInjectorMock: FrameworkInjectorProtocol {
     var mediatorMessageProtocol: MediatorMessageProtocolProtocol
 
     var messageProcessor: MessageProcessorProtocol
+    
+    var fsmp: ForwardSecurityMessageProcessor
+    
+    var dhSessionStore: DHSessionStoreProtocol
 
     init(
         backgroundEntityManager: EntityManager,
@@ -85,6 +89,12 @@ class BusinessInjectorMock: FrameworkInjectorProtocol {
         self.serverConnector = serverConnector
         self.mediatorMessageProtocol = mediatorMessageProtocol
         self.messageProcessor = messageProcessor
+        self.dhSessionStore = InMemoryDHSessionStore()
+        self.fsmp = ForwardSecurityMessageProcessor(
+            dhSessionStore: dhSessionStore,
+            identityStore: myIdentityStore,
+            messageSender: DummySender()
+        )
     }
 
     init(entityManager: EntityManager, backgroundEntityManager: EntityManager) {
@@ -102,5 +112,17 @@ class BusinessInjectorMock: FrameworkInjectorProtocol {
         self.serverConnector = ServerConnectorMock()
         self.mediatorMessageProtocol = MediatorMessageProtocolMock()
         self.messageProcessor = MessageProcessorMock()
+        self.dhSessionStore = InMemoryDHSessionStore()
+        self.fsmp = ForwardSecurityMessageProcessor(
+            dhSessionStore: dhSessionStore,
+            identityStore: myIdentityStore,
+            messageSender: DummySender()
+        )
+    }
+    
+    class DummySender: ForwardSecurityMessageSenderProtocol {
+        func send(message: AbstractMessage) {
+            // do nothing
+        }
     }
 }

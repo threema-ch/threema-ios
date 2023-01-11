@@ -30,12 +30,12 @@ import UIKit
         super.viewDidLoad()
         
         titleLabel.text = BundleUtil.localizedString(forKey: "delete_identity_title")
-        descriptionLabel.text = String(
-            format: BundleUtil.localizedString(forKey: "delete_identity_description"),
+        descriptionLabel.text = String.localizedStringWithFormat(
+            BundleUtil.localizedString(forKey: "delete_identity_description"),
             ThreemaApp.currentName
         )
         closeButton.setTitle(BundleUtil.localizedString(forKey: "delete_identity_app_close"), for: .normal)
-        
+        closeButton.accessibilityIdentifier = "DeleteIdentityViewControllerCloseButton"
         closeButton.backgroundColor = Colors.primaryWizard
         closeButton.setTitleColor(Colors.textSetup, for: .normal)
     }

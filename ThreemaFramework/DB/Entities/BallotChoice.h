@@ -44,18 +44,18 @@
 - (void)addResult:(NSSet *)values;
 - (void)removeResult:(NSSet *)values;
 
-#pragma mark - own methods
+#pragma mark - Own methods
 
-- (BallotResult *)getOwnResult;
+- (nullable BallotResult *)getOwnResult;
 
-- (BallotResult *)getResultForId:(NSString *)contactId NS_SWIFT_NAME(getResult(for:));
+- (nullable BallotResult *)getResultForId:(nonnull NSString *)contactId NS_SWIFT_NAME(getResult(for:));
 
-- (void)removeResultForContact:(NSString *)contactId;
+- (void)removeResultForContact:(nonnull NSString *)contactId;
 
 - (NSInteger)totalCountOfResultsTrue;
 
-- (NSSet *)participantIdsForResultsTrue NS_SWIFT_NAME(participantIDsForResultsTrue);
+- (nullable NSSet *)participantIdsForResultsTrue NS_SWIFT_NAME(participantIDsForResultsTrue());
 
-- (NSSet *)getAllParticipantIds NS_SWIFT_NAME(getAllParticipantIDs);
+- (nullable NSSet *)getAllParticipantIds NS_SWIFT_NAME(getAllParticipantIDs());
 
 @end

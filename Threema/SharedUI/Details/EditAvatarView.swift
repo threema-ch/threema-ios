@@ -309,7 +309,7 @@ class EditAvatarView: UIStackView {
         let imagePickerController = UIImagePickerController()
         imagePickerController.delegate = self
         imagePickerController.sourceType = sourceType
-        imagePickerController.mediaTypes = [kUTTypeImage as String]
+        imagePickerController.mediaTypes = [UTType.image.identifier]
         
         // Quite a hack. Maybe generalize that in modal presenter?
         

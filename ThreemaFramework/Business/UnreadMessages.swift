@@ -24,12 +24,15 @@ import PromiseKit
 
 public protocol UnreadMessagesProtocol: UnreadMessagesProtocolObjc {
     func read(for conversation: Conversation, isAppInBackground: Bool)
+    func read(for messages: [BaseMessage], in conversation: Conversation, isAppInBackground: Bool)
 }
 
 @objc public protocol UnreadMessagesProtocolObjc {
     func count(for conversation: Conversation) -> Int
+    @discardableResult
     func totalCount() -> Int
-    func totalCount(doCalcUnreadMessagesCountOf conversation: [Conversation]) -> Int
+    @discardableResult
+    func totalCount(doCalcUnreadMessagesCountOf conversation: Set<Conversation>) -> Int
 }
 
 @objc public class UnreadMessages: NSObject, UnreadMessagesProtocol {
@@ -55,14 +58,16 @@ public protocol UnreadMessagesProtocol: UnreadMessagesProtocolObjc {
 
     /// Unread messages count of all conversations (count only cached `Conversation.unreadMessageCount`).
     /// - Returns: Unread messages count of all conversations
-    @objc @discardableResult public func totalCount() -> Int {
-        totalCount(doCalcUnreadMessagesCountOf: [Conversation]())
+    @discardableResult
+    public func totalCount() -> Int {
+        totalCount(doCalcUnreadMessagesCountOf: Set<Conversation>())
     }
 
     /// Unread messages count of all conversations, and recalculate `Conversation.unreadMessageCount` for given conversations.
     /// - Parameter doCalcUnreadMessagesCountOf: Recalculate unread messages count for this conversations
     /// - Returns: Unread messages count of all conversations
-    @objc @discardableResult public func totalCount(doCalcUnreadMessagesCountOf: [Conversation]) -> Int {
+    @discardableResult
+    public func totalCount(doCalcUnreadMessagesCountOf: Set<Conversation>) -> Int {
         var unreadMessagesCount = 0
 
         entityManager.performSyncBlockAndSafe {
@@ -84,7 +89,7 @@ public protocol UnreadMessagesProtocol: UnreadMessagesProtocolObjc {
         return unreadMessagesCount
     }
 
-    private func count(conversations: [Conversation], doCalcUnreadMessagesCountOf: [Conversation]) -> Int {
+    private func count(conversations: [Conversation], doCalcUnreadMessagesCountOf: Set<Conversation>) -> Int {
         var unreadMessagesCount = 0
 
         for conversation in conversations {
@@ -128,17 +133,29 @@ public protocol UnreadMessagesProtocol: UnreadMessagesProtocolObjc {
     public func read(for conversation: Conversation, isAppInBackground: Bool) {
 
         // Only send receipt if not Group and App is in foreground
-        guard !isAppInBackground,
-              let messages = entityManager.entityFetcher.unreadMessages(for: conversation) else {
+        guard let messages = entityManager.entityFetcher.unreadMessages(for: conversation) as? [BaseMessage] else {
+            return
+        }
+
+        return read(for: messages, in: conversation, isAppInBackground: isAppInBackground)
+    }
+    
+    public func read(
+        for messages: [BaseMessage],
+        in conversation: Conversation,
+        isAppInBackground: Bool
+    ) {
+        // Only send receipt if not Group and App is in foreground
+        guard !isAppInBackground else {
+            DDLogVerbose("App is not in foreground do not mark as read.")
             return
         }
 
         // Unread messages are only incoming messages
         var unreadMessages = [BaseMessage]()
 
-        messages.forEach { message in
-            guard let baseMessage = message as? BaseMessage,
-                  !baseMessage.isOwnMessage else {
+        messages.forEach { baseMessage in
+            guard !baseMessage.isOwnMessage else {
                 return
             }
 
@@ -153,7 +170,17 @@ public protocol UnreadMessagesProtocol: UnreadMessagesProtocolObjc {
         updateMessageRead(messages: unreadMessages)
         totalCount(doCalcUnreadMessagesCountOf: [conversation])
 
-        if let contact = conversation.contact {
+        if conversation.isGroup() {
+            // Reflect read receipts for group message
+            if let groupEntity = entityManager.entityFetcher.groupEntity(for: conversation) {
+                let groupIdentity = GroupIdentity(
+                    id: groupEntity.groupID,
+                    creator: groupEntity.groupCreator ?? MyIdentityStore.shared().identity
+                )
+                MessageSender.reflectReadReceipt(messages: unreadMessages, senderGroupIdentity: groupIdentity)
+            }
+        }
+        else if let contact = conversation.contact {
             // Send read receipt
             MessageSender.sendReadReceipt(
                 forMessages: unreadMessages,

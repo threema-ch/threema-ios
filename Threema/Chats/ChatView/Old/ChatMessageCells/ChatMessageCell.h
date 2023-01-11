@@ -33,6 +33,7 @@
 @property (nonatomic, readonly) UIImageView *statusImage;
 @property (nonatomic, readonly) UIImageView *msgBackground;
 @property (nonatomic, readonly) UITapGestureRecognizer *dtgr;
+@property UIButton *resendButton;
 
 - (id)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier transparent:(BOOL)transparent;
 

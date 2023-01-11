@@ -30,7 +30,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 @implementation UTIConverter
 
 + (NSString *)mimeTypeFromUTI:(NSString *)uti {
-    if ([uti isEqualToString:UTTYPE_VCARD]) {
+    if ([uti isEqualToString:UTTypeVCard.identifier]) {
         return @"text/vcard";
     }
         
@@ -72,18 +72,18 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 }
 
 + (BOOL)isImageMimeType:(NSString *)mimeType {
-    return [self isKind:kUTTypeImage mimeType:mimeType];
+    return [self isKind:UTTypeImage.identifier mimeType:mimeType];
 }
 
 + (BOOL)isRenderingImageMimeType:(NSString *)mimeType {
-    if ([self isKind:kUTTypeJPEG mimeType:mimeType] || [self isKind:kUTTypePNG mimeType:mimeType]) {
+    if ([self isKind:UTTypeJPEG.identifier mimeType:mimeType] || [self isKind:UTTypePNG.identifier mimeType:mimeType]) {
         return true;
     }
     return false;
 }
 
 + (BOOL)isPNGImageMimeType:(NSString *)mimeType {
-    if ([self isKind:kUTTypePNG mimeType:mimeType]) {
+    if ([self isKind:UTTypePNG.identifier mimeType:mimeType]) {
         return true;
     }
     return false;
@@ -104,44 +104,48 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     return false;
 }
 
++ (NSArray<NSString *>*)renderingAudioMimetypes {
+    return @[@"audio/aac", @"audio/m4a", @"audio/x-m4a", @"audio/x-m4a"];
+}
+
 + (BOOL)isGifMimeType:(NSString *)mimeType {
-    return [self isKind:kUTTypeGIF mimeType:mimeType];
+    return [self isKind:UTTypeGIF.identifier mimeType:mimeType];
 }
 
 + (BOOL)isAudioMimeType:(NSString *)mimeType {
-    return [self isKind:kUTTypeAudio mimeType:mimeType];
+    return [self isKind:UTTypeAudio.identifier mimeType:mimeType];
 }
 
 + (BOOL)isVideoMimeType:(NSString *)mimeType {
-    return [self isKind:kUTTypeVideo mimeType:mimeType];
+    return [self isKind:UTTypeVideo.identifier mimeType:mimeType];
 }
 
 + (BOOL)isMovieMimeType:(NSString *)mimeType {
-    return [self isKind:kUTTypeMovie mimeType:mimeType];
+    return [self isKind:UTTypeMovie.identifier mimeType:mimeType];
 }
 
 + (BOOL)isPDFMimeType:(NSString *)mimeType {
-    return [self isKind:kUTTypePDF mimeType:mimeType];
+    return [self isKind:UTTypePDF.identifier mimeType:mimeType];
 }
 
 + (BOOL)isContactMimeType:(NSString *)mimeType {
-    return [self isKind:kUTTypeContact mimeType:mimeType];
+    return [self isKind:UTTypePNG.identifier mimeType:mimeType];
 }
 
 + (BOOL)isCalendarMimeType:(NSString *)mimeType {
-    return [self isKind:kUTTypeCalendarEvent mimeType:mimeType];
+    return [self isKind:UTTypeCalendarEvent.identifier mimeType:mimeType];
 }
 
 + (BOOL)isArchiveMimeType:(NSString *)mimeType {
-    return [self isKind:kUTTypeArchive mimeType:mimeType];
+    return [self isKind:UTTypeArchive.identifier mimeType:mimeType];
 }
 
 + (BOOL)isPublicContentMimeType:(NSString *)mimeType {
-    return [self isKind:kUTTypeContent mimeType:mimeType];
+    return [self isKind:UTTypeContent.identifier mimeType:mimeType];
 }
 
 + (BOOL)isPublicCompositeContentMimeType:(NSString *)mimeType {
-    return [self isKind:kUTTypeCompositeContent mimeType:mimeType];
+    return [self isKind:UTTypeCompositeContent.identifier mimeType:mimeType];
 }
 
 + (BOOL)isWordMimeType:(NSString *)mimeType {
@@ -169,7 +173,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 }
 
 + (BOOL)isTextMimeType:(NSString *)mimeType {
-    return [self isKind:kUTTypeText mimeType:mimeType];
+    return [self isKind:UTTypeText.identifier mimeType:mimeType];
 }
 
 + (BOOL)isPassMimeType:(NSString *)mimeType {
@@ -181,21 +185,22 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 }
 
 + (BOOL)conformsToImageType:(NSString *)uti {
-    return [UTIConverter type:uti conformsTo:UTTYPE_IMAGE];
+    return [UTIConverter type:uti conformsTo:UTTypeImage.identifier];
 }
 
 + (BOOL)conformsToMovieType:(NSString *)uti {
-    return [UTIConverter type:uti conformsTo:UTTYPE_MOVIE];
+    return [UTIConverter type:uti conformsTo:UTTypeMovie.identifier];
 }
 
-+ (BOOL)isKind:(CFStringRef)type mimeType:(NSString *)mimeType {
++ (BOOL)isKind:(NSString *)type mimeType:(NSString *)mimeType {
+    CFStringRef cfType = (__bridge CFStringRef)type;
     CFStringRef MIMEType = (__bridge CFStringRef)mimeType;
     CFStringRef UTI = UTTypeCreatePreferredIdentifierForTag(kUTTagClassMIMEType, MIMEType, NULL);
     if (UTI == nil) {
         DDLogError(@"UTI was nil for parameters %@ and %@", type, mimeType);
         return false;
     }
-    BOOL isKindOfType = UTTypeConformsTo(UTI, type);
+    BOOL isKindOfType = UTTypeConformsTo(UTI, cfType);
     CFRelease(UTI);
     return isKindOfType;
 }
@@ -250,12 +255,8 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 }
 
 + (NSString *)localizedDescriptionForMimeType:(NSString *)mimeType {
-    CFStringRef MIMEType = (__bridge CFStringRef)mimeType;
-    CFStringRef UTI = UTTypeCreatePreferredIdentifierForTag(kUTTagClassMIMEType, MIMEType, NULL);
-
-    CFStringRef description = UTTypeCopyDescription(UTI);
-    
-    return (__bridge_transfer NSString *)description;
+    UTType* utType = [UTType typeWithTag:mimeType tagClass:UTTagClassMIMEType conformingToType:nil];
+    return  utType.localizedDescription;
 }
 
 @end

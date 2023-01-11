@@ -22,7 +22,7 @@ import Foundation
 @testable import ThreemaFramework
 
 class MediatorMessageProtocolMock: MediatorMessageProtocolProtocol {
-    private let deviceGroupPathKey: Data
+    private let deviceGroupKeys: DeviceGroupKeys
     private let mmp: MediatorMessageProtocolProtocol
 
     struct ReflectData {
@@ -32,16 +32,23 @@ class MediatorMessageProtocolMock: MediatorMessageProtocolProtocol {
 
     private var returnValues: [ReflectData]
 
-    init(deviceGroupPathKey: Data, returnValues: [ReflectData]) {
-        self.deviceGroupPathKey = deviceGroupPathKey
+    init(deviceGroupKeys: DeviceGroupKeys, returnValues: [ReflectData]) {
+        self.deviceGroupKeys = deviceGroupKeys
         self.returnValues = returnValues
 
-        self.mmp = MediatorMessageProtocol(deviceGroupPathKey: deviceGroupPathKey)
+        self.mmp = MediatorMessageProtocol(deviceGroupKeys: deviceGroupKeys)
     }
 
     convenience init() {
         self.init(
-            deviceGroupPathKey: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupPathKeyLen))!,
+            deviceGroupKeys: DeviceGroupKeys(
+                dgpk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
+                dgrk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
+                dgdik: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
+                dgsddk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
+                dgtsk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
+                deviceGroupIDFirstByteHex: "a1"
+            ),
             returnValues: []
         )
     }
@@ -117,11 +124,11 @@ class MediatorMessageProtocolMock: MediatorMessageProtocolProtocol {
         nil
     }
 
-    func encryptByte(data: Data) -> Data? {
+    func encryptByte(data: Data, key: Data) -> Data? {
         nil
     }
 
-    func decryptByte(data: Data) -> Data? {
+    func decryptByte(data: Data, key: Data) -> Data? {
         nil
     }
 
@@ -131,6 +138,15 @@ class MediatorMessageProtocolMock: MediatorMessageProtocolProtocol {
         messageID: UInt64,
         senderIdentity: String,
         createdAt: Date
+    ) -> D2d_Envelope {
+        D2d_Envelope()
+    }
+
+    func getEnvelopeForIncomingMessageUpdate(
+        messageIDs: [Data],
+        messageReadDates: [Date],
+        // swiftformat:disable:next all
+        conversationID: D2d_ConversationId
     ) -> D2d_Envelope {
         D2d_Envelope()
     }
@@ -162,7 +178,8 @@ class MediatorMessageProtocolMock: MediatorMessageProtocolProtocol {
         )
     }
 
-    func getEnvelopeForOutgoingMessageSent(messageID: Data, receiver: D2d_MessageReceiver) -> D2d_Envelope {
+    // swiftformat:disable:next all
+    func getEnvelopeForOutgoingMessageUpdate(messageID: Data, conversationID: D2d_ConversationId) -> D2d_Envelope {
         D2d_Envelope()
     }
 
@@ -170,7 +187,7 @@ class MediatorMessageProtocolMock: MediatorMessageProtocolProtocol {
         D2d_Envelope()
     }
 
-    func getEnvelopeForContactSync(contact: Sync_Contact) -> D2d_Envelope {
+    func getEnvelopeForContactSync(contact: Sync_Contact, syncAction: DeltaSyncContact.SyncAction) -> D2d_Envelope {
         D2d_Envelope()
     }
 
@@ -180,5 +197,13 @@ class MediatorMessageProtocolMock: MediatorMessageProtocolProtocol {
 
     func getEnvelopeForSettingsUpdate(settings: Sync_Settings) -> D2d_Envelope {
         D2d_Envelope()
+    }
+
+    func decryptEnvelope(data: Data) -> D2d_Envelope? {
+        nil
+    }
+
+    func encryptEnvelope(envelope: D2d_Envelope) -> Data? {
+        nil
     }
 }

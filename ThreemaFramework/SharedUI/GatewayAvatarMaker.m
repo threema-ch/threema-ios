@@ -26,10 +26,17 @@
 #import "AppGroup.h"
 #import "HTTPSURLLoader.h"
 #import "BundleUtil.h"
+#import "UserSettings.h"
 
 #define AVATAR_EXPIRES_DICTIONARY @"GatewayAvatarExpiresDictionary"
 #define AVATAR_REFRESH_TIMESTAMP @"GatewayAvatarLastRefreshDate"
 #define AVATAR_CHECK_INTERVAL (24 * 60 * 60)
+
+#ifdef DEBUG
+  static const DDLogLevel ddLogLevel = DDLogLevelVerbose;
+#else
+  static const DDLogLevel ddLogLevel = DDLogLevelWarning;
+#endif
 
 @interface GatewayAvatarMaker ()
 
@@ -47,12 +54,22 @@
 }
 
 - (void)refresh {
+    if ([[UserSettings sharedUserSettings] blockCommunication]) {
+        DDLogWarn(@"Communication is blocked");
+        return;
+    }
+
     _forceRefresh = NO;
 
     [self loadCache];
 }
 
 - (void)refreshForced {
+    if ([[UserSettings sharedUserSettings] blockCommunication]) {
+        DDLogWarn(@"Communication is blocked");
+        return;
+    }
+
     _forceRefresh = YES;
     
     [self deleteExpires];

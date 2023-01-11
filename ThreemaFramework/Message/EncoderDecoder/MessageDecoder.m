@@ -101,10 +101,6 @@
     }
     DDLogVerbose(@"Effective data length is %d", realDataLength);
     
-    // Get message type and body, and decode it
-    uint8_t *type = (uint8_t*)data.bytes;
-    NSData *body = [NSData dataWithBytes:(data.bytes + 1) length:realDataLength - 1];
-    
     // Decrypt metadata, if present
     MessageMetadata *metadata = nil;
     if (boxmsg.metadataBox != nil) {
@@ -126,8 +122,7 @@
         }
     }
     
-    AbstractMessage *msg;
-    msg = [MessageDecoder decode:(int)*type body:body];
+    AbstractMessage *msg = [MessageDecoder decodeRawBody:data realDataLength:realDataLength];
     
     if (msg != nil) {
         /* copy header attributes from boxed message */
@@ -155,7 +150,7 @@
             msg.pushFromName = boxmsg.pushFromName;
         }
         
-        if (msg.isGroup == YES) {
+        if (msg.flagGroupMessage == YES) {
             // Set group creator and sync group id/creator with boxed message
             if ([msg isKindOfClass:[GroupCreateMessage class]] || [msg isKindOfClass:[GroupRenameMessage class]] || [msg isKindOfClass:[GroupSetPhotoMessage class]] || [msg isKindOfClass:[GroupDeletePhotoMessage class]]) {
                 ((AbstractGroupMessage *)msg).groupCreator = boxmsg.fromIdentity;
@@ -164,6 +159,33 @@
                 ((AbstractGroupMessage *)msg).groupCreator = boxmsg.toIdentity;
             }
         }
+    }
+    
+    return msg;
+}
+
++ (AbstractMessage*)decodeRawBody:(NSData*)data realDataLength:(int)realDataLength {
+    // Get message type and body, and decode it
+    uint8_t *type = (uint8_t*)data.bytes;
+    NSData *body = [NSData dataWithBytes:(data.bytes + 1) length:realDataLength - 1];
+    return [MessageDecoder decode:(int)*type body:body];
+}
+
++ (AbstractMessage*)decodeEncapsulated:(NSData*)data outer:(AbstractMessage*)outer {
+    AbstractMessage *msg = [MessageDecoder decodeRawBody:data realDataLength:(int)data.length];
+    
+    if (msg != nil) {
+        // Copy header fields from outer message
+        msg.fromIdentity = outer.fromIdentity;
+        msg.toIdentity = outer.toIdentity;
+        msg.messageId = outer.messageId;
+        msg.delivered = outer.delivered;
+        msg.date = outer.date;
+        msg.deliveryDate = outer.deliveryDate;
+        msg.userAck = outer.userAck;
+        msg.sendUserAck = outer.sendUserAck;
+        msg.nonce = outer.nonce;
+        msg.flags = outer.flags;
     }
     
     return msg;
@@ -711,6 +733,18 @@
             BoxVoIPCallRingingMessage *ringingMessage = [[BoxVoIPCallRingingMessage alloc] init];
             ringingMessage.jsonData = [NSData dataWithBytes:body.bytes length:[body length]];
             msg = ringingMessage;
+            break;
+        }
+        case MSGTYPE_FORWARD_SECURITY: {
+            NSData *protobufData = [NSData dataWithBytes:body.bytes length:[body length]];
+            NSError *protobufError = nil;
+            ForwardSecurityData *fsData = [ForwardSecurityData fromProtobufWithRawProtobufMessage:protobufData error:&protobufError];
+            if (protobufError != nil) {
+                DDLogWarn(@"Cannot decode FS message: %@", protobufError);
+                break;
+            }
+            ForwardSecurityEnvelopeMessage *envelopeMessage = [[ForwardSecurityEnvelopeMessage alloc] initWithData:fsData];
+            msg = envelopeMessage;
             break;
         }
         default: {

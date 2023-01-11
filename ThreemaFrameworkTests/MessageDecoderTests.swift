@@ -762,8 +762,9 @@ class MessageDecoderTests: XCTestCase {
     }
     
     private func checkBallotResult(ballotMessage: BallotMessage?, result: [Any]) {
-        let choice1 = ((ballotMessage?.ballot.choices)! as NSSet).allObjects.first as! BallotChoice
-        let choice2 = ((ballotMessage?.ballot.choices)! as NSSet).allObjects.last as! BallotChoice
+        let allObjects = ((ballotMessage?.ballot.choices)! as NSSet).allObjects
+        let choice1 = allObjects.first as! BallotChoice
+        let choice2 = allObjects.last as! BallotChoice
         
         if choice1.orderPosition == 0 {
             XCTAssertEqual(choice1.name, result[0] as? String)

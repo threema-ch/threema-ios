@@ -34,8 +34,8 @@
 #import <ThreemaFramework/BallotMessageEncoder.h>
 #import <ThreemaFramework/BallotResult.h>
 #import <ThreemaFramework/BaseMessage.h>
-#import <ThreemaFramework/BlobMessageSender.h>
-#import <ThreemaFramework/BlobUploadDelegate.h>
+#import <ThreemaFramework/Old_BlobMessageSender.h>
+#import <ThreemaFramework/Old_BlobUploadDelegate.h>
 #import <ThreemaFramework/BoxAudioMessage.h>
 #import <ThreemaFramework/BoxBallotCreateMessage.h>
 #import <ThreemaFramework/BoxBallotVoteMessage.h>
@@ -64,13 +64,14 @@
 #import <ThreemaFramework/DatabaseContext.h>
 #import <ThreemaFramework/DatabaseManager.h>
 #import <ThreemaFramework/DeliveryReceiptMessage.h>
+#import <ThreemaFramework/DeviceGroupKeys.h>
 #import <ThreemaFramework/EntityCreator.h>
 #import <ThreemaFramework/EntityFetcher.h>
 #import <ThreemaFramework/ErrorHandler.h>
 #import <ThreemaFramework/ExternalStorageInfo.h>
 #import <ThreemaFramework/FileLoggerCustom.h>
 #import <ThreemaFramework/FileMessageEntity.h>
-#import <ThreemaFramework/FileMessageSender.h>
+#import <ThreemaFramework/Old_FileMessageSender.h>
 #import <ThreemaFramework/MediaConverter.h>
 #import <ThreemaFramework/UTIConverter.h>
 #import <ThreemaFramework/FileMessageDecoder.h>
@@ -102,6 +103,7 @@
 #import <ThreemaFramework/LogLevelCustom.h>
 #import <ThreemaFramework/NaClCrypto.h>
 #import <ThreemaFramework/Nonce.h>
+#import <ThreemaFramework/NonceHasher.h>
 #import <ThreemaFramework/NSData+ConvertUInt64.h>
 #import <ThreemaFramework/MessageDecoder.h>
 #import <ThreemaFramework/MessageListenerDelegate.h>
@@ -112,7 +114,6 @@
 #import <ThreemaFramework/MyIdentityStore.h>
 #import <ThreemaFramework/ProtocolDefines.h>
 #import <ThreemaFramework/PushPayloadDecryptor.h>
-#import <ThreemaFramework/PushSetting.h>
 #import <ThreemaFramework/ServerAPIConnector.h>
 #import <ThreemaFramework/UnknownTypeMessage.h>
 #import <ThreemaFramework/UploadProgressDelegate.h>
@@ -157,6 +158,7 @@
 #import <ThreemaFramework/PageView.h>
 #import <ThreemaFramework/ThemedTableViewController.h>
 #import <ThreemaFramework/MessageDraftStore.h>
+#import <ThreemaFramework/CallEntity.h>
 
 //! Project version number for ThreemaFramework.
 FOUNDATION_EXPORT double ThreemaFrameworkVersionNumber;

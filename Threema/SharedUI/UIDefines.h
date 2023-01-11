@@ -40,11 +40,4 @@
 #define THREEMA_COLOR_LIGHT_GREY [UIColor colorWithRed:153.0/256.0 green:153.0/256.0 blue:153.0/256.0 alpha:1.0]
 #define THREEMA_COLOR_GREEN [UIColor colorWithRed:63.0/256.0 green:230.0/256.0 blue:105.0/256.0 alpha:1.0]
 
-#if __LP64__
-#define is64Bit (int) 1
-#else
-#define is64Bit (int) 0
-#endif
-
-
 #endif

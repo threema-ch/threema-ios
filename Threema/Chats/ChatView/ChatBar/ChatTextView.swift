@@ -33,7 +33,7 @@ protocol ChatTextViewDelegate: AnyObject {
     func didEndEditing()
 }
 
-final class ChatTextView: UITextView {
+final class ChatTextView: RTLAligningTextView {
     
     // MARK: - Public properties
     
@@ -46,12 +46,21 @@ final class ChatTextView: UITextView {
         }
     }
     
+    override var textInputContextIdentifier: String? {
+        conversationIdentifier
+    }
+    
     /// Returns the amount by which chat view inset from the leading edge.
     ///
     /// This is currently only used to align the quote view.
     var textBeginningInset: CGFloat {
         frame.minX
     }
+    
+    /// Keeping track of whether `didBeginEditing` and `didEndEditing` have been called.
+    /// True when `didBeginEditing` was called but `didEndEditing` was not yet called.
+    /// False otherwise
+    var isEditing = false
     
     // MARK: - Delegates
     
@@ -68,6 +77,7 @@ final class ChatTextView: UITextView {
     fileprivate var isDummy = false
     
     private let draftText: String?
+    private var conversationIdentifier: String?
     
     private let markupParser = MarkupParser()
     private(set) var notParsedText = NSAttributedString()
@@ -83,9 +93,18 @@ final class ChatTextView: UITextView {
         return heightConstraint
     }()
     
-    private var minHeight: CGFloat = Config.cornerRadius * 2
-    private var maxHeight: CGFloat = Config
-        .cornerRadius * CGFloat(2 * ChatViewConfiguration.ChatBar.maxNumberOfLines)
+    private var minHeight: CGFloat {
+        if traitCollection.preferredContentSizeCategory < .large {
+            return Config.smallerContentSizeConfigurationCornerRadius * 2
+        }
+        else {
+            return Config.cornerRadius * 2
+        }
+    }
+    
+    private var maxHeight: CGFloat {
+        minHeight * CGFloat(ChatViewConfiguration.ChatBar.maxNumberOfLines)
+    }
     
     private var prevSingleLineHeight: CGFloat = 0.0
     
@@ -117,9 +136,11 @@ final class ChatTextView: UITextView {
         label.isUserInteractionEnabled = false
         label.font = UIFont.preferredFont(forTextStyle: Config.textStyle)
         label.adjustsFontForContentSizeCategory = true
-        
+        label.isAccessibilityElement = false
         return label
     }()
+    
+    private let textViewKeyboardWorkaroundHandler = TextViewKeyboardWorkaroundHandler()
     
     // MARK: - Lifecycle
     
@@ -139,9 +160,9 @@ final class ChatTextView: UITextView {
         configureTextView()
     }
     
-    init(draftText: String? = nil) {
+    init(draftText: String? = nil, conversationIdentifier: String? = nil) {
         self.draftText = draftText
-        
+        self.conversationIdentifier = conversationIdentifier
         super.init(frame: .zero, textContainer: nil)
         
         configureTextView()
@@ -213,6 +234,7 @@ final class ChatTextView: UITextView {
         updatePlaceholder()
         updateColors()
         resizeTextView()
+        updateTextAlignment()
     }
     
     private func configureLayout() {
@@ -257,6 +279,12 @@ final class ChatTextView: UITextView {
             heightConstraint.constant = height
             
             UIView.performWithoutAnimation {
+                /// Calling layoutIfNeeded while we're not in the view causes temporary constraints to be added to our view
+                /// which then need to be broken once the real layout is ready.
+                /// We just won't animate as long as we're not added to the view hierarchy.
+                guard self.window != nil else {
+                    return
+                }
                 // TODO: IOS-2562
                 // Otherwise ChatViewController might miss our new height and animate it at an unfortunate time
                 superview?.setNeedsLayout()
@@ -280,7 +308,7 @@ final class ChatTextView: UITextView {
     
     func updateColors() {
         backgroundColor = Colors.chatBarInput
-        layer.borderColor = Colors.backgroundButton.cgColor
+        layer.borderColor = Colors.hairLine.cgColor
         
         placeholderLabel.textColor = Colors.textPlaceholder
         
@@ -343,6 +371,17 @@ final class ChatTextView: UITextView {
         layoutIfNeeded()
     }
     
+    @objc func updateTextAlignment() {
+        if let inputModeLocale = textInputMode?.primaryLanguage {
+            if NSLocale.characterDirection(forLanguage: inputModeLocale) == .rightToLeft {
+                textAlignment = .right
+            }
+            else {
+                textAlignment = .left
+            }
+        }
+    }
+    
     // MARK: - Observers
     
     private func addObservers() {
@@ -350,6 +389,13 @@ final class ChatTextView: UITextView {
             self,
             selector: #selector(preferredContentSizeCategoryDidChange),
             name: UIContentSizeCategory.didChangeNotification,
+            object: nil
+        )
+        
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(updateTextAlignment),
+            name: UITextInputMode.currentInputModeDidChangeNotification,
             object: nil
         )
     }
@@ -390,7 +436,7 @@ final class ChatTextView: UITextView {
     
     @objc private func sendOnHWKReturn() {
         if !isEmpty {
-            chatTextViewDelegate?.didEndEditing()
+            isEditing = false
             chatTextViewDelegate?.sendText()
             
             // This covers the case where a draft is sent using the HW keyboard
@@ -433,14 +479,14 @@ final class ChatTextView: UITextView {
         let text = parsedMentions.string
         attributedText = NSAttributedString(string: "")
         
-        guard let chatTextViewDelegate = chatTextViewDelegate else {
+        guard chatTextViewDelegate != nil else {
             let message = "chatTextViewDelegate should not be nil"
             DDLogError(message)
             assertionFailure(message)
             return nil
         }
         
-        chatTextViewDelegate.didEndEditing()
+        isEditing = false
         
         if text != "" {
             return text
@@ -582,6 +628,55 @@ final class ChatTextView: UITextView {
     }
 }
 
+// MARK: - Accessibility
+
+extension ChatTextView {
+
+    override var accessibilityLabel: String? {
+        get {
+            BundleUtil.localizedString(forKey: "accessibility_chatbar_label")
+        }
+        set {
+            // Do nothing
+        }
+    }
+    
+    override var accessibilityValue: String? {
+        get {
+            if isEmpty {
+                return nil
+            }
+            else {
+                return String.localizedStringWithFormat(
+                    BundleUtil.localizedString(forKey: "accessibility_chatbar_value"),
+                    text
+                )
+            }
+        }
+        set {
+            // Do nothing
+        }
+    }
+    
+    override var accessibilityHint: String? {
+        get {
+            BundleUtil.localizedString(forKey: "accessibility_chatbar_hint")
+        }
+        set {
+            // Do nothing
+        }
+    }
+    
+    override var accessibilityTraits: UIAccessibilityTraits {
+        get {
+            .allowsDirectInteraction
+        }
+        set {
+            // Do nothing
+        }
+    }
+}
+
 // MARK: - UITextViewDelegate
 
 extension ChatTextView: UITextViewDelegate {
@@ -615,7 +710,12 @@ extension ChatTextView: UITextViewDelegate {
         let adjustedRange = getAdjustedRange(from: range, with: textView.markedTextRange, in: textView)
 
         let oldParsedText = NSMutableAttributedString(attributedString: textView.attributedText)
-        textChangeQueue.append((adjustedRange, oldParsedText, text))
+        
+        textChangeQueue.append(textViewKeyboardWorkaroundHandler.nextTextViewChange(
+            shouldChangeTextIn: adjustedRange,
+            replacementText: text,
+            oldText: oldParsedText
+        ))
         
         return true
     }
@@ -656,7 +756,7 @@ extension ChatTextView: UITextViewDelegate {
             }
             
             if returnToSend, text == "\n", !isEmpty {
-                chatTextViewDelegate?.didEndEditing()
+                isEditing = false
                 chatTextViewDelegate?.sendText()
             }
             
@@ -666,10 +766,20 @@ extension ChatTextView: UITextViewDelegate {
         setNeedsDisplay()
     }
     
+    func textViewDidBeginEditing(_ textView: UITextView) {
+        if !isEditing {
+            isEditing = true
+        }
+    }
+    
     internal func textViewDidEndEditing(_ textView: UITextView) {
+        if isEditing {
+            isEditing = false
+        }
+        
         updatePlaceholder()
         
-        chatTextViewDelegate?.didEndEditing()
+        isEditing = false
         
         resignFirstResponder()
     }

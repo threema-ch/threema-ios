@@ -30,6 +30,10 @@
 	<dict>
 		<key>NSExtensionAttributes</key>
 		<dict>
+			<key>IntentsSupported</key>
+			<array>
+				<string>INSendMessageIntent</string>
+			</array>
 			<key>NSExtensionActivationRule</key>
 			<string>
 (

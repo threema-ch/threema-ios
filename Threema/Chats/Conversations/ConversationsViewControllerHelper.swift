@@ -137,39 +137,41 @@ class ConversationsViewControllerHelper {
         }
         completion()
     }
-    
-    /// Leaves a Group
-    /// - Parameter group: Group to leave
-    private static func leaveGroup(group: Group) {
-        guard !group.didLeave else {
-            // Only send leave if we're still in the group
-            return
-        }
 
-        GroupManager().leave(
-            groupID: group.groupID,
-            creator: group.groupCreatorIdentity,
-            toMembers: nil
-        )
-    }
-
-    /// Dissolve a group
-    /// - Parameter group: Group to dissolve
-    private static func dissolveGroup(group: Group, entityManager: EntityManager) {
-        let groupManager = GroupManager(entityManager: entityManager)
-        groupManager.dissolve(groupID: group.groupID, to: nil)
-    }
-    
     /// Deletes a Conversation
     /// - Parameters:
     ///   - conversation: Conversation to be deleted
+    ///   - group: Group to be deleted
+    ///   - deleteHiddenContacts: True delete hidden contacts where member of the group
     ///   - entityManager: EntityManager to handle deletion
-    private static func deleteConversation(conversation: Conversation, entityManager: EntityManager) {
+    private static func deleteConversation(
+        conversation: Conversation,
+        group: Group?,
+        deleteHiddenContacts: Bool,
+        entityManager: EntityManager
+    ) {
+        if let group = group {
+            guard group.state != .active, group.state != .requestedSync else {
+                return
+            }
+        }
+
         MessageDraftStore.deleteDraft(for: conversation)
         ChatScrollPosition.shared.removeSavedPosition(for: conversation)
+
+        var hiddenContacts = [String]()
         entityManager.performSyncBlockAndSafe {
+            if deleteHiddenContacts {
+                hiddenContacts = conversation.members.filter(\.isContactHidden).map(\.identity)
+            }
+
             entityManager.entityDestroyer.deleteObject(object: conversation)
         }
+
+        for identity in hiddenContacts {
+            ContactStore.shared().deleteContact(identity: identity, entityManagerObject: entityManager)
+        }
+
         let notificationManager = NotificationManager()
         notificationManager.updateUnreadMessagesCount()
         
@@ -409,6 +411,8 @@ class ConversationsViewControllerHelper {
             
             ConversationsViewControllerHelper.deleteConversation(
                 conversation: conversation,
+                group: nil,
+                deleteHiddenContacts: true,
                 entityManager: entityManager
             )
             handler(true)
@@ -430,7 +434,7 @@ class ConversationsViewControllerHelper {
             style: .destructive
         ) { _ in
             
-            ConversationsViewControllerHelper.leaveGroup(group: group)
+            GroupManager().leave(groupID: group.groupID, creator: group.groupCreatorIdentity, toMembers: nil)
             handler(true)
         }
         return leaveAction
@@ -452,9 +456,11 @@ class ConversationsViewControllerHelper {
             style: .destructive
         ) { _ in
             
-            ConversationsViewControllerHelper.leaveGroup(group: group)
+            GroupManager().leave(groupID: group.groupID, creator: group.groupCreatorIdentity, toMembers: nil)
             ConversationsViewControllerHelper.deleteConversation(
                 conversation: group.conversation,
+                group: group,
+                deleteHiddenContacts: false,
                 entityManager: entityManager
             )
             handler(true)
@@ -477,7 +483,7 @@ class ConversationsViewControllerHelper {
             style: .destructive
         ) { _ in
 
-            ConversationsViewControllerHelper.dissolveGroup(group: group, entityManager: entityManager)
+            GroupManager(entityManager: entityManager).dissolve(groupID: group.groupID, to: nil)
             handler(true)
         }
         return dissolveAction
@@ -499,14 +505,16 @@ class ConversationsViewControllerHelper {
             style: .destructive
         ) { _ in
             
-            ConversationsViewControllerHelper.dissolveGroup(group: group, entityManager: entityManager)
-            
+            GroupManager(entityManager: entityManager).dissolve(groupID: group.groupID, to: nil)
+
             guard let conversation = entityManager.entityFetcher.conversation(for: group.groupID) else {
                 handler(false)
                 return
             }
             ConversationsViewControllerHelper.deleteConversation(
                 conversation: conversation,
+                group: group,
+                deleteHiddenContacts: false,
                 entityManager: entityManager
             )
             handler(true)
@@ -569,6 +577,7 @@ class ConversationsViewControllerHelper {
             privateTitle = BundleUtil.localizedString(forKey: "make_private")
             privateAction.image = BundleUtil.imageNamed("lock.fill_regular.L")
         }
+        privateAction.title = privateTitle
         privateAction.accessibilityLabel = privateTitle
         privateAction.backgroundColor = Colors.gray
         

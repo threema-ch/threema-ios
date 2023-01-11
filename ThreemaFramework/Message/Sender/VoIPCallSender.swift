@@ -39,7 +39,7 @@ public class VoIPCallSender {
                 "VoipCallService: [cid=\(offer.callID.callID)]: Call offer enqueued to \(offer.contactIdentity ?? "?")"
             )
             
-            MessageSender.send(msg, onCompletion: nil)
+            MessageSender.send(msg, isPersistent: false, onCompletion: nil)
         }
         catch {
             DDLogError(
@@ -59,7 +59,7 @@ public class VoIPCallSender {
                 "VoipCallService: [cid=\(answer.callID.callID)]: Call answer enqueued to \(answer.contactIdentity ?? "?")"
             )
 
-            MessageSender.send(msg, onCompletion: nil)
+            MessageSender.send(msg, isPersistent: false, onCompletion: nil)
         }
         catch {
             DDLogError(
@@ -85,7 +85,7 @@ public class VoIPCallSender {
                 )
             }
 
-            MessageSender.send(msg, onCompletion: nil)
+            MessageSender.send(msg, isPersistent: false, onCompletion: nil)
         }
         catch {
             DDLogError(
@@ -116,7 +116,7 @@ public class VoIPCallSender {
                 var dispatchGroup: DispatchGroup? = DispatchGroup()
                 dispatchGroup?.enter()
                 
-                MessageSender.send(msg, onCompletion: {
+                MessageSender.send(msg, isPersistent: false, onCompletion: {
                     dispatchGroup?.leave()
                     dispatchGroup = nil
                 })
@@ -124,7 +124,7 @@ public class VoIPCallSender {
                 dispatchGroup?.wait()
             }
             else {
-                MessageSender.send(msg, onCompletion: nil)
+                MessageSender.send(msg, isPersistent: false, onCompletion: nil)
             }
         }
         catch {
@@ -145,7 +145,7 @@ public class VoIPCallSender {
                 "VoipCallService: [cid=\(ringingMessage.callID.callID)]: Call ringing message enqueued to \(ringingMessage.contactIdentity ?? "?")"
             )
 
-            MessageSender.send(msg, onCompletion: nil)
+            MessageSender.send(msg, isPersistent: false, onCompletion: nil)
         }
         catch {
             DDLogError(

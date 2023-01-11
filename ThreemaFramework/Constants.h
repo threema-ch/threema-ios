@@ -44,6 +44,7 @@
 #define MEDIA_EXTENSION_AUDIO @"m4a"
 #define MEDIA_EXTENSION_IMAGE @"jpg"
 #define MEDIA_EXTENSION_VIDEO @"mp4"
+#define MEDIA_EXTENSION_GIF @"gif"
 
 #pragma mark - notifications
 
@@ -77,6 +78,7 @@
 #define kNotificationIncomingSettingsSynchronization @"IncomingSettingsSynchronization"
 #define kNotificationNavigationBarColorShouldChange @"NavigationBarColorShouldChange"
 #define kNotificationNavigationItemPromptShouldChange @"NavigationItemPromptShouldChange"
+#define kNotificationMultiDeviceWizardDidUpdate @"MultiDeviceWizardDidUpdate"
 
 #define kNotificationUpdateDraftForCell @"ThreemaUpdateDraftForCell"
 
@@ -171,8 +173,6 @@ static NSString * const kThreemaVideoCallsQualitySettingChanged = @"ThreemaVideo
 #pragma mark - UserDefault Keys
 #define kLastPushOverrideSendDate @"LastPushOverrideSendDate"
 #define kShowedTestFlightFeedbackView @"ShowedTestFlightFeedbackView"
-#define kLastEphemeralKeyHashes @"LastEphemeralKeyHashes"
-#define kShowRogueDeviceWarningFlag @"ShowRogueDeviceWarningFlag"
 #define kShowed10YearsAnniversaryView @"Showed10YearsAnniversaryView"
 
 #pragma mark - Push notification keys

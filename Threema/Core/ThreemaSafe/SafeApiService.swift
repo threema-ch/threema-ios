@@ -167,18 +167,18 @@ import Foundation
         return (data, nil)
     }
     
-    private func getHttpClient(user: String?, password: String?, completion: @escaping (HttpClient) -> Void) {
+    private func getHttpClient(user: String?, password: String?, completion: @escaping (HTTPClient) -> Void) {
         if user != nil, password != nil {
-            completion(HttpClient(user: user, password: password))
+            completion(HTTPClient(user: user, password: password))
         }
         else {
             AuthTokenManager.shared().obtainToken { authToken, _ in
                 if authToken != nil {
                     let authorization = "Token " + authToken!
-                    completion(HttpClient(authorization: authorization))
+                    completion(HTTPClient(authorization: authorization))
                 }
                 else {
-                    completion(HttpClient(user: user, password: password))
+                    completion(HTTPClient(user: user, password: password))
                 }
             }
         }

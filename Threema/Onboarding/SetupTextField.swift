@@ -96,6 +96,16 @@ import UIKit
         }
     }
     
+    override var accessibilityIdentifier: String? {
+        get {
+            textField.accessibilityIdentifier
+        }
+        
+        set {
+            textField.accessibilityIdentifier = newValue
+        }
+    }
+    
     var mobile: Bool {
         get {
             isMobile

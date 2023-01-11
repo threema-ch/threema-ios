@@ -26,14 +26,20 @@ import Foundation
     @objc public static let appDataDirectory: URL? = FileManager.default.containerURL(
         forSecurityApplicationGroupIdentifier: AppGroup.groupID()
     )
+    
     @objc public static let appDocumentsDirectory: URL? = FileManager.default.urls(
         for: .documentDirectory,
         in: .userDomainMask
     ).last
+    
     @objc public static let appCachesDirectory: URL? = FileManager.default.urls(
         for: .cachesDirectory,
         in: .userDomainMask
     ).last
+    
+    /// Temporary app directory
+    ///
+    /// Please remove data stored here that is no longer needed: https://stackoverflow.com/a/25067497
     @objc public static let appTemporaryDirectory: URL? = FileManager.default.temporaryDirectory
     
     /// Get size of dictionary, including subdirectries.
@@ -312,7 +318,7 @@ import Foundation
         let fileManager = FileManager.default
         
         do {
-            DDLogInfo("Log files form \(path.path) into \(logFileName ?? "validation_log.txt")")
+            DDLogInfo("Log files form \(path.path) into \(logFileName ?? "debug_log.txt")")
             
             let resourceKeys: [URLResourceKey] = [.creationDateKey, .isDirectoryKey, .fileSizeKey]
             
@@ -352,7 +358,7 @@ import Foundation
         }
     }
     
-    @objc public static func cleanTemporaryDirectory(olderThan: Date?) {
+    @objc public static func cleanTemporaryDirectory(olderThan: Date? = nil) {
         guard let fiveDaysAgo = Calendar.current.date(byAdding: .day, value: -5, to: Date()) else {
             DDLogError("Could not get date for five days ago")
             return
@@ -376,7 +382,7 @@ import Foundation
             }
         }
         catch {
-            DDLogError("An error occured while cleaning the temporary directory \(error)")
+            DDLogError("An error occurred while cleaning the temporary directory \(error)")
         }
     }
     
@@ -385,9 +391,50 @@ import Foundation
     @objc public static func removeItemsInDirectory(directoryURL: URL) {
         if let items = FileUtility.dir(pathURL: directoryURL) {
             for item in items {
-                let itemURL = URL(fileURLWithPath: String(format: "%@/%@", directoryURL.path, item))
+                let itemURL = URL(fileURLWithPath: "\(directoryURL.path)/\(item)")
                 FileUtility.delete(at: itemURL)
             }
         }
     }
+    
+    /// Writes the contents of an existing debug log file at a URL to a new file at a given URL
+    /// - Parameters:
+    ///   - from: URL of the existing log file
+    ///   - to: URL to write the contents to
+    public static func migrateDebugLogFileContents(from: URL?, to: URL?) throws {
+        
+        // Check if URLs are valid
+        guard let from = from,
+              let to = to else {
+            throw FileUtilityError.badURL
+        }
+        
+        // Check if there is a legacy debug log
+        if !FileManager.default.fileExists(atPath: from.path) {
+            return
+        }
+        
+        // Read contents of old log file
+        guard let contents = FileManager.default.contents(atPath: from.path),
+              let text = String(data: contents, encoding: .utf8) else {
+            throw FileUtilityError.badContent
+        }
+        
+        guard FileUtility.write(fileURL: to, text: text) else {
+            throw FileUtilityError.writingFailed
+        }
+        
+        FileUtility.delete(at: from)
+        
+        if FileManager.default.fileExists(atPath: from.path) {
+            throw FileUtilityError.deletingFailed
+        }
+    }
+}
+
+public enum FileUtilityError: Error {
+    case badURL
+    case badContent
+    case writingFailed
+    case deletingFailed
 }

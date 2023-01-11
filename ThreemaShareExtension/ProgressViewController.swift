@@ -51,7 +51,7 @@ class ProgressViewController: UIViewController {
     }
     
     func updateColors() {
-        view.backgroundColor = Colors.backgroundViewController
+        view.backgroundColor = Colors.backgroundGroupedViewController
         
         view.tintColor = Colors.primary
         contentView!.backgroundColor = view.backgroundColor
@@ -151,7 +151,7 @@ class ProgressViewController: UIViewController {
         }
         else {
             let sendingText = BundleUtil.localizedString(forKey: "sending_count")
-            text = String(format: sendingText, currentItemCount, totalCount)
+            text = String.localizedStringWithFormat(sendingText, currentItemCount, totalCount)
         }
         
         label!.text = text

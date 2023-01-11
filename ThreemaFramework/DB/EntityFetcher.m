@@ -29,6 +29,7 @@
 #import "TextMessage.h"
 #import "LicenseStore.h"
 #import "NonceHasher.h"
+#import "UTIConverter.h"
 
 #ifdef DEBUG
   static const DDLogLevel ddLogLevel = DDLogLevelVerbose;
@@ -105,9 +106,22 @@
 }
 
 - (NSArray *)messagesContaining:(NSString *)searchText inConversation:(Conversation *)conversation {
-    NSArray *textMessages = [self textMessagesContaining:searchText inConversation:conversation fetchLimit:0];
-    NSArray *ballotMessages = [self ballotMessagesContaining:searchText inConversation:conversation fetchLimit:0];
-    NSArray *fileMessages = [self fileMessagesContaining:searchText inConversation:conversation fetchLimit:0];
+    return [self messagesContaining:searchText inConversation:conversation fetchLimit:0];
+}
+
+/// Returns all text, ballot and file messages containing the text in search text.
+/// Check the exact implementation on how text is matched for ballot and file messages
+///
+/// This might have room for optimization when sorting items since we have three already sorted arrays we should be able to "simply" combine them instead of sorting them again.
+/// We might additionally be able to fetch the three kinds of times in parallel since these are independent fetch requests.
+/// - Parameters:
+///   - searchText: The text to search for
+///   - conversation: The conversation to search in
+///   - fetchLimit: The maximum number of items to fetch for each kind of item. This currently results in |{textMessages U ballotMessages U fileMessages}| items, i.e. no more than 3 times the fetchLimit.
+- (NSArray *)messagesContaining:(NSString *)searchText inConversation:(Conversation *)conversation fetchLimit:(NSInteger)fetchLimit {
+    NSArray *textMessages = [self textMessagesContaining:searchText inConversation:conversation fetchLimit:fetchLimit];
+    NSArray *ballotMessages = [self ballotMessagesContaining:searchText inConversation:conversation fetchLimit:fetchLimit];
+    NSArray *fileMessages = [self fileMessagesContaining:searchText inConversation:conversation fetchLimit:fetchLimit];
     
     if ([ballotMessages count] > 0 || [fileMessages count] > 0) {
         NSMutableArray *allMessages = [NSMutableArray arrayWithArray:textMessages];
@@ -193,35 +207,10 @@
     return [self allEntitiesNamed:@"Contact" sortedBy:nil withPredicate: @"verificationLevel == %@", [NSNumber numberWithInteger:verificationLevel]];
 }
 
-- (NSArray *)contactsWithFeatureMaskNil {
+- (NSArray<Contact *> *)contactsWithFeatureMaskNil {
     return [self allEntitiesNamed:@"Contact" sortedBy:nil withPredicate: @"featureLevel == nil"];
 }
     
-- (NSArray *)contactsFilteredByWords:(NSArray *)searchWords {
-    NSMutableArray *predicates = [NSMutableArray array];
-    
-    if ([UserSettings sharedUserSettings].hideStaleContacts) {
-        NSPredicate *predicate = [NSPredicate predicateWithFormat:@"state == %d", kStateActive];
-        [predicates addObject:predicate];
-    }
-
-    for (NSString *searchWord in searchWords) {
-        if (searchWord.length > 0) {
-            NSPredicate *predicate = [NSPredicate predicateWithFormat:@"firstName contains[cd] %@ or lastName contains[cd] %@ or identity contains[c] %@ or publicNickname contains[cd] %@", searchWord, searchWord, searchWord, searchWord];
-            [predicates addObject:predicate];
-        }
-    }
-
-    NSFetchRequest *fetchRequest = [[NSFetchRequest alloc] initWithEntityName:@"Contact"];
-    [fetchRequest setFetchBatchSize:100];
-    [fetchRequest setPredicate:[NSCompoundPredicate andPredicateWithSubpredicates:predicates]];
-
-    NSArray *sortDescriptors = [self nameSortDescriptors];
-    [fetchRequest setSortDescriptors:sortDescriptors];
-
-    return [self executeFetchRequest:fetchRequest];
-}
-
 - (NSArray *)contactsWithCustomReadReceipt {
     NSString *predicate = [NSString stringWithFormat:@"readReceipts != %ld", (long)ReadReceiptDefault];
     return [self allEntitiesNamed:@"Contact" sortedBy:nil withPredicate: predicate];
@@ -235,7 +224,8 @@
 
 - (NSArray *)contactsFilteredByWords:(NSArray *)searchWords forContactTypes:(ContactTypes)types list:(ContactList)contactList members:(NSMutableSet *)members {
     NSMutableArray *predicates = [NSMutableArray array];
-    
+    [predicates addObject:[NSPredicate predicateWithFormat:@"hidden == nil OR hidden == 0"]];
+
     if (types == ContactsNoGateway) {
         NSPredicate *predicate = [NSPredicate predicateWithFormat:@"not identity beginswith '*'"];
         [predicates addObject:predicate];
@@ -303,6 +293,34 @@
     [fetchRequest setSortDescriptors:sortDescriptors];
     
     return [self executeFetchRequest:fetchRequest];
+}
+
+- (BOOL)hasDuplicateContactsWithDuplicateIdentities:(NSSet **)duplicateIdentities {
+    NSFetchRequest *fetchRequest = [NSFetchRequest fetchRequestWithEntityName:@"Contact"];
+    NSEntityDescription *entity = [NSEntityDescription entityForName:@"Contact" inManagedObjectContext:self.managedObjectContext];
+
+    fetchRequest.resultType = NSDictionaryResultType;
+    fetchRequest.propertiesToFetch = [NSArray arrayWithObject:[[entity propertiesByName] objectForKey:@"identity"]];
+
+    fetchRequest.returnsDistinctResults = NO;
+    NSArray *allIdentities = [self.managedObjectContext executeFetchRequest:fetchRequest error:nil];
+    NSSet *distinctIdentities = [[NSSet alloc] initWithArray:allIdentities];
+
+    if (allIdentities.count != distinctIdentities.count) {
+        NSMutableSet *duplicates = [NSMutableSet set];
+        for (NSString *identity in distinctIdentities) {
+            NSPredicate *predicate = [NSPredicate predicateWithFormat:@"SELF = %@", identity];
+            if ([allIdentities filteredArrayUsingPredicate:predicate].count > 1) {
+                [duplicates addObject:[identity valueForKey:@"identity"]];
+            }
+        }
+        *duplicateIdentities = duplicates;
+
+        return YES;
+    }
+    else {
+        return NO;
+    }
 }
 
 - (NSArray *)allGroupConversations {
@@ -432,9 +450,16 @@
     return [self allEntitiesNamed:@"FileMessage" sortedBy:sortDescriptors withPredicate:@"conversation == %@", conversation];
 }
 
-- (NSArray *)fileMessagesWOStickersForConversation:(Conversation *)conversation {
+- (NSArray *)filesMessagesFilteredForPhotoBrowserForConversation:(Conversation *)conversation {
     NSArray *sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"date" ascending:YES]];
-    return [self allEntitiesNamed:@"FileMessage" sortedBy:sortDescriptors withPredicate:@"(conversation == %@) AND (type != 2)", conversation];
+    
+    NSString *gifMimeType = [UTIConverter mimeTypeFromUTI:UTTYPE_GIF_IMAGE];
+    NSArray *renderingAudioMimetypes = [UTIConverter renderingAudioMimetypes];
+    
+    NSMutableArray *filteredMimeTypes = [NSMutableArray arrayWithArray:renderingAudioMimetypes];
+    [filteredMimeTypes addObject:gifMimeType];
+    
+    return [self allEntitiesNamed:@"FileMessage" sortedBy:sortDescriptors withPredicate:@"(conversation == %@) AND (type != 2) AND !(mimeType IN %@)", conversation, filteredMimeTypes];
 }
 
 - (NSArray *)unreadMessagesForConversation:(Conversation *)conversation {
@@ -462,11 +487,11 @@
     return result != nil;
 }
 
-- (BOOL)isNonceAlreadyInDb:(AbstractMessage *)message {
+- (BOOL)isNonceAlreadyInDB:(NSData *)nonce {
     id result;
     
-    NSData *hashedNonce = [NonceHasher hashedNonce:message.nonce];
-    result = [self singleEntityNamed:@"Nonce" withPredicate:@"nonce == %@ OR nonce == %@", message.nonce, hashedNonce];
+    NSData *hashedNonce = [NonceHasher hashedNonce:nonce];
+    result = [self singleEntityNamed:@"Nonce" withPredicate:@"nonce == %@ OR nonce == %@", nonce, hashedNonce];
     
     return result != nil;
 }
@@ -574,7 +599,8 @@
     [fetchRequest setFetchBatchSize:100];
     
     NSMutableArray *predicates = [NSMutableArray array];
-    
+    [predicates addObject:[NSPredicate predicateWithFormat:@"hidden == nil OR hidden == 0"]];
+
     if (types == ContactsNoGateway) {
         NSPredicate *predicate = [NSPredicate predicateWithFormat:@"not identity beginswith '*'"];
         [predicates addObject:predicate];
@@ -748,6 +774,12 @@
 
 - (NSArray *)allLastGroupSyncRequests {
     return [self allEntitiesNamed:@"LastGroupSyncRequest" sortedBy:nil withPredicate:nil];
+}
+
+- (NSArray *)allCallsWith:(NSString *)identity callID:(uint32_t)callID {
+    NSArray *sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"date" ascending:YES]];
+    NSDate *twoWeeksAgo = [[NSDate alloc] initWithTimeIntervalSinceNow:- 60 * 60 * 24 * 14];
+    return [self allEntitiesNamed:@"Call" sortedBy:sortDescriptors withPredicate:@"contact.identity == %@ AND callID == %u AND date > %@", identity, callID, twoWeeksAgo];
 }
 
 #pragma mark - private

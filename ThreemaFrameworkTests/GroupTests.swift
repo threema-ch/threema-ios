@@ -395,6 +395,7 @@ class GroupTests: XCTestCase {
         members.append(member02)
             
         let groupManager = GroupManager(
+            ServerConnectorMock(),
             myIdentityStoreMock,
             contactStoreMock,
             taskManagerMock,
@@ -412,7 +413,8 @@ class GroupTests: XCTestCase {
             groupID: groupID,
             creator: myIdentityStoreMock.identity,
             members: Set(members.map(\.identity).compactMap { $0 }),
-            systemMessageDate: Date()
+            systemMessageDate: Date(),
+            sourceCaller: .local
         )
         .done { grp in
             group = grp
@@ -486,6 +488,7 @@ class GroupTests: XCTestCase {
         members.append(member02)
 
         let groupManager = GroupManager(
+            ServerConnectorMock(),
             myIdentityStoreMock,
             contactStoreMock,
             taskManagerMock,
@@ -503,7 +506,8 @@ class GroupTests: XCTestCase {
             groupID: groupID,
             creator: myIdentityStoreMock.identity,
             members: Set(members.map(\.identity).compactMap { $0 }),
-            systemMessageDate: Date()
+            systemMessageDate: Date(),
+            sourceCaller: .local
         )
         .done { grp in
             group = grp

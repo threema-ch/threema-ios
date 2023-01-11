@@ -24,6 +24,10 @@ import XCTest
 
 class DatabasePersistentContext {
     
+    // The CD in memory persistent store doesn't support derived attributes:
+    // "Core Data provided atomic stores do not support derived properties (NSInvalidArgumentException)"
+    // Thus the function to create one was removed.
+
     /// Context in memory, doesn't work with NSBatch... commands (use devNullContext)
     ///
     /// - Returns:

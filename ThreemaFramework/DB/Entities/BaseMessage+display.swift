@@ -68,27 +68,124 @@ public extension BaseMessage {
             }
         }
         
+        /// Get overview symbol for current state if appropriate
+        /// - Parameter defaultColor: Default color to use for symbol if it does not have a specific color
+        /// - Returns: Symbol image if appropriate for this state, otherwise `nil`
+        public func overviewSymbol(
+            with defaultColor: UIColor,
+            ownMessage: Bool,
+            configuration: UIImage.SymbolConfiguration
+        ) -> UIImage? {
+            switch self {
+            case .none:
+                if !ownMessage {
+                    return UIImage(
+                        systemName: "arrowshape.turn.up.left",
+                        withConfiguration: configuration
+                    )?
+                        .withTintColor(defaultColor, renderingMode: .alwaysOriginal)
+                }
+                return nil
+            case .userAcknowledged:
+                if !ownMessage {
+                    return UIImage(
+                        systemName: "arrowshape.turn.up.left",
+                        withConfiguration: configuration
+                    )?
+                        .withTintColor(Colors.thumbUp, renderingMode: .alwaysOriginal)
+                }
+                return UIImage(
+                    systemName: "hand.thumbsup.fill",
+                    withConfiguration: configuration
+                )?
+                    .withTintColor(Colors.thumbUp, renderingMode: .alwaysOriginal)
+            case .userDeclined:
+                if !ownMessage {
+                    return UIImage(
+                        systemName: "arrowshape.turn.up.left",
+                        withConfiguration: configuration
+                    )?
+                        .withTintColor(Colors.thumbDown, renderingMode: .alwaysOriginal)
+                }
+                return UIImage(
+                    systemName: "hand.thumbsdown.fill",
+                    withConfiguration: configuration
+                )?
+                    .withTintColor(Colors.thumbDown, renderingMode: .alwaysOriginal)
+            case .sending:
+                return UIImage(
+                    systemName: "arrow.up.circle",
+                    withConfiguration: configuration
+                )?
+                    .withTintColor(defaultColor, renderingMode: .alwaysOriginal)
+            case .sent:
+                return UIImage(
+                    systemName: "envelope.fill",
+                    withConfiguration: configuration
+                )?
+                    .withTintColor(defaultColor, renderingMode: .alwaysOriginal)
+            case .delivered:
+                return UIImage(
+                    systemName: "tray.and.arrow.down.fill",
+                    withConfiguration: configuration
+                )?
+                    .withTintColor(defaultColor, renderingMode: .alwaysOriginal)
+            case .read:
+                return UIImage(
+                    systemName: "eye.fill",
+                    withConfiguration: configuration
+                )?
+                    .withTintColor(defaultColor, renderingMode: .alwaysOriginal)
+            case .failed:
+                return UIImage(
+                    systemName: "exclamationmark.triangle.fill",
+                    withConfiguration: configuration
+                )?
+                    .withTintColor(Colors.messageFailed, renderingMode: .alwaysOriginal)
+            }
+        }
+        
         /// Accessibility label for current state
-        var accessibilityLabel: String {
+        public func accessibilityLabel() -> String {
             switch self {
             case .none:
                 return ""
             case .userAcknowledged:
-                return BundleUtil.localizedString(forKey: "status_acknowledged")
+                return BundleUtil.localizedString(forKey: "accessibility_status_acknowledged_plus_time")
             case .userDeclined:
-                return BundleUtil.localizedString(forKey: "status_declined")
+                return BundleUtil.localizedString(forKey: "accessibility_status_declined_plus_time")
             case .sending:
-                return BundleUtil.localizedString(forKey: "status_sending")
+                return BundleUtil.localizedString(forKey: "accessibility_status_sending_plus_time")
             case .sent:
-                return BundleUtil.localizedString(forKey: "status_sent")
+                return BundleUtil.localizedString(forKey: "accessibility_status_sent_plus_time")
             case .delivered:
-                return BundleUtil.localizedString(forKey: "status_delivered")
+                return BundleUtil.localizedString(forKey: "accessibility_status_delivered_plus_time")
             case .read:
-                return BundleUtil.localizedString(forKey: "status_read")
+                return BundleUtil.localizedString(forKey: "accessibility_status_read_plus_time")
             case .failed:
-                return BundleUtil.localizedString(forKey: "status_failed")
+                return BundleUtil.localizedString(forKey: "accessibility_status_failed_plus_time")
             }
         }
+    }
+    
+    // MARK: - ack images
+    
+    var userThumbsUpImage: UIImage? {
+        var imageName = "hand.thumbsup"
+        if userackDate != nil, userack.boolValue {
+            imageName = "hand.thumbsup.fill"
+        }
+        return UIImage(systemName: imageName)?
+            .withTintColor(Colors.thumbUp, renderingMode: .alwaysOriginal)
+    }
+    
+    var userThumbsDownImage: UIImage? {
+        var imageName = "hand.thumbsdown"
+        if userackDate != nil, !userack.boolValue {
+            imageName = "hand.thumbsdown.fill"
+        }
+        return UIImage(systemName: imageName)?
+            .withTintColor(Colors.thumbDown, renderingMode: .alwaysOriginal)
     }
     
     // MARK: - messageDisplayState

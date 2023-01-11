@@ -347,7 +347,7 @@ import PromiseKit
     }
     
     private func loadImageItem(imageItem: UIImage, seal: Resolver<Any>) {
-        let isSticker = ImageURLSenderItemCreator.isPNGSticker(image: imageItem, uti: kUTTypePNG as String)
+        let isSticker = ImageURLSenderItemCreator.isPNGSticker(image: imageItem, uti: UTType.png.identifier)
         let imageData: Data?
         if isSticker {
             imageData = MediaConverter.pngRepresentation(for: imageItem)
@@ -369,9 +369,9 @@ import PromiseKit
         let url = tmpDirURL
         fileOperationQueue.sync {
             let jpegExt = UTIConverter
-                .preferredFileExtension(forMimeType: UTIConverter.mimeType(fromUTI: kUTTypeJPEG as String))!
+                .preferredFileExtension(forMimeType: UTIConverter.mimeType(fromUTI: UTType.jpeg.identifier))!
             let pngExt = UTIConverter
-                .preferredFileExtension(forMimeType: UTIConverter.mimeType(fromUTI: kUTTypePNG as String))!
+                .preferredFileExtension(forMimeType: UTIConverter.mimeType(fromUTI: UTType.png.identifier))!
             let ext = isSticker ? pngExt : jpegExt
             let filename = FileUtility.getTemporarySendableFileName(
                 base: "image",

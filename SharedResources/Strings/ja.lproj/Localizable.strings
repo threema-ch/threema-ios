@@ -82,7 +82,7 @@
 "audio" = "音声";
 "file" = "ファイル";
 "location" = "位置情報";
-"locating" = "位置情報を選択...";
+"locating" = "位置情報を選択…";
 "unknown_location" = "知られていない位置情報";
 "open" = "開く";
 "call" = "通話"; /* Short version for "Start Threema Call" */
@@ -103,6 +103,14 @@
 "threema_id" = "Threema ID";
 "nickname" = "ニックネーム";
 "add_button" = "追加";
+"chatview_contextmenu_more" = "その他…";
+
+"file_message_image" = "写真";
+"file_message_sticker" = "スタンプ";
+"file_message_animated_image" = "GIF画像";
+"file_message_video" = "動画";
+"file_message_voice" = "音声メッセージ";
+"file_message_file" = "データ";
 
 "chat_back_button_accessibility" = "%d件 未読";
 
@@ -147,6 +155,7 @@
 "high" = "高画質";
 "max_1_minute" = "最大１分";
 "max_x_minutes" = "最大%d分";
+"still_compressed_note" = "非常に大きな動画は、この設定に関係なく圧縮される場合があります。";
 
 /* Sound names */
 "push_sound_title" = "プッシュ通知音";
@@ -294,6 +303,7 @@
 "conversation_delete_confirm" = "この端末からこのトークを削除しますか？";
 "delete_all" = "すべて削除";
 "delete_n" = "削除 (%d)";
+
 "message_cannot_play_movie" = "動画の再生ができません。";
 
 "identity_not_found_title" = "不明なID";
@@ -383,10 +393,6 @@
 "contact_invalid_cannot_send" = "この連絡先は有効ではないためメッセージを送信できません。";
 "contact_betafeedback_cannot_send" = "これはベータバージョンではありません。フィードバックを *SUPPORT へ送信してください。";
 "group_sync_button" = "グループを同期";
-"group_sync_title" = "グループは同期されました";
-"group_sync_message" = "現在のグループデータを全メンバーに送信しました。";
-"group_sync_error_title" = "グループ同期に失敗しました";
-"group_sync_error_message" = "もう一度試す";
 "group_clone_button" = "グループを複製";
 "group_clone_title" = "グループを複製";
 "group_clone_message" = "あなたを管理者とするこのグループのクローンが作成されます。続けますか？";
@@ -415,6 +421,10 @@
 "add_note_group_info" = "*あなたはここでは一人です*\nこのトークは安全なノート・メディア・ドキュメントとして使ってください。";
 "end_note_group_info" = "*あなたはこのトークで一人ではなくなります*\n新しいメッセージはすべてのグループメンバーに送られます。";
 
+"chat_search_searching" = "検索中…";
+"chat_search_no_matches" = "一致なし";
+"chat_search_matches" = "%d/%d一致";
+
 "choose_recipient" = "受信者の選択";
 
 "msg_unknown_group_request_sync_x_title" = "未知のグループからメッセージがあります";
@@ -427,6 +437,7 @@
 "tap_to_change" = "タップして変更";
 "next" = "次";
 "unread_messages" = "未読のメッセージ";
+"unread_messages_line_with_count" = "未読のメッセージ（%d）";
 
 /* Verification level popovers in chat view */
 "verification_level_title" = "検証レベル";
@@ -448,7 +459,6 @@
 "level4_explanation" = "QRコードをスキャンして個人的にIDと公開鍵を確認した内部連絡先。";
 
 "id_verified_title" = "ID検証済み";
-"id_verified_message" = "%@さんのIDと公開鍵が確認されました。";
 
 /* Invalid country code alert */
 "invalid_country_code_title" = "無効な地域フォーマット";
@@ -470,9 +480,7 @@
 "backgrounding_off" = "バックグラウンドに移動するとすぐにアプリが切断されます。";
 "proximity_monitoring_off" = "近接センサーが覆われているとき、画面が暗くなりません。";
 "proximity_monitoring_on" = "音声通話中や音声メッセージの録音・再生時には、近接センサーが被ると画面が暗くなります。";
-"validation_logging_expl" = "デバッグログを使用して、Threemaのエンドツーエンドの暗号化を独自に検証することができます。\n詳細: https://threema.ch/validation";
-
-"validation_log_clear" = "ログをクリア";
+"debug_log_clear" = "ログを消去";
 "log_empty_message" = "デバグログは空です。";
 "cannot_send_mail_message" = "この端末にはメールアカウントが設定されていません。";
 
@@ -510,8 +518,6 @@
 "release_profilepicture_to" = "プロフィール画像を公開する範囲";
 "contact_added_to_profile_picture_list" = "この連絡先には、メッセージを書いたときに、あなたのプロフィール写真が届きます。";
 "contact_removed_from_profile_picture_list" = "この連絡先には、今後あなたのプロフィールは届きません。";
-"contact_send_profile_picture_success" = "あなたのプロフィール写真が連絡先に送信されました。";
-"contact_send_profile_picture_error" = "あなたのプロフィール写真を送信できませんでした。後でもう一度お試しください。";
 
 "sync_group" = "グループを同期";
 
@@ -537,6 +543,13 @@
 "exclude_deleted_id_title" = "「%@」さんのThreema IDを同期から除外しますか？";
 "exclude_deleted_id_message" = "プライバシー設定で除外項目を管理できます。";
 "exclude_deleted_id_exclude_button" = "除外";
+
+"forward_security" = "Perfect Forward Secrecy";
+"forward_security_none" = "なし";
+"forward_security_2dh" = "一方向";
+"forward_security_4dh" = "完了";
+"forward_security_clear_sessions" = "すべてのセッションを消去";
+"forward_security_explainer_footer" = "PFS（Perfect Forward Secrecy）は、長期暗号鍵が漏洩した場合でも、記録された通信が遡って復号されないように保護する機能です。\nこのオプションは、双方のアプリがPFSをサポートしている場合に有効にすることができます。";
 
 /* create id */
 "lets_get_started" = "さあ始めましょう";
@@ -654,7 +667,7 @@
 "new_message_no_access_title" = "新しいメッセージ";
 "new_message_no_access_message" = "%@を開いて受信メッセージを取得してください。";
 "new_message_invalid_license" = "ライセンスの有効期限が切れています。アプリを開いて続行してください。";
-"new_message_db_requires_migration" = "データベースの移行が必要です。アプリを開いて続行してください。";
+"new_message_db_requires_migration" = "Threemaはアップデートされました。アプリを開いてアップデートを完了してください。";
 
 /* reminder messages */
 "push_reminder_title" = "プッシュ通知が有効ではありません";
@@ -786,9 +799,6 @@
 "call_status_unknown" = "不明";
 "call_status_blocked" = "連絡先をブロック";
 "call_status_failed_title" = "Threema コール";
-"call_status_failed_connected_message" = "接続切れ";
-"call_status_failed_initializing_message" = "接続が確立されませんでした。";
-"call_status_failed_sdp_patch_message" = "Threemaコールを作成できませんでした";
 
 "call_threema_initiator_video_info" = "ここをタップするとカメラが起動します";
 "call_threema_remote_video_activated_info_title" = "ビデオ通話";
@@ -842,7 +852,7 @@
 "privacy_footer" = "トークの概要ですべてのプライベートトークを非表示にします。この設定を有効にするには、パスコードを設定する必要があります。";
 
 "group_leave_sheet_title" = "%@ から退会しますか？";
-"group_leave_sheet_message" = "退会しただけでは、会話に参加できなくなりますが、トーク履歴にはアクセスできます。";
+"group_leave_sheet_message" = "退出しただけの場合、会話に参加できなくなりますが、トーク履歴にアクセスして閲覧することはできます。";
 
 "group_leave_delete_sheet_title" = "“%@” から退会し削除しますか？";
 "group_leave_delete_sheet_message" = "グループを退会して削除すると、会話に参加できなくなり、トーク履歴も削除されます。";
@@ -1077,6 +1087,13 @@
 "file_deleted_title" = "ファイルは削除されました";
 "file_not_found_title" = "ファイルが見つかりません";
 
+"manage_all_conversations" = "すべてのトークを管理";
+"manage_media_and_files" = "ファイルを管理";
+"manage_messages" = "メッセージを管理";
+"messages" = "トーク";
+"files" = "データ";
+
+
 // Settings
 "settings_privacy" = "プライバシー管理";
 "settings_appearance" = "外観";
@@ -1111,6 +1128,7 @@
 "settings_devmode_quote_v2" = "Quote V2";
 "settings_devmode_new_chat_view" = "新規チャットビュー";
 "settings_devmode_stylekit_debug_view" = "スタイルキットデバッグビュー";
+"settings_devmode_id_colors_debug_view" = "IDカラーデバッグビュー";
 
 // Appearance
 "settings_appearance_theme_section" = "デザインテーマ";
@@ -1120,6 +1138,9 @@
 "settings_appearance_theme_selected" = "%@テーマがアクティブ";
 "settings_appearance_theme_active" = "アクティブ";
 "settings_appearance_hide_app_icon" = "アプリアイコン";
+"settings_appicon_default_header" = "デフォルトのアイコン";
+"settings_appicon_legacy_header" = "Threemaのアイコン";
+"settings_appicon_special_header" = "特別なアイコン";
 "settings_appearance_hide_stale_contacts" = "有効でないIDを非表示にする";
 "settings_appearance_show_profile_pictures" = "プロフィール写真を表示";
 "settings_appearance_display_order" = "表示順序";
@@ -1244,8 +1265,7 @@ iTunesのバックアップを作成してから行ってください。";
 "unknown_file_type" = "不明なファイル形式です";
 "unknown_file_size" = "ファイルサイズが不明です";
 "unknown_file_name" = "不明なファイル名です";
-
-"ballots_with_open_count_accessibility" = "投票（%dオープン）";
+"sending_to" = "受信者";
 
 /* Ballot */
 "ballot" = "投票";
@@ -1297,6 +1317,10 @@ iTunesのバックアップを作成してから行ってください。";
 "voteCancelMessage" = "投票前に退出された場合は放棄されます。";
 "discardVoteTitle" = "放棄";
 
+"ballot_load_error" = "投票利用不可";
+
+"ballots_with_open_count_accessibility" = "投票（%dオープン）";
+
 /* Custom Privacy Settings */
 "privacySetting_header" = "プライバシー";
 "send_readReceipts" = "既読";
@@ -1319,23 +1343,33 @@ iTunesのバックアップを作成してから行ってください。";
 "reset_overrides_alert_action" = "すべてリセット";
 
 /* Multi Decvice */
-"multi_device_linked_devices_title" = "紐付けされた端末";
+"multi_device_linked_devices_title" = "複数端末プレビュー";
+"multi_device_linked_devices_desc" = "このデバイスの複数端末プレビューを有効または無効にします。";
 "multi_device_linked_devices_refresh" = "引いてリフレッシュ";
 "multi_device_linked_devices_loading_failed" = "端末読み込み失敗：%@";
 "multi_device_linked_devices_failed_to_load_title" = "端末リストの読み込みに失敗しました";
 "multi_device_linked_devices_failed_to_load_message" = "紐付けされた端末を読み込むことができませんでした。インターネット接続を確認して、もう一度やり直してください。";
 "multi_device_linked_devices_this" = "この端末";
 "multi_device_linked_devices_others" = "他の端末";
+"multi_device_linked_devices_last_login" = "前回のログイン：%@";
 "multi_device_linked_devices_remove_failed" = "端末を削除できませんでした：%@";
+"multi_device_linked_devices_removed_devices_title" = "複数端末を無効にしますか？";
+"multi_device_linked_devices_removed_devices_message" = "これにより、接続されているすべての端末が削除され、複数端末が無効となります";
+"multi_device_linked_devices_removed_devices_ok" = "無効にする";
+"multi_device_linked_duplicate_contacts_title" = "重複した連絡先";
+"multi_device_linked_duplicate_contacts_desc" = "連絡先が重複しているため、この端末をリンクできません(%@)。サポートまでご連絡ください。";
+
 "multi_device_linked_devices_failed_remove_title" = "端末を削除できませんでした";
 "multi_device_linked_devices_failed_remove_message" = "紐付けされた端末を削除できませんでした。もう一度試してください。";
 "multi_device_linked_devices_failed_remove_message_2" = "紐付けされた端末を削除できませんでした。インターネット接続を確認し、もう一度試してください。";
+"multi_device_slot_state_mismatch_alert" = "このデバイスのリンクが解除されたため、現在新しいメッセージを送受信できません。この問題があなたの操作によるものでない場合、技術プレビューの段階で技術的な理由により発生した可能性があります。ご不便をおかけして申し訳ございません。再びリンクするには、「よくある質問」をご覧ください： https://three.ma/faq";
 
 "myprofile_link_email_phone_footer" = "メールアドレスや電話番号をIDに紐付けることで、”連絡先”アプリにあなたを登録している人は自動的に%@であなたを見つけることができます。";
 "myprofile_link_email_footer" = "メールアドレスとIDを紐付けすることで、他のユーザーが”連絡先”アプリにあなたのメールアドレスを登録していれば、自動的に%@であなたを見つけることができます。";
 "myprofile_link_email_onprem_footer" = "メールアドレスとIDを紐付けすることで、このサーバー（%@）の他のユーザーが”連絡先”アプリにあなたのメールアドレスを登録していれば、自動的に%@であなたを見つけることができます。";
 "myprofile_link_phone_footer" = "電話番号とIDを紐付けさせることで、他のユーザーが”連絡先”アプリにあなたの電話番号を登録していれば、自動的に%@であなたを見つけることができます。";
 "myprofile_link_phone_onprem_footer" = "メールアドレスとIDを紐付けすることで、このサーバー（%@）の他のユーザーが”連絡先”アプリにあなたの電話番号を登録していれば、自動的に%@であなたを見つけることができます。";
+
 "mentions_table_view_cell_accessibility_hint" = "タップしてメンションを作成";
 
 // POI
@@ -1389,6 +1423,140 @@ iTunesのバックアップを作成してから行ってください。";
 "detailView_messageID" = "メッセージID";
 "detailView_group_acknowledged" = "同意（%d）";
 "detailView_group_declined" = "反対（%d）";
+
+// In-app notifications
+"notification_copying_succeeded" = "アイテムをコピーしました";
+"notification_copying_failed" = "コピーに失敗しました";
+
+"notification_saving_succeeded" = "アイテムを保存しました";
+"notification_saving_failed" = "保存に失敗しました";
+
+"notification_sending_failed" = "送信に失敗しました";
+
+"notification_deleted_messages_count" = "%d件のメッセージを削除しました";
+
+"notification_cannot_play_video" = "動画を再生できません";
+
+"notification_call_failed_connected" = "接続切れ";
+"notification_call_failed_not_connected" = "接続の確立に失敗しました";
+"notification_call_creation_failed" = "通話の作成に失敗しました";
+
+"notification_sending_profile_picture_succeeded" = "プロフィール写真を送信しました";
+"notification_sending_profile_picture_failed" = "送信失敗しました";
+
+"notification_sending_profile_picture_failed_settings_sync_message" = "設定を同期しました";
+
+"notification_group_sync_succeeded" = "グループを同期";
+"notification_group_sync_failed" = "グループ同期に失敗しました";
+
+// Forward security status messages
+"forward_security_message_without" = "Perfect Forward Secrecyのないメッセージを受信しました。送信者がPerfect Forward Secrecyを意図的に無効にしていることを確認してください。";
+"forward_security_session_established" = "このトークのメッセージは、Perfect Forward Secrecyによって保護されるようになりました。";
+"forward_security_session_established_rx" = "このトークで受信したメッセージは、Perfect Forward Secrecyによって保護されるようになりました。連絡先の詳細でPerfect Forward Secrecyを有効にすると、送信したメッセージも保護されます。";
+"forward_security_messages_skipped_1" = "前回のメッセージ以降、1件のメッセージが失われました。";
+"forward_security_messages_skipped_x" = "前回のメッセージ以降、%d件のメッセージが失われました。";
+"forward_security_session_reset" = "この連絡先とのPerfect Forward Secrecyセッションがリセットされました。これは、連絡先がデバイスを変更したり、アプリを再インストールした場合に発生する可能性があります。";
+"forward_security_message_out_of_order" = "メッセージの受信順序がずれたため、復号化できませんでした。";
+"forward_security_status_enabled_outgoing" = "送信メッセージに対してPerfect Forward Secrecyが有効になっています。";
+"forward_security_status_disabled_outgoing" = "送信メッセージに対してPerfect Forward Secrecyが無効になっています。";
+"forward_security_contact_has_downgraded_to_an_incompatible_version" = "この連絡先は、Perfect Forward Secrecyに対応しないアプリのバージョンを使用するようになりました。今後、メッセージはPFSなしで送信されます。";
+
+// Profile view
+"accessibility_profile_button_hint_contact" = "連絡先詳細を開く";
+"accessibility_profile_button_hint_group" = "グループ詳細を開く";
+
+// Chat bar
+"accessibility_chatbar_label" = "トークの入力に失敗しました";
+"accessibility_chatbar_hint" = "メッセージを作成します。";
+"accessibility_chatbar_value" = "現在のテキスト：%@";
+"accessibility_chatbar_quote_label" = "選択された引用メッセージ：%@";
+"accessibility_chatbar_close_quote_button_label" = "引用終了。";
+"accessibility_chatbar_close_quote_button_hint" = "選択したメッセージの引用を終了します。";
+
+// Message senders
+"accessibility_senderDescription_ownMessage" = "あなたの%@";
+"accessibility_senderDescription_otherMessage_group" = "%@からの%@";
+"accessibility_senderDescription_systemMessage" = "情報：%@";
+
+// Message types
+"accessibility_textMessage_description" = "メッセージ";
+"accessibility_locationMessage_description" = "位置情報";
+"accessibility_systemCallMessage_description" = "通話";
+"accessibility_fileMessage_description" = "ファイル";
+"accessibility_imageMessage_description" = "画像";
+"accessibility_videoMessage_description" = "動画";
+"accessibility_animatedImageMessage_description" = "GIF画像";
+"accessibility_stickerMessage_description" = "ステッカー";
+"accessibility_voiceMessage_description" = "音声メッセージ";
+"accessibility_pollMessage_description" = "投票";
+
+// Message hints
+"accessibility_audioMessage_hint" = "音声メッセージを再生します。";
+"accessibility_locationMessage_hint" = "位置情報を開きます。";
+"accessibility_systemCallMessage_hint" = "通話開始";
+"accessibility_imageMessage_hint" = "画像を開きます。";
+"accessibility_videoMessage_hint" = "動画を再生します。";
+"accessibility_fileMessage_hint" = "ファイルのプレビューを開きます。";
+"accessibility_animatedImageMessage_hint" = "GIFアニメーションのオン・オフ切り替え";
+"accessibility_animatedStickerMessage_hint" = "ステッカーアニメーションのオン・オフ切り替え";
+"accessibility_ballotMessage_hint_open" = "投票を開きます。";
+"accessibility_ballotMessage_hint_closed" = "投票結果を表示します。";
+"accessibility_voiceMessage_speed_hint" = "再生スピードを変更します。";
+
+// Other
+"accessibility_caption" = "キャプション：%@";
+"accessibility_poll_content_open" = "%@。タイトル：%@、%@";
+"accessibility_poll_open" = "開く";
+"accessibility_poll_closed" = "終了";
+"accessibility_file_duration" = "時間: %@";
+
+// Message status types
+"accessibility_status_acknowledged_plus_time" = "了承済み、%@";
+"accessibility_status_declined_plus_time" = "拒否済み、%@";
+"accessibility_status_sending_plus_time" = "送信中、%@";
+"accessibility_status_sent_plus_time" = "送信済み、%@";
+"accessibility_status_delivered_plus_time" = "配信済み、%@";
+"accessibility_status_read_plus_time" = "既読、%@";
+"accessibility_status_failed_plus_time" = "失敗、%@";
+
+// Multi-Device Wizard
+"md_wizard_header" = "複数端末プレビュー";
+"md_wizard_start" = "パソコンをリンク";
+"md_wizard_cancel" = "キャンセル";
+"md_wizard_next" = "次へ";
+"md_wizard_close" = "閉じる";
+"md_wizard_back_identity" = "Threema IDを表示";
+
+"md_wizard_connection_info" = "リンク処理中は通話と通知が無効になります。";
+
+"md_wizard_terms_note_text" = "この技術プレビューは、今後予定されている複数端末の対応を一足先にお試しいただくためのものです。機能は限定的であり、またアルファ版ソフトウェアのため、荒削りな部分もありますが、ご了承ください。";
+
+"md_wizard_terms_backup" = "データの損失が発生する可能性があります。続行する前にバックアップを作成してください。\n［バックアップの手順］（https://threema.ch/docs/threema/ios_backup_manual_en.pdf）";
+"md_wizard_terms_support" = "このプレビューでは、テキストメッセージに対応しています。最新の機能と修正が得られるよう、iOSとデスクトップ用のアプリを定期的にアップデートしてください。 ";
+"md_wizard_terms_issues" = "既知の問題点と制限については［こちら］（https://threema.ch/faq/md_limit）をご覧ください。";
+"md_wizard_terms_bugs" = "「設定」>「ベータフィードバック」からこのアプリで発生した問題を報告してください。";
+
+"md_wizard_terms_accept" = "バックアップを作成したので続行を希望します。";
+
+"md_wizard_info_download_title" = "ダウンロード";
+"md_wizard_info_download_text" = "お使いのパソコンでThreema技術プレビュー：";
+"md_wizard_info_linking_title" = "お使いのパソコンをこの端末にリンクします";
+"md_wizard_info_linking_text" = "パソコンとリンクすると、あなたのThreemaの基本データ（ID、連絡先、グループ）が暗号化され、［現在利用しているThreema Safeサーバー］（https://threema.ch/en/faq/threema_safe_webdav）に一時的に保存されます。(現在の設定：%@）。";
+
+"md_wizard_preparation_status" = "準備中…";
+
+"md_wizard_start_desktop" = "パソコンでThreema技術プレビューを起動し、Threema IDを入力します。";
+"md_wizard_identity_text" = "あなたのThreema ID：";
+
+"md_wizard_code_text" = "リンクコード：";
+
+"md_wizard_success_title" = "端末をリンクしました";
+"md_wizard_success_text" = "Threema技術プレビューをパソコンで利用できるようになりました（たまたまこのiOS端末の電源がオフになっている場合でも）。";
+
+"md_wizard_error_title" = "Threemaアプリを閉じたため、リンクに失敗しました";
+"md_wizard_timeout_title" = "時間がかかりすぎたため、リンクに失敗しました";
+"md_wizard_could_not_connect_title" = "サーバーに接続できなかったため、リンクに失敗しました";
+"md_wizard_error_text" = "「設定」>「複数端末プレビュー」から再試行してください。";
 
 // App icons
 "app_icon_title_celebration" = "お祝いアイコン";

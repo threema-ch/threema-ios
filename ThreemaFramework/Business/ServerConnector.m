@@ -65,14 +65,7 @@ static const int MAX_BYTES_TO_DECRYPT_NOTIFICATION_EXTENSION = 500000;
     
     NSString *mediatorServerURL;
 
-    BOOL webSocketConnection;
-    
     dispatch_queue_t sendPushTokenQueue;
-    BOOL isSentPushToken;
-    
-    dispatch_queue_t sendVoIPPushTokenQueue;
-    BOOL isSentVoIPPushToken;
-    
     dispatch_queue_t removeVoIPPushTokenQueue;
     BOOL isRemovedVoIPPushToken;
     
@@ -105,10 +98,9 @@ static const int MAX_BYTES_TO_DECRYPT_NOTIFICATION_EXTENSION = 500000;
     int anotherConnectionCount;
     BOOL chatServerInInitialQueueSend;
     BOOL mediatorServerInInitialQueueSend;
+    BOOL doUnblockIncomingMessages;
     BOOL isWaitingForReconnect;
     BOOL isRolePromotedToLeader;
-    
-    RogueDeviceMonitor *rogueDeviceMonitor;
 
     dispatch_queue_t queueConnectionStateDelegate;
     NSMutableSet *clientConnectionStateDelegates;
@@ -125,8 +117,8 @@ static const int MAX_BYTES_TO_DECRYPT_NOTIFICATION_EXTENSION = 500000;
 
 @synthesize businessInjectorForMessageProcessing;
 @synthesize lastRtt;
-@synthesize deviceGroupPathKey;
-@synthesize deviceId;
+@synthesize deviceGroupKeys;
+@synthesize deviceID;
 @synthesize isAppInBackground;
 
 #pragma pack(push, 1)
@@ -186,6 +178,7 @@ struct pktExtension {
 #define EXTENSION_TYPE_CLIENT_INFO 0x00
 #define EXTENSION_TYPE_DEVICE_ID 0x01
 #define EXTENSION_TYPE_MESSAGE_PAYLOAD_VERSION 0x02
+#define EXTENSION_TYPE_DEVICE_COOKIE 0x03
 
 + (ServerConnector*)sharedServerConnector {
     static ServerConnector *instance;
@@ -204,14 +197,7 @@ struct pktExtension {
     if (self) {
         mediatorServerURL = [BundleUtil objectForInfoDictionaryKey:@"ThreemaMediatorServerURL"];
         
-        webSocketConnection = [[BundleUtil objectForInfoDictionaryKey:@"WebSocketConnection"] boolValue];
-        
         sendPushTokenQueue = dispatch_queue_create("ch.threema.ServerConnector.sendPushTokenQueue", NULL);
-        isSentPushToken = NO;
-        
-        sendVoIPPushTokenQueue = dispatch_queue_create("ch.threema.ServerConnector.sendVoIPPushTokenQueue", NULL);
-        isSentVoIPPushToken = NO;
-        
         removeVoIPPushTokenQueue = dispatch_queue_create("ch.threema.ServerConnector.removeVoIPPushTokenQueue", NULL);
         isRemovedVoIPPushToken = NO;
         
@@ -222,14 +208,12 @@ struct pktExtension {
         sendMessageQueue = dispatch_queue_create("ch.threema.ServerConnector.sendMessageQueue", NULL);
         disconnectCondition = [[NSCondition alloc] init];
         
-        serverConnectorConnectionState = [[ServerConnectorConnectionState alloc]  initWithConnectionStateDelegate:self isMultiDeviceEnabled:webSocketConnection];
+        serverConnectorConnectionState = [[ServerConnectorConnectionState alloc]  initWithUserSettings:[UserSettings sharedUserSettings] connectionStateDelegate:self];
         reconnectAttempts = 0;
         lastSentEchoSeq = 0;
         lastRcvdEchoSeq = 0;
 
         displayedServerAlerts = [NSMutableSet set];
-        
-        rogueDeviceMonitor = [[RogueDeviceMonitor alloc] init];
         
         /* register with reachability API */
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(networkStatusDidChange:) name:kReachabilityChangedNotification object:nil];
@@ -237,8 +221,10 @@ struct pktExtension {
         internetReachability = [Reachability reachabilityForInternetConnection];
         lastInternetStatus = [internetReachability currentReachabilityStatus];
         [internetReachability startNotifier];
-        
-        isWaitingForReconnect = false;
+
+        doUnblockIncomingMessages = YES;
+        isWaitingForReconnect = NO;
+        isRolePromotedToLeader = NO;
         
         /* listen for identity changes */
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(identityCreated:) name:kNotificationCreatedIdentity object:nil];
@@ -252,7 +238,7 @@ struct pktExtension {
     return self;
 }
 
-#pragma mark - Register/unregister Message Listener delegate, Message Processor delegate and Task Manager transaction delegate
+#pragma mark - Register/unregister delegates for Message Listener, Message Processor and Task Manager transaction
 
 - (void)registerConnectionStateDelegate:(id<ConnectionStateDelegate>)delegate {
     dispatch_sync(queueConnectionStateDelegate, ^{
@@ -324,9 +310,16 @@ struct pktExtension {
     });
 }
 
-#pragma mark - Chat Server connection handling
+#pragma mark - Chat (Mediator) Server connection handling
 
 - (void)connect:(ConnectionInitiator)initiator {
+    if ([[UserSettings sharedUserSettings] blockCommunication]) {
+        DDLogNotice(@"Cannot connect - communication is blocked");
+        return;
+    }
+
+    doUnblockIncomingMessages = YES;
+
     dispatch_async(socketQueue, ^{
         dispatch_sync(connectionInitiatorsQueue, ^{
             [self connectBy:initiator];
@@ -338,6 +331,26 @@ struct pktExtension {
 }
 
 - (void)connectWait:(ConnectionInitiator)initiator {
+    if ([[UserSettings sharedUserSettings] blockCommunication]) {
+        DDLogNotice(@"Cannot connect - communication is blocked");
+        return;
+    }
+
+    doUnblockIncomingMessages = YES;
+
+    dispatch_sync(socketQueue, ^{
+        dispatch_sync(connectionInitiatorsQueue, ^{
+            [self connectBy:initiator];
+        });
+
+        lastErrorDisplay = nil;
+        [self _connect];
+    });
+}
+
+- (void)connectWaitDoNotUnblockIncomingMessages:(ConnectionInitiator)initiator {
+    doUnblockIncomingMessages = NO;
+
     dispatch_sync(socketQueue, ^{
         dispatch_sync(connectionInitiatorsQueue, ^{
             [self connectBy:initiator];
@@ -352,7 +365,7 @@ struct pktExtension {
     if ([[NSUserDefaults standardUserDefaults] boolForKey:@"FASTLANE_SNAPSHOT"]) {
         return;
     }
-    
+
     if (![[MyIdentityStore sharedMyIdentityStore] isProvisioned]) {
         DDLogNotice(@"Cannot connect - missing identity or key");
         return;
@@ -427,19 +440,22 @@ struct pktExtension {
     DDLogVerbose(@"Client tempkey_pub = %@, tempkey_sec = %@", clientTempKeyPub, clientTempKeySec);
 #endif
 
-    if (webSocketConnection == NO) {
+    DeviceGroupKeyManager *deviceGroupKeyManager = [[DeviceGroupKeyManager alloc] initWithMyIdentityStore:[MyIdentityStore sharedMyIdentityStore]];
+    NSData *dgk = deviceGroupKeyManager.dgk;
+    if (!dgk) {
         [self _connectDirect];
     } else {
-        [self _connectViaMediator];
+        [self _connectViaMediator:dgk];
     }
 }
 
 - (void)_connectDirect {
-    // Multi device is not activated, reset device ID
-    deviceId = nil;
-    
-    UserSettings *settings = [UserSettings sharedUserSettings];
-    
+    // Multi device is not activated, reset device group keys and device ID
+    @synchronized (deviceGroupKeys) {
+        deviceGroupKeys = nil;
+        deviceID = nil;
+    };
+
     // Obtain chat server host/ports/keys from ServerInfoProvider
     [[ServerInfoProviderFactory makeServerInfoProvider] chatServerWithIpv6:[UserSettings sharedUserSettings].enableIPv6 completionHandler:^(ChatServerInfo * _Nullable chatServerInfo, NSError *error) {
         dispatch_async(socketQueue, ^{
@@ -460,6 +476,8 @@ struct pktExtension {
             serverKeyPub = chatServerInfo.publicKey;
             serverAltKeyPub = chatServerInfo.publicKeyAlt;
             
+            UserSettings *settings = [UserSettings sharedUserSettings];
+
             NSError *socketError;
             socket = [[ChatTcpSocket alloc] initWithServer:serverHost ports:chatServerInfo.serverPorts preferIPv6:settings.enableIPv6 delegate:self queue:socketQueue error:&socketError];
             
@@ -472,32 +490,44 @@ struct pktExtension {
     }];
 }
 
-- (void)_connectViaMediator {
+- (void)_connectViaMediator:(nonnull NSData *)dgk {
     UserSettings *settings = [UserSettings sharedUserSettings];
-    
-    // Derive DGPK from SK
-    MultiDeviceKey *multiDeviceKey = [[MultiDeviceKey alloc] init];
-    deviceGroupPathKey = [multiDeviceKey deriveWithSecretKey:[[MyIdentityStore sharedMyIdentityStore] keySecret]];
-    
-    NSAssert([deviceGroupPathKey length] == kDeviceGroupPathKeyLen, @"Device Group Path Key has wrong length");
 
-    // Convert hex string to int
-    unsigned sg = 0;
-    NSScanner *scanner = [NSScanner scannerWithString:[MyIdentityStore sharedMyIdentityStore].serverGroup];
-    [scanner scanHexInt:&sg];
-    
-    NSString *clientUrlInfo = [MediatorMessageProtocol encodeClientURLInfoWithDgpkPublicKey:[[NaClCrypto sharedCrypto] derivePublicKeyFromSecretKey:deviceGroupPathKey] serverGroup:sg];
-    
-    // Multi device is activated, check device ID
-    if ([settings deviceID] == nil || [[settings deviceID] length] != kDeviceIdLen) {
-        settings.deviceID = [NSData dataWithBytes:[[NaClCrypto sharedCrypto] randomBytes:kDeviceIdLen].bytes length:kDeviceIdLen];
+    // Derive multi device keys
+    NSError *deriveKeyError;
+    DeviceGroupDerivedKey *deviceGroupDerivedKey = [[DeviceGroupDerivedKey alloc] initWithDgk:dgk error:&deriveKeyError];
+
+    if (deriveKeyError) {
+        DDLogError(@"Device Group Keys could not be derived");
+        [serverConnectorConnectionState disconnected];
+        [self reconnectAfterDelay];
+        return;
     }
-    deviceId = settings.deviceID;
 
-    NSAssert([deviceId length] == kDeviceIdLen, @"Device ID has wrong length");
-    
+    // Multi device is activated, check device ID
+    NSData *deviceGroupID;
+
+    @synchronized (deviceGroupKeys) {
+        deviceGroupID = [[NaClCrypto sharedCrypto] derivePublicKeyFromSecretKey:deviceGroupDerivedKey.dgpk];
+
+        const unsigned char *deviceGroupIDBytes = [deviceGroupID bytes];
+        NSString *deviceGroupIDFirstByteHex = [NSString stringWithFormat:@"%02lx", (unsigned long)deviceGroupIDBytes[0]];
+
+        NSLog(@"%@", [NSString stringWithHexData:deviceGroupID]);
+        deviceGroupKeys = [[DeviceGroupKeys alloc] initWithDgpk:deviceGroupDerivedKey.dgpk dgrk:deviceGroupDerivedKey.dgrk dgdik:deviceGroupDerivedKey.dgdik dgsddk:deviceGroupDerivedKey.dgsddk dgtsk:deviceGroupDerivedKey.dgtsk deviceGroupIDFirstByteHex:deviceGroupIDFirstByteHex];
+
+        if ([settings deviceID] == nil || [[settings deviceID] length] != kDeviceIdLen) {
+            settings.deviceID = [NSData dataWithBytes:[[NaClCrypto sharedCrypto] randomBytes:kDeviceIdLen].bytes length:kDeviceIdLen];
+        }
+        deviceID = settings.deviceID;
+    };
+
+    NSAssert([deviceID length] == kDeviceIdLen, @"Device ID has wrong length");
+
+    NSString *clientUrlInfo = [MediatorMessageProtocol encodeClientURLInfoWithDgpkPublicKey:deviceGroupID serverGroup:[MyIdentityStore sharedMyIdentityStore].serverGroup];
+
     id<ServerInfoProvider> serverInfoProvider = [ServerInfoProviderFactory makeServerInfoProvider];
-    [serverInfoProvider mediatorServerWithCompletionHandler:^(MediatorServerInfo * _Nullable mediatorServerInfo, NSError * _Nullable mediatorServerError) {
+    [serverInfoProvider mediatorServerWithDeviceGroupIDFirstByteHex: deviceGroupKeys.deviceGroupIDFirstByteHex completionHandler:^(MediatorServerInfo * _Nullable mediatorServerInfo, NSError * _Nullable mediatorServerError) {
         // Obtain chat server info too (for public keys)
         [serverInfoProvider chatServerWithIpv6:[UserSettings sharedUserSettings].enableIPv6 completionHandler:^(ChatServerInfo * _Nullable chatServerInfo, NSError * _Nullable chatServerError) {
             if (mediatorServerInfo == nil || chatServerInfo == nil) {
@@ -574,7 +604,7 @@ struct pktExtension {
     return [serverConnectorConnectionState connectionState];
 }
 
-#pragma mark - Chat Server connection initiator handling
+#pragma mark - Chat (Mediator) Server connection initiator handling
 
 - (void)connectBy:(ConnectionInitiator)initiator {
     DDLogNotice(@"Connect initiated by (%@)", [self nameForConnectionInitiator:initiator]);
@@ -757,14 +787,11 @@ struct pktExtension {
              
             [[NSNotificationCenter defaultCenter] postNotificationName:kNotificationQueueSendComplete object:nil userInfo:nil];
             break;
-        case PLTYPE_LAST_EPHEMERAL_KEY_HASH: {
-            if (datalen != kEphemeralKeyHashLen) {
-                DDLogError(@"Bad ephemeral key hash datalen %d", datalen);
-                [socket disconnect];
-                break;
+        case PLTYPE_DEVICE_COOKIE_CHANGE_INDICATION: {
+            DDLogWarn(@"Got device cookie change indication");
+            if ([DeviceCookieManager changeIndicationReceived]) {
+                [self clearDeviceCookieChangedIndicator];
             }
-            NSData *lastTempKeyHash = [NSData dataWithBytes:pl->data length:datalen];
-            [rogueDeviceMonitor checkEphemeralKeyHash:lastTempKeyHash];
             break;
         }
         default:
@@ -774,14 +801,14 @@ struct pktExtension {
 }
 
 - (void)completedProcessingAbstractMessage:(AbstractMessage *)msg {
-    if (!(msg.flags.intValue & MESSAGE_FLAG_NOACK)) {
+    if (!(msg.flags.intValue & MESSAGE_FLAG_DONT_ACK)) {
         /* send ACK to server */
         [self ackMessage:msg.messageId fromIdentity:msg.fromIdentity];
     }
 }
 
 - (BOOL)completedProcessingMessage:(BoxedMessage *)boxmsg {
-    if (!(boxmsg.flags & MESSAGE_FLAG_NOACK)) {
+    if (!(boxmsg.flags & MESSAGE_FLAG_DONT_ACK)) {
         /* send ACK to server */
         return [self ackMessage:boxmsg.messageId fromIdentity:boxmsg.fromIdentity];
     }
@@ -928,8 +955,8 @@ struct pktExtension {
         return NO;
     }
 
-    if (deviceGroupPathKey == nil) {
-        DDLogError(@"Message could not be reflect, because mediator private key is missing");
+    if (deviceGroupKeys.dgrk == nil) {
+        DDLogError(@"Message could not be reflected, because Device Group Reflect Key is missing");
         return NO;
     }
 
@@ -976,38 +1003,36 @@ struct pktExtension {
     });
 }
 
+#pragma mark - Multi Device
+
 - (BOOL)isMultiDeviceActivated {
-    return deviceGroupPathKey != nil;
+    return deviceGroupKeys != nil;
+}
+
+- (void)deactivateMultiDevice {
+    @synchronized (deviceGroupKeys) {
+        DeviceGroupKeyManager *deviceGroupKeyManager = [[DeviceGroupKeyManager alloc] initWithMyIdentityStore:[MyIdentityStore sharedMyIdentityStore]];
+        [deviceGroupKeyManager destroy];
+        [UserSettings sharedUserSettings].enableMultiDevice = NO;
+        deviceGroupKeys = nil;
+        deviceID = nil;
+    };
 }
 
 #pragma mark - Push Notification
 
 - (BOOL)shouldRegisterPush {
-    return [AppGroup getCurrentType] == AppGroupTypeApp && [serverConnectorConnectionState connectionState] == ConnectionStateLoggedIn;
+    return [serverConnectorConnectionState connectionState] == ConnectionStateLoggedIn;
 }
 
 - (void)setPushToken:(NSData *)pushToken {
-    NSData *previousPushToken = [[AppGroup userDefaults] objectForKey:kPushNotificationDeviceToken];
     [[AppGroup userDefaults] setObject:pushToken forKey:kPushNotificationDeviceToken];
     [[AppGroup userDefaults] synchronize];
-    
-    // Force updating the push token if it changes
-    [self sendPushTokenForce:![previousPushToken isEqualToData:pushToken]];
+    [self sendPushToken];
 }
 
-- (void)setVoIPPushToken:(NSData *)voIPPushToken {
-    [[AppGroup userDefaults] setObject:voIPPushToken forKey:kVoIPPushNotificationDeviceToken];
-    [[AppGroup userDefaults] synchronize];
-    [self sendVoIPPushToken];
-}
-
-- (void)sendPushTokenForce:(BOOL)force {
+- (void)sendPushToken {
     dispatch_sync(sendPushTokenQueue, ^{
-        if (isSentPushToken == YES && !force) {
-            DDLogInfo(@"Already sent push notification token (apple mc)");
-            return;
-        }
-        
         NSData *pushToken = [[AppGroup userDefaults] objectForKey:kPushNotificationDeviceToken];
         
         if ([self shouldRegisterPush] == NO || pushToken == nil) {
@@ -1025,26 +1050,21 @@ struct pktExtension {
         NSMutableData *payloadData = [NSMutableData dataWithBytes:&pushTokenType length:1];
         [payloadData appendData:pushToken];
         [payloadData appendData:[@"|" dataUsingEncoding:NSUTF8StringEncoding]];
-        [payloadData appendData:[[[NSBundle mainBundle] bundleIdentifier] dataUsingEncoding:NSASCIIStringEncoding]];
+        [payloadData appendData:[[BundleUtil threemaAppIdentifier] dataUsingEncoding:NSASCIIStringEncoding]];
         [payloadData appendData:[@"|" dataUsingEncoding:NSUTF8StringEncoding]];
         [payloadData appendData:[PushPayloadDecryptor pushEncryptionKey]];
         [self sendPayloadWithType:PLTYPE_PUSH_NOTIFICATION_TOKEN data:payloadData];
-
-        isSentPushToken = YES;
     });
 }
 
 - (void)removePushToken {
     dispatch_sync(sendPushTokenQueue, ^{
-        NSData *previousPushToken = [[AppGroup userDefaults] objectForKey:kPushNotificationDeviceToken];
-        
-        if (previousPushToken != nil) {
+        if ([[AppGroup userDefaults] objectForKey:kPushNotificationDeviceToken] != nil) {
             [[AppGroup userDefaults] setObject:nil forKey:kPushNotificationDeviceToken];
             [[AppGroup userDefaults] synchronize];
         }
-        
-        if (isSentPushToken == YES && previousPushToken == nil) {
-            DDLogInfo(@"Already sent push notification token (apple mc)");
+        else {
+            DDLogInfo(@"Already removed push notification token (apple mc)");
             return;
         }
         
@@ -1054,49 +1074,9 @@ struct pktExtension {
 
         DDLogInfo(@"Clearing push notification token (apple mc)");
 
-        uint8_t voIPPushTokenType = PUSHTOKEN_TYPE_NONE;
-        
-        NSMutableData *payloadData = [NSMutableData dataWithBytes:&voIPPushTokenType length:1];
-        [payloadData appendData:[@"|" dataUsingEncoding:NSUTF8StringEncoding]];
-        [payloadData appendData:[[[NSBundle mainBundle] bundleIdentifier] dataUsingEncoding:NSASCIIStringEncoding]];
-        [payloadData appendData:[@"|" dataUsingEncoding:NSUTF8StringEncoding]];
-        [payloadData appendData:[PushPayloadDecryptor pushEncryptionKey]];
+        uint8_t pushTokenType = PUSHTOKEN_TYPE_NONE;
+        NSData *payloadData = [NSData dataWithBytes:&pushTokenType length:1];
         [self sendPayloadWithType:PLTYPE_PUSH_NOTIFICATION_TOKEN data:payloadData];
-
-        isSentPushToken = YES;
-    });
-}
-
-- (void)sendVoIPPushToken {
-    dispatch_sync(sendVoIPPushTokenQueue, ^{
-        if (isSentVoIPPushToken == YES) {
-            DDLogInfo(@"Already sent VoIP push notification token (apple)");
-            return;
-        }
-
-        NSData *voIPPushToken = [[AppGroup userDefaults] objectForKey:kVoIPPushNotificationDeviceToken];
-
-        if ([self shouldRegisterPush] == NO || voIPPushToken == nil) {
-            return;
-        }
-        
-        DDLogInfo(@"Sending VoIP push notification token (apple)");
-        
-    #ifdef DEBUG
-        uint8_t voIPPushTokenType = PUSHTOKEN_TYPE_APPLE_SANDBOX;
-    #else
-        uint8_t voIPPushTokenType = PUSHTOKEN_TYPE_APPLE_PROD;
-    #endif
-        
-        NSMutableData *payloadData = [NSMutableData dataWithBytes:&voIPPushTokenType length:1];
-        [payloadData appendData:voIPPushToken];
-        [payloadData appendData:[@"|" dataUsingEncoding:NSUTF8StringEncoding]];
-        [payloadData appendData:[[[NSBundle mainBundle] bundleIdentifier] dataUsingEncoding:NSASCIIStringEncoding]];
-        [payloadData appendData:[@"|" dataUsingEncoding:NSUTF8StringEncoding]];
-        [payloadData appendData:[PushPayloadDecryptor pushEncryptionKey]];
-        [self sendPayloadWithType:PLTYPE_VOIP_PUSH_NOTIFICATION_TOKEN data:payloadData];
-        
-        isSentVoIPPushToken = YES;
     });
 }
 
@@ -1108,29 +1088,19 @@ struct pktExtension {
             return;
         }
 
-        NSData *voIPPushToken = [[AppGroup userDefaults] objectForKey:kVoIPPushNotificationDeviceToken];
-
-        if(voIPPushToken != nil) {
+        if([[AppGroup userDefaults] objectForKey:kVoIPPushNotificationDeviceToken] != nil) {
             [[AppGroup userDefaults] setObject:nil forKey:kVoIPPushNotificationDeviceToken];
             [[AppGroup userDefaults] synchronize];
-            voIPPushToken = nil;
         }
  
         if ([self shouldRegisterPush] == NO) {
             return;
         }
         
-        DDLogInfo(@"Removing VoIP push token (apple)");
+        DDLogInfo(@"Clearing VoIP push token (apple)");
         
         uint8_t voIPPushTokenType = PUSHTOKEN_TYPE_NONE;
-
-        NSMutableData *payloadData = [NSMutableData dataWithBytes:&voIPPushTokenType length:1];
-        [payloadData appendData:voIPPushToken];
-        [payloadData appendData:[@"" dataUsingEncoding:NSUTF8StringEncoding]];
-        [payloadData appendData:[@"|" dataUsingEncoding:NSUTF8StringEncoding]];
-        [payloadData appendData:[[[NSBundle mainBundle] bundleIdentifier] dataUsingEncoding:NSASCIIStringEncoding]];
-        [payloadData appendData:[@"|" dataUsingEncoding:NSUTF8StringEncoding]];
-        [payloadData appendData:[PushPayloadDecryptor pushEncryptionKey]];
+        NSData *payloadData = [NSData dataWithBytes:&voIPPushTokenType length:1];
         [self sendPayloadWithType:PLTYPE_VOIP_PUSH_NOTIFICATION_TOKEN data:payloadData];
         
         isRemovedVoIPPushToken = YES;
@@ -1147,6 +1117,10 @@ struct pktExtension {
     
     DDLogVerbose(@"Sending allowed identities: %@", iddata);
     [self sendPayloadWithType:PLTYPE_PUSH_ALLOWED_IDENTITIES data:iddata];
+}
+
+- (void)clearDeviceCookieChangedIndicator {
+    [self sendPayloadWithType:PLTYPE_CLEAR_DEVICE_COOKIE_CHANGE_INDICATION data:[NSData data]];
 }
 
 - (void)sendPushSound{
@@ -1247,8 +1221,15 @@ struct pktExtension {
     }
     
     if (internetStatus != lastInternetStatus) {
-        DDLogNotice(@"Internet status changed - forcing reconnect");
-        [self reconnect];
+        if ([AppGroup getActiveType] != AppGroupTypeNotificationExtension) {
+            DDLogNotice(@"Internet status changed - forcing reconnect");
+            [self reconnect];
+        }
+        else {
+            DDLogNotice(@"Internet status changed - disconnect Notification Extension");
+            [serverConnectorConnectionState disconnecting];
+            [socket disconnect];
+        }
         lastInternetStatus = internetStatus;
     }
 }
@@ -1272,19 +1253,30 @@ struct pktExtension {
     [socket readWithLength:sizeof(struct pktServerHello) timeout:kReadTimeout tag:TAG_SERVER_HELLO_READ];
 }
 
-- (void)didDisconnect {
+- (void)didDisconnectWithErrorCode:(NSInteger)code {
     [serverConnectorConnectionState disconnected];
 
     DDLogWarn(@"Flushing incoming and interrupt outgoing queue on Task Manager");
     [TaskManager flushWithQueueType:TaskQueueTypeIncoming];
     [TaskManager interruptWithQueueType:TaskQueueTypeOutgoing];
 
+    isRolePromotedToLeader = NO;
+
     if (keepalive_timer != nil) {
         dispatch_source_cancel(keepalive_timer);
         keepalive_timer = nil;
     }
 
-    [self reconnectAfterDelay];
+    if (code != 4115) {
+        [self reconnectAfterDelay];
+    }
+    else {
+        // Device slot state mismatch -> this device must relink
+        [self displayServerAlert:[BundleUtil localizedStringForKey:@"multi_device_slot_state_mismatch_alert"]];
+
+        // Deactivate multi device -> relinking device
+        [self deactivateMultiDevice];
+    }
 }
 
 - (void)didReadData:(NSData * _Nonnull)data tag:(int16_t)tag {
@@ -1341,10 +1333,19 @@ struct pktExtension {
             [extensionsData appendData:[self makeExtensionWithType:EXTENSION_TYPE_MESSAGE_PAYLOAD_VERSION data:[NSData dataWithBytes:&plv length:1]]];
             
             // Adding Device ID extension if is Multi Device activated
-            if (deviceId != nil && [deviceId length] == kDeviceIdLen) {
+            if (deviceID != nil && [deviceID length] == kDeviceIdLen) {
                 /* CSP device ID (0x01) extension payload */
                 [extensionsData appendData:[self makeExtensionWithType:EXTENSION_TYPE_DEVICE_ID data:[UserSettings sharedUserSettings].deviceID]];
             }
+            
+            /* device cookie (0x03) extension payload */
+            NSData *deviceCookie = [DeviceCookieManager obtainDeviceCookie];
+            if (deviceCookie == nil) {
+                DDLogError(@"Could not obtain device cookie");
+                [socket disconnect];
+                return;
+            }
+            [extensionsData appendData:[self makeExtensionWithType:EXTENSION_TYPE_DEVICE_COOKIE data:deviceCookie]];
 
             NSData *loginNonce = [self nextClientNonce];
             NSData *extensionsNonce = [self nextClientNonce];
@@ -1363,22 +1364,17 @@ struct pktExtension {
             memcpy(login.server_cookie, serverCookie.bytes, kCookieLen);
             
             /* vouch calculation */
-            NSData *sharedSecret = [[MyIdentityStore sharedMyIdentityStore] sharedSecretWithPublicKey:chosenServerKeyPub];
+            NSMutableData *sharedSecrets = [NSMutableData dataWithData:[[MyIdentityStore sharedMyIdentityStore] sharedSecretWithPublicKey:chosenServerKeyPub]];
+            [sharedSecrets appendData:[[MyIdentityStore sharedMyIdentityStore] sharedSecretWithPublicKey:serverTempKeyPub]];
             NSMutableData *vouchInput = [NSMutableData dataWithData:serverCookie];
             [vouchInput appendData:clientTempKeyPub];
             ThreemaKDF *kdf = [[ThreemaKDF alloc] initWithPersonal:@"3ma-csp"];
-            NSData *vouchKey = [kdf deriveKeyWithSalt:@"v" key:sharedSecret];
+            NSData *vouchKey = [kdf deriveKeyWithSalt:@"v2" key:sharedSecrets];
             NSData *vouch = [ThreemaKDF calculateMacWithKey:vouchKey input:vouchInput];
             memcpy(login.vouch, vouch.bytes, kVouchLen);
                         
             /* encrypt login packet */
             NSData *loginBox = [[NaClCrypto sharedCrypto] encryptData:[NSData dataWithBytes:&login length:sizeof(login)] withPublicKey:serverTempKeyPub signKey:clientTempKeySec nonce:loginNonce];
-            
-            /* tell rogue device monitor about the new keys */
-            NSMutableData *ephemeralKeys = [NSMutableData dataWithData:clientTempKeyPub];
-            [ephemeralKeys appendData:serverTempKeyPub];
-            tempKeyHash = [ThreemaKDF hashWithInput:ephemeralKeys];
-            [rogueDeviceMonitor recordEphemeralKeyHash:tempKeyHash postLogin:NO];
             
             /* send it! */
             [socket writeWithData:loginBox tag:0];
@@ -1405,25 +1401,17 @@ struct pktExtension {
             
             /* Don't care about the contents of the login ACK for now; it only needs to decrypt correctly */
             
-            [rogueDeviceMonitor recordEphemeralKeyHash:tempKeyHash postLogin:YES];
-            
             reconnectAttempts = 0;
             [serverConnectorConnectionState loggedInChatServer];
 
-            [self sendPushTokenForce:false];
-            
+            [self sendPushToken];
             [self sendPushAllowedIdentities];
             [self sendPushSound];
             [self sendPushGroupSound];
             
-            // Remove VoIP toke if on iOS15 or above, add it if below
-            if (@available(iOS 15, *)){
-                [self removeVoIPPushToken];
-            }
-            else {
-                [self sendVoIPPushToken];
-            }
-            
+            // Remove VoIP push token (since min OS version is iOS 15 or above)
+            [self removeVoIPPushToken];
+
             /* Schedule task for keepalive */
             keepalive_timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, socketQueue);
             dispatch_source_set_event_handler(keepalive_timer, ^{
@@ -1434,7 +1422,7 @@ struct pktExtension {
             dispatch_resume(keepalive_timer);
             
             /* Unblock incoming messages if not running multi device or already promoted to leader */
-            if (deviceId == nil || [deviceId length] != kDeviceIdLen || isRolePromotedToLeader) {
+            if (doUnblockIncomingMessages && (deviceID == nil || [deviceID length] != kDeviceIdLen || isRolePromotedToLeader)) {
                 [self sendPayloadWithType:PLTYPE_UNBLOCK_INCOMING_MESSAGES data:[NSData data]];
             }
             
@@ -1486,8 +1474,16 @@ struct pktExtension {
             int timeoutDownloadThumbnail = isAppInBackground || [AppGroup getActiveType] == AppGroupTypeNotificationExtension ? 20 : 0;
 
             TaskManager *taskManager = [[TaskManager alloc] init];
-            
-            MediatorMessageProcessor *processor = [[MediatorMessageProcessor alloc] initWithDeviceGroupPathKey:deviceGroupPathKey deviceID:deviceId maxBytesToDecrypt:[AppGroup getActiveType] != AppGroupTypeNotificationExtension ? MAX_BYTES_TO_DECRYPT_NO_LIMIT : MAX_BYTES_TO_DECRYPT_NOTIFICATION_EXTENSION timeoutDownloadThumbnail:timeoutDownloadThumbnail mediatorMessageProtocol:[[MediatorMessageProtocol alloc] initWithDeviceGroupPathKey:[self deviceGroupPathKey]] taskManager:taskManager messageProcessorDelegate:self];
+
+            MediatorMessageProcessor *processor = [[MediatorMessageProcessor alloc]
+                                                   initWithDeviceGroupKeys:deviceGroupKeys
+                                                   deviceID:deviceID
+                                                   maxBytesToDecrypt:[AppGroup getActiveType] != AppGroupTypeNotificationExtension ? MAX_BYTES_TO_DECRYPT_NO_LIMIT : MAX_BYTES_TO_DECRYPT_NOTIFICATION_EXTENSION
+                                                   timeoutDownloadThumbnail:timeoutDownloadThumbnail
+                                                   mediatorMessageProtocol:[[MediatorMessageProtocol alloc] initWithDeviceGroupKeys:deviceGroupKeys]
+                                                   userSettings:[UserSettings sharedUserSettings]
+                                                   taskManager:taskManager
+                                                   messageProcessorDelegate:self];
 
             uint8_t type;
             NSData *result = [processor processWithMessage:data messageType:&type receivedAfterInitialQueueSend:!mediatorServerInInitialQueueSend];
@@ -1566,7 +1562,7 @@ struct pktExtension {
     dispatch_sync(queueMessageListenerDelegate, ^{
         if (clientMessageListenerDelegates != nil && [clientMessageListenerDelegates count] > 0) {
             for (id<MessageListenerDelegate> clientListener in clientMessageListenerDelegates) {
-                [clientListener messageReceived:type data:data];
+                [clientListener messageReceived:clientListener type:type data:data];
             }
         }
     });
@@ -1610,15 +1606,21 @@ struct pktExtension {
     });
 }
 
-- (void)taskQueueEmpty:(NSString * _Nonnull)queueTypeName {
+- (void)incomingAbstractMessageFailed:(AbstractMessage *)message {
     dispatch_async(queueMessageProcessorDelegate, ^{
-        [clientMessageProcessorDelegate taskQueueEmpty:queueTypeName];
+        [clientMessageProcessorDelegate incomingAbstractMessageFailed:message];
     });
 }
 
-- (void)outgoingMessageFinished:(AbstractMessage *)message {
+- (void)readMessage:(NSSet *)inConversations {
     dispatch_async(queueMessageProcessorDelegate, ^{
-        [clientMessageProcessorDelegate outgoingMessageFinished:message];
+        [clientMessageProcessorDelegate readMessage:inConversations];
+    });
+}
+
+- (void)taskQueueEmpty:(NSString * _Nonnull)queueTypeName {
+    dispatch_async(queueMessageProcessorDelegate, ^{
+        [clientMessageProcessorDelegate taskQueueEmpty:queueTypeName];
     });
 }
 

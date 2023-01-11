@@ -57,7 +57,7 @@ public class UserNotificationManager: UserNotificationManagerProtocol {
     /// Get the best infos for user notification on the basis of the threema push, abstract or base (DB) message.
     ///
     /// - Parameter pendingUserNotification: Incoming processing message
-    /// - Returns User notification content or NULL if should no user notification showed
+    /// - Returns User notification content or NULL if should no user notification should be shown or if the user notification is handled otherwise
     public func userNotificationContent(_ pendingUserNotification: PendingUserNotification)
         -> UserNotificationContent? {
         
@@ -66,19 +66,26 @@ public class UserNotificationManager: UserNotificationManagerProtocol {
             return nil
         }
         
-        if let shouldPush = pendingUserNotification.abstractMessage?.shouldPush() {
-            guard shouldPush else {
+        if let flagShouldPush = pendingUserNotification.abstractMessage?.flagShouldPush() {
+            guard flagShouldPush else {
                 return nil
             }
         }
-        if let isVoIP = pendingUserNotification.abstractMessage?.isVoIP() {
-            guard !isVoIP else {
+        if let flagImmediateDeliveryRequired = pendingUserNotification.abstractMessage?
+            .flagImmediateDeliveryRequired() {
+            guard !flagImmediateDeliveryRequired else {
+                return nil
+            }
+        }
+        if let flagIsVoIP = pendingUserNotification.abstractMessage?.flagIsVoIP() {
+            guard !flagIsVoIP else {
                 return nil
             }
         }
         
         if let flags = pendingUserNotification.baseMessage?.flags {
-            guard flags.intValue & Int(MESSAGE_FLAG_PUSH) != 0, flags.intValue & Int(MESSAGE_FLAG_VOIP) == 0 else {
+            guard flags.intValue & Int(MESSAGE_FLAG_SEND_PUSH) != 0,
+                  flags.intValue & Int(MESSAGE_FLAG_IMMEDIATE_DELIVERY) == 0 else {
                 return nil
             }
         }
@@ -125,12 +132,10 @@ public class UserNotificationManager: UserNotificationManagerProtocol {
         }
         
         // Apply content from threema push
-        userNotificationContent.body = String(
-            format: BundleUtil
-                .localizedString(
-                    forKey: pendingUserNotification
-                        .isGroupMessage! ? "new_group_message_from_x" : "new_message_from_x"
-                ),
+        userNotificationContent.body = String.localizedStringWithFormat(
+            BundleUtil.localizedString(
+                forKey: pendingUserNotification.isGroupMessage! ? "new_group_message_from_x" : "new_message_from_x"
+            ),
             userNotificationContent.fromName!
         )
         

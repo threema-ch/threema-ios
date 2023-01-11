@@ -32,7 +32,8 @@ public protocol GroupManagerProtocol: GroupManagerProtocolObjc {
         groupID: Data,
         creator: String,
         members: Set<String>,
-        systemMessageDate: Date?
+        systemMessageDate: Date?,
+        sourceCaller: SourceCaller
     ) -> Promise<Group?>
     func getConversation(for groupIdentity: GroupIdentity) -> Conversation?
     func setName(groupID: Data, creator: String, name: String?, systemMessageDate: Date, send: Bool) -> Promise<Void>
@@ -84,7 +85,8 @@ public extension GroupManagerProtocol {
         groupID: Data,
         creator: String,
         members: Set<String>,
-        systemMessageDate: Date?
+        systemMessageDate: Date?,
+        sourceCaller: SourceCaller
     ) -> AnyPromise
     func deletePhotoObjc(groupID: Data, creator: String, sentDate: Date, send: Bool) -> AnyPromise
     func getGroup(_ groupID: Data, creator: String) -> Group?

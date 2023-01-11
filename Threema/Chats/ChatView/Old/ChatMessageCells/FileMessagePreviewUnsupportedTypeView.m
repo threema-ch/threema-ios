@@ -32,7 +32,7 @@
 }
 
 - (void)updateColors {
-    self.backgroundColor = Colors.backgroundViewController;
+    self.backgroundColor = Colors.backgroundGroupedViewController;
     [_noPreviewLabel setTextColor: [Colors text]];
     [_fileNameLabel setTextColor: [Colors text]];
     [_fileSizeLabel setTextColor: [Colors textLight]];

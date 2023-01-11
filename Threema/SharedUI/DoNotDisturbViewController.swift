@@ -18,7 +18,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-import DiffableDataSources
 import UIKit
 
 /// Show and change `PushSetting` for a conversation or contact
@@ -47,7 +46,7 @@ final class DoNotDisturbViewController: ThemedCodeModernGroupedTableViewControll
     }
     
     /// Simple subclass to provide easy header and footer string configuration
-    private class DataSource: TableViewDiffableDataSource<Section, Row> {
+    private class DataSource: UITableViewDiffableDataSource<Section, Row> {
         typealias SupplementaryProvider = (UITableView, Section) -> String?
         
         let headerProvider: SupplementaryProvider
@@ -55,7 +54,7 @@ final class DoNotDisturbViewController: ThemedCodeModernGroupedTableViewControll
         
         init(
             tableView: UITableView,
-            cellProvider: @escaping TableViewDiffableDataSource<Section, Row>.CellProvider,
+            cellProvider: @escaping UITableViewDiffableDataSource<Section, Row>.CellProvider,
             headerProvider: @escaping SupplementaryProvider,
             footerProvider: @escaping SupplementaryProvider
         ) {
@@ -68,7 +67,7 @@ final class DoNotDisturbViewController: ThemedCodeModernGroupedTableViewControll
         @available(*, unavailable)
         override init(
             tableView: UITableView,
-            cellProvider: @escaping TableViewDiffableDataSource<Section, Row>.CellProvider
+            cellProvider: @escaping UITableViewDiffableDataSource<Section, Row>.CellProvider
         ) {
             fatalError("Not supported.")
         }
@@ -196,8 +195,8 @@ final class DoNotDisturbViewController: ThemedCodeModernGroupedTableViewControll
             return localizedInfo
         }
         
-        let localizedDetails = String(
-            format: localizedDetailsFormatString,
+        let localizedDetails = String.localizedStringWithFormat(
+            localizedDetailsFormatString,
             localizedWeekdaysList,
             localizedStartTime,
             localizedEndTime
@@ -303,7 +302,7 @@ extension DoNotDisturbViewController {
 extension DoNotDisturbViewController {
     
     private func updateContent() {
-        var snapshot = DiffableDataSourceSnapshot<Section, Row>()
+        var snapshot = NSDiffableDataSourceSnapshot<Section, Row>()
         
         // Always show activeDND section when off-hours are enable to display info in footer
         if pushSetting.type != .on || areOffHoursEnabled {

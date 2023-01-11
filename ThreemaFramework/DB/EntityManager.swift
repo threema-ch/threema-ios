@@ -57,7 +57,7 @@ public class EntityManager: NSObject {
     /// With DB child context.
     /// - Parameters:
     ///     - withChildContextForBackgroundProcess: Child context for background or main thread
-    ///     - myIdenityStore: To fetch group conversation and  contact display name
+    ///     - myIdentityStore: To fetch group conversation and  contact display name
     public required init(withChildContextForBackgroundProcess: Bool, myIdentityStore: MyIdentityStoreProtocol) {
         self.dbContext = DatabaseManager.db()
             .getDatabaseContext(withChildContextforBackgroundProcess: withChildContextForBackgroundProcess)
@@ -121,30 +121,30 @@ public class EntityManager: NSObject {
         dbContext.current.persistentStoreCoordinator?.managedObjectID(forURIRepresentation: url)
     }
 
-    /// Check message is already processed (on main thread and main DB context).
+    /// Check (on main thread and main DB context) is message nonce already in DB.
     ///
     /// This is useful during incoming message processing to check
     /// if a message is already processed to prevent race conditions
     /// between App and Notification Extension.
     ///
-    /// - Parameter message: Message to check
-    /// - Returns: True message is already processed
-    @objc public func isProcessed(message: AbstractMessage) -> Bool {
+    /// - Parameter nonce: Message Nonce to check
+    /// - Returns: True nonce found in DB
+    func isMessageNonceAlreadyInDB(nonce: Data) -> Bool {
         var isProcessed = false
 
-        let isNonceAlreadyInDB: (AbstractMessage) -> Void = { message in
+        let isNonceAlreadyInDB: (Data) -> Void = { nonce in
             let entityFetcherOnMain = EntityFetcher(self.dbContext.main, myIdentityStore: MyIdentityStore.shared())
             self.dbContext.main.performAndWait {
-                isProcessed = entityFetcherOnMain?.isNonceAlready(inDb: message) ?? false
+                isProcessed = entityFetcherOnMain?.isNonceAlreadyInDB(nonce: nonce) ?? false
             }
         }
 
         if Thread.isMainThread {
-            isNonceAlreadyInDB(message)
+            isNonceAlreadyInDB(nonce)
         }
         else {
             DispatchQueue.main.sync {
-                isNonceAlreadyInDB(message)
+                isNonceAlreadyInDB(nonce)
             }
         }
         return isProcessed
@@ -152,11 +152,23 @@ public class EntityManager: NSObject {
 
     @objc public func conversation(forContact: Contact, createIfNotExisting: Bool) -> Conversation? {
         let conversation = entityFetcher.conversation(forIdentity: forContact.identity)
-        
+
         if createIfNotExisting, conversation == nil,
            let conversation = entityCreator.conversation() {
             conversation.contact = forContact
-            if !ThreemaUtilityObjC.hideThreemaTypeIcon(for: forContact) {
+
+            if forContact.isContactHidden {
+                forContact.isContactHidden = false
+
+                let mediatorSyncableContacts = MediatorSyncableContacts()
+                mediatorSyncableContacts.updateAcquaintanceLevel(
+                    identity: forContact.identity,
+                    value: NSNumber(integerLiteral: ContactAcquaintanceLevel.direct.rawValue)
+                )
+                mediatorSyncableContacts.syncAsync()
+            }
+
+            if forContact.showOtherThreemaTypeIcon {
                 // Add work info as first message
                 let systemMessage = entityCreator.systemMessage(for: conversation)
                 systemMessage?.type = NSNumber(value: kSystemMessageContactOtherAppInfo)
@@ -164,7 +176,7 @@ public class EntityManager: NSObject {
             }
             return conversation
         }
-        
+
         return conversation
     }
 
@@ -178,12 +190,31 @@ public class EntityManager: NSObject {
     /// Set sent property of own message to true and save.
     ///
     /// - Parameter messageID: Message to set sent true
-    public func markMessageAsSent(_ messageID: Data) {
+    /// - Parameter isLocal: Is the message NOT sent to the chat server?
+    public func markMessageAsSent(_ messageID: Data, isLocal: Bool = false) {
         performSyncBlockAndSafe {
             if let dbMsg = self.entityFetcher.ownMessage(with: messageID) {
                 if let sent = Bool(exactly: dbMsg.sent), !sent {
                     dbMsg.sent = true
+                    dbMsg.sendFailed = false
+                    
+                    // Only set remote sent date if it was actually sent to the chat server
+                    if !isLocal {
+                        dbMsg.remoteSentDate = .now
+                    }
                 }
+            }
+        }
+    }
+    
+    /// Set forward security mode of own message and save.
+    ///
+    /// - Parameter messageID: Message to set FS mode on
+    /// - Parameter forwardSecurityMode: new mode
+    public func setForwardSecurityMode(_ messageID: Data, forwardSecurityMode: ForwardSecurityMode) {
+        performSyncBlockAndSafe {
+            if let dbMsg = self.entityFetcher.ownMessage(with: messageID) {
+                dbMsg.forwardSecurityMode = forwardSecurityMode.rawValue as NSNumber
             }
         }
     }
@@ -221,10 +252,38 @@ private extension EntityManager {
         
         // Fixes Crash when swipe-deleting Conversation on iOS15b8
         #if DEBUG
-            DDLogVerbose(String(format: "inserted objects: %@", dbContext.current.insertedObjects))
-            DDLogVerbose(String(format: "updated objects: %@", dbContext.current.updatedObjects))
-            DDLogVerbose(String(format: "deleted objects: %@", dbContext.current.deletedObjects))
+            DDLogVerbose("inserted objects: \(dbContext.current.insertedObjects)")
+            DDLogVerbose("updated objects: \(dbContext.current.updatedObjects)")
+            DDLogVerbose("deleted objects: \(dbContext.current.deletedObjects)")
         #endif
+        
+        // Workaround for temporary managed object IDs
+        //
+        // After creating a managed object it appears in the context it is created on with a temporary object ID
+        // (indicated by the "t" at the beginning of the UUID of a printed object ID). This object ID stays temporary
+        // until the object is saved to a persistent store. Thus when a child contexts is saved all new managed objects
+        // appear with their temporary object ID in the parent context.
+        // A fetched results controller (FRC) on a context picks this up and sends an update (e.g. the one used in the
+        // new chat view) with the temporary object IDs if you use diffable DS. However, there is no snapshot update
+        // when the temporary object ID is switched out for a permanent one unless you update and save the object one
+        // more time. Depending on the implementation this leads to a crash due to an unknown (temporary) object ID in
+        // the DS.
+        //
+        // Workaround: We prefetch the permanent object IDs of all inserted objects before every save. Note: Testing
+        // showed that we have to do this also if there is no parent context to work as expected.
+        //
+        // This should be addressed on a lower level with IOS-2354. Probably by replacing child contexts by multiple
+        // contexts accessing the same permanent store directly.
+        //
+        // Sources:
+        // - https://developer.apple.com/forums/thread/692357?answerID=691521022#691521022
+        // - https://stackoverflow.com/q/11336120
+        do {
+            try dbContext.current.obtainPermanentIDs(for: Array(dbContext.current.insertedObjects))
+        }
+        catch {
+            DDLogWarn("Unable to obtain permanent ids: \(error)")
+        }
         
         var success = false
         do {

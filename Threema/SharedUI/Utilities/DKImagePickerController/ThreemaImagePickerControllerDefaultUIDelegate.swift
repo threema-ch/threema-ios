@@ -56,7 +56,10 @@ import ThreemaFramework
     override open func updateDoneButtonTitle(_ button: UIButton) {
         if !imagePickerController.selectedAssets.isEmpty {
             button.setTitle(
-                String(format: DKImageLocalizedStringWithKey("select"), imagePickerController.selectedAssets.count),
+                String.localizedStringWithFormat(
+                    DKImageLocalizedStringWithKey("select"),
+                    imagePickerController.selectedAssets.count
+                ),
                 for: .normal
             )
             button.isHidden = false

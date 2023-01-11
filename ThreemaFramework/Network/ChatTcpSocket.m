@@ -116,12 +116,14 @@ static int currentPortIndex = 0;
 
 - (void)socketDidDisconnect:(GCDAsyncSocket *)sender withError:(NSError *)error {
     if (sender != socket) {
-        DDLogWarn(@"socketDidDisconnect from old socket");
+        DDLogWarn(@"Disconnect from chat server because of old socket");
         return;
     }
-    
+
+    NSInteger code = 0;
     if (error != nil) {
-        DDLogWarn(@"Socket disconnected, error = %@", error);
+        DDLogError(@"Disconnect from chat server with error: %@", error);
+        code = error.code;
         
         /* try next port */
         currentPortIndex++;
@@ -132,7 +134,7 @@ static int currentPortIndex = 0;
     socket = nil;
 
     DDLogInfo(@"Disconnected from %@:%d", [sender connectedHost], [sender connectedPort]);
-    [delegate didDisconnect];
+    [delegate didDisconnectWithErrorCode:code];
 }
 
 - (void)socket:(GCDAsyncSocket *)sender didReadData:(NSData *)data withTag:(long)tag {

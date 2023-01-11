@@ -35,7 +35,7 @@
 + (BOOL)canScan {
     if ([UIImagePickerController isSourceTypeAvailable:UIImagePickerControllerSourceTypeCamera]) {
         NSArray *mediaTypes = [UIImagePickerController availableMediaTypesForSourceType:UIImagePickerControllerSourceTypeCamera];
-        return [mediaTypes containsObject:(NSString *)kUTTypeMovie];
+        return [mediaTypes containsObject:(NSString *)UTTypeMovie.identifier];
     }
     return NO;
 }

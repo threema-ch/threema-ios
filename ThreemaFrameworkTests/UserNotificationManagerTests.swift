@@ -88,7 +88,7 @@ class UserNotificationManagerTests: XCTestCase {
         XCTAssertNil(result)
     }
 
-    func testUserNotificationContentShouldPushNo() throws {
+    func testUserNotificationContentflagImmediateDeliveryRequiredNo() throws {
         let pendingUserNotification = PendingUserNotification(key: "ECHOECHO94c605d0e3150619")
         pendingUserNotification
             .threemaPushNotification =
@@ -113,7 +113,7 @@ class UserNotificationManagerTests: XCTestCase {
         XCTAssertNil(result)
     }
 
-    func testUserNotificationContentShouldPushYes() throws {
+    func testUserNotificationContentflagImmediateDeliveryRequiredYes() throws {
         let pendingUserNotification = PendingUserNotification(key: "ECHOECHO94c605d0e3150619")
         pendingUserNotification
             .threemaPushNotification =
@@ -284,10 +284,10 @@ class UserNotificationManagerTests: XCTestCase {
     func testUserNotificationContentBaseMessageFlags() throws {
         let testsFlags: [Int: Bool] = [
             0: true,
-            Int(MESSAGE_FLAG_PUSH): false,
-            Int(MESSAGE_FLAG_VOIP): true,
-            Int(MESSAGE_FLAG_PUSH) | Int(MESSAGE_FLAG_VOIP): true,
-            Int(MESSAGE_FLAG_PUSH) | Int(MESSAGE_FLAG_NOACK) | Int(MESSAGE_FLAG_GROUP): false,
+            Int(MESSAGE_FLAG_SEND_PUSH): false,
+            Int(MESSAGE_FLAG_IMMEDIATE_DELIVERY): true,
+            Int(MESSAGE_FLAG_SEND_PUSH) | Int(MESSAGE_FLAG_IMMEDIATE_DELIVERY): true,
+            Int(MESSAGE_FLAG_SEND_PUSH) | Int(MESSAGE_FLAG_DONT_ACK) | Int(MESSAGE_FLAG_GROUP): false,
         ]
 
         for testFlags in testsFlags {
@@ -311,7 +311,8 @@ class UserNotificationManagerTests: XCTestCase {
                             read: false,
                             sent: true,
                             userack: false,
-                            sender: contact
+                            sender: contact,
+                            remoteSentDate: Date(timeIntervalSinceNow: -100)
                         )
 
                         textMessage.flags = NSNumber(integerLiteral: testFlags.key)
@@ -458,7 +459,8 @@ class UserNotificationManagerTests: XCTestCase {
                     read: false,
                     sent: true,
                     userack: false,
-                    sender: contact
+                    sender: contact,
+                    remoteSentDate: Date(timeIntervalSinceNow: -100)
                 )
             }
         }
@@ -955,7 +957,8 @@ class UserNotificationManagerTests: XCTestCase {
                             read: false,
                             sent: true,
                             userack: false,
-                            sender: contact
+                            sender: contact,
+                            remoteSentDate: Date(timeIntervalSinceNow: -100)
                         )
                     }
             }
@@ -1079,7 +1082,8 @@ class UserNotificationManagerTests: XCTestCase {
                             read: false,
                             sent: true,
                             userack: false,
-                            sender: contact
+                            sender: contact,
+                            remoteSentDate: Date(timeIntervalSinceNow: -100)
                         )
                     }
             }

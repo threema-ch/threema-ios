@@ -197,8 +197,8 @@ extension DeleteContactAction {
             self.deleteContact(exclude: nil, completion: completion)
         }
         
-        let sheetTitle = String(
-            format: BundleUtil.localizedString(forKey: "delete_contact_existing_conversation_title"),
+        let sheetTitle = String.localizedStringWithFormat(
+            BundleUtil.localizedString(forKey: "delete_contact_existing_conversation_title"),
             contactName
         )
         UIAlertTemplate.showSheet(
@@ -286,7 +286,16 @@ extension DeleteContactAction {
                 MessageDraftStore.deleteDraft(for: conversation)
             }
         }
-                        
+        
+        // Delete any PFS sessions
+        do {
+            try BusinessInjector().dhSessionStore
+                .deleteAllDHSessions(myIdentity: MyIdentityStore().identity, peerIdentity: contact.identity)
+        }
+        catch {
+            DDLogWarn("Cannot delete PFS sessions: \(error)")
+        }
+        
         // Remove contact & conversation
         entityManager.performSyncBlockAndSafe {
             tempContactCouldBeExcluded = self.contactCouldBeExcluded

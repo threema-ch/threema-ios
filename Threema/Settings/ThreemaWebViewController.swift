@@ -18,6 +18,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import CocoaLumberjackSwift
+import PromiseKit
 import ThreemaFramework
 import UIKit
 
@@ -241,15 +243,15 @@ class ThreemaWebViewController: ThemedTableViewController {
                 return BundleUtil.localizedString(forKey: "disabled_by_device_policy")
             }
             else {
-                return String(
-                    format: BundleUtil.localizedString(forKey: "settings_threema_web_connectioninfo"),
+                return String.localizedStringWithFormat(
+                    BundleUtil.localizedString(forKey: "settings_threema_web_connectioninfo"),
                     ThreemaApp.currentName,
                     ThreemaApp.currentName
                 )
             }
         }
-        return String(
-            format: BundleUtil.localizedString(forKey: "webClientSession_add_footer"),
+        return String.localizedStringWithFormat(
+            BundleUtil.localizedString(forKey: "webClientSession_add_footer"),
             downloadString,
             threemaWebServerURL
         )
@@ -347,8 +349,8 @@ extension ThreemaWebViewController: QRScannerViewControllerDelegate {
         
         guard let result = result, let qrCodeData = Data(base64Encoded: result) else {
             ValidationLogger.shared().logString("[Threema Web] Can't read qr code")
-            let message = String(
-                format: BundleUtil.localizedString(forKey: "webClientSession_add_wrong_qr_message"),
+            let message = String.localizedStringWithFormat(
+                BundleUtil.localizedString(forKey: "webClientSession_add_wrong_qr_message"),
                 downloadString,
                 threemaWebServerURL
             )
@@ -379,15 +381,17 @@ extension ThreemaWebViewController: QRScannerViewControllerDelegate {
                 }
             }
         }
-        
+
         // Don't enable Threema Web until all contacts have a non-nil feature mask
-        let contacts = ContactStore.shared().contactsWithFeatureMaskNil()
-        if let nilContacts = contacts, !nilContacts.isEmpty {
-            ContactStore.shared().updateFeatureMasks(for: nilContacts, onCompletion: {
-                scannedCodeHandler()
-            }) { _ in
-                scannedCodeHandler()
-            }
+        if let identities = ContactStore.shared().contactsWithFeatureMaskNil(), !identities.isEmpty {
+            ContactStore.shared().updateFeatureMasks(forIdentities: identities)
+                .done { _ in
+                    scannedCodeHandler()
+                }
+                .catch { error in
+                    DDLogError("Update feature mask failed: \(error)")
+                    scannedCodeHandler()
+                }
         }
         else {
             scannedCodeHandler()

@@ -58,6 +58,11 @@
 #else
   static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 #endif
+
+/// MARK: - Refactoring notes:
+/// It possibly makes sense to integrate the MessageForwarder into this class upon rewriting it.
+/// Also create a function that takes a LocationMessage as input for forwarding.
+
 @implementation MessageSender {
     id<TaskManagerProtocolObjc> taskManager;
 }
@@ -147,6 +152,7 @@
         }];
     }
     
+    [MessageSender donateInteractionForOutgoingMessageIn:conversation];
 }
 
 + (void)sendLocation:(CLLocationCoordinate2D)coordinates accuracy:(CLLocationAccuracy)accuracy poiName:(NSString*)poiName poiAddress:(NSString*)poiAddress inConversation:(Conversation*)conversation onCompletion:(void(^)(NSData *messageId))onCompletion {
@@ -191,11 +197,13 @@
             }
         }
     }];
+    
+    [MessageSender donateInteractionForOutgoingMessageIn:conversation];
 }
 
-+ (void)sendMessage:(AbstractMessage *)message onCompletion:(void (^)(void))onCompletion {
++ (void)sendMessage:(AbstractMessage *)message isPersistent:(BOOL)isPersistent onCompletion:(void (^)(void))onCompletion {
     TaskManager *tm = [[TaskManager alloc] init];
-    [tm addObjcWithTaskDefinition: [[TaskDefinitionSendAbstractMessage alloc] initWithMessage:message doOnlyReflect:NO isPersistent:NO] completionHandler:^(__unused TaskDefinition * task, __unused NSError * error) {
+    [tm addObjcWithTaskDefinition: [[TaskDefinitionSendAbstractMessage alloc] initWithMessage:message doOnlyReflect:NO isPersistent:isPersistent] completionHandler:^(__unused TaskDefinition * task, __unused NSError * error) {
         if (onCompletion != nil) {
             onCompletion();
         }
@@ -356,11 +364,11 @@
     [tm addObjcWithTaskDefinition:task];
 }
 
-+ (void)markBlobAsDone:(NSData * _Nonnull)blobId localOrigin:(BOOL) localOrigin {
-    BlobURL *blobUrl = [[BlobURL alloc] initWithServerConnector:[ServerConnector sharedServerConnector] userSettings:[UserSettings sharedUserSettings] localOrigin:localOrigin];
-    [blobUrl doneWithBlobID:blobId completionHandler:^(NSURL * _Nullable doneUrl, NSError * _Nullable error) {
++ (void)markBlobAsDoneWithBlobID:(NSData* _Nonnull)blobID origin:(BlobOrigin)origin {
+    BlobURL *blobUrl = [[BlobURL alloc] initWithServerConnector:[ServerConnector sharedServerConnector] userSettings:[UserSettings sharedUserSettings]];
+    [blobUrl doneWithBlobID:blobID origin:origin completionHandler:^(NSURL * _Nullable doneUrl, NSError * _Nullable error) {
         if (doneUrl == nil) {
-            DDLogWarn(@"Error marking blob ID %@ as done: %@", [NSString stringWithHexData:blobId], error);
+            DDLogWarn(@"Error marking blob ID %@ as done: %@", [NSString stringWithHexData:blobID], error);
             return;
         }
         
@@ -369,9 +377,9 @@
         
         PinnedHTTPSURLLoader *loader = [[PinnedHTTPSURLLoader alloc] init];
         [loader startWithURLRequest:request onCompletion:^(NSData *data) {
-            DDLogInfo(@"Blob ID %@ marked as done", [NSString stringWithHexData:blobId]);
+            DDLogInfo(@"Blob ID %@ marked as done", [NSString stringWithHexData:blobID]);
         } onError:^(NSError *error) {
-            DDLogWarn(@"Error marking blob ID %@ as done: %@", [NSString stringWithHexData:blobId], error);
+            DDLogWarn(@"Error marking blob ID %@ as done: %@", [NSString stringWithHexData:blobID], error);
         }];
     }];
 }
@@ -402,6 +410,8 @@
 
     TaskManager *tm = [[TaskManager alloc] init];
     [tm addObjcWithTaskDefinition:task];
+    
+    [MessageSender donateInteractionForOutgoingMessageIn:ballot.conversation];
 }
 
 + (void)sendBallotVoteMessage:(Ballot *)ballot {
@@ -417,6 +427,8 @@
 
     TaskManager *tm = [[TaskManager alloc] init];
     [tm addObjcWithTaskDefinition:task];
+    
+    [MessageSender donateInteractionForOutgoingMessageIn:ballot.conversation];
 }
 
 /// Get `Group` if `conversation` is a group
@@ -435,6 +447,13 @@
     }
     
     return group;
+}
+
++ (void)sendBaseMessage:(BaseMessage *)baseMessage {
+    TaskDefinitionSendBaseMessage *task = [[TaskDefinitionSendBaseMessage alloc] initWithMessage:baseMessage group:nil sendContactProfilePicture:false];
+    
+    TaskManager *tm = [[TaskManager alloc] init];
+    [tm addObjcWithTaskDefinition:task];
 }
 
 @end

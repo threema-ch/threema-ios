@@ -266,7 +266,7 @@ import PromiseKit
                 userSettings.sendProfilePicture = SendProfilePictureNone
             case let .allowList(contacts):
                 userSettings.sendProfilePicture = SendProfilePictureContacts
-                userSettings.profilePictureContactList = contacts.identifies
+                userSettings.profilePictureContactList = contacts.identities
             case .everyone:
                 userSettings.sendProfilePicture = SendProfilePictureAll
             case .none:
@@ -298,7 +298,7 @@ import PromiseKit
             return .nobody(Common_Unit())
         case SendProfilePictureContacts:
             var allowList = Common_Identities()
-            allowList.identifies = identities
+            allowList.identities = identities
             return .allowList(allowList)
         case SendProfilePictureAll:
             return .everyone(Common_Unit())

@@ -75,6 +75,52 @@ class ConversationActions: NSObject {
         }
     }
     
+    /// Marks the messages passed in from the argument as read
+    /// This is a workaround implemented specifically for `ChatViewController`.
+    /// - Parameters:
+    ///   - conversationObjectID: The conversation to which the messages below
+    ///   - messages: messages which will be marked as read
+    /// - Returns: a promise which is fulfilled after all messages were marked as read
+    func read(
+        _ conversationObjectID: NSManagedObjectID,
+        messages: [BaseMessage]
+    ) -> Guarantee<Void> {
+        Guarantee { seal in
+            entityManager.performBlock {
+                let conversation = self.entityManager.entityFetcher
+                    .getManagedObject(by: conversationObjectID) as! Conversation
+                self.read(conversation, messages: messages)
+                    .done {
+                        seal(())
+                    }
+            }
+        }
+    }
+    
+    private func read(
+        _ conversation: Conversation,
+        messages: [BaseMessage],
+        isAppInBackground: Bool = AppDelegate.shared().isAppInBackground()
+    ) -> Guarantee<Void> {
+        Guarantee { seal in
+            entityManager.performBlock {
+                self.unreadMessages.read(for: messages, in: conversation, isAppInBackground: isAppInBackground)
+
+                self.entityManager.performBlockAndWait {
+                    if conversation.unreadMessageCount == -1 {
+                        self.entityManager.performSyncBlockAndSafe {
+                            conversation.unreadMessageCount = 0
+                        }
+                    }
+                }
+
+                self.notificationManager.updateUnreadMessagesCount()
+
+                seal(())
+            }
+        }
+    }
+
     @objc
     @discardableResult
     func readObjc(

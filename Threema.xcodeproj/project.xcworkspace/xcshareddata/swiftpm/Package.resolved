@@ -1,21 +1,12 @@
 {
   "pins" : [
     {
-      "identity" : "diffabledatasources",
+      "identity" : "dswaveformimage",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/ra1028/DiffableDataSources.git",
+      "location" : "https://github.com/dmrschmidt/DSWaveformImage.git",
       "state" : {
-        "revision" : "a457cf63456b3aeec2a3626af0230c98b0733927",
-        "version" : "0.5.0"
-      }
-    },
-    {
-      "identity" : "differencekit",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/ra1028/DifferenceKit.git",
-      "state" : {
-        "revision" : "62745d7780deef4a023a792a1f8f763ec7bf9705",
-        "version" : "1.2.0"
+        "revision" : "e9a2e5422d1e58e7411e8ecce0b4b091e627d223",
+        "version" : "9.1.1"
       }
     },
     {
@@ -34,6 +25,14 @@
       "state" : {
         "revision" : "ba0b6cb51cc6202f896e469b87d2889a46b10d1b",
         "version" : "5.1.1"
+      }
+    },
+    {
+      "identity" : "jdstatusbarnotification",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/calimarkus/JDStatusBarNotification",
+      "state" : {
+        "revision" : "00f4386a3dbfb56ddfc4703936b7b05076f9d42a"
       }
     },
     {
@@ -94,7 +93,7 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/threema-ch/sentry-cocoa",
       "state" : {
-        "revision" : "77f7a364d30f3623f3ddafc264d600f0613a1d8f"
+        "revision" : "2eca6c4e5208b51cf35b8b036cb46354f3d90591"
       }
     },
     {
@@ -104,6 +103,15 @@
       "state" : {
         "revision" : "d458564516e5676af9c70b4f4b2a9178294f1bc6",
         "version" : "5.0.1"
+      }
+    },
+    {
+      "identity" : "sqlite.swift",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/stephencelis/SQLite.swift.git",
+      "state" : {
+        "revision" : "7a2e3cd27de56f6d396e84f63beefd0267b55ccb",
+        "version" : "0.14.1"
       }
     },
     {

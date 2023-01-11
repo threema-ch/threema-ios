@@ -162,7 +162,7 @@ class FileMessageEntityRenderTypeTests: XCTestCase {
         XCTAssertEqual(.fileMessage, fileMessageEntity.renderType)
     }
     
-    func testFileMessageAudioRenderedAsAudio1() {
+    func testFileMessageAudioRenderedAsVoice1() {
         var fileMessageEntity: FileMessageEntity!
 
         databasePreparer.save {
@@ -171,10 +171,10 @@ class FileMessageEntityRenderTypeTests: XCTestCase {
             fileMessageEntity.type = 1
         }
 
-        XCTAssertEqual(.audioMessage, fileMessageEntity.renderType)
+        XCTAssertEqual(.voiceMessage, fileMessageEntity.renderType)
     }
     
-    func testFileMessageAudioRenderedAsAudio2() {
+    func testFileMessageAudioRenderedAsVoice2() {
         var fileMessageEntity: FileMessageEntity!
 
         databasePreparer.save {
@@ -183,7 +183,7 @@ class FileMessageEntityRenderTypeTests: XCTestCase {
             fileMessageEntity.type = 2
         }
 
-        XCTAssertEqual(.audioMessage, fileMessageEntity.renderType)
+        XCTAssertEqual(.voiceMessage, fileMessageEntity.renderType)
     }
     
     func testFileMessageFileRenderedAsFile() {

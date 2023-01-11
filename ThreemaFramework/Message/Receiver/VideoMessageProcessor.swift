@@ -25,6 +25,7 @@ import PromiseKit
 @objc class VideoMessageProcessor: NSObject {
     
     private let blobDownloader: BlobDownloader
+    private let serverConnector: ServerConnectorProtocol
     private let entityManager: EntityManager
     
     enum VideoMessageProcessorError: Error {
@@ -32,14 +33,20 @@ import PromiseKit
         case messageNotFound(message: String)
     }
     
-    @objc required init(blobDownloader: BlobDownloader, entityManager: EntityManager) {
+    @objc required init(
+        blobDownloader: BlobDownloader,
+        serverConnector: ServerConnectorProtocol,
+        entityManager: EntityManager
+    ) {
         self.blobDownloader = blobDownloader
+        self.serverConnector = serverConnector
         self.entityManager = entityManager
     }
 
     @objc func downloadVideoThumbnail(
         videoMessageID: Data,
         thumbnailBlobID: Data,
+        origin: BlobOrigin,
         maxBytesToDecrypt: Int,
         timeoutDownloadThumbnail: Int,
         completion: @escaping (Error?) -> Void
@@ -48,6 +55,7 @@ import PromiseKit
             race(
                 downloadVideoThumbnail(
                     videoMessageID: videoMessageID,
+                    origin: origin,
                     thumbnailBlobID: thumbnailBlobID,
                     maxBytesToDecrypt: maxBytesToDecrypt
                 ),
@@ -63,6 +71,7 @@ import PromiseKit
         else {
             downloadVideoThumbnail(
                 videoMessageID: videoMessageID,
+                origin: origin,
                 thumbnailBlobID: thumbnailBlobID,
                 maxBytesToDecrypt: maxBytesToDecrypt
             )
@@ -77,12 +86,13 @@ import PromiseKit
     
     func downloadVideoThumbnail(
         videoMessageID: Data,
+        origin: BlobOrigin,
         thumbnailBlobID: Data,
         maxBytesToDecrypt: Int
     ) -> Promise<Void> {
         Promise { seal in
             // Download thumbnail
-            self.blobDownloader.download(blobID: thumbnailBlobID) { data, error in
+            self.blobDownloader.download(blobID: thumbnailBlobID, origin: origin) { data, error in
                 if let error = error {
                     seal.reject(
                         VideoMessageProcessorError
@@ -114,12 +124,11 @@ import PromiseKit
                     }
 
                     // Decrypt blob
-                    // swiftformat:disable:next wrap wrapArguments
-                    let nonce = Data([0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                                      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                                      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02]) // kNonce_2
-                    let thumbnailData: Data? = NaClCrypto.shared()!
-                        .symmetricDecryptData(data, withKey: msg.encryptionKey, nonce: nonce)
+                    let thumbnailData: Data? = NaClCrypto.shared()!.symmetricDecryptData(
+                        data,
+                        withKey: msg.encryptionKey,
+                        nonce: ThreemaProtocol.nonce02
+                    )
 
                     if let thumbnailData = thumbnailData,
                        let thumbnailImage = UIImage(data: thumbnailData) {
@@ -133,9 +142,12 @@ import PromiseKit
 
                         msg.thumbnail = thumbnail
 
-                        // Mark blob as done, if is not a group message
+                        // Mark blob as done, if is group message and Multi Device is activated then always on `local` origin
                         if !msg.conversation.isGroup() {
-                            MessageSender.markBlob(asDone: thumbnailBlobID, localOrigin: false)
+                            MessageSender.markBlobAsDone(blobID: thumbnailBlobID, origin: msg.blobGetOrigin())
+                        }
+                        else if self.serverConnector.isMultiDeviceActivated {
+                            MessageSender.markBlobAsDone(blobID: thumbnailBlobID, origin: .local)
                         }
 
                         seal.fulfill_()

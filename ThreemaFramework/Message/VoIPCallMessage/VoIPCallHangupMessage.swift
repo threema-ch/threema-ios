@@ -23,6 +23,7 @@ import Foundation
 @objc public class VoIPCallHangupMessage: NSObject {
     public var contactIdentity: String!
     public var callID: VoIPCallID
+    public var date: Date?
     public var completion: (() -> Void)?
     
     init(callID: VoIPCallID, completion: (() -> Void)?) {

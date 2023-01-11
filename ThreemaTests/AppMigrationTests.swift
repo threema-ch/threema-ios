@@ -47,7 +47,7 @@ class AppMigrationTests: XCTestCase {
     }
 
     func testRunMigrationToLatestVersion() throws {
-        setupDataForMigrationVersion48()
+        setupDataForMigrationVersion4_8()
         
         // Verify that the migration was started by `doMigrate` and not some other function accidentally accessing the database before the proper migration was initialized.
         DatabaseManager.db().doMigrateDB()
@@ -85,14 +85,16 @@ class AppMigrationTests: XCTestCase {
         let conversations = entityManager.entityFetcher.allConversations()
         XCTAssertEqual(conversations?.count ?? 0, 2)
 
-        for conversation in entityManager.entityFetcher.allConversations() {
+        // Checks for 4.8 migration
+        for conversation in ["SENDER01", "SENDER02"]
+            .map({ entityManager.entityFetcher.conversation(forIdentity: $0) }) {
             XCTAssertEqual(
-                entityManager.entityFetcher.unreadMessages(for: conversation as? Conversation).count, 1
+                entityManager.entityFetcher.unreadMessages(for: conversation).count, 1
             )
         }
     }
 
-    private func setupDataForMigrationVersion48() {
+    private func setupDataForMigrationVersion4_8() {
         let calendar = Calendar.current
 
         let addTextMessage: (Conversation, String, Bool) -> Void = { conversation, text, read in

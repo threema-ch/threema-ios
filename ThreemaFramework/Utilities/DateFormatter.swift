@@ -260,6 +260,26 @@ public class DateFormatter: NSObject {
         return mediumWeekdayDayAndMonthDateFormatter!.string(from: date)
     }
     
+    /// Localized  weekday
+    ///
+    /// - Note: Marked as private, because it's only used internally
+    ///
+    /// Examples in multiple locales:
+    /// - Saturday
+    /// - Samstag
+    /// - Samedi
+    ///
+    /// - Parameter date: Date to format
+    /// - Returns: Localized short weekday, medium day and medium month
+    @objc
+    private static func weekday(_ date: Date) -> String {
+        if weekdayFormatter == nil {
+            weekdayFormatter = dateFormatter(for: "EEEE")
+        }
+        
+        return weekdayFormatter!.string(from: date)
+    }
+    
     /// Localized short weekday, medium day, medium month and long year string including short time
     ///
     /// Examples in multiple locales:
@@ -406,6 +426,9 @@ public class DateFormatter: NSObject {
         if isDateInTodayOrYesterday(date) {
             return relativeMediumStyleDate(date)
         }
+        else if isDateInLastSixDays(date) {
+            return weekday(date)
+        }
         else if isDateInThisCalendarYear(date) {
             return mediumWeekdayDayAndMonth(date)
         }
@@ -534,6 +557,30 @@ public class DateFormatter: NSObject {
         }
     }
     
+    /// Format seconds into time string showing a negative time if `totalSeconds` is negative
+    ///
+    /// This might be replaced by `DateComponentsFormatter` in the future for better localization. It requires that
+    /// `totalSeconds` is not required as an inverse function.
+    ///
+    /// - Parameter totalSeconds: Seconds to transform
+    /// - Returns: String of format "01:02:03" with hour omitted if it's zero
+    @objc
+    public static func maybeNegativeTimeFormatted(_ totalSeconds: Int) -> String {
+        let negativeOrNothing = totalSeconds < 0 ? "-" : ""
+        
+        let totalSeconds = abs(totalSeconds)
+        let seconds = totalSeconds % 60
+        let minutes = (totalSeconds / 60) % 60
+        let hours = totalSeconds / 60 / 60
+        
+        if hours == 0 {
+            return String(format: "%@%02d:%02d", negativeOrNothing, minutes, seconds)
+        }
+        else {
+            return String(format: "%@%02d:%02d:%02d", negativeOrNothing, hours, minutes, seconds)
+        }
+    }
+    
     /// Converts time string into seconds
     ///
     /// - Parameter timeFormatted: Time string with format "01:02:03" where the hour can be omitted
@@ -587,6 +634,7 @@ public class DateFormatter: NSObject {
     
     private static var shortDayMonthAndYearDateFormatter: Foundation.DateFormatter?
     private static var mediumWeekdayDayMonthAndYearDateFormatter: Foundation.DateFormatter?
+    private static var weekdayFormatter: Foundation.DateFormatter?
     private static var mediumWeekdayDayAndMonthDateFormatter: Foundation.DateFormatter?
     private static var longWeekdayDayMonthAndYearDateFormatter: Foundation.DateFormatter?
     private static var mediumWeekdayDayMonthYearAndTimeDateFormatter: Foundation.DateFormatter?

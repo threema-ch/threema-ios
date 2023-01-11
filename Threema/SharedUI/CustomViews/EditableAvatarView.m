@@ -142,7 +142,7 @@
                 _imagePicker.delegate = self;
                 _imagePicker.allowsEditing = NO;
                 _imagePicker.sourceType = UIImagePickerControllerSourceTypeCamera;
-                _imagePicker.mediaTypes = @[(NSString*)kUTTypeImage];
+                _imagePicker.mediaTypes = @[(NSString*)UTTypeImage.identifier];
                 
                 CGRect rect = [_presentingViewController.view convertRect:self.frame fromView:self.superview];
                 [ModalPresenter present:_imagePicker on:_presentingViewController fromRect:rect inView:_presentingViewController.view];
@@ -154,7 +154,7 @@
                 _imagePicker.delegate = self;
                 _imagePicker.allowsEditing = NO;
                 _imagePicker.sourceType = UIImagePickerControllerSourceTypePhotoLibrary;
-                _imagePicker.mediaTypes = @[(NSString*)kUTTypeImage];
+                _imagePicker.mediaTypes = @[(NSString*)UTTypeImage.identifier];
                 
                 CGRect rect = [_presentingViewController.view convertRect:self.frame fromView:self.superview];
                 [ModalPresenter present:_imagePicker on:_presentingViewController fromRect:rect inView:_presentingViewController.view];

@@ -1,54 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="17701" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="PlI-zG-6ML">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="20037" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="PlI-zG-6ML">
     <device id="retina4_7" orientation="portrait" appearance="light"/>
     <dependencies>
         <deployment identifier="iOS"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="17703"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="20020"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
-        <capability name="System colors in document resources" minToolsVersion="11.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <scenes>
-        <!--Text Preview View Controller-->
-        <scene sceneID="6YJ-GA-3Bs">
-            <objects>
-                <viewController storyboardIdentifier="TextPreviewViewController" useStoryboardIdentifierAsRestorationIdentifier="YES" id="dyq-kR-lnw" customClass="TextPreviewViewController" customModule="ThreemaForWorkShareExtension" customModuleProvider="target" sceneMemberID="viewController">
-                    <view key="view" contentMode="scaleToFill" id="m6u-wQ-kPP">
-                        <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
-                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                        <subviews>
-                            <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" contentInsetAdjustmentBehavior="never" adjustsFontForContentSizeCategory="YES" translatesAutoresizingMaskIntoConstraints="NO" id="OrR-er-5Ho">
-                                <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
-                                <color key="backgroundColor" systemColor="systemBackgroundColor"/>
-                                <string key="text">Lorem ipsum dolor sit er elit lamet, consectetaur cillium adipisicing pecu, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Nam liber te conscient to factor tum poen legum odioque civiuda.</string>
-                                <color key="textColor" systemColor="labelColor"/>
-                                <fontDescription key="fontDescription" name=".AppleSystemUIFont" family=".AppleSystemUIFont" pointSize="14"/>
-                                <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
-                            </textView>
-                        </subviews>
-                        <viewLayoutGuide key="safeArea" id="5Sg-WM-Vuw"/>
-                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
-                        <constraints>
-                            <constraint firstItem="OrR-er-5Ho" firstAttribute="bottom" secondItem="5Sg-WM-Vuw" secondAttribute="bottom" id="11k-OG-UeL"/>
-                            <constraint firstItem="OrR-er-5Ho" firstAttribute="trailing" secondItem="5Sg-WM-Vuw" secondAttribute="trailing" id="M2B-74-nMC"/>
-                            <constraint firstItem="OrR-er-5Ho" firstAttribute="top" secondItem="5Sg-WM-Vuw" secondAttribute="top" id="brl-mg-02s"/>
-                            <constraint firstItem="OrR-er-5Ho" firstAttribute="leading" secondItem="5Sg-WM-Vuw" secondAttribute="leading" id="tgl-Sa-0S7"/>
-                        </constraints>
-                    </view>
-                    <navigationItem key="navigationItem" id="hOb-GP-pnt"/>
-                    <connections>
-                        <outlet property="bottomLayoutConstraint" destination="11k-OG-UeL" id="l7e-0A-9gT"/>
-                        <outlet property="textView" destination="OrR-er-5Ho" id="7Bn-xs-MwK"/>
-                    </connections>
-                </viewController>
-                <placeholder placeholderIdentifier="IBFirstResponder" id="a08-fW-C6W" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
-            </objects>
-            <point key="canvasLocation" x="1602.4000000000001" y="-202.84857571214394"/>
-        </scene>
         <!--Root Navigation Controller-->
         <scene sceneID="tjp-DD-UHP">
             <objects>
-                <navigationController id="PlI-zG-6ML" customClass="RootNavigationController" customModule="ThreemaForWorkShareExtension" customModuleProvider="target" sceneMemberID="viewController">
+                <navigationController id="PlI-zG-6ML" customClass="RootNavigationController" customModule="ThreemaForWorkRedShareExtension" customModuleProvider="target" sceneMemberID="viewController">
                     <navigationBar key="navigationBar" contentMode="scaleToFill" id="3eU-Xc-Xxm">
                         <rect key="frame" x="0.0" y="0.0" width="375" height="44"/>
                         <autoresizingMask key="autoresizingMask"/>
@@ -61,7 +24,7 @@
         <!--Progress View Controller-->
         <scene sceneID="SfS-oM-cJX">
             <objects>
-                <viewController storyboardIdentifier="ProgressViewController" id="1g1-T0-HaN" customClass="ProgressViewController" customModule="ThreemaForWorkShareExtension" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController storyboardIdentifier="ProgressViewController" id="1g1-T0-HaN" customClass="ProgressViewController" customModule="ThreemaForWorkRedShareExtension" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="Ep5-ud-z4P">
                         <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -138,12 +101,6 @@
     <resources>
         <systemColor name="darkTextColor">
             <color white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-        </systemColor>
-        <systemColor name="labelColor">
-            <color white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-        </systemColor>
-        <systemColor name="systemBackgroundColor">
-            <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
         </systemColor>
     </resources>
 </document>

@@ -45,7 +45,10 @@ struct CspE2e_MessageMetadata {
   /// (i.e. `message-with-metadata-box.message-id`).
   var messageID: UInt64 = 0
 
-  /// Unix-ish timestamp in milliseconds for when the message has been created
+  /// Unix-ish timestamp in milliseconds for when the message has been created.
+  ///
+  /// Messages sent in a group must have the same timestamp for each group
+  /// member.
   var createdAt: UInt64 = 0
 
   var unknownFields = SwiftProtobuf.UnknownStorage()
@@ -108,7 +111,8 @@ struct CspE2e_GroupJoinRequest {
   init() {}
 }
 
-/// Response sent by the admin of a group towards a sender of a valid group join request.
+/// Response sent by the admin of a group towards a sender of a valid group join
+/// request.
 ///
 /// When receiving this message:
 ///

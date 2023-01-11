@@ -58,7 +58,8 @@ import Foundation
                 read: false,
                 sent: true,
                 userack: true,
-                sender: conversation.contact
+                sender: conversation.contact,
+                remoteSentDate: Calendar.current.date(byAdding: .minute, value: 1, to: date)
             )
         }
         return textMessage!

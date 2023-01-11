@@ -1,12 +1,3 @@
-syntax = "proto3";
-
-package history;
-
-option java_package = "ch.threema.protobuf.d2d.history";
-
-import "common.proto";
-import "md-d2d.proto";
-
 // ## History Exchange Protocol
 //
 // This protocol specifies how to transfer the conversation history from one
@@ -68,8 +59,8 @@ import "md-d2d.proto";
 // encrypted as defined by the Connection Rendezvous Protocol. All transmitted
 // messages are to be wrapped in:
 //
-// - `TowardsSourceDeviceEnvelope` when sending from DD to SD, and
-// - `TowardsDestinationDeviceEnvelope` when sending from SD to DD.
+// - `FromDestinationDeviceEnvelope` when sending from DD to SD, and
+// - `FromSourceDeviceEnvelope` when sending from SD to DD.
 //
 // #### History Transfer Flow
 //
@@ -98,10 +89,18 @@ import "md-d2d.proto";
 // SD may now close the connection once all buffered data has been written. DD
 // may close the connection when it received the last `Data` message.
 
+syntax = "proto3";
 
+package history;
 
-// Root message envelope for messages towards the source device.
-message TowardsSourceDeviceEnvelope {
+option java_package = "ch.threema.protobuf.d2d.history";
+
+import "common.proto";
+import "md-d2d.proto";
+
+// Root message envelope for messages from the destination device (DD) to the
+// source device (SD).
+message FromDestinationDeviceEnvelope {
   // The enveloped message
   oneof content {
     GetSummary get_summary = 1;
@@ -109,8 +108,9 @@ message TowardsSourceDeviceEnvelope {
   }
 }
 
-// Root message envelope for messages towards the destination device.
-message TowardsDestinationDeviceEnvelope {
+// Root message envelope for messages from the source device (SD) to the
+// destination device (DD).
+message FromSourceDeviceEnvelope {
   // The enveloped message
   oneof content {
     Summary summary = 1;

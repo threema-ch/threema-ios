@@ -36,8 +36,8 @@ class OrphanedFilesCleanupViewController: ThemedTableViewController {
     private var orphanedFilesBinSize: Int64?
 
     override func viewDidLoad() {
-        orphanedFilesDescription.text = String(
-            format: BundleUtil.localizedString(forKey: "settings_orphaned_files_description"),
+        orphanedFilesDescription.text = String.localizedStringWithFormat(
+            BundleUtil.localizedString(forKey: "settings_orphaned_files_description"),
             ThreemaApp.currentName,
             ThreemaApp.currentName
         )
@@ -107,8 +107,8 @@ class OrphanedFilesCleanupViewController: ThemedTableViewController {
             if let orphanedFiles = orphanedFiles,
                !orphanedFiles.isEmpty {
                 
-                return String(
-                    format: BundleUtil.localizedString(forKey: "settings_orphaned_files_footer"),
+                return String.localizedStringWithFormat(
+                    BundleUtil.localizedString(forKey: "settings_orphaned_files_footer"),
                     "\(orphanedFiles.count)",
                     "\((totalFilesCount ?? 0) + orphanedFiles.count)",
                     ThreemaApp.currentName
@@ -121,12 +121,12 @@ class OrphanedFilesCleanupViewController: ThemedTableViewController {
             if let orphanedFilesInBin = orphanedFilesInBin,
                !orphanedFilesInBin.isEmpty {
                 
-                return String(
-                    format: BundleUtil.localizedString(forKey: "settings_orphaned_files_bin_footer"),
+                return String.localizedStringWithFormat(
+                    BundleUtil.localizedString(forKey: "settings_orphaned_files_bin_footer"),
                     "\(orphanedFilesInBin.count)",
                     ByteCountFormatter.string(
                         fromByteCount: orphanedFilesBinSize ?? 0,
-                        countStyle: ByteCountFormatter.CountStyle.file
+                        countStyle: .file
                     ),
                     ThreemaApp.currentName
                 )

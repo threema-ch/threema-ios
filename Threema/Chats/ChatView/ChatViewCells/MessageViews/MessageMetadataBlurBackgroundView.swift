@@ -39,13 +39,15 @@ final class MessageMetadataBlurBackgroundView: UIVisualEffectView {
     /// Create a new view
     ///
     /// - Parameters:
-    ///   - rootView: (Container) view to display on top of the background
+    ///   - rootView: (Container) view to display on top of the background with `UIVibrancyEffect`
+    ///   - nonVibrantRootView: (Container) view to display on top of the background and `rootView` without `UIVibrancyEffect`
     init(
-        rootView: UIView
+        rootView: UIView,
+        nonVibrantRootView: UIView? = nil
     ) {
         super.init(effect: blurEffect)
         
-        configureView(with: rootView)
+        configureView(with: rootView, nonVibrantRootView: nonVibrantRootView)
     }
     
     @available(*, unavailable)
@@ -55,48 +57,64 @@ final class MessageMetadataBlurBackgroundView: UIVisualEffectView {
     
     // MARK: - Configure
     
-    private func configureView(with rootView: UIView) {
+    private func configureView(with rootView: UIView, nonVibrantRootView: UIView?) {
+        // All views have their constraints related to the `contentView`.
+        func pinToContentView(_ view: UIView) {
+            NSLayoutConstraint.activate([
+                view.topAnchor.constraint(
+                    equalTo: contentView.topAnchor,
+                    constant: ChatViewConfiguration.MetadataBackground.topAndBottomInset
+                ),
+                view.leadingAnchor.constraint(
+                    equalTo: contentView.leadingAnchor,
+                    constant: ChatViewConfiguration.MetadataBackground.leadingAndTrailingInset
+                ),
+                view.bottomAnchor.constraint(
+                    equalTo: contentView.bottomAnchor,
+                    constant: -ChatViewConfiguration.MetadataBackground.topAndBottomInset
+                ),
+                view.trailingAnchor.constraint(
+                    equalTo: contentView.trailingAnchor,
+                    constant: -ChatViewConfiguration.MetadataBackground.leadingAndTrailingInset
+                ),
+            ])
+        }
         
         // Embed content into stack for easy vertical centering
         let rootStack = UIStackView(arrangedSubviews: [rootView])
         rootStack.alignment = .center
         
         // Layout
-        
         vibrantEffectView.contentView.addSubview(rootStack)
         contentView.addSubview(vibrantEffectView)
         
         rootStack.translatesAutoresizingMaskIntoConstraints = false
         vibrantEffectView.translatesAutoresizingMaskIntoConstraints = false
         
-        NSLayoutConstraint.activate([
-            rootStack.topAnchor.constraint(
-                equalTo: vibrantEffectView.topAnchor,
-                constant: ChatViewConfiguration.MetadataBackground.topAndBottomInset
-            ),
-            rootStack.leadingAnchor.constraint(
-                equalTo: vibrantEffectView.leadingAnchor,
-                constant: ChatViewConfiguration.MetadataBackground.leadingAndTrailingInset
-            ),
-            rootStack.bottomAnchor.constraint(
-                equalTo: vibrantEffectView.bottomAnchor,
-                constant: -ChatViewConfiguration.MetadataBackground.topAndBottomInset
-            ),
-            rootStack.trailingAnchor.constraint(
-                equalTo: vibrantEffectView.trailingAnchor,
-                constant: -ChatViewConfiguration.MetadataBackground.leadingAndTrailingInset
-            ),
+        pinToContentView(rootStack)
+        pinToContentView(vibrantEffectView)
+
+        // Add `nonVibrantRootView` not affected by the default vibrancy effects (such as change to monochrome)
+        // made by `UIVibrancyEffect`
+        if let nonVibrantRootView = nonVibrantRootView {
+            let nonVibrantRootStack = UIStackView(arrangedSubviews: [nonVibrantRootView])
+            nonVibrantRootStack.alignment = .center
             
-            vibrantEffectView.topAnchor.constraint(equalTo: topAnchor),
-            vibrantEffectView.leadingAnchor.constraint(equalTo: leadingAnchor),
-            vibrantEffectView.bottomAnchor.constraint(equalTo: bottomAnchor),
-            vibrantEffectView.trailingAnchor.constraint(equalTo: trailingAnchor),
+            // No extra container is needed. The stack view does all the needed things to align correctly.
             
-            sizeConstraint,
-        ])
+            contentView.addSubview(nonVibrantRootStack)
+            nonVibrantRootStack.translatesAutoresizingMaskIntoConstraints = false
+            pinToContentView(nonVibrantRootStack)
+        }
+        
+        sizeConstraint.isActive = true
         
         // Corner radius
         layer.cornerRadius = ChatViewConfiguration.MetadataBackground.cornerRadius
         clipsToBounds = true
+        
+        if UIAccessibility.isReduceTransparencyEnabled || UIAccessibility.isDarkerSystemColorsEnabled {
+            backgroundColor = Colors.backgroundChatBar
+        }
     }
 }

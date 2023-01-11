@@ -20,7 +20,6 @@
 
 import CocoaLumberjackSwift
 import CoreLocation
-import DiffableDataSources
 import Foundation
 import MapKit
 import UIKit
@@ -111,6 +110,7 @@ class SendLocationViewController: ThemedViewController {
         let tableViewMap = UITableView()
         tableViewMap.translatesAutoresizingMaskIntoConstraints = false
         tableViewMap.tableFooterView = UIView(frame: .zero) // Removes empty placeholder cells
+        tableViewMap.rowHeight = UITableView.automaticDimension
         return tableViewMap
     }()
     
@@ -263,6 +263,7 @@ extension SendLocationViewController: SendLocationDataSourceMapDelegate {
         if let indexPath = selectionIndexPath,
            indexPath == mapDataSource.indexPath(for: currentLocationPOI) {
             mapTableView.selectRow(at: indexPath, animated: false, scrollPosition: .top)
+            mapDataSource.refresh(poi: currentLocationPOI)
         }
     }
 }
@@ -363,9 +364,8 @@ extension SendLocationViewController: MKMapViewDelegate {
         )
         
         mapDataSource.addAddress(to: poi) {
-            self.mapTableView.performBatchUpdates(nil) { _ in
-                self.mapTableView.scrollToRow(at: self.mapDataSource.indexPath(for: poi)!, at: .top, animated: true)
-            }
+            self.mapDataSource.refresh(poi: poi)
+            self.mapTableView.scrollToRow(at: self.mapDataSource.indexPath(for: poi)!, at: .top, animated: true)
         }
         
         updateSendButton()
@@ -376,9 +376,7 @@ extension SendLocationViewController: MKMapViewDelegate {
     
     func mapView(_ mapView: MKMapView, didDeselect view: MKAnnotationView) {
         if let indexPath = mapTableView.indexPathForSelectedRow {
-            mapTableView.performBatchUpdates {
-                mapTableView.deselectRow(at: indexPath, animated: true)
-            }
+            mapTableView.deselectRow(at: indexPath, animated: true)
         }
         updateSendButton()
     }
@@ -498,7 +496,9 @@ extension SendLocationViewController: UITableViewDelegate {
         guard let annotation = getAnnotation(for: poi.type) else {
             return
         }
+        
         mapView.selectAnnotation(annotation, animated: true)
+        mapDataSource.refresh(poi: poi)
     }
     
     private func didSelectTableViewSearchCell(tableView: UITableView, indexPath: IndexPath) {
@@ -530,7 +530,10 @@ extension SendLocationViewController: UITableViewDelegate {
     }
     
     func tableView(_ tableView: UITableView, didDeselectRowAt indexPath: IndexPath) {
-        mapTableView.performBatchUpdates(nil)
+        
+        if let poi = mapDataSource.itemIdentifier(for: indexPath) {
+            mapDataSource.refresh(poi: poi)
+        }
         
         updateSendButton()
     }
@@ -670,10 +673,8 @@ extension SendLocationViewController {
         markedLocationPOI.name = name
         mapDataSource.addAddress(to: markedLocationPOI) {
             self.updateMarkedPOIAnnotation()
+            self.selectPOI(poi: self.markedLocationPOI)
             self.mapDataSource.refresh(poi: self.markedLocationPOI)
-            self.mapTableView.performBatchUpdates {
-                self.selectPOI(poi: self.markedLocationPOI)
-            }
         }
     }
     
@@ -686,9 +687,8 @@ extension SendLocationViewController {
         
         DispatchQueue.main.async {
             self.mapView.selectAnnotation(annotation, animated: true)
-            self.mapTableView.performBatchUpdates {
-                self.mapTableView.selectRow(at: indexPath, animated: true, scrollPosition: .top)
-            }
+            self.mapTableView.selectRow(at: indexPath, animated: true, scrollPosition: .top)
+            self.mapDataSource.refresh(poi: poi)
             self.updateSendButton()
         }
     }

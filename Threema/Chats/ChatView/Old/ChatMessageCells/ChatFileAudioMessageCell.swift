@@ -308,7 +308,7 @@ extension ChatFileAudioMessageCell {
     
     override open func accessibilityLabelForContent() -> String! {
         let fileMessageEntity = message as! FileMessageEntity
-        let duration = ThreemaUtilityObjC.accessabilityTimeString(forSeconds: fileMessageEntity.duration?.intValue ?? 0)
+        let duration = ThreemaUtilityObjC.accessibilityTimeString(forSeconds: fileMessageEntity.duration?.intValue ?? 0)
         let durationText = "\(BundleUtil.localizedString(forKey: "audio")), \(duration!)"
         if _captionLabel?.text != nil {
             return "\(durationText). \(_captionLabel!.text!)"
@@ -433,16 +433,21 @@ extension ChatFileAudioMessageCell {
     
     @objc func resendMessage(_ menuController: UIMenuController) {
         let fileMessageEntity = message as! FileMessageEntity
-        let sender = FileMessageSender()
+        
+        let entityManager = EntityManager()
+        entityManager.performSyncBlockAndSafe {
+            // swiftformat:disable acronyms
+            fileMessageEntity.id = NaClCrypto.shared().randomBytes(kMessageIdLen)
+        }
+        
+        let sender = Old_FileMessageSender()
         sender.retryMessage(fileMessageEntity)
     }
     
     @objc func speakMessage(_ menuController: UIMenuController) {
         if _captionLabel?.text != nil {
             let speakText = "\(BundleUtil.localizedString(forKey: "image")). \(_captionLabel!.text!)"
-            let utterance = AVSpeechUtterance(string: speakText)
-            let syn = AVSpeechSynthesizer()
-            syn.speak(utterance)
+            SpeechSynthesizerManger().speak(speakText)
         }
     }
 }

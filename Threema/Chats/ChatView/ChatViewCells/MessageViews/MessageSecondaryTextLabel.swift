@@ -21,7 +21,7 @@
 import UIKit
 
 /// Label with correct font for secondary text
-final class MessageSecondaryTextLabel: UILabel {
+final class MessageSecondaryTextLabel: RTLAligningLabel {
     
     // MARK: - Lifecycle
     

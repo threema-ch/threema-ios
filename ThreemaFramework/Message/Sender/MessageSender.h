@@ -26,6 +26,7 @@
 #import "BaseMessage.h"
 #import "BallotMessage.h"
 #import "TextMessage.h"
+#import "FileMessageEntity.h"
 
 @class Conversation;
 @class Contact;
@@ -61,12 +62,13 @@
 + (void)sendLocation:(CLLocationCoordinate2D)coordinates accuracy:(CLLocationAccuracy)accuracy poiName:(NSString* _Nullable)poiName poiAddress:(NSString* _Nullable)poiAddress inConversation:(Conversation* _Nonnull)conversation onCompletion:(void(^ _Nonnull)(NSData *_Nonnull messageId))onCompletion;
 
 /**
- Send message only without persisting. Used for VoIP Calls mainly!
+ Send a raw message.
  
  @param message: Message to send
+ @param isPersistent: whether to persist the message across app restarts
  @param onCompletion: Will be called after message was sent
  */
-+ (void)sendMessage:(AbstractMessage * _Nonnull)message onCompletion:(void(^_Nullable)(void))onCompletion;
++ (void)sendMessage:(AbstractMessage * _Nonnull)message isPersistent:(BOOL)isPersistent onCompletion:(void(^_Nullable)(void))onCompletion;
 
 + (void)sendReadReceiptForMessages:(NSArray*_Nonnull)messages toIdentity:(NSString*_Nonnull)identity onCompletion:(void(^_Nullable)(void))onCompletion;
 + (void)sendUserAckForMessages:(NSArray*_Nonnull)messages toIdentity:(NSString*_Nullable)identity group:(Group *_Nullable)group onCompletion:(void(^_Nonnull)(void))onCompletion;
@@ -74,10 +76,12 @@
 
 + (void)sendTypingIndicatorMessage:(BOOL)typing toIdentity:(NSString*_Nonnull)identity;
 
-+ (void)markBlobAsDone:(NSData* _Nonnull)blobId localOrigin:(BOOL) localOrigin;
++ (void)markBlobAsDoneWithBlobID:(NSData* _Nonnull)blobID origin:(BlobOrigin)origin NS_SWIFT_NAME(markBlobAsDone(blobID:origin:));
 
 + (void)sendCreateMessageForBallot:(Ballot *_Nonnull)ballot;
 
 + (void)sendBallotVoteMessage:(Ballot *_Nonnull)ballot;
+
++ (void)sendBaseMessage:(BaseMessage *)baseMessage;
 
 @end

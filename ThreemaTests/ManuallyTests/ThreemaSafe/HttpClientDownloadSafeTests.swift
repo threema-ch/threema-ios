@@ -50,7 +50,7 @@ class HttpClientDownloadSafeTests: XCTestCase {
                 switch result {
                 case let .success(safeServer):
                     let backupURL = URL(string: "\(safeServer)/backups/\(BytesUtility.toHexString(bytes: backupID))")
-                    let client = HttpClient()
+                    let client = HTTPClient()
                     client.downloadData(url: backupURL!, contentType: .octetStream) { data, response, error in
                         if let error = error {
                             print("http client download error: \(error)")
@@ -96,7 +96,7 @@ class HttpClientDownloadSafeTests: XCTestCase {
         if let key = store.createKey(identity: "ECHOECHO", password: "shootdeathstar"),
            let backupID = store.getBackupID(key: key) {
             let backupURL = URL(string: "https://safe.threema.ch/backups/\(BytesUtility.toHexString(bytes: backupID))")
-            let client = HttpClient()
+            let client = HTTPClient()
             client.downloadData(url: backupURL!, delegate: self)
         }
     }

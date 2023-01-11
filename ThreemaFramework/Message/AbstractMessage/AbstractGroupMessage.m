@@ -39,7 +39,7 @@
 @synthesize groupCreator;
 @synthesize groupId;
 
-- (BOOL)isGroup {
+- (BOOL)flagGroupMessage {
     return YES;
 }
 

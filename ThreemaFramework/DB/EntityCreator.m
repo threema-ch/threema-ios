@@ -371,6 +371,11 @@
     dbMessage.userack = [NSNumber numberWithBool:NO];
     dbMessage.remoteSentDate = incomingMsg.date;
     dbMessage.flags = incomingMsg.flags;
+    dbMessage.forwardSecurityMode = [NSNumber numberWithInt:(int)incomingMsg.forwardSecurityMode];
+}
+
+- (CallEntity *)callEntity {
+    return (CallEntity *)[self createEntityOfType: @"Call"];
 }
 
 @end

@@ -330,8 +330,8 @@ import Foundation
                 if fireDate.timeIntervalSinceNow <= 0 { // Safe backup it outside of retention days
                     let seconds = lastBackup.timeIntervalSinceNow
                     let days = Double(exactly: seconds / Double(oneDayInSeconds))?.rounded(.up)
-                    notification.body = String(
-                        format: BundleUtil.localizedString(forKey: "safe_failed_notification"),
+                    notification.body = String.localizedStringWithFormat(
+                        BundleUtil.localizedString(forKey: "safe_failed_notification"),
                         abs(days!)
                     )
                 }
@@ -425,6 +425,98 @@ import Foundation
                     case let .failure(error):
                         self.logger.logString("Cannot obtain default server: \(error)")
                     }
+                }
+            }
+        }
+    }
+
+    func startBackupForDeviceLinking(password: String) async throws {
+
+        guard !isPasswordBad(password: password) else {
+            throw SafeError.backupFailed(message: "This password is bad, please try another")
+        }
+
+        guard let key = safeStore.createKey(identity: MyIdentityStore.shared().identity, password: password) else {
+            throw SafeError.backupFailed(message: "Missing backup key")
+        }
+
+        guard let backupID = safeStore.getBackupID(key: key) else {
+            throw SafeError.backupFailed(message: "Missing backup ID")
+        }
+
+        guard let data = safeStore.backupData(backupDeviceGroupKey: true) else {
+            throw SafeError.backupFailed(message: "Missing backup data")
+        }
+
+        return try await withCheckedThrowingContinuation { continuation in
+            safeStore.getSafeServer(key: key) { result in
+                switch result {
+                case let .success(safeServerURL):
+                    let safeServerAuth = self.safeStore.extractSafeServerAuth(server: safeServerURL)
+                    let safeBackupURL = safeServerAuth.server
+                        .appendingPathComponent("backups/\(BytesUtility.toHexString(bytes: backupID))")
+
+                    do {
+                        let resultTest = self.testServer(serverURL: safeServerURL)
+                        if let error = resultTest.errorMessage {
+                            throw SafeError.backupFailed(message: error)
+                        }
+
+                        // encrypt backup data and upload it
+                        let encryptedData = try self.safeStore.encryptBackupData(key: key, data: data)
+
+                        guard encryptedData.count < resultTest.maxBackupBytes ?? 524_288 else {
+                            throw SafeError
+                                .backupFailed(message: BundleUtil.localizedString(forKey: "safe_upload_size_exceeded"))
+                        }
+
+                        self.safeApiService.upload(
+                            backup: safeBackupURL,
+                            user: safeServerAuth.user,
+                            password: safeServerAuth.password,
+                            encryptedData: encryptedData
+                        ) { _, error in
+                            if let error = error {
+                                continuation.resume(throwing: SafeError.backupFailed(
+                                    message: error.contains("Payload Too Large") ? BundleUtil
+                                        .localizedString(forKey: "safe_upload_size_exceeded") :
+                                        "\(BundleUtil.localizedString(forKey: "safe_upload_failed")) (\(error))"
+                                ))
+                            }
+                            else {
+                                continuation.resume()
+                            }
+                        }
+                    }
+                    catch {
+                        continuation.resume(throwing: error)
+                    }
+
+                case let .failure(error):
+                    continuation.resume(throwing: SafeError.backupFailed(message: "Invalid safe server url \(error)"))
+                }
+            }
+        }
+    }
+
+    func deleteBackupForDeviceLinking(password: String) {
+        if let key = safeStore.createKey(identity: MyIdentityStore.shared().identity, password: password),
+           let backupID = safeStore.getBackupID(key: key) {
+
+            safeStore.getSafeServer(key: key) { result in
+                switch result {
+                case let .success(safeServer):
+                    let safeServerAuth = self.safeStore.extractSafeServerAuth(server: safeServer)
+                    let safeBackupURL = safeServerAuth.server
+                        .appendingPathComponent("backups/\(BytesUtility.toHexString(bytes: backupID))")
+                    if let errorMessage = self.safeApiService.delete(
+                        server: safeBackupURL,
+                        user: safeServerAuth.user,
+                        password: safeServerAuth.password
+                    ) {
+                        self.logger.logString("Safe backup could not be deleted: \(errorMessage)")
+                    }
+                case .failure: break
                 }
             }
         }
@@ -813,8 +905,8 @@ import Foundation
                     UIAlertTemplate.showAlert(
                         owner: topViewController,
                         title: BundleUtil.localizedString(forKey: "safe_setup_backup_title"),
-                        message: String(
-                            format: BundleUtil.localizedString(forKey: "safe_failed_notification"),
+                        message: String.localizedStringWithFormat(
+                            BundleUtil.localizedString(forKey: "safe_failed_notification"),
                             abs(days)
                         )
                     )
@@ -824,6 +916,12 @@ import Foundation
     }
     
     @objc private func trigger() {
+        let businessInjector = BusinessInjector()
+        if businessInjector.userSettings.blockCommunication {
+            DDLogWarn("Communication is blocked")
+            return
+        }
+
         DispatchQueue(label: "backupProcess").async {
 
             // if forced, try to start backup immediately, otherwise when backup process is already running or last backup not older then a day then just mark as triggered

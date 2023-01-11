@@ -93,9 +93,22 @@ import Foundation
     public let url: String
     public let blob: BlobServerInfo
     
-    init(url: String, blob: BlobServerInfo) {
-        self.url = url
-        self.blob = blob
+    init(deviceGroupIDFirstByteHex: String, url: String, blob: BlobServerInfo) {
+        let prefix4 = String(deviceGroupIDFirstByteHex.prefix(1)).lowercased()
+        let prefix8 = deviceGroupIDFirstByteHex.lowercased()
+        
+        func replacePrefixesInURL(url: String) -> String {
+            url
+                .replacingOccurrences(of: "{prefix4}", with: prefix4)
+                .replacingOccurrences(of: "{prefix8}", with: prefix8)
+        }
+        
+        self.url = replacePrefixesInURL(url: url)
+        self.blob = BlobServerInfo(
+            downloadURL: replacePrefixesInURL(url: blob.downloadURL),
+            uploadURL: replacePrefixesInURL(url: blob.uploadURL),
+            doneURL: replacePrefixesInURL(url: blob.doneURL)
+        )
     }
 }
 
@@ -118,6 +131,9 @@ import Foundation
     func workServer(ipv6: Bool, completionHandler: @escaping (WorkServerInfo?, Error?) -> Void)
     func avatarServer(ipv6: Bool, completionHandler: @escaping (AvatarServerInfo?, Error?) -> Void)
     func safeServer(ipv6: Bool, completionHandler: @escaping (SafeServerInfo?, Error?) -> Void)
-    func mediatorServer(completionHandler: @escaping (MediatorServerInfo?, Error?) -> Void)
+    func mediatorServer(
+        deviceGroupIDFirstByteHex: String,
+        completionHandler: @escaping (MediatorServerInfo?, Error?) -> Void
+    )
     func webServer(ipv6: Bool, completionHandler: @escaping (WebServerInfo?, Error?) -> Void)
 }

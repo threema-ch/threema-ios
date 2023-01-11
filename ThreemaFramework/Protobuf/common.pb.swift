@@ -241,7 +241,7 @@ struct Common_Identities {
   // methods supported on all messages.
 
   /// List of identities
-  var identifies: [String] = []
+  var identities: [String] = []
 
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
@@ -551,7 +551,7 @@ extension Common_Timespan: SwiftProtobuf.Message, SwiftProtobuf._MessageImplemen
 extension Common_Identities: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".Identities"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "identifies"),
+    1: .same(proto: "identities"),
   ]
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -560,21 +560,21 @@ extension Common_Identities: SwiftProtobuf.Message, SwiftProtobuf._MessageImplem
       // allocates stack space for every case branch when no optimizations are
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
-      case 1: try { try decoder.decodeRepeatedStringField(value: &self.identifies) }()
+      case 1: try { try decoder.decodeRepeatedStringField(value: &self.identities) }()
       default: break
       }
     }
   }
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    if !self.identifies.isEmpty {
-      try visitor.visitRepeatedStringField(value: self.identifies, fieldNumber: 1)
+    if !self.identities.isEmpty {
+      try visitor.visitRepeatedStringField(value: self.identities, fieldNumber: 1)
     }
     try unknownFields.traverse(visitor: &visitor)
   }
 
   static func ==(lhs: Common_Identities, rhs: Common_Identities) -> Bool {
-    if lhs.identifies != rhs.identifies {return false}
+    if lhs.identities != rhs.identities {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

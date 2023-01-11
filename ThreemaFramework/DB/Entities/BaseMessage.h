@@ -34,12 +34,12 @@ typedef enum {
 } MessageState DEPRECATED_MSG_ATTRIBUTE("Only use from Objective-C. Use state otherwise.");
 
 typedef NS_OPTIONS(NSInteger, BaseMessageFlags) {
-    BaseMessageFlagsPush = 1 << 0,
-    BaseMessageFlagsImmediate = 1 << 1,
-    BaseMessageFlagsNoAck = 1 << 2,
+    BaseMessageFlagsSendPush = 1 << 0,
+    BaseMessageFlagsDontQueue = 1 << 1,
+    BaseMessageFlagsDontAck = 1 << 2,
     BaseMessageFlagsAlreadyDelivered = 1 << 3,
     BaseMessageFlagsGroup = 1 << 4,
-    BaseMessageFlagsVoip = 1 << 5,
+    BaseMessageFlagsImmediateDelivery = 1 << 5,
     BaseMessageFlagsSilentPush = 1 << 6,
     BaseMessageFlagsNoDeliveryReceipt = 1 << 7
 };
@@ -61,7 +61,15 @@ typedef NS_OPTIONS(NSInteger, BaseMessageFlags) {
 @property (nullable, nonatomic, retain) NSNumber *isOwn;
 
 
+/// Creation date of this message in Core Data
+///
+/// This should never be `nil`!
 @property (nonatomic, retain) NSDate *date; // Non-optional by Core Data
+
+/// Remote sent date of message. This is never `nil`.
+///
+/// Outgoing message: Staring with with 4.9 date when message was acknowledged by server. For local messages and before 4.7 `date` is returned.
+/// Incoming message: Date set by sender.
 @property (nonatomic, retain) NSDate *remoteSentDate;
 @property (nullable, nonatomic, retain) NSDate *deliveryDate;
 @property (nullable, nonatomic, retain) NSDate *readDate;
@@ -81,7 +89,9 @@ typedef NS_OPTIONS(NSInteger, BaseMessageFlags) {
 @property (nonatomic, retain) NSArray *groupDeliveryReceipts;
 
 @property (nonatomic, retain) Conversation *conversation;
-@property (nonatomic, retain) Contact *sender;
+@property (nullable, nonatomic, retain) Contact *sender;
+
+@property (nonatomic, retain) NSNumber *forwardSecurityMode;
 
 @property (readonly) MessageState old_messageState DEPRECATED_MSG_ATTRIBUTE("Only use from Objective-C. Use messageState otherwise.");
 

@@ -88,8 +88,20 @@
     self.audio = dbData;
 }
 
+- (void)blobSetDataID:(NSData *)dataID {
+    self.audioBlobId = dataID;
+}
+
 - (NSData *)blobGetThumbnail {
     return nil;
+}
+
+- (void)blobSetOrigin:(BlobOrigin)origin {
+    // no-op
+}
+
+- (BlobOrigin)blobGetOrigin {
+    return BlobOriginPublic;
 }
 
 - (NSString *)blobGetUTI {

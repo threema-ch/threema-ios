@@ -82,7 +82,7 @@
 "audio" = "Аудио";
 "file" = "Файл";
 "location" = "Расположение";
-"locating" = "Определение расположения...";
+"locating" = "Определение местоположения…";
 "unknown_location" = "неизвестное расположение";
 "open" = "Открыть";
 "call" = "Позвонить"; /* Short version for "Start Threema Call" */
@@ -103,6 +103,14 @@
 "threema_id" = "Threema ID";
 "nickname" = "Публичный ник";
 "add_button" = "Добавить";
+"chatview_contextmenu_more" = "Больше…";
+
+"file_message_image" = "Изображение";
+"file_message_sticker" = "Стикер";
+"file_message_animated_image" = "GIF";
+"file_message_video" = "Видео";
+"file_message_voice" = "Голосовое сообщение";
+"file_message_file" = "Файл";
 
 "chat_back_button_accessibility" = "%d не прочитано";
 
@@ -145,6 +153,7 @@
 "high" = "Высокое";
 "max_1_minute" = "Макс. 1 минута";
 "max_x_minutes" = "Макс. %d мин.";
+"still_compressed_note" = "Очень большие видео могут сжиматься независимо от настроек.";
 
 /* Sound names */
 "push_sound_title" = "Звук Push-уведомления";
@@ -292,6 +301,7 @@
 "conversation_delete_confirm" = "Удалить этот чат с этого устройства?";
 "delete_all" = "Удалить все";
 "delete_n" = "Удалить (%d)";
+
 "message_cannot_play_movie" = "Не удается воспроизвести видео.";
 
 "identity_not_found_title" = "Неизвестный ID";
@@ -381,10 +391,6 @@
 "contact_invalid_cannot_send" = "Вы не можете отправить сообщение этому контакту, так как он недействительный.";
 "contact_betafeedback_cannot_send" = "Это не бета-версия, отправьте отзыв в *СЛУЖБУ ПОДДЕРЖКИ.";
 "group_sync_button" = "Синхронизизация членов";
-"group_sync_title" = "Группа синхронизирована";
-"group_sync_message" = "Текущие данные группы отправлены всем членам группы.";
-"group_sync_error_title" = "Не удалось синхронизировать группу";
-"group_sync_error_message" = "Попробуйте снова позже.";
 "group_clone_button" = "Клонировать группу";
 "group_clone_title" = "Клонировать группу";
 "group_clone_message" = "Будет создан клон группы с вами, в качестве администратора. Продолжить?";
@@ -413,6 +419,10 @@
 "add_note_group_info" = "*Вы здесь в одиночестве*\nИспользуйте этот чат как защищенный блокнот для заметок, мультимедийных файлов и документов.";
 "end_note_group_info" = "*Вы уже не одиноки в этом чате*\nНовые сообщения будут отправляться всем участникам группы.";
 
+"chat_search_searching" = "Поиск…";
+"chat_search_no_matches" = "Нет совпадений";
+"chat_search_matches" = "%d из %d совпадений";
+
 "choose_recipient" = "Выбор получателя";
 
 "msg_unknown_group_request_sync_x_title" = "Сообщение получено в неизвестной группе";
@@ -425,6 +435,7 @@
 "tap_to_change" = "Коснитесь, чтобы изменить";
 "next" = "Далее";
 "unread_messages" = "Непрочитанные сообщения";
+"unread_messages_line_with_count" = "Непрочитанные сообщения (%d)";
 
 /* Verification level popovers in chat view */
 "verification_level_title" = "Уровень проверки";
@@ -446,7 +457,6 @@
 "level4_explanation" = "Внутренний контакт, личность и публичный ключ которого вы персонально проверили, сканировав QR-код.";
 
 "id_verified_title" = "ID проверен";
-"id_verified_message" = "%@: личность и публичный ключ проверены.";
 
 /* Invalid country code alert */
 "invalid_country_code_title" = "Неправильный формат региона";
@@ -468,9 +478,7 @@
 "backgrounding_off" = "Приложение автоматически отключится после перехода в фоновый режим.";
 "proximity_monitoring_off" = "Если датчик приближения закрыт, экран не будет выключаться.";
 "proximity_monitoring_on" = "Во время голосовых звонков, записи и воспроизведения голосовых сообщений экран выключается, если датчик приближения закрыт.";
-"validation_logging_expl" = "Журнал отладки может использоваться для независимой проверки сквозного шифрования Threema.\nПодробности: https://threema.ch/validation";
-
-"validation_log_clear" = "Очистить журнал";
+"debug_log_clear" = "Очистить журнал";
 "log_empty_message" = "Журнал отладки в настоящее время пуст.";
 "cannot_send_mail_message" = "На этом устройстве не настроен аккаунт электронной почты.";
 
@@ -508,8 +516,6 @@
 "release_profilepicture_to" = "Открыть аватар";
 "contact_added_to_profile_picture_list" = "Этот контакт будет видеть ваш аватар, когда вы ему напишете.";
 "contact_removed_from_profile_picture_list" = "Этот контакт больше не будет видеть ваш аватар.";
-"contact_send_profile_picture_success" = "Ваш аватар успешно отправлен этому контакту.";
-"contact_send_profile_picture_error" = "Не удалось отправить ваш аватар. Повторите попытку позже.";
 
 "sync_group" = "Синхронизация группы";
 
@@ -535,6 +541,13 @@
 "exclude_deleted_id_title" = "Исключить Threema ID контакта «%@» из синхронизации?";
 "exclude_deleted_id_message" = "Вы можете настроить исключения в настройках приватности.";
 "exclude_deleted_id_exclude_button" = "Исключить";
+
+"forward_security" = "Perfect Forward Secrecy";
+"forward_security_none" = "Нет";
+"forward_security_2dh" = "Односторонняя";
+"forward_security_4dh" = "Готово";
+"forward_security_clear_sessions" = "Очистить все сеансы";
+"forward_security_explainer_footer" = "Протокол Perfect Forward Secrecy (PFS) защищает записанный сеанс связи от ретроактивной расшифровки, если нарушена безопасность ключа шифрования долговременного пользования.\nЭтот параметр может быть активирован, если приложение с обеих сторон использует протокол PFS.";
 
 /* create id */
 "lets_get_started" = "Начнем!";
@@ -652,7 +665,7 @@
 "new_message_no_access_title" = "Новые сообщения";
 "new_message_no_access_message" = "Откройте %@, чтобы доставить входящие сообщения.";
 "new_message_invalid_license" = "Срок действия вашей лицензии истек, для продолжения откройте приложение.";
-"new_message_db_requires_migration" = "Требуется перенос базы данных, откройте приложение для продоложения.";
+"new_message_db_requires_migration" = "Приложение Threema обновлено, откройте приложение, чтобы завершить обновление.";
 
 /* reminder messages */
 "push_reminder_title" = "Push-уведомления не включены";
@@ -693,7 +706,7 @@
 "draft" = "Проект";
 "new_message_accessibility" = "Новое сообщение: ";
 "scoll_down_text" = "Scroll down";
-"quote_interaction_hint" = "Нажимайте для перехода к цитированным сообщениям.";
+"quote_interaction_hint" = "Переход к цитируемому сообщению";
 
 /* TTOpenInAppActivity */
 "Open in ..." = "Открыть в ...";
@@ -784,9 +797,6 @@
 "call_status_unknown" = "Неизвестно";
 "call_status_blocked" = "Заблокированный контак";
 "call_status_failed_title" = "Звонок Threema";
-"call_status_failed_connected_message" = "Соединение утеряно";
-"call_status_failed_initializing_message" = "Не удалось установить соединение";
-"call_status_failed_sdp_patch_message" = "Не удалось создать звонок Threema";
 
 "call_threema_initiator_video_info" = "Нажмите здесь, чтобы включить камеру";
 "call_threema_remote_video_activated_info_title" = "Видеозвонок";
@@ -840,7 +850,7 @@
 "privacy_footer" = "Скрывает все личные чаты на экране обзоре чатов. Чтобы активировать эту настройку, сначала настройте пароль.";
 
 "group_leave_sheet_title" = "Выйти из “%@”?";
-"group_leave_sheet_message" = "Если просто выйти, вы больше не сможете принимать участие в обсуждении, но у вас при этом будет доступ к истории чата.";
+"group_leave_sheet_message" = "Если просто выйти, вы больше не сможете принимать участие в обсуждении, но у вас при этом будет доступ к истории чата для ее просмотра.";
 
 "group_leave_delete_sheet_title" = "Выйти и удалить “%@”?";
 "group_leave_delete_sheet_message" = "Если выйти и удалить группу, вы больше не сможете принимать участие в обсуждении, также будет удалена история чата.";
@@ -1074,6 +1084,13 @@
 "file_deleted_title" = "Файл удален";
 "file_not_found_title" = "Файл не найден";
 
+"manage_all_conversations" = "Управление всеми чатами";
+"manage_media_and_files" = "Управление файлами";
+"manage_messages" = "Управление сообщениями";
+"messages" = "Сообщения";
+"files" = "Файлы";
+
+
 // Settings
 "settings_privacy" = "Приватность";
 "settings_appearance" = "Вид";
@@ -1108,6 +1125,7 @@
 "settings_devmode_quote_v2" = "Quote V2";
 "settings_devmode_new_chat_view" = "Новый вид чата";
 "settings_devmode_stylekit_debug_view" = "Вид отладки StyleKit";
+"settings_devmode_id_colors_debug_view" = "Вид отладки цветов ID";
 
 // Appearance
 "settings_appearance_theme_section" = "Тема интерфейса";
@@ -1117,6 +1135,9 @@
 "settings_appearance_theme_selected" = "Активная тема: %@";
 "settings_appearance_theme_active" = "Активная";
 "settings_appearance_hide_app_icon" = "Значок приложения";
+"settings_appicon_default_header" = "Значок по умолчанию";
+"settings_appicon_legacy_header" = "Значки Threema";
+"settings_appicon_special_header" = "Особые значки";
 "settings_appearance_hide_stale_contacts" = "Скрывать неактивные ID";
 "settings_appearance_show_profile_pictures" = "Показывать аватары";
 "settings_appearance_display_order" = "Отобpaжениe";
@@ -1241,8 +1262,7 @@
 "unknown_file_type" = "Неизвестный тип файла";
 "unknown_file_size" = "Неизвестный размер файла";
 "unknown_file_name" = "Неизвестное имя файла";
-
-"ballots_with_open_count_accessibility" = "Опросы (%d открыто)";
+"sending_to" = "Получатели";
 
 /* Ballot */
 "ballot" = "Опрос";
@@ -1258,10 +1278,10 @@
 "ballot_multiple_choice" = "Несколько вариантов";
 "ballot_clone" = "Скопировать имеющийся опрос";
 "ballot_clone_warning_title" = "Внимание";
-"ballot_clone_warning_message" = "все введенные данные будут переопределены.";
+"ballot_clone_warning_message" = "Все введенные данные будут перезаписаны.";
 "ballot_feature_level_warning_title" = "Пожалуйста, обратите внимание";
-"ballot_feature_level_warning_message" = "Некоторые участники имееют версию приложения, которая еще не поддерживает опросы: %@";
-"ballot_feature_level_error_message" = "Никакой из участников не имеет версию приложения, которая поддерживает опросы: %@";
+"ballot_feature_level_warning_message" = "Некоторые участники используют версию приложения, которая еще не поддерживает опросы: %@";
+"ballot_feature_level_error_message" = "Никто из участников не использует версию приложения, которая поддерживает опросы: %@";
 
 "ballot_add_choice" = "Добавить выбор";
 "ballot_create" = "Создать опрос";
@@ -1294,6 +1314,10 @@
 "voteCancelMessage" = "Если выйти до подачи голоса, голос не будет учтен.";
 "discardVoteTitle" = "Отменить";
 
+"ballot_load_error" = "Опросы недоступны";
+
+"ballots_with_open_count_accessibility" = "Опросы (%d открыто)";
+
 /* Custom Privacy Settings */
 "privacySetting_header" = "Приватность";
 "send_readReceipts" = "Подтверждения прочтения";
@@ -1316,23 +1340,33 @@
 "reset_overrides_alert_action" = "Сбросить все";
 
 /* Multi Decvice */
-"multi_device_linked_devices_title" = "Привязанные устройства";
+"multi_device_linked_devices_title" = "Предварительный просмотр на нескольких устройствах";
+"multi_device_linked_devices_desc" = "Активируйте или отключите предварительный просмотр на нескольких устройствах для этого устройства.";
 "multi_device_linked_devices_refresh" = "Нажмите, чтобы обновить";
 "multi_device_linked_devices_loading_failed" = "Не удалось загрузить устройства: %@";
 "multi_device_linked_devices_failed_to_load_title" = "Не удалось загрузить список устройств";
 "multi_device_linked_devices_failed_to_load_message" = "Не удалось загрузить привязанные устройства, проверьте соединение с Интернетом и повторите попытку.";
 "multi_device_linked_devices_this" = "Это устройство";
 "multi_device_linked_devices_others" = "Другие устройства";
+"multi_device_linked_devices_last_login" = "Последний вход: %@";
 "multi_device_linked_devices_remove_failed" = "Не удалось удалить устройство: %@";
+"multi_device_linked_devices_removed_devices_title" = "Отключить несколько устройств?";
+"multi_device_linked_devices_removed_devices_message" = "Будут удалены все подключенные устройства, а также отключен режим нескольких устройств";
+"multi_device_linked_devices_removed_devices_ok" = "Отключить";
+"multi_device_linked_duplicate_contacts_title" = "Дублирующиеся контакты";
+"multi_device_linked_duplicate_contacts_desc" = "Вы не можете привязать это устройство из-за дублирующихся контактов (%@). Обратитесь в службу поддержки.";
+
 "multi_device_linked_devices_failed_remove_title" = "Не удалось удалить устройство";
 "multi_device_linked_devices_failed_remove_message" = "Не удалось удалить привязанное устройство, повторите попытку.";
 "multi_device_linked_devices_failed_remove_message_2" = "Не удалось удалить привязанное устройство, проверьте соединение с Интернетом и повторите попытку.";
+"multi_device_slot_state_mismatch_alert" = "Привязка устройства отменена. Это означает, что вы сейчас не можете отправлять или получать новые сообщения. Если это действие не было запущено вами, обратите внимание, что это могло произойти по техническим причинам на этапе технического предпросмотра. Приносим свои извинения за возможные неудобства. Сведения о том, как снова привязать устройство, см. в вопросах и ответах: https://three.ma/faq";
 
 "myprofile_link_email_phone_footer" = "Привязка вашего эл. адреса или номера телефона к ID позволяет другим пользователям автоматически находить вас в %@, если вы есть у них в адресной книге.";
 "myprofile_link_email_footer" = "Привязка вашего эл. адреса к ID позволяет другим пользователям автоматически находить вас в %@, если ваш адрес электронной почты есть у них в адресной книге.";
 "myprofile_link_email_onprem_footer" = "Привязка вашего эл. адреса к ID позволяет другим пользователям этого сервера (%@) автоматически находить вас в %@, если ваш адрес электронной почты есть у них в адресной книге.";
 "myprofile_link_phone_footer" = "Привязка вашего номера мобильного телефона к ID позволяет другим пользователям автоматически находить вас в %@, если ваш номер телефона есть у них в адресной книге.";
 "myprofile_link_phone_onprem_footer" = "Привязка вашего номера мобильного телефона к ID позволяет другим пользователям этого сервере (%@) автоматически находить вас в %@, если ваш номер телефона есть у них в адресной книге.";
+
 "mentions_table_view_cell_accessibility_hint" = "Нажмите, чтобы создать упоминание";
 
 // POI
@@ -1386,6 +1420,140 @@
 "detailView_messageID" = "Код сообщения";
 "detailView_group_acknowledged" = "Принято (%d)";
 "detailView_group_declined" = "Не принято (%d)";
+
+// In-app notifications
+"notification_copying_succeeded" = "Элемент скопирован";
+"notification_copying_failed" = "Не удается скопировать";
+
+"notification_saving_succeeded" = "Элемент сохранен";
+"notification_saving_failed" = "Не удается сохранить";
+
+"notification_sending_failed" = "Не удается отправить";
+
+"notification_deleted_messages_count" = "%d сообщен. удалены";
+
+"notification_cannot_play_video" = "Не удается воспроизвести видео";
+
+"notification_call_failed_connected" = "Соединение утеряно";
+"notification_call_failed_not_connected" = "Не удалось установить соединение";
+"notification_call_creation_failed" = "Не удалось создать звонок";
+
+"notification_sending_profile_picture_succeeded" = "Аватар отправлен";
+"notification_sending_profile_picture_failed" = "Не удалось отправить";
+
+"notification_sending_profile_picture_failed_settings_sync_message" = "Настройки синхронизированы";
+
+"notification_group_sync_succeeded" = "Группа синхронизирована";
+"notification_group_sync_failed" = "Не удалось синхронизировать группу";
+
+// Forward security status messages
+"forward_security_message_without" = "Получено сообщение, не использующее протокол Perfect Forward Secrecy. Проверьте, что отправитель намеренно отключил Perfect Forward Secrecy.";
+"forward_security_session_established" = "Сообщения в этом чате теперь защищены протоколом Perfect Forward Secrecy.";
+"forward_security_session_established_rx" = "Сообщения, получаемые в этом чате, теперь защищаются протоколом Perfect Forward Secrecy. Активируйте Perfect Forward Secrecy на окне сведений о контакте, чтобы защитить также отправляемые сообщения.";
+"forward_security_messages_skipped_1" = "После получения последнего сообщения одно сообщение было утеряно.";
+"forward_security_messages_skipped_x" = "После получения последнего сообщения несколько сообщений (%d) были утеряны.";
+"forward_security_session_reset" = "Сеанс Perfect Forward Secrecy с этим контактом был сброшен. Это может произойти, если контакт сменил устройства или переустановил приложение.";
+"forward_security_message_out_of_order" = "Сообщение получено с нарушением порядка, его не удалось расшифровать.";
+"forward_security_status_enabled_outgoing" = "Для исходящих сообщений активирован протокол Perfect Forward Secrecy.";
+"forward_security_status_disabled_outgoing" = "Для исходящих сообщений отключен протокол Perfect Forward Secrecy.";
+"forward_security_contact_has_downgraded_to_an_incompatible_version" = "Этот контакт начал использовать версию приложения, не поддерживающую протокол Perfect Forward Secrecy. В дальнейшем сообщения будут отправляться без применения протокола PFS.";
+
+// Profile view
+"accessibility_profile_button_hint_contact" = "Открыть сведения о контакте";
+"accessibility_profile_button_hint_group" = "Открыть сведения о группе";
+
+// Chat bar
+"accessibility_chatbar_label" = "Поле ввода сообщений чата.";
+"accessibility_chatbar_hint" = "Написать сообщение";
+"accessibility_chatbar_value" = "Текущий текст: %@";
+"accessibility_chatbar_quote_label" = "Выбранное цитируемое сообщение: %@.";
+"accessibility_chatbar_close_quote_button_label" = "Завершение цитаты.";
+"accessibility_chatbar_close_quote_button_hint" = "Завершение цитирования выделенного сообщения.";
+
+// Message senders
+"accessibility_senderDescription_ownMessage" = "Ваш %@";
+"accessibility_senderDescription_otherMessage_group" = "%@ от %@";
+"accessibility_senderDescription_systemMessage" = "Информация: %@";
+
+// Message types
+"accessibility_textMessage_description" = "Сообщение";
+"accessibility_locationMessage_description" = "Местоположение";
+"accessibility_systemCallMessage_description" = "Звонок";
+"accessibility_fileMessage_description" = "Файл";
+"accessibility_imageMessage_description" = "Изображение";
+"accessibility_videoMessage_description" = "Видео";
+"accessibility_animatedImageMessage_description" = "GIF";
+"accessibility_stickerMessage_description" = "Стикер";
+"accessibility_voiceMessage_description" = "Голосовое сообщение";
+"accessibility_pollMessage_description" = "Опрос";
+
+// Message hints
+"accessibility_audioMessage_hint" = "Воспроизвести голосовое сообщение";
+"accessibility_locationMessage_hint" = "Открыть местоположение";
+"accessibility_systemCallMessage_hint" = "Начать звонок";
+"accessibility_imageMessage_hint" = "Открыть сообщение";
+"accessibility_videoMessage_hint" = "Воспроизвести видео";
+"accessibility_fileMessage_hint" = "Открыть предпросмотр файла";
+"accessibility_animatedImageMessage_hint" = "Вкл./выкл. анимацию GIF";
+"accessibility_animatedStickerMessage_hint" = "Вкл./выкл. анимацию стикеров";
+"accessibility_ballotMessage_hint_open" = "Открыть опрос для голосования";
+"accessibility_ballotMessage_hint_closed" = "Показать результаты опроса";
+"accessibility_voiceMessage_speed_hint" = "Изменить скорость воспроизведения";
+
+// Other
+"accessibility_caption" = "Подпись: %@";
+"accessibility_poll_content_open" = "%@. Название: %@, %@";
+"accessibility_poll_open" = "Открытый";
+"accessibility_poll_closed" = "Закрытый";
+"accessibility_file_duration" = "Продолжительность: %@.";
+
+// Message status types
+"accessibility_status_acknowledged_plus_time" = "Подтверждено, %@";
+"accessibility_status_declined_plus_time" = "Отклонено, %@";
+"accessibility_status_sending_plus_time" = "Отправка, %@";
+"accessibility_status_sent_plus_time" = "Отправлено, %@";
+"accessibility_status_delivered_plus_time" = "Доставлено, %@";
+"accessibility_status_read_plus_time" = "Прочитано, %@";
+"accessibility_status_failed_plus_time" = "Сбой, %@";
+
+// Multi-Device Wizard
+"md_wizard_header" = "Предпросмотр на нескольких устройствах";
+"md_wizard_start" = "Привязать мой компьютер";
+"md_wizard_cancel" = "Отмена";
+"md_wizard_next" = "Далее";
+"md_wizard_close" = "Закрыть";
+"md_wizard_back_identity" = "Показать Threema ID";
+
+"md_wizard_connection_info" = "Во время привязки звонки и уведомления отключены.";
+
+"md_wizard_terms_note_text" = "Режим технического предпросмотра позволяет вам время от времени проверять будущую поддержку нескольких устройств. Обратите внимание, что эти функции ограничены, а поскольку это альфа-версия программы, возможны недоработки.";
+
+"md_wizard_terms_backup" = "Возможна утеря данных. Перед тем как продолжить, создайте резервную копию.\n[Инструкции по резервному копированию](https://threema.ch/docs/threema/ios_backup_manual_en.pdf)";
+"md_wizard_terms_support" = "Этот предпросмотр поддерживает текстовые сообщения. Регулярно обновляйте приложения для iOS и компьютера, чтобы получать доступ к новейшим функциям и усовершенствованиям. ";
+"md_wizard_terms_issues" = "Известные проблемы и ограничения перечислены [здесь](https://threema.ch/faq/md_limit).";
+"md_wizard_terms_bugs" = "Просим вас сообщать о проблемах, с которыми вы столкнулись в приложении, через меню «Настройки > Отзыв о бета-версии».";
+
+"md_wizard_terms_accept" = "Я создал резервную копию и хочу продолжить.";
+
+"md_wizard_info_download_title" = "Скачать";
+"md_wizard_info_download_text" = "Режим технического предпросмотра Threema на вашем компьютере:";
+"md_wizard_info_linking_title" = "Привяжите компьютер к этому устройству";
+"md_wizard_info_linking_text" = "Во время привязки компьютера ваши основные данные Threema (ваш ID, контакты и группы) будут зашифрованы и временно сохранены на [сервере Threema Safe, который мы в настоящее время используем] (https://threema.ch/en/faq/threema_safe_webdav). (Текущая настройка: %@).";
+
+"md_wizard_preparation_status" = "Подготовка...";
+
+"md_wizard_start_desktop" = "Откройте режим технического предпросмотра Threema на своем компьютере и введите Threema ID.";
+"md_wizard_identity_text" = "Ваш Threema ID:";
+
+"md_wizard_code_text" = "Код привязки:";
+
+"md_wizard_success_title" = "Устройство успешно привязано";
+"md_wizard_success_text" = "Теперь вы можете использовать режим технического предпросмотра Threema на вашем компьютере (даже когда это устройство iOS отключено).";
+
+"md_wizard_error_title" = "Не удалось привязать: приложение Threema было закрыто";
+"md_wizard_timeout_title" = "Не удалось привязать: привязка длилась слишком долго";
+"md_wizard_could_not_connect_title" = "Не удалось привязать: невозможно подключиться к серверу";
+"md_wizard_error_text" = "Повторите попытку через меню «Настройки > Предпросмотр на нескольких устройствах».";
 
 // App icons
 "app_icon_title_celebration" = "Значок праздника";

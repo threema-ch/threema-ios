@@ -284,7 +284,14 @@ class TaskExecutionReceiveMessageTests: XCTestCase {
 
     func testReceivedTextMessageMultiDeviceActivated() throws {
         let deviceID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.deviceIDLength)!
-        let deviceGroupPathKey = BytesUtility.generateRandomBytes(length: Int(kDeviceGroupPathKeyLen))!
+        let deviceGroupKeys = DeviceGroupKeys(
+            dgpk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
+            dgrk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
+            dgdik: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
+            dgsddk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
+            dgtsk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
+            deviceGroupIDFirstByteHex: "a1"
+        )
 
         let expectedReflectID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.messageIDLength)!
 
@@ -292,7 +299,7 @@ class TaskExecutionReceiveMessageTests: XCTestCase {
         let serverConnectorMock = ServerConnectorMock(
             connectionState: .loggedIn,
             deviceID: deviceID,
-            deviceGroupPathKey: deviceGroupPathKey
+            deviceGroupKeys: deviceGroupKeys
         )
         serverConnectorMock.reflectMessageClosure = { _ -> Bool in
             if serverConnectorMock.connectionState == .loggedIn {
@@ -306,7 +313,7 @@ class TaskExecutionReceiveMessageTests: XCTestCase {
         }
         let messageProcessorMock = MessageProcessorMock()
         let mediatorMessageProtocolMock = MediatorMessageProtocolMock(
-            deviceGroupPathKey: deviceGroupPathKey,
+            deviceGroupKeys: deviceGroupKeys!,
             returnValues: [
                 MediatorMessageProtocolMock.ReflectData(
                     id: expectedReflectID,

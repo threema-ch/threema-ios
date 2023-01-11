@@ -43,6 +43,7 @@ import Foundation
             msg = VoIPCallHangupMessage(callID: VoIPCallID(callID: nil), completion: nil)
         }
         msg?.contactIdentity = contactIdentity
+        msg?.date = from.date
         
         return msg
     }

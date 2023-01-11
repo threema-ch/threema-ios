@@ -27,7 +27,7 @@ import Foundation
     private var conversation: Conversation!
     
     @objc func prepareDatabase() {
-        objectContext = DatabasePersistentContext.inMemoryContext()
+        (_, objectContext, _) = DatabasePersistentContext.devNullContext()
 
         let databasePreparer = DatabasePreparer(context: objectContext)
         let contact = databasePreparer.createContact(publicKey: Data([1]), identity: "ECHOECHO", verificationLevel: 0)

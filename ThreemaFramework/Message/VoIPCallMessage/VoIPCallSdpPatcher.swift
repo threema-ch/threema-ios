@@ -288,7 +288,7 @@ public class VoIPCallSdpPatcher: NSObject {
                 //       a line within that section should never be parsed.
                 throw SdpError(
                     type: .unknownSection,
-                    description: String(format: "Unknown section %@", current.rawValue)
+                    description: "Unknown section \(current.rawValue)"
                 )
             }
         }
@@ -299,7 +299,7 @@ public class VoIPCallSdpPatcher: NSObject {
             lines.append(line.line)
             lines.append("\r\n")
         case .REJECT:
-            DDLogError(String(format: "Rejected line: %@", line.line))
+            DDLogError("Rejected line: \(line.line)")
         }
         // If we have switched to another section and the line has been rejected,
         // we need to reject the remainder of the section.
@@ -317,7 +317,7 @@ public class VoIPCallSdpPatcher: NSObject {
                     }
                 }
             }
-            DDLogError(String(format: "Rejected section: %@", debug))
+            DDLogError("Rejected section: \(debug)")
         }
     }
     

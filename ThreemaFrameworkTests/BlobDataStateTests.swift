@@ -109,21 +109,6 @@ class BlobDataStateTests: XCTestCase {
     
     // MARK: Outgoing
     
-    func testFileMessageThumbnailOutgoingStatePendingUploadNoError() {
-        var fileMessageEntity: FileMessageEntity!
-        
-        databasePreparer.save {
-            fileMessageEntity = databasePreparer.createFileMessageEntity(
-                conversation: conversation,
-                progress: NSNumber(floatLiteral: 0),
-                thumbnail: thumbnailTestImageData(),
-                isOwn: true
-            )
-        }
-        
-        XCTAssertEqual(.outgoing(.pendingUpload(error: nil)), fileMessageEntity.thumbnailState)
-    }
-    
     func testFileMessageThumbnailOutgoingStatePendingUploadFailed() {
         var fileMessageEntity: FileMessageEntity!
         
@@ -167,6 +152,21 @@ class BlobDataStateTests: XCTestCase {
         }
         
         XCTAssertEqual(.outgoing(.pendingUpload(error: .uploadFailed)), fileMessageEntity.thumbnailState)
+    }
+    
+    func testFileMessageThumbnailOutgoingStateUploadingWithZeroProgress() {
+        var fileMessageEntity: FileMessageEntity!
+        
+        databasePreparer.save {
+            fileMessageEntity = databasePreparer.createFileMessageEntity(
+                conversation: conversation,
+                progress: NSNumber(floatLiteral: 0),
+                thumbnail: thumbnailTestImageData(),
+                isOwn: true
+            )
+        }
+        
+        XCTAssertEqual(.outgoing(.uploading), fileMessageEntity.thumbnailState)
     }
 
     func testFileMessageThumbnailOutgoingStateUploading() {
@@ -316,23 +316,6 @@ class BlobDataStateTests: XCTestCase {
     
     // MARK: Outgoing
     
-    func testFileMessageDataOutgoingPendingUpload() {
-        var fileMessageEntity: FileMessageEntity!
-        
-        databasePreparer.save {
-            let fileData = databasePreparer.createFileData(data: Data(count: 10))
-
-            fileMessageEntity = databasePreparer.createFileMessageEntity(
-                conversation: conversation,
-                progress: NSNumber(floatLiteral: 0),
-                data: fileData,
-                isOwn: true
-            )
-        }
-        
-        XCTAssertEqual(.outgoing(.pendingUpload(error: nil)), fileMessageEntity.dataState)
-    }
-    
     func testFileMessageDataOutgoingPendingUploadNotUploading() {
         var fileMessageEntity: FileMessageEntity!
         
@@ -365,6 +348,23 @@ class BlobDataStateTests: XCTestCase {
         }
         
         XCTAssertEqual(.outgoing(.pendingUpload(error: .uploadFailed)), fileMessageEntity.dataState)
+    }
+    
+    func testFileMessageDataOutgoingUploadingWithZeroProgress() {
+        var fileMessageEntity: FileMessageEntity!
+        
+        databasePreparer.save {
+            let fileData = databasePreparer.createFileData(data: Data(count: 10))
+
+            fileMessageEntity = databasePreparer.createFileMessageEntity(
+                conversation: conversation,
+                progress: NSNumber(floatLiteral: 0),
+                data: fileData,
+                isOwn: true
+            )
+        }
+        
+        XCTAssertEqual(.outgoing(.uploading), fileMessageEntity.dataState)
     }
     
     func testFileMessageDataOutgoingUploading() {

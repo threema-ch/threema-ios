@@ -82,7 +82,7 @@
 "audio" = "Audio";
 "file" = "Bestand";
 "location" = "Locatie";
-"locating" = "Zoeken...";
+"locating" = "Bezig met zoeken...";
 "unknown_location" = "onbekende locatie";
 "open" = "Openen";
 "call" = "Bellen"; /* Short version for "Start Threema Call" */
@@ -103,6 +103,14 @@
 "threema_id" = "Threema ID";
 "nickname" = "Nickname";
 "add_button" = "Toevoegen";
+"chatview_contextmenu_more" = "Meer...";
+
+"file_message_image" = "Afbeelding";
+"file_message_sticker" = "Sticker";
+"file_message_animated_image" = "GIF";
+"file_message_video" = "Video";
+"file_message_voice" = "Spraakbericht";
+"file_message_file" = "Bestand";
 
 "chat_back_button_accessibility" = "%d ongelezen";
 
@@ -145,6 +153,7 @@
 "high" = "Hoog";
 "max_1_minute" = "Max. 1 minuut";
 "max_x_minutes" = "Max. %d minuten";
+"still_compressed_note" = "Zeer grote video's kunnen ongeacht deze instelling worden gecomprimeerd.";
 
 /* Sound names */
 "push_sound_title" = "Geluid pushbericht";
@@ -288,10 +297,11 @@
 "messages_delete_all_button" = "Alle berichten verwijderen";
 "messages_delete_all_confirm_title" = "Alle berichten in deze chat van dit apparaat verwijderen?";
 "messages_delete_all_confirm_message" = "Dit omvat alle mediabestanden en documenten.";
-"messages_delete_selected_confirm" = "De geselecteerde berichten in deze chat van dit apparaat verwijderen?";
+"messages_delete_selected_confirm" = "Geselecteerde berichten van dit apparaat verwijderen?";
 "conversation_delete_confirm" = "Deze chat van dit apparaat verwijderen?";
 "delete_all" = "Alles verwijderen";
 "delete_n" = "Verwijderen (%d)";
+
 "message_cannot_play_movie" = "Kan film niet afspelen";
 
 "identity_not_found_title" = "Onbekende ID";
@@ -381,10 +391,6 @@
 "contact_invalid_cannot_send" = "Je kunt geen bericht naar deze contactpersoon sturen omdat hij ongeldig is.";
 "contact_betafeedback_cannot_send" = "Dit is geen beta-versie, stuur feedback naar *ONDERSTEUNING.";
 "group_sync_button" = "Groep synchroniseren";
-"group_sync_title" = "Groep gesynchroniseerd";
-"group_sync_message" = "Huidige groepsgegevens zijn aan alle leden verstuurd.";
-"group_sync_error_title" = "Groep niet gesynchroniseerd";
-"group_sync_error_message" = "Probeer het later opnieuw.";
 "group_clone_button" = "Groep klonen";
 "group_clone_title" = "Groep klonen";
 "group_clone_message" = "Dit kloont deze groep met u als administrator. Doorgaan?";
@@ -413,6 +419,10 @@
 "add_note_group_info" = "*U bent hier helemaal alleen*\nGebruik deze chat als een beveiligd notitieboekje voor tekst, mediabestanden en documenten.";
 "end_note_group_info" = "*U bent niet langer de enige in deze chat*\nNieuwe berichten worden aan alle groepsleden verzonden.";
 
+"chat_search_searching" = "Bezig met zoeken...";
+"chat_search_no_matches" = "Geen overeenkomsten";
+"chat_search_matches" = "%d van %d overeenkomsten";
+
 "choose_recipient" = "Ontvanger kiezen";
 
 "msg_unknown_group_request_sync_x_title" = "Bericht ontvangen in onbekende groep";
@@ -425,6 +435,7 @@
 "tap_to_change" = "Tikken om te wijzigen";
 "next" = "Volgende";
 "unread_messages" = "Ongelezen berichten";
+"unread_messages_line_with_count" = "Ongelezen berichten (%d)";
 
 /* Verification level popovers in chat view */
 "verification_level_title" = "Verificatieniveau";
@@ -446,7 +457,6 @@
 "level4_explanation" = "Interne contactpersoon wiens identiteit en openbare sleutel je persoonlijk hebt geverifieerd door zijn/haar QR-code te scannen.";
 
 "id_verified_title" = "ID geverificeerd";
-"id_verified_message" = "De identiteit en de publieke sleutel van %@ zijn geverifieerd.";
 
 /* Invalid country code alert */
 "invalid_country_code_title" = "Ongeldige regiocode";
@@ -468,9 +478,7 @@
 "backgrounding_off" = "De app-verbinding wordt onmiddellijk verbroken wanneer de app naar de achtergrond wordt verplaatst.";
 "proximity_monitoring_off" = "Het scherm wordt niet uitgeschakeld wanneer de nabijheidssensor wordt bedekt.";
 "proximity_monitoring_on" = "Tijdens actieve gesprekken en wanneer gesproken berichten worden opgenomen of afgespeeld, schakelt het scherm zichzelf uit wanneer de nabijheidssensor is bedekt.";
-"validation_logging_expl" = "Het debugging-logbestand kan worden gebruikt om de end-to-end versleuteling van Threema onafhankelijk te verifiëren.\nDetails: https://threema.ch/validation";
-
-"validation_log_clear" = "Log leegmaken";
+"debug_log_clear" = "Log wissen";
 "log_empty_message" = "Het debugging-logbestand is leeg.";
 "cannot_send_mail_message" = "Er is geen e-mailaccount op dit apparaat geconfigureerd.";
 
@@ -508,8 +516,6 @@
 "release_profilepicture_to" = "Profielafbeelding vrijgeven aan";
 "contact_added_to_profile_picture_list" = "Deze contactpersoon ontvangt je profielafbeelding als je een bericht zendt.";
 "contact_removed_from_profile_picture_list" = "Deze contactpersoon ontvangt je profiel niet langer.";
-"contact_send_profile_picture_success" = "Je profielafbeelding is naar de contactpersoon verzonden.";
-"contact_send_profile_picture_error" = "Je profielafbeelding kan niet worden verzonden. Probeer het later opnieuw.";
 
 "sync_group" = "Groep synchroniseren";
 
@@ -535,6 +541,13 @@
 "exclude_deleted_id_title" = "Threema ID van \"%@\" uitsluiten van synchronisatie?";
 "exclude_deleted_id_message" = "Je kunt de uitsluitingen beheren via de privacy-instellingen.";
 "exclude_deleted_id_exclude_button" = "Uitsluiten";
+
+"forward_security" = "Perfect forward secrecy";
+"forward_security_none" = "Geen";
+"forward_security_2dh" = "Eenzijdig";
+"forward_security_4dh" = "Voltooid";
+"forward_security_clear_sessions" = "Alle sessies wissen";
+"forward_security_explainer_footer" = "Perfect forward secrecy (PFS) beschermt opgenomen communicatie tegen ontsleuteling met terugwerkende kracht, zelfs wanneer de lange termijn-coderingssleutel gecomprimeerd is.\nDe optie kan worden ingeschakeld als de app aan beide zijden PFS ondersteunt.";
 
 /* create id */
 "lets_get_started" = "Aan de slag";
@@ -652,7 +665,7 @@
 "new_message_no_access_title" = "Nieuwe berichten";
 "new_message_no_access_message" = "Open %@ om binnenkomende berichten op te halen.";
 "new_message_invalid_license" = "Je licentie is verlopen. Open de app om door te gaan.";
-"new_message_db_requires_migration" = "Er is een database migratie vereist, open de app om door te gaan.";
+"new_message_db_requires_migration" = "Threema is geüpdatet, open de app om de update te voltooien.";
 
 /* reminder messages */
 "push_reminder_title" = "Meldingen zijn niet ingeschakeld";
@@ -693,7 +706,7 @@
 "draft" = "Ontwerp";
 "new_message_accessibility" = "Nieuw bericht: ";
 "scoll_down_text" = "Scroll down";
-"quote_interaction_hint" = "Tikken om naar geciteerd bericht te gaan.";
+"quote_interaction_hint" = "Gaat naar geciteerd bericht.";
 
 /* TTOpenInAppActivity */
 "Open in ..." = "Openen in...";
@@ -784,9 +797,6 @@
 "call_status_unknown" = "Onbekend";
 "call_status_blocked" = "Geblokkeerde contactpersoon";
 "call_status_failed_title" = "Threema-Oproep";
-"call_status_failed_connected_message" = "Verbinding verbroken";
-"call_status_failed_initializing_message" = "Er kon geen verbinding worden gemaakt";
-"call_status_failed_sdp_patch_message" = "Threema-Oproep niet aangemaakt";
 
 "call_threema_initiator_video_info" = "Tik hier om de camera in te schakelen";
 "call_threema_remote_video_activated_info_title" = "Video-oproep";
@@ -840,7 +850,7 @@
 "privacy_footer" = "Dit verbergt alle privéchats in het chatoverzicht. Je moet een beveiligingscode instellen om deze optie te activeren.";
 
 "group_leave_sheet_title" = "“%@” verlaten?";
-"group_leave_sheet_message" = "Als je alleen vertrekt, kun je niet meer deelnemen aan het gesprek, maar heb je nog wel toegang tot de chatgeschiedenis.";
+"group_leave_sheet_message" = "Als u het gesprek verlaat, kunt u niet meer deelnemen. U hebt nog wel toegang tot de chatgeschiedenis.";
 
 "group_leave_delete_sheet_title" = "\"%@\" verlaten en verwijderen?";
 "group_leave_delete_sheet_message" = "Als je de groep verlaat en deze verwijdert, kun je niet meer deelnemen aan het gesprek en wordt de chatgeschiedenis verwijderd.";
@@ -863,7 +873,7 @@
 "archived_alert_title" = "Gearchiveerde chats";
 "archived_alert_message" = "Tik op de knop onder aan het chatoverzicht om je gearchiveerde chats te bekijken.";
 
-"private_delete_info_alert_message" = "Wanneer je een privéchat verwijdert, wordt een nieuwe chat niet automatisch weer als privé aangemerkt.";
+"private_delete_info_alert_message" = "Wanneer u een privéchat verwijdert, wordt een nieuwe chat niet automatisch opnieuw als privé aangemerkt.";
 
 /* End Edit */
 
@@ -1074,6 +1084,13 @@
 "file_deleted_title" = "Bestand verwijderd";
 "file_not_found_title" = "Bestand niet gevonden";
 
+"manage_all_conversations" = "Alle chats beheren";
+"manage_media_and_files" = "Bestanden beheren";
+"manage_messages" = "Berichten beheren";
+"messages" = "Berichten";
+"files" = "Bestanden";
+
+
 // Settings
 "settings_privacy" = "Privacy";
 "settings_appearance" = "Verschijning";
@@ -1108,6 +1125,7 @@
 "settings_devmode_quote_v2" = "Quote V2";
 "settings_devmode_new_chat_view" = "Nieuwe chatweergave";
 "settings_devmode_stylekit_debug_view" = "StyleKit-debugweergave";
+"settings_devmode_id_colors_debug_view" = "ID-kleuren debug-weergave";
 
 // Appearance
 "settings_appearance_theme_section" = "Thema ontwerpen";
@@ -1117,6 +1135,9 @@
 "settings_appearance_theme_selected" = "%@-thema actief";
 "settings_appearance_theme_active" = "Actief";
 "settings_appearance_hide_app_icon" = "App-icoon";
+"settings_appicon_default_header" = "Standaardpictogram";
+"settings_appicon_legacy_header" = "Threema-pictogrammen";
+"settings_appicon_special_header" = "Speciale pictogrammen";
 "settings_appearance_hide_stale_contacts" = "Inactieve ID’s verbergen";
 "settings_appearance_show_profile_pictures" = "Profielafbeeldingen weergeven";
 "settings_appearance_display_order" = "Geef weer";
@@ -1241,8 +1262,7 @@ Als er geen (media)bestanden in %@ ontbreken, maak de prullenbak dan leeg om de 
 "unknown_file_type" = "Onbekend bestandstype";
 "unknown_file_size" = "Onbekende bestandsgrootte";
 "unknown_file_name" = "Onbekende bestandsnaam";
-
-"ballots_with_open_count_accessibility" = "Polls (%d open)";
+"sending_to" = "Ontvangers";
 
 /* Ballot */
 "ballot" = "Poll";
@@ -1294,6 +1314,10 @@ Als er geen (media)bestanden in %@ ontbreken, maak de prullenbak dan leeg om de 
 "voteCancelMessage" = "Als u vertrekt voordat u hebt gestemd, gaat uw stem verloren.";
 "discardVoteTitle" = "Annuleren";
 
+"ballot_load_error" = "Polls zijn niet beschikbaar";
+
+"ballots_with_open_count_accessibility" = "Polls (%d open)";
+
 /* Custom Privacy Settings */
 "privacySetting_header" = "Privacy";
 "send_readReceipts" = "Leesbevestigingen";
@@ -1316,23 +1340,33 @@ Als er geen (media)bestanden in %@ ontbreken, maak de prullenbak dan leeg om de 
 "reset_overrides_alert_action" = "Alles herstellen";
 
 /* Multi Decvice */
-"multi_device_linked_devices_title" = "Gekoppelde apparaten";
+"multi_device_linked_devices_title" = "Multi-device preview";
+"multi_device_linked_devices_desc" = "Multi-device preview in- of uitschakelen voor dit apparaat.";
 "multi_device_linked_devices_refresh" = "Vegen om te verversen";
 "multi_device_linked_devices_loading_failed" = "Apparaten niet geladen: %@";
 "multi_device_linked_devices_failed_to_load_title" = "Apparatenlijst is niet geladen";
 "multi_device_linked_devices_failed_to_load_message" = "De gekoppelde apparaten zijn niet geladen. Controleer uw internetverbinding en probeer het opnieuw.";
 "multi_device_linked_devices_this" = "Dit apparaat";
 "multi_device_linked_devices_others" = "Overige apparaten";
+"multi_device_linked_devices_last_login" = "Laatste aanmelding: %@";
 "multi_device_linked_devices_remove_failed" = "Apparaat is niet verwijderd: %@";
+"multi_device_linked_devices_removed_devices_title" = "Multi-device uitschakelen?";
+"multi_device_linked_devices_removed_devices_message" = "Dit zorgt ervoor dat alle gekoppelde apparaten worden verwijderd en multi-device wordt uitgeschakeld";
+"multi_device_linked_devices_removed_devices_ok" = "Uitschakelen";
+"multi_device_linked_duplicate_contacts_title" = "Dubbele contacten";
+"multi_device_linked_duplicate_contacts_desc" = "Dit apparaat kan niet worden gekoppeld vanwege dubbele contacten (%@). Neem contact op met ons ondersteuningsteam.";
+
 "multi_device_linked_devices_failed_remove_title" = "Apparaat is niet verwijderd";
 "multi_device_linked_devices_failed_remove_message" = "Het gekoppelde apparaat is niet verwijderd. Probeer het opnieuw.";
 "multi_device_linked_devices_failed_remove_message_2" = "Het gekoppelde apparaat is niet verwijderd. Controleer uw internetverbinding en probeer het opnieuw.";
+"multi_device_slot_state_mismatch_alert" = "Dit apparaat is ontkoppeld, u kunt momenteel geen nieuwe berichten verzenden of ontvangen. Als u het apparaat niet hebt ontkoppeld, kan dit vanwege technische redenen tijdens de tech-preview-fase zijn gebeurd. Onze excuses voor het ongemak. Raadpleeg de FAQ om opnieuw te koppelen: https://three.ma/faq";
 
 "myprofile_link_email_phone_footer" = "Als je je e-mailadres of telefoonnummer aan je ID koppelt, kunnen anderen je automatisch op %@ vinden als je in hun adresboek staat.";
 "myprofile_link_email_footer" = "Als je je e-mailadres aan je ID koppelt, kunnen anderen je automatisch op %@ vinden als je e-mailadres in hun adresboek staat.";
 "myprofile_link_email_onprem_footer" = "Als je je e-mailadres aan je ID koppelt, kunnen andere gebruikers van deze server (%@) je automatisch op %@ vinden als je e-mailadres in hun adresboek staat.";
 "myprofile_link_phone_footer" = "Als je je telefoonnummer aan je ID koppelt, kunnen anderen je automatisch op %@ vinden als je nummer in hun adresboek staat.";
 "myprofile_link_phone_onprem_footer" = "Als je je telefoonnummer aan je ID koppelt, kunnen andere gebruikers van deze server (%@) je automatisch op %@ vinden als je nummer in hun adresboek staat.";
+
 "mentions_table_view_cell_accessibility_hint" = "Tikken om vermelding aan te maken";
 
 // POI
@@ -1386,6 +1420,140 @@ Als er geen (media)bestanden in %@ ontbreken, maak de prullenbak dan leeg om de 
 "detailView_messageID" = "Bericht-ID";
 "detailView_group_acknowledged" = "Akkoord (%d)";
 "detailView_group_declined" = "Niet akkoord (%d)";
+
+// In-app notifications
+"notification_copying_succeeded" = "Item gekopieerd";
+"notification_copying_failed" = "Kopiëren is mislukt";
+
+"notification_saving_succeeded" = "Item opgeslagen";
+"notification_saving_failed" = "Opslaan mislukt";
+
+"notification_sending_failed" = "Verzending mislukt";
+
+"notification_deleted_messages_count" = "%d berichten verwijderd";
+
+"notification_cannot_play_video" = "Niet mogelijk om video af te spelen";
+
+"notification_call_failed_connected" = "Verbinding verbroken";
+"notification_call_failed_not_connected" = "Geen verbinding tot stand gebracht";
+"notification_call_creation_failed" = "Geen gesprek gevoerd";
+
+"notification_sending_profile_picture_succeeded" = "Profielafbeelding verzonden";
+"notification_sending_profile_picture_failed" = "Niet verzonden";
+
+"notification_sending_profile_picture_failed_settings_sync_message" = "Instellingen gesynchroniseerd";
+
+"notification_group_sync_succeeded" = "Groep gesynchroniseerd";
+"notification_group_sync_failed" = "Groep niet gesynchroniseerd";
+
+// Forward security status messages
+"forward_security_message_without" = "Er is een bericht zonder Perfect forward secrecy ontvangen. Controleer of de afzender Perfect forward secrecy opzettelijk heeft uitgeschakeld.";
+"forward_security_session_established" = "De berichten in deze chat zijn nu beschermd met Perfect forward secrecy.";
+"forward_security_session_established_rx" = "De ontvangen berichten in deze chat zijn nu beschermd met Perfect forward secrecy. Zorg dat u Perfect forward secrecy in de contactgegevens inschakelt om verzonden berichten ook te beschermen.";
+"forward_security_messages_skipped_1" = "Er is één bericht verloren gegaan sinds het laatste bericht.";
+"forward_security_messages_skipped_x" = "Er zijn %d berichten verloren gegaan sinds het laatste bericht.";
+"forward_security_session_reset" = "De Perfect forward secrecy-sessie met deze contactpersoon is gereset. Dit kan gebeuren wanneer de contactpersoon een ander apparaat gebruikt of de app opnieuw heeft geïnstalleerd.";
+"forward_security_message_out_of_order" = "Er is een bericht buiten de volgorde ontvangen dat niet is versleuteld.";
+"forward_security_status_enabled_outgoing" = "Perfect forward secrecy is ingeschakeld voor uitgaande berichten.";
+"forward_security_status_disabled_outgoing" = "Perfect forward secrecy is uitgeschakeld voor uitgaande berichten.";
+"forward_security_contact_has_downgraded_to_an_incompatible_version" = "Dit contactpersoon gebruikt nu een app-versie die Perfect forward secrecy niet ondersteunt. Berichten worden vanaf nu zonder PFS verzonden.";
+
+// Profile view
+"accessibility_profile_button_hint_contact" = "Opent de contactgegevens";
+"accessibility_profile_button_hint_group" = "Opent de groepsgegevens";
+
+// Chat bar
+"accessibility_chatbar_label" = "Chat invoerveld.";
+"accessibility_chatbar_hint" = "Bericht samenstellen.";
+"accessibility_chatbar_value" = "Huidige tekst: %@";
+"accessibility_chatbar_quote_label" = "Geselecteerd citaatbericht: %@.";
+"accessibility_chatbar_close_quote_button_label" = "Einde citaat";
+"accessibility_chatbar_close_quote_button_hint" = "Beëindigt het citeren van het geselecteerde bericht.";
+
+// Message senders
+"accessibility_senderDescription_ownMessage" = "Uw %@";
+"accessibility_senderDescription_otherMessage_group" = "%@ van %@";
+"accessibility_senderDescription_systemMessage" = "Info: %@";
+
+// Message types
+"accessibility_textMessage_description" = "Bericht";
+"accessibility_locationMessage_description" = "Locatie";
+"accessibility_systemCallMessage_description" = "Oproep";
+"accessibility_fileMessage_description" = "Bestand";
+"accessibility_imageMessage_description" = "Afbeelding";
+"accessibility_videoMessage_description" = "Video";
+"accessibility_animatedImageMessage_description" = "GIF";
+"accessibility_stickerMessage_description" = "Sticker";
+"accessibility_voiceMessage_description" = "Spraakbericht";
+"accessibility_pollMessage_description" = "Poll";
+
+// Message hints
+"accessibility_audioMessage_hint" = "Spraakbericht afspelen.";
+"accessibility_locationMessage_hint" = "Locatie openen";
+"accessibility_systemCallMessage_hint" = "Oproep starten";
+"accessibility_imageMessage_hint" = "Afbeelding openen.";
+"accessibility_videoMessage_hint" = "Video afspelen.";
+"accessibility_fileMessage_hint" = "Open de preview van het bestand.";
+"accessibility_animatedImageMessage_hint" = "GIF-animatie in-/uitschakelen";
+"accessibility_animatedStickerMessage_hint" = "Stickeranimatie in-/uitschakelen";
+"accessibility_ballotMessage_hint_open" = "Open de poll om te stemmen.";
+"accessibility_ballotMessage_hint_closed" = "Poll-resultaten tonen.";
+"accessibility_voiceMessage_speed_hint" = "Afspeelsnelheid wijzigen.";
+
+// Other
+"accessibility_caption" = "Onderschrift: %@";
+"accessibility_poll_content_open" = "%@. Titel: %@, %@";
+"accessibility_poll_open" = "Open";
+"accessibility_poll_closed" = "Gesloten";
+"accessibility_file_duration" = "Tijdsduur: %@.";
+
+// Message status types
+"accessibility_status_acknowledged_plus_time" = "Erkend, %@";
+"accessibility_status_declined_plus_time" = "Afgewezen, %@";
+"accessibility_status_sending_plus_time" = "Aan het verzenden, %@";
+"accessibility_status_sent_plus_time" = "Verzonden, %@";
+"accessibility_status_delivered_plus_time" = "Afgeleverd, %@";
+"accessibility_status_read_plus_time" = "Gelezen, %@";
+"accessibility_status_failed_plus_time" = "Mislukt, %@";
+
+// Multi-Device Wizard
+"md_wizard_header" = "Multi-device preview";
+"md_wizard_start" = "Mijn computer koppelen";
+"md_wizard_cancel" = "Annuleren";
+"md_wizard_next" = "Volgende";
+"md_wizard_close" = "Sluiten";
+"md_wizard_back_identity" = "Toon Threema-ID";
+
+"md_wizard_connection_info" = "Tijdens het koppelingsproces zijn oproepen en meldingen uitgeschakeld.";
+
+"md_wizard_terms_note_text" = "Deze tech-preview is bedoeld om de komende Multi-device ondersteuning vooraf te testen. De functies zijn beperkt en, omdat dit alpha-software is, kunnen er wat onvolmaaktheden zijn.";
+
+"md_wizard_terms_backup" = "Er kan gegevensverlies optreden. Zorg dat u een back-up maakt voordat u verdergaat.\n[Back-up instructies](https://threema.ch/docs/threema/ios_backup_manual_en.pdf)";
+"md_wizard_terms_support" = "Deze preview ondersteunt sms-berichten. Zorg dat u de iOS- en desktop-apps regelmatig bijwerkt om de laatste functies en verbeteringen te krijgen. ";
+"md_wizard_terms_issues" = "Bekende problemen en beperkingen kunnen [hier] worden gevonden (https://threema.ch/faq/md_limit).";
+"md_wizard_terms_bugs" = "Meld de problemen die u in deze app ervaart via \"Instellingen > Beta-feedback\".";
+
+"md_wizard_terms_accept" = "Ik heb een back-up gemaakt en wil verdergaan.";
+
+"md_wizard_info_download_title" = "Downloaden";
+"md_wizard_info_download_text" = "Threema tech-preview op uw computer:";
+"md_wizard_info_linking_title" = "Koppel uw computer aan dit apparaat";
+"md_wizard_info_linking_text" = "Bij het koppelen van uw computer, worden uw basisgegevens van Threema (uw ID, contactpersonen en groepen) versleuteld en tijdelijk opgeslagen op de [veilige server van Threema die u momenteel gebruikt](https://threema.ch/en/faq/threema_safe_webdav). (Huidige instelling: %@).";
+
+"md_wizard_preparation_status" = "Aan het voorbereiden...";
+
+"md_wizard_start_desktop" = "Open de Threema tech-preview op uw computer en voer uw Threema-ID in.";
+"md_wizard_identity_text" = "Uw Threema-ID:";
+
+"md_wizard_code_text" = "Code aan het koppelen:";
+
+"md_wizard_success_title" = "Apparaat is gekoppeld";
+"md_wizard_success_text" = "U kunt nu de Threema tech-preview op uw computer gebruiken (zelfs wanneer dit iOS-apparaat is uitgeschakeld).";
+
+"md_wizard_error_title" = "Koppelen is mislukt omdat de Threema-app gesloten was";
+"md_wizard_timeout_title" = "Koppelen is mislukt omdat het te lang duurde";
+"md_wizard_could_not_connect_title" = "Koppelen is mislukt omdat er geen serververbinding mogelijk was";
+"md_wizard_error_text" = "Probeer het opnieuw via \"Instellingen > Multi-device preview\".";
 
 // App icons
 "app_icon_title_celebration" = "Icoon feest";

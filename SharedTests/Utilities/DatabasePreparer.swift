@@ -183,7 +183,7 @@ class DatabasePreparer {
         sent: Bool,
         userack: Bool,
         sender: Contact?,
-        remoteSentDate: Date? = nil
+        remoteSentDate: Date? // can be set to nil for outgoing messages
     ) -> TextMessage {
         let textMessage = createEntity(objectType: TextMessage.self)
         textMessage.conversation = conversation
@@ -226,6 +226,8 @@ class DatabasePreparer {
         progress: NSNumber? = nil,
         data: FileData? = nil,
         thumbnail: ImageData? = nil,
+        mimeType: String? = nil,
+        type: NSNumber? = nil,
         messageID: Data = BytesUtility.generateRandomBytes(length: ThreemaProtocol.messageIDLength)!,
         date: Date = Date(),
         isOwn: Bool = false,
@@ -244,6 +246,8 @@ class DatabasePreparer {
         fileMessage.progress = progress
         fileMessage.data = data
         fileMessage.thumbnail = thumbnail
+        fileMessage.mimeType = mimeType
+        fileMessage.type = type
         
         // Required by Core Data values
         fileMessage.id = messageID

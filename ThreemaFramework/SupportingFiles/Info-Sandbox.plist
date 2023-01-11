@@ -83,8 +83,6 @@
 	<string>w-</string>
 	<key>ThreemaWorkServerNamePrefixv6</key>
 	<string>ds.w-</string>
-	<key>WebSocketConnection</key>
-	<false/>
 	<key>ThreemaWebURL</key>
 	<string>https://web.threema.ch/</string>
 	<key>ThreemaPOIAroundURL</key>

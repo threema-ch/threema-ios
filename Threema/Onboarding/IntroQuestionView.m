@@ -54,13 +54,16 @@
     
     _yesButton.backgroundColor = Colors.primaryWizard;
     [_yesButton setTitleColor:Colors.textSetup forState:UIControlStateNormal];
+    _yesButton.accessibilityIdentifier = @"setupYesButton";
     _okButton.backgroundColor = Colors.primaryWizard;
     [_okButton setTitleColor:Colors.textSetup forState:UIControlStateNormal];
+    _okButton.accessibilityIdentifier = @"setupOKButton";
 
     _noButton.layer.borderWidth = 1;
     _noButton.layer.borderColor = _yesButton.backgroundColor.CGColor;
     _noButton.layer.cornerRadius = 3;
-    
+    _noButton.accessibilityIdentifier = @"IntroQuestionViewNoButton";
+
     [_yesButton setTitle:[BundleUtil localizedStringForKey:@"yes"] forState:UIControlStateNormal];
     [_noButton setTitle:[BundleUtil localizedStringForKey:@"no"] forState:UIControlStateNormal];
     [_okButton setTitle:[BundleUtil localizedStringForKey:@"ok"] forState:UIControlStateNormal];
@@ -78,12 +81,6 @@
 
 - (IBAction)okAction:(id)sender {
     [_delegate selectedOk:self];
-}
-
-#pragma mark - accessability 
-
-- (BOOL)isAccessibilityElement {
-    return NO;
 }
 
 @end

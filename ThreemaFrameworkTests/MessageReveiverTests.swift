@@ -23,16 +23,24 @@ import XCTest
 
 class MessageReveiverTests: XCTestCase {
 
-    var deviceGroupPathKey: Data!
+    var deviceGroupKeys: DeviceGroupKeys!
     var deviceID: Data!
 
     var mediatorMessageProtocol: MediatorMessageProtocolProtocol!
 
     override func setUpWithError() throws {
-        deviceGroupPathKey = BytesUtility.generateRandomBytes(length: Int(kDeviceGroupPathKeyLen))!
+        deviceGroupKeys = DeviceGroupKeys(
+            dgpk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
+            dgrk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
+            dgdik: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
+            dgsddk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
+            dgtsk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
+            deviceGroupIDFirstByteHex: "a1"
+        )
+
         deviceID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.deviceIDLength)!
 
-        mediatorMessageProtocol = MediatorMessageProtocol(deviceGroupPathKey: deviceGroupPathKey)
+        mediatorMessageProtocol = MediatorMessageProtocol(deviceGroupKeys: deviceGroupKeys)
     }
 
     func testRequestDevicesInfoMultiDeviceNotActivated() throws {
@@ -44,7 +52,7 @@ class MessageReveiverTests: XCTestCase {
             serverConnector: ServerConnectorMock(),
             mediatorMessageProtocol: mediatorMessageProtocol
         )
-        messageReceiver.requestDevicesInfo()
+        messageReceiver.requestDevicesInfo(thisDeviceID: Data())
             .catch { error in
                 resultError = error
                 expec.fulfill()
@@ -57,9 +65,6 @@ class MessageReveiverTests: XCTestCase {
     }
 
     func testRequestDevicesInfo() throws {
-        let deviceGroupPathKey = BytesUtility.generateRandomBytes(length: Int(kDeviceGroupPathKeyLen))!
-        let deviceID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.deviceIDLength)!
-
         let expectedOtherDeviceID = NSData(
             data: BytesUtility.generateRandomBytes(length: ThreemaProtocol.deviceIDLength)!
         )
@@ -74,7 +79,7 @@ class MessageReveiverTests: XCTestCase {
         var expectedAugmentedDeviceInfo = D2m_DevicesInfo.AugmentedDeviceInfo()
         expectedAugmentedDeviceInfo.deviceSlotExpirationPolicy = .persistent
         if let data = try? expectedDeviceInfo.serializedData(),
-           let encryptedData = mediatorMessageProtocol.encryptByte(data: data) {
+           let encryptedData = mediatorMessageProtocol.encryptByte(data: data, key: deviceGroupKeys.dgdik) {
             expectedAugmentedDeviceInfo.encryptedDeviceInfo = encryptedData
         }
 
@@ -84,10 +89,11 @@ class MessageReveiverTests: XCTestCase {
         let serverConnectorMock = ServerConnectorMock(
             connectionState: .loggedIn,
             deviceID: deviceID,
-            deviceGroupPathKey: deviceGroupPathKey
+            deviceGroupKeys: deviceGroupKeys
         )
         serverConnectorMock.reflectMessageClosure = { _ in
             serverConnectorMock.messageListenerDelegate?.messageReceived(
+                listener: serverConnectorMock.messageListenerDelegate!,
                 type: MediatorMessageProtocol.MEDIATOR_MESSAGE_TYPE_DEVICE_INFO,
                 data: expectedDevicesInfoData
             )
@@ -103,7 +109,7 @@ class MessageReveiverTests: XCTestCase {
             serverConnector: serverConnectorMock,
             mediatorMessageProtocol: mediatorMessageProtocol
         )
-        messageReceiver.requestDevicesInfo()
+        messageReceiver.requestDevicesInfo(thisDeviceID: serverConnectorMock.deviceID!)
             .done { devices in
                 resultDevices = devices
                 expec.fulfill()
@@ -152,9 +158,6 @@ class MessageReveiverTests: XCTestCase {
     }
 
     func testRequestDropDevice() throws {
-        let deviceGroupPathKey = BytesUtility.generateRandomBytes(length: Int(kDeviceGroupPathKeyLen))!
-        let deviceID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.deviceIDLength)!
-
         let expectedDropDeviceAck = Data(
             bytes: [MediatorMessageProtocol.MediatorMessageType.dropDeviceAck.rawValue, 0x00, 0x00, 0x00],
             count: 4
@@ -163,10 +166,11 @@ class MessageReveiverTests: XCTestCase {
         let serverConnectorMock = ServerConnectorMock(
             connectionState: .loggedIn,
             deviceID: deviceID,
-            deviceGroupPathKey: deviceGroupPathKey
+            deviceGroupKeys: deviceGroupKeys
         )
         serverConnectorMock.reflectMessageClosure = { _ in
             serverConnectorMock.messageListenerDelegate?.messageReceived(
+                listener: serverConnectorMock.messageListenerDelegate!,
                 type: MediatorMessageProtocol.MEDIATOR_MESSAGE_TYPE_DROP_DEVICE_ACK,
                 data: expectedDropDeviceAck
             )
@@ -189,13 +193,8 @@ class MessageReveiverTests: XCTestCase {
             platform: .unspecified,
             platformDetails: nil
         ))
-        .done { success in
-            if success {
-                expec.fulfill()
-            }
-            else {
-                XCTFail("Remove device failed")
-            }
+        .done {
+            expec.fulfill()
         }
         .catch { error in
             resultError = error

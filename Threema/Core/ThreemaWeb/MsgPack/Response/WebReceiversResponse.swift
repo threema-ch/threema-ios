@@ -85,7 +85,7 @@ struct WebContact {
         self.publicNickname = contact.publicNickname
         self.verificationLevel = contact.verificationLevel.intValue + 1 // iOS begins with 0
         self.state = contact.isActive() ? "ACTIVE" : "INACTIVE"
-        self.featureMask = Int(truncating: contact.featureMask())
+        self.featureMask = contact.featureMask.intValue
 
         self.isWork = contact.workContact == NSNumber(value: true)
         self.identityType = UserSettings.shared().workIdentities.contains(contact.identity) ? 1 : 0

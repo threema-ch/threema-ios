@@ -189,4 +189,12 @@ public extension Colors {
             return Asset.SharedColors.gray700.color
         }
     }
+    
+    @objc class var threemaConsumerColor: UIColor {
+        color(for: Asset.TargetColors.Threema.primary)
+    }
+    
+    @objc class var threemaWorkColor: UIColor {
+        color(for: Asset.TargetColors.ThreemaWork.primary)
+    }
 }

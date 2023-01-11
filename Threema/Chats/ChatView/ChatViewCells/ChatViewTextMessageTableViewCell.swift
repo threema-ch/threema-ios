@@ -23,37 +23,117 @@ import UIKit
 
 /// Display a text message
 final class ChatViewTextMessageTableViewCell: ChatViewBaseTableViewCell, MeasurableCell {
-    
     static var sizingCell = ChatViewTextMessageTableViewCell()
     
     /// Text message to display
     ///
     /// Reset it when the message had any changes to update data shown in the views (e.g. date or status symbol).
-    var textMessage: TextMessage? {
+    var textMessageAndNeighbors: (message: TextMessage, neighbors: ChatViewDataSource.MessageNeighbors)? {
         didSet {
-            super.setMessage(to: textMessage)
-            updateCell(for: textMessage)
+            updateCell(for: textMessageAndNeighbors?.message)
+            
+            super.setMessage(to: textMessageAndNeighbors?.message, with: textMessageAndNeighbors?.neighbors)
+        }
+    }
+    
+    override var shouldShowDateAndState: Bool {
+        didSet {
+            messageDateAndStateView.isHidden = !shouldShowDateAndState
+            
+            guard oldValue != shouldShowDateAndState else {
+                return
+            }
+            
+            // The length of the rendered text in the message might be shorter than `messageDateAndStateView`.
+            // Thus we fully remove it to avoid having it set the width of the message bubble.
+            if messageDateAndStateView.isHidden {
+                contentStack.removeArrangedSubview(messageDateAndStateView)
+            }
+            else {
+                contentStack.addArrangedSubview(messageDateAndStateView)
+            }
         }
     }
     
     // MARK: - Views
     
-    private lazy var messageQuoteStackView = MessageQuoteStackView()
+    private lazy var messageQuoteStackView: MessageQuoteStackView = {
+        let view = MessageQuoteStackView()
+        
+        let tapInteraction = UITapGestureRecognizer(target: self, action: #selector(quoteViewTapped))
+        tapInteraction.delegate = self
+        view.addGestureRecognizer(tapInteraction)
+        
+        return view
+    }()
+    
+    private lazy var messageQuoteStackViewConstraints = [
+        messageQuoteStackView.topAnchor.constraint(equalTo: containerView.topAnchor),
+        messageQuoteStackView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
+        messageQuoteStackView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
+    ]
+    
     private lazy var messageTextView = MessageTextView(messageTextViewDelegate: self)
     private lazy var messageDateAndStateView = MessageDateAndStateView()
     
     private lazy var contentStack = DefaultMessageContentStackView(arrangedSubviews: [
-        messageQuoteStackView,
         messageTextView,
         messageDateAndStateView,
     ])
+    
+    private lazy var contentStackViewConstraints: [NSLayoutConstraint] = {
+        [
+            contentStack.topAnchor.constraint(equalTo: containerView.topAnchor),
+            contentStack.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
+            contentStack.bottomAnchor.constraint(equalTo: containerView.bottomAnchor),
+            contentStack.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
+        ]
+        
+    }()
+    
+    private lazy var contentStackViewWithQuoteConstraints: [NSLayoutConstraint] = {
+        [
+            contentStack.topAnchor.constraint(
+                equalTo: messageQuoteStackView.bottomAnchor,
+                constant: ChatViewConfiguration.Quote.quoteTextCellDistance
+            ),
+            contentStack.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
+            contentStack.bottomAnchor.constraint(equalTo: containerView.bottomAnchor),
+            contentStack.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
+        ]
+
+    }()
+    
+    private lazy var containerView: UIView = {
+        let view = UIView()
+        
+        // This adds the margin to the chat bubble border
+        view.directionalLayoutMargins = NSDirectionalEdgeInsets(
+            top: -ChatViewConfiguration.Content.defaultTopBottomInset,
+            leading: -ChatViewConfiguration.Content.defaultLeadingTrailingInset,
+            bottom: -ChatViewConfiguration.Content.defaultTopBottomInset,
+            trailing: -ChatViewConfiguration.Content.defaultLeadingTrailingInset
+        )
+        view.translatesAutoresizingMaskIntoConstraints = false
+        
+        return view
+    }()
 
     // MARK: - Configuration
     
     override func configureCell() {
         super.configureCell()
         
-        super.addContent(rootView: contentStack)
+        containerView.addSubview(messageQuoteStackView)
+        messageQuoteStackView.translatesAutoresizingMaskIntoConstraints = false
+        
+        containerView.addSubview(contentStack)
+        contentStack.translatesAutoresizingMaskIntoConstraints = false
+
+        NSLayoutConstraint.activate(messageQuoteStackViewConstraints)
+        NSLayoutConstraint.activate(contentStackViewWithQuoteConstraints)
+   
+        super.addContent(rootView: containerView)
     }
     
     // MARK: - Updates
@@ -66,42 +146,61 @@ final class ChatViewTextMessageTableViewCell: ChatViewBaseTableViewCell, Measura
         messageDateAndStateView.updateColors()
     }
     
+    override func setEditing(_ editing: Bool, animated: Bool) {
+        super.setEditing(editing, animated: animated)
+        
+        containerView.isUserInteractionEnabled = !editing
+    }
+    
+    override func setSelected(_ selected: Bool, animated: Bool) {
+        super.setSelected(selected, animated: animated)
+        
+        if chatViewTableViewCellDelegate?.currentSearchText != nil {
+            if selected {
+                updateCell(for: textMessageAndNeighbors?.message)
+            }
+        }
+    }
+    
     private func updateCell(for textMessage: TextMessage?) {
-        // By accepting an optional the data is automatically reset when the text message is set to `nil`
+       
+        // Quote stack view displaying / hiding
+        if textMessage?.quoteMessage != nil {
+            containerView.addSubview(messageQuoteStackView)
+            NSLayoutConstraint.deactivate(contentStackViewConstraints)
+            NSLayoutConstraint.activate(messageQuoteStackViewConstraints)
+            NSLayoutConstraint.activate(contentStackViewWithQuoteConstraints)
+        }
+        else {
+            messageQuoteStackView.removeFromSuperview()
+            NSLayoutConstraint.deactivate(messageQuoteStackViewConstraints)
+            NSLayoutConstraint.deactivate(contentStackViewWithQuoteConstraints)
+            NSLayoutConstraint.activate(contentStackViewConstraints)
+        }
+        
         messageQuoteStackView.quoteMessage = textMessage?.quoteMessage
-        
-        // TODO: (IOS-2390) Replace by correct name label implementation
-        if let textMessage = textMessage,
-           textMessage.conversation.isGroup(),
-           !textMessage.isOwnMessage {
-            messageTextView.text = "\(textMessage.quotedSender): \(textMessage.text ?? "")"
-        }
-        else {
-            messageTextView.text = textMessage?.text ?? ""
-        }
-        
+        messageTextView.text = textMessage?.text ?? ""
         messageDateAndStateView.message = textMessage
-        
-        // We hide the quote stack view if there is no quoted message
-        if textMessage?.quoteMessage == nil {
-            messageQuoteStackView.isHidden = true
-        }
-        else {
-            messageQuoteStackView.isHidden = false
-        }
-        
+
         updateAccessibility()
     }
     
     private func updateAccessibility() {
-        guard let textMessage = textMessage else {
+        guard textMessageAndNeighbors?.message.quoteMessage != nil else {
             return
         }
         
-        // TODO: construct accessibility label for different types
-        if textMessage.quoteMessage != nil {
-            accessibilityHint = BundleUtil.localizedString(forKey: "quote_interaction_hint")
+        // TODO: IOS-3119 construct accessibility label for different types
+        accessibilityHint = BundleUtil.localizedString(forKey: "quote_interaction_hint")
+    }
+    
+    // MARK: - Action Functions
+    
+    @objc func quoteViewTapped() {
+        guard let quotedMessageID = textMessageAndNeighbors?.message.quotedMessageID else {
+            return
         }
+        chatViewTableViewCellDelegate?.quoteTapped(on: quotedMessageID)
     }
 }
 
@@ -110,6 +209,10 @@ final class ChatViewTextMessageTableViewCell: ChatViewBaseTableViewCell, Measura
 extension ChatViewTextMessageTableViewCell: MessageTextViewDelegate {
     func showContact(identity: String) {
         chatViewTableViewCellDelegate?.show(identity: identity)
+    }
+    
+    func didSelectText(in textView: MessageTextView?) {
+        chatViewTableViewCellDelegate?.didSelectText(in: textView)
     }
 }
 
@@ -123,31 +226,50 @@ extension ChatViewTextMessageTableViewCell: ContextMenuAction {
     
     func buildContextMenu(at indexPath: IndexPath) -> UIContextMenuConfiguration? {
        
-        guard let message = textMessage else {
+        guard let message = textMessageAndNeighbors?.message else {
             return nil
         }
 
         typealias Provider = ChatViewContextMenuActionProvider
         var menuItems = [UIAction]()
         
+        // Copy
         let copyHandler = {
             UIPasteboard.general.string = message.text
+            NotificationPresenterWrapper.shared.present(type: .copySuccess)
         }
+        
+        // Share
         let shareItems = [message.text as Any]
         
+        // Quote
         let quoteHandler = {
             guard let chatViewTableViewCellDelegate = self.chatViewTableViewCellDelegate else {
                 return
             }
+            
             chatViewTableViewCellDelegate.showQuoteView(message: message)
+        }
+        
+        // Details
+        let detailsHandler = {
+            self.chatViewTableViewCellDelegate?.showDetails(for: message.objectID)
+        }
+        
+        // Edit
+        let editHandler = {
+            self.chatViewTableViewCellDelegate?.startMultiselect()
         }
         
         let defaultActions = Provider.defaultActions(
             message: message,
             speakText: message.text,
             shareItems: shareItems,
+            activityViewAnchor: contentView,
             copyHandler: copyHandler,
-            quoteHandler: quoteHandler
+            quoteHandler: quoteHandler,
+            detailsHandler: detailsHandler,
+            editHandler: editHandler
         )
         
         menuItems.append(contentsOf: defaultActions)

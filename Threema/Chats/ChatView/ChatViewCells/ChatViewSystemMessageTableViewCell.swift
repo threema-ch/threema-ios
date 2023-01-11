@@ -29,26 +29,46 @@ final class ChatViewSystemMessageTableViewCell: ThemedCodeTableViewCell, Measura
     /// System message to display
     ///
     /// Reset it when the message had any changes to update data shown in the views.
-    var systemMessage: SystemMessage? {
+    var systemMessageAndNeighbors: (message: SystemMessage?, neighbors: ChatViewDataSource.MessageNeighbors?) {
         didSet {
-            updateCell(for: systemMessage)
+            updateCell(for: systemMessageAndNeighbors.message)
         }
     }
     
-    // MARK: - Views
+    // MARK: - Views & constraints
 
     private lazy var systemMessageTextLabel = SystemMessageTextLabel()
+    
+    private lazy var topSpacingConstraint = systemMessageTextLabel.topAnchor.constraint(
+        equalTo: contentView.topAnchor,
+        constant: ChatViewConfiguration.SystemMessage.defaultTopBottomInset
+    )
+    
+    private lazy var bottomSpacingConstraint = systemMessageTextLabel.bottomAnchor.constraint(
+        equalTo: contentView.bottomAnchor,
+        constant: -ChatViewConfiguration.SystemMessage.defaultTopBottomInset
+    )
 
     // MARK: - Configuration
     
     override func configureCell() {
         super.configureCell()
+        
+        if UserSettings.shared().flippedTableView {
+            contentView.transform = CGAffineTransform(scaleX: 1, y: -1)
+        }
+        
+        isUserInteractionEnabled = false
+        backgroundConfiguration = UIBackgroundConfiguration.clear()
+        
+        defaultMinimalHeightConstraint.isActive = false
+        
         contentView.addSubview(systemMessageTextLabel)
         systemMessageTextLabel.translatesAutoresizingMaskIntoConstraints = false
 
         NSLayoutConstraint.activate([
-            systemMessageTextLabel.topAnchor.constraint(equalTo: contentView.layoutMarginsGuide.topAnchor),
-            systemMessageTextLabel.bottomAnchor.constraint(equalTo: contentView.layoutMarginsGuide.bottomAnchor),
+            topSpacingConstraint,
+            bottomSpacingConstraint,
             systemMessageTextLabel.widthAnchor
                 .constraint(lessThanOrEqualTo: contentView.readableContentGuide.widthAnchor),
             systemMessageTextLabel.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
@@ -61,6 +81,7 @@ final class ChatViewSystemMessageTableViewCell: ThemedCodeTableViewCell, Measura
     
     override func updateColors() {
         super.updateColors()
+        
         systemMessageTextLabel.updateColors()
     }
     
@@ -71,6 +92,80 @@ final class ChatViewSystemMessageTableViewCell: ThemedCodeTableViewCell, Measura
 
         systemMessageTextLabel.text = infoType.localizedMessage
         systemMessageTextLabel.updateCornerRadius()
+        
+        // Adjust insets depending on the neighbors
+        
+        if shouldGroupWithPreviousSystemMessage {
+            topSpacingConstraint.constant = ChatViewConfiguration.SystemMessage.groupedDefaultTopBottomInset
+        }
+        else {
+            topSpacingConstraint.constant = ChatViewConfiguration.SystemMessage.defaultTopBottomInset
+        }
+        
+        if shouldGroupWithNextSystemMessage {
+            bottomSpacingConstraint.constant = -ChatViewConfiguration.SystemMessage.groupedDefaultTopBottomInset
+        }
+        else {
+            bottomSpacingConstraint.constant = -ChatViewConfiguration.SystemMessage.defaultTopBottomInset
+        }
+    }
+    
+    // MARK: - Neighboring helpers
+    
+    // You should only need these two:
+    
+    private var shouldGroupWithPreviousSystemMessage: Bool {
+        previousMessageIsSystemMessage && previousMessageIsInSameDay
+    }
+    
+    private var shouldGroupWithNextSystemMessage: Bool {
+        nextMessageIsSystemMessage && nextMessageIsInSameDay
+    }
+    
+    // Helper for the helpers
+    
+    private var previousMessageIsSystemMessage: Bool {
+        guard let systemMessage = systemMessageAndNeighbors.neighbors?.previousMessage as? SystemMessage else {
+            return false
+        }
+        
+        switch systemMessage.systemMessageType {
+        case .systemMessage:
+            return true
+        case .callMessage, .workConsumerInfo:
+            return false
+        }
+    }
+    
+    private var previousMessageIsInSameDay: Bool {
+        guard let previousMessage = systemMessageAndNeighbors.neighbors?.previousMessage,
+              let message = systemMessageAndNeighbors.message else {
+            return true
+        }
+        
+        return Calendar.current.isDate(previousMessage.sectionDate, inSameDayAs: message.sectionDate)
+    }
+        
+    private var nextMessageIsSystemMessage: Bool {
+        guard let systemMessage = systemMessageAndNeighbors.neighbors?.nextMessage as? SystemMessage else {
+            return false
+        }
+        
+        switch systemMessage.systemMessageType {
+        case .systemMessage:
+            return true
+        case .callMessage, .workConsumerInfo:
+            return false
+        }
+    }
+    
+    private var nextMessageIsInSameDay: Bool {
+        guard let nextMessage = systemMessageAndNeighbors.neighbors?.nextMessage,
+              let message = systemMessageAndNeighbors.message else {
+            return true
+        }
+        
+        return Calendar.current.isDate(nextMessage.sectionDate, inSameDayAs: message.sectionDate)
     }
 }
 
@@ -86,10 +181,56 @@ extension ChatViewSystemMessageTableViewCell: ChatScrollPositionDataProvider {
     }
 
     var messageObjectID: NSManagedObjectID? {
-        systemMessage?.objectID
+        systemMessageAndNeighbors.message?.objectID
     }
 
     var messageDate: Date? {
-        systemMessage?.sectionDate
+        systemMessageAndNeighbors.message?.sectionDate
+    }
+}
+
+// MARK: - Accessibility
+
+extension ChatViewSystemMessageTableViewCell {
+    
+    override public var accessibilityLabel: String? {
+        get {
+            guard let message = systemMessageAndNeighbors.message else {
+                return nil
+            }
+            return message.customAccessibilityLabel
+        }
+        
+        set {
+            // No-op
+        }
+    }
+    
+    override public var accessibilityHint: String? {
+        get {
+            guard let message = systemMessageAndNeighbors.message,
+                  let accessibilityHint = message.customAccessibilityHint else {
+                return nil
+            }
+            return accessibilityHint
+        }
+        
+        set {
+            // No-op
+        }
+    }
+    
+    override var accessibilityTraits: UIAccessibilityTraits {
+        get {
+            guard let message = systemMessageAndNeighbors.message else {
+                return .none
+            }
+            
+            return message.customAccessibilityTrait
+        }
+        
+        set {
+            // No-op
+        }
     }
 }

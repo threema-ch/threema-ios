@@ -30,6 +30,7 @@ public extension Colors {
         }
     }
     
+    // TODO: (IOS-2111) Remove when old chat view code is removed
     class var activityIndicatorViewStyle: UIActivityIndicatorView.Style {
         switch Colors.theme {
         case .light, .undefined:

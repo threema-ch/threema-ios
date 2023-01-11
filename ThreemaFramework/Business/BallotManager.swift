@@ -83,6 +83,6 @@ public class BallotManager: NSObject {
         sysMsg?.date = date
         sysMsg?.remoteSentDate = date
         
-        // We intentionally do not save the changes in here. They get saved with the ballot after the last step of decoding, so we still can rollback.
+        // We intentionally do not save the changes in here. They get saved with the ballot after the last step of decoding.
     }
 }

@@ -55,6 +55,9 @@
 "error_other_connection_for_same_identity_title" = "Aviso";
 "error_other_connection_for_same_identity_message" = "El servidor ha detectado dos o más conexiones desde diferentes dispositivos con el mismo ID de Threema.\n\nNo se puede utilizar el mismo ID de Threema en varios dispositivos a la vez. Los mensajes nuevos se transmiten solo al dispositivo que se conectó por última vez al servidor.\n\nSi va a cambiar de dispositivo, por favor, desinstale o desactive %@ en el dispositivo antiguo y luego reinicie el nuevo.";
 
+"error_rogue_device_title" = "Se ha detectado una conexión desde otro dispositivo";
+"error_rogue_device_message" = "El servidor ha detectado una conexión desde otro dispositivo con la misma ID de Threema.\n\nSi no has utilizado tu ID de Threema en otro dispositivo o con una versión más antigua de la app, contacta con el equipo de asistencia y, si es posible, envíales el archivo de registro.";
+
 "video_too_long_title" = "El vídeo es demasiado pesado";
 "video_too_long_message" = "Este vídeo no se puede enviar porque es demasiado largo.  La duración máxima permitida es de %.0f minutos.";
 

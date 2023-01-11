@@ -23,7 +23,11 @@ import Foundation
 import PromiseKit
 
 protocol UserNotificationCenterManagerProtocol {
-    func add(key: String, stage: UserNotificationStage, notification: UNNotificationContent) -> Promise<Date?>
+    func add(
+        key: String,
+        stage: UserNotificationStage,
+        notification: UNNotificationContent
+    ) -> Promise<Date?>
     func isPending(key: String, stage: UserNotificationStage) -> Bool
     func remove(key: String, exceptStage: UserNotificationStage?)
 }
@@ -33,7 +37,7 @@ enum UserNotificationCenterManagerError: Error {
 }
 
 class UserNotificationCenterManager: UserNotificationCenterManagerProtocol {
-
+    
     /// Add notification to notification center.
     ///
     /// - Parameters:
@@ -41,7 +45,11 @@ class UserNotificationCenterManager: UserNotificationCenterManagerProtocol {
     ///    - stage: Stage of incoming message, if not equals 'final' set trigger date (30s) to fire (show) notification otherwise fire notification right now
     ///    - notification: Notification for adding/replacing
     /// - Returns: Date when notification will be showed
-    func add(key: String, stage: UserNotificationStage, notification: UNNotificationContent) -> Promise<Date?> {
+    func add(
+        key: String,
+        stage: UserNotificationStage,
+        notification: UNNotificationContent
+    ) -> Promise<Date?> {
         Promise { seal in
             var trigger: UNTimeIntervalNotificationTrigger?
             var fireDate: Date?
@@ -50,7 +58,7 @@ class UserNotificationCenterManager: UserNotificationCenterManagerProtocol {
                 trigger = UNTimeIntervalNotificationTrigger(timeInterval: 30, repeats: false)
                 fireDate = trigger!.nextTriggerDate()
             }
-
+            
             let dispatchGroup = DispatchGroup()
             dispatchGroup.enter()
             
@@ -73,11 +81,12 @@ class UserNotificationCenterManager: UserNotificationCenterManagerProtocol {
                         "[Push] Added message \(key) to notification center with trigger \(trigger?.timeInterval ?? 0)s and identifier \(notificationRequest.identifier)"
                     )
                     self.remove(key: key, exceptStage: stage)
-
+                    
                     seal.fulfill(fireDate)
                 }
                 dispatchGroup.leave()
             }
+            
             dispatchGroup.wait()
         }
     }
@@ -119,7 +128,7 @@ class UserNotificationCenterManager: UserNotificationCenterManagerProtocol {
         }) {
             removeKeyStages.append(getIdentifier(key, stage))
         }
-
+        
         DDLogNotice("[Push] Remove notifications with keys: \(removeKeyStages)")
         UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: removeKeyStages)
     }

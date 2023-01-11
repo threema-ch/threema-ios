@@ -86,7 +86,8 @@ class MessageFetcherTests: XCTestCase {
                     read: true,
                     sent: true,
                     userack: false,
-                    sender: nil
+                    sender: nil,
+                    remoteSentDate: Date()
                 )
             }
         }
@@ -169,7 +170,8 @@ class MessageFetcherTests: XCTestCase {
                 read: false,
                 sent: true,
                 userack: false,
-                sender: nil
+                sender: nil,
+                remoteSentDate: Date()
             )
         }
         

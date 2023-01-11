@@ -19,10 +19,10 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import CocoaLumberjackSwift
-import DifferenceKit
 import Foundation
+import ThreemaFramework
 
-class MentionableIdentity: Hashable, Differentiable {
+class MentionableIdentity: Hashable {
     enum ContactKind: Hashable {
         case all
         case contact(String)

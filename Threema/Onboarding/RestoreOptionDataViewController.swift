@@ -47,8 +47,8 @@ class RestoreOptionDataViewController: IDCreationPageViewController {
         hideKeyboardWhenTappedAround()
 
         titleLabel.text = BundleUtil.localizedString(forKey: "restore_option_title")
-        descriptionLabel.text = String(
-            format: BundleUtil.localizedString(forKey: "restore_option_data_description"),
+        descriptionLabel.text = String.localizedStringWithFormat(
+            BundleUtil.localizedString(forKey: "restore_option_data_description"),
             ThreemaApp.currentName
         )
         keepLocalButton.setTitle(BundleUtil.localizedString(forKey: "restore_option_data_keep_data"), for: .normal)
@@ -78,8 +78,8 @@ extension RestoreOptionDataViewController {
         }
         else if sender == deleteLocalButton {
             let alert = IntroQuestionViewHelper(parent: self, onAnswer: nil)
-            let message = String(
-                format: BundleUtil.localizedString(forKey: "restore_option_data_delete_data_explain"),
+            let message = String.localizedStringWithFormat(
+                BundleUtil.localizedString(forKey: "restore_option_data_delete_data_explain"),
                 ThreemaApp.currentName
             )
             alert.showAlert(message, title: BundleUtil.localizedString(forKey: "safe_restore"))

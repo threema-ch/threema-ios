@@ -55,12 +55,13 @@ class WebMessageObject: NSObject {
         self.events = messageEvents.events
         self.sortKey = UInt64((message.date.timeIntervalSince1970 * 1000.0).rounded())
         
-        if message.sender != nil {
+        if let sender = message.sender {
             if message.isOwnMessage {
+                // This should never be true
                 self.partnerID = MyIdentityStore.shared().identity
             }
             else {
-                self.partnerID = message.sender.identity
+                self.partnerID = sender.identity
             }
         }
         else if let contact = conversation.contact {

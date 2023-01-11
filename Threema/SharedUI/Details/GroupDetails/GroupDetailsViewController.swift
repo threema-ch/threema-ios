@@ -19,7 +19,6 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import CocoaLumberjackSwift
-import DiffableDataSources
 import UIKit
 
 final class GroupDetailsViewController: ThemedCodeModernGroupedTableViewController {
@@ -28,11 +27,7 @@ final class GroupDetailsViewController: ThemedCodeModernGroupedTableViewControll
     
     // Mode to show view in
     private let displayMode: GroupDetailsDisplayMode
-    
-    // Display style of the chosen mode
-    private let displayStyle: DetailsDisplayStyle
-    
-    private let group: Group
+    private weak var delegate: DetailsDelegate?
     
     private lazy var headerView: DetailsHeaderView = {
         
@@ -44,7 +39,7 @@ final class GroupDetailsViewController: ThemedCodeModernGroupedTableViewControll
         
         var mediaAndPollsActions = [QuickAction]()
         
-        // TODO: Remove when new chat view released
+        // TODO: (IOS-2860) Remove when new chat view released
         if UserSettings.shared().newChatViewActive {
             mediaAndPollsActions = mediaAndPollActions()
         }
@@ -74,6 +69,11 @@ final class GroupDetailsViewController: ThemedCodeModernGroupedTableViewControll
         tableView: tableView
     )
     
+    private let group: Group
+    
+    // Display style of the chosen mode
+    private let displayStyle: DetailsDisplayStyle
+    
     private lazy var entityManager = EntityManager()
     
     private var observers = [NSKeyValueObservation]()
@@ -92,15 +92,20 @@ final class GroupDetailsViewController: ThemedCodeModernGroupedTableViewControll
     ///   - group: Group to show details for
     ///   - displayMode: Mode the group is shown in
     ///   - displayStyle: Appearance of the group details
+    ///   - delegate: Details delegate that is called on certain actions. This should be set when `displayMode` is `conversation`.
     @objc init(
         for group: Group,
         displayMode: GroupDetailsDisplayMode = .default,
-        displayStyle: DetailsDisplayStyle = .default
+        displayStyle: DetailsDisplayStyle = .default,
+        delegate: DetailsDelegate? = nil
     ) {
         self.displayMode = displayMode
-        self.displayStyle = displayStyle
+        self.delegate = delegate
+        
         self.group = group
         
+        self.displayStyle = displayStyle
+
         super.init()
     }
     
@@ -131,6 +136,12 @@ final class GroupDetailsViewController: ThemedCodeModernGroupedTableViewControll
         if parent == nil {
             removeObservers()
         }
+    }
+    
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        
+        delegate?.detailsDidDisappear()
     }
     
     deinit {
@@ -362,7 +373,9 @@ extension GroupDetailsViewController {
             if animated {
                 // Use table view update to animate height change
                 // https://stackoverflow.com/a/32228700/286611
-                self.tableView.performBatchUpdates(updateHeight)
+                UIView.animate(withDuration: 0.6) {
+                    updateHeight()
+                }
             }
             else {
                 updateHeight()
@@ -394,6 +407,21 @@ extension GroupDetailsViewController: LegacyUIActionProvider {
     }
 }
 
+// MARK: - Search
+
+extension GroupDetailsViewController {
+    /// Tell delegate to start a search in the group chat who these details belong to
+    ///
+    /// This is a workaround so a quick action can talk to the parent. If we end up with more of these we should
+    /// consider if there is a better way to communication actions from the details to the chat.
+    func startChatSearch() {
+        // To not have a delay from when the details disappear and the search field appears we show the search
+        // field before we dismiss ourself and then active the search after the dismissal.
+        delegate?.showChatSearch()
+        dismiss(animated: true)
+    }
+}
+
 // MARK: - UITableViewDelegate
 
 // The delegate is here instead of `GroupDetailsDataSource`, because otherwise
@@ -419,7 +447,7 @@ extension GroupDetailsViewController: UITableViewDelegate {
 
         case .members:
             let localizedFormatString = BundleUtil.localizedString(forKey: "group_members_section_header")
-            title = String(format: localizedFormatString, dataSource.numberOfMembers)
+            title = String.localizedStringWithFormat(localizedFormatString, dataSource.numberOfMembers)
 
             if dataSource.hasMoreMembersToShow {
                 let localizedShowAllTitle = BundleUtil.localizedString(forKey: "show_all_button")

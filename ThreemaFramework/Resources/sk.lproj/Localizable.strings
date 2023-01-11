@@ -55,6 +55,9 @@
 "error_other_connection_for_same_identity_title" = "Varovanie";
 "error_other_connection_for_same_identity_message" = "Server zistil dve alebo viac pripojení z rôznych zariadení s rovnakým Threema ID.\n\nRovnaké Threema ID nie je možné používať súčasne na rôznych zariadeniach. Nové správy budú doručené len na zariadenie naposledy pripojené k serveru.\n\nAk ste prešli na nové zariadenie, odinštalujte, alebo deaktivujte aplikáciu %@ na starom zariadení a potom reštartujte vaše súčasné.";
 
+"error_rogue_device_title" = "Bolo zistené pripojenie z iného zariadenia";
+"error_rogue_device_message" = "Server zistil pripojenie z iného zariadenia s rovnakým Threema ID.\n\nAk ste medzitým nepoužili svoje Threema ID na inom zariadení alebo so staršou verziou aplikácie, kontaktujte podporu a pošlite súbor denníka, ak je to možné.";
+
 "video_too_long_title" = "Video je príliš dlhé";
 "video_too_long_message" = "Video je príliš dlhé, aby sa dalo odoslať. Maximálna povolená dĺžka je %.0f munút.";
 

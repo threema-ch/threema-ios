@@ -31,10 +31,10 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 #endif
 
 @interface ChatBlobMessageCell ()
-
 @end
 
 @implementation ChatBlobMessageCell
+@synthesize resendButton = _resendButton;
 
 - (id)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier transparent:(BOOL)transparent {
     self = [super initWithStyle:style reuseIdentifier:reuseIdentifier transparent:transparent];

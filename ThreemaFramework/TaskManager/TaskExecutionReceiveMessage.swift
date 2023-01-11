@@ -71,6 +71,7 @@ class TaskExecutionReceiveMessage: TaskExecution, TaskExecutionProtocol {
             }
 
             // Reflect processed incoming chat message
+            // Notice: This message will be reflected immediately, before the next task will be executed!
             return task.create(frameworkInjector: self.frameworkInjector, taskContext: TaskContext(
                 logReflectMessageToMediator: .reflectIncomingMessageToMediator,
                 logReceiveMessageAckFromMediator: .receiveIncomingMessageAckFromMediator,
@@ -108,7 +109,7 @@ class TaskExecutionReceiveMessage: TaskExecution, TaskExecutionProtocol {
         .then { (processedMsg: AbstractMessage?) -> Promise<Void> in
             
             if AppGroup.getActiveType() == AppGroupTypeNotificationExtension,
-               processedMsg?.isVoIP() == true,
+               processedMsg?.flagImmediateDeliveryRequired() == true,
                let identity = processedMsg?.fromIdentity,
                !UserSettings.shared().blacklist.contains(identity) {
                 // Do not ack message if it's a VoIP message in the notification extension

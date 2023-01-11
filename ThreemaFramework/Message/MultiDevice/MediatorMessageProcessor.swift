@@ -22,43 +22,46 @@ import CocoaLumberjackSwift
 import Foundation
 import SwiftProtobuf
 
-@objc class MediatorMessageProcessor: NSObject {
+class MediatorMessageProcessor: NSObject {
     
     enum MediatorMessageError: Error {
         case noMediatorMessage
         case undefinedType
     }
 
-    private let deviceGroupPathKey: Data
+    private let deviceGroupKeys: DeviceGroupKeys
     private let deviceID: Data
     private let maxBytesToDecrypt: Int
     private let timeoutDownloadThumbnail: Int
     private let mediatorMessageProtocol: MediatorMessageProtocolProtocol
+    private let userSettings: UserSettingsProtocol
     private let taskManager: TaskManagerProtocol
     private let messageProcessorDelegate: MessageProcessorDelegate
 
     @objc required init(
-        deviceGroupPathKey: Data,
+        deviceGroupKeys: DeviceGroupKeys,
         deviceID: Data,
         maxBytesToDecrypt: Int,
         timeoutDownloadThumbnail: Int,
         mediatorMessageProtocol: AnyObject,
+        userSettings: UserSettingsProtocol,
         taskManager: AnyObject,
         messageProcessorDelegate: MessageProcessorDelegate
     ) {
         assert(mediatorMessageProtocol is MediatorMessageProtocolProtocol)
         assert(taskManager is TaskManagerProtocol)
         
-        self.deviceGroupPathKey = deviceGroupPathKey
+        self.deviceGroupKeys = deviceGroupKeys
         self.deviceID = deviceID
         self.maxBytesToDecrypt = maxBytesToDecrypt
         self.timeoutDownloadThumbnail = timeoutDownloadThumbnail
+        self.userSettings = userSettings
         self.taskManager = taskManager as! TaskManagerProtocol
         self.mediatorMessageProtocol = mediatorMessageProtocol as! MediatorMessageProtocolProtocol
         self.messageProcessorDelegate = messageProcessorDelegate
     }
     
-    /// Decode/decryp and process all message types from mediator server.
+    /// Decode/decrypt and process all message types from mediator server.
     /// - Parameters:
     ///     - message: Mediator message
     ///     - messageType: Message type, inout parameter objc style
@@ -83,23 +86,24 @@ import SwiftProtobuf
             if let serverHello = mediatorMessageProtocol.decodeServerHello(message: message) {
                 DDLogInfo("Server hello")
                 
-                if let nonce: Data = NaClCrypto.shared()?.randomBytes(24),
-                   let encryptedChallange = NaClCrypto.shared()?
+                if let nonce: Data = NaClCrypto.shared()?.randomBytes(kNaClCryptoNonceSize),
+                   let encryptedChallenge = NaClCrypto.shared()?
                    .encryptData(
                        serverHello.challenge,
                        withPublicKey: serverHello.esk,
-                       signKey: deviceGroupPathKey,
+                       signKey: deviceGroupKeys.dgpk,
                        nonce: nonce
                    ) {
                     
                     var response = Data(nonce)
-                    response.append(encryptedChallange)
+                    response.append(encryptedChallenge)
                     
                     var clientHello = D2m_ClientHello()
                     clientHello.response = response
                     clientHello.deviceID = deviceID.convert()
                     clientHello.deviceSlotExpirationPolicy = .persistent
                     clientHello.deviceSlotsExhaustedPolicy = .dropLeastRecent
+                    clientHello.expectedDeviceSlotState = userSettings.enableMultiDevice ? .existing : .new
 
                     var deviceInfo = D2d_DeviceInfo()
                     deviceInfo.label = UIDevice().name
@@ -108,7 +112,7 @@ import SwiftProtobuf
                     deviceInfo.platformDetails = UIDevice.modelName
 
                     if let data = try? deviceInfo.serializedData(),
-                       let encryptedData = mediatorMessageProtocol.encryptByte(data: data) {
+                       let encryptedData = mediatorMessageProtocol.encryptByte(data: data, key: deviceGroupKeys.dgdik) {
                         clientHello.encryptedDeviceInfo = encryptedData
                     }
 
@@ -124,7 +128,12 @@ import SwiftProtobuf
             }
         case .serverInfo:
             DDLogInfo("Server info")
-            
+
+            if !userSettings.enableMultiDevice {
+                userSettings.enableMultiDevice = true
+                FeatureMask.update()
+            }
+
             if let serverInfo = mediatorMessageProtocol.decodeServerInfo(message: message) {
                 DDLogVerbose("Server info deserialized, device slots \(serverInfo.maxDeviceSlots)")
             }
@@ -142,7 +151,7 @@ import SwiftProtobuf
             if mediatorMessageProtocol.decodeRolePromotedToLeader(message: message) != nil {
                 DDLogVerbose("Role promoted to leader deserialized")
             }
-            
+
         case .deviceInfo:
             DDLogInfo("Device info")
             return message
@@ -159,14 +168,14 @@ import SwiftProtobuf
                 DDLogError("Could not decode message")
                 break
             }
-            return mediatorMessageProtocol.decryptByte(data: message.encryptedScope)
+            return mediatorMessageProtocol.decryptByte(data: message.encryptedScope, key: deviceGroupKeys.dgtsk)
         case .ended:
             DDLogInfo("Ended")
             guard let message = MediatorMessageProtocol.decodeTransactionLocked(message) else {
                 DDLogError("Could not decode message")
                 break
             }
-            return mediatorMessageProtocol.decryptByte(data: message.encryptedScope)
+            return mediatorMessageProtocol.decryptByte(data: message.encryptedScope, key: deviceGroupKeys.dgtsk)
         case .reflectAck:
             DDLogInfo("Reflect ack")
             
@@ -179,11 +188,7 @@ import SwiftProtobuf
             let (reflectID, envelopeData, timestamp) = MediatorMessageProtocol.decodeReflected(message)
             DDLogNotice("[MSG] Incoming reflected message (reflect ID \(reflectID.hexString))")
 
-            if let envelope = MediatorMessageProtocol.decryptEnvelope(
-                data: envelopeData,
-                deviceGroupPathKey: deviceGroupPathKey
-            ) {
-                
+            if let envelope = mediatorMessageProtocol.decryptEnvelope(data: envelopeData) {
                 // Add task for processing incoming reflected message
                 let task = TaskDefinitionReceiveReflectedMessage(
                     reflectID: reflectID,

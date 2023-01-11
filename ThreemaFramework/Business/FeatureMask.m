@@ -26,6 +26,7 @@
 #import "ContactStore.h"
 #import "UIDefines.h"
 #import "AppGroup.h"
+#import "ThreemaFramework/ThreemaFramework-Swift.h"
 
 #ifdef DEBUG
 static const DDLogLevel ddLogLevel = DDLogLevelVerbose;
@@ -38,26 +39,39 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 @implementation FeatureMask
 
 + (void)updateFeatureMask {
+    [FeatureMask updateFeatureMaskOnCompletion:nil];
+}
+
++ (void)updateFeatureMaskOnCompletion:(void (^)(void))onCompletion {
     MyIdentityStore *myIdentityStore = [MyIdentityStore sharedMyIdentityStore];
     NSUserDefaults *defaults = [AppGroup userDefaults];
     
     NSDate *lastFeatureMaskSet = [defaults objectForKey:@"LastFeatureMaskSet"];
     NSDate *lastFeatureMaskDate = [NSDate dateWithTimeIntervalSinceNow:kTimeTillNextFeatureMaskSet];
-    int currentFeatureMask = is64Bit == 1 ? kCurrentFeatureMask : kWithoutVoIPFeatureMask;
+    int currentFeatureMask = kCurrentFeatureMask;
+    if ([ThreemaUtility supportsForwardSecurity]) {
+        currentFeatureMask = kCurrentFeatureMaskWithForwardSecurity;
+    }
     
     if ((!lastFeatureMaskSet || [lastFeatureMaskSet laterDate:lastFeatureMaskDate] == lastFeatureMaskDate) || (myIdentityStore == nil || !myIdentityStore.lastSentFeatureMask || myIdentityStore.lastSentFeatureMask == 0 || myIdentityStore.lastSentFeatureMask != currentFeatureMask)) {
-        DDLogVerbose(@"Set feature mask %d on server", kCurrentFeatureMask);
+        DDLogVerbose(@"Set feature mask %d on server", currentFeatureMask);
         ServerAPIConnector *connector = [[ServerAPIConnector alloc] init];
         [connector setFeatureMask:[NSNumber numberWithInt:currentFeatureMask] forStore:myIdentityStore onCompletion:^{
             myIdentityStore.lastSentFeatureMask = currentFeatureMask;
             [defaults setObject:[NSDate date] forKey:@"LastFeatureMaskSet"];
             [defaults synchronize];
+            if (onCompletion) {
+                onCompletion();
+            }
         } onError:^(NSError *error) {
-            DDLogError(@"Set feature level failed: %@", error);
+            DDLogError(@"Set feature mask failed: %@", error);
             myIdentityStore.lastSentFeatureMask = 0;
         }];
     } else {
-        DDLogVerbose(@"Feature level is up-to-date");
+        DDLogVerbose(@"Feature mask is up-to-date");
+        if (onCompletion) {
+            onCompletion();
+        }
     }
 }
 
@@ -93,35 +107,53 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 }
 
 + (void)checkFeatureMask:(NSInteger)featureMask forContacts:(NSSet *)contacts onCompletion:(void (^)(NSArray *unsupportedContacts))onCompletion {
-    NSSet *unsupportedContacts = [FeatureMask filterContactsWithUnsupportedFeatureMask:featureMask fromContacts:contacts];
-    NSInteger count = [unsupportedContacts count];
+    [FeatureMask checkFeatureMask:featureMask forContacts:contacts forceRefresh:NO onCompletion:onCompletion];
+}
+
++ (void)checkFeatureMask:(NSInteger)featureMask forContacts:(NSSet *)contacts forceRefresh:(BOOL)forceRefresh onCompletion:(void (^)(NSArray *unsupportedContacts))onCompletion {
+    NSSet *unsupportedContacts;
+    if (forceRefresh) {
+        unsupportedContacts = contacts;
+    } else {
+        unsupportedContacts = [FeatureMask filterContactsWithUnsupportedFeatureMask:featureMask fromContacts:contacts];
+    }
     
-    if (count == 0) {
+    if ([unsupportedContacts count] == 0) {
         onCompletion(unsupportedContacts.allObjects);
         return;
     }
-    
+
+    __block MediatorSyncableContacts *mediatorSyncableContacts = [[MediatorSyncableContacts alloc] init];
     ContactStore *contactStore = [ContactStore sharedContactStore];
-    
-    [contactStore updateFeatureMasksForContacts:unsupportedContacts.allObjects onCompletion:^{
-        // reread feature mask
-        NSSet *unsupportedContacts2Run = [FeatureMask filterContactsWithUnsupportedFeatureMask:featureMask fromContacts:unsupportedContacts];
-        
-        onCompletion(unsupportedContacts2Run.allObjects);
-        return;
-    } onError:^(NSError *error) {
-        // always run onCompletion
-        onCompletion(unsupportedContacts.allObjects);
-    }];
+    [contactStore updateFeatureMasksForContacts:unsupportedContacts.allObjects contactSyncer:mediatorSyncableContacts]
+        .then(^{
+            return [mediatorSyncableContacts syncObjc];
+        })
+        .then(^{
+            // reread feature mask
+            NSSet *unsupportedContacts2Run = [FeatureMask filterContactsWithUnsupportedFeatureMask:featureMask fromContacts:unsupportedContacts];
+
+            onCompletion(unsupportedContacts2Run.allObjects);
+        })
+        .catch(^(NSError *error){
+            // always run onCompletion
+            onCompletion(unsupportedContacts.allObjects);
+        });
 }
 
 + (void)updateFeatureMaskForAllContacts:(NSArray *)allContacts onCompletion:(void(^)(void))onCompletion {
+    __block MediatorSyncableContacts *mediatorSyncableContacts = [[MediatorSyncableContacts alloc] init];
     ContactStore *contactStore = [ContactStore sharedContactStore];
-    [contactStore updateFeatureMasksForContacts:allContacts onCompletion:^{
-        onCompletion();
-    } onError:^(NSError *error) {
-        onCompletion();
-    }];
+    [contactStore updateFeatureMasksForContacts:allContacts contactSyncer:mediatorSyncableContacts]
+        .then(^{
+            return [mediatorSyncableContacts syncObjc];
+        })
+        .then(^{
+            onCompletion();
+        })
+        .catch(^(NSError *error){
+            onCompletion();
+        });
 }
 
 

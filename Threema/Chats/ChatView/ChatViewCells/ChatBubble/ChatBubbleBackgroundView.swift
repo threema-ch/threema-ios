@@ -27,11 +27,20 @@ final class ChatBubbleBackgroundView: UIView {
     enum ShowChatBubbleArrow {
         case leading
         case trailing
+        case bubbles
         case none
     }
     
     /// Which bubble arrow should be shown?
-    var showChatBubbleArrow: ShowChatBubbleArrow = .leading
+    var showChatBubbleArrow: ShowChatBubbleArrow = .leading {
+        didSet {
+            guard oldValue != showChatBubbleArrow else {
+                return
+            }
+            
+            updatePaths(for: bounds)
+        }
+    }
     
     // MARK: Bubble shape
     
@@ -60,12 +69,19 @@ final class ChatBubbleBackgroundView: UIView {
     }
     
     private func updatePaths(for frame: CGRect) {
+        // This could probably be optimized by caching the previous frame and only update if it changes or
+        // the update is forced (when the value of `showChatBubbleArrow` changes).
+        
         // We always have a rounded rectangle background
-        let path = ChatBubbleShape.roundedRect(for: frame)
+        let path = ChatBubbleShape.roundedRect(for: frame, with: traitCollection)
         
         switch showChatBubbleArrow {
         case .leading:
             path.append(ChatBubbleShape.leadingArrow(for: frame))
+        case .bubbles:
+            for newPath in ChatBubbleShape.bubbles(for: frame) {
+                path.append(newPath)
+            }
         case .trailing:
             path.append(ChatBubbleShape.trailingArrow(for: frame).reversing())
         case .none:

@@ -251,6 +251,7 @@
         }
         
         message.sent = [NSNumber numberWithBool:YES];
+        message.remoteSentDate = message.date;
         message.delivered = [NSNumber numberWithBool:YES];
         
         NSNumber *read = ((NSNumber *)[messageData objectForKey:@"read"]);

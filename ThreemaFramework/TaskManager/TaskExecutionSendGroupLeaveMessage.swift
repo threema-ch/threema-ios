@@ -58,7 +58,7 @@ class TaskExecutionSendGroupLeaveMessage: TaskExecution, TaskExecutionProtocol {
 
             return Promise()
         }
-        .then { _ -> Promise<Void> in
+        .then { _ -> Promise<[AbstractMessage?]> in
             // Send group leave messages
             var sendMessages = [Promise<AbstractMessage?>]()
             for toMember in task.toMembers {
@@ -75,7 +75,15 @@ class TaskExecutionSendGroupLeaveMessage: TaskExecution, TaskExecutionProtocol {
             }
             
             return when(fulfilled: sendMessages)
-                .done { _ in }
+        }
+        .then { _ -> Promise<Void> in
+            for identity in task.hiddenContacts {
+                self.frameworkInjector.contactStore.deleteContact(
+                    identity: identity,
+                    entityManagerObject: self.frameworkInjector.backgroundEntityManager
+                )
+            }
+            return Promise()
         }
     }
 }

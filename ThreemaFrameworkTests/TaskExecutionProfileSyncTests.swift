@@ -134,12 +134,19 @@ class TaskExecutionProfileSyncTests: XCTestCase {
             let expectedReflectMessage = BytesUtility.generateRandomBytes(length: 16)!
             var expectedMediatorLockState: ([MediatorMessageProtocol.MediatorMessageType], [Data]?)?
 
-            let deviceGroupPathKey = BytesUtility.generateRandomBytes(length: Int(kDeviceGroupPathKeyLen))!
+            let deviceGroupKeys = DeviceGroupKeys(
+                dgpk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
+                dgrk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
+                dgdik: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
+                dgsddk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
+                dgtsk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
+                deviceGroupIDFirstByteHex: "a1"
+            )
             let deviceID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.deviceIDLength)!
             let serverConnectorMock = ServerConnectorMock(
                 connectionState: .loggedIn,
                 deviceID: deviceID,
-                deviceGroupPathKey: deviceGroupPathKey
+                deviceGroupKeys: deviceGroupKeys
             )
             serverConnectorMock.reflectMessageClosure = { _ in
                 if serverConnectorMock.connectionState == .loggedIn {
@@ -194,7 +201,7 @@ class TaskExecutionProfileSyncTests: XCTestCase {
                 userSettings: test.initialConfig.userSettings,
                 serverConnector: serverConnectorMock,
                 mediatorMessageProtocol: MediatorMessageProtocolMock(
-                    deviceGroupPathKey: deviceGroupPathKey,
+                    deviceGroupKeys: deviceGroupKeys!,
                     returnValues: [
                         MediatorMessageProtocolMock
                             .ReflectData(
@@ -333,7 +340,7 @@ class TaskExecutionProfileSyncTests: XCTestCase {
                     }
 
                 var contacts = Common_Identities()
-                contacts.identifies = contactList
+                contacts.identities = contactList
                 syncUserProfile.profilePictureShareWith.policy = .allowList(contacts)
             case SendProfilePictureAll:
                 break

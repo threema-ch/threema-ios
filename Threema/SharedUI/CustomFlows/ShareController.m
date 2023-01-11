@@ -23,9 +23,10 @@
 #import "UIDefines.h"
 #import "ContactGroupPickerViewController.h"
 #import "BundleUtil.h"
-#import "FileMessageSender.h"
+#import "Old_FileMessageSender.h"
 #import "UTIConverter.h"
 #import <CocoaLumberjack/CocoaLumberjack.h>
+#import "UserSettings.h"
 
 #ifdef DEBUG
 static const DDLogLevel ddLogLevel = DDLogLevelVerbose;
@@ -90,9 +91,15 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
             item = [URLSenderItemCreator getSenderItemFor:_url];
         }
         for (Conversation *conv in conversations) {
-            FileMessageSender *sender = [[FileMessageSender alloc] init];
-            [sender sendItem:item inConversation:conv];
-            sender.uploadProgressDelegate = self;
+            if ([UserSettings sharedUserSettings].newChatViewActive) {
+                BlobManagerObjcWrapper *manager = [[BlobManagerObjcWrapper alloc] init];
+                [manager createMessageAndSyncBlobsFor:item in:conversation correlationID:nil webRequestID:nil];
+            }
+            else {
+                Old_FileMessageSender *sender = [[Old_FileMessageSender alloc] init];
+                [sender sendItem:item inConversation:conv];
+                sender.uploadProgressDelegate = self;
+            }
         }
     } else {
         DDLogError(@"No URL provided, can't share anything");
@@ -110,12 +117,12 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 
 #pragma mark - Contact picker delegate
 
-- (void)contactPicker:(ContactGroupPickerViewController*)contactPicker didPickConversations:(NSSet *)conversations renderType:(NSNumber *)renderType sendAsFile:(BOOL)sendAsFile {
-    // only one expected
-    Conversation *conversation = conversations.anyObject;
-    [self shareWithConversation:conversation renderType:renderType sendAsFile:sendAsFile];
-
-    [contactPicker dismissViewControllerAnimated:YES completion:nil];
+- (void)contactPicker:(ContactGroupPickerViewController*)contactPicker didPickConversations:(NSSet *)conversations renderType:(NSNumber *)renderType sendAsFile:(BOOL)sendAsFile {   
+    [contactPicker dismissViewControllerAnimated:YES completion:^{
+        // Only one expected
+        Conversation *conversation = conversations.anyObject;
+        [self shareWithConversation:conversation renderType:renderType sendAsFile:sendAsFile];
+    }];
 }
 
 - (void)contactPickerDidCancel:(ContactGroupPickerViewController*)contactPicker {
@@ -130,23 +137,23 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 
 #pragma mark - UploadProgressDelegate
 
-- (void)blobMessageSender:(BlobMessageSender *)blobMessageSender uploadFailedForMessage:(BaseMessage *)message error:(UploadError)error {
+- (void)blobMessageSender:(Old_BlobMessageSender *)blobMessageSender uploadFailedForMessage:(BaseMessage *)message error:(UploadError)error {
     NSString *errorTitle = [BundleUtil localizedStringForKey:@"error_sending_failed"];
-    NSString *errorMessage = [FileMessageSender messageForError:error];
+    NSString *errorMessage = [Old_FileMessageSender messageForError:error];
     
     [UIAlertTemplate showAlertWithOwner:[[AppDelegate sharedAppDelegate] currentTopViewController] title:errorTitle message:errorMessage actionOk:nil];    
     [self deleteInboxFile];
 }
 
-- (void)blobMessageSender:(BlobMessageSender *)blobMessageSender uploadSucceededForMessage:(BaseMessage *)message {
+- (void)blobMessageSender:(Old_BlobMessageSender *)blobMessageSender uploadSucceededForMessage:(BaseMessage *)message {
     [self deleteInboxFile];
 }
 
-- (BOOL)blobMessageSenderUploadShouldCancel:(BlobMessageSender *)blobMessageSender {
+- (BOOL)blobMessageSenderUploadShouldCancel:(Old_BlobMessageSender *)blobMessageSender {
     return NO;
 }
 
-- (void)blobMessageSender:(BlobMessageSender *)blobMessageSender uploadProgress:(NSNumber *)progress forMessage:(BaseMessage *)message {
+- (void)blobMessageSender:(Old_BlobMessageSender *)blobMessageSender uploadProgress:(NSNumber *)progress forMessage:(BaseMessage *)message {
     ;//nop
 }
 

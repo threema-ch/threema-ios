@@ -1,0 +1,85 @@
+{
+  "configurations" : [
+    {
+      "id" : "D5EF7D18-C6E2-4D81-B663-69EE8F44F7B2",
+      "name" : "Configuration 1",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "commandLineArgumentEntries" : [
+      {
+        "argument" : "unit-testing"
+      },
+      {
+        "argument" : "-com.apple.CoreData.SQLDebug 1",
+        "enabled" : false
+      },
+      {
+        "argument" : "-com.apple.CoreData.ConcurrencyDebug 1",
+        "enabled" : false
+      }
+    ],
+    "environmentVariableEntries" : [
+      {
+        "key" : "SQLITE_ENABLE_THREAD_ASSERTIONS",
+        "value" : "1"
+      },
+      {
+        "enabled" : false,
+        "key" : "SQLITE_AUTO_TRACE",
+        "value" : "1"
+      },
+      {
+        "key" : "SQLITE_ENABLE_FILE_ASSERTIONS",
+        "value" : "1"
+      }
+    ],
+    "targetForVariableExpansion" : {
+      "containerPath" : "container:Threema.xcodeproj",
+      "identifier" : "4DD01F6714C1CCA900EF7690",
+      "name" : "Threema"
+    }
+  },
+  "testTargets" : [
+    {
+      "skippedTests" : [
+        "(null)",
+        "AddressBoolLoadTests",
+        "ChatProfileViewTests\/testBasicInitialization()",
+        "ChatProfileViewTests\/testDoNotObserveRemovedMemberNameChange()",
+        "ChatProfileViewTests\/testObserveGroupNameChange()",
+        "ChatProfileViewTests\/testObserveMemberNameChange()",
+        "ChatProfileViewTests\/testObserveMembersChange()",
+        "ChatProfileViewTests\/testObserveNameChange()",
+        "ChatProfileViewTests\/testObserveVerificationLevelChange()",
+        "ChatTextViewPerformanceTest",
+        "DBLoadTests",
+        "HttpClientDownloadSafeTests",
+        "HttpClientUploadSafeTests",
+        "PerformanceTests\/testExample()",
+        "ScreenshotJsonImporter"
+      ],
+      "target" : {
+        "containerPath" : "container:Threema.xcodeproj",
+        "identifier" : "0A688AB519A3A4670013FCE8",
+        "name" : "Threema Tests"
+      }
+    },
+    {
+      "enabled" : false,
+      "skippedTests" : [
+        "ScreenshotsSimpleStep",
+        "ScreenshotsWithData"
+      ],
+      "target" : {
+        "containerPath" : "container:Threema.xcodeproj",
+        "identifier" : "CE4CA9971E2629B000F3A560",
+        "name" : "ScreenshotsWithData"
+      }
+    }
+  ],
+  "version" : 1
+}

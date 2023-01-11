@@ -82,6 +82,10 @@ typedef enum : NSUInteger {
 {
     [super viewDidLoad];
     
+    if ([_rightBarButtonTitle length] == 0) {
+        _rightBarButtonTitle = [BundleUtil localizedStringForKey:@"send"];
+    }
+    
     self.overrideUserInterfaceStyle = [UserSettings sharedUserSettings].darkTheme ? UIUserInterfaceStyleDark : UIUserInterfaceStyleLight;
     
     WorkContactTableDataSource *workDataSource = [WorkContactTableDataSource workContactTableDataSource];
@@ -184,6 +188,17 @@ typedef enum : NSUInteger {
     
     self.segmentedControl.selectedSegmentIndex = _mode;
     [self segmentedControlChanged:nil];
+    
+    if (self.preselectedConversations != nil) {
+        _mode = ModeRecent;
+        [self updateDataSourceMode];
+        for (Conversation *conv in self.preselectedConversations) {
+            if ([_currentDataSource isKindOfClass:RecentTableDataSource.class]) {
+                [(RecentTableDataSource *) _currentDataSource insertSelectedConversation:conv];
+            }
+        }
+        [self.tableView reloadData];
+    }
     
     if (_renderType == nil) {
         _renderType = @0;
@@ -415,9 +430,9 @@ typedef enum : NSUInteger {
     BOOL hasSelection = count > 0;
     _sendButton.enabled = hasSelection;
     if (hasSelection) {
-        [_sendButton setTitle:[NSString stringWithFormat:@"%@ (%lu)", [BundleUtil localizedStringForKey:@"send"], (unsigned long)count]];
+        [_sendButton setTitle:[NSString stringWithFormat:@"%@ (%lu)", _rightBarButtonTitle, (unsigned long)count]];
     } else {
-        [_sendButton setTitle:[BundleUtil localizedStringForKey:@"send"]];
+        [_sendButton setTitle:_rightBarButtonTitle];
     }
 }
 
@@ -510,13 +525,26 @@ typedef enum : NSUInteger {
 }
 
 - (IBAction)doneAction:(id)sender {
-    [self.searchController setActive:false];
+    // If the delegate pushes a view controller while `searchController` is still setting itself to inactive
+    // Nothing will happen and the following warning will be logged:
+    // pushViewController:animated: called on while an existing transition or presentation is occurring;
+    // the navigation stack will not be updated.
+    //
+    // Setting `searchController` to inactive doesn't matter as much when we're moving to another view anyways.
+    if (!_delegateDisablesSearchController) {
+        [self.searchController setActive:false];
+    }
+
     [self.delegate contactPicker:self didPickConversations:_currentDataSource.selectedConversations renderType:_renderType sendAsFile:_sendAsFileSwitch.on];
 }
 
 - (IBAction)segmentedControlChanged:(id)sender {
     _mode = self.segmentedControl.selectedSegmentIndex;
     
+    [self updateDataSourceMode];
+}
+
+- (void)updateDataSourceMode {
     [_textView resignFirstResponder];
     [self hideTextInput:YES];
     

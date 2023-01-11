@@ -19,7 +19,6 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import CocoaLumberjackSwift
-import DiffableDataSources
 import UIKit
 
 /// Show an edit view for the provided group
@@ -45,7 +44,7 @@ final class EditGroupViewController: ThemedCodeModernGroupedTableViewController 
     
     // MARK: - Private properties
         
-    private lazy var dataSource = TableViewDiffableDataSource<
+    private lazy var dataSource = UITableViewDiffableDataSource<
         Section,
         Row
     >(tableView: tableView) { [weak self] tableView, indexPath, row -> UITableViewCell? in
@@ -187,7 +186,7 @@ final class EditGroupViewController: ThemedCodeModernGroupedTableViewController 
     }
 
     private func configureSnapshot() {
-        var snapshot = DiffableDataSourceSnapshot<Section, Row>()
+        var snapshot = NSDiffableDataSourceSnapshot<Section, Row>()
         
         snapshot.appendSections([.editName])
         snapshot.appendItems([.groupName])

@@ -92,7 +92,7 @@ class ChevronBarButtonItem: UIButton {
     }
     
     private func updateAccessibilityLabel() {
-        accessibilityLabel = String(format: BundleUtil.localizedString(forKey: "back"))
+        accessibilityLabel = BundleUtil.localizedString(forKey: "back")
     }
     
     // MARK: - Destruction

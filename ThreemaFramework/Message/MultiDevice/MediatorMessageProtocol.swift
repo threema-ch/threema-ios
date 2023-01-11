@@ -81,32 +81,68 @@ enum MediatorMessageProtocolError: Error {
     @objc public static let MEDIATOR_MESSAGE_TYPE_REFLECTED = MediatorMessageType.reflected.rawValue
     @objc public static let MEDIATOR_MESSAGE_TYPE_REFLECTED_ACK = MediatorMessageType.reflectedAck.rawValue
     
+    private static let device_group_keys_missing = "Device Group Keys are missing"
     private static let generate_nonce_failed = "Could not generate nonce"
 
-    private let deviceGroupPathKey: Data
+    private let deviceGroupKeys: DeviceGroupKeys?
 
-    @objc init(deviceGroupPathKey: Data) {
-        self.deviceGroupPathKey = deviceGroupPathKey
+    /// - Parameter deviceGroupKeys: Should be set if multi device activated
+    @objc init(deviceGroupKeys: DeviceGroupKeys?) {
+        self.deviceGroupKeys = deviceGroupKeys
     }
 
     @objc static func doReflectMessage(_ type: Int32) -> Bool {
         let mt = getMultiDeviceMessageType(for: type)
-        return mt == .deprecatedAudio || mt == .deliveryReceipt || mt == .file || mt == .deprecatedImage || mt ==
-            .groupAudio || mt == .groupSetup || mt == .groupDeleteProfilePicture || mt == .groupFile || mt ==
-            .groupImage || mt == .groupLeave || mt == .groupLocation || mt == .groupPollSetup || mt == .groupPollVote ||
-            mt == .groupRename || mt == .groupSetProfilePicture || mt == .groupText || mt == .groupVideo || mt ==
-            .location || mt == .pollSetup || mt == .pollVote || mt == .text || mt == .deprecatedVideo || mt ==
-            .callOffer || mt == .callAnswer || mt == .callIceCandidate || mt == .callHangup || mt == .callRinging ||
-            mt ==
-            .contactSetProfilePicture || mt == .contactDeleteProfilePicture || mt == .contactRequestProfilePicture
+        return mt == .deprecatedAudio ||
+            mt == .deliveryReceipt ||
+            mt == .file ||
+            mt == .deprecatedImage ||
+            mt == .groupAudio ||
+            mt == .groupSetup ||
+            mt == .groupDeleteProfilePicture ||
+            mt == .groupDeliveryReceipt ||
+            mt == .groupFile ||
+            mt == .groupImage ||
+            mt == .groupLeave ||
+            mt == .groupLocation ||
+            mt == .groupPollSetup ||
+            mt == .groupPollVote ||
+            mt == .groupName ||
+            mt == .groupSetProfilePicture ||
+            mt == .groupText ||
+            mt == .groupVideo ||
+            mt == .location ||
+            mt == .pollSetup ||
+            mt == .pollVote ||
+            mt == .text ||
+            mt == .deprecatedVideo ||
+            mt == .callOffer ||
+            mt == .callAnswer ||
+            mt == .callIceCandidate ||
+            mt == .callHangup ||
+            mt == .callRinging ||
+            mt == .contactSetProfilePicture ||
+            mt == .contactDeleteProfilePicture ||
+            mt == .contactRequestProfilePicture
     }
     
     static func isGroupMessage(_ type: Int32) -> Bool {
         let mt = getMultiDeviceMessageType(for: type)
-        return mt == .groupAudio || mt == .groupSetup || mt == .groupDeleteProfilePicture || mt == .groupFile || mt ==
-            .groupImage || mt == .groupLeave || mt == .groupLocation || mt == .groupPollSetup || mt == .groupPollVote ||
-            mt == .groupRename || mt == .groupRequestSync || mt == .groupSetProfilePicture || mt == .groupText || mt ==
-            .groupVideo
+        return mt == .groupAudio ||
+            mt == .groupSetup ||
+            mt == .groupDeleteProfilePicture ||
+            mt == .groupDeliveryReceipt ||
+            mt == .groupFile ||
+            mt == .groupImage ||
+            mt == .groupLeave ||
+            mt == .groupLocation ||
+            mt == .groupPollSetup ||
+            mt == .groupPollVote ||
+            mt == .groupName ||
+            mt == .groupRequestSync ||
+            mt == .groupSetProfilePicture ||
+            mt == .groupText ||
+            mt == .groupVideo
     }
 
     // MARK: Chat server protocol extension for WebSocket
@@ -146,7 +182,16 @@ enum MediatorMessageProtocolError: Error {
     // MARK: Encoding multi device messages
 
     func encodeBeginTransactionMessage(messageType: MediatorMessageType, reason: D2d_TransactionScope.Scope) -> Data? {
-        guard let encryptedTransactionScope = encryptByte(data: Data(bytes: [UInt8(reason.rawValue)], count: 1)) else {
+        guard let dgtsk = deviceGroupKeys?.dgtsk else {
+            DDLogError(MediatorMessageProtocol.device_group_keys_missing)
+            return nil
+        }
+
+        guard let encryptedTransactionScope = encryptByte(
+            data: Data(bytes: [UInt8(reason.rawValue)], count: 1),
+            key: dgtsk
+        )
+        else {
             DDLogError("Could not encrypt transaction scope")
             return nil
         }
@@ -174,11 +219,11 @@ enum MediatorMessageProtocolError: Error {
         return clientHelloMessage
     }
     
-    @objc static func encodeClientURLInfo(dgpkPublicKey: Data, serverGroup: UInt32) -> String? {
+    @objc static func encodeClientURLInfo(dgpkPublicKey: Data, serverGroup: String) -> String? {
         // swiftformat:disable:next acronyms
         var clientURLInfo = D2m_ClientUrlInfo()
         clientURLInfo.deviceGroupID = dgpkPublicKey
-        clientURLInfo.serverGroup = serverGroup
+        clientURLInfo.serverGroupString = serverGroup
 
         if let clientURLInfoData = try? clientURLInfo.serializedData() {
             return clientURLInfoData.hexString.lowercased()
@@ -228,10 +273,7 @@ enum MediatorMessageProtocolError: Error {
             return (nil, nil)
         }
 
-        if let encryptedEnvelope = MediatorMessageProtocol.encryptEnvelope(
-            envelope: envelope,
-            deviceGroupPathKey: deviceGroupPathKey
-        ) {
+        if let encryptedEnvelope = encryptEnvelope(envelope: envelope) {
             var mediatorMsg = MediatorMessageProtocol.getCommonHeader(type: .reflect)
             mediatorMsg.append(MediatorMessageProtocol.getPayloadHeader())
             mediatorMsg.append(reflectID)
@@ -330,7 +372,7 @@ enum MediatorMessageProtocolError: Error {
         let envelopeData: Data = reflectedPayload.subdata(in: Int(headerLenght)..<reflectedPayload.count)
 
         let milliseconds: UInt64 = timestampData.convert(at: 0, endianess: .LittleEndian)
-        let timestamp = Date(milliseconds: Int64(milliseconds))
+        let timestamp = Date(milliseconds: milliseconds)
 
         return (reflectID, envelopeData, timestamp)
     }
@@ -345,16 +387,16 @@ enum MediatorMessageProtocolError: Error {
 
     // MARK: Encrypt / decrypt
 
-    func encryptByte(data: Data) -> Data? {
+    func encryptByte(data: Data, key: Data) -> Data? {
         if let nonce = NaClCrypto.shared()?.randomBytes(Int32(MediatorMessageProtocol.MEDIATOR_NONCE_LENGTH)) {
             var encryptedMessage = Data(nonce)
             if let encryptedData = NaClCrypto.shared()?
-                .symmetricEncryptData(data, withKey: deviceGroupPathKey, nonce: nonce) {
+                .symmetricEncryptData(data, withKey: key, nonce: nonce) {
                 encryptedMessage.append(encryptedData)
                 return encryptedMessage
             }
             else {
-                DDLogError("Could not encrypt byte")
+                DDLogError("Could not encrypt bytes")
             }
         }
         else {
@@ -363,18 +405,18 @@ enum MediatorMessageProtocolError: Error {
         return nil
     }
     
-    func decryptByte(data: Data) -> Data? {
+    func decryptByte(data: Data, key: Data) -> Data? {
         if data.count >= MediatorMessageProtocol.MEDIATOR_NONCE_LENGTH {
             let nonce = data[0..<MediatorMessageProtocol.MEDIATOR_NONCE_LENGTH]
             if let decryptedData = NaClCrypto.shared()?.symmetricDecryptData(
                 data[MediatorMessageProtocol.MEDIATOR_NONCE_LENGTH..<data.count],
-                withKey: deviceGroupPathKey,
+                withKey: key,
                 nonce: nonce
             ) {
                 return decryptedData
             }
             else {
-                DDLogError("Could not decrypt envelope")
+                DDLogError("Could not decrypt bytes")
             }
         }
         else {
@@ -384,16 +426,21 @@ enum MediatorMessageProtocolError: Error {
     }
 
     // MARK: Create multi device envelope message
-    
+
     /// Create Envelope for contact sync.
     /// - Parameter contact: Contact for sync
     /// - Returns: Envelope with contact sync
-    func getEnvelopeForContactSync(contact: Sync_Contact) -> D2d_Envelope {
-        var sContactSync = D2d_ContactSync()
-        sContactSync.set.contact = contact
+    func getEnvelopeForContactSync(contact: Sync_Contact, syncAction: DeltaSyncContact.SyncAction) -> D2d_Envelope {
+        var contactSync = D2d_ContactSync()
+        switch syncAction {
+        case .create:
+            contactSync.create.contact = contact
+        case .update:
+            contactSync.update.contact = contact
+        }
 
         var envelope = D2d_Envelope()
-        envelope.contactSync = sContactSync
+        envelope.contactSync = contactSync
 
         return envelope
     }
@@ -437,6 +484,39 @@ enum MediatorMessageProtocolError: Error {
 
         return envelope
     }
+
+    /// Create envelope for incoming message update.
+    /// - Parameters:
+    ///   - messageIDs: Send status read for message IDs
+    ///   - messageReadDates: Send date of read messages
+    ///   - conversationID: Conversation of the messages
+    /// - Returns: Envelope with incoming message update
+    func getEnvelopeForIncomingMessageUpdate(
+        messageIDs: [Data],
+        messageReadDates: [Date],
+        // swiftformat:disable:next all
+        conversationID: D2d_ConversationId
+    ) -> D2d_Envelope {
+        var incomingMessageUpdate = D2d_IncomingMessageUpdate()
+        var index = 0
+
+        for messageID in messageIDs {
+            var updateMessage = D2d_IncomingMessageUpdate.Update()
+            updateMessage.read = D2d_IncomingMessageUpdate.Read()
+            updateMessage.messageID = messageID.convert()
+            updateMessage.read.at = UInt64(messageReadDates[index].millisecondsSince1970)
+            updateMessage.conversation = conversationID
+            incomingMessageUpdate.updates.append(updateMessage)
+
+            index += 1
+        }
+
+        var envelope = D2d_Envelope()
+        envelope.padding = BytesUtility.paddingRandom()
+        envelope.incomingMessageUpdate = incomingMessageUpdate
+
+        return envelope
+    }
     
     /// Create Envelope for outgoing message.
     /// - Parameter type: Message type, see MSGTYPE_... in `ProtocolDefinitions.h`
@@ -452,10 +532,11 @@ enum MediatorMessageProtocolError: Error {
         receiverIdentity: String,
         createdAt: Date
     ) -> D2d_Envelope {
-        var receiver = D2d_MessageReceiver()
-        receiver.identity = receiverIdentity
+        // swiftformat:disable:next all
+        var conversationID = D2d_ConversationId()
+        conversationID.contact = receiverIdentity
         
-        return getEnvelopeForOutgoingMessage(type, body, messageID, receiver, createdAt)
+        return getEnvelopeForOutgoingMessage(type, body, messageID, conversationID, createdAt)
     }
     
     /// Create Envelope for outgoing message.
@@ -478,17 +559,19 @@ enum MediatorMessageProtocolError: Error {
         group.groupID = groupID
         group.creatorIdentity = groupCreatorIdentity
 
-        var receiver = D2d_MessageReceiver()
-        receiver.group = group
+        // swiftformat:disable:next all
+        var conversationID = D2d_ConversationId()
+        conversationID.group = group
 
-        return getEnvelopeForOutgoingMessage(type, body, messageID, receiver, createdAt)
+        return getEnvelopeForOutgoingMessage(type, body, messageID, conversationID, createdAt)
     }
     
     private func getEnvelopeForOutgoingMessage(
         _ type: Int32,
         _ body: Data?,
         _ messageID: UInt64,
-        _ receiver: D2d_MessageReceiver,
+        // swiftformat:disable:next all
+        _ conversationID: D2d_ConversationId,
         _ createdAt: Date
     ) -> D2d_Envelope {
         var outgoingMessage = D2d_OutgoingMessage()
@@ -498,7 +581,7 @@ enum MediatorMessageProtocolError: Error {
         }
         outgoingMessage.messageID = messageID
         
-        outgoingMessage.receiver = receiver
+        outgoingMessage.conversation = conversationID
         outgoingMessage.createdAt = UInt64(createdAt.millisecondsSince1970)
 
         var envelope = D2d_Envelope()
@@ -508,21 +591,25 @@ enum MediatorMessageProtocolError: Error {
         return envelope
     }
 
-    func getEnvelopeForOutgoingMessageSent(messageID: Data, receiver: D2d_MessageReceiver) -> D2d_Envelope {
-        var outgoingMessageSent = D2d_OutgoingMessageSent()
-        outgoingMessageSent.messageID = messageID.convert()
-        outgoingMessageSent.receiver = receiver
+    // swiftformat:disable:next all
+    func getEnvelopeForOutgoingMessageUpdate(messageID: Data, conversationID: D2d_ConversationId) -> D2d_Envelope {
+        var outgoingMessageUpdate = D2d_OutgoingMessageUpdate()
+        var updateMessage = D2d_OutgoingMessageUpdate.Update()
+        updateMessage.sent = D2d_OutgoingMessageUpdate.Sent()
+        updateMessage.messageID = messageID.convert()
+        updateMessage.conversation = conversationID
+        outgoingMessageUpdate.updates.append(updateMessage)
 
         var envelope = D2d_Envelope()
         envelope.padding = BytesUtility.paddingRandom()
-        envelope.outgoingMessageSent = outgoingMessageSent
+        envelope.outgoingMessageUpdate = outgoingMessageUpdate
 
         return envelope
     }
 
     func getEnvelopeForProfileUpdate(userProfile: Sync_UserProfile) -> D2d_Envelope {
         var userProfileSync = D2d_UserProfileSync()
-        userProfileSync.set.userProfile = userProfile
+        userProfileSync.update.userProfile = userProfile
 
         var envelope = D2d_Envelope()
         envelope.userProfileSync = userProfileSync
@@ -532,7 +619,7 @@ enum MediatorMessageProtocolError: Error {
 
     func getEnvelopeForSettingsUpdate(settings: Sync_Settings) -> D2d_Envelope {
         var settingsSync = D2d_SettingsSync()
-        settingsSync.set.settings = settings
+        settingsSync.update.settings = settings
 
         var envelope = D2d_Envelope()
         envelope.settingsSync = settingsSync
@@ -545,17 +632,20 @@ enum MediatorMessageProtocolError: Error {
     /// Decrypt message and decode envelope.
     ///
     /// - Parameter data: Encrypted message
-    /// - Parameter deviceGroupPathKey: Key for message decryption
-    ///
     /// - Returns: Decrypted and decoded envelope
-    static func decryptEnvelope(data: Data, deviceGroupPathKey: Data) -> D2d_Envelope? {
+    func decryptEnvelope(data: Data) -> D2d_Envelope? {
+        guard let dgrk = deviceGroupKeys?.dgrk else {
+            DDLogError(MediatorMessageProtocol.device_group_keys_missing)
+            return nil
+        }
+
         do {
-            if data.count >= MEDIATOR_NONCE_LENGTH {
-                let nonce = data[0..<MEDIATOR_NONCE_LENGTH]
+            if data.count >= MediatorMessageProtocol.MEDIATOR_NONCE_LENGTH {
+                let nonce = data[0..<MediatorMessageProtocol.MEDIATOR_NONCE_LENGTH]
                 if let decryptedData = NaClCrypto.shared()?
                     .symmetricDecryptData(
-                        data[MEDIATOR_NONCE_LENGTH..<data.count],
-                        withKey: deviceGroupPathKey,
+                        data[MediatorMessageProtocol.MEDIATOR_NONCE_LENGTH..<data.count],
+                        withKey: dgrk,
                         nonce: nonce
                     ) {
                     return try D2d_Envelope(serializedData: decryptedData)
@@ -569,7 +659,7 @@ enum MediatorMessageProtocolError: Error {
             }
         }
         catch {
-            DDLogError(String(format: "Could not deserialize envelope: %@", error.localizedDescription))
+            DDLogError("Could not deserialize envelope: \(error.localizedDescription)")
         }
         
         return nil
@@ -578,16 +668,19 @@ enum MediatorMessageProtocolError: Error {
     /// Encode and encrypt envelope.
     ///
     /// - Parameter envelope: Plain data
-    /// - Parameter deviceGroupPathKey: Key for message decryption
-    ///
     /// - Returns: Encoded and encrypted data
-    static func encryptEnvelope(envelope: D2d_Envelope, deviceGroupPathKey: Data) -> Data? {
+    func encryptEnvelope(envelope: D2d_Envelope) -> Data? {
+        guard let dgrk = deviceGroupKeys?.dgrk else {
+            DDLogError(MediatorMessageProtocol.device_group_keys_missing)
+            return nil
+        }
+
         do {
             let envelopeData = try envelope.serializedData()
-            if let nonce = NaClCrypto.shared()?.randomBytes(Int32(MEDIATOR_NONCE_LENGTH)) {
+            if let nonce = NaClCrypto.shared()?.randomBytes(Int32(MediatorMessageProtocol.MEDIATOR_NONCE_LENGTH)) {
                 var encryptedMessage = Data(nonce)
                 if let encryptedData = NaClCrypto.shared()?
-                    .symmetricEncryptData(envelopeData, withKey: deviceGroupPathKey, nonce: nonce) {
+                    .symmetricEncryptData(envelopeData, withKey: dgrk, nonce: nonce) {
                     encryptedMessage.append(encryptedData)
                     return encryptedMessage
                 }
@@ -596,11 +689,11 @@ enum MediatorMessageProtocolError: Error {
                 }
             }
             else {
-                DDLogError(generate_nonce_failed)
+                DDLogError(MediatorMessageProtocol.generate_nonce_failed)
             }
         }
         catch {
-            DDLogError(String(format: "Could not serialize envelope: %@", error.localizedDescription))
+            DDLogError("Could not serialize envelope: \(error.localizedDescription)")
         }
         
         return nil
@@ -630,6 +723,8 @@ enum MediatorMessageProtocolError: Error {
             return MSGTYPE_GROUP_CREATE
         case .groupDeleteProfilePicture:
             return MSGTYPE_GROUP_DELETE_PHOTO
+        case .groupDeliveryReceipt:
+            return MSGTYPE_GROUP_DELIVERY_RECEIPT
         case .groupFile:
             return MSGTYPE_GROUP_FILE
         case .groupImage:
@@ -638,7 +733,7 @@ enum MediatorMessageProtocolError: Error {
             return MSGTYPE_GROUP_LEAVE
         case .groupLocation:
             return MSGTYPE_GROUP_LOCATION
-        case .groupRename:
+        case .groupName:
             return MSGTYPE_GROUP_RENAME
         case .groupRequestSync:
             return MSGTYPE_GROUP_REQUEST_SYNC
@@ -703,6 +798,8 @@ enum MediatorMessageProtocolError: Error {
             return .groupSetup
         case MSGTYPE_GROUP_DELETE_PHOTO:
             return .groupDeleteProfilePicture
+        case MSGTYPE_GROUP_DELIVERY_RECEIPT:
+            return .groupDeliveryReceipt
         case MSGTYPE_GROUP_FILE:
             return .groupFile
         case MSGTYPE_GROUP_IMAGE:
@@ -712,7 +809,7 @@ enum MediatorMessageProtocolError: Error {
         case MSGTYPE_GROUP_LOCATION:
             return .groupLocation
         case MSGTYPE_GROUP_RENAME:
-            return .groupRename
+            return .groupName
         case MSGTYPE_GROUP_REQUEST_SYNC:
             return .groupRequestSync
         case MSGTYPE_GROUP_SET_PHOTO:
@@ -769,12 +866,12 @@ enum MediatorMessageProtocolError: Error {
     }
 }
 
-extension Date {
-    var millisecondsSince1970: Int64 {
-        Int64((timeIntervalSince1970 * 1000.0).rounded())
+public extension Date {
+    var millisecondsSince1970: UInt64 {
+        UInt64((timeIntervalSince1970 * 1000.0).rounded())
     }
 
-    init(milliseconds: Int64) {
+    init(milliseconds: UInt64) {
         self = Date(timeIntervalSince1970: TimeInterval(milliseconds) / 1000)
     }
 }
@@ -796,9 +893,11 @@ extension D2d_Envelope: D2d_LoggingDescriptionProtocol {
             return msg.loggingDescription
         case let .incomingMessage(msg):
             return msg.loggingDescription
+        case let .incomingMessageUpdate(msg):
+            return msg.loggingDescription
         case let .outgoingMessage(msg):
             return msg.loggingDescription
-        case let .outgoingMessageSent(msg):
+        case let .outgoingMessageUpdate(msg):
             return msg.loggingDescription
         case let .settingsSync(msg):
             return msg.loggingDescription
@@ -842,6 +941,14 @@ extension D2d_IncomingMessage: D2d_LoggingDescriptionProtocol {
     }
 }
 
+// MARK: - D2d_IncomingMessageUpdate + D2d_LoggingDescriptionProtocol
+
+extension D2d_IncomingMessageUpdate: D2d_LoggingDescriptionProtocol {
+    var loggingDescription: String {
+        "(type: \(D2d_IncomingMessageUpdate.self))"
+    }
+}
+
 // MARK: - D2d_OutgoingMessage + D2d_LoggingDescriptionProtocol
 
 extension D2d_OutgoingMessage: D2d_LoggingDescriptionProtocol {
@@ -850,11 +957,11 @@ extension D2d_OutgoingMessage: D2d_LoggingDescriptionProtocol {
     }
 }
 
-// MARK: - D2d_OutgoingMessageSent + D2d_LoggingDescriptionProtocol
+// MARK: - D2d_OutgoingMessageUpdate + D2d_LoggingDescriptionProtocol
 
-extension D2d_OutgoingMessageSent: D2d_LoggingDescriptionProtocol {
+extension D2d_OutgoingMessageUpdate: D2d_LoggingDescriptionProtocol {
     var loggingDescription: String {
-        "(type: \(D2d_OutgoingMessageSent.self); id: \(NSData.convertBytes(messageID).hexString))"
+        "(type: \(D2d_OutgoingMessageUpdate.self))"
     }
 }
 

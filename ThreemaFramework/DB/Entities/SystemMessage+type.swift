@@ -50,6 +50,7 @@ public extension SystemMessage {
     enum SystemMessageType {
         case systemMessage(type: InfoType)
         case callMessage(type: CallType)
+        case workConsumerInfo(type: WorkConsumerInfoType)
     }
     
     // MARK: - InfoType
@@ -65,9 +66,17 @@ public extension SystemMessage {
         case groupSelfLeft
         case groupNoteGroupStarted
         case groupNoteGroupEnded
-        case contactUsesOtherApp
         case groupCreatorLeft
         case vote(info: VoteInfo?)
+        case fsMessageWithoutForwardSecurity
+        case fsSessionEstablished
+        case fsSessionEstablishedRcvd
+        case fsMessagesSkipped(numSkipped: Int)
+        case fsSessionReset
+        case fsMessageOutOfOrder
+        case fsEnabledOutgoing
+        case fsDisabledOutgoing
+        case fsNotSupportedAnymore
         
         /// Localized Message to display
         public var localizedMessage: String {
@@ -105,14 +114,6 @@ public extension SystemMessage {
             case .groupNoteGroupEnded:
                 return BundleUtil.localizedString(forKey: "end_note_group_info")
                 
-            case .contactUsesOtherApp:
-                if ThreemaApp.current == .work || ThreemaApp.current == .workRed {
-                    return BundleUtil.localizedString(forKey: "contact_threema_conversation_info")
-                }
-                else {
-                    return BundleUtil.localizedString(forKey: "contact_threema_work_conversation_info")
-                }
-                
             case .groupCreatorLeft:
                 return BundleUtil.localizedString(forKey: "group_member_creator_left")
                 
@@ -139,6 +140,41 @@ public extension SystemMessage {
                         info.ballotTitle
                     )
                 }
+                
+            case .fsMessageWithoutForwardSecurity:
+                return BundleUtil.localizedString(forKey: "forward_security_message_without")
+                
+            case .fsSessionEstablished:
+                return BundleUtil.localizedString(forKey: "forward_security_session_established")
+                
+            case .fsSessionEstablishedRcvd:
+                return BundleUtil.localizedString(forKey: "forward_security_session_established_rx")
+                
+            case let .fsMessagesSkipped(numSkipped):
+                if numSkipped == 1 {
+                    return BundleUtil.localizedString(forKey: "forward_security_messages_skipped_1")
+                }
+                else {
+                    return String.localizedStringWithFormat(
+                        BundleUtil.localizedString(forKey: "forward_security_messages_skipped_x"),
+                        numSkipped
+                    )
+                }
+                
+            case .fsSessionReset:
+                return BundleUtil.localizedString(forKey: "forward_security_session_reset")
+            
+            case .fsMessageOutOfOrder:
+                return BundleUtil.localizedString(forKey: "forward_security_message_out_of_order")
+                
+            case .fsEnabledOutgoing:
+                return BundleUtil.localizedString(forKey: "forward_security_status_enabled_outgoing")
+                
+            case .fsDisabledOutgoing:
+                return BundleUtil.localizedString(forKey: "forward_security_status_disabled_outgoing")
+            case .fsNotSupportedAnymore:
+                return BundleUtil
+                    .localizedString(forKey: "forward_security_contact_has_downgraded_to_an_incompatible_version")
             }
         }
     }
@@ -177,7 +213,7 @@ public extension SystemMessage {
         case rejectedOffHoursOutgoing
         
         /// Localized Message to display
-        public var localizedMessage: String? {
+        public var localizedMessage: String {
             
             switch self {
             case .endedIncomingSuccessful:
@@ -267,6 +303,104 @@ public extension SystemMessage {
                     .withTintColor(Colors.red, renderingMode: .alwaysOriginal)
             }
         }
+        
+        /// Name of symbol for call type
+        public var previewSymbolName: String? {
+            switch self {
+            // Incoming
+            case .endedIncomingSuccessful:
+                return "phone.fill.arrow.down.left"
+            case .rejectedIncoming:
+                return "threema.phone.fill.arrow.bend.left"
+                
+            case .endedIncomingUnsuccessful,
+                 .missedIncoming,
+                 .rejectedBusyIncoming,
+                 .rejectedTimeoutIncoming,
+                 .rejectedDisabledIncoming,
+                 .rejectedUnknownIncoming,
+                 .rejectedOffHoursIncoming:
+                return "threema.phone.fill.arrow.bend.left"
+                
+            // Outgoing
+            case .endedOutgoingSuccessful:
+                return "phone.fill.arrow.up.right"
+                
+            case .endedOutgoingUnsuccessful:
+                return "phone.fill.arrow.up.right"
+                
+            case .missedOutgoing,
+                 .rejectedOutgoing,
+                 .rejectedBusyOutgoing,
+                 .rejectedTimeoutOutgoing,
+                 .rejectedDisabledOutgoing,
+                 .rejectedUnknownOutgoing,
+                 .rejectedOffHoursOutgoing:
+                return "threema.phone.fill.arrow.bend.right"
+            }
+        }
+        
+        /// Symbol for call type
+        public var previewSymbolTintColor: UIColor? {
+            switch self {
+            // Incoming
+            case .endedIncomingSuccessful:
+                return Colors.green
+            case .rejectedIncoming:
+                return Colors.orange
+                
+            case .endedIncomingUnsuccessful,
+                 .missedIncoming,
+                 .rejectedBusyIncoming,
+                 .rejectedTimeoutIncoming,
+                 .rejectedDisabledIncoming,
+                 .rejectedUnknownIncoming,
+                 .rejectedOffHoursIncoming:
+                return Colors.red
+                
+            // Outgoing
+            case .endedOutgoingSuccessful:
+                return Colors.green
+                
+            case .endedOutgoingUnsuccessful:
+                return Colors.red
+                
+            case .missedOutgoing,
+                 .rejectedOutgoing,
+                 .rejectedBusyOutgoing,
+                 .rejectedTimeoutOutgoing,
+                 .rejectedDisabledOutgoing,
+                 .rejectedUnknownOutgoing,
+                 .rejectedOffHoursOutgoing:
+                return Colors.red
+            }
+        }
+    }
+    
+    // MARK: - WorkConsumerInfoType
+    
+    /// Types for messages used to display consumer or private info
+    enum WorkConsumerInfoType {
+        case work
+        case consumer
+        
+        public var localizedMessage: String {
+            switch self {
+            case .work:
+                return BundleUtil.localizedString(forKey: "contact_threema_work_conversation_info")
+            case .consumer:
+                return BundleUtil.localizedString(forKey: "contact_threema_conversation_info")
+            }
+        }
+        
+        public var symbol: UIImage? {
+            switch self {
+            case .work:
+                return StyleKit.workIcon
+            case .consumer:
+                return StyleKit.houseIcon
+            }
+        }
     }
     
     // MARK: - systemMessageType
@@ -331,8 +465,12 @@ public extension SystemMessage {
             }
             return .callMessage(type: .rejectedUnknownIncoming)
         case 14:
-            
-            return .systemMessage(type: .contactUsesOtherApp)
+            if ThreemaApp.current == .work || ThreemaApp.current == .workRed {
+                return .workConsumerInfo(type: .consumer)
+            }
+            else {
+                return .workConsumerInfo(type: .work)
+            }
         case 15:
             if isOwnMessage {
                 return .callMessage(type: .rejectedOffHoursOutgoing)
@@ -349,6 +487,24 @@ public extension SystemMessage {
         case 20:
             let voteInfo = try? JSONDecoder().decode(VoteInfo.self, from: arg)
             return .systemMessage(type: .vote(info: voteInfo))
+        case 21:
+            return .systemMessage(type: .fsMessageWithoutForwardSecurity)
+        case 22:
+            return .systemMessage(type: .fsSessionEstablished)
+        case 23:
+            return .systemMessage(type: .fsSessionEstablishedRcvd)
+        case 24:
+            return .systemMessage(type: .fsMessagesSkipped(numSkipped: Int(argAsUTF8String()) ?? 0))
+        case 25:
+            return .systemMessage(type: .fsSessionReset)
+        case 26:
+            return .systemMessage(type: .fsMessageOutOfOrder)
+        case 27:
+            return .systemMessage(type: .fsEnabledOutgoing)
+        case 28:
+            return .systemMessage(type: .fsDisabledOutgoing)
+        case 29:
+            return .systemMessage(type: .fsNotSupportedAnymore)
         default:
             DDLogError("Unsupported system message type with value")
             fatalError("Unsupported system message type with value")

@@ -20,8 +20,22 @@
 
 import UIKit
 
+protocol BlurCircleViewConfiguration {
+    var scaledSize: CGFloat { get }
+    var symbolConfiguration: UIImage.SymbolConfiguration { get }
+    var textStyle: UIFont.TextStyle { get }
+    var textStyleFontMetrics: UIFontMetrics { get }
+}
+
 extension BlurCircleView {
-    private struct Configuration {
+    
+    public enum BlurCircleViewConfigurationType {
+        case `default`
+        case thumbnail
+    }
+    
+    private struct DefaultConfiguration: BlurCircleViewConfiguration {
+        
         /// Diameter of circular view adjusted for current content size
         var scaledSize: CGFloat {
             let defaultSize: CGFloat = 52
@@ -36,8 +50,28 @@ extension BlurCircleView {
         }
         
         // These should always use the same TextStyle
-        private let textStyle: UIFont.TextStyle = .title3
-        private let textStyleFontMetrics = UIFontMetrics(forTextStyle: .title3)
+        let textStyle: UIFont.TextStyle = .title3
+        let textStyleFontMetrics = UIFontMetrics(forTextStyle: .title3)
+    }
+    
+    private struct ThumbnailConfiguration: BlurCircleViewConfiguration {
+        
+        /// Diameter of circular view adjusted for current content size
+        var scaledSize: CGFloat {
+            let defaultSize: CGFloat = 20
+            return textStyleFontMetrics.scaledValue(for: defaultSize)
+        }
+        
+        /// Configuration of symbol in the center
+        var symbolConfiguration: UIImage.SymbolConfiguration {
+            let textStyleAndScaleConfiguration = UIImage.SymbolConfiguration(textStyle: textStyle, scale: .small)
+            let weightConfiguration = UIImage.SymbolConfiguration(weight: .bold)
+            return textStyleAndScaleConfiguration.applying(weightConfiguration)
+        }
+        
+        // These should always use the same TextStyle
+        let textStyle: UIFont.TextStyle = .caption1
+        let textStyleFontMetrics = UIFontMetrics(forTextStyle: .caption1)
     }
 }
 
@@ -46,7 +80,7 @@ extension BlurCircleView {
 /// Use as-is. You should not add your own subviews.
 final class BlurCircleView: UIVisualEffectView {
     
-    private let viewConfiguration = Configuration()
+    private let viewConfiguration: BlurCircleViewConfiguration
     
     private var currentSfSymbolName: String
     
@@ -74,9 +108,19 @@ final class BlurCircleView: UIVisualEffectView {
     ///
     /// - Parameters:
     ///   - sfSymbolName: Name of SF Symbol to show. Use just the SF Symbol name.
+    ///   - configuration: BlurCircleViewConfigurationType, default value is .default
     init(
-        sfSymbolName: String
+        sfSymbolName: String,
+        configuration: BlurCircleViewConfigurationType = .default
     ) {
+        
+        switch configuration {
+        case .default:
+            self.viewConfiguration = DefaultConfiguration()
+        case .thumbnail:
+            self.viewConfiguration = ThumbnailConfiguration()
+        }
+        
         self.currentSfSymbolName = sfSymbolName
         self.blurEffect = UIBlurEffect(style: .systemMaterial)
         
@@ -123,6 +167,10 @@ final class BlurCircleView: UIVisualEffectView {
         
         // Show circle
         clipsToBounds = true
+        
+        if UIAccessibility.isReduceTransparencyEnabled || UIAccessibility.isDarkerSystemColorsEnabled {
+            backgroundColor = Colors.backgroundChatBar
+        }
     }
     
     private func registerObservers() {
@@ -149,6 +197,12 @@ final class BlurCircleView: UIVisualEffectView {
     private func updateSize() {
         sizeConstraint.constant = viewConfiguration.scaledSize
         layer.cornerRadius = viewConfiguration.scaledSize / 2
+    }
+    
+    func highlight(_ highlight: Bool, highlightingDuration: Double = 0.15, highlightingAlpha: Double = 0.8) {
+        UIView.animate(withDuration: highlightingDuration) {
+            self.alpha = highlight ? highlightingAlpha : 1
+        }
     }
     
     // MARK: - Notifications

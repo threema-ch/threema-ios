@@ -93,8 +93,8 @@ class MessageStoreMock: MessageStoreProtocol {
         // no-op
     }
 
-    func save(groupCreateMessage amsg: GroupCreateMessage) {
-        // no-op
+    func save(groupCreateMessage amsg: GroupCreateMessage) -> Promise<Void> {
+        Promise()
     }
 
     func save(groupDeletePhotoMessage amsg: GroupDeletePhotoMessage) -> Promise<Void> {

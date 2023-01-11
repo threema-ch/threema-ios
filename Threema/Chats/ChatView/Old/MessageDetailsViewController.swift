@@ -81,6 +81,12 @@ import UIKit
         return cell
     }()
     
+    private lazy var forwardSecurityCell: UITableViewCell = {
+        let cell = createCell("forwardSecurityCell")
+        cell.textLabel!.text = BundleUtil.localizedString(forKey: "forward_security")
+        return cell
+    }()
+    
     private lazy var debugTextView: UITextView = {
         let textView = UITextView()
         
@@ -111,6 +117,7 @@ import UIKit
     private var showDelivered = false
     private var showRead = false
     private var showAck = false
+    private var showFs = false
     
     // MARK: - Lifecycle
 
@@ -163,12 +170,7 @@ import UIKit
             return
         }
         
-        if message.isOwnMessage {
-            sentCell.detailTextLabel!.text = DateFormatter.shortStyleDateTime(message.remoteSentDate)
-        }
-        else {
-            sentCell.detailTextLabel!.text = DateFormatter.shortStyleDateTime(message.date)
-        }
+        sentCell.detailTextLabel!.text = DateFormatter.shortStyleDateTime(message.remoteSentDate)
         
         if let deliveryDate = message.deliveryDate {
             deliveredCell.detailTextLabel!.text = DateFormatter.shortStyleDateTime(deliveryDate)
@@ -184,11 +186,25 @@ import UIKit
             ackCell.detailTextLabel!.text = DateFormatter.shortStyleDateTime(ackDate)
             showAck = true
         }
+        
+        if !message.conversation.isGroup() {
+            showFs = true
+        }
 
         messageIDCell.detailTextLabel!.text = NSString(hexData: message.id) as String?
         
-        groupAckList = message.groupReactions(for: .userAcknowledgment)
-        groupDeclineList = message.groupReactions(for: .userDeclined)
+        let forwardSecurityMode = ForwardSecurityMode(message.forwardSecurityMode.uintValue)
+        switch forwardSecurityMode {
+        case kForwardSecurityModeTwoDH:
+            forwardSecurityCell.detailTextLabel!.text = BundleUtil.localizedString(forKey: "forward_security_2dh")
+        case kForwardSecurityModeFourDH:
+            forwardSecurityCell.detailTextLabel!.text = BundleUtil.localizedString(forKey: "forward_security_4dh")
+        default:
+            forwardSecurityCell.detailTextLabel!.text = BundleUtil.localizedString(forKey: "forward_security_none")
+        }
+        
+        groupAckList = message.groupReactions(for: .acknowledged)
+        groupDeclineList = message.groupReactions(for: .declined)
     }
     
     private func addObservers(_ message: BaseMessage) {
@@ -241,6 +257,9 @@ import UIKit
         }
         if showAck {
             cells.append(ackCell)
+        }
+        if showFs {
+            cells.append(forwardSecurityCell)
         }
         cells.append(messageIDCell)
         

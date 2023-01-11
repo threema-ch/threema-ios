@@ -23,8 +23,6 @@ import Foundation
 import ThreemaFramework
 
 @objc class MediaPreviewDataProcessor: MediaPreviewURLDataProcessor {
-    
-    @objc var addMore: (([Any], [MediaPreviewItem]) -> Void)?
     @objc var returnToMe: (([DKAsset], [MediaPreviewItem]) -> Void)?
     
     override func loadItems(dataArray: [Any]) -> (items: [MediaPreviewItem], errors: [PhotosPickerError]) {

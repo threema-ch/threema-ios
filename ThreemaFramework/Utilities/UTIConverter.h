@@ -21,6 +21,7 @@
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 #import <MobileCoreServices/MobileCoreServices.h>
+#import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
 
 #define UTTYPE_IMAGE ((NSString *)kUTTypeImage)
 #define UTTYPE_GIF_IMAGE ((NSString *)kUTTypeGIF)
@@ -60,6 +61,8 @@
 + (BOOL)isAudioMimeType:(NSString *)mimeType;
 
 + (BOOL)isRenderingAudioMimeType:(NSString *)mimeType;
+
++ (NSArray<NSString *>*_Nonnull)renderingAudioMimetypes;
 
 + (BOOL)isVideoMimeType:(NSString *)mimeType;
 

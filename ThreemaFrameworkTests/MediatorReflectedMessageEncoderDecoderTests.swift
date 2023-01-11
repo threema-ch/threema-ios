@@ -35,10 +35,16 @@ class MediatorReflectedMessageEncoderDecoderTests: XCTestCase {
             entityManager: EntityManager(),
             backgroundEntityManager: EntityManager()
         )
-        mediatorMessageProtocol = MediatorMessageProtocol(
-            deviceGroupPathKey: BytesUtility
-                .generateRandomBytes(length: ThreemaProtocol.deviceIDLength)!
+
+        let deviceGroupKeys = DeviceGroupKeys(
+            dgpk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
+            dgrk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
+            dgdik: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
+            dgsddk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
+            dgtsk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
+            deviceGroupIDFirstByteHex: "a1"
         )
+        mediatorMessageProtocol = MediatorMessageProtocol(deviceGroupKeys: deviceGroupKeys!)
     }
 
     func testEncodeDecodeIncomingMessageAbstractText() throws {

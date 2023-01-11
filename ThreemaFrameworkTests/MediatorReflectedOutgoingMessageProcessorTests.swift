@@ -370,10 +370,16 @@ class MediatorReflectedOutgoingMessageProcessorTests: XCTestCase {
     }
 
     private func getEnvelopeForOutgoingMessage(abstractMessage: AbstractMessage) -> D2d_Envelope {
-        let mediatorMessageProtocol = MediatorMessageProtocol(
-            deviceGroupPathKey: BytesUtility
-                .generateRandomBytes(length: ThreemaProtocol.deviceIDLength)!
+        let deviceGroupKeys = DeviceGroupKeys(
+            dgpk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
+            dgrk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
+            dgdik: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
+            dgsddk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
+            dgtsk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
+            deviceGroupIDFirstByteHex: "a1"
         )
+
+        let mediatorMessageProtocol = MediatorMessageProtocol(deviceGroupKeys: deviceGroupKeys!)
         return mediatorMessageProtocol.getEnvelopeForOutgoingMessage(
             type: Int32(abstractMessage.type()),
             body: abstractMessage.body(),

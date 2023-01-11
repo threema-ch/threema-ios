@@ -32,7 +32,7 @@
     return nil;
 }
 
-- (BOOL)shouldPush {
+- (BOOL)flagShouldPush {
     return NO;
 }
 

@@ -38,7 +38,7 @@ class MultiDeviceManagerMock: MultiDeviceManagerProtocol {
         Promise { seal in seal.fulfill([]) }
     }
 
-    func drop(device: DeviceInfo) -> Promise<Bool> {
-        Promise { seal in seal.fulfill(true) }
+    func drop(device: DeviceInfo) -> Promise<Void> {
+        Promise()
     }
 }

@@ -75,10 +75,7 @@ class ThreemaCallsSettingsViewController: ThemedTableViewController {
     @objc func incomingUpdate() {
         loadSettings()
         updateView()
-        NotificationBannerHelper.newInfoToast(
-            title: BundleUtil.localizedString(forKey: "incoming_settings_sync_title"),
-            body: BundleUtil.localizedString(forKey: "incoming_settings_sync_message")
-        )
+        NotificationPresenterWrapper.shared.present(type: .settingsSyncSuccess)
     }
     
     private func loadSettings() {
@@ -93,10 +90,8 @@ class ThreemaCallsSettingsViewController: ThemedTableViewController {
     // MARK: - Table view data source
     
     override func numberOfSections(in tableView: UITableView) -> Int {
-        if is64Bit == 1 {
-            if enableThreemaCallSwitch.isOn {
-                return 5
-            }
+        if enableThreemaCallSwitch.isOn {
+            return 5
         }
         return 1
     }
@@ -149,7 +144,7 @@ class ThreemaCallsSettingsViewController: ThemedTableViewController {
     }
     
     func attemptSave() {
-        if ServerConnector.shared()?.isMultiDeviceActivated ?? false {
+        if ServerConnector.shared().isMultiDeviceActivated {
             let syncHelper = UISyncHelper(
                 viewController: self,
                 progressString: BundleUtil.localizedString(forKey: "syncing_settings")
@@ -175,17 +170,8 @@ private extension ThreemaCallsSettingsViewController {
     // MARK: Private functions
     
     private func setupCells() {
-        if is64Bit == 1 {
-            enableDisableCallCellForMDM(!mdmSetup.existsMdmKey(MDM_KEY_DISABLE_CALLS))
-            enableDisableVideoCellForMDM(!mdmSetup.existsMdmKey(MDM_KEY_DISABLE_VIDEO_CALLS))
-        }
-        else {
-            UserSettings.shared().enableThreemaCall = false
-            enableThreemaCallSwitch.isOn = false
-            enableThreemaCallsCell.isUserInteractionEnabled = false
-            enableThreemaCallsCell.textLabel?.isEnabled = false
-            enableThreemaCallSwitch.isEnabled = false
-        }
+        enableDisableCallCellForMDM(!mdmSetup.existsMdmKey(MDM_KEY_DISABLE_CALLS))
+        enableDisableVideoCellForMDM(!mdmSetup.existsMdmKey(MDM_KEY_DISABLE_VIDEO_CALLS))
         setupLabels()
         setupSwitches()
     }

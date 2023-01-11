@@ -282,7 +282,6 @@ class MediatorReflectedIncomingMessageProcessor {
         groupCreateMessage amsg: GroupCreateMessage
     ) throws -> Promise<Void> {
         messageStore.save(groupCreateMessage: amsg)
-        return Promise()
     }
 
     private func process(
@@ -452,13 +451,12 @@ class MediatorReflectedIncomingMessageProcessor {
         guard let msg = VoIPCallMessageDecoder.decodeVoIPCallOffer(from: amsg) else {
             throw MediatorReflectedProcessorError.messageNotProcessed(message: imsg.loggingDescription)
         }
-        processVoIPCallMessage(
+        return processVoIPCallMessage(
             abstractMessage: amsg,
             voipMessage: msg,
             identity: senderIdentity,
             isOutgoing: false
         )
-        return Promise()
     }
 
     private func process(
@@ -469,13 +467,12 @@ class MediatorReflectedIncomingMessageProcessor {
         guard let msg = VoIPCallMessageDecoder.decodeVoIPCallAnswer(from: amsg) else {
             throw MediatorReflectedProcessorError.messageNotProcessed(message: imsg.loggingDescription)
         }
-        processVoIPCallMessage(
+        return processVoIPCallMessage(
             abstractMessage: amsg,
             voipMessage: msg,
             identity: senderIdentity,
             isOutgoing: false
         )
-        return Promise()
     }
 
     private func process(
@@ -486,13 +483,12 @@ class MediatorReflectedIncomingMessageProcessor {
         guard let msg = VoIPCallMessageDecoder.decodeVoIPCallIceCandidates(from: amsg) else {
             throw MediatorReflectedProcessorError.messageNotProcessed(message: imsg.loggingDescription)
         }
-        processVoIPCallMessage(
+        return processVoIPCallMessage(
             abstractMessage: amsg,
             voipMessage: msg,
             identity: senderIdentity,
             isOutgoing: false
         )
-        return Promise()
     }
 
     private func process(
@@ -503,13 +499,12 @@ class MediatorReflectedIncomingMessageProcessor {
         guard let msg = VoIPCallMessageDecoder.decodeVoIPCallHangup(from: amsg, contactIdentity: senderIdentity) else {
             throw MediatorReflectedProcessorError.messageNotProcessed(message: imsg.loggingDescription)
         }
-        processVoIPCallMessage(
+        return processVoIPCallMessage(
             abstractMessage: amsg,
             voipMessage: msg,
             identity: senderIdentity,
             isOutgoing: false
         )
-        return Promise()
     }
 
     private func process(
@@ -520,13 +515,12 @@ class MediatorReflectedIncomingMessageProcessor {
         guard let msg = VoIPCallMessageDecoder.decodeVoIPCallRinging(from: amsg, contactIdentity: senderIdentity) else {
             throw MediatorReflectedProcessorError.messageNotProcessed(message: imsg.loggingDescription)
         }
-        processVoIPCallMessage(
+        return processVoIPCallMessage(
             abstractMessage: amsg,
             voipMessage: msg,
             identity: senderIdentity,
             isOutgoing: false
         )
-        return Promise()
     }
 
     private func processVoIPCallMessage(
@@ -534,14 +528,25 @@ class MediatorReflectedIncomingMessageProcessor {
         voipMessage: VoIPCallMessageProtocol,
         identity: String,
         isOutgoing: Bool
-    ) {
-        if !isOutgoing {
-            messageProcessorDelegate.incomingMessageStarted(amsg)
-        }
-
-        messageProcessorDelegate.processVoIPCall(voipMessage as! NSObject, identity: identity) { delegate in
+    ) -> Promise<Void> {
+        Promise { seal in
             if !isOutgoing {
-                delegate.incomingMessageFinished(amsg, isPendingGroup: false)
+                messageProcessorDelegate.incomingMessageStarted(amsg)
+            }
+
+            messageProcessorDelegate.processVoIPCall(voipMessage as! NSObject, identity: identity) { delegate in
+                if !isOutgoing {
+                    delegate.incomingMessageFinished(amsg, isPendingGroup: false)
+                }
+
+                if AppGroup.getCurrentType() == AppGroupTypeNotificationExtension,
+                   !(voipMessage is VoIPCallOfferMessage),
+                   !(voipMessage is VoIPCallHangupMessage) {
+                    seal.reject(MediatorReflectedProcessorError.doNotAckIncomingVoIPMessage)
+                    return
+                }
+
+                seal.fulfill_()
             }
         }
     }
@@ -560,7 +565,7 @@ class MediatorReflectedIncomingMessageProcessor {
         }
 
         guard let sender = senderIdentity else {
-            throw MediatorReflectedProcessorError.contactNotFound(message: imsg.loggingDescription)
+            throw MediatorReflectedProcessorError.contactNotFound(identity: imsg.senderIdentity)
         }
         return sender
     }

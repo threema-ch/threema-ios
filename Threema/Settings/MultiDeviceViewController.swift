@@ -31,8 +31,8 @@ class MultiDeviceViewController: ThemedTableViewController {
 
     private let refreshControlTableView = UIRefreshControl()
 
-    private var thisDevice: DeviceInfo?
-    private var otherDevices: [DeviceInfo]?
+    var thisDevice: DeviceInfo?
+    var otherDevices: [DeviceInfo]?
 
     // MARK: - Lifecycle
 
@@ -41,17 +41,22 @@ class MultiDeviceViewController: ThemedTableViewController {
 
         title = BundleUtil.localizedString(forKey: "multi_device_linked_devices_title")
         
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(wizardUpdate),
+            name: NSNotification.Name(rawValue: kNotificationMultiDeviceWizardDidUpdate),
+            object: nil
+        )
+        
         registerHeaderAndCells()
     }
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
 
-        refreshControlTableView
-            .attributedTitle = NSAttributedString(
-                string: BundleUtil
-                    .localizedString(forKey: "multi_device_linked_devices_refresh")
-            )
+        refreshControlTableView.attributedTitle = NSAttributedString(
+            string: BundleUtil.localizedString(forKey: "multi_device_linked_devices_refresh")
+        )
         refreshControlTableView.addTarget(self, action: #selector(refreshTableView), for: UIControl.Event.valueChanged)
         tableView?.addSubview(refreshControlTableView)
         
@@ -71,33 +76,60 @@ class MultiDeviceViewController: ThemedTableViewController {
     // MARK: - Private functions
     
     /// Load this device, other devices and reload view
-    private func load() {
-        activityIndicator.hidesWhenStopped = true
-        activityIndicator.startAnimating()
+    func load() {
+        DispatchQueue.main.async {
+            self.activityIndicator.hidesWhenStopped = true
+            self.activityIndicator.startAnimating()
+        }
 
         let bi = BusinessInjector()
         thisDevice = bi.multiDeviceManager.thisDevice
-        bi.multiDeviceManager.otherDevices()
-            .done { items in
-                self.otherDevices = items
-            }
-            .ensure {
+
+        if bi.userSettings.enableMultiDevice {
+            bi.multiDeviceManager.otherDevices()
+                .done { items in
+                    self.otherDevices = items
+                }
+                .ensure {
+                    self.tableView.reloadData()
+                    self.activityIndicator.stopAnimating()
+                }
+                .catch { error in
+                    DDLogError(String.localizedStringWithFormat(
+                        BundleUtil.localizedString(forKey: "multi_device_linked_devices_loading_failed"),
+                        error as CVarArg
+                    ))
+
+                    UIAlertTemplate.showAlert(
+                        owner: self,
+                        title: BundleUtil.localizedString(forKey: "multi_device_linked_devices_failed_to_load_title"),
+                        message: BundleUtil.localizedString(
+                            forKey: "multi_device_linked_devices_failed_to_load_message"
+                        )
+                    )
+                }
+        }
+        else {
+            otherDevices = []
+
+            DispatchQueue.main.async {
                 self.tableView.reloadData()
                 self.activityIndicator.stopAnimating()
             }
-            .catch { error in
-                DDLogError(String(
-                    format: BundleUtil
-                        .localizedString(forKey: "multi_device_linked_devices_loading_failed"),
-                    error as CVarArg
-                ))
+        }
+    }
 
-                UIAlertTemplate.showAlert(
-                    owner: self,
-                    title: BundleUtil.localizedString(forKey: "multi_device_linked_devices_failed_to_load_title"),
-                    message: BundleUtil.localizedString(forKey: "multi_device_linked_devices_failed_to_load_message")
-                )
-            }
+    func showAlertRemoveDeviceFailed() {
+        UIAlertTemplate.showAlert(
+            owner: self,
+            title: BundleUtil.localizedString(forKey: "multi_device_linked_devices_failed_remove_title"),
+            message: BundleUtil
+                .localizedString(forKey: "multi_device_linked_devices_failed_remove_message_2")
+        )
+    }
+
+    @objc private func wizardUpdate() {
+        load()
     }
 }
 
@@ -106,7 +138,15 @@ class MultiDeviceViewController: ThemedTableViewController {
 extension MultiDeviceViewController {
 
     override func numberOfSections(in tableView: UITableView) -> Int {
-        2
+        guard let otherDevicesCount = otherDevices?.count else {
+            return 1
+        }
+        
+        guard otherDevicesCount > 0 else {
+            return 1
+        }
+        
+        return 2
     }
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -119,8 +159,12 @@ extension MultiDeviceViewController {
                 withIdentifier: "MultiThisDeviceCell",
                 for: indexPath
             ) as! MultiThisDeviceCell
+            cell.parentViewController = self
             cell.deviceInfo = thisDevice
-            cell.activated = BusinessInjector().serverConnector.isMultiDeviceActivated
+
+            let bi = BusinessInjector()
+
+            cell.enabled = bi.userSettings.enableMultiDevice
             return cell
         }
         else {
@@ -137,6 +181,13 @@ extension MultiDeviceViewController {
         section == 0 ? BundleUtil.localizedString(forKey: "multi_device_linked_devices_this") : BundleUtil
             .localizedString(forKey: "multi_device_linked_devices_others")
     }
+
+    override func tableView(_ tableView: UITableView, titleForFooterInSection section: Int) -> String? {
+        if section == 0 {
+            return BundleUtil.localizedString(forKey: "multi_device_linked_devices_desc")
+        }
+        return nil
+    }
     
     override func tableView(_ tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
         indexPath.section == 1
@@ -148,44 +199,49 @@ extension MultiDeviceViewController {
         forRowAt indexPath: IndexPath
     ) {
         if editingStyle == .delete,
-           let item = otherDevices?[indexPath.row] {
+           let otherDevicesCount = otherDevices?.count {
             activityIndicator.hidesWhenStopped = true
             activityIndicator.startAnimating()
 
-            // Drop device and reload other devices
-            let bi = BusinessInjector()
-            bi.multiDeviceManager.drop(device: item)
-                .done { (success: Bool) in
-                    self.load()
+            let dl = DeviceLinking(businessInjector: BusinessInjector())
 
-                    if !success {
-                        UIAlertTemplate.showAlert(
-                            owner: self,
-                            title: BundleUtil
-                                .localizedString(forKey: "multi_device_linked_devices_failed_remove_title"),
-                            message: BundleUtil
-                                .localizedString(forKey: "multi_device_linked_devices_failed_remove_message")
-                        )
+            if otherDevicesCount == 1 {
+                dl.disableMultiDevice()
+                    .ensure {
+                        self.load()
+                        self.activityIndicator.stopAnimating()
                     }
-                }
-                .ensure {
-                    self.activityIndicator.stopAnimating()
-                }
-                .catch { error in
-                    DDLogError(String(
-                        format: BundleUtil
-                            .localizedString(forKey: "multi_device_linked_devices_remove_failed"),
-                        error as CVarArg
-                    ))
-
-                    UIAlertTemplate.showAlert(
-                        owner: self,
-                        title: BundleUtil.localizedString(forKey: "multi_device_linked_devices_failed_remove_title"),
-                        message: BundleUtil
-                            .localizedString(forKey: "multi_device_linked_devices_failed_remove_message_2")
-                    )
-                }
+                    .catch { error in
+                        DDLogError("Disable Multi Device failed: \(error)")
+                        self.showAlertRemoveDeviceFailed()
+                    }
+            }
+            else if let item = otherDevices?[indexPath.row] {
+                dl.drop(items: [item])
+                    .ensure {
+                        self.load()
+                        self.activityIndicator.stopAnimating()
+                    }
+                    .catch { error in
+                        DDLogError("Drop device failed: \(error)")
+                        self.showAlertRemoveDeviceFailed()
+                    }
+            }
         }
+    }
+    
+    override func tableView(
+        _ tableView: UITableView,
+        willDisplay cell: UITableViewCell,
+        forRowAt indexPath: IndexPath
+    ) {
+        guard let multiDeviceCell = cell as? MultiDeviceCell else {
+            return
+        }
+        
+        // This a hack, because `ThemedTableViewController` resets all the colors. We should remove this behavior
+        // of `ThemedTableViewController` in the future.
+        multiDeviceCell.updateColors()
     }
 
     /// Pull to refresh

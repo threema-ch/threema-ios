@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2020-2022 Threema GmbH
+// Copyright (c) 2022 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -20,209 +20,175 @@
 
 import CocoaLumberjackSwift
 import Foundation
-import PromiseKit
+
+protocol BlobUploaderDelegate: AnyObject {
+    func blobUploader(for objectID: NSManagedObjectID, didUpdate progress: Progress) async
+}
 
 class BlobUploader: NSObject {
     
+    enum BlobUploaderError: Error {
+        case uploadFailed(message: String)
+        case invalidUploadURL
+        case idGenerationFailed
+    }
+    
     private let blobURL: BlobURL
-    private let delegate: BlobUploadDelegate
+    private let queue: DispatchQueue
+    private var urlSessionManager: URLSessionManager
     
-    class BlobUploadItem {
-        let description: String
-        var totalBytesSent: Int64 = 0
-        var totalBytesExpectedToSend: Int64 = 0
-        var isCanceled = false
-        var blobID: Data?
-
-        init(_ taskDescription: String) {
-            self.description = taskDescription
-        }
-    }
+    private var progressObservers = [NSManagedObjectID: NSKeyValueObservation]()
+    private var activeTasks = [NSManagedObjectID: URLSessionTask]()
     
-    private var blobUploadItems: [BlobUploadItem]
+    // MARK: - Lifecycle
     
-    private var blobItemIndex = 0
-    
-    @objc init(blobURL: BlobURL, delegate: BlobUploadDelegate) {
+    init(
+        blobURL: BlobURL,
+        queue: DispatchQueue = DispatchQueue.main,
+        sessionManager: URLSessionManager = .shared
+    ) {
         self.blobURL = blobURL
-        self.delegate = delegate
-        
-        self.blobUploadItems = [BlobUploadItem]()
+        self.queue = queue
+        self.urlSessionManager = sessionManager
+        super.init()
     }
     
-    @objc func upload(blobs: [Data]) {
-        guard !blobs.isEmpty else {
-            return
-        }
-        
-        // Start all upload tasks
-        for blob in blobs {
-            blobUploadItems.append(startUpload(blob))
-        }
-    }
-
-    /// Cancel all upload tasks.
-    @objc func cancel() {
-        if let session = HttpClient.getSession(self) {
-            session.invalidateAndCancel()
-        }
-    }
+    // MARK: - Upload
     
-    private func startUpload(_ blob: Data) -> BlobUploadItem {
-        let boundary = "---------------------------Boundary_Line"
-        let contentType = String(format: "multipart/form-data; boundary=%@", boundary)
-
-        var data = Data()
-        data.append(contentsOf: String(format: "--%@\r\n", boundary).utf8)
-        data.append(contentsOf: "Content-Disposition: form-data; name=\"blob\"; filename=\"blob.bin\"\r\n".utf8)
-        data.append(contentsOf: "Content-Type: application/octet-stream\r\n\r\n".utf8)
-        data.append(blob)
-        data.append(contentsOf: String(format: "\r\n--%@--\r\n", boundary).utf8)
-        
-        blobItemIndex += 1
-        let blobUploadItem = BlobUploadItem(String(blobItemIndex))
-        
-        blobURL.upload { uploadURL, authorization, error in
-            if uploadURL == nil {
-                DDLogError(String(format: "Upload failed with error: %@", error!.localizedDescription))
-                self.delegate.uploadFailed()
-                return
-            }
-            
-            let client = HttpClient(authorization: authorization)
-            client.uploadDataMultipart(
-                taskDescription: blobUploadItem.description,
-                url: uploadURL!,
-                contentType: contentType,
-                data: data,
-                delegate: self
-            ) { task, data, response, error in
+    /// Uploads given data and provides progress updates to its delegate
+    /// - Parameters:
+    ///   - blobData: Data to be uploaded
+    ///   - origin: Origin of the Blob
+    ///   - objectID: ObjectID used to track progress
+    ///   - delegate: Delegate to send progress updates to
+    /// - Returns: Received data from server
+    @discardableResult
+    func upload(
+        blobData: Data,
+        origin: BlobOrigin,
+        objectID: NSManagedObjectID,
+        delegate: BlobUploaderDelegate? = nil
+    ) async throws -> Data {
+        try await withCheckedThrowingContinuation { continuation in
+            blobURL.upload(origin: origin, completionHandler: { uploadURL, authorization, error in
+                
                 if let error = error {
-                    DDLogError(String(format: "Upload failed with error: %@", error.localizedDescription))
-                    self.delegate.uploadFailed()
+                    continuation.resume(throwing: error)
                     return
                 }
-                guard let httpResponse = response as? HTTPURLResponse,
-                      (200...299).contains(httpResponse.statusCode) else {
-                    
-                    var logMessage = "Upload not succeeded"
-                    if let response = response as? HTTPURLResponse {
-                        logMessage += " \(response.statusCode)"
-                    }
-                    DDLogWarn("\(logMessage).")
-                    
-                    if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 401 {
-                        AuthTokenManager.shared().clearCache()
-                    }
-                    
-                    self.delegate.uploadFailed()
+                
+                guard let uploadURL = uploadURL else {
+                    continuation.resume(throwing: BlobUploaderError.invalidUploadURL)
                     return
                 }
+                
+                let task = self
+                    .startUpload(for: uploadURL, and: blobData, authorization: authorization) { data, error in
+                        
+                        // Upload was completed
+                        if let error = error {
+                            continuation.resume(throwing: error)
+                        }
+                        else if let data = data {
+                            // We got data, so we create the ID for it
+                            guard let blobIDHex = String(bytes: data, encoding: .ascii),
+                                  let blobID = BytesUtility.toBytes(hexString: blobIDHex) else {
+                                continuation.resume(throwing: BlobUploaderError.idGenerationFailed)
+                                return
+                            }
                             
-                if let item = self.blobUploadItems.first(where: { $0.description == task?.taskDescription }),
-                   let receivedData = data {
-                    
-                    if let blobIDHex = String(bytes: receivedData, encoding: .ascii),
-                       let blobID = BytesUtility.toBytes(hexString: blobIDHex),
-                       blobID.count == ThreemaProtocol.blobIDLength {
+                            let id = Data(blobID)
+                            continuation.resume(returning: id)
+                        }
+                        else {
+                            continuation.resume(
+                                throwing: BlobUploaderError.uploadFailed(message: "[BlobUploader] Upload unsuccessful.")
+                            )
+                        }
                         
-                        item.blobID = Data(blobID)
-                        
-                        if self.blobUploadItems.filter({ $0.blobID == nil }).isEmpty {
-                            self.delegate.uploadSucceeded(with: self.blobUploadItems.map { $0.blobID! })
+                        // Remove completed Task
+                        self.progressObservers.removeValue(forKey: objectID)
+                        self.activeTasks.removeValue(forKey: objectID)
+                    }
+                
+                // Add created task to keep track
+                self.activeTasks[objectID] = task
+                let observer = task.progress.observe(\.fractionCompleted) { progress, _ in
+                    Task {
+                        await delegate?.blobUploader(for: objectID, didUpdate: progress)
+                    }
+                }
+                self.progressObservers[objectID] = observer
+            })
+        }
+    }
+    
+    public func startUpload(
+        for url: URL,
+        and data: Data,
+        authorization: String?,
+        completion: @escaping (Data?, Error?) -> Void
+    ) -> URLSessionDataTask {
+        
+        let client = HTTPClient(authorization: authorization, sessionManager: urlSessionManager)
+        let task = client
+            .uploadData(
+                url: url,
+                data: createUploadData(with: data),
+                contentType: .multiPart
+            ) { data, response, error in
+            
+                var uploadError: Error?
+            
+                if let error = error {
+                    uploadError = error
+                }
+                else {
+                    if response is HTTPURLResponse {
+                        if let response = response as? HTTPURLResponse,
+                           !(200...299).contains(response.statusCode) {
+                            uploadError = BlobUploaderError
+                                .uploadFailed(
+                                    message: "[BlobUploader] Download failed with response code: \(response.statusCode)."
+                                )
                         }
                     }
                     else {
-                        DDLogError("Could not evaluate received blob ID.")
-                        self.delegate.uploadFailed()
+                        uploadError = BlobUploaderError.uploadFailed(message: "[BlobUploader] Response is missing")
                     }
                 }
-                else {
-                    DDLogError("No data received for this upload task.")
-                    self.delegate.uploadFailed()
+                self.queue.async {
+                    completion(data, uploadError)
                 }
             }
-        }
-                
-        return blobUploadItem
-    }
-
-    /// Progress of all upload tasks.
-    /// - Returns: Progress, represented by a floating-point value between 0.0 and 1.0
-    var progressPrecent: Double {
-        guard !blobUploadItems.isEmpty else {
-            return 0
-        }
-            
-        var sumTotalBytesSent: Double = 0
-        var sumTotalBytesExpectedToSend: Double = 0
-            
-        for item in blobUploadItems {
-            sumTotalBytesSent += Double(item.totalBytesSent)
-            sumTotalBytesExpectedToSend += Double(item.totalBytesExpectedToSend)
-        }
-            
-        return sumTotalBytesSent / sumTotalBytesExpectedToSend
-    }
-}
-
-// MARK: - URLSessionTaskDelegate
-
-extension BlobUploader: URLSessionTaskDelegate {
-    
-    func urlSession(
-        _ session: URLSession,
-        task: URLSessionTask,
-        didSendBodyData bytesSent: Int64,
-        totalBytesSent: Int64,
-        totalBytesExpectedToSend: Int64
-    ) {
-        if let item = blobUploadItems.first(where: { $0.description == task.taskDescription }) {
-            if !delegate.uploadShouldCancel() {
-                item.totalBytesSent = totalBytesSent
-                item.totalBytesExpectedToSend = totalBytesExpectedToSend
-                
-                delegate.uploadProgress(NSNumber(value: progressPrecent))
-            }
-            else {
-                task.cancel()
-                
-                item.isCanceled = true
-                if blobUploadItems.filter({ !$0.isCanceled }).isEmpty {
-                    delegate.uploadDidCancel()
-                }
-            }
-        }
-        else {
-            DDLogWarn("No internal data found for this upload task.")
-        }
+        return task
     }
     
-    func urlSession(_ session: URLSession, didBecomeInvalidWithError error: Error?) {
-        if let error = error {
-            DDLogError(String(format: "Upload session invalid with error: %@", error.localizedDescription))
+    /// Cancels a upload for given objectID if it exists
+    /// - Parameters:
+    ///   - objectID: ObjectID of blob
+    public func cancelUpload(for objectID: NSManagedObjectID) {
+        guard let task = activeTasks[objectID] else {
+            return
         }
-
-        if !delegate.uploadShouldCancel() {
-            delegate.uploadFailed()
-        }
-        else {
-            session.getAllTasks { tasks in
-                for task in tasks {
-                    if let item = self.blobUploadItems.first(where: { $0.description == task.taskDescription }) {
-                        item.isCanceled = true
-                    }
-                }
-                self.delegate.uploadDidCancel()
-            }
-        }
+        
+        task.cancel()
+        activeTasks.removeValue(forKey: objectID)
+        progressObservers.removeValue(forKey: objectID)
     }
     
-    func urlSession(
-        _ session: URLSession,
-        didReceive challenge: URLAuthenticationChallenge,
-        completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void
-    ) {
-        SSLCAHelper.session(session, didReceive: challenge, completion: completionHandler)
+    // MARK: - Helpers
+    
+    private func createUploadData(with blobData: Data) -> Data {
+        let boundary = "---------------------------Boundary_Line"
+        
+        var data = Data()
+        data.append(contentsOf: "--\(boundary)\r\n".utf8)
+        data.append(contentsOf: "Content-Disposition: form-data; name=\"blob\"; filename=\"blob.bin\"\r\n".utf8)
+        data.append(contentsOf: "Content-Type: application/octet-stream\r\n\r\n".utf8)
+        data.append(blobData)
+        data.append(contentsOf: "\r\n--\(boundary)--\r\n".utf8)
+        
+        return data
     }
 }

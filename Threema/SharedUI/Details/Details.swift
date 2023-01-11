@@ -24,6 +24,17 @@
     case preview
 }
 
+/// Delegate for details
+///
+/// When we remove `objc` check if we can move this into the `Details` name space
+@objc protocol DetailsDelegate: AnyObject {
+    /// Called when the details view controller did disappear
+    func detailsDidDisappear()
+    
+    /// Show a chat search in the delegate
+    func showChatSearch()
+}
+
 enum Details {
 
     struct Action: Hashable {
@@ -35,12 +46,21 @@ enum Details {
         
         let destructive: Bool
         
+        let disabled: Bool
+        
         let run: Action
         
-        init(title: String, imageName: String? = nil, destructive: Bool = false, action: @escaping Action) {
+        init(
+            title: String,
+            imageName: String? = nil,
+            destructive: Bool = false,
+            disabled: Bool = false,
+            action: @escaping Action
+        ) {
             self.title = title
             self.imageName = imageName
             self.destructive = destructive
+            self.disabled = disabled
             self.run = action
         }
         
@@ -67,12 +87,20 @@ enum Details {
         let currentBool: BoolProvider
         
         let destructive: Bool
+        let disabled: Bool
         
         let run: Action
         
-        init(title: String, destructive: Bool = false, boolProvider: @escaping BoolProvider, action: @escaping Action) {
+        init(
+            title: String,
+            destructive: Bool = false,
+            disabled: Bool = false,
+            boolProvider: @escaping BoolProvider,
+            action: @escaping Action
+        ) {
             self.title = title
             self.destructive = destructive
+            self.disabled = disabled
             self.currentBool = boolProvider
             self.run = action
         }

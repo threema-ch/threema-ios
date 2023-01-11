@@ -25,6 +25,7 @@
 #import "AppDelegate.h"
 #import "UserSettings.h"
 #import "Threema-Swift.h"
+#import "UserSettings.h"
 
 #ifdef DEBUG
   static const DDLogLevel ddLogLevel = DDLogLevelVerbose;
@@ -438,8 +439,14 @@
     DDLogVerbose(@"Sending file");    
     NSURL *url = [_recorder audioURL];
     URLSenderItem *item = [URLSenderItem itemWithUrl:url type:(NSString *)kUTTypeAudio renderType:@1 sendAsFile:true];
-    FileMessageSender *sender = [[FileMessageSender alloc] init];
-    [sender sendItem:item inConversation:_conversation requestId:nil];
+    if ([UserSettings sharedUserSettings].newChatViewActive) {
+        BlobManagerObjcWrapper *manager = [[BlobManagerObjcWrapper alloc] init];
+        [manager createMessageAndSyncBlobsFor:item in:_conversation correlationID:nil webRequestID:nil];
+    }
+    else {
+        Old_FileMessageSender *sender = [[Old_FileMessageSender alloc] init];
+        [sender sendItem:item inConversation:_conversation requestId:nil];
+    }
 }
 
 

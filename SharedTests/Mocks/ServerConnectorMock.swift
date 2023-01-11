@@ -35,17 +35,17 @@ class ServerConnectorMock: NSObject, ServerConnectorProtocol {
     var messageProcessorDelegate: MessageProcessorDelegate?
     var messageListenerDelegate: MessageListenerDelegate?
 
-    var waitSecondsBeforSend = 0
+    var waitMillisecondsBeforSend = 5
     let sendQueue = DispatchQueue(label: "ch.threema.ThreemaFrameworkTests.ServerConnectorMock")
 
-    init(connectionState: ConnectionState, deviceID: Data?, deviceGroupPathKey: Data?) {
+    init(connectionState: ConnectionState, deviceID: Data?, deviceGroupKeys: DeviceGroupKeys?) {
         self.connectionState = connectionState
         self.deviceID = deviceID
-        self.deviceGroupPathKey = deviceGroupPathKey
+        self.deviceGroupKeys = deviceGroupKeys
     }
     
     convenience init(connectionState: ConnectionState) {
-        self.init(connectionState: connectionState, deviceID: nil, deviceGroupPathKey: nil)
+        self.init(connectionState: connectionState, deviceID: nil, deviceGroupKeys: nil)
     }
     
     override convenience init() {
@@ -54,16 +54,20 @@ class ServerConnectorMock: NSObject, ServerConnectorProtocol {
 
     // MARK: - ServerConnectorProtocol
 
-    var businessInjectorForMessageProcessing: NSObject!
+    var businessInjectorForMessageProcessing: NSObject?
 
     var connectionState: ConnectionState
 
-    var deviceID: Data!
+    var deviceID: Data?
 
-    var deviceGroupPathKey: Data!
+    var deviceGroupKeys: DeviceGroupKeys?
+
+    func name(for connectionState: ConnectionState) -> String {
+        "unknown"
+    }
 
     var isMultiDeviceActivated: Bool {
-        deviceGroupPathKey != nil
+        deviceGroupKeys != nil
     }
 
     var isAppInBackground = false
@@ -76,15 +80,23 @@ class ServerConnectorMock: NSObject, ServerConnectorProtocol {
         // no-op
     }
 
+    func connectWaitDoNotUnblockIncomingMessages(initiator: ConnectionInitiator) {
+        // no-op
+    }
+
     func disconnect(initiator: ConnectionInitiator) {
         // no-op
     }
 
-    func registerConnectionStateDelegate(delegate: ConnectionStateDelegate!) {
+    func deactivateMultiDevice() {
+        // no-op
+    }
+
+    func registerConnectionStateDelegate(delegate: ConnectionStateDelegate) {
         connectionStateDelegate = delegate
     }
 
-    func unregisterConnectionStateDelegate(delegate: ConnectionStateDelegate!) {
+    func unregisterConnectionStateDelegate(delegate: ConnectionStateDelegate) {
         connectionStateDelegate = nil
     }
 
@@ -92,11 +104,11 @@ class ServerConnectorMock: NSObject, ServerConnectorProtocol {
 
     func changed(connectionState state: ConnectionState) { }
     
-    func registerTaskExecutionTransactionDelegate(delegate: TaskExecutionTransactionDelegate!) {
+    func registerTaskExecutionTransactionDelegate(delegate: TaskExecutionTransactionDelegate) {
         taskExecutionTransactionDelegate = delegate
     }
     
-    func unregisterTaskExecutionTransactionDelegate(delegate: TaskExecutionTransactionDelegate!) {
+    func unregisterTaskExecutionTransactionDelegate(delegate: TaskExecutionTransactionDelegate) {
         taskExecutionTransactionDelegate = nil
     }
     
@@ -104,18 +116,17 @@ class ServerConnectorMock: NSObject, ServerConnectorProtocol {
         taskExecutionTransactionDelegate?.transactionResponse(messageType, reason: reason)
     }
     
-    func reflectMessage(_ message: Data!) -> Bool {
+    func reflectMessage(_ message: Data) -> Bool {
         reflectMessageCalls.append(message)
         return reflectMessageClosure?(message) ?? false
     }
     
-    func send(_ message: BoxedMessage!) -> Bool {
-        if let message = message {
-            sendMessageCalls.append(message)
+    func send(_ message: BoxedMessage) -> Bool {
+        sendMessageCalls.append(message)
 
-            if connectionState == .loggedIn {
-                // TODO: Should wait here to simulate poor network, but it those not work
-//                sendQueue.asyncAfter(deadline: .now() + .seconds(self.waitSecondsBeforSend), execute: {
+        if connectionState == .loggedIn {
+            // TODO: Should wait here to simulate poor network, but it those not work
+            sendQueue.asyncAfter(deadline: .now() + .milliseconds(waitMillisecondsBeforSend)) {
                 NotificationCenter.default.post(
                     name: TaskManager.chatMessageAckObserverName(
                         messageID: message.messageID,
@@ -123,28 +134,27 @@ class ServerConnectorMock: NSObject, ServerConnectorProtocol {
                     ),
                     object: nil
                 )
-//                })
-                return true
             }
+            return true
         }
 
         return false
     }
     
-    func completedProcessingMessage(_ boxmsg: BoxedMessage!) -> Bool {
+    func completedProcessingMessage(_ boxmsg: BoxedMessage) -> Bool {
         completedProcessingMessageCalls.append(boxmsg)
         return connectionState == .loggedIn
     }
     
-    func failedProcessingMessage(_ boxmsg: BoxedMessage!, error err: Error!) {
+    func failedProcessingMessage(_ boxmsg: BoxedMessage, error err: Error) {
         failedProcessingMessageCalls.append(boxmsg)
     }
 
-    func registerMessageListenerDelegate(delegate: MessageListenerDelegate!) {
+    func registerMessageListenerDelegate(delegate: MessageListenerDelegate) {
         messageListenerDelegate = delegate
     }
 
-    func unregisterMessageListenerDelegate(delegate: MessageListenerDelegate!) {
+    func unregisterMessageListenerDelegate(delegate: MessageListenerDelegate) {
         if let delegateMsgLis = messageListenerDelegate, delegateMsgLis.isEqual(delegate) {
             messageListenerDelegate = nil
         }
@@ -152,13 +162,15 @@ class ServerConnectorMock: NSObject, ServerConnectorProtocol {
 
     // MARK: - MessageListenerDelegate
 
-    func messageReceived(type: UInt8, data: Data) { }
+    func messageReceived(listener: MessageListenerDelegate, type: UInt8, data: Data) {
+        // no-op
+    }
 
-    func registerMessageProcessorDelegate(delegate: MessageProcessorDelegate!) {
+    func registerMessageProcessorDelegate(delegate: MessageProcessorDelegate) {
         messageProcessorDelegate = delegate
     }
 
-    func unregisterMessageProcessorDelegate(delegate: MessageProcessorDelegate!) {
+    func unregisterMessageProcessorDelegate(delegate: MessageProcessorDelegate) {
         if let delegateMsgPro = messageProcessorDelegate, delegateMsgPro.isEqual(delegate) {
             messageProcessorDelegate = nil
         }
@@ -177,16 +189,22 @@ class ServerConnectorMock: NSObject, ServerConnectorProtocol {
     func incomingMessageChanged(_ message: BaseMessage, fromIdentity: String) { }
     
     func incomingMessageFinished(_ message: AbstractMessage, isPendingGroup: Bool) { }
+
+    func readMessage(inConversations: Set<Conversation>?) {
+        // no-op
+    }
     
     func incomingMessageFailed(_ message: BoxedMessage) {
+        // no-op
+    }
+
+    func incomingAbstractMessageFailed(_ message: AbstractMessage) {
         // no-op
     }
 
     func taskQueueEmpty(_ queueTypeName: String) {
         messageProcessorDelegate?.taskQueueEmpty(queueTypeName)
     }
-    
-    func outgoingMessageFinished(_ message: AbstractMessage) { }
     
     func chatQueueDry() { }
     

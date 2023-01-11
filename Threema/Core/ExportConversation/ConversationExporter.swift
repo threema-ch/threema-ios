@@ -107,8 +107,8 @@ class ConversationExporter: NSObject, PasswordCallback {
     
     /// Exports a conversation
     @objc func exportConversation() {
-        emailSubject = String(
-            format: BundleUtil.localizedString(forKey: "conversation_log_subject"),
+        emailSubject = String.localizedStringWithFormat(
+            BundleUtil.localizedString(forKey: "conversation_log_subject"),
             conversation.displayName ?? ""
         )
         ZipFileContainer.cleanFiles()
@@ -294,8 +294,8 @@ extension ConversationExporter {
             }
             
             po.completedUnitCount += 1
-            hud.label.text = String(
-                format: BundleUtil.localizedString(forKey: "export_progress_label"),
+            hud.label.text = String.localizedStringWithFormat(
+                BundleUtil.localizedString(forKey: "export_progress_label"),
                 po.completedUnitCount,
                 po.totalUnitCount
             )
@@ -471,8 +471,11 @@ extension ConversationExporter {
     /// Shows an alert with an error code
     /// - Parameter errorCode: the error code shown in the alert
     func showGeneralAlert(errorCode: Int) {
-        let title = String(format: BundleUtil.localizedString(forKey: "chat_export_failed_title"))
-        let message = String(format: BundleUtil.localizedString(forKey: "chat_export_failed_message"), errorCode)
+        let title = BundleUtil.localizedString(forKey: "chat_export_failed_title")
+        let message = String.localizedStringWithFormat(
+            BundleUtil.localizedString(forKey: "chat_export_failed_message"),
+            errorCode
+        )
         
         UIAlertTemplate.showAlert(owner: viewController!, title: title, message: message, actionOk: nil)
     }
@@ -486,7 +489,11 @@ extension ConversationExporter {
         let free = ByteCountFormatter.string(fromByteCount: freeStorage, countStyle: .file)
         
         let title = BundleUtil.localizedString(forKey: "not_enough_storage_title")
-        let message = String(format: BundleUtil.localizedString(forKey: "amount_of_free_storage_needed"), needed, free)
+        let message = String.localizedStringWithFormat(
+            BundleUtil.localizedString(forKey: "amount_of_free_storage_needed"),
+            needed,
+            free
+        )
         
         UIAlertTemplate.showAlert(owner: viewController!, title: title, message: message, actionOk: nil)
     }
@@ -494,8 +501,7 @@ extension ConversationExporter {
     /// Presents the password request UI
     func requestPassword() {
         let passwordTrigger = CreatePasswordTrigger(on: viewController)
-        passwordTrigger?
-            .passwordAdditionalText = String(format: BundleUtil.localizedString(forKey: "password_description_export"))
+        passwordTrigger?.passwordAdditionalText = BundleUtil.localizedString(forKey: "password_description_export")
         passwordTrigger?.passwordCallback = self
         
         passwordTrigger?.presentPasswordUI()
@@ -560,8 +566,8 @@ extension ConversationExporter {
                 hud.button.setTitle(BundleUtil.localizedString(forKey: "cancel"), for: .normal)
                 hud.button.addTarget(self, action: #selector(self.progressHUDCancelPressed), for: .touchUpInside)
                 
-                hud.label.text = String(
-                    format: BundleUtil.localizedString(forKey: "export_progress_label"),
+                hud.label.text = String.localizedStringWithFormat(
+                    BundleUtil.localizedString(forKey: "export_progress_label"),
                     0,
                     totalWork
                 )

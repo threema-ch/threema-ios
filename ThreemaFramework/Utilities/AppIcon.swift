@@ -22,48 +22,64 @@ import Foundation
 
 public enum AppIcon: CaseIterable {
     
-    // This is also the order in AppIconSettingsView
+    // Default Icon
     case `default`
+    
+    // Base Icons
     case icon2019
     case icon20132
     case icon20131
+    
+    // Special Icons
+    case anniversary10
+    
+    // This is also the order in AppIconSettingsView
+    public static let defaultIcon: [AppIcon] = [.default]
+    public static let baseIcons: [AppIcon] = [.icon2019, .icon20132, .icon20131]
+    public static let specialIcons: [AppIcon] = [.anniversary10]
     
     public var iconName: String? {
         switch self {
         case .default:
             return nil
+        case .icon2019:
+            return "icon_2019"
         case .icon20131:
             return "icon_2013_march"
         case .icon20132:
             return "icon_2013_september"
-        case .icon2019:
-            return "icon_2019"
+        case .anniversary10:
+            return "icon_10_years"
         }
     }
         
     public var displayTitle: String {
         switch self {
         case .default:
-            return BundleUtil.localizedString(forKey: "app_icon_title_celebration")
+            return BundleUtil.localizedString(forKey: "app_icon_title_current")
+        case .icon2019:
+            return BundleUtil.localizedString(forKey: "app_icon_title_current")
         case .icon20131:
             return BundleUtil.localizedString(forKey: "app_icon_title_first")
         case .icon20132:
             return BundleUtil.localizedString(forKey: "app_icon_title_second")
-        case .icon2019:
-            return BundleUtil.localizedString(forKey: "app_icon_title_current")
+        case .anniversary10:
+            return BundleUtil.localizedString(forKey: "app_icon_title_celebration")
         }
     }
     
     public var displayInfo: String {
         switch self {
         case .default:
-            return BundleUtil.localizedString(forKey: "app_icon_description_celebration")
+            return BundleUtil.localizedString(forKey: "app_icon_description_current")
+        case .icon2019:
+            return BundleUtil.localizedString(forKey: "app_icon_description_current")
         case .icon20131:
             return BundleUtil.localizedString(forKey: "app_icon_description_first")
         case .icon20132:
             return BundleUtil.localizedString(forKey: "app_icon_description_second")
-        case .icon2019:
-            return BundleUtil.localizedString(forKey: "app_icon_description_current")
+        case .anniversary10:
+            return BundleUtil.localizedString(forKey: "app_icon_description_celebration")
         }
     }
     
@@ -72,13 +88,15 @@ public enum AppIcon: CaseIterable {
         
         switch self {
         case .default:
-            image = UIImage(named: "icon_10_years_full")
+            image = UIImage(named: "icon_2019_full")
+        case .icon2019:
+            image = UIImage(named: "icon_2019_full")
         case .icon20131:
             image = UIImage(named: "icon_2013_march_full")
         case .icon20132:
             image = UIImage(named: "icon_2013_september_full")
-        case .icon2019:
-            image = UIImage(named: "icon_2019_full")
+        case .anniversary10:
+            image = UIImage(named: "icon_10_years_full")
         }
         guard let image = image else {
             return UIImage(systemName: "questionmark.square.dashed")!

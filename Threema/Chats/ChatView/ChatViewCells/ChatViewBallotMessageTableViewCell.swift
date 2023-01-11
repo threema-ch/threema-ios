@@ -29,12 +29,21 @@ final class ChatViewBallotMessageTableViewCell: ChatViewBaseTableViewCell, Measu
     /// Ballot message to display
     ///
     /// Reset it when the message had any changes to update data shown in the views (e.g. date or status symbol).
-    var ballotMessage: BallotMessage? {
+    var ballotMessageAndNeighbors: (message: BallotMessage, neighbors: ChatViewDataSource.MessageNeighbors)? {
         didSet {
-            super.setMessage(to: ballotMessage)
-            updateCell(for: ballotMessage)
-
-            observe(ballot: ballotMessage?.ballot, oldBallot: oldValue?.ballot)
+            updateCell(for: ballotMessageAndNeighbors?.message)
+            observe(ballot: ballotMessageAndNeighbors?.message.ballot, oldBallot: oldValue?.message.ballot)
+            
+            super.setMessage(
+                to: ballotMessageAndNeighbors?.message,
+                with: ballotMessageAndNeighbors?.neighbors
+            )
+        }
+    }
+    
+    override var shouldShowDateAndState: Bool {
+        didSet {
+            messageDateAndStateView.isHidden = !shouldShowDateAndState
         }
     }
     
@@ -46,6 +55,15 @@ final class ChatViewBallotMessageTableViewCell: ChatViewBaseTableViewCell, Measu
     private lazy var ballotCellStackView: UIStackView = {
         let stackView = UIStackView(arrangedSubviews: [messageQuoteStackView, iconMessageContentView])
         stackView.axis = .vertical
+        
+        // This adds the margin to the chat bubble border
+        stackView.directionalLayoutMargins = NSDirectionalEdgeInsets(
+            top: -ChatViewConfiguration.Content.defaultTopBottomInset,
+            leading: -ChatViewConfiguration.Content.defaultLeadingTrailingInset,
+            bottom: -ChatViewConfiguration.Content.defaultTopBottomInset,
+            trailing: -ChatViewConfiguration.Content.defaultLeadingTrailingInset
+        )
+        
         return stackView
     }()
     
@@ -54,10 +72,10 @@ final class ChatViewBallotMessageTableViewCell: ChatViewBaseTableViewCell, Measu
         let messageQuoteStackView = MessageQuoteStackView()
       
         messageQuoteStackView.directionalLayoutMargins = NSDirectionalEdgeInsets(
-            top: ChatViewConfiguration.Content.defaultTopBottomInset,
-            leading: ChatViewConfiguration.Content.defaultLeadingTrailingInset,
-            bottom: 0, // Already set by iconMessageContentView
-            trailing: ChatViewConfiguration.Content.defaultLeadingTrailingInset
+            top: 0,
+            leading: 0,
+            bottom: ChatViewConfiguration.Content.defaultTopBottomInset,
+            trailing: 0
         )
         messageQuoteStackView.isLayoutMarginsRelativeArrangement = true
 
@@ -69,7 +87,16 @@ final class ChatViewBallotMessageTableViewCell: ChatViewBaseTableViewCell, Measu
         messageTextView,
         messageSecondaryTextLabel,
         messageDateAndStateView,
-    ])
+    ]) { [weak self] in
+        guard let strongSelf = self else {
+            return
+        }
+        
+        strongSelf.chatViewTableViewCellDelegate?.didTap(
+            message: strongSelf.ballotMessageAndNeighbors?.message,
+            in: strongSelf
+        )
+    }
     
     private lazy var defaultSymbol = UIImage(systemName: "chart.pie.fill")?.withRenderingMode(.alwaysOriginal)
 
@@ -82,7 +109,7 @@ final class ChatViewBallotMessageTableViewCell: ChatViewBaseTableViewCell, Measu
         return imageView
     }()
     
-    private lazy var messageTextView = MessageTextView(messageTextViewDelegate: self)
+    private lazy var messageTextView = MessageTextView(messageTextViewDelegate: nil)
     private lazy var messageSecondaryTextLabel = MessageSecondaryTextLabel()
     private lazy var messageDateAndStateView = MessageDateAndStateView()
     
@@ -106,7 +133,7 @@ final class ChatViewBallotMessageTableViewCell: ChatViewBaseTableViewCell, Measu
         super.updateColors()
         
         // We must change the icon based on the closing state and re-assign the attributed text for the icons to change color as well
-        if let ballotMessage = ballotMessage {
+        if let ballotMessage = ballotMessageAndNeighbors?.message {
             if ballotMessage.isClosed() {
                 iconView.image = iconView.image?.withTintColor(Colors.textLight)
             }
@@ -128,6 +155,12 @@ final class ChatViewBallotMessageTableViewCell: ChatViewBaseTableViewCell, Measu
         messageDateAndStateView.updateColors()
     }
     
+    override func setEditing(_ editing: Bool, animated: Bool) {
+        super.setEditing(editing, animated: animated)
+
+        ballotCellStackView.isUserInteractionEnabled = !editing
+    }
+    
     private func updateCell(for ballotMessage: BallotMessage?) {
         // By accepting an optional the data is automatically reset when the ballot message is set to `nil`
                 
@@ -136,7 +169,7 @@ final class ChatViewBallotMessageTableViewCell: ChatViewBaseTableViewCell, Measu
         // Distinguish between closed and open poll message
         if ballotMessage?.isClosed() ?? false {
             messageQuoteStackView.isHidden = false
-            messageTextView.text = nil
+            messageTextView.text = ""
             messageTextView.isHidden = true
             
             if let symbol = ballotMessage?.ballot.stateSymbol {
@@ -172,10 +205,10 @@ final class ChatViewBallotMessageTableViewCell: ChatViewBaseTableViewCell, Measu
         }
         
         let dateObserver = ballot.observe(\.modifyDate) { [weak self] _, _ in
-            self?.updateCell(for: self?.ballotMessage)
+            self?.updateCell(for: self?.ballotMessageAndNeighbors?.message)
         }
         let stateObserver = ballot.observe(\.state) { [weak self] _, _ in
-            self?.updateCell(for: self?.ballotMessage)
+            self?.updateCell(for: self?.ballotMessageAndNeighbors?.message)
         }
         
         observers.append(dateObserver)
@@ -190,10 +223,40 @@ final class ChatViewBallotMessageTableViewCell: ChatViewBaseTableViewCell, Measu
     }
 }
 
-// MARK: - MessageTextViewDelegate
-
-extension ChatViewBallotMessageTableViewCell: MessageTextViewDelegate { }
-
 // MARK: - Reusable
 
 extension ChatViewBallotMessageTableViewCell: Reusable { }
+
+// MARK: - ContextMenuAction
+
+extension ChatViewBallotMessageTableViewCell: ContextMenuAction {
+    
+    func buildContextMenu(at indexPath: IndexPath) -> UIContextMenuConfiguration? {
+
+        guard let message = ballotMessageAndNeighbors?.message else {
+            return nil
+        }
+
+        typealias Provider = ChatViewContextMenuActionProvider
+        
+        // Details
+        let detailsHandler = {
+            self.chatViewTableViewCellDelegate?.showDetails(for: message.objectID)
+        }
+        
+        let detailsAction = Provider.detailsAction(handler: detailsHandler)
+        
+        let editAction = Provider.editAction {
+            self.chatViewTableViewCellDelegate?.startMultiselect()
+        }
+        
+        let deleteAction = Provider.deleteAction(message: message)
+        
+        // Build menu
+        let menu = UIMenu(children: [detailsAction, editAction, deleteAction])
+        
+        return UIContextMenuConfiguration(identifier: indexPath as NSCopying, previewProvider: nil) { _ in
+            menu
+        }
+    }
+}

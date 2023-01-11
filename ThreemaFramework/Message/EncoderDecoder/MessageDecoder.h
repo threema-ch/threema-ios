@@ -35,6 +35,17 @@
 + (AbstractMessage*)decodeFromBoxed:(BoxedMessage*)boxmsg withPublicKey:(NSData*)publicKey;
 
 /**
+ Decode an encapsulated message (e.g. inside a forward security payload) that has already
+ been decrypted, and return it with the same attributes as the outer (envelope) message.
+ 
+ @param data: decrypted body
+ @param outer: outer message
+ 
+ @return Decoded message
+ */
++ (AbstractMessage*)decodeEncapsulated:(NSData*)data outer:(AbstractMessage*)outer;
+
+/**
  Decode message depence on type.
  
  @param type: Message Type (MSGTYPE_...), see in `ProtocolDefines.h`

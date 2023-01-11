@@ -22,6 +22,7 @@ import CocoaLumberjackSwift
 import CoreServices
 import Foundation
 import PromiseKit
+import UIKit
 
 public class ImageURLSenderItemCreator: NSObject {
     
@@ -108,7 +109,7 @@ public class ImageURLSenderItemCreator: NSObject {
                 return nil
             }
             imageData = convJpgData
-            finalUti = kUTTypeJPEG as String
+            finalUti = UTType.jpeg.identifier
         }
         
         let mimeType = UTIConverter.mimeType(fromUTI: finalUti)
@@ -171,7 +172,7 @@ public class ImageURLSenderItemCreator: NSObject {
                     return nil
                 }
                 imageData = convJpgData
-                finalUti = kUTTypeJPEG as String
+                finalUti = UTType.jpeg.identifier
             }
         }
         
@@ -218,7 +219,7 @@ public class ImageURLSenderItemCreator: NSObject {
                     return nil
                 }
                 data = imageData
-                uti = kUTTypeJPEG as String
+                uti = UTType.jpeg.identifier
                 
                 guard let item = senderItem(from: data, uti: uti) else {
                     DDLogError("Could not create item")
@@ -346,16 +347,16 @@ public class ImageURLSenderItemCreator: NSObject {
     /// that all possible UTTypes for your object are covered.
     /// - Parameter data: any Data object
     /// - Returns: A CFString with the UTType of the Data object.
-    @objc public static func getUTI(for data: Data) -> CFString? {
+    @objc public static func getUTI(for data: Data) -> NSString? {
         var values = [UInt8](repeating: 0, count: 1)
         data.copyBytes(to: &values, count: 1)
         switch values[0] {
         case 0xFF:
-            return kUTTypeJPEG
+            return UTType.jpeg.identifier as NSString
         case 0x89:
-            return kUTTypePNG
+            return UTType.png.identifier as NSString
         case 0x47:
-            return kUTTypeGIF
+            return UTType.gif.identifier as NSString
         default:
             break
         }
@@ -427,9 +428,9 @@ public class ImageURLSenderItemCreator: NSObject {
     /// - Parameter uti: any UTI represented as String
     /// - Returns: true if the given uti is supported by the file message spec false otherwise
     static func isAllowedUTI(uti: String) -> Bool {
-        let isJPEG = uti == (kUTTypeJPEG as String)
-        let isGIF = uti == (kUTTypeGIF as String)
-        let isPNG = uti == (kUTTypePNG as String)
+        let isJPEG = uti == UTType.jpeg.identifier
+        let isGIF = uti == UTType.gif.identifier
+        let isPNG = uti == UTType.png.identifier
         return isJPEG || isGIF || isPNG
     }
     

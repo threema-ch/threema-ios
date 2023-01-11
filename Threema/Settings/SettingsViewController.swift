@@ -134,7 +134,7 @@ extension SettingsViewController {
     
     private func registerObserver() {
         if observing == false {
-            ServerConnector.shared()?.registerConnectionStateDelegate(delegate: self)
+            ServerConnector.shared().registerConnectionStateDelegate(delegate: self)
             WCSessionManager.shared.addObserver(self, forKeyPath: "running", options: [], context: nil)
             observing = true
         }
@@ -142,7 +142,7 @@ extension SettingsViewController {
     
     private func unregisterObserver() {
         if observing == true {
-            ServerConnector.shared()?.unregisterConnectionStateDelegate(delegate: self)
+            ServerConnector.shared().unregisterConnectionStateDelegate(delegate: self)
             WCSessionManager.shared.removeObserver(self, forKeyPath: "running")
             observing = false
         }
@@ -178,7 +178,8 @@ extension SettingsViewController {
         
         passcodeLockCell.textLabel?.text = BundleUtil.localizedString(forKey: "settings_passcode_lock")
         passcodeLockCell.imageView?.image = BundleUtil.imageNamed("PasscodeLock\(suffix)")
-        
+        passcodeLockCell.accessibilityIdentifier = "SettingsPasscodeCell"
+
         threemaCallsCell.textLabel?.text = BundleUtil.localizedString(forKey: "settings_threema_calls")
         threemaCallsCell.imageView?.image = BundleUtil.imageNamed("ThreemaCallsSettings\(suffix)")
         
@@ -221,13 +222,13 @@ extension SettingsViewController {
     
     private func updateConnectionStatus() {
         let stateName = ServerConnector.shared().name(for: ServerConnector.shared().connectionState)
-        let locKey = "status_\(stateName!)"
+        let locKey = "status_\(stateName)"
         
         var statusText = BundleUtil.localizedString(forKey: locKey)
-        if ServerConnector.shared()?.isIPv6Connection == true {
+        if ServerConnector.shared().isIPv6Connection == true {
             statusText = statusText.appending(" (IPv6)")
         }
-        if ServerConnector.shared()?.isProxyConnection == true {
+        if ServerConnector.shared().isProxyConnection == true {
             statusText = statusText.appending(" (Proxy)")
         }
         
@@ -363,25 +364,30 @@ extension SettingsViewController {
                 return numberOfRows
             }
         }
-        
-        // Remove multi device cell
-        if section == 2 {
+        else if section == 2 {
             let numberOfRows = super.tableView(tableView, numberOfRowsInSection: section)
-            
+
             switch ThreemaEnvironment.env() {
             case .appStore:
+                // Remove multi device cells
                 return numberOfRows - 1
             case .testFlight:
-                // Show multi device cell when in red
-                if ThreemaApp.current == .red || ThreemaApp.current == .workRed {
+                // Show MD for red and workRed
+                switch ThreemaApp.current {
+                case .red, .workRed:
+                    return numberOfRows
+                case .threema, .work, .onPrem:
+                    // Remove multi device cells, if app version less than 5
+                    guard AppInfo.version.major >= 5 else {
+                        return numberOfRows - 1
+                    }
                     return numberOfRows
                 }
-                return numberOfRows - 1
             case .xcode:
                 return numberOfRows
             }
         }
-        
+
         // hide Threema Channel for work
         if LicenseStore.requiresLicenseKey() {
             if section == 3 {
@@ -469,6 +475,15 @@ extension SettingsViewController {
                 }
             }
         }
+        else if indexPath.section == 1, indexPath.row == 6 {
+            let vc = KKPasscodeSettingsViewController(style: .grouped)
+            vc.delegate = self
+            navigationController?.pushViewController(vc, animated: true)
+        }
+        else if indexPath.section == 1, indexPath.row == 5 {
+            let vc = StorageManagementViewController()
+            navigationController?.pushViewController(vc, animated: true)
+        }
         else if indexPath.section == 4, indexPath.row == 0 {
             inviteController = InviteController()
             inviteController!.parentViewController = self
@@ -480,6 +495,7 @@ extension SettingsViewController {
         else if indexPath.section == 4, indexPath.row == 1 {
             AddThreemaChannelAction.run(in: self)
         }
+
         tableView.deselectRow(at: indexPath, animated: true)
     }
 }

@@ -20,6 +20,7 @@
 
 import CocoaLumberjackSwift
 import Foundation
+import Intents
 import ThreemaFramework
 
 protocol VoIPCallServiceDelegate: AnyObject {
@@ -31,7 +32,7 @@ class VoIPCallService: NSObject {
     private let voIPCallSender: VoIPCallSender
     
     private let kIncomingCallTimeout = 60.0
-    private let kCallFailedTimeout = 15.0
+    private let kCallFailedTimeout = 10.0
     private let kEndedDelay = 5.0
     
     @objc public enum CallState: Int, RawRepresentable, Equatable {
@@ -177,6 +178,7 @@ class VoIPCallService: NSObject {
     private var callDurationTimer: Timer?
     private var callDurationTime = 0
     private var callFailedTimer: Timer?
+    private var transportExpectedStableTimer: Timer?
     
     private var incomingOffer: VoIPCallOfferMessage?
     
@@ -192,7 +194,7 @@ class VoIPCallService: NSObject {
     private var remoteRenderer: RTCVideoRenderer?
     
     private var reconnectingTimer: Timer?
-    private var iceWasConnected = false
+    private var peerWasConnected = false
     
     private var isModal: Bool {
         // Check whether our callViewController is currently in the state presented modally
@@ -301,8 +303,17 @@ extension VoIPCallService {
                 }
                 
                 startCallAsInitiator(action: action, completion: {
+                    // Store call in temporary call history
+                    Task {
+                        await CallHistoryManager(
+                            identity: action.contactIdentity,
+                            businessInjector: BusinessInjector()
+                        ).store(callID: self.callID!.callID, date: Date())
+                    }
+                    
                     self.delegate?.callServiceFinishedProcess()
                     action.completion?()
+                    
                 })
             case .callWithVideo:
                 startCallAsInitiator(action: action, completion: {
@@ -462,7 +473,7 @@ extension VoIPCallService {
             )
         }
     }
-        
+    
     /// Dismiss the CallViewController
     func dismissCallViewController() {
         dismissCallView()
@@ -524,7 +535,7 @@ extension VoIPCallService {
             switchCamera: switchCamera
         )
     }
-        
+    
     /// End capture local video
     func endCaptureLocalVideo(switchCamera: Bool = false) {
         if !switchCamera {
@@ -588,13 +599,21 @@ extension VoIPCallService {
         DDLogNotice(
             "VoipCallService: [cid=\(offer.callID.callID)]: Call offer received from \(offer.contactIdentity ?? "?")"
         )
-
-        if UserSettings.shared().enableThreemaCall, is64Bit == 1 {
+        
+        // Store call in temporary call history
+        Task {
+            if let contactIdentity = offer.contactIdentity {
+                await CallHistoryManager(identity: contactIdentity, businessInjector: BusinessInjector())
+                    .store(callID: offer.callID.callID, date: Date())
+            }
+        }
+        
+        if UserSettings.shared().enableThreemaCall {
             var appRunsInBackground = false
             DispatchQueue.main.sync {
                 appRunsInBackground = AppDelegate.shared().isAppInBackground()
             }
-
+            
             let pushSettingManager = PushSettingManager(UserSettings.shared(), LicenseStore.requiresLicenseKey())
             
             let entityManager = BusinessInjector().entityManager
@@ -654,7 +673,7 @@ extension VoIPCallService {
                         self.startIncomingCallTimeoutTimer()
                         
                         /// Make sure that the connection is not prematurely disconnected when the app is put into the background
-                        ServerConnector.shared()?.connectWait(initiator: .threemaCall)
+                        ServerConnector.shared().connectWait(initiator: .threemaCall)
                         
                         // New Call
                         // Send ringing message
@@ -817,7 +836,7 @@ extension VoIPCallService {
                             key: kAppVoIPBackgroundTask,
                             timeout: Int(kAppVoIPBackgroundTaskTime)
                         ) {
-                            ServerConnector.shared()?.connect(initiator: .threemaCall)
+                            ServerConnector.shared().connect(initiator: .threemaCall)
                             
                             self.callKitManager?.timeoutCall()
                             let action = VoIPCallUserAction(
@@ -1046,6 +1065,7 @@ extension VoIPCallService {
     }
     
     /// Handle the hangup message if the contact in the answer message is the same as in the call service and call state is receivedOffer, ringing, sendAnswer, initializing, calling or reconnecting.
+    /// / If we receive a hangup message without having had a call with this callID in any state, we assume that it belonged to a missed call whose other messages were already dropped by the server.
     /// It will dismiss the CallViewController after the call was ended.
     /// - parameter hangup: VoIPCallHangupMessage
     /// - parameter completion: Completion block
@@ -1077,7 +1097,20 @@ extension VoIPCallService {
             }
         }
         else {
-            DDLogWarn("VoipCallService: [cid=\(hangup.callID.callID)]: No contact set for currenct call")
+            DDLogWarn("VoipCallService: [cid=\(hangup.callID.callID)]: Hangup received")
+            // If we receive a hangup message without having had a call with this callID in any state,
+            // we assume that it belonged to a missed call whose other messages were already dropped by the server.
+            let businessInjector = BusinessInjector()
+            CallSystemMessageHelper
+                .maybeAddMissedCallNotificationToConversation(
+                    with: hangup,
+                    on: businessInjector
+                ) { conversation, systemMessage in
+                    if let conversation = conversation, systemMessage != nil {
+                        ConversationActions(entityManager: businessInjector.entityManager).unarchive(conversation)
+                        NotificationManager(businessInjector: businessInjector).updateUnreadMessagesCount()
+                    }
+                }
         }
         completion()
     }
@@ -1087,7 +1120,7 @@ extension VoIPCallService {
     /// - parameter action: VoIPCallUserAction
     /// - parameter completion: Completion block
     private func startCallAsInitiator(action: VoIPCallUserAction, completion: @escaping (() -> Void)) {
-        if UserSettings.shared().enableThreemaCall, is64Bit == 1 {
+        if UserSettings.shared().enableThreemaCall {
             RTCAudioSession.sharedInstance().useManualAudio = true
             if state == .idle {
                 AVAudioSession.sharedInstance().requestRecordPermission { granted in
@@ -1175,7 +1208,7 @@ extension VoIPCallService {
                         self.threemaVideoCallAvailable = false
                         self.callViewController?.disableThreemaVideoCall()
                     }
-
+                    
                     let answerMessage = VoIPCallAnswerMessage(
                         action: .call,
                         contactIdentity: action.contactIdentity,
@@ -1238,7 +1271,8 @@ extension VoIPCallService {
         let entityManager = BusinessInjector().entityManager
         
         entityManager.performBlockAndWait {
-            guard let contact = entityManager.entityFetcher.contact(for: self.contactIdentity) else {
+            guard let contactIdentity = self.contactIdentity,
+                  let contact = entityManager.entityFetcher.contact(for: self.contactIdentity) else {
                 return
             }
             
@@ -1262,7 +1296,7 @@ extension VoIPCallService {
                 self.callID = VoIPCallID.generate()
                 
                 DDLogNotice(
-                    "VoipCallService: [cid=\(self.callID!.callID)]: Handle new call with \(contact.identity), we are the caller"
+                    "VoipCallService: [cid=\(self.callID!.callID)]: Handle new call with \(contactIdentity), we are the caller"
                 )
                 
                 if Int(truncating: contact.verificationLevel) == kVerificationLevelUnverified {
@@ -1273,7 +1307,7 @@ extension VoIPCallService {
                 }
                 
                 VoIPCallPeerConnectionClient.instantiate(
-                    contactIdentity: contact.identity,
+                    contactIdentity: contactIdentity,
                     callID: self.callID,
                     peerConnectionParameters: peerConnectionParameters
                 ) { result in
@@ -1286,11 +1320,11 @@ extension VoIPCallService {
                         return
                     }
                     self.peerConnectionClient?.delegate = self
-
+                    
                     if self.callKitManager == nil {
                         self.callKitManager = VoIPCallKitManager()
                     }
-
+                    
                     self.peerConnectionClient?.offer(completion: { sdp, sdpError in
                         if let error = sdpError {
                             self.callID = nil
@@ -1302,7 +1336,7 @@ extension VoIPCallService {
                             self.callCantCreateOffer(error: nil)
                             return
                         }
-
+                        
                         let offerMessage = VoIPCallOfferMessage(
                             offer: sdp,
                             contactIdentity: self.contactIdentity,
@@ -1326,7 +1360,7 @@ extension VoIPCallService {
                                             RTCAudioSession.sharedInstance().isAudioEnabled = false
                                             DDLogNotice("VoipCallService: [cid=\(self.callID!)]: Call ringing timeout")
                                             let hangupMessage = VoIPCallHangupMessage(
-                                                contactIdentity: contact.identity,
+                                                contactIdentity: contactIdentity,
                                                 callID: self.callID!,
                                                 completion: nil
                                             )
@@ -1337,7 +1371,7 @@ extension VoIPCallService {
                                                 self.dismissCallView(rejected: false, completion: {
                                                     self.callKitManager?.endCall()
                                                     self.invalidateInitCallTimeout()
-                                                
+                                                    
                                                     let rootVC = UIApplication.shared.windows.first!.rootViewController!
                                                     UIAlertTemplate.showAlert(
                                                         owner: rootVC,
@@ -1466,7 +1500,7 @@ extension VoIPCallService {
             localRenderer = nil
             remoteRenderer = nil
             audioPlayer?.pause()
-
+            
             do {
                 RTCAudioSession.sharedInstance().lockForConfiguration()
                 try RTCAudioSession.sharedInstance().setActive(false)
@@ -1701,7 +1735,7 @@ extension VoIPCallService {
             addRejectedMessageToConversation(contactIdentity: action.contactIdentity, reason: kSystemMessageCallMissed)
         }
     }
-        
+    
     /// It will check the current call state and play the correct tone if it's needed
     private func handleTones(state: VoIPCallService.CallState, oldState: VoIPCallService.CallState) {
         if UserDefaults.standard.bool(forKey: "FASTLANE_SNAPSHOT") {
@@ -1821,6 +1855,7 @@ extension VoIPCallService {
             invalidateInitCallTimeout()
             invalidateCallDuration()
             invalidateCallFailedTimer()
+            invalidateTransportExpectedStableTimer()
         case .sendOffer:
             invalidateCallFailedTimer()
         case .receivedOffer:
@@ -1843,6 +1878,7 @@ extension VoIPCallService {
             invalidateInitCallTimeout()
             invalidateIncomingCallTimeout()
             invalidateCallFailedTimer()
+            invalidateTransportExpectedStableTimer()
         case .reconnecting:
             invalidateInitCallTimeout()
             invalidateIncomingCallTimeout()
@@ -1850,16 +1886,19 @@ extension VoIPCallService {
             invalidateInitCallTimeout()
             invalidateIncomingCallTimeout()
             invalidateCallFailedTimer()
+            invalidateTransportExpectedStableTimer()
         case .rejected, .rejectedBusy, .rejectedTimeout, .rejectedDisabled, .rejectedOffHours, .rejectedUnknown:
             invalidateInitCallTimeout()
             invalidateCallDuration()
             invalidateIncomingCallTimeout()
             invalidateCallFailedTimer()
+            invalidateTransportExpectedStableTimer()
         case .microphoneDisabled:
             invalidateInitCallTimeout()
             invalidateCallDuration()
             invalidateIncomingCallTimeout()
             invalidateCallFailedTimer()
+            invalidateTransportExpectedStableTimer()
         @unknown default:
             break
         }
@@ -1884,10 +1923,16 @@ extension VoIPCallService {
         callDurationTime = 0
     }
     
-    /// Invalidate the call duration timer and set the callDurationTime to 0
+    /// Invalidate the call failed timer
     private func invalidateCallFailedTimer() {
         callFailedTimer?.invalidate()
         callFailedTimer = nil
+    }
+    
+    /// Invalidate the transport expected stable
+    private func invalidateTransportExpectedStableTimer() {
+        transportExpectedStableTimer?.invalidate()
+        transportExpectedStableTimer = nil
     }
     
     /// Add icecandidate to local array if it's in the correct state. Start a timer to send candidates as packets all 0.05 seconds
@@ -1981,7 +2026,7 @@ extension VoIPCallService {
                 localRelatedAddresses.insert(relatedAddress)
             }
         }
-
+        
         // Add it!
         return (true, nil)
     }
@@ -1998,100 +2043,139 @@ extension VoIPCallService {
         return false
     }
     
+    // MARK: - Missed Call
+
     /// Handle notification if needed
     private func handleLocalNotification() {
+        switch state {
+        case .idle, .sendOffer, .receivedOffer, .outgoingRinging, .incomingRinging, .sendAnswer, .receivedAnswer,
+             .initializing, .calling, .reconnecting, .ended, .rejected, .rejectedOffHours, .rejectedUnknown,
+             .rejectedDisabled, .microphoneDisabled:
+            break
+        case .remoteEnded, .rejectedBusy, .rejectedTimeout:
+            addMissedCall()
+        }
+    }
+    
+    private func addMissedCall() {
         
-        func addMissedCall() {
-            if let identity = contactIdentity {
-                DispatchQueue.main.async {
-                    if AppDelegate.shared().isAppInBackground(),
-                       !self.isCallInitiator(),
-                       self.callDurationTime == 0 {
-                        let pushSetting = PushSetting(forThreemaID: identity)
-                        let canSendPush = pushSetting.canSendPush()
-                        
-                        if canSendPush {
-                            // callkit is disabled --> show missed notification
-                            
-                            let notification = UNMutableNotificationContent()
-                            notification.categoryIdentifier = "CALL"
-                            
-                            if UserSettings.shared().pushSound != "none" {
-                                if !pushSetting.silent {
-                                    notification
-                                        .sound =
-                                        UNNotificationSound(named: UNNotificationSoundName(
-                                            rawValue: UserSettings
-                                                .shared().pushSound! + ".caf"
-                                        ))
-                                }
-                            }
-                                
-                            let entityManager = BusinessInjector().entityManager
-                            let contact = entityManager.entityFetcher.contact(for: self.contactIdentity)
-                            notification.userInfo = ["threema": ["cmd": "missedcall", "from": identity]]
-                            if !UserSettings.shared().pushShowNickname,
-                               let displayName = contact?.displayName {
-                                notification.title = displayName
-                            }
-                            else {
-                                if let publicNickname = contact?.publicNickname,
-                                   !publicNickname.isEmpty {
-                                    notification.title = publicNickname
-                                }
-                                else {
-                                    notification.title = identity
-                                }
-                            }
-                            notification.body = BundleUtil.localizedString(forKey: "call_missed")
-                            
-                            // Group notification together with others from the same contact
-                            notification.threadIdentifier = "SINGLE-\(self.contactIdentity ?? "")"
-                            
-                            let notificationRequest = UNNotificationRequest(
-                                identifier: identity,
-                                content: notification,
-                                trigger: nil
-                            )
-                            UNUserNotificationCenter.current().add(notificationRequest, withCompletionHandler: { _ in
-                            })
-                        }
-                    }
-                }
-            }
+        guard let identity = contactIdentity else {
+            DDLogError("Cannot add missed call without identity")
+            return
         }
         
-        switch state {
-        case .idle:
-            break
-        case .sendOffer:
-            break
-        case .receivedOffer:
-            break
-        case .outgoingRinging:
-            break
-        case .incomingRinging:
-            break
-        case .sendAnswer:
-            break
-        case .receivedAnswer:
-            break
-        case .initializing:
-            break
-        case .calling:
-            break
-        case .reconnecting:
-            break
-        case .ended:
-            break
-        case .remoteEnded:
-            addMissedCall()
-        case .rejected, .rejectedOffHours, .rejectedUnknown, .rejectedDisabled:
-            break
-        case .rejectedBusy, .rejectedTimeout:
-            addMissedCall()
-        case .microphoneDisabled:
-            break
+        DispatchQueue.main.async {
+            guard AppDelegate.shared().isAppInBackground(),
+                  !self.isCallInitiator(),
+                  self.callDurationTime == 0 else {
+                return
+            }
+            let pushSetting = PushSetting(forThreemaID: identity)
+            let canSendPush = pushSetting.canSendPush()
+            
+            guard canSendPush else {
+                return
+            }
+            
+            let notification = UNMutableNotificationContent()
+            notification.categoryIdentifier = "CALL"
+            
+            if UserSettings.shared().pushSound != "none", !pushSetting.silent {
+                notification.sound = UNNotificationSound(
+                    named: UNNotificationSoundName(
+                        rawValue: UserSettings
+                            .shared().pushSound! + ".caf"
+                    )
+                )
+            }
+            
+            let businessInjector = BusinessInjector()
+            let entityManager = businessInjector.entityManager
+            var contact: Contact?
+            
+            entityManager.performSyncBlockAndSafe {
+                contact = entityManager.entityFetcher.contact(for: self.contactIdentity)
+            }
+            guard let contact = contact else {
+                return
+            }
+            notification.userInfo = ["threema": ["cmd": "missedcall", "from": identity]]
+            
+            if !UserSettings.shared().pushShowNickname {
+                notification.title = contact.displayName
+            }
+            else {
+                if let publicNickname = contact.publicNickname,
+                   !publicNickname.isEmpty {
+                    notification.title = publicNickname
+                }
+                else {
+                    notification.title = identity
+                }
+            }
+            
+            notification.body = BundleUtil.localizedString(forKey: "call_missed")
+            
+            // Group notification together with others from the same contact
+            notification.threadIdentifier = "SINGLE-\(identity)"
+            
+            if UserSettings.shared().donateInteractions,
+               let interaction = IntentCreator(
+                   userSettings: businessInjector.userSettings,
+                   entityManager: entityManager
+               ).inSendMessageIntentInteraction(
+                   for: identity,
+                   direction: .incoming
+               ) {
+                self.showRichMissedCallNotification(
+                    interaction: interaction,
+                    identifier: identity,
+                    content: notification
+                )
+            }
+            else {
+                
+                self.showRegularMissedCallNotification(with: identity, content: notification)
+            }
+        }
+    }
+    
+    private func showRegularMissedCallNotification(with identifier: String, content: UNNotificationContent) {
+        let notificationRequest = UNNotificationRequest(
+            identifier: identifier,
+            content: content,
+            trigger: nil
+        )
+        
+        UNUserNotificationCenter.current().add(notificationRequest)
+    }
+    
+    private func showRichMissedCallNotification(
+        interaction: INInteraction,
+        identifier: String,
+        content: UNNotificationContent
+    ) {
+        
+        interaction.donate { error in
+            guard error == nil else {
+                self.showRegularMissedCallNotification(with: identifier, content: content)
+                return
+            }
+            
+            do {
+                let updated = try content.updating(from: interaction.intent as! UNNotificationContentProviding)
+                let notificationRequest = UNNotificationRequest(
+                    identifier: identifier,
+                    content: updated,
+                    trigger: nil
+                )
+                
+                UNUserNotificationCenter.current().add(notificationRequest, withCompletionHandler: { _ in
+                })
+            }
+            catch {
+                self.showRegularMissedCallNotification(with: identifier, content: content)
+            }
         }
     }
     
@@ -2100,7 +2184,7 @@ extension VoIPCallService {
         
         let entityManager = BusinessInjector().entityManager
         let utilities = ConversationActions(entityManager: entityManager)
-
+        
         switch state {
         case .idle:
             break
@@ -2132,7 +2216,7 @@ extension VoIPCallService {
             if oldCallState == .ended || oldCallState == .remoteEnded {
                 return
             }
-
+            
             guard let identity = contactIdentity else {
                 return
             }
@@ -2143,7 +2227,7 @@ extension VoIPCallService {
             entityManager.performSyncBlockAndSafe {
                 let conversation = entityManager.conversation(for: identity, createIfNotExisting: true)
                 systemMessage = entityManager.entityCreator.systemMessage(for: conversation)
-                                
+                
                 systemMessage?.type = NSNumber(value: kSystemMessageCallEnded)
                 
                 var callInfo = [
@@ -2159,7 +2243,7 @@ extension VoIPCallService {
                     messageRead = false
                     conversation?.lastUpdate = Date.now
                 }
-                                
+                
                 do {
                     let callInfoData = try JSONSerialization.data(withJSONObject: callInfo, options: .prettyPrinted)
                     systemMessage?.arg = callInfoData
@@ -2267,7 +2351,7 @@ extension VoIPCallService {
     
     private func addRejectedMessageToConversation(contactIdentity: String, reason: Int) {
         var systemMessage: SystemMessage?
-
+        
         let entityManager = BusinessInjector().entityManager
         entityManager.performSyncBlockAndSafe {
             if let conversation = entityManager.conversation(for: contactIdentity, createIfNotExisting: true) {
@@ -2333,36 +2417,33 @@ extension VoIPCallService {
     }
     
     private func callFailed() {
-        var message = BundleUtil.localizedString(forKey: "call_status_failed_connected_message")
-        if !iceWasConnected {
+        if !peerWasConnected {
             // show error as notification
             if let identity = contactIdentity {
                 let hangupMessage = VoIPCallHangupMessage(contactIdentity: identity, callID: callID!, completion: nil)
                 voIPCallSender.sendVoIPCallHangup(hangupMessage: hangupMessage)
             }
-            message = BundleUtil.localizedString(forKey: "call_status_failed_initializing_message")
+            NotificationPresenterWrapper.shared.present(type: .connectedCallError)
         }
-        NotificationBannerHelper.newErrorToast(
-            title: BundleUtil.localizedString(forKey: "call_status_failed_title"),
-            body: message
-        )
+        else {
+            NotificationPresenterWrapper.shared.present(type: .notConnectedCallError)
+        }
+        
         invalidateCallFailedTimer()
+        invalidateTransportExpectedStableTimer()
         handleTones(state: .ended, oldState: .reconnecting)
         callKitManager?.endCall()
         dismissCallView()
         disconnectPeerConnection()
     }
-
+    
     private func callCantCreateOffer(error: Error?) {
         DDLogNotice(
             "VoipCallService: [cid=\(callID?.callID ?? 0)]: Can't create offer (\(error?.localizedDescription ?? "error is missing")"
         )
-        let message = BundleUtil.localizedString(forKey: "call_status_failed_sdp_patch_message")
-        NotificationBannerHelper.newErrorToast(
-            title: BundleUtil.localizedString(forKey: "call_status_failed_title"),
-            body: message
-        )
+        NotificationPresenterWrapper.shared.present(type: .callCreationError)
         invalidateCallFailedTimer()
+        invalidateTransportExpectedStableTimer()
         handleTones(state: .ended, oldState: .reconnecting)
         callKitManager?.endCall()
         dismissCallView()
@@ -2373,6 +2454,28 @@ extension VoIPCallService {
 // MARK: - VoIPCallPeerConnectionClientDelegate
 
 extension VoIPCallService: VoIPCallPeerConnectionClientDelegate {
+    func peerconnectionClient(_ client: VoIPCallPeerConnectionClient, startTransportExpectedStableTimer: Bool) {
+        DispatchQueue.main.async {
+            // Schedule to expect the transport to be 'stable' after 10s. This is a workaround
+            // for intermittent FAILED states.
+            if self.transportExpectedStableTimer != nil {
+                DDLogError(
+                    "VoipCallService: [cid=\(self.callID?.callID ?? 0)]: transportExpectedStableTimer was already running!"
+                )
+                self.transportExpectedStableTimer?.invalidate()
+                self.transportExpectedStableTimer = nil
+            }
+            
+            self.transportExpectedStableTimer = Timer.scheduledTimer(
+                withTimeInterval: self.kCallFailedTimeout,
+                repeats: false,
+                block: { _ in
+                    self.callFailed()
+                }
+            )
+        }
+    }
+    
     func peerConnectionClient(_ client: VoIPCallPeerConnectionClient, removedCandidates: [RTCIceCandidate]) {
         // ICE candidate messages are currently allowed to have a "removed" flag. However, this is non-standard.
         // Ignore generated ICE candidates with removed set to true coming from libwebrtc
@@ -2429,18 +2532,23 @@ extension VoIPCallService: VoIPCallPeerConnectionClientDelegate {
     
     func peerConnectionClient(
         _ client: VoIPCallPeerConnectionClient,
-        didChangeConnectionState state: RTCIceConnectionState
+        didChangeConnectionState state: RTCPeerConnectionState
     ) {
         let oldState = self.state
         
         switch state {
         case .new:
             break
-        case .checking:
-            self.state = .initializing
+        case .connecting:
+            if self.state != .outgoingRinging, self.state != .incomingRinging {
+                self.state = .initializing
+            }
+            
         case .connected:
             invalidateCallFailedTimer()
-            iceWasConnected = true
+            invalidateTransportExpectedStableTimer()
+            
+            peerWasConnected = true
             if self.state != .reconnecting {
                 self.state = .calling
                 DispatchQueue.main.async {
@@ -2471,25 +2579,22 @@ extension VoIPCallService: VoIPCallPeerConnectionClientDelegate {
                 self.state = .calling
             }
             activateRTCAudio()
-        case .completed:
-            break
         case .failed:
-            if self.state == .reconnecting {
+            if callFailedTimer != nil {
+                invalidateCallFailedTimer()
+                invalidateTransportExpectedStableTimer()
+            }
+            
+            if transportExpectedStableTimer == nil {
+                DDLogError(
+                    "VoipCallService: [cid=\(callID?.callID ?? 0)]: transportExpectedStableFuture is nil as transport connection state moved into FAILED"
+                )
                 callFailed()
             }
-            else {
-                if iceWasConnected {
-                    self.state = .reconnecting
-                    DDLogNotice(
-                        "VoipCallService: [cid=\(callID?.callID ?? 0)]: PeerConnection failed, set state to reconnecting and start callFailedTimer"
-                    )
-                }
-                else {
-                    self.state = .initializing
-                    DDLogNotice(
-                        "VoipCallService: [cid=\(callID?.callID ?? 0)]: PeerConnection failed, set state to initializing and start callFailedTimer"
-                    )
-                }
+        case .disconnected:
+            if callFailedTimer == nil {
+                self.state = .reconnecting
+                
                 // start timer and wait if state change back to connected
                 DispatchQueue.main.async {
                     self.invalidateCallFailedTimer()
@@ -2502,13 +2607,7 @@ extension VoIPCallService: VoIPCallPeerConnectionClientDelegate {
                     )
                 }
             }
-        case .disconnected:
-            if self.state == .calling || self.state == .initializing {
-                self.state = .reconnecting
-            }
         case .closed:
-            break
-        case .count:
             break
         @unknown default:
             break

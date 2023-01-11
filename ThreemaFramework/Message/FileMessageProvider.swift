@@ -35,13 +35,11 @@ public enum FileMessageType {
     /// A video
     case video(VideoMessage)
     /// A voice message
-    case audio(AudioMessage)
+    case voice(VoiceMessage)
     /// A file/document
     case file(FileMessage)
-    /// Place holder until all messages are implemented
-    /// TODO: Remove before Release
-    case placeholder(FileMessageEntity)
     
+    /// Name of the belonging SFSymbol
     public var symbolName: String {
         switch self {
         case .image, .sticker:
@@ -49,14 +47,39 @@ public enum FileMessageType {
         case .animatedImage, .animatedSticker:
             return "photo.artframe"
         case .video:
-            // TODO: (IOS-2386) Create and use custom camera symbol as the default one is only allowed for FaceTime
-            fatalError("Custom video file needed")
-        case .audio:
+            // Own icon used because SFSymbols is reserved
+            return "threema.video.fill"
+        case .voice:
             return "mic.fill"
         case .file:
             return "doc.fill"
-        case .placeholder:
-            return "bolt.square.fill"
+        }
+    }
+    
+    public var defaultInteractionSymbolName: String? {
+        switch self {
+        case .animatedImage, .animatedSticker, .video:
+            return "play.fill"
+        case .image, .sticker, .voice, .file:
+            return nil
+        }
+    }
+    
+    /// Localized description of the type
+    public var localizedDescription: String {
+        switch self {
+        case .image:
+            return BundleUtil.localizedString(forKey: "file_message_image")
+        case .sticker, .animatedSticker:
+            return BundleUtil.localizedString(forKey: "file_message_sticker")
+        case .animatedImage:
+            return BundleUtil.localizedString(forKey: "file_message_animated_image")
+        case .video:
+            return BundleUtil.localizedString(forKey: "file_message_video")
+        case .voice:
+            return BundleUtil.localizedString(forKey: "file_message_voice")
+        case .file:
+            return BundleUtil.localizedString(forKey: "file_message_file")
         }
     }
 }
@@ -108,26 +131,31 @@ public protocol ThumbnailDisplayMessage: BaseMessage & FileMessageProvider & Com
 // MARK: - ImageMessage
 
 /// A blob message that is an image. The image might be animated.
-public protocol ImageMessage: ThumbnailDisplayMessage {
-    // TODO: (IOS-2414) Metadata for details: File type?
-}
+public protocol ImageMessage: ThumbnailDisplayMessage { }
 
 // MARK: - StickerMessage
 
-public protocol StickerMessage: ThumbnailDisplayMessage {
-    // TODO: (IOS-2388) Define correct protocol requirements
-}
+/// A blob message that is a sticker. The sticker might be animated.
+public protocol StickerMessage: ThumbnailDisplayMessage { }
 
 // MARK: - VideoMessage
 
 public protocol VideoMessage: ThumbnailDisplayMessage {
-    // TODO: (IOS-2386) Define correct protocol requirements
+    var durationTimeInterval: TimeInterval? { get }
+    /// Temporary URL to the video blob data
+    ///
+    /// Please remove the data if it is no longer needed.
+    var temporaryBlobDataURL: URL? { get }
 }
 
-// MARK: - AudioMessage
+// MARK: - VoiceMessage
 
-public protocol AudioMessage: FileMessageProvider {
-    // TODO: (IOS-2400) Define correct protocol requirements
+public protocol VoiceMessage: BaseMessage & FileMessageProvider & CommonFileMessageMetadata {
+    var durationTimeInterval: TimeInterval? { get }
+    /// Temporary URL to the audio blob data
+    ///
+    /// Please remove the data if it is no longer needed.
+    var temporaryBlobDataURL: URL? { get }
 }
 
 // MARK: - FileMessage

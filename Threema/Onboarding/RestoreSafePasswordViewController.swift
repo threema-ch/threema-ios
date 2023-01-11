@@ -40,10 +40,12 @@ class RestoreSafePasswordViewController: IDCreationPageViewController {
         descriptionLabel.text = BundleUtil.localizedString(forKey: "safe_enter_password")
         passwordField.delegate = self
         passwordField.placeholder = BundleUtil.localizedString(forKey: "Password")
+        passwordField.accessibilityIdentifier = "RestoreSafePasswordViewControllerPasswordTextfield"
         passwordField.becomeFirstResponder()
         cancelButton.setTitle(BundleUtil.localizedString(forKey: "cancel"), for: .normal)
         okButton.setTitle(BundleUtil.localizedString(forKey: "ok"), for: .normal)
-        
+        okButton.accessibilityIdentifier = "RestoreSafePasswordViewControllerOkButton"
+
         forgotPasswordTappableLabel.tapDelegate = self
         let linkAttributes: [NSAttributedString.Key: Any] = [
             NSAttributedString.Key.tappableRegion: true,

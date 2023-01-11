@@ -27,6 +27,7 @@
 #import "ModalNavigationController.h"
 #import "UIImage+ColoredImage.h"
 #import "BundleUtil.h"
+#import "Threema-Swift.h"
 
 #define ICON_IMAGE @"ActionBallot"
 
@@ -205,11 +206,20 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 - (void)forwardMessage:(UIMenuController *)menuController {
 }
 
+- (void)resendMessage:(UIMenuController*)menuController {
+    EntityManager *entityManager = [[EntityManager alloc] init];
+    [entityManager performSyncBlockAndSafe:^{
+        BallotMessage *ballotMessage = [[entityManager entityFetcher] existingObjectWithID:self.message.objectID];
+        ballotMessage.id = [[NaClCrypto sharedCrypto] randomBytes:kMessageIdLen];
+    }];
+    
+    BallotMessage *ballotMessage = (BallotMessage*)self.message;
+    [MessageSender sendBaseMessage:ballotMessage];
+}
+
 - (void)speakMessage:(UIMenuController *)menuController {
     NSString *speakText = [NSString stringWithFormat:@"%@, %@", [ChatBallotMessageCell headerForMessage:self.message], [ChatBallotMessageCell displayTextForMessage:self.message]];;
-    AVSpeechUtterance *utterance = [AVSpeechUtterance speechUtteranceWithString:speakText];
-    AVSpeechSynthesizer *syn = [[AVSpeechSynthesizer alloc] init];
-    [syn speakUtterance:utterance];
+    [[[SpeechSynthesizerManger alloc] init] speak:speakText];
 }
 
 

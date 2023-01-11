@@ -47,6 +47,10 @@ public class MessageFetcher: NSObject {
     // MARK: - Private properties
     
     private let entityName = "Message"
+    private let fileEntityName = "FileMessage"
+    private let imageEntityName = "ImageMessage"
+    private let videoEntityName = "VideoMessage"
+    private let audioEntityName = "AudioMessage"
     
     private let conversation: Conversation
     private let entityManager: EntityManager
@@ -55,6 +59,22 @@ public class MessageFetcher: NSObject {
     
     private var conversationPredicate: NSPredicate {
         NSPredicate(format: "conversation == %@", conversation)
+    }
+    
+    private var conversationFilePredicate: NSPredicate {
+        NSPredicate(format: "conversation == %@ && %K != nil", conversation, "data")
+    }
+    
+    private var conversationImagePredicate: NSPredicate {
+        NSPredicate(format: "conversation == %@ && %K != nil", conversation, "image")
+    }
+    
+    private var conversationVideoPredicate: NSPredicate {
+        NSPredicate(format: "conversation == %@ && %K != nil", conversation, "video")
+    }
+    
+    private var conversationAudioPredicate: NSPredicate {
+        NSPredicate(format: "conversation == %@ && %K != nil", conversation, "audio")
     }
     
     private var conversationUnreadPredicate: NSPredicate {
@@ -87,10 +107,61 @@ public class MessageFetcher: NSObject {
         return fetchRequest
     }()
     
+    private lazy var limitedUnreadMessagesFetchRequest: NSFetchRequest<NSFetchRequestResult> = {
+        let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: entityName)
+        fetchRequest.predicate = conversationUnreadPredicate
+        fetchRequest.sortDescriptors = sortDescriptors(ascending: false)
+        return fetchRequest
+    }()
+    
+    private lazy var newestUnreadMessageFetchRequest: NSFetchRequest<NSFetchRequestResult> = {
+        let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: entityName)
+        fetchRequest.predicate = conversationUnreadPredicate
+        fetchRequest.sortDescriptors = sortDescriptors(ascending: false)
+        fetchRequest.fetchLimit = 1
+        return fetchRequest
+    }()
+    
+    private lazy var oldestUnreadMessageFetchRequest: NSFetchRequest<NSFetchRequestResult> = {
+        let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: entityName)
+        fetchRequest.predicate = conversationUnreadPredicate
+        fetchRequest.fetchLimit = 1
+        fetchRequest.sortDescriptors = sortDescriptors(ascending: true)
+        return fetchRequest
+    }()
+    
     private lazy var lastMessagesFetchRequest: NSFetchRequest<NSFetchRequestResult> = {
         let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: entityName)
         fetchRequest.predicate = conversationPredicate
         fetchRequest.sortDescriptors = sortDescriptors(ascending: false)
+        return fetchRequest
+    }()
+    
+    private lazy var countFileMessagesFetchRequest: NSFetchRequest<NSFetchRequestResult> = {
+        let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: fileEntityName)
+        fetchRequest.predicate = conversationFilePredicate
+        // Sorting doesn't matter for counting
+        return fetchRequest
+    }()
+    
+    private lazy var countImageMessagesFetchRequest: NSFetchRequest<NSFetchRequestResult> = {
+        let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: imageEntityName)
+        fetchRequest.predicate = conversationPredicate
+        // Sorting doesn't matter for counting
+        return fetchRequest
+    }()
+    
+    private lazy var countVideoMessagesFetchRequest: NSFetchRequest<NSFetchRequestResult> = {
+        let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: videoEntityName)
+        fetchRequest.predicate = conversationPredicate
+        // Sorting doesn't matter for counting
+        return fetchRequest
+    }()
+    
+    private lazy var countAudioMessagesFetchRequest: NSFetchRequest<NSFetchRequestResult> = {
+        let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: audioEntityName)
+        fetchRequest.predicate = conversationPredicate
+        // Sorting doesn't matter for counting
         return fetchRequest
     }()
     
@@ -116,6 +187,7 @@ public class MessageFetcher: NSObject {
     
     /// Number of messages in the conversation
     @objc public func count() -> Int {
+        // This might be 0 before the first save after the migration to V35
         entityManager.entityFetcher.executeCount(countFetchRequest)
     }
     
@@ -163,6 +235,34 @@ public class MessageFetcher: NSObject {
         return result
     }
     
+    public func unreadMessages(limit: Int = 0) -> [BaseMessage] {
+        let fetchRequest = limitedUnreadMessagesFetchRequest
+        fetchRequest.fetchLimit = limit
+        guard let result = entityManager.entityFetcher.execute(fetchRequest) as? [BaseMessage] else {
+            return []
+        }
+        
+        return result
+    }
+    
+    /// Newest Unread Message
+    public func newestUnreadMessage() -> BaseMessage? {
+        guard let result = entityManager.entityFetcher.execute(newestUnreadMessageFetchRequest) as? [BaseMessage] else {
+            return nil
+        }
+        
+        return result.first
+    }
+    
+    /// Oldest Unread Message
+    public func oldestUnreadMessage() -> BaseMessage? {
+        guard let result = entityManager.entityFetcher.execute(oldestUnreadMessageFetchRequest) as? [BaseMessage] else {
+            return nil
+        }
+        
+        return result.first
+    }
+    
     /// Most recent message
     @objc public func lastMessage() -> BaseMessage? {
         lastMessagesFetchRequest.fetchLimit = 1
@@ -172,6 +272,17 @@ public class MessageFetcher: NSObject {
         }
         
         return result as? BaseMessage
+    }
+    
+    /// Number of media messages in the conversation
+    @objc public func mediaCount() -> Int {
+        var mediaCount = 0
+        mediaCount += entityManager.entityFetcher.executeCount(countFileMessagesFetchRequest)
+        mediaCount += entityManager.entityFetcher.executeCount(countImageMessagesFetchRequest)
+        mediaCount += entityManager.entityFetcher.executeCount(countVideoMessagesFetchRequest)
+        mediaCount += entityManager.entityFetcher.executeCount(countAudioMessagesFetchRequest)
+        
+        return mediaCount
     }
     
     /// Most recent 20 messages

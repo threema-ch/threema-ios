@@ -86,18 +86,12 @@ public extension BlobData {
         // We have a local thumbnail...
         
         // We expect the error to be reset whenever a new upload is initiated
-        if !blobGetError(), let progress = blobGetProgress() {
-            if progress.floatValue <= 0 {
-                // Makes this sense? Maybe always `.uploading` is more correct?
-                return .pendingUpload(error: nil)
-            }
-            else {
-                return .uploading
-            }
+        if !blobGetError(), blobGetProgress() != nil {
+            return .uploading
         }
         
-        // TODO: (IOS-2590) Where do we need to consider and fix that?
-        // This error might not be correctly set if app was terminated while uploading (ChatBlogMessageCell)
+        // This error might not be correctly set if app was terminated while uploading.
+        // This will be resolved in `BlobManager`
         if blobGetError() {
             return .pendingUpload(error: .uploadFailed)
         }
@@ -131,7 +125,7 @@ public extension BlobData {
         
         // We expect the error to be reset whenever a new download is initiated
         if !blobGetError(), let progress = blobGetProgress() {
-            if progress.floatValue < 1 { // TODO: (IOS-2590) Maybe check for rounding errors...
+            if progress.floatValue < 1 {
                 return .downloading
             }
             else {
@@ -165,18 +159,12 @@ public extension BlobData {
         // We have no blob ID...
                 
         // We expect the error to be reset whenever a new upload is initiated
-        if !blobGetError(), let progress = blobGetProgress() {
-            if progress.floatValue <= 0 {
-                // Makes this sense? Maybe always `.uploading` is more correct?
-                return .pendingUpload(error: nil)
-            }
-            else {
-                return .uploading
-            }
+        if !blobGetError(), blobGetProgress() != nil {
+            return .uploading
         }
         
-        // TODO: (IOS-2590) Where do we need to consider and fix that?
-        // This error might not be correctly set if app was terminated while uploading (ChatBlogMessageCell)
+        // This error might not be correctly set if app was terminated while uploading.
+        // This will be resolved in `BlobManager`
         if blobGetError() {
             return .pendingUpload(error: .uploadFailed)
         }

@@ -232,8 +232,6 @@ extension VoIPCallKitManager {
 // MARK: - CXProviderDelegate
 
 extension VoIPCallKitManager: CXProviderDelegate {
-    // MARK: CXProviderDelegate
-
     func providerDidReset(_ provider: CXProvider) {
         let state = VoIPCallStateManager.shared.currentCallState()
         if state == .incomingRinging || state == .calling || state == .reconnecting {
@@ -243,7 +241,7 @@ extension VoIPCallKitManager: CXProviderDelegate {
                         key: kAppVoIPBackgroundTask,
                         timeout: Int(kAppVoIPBackgroundTaskTime)
                     ) {
-                        ServerConnector.shared()?.connectWait(initiator: .threemaCall)
+                        ServerConnector.shared().connectWait(initiator: .threemaCall)
                         var userAction: VoIPCallUserAction?
                         if VoIPCallStateManager.shared.currentCallState() == .incomingRinging {
                             userAction = VoIPCallUserAction(
@@ -279,7 +277,7 @@ extension VoIPCallKitManager: CXProviderDelegate {
                     key: kAppVoIPBackgroundTask,
                     timeout: Int(kAppPushBackgroundTaskTime)
                 ) {
-                    ServerConnector.shared()?.connectWait(initiator: .threemaCall)
+                    ServerConnector.shared().connectWait(initiator: .threemaCall)
                     self.answerAction = action
                     VoIPCallKitManager.configureAudioSession()
                     let action = VoIPCallUserAction(
@@ -320,7 +318,7 @@ extension VoIPCallKitManager: CXProviderDelegate {
             key: kAppVoIPBackgroundTask,
             timeout: Int(kAppPushBackgroundTaskTime)
         ) {
-            ServerConnector.shared()?.connectWait(initiator: .threemaCall)
+            ServerConnector.shared().connectWait(initiator: .threemaCall)
             var userAction: VoIPCallUserAction?
             if VoIPCallStateManager.shared.currentCallState() == .incomingRinging {
                 userAction = VoIPCallUserAction(
@@ -357,7 +355,7 @@ extension VoIPCallKitManager: CXProviderDelegate {
             key: kAppVoIPBackgroundTask,
             timeout: Int(kAppVoIPBackgroundTaskTime)
         ) {
-            ServerConnector.shared()?.connectWait(initiator: .threemaCall)
+            ServerConnector.shared().connectWait(initiator: .threemaCall)
             let actionType: VoIPCallUserAction.Action = action.isMuted ? .muteAudio : .unmuteAudio
             let userAction = VoIPCallUserAction(
                 action: actionType,
@@ -382,7 +380,7 @@ extension VoIPCallKitManager: CXProviderDelegate {
             key: kAppVoIPBackgroundTask,
             timeout: Int(kAppVoIPBackgroundTaskTime)
         ) {
-            ServerConnector.shared()?.connectWait(initiator: .threemaCall)
+            ServerConnector.shared().connectWait(initiator: .threemaCall)
             let actionType: VoIPCallUserAction.Action = action.isOnHold ? .muteAudio : .unmuteAudio
             let action = VoIPCallUserAction(
                 action: actionType,
@@ -407,7 +405,7 @@ extension VoIPCallKitManager: CXProviderDelegate {
             key: kAppVoIPBackgroundTask,
             timeout: Int(kAppVoIPBackgroundTaskTime)
         ) {
-            ServerConnector.shared()?.connectWait(initiator: .threemaCall)
+            ServerConnector.shared().connectWait(initiator: .threemaCall)
             
             switch VoIPCallStateManager.shared.currentCallState() {
             case .idle, .ended, .remoteEnded, .rejected, .rejectedBusy, .rejectedTimeout, .rejectedOffHours,

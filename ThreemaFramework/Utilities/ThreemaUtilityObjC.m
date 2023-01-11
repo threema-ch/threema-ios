@@ -133,6 +133,7 @@
     return uptime;
 }
 
+// Use `ThreemaUtility.timeString() instead`
 + (NSString *)timeStringForSeconds: (NSInteger) totalSeconds {
     NSInteger minutes = totalSeconds / 60;
     NSInteger seconds = totalSeconds % 60;
@@ -140,7 +141,7 @@
     return [NSString stringWithFormat:@"%02ld:%02ld", (long)minutes, (long)seconds];
 }
 
-+ (NSString *)accessabilityTimeStringForSeconds: (NSInteger) totalSeconds {    
++ (NSString *)accessibilityTimeStringForSeconds: (NSInteger) totalSeconds {    
     NSDateComponentsFormatter* formatter = [[NSDateComponentsFormatter alloc] init];
     formatter.unitsStyle = NSDateComponentsFormatterUnitsStyleFull;
     formatter.collapsesLargestUnit = YES;
@@ -150,10 +151,10 @@
 }
 
 + (NSString *)accessibilityStringAtTime:(NSTimeInterval)timeInterval withPrefix:(NSString *)prefixKey {
-    NSString *accessabilityTime = [self accessabilityTimeStringForSeconds:timeInterval];
+    NSString *accessibilityTime = [self accessibilityTimeStringForSeconds:timeInterval];
     NSString *at = [BundleUtil localizedStringForKey:prefixKey];
     
-    return [NSString stringWithFormat:@"%@ %@", at, accessabilityTime];
+    return [NSString stringWithFormat:@"%@ %@", at, accessibilityTime];
 }
 
 + (NSDate*)parseISO8601DateString:(NSString*)dateString {

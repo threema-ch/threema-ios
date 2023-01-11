@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scheme
-   LastUpgradeVersion = "1020"
+   LastUpgradeVersion = "1410"
    version = "1.7">
    <BuildAction
       parallelizeBuildables = "YES"
@@ -131,10 +131,16 @@
                   Identifier = "ChatTextViewPerformanceTest">
                </Test>
                <Test
+                  Identifier = "ChatViewSnapshotProviderTests">
+               </Test>
+               <Test
                   Identifier = "ConversationActionsTest">
                </Test>
                <Test
                   Identifier = "DbLoadTests">
+               </Test>
+               <Test
+                  Identifier = "DeviceGroupKeyManagerTests">
                </Test>
                <Test
                   Identifier = "EntityDestroyerTests">
@@ -158,6 +164,9 @@
                   Identifier = "MarkupParserTest">
                </Test>
                <Test
+                  Identifier = "MarkupParserTests">
+               </Test>
+               <Test
                   Identifier = "MentionsHelperTests">
                </Test>
                <Test
@@ -177,6 +186,9 @@
                </Test>
                <Test
                   Identifier = "SafeTests">
+               </Test>
+               <Test
+                  Identifier = "TextViewKeyboardWorkaroundHandlerTests">
                </Test>
                <Test
                   Identifier = "VoIPCallTests">
@@ -206,6 +218,16 @@
                   Identifier = "ScreenshotsWithRestoreID">
                </Test>
             </SkippedTests>
+         </TestableReference>
+         <TestableReference
+            skipped = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "24489950289A46680067CE28"
+               BuildableName = "ThreemaUITests.xctest"
+               BlueprintName = "ThreemaUITests"
+               ReferencedContainer = "container:Threema.xcodeproj">
+            </BuildableReference>
          </TestableReference>
       </Testables>
    </TestAction>

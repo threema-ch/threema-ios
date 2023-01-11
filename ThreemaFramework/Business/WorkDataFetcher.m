@@ -39,12 +39,17 @@
 @implementation WorkDataFetcher
 
 + (void)checkUpdateWorkDataForce:(BOOL)force onCompletion:(void(^)(void))onCompletion onError:(void(^)(NSError*))onError {
+    if ([[UserSettings sharedUserSettings] blockCommunication]) {
+        DDLogWarn(@"Communication is blocked");
+        return;
+    }
+
     if (![LicenseStore requiresLicenseKey]) {
         if (onCompletion != nil)
             onCompletion();
         return;
     }
-    
+
     MediatorSyncableContacts *mediatorSyncableContacts = [[MediatorSyncableContacts alloc] init];
     
     NSUserDefaults *defaults = [AppGroup userDefaults];
@@ -151,7 +156,7 @@
                 BOOL isWorkContact = [workContactIds containsObject:contact.identity];
                 if (contact.workContact == nil || contact.workContact.boolValue != isWorkContact) {
                     [[ContactStore sharedContactStore] setWorkContact:contact workContact:isWorkContact];
-                    [mediatorSyncableContacts updateAllWithIdentity:contact.identity withoutProfileImage:NO];
+                    [mediatorSyncableContacts updateAllWithIdentity:contact.identity added:NO];
                 }
             }
             
@@ -211,6 +216,12 @@
 }
 
 + (void)checkUpdateThreemaMDM:(void(^)(void))onCompletion onError:(void(^)(NSError*))onError {
+    if ([[UserSettings sharedUserSettings] blockCommunication]) {
+        DDLogWarn(@"Communication is blocked");
+        onError(nil);
+        return;
+    }
+
     NSString *username = [LicenseStore sharedLicenseStore].licenseUsername;
     NSString *password = [LicenseStore sharedLicenseStore].licensePassword;
     if (username != nil && password != nil) {

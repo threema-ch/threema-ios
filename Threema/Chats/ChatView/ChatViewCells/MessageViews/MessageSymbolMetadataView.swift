@@ -31,7 +31,13 @@ final class MessageSymbolMetadataView: UIView {
             }
             
             if let symbolName = symbolName {
-                symbolImageView.image = UIImage(systemName: symbolName)
+                var image = UIImage(systemName: symbolName)
+                
+                if image == nil {
+                    image = UIImage(named: symbolName)
+                }
+                
+                symbolImageView.image = image
                 showSymbol()
             }
             else {

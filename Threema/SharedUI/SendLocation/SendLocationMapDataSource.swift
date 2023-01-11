@@ -19,7 +19,6 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import CocoaLumberjackSwift
-import DiffableDataSources
 import Foundation
 import MapKit
 
@@ -30,7 +29,7 @@ protocol SendLocationDataSourceMapDelegate: AnyObject {
     func didReceiveInitialLocation()
 }
 
-final class SendLocationMapDataSource: TableViewDiffableDataSource<SendLocationDetails.Section, PointOfInterest> {
+final class SendLocationMapDataSource: UITableViewDiffableDataSource<SendLocationDetails.Section, PointOfInterest> {
     
     // MARK: - Properties
     
@@ -70,7 +69,7 @@ final class SendLocationMapDataSource: TableViewDiffableDataSource<SendLocationD
     @available(*, unavailable)
     override init(
         tableView: UITableView,
-        cellProvider: @escaping TableViewDiffableDataSource<SendLocationDetails.Section, PointOfInterest>.CellProvider
+        cellProvider: @escaping UITableViewDiffableDataSource<SendLocationDetails.Section, PointOfInterest>.CellProvider
     ) {
         fatalError("Just use init(tableView:).")
     }
@@ -93,7 +92,7 @@ final class SendLocationMapDataSource: TableViewDiffableDataSource<SendLocationD
         
         tableView.registerCell(POICell.self)
         
-        var snapshot = DiffableDataSourceSnapshot<SendLocationDetails.Section, PointOfInterest>()
+        var snapshot = NSDiffableDataSourceSnapshot<SendLocationDetails.Section, PointOfInterest>()
         
         // Standard POI Section
         snapshot.appendSections([.standardPOI])
@@ -117,7 +116,7 @@ final class SendLocationMapDataSource: TableViewDiffableDataSource<SendLocationD
         let selected = mapTableView?.indexPathForSelectedRow
         var localSnapshot = snapshot()
         
-        localSnapshot.reloadItems([poi])
+        localSnapshot.reconfigureItems([poi])
         apply(localSnapshot)
         mapTableView?.selectRow(at: selected, animated: false, scrollPosition: .top)
     }
@@ -141,7 +140,6 @@ final class SendLocationMapDataSource: TableViewDiffableDataSource<SendLocationD
         
         fetchAddress(for: poi.location) { address in
             poi.address = address
-            self.refresh(poi: poi)
             completion()
         }
     }
@@ -304,7 +302,7 @@ extension SendLocationMapDataSource {
             return
         }
         
-        HttpClient().downloadData(url: url, contentType: .json) { data, _, error in
+        HTTPClient().downloadData(url: url, contentType: .json) { data, _, error in
             do {
                 guard let data = data else {
                     DDLogError("Did not receive POI: \(error)")

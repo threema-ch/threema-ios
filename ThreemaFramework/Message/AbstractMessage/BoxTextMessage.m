@@ -34,7 +34,7 @@
     return [text dataUsingEncoding:NSUTF8StringEncoding];
 }
 
-- (BOOL)shouldPush {
+- (BOOL)flagShouldPush {
     return YES;
 }
 
@@ -47,6 +47,10 @@
 }
 
 - (BOOL)allowSendingProfile {
+    return YES;
+}
+
+- (BOOL)supportsForwardSecurity {
     return YES;
 }
 

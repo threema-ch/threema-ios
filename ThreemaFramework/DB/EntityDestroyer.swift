@@ -39,28 +39,48 @@ import Foundation
     ///
     /// - Parameters:
     ///   - olderThan: All message older than that date will be deleted
-    ///
+    ///   - conversation: Conversation
     /// - Returns:
     ///   Count of deleted media files
-    public func deleteMedias(olderThan: Date?) -> Int? {
+    public func deleteMedias(olderThan: Date?, for conversation: Conversation? = nil) -> Int? {
         var deletedObjects = 0
-        if let count = deleteMediasOf(messageType: AudioMessageEntity.self, olderThan: olderThan) {
+        if let count = deleteMediasOf(
+            messageType: AudioMessageEntity.self,
+            olderThan: olderThan,
+            conversation: conversation
+        ) {
             deletedObjects += count
         }
-        if let count = deleteMediasOf(messageType: FileMessageEntity.self, olderThan: olderThan) {
+        if let count = deleteMediasOf(
+            messageType: FileMessageEntity.self,
+            olderThan: olderThan,
+            conversation: conversation
+        ) {
             deletedObjects += count
         }
-        if let count = deleteMediasOf(messageType: ImageMessageEntity.self, olderThan: olderThan) {
+        if let count = deleteMediasOf(
+            messageType: ImageMessageEntity.self,
+            olderThan: olderThan,
+            conversation: conversation
+        ) {
             deletedObjects += count
         }
-        if let count = deleteMediasOf(messageType: VideoMessageEntity.self, olderThan: olderThan) {
+        if let count = deleteMediasOf(
+            messageType: VideoMessageEntity.self,
+            olderThan: olderThan,
+            conversation: conversation
+        ) {
             deletedObjects += count
         }
         
         return deletedObjects
     }
     
-    func deleteMediasOf<T: BaseMessage>(messageType: T.Type, olderThan: Date?) -> Int? {
+    func deleteMediasOf<T: BaseMessage>(
+        messageType: T.Type,
+        olderThan: Date?,
+        conversation: Conversation? = nil
+    ) -> Int? {
         guard messageType is AudioMessageEntity.Type ||
             messageType is FileMessageEntity.Type ||
             messageType is ImageMessageEntity.Type ||
@@ -73,14 +93,33 @@ import Foundation
             let mediaMetaInfo = try getMediaMetaInfo(messageType: messageType)
 
             if let olderThan = olderThan {
-                mediaMetaInfo.fetchMessages.predicate = NSPredicate(
-                    format: "%K != nil AND date < %@",
-                    mediaMetaInfo.relationship,
-                    olderThan as NSDate
-                )
+                if let conversation = conversation {
+                    mediaMetaInfo.fetchMessages.predicate = NSPredicate(
+                        format: "%K != nil AND date < %@ AND conversation == %@",
+                        mediaMetaInfo.relationship,
+                        olderThan as NSDate,
+                        conversation
+                    )
+                }
+                else {
+                    mediaMetaInfo.fetchMessages.predicate = NSPredicate(
+                        format: "%K != nil AND date < %@",
+                        mediaMetaInfo.relationship,
+                        olderThan as NSDate
+                    )
+                }
             }
             else {
-                mediaMetaInfo.fetchMessages.predicate = NSPredicate(format: "%K != nil", mediaMetaInfo.relationship)
+                if let conversation = conversation {
+                    mediaMetaInfo.fetchMessages.predicate = NSPredicate(
+                        format: "%K != nil AND conversation == %@",
+                        mediaMetaInfo.relationship,
+                        conversation
+                    )
+                }
+                else {
+                    mediaMetaInfo.fetchMessages.predicate = NSPredicate(format: "%K != nil", mediaMetaInfo.relationship)
+                }
             }
             
             let messages = try objCnx.fetch(mediaMetaInfo.fetchMessages)
@@ -109,6 +148,11 @@ import Foundation
                     objCnx.performAndWait {
                         do {
                             let object = try self.objCnx.existingObject(with: mediaID)
+
+                            if let message = object as? BaseMessage {
+                                nullifyConversationLastMessage(for: [message])
+                            }
+
                             self.objCnx.delete(object)
                             
                             try self.objCnx.save()
@@ -174,14 +218,29 @@ import Foundation
     ///
     /// - Parameters:
     ///    - olderThan: All message older than that date will be deleted
+    ///    - conversation: Conversation
     ///
     /// - Returns:
     ///    Count of deleted messages
-    public func deleteMessages(olderThan: Date?) -> Int? {
+    public func deleteMessages(olderThan: Date?, for conversation: Conversation? = nil) -> Int? {
         let fetchMessages = NSFetchRequest<NSFetchRequestResult>(entityName: "Message")
         
-        if let olderThan = olderThan {
-            fetchMessages.predicate = NSPredicate(format: "date < %@", olderThan as NSDate)
+        if let conversation = conversation {
+            if let olderThan = olderThan {
+                fetchMessages.predicate = NSPredicate(
+                    format: "date < %@ && conversation == %@",
+                    olderThan as NSDate,
+                    conversation
+                )
+            }
+            else {
+                fetchMessages.predicate = NSPredicate(format: "conversation == %@", conversation)
+            }
+        }
+        else {
+            if let olderThan = olderThan {
+                fetchMessages.predicate = NSPredicate(format: "date < %@", olderThan as NSDate)
+            }
         }
         
         let deletedMessages = deleteMessages(with: fetchMessages)
@@ -252,6 +311,10 @@ import Foundation
                 
         let deleteFilenames = getExternalFilenames(ofMessages: [object], includeThumbnail: true)
         deleteExternalFiles(list: deleteFilenames)
+
+        if let message = object as? BaseMessage {
+            nullifyConversationLastMessage(for: [message])
+        }
         
         objCnx.delete(object)
         
@@ -330,6 +393,43 @@ import Foundation
         }
         
         return (nil, 0)
+    }
+    
+    public func deleteMissedCallsCacheOlderThanTwoWeeks() {
+        guard let twoWeeksAgo = Calendar.current.date(byAdding: .day, value: -14, to: Date()) as? NSDate else {
+            fatalError()
+        }
+        
+        let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "Call")
+        fetchRequest.predicate = NSPredicate(format: "date <= %@", twoWeeksAgo)
+        
+        do {
+            let batch = NSBatchDeleteRequest(fetchRequest: fetchRequest)
+            batch.resultType = NSBatchDeleteRequestResultType.resultTypeObjectIDs
+            let deleteResult = try objCnx.execute(batch) as? NSBatchDeleteResult
+            
+            if let deletedIDs = deleteResult?.result as? [NSManagedObjectID], !deletedIDs.isEmpty {
+                let dbManager = DatabaseManager()
+                dbManager.refreshDirtyObjectIDs([NSDeletedObjectsKey: deletedIDs], into: objCnx)
+                objCnx.reset()
+            }
+            else {
+                // Fallback for when the batch delete request misses the objects stored in the DB
+                // This should only happen in unit tests but if it were to ever change and we'd miss it
+                // well still be safe in production.
+                guard let fetchedCalls = try? fetchRequest.execute() as? [NSManagedObject] else {
+                    DDLogError("Could not delete calls cache. Unknown error.")
+                    return
+                }
+                
+                for fetchedCall in fetchedCalls {
+                    deleteObject(object: fetchedCall)
+                }
+            }
+        }
+        catch let error as NSError {
+            DDLogError("Could not delete calls cache. \(error), \(error.userInfo)")
+        }
     }
     
     // MARK: - Private helper methods
@@ -445,7 +545,7 @@ import Foundation
     /// Delete all kind of messages of this contact.
     ///
     /// - Parameters:
-    ///    - contact: Delete all messages of this contatct
+    ///    - contact: Delete all messages of this contact
     ///
     /// - Returns:
     ///    Count of deleted messages
@@ -466,6 +566,10 @@ import Foundation
         do {
             let messages = try objCnx.fetch(fetchRequest)
             let deleteFilenames = getExternalFilenames(ofMessages: messages, includeThumbnail: true)
+
+            if let messages = messages as? [BaseMessage] {
+                nullifyConversationLastMessage(for: messages)
+            }
             
             let batch = NSBatchDeleteRequest(fetchRequest: fetchRequest)
             batch.resultType = NSBatchDeleteRequestResultType.resultTypeObjectIDs
@@ -486,5 +590,29 @@ import Foundation
         }
 
         return 0
+    }
+
+    private func nullifyConversationLastMessage(for messages: [BaseMessage]) {
+        guard !messages.isEmpty else {
+            return
+        }
+
+        do {
+            try objCnx.performAndWait {
+                let fetchConversations = NSFetchRequest<NSFetchRequestResult>(entityName: "Conversation")
+                fetchConversations.predicate = NSPredicate(format: "lastMessage IN %@", messages)
+
+                if let conversations = try fetchConversations.execute() as? [Conversation], !conversations.isEmpty {
+                    for conversation in conversations {
+                        conversation.lastMessage = nil
+                    }
+
+                    try self.objCnx.save()
+                }
+            }
+        }
+        catch {
+            DDLogError("Failed to nullify `Conversation.lastMessage`: \(error)")
+        }
     }
 }

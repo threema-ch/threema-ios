@@ -36,7 +36,7 @@ class NotificationService: UNNotificationServiceExtension {
     private var pendingUserNotificationManager: PendingUserNotificationManagerProtocol?
 
     private static var stopProcessingTimer: Timer?
-    private static var stopProcessingGroup = DispatchGroup()
+    private static var stopProcessingGroup: DispatchGroup?
 
     private var isChatQueueDry = false
     private var isReflectionQueueDry = false
@@ -52,13 +52,13 @@ class NotificationService: UNNotificationServiceExtension {
         
         guard !NotificationService.didJustReportCall else {
             businessInjector.serverConnector.disconnect(initiator: .notificationExtension)
-            
+
             DDLogNotice("[Push] Suppressing push because we have just reported an incoming call")
             self.contentHandler = contentHandler
             applyContent()
             return
         }
-        
+
         // Make timer invalid, to prevent stopping processing
         DispatchQueue.main.async {
             NotificationService.stopProcessingTimer?.invalidate()
@@ -170,7 +170,8 @@ class NotificationService: UNNotificationServiceExtension {
                     if baseMessage == nil {
                         // Start processing incoming messages and wait (max. 25s)
                         DDLogNotice("[Push] Enter the stopProcessingGroup")
-                        NotificationService.stopProcessingGroup.enter()
+                        NotificationService.stopProcessingGroup = DispatchGroup()
+                        NotificationService.stopProcessingGroup?.enter()
 
                         // We observe for invalid license
                         NotificationCenter.default.addObserver(
@@ -180,18 +181,19 @@ class NotificationService: UNNotificationServiceExtension {
                         ) { [weak self] _ in
                             self?.addInvalidLicenseKeyNotification(removingInitialPushFor: threemaPushNotification)
                         }
-                        
+
                         DispatchQueue.global().async {
                             // Register message processor delegate and connect to server
                             self.businessInjector.serverConnector.registerMessageProcessorDelegate(delegate: self)
                             self.businessInjector.serverConnector.registerConnectionStateDelegate(delegate: self)
-                            
+
                             self.businessInjector.serverConnector.connect(initiator: .notificationExtension)
                         }
 
-                        let result = NotificationService.stopProcessingGroup.wait(timeout: .now() + 25)
+                        let result = NotificationService.stopProcessingGroup?.wait(timeout: .now() + 25)
                         if result != .success {
                             DDLogWarn("[Push] Stopping processing incoming messages, because time is up!")
+
                             if NotificationService.didJustReportCall {
                                 DDLogError("[Push] Stopped processing incoming messages, but we were reporting a call!")
                                 NotificationService.didJustReportCall = false
@@ -294,7 +296,8 @@ class NotificationService: UNNotificationServiceExtension {
         var badge = 0
         if let conversations = businessInjector.backgroundEntityManager.entityFetcher
             .notArchivedConversations() as? [Conversation] {
-            badge = businessInjector.backgroundUnreadMessages.totalCount(doCalcUnreadMessagesCountOf: conversations)
+            badge = businessInjector.backgroundUnreadMessages
+                .totalCount(doCalcUnreadMessagesCountOf: Set(conversations))
         }
         else {
             badge = businessInjector.backgroundUnreadMessages.totalCount()
@@ -332,6 +335,11 @@ class NotificationService: UNNotificationServiceExtension {
 
             return false
         }
+
+        guard !businessInjector.userSettings.blockCommunication else {
+            DDLogWarn("[Push] Comminucation is blocked")
+            return false
+        }
         
         return true
     }
@@ -353,7 +361,7 @@ class NotificationService: UNNotificationServiceExtension {
                     TaskManager.isEmpty(queueType: .incoming)
             ) {
             DDLogNotice(
-                "[Push] Stopping processing incoming messages, because receive message queue finished or chat/reflection queue is dry!"
+                "[Push] Stopping process incoming messages (force: \(force), because receive message queue finished or chat/reflection queue is dry!"
             )
             DDLog.flushLog()
 
@@ -371,7 +379,7 @@ class NotificationService: UNNotificationServiceExtension {
                 NotificationService.didJustReportCall = reportedCall
             }
 
-            DispatchQueue.main.sync {
+            DispatchQueue.main.async {
                 NotificationService.stopProcessingTimer?.invalidate()
                 NotificationService.stopProcessingTimer = Timer.scheduledTimer(
                     withTimeInterval: delay,
@@ -388,9 +396,10 @@ class NotificationService: UNNotificationServiceExtension {
                                 }
                             )
                         }
-                        
+
                         DDLogNotice("[Push] Leave Processing Group")
-                        NotificationService.stopProcessingGroup.leave()
+                        NotificationService.stopProcessingGroup?.leave()
+                        NotificationService.stopProcessingGroup = nil
                     }
                 )
             }
@@ -418,7 +427,8 @@ class NotificationService: UNNotificationServiceExtension {
         applyContent(content)
         DDLogNotice("[Push] Left the stopProcessingGroup because there is no valid license")
         DDLog.flushLog()
-        NotificationService.stopProcessingGroup.leave()
+        NotificationService.stopProcessingGroup?.leave()
+        NotificationService.stopProcessingGroup = nil
     }
     
     @available(iOSApplicationExtension 15, *)
@@ -441,9 +451,8 @@ class NotificationService: UNNotificationServiceExtension {
         }
         DDLogNotice("[Push] will Report Incoming VoIP Push Payload to OS.")
         CXProvider.reportNewIncomingVoIPPushPayload(payload) { _ in
-            DDLogNotice("[Push] Incoming VoIP Push Payload reported, leaving queue now.")
-            DDLogNotice("[Push] Left the stopProcessingGroup for incoming call")
-            
+            DDLogNotice("[Push] Incoming VoIP Push Payload reported, leaving now")
+
             self.exitIfAllTasksProcessed(force: true, reportedCall: true)
         }
     }
@@ -491,27 +500,30 @@ extension NotificationService: MessageProcessorDelegate {
     
     func incomingMessageChanged(_ message: BaseMessage, fromIdentity: String) {
         businessInjector.backgroundEntityManager.performBlockAndWait {
-            let msgID = message.id.hexString
-            DDLogNotice("[Push] Message processor changed for message id: \(msgID)")
-        
-            // Set dirty DB objects for refreshing in the app process
-            let databaseManager = DatabaseManager()
-            databaseManager.addDirtyObject(message)
-            if let conversation = message.conversation {
-                databaseManager.addDirtyObject(conversation)
-                if let contact = conversation.contact {
-                    databaseManager.addDirtyObject(contact)
-                }
-            }
+            if let msg = self.businessInjector.backgroundEntityManager.entityFetcher
+                .getManagedObject(by: message.objectID) as? BaseMessage {
+                let msgID = msg.id?.hexString
+                DDLogNotice("[Push] Message processor changed for message id: \(msgID ?? "nil")")
 
-            if let pendingUserNotification = self.pendingUserNotificationManager?.pendingUserNotification(
-                for: message,
-                fromIdentity: fromIdentity,
-                stage: .base
-            ) {
-                DDLogInfo("[Push] Message processor changed for message id: \(msgID) found")
-                _ = self.pendingUserNotificationManager?
-                    .startTimedUserNotification(pendingUserNotification: pendingUserNotification)
+                // Set dirty DB objects for refreshing in the app process
+                let databaseManager = DatabaseManager()
+                databaseManager.addDirtyObject(msg)
+                if let conversation = msg.conversation {
+                    databaseManager.addDirtyObject(conversation)
+                    if let contact = conversation.contact {
+                        databaseManager.addDirtyObject(contact)
+                    }
+                }
+
+                if let pendingUserNotification = self.pendingUserNotificationManager?.pendingUserNotification(
+                    for: msg,
+                    fromIdentity: fromIdentity,
+                    stage: .base
+                ) {
+                    DDLogInfo("[Push] Message processor changed for message id: \(msgID ?? "nil") found")
+                    _ = self.pendingUserNotificationManager?
+                        .startTimedUserNotification(pendingUserNotification: pendingUserNotification)
+                }
             }
         }
     }
@@ -541,10 +553,26 @@ extension NotificationService: MessageProcessorDelegate {
         }
     }
 
+    func readMessage(inConversations: Set<Conversation>?) {
+        // no-op
+    }
+    
     func incomingMessageFailed(_ message: BoxedMessage) {
         if let pendingUserNotification = pendingUserNotificationManager?.pendingUserNotification(
             for: message,
             stage: .initial
+        ) {
+            pendingUserNotificationManager?.addAsProcessed(pendingUserNotification: pendingUserNotification)
+            pendingUserNotificationManager?
+                .removeAllTimedUserNotifications(pendingUserNotification: pendingUserNotification)
+        }
+    }
+    
+    func incomingAbstractMessageFailed(_ message: AbstractMessage) {
+        if let pendingUserNotification = pendingUserNotificationManager?.pendingUserNotification(
+            for: message,
+            stage: .abstract,
+            isPendingGroup: false
         ) {
             pendingUserNotificationManager?.addAsProcessed(pendingUserNotification: pendingUserNotification)
             pendingUserNotificationManager?
@@ -558,8 +586,6 @@ extension NotificationService: MessageProcessorDelegate {
             exitIfAllTasksProcessed(force: true)
         }
     }
-    
-    func outgoingMessageFinished(_ message: AbstractMessage) { }
     
     func chatQueueDry() {
         DDLogNotice("[Push] Message processor chat queue is dry")
@@ -618,6 +644,22 @@ extension NotificationService: MessageProcessorDelegate {
                     onCompletion: onCompletion
                 )
             }
+        case let message as VoIPCallHangupMessage:
+            CallSystemMessageHelper
+                .maybeAddMissedCallNotificationToConversation(
+                    with: message,
+                    on: businessInjector
+                ) { conversation, systemMessage in
+                    if let systemMessage = systemMessage, let conversation = conversation {
+                        let databaseManager = DatabaseManager()
+                        databaseManager.addDirtyObject(conversation)
+                        databaseManager.addDirtyObject(systemMessage)
+                        
+                        self.updateNotificationContent(for: message)
+                    }
+                    
+                    onCompletion?(self)
+                }
         default:
             onCompletion?(self)
             DDLogError("Message couldn't be processed as VoIP call.")
@@ -626,7 +668,7 @@ extension NotificationService: MessageProcessorDelegate {
     
     private func rejectCall(offer: VoIPCallOfferMessage) {
         let voIPCallSender = VoIPCallSender(businessInjector.myIdentityStore)
-        var reason: VoIPCallAnswerMessage.MessageRejectReason = .disabled
+        let reason: VoIPCallAnswerMessage.MessageRejectReason = .disabled
         let answer = VoIPCallAnswerMessage(
             action: .reject,
             contactIdentity: offer.contactIdentity,
@@ -638,46 +680,52 @@ extension NotificationService: MessageProcessorDelegate {
             completion: nil
         )
         voIPCallSender.sendVoIPCall(answer: answer)
-        addRejectedMessageToConversation(contactIdentity: offer.contactIdentity!, reason: kSystemMessageCallMissed)
+        
+        guard let contactIdentity = offer.contactIdentity else {
+            DDLogError("Cannot reject call offer as it does not have an identity")
+            return
+        }
+        
+        CallSystemMessageHelper.addRejectedMessageToConversation(
+            contactIdentity: contactIdentity,
+            reason: kSystemMessageCallMissed,
+            on: businessInjector
+        ) { conversation, systemMessage in
+            let databaseManager = DatabaseManager()
+            databaseManager.addDirtyObject(conversation)
+            databaseManager.addDirtyObject(systemMessage)
+        }
     }
     
-    private func addRejectedMessageToConversation(contactIdentity: String, reason: Int) {
-        var systemMessage: SystemMessage?
-
-        businessInjector.backgroundEntityManager.performSyncBlockAndSafe {
-            if let conversation = self.businessInjector.backgroundEntityManager.conversation(
-                for: contactIdentity,
-                createIfNotExisting: true
-            ) {
-                systemMessage = self.businessInjector.backgroundEntityManager.entityCreator
-                    .systemMessage(for: conversation)
-                systemMessage?.type = NSNumber(value: reason)
-                let callInfo = [
-                    "DateString": DateFormatter.shortStyleTimeNoDate(Date()),
-                    "CallInitiator": NSNumber(booleanLiteral: false),
-                ] as [String: Any]
-                do {
-                    let callInfoData = try JSONSerialization.data(withJSONObject: callInfo, options: .prettyPrinted)
-                    systemMessage?.arg = callInfoData
-                    systemMessage?.isOwn = NSNumber(booleanLiteral: false)
-                    systemMessage?.conversation = conversation
-                    conversation.lastMessage = systemMessage
-                    if reason == kSystemMessageCallMissed {
-                        conversation.lastUpdate = Date.now
-                    }
-
-                    let databaseManager = DatabaseManager()
-                    databaseManager.addDirtyObject(conversation)
-                    databaseManager.addDirtyObject(systemMessage)
-                }
-                catch {
-                    print(error)
-                }
+    private func updateNotificationContent(
+        for message: VoIPCallHangupMessage,
+        onCompletion: ((MessageProcessorDelegate) -> Void)? = nil
+    ) {
+        guard let contactIdentity = message.contactIdentity else {
+            DDLogError("Cannot update local notification without contact identity")
+            return
+        }
+        
+        let contact = businessInjector.entityManager.entityFetcher.contact(for: contactIdentity)
+        let content = UNMutableNotificationContent()
+        if !UserSettings.shared().pushShowNickname,
+           let displayName = contact?.displayName {
+            content.title = displayName
+        }
+        else {
+            if let publicNickname = contact?.publicNickname,
+               !publicNickname.isEmpty {
+                content.title = publicNickname
             }
             else {
-                DDLogNotice("Threema Calls: Can't add rejected message because conversation is nil")
+                content.title = contactIdentity
             }
         }
+        content.body = BundleUtil.localizedString(forKey: "call_missed")
+        
+        // Group notifications together with others from the same contact
+        content.threadIdentifier = "SINGLE-\(contactIdentity)"
+        applyContent(content)
     }
 }
 
@@ -686,13 +734,15 @@ extension NotificationService: MessageProcessorDelegate {
 extension NotificationService: ConnectionStateDelegate {
     func changed(connectionState state: ConnectionState) {
         if state == .disconnecting || state == .disconnected {
-            DDLogNotice("[Push] Left the stopProcessingGroup because connection is \(state.rawValue)")
-            
+            DDLogWarn(
+                "[Push] Server connection is disconnected (state: \(businessInjector.serverConnector.name(for: state)))) stop processing"
+            )
+
             guard !NotificationService.didJustReportCall else {
                 DDLogNotice("[Push] Don't leave after connection state change because we just reported a call.")
                 return
             }
-            
+
             exitIfAllTasksProcessed(force: true)
         }
     }

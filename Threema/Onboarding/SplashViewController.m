@@ -171,6 +171,7 @@
     
     _setupButton.backgroundColor = Colors.primaryWizard;
     _setupButton.layer.cornerRadius = 5;
+    _setupButton.accessibilityIdentifier = @"SplashViewControllerSetupButton";
     [_setupButton setTitleColor:Colors.textSetup forState:UIControlStateNormal];
     
     _restoreButton.backgroundColor = Colors.primaryWizard;
@@ -179,6 +180,7 @@
     _restoreButton.layer.cornerRadius = 5;
     _restoreButton.titleLabel.adjustsFontSizeToFitWidth = YES;
     _restoreButton.titleLabel.minimumScaleFactor = 0.6;
+    _restoreButton.accessibilityIdentifier = @"SplashViewControllerRestoreButton";
     [_restoreButton setTitleColor:Colors.textSetup forState:UIControlStateNormal];
 
     _setupTitleLabel.textColor = Colors.textSetup;

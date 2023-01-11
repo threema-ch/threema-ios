@@ -101,16 +101,16 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
+
+    // Checks is device linking not finished yet
+    if ([[UserSettings sharedUserSettings] blockCommunication]) {
+        [self showMultiDeviceWizard];
+    }
     
     if (_isFirstAppearance) {
         self.selectedIndex = kDefaultInitialTabIndex;
         _isFirstAppearance = NO;
         [self showBetaFeedBackVC];
-        
-        // The celebration info screen is only for consumer users
-        if ([ThreemaAppObjc current] == ThreemaAppThreema) {
-            [self showAnniversaryView];
-        }
     }
 }
 
@@ -123,9 +123,6 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     
     _contactsViewController = nil;
     
-    if (_conversationsViewController != nil) {
-        [_conversationsViewController removeAllObservers];
-    }
     _conversationsViewController = nil;
     
     _contactsNavigationController = nil;
@@ -264,6 +261,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         return;
     }
     
+    // TODO: (IOS-2860) Remove when new chat view released
     // Old ChatView iPad
     if (_old_ChatViewController == nil) {
         Conversation *conv = [_conversationsViewController getFirstConversation];
@@ -374,6 +372,13 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     _conversationsNavigationController = nil;
 }
 
+- (void)showMultiDeviceWizard {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [[MultiDeviceWizardManager shared] continueWizard];
+        [self presentViewController:[[MultiDeviceWizardManager shared] wizardViewController] animated:true completion:nil];
+    });
+}
+
 - (void)showBetaFeedBackVC {
     if ([[NSUserDefaults standardUserDefaults] boolForKey:@"FASTLANE_SNAPSHOT"]) {
         return;
@@ -396,22 +401,6 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     }
 }
 
-- (void)showAnniversaryView {
-    if ([[NSUserDefaults standardUserDefaults] boolForKey:@"FASTLANE_SNAPSHOT"]) {
-        return;
-    }
-
-    BOOL doNotShowAgain = [[AppGroup userDefaults] boolForKey:kShowed10YearsAnniversaryView];
-    
-    if (!doNotShowAgain) {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            UIViewController *anniversaryInfoViewController = [[InfoScreenHelper shared] anniversaryInfoViewController];
-            if (![anniversaryInfoViewController isBeingPresented]) {
-                [self presentViewController:anniversaryInfoViewController animated:true completion:nil];
-            }
-        });
-    }
-}
 #pragma mark - notifications
 
 - (void)selectedGroup:(NSNotification*)notification {
@@ -420,7 +409,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     _singleDetailViewController = nil;
     
     if (SYSTEM_IS_IPAD) {
-        _groupDetailViewController = [[GroupDetailsViewController alloc] initFor:group displayMode:GroupDetailsDisplayModeDefault displayStyle:DetailsDisplayStyleDefault];
+        _groupDetailViewController = [[GroupDetailsViewController alloc] initFor:group displayMode:GroupDetailsDisplayModeDefault displayStyle:DetailsDisplayStyleDefault delegate:nil];
         
         if (self.selectedIndex == kContactsTabBarIndex) {
             [self switchContact];
@@ -536,6 +525,10 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
             Conversation *conv = [Old_ChatViewControllerCache getConversationForNotificationInfo:notification.userInfo createIfNotExisting:YES];
             ChatViewController *chatViewController = [[ChatViewController alloc]initWithConversation:conv];
             
+            if ([[UserSettings sharedUserSettings] initialScrollPositionAlt1]) {
+                [CATransaction begin];
+            }
+            
             if ([_conversationsNavigationController.topViewController isKindOfClass:[ArchivedConversationsViewController class]]) {
                 _archivedConversationsViewController = (ArchivedConversationsViewController *) _conversationsNavigationController.topViewController;
                 [_archivedConversationsViewController displayChatWithChatViewController: chatViewController animated:YES];
@@ -564,6 +557,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
             return;
         }
         
+        // TODO: (IOS-2860) Remove when new chat view released
         // Old ChatView iPhone
         if (_conversationsViewController == nil) {
             _conversationsNavigationController = self.viewControllers[kChatTabBarIndex];
@@ -725,6 +719,9 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 }
 
 - (void)chatFontSizeChanged:(NSNotification*)notification {
+    if ([[UserSettings sharedUserSettings] newChatViewActive]) {
+        return;
+    }
     DDLogInfo(@"Chat font size changed, removing cached chat view controllers");
     [self resetChats];
 }
@@ -783,6 +780,10 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
                 }
             }
         }
+    }
+    
+    if ([[UserSettings sharedUserSettings] newChatViewActive]) {
+        return;
     }
     
     if (previousTraitCollection.preferredContentSizeCategory != self.traitCollection.preferredContentSizeCategory) {

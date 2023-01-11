@@ -40,6 +40,7 @@ open class ThemedCodeButton: UIButton {
         
         configureButton()
         registerObserver()
+        updateColors()
     }
     
     @available(*, unavailable)

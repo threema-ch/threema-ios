@@ -142,8 +142,8 @@
 }
 
 - (void)updateColors {
-    self.view.backgroundColor = Colors.backgroundViewController;
-    _buttonView.backgroundColor = Colors.backgroundViewController;
+    self.view.backgroundColor = Colors.backgroundGroupedViewController;
+    _buttonView.backgroundColor = Colors.backgroundGroupedViewController;
     
     _hairlineTop.backgroundColor = Colors.textLight;
     _hairlineTop.frame = [RectUtil setHeightOf:_hairlineTop.frame height:0.5];

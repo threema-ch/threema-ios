@@ -37,6 +37,8 @@ protocol ChatBarViewDelegate: AnyObject {
     
     // Animations
     func updateLayoutForTextChange()
+    
+    func setIsResettingKeyboard(_ setReset: Bool)
 }
 
 final class ChatBarView: UIView {
@@ -49,7 +51,11 @@ final class ChatBarView: UIView {
     // MARK: - Properties
     
     var textBeginningInset: CGFloat {
-        frame.minX + chatTextView.textBeginningInset
+        chatTextView.textBeginningInset
+    }
+    
+    var isTextViewFirstResponder: Bool {
+        chatTextView.isFirstResponder
     }
     
     weak var chatBarViewDelegate: ChatBarViewDelegate?
@@ -59,6 +65,10 @@ final class ChatBarView: UIView {
     private let markupParser = MarkupParser()
     private let conversation: Conversation
     private var isTyping = false
+    
+    /// Timer which sends a typing message to avoid the other device cancelling the typing status
+    private var continueTypingTimer: Timer?
+    /// Timer which sends stop typing message if the user has not updated the text field within the past n seconds
     private var typingTimer: Timer?
     
     private var sendButtonConstraint: NSLayoutConstraint?
@@ -68,11 +78,15 @@ final class ChatBarView: UIView {
     private var updatableConstraints = [UpdatableConstraint]()
     
     private let draftText: String?
+    private lazy var feedbackGenerator = UINotificationFeedbackGenerator()
     
     // MARK: - Views
     
     private lazy var chatTextView: ChatTextView = {
-        let chatTextView = ChatTextView(draftText: draftText)
+        let chatTextView = ChatTextView(
+            draftText: draftText,
+            conversationIdentifier: conversation.objectID.uriRepresentation().absoluteString
+        )
         
         chatTextView.setContentHuggingPriority(.defaultLow, for: .horizontal)
         chatTextView.setContentCompressionResistancePriority(.defaultHigh, for: .horizontal)
@@ -86,7 +100,7 @@ final class ChatBarView: UIView {
         let imageButton = ChatBarButton(
             sfSymbolName: "plus.circle.fill",
             accessibilityLabel: BundleUtil.localizedString(forKey: "compose_bar_attachment_button_accessibility_label"),
-            defaultColor: { Colors.backgroundButton },
+            defaultColor: { Colors.backgroundChatBarButton },
             customScalableSize: Config.plusButtonSize
         ) { [weak self] _ in
             guard let strongSelf = self else {
@@ -154,7 +168,7 @@ final class ChatBarView: UIView {
     private lazy var recordButton = ChatBarButton(
         sfSymbolName: "mic.fill",
         accessibilityLabel: BundleUtil.localizedString(forKey: "compose_bar_record_button_accessibility_label"),
-        defaultColor: { Colors.backgroundButton }
+        defaultColor: { Colors.backgroundChatBarButton }
     ) { [weak self] _ in
         guard let strongSelf = self else {
             return
@@ -168,7 +182,7 @@ final class ChatBarView: UIView {
     private lazy var cameraButton = ChatBarButton(
         sfSymbolName: "camera.fill",
         accessibilityLabel: BundleUtil.localizedString(forKey: "compose_bar_camera_button_accessibility_label"),
-        defaultColor: { Colors.backgroundButton }
+        defaultColor: { Colors.backgroundChatBarButton }
     ) { [weak self] _ in
         guard let strongSelf = self else {
             return
@@ -347,7 +361,7 @@ final class ChatBarView: UIView {
     // MARK: - Update
     
     func updateColors() {
-        bottomHairlineView.backgroundColor = Colors.backgroundButton
+        bottomHairlineView.backgroundColor = Colors.hairLine
         
         if UIAccessibility.isReduceTransparencyEnabled {
             backgroundColor = Colors.backgroundChatBar
@@ -440,11 +454,13 @@ final class ChatBarView: UIView {
         }
     }
     
+    @discardableResult
     override func resignFirstResponder() -> Bool {
         chatTextView.resignFirstResponder()
         return super.resignFirstResponder()
     }
     
+    @discardableResult
     override func becomeFirstResponder() -> Bool {
         chatTextView.becomeFirstResponder()
     }
@@ -499,6 +515,9 @@ extension ChatBarView: ChatTextViewDelegate {
         resetKeyboard(andType: true)
         
         chatBarViewDelegate.sendText(rawText: text)
+        feedbackGenerator.prepare()
+        feedbackGenerator.notificationOccurred(.success)
+        isTyping = false
     }
     
     func canStartEditing() -> Bool {
@@ -508,10 +527,36 @@ extension ChatBarView: ChatTextViewDelegate {
     /// This flips the isTyping indicator and sends a message updating the status for the contact
     /// Additionally we keep track of time and stop the typing indicator after 5 seconds.
     private func sendStartOrStopTypingIndicator() {
+        if continueTypingTimer == nil {
+            continueTypingTimer = Timer.scheduledTimer(
+                withTimeInterval: TimeInterval(TypingIndicatorManager.typingIndicatorResendInterval()),
+                repeats: false,
+                block: { [weak self] _ in
+                    if let isTyping = self?.isTyping, isTyping {
+                        self?.chatBarViewDelegate?.sendTypingIndicator(startTyping: isTyping)
+                    }
+                }
+            )
+        }
+        
         // Send typing indicator
         // Restart timer to send stop typing
         if let timer = typingTimer {
             timer.invalidate()
+            typingTimer = nil
+        }
+        
+        typingTimer = Timer.scheduledTimer(
+            withTimeInterval: TimeInterval(TypingIndicatorManager.typingIndicatorTypingPauseInterval()),
+            repeats: false,
+            block: { _ in
+                self.isTyping = false
+                self.chatBarViewDelegate?.sendTypingIndicator(startTyping: self.isTyping)
+            }
+        )
+        
+        guard isTyping != chatTextView.isEditing else {
+            return
         }
         
         if !isTyping {
@@ -522,11 +567,6 @@ extension ChatBarView: ChatTextViewDelegate {
             isTyping = false
             chatBarViewDelegate?.sendTypingIndicator(startTyping: isTyping)
         }
-        
-        typingTimer = Timer.scheduledTimer(withTimeInterval: 5, repeats: false, block: { _ in
-            self.isTyping = false
-            self.chatBarViewDelegate?.sendTypingIndicator(startTyping: self.isTyping)
-        })
     }
     
     // MARK: ChatTextViewDelegate Helpers
@@ -539,7 +579,7 @@ extension ChatBarView: ChatTextViewDelegate {
             showSendButton()
         }
         
-        if !isTyping, changeTyping {
+        if changeTyping {
             sendStartOrStopTypingIndicator()
         }
     }

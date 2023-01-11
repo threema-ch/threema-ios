@@ -90,13 +90,16 @@
     int maxBytesToDecrypt;
     int timeoutDownloadThumbnail;
     EntityManager *entityManager;
+    ForwardSecurityMessageProcessor *fsmp;
+    NonceGuard *nonceGuard;
 }
 
 static dispatch_queue_t pendingGroupMessagesQueue;
 static NSMutableOrderedSet *pendingGroupMessages;
 
-- (instancetype)initWith:(id<MessageProcessorDelegate>)messageProcessorDelegate entityManager:(NSObject *)entityManagerObject {
+- (instancetype)initWith:(id<MessageProcessorDelegate>)messageProcessorDelegate entityManager:(NSObject *)entityManagerObject fsmp:(NSObject*)fsmp {
     NSAssert([entityManagerObject isKindOfClass:[EntityManager class]], @"Object must be type of EntityManager");
+    NSAssert([fsmp isKindOfClass:[ForwardSecurityMessageProcessor class]], @"Object must be type of ForwardSecurityMessageProcessor");
 
     self = [super init];
     if (self) {
@@ -104,6 +107,8 @@ static NSMutableOrderedSet *pendingGroupMessages;
         self->maxBytesToDecrypt = 0;
         self->timeoutDownloadThumbnail = 0;
         self->entityManager = (EntityManager*)entityManagerObject;
+        self->fsmp = (ForwardSecurityMessageProcessor*)fsmp;
+        self->nonceGuard = [[NonceGuard alloc] initWithEntityManager:self->entityManager];
 
         if (pendingGroupMessages == nil) {
             pendingGroupMessagesQueue = dispatch_queue_create("ch.threema.ServerConnector.pendingGroupMessagesQueue", NULL);
@@ -121,7 +126,9 @@ static NSMutableOrderedSet *pendingGroupMessages;
     return [AnyPromise promiseWithAdapterBlock:^(PMKAdapter  _Nonnull adapter) {
         [messageProcessorDelegate beforeDecode];
 
-        [[ContactStore sharedContactStore] fetchPublicKeyForIdentity:boxmsg.fromIdentity entityManager:entityManager onCompletion:^(NSData *publicKey) {
+        ContactAcquaintanceLevel acquaintanceLevel = boxmsg.flags & MESSAGE_FLAG_GROUP ? ContactAcquaintanceLevelGroup : ContactAcquaintanceLevelDirect;
+
+        [[ContactStore sharedContactStore] fetchPublicKeyForIdentity:boxmsg.fromIdentity acquaintanceLevel:acquaintanceLevel entityManager:entityManager onCompletion:^(NSData *publicKey) {
             NSAssert(!([NSThread isMainThread] == YES), @"Should not running in main thread");
 
             [entityManager performBlock:^{
@@ -177,7 +184,7 @@ static NSMutableOrderedSet *pendingGroupMessages;
                         adapter(nil, nil);
                         return;
                     } else {
-                        if ([entityManager.entityFetcher isNonceAlreadyInDb:amsg]) {
+                        if ([nonceGuard isProcessedWithMessage:amsg isReflected:NO]) {
                             NSString *errorDescription = @"Nonce already in database";
                             if ([amsg isKindOfClass:[BoxTextMessage class]] || [amsg isKindOfClass:[GroupTextMessage class]]) {
                                 [[ValidationLogger sharedValidationLogger] logBoxedMessage:boxmsg isIncoming:YES description:errorDescription];
@@ -231,14 +238,16 @@ static NSMutableOrderedSet *pendingGroupMessages;
         return;
     }
     
-    if ([entityManager.entityFetcher isNonceAlreadyInDb:amsg]) {
-        DDLogInfo(@"Message nonce from %@ already in database", amsg.fromIdentity);
+    if ([nonceGuard isProcessedWithMessage:amsg isReflected:NO]) {
+        DDLogInfo(@"Message nonce for %@ already in database", amsg.messageId);
         onCompletion(nil);
         return;
     }
     
     /* Find contact for message */
-    if ([[ContactStore sharedContactStore] contactForIdentity:amsg.fromIdentity] == nil) {
+    
+    Contact *contact = [entityManager.entityFetcher contactForId: amsg.fromIdentity];
+    if (contact == nil) {
         /* This should never happen, as without an entry in the contacts database, we wouldn't have
          been able to decrypt this message in the first place (no sender public key) */
         DDLogWarn(@"Identity %@ not in local contacts database - cannot process message", amsg.fromIdentity);
@@ -246,6 +255,7 @@ static NSMutableOrderedSet *pendingGroupMessages;
         onError(error);
         return;
     }
+    NSData *senderPublicKey = contact.publicKey;
     
     /* Update public nickname in contact, if necessary */
     [[ContactStore sharedContactStore] updateNickname:amsg.fromIdentity nickname:amsg.pushFromName shouldReflect:YES];
@@ -254,11 +264,54 @@ static NSMutableOrderedSet *pendingGroupMessages;
     
     [messageProcessorDelegate incomingMessageStarted:amsg];
     
+    void(^processAbstractMessageBlock)(AbstractMessage *) = ^void(AbstractMessage *amsg) {        
+        [self processIncomingMessage:(AbstractMessage *)amsg onCompletion:^(id<MessageProcessorDelegate> _Nullable delegate) {
+            if (!amsg.flagDontQueue) {
+                [nonceGuard processedWithMessage:amsg isReflected:NO error:nil];
+            }
+
+            if (delegate) {
+                [delegate incomingMessageFinished:amsg isPendingGroup:false];
+            }
+            else {
+                [messageProcessorDelegate incomingMessageFinished:amsg isPendingGroup:false];
+            }
+            onCompletion(amsg);
+        } onError:^(NSError *error) {
+            [messageProcessorDelegate incomingMessageFinished:amsg isPendingGroup:false];
+            onError(error);
+        }];
+    };
+    
     @try {
-        if ([amsg isKindOfClass:[AbstractGroupMessage class]]) {
+        if ([amsg isKindOfClass:[ForwardSecurityEnvelopeMessage class]]) {
+            if ([ThreemaUtility supportsForwardSecurity]) {
+                [self processIncomingForwardSecurityMessage:(ForwardSecurityEnvelopeMessage*)amsg senderPublicKey:senderPublicKey onCompletion:^(AbstractMessage *unwrappedMessage) {
+                    if (unwrappedMessage != nil) {
+                        processAbstractMessageBlock(unwrappedMessage);
+                    } else {
+                        [messageProcessorDelegate incomingAbstractMessageFailed:amsg]; // Remove notification
+                        onError(nil); // drop message
+                    }
+                } onError:^(NSError *error) {
+                    if ([error.userInfo objectForKey:@"ShouldRetry"]) {
+                        [messageProcessorDelegate incomingMessageFinished:amsg isPendingGroup:false];
+                        onError(error);
+                    } else {
+                        [messageProcessorDelegate incomingAbstractMessageFailed:amsg]; // Remove notification
+                        onError(nil); // drop message
+                    }
+                }];
+            } else {
+                // No FS support - reject message
+                ForwardSecurityContact *fsContact = [[ForwardSecurityContact alloc] initWithIdentity:amsg.fromIdentity publicKey:senderPublicKey];
+                [fsmp rejectEnvelopeMessageWithSender:fsContact envelopeMessage:(ForwardSecurityEnvelopeMessage*)amsg];
+                [messageProcessorDelegate incomingAbstractMessageFailed:amsg]; // Remove notification
+                onError(nil); // drop message
+            }
+        } else if ([amsg isKindOfClass:[AbstractGroupMessage class]]) {
             [self processIncomingGroupMessage:(AbstractGroupMessage *)amsg onCompletion:^{
-                [self processedMessage:amsg];
-                
+                [nonceGuard processedWithMessage:amsg isReflected:NO error:nil];
                 [messageProcessorDelegate incomingMessageFinished:amsg isPendingGroup:false];
                 onCompletion(amsg);
             } onError:^(NSError *error) {
@@ -266,22 +319,7 @@ static NSMutableOrderedSet *pendingGroupMessages;
                 onError(error);
             }];
         } else  {
-            [self processIncomingMessage:(AbstractMessage *)amsg onCompletion:^(id<MessageProcessorDelegate> _Nullable delegate) {
-                if (!amsg.immediate) {
-                    [self processedMessage:amsg];
-                }
-
-                if (delegate) {
-                    [delegate incomingMessageFinished:amsg isPendingGroup:false];
-                }
-                else {
-                    [messageProcessorDelegate incomingMessageFinished:amsg isPendingGroup:false];
-                }
-                onCompletion(amsg);
-            } onError:^(NSError *error) {
-                [messageProcessorDelegate incomingMessageFinished:amsg isPendingGroup:false];
-                onError(error);
-            }];
+            processAbstractMessageBlock(amsg);
         }
     } @catch (NSException *exception) {
         NSError *error = [ThreemaError threemaError:exception.description withCode:kMessageProcessingErrorCode];
@@ -295,7 +333,7 @@ static NSMutableOrderedSet *pendingGroupMessages;
 Process incoming message.
 
 @param amsg: Incoming Abstract Message
-@param onCompletion: Completion handler with MessageProcessorDelegate, use it when call MessageProcessorDelegate in completion block of processVoIPCall, to prevet blocking of dispatch queue 'ServerConnector.registerMessageProcessorDelegateQueue')
+@param onCompletion: Completion handler with MessageProcessorDelegate, use it when calling MessageProcessorDelegate in completion block of processVoIPCall, to prevent blocking of dispatch queue 'ServerConnector.registerMessageProcessorDelegateQueue')
 @param onError: Error handler
 */
 - (void)processIncomingMessage:(AbstractMessage*)amsg onCompletion:(void(^ _Nonnull)(id<MessageProcessorDelegate> _Nullable delegate))onCompletion onError:(void(^ _Nonnull)(NSError *err))onError {
@@ -374,7 +412,7 @@ Process incoming message.
             onCompletion(nil);
         } onError:onError];
     } else if ([amsg isKindOfClass:[BoxFileMessage class]]) {
-        [FileMessageDecoder decodeMessageFromBox:(BoxFileMessage *)amsg forConversation:conversation timeoutDownloadThumbnail:timeoutDownloadThumbnail entityManager:entityManager onCompletion:^(BaseMessage *message) {
+        [FileMessageDecoder decodeMessageFromBox:(BoxFileMessage *)amsg forConversation:conversation isReflectedMessage:NO timeoutDownloadThumbnail:timeoutDownloadThumbnail entityManager:entityManager onCompletion:^(BaseMessage *message) {
             // Do not download blob when message will processed via Notification Extension,
             // to keep notifications fast and because option automatically save to photos gallery
             // dosen't work within Notification Extension
@@ -429,7 +467,7 @@ Process incoming message.
     /* Try to find an existing Conversation for the same contact */
     // check if type allow to create the conversation
     Conversation *conversation = [entityManager conversationForContact: contact createIfNotExisting:[msg canCreateConversation]];
-    
+
     return conversation;
 }
 
@@ -565,7 +603,7 @@ Process incoming message.
             }
             [self processIncomingGroupBallotVoteMessage:(GroupBallotVoteMessage*)amsg onCompletion:onCompletion onError:onError];
         } else if ([amsg isKindOfClass:[GroupFileMessage class]]) {
-            [FileMessageDecoder decodeGroupMessageFromBox:(GroupFileMessage *)amsg forConversation:conversation timeoutDownloadThumbnail:timeoutDownloadThumbnail entityManager:entityManager onCompletion:^(BaseMessage *message) {
+            [FileMessageDecoder decodeGroupMessageFromBox:(GroupFileMessage *)amsg forConversation:conversation isReflectedMessage:NO timeoutDownloadThumbnail:timeoutDownloadThumbnail entityManager:entityManager onCompletion:^(BaseMessage *message) {
                 [self finalizeGroupMessage:message inConversation:conversation fromBoxMessage:amsg sender:sender onCompletion:onCompletion];
             } onError:^(NSError *err) {
                 onError(err);
@@ -583,6 +621,18 @@ Process incoming message.
     }];
 }
 
+- (void)processIncomingForwardSecurityMessage:(ForwardSecurityEnvelopeMessage * _Nonnull)amsg senderPublicKey:(NSData*)senderPublicKey onCompletion:(void(^ _Nonnull)(AbstractMessage *unwrappedMessage))onCompletion onError:(void(^ _Nonnull)(NSError * error))onError {
+    NSError *error = nil;
+    ForwardSecurityContact *fsContact = [[ForwardSecurityContact alloc] initWithIdentity:amsg.fromIdentity publicKey:senderPublicKey];
+    AbstractMessage *unwrappedMessage = [fsmp processEnvelopeMessageObjcWithSender:fsContact envelopeMessage:amsg errorP:&error];
+    if (error != nil) {
+        DDLogError(@"Processing forward security message failed: %@", error);
+        onError(error);
+        return;
+    }
+    onCompletion(unwrappedMessage);
+}
+
 - (void)appendNewMessage:(BaseMessage *)message toConversation:(Conversation *)conversation fromBoxMessage:(AbstractMessage*)boxMessage {
     [entityManager performSyncBlockAndSafe:^{
         message.conversation = conversation;
@@ -592,7 +642,7 @@ Process incoming message.
         }
         conversation.conversationVisibility = ConversationVisibilityDefault;
 
-        [[entityManager entityCreator] nonceWithData:[NonceHasher hashedNonce:boxMessage.nonce]];
+        [nonceGuard processedWithMessage:boxMessage isReflected:NO error:nil];
     }];
 
     // Refault managed object to release memory, because Core Data loads `Conversation.messages` of conversation when assign conversation
@@ -600,6 +650,32 @@ Process incoming message.
 }
 
 - (void)finalizeMessage:(BaseMessage*)message inConversation:(Conversation*)conversation fromBoxMessage:(AbstractMessage*)boxMessage onCompletion:(void(^_Nonnull)(void))onCompletion {
+    if ([ThreemaUtility supportsForwardSecurity]) {
+        int systemMessageType = 0;
+        
+        if (message.forwardSecurityMode.intValue == kForwardSecurityModeNone &&
+            conversation.contact.forwardSecurityState.intValue == kForwardSecurityStateOn) {
+            // Contact has sent FS messages before, but this is not an FS message. Warn the user.
+            systemMessageType = kSystemMessageFsMessageWithoutForwardSecurity;
+            conversation.contact.forwardSecurityState = [NSNumber numberWithInt:kForwardSecurityStateOff];
+        } else if (message.forwardSecurityMode.intValue == kForwardSecurityModeFourDH &&
+                   conversation.contact.forwardSecurityState.intValue == kForwardSecurityStateOff) {
+            // Contact has sent the first 4DH message
+            systemMessageType = conversation.contact.forwardSecurityEnabled.boolValue ? kSystemMessageFsSessionEstablished : kSystemMessageFsSessionEstablishedRcvd;
+            conversation.contact.forwardSecurityState = [NSNumber numberWithInt:kForwardSecurityStateOn];
+        }
+        
+        if (systemMessageType != 0) {
+            SystemMessage *systemMessage = [entityManager.entityCreator systemMessageForConversation:conversation];
+            systemMessage.type = [NSNumber numberWithInt:systemMessageType];
+            systemMessage.remoteSentDate = [NSDate date];
+            conversation.lastMessage = systemMessage;
+            conversation.lastUpdate = [NSDate date];
+        }
+        
+        // Changes will be saved with appendNewMessage below
+    }
+    
     [self appendNewMessage:message toConversation:conversation fromBoxMessage:boxMessage];
     [messageProcessorDelegate incomingMessageChanged:message fromIdentity:boxMessage.fromIdentity];
     onCompletion();
@@ -685,10 +761,10 @@ Process incoming message.
         dispatch_queue_t downloadQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
 
         // An ImageMessage never has a local blob because all note group cabable devices send everything as FileMessage
-        BlobURL *blobUrl = [[BlobURL alloc] initWithServerConnector:[ServerConnector sharedServerConnector] userSettings:[UserSettings sharedUserSettings] localOrigin:false queue:downloadQueue];
+        BlobURL *blobUrl = [[BlobURL alloc] initWithServerConnector:[ServerConnector sharedServerConnector] userSettings:[UserSettings sharedUserSettings] queue:downloadQueue];
         BlobDownloader *blobDownloader = [[BlobDownloader alloc] initWithBlobURL:blobUrl queue:downloadQueue];
-        ImageMessageProcessor *processor = [[ImageMessageProcessor alloc] initWithBlobDownloader:blobDownloader myIdentityStore:[MyIdentityStore sharedMyIdentityStore] userSettings:[UserSettings sharedUserSettings] entityManager:entityManager];
-        [processor downloadImageWithImageMessageID:msg.id imageBlobID:msg.imageBlobId imageBlobEncryptionKey:msg.encryptionKey imageBlobNonce:msg.imageNonce senderPublicKey:sender.publicKey maxBytesToDecrypt:self->maxBytesToDecrypt timeoutDownloadThumbnail:timeoutDownloadThumbnail completion:^(NSError *error) {
+        ImageMessageProcessor *processor = [[ImageMessageProcessor alloc] initWithBlobDownloader:blobDownloader serverConnector:[ServerConnector sharedServerConnector] myIdentityStore:[MyIdentityStore sharedMyIdentityStore] userSettings:[UserSettings sharedUserSettings] entityManager:entityManager];
+        [processor downloadImageWithImageMessageID:msg.id imageBlobID:msg.imageBlobId origin:BlobOriginPublic imageBlobEncryptionKey:msg.encryptionKey imageBlobNonce:msg.imageNonce senderPublicKey:sender.publicKey maxBytesToDecrypt:self->maxBytesToDecrypt timeoutDownloadThumbnail:timeoutDownloadThumbnail completion:^(NSError *error) {
 
             if (error != nil) {
                 DDLogError(@"Could not process image message %@", error);
@@ -763,11 +839,11 @@ Process incoming message.
 
         dispatch_queue_t downloadQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
 
-        // A VideoMessage never has a local blob because all note group cabable devices send everything as FileMessage
-        BlobURL *blobUrl = [[BlobURL alloc] initWithServerConnector:[ServerConnector sharedServerConnector] userSettings:[UserSettings sharedUserSettings] localOrigin:false queue:downloadQueue];
+        // A VideoMessage never has a local blob because all note group capable devices send everything as FileMessage
+        BlobURL *blobUrl = [[BlobURL alloc] initWithServerConnector:[ServerConnector sharedServerConnector] userSettings:[UserSettings sharedUserSettings] queue:downloadQueue];
         BlobDownloader *blobDownloader = [[BlobDownloader alloc] initWithBlobURL:blobUrl queue:downloadQueue];
-        VideoMessageProcessor *processor = [[VideoMessageProcessor alloc] initWithBlobDownloader:blobDownloader entityManager:entityManager];
-        [processor downloadVideoThumbnailWithVideoMessageID:msg.id thumbnailBlobID:thumbnailBlobId maxBytesToDecrypt:self->maxBytesToDecrypt timeoutDownloadThumbnail:self->timeoutDownloadThumbnail completion:^(NSError *error) {
+        VideoMessageProcessor *processor = [[VideoMessageProcessor alloc] initWithBlobDownloader:blobDownloader serverConnector:[ServerConnector sharedServerConnector] entityManager:entityManager];
+        [processor downloadVideoThumbnailWithVideoMessageID:msg.id thumbnailBlobID:thumbnailBlobId origin:BlobOriginPublic maxBytesToDecrypt:self->maxBytesToDecrypt timeoutDownloadThumbnail:self->timeoutDownloadThumbnail completion:^(NSError *error) {
 
             if (error != nil) {
                 DDLogError(@"Error while downloading video thumbnail: %@", error);
@@ -868,12 +944,12 @@ Process incoming message.
             }
             
             if (msg.receiptType == GROUPDELIVERYRECEIPT_MSGUSERACK) {
-                GroupDeliveryReceipt *groupDeliveryReceipt = [[GroupDeliveryReceipt alloc] initWithIdentity:msg.fromIdentity deliveryReceiptType:DeliveryReceiptTypeUserAcknowledgment date:msg.date];
+                GroupDeliveryReceipt *groupDeliveryReceipt = [[GroupDeliveryReceipt alloc] initWithIdentity:msg.fromIdentity deliveryReceiptType:DeliveryReceiptTypeAcknowledged date:msg.date];
                 [dbmsg addWithGroupDeliveryReceipt:groupDeliveryReceipt];
                 DDLogWarn(@"Message ID %@ has been user acknowledged by %@", [NSString stringWithHexData:receiptMessageId], msg.fromIdentity);
             }
             else if (msg.receiptType == GROUPDELIVERYRECEIPT_MSGUSERDECLINE) {
-                GroupDeliveryReceipt *groupDeliveryReceipt = [[GroupDeliveryReceipt alloc] initWithIdentity:msg.fromIdentity deliveryReceiptType:DeliveryReceiptTypeUserDeclined date:msg.date];
+                GroupDeliveryReceipt *groupDeliveryReceipt = [[GroupDeliveryReceipt alloc] initWithIdentity:msg.fromIdentity deliveryReceiptType:DeliveryReceiptTypeDeclined date:msg.date];
                 [dbmsg addWithGroupDeliveryReceipt:groupDeliveryReceipt];
                 DDLogWarn(@"Message ID %@ has been user declined by %@", [NSString stringWithHexData:receiptMessageId], msg.fromIdentity);
             }
@@ -903,7 +979,7 @@ Process incoming message.
     } else {
         /* Start loading image */
         ContactGroupPhotoLoader *loader = [[ContactGroupPhotoLoader alloc] init];
-        [loader startWithBlobId:msg.blobId encryptionKey:msg.encryptionKey onCompletion:^(NSData *imageData) {
+        [loader startWithBlobId:msg.blobId encryptionKey:msg.encryptionKey origin:BlobOriginPublic onCompletion:^(NSData *imageData) {
             DDLogInfo(@"Group photo blob load completed");
 
             // Initialize new GroupManager with EntityManager on main context, becaus this completion handler runs on main queue
@@ -1003,7 +1079,7 @@ Process incoming message.
     /* Start loading image */
     ContactGroupPhotoLoader *loader = [[ContactGroupPhotoLoader alloc] init];
     
-    [loader startWithBlobId:msg.blobId encryptionKey:msg.encryptionKey onCompletion:^(NSData *imageData) {
+    [loader startWithBlobId:msg.blobId encryptionKey:msg.encryptionKey origin:BlobOriginPublic onCompletion:^(NSData *imageData) {
         DDLogInfo(@"contact photo blob load completed");
 
         // TODO call completion handler if async update profile pic is finished
@@ -1104,19 +1180,11 @@ Process incoming message.
 #pragma private methods
 
 - (BOOL)isAlreadyProcessedMessage:(AbstractMessage * _Nonnull)message onError:(void(^ _Nonnull)(NSError *error))onError {
-    if ([entityManager isProcessedWithMessage:message]) {
+    if ([nonceGuard isProcessedWithMessage:message isReflected:NO]) {
         onError([ThreemaError threemaError:@"Message already processed" withCode:kMessageAlreadyProcessedErrorCode]);
         return YES;
     }
     return NO;
-}
-
-- (void)processedMessage:(AbstractMessage *)message {
-    if ([[entityManager entityFetcher] isNonceAlreadyInDb:message] == NO) {
-        [entityManager performSyncBlockAndSafe:^{
-            [[entityManager entityCreator] nonceWithData:[NonceHasher hashedNonce:message.nonce]];
-        }];
-    }
 }
 
 /// Check is the sender in the black list. If it's a group control message and the sender is on the black list, we will process the message if the group is still active on the receiver side

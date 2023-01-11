@@ -36,6 +36,14 @@ final class MessageDateAndStateView: UIView {
                     
             updateDate(for: message)
             updateState(to: message.messageDisplayState)
+            updateGroupAck(for: message)
+        }
+    }
+    
+    /// Allows overriding the default text and symbol color to something custom
+    var overrideColor: UIColor? {
+        didSet {
+            updateColors()
         }
     }
     
@@ -64,11 +72,16 @@ final class MessageDateAndStateView: UIView {
     
     private lazy var dateLabel = MessageMetadataTextLabel()
     
-    private lazy var dateLabelInsetConstraint = dateLabel.trailingAnchor.constraint(
+    private lazy var dateLabelNoGroupReactionsInsetConstraint = dateLabel.trailingAnchor.constraint(
         equalTo: trailingAnchor,
         constant: -dateLabelTrailingInset
     )
     
+    private lazy var dateLabelGroupReactionsInsetConstraint = dateLabel.trailingAnchor.constraint(
+        equalTo: groupReactionsStackView.leadingAnchor,
+        constant: -ChatViewConfiguration.MessageMetadata.minimalInBetweenSpace
+    )
+
     private lazy var statusSymbolImageView: UIImageView = {
         let imageView = UIImageView()
         
@@ -84,7 +97,9 @@ final class MessageDateAndStateView: UIView {
             constant: -statusSymbolXCenterTrailingDistance
         ),
     ]
-
+    
+    private lazy var groupReactionsStackView = MessageGroupReactionStackView()
+    
     // MARK: - Lifecycle
     
     override init(frame: CGRect) {
@@ -104,17 +119,22 @@ final class MessageDateAndStateView: UIView {
     }
     
     private func configureLayout() {
+        addSubview(groupReactionsStackView)
         addSubview(dateLabel)
         addSubview(statusSymbolImageView)
         
         dateLabel.translatesAutoresizingMaskIntoConstraints = false
         statusSymbolImageView.translatesAutoresizingMaskIntoConstraints = false
+        groupReactionsStackView.translatesAutoresizingMaskIntoConstraints = false
         
         NSLayoutConstraint.activate([
             dateLabel.topAnchor.constraint(equalTo: topAnchor),
             dateLabel.leadingAnchor.constraint(greaterThanOrEqualTo: leadingAnchor),
             dateLabel.bottomAnchor.constraint(equalTo: bottomAnchor),
-            dateLabelInsetConstraint,
+            dateLabelNoGroupReactionsInsetConstraint,
+            groupReactionsStackView.topAnchor.constraint(equalTo: topAnchor),
+            groupReactionsStackView.bottomAnchor.constraint(equalTo: bottomAnchor),
+            groupReactionsStackView.trailingAnchor.constraint(equalTo: trailingAnchor),
         ])
         NSLayoutConstraint.activate(statusSymbolImageViewConstraints)
     }
@@ -122,10 +142,18 @@ final class MessageDateAndStateView: UIView {
     // MARK: - Updates
     
     func updateColors() {
-        Colors.setTextColor(Colors.textLight, label: dateLabel)
+        if let dateColor = overrideColor {
+            Colors.setTextColor(dateColor, label: dateLabel)
+        }
+        else {
+            Colors.setTextColor(Colors.textLight, label: dateLabel)
+        }
+        
+        groupReactionsStackView.updateColors()
         
         if let message = message {
             updateState(to: message.messageDisplayState)
+            updateGroupAck(for: message)
         }
     }
     
@@ -151,7 +179,15 @@ final class MessageDateAndStateView: UIView {
             return
         }
         
-        statusSymbolImageView.image = symbol
+        let coloredSymbol: UIImage
+        if state != .userAcknowledged, state != .userDeclined, let textColor = overrideColor {
+            coloredSymbol = symbol.withTintColor(textColor, renderingMode: .alwaysOriginal)
+        }
+        else {
+            coloredSymbol = symbol
+        }
+        
+        statusSymbolImageView.image = coloredSymbol
         showStatusSymbol()
     }
     
@@ -162,7 +198,7 @@ final class MessageDateAndStateView: UIView {
         statusSymbolImageView.isHidden = false
 
         NSLayoutConstraint.activate(statusSymbolImageViewConstraints)
-        dateLabelInsetConstraint.constant = -dateLabelTrailingInset
+        dateLabelNoGroupReactionsInsetConstraint.constant = -dateLabelTrailingInset
     }
     
     private func hideStatusSymbol() {
@@ -172,6 +208,33 @@ final class MessageDateAndStateView: UIView {
         statusSymbolImageView.isHidden = true
         
         NSLayoutConstraint.deactivate(statusSymbolImageViewConstraints)
-        dateLabelInsetConstraint.constant = 0
+        dateLabelNoGroupReactionsInsetConstraint.constant = 0
+    }
+    
+    // MARK: Group ack
+    
+    private func updateGroupAck(for message: BaseMessage) {
+        groupReactionsStackView.message = message
+        switch message.messageGroupReactionState {
+        case .none:
+            hideGroupReactions()
+        case .acknowledged,
+             .declined,
+             .acknowledgedAndDeclined:
+            showGroupReactions()
+        }
+    }
+    
+    private func showGroupReactions() {
+        groupReactionsStackView.isHidden = false
+        
+        NSLayoutConstraint.deactivate([dateLabelNoGroupReactionsInsetConstraint])
+        NSLayoutConstraint.activate([dateLabelGroupReactionsInsetConstraint])
+    }
+    
+    private func hideGroupReactions() {
+        groupReactionsStackView.isHidden = true
+        NSLayoutConstraint.deactivate([dateLabelGroupReactionsInsetConstraint])
+        NSLayoutConstraint.activate([dateLabelNoGroupReactionsInsetConstraint])
     }
 }

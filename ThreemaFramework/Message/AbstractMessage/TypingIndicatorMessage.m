@@ -38,15 +38,15 @@
     return typingIndicatorBody;
 }
 
-- (BOOL)shouldPush {
+- (BOOL)flagShouldPush {
     return NO;
 }
 
-- (BOOL)immediate {
+- (BOOL)flagDontQueue {
     return YES;
 }
 
-- (BOOL)noAck {
+- (BOOL)flagDontAck {
     return YES;
 }
 

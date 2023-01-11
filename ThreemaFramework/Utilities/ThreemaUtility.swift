@@ -103,13 +103,77 @@ public final class ThreemaUtility: NSObject {
         return "\(appAndBuildVersion);\(mdmDescription)I;\(language)/\(countryCode ?? "?");\(ThreemaUtility.modelName);\(UIDevice.current.systemVersion)"
     }()
     
+    // MARK: - Other threema type
+    
+    private static let isWorkFlavor = ThreemaApp.current == .work ||
+        ThreemaApp.current == .workRed ||
+        ThreemaApp.current == .onPrem
+    
+    @objc public static var supportsForwardSecurity: Bool {
+        let bi = BusinessInjector()
+        if bi.userSettings.enableMultiDevice {
+            return false
+        }
+        
+        guard let mainBundle = BundleUtil.mainBundle() else {
+            return false
+        }
+        
+        return (mainBundle.object(forInfoDictionaryKey: "ThreemaForwardSecurity") as? NSNumber)?.boolValue ?? false
+    }
+    
+    /// Icon to show if `Contact.showOtherThreemaIcon` is `true`
+    ///
+    /// If you need a view for it use `OtherThreemaTypeImageView`
+    public static var otherThreemaTypeIcon: UIImage {
+        if isWorkFlavor {
+            return StyleKit.houseIcon
+        }
+        else {
+            return StyleKit.workIcon
+        }
+    }
+    
+    /// Accessibility label to use if `Contact.showOtherThreemaIcon` is `true`
+    public static var otherThreemaTypeAccessibilityLabel: String {
+        if isWorkFlavor {
+            return BundleUtil.localizedString(forKey: "threema_type_icon_private_accessibility_label")
+        }
+        else {
+            return BundleUtil.localizedString(forKey: "threema_type_icon_work_accessibility_label")
+        }
+    }
+    
+    /// Checks if the otherTypeIcon should be hidden for a given contact
+    /// - Parameter contact: Contact to check
+    /// - Returns: Bool that states if icon should be hidden
+    public static func shouldHideOtherTypeIcon(for contact: Contact?) -> Bool {
+        
+        guard let contact = contact else {
+            return true
+        }
+        
+        if contact.isEchoEcho() || contact.isGatewayID() || LicenseStore.isOnPrem() {
+            return true
+        }
+        
+        if LicenseStore.requiresLicenseKey() {
+            return UserSettings.shared().workIdentities.contains(contact.identity)
+        }
+        else {
+            return !UserSettings.shared().workIdentities.contains(contact.identity)
+        }
+    }
+    
+    // MARK: - POI
+    
     /// Fetches the address given a location if the privacy setting is enabled, else returns coordinate string
     /// - Parameter location: Location to fetch address for
     /// - Returns: AnyPromise with address or coordinate string
     @objc static func fetchAddressObjc(for location: CLLocation) -> AnyPromise {
         AnyPromise(fetchAddress(for: location))
     }
-
+    
     /// Fetches the address given a location if the privacy setting is enabled, else returns coordinate string
     /// - Parameter location: Location to fetch address for
     /// - Returns: Guarantee with address or coordinate string
@@ -120,21 +184,21 @@ public final class ThreemaUtility: NSObject {
                 location.coordinate.latitude,
                 location.coordinate.longitude
             )
-
+            
             // Don't fetch address if POI are disabled in privacy settings
             guard UserSettings.shared().enablePoi else {
                 seal(coordinates)
                 return
             }
-
+            
             CLGeocoder().reverseGeocodeLocation(location, preferredLocale: Locale.current) { placemarks, error in
-
+                
                 if let error = error {
                     DDLogError("Reverse geocoding failed: \(error)")
                     seal(coordinates)
                     return
                 }
-
+                
                 guard let placemark = placemarks?.first, let postalAddress = placemark.postalAddress else {
                     seal(coordinates)
                     return
@@ -148,7 +212,7 @@ public final class ThreemaUtility: NSObject {
     /// Fire a local push notification
     /// - Parameters:
     ///   - identifier: Identifier of the notification
-    ///   - title: Tilte of the notification
+    ///   - title: Title of the notification
     ///   - body: Body of the notification
     ///   - badge: Badge count of the notification
     ///   - userInfo: UserInfo of the notification

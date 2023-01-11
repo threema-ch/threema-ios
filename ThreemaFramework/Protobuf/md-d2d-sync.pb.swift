@@ -52,33 +52,167 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
   typealias Version = _2
 }
 
-/// Visibility of a conversation.
-enum Sync_ConversationVisibility: SwiftProtobuf.Enum {
+/// _Read_ receipt policy (when an unread message has been read)
+enum Sync_ReadReceiptPolicy: SwiftProtobuf.Enum {
   typealias RawValue = Int
 
-  /// Appears in the list of conversations
-  case show // = 0
+  /// Send _read_ receipt when an unread message has been read
+  case sendReadReceipt // = 0
 
-  /// Appears in the archived list of conversations
-  case archive // = 1
+  /// Don't send _read_ receipts
+  case dontSendReadReceipt // = 1
   case UNRECOGNIZED(Int)
 
   init() {
-    self = .show
+    self = .sendReadReceipt
   }
 
   init?(rawValue: Int) {
     switch rawValue {
-    case 0: self = .show
-    case 1: self = .archive
+    case 0: self = .sendReadReceipt
+    case 1: self = .dontSendReadReceipt
     default: self = .UNRECOGNIZED(rawValue)
     }
   }
 
   var rawValue: Int {
     switch self {
-    case .show: return 0
-    case .archive: return 1
+    case .sendReadReceipt: return 0
+    case .dontSendReadReceipt: return 1
+    case .UNRECOGNIZED(let i): return i
+    }
+  }
+
+}
+
+#if swift(>=4.2)
+
+extension Sync_ReadReceiptPolicy: CaseIterable {
+  // The compiler won't synthesize support with the UNRECOGNIZED case.
+  static var allCases: [Sync_ReadReceiptPolicy] = [
+    .sendReadReceipt,
+    .dontSendReadReceipt,
+  ]
+}
+
+#endif  // swift(>=4.2)
+
+/// Typing indicator policy (signal _currently typing_)
+enum Sync_TypingIndicatorPolicy: SwiftProtobuf.Enum {
+  typealias RawValue = Int
+
+  /// Send _typing_ indicator when a message is being composed
+  case sendTypingIndicator // = 0
+
+  /// Don't send _typing_ indicators
+  case dontSendTypingIndicator // = 1
+  case UNRECOGNIZED(Int)
+
+  init() {
+    self = .sendTypingIndicator
+  }
+
+  init?(rawValue: Int) {
+    switch rawValue {
+    case 0: self = .sendTypingIndicator
+    case 1: self = .dontSendTypingIndicator
+    default: self = .UNRECOGNIZED(rawValue)
+    }
+  }
+
+  var rawValue: Int {
+    switch self {
+    case .sendTypingIndicator: return 0
+    case .dontSendTypingIndicator: return 1
+    case .UNRECOGNIZED(let i): return i
+    }
+  }
+
+}
+
+#if swift(>=4.2)
+
+extension Sync_TypingIndicatorPolicy: CaseIterable {
+  // The compiler won't synthesize support with the UNRECOGNIZED case.
+  static var allCases: [Sync_TypingIndicatorPolicy] = [
+    .sendTypingIndicator,
+    .dontSendTypingIndicator,
+  ]
+}
+
+#endif  // swift(>=4.2)
+
+/// Notificatoun sound policy.
+enum Sync_NotificationSoundPolicy: SwiftProtobuf.Enum {
+  typealias RawValue = Int
+
+  /// Do not emit a sound when notifying of a _conversation_ message.
+  case muted // = 0
+  case UNRECOGNIZED(Int)
+
+  init() {
+    self = .muted
+  }
+
+  init?(rawValue: Int) {
+    switch rawValue {
+    case 0: self = .muted
+    default: self = .UNRECOGNIZED(rawValue)
+    }
+  }
+
+  var rawValue: Int {
+    switch self {
+    case .muted: return 0
+    case .UNRECOGNIZED(let i): return i
+    }
+  }
+
+}
+
+#if swift(>=4.2)
+
+extension Sync_NotificationSoundPolicy: CaseIterable {
+  // The compiler won't synthesize support with the UNRECOGNIZED case.
+  static var allCases: [Sync_NotificationSoundPolicy] = [
+    .muted,
+  ]
+}
+
+#endif  // swift(>=4.2)
+
+/// Visibility of a conversation.
+enum Sync_ConversationVisibility: SwiftProtobuf.Enum {
+  typealias RawValue = Int
+
+  /// Appears normally in the list of conversations
+  case normal // = 0
+
+  /// Appears pinned in the list of conversations
+  case pinned // = 2
+
+  /// Appears in the archived list of conversations
+  case archived // = 1
+  case UNRECOGNIZED(Int)
+
+  init() {
+    self = .normal
+  }
+
+  init?(rawValue: Int) {
+    switch rawValue {
+    case 0: self = .normal
+    case 1: self = .archived
+    case 2: self = .pinned
+    default: self = .UNRECOGNIZED(rawValue)
+    }
+  }
+
+  var rawValue: Int {
+    switch self {
+    case .normal: return 0
+    case .archived: return 1
+    case .pinned: return 2
     case .UNRECOGNIZED(let i): return i
     }
   }
@@ -90,8 +224,9 @@ enum Sync_ConversationVisibility: SwiftProtobuf.Enum {
 extension Sync_ConversationVisibility: CaseIterable {
   // The compiler won't synthesize support with the UNRECOGNIZED case.
   static var allCases: [Sync_ConversationVisibility] = [
-    .show,
-    .archive,
+    .normal,
+    .pinned,
+    .archived,
   ]
 }
 
@@ -1716,6 +1851,15 @@ struct Sync_Contact {
   /// Clears the value of `verificationLevel`. Subsequent reads from it will return its default value.
   mutating func clearVerificationLevel() {_uniqueStorage()._verificationLevel = nil}
 
+  var workVerificationLevel: Sync_Contact.WorkVerificationLevel {
+    get {return _storage._workVerificationLevel ?? .none}
+    set {_uniqueStorage()._workVerificationLevel = newValue}
+  }
+  /// Returns true if `workVerificationLevel` has been explicitly set.
+  var hasWorkVerificationLevel: Bool {return _storage._workVerificationLevel != nil}
+  /// Clears the value of `workVerificationLevel`. Subsequent reads from it will return its default value.
+  mutating func clearWorkVerificationLevel() {_uniqueStorage()._workVerificationLevel = nil}
+
   var identityType: Sync_Contact.IdentityType {
     get {return _storage._identityType ?? .regular}
     set {_uniqueStorage()._identityType = newValue}
@@ -1743,31 +1887,25 @@ struct Sync_Contact {
   /// Clears the value of `activityState`. Subsequent reads from it will return its default value.
   mutating func clearActivityState() {_uniqueStorage()._activityState = nil}
 
-  /// Conversation category of the contact
+  /// Features available for the contact (32 bit mask).
+  ///
+  /// - `0x00_00_00_01`: Can handle audio messages.
+  /// - `0x00_00_00_02`: Can handle groups.
+  /// - `0x00_00_00_04`: Can handle polls.
+  /// - `0x00_00_00_08`: Can handle file messages.
+  /// - `0x00_00_00_10`: Can handle audio calls.
+  /// - `0x00_00_00_20`: Can handle video calls.
   ///
   /// Required towards a new device and for a new contact. Optional for an
   /// existing contact.
-  var conversationCategory: Sync_ConversationCategory {
-    get {return _storage._conversationCategory ?? .default}
-    set {_uniqueStorage()._conversationCategory = newValue}
+  var featureMask: UInt32 {
+    get {return _storage._featureMask ?? 0}
+    set {_uniqueStorage()._featureMask = newValue}
   }
-  /// Returns true if `conversationCategory` has been explicitly set.
-  var hasConversationCategory: Bool {return _storage._conversationCategory != nil}
-  /// Clears the value of `conversationCategory`. Subsequent reads from it will return its default value.
-  mutating func clearConversationCategory() {_uniqueStorage()._conversationCategory = nil}
-
-  /// Conversation visbility of the contact
-  ///
-  /// Required towards a new device and for a new contact. Optional for an
-  /// existing contact.
-  var conversationVisibility: Sync_ConversationVisibility {
-    get {return _storage._conversationVisibility ?? .show}
-    set {_uniqueStorage()._conversationVisibility = newValue}
-  }
-  /// Returns true if `conversationVisibility` has been explicitly set.
-  var hasConversationVisibility: Bool {return _storage._conversationVisibility != nil}
-  /// Clears the value of `conversationVisibility`. Subsequent reads from it will return its default value.
-  mutating func clearConversationVisibility() {_uniqueStorage()._conversationVisibility = nil}
+  /// Returns true if `featureMask` has been explicitly set.
+  var hasFeatureMask: Bool {return _storage._featureMask != nil}
+  /// Clears the value of `featureMask`. Subsequent reads from it will return its default value.
+  mutating func clearFeatureMask() {_uniqueStorage()._featureMask = nil}
 
   var syncState: Sync_Contact.SyncState {
     get {return _storage._syncState ?? .initial}
@@ -1777,6 +1915,42 @@ struct Sync_Contact {
   var hasSyncState: Bool {return _storage._syncState != nil}
   /// Clears the value of `syncState`. Subsequent reads from it will return its default value.
   mutating func clearSyncState() {_uniqueStorage()._syncState = nil}
+
+  var readReceiptPolicyOverride: Sync_Contact.ReadReceiptPolicyOverride {
+    get {return _storage._readReceiptPolicyOverride ?? Sync_Contact.ReadReceiptPolicyOverride()}
+    set {_uniqueStorage()._readReceiptPolicyOverride = newValue}
+  }
+  /// Returns true if `readReceiptPolicyOverride` has been explicitly set.
+  var hasReadReceiptPolicyOverride: Bool {return _storage._readReceiptPolicyOverride != nil}
+  /// Clears the value of `readReceiptPolicyOverride`. Subsequent reads from it will return its default value.
+  mutating func clearReadReceiptPolicyOverride() {_uniqueStorage()._readReceiptPolicyOverride = nil}
+
+  var typingIndicatorPolicyOverride: Sync_Contact.TypingIndicatorPolicyOverride {
+    get {return _storage._typingIndicatorPolicyOverride ?? Sync_Contact.TypingIndicatorPolicyOverride()}
+    set {_uniqueStorage()._typingIndicatorPolicyOverride = newValue}
+  }
+  /// Returns true if `typingIndicatorPolicyOverride` has been explicitly set.
+  var hasTypingIndicatorPolicyOverride: Bool {return _storage._typingIndicatorPolicyOverride != nil}
+  /// Clears the value of `typingIndicatorPolicyOverride`. Subsequent reads from it will return its default value.
+  mutating func clearTypingIndicatorPolicyOverride() {_uniqueStorage()._typingIndicatorPolicyOverride = nil}
+
+  var notificationTriggerPolicyOverride: Sync_Contact.NotificationTriggerPolicyOverride {
+    get {return _storage._notificationTriggerPolicyOverride ?? Sync_Contact.NotificationTriggerPolicyOverride()}
+    set {_uniqueStorage()._notificationTriggerPolicyOverride = newValue}
+  }
+  /// Returns true if `notificationTriggerPolicyOverride` has been explicitly set.
+  var hasNotificationTriggerPolicyOverride: Bool {return _storage._notificationTriggerPolicyOverride != nil}
+  /// Clears the value of `notificationTriggerPolicyOverride`. Subsequent reads from it will return its default value.
+  mutating func clearNotificationTriggerPolicyOverride() {_uniqueStorage()._notificationTriggerPolicyOverride = nil}
+
+  var notificationSoundPolicyOverride: Sync_Contact.NotificationSoundPolicyOverride {
+    get {return _storage._notificationSoundPolicyOverride ?? Sync_Contact.NotificationSoundPolicyOverride()}
+    set {_uniqueStorage()._notificationSoundPolicyOverride = newValue}
+  }
+  /// Returns true if `notificationSoundPolicyOverride` has been explicitly set.
+  var hasNotificationSoundPolicyOverride: Bool {return _storage._notificationSoundPolicyOverride != nil}
+  /// Clears the value of `notificationSoundPolicyOverride`. Subsequent reads from it will return its default value.
+  mutating func clearNotificationSoundPolicyOverride() {_uniqueStorage()._notificationSoundPolicyOverride = nil}
 
   /// Contact-defined profile picture as received from the contact in a
   /// `set-profile-picture` message.
@@ -1804,12 +1978,44 @@ struct Sync_Contact {
   /// Clears the value of `userDefinedProfilePicture`. Subsequent reads from it will return its default value.
   mutating func clearUserDefinedProfilePicture() {_uniqueStorage()._userDefinedProfilePicture = nil}
 
+  /// Conversation category of the contact
+  ///
+  /// Required towards a new device and for a new contact. Optional for an
+  /// existing contact.
+  var conversationCategory: Sync_ConversationCategory {
+    get {return _storage._conversationCategory ?? .default}
+    set {_uniqueStorage()._conversationCategory = newValue}
+  }
+  /// Returns true if `conversationCategory` has been explicitly set.
+  var hasConversationCategory: Bool {return _storage._conversationCategory != nil}
+  /// Clears the value of `conversationCategory`. Subsequent reads from it will return its default value.
+  mutating func clearConversationCategory() {_uniqueStorage()._conversationCategory = nil}
+
+  /// Conversation visbility of the contact
+  ///
+  /// Required towards a new device and for a new contact. Optional for an
+  /// existing contact.
+  var conversationVisibility: Sync_ConversationVisibility {
+    get {return _storage._conversationVisibility ?? .normal}
+    set {_uniqueStorage()._conversationVisibility = newValue}
+  }
+  /// Returns true if `conversationVisibility` has been explicitly set.
+  var hasConversationVisibility: Bool {return _storage._conversationVisibility != nil}
+  /// Clears the value of `conversationVisibility`. Subsequent reads from it will return its default value.
+  mutating func clearConversationVisibility() {_uniqueStorage()._conversationVisibility = nil}
+
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
   /// Verification level of the contact
   ///
   /// Required towards a new device and for a new contact. Optional for an
   /// existing contact.
+  ///
+  /// Note: When applying logic depending on the verification level, a
+  ///       `WorkVerificationLevel` of `WORK_SUBSCRIPTION_VERIFIED` virtually
+  ///       raises the verification level to `SERVER_VERIFIED`. However, the
+  ///       contact verification level takes precedence if it is
+  ///       `FULLY_VERIFIED`.
   enum VerificationLevel: SwiftProtobuf.Enum {
     typealias RawValue = Int
 
@@ -1842,6 +2048,46 @@ struct Sync_Contact {
       case .unverified: return 0
       case .serverVerified: return 1
       case .fullyVerified: return 2
+      case .UNRECOGNIZED(let i): return i
+      }
+    }
+
+  }
+
+  /// Threema Work verification level of the contact.
+  ///
+  /// Required towards a new device and for a new contact. Optional for an
+  /// existing contact.
+  ///
+  /// Note: When not using a Threema Work client, the Threema Work verification
+  ///       level must always be `NONE`.
+  enum WorkVerificationLevel: SwiftProtobuf.Enum {
+    typealias RawValue = Int
+
+    /// The user does not use Threema Work or the contact is not in the same
+    /// Threema Work subscription.
+    case none // = 0
+
+    /// The contact is in the same Threema Work subscription.
+    case workSubscriptionVerified // = 1
+    case UNRECOGNIZED(Int)
+
+    init() {
+      self = .none
+    }
+
+    init?(rawValue: Int) {
+      switch rawValue {
+      case 0: self = .none
+      case 1: self = .workSubscriptionVerified
+      default: self = .UNRECOGNIZED(rawValue)
+      }
+    }
+
+    var rawValue: Int {
+      switch self {
+      case .none: return 0
+      case .workSubscriptionVerified: return 1
       case .UNRECOGNIZED(let i): return i
       }
     }
@@ -2020,6 +2266,307 @@ struct Sync_Contact {
 
   }
 
+  /// _Read_ receipt policy override for this contact
+  ///
+  /// Required towards a new device and for a new contact. Optional for an
+  /// existing contact.
+  struct ReadReceiptPolicyOverride {
+    // SwiftProtobuf.Message conformance is added in an extension below. See the
+    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+    // methods supported on all messages.
+
+    var override: Sync_Contact.ReadReceiptPolicyOverride.OneOf_Override? = nil
+
+    /// Apply the _read_ receipt policy specified in the settings
+    var `default`: Common_Unit {
+      get {
+        if case .default(let v)? = override {return v}
+        return Common_Unit()
+      }
+      set {override = .default(newValue)}
+    }
+
+    /// Apply the following _read_ receipt policy
+    var policy: Sync_ReadReceiptPolicy {
+      get {
+        if case .policy(let v)? = override {return v}
+        return .sendReadReceipt
+      }
+      set {override = .policy(newValue)}
+    }
+
+    var unknownFields = SwiftProtobuf.UnknownStorage()
+
+    enum OneOf_Override: Equatable {
+      /// Apply the _read_ receipt policy specified in the settings
+      case `default`(Common_Unit)
+      /// Apply the following _read_ receipt policy
+      case policy(Sync_ReadReceiptPolicy)
+
+    #if !swift(>=4.1)
+      static func ==(lhs: Sync_Contact.ReadReceiptPolicyOverride.OneOf_Override, rhs: Sync_Contact.ReadReceiptPolicyOverride.OneOf_Override) -> Bool {
+        // The use of inline closures is to circumvent an issue where the compiler
+        // allocates stack space for every case branch when no optimizations are
+        // enabled. https://github.com/apple/swift-protobuf/issues/1034
+        switch (lhs, rhs) {
+        case (.default, .default): return {
+          guard case .default(let l) = lhs, case .default(let r) = rhs else { preconditionFailure() }
+          return l == r
+        }()
+        case (.policy, .policy): return {
+          guard case .policy(let l) = lhs, case .policy(let r) = rhs else { preconditionFailure() }
+          return l == r
+        }()
+        default: return false
+        }
+      }
+    #endif
+    }
+
+    init() {}
+  }
+
+  /// Typing indicator policy override for this contact
+  ///
+  /// Required towards a new device and for a new contact. Optional for an
+  /// existing contact.
+  struct TypingIndicatorPolicyOverride {
+    // SwiftProtobuf.Message conformance is added in an extension below. See the
+    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+    // methods supported on all messages.
+
+    var override: Sync_Contact.TypingIndicatorPolicyOverride.OneOf_Override? = nil
+
+    /// Apply the typing indicator policy specified in the settings
+    var `default`: Common_Unit {
+      get {
+        if case .default(let v)? = override {return v}
+        return Common_Unit()
+      }
+      set {override = .default(newValue)}
+    }
+
+    /// Apply the following typing indicator policy
+    var policy: Sync_TypingIndicatorPolicy {
+      get {
+        if case .policy(let v)? = override {return v}
+        return .sendTypingIndicator
+      }
+      set {override = .policy(newValue)}
+    }
+
+    var unknownFields = SwiftProtobuf.UnknownStorage()
+
+    enum OneOf_Override: Equatable {
+      /// Apply the typing indicator policy specified in the settings
+      case `default`(Common_Unit)
+      /// Apply the following typing indicator policy
+      case policy(Sync_TypingIndicatorPolicy)
+
+    #if !swift(>=4.1)
+      static func ==(lhs: Sync_Contact.TypingIndicatorPolicyOverride.OneOf_Override, rhs: Sync_Contact.TypingIndicatorPolicyOverride.OneOf_Override) -> Bool {
+        // The use of inline closures is to circumvent an issue where the compiler
+        // allocates stack space for every case branch when no optimizations are
+        // enabled. https://github.com/apple/swift-protobuf/issues/1034
+        switch (lhs, rhs) {
+        case (.default, .default): return {
+          guard case .default(let l) = lhs, case .default(let r) = rhs else { preconditionFailure() }
+          return l == r
+        }()
+        case (.policy, .policy): return {
+          guard case .policy(let l) = lhs, case .policy(let r) = rhs else { preconditionFailure() }
+          return l == r
+        }()
+        default: return false
+        }
+      }
+    #endif
+    }
+
+    init() {}
+  }
+
+  /// Notification trigger policy for the contact
+  ///
+  /// Required towards a new device and for a new contact. Optional for an
+  /// existing contact.
+  struct NotificationTriggerPolicyOverride {
+    // SwiftProtobuf.Message conformance is added in an extension below. See the
+    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+    // methods supported on all messages.
+
+    var override: Sync_Contact.NotificationTriggerPolicyOverride.OneOf_Override? = nil
+
+    /// Apply the trigger policy specified in the settings (i.e. trigger on
+    /// every _conversation_ message).
+    var `default`: Common_Unit {
+      get {
+        if case .default(let v)? = override {return v}
+        return Common_Unit()
+      }
+      set {override = .default(newValue)}
+    }
+
+    /// Apply the following notification trigger policy
+    var policy: Sync_Contact.NotificationTriggerPolicyOverride.Policy {
+      get {
+        if case .policy(let v)? = override {return v}
+        return Sync_Contact.NotificationTriggerPolicyOverride.Policy()
+      }
+      set {override = .policy(newValue)}
+    }
+
+    var unknownFields = SwiftProtobuf.UnknownStorage()
+
+    enum OneOf_Override: Equatable {
+      /// Apply the trigger policy specified in the settings (i.e. trigger on
+      /// every _conversation_ message).
+      case `default`(Common_Unit)
+      /// Apply the following notification trigger policy
+      case policy(Sync_Contact.NotificationTriggerPolicyOverride.Policy)
+
+    #if !swift(>=4.1)
+      static func ==(lhs: Sync_Contact.NotificationTriggerPolicyOverride.OneOf_Override, rhs: Sync_Contact.NotificationTriggerPolicyOverride.OneOf_Override) -> Bool {
+        // The use of inline closures is to circumvent an issue where the compiler
+        // allocates stack space for every case branch when no optimizations are
+        // enabled. https://github.com/apple/swift-protobuf/issues/1034
+        switch (lhs, rhs) {
+        case (.default, .default): return {
+          guard case .default(let l) = lhs, case .default(let r) = rhs else { preconditionFailure() }
+          return l == r
+        }()
+        case (.policy, .policy): return {
+          guard case .policy(let l) = lhs, case .policy(let r) = rhs else { preconditionFailure() }
+          return l == r
+        }()
+        default: return false
+        }
+      }
+    #endif
+    }
+
+    struct Policy {
+      // SwiftProtobuf.Message conformance is added in an extension below. See the
+      // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+      // methods supported on all messages.
+
+      var policy: Sync_Contact.NotificationTriggerPolicyOverride.Policy.NotificationTriggerPolicy = .never
+
+      /// Unix-ish timestamp in milliseconds when the provided policy should
+      /// expire and fall back to the default. If not provided, the policy does
+      /// not expire.
+      var expiresAt: UInt64 {
+        get {return _expiresAt ?? 0}
+        set {_expiresAt = newValue}
+      }
+      /// Returns true if `expiresAt` has been explicitly set.
+      var hasExpiresAt: Bool {return self._expiresAt != nil}
+      /// Clears the value of `expiresAt`. Subsequent reads from it will return its default value.
+      mutating func clearExpiresAt() {self._expiresAt = nil}
+
+      var unknownFields = SwiftProtobuf.UnknownStorage()
+
+      /// Apply the following notification trigger policy
+      enum NotificationTriggerPolicy: SwiftProtobuf.Enum {
+        typealias RawValue = Int
+
+        /// Never trigger a notification message.
+        case never // = 0
+        case UNRECOGNIZED(Int)
+
+        init() {
+          self = .never
+        }
+
+        init?(rawValue: Int) {
+          switch rawValue {
+          case 0: self = .never
+          default: self = .UNRECOGNIZED(rawValue)
+          }
+        }
+
+        var rawValue: Int {
+          switch self {
+          case .never: return 0
+          case .UNRECOGNIZED(let i): return i
+          }
+        }
+
+      }
+
+      init() {}
+
+      fileprivate var _expiresAt: UInt64? = nil
+    }
+
+    init() {}
+  }
+
+  /// Notification sound policy for the contact
+  ///
+  /// Required towards a new device and for a new contact. Optional for an
+  /// existing contact.
+  ///
+  /// Custom sounds are not reflected but are to be (re-)applied in case the
+  /// policy is _default_.
+  struct NotificationSoundPolicyOverride {
+    // SwiftProtobuf.Message conformance is added in an extension below. See the
+    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+    // methods supported on all messages.
+
+    var override: Sync_Contact.NotificationSoundPolicyOverride.OneOf_Override? = nil
+
+    /// Apply the notification sound policy specified in the settings (i.e.
+    /// always emit a sound when notifying of a _conversation_ message).
+    var `default`: Common_Unit {
+      get {
+        if case .default(let v)? = override {return v}
+        return Common_Unit()
+      }
+      set {override = .default(newValue)}
+    }
+
+    /// Apply the following notification sound policy
+    var policy: Sync_NotificationSoundPolicy {
+      get {
+        if case .policy(let v)? = override {return v}
+        return .muted
+      }
+      set {override = .policy(newValue)}
+    }
+
+    var unknownFields = SwiftProtobuf.UnknownStorage()
+
+    enum OneOf_Override: Equatable {
+      /// Apply the notification sound policy specified in the settings (i.e.
+      /// always emit a sound when notifying of a _conversation_ message).
+      case `default`(Common_Unit)
+      /// Apply the following notification sound policy
+      case policy(Sync_NotificationSoundPolicy)
+
+    #if !swift(>=4.1)
+      static func ==(lhs: Sync_Contact.NotificationSoundPolicyOverride.OneOf_Override, rhs: Sync_Contact.NotificationSoundPolicyOverride.OneOf_Override) -> Bool {
+        // The use of inline closures is to circumvent an issue where the compiler
+        // allocates stack space for every case branch when no optimizations are
+        // enabled. https://github.com/apple/swift-protobuf/issues/1034
+        switch (lhs, rhs) {
+        case (.default, .default): return {
+          guard case .default(let l) = lhs, case .default(let r) = rhs else { preconditionFailure() }
+          return l == r
+        }()
+        case (.policy, .policy): return {
+          guard case .policy(let l) = lhs, case .policy(let r) = rhs else { preconditionFailure() }
+          return l == r
+        }()
+        default: return false
+        }
+      }
+    #endif
+    }
+
+    init() {}
+  }
+
   init() {}
 
   fileprivate var _storage = _StorageClass.defaultInstance
@@ -2033,6 +2580,14 @@ extension Sync_Contact.VerificationLevel: CaseIterable {
     .unverified,
     .serverVerified,
     .fullyVerified,
+  ]
+}
+
+extension Sync_Contact.WorkVerificationLevel: CaseIterable {
+  // The compiler won't synthesize support with the UNRECOGNIZED case.
+  static var allCases: [Sync_Contact.WorkVerificationLevel] = [
+    .none,
+    .workSubscriptionVerified,
   ]
 }
 
@@ -2067,6 +2622,13 @@ extension Sync_Contact.SyncState: CaseIterable {
     .initial,
     .imported,
     .custom,
+  ]
+}
+
+extension Sync_Contact.NotificationTriggerPolicyOverride.Policy.NotificationTriggerPolicy: CaseIterable {
+  // The compiler won't synthesize support with the UNRECOGNIZED case.
+  static var allCases: [Sync_Contact.NotificationTriggerPolicyOverride.Policy.NotificationTriggerPolicy] = [
+    .never,
   ]
 }
 
@@ -2119,6 +2681,68 @@ struct Sync_Group {
   /// Clears the value of `createdAt`. Subsequent reads from it will return its default value.
   mutating func clearCreatedAt() {self._createdAt = nil}
 
+  var userState: Sync_Group.UserState {
+    get {return _userState ?? .member}
+    set {_userState = newValue}
+  }
+  /// Returns true if `userState` has been explicitly set.
+  var hasUserState: Bool {return self._userState != nil}
+  /// Clears the value of `userState`. Subsequent reads from it will return its default value.
+  mutating func clearUserState() {self._userState = nil}
+
+  var notificationTriggerPolicyOverride: Sync_Group.NotificationTriggerPolicyOverride {
+    get {return _notificationTriggerPolicyOverride ?? Sync_Group.NotificationTriggerPolicyOverride()}
+    set {_notificationTriggerPolicyOverride = newValue}
+  }
+  /// Returns true if `notificationTriggerPolicyOverride` has been explicitly set.
+  var hasNotificationTriggerPolicyOverride: Bool {return self._notificationTriggerPolicyOverride != nil}
+  /// Clears the value of `notificationTriggerPolicyOverride`. Subsequent reads from it will return its default value.
+  mutating func clearNotificationTriggerPolicyOverride() {self._notificationTriggerPolicyOverride = nil}
+
+  var notificationSoundPolicyOverride: Sync_Group.NotificationSoundPolicyOverride {
+    get {return _notificationSoundPolicyOverride ?? Sync_Group.NotificationSoundPolicyOverride()}
+    set {_notificationSoundPolicyOverride = newValue}
+  }
+  /// Returns true if `notificationSoundPolicyOverride` has been explicitly set.
+  var hasNotificationSoundPolicyOverride: Bool {return self._notificationSoundPolicyOverride != nil}
+  /// Clears the value of `notificationSoundPolicyOverride`. Subsequent reads from it will return its default value.
+  mutating func clearNotificationSoundPolicyOverride() {self._notificationSoundPolicyOverride = nil}
+
+  /// Group's profile picture as received from the group's creator
+  ///
+  /// Always optional.
+  var profilePicture: Common_DeltaImage {
+    get {return _profilePicture ?? Common_DeltaImage()}
+    set {_profilePicture = newValue}
+  }
+  /// Returns true if `profilePicture` has been explicitly set.
+  var hasProfilePicture: Bool {return self._profilePicture != nil}
+  /// Clears the value of `profilePicture`. Subsequent reads from it will return its default value.
+  mutating func clearProfilePicture() {self._profilePicture = nil}
+
+  /// Group members (**NOT** including the user itself)
+  ///
+  /// Required towards a new device and for a new group. Optional for an existing
+  /// group.
+  ///
+  /// The concrete semantic of this list depends on the current `user_state`:
+  ///
+  /// - `MEMBER`: It contains a list of all **current** group members (with the
+  ///   user itself implicitly added).
+  /// - `KICKED`/`LEFT`: It contains a list of all **previous** group members up
+  ///   to that event. If the list is empty, the group must not be visible in the
+  ///   UI.
+  ///
+  /// An empty list is valid.
+  var memberIdentities: Common_Identities {
+    get {return _memberIdentities ?? Common_Identities()}
+    set {_memberIdentities = newValue}
+  }
+  /// Returns true if `memberIdentities` has been explicitly set.
+  var hasMemberIdentities: Bool {return self._memberIdentities != nil}
+  /// Clears the value of `memberIdentities`. Subsequent reads from it will return its default value.
+  mutating func clearMemberIdentities() {self._memberIdentities = nil}
+
   /// Conversation category of the group
   ///
   /// Required towards a new device and for a new group. Optional for an
@@ -2137,55 +2761,13 @@ struct Sync_Group {
   /// Required towards a new device and for a new group. Optional for an
   /// existing group.
   var conversationVisibility: Sync_ConversationVisibility {
-    get {return _conversationVisibility ?? .show}
+    get {return _conversationVisibility ?? .normal}
     set {_conversationVisibility = newValue}
   }
   /// Returns true if `conversationVisibility` has been explicitly set.
   var hasConversationVisibility: Bool {return self._conversationVisibility != nil}
   /// Clears the value of `conversationVisibility`. Subsequent reads from it will return its default value.
   mutating func clearConversationVisibility() {self._conversationVisibility = nil}
-
-  var userState: Sync_Group.UserState {
-    get {return _userState ?? .member}
-    set {_userState = newValue}
-  }
-  /// Returns true if `userState` has been explicitly set.
-  var hasUserState: Bool {return self._userState != nil}
-  /// Clears the value of `userState`. Subsequent reads from it will return its default value.
-  mutating func clearUserState() {self._userState = nil}
-
-  /// Group's profile picture as received from the group's administrator
-  ///
-  /// Always optional.
-  var profilePicture: Common_DeltaImage {
-    get {return _profilePicture ?? Common_DeltaImage()}
-    set {_profilePicture = newValue}
-  }
-  /// Returns true if `profilePicture` has been explicitly set.
-  var hasProfilePicture: Bool {return self._profilePicture != nil}
-  /// Clears the value of `profilePicture`. Subsequent reads from it will return its default value.
-  mutating func clearProfilePicture() {self._profilePicture = nil}
-
-  /// Group members (**NOT** including the user itself)
-  ///
-  /// Required towards a new device and for a new group. Optional for an
-  /// existing group.
-  ///
-  /// The concrete semantic of this list depends on the current `user_state`:
-  ///
-  /// - `MEMBER`: It contains a list of all **current** group members.
-  /// - `KICKED`/`LEFT`: It contains a list of all **previous** group members up
-  ///   to that event.
-  ///
-  /// An empty list is valid.
-  var memberIdentities: Common_Identities {
-    get {return _memberIdentities ?? Common_Identities()}
-    set {_memberIdentities = newValue}
-  }
-  /// Returns true if `memberIdentities` has been explicitly set.
-  var hasMemberIdentities: Bool {return self._memberIdentities != nil}
-  /// Clears the value of `memberIdentities`. Subsequent reads from it will return its default value.
-  mutating func clearMemberIdentities() {self._memberIdentities = nil}
 
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
@@ -2196,13 +2778,15 @@ struct Sync_Group {
   enum UserState: SwiftProtobuf.Enum {
     typealias RawValue = Int
 
-    /// The user is a member (or an admin) of the group
+    /// The user is a member (or creator) of the group.
     case member // = 0
 
-    /// The user has been kicked from the group
+    /// The user has been kicked from the group. Implies that the group has been
+    /// marked as _left_.
     case kicked // = 1
 
-    /// The user left the group
+    /// The user left the group. Implies that the group has been marked as
+    /// _left_.
     case left // = 2
     case UNRECOGNIZED(Int)
 
@@ -2230,16 +2814,204 @@ struct Sync_Group {
 
   }
 
+  /// Notification trigger policy for the group
+  ///
+  /// Required towards a new device and for a new group. Optional for an
+  /// existing group.
+  struct NotificationTriggerPolicyOverride {
+    // SwiftProtobuf.Message conformance is added in an extension below. See the
+    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+    // methods supported on all messages.
+
+    var override: Sync_Group.NotificationTriggerPolicyOverride.OneOf_Override? = nil
+
+    /// Apply the trigger policy specified in the settings (i.e. trigger on
+    /// every _conversation_ message).
+    var `default`: Common_Unit {
+      get {
+        if case .default(let v)? = override {return v}
+        return Common_Unit()
+      }
+      set {override = .default(newValue)}
+    }
+
+    /// Apply the following notification trigger policy
+    var policy: Sync_Group.NotificationTriggerPolicyOverride.Policy {
+      get {
+        if case .policy(let v)? = override {return v}
+        return Sync_Group.NotificationTriggerPolicyOverride.Policy()
+      }
+      set {override = .policy(newValue)}
+    }
+
+    var unknownFields = SwiftProtobuf.UnknownStorage()
+
+    enum OneOf_Override: Equatable {
+      /// Apply the trigger policy specified in the settings (i.e. trigger on
+      /// every _conversation_ message).
+      case `default`(Common_Unit)
+      /// Apply the following notification trigger policy
+      case policy(Sync_Group.NotificationTriggerPolicyOverride.Policy)
+
+    #if !swift(>=4.1)
+      static func ==(lhs: Sync_Group.NotificationTriggerPolicyOverride.OneOf_Override, rhs: Sync_Group.NotificationTriggerPolicyOverride.OneOf_Override) -> Bool {
+        // The use of inline closures is to circumvent an issue where the compiler
+        // allocates stack space for every case branch when no optimizations are
+        // enabled. https://github.com/apple/swift-protobuf/issues/1034
+        switch (lhs, rhs) {
+        case (.default, .default): return {
+          guard case .default(let l) = lhs, case .default(let r) = rhs else { preconditionFailure() }
+          return l == r
+        }()
+        case (.policy, .policy): return {
+          guard case .policy(let l) = lhs, case .policy(let r) = rhs else { preconditionFailure() }
+          return l == r
+        }()
+        default: return false
+        }
+      }
+    #endif
+    }
+
+    struct Policy {
+      // SwiftProtobuf.Message conformance is added in an extension below. See the
+      // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+      // methods supported on all messages.
+
+      var policy: Sync_Group.NotificationTriggerPolicyOverride.Policy.NotificationTriggerPolicy = .mentioned
+
+      /// Unix-ish timestamp in milliseconds when the provided policy should
+      /// expire and fall back to the default. If not provided, the policy does
+      /// not expire.
+      var expiresAt: UInt64 {
+        get {return _expiresAt ?? 0}
+        set {_expiresAt = newValue}
+      }
+      /// Returns true if `expiresAt` has been explicitly set.
+      var hasExpiresAt: Bool {return self._expiresAt != nil}
+      /// Clears the value of `expiresAt`. Subsequent reads from it will return its default value.
+      mutating func clearExpiresAt() {self._expiresAt = nil}
+
+      var unknownFields = SwiftProtobuf.UnknownStorage()
+
+      /// Apply the following notification trigger policy
+      enum NotificationTriggerPolicy: SwiftProtobuf.Enum {
+        typealias RawValue = Int
+
+        /// Only trigger a notification if mentioned in a _conversation_ message.
+        case mentioned // = 0
+
+        /// Never trigger a notification message.
+        case never // = 1
+        case UNRECOGNIZED(Int)
+
+        init() {
+          self = .mentioned
+        }
+
+        init?(rawValue: Int) {
+          switch rawValue {
+          case 0: self = .mentioned
+          case 1: self = .never
+          default: self = .UNRECOGNIZED(rawValue)
+          }
+        }
+
+        var rawValue: Int {
+          switch self {
+          case .mentioned: return 0
+          case .never: return 1
+          case .UNRECOGNIZED(let i): return i
+          }
+        }
+
+      }
+
+      init() {}
+
+      fileprivate var _expiresAt: UInt64? = nil
+    }
+
+    init() {}
+  }
+
+  /// Notification sound policy for the group
+  ///
+  /// Required towards a new device and for a new group. Optional for an existing
+  /// group.
+  ///
+  /// Custom sounds are not reflected but are to be (re-)applied in case the
+  /// policy is _default_.
+  struct NotificationSoundPolicyOverride {
+    // SwiftProtobuf.Message conformance is added in an extension below. See the
+    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+    // methods supported on all messages.
+
+    var override: Sync_Group.NotificationSoundPolicyOverride.OneOf_Override? = nil
+
+    /// Apply the notification sound policy specified in the settings (i.e.
+    /// always emit a sound when notifying of a _conversation_ message).
+    var `default`: Common_Unit {
+      get {
+        if case .default(let v)? = override {return v}
+        return Common_Unit()
+      }
+      set {override = .default(newValue)}
+    }
+
+    /// Apply the following notification sound policy
+    var policy: Sync_NotificationSoundPolicy {
+      get {
+        if case .policy(let v)? = override {return v}
+        return .muted
+      }
+      set {override = .policy(newValue)}
+    }
+
+    var unknownFields = SwiftProtobuf.UnknownStorage()
+
+    enum OneOf_Override: Equatable {
+      /// Apply the notification sound policy specified in the settings (i.e.
+      /// always emit a sound when notifying of a _conversation_ message).
+      case `default`(Common_Unit)
+      /// Apply the following notification sound policy
+      case policy(Sync_NotificationSoundPolicy)
+
+    #if !swift(>=4.1)
+      static func ==(lhs: Sync_Group.NotificationSoundPolicyOverride.OneOf_Override, rhs: Sync_Group.NotificationSoundPolicyOverride.OneOf_Override) -> Bool {
+        // The use of inline closures is to circumvent an issue where the compiler
+        // allocates stack space for every case branch when no optimizations are
+        // enabled. https://github.com/apple/swift-protobuf/issues/1034
+        switch (lhs, rhs) {
+        case (.default, .default): return {
+          guard case .default(let l) = lhs, case .default(let r) = rhs else { preconditionFailure() }
+          return l == r
+        }()
+        case (.policy, .policy): return {
+          guard case .policy(let l) = lhs, case .policy(let r) = rhs else { preconditionFailure() }
+          return l == r
+        }()
+        default: return false
+        }
+      }
+    #endif
+    }
+
+    init() {}
+  }
+
   init() {}
 
   fileprivate var _groupIdentity: Common_GroupIdentity? = nil
   fileprivate var _name: String? = nil
   fileprivate var _createdAt: UInt64? = nil
-  fileprivate var _conversationCategory: Sync_ConversationCategory? = nil
-  fileprivate var _conversationVisibility: Sync_ConversationVisibility? = nil
   fileprivate var _userState: Sync_Group.UserState? = nil
+  fileprivate var _notificationTriggerPolicyOverride: Sync_Group.NotificationTriggerPolicyOverride? = nil
+  fileprivate var _notificationSoundPolicyOverride: Sync_Group.NotificationSoundPolicyOverride? = nil
   fileprivate var _profilePicture: Common_DeltaImage? = nil
   fileprivate var _memberIdentities: Common_Identities? = nil
+  fileprivate var _conversationCategory: Sync_ConversationCategory? = nil
+  fileprivate var _conversationVisibility: Sync_ConversationVisibility? = nil
 }
 
 #if swift(>=4.2)
@@ -2250,6 +3022,14 @@ extension Sync_Group.UserState: CaseIterable {
     .member,
     .kicked,
     .left,
+  ]
+}
+
+extension Sync_Group.NotificationTriggerPolicyOverride.Policy.NotificationTriggerPolicy: CaseIterable {
+  // The compiler won't synthesize support with the UNRECOGNIZED case.
+  static var allCases: [Sync_Group.NotificationTriggerPolicyOverride.Policy.NotificationTriggerPolicy] = [
+    .mentioned,
+    .never,
   ]
 }
 
@@ -2295,6 +3075,22 @@ struct Sync_DistributionList {
   /// Clears the value of `createdAt`. Subsequent reads from it will return its default value.
   mutating func clearCreatedAt() {self._createdAt = nil}
 
+  /// Distribution list members
+  ///
+  /// Required towards a new device and for a new distribution list. Optional
+  /// for an existing distribution list.
+  ///
+  /// An empty list is **not** valid. Clearing all members should be prevented
+  /// by the UI.
+  var memberIdentities: Common_Identities {
+    get {return _memberIdentities ?? Common_Identities()}
+    set {_memberIdentities = newValue}
+  }
+  /// Returns true if `memberIdentities` has been explicitly set.
+  var hasMemberIdentities: Bool {return self._memberIdentities != nil}
+  /// Clears the value of `memberIdentities`. Subsequent reads from it will return its default value.
+  mutating func clearMemberIdentities() {self._memberIdentities = nil}
+
   /// Conversation category of the distribution list
   ///
   /// Required towards a new device and for a new distribution list. Optional
@@ -2313,7 +3109,7 @@ struct Sync_DistributionList {
   /// Required towards a new device and for a new distribution list. Optional
   /// for an existing distribution list.
   var conversationVisibility: Sync_ConversationVisibility {
-    get {return _conversationVisibility ?? .show}
+    get {return _conversationVisibility ?? .normal}
     set {_conversationVisibility = newValue}
   }
   /// Returns true if `conversationVisibility` has been explicitly set.
@@ -2321,31 +3117,15 @@ struct Sync_DistributionList {
   /// Clears the value of `conversationVisibility`. Subsequent reads from it will return its default value.
   mutating func clearConversationVisibility() {self._conversationVisibility = nil}
 
-  /// Distribution list members
-  ///
-  /// Required towards a new device and for a new distribution list. Optional
-  /// for an existing distribution list.
-  ///
-  /// An empty list is **not** valid. Clearing all members should be prevented
-  /// by the UI.
-  var memberIdentities: Common_Identities {
-    get {return _memberIdentities ?? Common_Identities()}
-    set {_memberIdentities = newValue}
-  }
-  /// Returns true if `memberIdentities` has been explicitly set.
-  var hasMemberIdentities: Bool {return self._memberIdentities != nil}
-  /// Clears the value of `memberIdentities`. Subsequent reads from it will return its default value.
-  mutating func clearMemberIdentities() {self._memberIdentities = nil}
-
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
   init() {}
 
   fileprivate var _name: String? = nil
   fileprivate var _createdAt: UInt64? = nil
+  fileprivate var _memberIdentities: Common_Identities? = nil
   fileprivate var _conversationCategory: Sync_ConversationCategory? = nil
   fileprivate var _conversationVisibility: Sync_ConversationVisibility? = nil
-  fileprivate var _memberIdentities: Common_Identities? = nil
 }
 
 /// App settings
@@ -2372,23 +3152,29 @@ struct Sync_Settings {
   /// Clears the value of `unknownContactPolicy`. Subsequent reads from it will return its default value.
   mutating func clearUnknownContactPolicy() {self._unknownContactPolicy = nil}
 
-  var readMessagePolicy: Sync_Settings.ReadMessagePolicy {
-    get {return _readMessagePolicy ?? .sendReadReceipt}
-    set {_readMessagePolicy = newValue}
+  /// _Read_ receipt policy (when an unread message has been read)
+  ///
+  /// Required towards a new device. Optional otherwise.
+  var readReceiptPolicy: Sync_ReadReceiptPolicy {
+    get {return _readReceiptPolicy ?? .sendReadReceipt}
+    set {_readReceiptPolicy = newValue}
   }
-  /// Returns true if `readMessagePolicy` has been explicitly set.
-  var hasReadMessagePolicy: Bool {return self._readMessagePolicy != nil}
-  /// Clears the value of `readMessagePolicy`. Subsequent reads from it will return its default value.
-  mutating func clearReadMessagePolicy() {self._readMessagePolicy = nil}
+  /// Returns true if `readReceiptPolicy` has been explicitly set.
+  var hasReadReceiptPolicy: Bool {return self._readReceiptPolicy != nil}
+  /// Clears the value of `readReceiptPolicy`. Subsequent reads from it will return its default value.
+  mutating func clearReadReceiptPolicy() {self._readReceiptPolicy = nil}
 
-  var composeMessagePolicy: Sync_Settings.ComposeMessagePolicy {
-    get {return _composeMessagePolicy ?? .sendTypingIndicator}
-    set {_composeMessagePolicy = newValue}
+  /// Typing indicator policy (signal _currently typing_)
+  ///
+  /// Required towards a new device. Optional otherwise.
+  var typingIndicatorPolicy: Sync_TypingIndicatorPolicy {
+    get {return _typingIndicatorPolicy ?? .sendTypingIndicator}
+    set {_typingIndicatorPolicy = newValue}
   }
-  /// Returns true if `composeMessagePolicy` has been explicitly set.
-  var hasComposeMessagePolicy: Bool {return self._composeMessagePolicy != nil}
-  /// Clears the value of `composeMessagePolicy`. Subsequent reads from it will return its default value.
-  mutating func clearComposeMessagePolicy() {self._composeMessagePolicy = nil}
+  /// Returns true if `typingIndicatorPolicy` has been explicitly set.
+  var hasTypingIndicatorPolicy: Bool {return self._typingIndicatorPolicy != nil}
+  /// Clears the value of `typingIndicatorPolicy`. Subsequent reads from it will return its default value.
+  mutating func clearTypingIndicatorPolicy() {self._typingIndicatorPolicy = nil}
 
   var callPolicy: Sync_Settings.CallPolicy {
     get {return _callPolicy ?? .allowCall}
@@ -2520,76 +3306,6 @@ struct Sync_Settings {
       switch self {
       case .allowUnknown: return 0
       case .blockUnknown: return 1
-      case .UNRECOGNIZED(let i): return i
-      }
-    }
-
-  }
-
-  /// Read message policy (when an unread message has been read)
-  ///
-  /// Required towards a new device. Optional otherwise.
-  enum ReadMessagePolicy: SwiftProtobuf.Enum {
-    typealias RawValue = Int
-
-    /// Send _read_ receipt when an unread message has been read
-    case sendReadReceipt // = 0
-
-    /// Don't send _read_ receipts
-    case ignoreRead // = 1
-    case UNRECOGNIZED(Int)
-
-    init() {
-      self = .sendReadReceipt
-    }
-
-    init?(rawValue: Int) {
-      switch rawValue {
-      case 0: self = .sendReadReceipt
-      case 1: self = .ignoreRead
-      default: self = .UNRECOGNIZED(rawValue)
-      }
-    }
-
-    var rawValue: Int {
-      switch self {
-      case .sendReadReceipt: return 0
-      case .ignoreRead: return 1
-      case .UNRECOGNIZED(let i): return i
-      }
-    }
-
-  }
-
-  /// Compose message policy
-  ///
-  /// Required towards a new device. Optional otherwise.
-  enum ComposeMessagePolicy: SwiftProtobuf.Enum {
-    typealias RawValue = Int
-
-    /// Send _typing_ indicator when a message is being composed
-    case sendTypingIndicator // = 0
-
-    /// Don't send _typing_ indicators
-    case ignoreCompose // = 1
-    case UNRECOGNIZED(Int)
-
-    init() {
-      self = .sendTypingIndicator
-    }
-
-    init?(rawValue: Int) {
-      switch rawValue {
-      case 0: self = .sendTypingIndicator
-      case 1: self = .ignoreCompose
-      default: self = .UNRECOGNIZED(rawValue)
-      }
-    }
-
-    var rawValue: Int {
-      switch self {
-      case .sendTypingIndicator: return 0
-      case .ignoreCompose: return 1
       case .UNRECOGNIZED(let i): return i
       }
     }
@@ -2740,8 +3456,8 @@ struct Sync_Settings {
 
   fileprivate var _contactSyncPolicy: Sync_Settings.ContactSyncPolicy? = nil
   fileprivate var _unknownContactPolicy: Sync_Settings.UnknownContactPolicy? = nil
-  fileprivate var _readMessagePolicy: Sync_Settings.ReadMessagePolicy? = nil
-  fileprivate var _composeMessagePolicy: Sync_Settings.ComposeMessagePolicy? = nil
+  fileprivate var _readReceiptPolicy: Sync_ReadReceiptPolicy? = nil
+  fileprivate var _typingIndicatorPolicy: Sync_TypingIndicatorPolicy? = nil
   fileprivate var _callPolicy: Sync_Settings.CallPolicy? = nil
   fileprivate var _callConnectionPolity: Sync_Settings.CallConnectionPolicy? = nil
   fileprivate var _screenshotPolicy: Sync_Settings.ScreenshotPolicy? = nil
@@ -2765,22 +3481,6 @@ extension Sync_Settings.UnknownContactPolicy: CaseIterable {
   static var allCases: [Sync_Settings.UnknownContactPolicy] = [
     .allowUnknown,
     .blockUnknown,
-  ]
-}
-
-extension Sync_Settings.ReadMessagePolicy: CaseIterable {
-  // The compiler won't synthesize support with the UNRECOGNIZED case.
-  static var allCases: [Sync_Settings.ReadMessagePolicy] = [
-    .sendReadReceipt,
-    .ignoreRead,
-  ]
-}
-
-extension Sync_Settings.ComposeMessagePolicy: CaseIterable {
-  // The compiler won't synthesize support with the UNRECOGNIZED case.
-  static var allCases: [Sync_Settings.ComposeMessagePolicy] = [
-    .sendTypingIndicator,
-    .ignoreCompose,
   ]
 }
 
@@ -2822,10 +3522,31 @@ extension Sync_Settings.KeyboardDataCollectionPolicy: CaseIterable {
 
 fileprivate let _protobuf_package = "sync"
 
+extension Sync_ReadReceiptPolicy: SwiftProtobuf._ProtoNameProviding {
+  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    0: .same(proto: "SEND_READ_RECEIPT"),
+    1: .same(proto: "DONT_SEND_READ_RECEIPT"),
+  ]
+}
+
+extension Sync_TypingIndicatorPolicy: SwiftProtobuf._ProtoNameProviding {
+  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    0: .same(proto: "SEND_TYPING_INDICATOR"),
+    1: .same(proto: "DONT_SEND_TYPING_INDICATOR"),
+  ]
+}
+
+extension Sync_NotificationSoundPolicy: SwiftProtobuf._ProtoNameProviding {
+  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    0: .same(proto: "MUTED"),
+  ]
+}
+
 extension Sync_ConversationVisibility: SwiftProtobuf._ProtoNameProviding {
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "SHOW"),
-    1: .same(proto: "ARCHIVE"),
+    0: .same(proto: "NORMAL"),
+    1: .same(proto: "ARCHIVED"),
+    2: .same(proto: "PINNED"),
   ]
 }
 
@@ -3582,14 +4303,20 @@ extension Sync_Contact: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementat
     5: .standard(proto: "last_name"),
     6: .same(proto: "nickname"),
     7: .standard(proto: "verification_level"),
+    21: .standard(proto: "work_verification_level"),
     8: .standard(proto: "identity_type"),
     9: .standard(proto: "acquaintance_level"),
     10: .standard(proto: "activity_state"),
-    11: .standard(proto: "conversation_category"),
-    12: .standard(proto: "conversation_visibility"),
+    18: .standard(proto: "feature_mask"),
     13: .standard(proto: "sync_state"),
+    16: .standard(proto: "read_receipt_policy_override"),
+    17: .standard(proto: "typing_indicator_policy_override"),
+    19: .standard(proto: "notification_trigger_policy_override"),
+    20: .standard(proto: "notification_sound_policy_override"),
     14: .standard(proto: "contact_defined_profile_picture"),
     15: .standard(proto: "user_defined_profile_picture"),
+    11: .standard(proto: "conversation_category"),
+    12: .standard(proto: "conversation_visibility"),
   ]
 
   fileprivate class _StorageClass {
@@ -3600,14 +4327,20 @@ extension Sync_Contact: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementat
     var _lastName: String? = nil
     var _nickname: String? = nil
     var _verificationLevel: Sync_Contact.VerificationLevel? = nil
+    var _workVerificationLevel: Sync_Contact.WorkVerificationLevel? = nil
     var _identityType: Sync_Contact.IdentityType? = nil
     var _acquaintanceLevel: Sync_Contact.AcquaintanceLevel? = nil
     var _activityState: Sync_Contact.ActivityState? = nil
-    var _conversationCategory: Sync_ConversationCategory? = nil
-    var _conversationVisibility: Sync_ConversationVisibility? = nil
+    var _featureMask: UInt32? = nil
     var _syncState: Sync_Contact.SyncState? = nil
+    var _readReceiptPolicyOverride: Sync_Contact.ReadReceiptPolicyOverride? = nil
+    var _typingIndicatorPolicyOverride: Sync_Contact.TypingIndicatorPolicyOverride? = nil
+    var _notificationTriggerPolicyOverride: Sync_Contact.NotificationTriggerPolicyOverride? = nil
+    var _notificationSoundPolicyOverride: Sync_Contact.NotificationSoundPolicyOverride? = nil
     var _contactDefinedProfilePicture: Common_DeltaImage? = nil
     var _userDefinedProfilePicture: Common_DeltaImage? = nil
+    var _conversationCategory: Sync_ConversationCategory? = nil
+    var _conversationVisibility: Sync_ConversationVisibility? = nil
 
     static let defaultInstance = _StorageClass()
 
@@ -3621,14 +4354,20 @@ extension Sync_Contact: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementat
       _lastName = source._lastName
       _nickname = source._nickname
       _verificationLevel = source._verificationLevel
+      _workVerificationLevel = source._workVerificationLevel
       _identityType = source._identityType
       _acquaintanceLevel = source._acquaintanceLevel
       _activityState = source._activityState
-      _conversationCategory = source._conversationCategory
-      _conversationVisibility = source._conversationVisibility
+      _featureMask = source._featureMask
       _syncState = source._syncState
+      _readReceiptPolicyOverride = source._readReceiptPolicyOverride
+      _typingIndicatorPolicyOverride = source._typingIndicatorPolicyOverride
+      _notificationTriggerPolicyOverride = source._notificationTriggerPolicyOverride
+      _notificationSoundPolicyOverride = source._notificationSoundPolicyOverride
       _contactDefinedProfilePicture = source._contactDefinedProfilePicture
       _userDefinedProfilePicture = source._userDefinedProfilePicture
+      _conversationCategory = source._conversationCategory
+      _conversationVisibility = source._conversationVisibility
     }
   }
 
@@ -3662,6 +4401,12 @@ extension Sync_Contact: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementat
         case 13: try { try decoder.decodeSingularEnumField(value: &_storage._syncState) }()
         case 14: try { try decoder.decodeSingularMessageField(value: &_storage._contactDefinedProfilePicture) }()
         case 15: try { try decoder.decodeSingularMessageField(value: &_storage._userDefinedProfilePicture) }()
+        case 16: try { try decoder.decodeSingularMessageField(value: &_storage._readReceiptPolicyOverride) }()
+        case 17: try { try decoder.decodeSingularMessageField(value: &_storage._typingIndicatorPolicyOverride) }()
+        case 18: try { try decoder.decodeSingularUInt32Field(value: &_storage._featureMask) }()
+        case 19: try { try decoder.decodeSingularMessageField(value: &_storage._notificationTriggerPolicyOverride) }()
+        case 20: try { try decoder.decodeSingularMessageField(value: &_storage._notificationSoundPolicyOverride) }()
+        case 21: try { try decoder.decodeSingularEnumField(value: &_storage._workVerificationLevel) }()
         default: break
         }
       }
@@ -3715,6 +4460,24 @@ extension Sync_Contact: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementat
       if let v = _storage._userDefinedProfilePicture {
         try visitor.visitSingularMessageField(value: v, fieldNumber: 15)
       }
+      if let v = _storage._readReceiptPolicyOverride {
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 16)
+      }
+      if let v = _storage._typingIndicatorPolicyOverride {
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 17)
+      }
+      if let v = _storage._featureMask {
+        try visitor.visitSingularUInt32Field(value: v, fieldNumber: 18)
+      }
+      if let v = _storage._notificationTriggerPolicyOverride {
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 19)
+      }
+      if let v = _storage._notificationSoundPolicyOverride {
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 20)
+      }
+      if let v = _storage._workVerificationLevel {
+        try visitor.visitSingularEnumField(value: v, fieldNumber: 21)
+      }
     }
     try unknownFields.traverse(visitor: &visitor)
   }
@@ -3731,14 +4494,20 @@ extension Sync_Contact: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementat
         if _storage._lastName != rhs_storage._lastName {return false}
         if _storage._nickname != rhs_storage._nickname {return false}
         if _storage._verificationLevel != rhs_storage._verificationLevel {return false}
+        if _storage._workVerificationLevel != rhs_storage._workVerificationLevel {return false}
         if _storage._identityType != rhs_storage._identityType {return false}
         if _storage._acquaintanceLevel != rhs_storage._acquaintanceLevel {return false}
         if _storage._activityState != rhs_storage._activityState {return false}
-        if _storage._conversationCategory != rhs_storage._conversationCategory {return false}
-        if _storage._conversationVisibility != rhs_storage._conversationVisibility {return false}
+        if _storage._featureMask != rhs_storage._featureMask {return false}
         if _storage._syncState != rhs_storage._syncState {return false}
+        if _storage._readReceiptPolicyOverride != rhs_storage._readReceiptPolicyOverride {return false}
+        if _storage._typingIndicatorPolicyOverride != rhs_storage._typingIndicatorPolicyOverride {return false}
+        if _storage._notificationTriggerPolicyOverride != rhs_storage._notificationTriggerPolicyOverride {return false}
+        if _storage._notificationSoundPolicyOverride != rhs_storage._notificationSoundPolicyOverride {return false}
         if _storage._contactDefinedProfilePicture != rhs_storage._contactDefinedProfilePicture {return false}
         if _storage._userDefinedProfilePicture != rhs_storage._userDefinedProfilePicture {return false}
+        if _storage._conversationCategory != rhs_storage._conversationCategory {return false}
+        if _storage._conversationVisibility != rhs_storage._conversationVisibility {return false}
         return true
       }
       if !storagesAreEqual {return false}
@@ -3753,6 +4522,13 @@ extension Sync_Contact.VerificationLevel: SwiftProtobuf._ProtoNameProviding {
     0: .same(proto: "UNVERIFIED"),
     1: .same(proto: "SERVER_VERIFIED"),
     2: .same(proto: "FULLY_VERIFIED"),
+  ]
+}
+
+extension Sync_Contact.WorkVerificationLevel: SwiftProtobuf._ProtoNameProviding {
+  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    0: .same(proto: "NONE"),
+    1: .same(proto: "WORK_SUBSCRIPTION_VERIFIED"),
   ]
 }
 
@@ -3786,17 +4562,324 @@ extension Sync_Contact.SyncState: SwiftProtobuf._ProtoNameProviding {
   ]
 }
 
+extension Sync_Contact.ReadReceiptPolicyOverride: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = Sync_Contact.protoMessageName + ".ReadReceiptPolicyOverride"
+  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .same(proto: "default"),
+    2: .same(proto: "policy"),
+  ]
+
+  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try {
+        var v: Common_Unit?
+        var hadOneofValue = false
+        if let current = self.override {
+          hadOneofValue = true
+          if case .default(let m) = current {v = m}
+        }
+        try decoder.decodeSingularMessageField(value: &v)
+        if let v = v {
+          if hadOneofValue {try decoder.handleConflictingOneOf()}
+          self.override = .default(v)
+        }
+      }()
+      case 2: try {
+        var v: Sync_ReadReceiptPolicy?
+        try decoder.decodeSingularEnumField(value: &v)
+        if let v = v {
+          if self.override != nil {try decoder.handleConflictingOneOf()}
+          self.override = .policy(v)
+        }
+      }()
+      default: break
+      }
+    }
+  }
+
+  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every case branch when no optimizations are
+    // enabled. https://github.com/apple/swift-protobuf/issues/1034
+    switch self.override {
+    case .default?: try {
+      guard case .default(let v)? = self.override else { preconditionFailure() }
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
+    }()
+    case .policy?: try {
+      guard case .policy(let v)? = self.override else { preconditionFailure() }
+      try visitor.visitSingularEnumField(value: v, fieldNumber: 2)
+    }()
+    case nil: break
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  static func ==(lhs: Sync_Contact.ReadReceiptPolicyOverride, rhs: Sync_Contact.ReadReceiptPolicyOverride) -> Bool {
+    if lhs.override != rhs.override {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension Sync_Contact.TypingIndicatorPolicyOverride: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = Sync_Contact.protoMessageName + ".TypingIndicatorPolicyOverride"
+  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .same(proto: "default"),
+    2: .same(proto: "policy"),
+  ]
+
+  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try {
+        var v: Common_Unit?
+        var hadOneofValue = false
+        if let current = self.override {
+          hadOneofValue = true
+          if case .default(let m) = current {v = m}
+        }
+        try decoder.decodeSingularMessageField(value: &v)
+        if let v = v {
+          if hadOneofValue {try decoder.handleConflictingOneOf()}
+          self.override = .default(v)
+        }
+      }()
+      case 2: try {
+        var v: Sync_TypingIndicatorPolicy?
+        try decoder.decodeSingularEnumField(value: &v)
+        if let v = v {
+          if self.override != nil {try decoder.handleConflictingOneOf()}
+          self.override = .policy(v)
+        }
+      }()
+      default: break
+      }
+    }
+  }
+
+  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every case branch when no optimizations are
+    // enabled. https://github.com/apple/swift-protobuf/issues/1034
+    switch self.override {
+    case .default?: try {
+      guard case .default(let v)? = self.override else { preconditionFailure() }
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
+    }()
+    case .policy?: try {
+      guard case .policy(let v)? = self.override else { preconditionFailure() }
+      try visitor.visitSingularEnumField(value: v, fieldNumber: 2)
+    }()
+    case nil: break
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  static func ==(lhs: Sync_Contact.TypingIndicatorPolicyOverride, rhs: Sync_Contact.TypingIndicatorPolicyOverride) -> Bool {
+    if lhs.override != rhs.override {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension Sync_Contact.NotificationTriggerPolicyOverride: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = Sync_Contact.protoMessageName + ".NotificationTriggerPolicyOverride"
+  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .same(proto: "default"),
+    2: .same(proto: "policy"),
+  ]
+
+  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try {
+        var v: Common_Unit?
+        var hadOneofValue = false
+        if let current = self.override {
+          hadOneofValue = true
+          if case .default(let m) = current {v = m}
+        }
+        try decoder.decodeSingularMessageField(value: &v)
+        if let v = v {
+          if hadOneofValue {try decoder.handleConflictingOneOf()}
+          self.override = .default(v)
+        }
+      }()
+      case 2: try {
+        var v: Sync_Contact.NotificationTriggerPolicyOverride.Policy?
+        var hadOneofValue = false
+        if let current = self.override {
+          hadOneofValue = true
+          if case .policy(let m) = current {v = m}
+        }
+        try decoder.decodeSingularMessageField(value: &v)
+        if let v = v {
+          if hadOneofValue {try decoder.handleConflictingOneOf()}
+          self.override = .policy(v)
+        }
+      }()
+      default: break
+      }
+    }
+  }
+
+  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every case branch when no optimizations are
+    // enabled. https://github.com/apple/swift-protobuf/issues/1034
+    switch self.override {
+    case .default?: try {
+      guard case .default(let v)? = self.override else { preconditionFailure() }
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
+    }()
+    case .policy?: try {
+      guard case .policy(let v)? = self.override else { preconditionFailure() }
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
+    }()
+    case nil: break
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  static func ==(lhs: Sync_Contact.NotificationTriggerPolicyOverride, rhs: Sync_Contact.NotificationTriggerPolicyOverride) -> Bool {
+    if lhs.override != rhs.override {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension Sync_Contact.NotificationTriggerPolicyOverride.Policy: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = Sync_Contact.NotificationTriggerPolicyOverride.protoMessageName + ".Policy"
+  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .same(proto: "policy"),
+    2: .standard(proto: "expires_at"),
+  ]
+
+  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularEnumField(value: &self.policy) }()
+      case 2: try { try decoder.decodeSingularUInt64Field(value: &self._expiresAt) }()
+      default: break
+      }
+    }
+  }
+
+  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if self.policy != .never {
+      try visitor.visitSingularEnumField(value: self.policy, fieldNumber: 1)
+    }
+    if let v = self._expiresAt {
+      try visitor.visitSingularUInt64Field(value: v, fieldNumber: 2)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  static func ==(lhs: Sync_Contact.NotificationTriggerPolicyOverride.Policy, rhs: Sync_Contact.NotificationTriggerPolicyOverride.Policy) -> Bool {
+    if lhs.policy != rhs.policy {return false}
+    if lhs._expiresAt != rhs._expiresAt {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension Sync_Contact.NotificationTriggerPolicyOverride.Policy.NotificationTriggerPolicy: SwiftProtobuf._ProtoNameProviding {
+  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    0: .same(proto: "NEVER"),
+  ]
+}
+
+extension Sync_Contact.NotificationSoundPolicyOverride: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = Sync_Contact.protoMessageName + ".NotificationSoundPolicyOverride"
+  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .same(proto: "default"),
+    2: .same(proto: "policy"),
+  ]
+
+  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try {
+        var v: Common_Unit?
+        var hadOneofValue = false
+        if let current = self.override {
+          hadOneofValue = true
+          if case .default(let m) = current {v = m}
+        }
+        try decoder.decodeSingularMessageField(value: &v)
+        if let v = v {
+          if hadOneofValue {try decoder.handleConflictingOneOf()}
+          self.override = .default(v)
+        }
+      }()
+      case 2: try {
+        var v: Sync_NotificationSoundPolicy?
+        try decoder.decodeSingularEnumField(value: &v)
+        if let v = v {
+          if self.override != nil {try decoder.handleConflictingOneOf()}
+          self.override = .policy(v)
+        }
+      }()
+      default: break
+      }
+    }
+  }
+
+  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every case branch when no optimizations are
+    // enabled. https://github.com/apple/swift-protobuf/issues/1034
+    switch self.override {
+    case .default?: try {
+      guard case .default(let v)? = self.override else { preconditionFailure() }
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
+    }()
+    case .policy?: try {
+      guard case .policy(let v)? = self.override else { preconditionFailure() }
+      try visitor.visitSingularEnumField(value: v, fieldNumber: 2)
+    }()
+    case nil: break
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  static func ==(lhs: Sync_Contact.NotificationSoundPolicyOverride, rhs: Sync_Contact.NotificationSoundPolicyOverride) -> Bool {
+    if lhs.override != rhs.override {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
 extension Sync_Group: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".Group"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "group_identity"),
     2: .same(proto: "name"),
     3: .standard(proto: "created_at"),
-    4: .standard(proto: "conversation_category"),
-    5: .standard(proto: "conversation_visibility"),
     6: .standard(proto: "user_state"),
+    9: .standard(proto: "notification_trigger_policy_override"),
+    10: .standard(proto: "notification_sound_policy_override"),
     7: .standard(proto: "profile_picture"),
     8: .standard(proto: "member_identities"),
+    4: .standard(proto: "conversation_category"),
+    5: .standard(proto: "conversation_visibility"),
   ]
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -3813,6 +4896,8 @@ extension Sync_Group: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementatio
       case 6: try { try decoder.decodeSingularEnumField(value: &self._userState) }()
       case 7: try { try decoder.decodeSingularMessageField(value: &self._profilePicture) }()
       case 8: try { try decoder.decodeSingularMessageField(value: &self._memberIdentities) }()
+      case 9: try { try decoder.decodeSingularMessageField(value: &self._notificationTriggerPolicyOverride) }()
+      case 10: try { try decoder.decodeSingularMessageField(value: &self._notificationSoundPolicyOverride) }()
       default: break
       }
     }
@@ -3843,6 +4928,12 @@ extension Sync_Group: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementatio
     if let v = self._memberIdentities {
       try visitor.visitSingularMessageField(value: v, fieldNumber: 8)
     }
+    if let v = self._notificationTriggerPolicyOverride {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 9)
+    }
+    if let v = self._notificationSoundPolicyOverride {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 10)
+    }
     try unknownFields.traverse(visitor: &visitor)
   }
 
@@ -3850,11 +4941,13 @@ extension Sync_Group: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementatio
     if lhs._groupIdentity != rhs._groupIdentity {return false}
     if lhs._name != rhs._name {return false}
     if lhs._createdAt != rhs._createdAt {return false}
-    if lhs._conversationCategory != rhs._conversationCategory {return false}
-    if lhs._conversationVisibility != rhs._conversationVisibility {return false}
     if lhs._userState != rhs._userState {return false}
+    if lhs._notificationTriggerPolicyOverride != rhs._notificationTriggerPolicyOverride {return false}
+    if lhs._notificationSoundPolicyOverride != rhs._notificationSoundPolicyOverride {return false}
     if lhs._profilePicture != rhs._profilePicture {return false}
     if lhs._memberIdentities != rhs._memberIdentities {return false}
+    if lhs._conversationCategory != rhs._conversationCategory {return false}
+    if lhs._conversationVisibility != rhs._conversationVisibility {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
@@ -3868,15 +4961,193 @@ extension Sync_Group.UserState: SwiftProtobuf._ProtoNameProviding {
   ]
 }
 
+extension Sync_Group.NotificationTriggerPolicyOverride: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = Sync_Group.protoMessageName + ".NotificationTriggerPolicyOverride"
+  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .same(proto: "default"),
+    2: .same(proto: "policy"),
+  ]
+
+  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try {
+        var v: Common_Unit?
+        var hadOneofValue = false
+        if let current = self.override {
+          hadOneofValue = true
+          if case .default(let m) = current {v = m}
+        }
+        try decoder.decodeSingularMessageField(value: &v)
+        if let v = v {
+          if hadOneofValue {try decoder.handleConflictingOneOf()}
+          self.override = .default(v)
+        }
+      }()
+      case 2: try {
+        var v: Sync_Group.NotificationTriggerPolicyOverride.Policy?
+        var hadOneofValue = false
+        if let current = self.override {
+          hadOneofValue = true
+          if case .policy(let m) = current {v = m}
+        }
+        try decoder.decodeSingularMessageField(value: &v)
+        if let v = v {
+          if hadOneofValue {try decoder.handleConflictingOneOf()}
+          self.override = .policy(v)
+        }
+      }()
+      default: break
+      }
+    }
+  }
+
+  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every case branch when no optimizations are
+    // enabled. https://github.com/apple/swift-protobuf/issues/1034
+    switch self.override {
+    case .default?: try {
+      guard case .default(let v)? = self.override else { preconditionFailure() }
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
+    }()
+    case .policy?: try {
+      guard case .policy(let v)? = self.override else { preconditionFailure() }
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
+    }()
+    case nil: break
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  static func ==(lhs: Sync_Group.NotificationTriggerPolicyOverride, rhs: Sync_Group.NotificationTriggerPolicyOverride) -> Bool {
+    if lhs.override != rhs.override {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension Sync_Group.NotificationTriggerPolicyOverride.Policy: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = Sync_Group.NotificationTriggerPolicyOverride.protoMessageName + ".Policy"
+  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .same(proto: "policy"),
+    2: .standard(proto: "expires_at"),
+  ]
+
+  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularEnumField(value: &self.policy) }()
+      case 2: try { try decoder.decodeSingularUInt64Field(value: &self._expiresAt) }()
+      default: break
+      }
+    }
+  }
+
+  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if self.policy != .mentioned {
+      try visitor.visitSingularEnumField(value: self.policy, fieldNumber: 1)
+    }
+    if let v = self._expiresAt {
+      try visitor.visitSingularUInt64Field(value: v, fieldNumber: 2)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  static func ==(lhs: Sync_Group.NotificationTriggerPolicyOverride.Policy, rhs: Sync_Group.NotificationTriggerPolicyOverride.Policy) -> Bool {
+    if lhs.policy != rhs.policy {return false}
+    if lhs._expiresAt != rhs._expiresAt {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension Sync_Group.NotificationTriggerPolicyOverride.Policy.NotificationTriggerPolicy: SwiftProtobuf._ProtoNameProviding {
+  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    0: .same(proto: "MENTIONED"),
+    1: .same(proto: "NEVER"),
+  ]
+}
+
+extension Sync_Group.NotificationSoundPolicyOverride: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = Sync_Group.protoMessageName + ".NotificationSoundPolicyOverride"
+  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .same(proto: "default"),
+    2: .same(proto: "policy"),
+  ]
+
+  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try {
+        var v: Common_Unit?
+        var hadOneofValue = false
+        if let current = self.override {
+          hadOneofValue = true
+          if case .default(let m) = current {v = m}
+        }
+        try decoder.decodeSingularMessageField(value: &v)
+        if let v = v {
+          if hadOneofValue {try decoder.handleConflictingOneOf()}
+          self.override = .default(v)
+        }
+      }()
+      case 2: try {
+        var v: Sync_NotificationSoundPolicy?
+        try decoder.decodeSingularEnumField(value: &v)
+        if let v = v {
+          if self.override != nil {try decoder.handleConflictingOneOf()}
+          self.override = .policy(v)
+        }
+      }()
+      default: break
+      }
+    }
+  }
+
+  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every case branch when no optimizations are
+    // enabled. https://github.com/apple/swift-protobuf/issues/1034
+    switch self.override {
+    case .default?: try {
+      guard case .default(let v)? = self.override else { preconditionFailure() }
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
+    }()
+    case .policy?: try {
+      guard case .policy(let v)? = self.override else { preconditionFailure() }
+      try visitor.visitSingularEnumField(value: v, fieldNumber: 2)
+    }()
+    case nil: break
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  static func ==(lhs: Sync_Group.NotificationSoundPolicyOverride, rhs: Sync_Group.NotificationSoundPolicyOverride) -> Bool {
+    if lhs.override != rhs.override {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
 extension Sync_DistributionList: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".DistributionList"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "distribution_list_id"),
     2: .same(proto: "name"),
     3: .standard(proto: "created_at"),
+    6: .standard(proto: "member_identities"),
     4: .standard(proto: "conversation_category"),
     5: .standard(proto: "conversation_visibility"),
-    6: .standard(proto: "member_identities"),
   ]
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -3922,9 +5193,9 @@ extension Sync_DistributionList: SwiftProtobuf.Message, SwiftProtobuf._MessageIm
     if lhs.distributionListID != rhs.distributionListID {return false}
     if lhs._name != rhs._name {return false}
     if lhs._createdAt != rhs._createdAt {return false}
+    if lhs._memberIdentities != rhs._memberIdentities {return false}
     if lhs._conversationCategory != rhs._conversationCategory {return false}
     if lhs._conversationVisibility != rhs._conversationVisibility {return false}
-    if lhs._memberIdentities != rhs._memberIdentities {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
@@ -3935,8 +5206,8 @@ extension Sync_Settings: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementa
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "contact_sync_policy"),
     2: .standard(proto: "unknown_contact_policy"),
-    3: .standard(proto: "read_message_policy"),
-    4: .standard(proto: "compose_message_policy"),
+    3: .standard(proto: "read_receipt_policy"),
+    4: .standard(proto: "typing_indicator_policy"),
     5: .standard(proto: "call_policy"),
     6: .standard(proto: "call_connection_polity"),
     7: .standard(proto: "screenshot_policy"),
@@ -3953,8 +5224,8 @@ extension Sync_Settings: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementa
       switch fieldNumber {
       case 1: try { try decoder.decodeSingularEnumField(value: &self._contactSyncPolicy) }()
       case 2: try { try decoder.decodeSingularEnumField(value: &self._unknownContactPolicy) }()
-      case 3: try { try decoder.decodeSingularEnumField(value: &self._readMessagePolicy) }()
-      case 4: try { try decoder.decodeSingularEnumField(value: &self._composeMessagePolicy) }()
+      case 3: try { try decoder.decodeSingularEnumField(value: &self._readReceiptPolicy) }()
+      case 4: try { try decoder.decodeSingularEnumField(value: &self._typingIndicatorPolicy) }()
       case 5: try { try decoder.decodeSingularEnumField(value: &self._callPolicy) }()
       case 6: try { try decoder.decodeSingularEnumField(value: &self._callConnectionPolity) }()
       case 7: try { try decoder.decodeSingularEnumField(value: &self._screenshotPolicy) }()
@@ -3973,10 +5244,10 @@ extension Sync_Settings: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementa
     if let v = self._unknownContactPolicy {
       try visitor.visitSingularEnumField(value: v, fieldNumber: 2)
     }
-    if let v = self._readMessagePolicy {
+    if let v = self._readReceiptPolicy {
       try visitor.visitSingularEnumField(value: v, fieldNumber: 3)
     }
-    if let v = self._composeMessagePolicy {
+    if let v = self._typingIndicatorPolicy {
       try visitor.visitSingularEnumField(value: v, fieldNumber: 4)
     }
     if let v = self._callPolicy {
@@ -4003,8 +5274,8 @@ extension Sync_Settings: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementa
   static func ==(lhs: Sync_Settings, rhs: Sync_Settings) -> Bool {
     if lhs._contactSyncPolicy != rhs._contactSyncPolicy {return false}
     if lhs._unknownContactPolicy != rhs._unknownContactPolicy {return false}
-    if lhs._readMessagePolicy != rhs._readMessagePolicy {return false}
-    if lhs._composeMessagePolicy != rhs._composeMessagePolicy {return false}
+    if lhs._readReceiptPolicy != rhs._readReceiptPolicy {return false}
+    if lhs._typingIndicatorPolicy != rhs._typingIndicatorPolicy {return false}
     if lhs._callPolicy != rhs._callPolicy {return false}
     if lhs._callConnectionPolity != rhs._callConnectionPolity {return false}
     if lhs._screenshotPolicy != rhs._screenshotPolicy {return false}
@@ -4027,20 +5298,6 @@ extension Sync_Settings.UnknownContactPolicy: SwiftProtobuf._ProtoNameProviding 
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     0: .same(proto: "ALLOW_UNKNOWN"),
     1: .same(proto: "BLOCK_UNKNOWN"),
-  ]
-}
-
-extension Sync_Settings.ReadMessagePolicy: SwiftProtobuf._ProtoNameProviding {
-  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "SEND_READ_RECEIPT"),
-    1: .same(proto: "IGNORE_READ"),
-  ]
-}
-
-extension Sync_Settings.ComposeMessagePolicy: SwiftProtobuf._ProtoNameProviding {
-  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "SEND_TYPING_INDICATOR"),
-    1: .same(proto: "IGNORE_COMPOSE"),
   ]
 }
 

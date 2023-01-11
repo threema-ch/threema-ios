@@ -23,7 +23,7 @@
 #import "BaseMessage.h"
 
 
-// Note that maximum value is 16.
+// Note that maximum value is 28.
 enum {
     kSystemMessageRenameGroup = 1, // The admin has renamed the group
     kSystemMessageGroupMemberLeave = 2, // Another member has left the group
@@ -44,7 +44,16 @@ enum {
     kSystemMessageCallRejectedDisabled = 12,
     kSystemMessageCallRejectedUnknown = 13,
     kSystemMessageContactOtherAppInfo = 14,
-    kSystemMessageCallRejectedOffHours = 15
+    kSystemMessageCallRejectedOffHours = 15,
+    kSystemMessageFsMessageWithoutForwardSecurity = 21,
+    kSystemMessageFsSessionEstablished = 22,
+    kSystemMessageFsSessionEstablishedRcvd = 23,
+    kSystemMessageFsMessagesSkipped = 24,
+    kSystemMessageFsSessionReset = 25,
+    kSystemMessageFsOutOfOrder = 26,
+    kSystemMessageFsEnabledOutgoing = 27,
+    kSystemMessageFsDisabledOutgoing = 28,
+    kSystemMessageFsNotSupportedAnymore = 29
 };
 
 @interface SystemMessage : BaseMessage

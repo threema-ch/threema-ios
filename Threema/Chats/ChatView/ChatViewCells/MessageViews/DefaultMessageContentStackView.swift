@@ -49,13 +49,6 @@ final class DefaultMessageContentStackView: UIStackView {
     private func configureStackView() {
         axis = .vertical
         spacing = ChatViewConfiguration.Content.contentAndMetadataSpace
-        
-        directionalLayoutMargins = NSDirectionalEdgeInsets(
-            top: ChatViewConfiguration.Content.defaultTopBottomInset,
-            leading: ChatViewConfiguration.Content.defaultLeadingTrailingInset,
-            bottom: ChatViewConfiguration.Content.defaultTopBottomInset,
-            trailing: ChatViewConfiguration.Content.defaultLeadingTrailingInset
-        )
         isLayoutMarginsRelativeArrangement = true
     }
 }

@@ -23,6 +23,7 @@
 #import "Contact.h"
 #import "MyIdentityStore.h"
 #import "LoggingDescriptionProtocol.h"
+#import "ProtocolDefines.h"
 
 @protocol MyIdentityStoreProtocol;
 
@@ -42,28 +43,30 @@
 
 @property (nonatomic) BOOL receivedAfterInitialQueueSend;
 @property (readonly, nonnull) NSString *loggingDescription;
+@property (nonatomic) ForwardSecurityMode forwardSecurityMode;
 
 /**
  Make boxed message with end to end encrypted message.
 
  @param toContact: Receiver contact of the message
  @param myIdentityStore: Sender of the message, with secret key
- @param entityManager: Must be type of EntityManager (is NObject because Swift-Objc header could not be public)
  */
-- (BoxedMessage*)makeBox:(Contact* _Nonnull)toContact myIdentityStore:(id<MyIdentityStoreProtocol>  _Nonnull)myIdentityStore entityManager:(NSObject*  _Nonnull)entityManagerObject;
+- (BoxedMessage* _Nullable)makeBox:(Contact* _Nonnull)toContact myIdentityStore:(id<MyIdentityStoreProtocol>  _Nonnull)myIdentityStore;
 
 + (NSData*)randomMessageId NS_SWIFT_NAME(randomMessageID());
 
 /* Methods to be overridden by subclasses: */
 - (uint8_t)type;
-- (BOOL)shouldPush;
-- (BOOL)immediate;
-- (BOOL)noAck;
-- (BOOL)isGroup;
-- (BOOL)isVoIP;
+- (BOOL)flagShouldPush;
+- (BOOL)flagDontQueue;
+- (BOOL)flagDontAck;
+- (BOOL)flagGroupMessage;
+- (BOOL)flagImmediateDeliveryRequired;
+- (BOOL)flagIsVoIP;
 - (NSData *)body;
 - (BOOL)canCreateConversation;
 - (BOOL)needsConversation;
+- (BOOL)supportsForwardSecurity;
 
 - (BOOL)isContentValid;
 - (NSString *)pushNotificationBody;

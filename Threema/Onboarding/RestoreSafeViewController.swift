@@ -61,10 +61,12 @@ class RestoreSafeViewController: IDCreationPageViewController, UITextFieldDelega
         identityField.delegate = self
         identityField.placeholder = BundleUtil.localizedString(forKey: "safe_threema_id")
         identityField.threemaID = true
+        identityField.accessibilityIdentifier = "RestoreSafeViewControllerIdentityTextField"
         expertOptionsButton.setTitle(BundleUtil.localizedString(forKey: "safe_advanced_options"), for: .normal)
 
         cancelButton.setTitle(BundleUtil.localizedString(forKey: "cancel"), for: .normal)
         okButton.setTitle(BundleUtil.localizedString(forKey: "restore"), for: .normal)
+        okButton.accessibilityIdentifier = "RestoreSafeViewControllerRestoreButton"
         
         forgotIDButton.setTitleColor(Colors.primaryWizard, for: .normal)
         
@@ -268,53 +270,45 @@ extension RestoreSafeViewController {
             safeStore: safeStore,
             safeApiService: SafeApiService()
         )
-        
-        DispatchQueue.global(qos: .userInitiated).async {
-            safeManager.startRestore(
-                identity: self.restoreIdentity!,
-                password: self.restorePassword!,
-                customServer: self.restoreCustomServer,
-                server: self.restoreServer,
-                restoreIdentityOnly: self.restoreIdentityOnly,
-                activateSafeAnyway: self.activateSafeAnyway,
-                completionHandler: { error in
+
+        safeManager.startRestore(
+            identity: restoreIdentity!,
+            password: restorePassword!,
+            customServer: restoreCustomServer,
+            server: restoreServer,
+            restoreIdentityOnly: restoreIdentityOnly,
+            activateSafeAnyway: activateSafeAnyway,
+            completionHandler: { error in
+            
+                DispatchQueue.main.async {
+                    MBProgressHUD.hide(for: self.view, animated: true)
+                    self.view.isUserInteractionEnabled = true
                 
-                    DispatchQueue.main.async {
-                        MBProgressHUD.hide(for: self.view, animated: true)
-                        self.view.isUserInteractionEnabled = true
-                    
-                        if let error = error {
-                            switch error {
-                            case let .restoreError(message):
-                                DDLogError(message)
-                                let alert = IntroQuestionViewHelper(parent: self, onAnswer: { _, _ in
-                                    self.delegate?.restoreSafeDone()
-                                })
-                                alert.showAlert(
-                                    message,
-                                    title: BundleUtil.localizedString(forKey: "safe_restore_failed")
-                                )
-                            case let .restoreFailed(message):
-                                DDLogError(message)
-                                let alert = IntroQuestionViewHelper(parent: self, onAnswer: nil)
-                                alert.showAlert(
-                                    message,
-                                    title: BundleUtil.localizedString(forKey: "safe_restore_failed")
-                                )
-                            default: break
-                            }
+                    if let error = error {
+                        switch error {
+                        case let .restoreError(message):
+                            DDLogError(message)
+                            let alert = IntroQuestionViewHelper(parent: self, onAnswer: { _, _ in
+                                self.delegate?.restoreSafeDone()
+                            })
+                            alert.showAlert(message, title: BundleUtil.localizedString(forKey: "safe_restore_failed"))
+                        case let .restoreFailed(message):
+                            DDLogError(message)
+                            let alert = IntroQuestionViewHelper(parent: self, onAnswer: nil)
+                            alert.showAlert(message, title: BundleUtil.localizedString(forKey: "safe_restore_failed"))
+                        default: break
                         }
-                        else {
-                            DDLogNotice("Threema Safe restore successfully finished")
-                        
-                            self.delegate?.restoreSafeDone()
-                        }
-                    
-                        LogManager.removeFileLogger(logFile)
                     }
+                    else {
+                        DDLogNotice("Threema Safe restore successfully finished")
+                    
+                        self.delegate?.restoreSafeDone()
+                    }
+                
+                    LogManager.removeFileLogger(logFile)
                 }
-            )
-        }
+            }
+        )
     }
 }
 

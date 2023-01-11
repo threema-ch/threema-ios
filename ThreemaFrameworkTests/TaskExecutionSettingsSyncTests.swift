@@ -27,6 +27,8 @@ class TaskExecutionSettingsSyncTests: XCTestCase {
     private var databaseMainCnx: DatabaseContext!
     private var databaseBackgroundCnx: DatabaseContext!
 
+    private var deviceGroupKeys: DeviceGroupKeys!
+
     private let timeout: Double = 30
     
     override func setUpWithError() throws {
@@ -36,6 +38,15 @@ class TaskExecutionSettingsSyncTests: XCTestCase {
         let (_, mainCnx, backgroundCnx) = DatabasePersistentContext.devNullContext()
         databaseMainCnx = DatabaseContext(mainContext: mainCnx, backgroundContext: nil)
         databaseBackgroundCnx = DatabaseContext(mainContext: mainCnx, backgroundContext: backgroundCnx)
+
+        deviceGroupKeys = DeviceGroupKeys(
+            dgpk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
+            dgrk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
+            dgdik: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
+            dgsddk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
+            dgtsk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
+            deviceGroupIDFirstByteHex: "a1"
+        )
     }
     
     func testNoDeviceGroupPathKey() {
@@ -85,7 +96,7 @@ class TaskExecutionSettingsSyncTests: XCTestCase {
         let serverConnectorMock = ServerConnectorMock(
             connectionState: .disconnected,
             deviceID: BytesUtility.generateRandomBytes(length: ThreemaProtocol.deviceIDLength)!,
-            deviceGroupPathKey: BytesUtility.generateRandomBytes(length: 32)!
+            deviceGroupKeys: deviceGroupKeys
         )
         let frameworkInjectorMock = BusinessInjectorMock(
             backgroundEntityManager: EntityManager(databaseContext: databaseBackgroundCnx),
@@ -134,7 +145,7 @@ class TaskExecutionSettingsSyncTests: XCTestCase {
         }
     }
 
-    func testAlreadyLocked() {
+    func testAlreadyLocked() throws {
         let testMatrix: [
             (
                 serverTransactionTypeResponses: [MediatorMessageProtocol.MediatorMessageType],
@@ -191,7 +202,7 @@ class TaskExecutionSettingsSyncTests: XCTestCase {
             ),
         ]
         
-        testWithMatrix(testMatrix: testMatrix)
+        try testWithMatrix(testMatrix: testMatrix)
     }
     
     func testWithMatrix(testMatrix: [(
@@ -213,7 +224,7 @@ class TaskExecutionSettingsSyncTests: XCTestCase {
             userSettings: UserSettingsProtocol
         ),
         description: String
-    )]) {
+    )]) throws {
 
         for test in testMatrix {
             print("👨‍🏫 Starting Test: \(test.description)")
@@ -222,12 +233,11 @@ class TaskExecutionSettingsSyncTests: XCTestCase {
             let expectedReflectMessage = BytesUtility.generateRandomBytes(length: 16)!
             var expectedMediatorLockState: ([MediatorMessageProtocol.MediatorMessageType], [Data]?)?
 
-            let deviceGroupPathKey = BytesUtility.generateRandomBytes(length: Int(kDeviceGroupPathKeyLen))!
             let deviceID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.deviceIDLength)!
             let serverConnectorMock = ServerConnectorMock(
                 connectionState: .loggedIn,
                 deviceID: deviceID,
-                deviceGroupPathKey: deviceGroupPathKey
+                deviceGroupKeys: deviceGroupKeys
             )
             serverConnectorMock.reflectMessageClosure = { _ in
                 if serverConnectorMock.connectionState == .loggedIn {
@@ -257,6 +267,8 @@ class TaskExecutionSettingsSyncTests: XCTestCase {
                 }
                 return false
             }
+
+            let deviceGroupKeys = try XCTUnwrap(serverConnectorMock.deviceGroupKeys, "Device group keys missing")
             let framworkInjectorMock = BusinessInjectorMock(
                 backgroundEntityManager: EntityManager(databaseContext: databaseBackgroundCnx),
                 backgroundGroupManager: GroupManagerMock(),
@@ -271,7 +283,7 @@ class TaskExecutionSettingsSyncTests: XCTestCase {
                 userSettings: test.initialConfig.userSettings,
                 serverConnector: serverConnectorMock,
                 mediatorMessageProtocol: MediatorMessageProtocolMock(
-                    deviceGroupPathKey: serverConnectorMock.deviceGroupPathKey,
+                    deviceGroupKeys: deviceGroupKeys,
                     returnValues: [
                         MediatorMessageProtocolMock
                             .ReflectData(
@@ -397,7 +409,7 @@ class TaskExecutionSettingsSyncTests: XCTestCase {
         }
 
         if initialConfig.sendReadReceipts != secondConfig.sendReadReceipts {
-            syncSettings.readMessagePolicy = secondConfig.sendReadReceipts ? .sendReadReceipt : .ignoreRead
+            syncSettings.readReceiptPolicy = secondConfig.sendReadReceipts ? .sendReadReceipt : .dontSendReadReceipt
         }
 
         if initialConfig.blockUnknown != secondConfig.blockUnknown {
@@ -405,8 +417,8 @@ class TaskExecutionSettingsSyncTests: XCTestCase {
         }
 
         if initialConfig.sendTypingIndicator != secondConfig.sendTypingIndicator {
-            syncSettings.composeMessagePolicy = secondConfig
-                .sendTypingIndicator ? .sendTypingIndicator : .ignoreCompose
+            syncSettings.typingIndicatorPolicy = secondConfig
+                .sendTypingIndicator ? .sendTypingIndicator : .dontSendTypingIndicator
         }
 
         if initialConfig.enableThreemaCall != secondConfig.enableThreemaCall {
@@ -419,11 +431,11 @@ class TaskExecutionSettingsSyncTests: XCTestCase {
 
         if initialConfig.blacklist != secondConfig.blacklist {
             syncSettings.blockedIdentities
-                .identifies = secondConfig.blacklist != nil ? secondConfig.blacklist!.map { $0 as! String } : [String]()
+                .identities = secondConfig.blacklist != nil ? secondConfig.blacklist!.map { $0 as! String } : [String]()
         }
 
         if initialConfig.syncExclusionList as! [String] != secondConfig.syncExclusionList as! [String] {
-            syncSettings.excludeFromSyncIdentities.identifies = secondConfig.syncExclusionList as! [String]
+            syncSettings.excludeFromSyncIdentities.identities = secondConfig.syncExclusionList as! [String]
         }
 
         return syncSettings

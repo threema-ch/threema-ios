@@ -43,6 +43,8 @@ import Sentry
         
         do {
             let options = try Sentry.Options(dict: ["dsn": sentryDsn])
+            options.enableAutoSessionTracking = false
+            options.enableNetworkTracking = false
 
             options.beforeSend = { event in
                 if let appDevice = event.context?["app"]?["device_app_hash"] as? String {
@@ -65,7 +67,10 @@ import Sentry
                 dispatch.enter()
                 DispatchQueue.main.async {
                     let confirm = UIAlertController(
-                        title: String(format: BundleUtil.localizedString(forKey: "sentry_crash_send_title"), "Threema"),
+                        title: String.localizedStringWithFormat(
+                            BundleUtil.localizedString(forKey: "sentry_crash_send_title"),
+                            ThreemaApp.currentName
+                        ),
                         message: BundleUtil.localizedString(forKey: "sentry_crash_send_description"),
                         preferredStyle: .alert
                     )
@@ -76,8 +81,9 @@ import Sentry
                         title: BundleUtil.localizedString(forKey: "sentry_crash_send_yes"),
                         style: .default,
                         handler: { _ in
-                            if let textField = confirm.textFields?.first {
-                                event.message = textField.text ?? ""
+                            if let textField = confirm.textFields?.first, let text = textField.text {
+                                let sentryMessage = SentryMessage(formatted: text)
+                                event.message = sentryMessage
                             }
                             send = true
                             dispatch.leave()

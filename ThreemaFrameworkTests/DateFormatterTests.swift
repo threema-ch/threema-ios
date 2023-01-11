@@ -195,6 +195,33 @@ class DateFormatterTests: XCTestCase {
         XCTAssertEqual(actual, expected)
     }
     
+    func testMaybeNegativeTimeFormattedHour() {
+        let expected = "-02:11:03"
+        
+        let inputSeconds = -7863
+        let actual = DateFormatter.maybeNegativeTimeFormatted(inputSeconds)
+        
+        XCTAssertEqual(actual, expected)
+    }
+    
+    func testMaybeNegativeTimeFormattedMinute() {
+        let expected = "-01:23"
+        
+        let inputSeconds = -83
+        let actual = DateFormatter.maybeNegativeTimeFormatted(inputSeconds)
+        
+        XCTAssertEqual(actual, expected)
+    }
+    
+    func testMaybeNegativeTimeFormattedSeconds() {
+        let expected = "-00:33"
+        
+        let inputSeconds = -33
+        let actual = DateFormatter.maybeNegativeTimeFormatted(inputSeconds)
+        
+        XCTAssertEqual(actual, expected)
+    }
+    
     func testTotalSeconds() {
         let expected = 541
         

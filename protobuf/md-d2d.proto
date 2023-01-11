@@ -1,3 +1,11 @@
+// ## Device to Device Protocol
+//
+// ### General Information
+//
+// Encryption format: 24 byte nonce prepended, followed by an NaCl box.
+//
+// All strings are UTF-8 encoded.
+
 syntax = "proto3";
 
 package d2d;
@@ -7,23 +15,16 @@ option java_package = "ch.threema.protobuf.d2d";
 import "common.proto";
 import "md-d2d-sync.proto";
 
-// ## Device to Device Protocol
-//
-// ### General Information
-//
-// Encryption format: 24 byte nonce prepended, followed by an NaCl box.
-//
-// All strings are UTF-8 encoded.
-
-
-
 // Data shared across all devices and transmitted during the handshake.
 message SharedDeviceData {
   // Random amount of padding, ignored by the receiver
   bytes padding = 1;
 
+  // Current lowest protocol version that must be supported by all devices
+  uint32 version = 2;
+
   // MDM parameters to be applied on all devices
-  sync.MdmParameters mdm_parameters = 2;
+  sync.MdmParameters mdm_parameters = 3;
 }
 
 // Metadata about a device, determined by the device itself.
@@ -46,7 +47,8 @@ message DeviceInfo {
   }
   Platform platform = 2;
 
-  // Platform details (smartphone model / browser), e.g. "Firefox 91.0.2" or "iPhone 11 Pro"
+  // Platform details (smartphone model / browser), e.g. "Firefox 91.0.2" or
+  // "iPhone 11 Pro"
   string platform_details = 3;
 
   // App version, e.g. "4.52" (Android) or "4.6.12b2653" (iOS)
@@ -59,15 +61,15 @@ message DeviceInfo {
 
 // A transaction scope. Used in the d2m transaction messages.
 message TransactionScope {
-    enum Scope {
-      USER_PROFILE_SYNC = 0;
-      CONTACT_SYNC = 1;
-      GROUP_SYNC = 2;
-      DISTRIBUTION_LIST_SYNC = 3;
-      SETTINGS_SYNC = 4;
-      NEW_DEVICE_SYNC = 5;
-    }
-    Scope scope = 1;
+  enum Scope {
+    USER_PROFILE_SYNC = 0;
+    CONTACT_SYNC = 1;
+    GROUP_SYNC = 2;
+    DISTRIBUTION_LIST_SYNC = 3;
+    SETTINGS_SYNC = 4;
+    NEW_DEVICE_SYNC = 5;
+  }
+  Scope scope = 1;
 }
 
 // Root message
@@ -78,8 +80,9 @@ message Envelope {
   // The enveloped reflected message
   oneof content {
     OutgoingMessage outgoing_message = 2;
-    OutgoingMessageSent outgoing_message_sent = 3;
+    OutgoingMessageUpdate outgoing_message_update = 10;
     IncomingMessage incoming_message = 4;
+    IncomingMessageUpdate incoming_message_update = 11;
     UserProfileSync user_profile_sync = 5;
     ContactSync contact_sync = 6;
     GroupSync group_sync = 7;
@@ -136,8 +139,8 @@ enum MessageType {
 
   // Announce a group's setup
   GROUP_SETUP = 0x4a;
-  // Rename a group
-  GROUP_RENAME = 0x4b;
+  // (Re)name a group
+  GROUP_NAME = 0x4b;
   // Leave a group
   GROUP_LEAVE = 0x4c;
   // Set a group's profile picture
@@ -163,13 +166,16 @@ enum MessageType {
   GROUP_POLL_SETUP = 0x52;
   // Cast a vote on a group poll
   GROUP_POLL_VOTE = 0x53;
+
+  // Group delivery receipt
+  GROUP_DELIVERY_RECEIPT = 0x81;
 }
 
-// A message receiver can be a single user or a group.
-message MessageReceiver {
-  // The recipient's Threema ID or a group identity.
-  oneof receiver {
-    string identity = 1;
+// Unique conversation identifier.
+message ConversationId {
+  // A contact's Threema ID, distribution list ID or group identity to identify the conversation.
+  oneof id {
+    string contact = 1;
     fixed64 distribution_list = 2;
     common.GroupIdentity group = 3;
   }
@@ -177,46 +183,67 @@ message MessageReceiver {
 
 // An outgoing message, reflected to other devices.
 message OutgoingMessage {
-  // Recipient of the enclosed message.
+  // Conversation ID of the enclosed message.
   //
-  // Note: If the receiver is a group identity, group and group creator id of
-  //       the enclosed message must match the values of the supplied group
-  //       identity. Otherwise, the message must be considered invalid.
-  MessageReceiver receiver = 1;
+  // Note: If the conversation is of type group, group and group creator id of
+  //       the enclosed CSP E2E message must match the values of the supplied
+  //       group identity. Otherwise, the message must be considered invalid.
+  ConversationId conversation = 1;
 
   // Unique ID of the enclosed message
   fixed64 message_id = 2;
 
-  // Unix-ish timestamp in milliseconds for when the message has been created
+  // Optional thread message ID (the message ID of the last incoming message in
+  // the current conversation)
+  optional fixed64 thread_message_id = 6;
+
+  // Unix-ish timestamp in milliseconds for when the enclosed message has been
+  // created
+  //
+  // Note: Take this value from the
+  //       `csp.payload.legacy-message`/`csp.payload.message-with-metadata-box`
+  //       that enclosed the message.
   uint64 created_at = 3;
 
-  // Enclosed message's type
+  // Enclosed message's type, mapped from `csp.e2e.container.type`
   MessageType type = 4;
 
-  // The message's body as defined for `Message` (0x01/0x02) of the Chat
-  // Server Protocol.
+  // The message's body, i.e. the unpadded `csp.e2e.container.padded-data`
   bytes body = 5;
 }
 
-// An outgoing message has been acknowledged by the chat server.
-//
-// Note 1: The timestamp of the `reflect`/`reflect-ack` determines the
-//         timestamp for when the message has been sent.
-// Note 2: This indicates that the message has been successfully stored in the
-//         message queue of the server. It does NOT indicate that the message
-//         has been delivered to the intended receiver.
-message OutgoingMessageSent {
-  // Recipient of the sent message.
-  MessageReceiver receiver = 1;
+// Update one or more existing outgoing messages.
+message OutgoingMessageUpdate {
+  // Mark the referred message as sent (acknowledged by the chat server).
+  //
+  // Note 1: The timestamp of the `reflect-ack`/`reflected` message determines the
+  //         timestamp for when the referred message has been sent.
+  //
+  // Note 2: This indicates that the referred message has been successfully
+  //         stored in the message queue of the server. It does NOT indicate
+  //         that the referred message has been delivered to the intended
+  //         receiver.
+  message Sent {}
 
-  // Unique ID of the sent message
-  fixed64 message_id = 2;
+  message Update {
+    // Conversation ID of the referred message.
+    ConversationId conversation = 1;
+
+    // Unique ID of the referred message
+    fixed64 message_id = 2;
+
+    // Update type
+    oneof update {
+      // Mark the referred message as sent
+      Sent sent = 3;
+    }
+  }
+
+  // Updates
+  repeated Update updates = 1;
 }
 
 // An incoming message, reflected to other devices.
-//
-// Note: The timestamp of the `reflect`/`reflect-ack` determines the timestamp
-//       for when the message has been received.
 message IncomingMessage {
   // Sender's Threema ID
   string sender_identity = 1;
@@ -224,58 +251,106 @@ message IncomingMessage {
   // Unique ID of the enclosed message
   fixed64 message_id = 2;
 
-  // Unix-ish timestamp in milliseconds for when the message has been created
-  // Note: Take this value from the CSP `message` struct.
+  // Unix-ish timestamp in milliseconds for when the enclosed message has been
+  // created.
+  //
+  // Note: Take this value from the
+  //       `csp.payload.legacy-message`/`csp.payload.message-with-metadata-box`
+  //       that enclosed the message.
   uint64 created_at = 3;
 
-  // Enclosed message's type
+  // Enclosed message's type, mapped from `csp.e2e.container.type`
   MessageType type = 5;
 
-  // The message's body as defined for `Message` (0x01/0x02) of the Chat
-  // Server Protocol.
+  // The message's body, i.e. the unpadded `csp.e2e.container.padded-data`
   bytes body = 6;
+}
+
+// Update one or more existing incoming messages.
+message IncomingMessageUpdate {
+  // Mark the referred message as read.
+  //
+  // Note: This may only be used when _read receipts_ have been turned off, i.e.
+  //       as a replacement for reflecting `delivery-receipt` type _read_
+  //       (`0x02`).
+  message Read {
+    // Unix-ish timestamp in milliseconds for when the referred message has been
+    // read.
+    uint64 at = 1;
+  }
+
+  message Update {
+    // Conversation ID of the referred message.
+    ConversationId conversation = 1;
+
+    // Unique ID of the referred message
+    fixed64 message_id = 2;
+
+    // Update type
+    oneof update {
+      // Mark the referred message as read
+      Read read = 3;
+    }
+  }
+
+  // Updates
+  repeated Update updates = 1;
 }
 
 // User profile synchronisation message.
 message UserProfileSync {
   // Update the user's profile
-  message Set {
+  message Update {
     sync.UserProfile user_profile = 1;
   }
 
   // Synchronisation type
   oneof action {
-    Set set = 1;
+    Update update = 1;
   }
 }
 
 // Contact synchronisation message.
 message ContactSync {
-  // Set a Threema contact
-  message Set {
+  // Create a Threema contact.
+  message Create {
     sync.Contact contact = 1;
   }
 
-  // Delete a Threema contact
+  // Update a Threema contact.
+  message Update {
+    sync.Contact contact = 1;
+  }
+
+  // Delete a Threema contact.
   message Delete {
     string delete_identity = 1;
   }
 
   // Synchronisation type
   oneof action {
-    Set set = 1;
-    Delete delete = 2;
+    // Create a Threema contact
+    Create create = 1;
+    // Update a Threema contact
+    Update update = 2;
+    // Delete a Threema contact
+    Delete delete = 3;
   }
 }
 
 // Group synchronisation message.
 message GroupSync {
-  // Set a group
-  message Set {
+  // Create a group.
+  message Create {
     sync.Group group = 1;
   }
 
-  // Delete a group
+  // Update a group.
+  message Update {
+    sync.Group group = 1;
+  }
+
+  // Delete a group.
   message Delete {
     // Unique group identity
     common.GroupIdentity group_identity = 1;
@@ -283,19 +358,28 @@ message GroupSync {
 
   // Synchronisation type
   oneof action {
-    Set set = 1;
-    Delete delete = 2;
+    // Create a group
+    Create create = 1;
+    // Update a group
+    Update update = 2;
+    // Delete a group
+    Delete delete = 3;
   }
 }
 
 // Distribution list synchronisation message.
 message DistributionListSync {
-  // Set a distribution list
-  message Set {
+  // Create a distribution list.
+  message Create {
     sync.DistributionList distribution_list = 1;
   }
 
-  // Delete a group
+  // Update a distribution list.
+  message Update {
+    sync.DistributionList distribution_list = 1;
+  }
+
+  // Delete a distribution list.
   message Delete {
     // Unique ID of the distribution list
     fixed64 distribution_list_id = 1;
@@ -303,20 +387,24 @@ message DistributionListSync {
 
   // Synchronisation type
   oneof action {
-    Set set = 1;
-    Delete delete = 2;
+    // Create a distribution list
+    Create create = 1;
+    // Update a distribution list
+    Update update = 2;
+    // Delete a distribution list
+    Delete delete = 3;
   }
 }
 
 // Settings synchronisation message.
 message SettingsSync {
-  // Apply settings
-  message Set {
+  // Update settings.
+  message Update {
     sync.Settings settings = 1;
   }
 
   // Synchronisation type
   oneof action {
-    Set set = 1;
+    Update update = 1;
   }
 }

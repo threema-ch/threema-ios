@@ -54,7 +54,7 @@
     if (group) {
         [self presentAlertController];
     } else {
-        [self deleteConversation];
+        [self deleteConversationWithDeleteHiddenContacts:YES];
         if (_onCompletion) {
             _onCompletion(YES);
         }
@@ -108,7 +108,7 @@
             }]];
             [alertController addAction:[UIAlertAction actionWithTitle:[BundleUtil localizedStringForKey:@"group_dissolve_and_delete_button"] style:UIAlertActionStyleDestructive handler:^(UIAlertAction * _Nonnull action) {
                 [self dissolve];
-                [self deleteConversation];
+                [self deleteConversationWithDeleteHiddenContacts:NO];
                 if (_onCompletion) {
                     _onCompletion(YES);
                 }
@@ -123,7 +123,7 @@
             }]];
             [alertController addAction:[UIAlertAction actionWithTitle:[BundleUtil localizedStringForKey:@"group_leave_and_delete_button"] style:UIAlertActionStyleDestructive handler:^(UIAlertAction * _Nonnull action) {
                 [self leave];
-                [self deleteConversation];
+                [self deleteConversationWithDeleteHiddenContacts:NO];
                 if (_onCompletion) {
                     _onCompletion(YES);
                 }
@@ -132,7 +132,7 @@
     }
     else {
         [alertController addAction:[UIAlertAction actionWithTitle:[BundleUtil localizedStringForKey:@"delete"] style:UIAlertActionStyleDestructive handler:^(UIAlertAction * _Nonnull action) {
-            [self deleteConversation];
+            [self deleteConversationWithDeleteHiddenContacts:YES];
             if (_onCompletion) {
                 _onCompletion(YES);
             }
@@ -165,26 +165,37 @@
 
 - (void)leave {
     if (group) {
-        if (![[group groupCreatorIdentity] isEqualToString:[[MyIdentityStore sharedMyIdentityStore] identity]] && ![group didLeave]) {
-            // Leave group, i'm NOT creator and group is active
-            [groupManager leaveWithGroupID:group.groupID creator:group.groupCreatorIdentity toMembers:nil systemMessageDate:[NSDate date]];
-        }
+        [groupManager leaveWithGroupID:group.groupID creator:group.groupCreatorIdentity toMembers:nil systemMessageDate:[NSDate date]];
     }
 }
 
-- (void)deleteConversation {
-    if ([group state] == GroupStateActive || _conversation == nil) {
+- (void)deleteConversationWithDeleteHiddenContacts:(BOOL)deleteHiddenContacts {
+    if ([group state] == GroupStateActive || [group state] == GroupStateRequestedSync || _conversation == nil) {
         return;
     }
     
     [MessageDraftStore deleteDraftForConversation:_conversation];
     [[ChatScrollPosition _sharedObjC] removeSavedPositionFor:_conversation];
-    
+
     // Delete conversation
+    __block NSMutableSet<NSString *> *hiddenMembers = [NSMutableSet new];
     [entityManager performSyncBlockAndSafe:^{
+        if (deleteHiddenContacts) {
+            for (Contact *member in _conversation.members) {
+                if (member.isContactHidden) {
+                    [hiddenMembers addObject:member.identity];
+                }
+            }
+        }
+
         [[entityManager entityDestroyer] deleteObjectWithObject:_conversation];
     }];
-    
+
+    // Delete contacts which was unknown group members
+    for (NSString *identity in hiddenMembers) {
+        [[ContactStore sharedContactStore] deleteContactWithIdentity:identity entityManagerObject:entityManager];
+    }
+
     NotificationManager *notificationManager = [[NotificationManager alloc] init];
     [notificationManager updateUnreadMessagesCount];
     

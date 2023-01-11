@@ -25,7 +25,6 @@ extension ImageMessageEntity: ImageMessage {
     // MARK: - FileMessageProvider
     
     public var fileMessageType: FileMessageType {
-        // TODO: (IOS-2389) Does this also support animated images?
         .image(self)
     }
     

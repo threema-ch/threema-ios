@@ -20,7 +20,7 @@
 
 import Foundation
 
-class MentionsTableViewCell: UITableViewCell {
+class MentionsTableViewCell: ThemedCodeTableViewCell {
     // MARK: Subviews
     
     public lazy var iconImageView: UIImageView = {
@@ -69,8 +69,8 @@ class MentionsTableViewCell: UITableViewCell {
         return stackView
     }()
     
-    init(reuseIdentifier: String) {
-        super.init(style: .default, reuseIdentifier: reuseIdentifier)
+    override func configureCell() {
+        super.configureCell()
         
         configureLayout()
         configureAccessibility()
@@ -99,13 +99,14 @@ class MentionsTableViewCell: UITableViewCell {
         nameLabel.text = ""
     }
     
-    func updateColors() {
+    override func updateColors() {
+        super.updateColors()
+        
         backgroundColor = Colors.backgroundChatBar
         nameLabel.textColor = Colors.text
     }
-    
-    @available(*, unavailable)
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
 }
+
+// MARK: - Reusable
+
+extension MentionsTableViewCell: Reusable { }

@@ -146,7 +146,10 @@ class OnPremServerInfoProvider: ServerInfoProvider {
         }
     }
 
-    func mediatorServer(completionHandler: @escaping (MediatorServerInfo?, Error?) -> Void) {
+    func mediatorServer(
+        deviceGroupIDFirstByteHex: String,
+        completionHandler: @escaping (MediatorServerInfo?, Error?) -> Void
+    ) {
         switch prepareConfigFetcher() {
         case let .success(fetcher):
             fetcher.fetch { result in
@@ -154,6 +157,7 @@ class OnPremServerInfoProvider: ServerInfoProvider {
                 case let .success(config):
                     if let mediatorConfig = config.mediator {
                         completionHandler(MediatorServerInfo(
+                            deviceGroupIDFirstByteHex: deviceGroupIDFirstByteHex,
                             url: mediatorConfig.url,
                             blob: BlobServerInfo(
                                 downloadURL: mediatorConfig.blob.downloadUrl,

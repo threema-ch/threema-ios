@@ -35,6 +35,7 @@ class SafeJsonParser {
         
         class User: Codable {
             var privatekey: String
+            var temporaryDeviceGroupKeyTodoRemove: String? // Temporary field for manual pairing of ios and desktop multi device clients
             var nickname: String?
             var profilePic: String?
             var profilePicRelease: [String?]?
@@ -63,6 +64,7 @@ class SafeJsonParser {
             var nickname: String? = ""
             var typingIndicators: Int? = 0
             var readReceipts: Int? = 0
+            var lastUpdate: UInt64?
             var `private`: Bool? = false
             
             init(identity: String, verification: Int) {
@@ -78,6 +80,7 @@ class SafeJsonParser {
             var createdAt: UInt64? = 0
             let members: [String]?
             let deleted: Bool?
+            var lastUpdate: UInt64?
             var `private`: Bool? = false
         }
         

@@ -32,6 +32,7 @@
 #import "UserSettings.h"
 #import "ValidationLogger.h"
 #import "BundleUtil.h"
+#import "ThreemaFramework/ThreemaFramework-Swift.h"
 
 #ifdef DEBUG
   static const DDLogLevel ddLogLevel = DDLogLevelVerbose;
@@ -74,7 +75,7 @@ static MyIdentityStore *instance;
         if (identity == nil) {
             if (status == errSecInteractionNotAllowed) {
                 keychainLocked = YES;
-            } else {
+            } else if (status == errSecItemNotFound) {
                 /* This can happen when a backup is restored to a new phone, and we have our NSUserDefaults
                  but no keychain item. Make sure the identity-specific defaults are wiped to avoid confusion
                  later on */
@@ -224,6 +225,10 @@ static MyIdentityStore *instance;
 
 - (void)destroy {
     [self deleteFromKeychain];
+
+    DeviceGroupKeyManager *deviceGroupKeyManager = [[DeviceGroupKeyManager alloc] initWithMyIdentityStore:self];
+    [deviceGroupKeyManager destroy];
+    
     [self removeIdentityUserDefaults];
     [[UserSettings sharedUserSettings] setPushDecrypt:NO];
     [[UserSettings sharedUserSettings] setAskedForPushDecryption:NO];
@@ -234,6 +239,9 @@ static MyIdentityStore *instance;
 }
 
 - (void)removeIdentityUserDefaults {
+    [[KeychainKeyWrapper new] deleteWrappingKey];
+    [DeviceCookieManager deleteDeviceCookie];
+    
     [[AppGroup userDefaults] removeObjectForKey:@"PushFromName"];
     NSFileManager *fileManager = [NSFileManager defaultManager];
     if ([fileManager fileExistsAtPath:[self profilePicturePath]]) {
@@ -268,8 +276,6 @@ static MyIdentityStore *instance;
     [[AppGroup userDefaults] removeObjectForKey:@"MessageDrafts"];
     [[AppGroup userDefaults] removeObjectForKey:@"PushNotificationEncryptionKey"];
     [[AppGroup userDefaults] removeObjectForKey:@"MatchToken"];
-    [[AppGroup userDefaults] removeObjectForKey:kLastEphemeralKeyHashes];
-    [[AppGroup userDefaults] removeObjectForKey:kShowRogueDeviceWarningFlag];
     [[AppGroup userDefaults] synchronize];
 }
 
@@ -603,9 +609,10 @@ static MyIdentityStore *instance;
 - (NSData*)sharedSecretWithPublicKey:(NSData*)publicKey {
     NSData *mySecretKey = [self _obtainSecretKey];
     if (mySecretKey == nil) {
+        DDLogError(@"Cannot calculate shared secret: no secret key");
         return nil;
     }
-    return [[NaClCrypto sharedCrypto] sharedSecretForPublicKey:publicKey secretKey:[self _obtainSecretKey]];
+    return [[NaClCrypto sharedCrypto] sharedSecretForPublicKey:publicKey secretKey:mySecretKey];
 }
 
 - (NSData*)_obtainSecretKey {

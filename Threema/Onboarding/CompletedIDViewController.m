@@ -140,7 +140,8 @@
     _enableSafeLabel.text = [BundleUtil localizedStringForKey:@"safe_setup_backup_title"];
     
     [_finishButton setTitle:[BundleUtil localizedStringForKey:@"finish"] forState:UIControlStateNormal];
-    
+    _finishButton.accessibilityIdentifier = @"SetupFinishButton";
+
     self.scrollView.contentSize = self.mainContentView.frame.size;
     
     _finishButton.backgroundColor = Colors.primaryWizard;

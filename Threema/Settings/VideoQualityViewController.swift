@@ -42,20 +42,32 @@ extension VideoQualityViewController {
         MediaConverter.videoQualities().count
     }
     
+    override func tableView(_ tableView: UITableView, titleForFooterInSection section: Int) -> String? {
+        if section == 0 {
+            return BundleUtil.localizedString(forKey: "still_compressed_note")
+        }
+        return nil
+    }
+    
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "VideoQualityCell", for: indexPath)
         let quality = MediaConverter.videoQualities()[indexPath.row]
-        let maxDuration = MediaConverter.videoQualityMaxDurations()[indexPath.row]
         cell.textLabel?.text = BundleUtil.localizedString(forKey: quality)
         
-        if maxDuration.intValue == 1 {
-            cell.detailTextLabel?.text = BundleUtil.localizedString(forKey: "max_1_minute")
+        if indexPath.row < 2 {
+            let maxDuration = MediaConverter.videoQualityMaxDurations()[indexPath.row]
+            if maxDuration.intValue == 1 {
+                cell.detailTextLabel?.text = BundleUtil.localizedString(forKey: "max_1_minute")
+            }
+            else {
+                cell.detailTextLabel?.text = String.localizedStringWithFormat(
+                    BundleUtil.localizedString(forKey: "max_x_minutes"),
+                    maxDuration.intValue
+                )
+            }
         }
         else {
-            cell.detailTextLabel?.text = String.localizedStringWithFormat(
-                BundleUtil.localizedString(forKey: "max_x_minutes"),
-                maxDuration.intValue
-            )
+            cell.detailTextLabel?.text = nil
         }
         
         if businessInjector.userSettings.videoQuality == quality {

@@ -44,7 +44,7 @@ import Foundation
             self.userInfo = response.notification.request.content.userInfo
             if let mid = threemaDict!["messageId"] as? String {
                 self.messageID = mid
-                self.notificationIdentifier = String(format: "%@%@", kAppPushReplyBackgroundTask, messageID!)
+                self.notificationIdentifier = "\(kAppPushReplyBackgroundTask)\(messageID!)"
             }
             else {
                 self.notificationIdentifier = kAppPushReplyBackgroundTask
@@ -166,8 +166,7 @@ import Foundation
             if isGroup {
                 if let groupDeliveryReceipts = baseMessage.groupDeliveryReceipts,
                    !groupDeliveryReceipts.isEmpty,
-                   let gdr = baseMessage.reaction(for: MyIdentityStore.shared().identity),
-                   gdr.deliveryReceiptType() == .userAcknowledgment {
+                   baseMessage.isMyReaction(.acknowledged) {
                     self.finishResponse()
                     return
                 }
@@ -228,7 +227,7 @@ import Foundation
                     if conversation.isGroup() {
                         let groupDeliveryReceipt = GroupDeliveryReceipt(
                             identity: MyIdentityStore.shared().identity,
-                            deliveryReceiptType: .userAcknowledgment,
+                            deliveryReceiptType: .acknowledged,
                             date: Date()
                         )
                         baseMessage.add(groupDeliveryReceipt: groupDeliveryReceipt)
@@ -267,8 +266,7 @@ import Foundation
             if conversation.isGroup() {
                 if let groupDeliveryReceipts = baseMessage.groupDeliveryReceipts,
                    !groupDeliveryReceipts.isEmpty,
-                   let gdr = baseMessage.reaction(for: MyIdentityStore.shared().identity),
-                   gdr.deliveryReceiptType() == .userDeclined {
+                   baseMessage.isMyReaction(.declined) {
                     self.finishResponse()
                     return
                 }
@@ -333,7 +331,7 @@ import Foundation
                     if conversation.isGroup() {
                         let groupDeliveryReceipt = GroupDeliveryReceipt(
                             identity: MyIdentityStore.shared().identity,
-                            deliveryReceiptType: .userDeclined,
+                            deliveryReceiptType: .declined,
                             date: Date()
                         )
                         baseMessage.add(groupDeliveryReceipt: groupDeliveryReceipt)
@@ -373,6 +371,7 @@ import Foundation
                         toIdentity: contact.identity,
                         onCompletion: {
                             self.updateMessageAsRead(for: baseMessage, entityManager: entityManager)
+                            MessageSender.reflectReadReceipt(messages: [baseMessage], senderIdentity: contact.identity)
                             self.sendUserText(
                                 text: self.userText,
                                 conversation: conversation,

@@ -82,7 +82,7 @@
 "audio" = "Ses";
 "file" = "Dosya";
 "location" = "Konum";
-"locating" = "Konum belirleniyor...";
+"locating" = "Konum belirleniyor…";
 "unknown_location" = "bilinmeyen konum";
 "open" = "Açık";
 "call" = "Ara"; /* Short version for "Start Threema Call" */
@@ -103,6 +103,14 @@
 "threema_id" = "Threema kimliği";
 "nickname" = "Takma isim";
 "add_button" = "Ekle";
+"chatview_contextmenu_more" = "Daha...";
+
+"file_message_image" = "Resim";
+"file_message_sticker" = "Çıkartma";
+"file_message_animated_image" = "GIF";
+"file_message_video" = "Video";
+"file_message_voice" = "Sesli Mesaj";
+"file_message_file" = "Dosya";
 
 "chat_back_button_accessibility" = "%d okunmadı";
 
@@ -145,6 +153,7 @@
 "high" = "Yüksek";
 "max_1_minute" = "Maks. 1 dakika";
 "max_x_minutes" = "Maks. %d dakika";
+"still_compressed_note" = "Çok büyük videolar bu ayardan bağımsız olarak sıkıştırılabilir.";
 
 /* Sound names */
 "push_sound_title" = "Bildirim tonu";
@@ -292,6 +301,7 @@
 "conversation_delete_confirm" = "Bu sohbet bu cihazdan silinsin mi?";
 "delete_all" = "Hepsini sil";
 "delete_n" = "Sil (%d)";
+
 "message_cannot_play_movie" = "Video oynatılamıyor.";
 
 "identity_not_found_title" = "Bilinmeyen kimlik";
@@ -381,10 +391,6 @@
 "contact_invalid_cannot_send" = "Geçersiz olduğu için bu kişiye mesaj gönderemezsiniz.";
 "contact_betafeedback_cannot_send" = "Bu bir beta sürümü değil, lütfen *SUPPORT'a geri bildirim gönderin.";
 "group_sync_button" = "Grubu eşitle";
-"group_sync_title" = "Grup eşitlendi";
-"group_sync_message" = "Mevcut grup verileri tüm üyelere gönderildi.";
-"group_sync_error_title" = "Grup eşitlemesi başarısız oldu";
-"group_sync_error_message" = "Lütfen daha sonra tekrar deneyin.";
 "group_clone_button" = "Grubu kopyala";
 "group_clone_title" = "Grubu kopyala";
 "group_clone_message" = "Bu, yönetici olarak sizinle birlikte bu grubun bir kopyasını oluşturacaktır. ";
@@ -413,6 +419,10 @@
 "add_note_group_info" = "* Burada yalnızsınız *\nBu sohbeti metin, medya ve belgeler için güvenli bir not defteri olarak kullanın.";
 "end_note_group_info" = "* Artık bu sohbette yalnız değilsiniz *\nTüm grup üyelerine yeni mesajlar gönderilecektir.";
 
+"chat_search_searching" = "Aranıyor...";
+"chat_search_no_matches" = "Eşleşme yok";
+"chat_search_matches" = "%d / %d eşleşme";
+
 "choose_recipient" = "Alıcı seçin";
 
 "msg_unknown_group_request_sync_x_title" = "Bilinmeyen gruptan mesaj alındı";
@@ -425,6 +435,7 @@
 "tap_to_change" = "Değiştirmek için dokunun";
 "next" = "Sonraki";
 "unread_messages" = "Okunmamış mesajlar";
+"unread_messages_line_with_count" = "Okunmamış Mesajlar (%d)";
 
 /* Verification level popovers in chat view */
 "verification_level_title" = "Doğrulama seviyesi";
@@ -446,7 +457,6 @@
 "level4_explanation" = "Kare kodunu tarayarak kimliğini ve genel anahtarını kişisel olarak doğruladığınız dahili kişi.";
 
 "id_verified_title" = "Kimlik doğrulandı";
-"id_verified_message" = "%@ kimliği ve genel anahtarı doğrulandı.";
 
 /* Invalid country code alert */
 "invalid_country_code_title" = "Geçersiz bölge biçimi";
@@ -468,9 +478,7 @@
 "backgrounding_off" = "Uygulama, arka plana geçerken hemen bağlantıyı kesecektir.";
 "proximity_monitoring_off" = "Yakınlık sensörü kapandığında ekran kapanmaz.";
 "proximity_monitoring_on" = "Sesli aramalar devam ederken ve sesli mesajları kaydederken veya dinlerken, yakınlık sensörü kapatılırsa ekran kapanır.";
-"validation_logging_expl" = "Hata ayıklama günlüğü, Threema'nın uçtan uca şifrelemesini bağımsız olarak doğrulamak için kullanılabilir.\nAyrıntılar: https://threema.ch/validation";
-
-"validation_log_clear" = "Günlüğü temizle";
+"debug_log_clear" = "Günlüğü Temizle";
 "log_empty_message" = "Hata ayıklama günlüğü boş.";
 "cannot_send_mail_message" = "Bu cihazda yapılandırılmış bir e-posta hesabı yok.";
 
@@ -508,8 +516,6 @@
 "release_profilepicture_to" = "Profil resmini gönder";
 "contact_added_to_profile_picture_list" = "Bu kişi, yazdığınızda profil resminizi görecek.";
 "contact_removed_from_profile_picture_list" = "Bu kişi artık profilinizi göremeyecek.";
-"contact_send_profile_picture_success" = "Profil resminiz kişiye başarıyla gönderildi.";
-"contact_send_profile_picture_error" = "Profil resminiz gönderilemedi. Lütfen daha sonra tekrar deneyin.";
 
 "sync_group" = "Grubu eşitle";
 
@@ -535,6 +541,13 @@
 "exclude_deleted_id_title" = "“%@“ Threema kimliği eşitlemeden çıkarılsın mı?";
 "exclude_deleted_id_message" = "İstisnalar gizlilik ayarlarından yönetilebilir.";
 "exclude_deleted_id_exclude_button" = "Hariç tut";
+
+"forward_security" = "Mükemmel İletme Gizliliği";
+"forward_security_none" = "Hiçbiri";
+"forward_security_2dh" = "Tek Taraflı";
+"forward_security_4dh" = "Tamam";
+"forward_security_clear_sessions" = "Tüm Oturumları Temizle";
+"forward_security_explainer_footer" = "Mükemmel İletme Gizliliği (Perfect Forward Secrecy) (PFS), uzun süreli şifreleme anahtarı ele geçirilmiş olsa bile kaydedilmiş bir iletişimi geriye dönük olarak şifre çözme işleminden korur.\nHer iki taraftaki uygulama PFS'yi destekliyorsa seçenek etkinleştirilebilir.";
 
 /* create id */
 "lets_get_started" = "Başlayalım";
@@ -652,7 +665,7 @@
 "new_message_no_access_title" = "Yeni mesajlar";
 "new_message_no_access_message" = "Gelen mesajları almak için lütfen %@ açın.";
 "new_message_invalid_license" = "Lisansınızın süresi doldu, lütfen devam etmek için uygulamayı açın.";
-"new_message_db_requires_migration" = "Veritabanı geçişi gerekiyor, devam etmek için lütfen uygulamayı açın.";
+"new_message_db_requires_migration" = "Threema güncellendi, lütfen güncellemeyi tamamlamak için uygulamayı açın.";
 
 /* reminder messages */
 "push_reminder_title" = "Bildirimler Etkinleştirilmedi ";
@@ -693,7 +706,7 @@
 "draft" = "Taslak";
 "new_message_accessibility" = "Yeni mesaj:";
 "scoll_down_text" = "Aşağı kaydır";
-"quote_interaction_hint" = "Alıntılanan mesaja geçmek için dokunun.";
+"quote_interaction_hint" = "Alıntılanan mesaja geçer";
 
 /* TTOpenInAppActivity */
 "Open in ..." = "... içinde aç";
@@ -784,9 +797,6 @@
 "call_status_unknown" = "Bilinmeyen";
 "call_status_blocked" = "Engellenmiş kişi";
 "call_status_failed_title" = "Threema araması";
-"call_status_failed_connected_message" = "Bağlantı koptu";
-"call_status_failed_initializing_message" = "Bağlantı kurulamadı";
-"call_status_failed_sdp_patch_message" = "Threema araması başlatılamadı";
 
 "call_threema_initiator_video_info" = "Kamerayı açmak için buraya dokunun";
 "call_threema_remote_video_activated_info_title" = "Görüntülü arama";
@@ -840,7 +850,7 @@
 "privacy_footer" = "Sohbetlere genel bakışta tüm özel sohbetleri gizler. Bu ayarı etkinleştirmek için bir şifre belirlemeniz gerekir.";
 
 "group_leave_sheet_title" = "“%@\" çıkılsın mı?";
-"group_leave_sheet_message" = "Sadece ayrılırsanız, artık sohbete katılamazsınız, ancak yine de sohbet geçmişine erişebilirsiniz.";
+"group_leave_sheet_message" = "Ayrılırsanız, artık sohbete katılamazsınız, ancak yine de sohbet geçmişine erişebilir ve sohbet geçmişini görebilirsiniz.";
 
 "group_leave_delete_sheet_title" = "“%@” çıkılsın ve silinsin mi?";
 "group_leave_delete_sheet_message" = "Gruptan ayrılır ve silerseniz, artık sohbete katılamazsınız ve sohbet geçmişi silinir.";
@@ -863,7 +873,7 @@
 "archived_alert_title" = "Arşivlenmiş sohbetler";
 "archived_alert_message" = "Arşivlenmiş sohbetlerinizi görmek için sohbete genel bakışın altındaki düğmeye dokunun.";
 
-"private_delete_info_alert_message" = "Bir özel sohbeti silerken, yenisi tekrar otomatik olarak özel olarak işaretlenmez.";
+"private_delete_info_alert_message" = "Bir Özel Sohbeti silerken, yenisi otomatik olarak tekrar özel olarak işaretlenmez.";
 
 /* End Edit */
 
@@ -1075,6 +1085,13 @@ Threema Safe'i kullanırken, cihazınıza erişiminizi kaybetmeniz durumunda Thr
 "file_deleted_title" = "Dosya silindi";
 "file_not_found_title" = "Dosya bulunamadı";
 
+"manage_all_conversations" = "Tüm Sohbetleri Yönet";
+"manage_media_and_files" = "Dosyaları Yönet";
+"manage_messages" = "Mesajları Yönet";
+"messages" = "Mesajlar";
+"files" = "Dosyalar";
+
+
 // Settings
 "settings_privacy" = "Gizlilik";
 "settings_appearance" = "Görünüm";
@@ -1109,6 +1126,7 @@ Threema Safe'i kullanırken, cihazınıza erişiminizi kaybetmeniz durumunda Thr
 "settings_devmode_quote_v2" = "Alıntı V2";
 "settings_devmode_new_chat_view" = "Yeni sohbet görünümü";
 "settings_devmode_stylekit_debug_view" = "StyleKit hata ayıklama görünümü";
+"settings_devmode_id_colors_debug_view" = "Kimlik Renkleri Hata Ayıklama Görünümü";
 
 // Appearance
 "settings_appearance_theme_section" = "Tasarım teması";
@@ -1118,6 +1136,9 @@ Threema Safe'i kullanırken, cihazınıza erişiminizi kaybetmeniz durumunda Thr
 "settings_appearance_theme_selected" = "%@ tema etkin";
 "settings_appearance_theme_active" = "Aktif";
 "settings_appearance_hide_app_icon" = "Uygulama Simgesi";
+"settings_appicon_default_header" = "Varsayılan Simge";
+"settings_appicon_legacy_header" = "Threema Simgeleri";
+"settings_appicon_special_header" = "Özel Simgeler";
 "settings_appearance_hide_stale_contacts" = "Etkin olmayan kimlikleri gizle";
 "settings_appearance_show_profile_pictures" = "Profil resimlerini göster";
 "settings_appearance_display_order" = "Görüntüleme sırası";
@@ -1242,8 +1263,7 @@ Artık dosyaları çöp kutusuna taşıyın ve %@ içinde hiçbir (medya) dosyas
 "unknown_file_type" = "Bilinmeyen dosya türü";
 "unknown_file_size" = "Bilinmeyen dosya boyutu";
 "unknown_file_name" = "Bilinmeyen dosya adı";
-
-"ballots_with_open_count_accessibility" = "Anketler (%d açık)";
+"sending_to" = "Alıcılar";
 
 /* Ballot */
 "ballot" = "Anket";
@@ -1295,6 +1315,10 @@ Artık dosyaları çöp kutusuna taşıyın ve %@ içinde hiçbir (medya) dosyas
 "voteCancelMessage" = "Oyunuzu kullanmadan önce ayrılırsanız, geçersiz sayılacaktır.";
 "discardVoteTitle" = "Geçersiz say";
 
+"ballot_load_error" = "Anketler kullanım dışı";
+
+"ballots_with_open_count_accessibility" = "Anketler (%d açık)";
+
 /* Custom Privacy Settings */
 "privacySetting_header" = "Gizlilik";
 "send_readReceipts" = "Okundu bilgileri";
@@ -1317,23 +1341,33 @@ Artık dosyaları çöp kutusuna taşıyın ve %@ içinde hiçbir (medya) dosyas
 "reset_overrides_alert_action" = "Hepsini sıfırla";
 
 /* Multi Decvice */
-"multi_device_linked_devices_title" = "Bağlı cihazlar";
+"multi_device_linked_devices_title" = "Çoklu Cihaz Önizlemesi";
+"multi_device_linked_devices_desc" = "Bu cihaz için Çoklu Cihaz Önizlemesini etkinleştirin veya devre dışı bırakın.";
 "multi_device_linked_devices_refresh" = "Yenilemek için çekin";
 "multi_device_linked_devices_loading_failed" = "Aygıtlar yüklenemedi: %@";
 "multi_device_linked_devices_failed_to_load_title" = "Cihaz listesi yüklenemedi";
 "multi_device_linked_devices_failed_to_load_message" = "Bağlı cihazlar yüklenemedi, lütfen internet bağlantınızı kontrol edin ve tekrar deneyin.";
 "multi_device_linked_devices_this" = "Bu cihaz";
 "multi_device_linked_devices_others" = "Diğer cihazlar";
+"multi_device_linked_devices_last_login" = "Son giriş: %@";
 "multi_device_linked_devices_remove_failed" = "Cihaz kaldırılamadı: %@";
+"multi_device_linked_devices_removed_devices_title" = "Çoklu Cihaz Devre Dışı Bırakılsın mı?";
+"multi_device_linked_devices_removed_devices_message" = "Bu işlem bağlı tüm cihazları kaldırır ve çoklu cihazı devre dışı bırakır";
+"multi_device_linked_devices_removed_devices_ok" = "Devre dışı bırak";
+"multi_device_linked_duplicate_contacts_title" = "Yinelenen kişiler";
+"multi_device_linked_duplicate_contacts_desc" = "Yinelenen kişiler (%@) nedeniyle bu cihazı bağlayamazsınız. Lütfen destek ile iletişime geçin.";
+
 "multi_device_linked_devices_failed_remove_title" = "Cihaz kaldırılamadı";
 "multi_device_linked_devices_failed_remove_message" = "Bağlı cihaz kaldırılamadı, lütfen tekrar deneyin.";
 "multi_device_linked_devices_failed_remove_message_2" = "Bağlı cihaz kaldırılamadı, lütfen internet bağlantınızı kontrol edin ve tekrar deneyin.";
+"multi_device_slot_state_mismatch_alert" = "Bu cihazın bağlantısı kaldırıldı. Bu, şu anda yeni mesaj gönderemeyeceğiniz veya alamayacağınız anlamına gelir. Bu sizin tarafınızdan tetiklenmediyse lütfen bunun Teknik Ön İzleme aşamasında teknik nedenlerle olabileceğini unutmayın. Rahatsızlıktan dolayı özür dileriz. Yeniden bağlamak için SSS'ye bakın: https://three.ma/faq";
 
 "myprofile_link_email_phone_footer" = "E-posta adresinizi veya telefon numaranızı kimliğinize bağlamak, diğer kişilerin sizi adres defterlerinde varsa otomatik olarak %@ üzerinde bulmasını sağlar.";
 "myprofile_link_email_footer" = "E-posta adresinizi kimliğinize bağlamak, e-postanız adres defterlerinde varsa diğer kullanıcıların sizi %@ üzerinde otomatik olarak bulmasını sağlar.";
 "myprofile_link_email_onprem_footer" = "E-posta adresinizi kimliğinize bağlamak, bu sunucunun (%@) diğer kullanıcılarının, adres defterlerinde e-postanız varsa, sizi %@ üzerinde otomatik olarak bulmasını sağlar.";
 "myprofile_link_phone_footer" = "Telefon numaranızı kimliğinize bağlamak, telefon numaranız adres defterlerinde varsa diğer kullanıcıların sizi otomatik olarak %@ üzerinde bulmasını sağlar.";
 "myprofile_link_phone_onprem_footer" = "Telefon numaranızı kimliğinize bağlamak, bu sunucunun (%@) diğer kullanıcılarının, numaranız adres defterlerinde varsa, sizi %@ üzerinde otomatik olarak bulmasını sağlar.";
+
 "mentions_table_view_cell_accessibility_hint" = "Bahsetmek için dokunun";
 
 // POI
@@ -1387,6 +1421,141 @@ Artık dosyaları çöp kutusuna taşıyın ve %@ içinde hiçbir (medya) dosyas
 "detailView_messageID" = "Mesaj Kimliği";
 "detailView_group_acknowledged" = "Kabul Edildi (%d)";
 "detailView_group_declined" = "Kabul Edilmedi (%d)";
+
+// In-app notifications
+"notification_copying_succeeded" = "Öğe Kopyalandı";
+"notification_copying_failed" = "Kopyalama Başarısız";
+
+"notification_saving_succeeded" = "Öğe Kaydedildi";
+"notification_saving_failed" = "Kaydetme Başarısız";
+
+"notification_sending_failed" = "Gönderme Başarısız";
+
+"notification_deleted_messages_count" = "%d Mesaj Silindi";
+
+"notification_cannot_play_video" = "Video Oynatılamıyor";
+
+"notification_call_failed_connected" = "Bağlantı Koptu";
+"notification_call_failed_not_connected" = "Bağlantı Kurulamadı";
+"notification_call_creation_failed" = "Arama Oluşturulamadı";
+
+"notification_sending_profile_picture_succeeded" = "Profil Resmi Gönderildi";
+"notification_sending_profile_picture_failed" = "Gönderme Başarısız";
+
+"notification_sending_profile_picture_failed_settings_sync_message" = "Ayarlar Senkronize Edildi";
+
+"notification_group_sync_succeeded" = "Grup Senkronize Edildi";
+"notification_group_sync_failed" = "Grup Senkronizasyonu Başarısız";
+
+// Forward security status messages
+"forward_security_message_without" = "Kusursuz İletme Gizliliği olmayan bir mesaj alındı.  Gönderenin Kusursuz İletme Gizliliğini kasıtlı olarak devre dışı bıraktığını doğrulayın.";
+"forward_security_session_established" = "Bu sohbetteki mesajlar artık Mükemmel İletme Gizliliği ile korunmaktadır.";
+"forward_security_session_established_rx" = "Bu sohbette alınan mesajlar artık Mükemmel İletme Gizliliği ile korunmaktadır. Gönderilen mesajları da korumak için kişi ayrıntılarında Mükemmel İletme Gizliliğini etkinleştirin.";
+"forward_security_messages_skipped_1" = "Son mesajdan bu yana bir mesaj kayboldu.";
+"forward_security_messages_skipped_x" = "Son mesajdan bu yana %d mesaj kayboldu.";
+"forward_security_session_reset" = "Bu kişiyle Mükemmel İletme Gizliliği oturumu sıfırlandı. Kişi cihazlarını değiştirmiş veya uygulamayı yeniden yüklemişse bu durum meydana gelebilir.";
+"forward_security_message_out_of_order" = "Sıra dışı bir mesaj alındı ​​ve şifresi çözülemedi.";
+"forward_security_status_enabled_outgoing" = "Giden mesajlar için Mükemmel İletme Gizliliği etkinleştirildi.";
+"forward_security_status_disabled_outgoing" = "Giden mesajlar için Mükemmel İletme Gizliliği devre dışı bırakıldı.";
+"forward_security_contact_has_downgraded_to_an_incompatible_version" = "Bu kişi Mükemmel İletme Gizliliği'ni desteklemeyen bir uygulama sürümü kullanmaya başladı. Artık mesajlar PFS olmadan gönderilecek.";
+
+// Profile view
+"accessibility_profile_button_hint_contact" = "Kişi ayrıntılarını açar";
+"accessibility_profile_button_hint_group" = "Grup ayrıntılarını açar";
+
+// Chat bar
+"accessibility_chatbar_label" = "Sohbet giriş alanı.";
+"accessibility_chatbar_hint" = "Mesaj oluştur.";
+"accessibility_chatbar_value" = "Geçerli metin: %@";
+"accessibility_chatbar_quote_label" = "Seçili alıntılanmış mesaj: %@.";
+"accessibility_chatbar_close_quote_button_label" = "Alıntılamayı bitir.";
+"accessibility_chatbar_close_quote_button_hint" = "Seçilen mesajın alıntılanmasını sonlandırır.";
+
+// Message senders
+"accessibility_senderDescription_ownMessage" = "Sizinki %@";
+"accessibility_senderDescription_otherMessage_group" = "%@ itibaren %@";
+"accessibility_senderDescription_systemMessage" = "Bilgi: %@";
+
+// Message types
+"accessibility_textMessage_description" = "Mesaj";
+"accessibility_locationMessage_description" = "Konum";
+"accessibility_systemCallMessage_description" = "Arama";
+"accessibility_fileMessage_description" = "Dosya";
+"accessibility_imageMessage_description" = "Resim";
+"accessibility_videoMessage_description" = "Video";
+"accessibility_animatedImageMessage_description" = "GIF";
+"accessibility_stickerMessage_description" = "Çıkartma";
+"accessibility_voiceMessage_description" = "Sesli mesaj";
+"accessibility_pollMessage_description" = "Anket";
+
+// Message hints
+"accessibility_audioMessage_hint" = "Sesli mesajı oynat.";
+"accessibility_locationMessage_hint" = "Konumu aç.";
+"accessibility_systemCallMessage_hint" = "Arama başlat";
+"accessibility_imageMessage_hint" = "Resmi göster.";
+"accessibility_videoMessage_hint" = "Videoyu oynat.";
+"accessibility_fileMessage_hint" = "Dosya önizlemesini aç.";
+"accessibility_animatedImageMessage_hint" = "GIF animasyonunu değiştir";
+"accessibility_animatedStickerMessage_hint" = "Çıkartma animasyonunu değiştir.";
+"accessibility_ballotMessage_hint_open" = "Oy vermek için anketi aç.";
+"accessibility_ballotMessage_hint_closed" = "Anket sonuçlarını göster.";
+"accessibility_voiceMessage_speed_hint" = "Oynatma hızını değiştir.";
+
+// Other
+"accessibility_caption" = "Altyazı: %@";
+"accessibility_poll_content_open" = "%@. Başlık: %@, %@";
+"accessibility_poll_open" = "Açık";
+"accessibility_poll_closed" = "Kapalı";
+"accessibility_file_duration" = "Süre: %@.";
+
+// Message status types
+"accessibility_status_acknowledged_plus_time" = "Alındı, %@";
+"accessibility_status_declined_plus_time" = "Reddedildi, %@";
+"accessibility_status_sending_plus_time" = "Gönderiliyor, %@";
+"accessibility_status_sent_plus_time" = "Gönderildi, %@";
+"accessibility_status_delivered_plus_time" = "Teslim edildi, %@";
+"accessibility_status_read_plus_time" = "Okundu, %@";
+"accessibility_status_failed_plus_time" = "Başarısız oldu, %@";
+
+// Multi-Device Wizard
+"md_wizard_header" = "Çoklu Cihaz Önizlemesi";
+"md_wizard_start" = "Bilgisayarımı Bağla";
+"md_wizard_cancel" = "İptal";
+"md_wizard_next" = "Sonraki";
+"md_wizard_close" = "Kapat";
+"md_wizard_back_identity" = "Threema Kimliğini Göster";
+
+"md_wizard_connection_info" = "Bağlama işlemi sırasında aramalar ve bildirimler devre dışı bırakılır.";
+
+"md_wizard_terms_note_text" = "Bu teknik önizlemenin amacı, yaklaşan çoklu cihaz desteğini önceden test etmenize olanak tanımaktır. Lütfen özelliklerin sınırlı olduğunu ve bu alfa yazılımı olduğu için kusursuz değil ama iş görebileceğini unutmayın.";
+
+"md_wizard_terms_backup" = "Veri kaybı meydana gelebilir. Devam etmeden önce lütfen bir yedek oluşturun.\n[Yedekleme talimatları]\n(https://threema.ch/docs/threema/ios_backup_manual_en.pdf)";
+"md_wizard_terms_support" = "Bu önizleme metin mesajlarını destekler. En son özellikleri ve iyileştirmeleri almak için iOS ve masaüstü uygulamalarını düzenli olarak güncelleyin.";
+"md_wizard_terms_issues" = "Bilinen sorunlar ve sınırlamalar [burada] bulunabilir (https://threema.ch/faq/md_limit).";
+"md_wizard_terms_bugs" = "Lütfen bu uygulamada karşılaştığınız sorunları \"Ayarlar > Beta Geri Bildirimi\" yoluyla bildirin.";
+
+"md_wizard_terms_accept" = "Yedek oluşturdum ve devam etmek istiyorum.";
+
+"md_wizard_info_download_title" = "İndir";
+"md_wizard_info_download_text" = "Bilgisayarınızda Threema Tech Önizlemesi:";
+"md_wizard_info_linking_title" = "Bilgisayarınızı bu cihaza bağlayın";
+"md_wizard_info_linking_text" = "Bilgisayarınızı bağlarken, temel Threema verileriniz (kimliğiniz, kişileriniz ve gruplarınız) şifrelenir ve geçici olarak [şu anda kullandığınız Threema Safe sunucusunda] saklanır (https://threema.ch/en/faq/threema_safe_webdav).
+(Şimdiki ayar: %@).";
+
+"md_wizard_preparation_status" = "Hazırlanıyor...";
+
+"md_wizard_start_desktop" = "Bilgisayarınızda Threema Teknik Önizlemesini açın ve Threema Kimliğinizi girin.";
+"md_wizard_identity_text" = "Threema Kimliğiniz:";
+
+"md_wizard_code_text" = "Bağlantı Kodu:";
+
+"md_wizard_success_title" = "Cihaz Başarıyla Bağlandı";
+"md_wizard_success_text" = "Artık Threema Teknik Önizlemesini bilgisayarınızda kullanabilirsiniz (bu iOS cihazı kapalı olsa bile).";
+
+"md_wizard_error_title" = "Threema uygulaması kapalı olduğu için bağlantı başarısız oldu";
+"md_wizard_timeout_title" = "Bağlantı çok uzun sürdüğü için başarısız oldu";
+"md_wizard_could_not_connect_title" = "Sunucuya bağlanılamadığı için bağlantı başarısız oldu";
+"md_wizard_error_text" = "Lütfen \"Ayarlar > Çoklu Cihaz Önizlemesi\" üzerinden tekrar deneyin.";
 
 // App icons
 "app_icon_title_celebration" = "Kutlama Simgesi";

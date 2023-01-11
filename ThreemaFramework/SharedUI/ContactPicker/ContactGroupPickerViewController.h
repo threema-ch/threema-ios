@@ -51,17 +51,22 @@
 @property (weak, nonatomic) IBOutlet UILabel *sendAsFileLabel;
 @property (weak, nonatomic) IBOutlet UISwitch *sendAsFileSwitch;
 
+@property  (nonatomic) NSArray *preselectedConversations;
+
 // This is required to be strong when called from the ShareController class
 @property (strong, nonatomic) id<ContactGroupPickerDelegate> delegate;
 
 @property (nonatomic) BOOL enableMultiSelection;
 @property (nonatomic) BOOL enableTextInput;
 @property (nonatomic) BOOL enableControlView;
+@property (nonatomic) BOOL delegateDisablesSearchController;
 
 @property (nonatomic, strong) NSString *pickerTitle;
 @property (nonatomic, strong) NSNumber *renderType;
 
 @property (readonly) NSString *additionalTextToSend;
+
+@property (nonatomic, strong) NSString *rightBarButtonTitle;
 
 @property (strong, nonatomic) UISearchController *searchController;
 

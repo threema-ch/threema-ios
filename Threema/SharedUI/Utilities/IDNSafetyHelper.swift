@@ -60,8 +60,8 @@ import UIKit
     }
     
     private class func showAlert(url: URL, viewController: UIViewController) {
-        let body = String(
-            format: BundleUtil.localizedString(forKey: "url_warning_body"),
+        let body = String.localizedStringWithFormat(
+            BundleUtil.localizedString(forKey: "url_warning_body"),
             url.host!.idnaDecoded!,
             url.host!
         )

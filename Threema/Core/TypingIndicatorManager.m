@@ -35,6 +35,14 @@
     dispatch_queue_t resetQueue;
 }
 
++ (int) typingIndicatorResendInterval {
+    return kTypingIndicatorResendInterval;
+}
+
++ (int) typingIndicatorTypingPauseInterval {
+    return kTypingIndicatorTypingPauseInterval;
+}
+
 + (TypingIndicatorManager*)sharedInstance {
     static TypingIndicatorManager *sharedInstance;
     static dispatch_once_t pred;
@@ -73,18 +81,22 @@
         /* Fetch all Conversations that are currently typing, and reset the typing
          indicator if it was received too long ago */
         EntityManager *entityManager = [[EntityManager alloc] init];
-        NSArray *conversations = [entityManager.entityFetcher allConversations];
-        if (conversations == nil) {
-            DDLogError(@"No conversations found");
-            return;
-        }
-        
-        for (Conversation *conversation in conversations) {
-            if (conversation.typing.boolValue && ((conversation.lastTypingStart != nil && [conversation.lastTypingStart timeIntervalSinceNow] < -kTypingIndicatorTimeout))) {
-                DDLogVerbose(@"Reset typing indicator on conversation with %@", conversation.contact.identity);
-                conversation.typing = [NSNumber numberWithBool:NO];
+        [entityManager performBlockAndWait:^{
+            NSArray *conversations = [entityManager.entityFetcher allConversations];
+            if (conversations == nil) {
+                DDLogError(@"No conversations found");
+                return;
             }
-        }
+            
+            [entityManager performSyncBlockAndSafe:^{
+                for (Conversation *conversation in conversations) {
+                    if (conversation.typing.boolValue && ((conversation.lastTypingStart != nil && [conversation.lastTypingStart timeIntervalSinceNow] < -kTypingIndicatorTimeout))) {
+                        DDLogVerbose(@"Reset typing indicator on conversation with %@", conversation.contact.identity);
+                        conversation.typing = [NSNumber numberWithBool:NO];
+                    }
+                }
+            }];
+        }];
     });
 }
 

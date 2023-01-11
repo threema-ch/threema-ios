@@ -198,8 +198,8 @@ class HeaderView: UIView {
         var tmpTitle: String?
         
         if mediaPreviewItems.count > 1 {
-            tmpTitle = String(
-                format: BundleUtil.localizedString(forKey: "multiple_media_items"),
+            tmpTitle = String.localizedStringWithFormat(
+                BundleUtil.localizedString(forKey: "multiple_media_items"),
                 mediaPreviewItems.count
             )
         }

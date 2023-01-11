@@ -191,9 +191,9 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 - (void)startUpload {
     [ActivityIndicatorProxy startActivity];
     
-    BlobURL *blobUrl = [[BlobURL alloc] initWithServerConnector:[ServerConnector sharedServerConnector] userSettings:[UserSettings sharedUserSettings] localOrigin:false];
-    BlobUploader *uploader = [[BlobUploader alloc] initWithBlobURL:blobUrl delegate:self];
-    [uploader uploadWithBlobs:@[boxImageData]];
+    BlobURL *blobUrl = [[BlobURL alloc] initWithServerConnector:[ServerConnector sharedServerConnector] userSettings:[UserSettings sharedUserSettings]];
+    Old_BlobUploader *uploader = [[Old_BlobUploader alloc] initWithBlobURL:blobUrl delegate:self];
+    [uploader uploadWithBlobs:@[boxImageData] origin:BlobOriginPublic];
 }
 
 - (void)uploadCompletedWithBlobId:(NSData*)blobId {

@@ -50,8 +50,8 @@ class ProgressViewHandler {
                 let po = Progress(totalUnitCount: self.totalWorkItems)
                 hud.progressObject = po
                 
-                hud.label.text = String(
-                    format: BundleUtil.localizedString(forKey: "processing_items_progress"),
+                hud.label.text = String.localizedStringWithFormat(
+                    BundleUtil.localizedString(forKey: "processing_items_progress"),
                     po.completedUnitCount / 100,
                     po.totalUnitCount / 100
                 )
@@ -78,8 +78,8 @@ class ProgressViewHandler {
             po.completedUnitCount += Int64(increment)
             let completed = min(po.completedUnitCount / 100 + 1, po.totalUnitCount / 100)
             let total = po.totalUnitCount / 100
-            hud.label.text = String(
-                format: BundleUtil.localizedString(forKey: "processing_items_progress"),
+            hud.label.text = String.localizedStringWithFormat(
+                BundleUtil.localizedString(forKey: "processing_items_progress"),
                 completed,
                 total
             )

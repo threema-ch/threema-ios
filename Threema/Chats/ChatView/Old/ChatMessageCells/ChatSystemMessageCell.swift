@@ -138,6 +138,7 @@ extension ChatSystemMessageCell {
     // MARK: private functions
     
     private func updateColors() {
+        backgroundColor = .clear
         _msgBackground.backgroundColor = Colors.backgroundSystemMessage
     }
 }

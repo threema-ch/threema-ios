@@ -55,6 +55,9 @@
 "error_other_connection_for_same_identity_title" = "警告";
 "error_other_connection_for_same_identity_message" = "サーバーは、同じThreema IDを持つ異なる端末からの2つ以上の接続を検出しました。\n\n同一のThreema IDを複数の端末で同時に使用することはできません。新しいメッセージは、サーバーに最後にログインしたデバイスにのみ送信されます。\n\n新しい端末に切り換える場合は、古い端末で%@をアンインストールまたは無効にしてから、新しい端末を再起動してください。";
 
+"error_rogue_device_title" = "別の端末からの接続が検出されました";
+"error_rogue_device_message" = "サーバーは、同じThreema IDを持つ別の端末からの接続を検出しました。\n\nしばらく別の端末や古いアプリのバージョンでThreema IDを使用していないのであれば、サポートまでご連絡いただき、可能であればログファイルをお送りください。";
+
 "video_too_long_title" = "動画が長すぎます";
 "video_too_long_message" = "この動画は長すぎるため送信できません。許可された最大の長さは %.0f 分です。";
 

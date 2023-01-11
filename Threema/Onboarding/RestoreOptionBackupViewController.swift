@@ -56,6 +56,7 @@ class RestoreOptionBackupViewController: IDCreationPageViewController {
             .localizedString(forKey: "restore_option_title")
         descriptionLabel.text = BundleUtil.localizedString(forKey: "restore_option_description")
         safeButton.setTitle("Threema Safe", for: .normal)
+        safeButton.accessibilityIdentifier = "RestoreOptionBackupViewControllerThreemaSafeButton"
         safeLabel.text = hasDataOnDevice ? BundleUtil
             .localizedString(forKey: "restore_option_safe_keep_data") : BundleUtil
             .localizedString(forKey: "restore_option_safe")
@@ -73,7 +74,10 @@ class RestoreOptionBackupViewController: IDCreationPageViewController {
             .font: UIFont.systemFont(ofSize: 16),
         ]
         let faqLabelText = NSAttributedString(
-            string: String(format: BundleUtil.localizedString(forKey: "backup_faq_link_text"), ThreemaApp.currentName),
+            string: String.localizedStringWithFormat(
+                BundleUtil.localizedString(forKey: "backup_faq_link_text"),
+                ThreemaApp.currentName
+            ),
             attributes: linkAttributes
         )
         

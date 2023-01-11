@@ -20,13 +20,27 @@
 
 import Foundation
 
+/// App migration versions
+///
+/// Migrations are done in `AppMigration`.
+///
+/// # How to add a new version?
+///
+/// Add a new  case with a higher integer than the existing ones. If another migration is needed during the beta phase just increment the number by one. This
+/// enforced another run of this migration. **After a release don't increment the number anymore.**
 public enum AppMigrationVersion: Int, Comparable, CaseIterable {
     case none = 0
-    case v48 = 3
+    case v4_8 = 3
     // Add here new version for app migration...
 
     public static func isMigrationRequired(userSettings: UserSettingsProtocol) -> Bool {
-        AppMigrationVersion.allCases.last!.rawValue > userSettings.appMigratedToVersion
+        // If `appMigratedToVersion` greater than latest migration version means, that the BETA user has downgraded the app.
+        // In this case run all migrations again.
+        if AppMigrationVersion.allCases.last!.rawValue < userSettings.appMigratedToVersion {
+            userSettings.appMigratedToVersion = AppMigrationVersion.none.rawValue
+        }
+        
+        return AppMigrationVersion.allCases.last!.rawValue > userSettings.appMigratedToVersion
     }
 
     public static func < (lhs: AppMigrationVersion, rhs: AppMigrationVersion) -> Bool {

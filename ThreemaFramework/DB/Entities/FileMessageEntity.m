@@ -33,6 +33,8 @@ static const DDLogLevel ddLogLevel = DDLogLevelVerbose;
 static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 #endif
 
+static NSString *fieldOrigin = @"origin";
+
 @implementation FileMessageEntity
 
 @dynamic encryptionKey;
@@ -46,7 +48,6 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 @dynamic data;
 @dynamic thumbnail;
 @dynamic json;
-@dynamic origin;
 @synthesize caption = _caption;
 @synthesize correlationId = _correlationId;
 @synthesize mimeTypeThumbnail = _mimeTypeThumbnail;
@@ -164,12 +165,46 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     self.data = dbData;
 }
 
+- (void)blobSetDataID:(NSData *)dataID {
+    self.blobId = dataID;
+}
+
+- (void)blobSetThumbnail:(NSData *)data {
+    ImageData *dbData = [NSEntityDescription
+                        insertNewObjectForEntityForName:@"ImageData"
+                        inManagedObjectContext:self.managedObjectContext];
+    
+    dbData.data = data;
+    self.thumbnail = dbData;
+}
+
+- (void)blobSetThumbnailID:(NSData *)data {
+    self.blobThumbnailId = data;
+}
 - (NSData *)blobGetThumbnail {
     if (self.thumbnail) {
         return self.thumbnail.data;
     }
     
     return nil;
+}
+
+- (void)blobSetOrigin:(BlobOrigin)origin {
+    [self willChangeValueForKey:fieldOrigin];
+    [self setPrimitiveValue:[NSNumber numberWithInt:(int)origin] forKey:fieldOrigin];
+    [self didChangeValueForKey:fieldOrigin];
+}
+
+- (BlobOrigin)blobGetOrigin {
+    if ([self valueForKey:fieldOrigin] != nil) {
+        switch ([[self valueForKey:fieldOrigin] intValue]) {
+            case BlobOriginLocal:
+                return BlobOriginLocal;
+            default:
+                return BlobOriginPublic;
+        }
+    }
+    return BlobOriginPublic;
 }
 
 - (NSString *)blobGetUTI {

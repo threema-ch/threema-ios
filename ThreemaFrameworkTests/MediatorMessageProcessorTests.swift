@@ -24,22 +24,31 @@ import XCTest
 class MediatorMessageProcessorTests: XCTestCase {
     
     private var mmp: MediatorMessageProcessor?
-    private var dgpk: Data!
+    private var deviceGroupKeys: DeviceGroupKeys!
     private var taskManagerMock: TaskManagerMock!
-    
-    override func setUp() {
+
+    override func setUpWithError() throws {
         // necessary for ValidationLogger
         AppGroup.setGroupID("group.ch.threema") // THREEMA_GROUP_IDENTIFIER @"group.ch.threema"
-        
+
         taskManagerMock = TaskManagerMock()
 
-        dgpk = Data(base64Encoded: "BivETNngWPWYxad+ogDb8Q4ZWha1piBk/TLGsW5zojs=")!
+        deviceGroupKeys = DeviceGroupKeys(
+            dgpk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
+            dgrk: Data(base64Encoded: "BivETNngWPWYxad+ogDb8Q4ZWha1piBk/TLGsW5zojs=")!,
+            dgdik: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
+            dgsddk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
+            dgtsk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
+            deviceGroupIDFirstByteHex: "a1"
+        )
+
         mmp = MediatorMessageProcessor(
-            deviceGroupPathKey: dgpk,
+            deviceGroupKeys: deviceGroupKeys,
             deviceID: Data([1]),
             maxBytesToDecrypt: 0,
             timeoutDownloadThumbnail: 0,
-            mediatorMessageProtocol: MediatorMessageProtocol(deviceGroupPathKey: dgpk) as AnyObject,
+            mediatorMessageProtocol: MediatorMessageProtocol(deviceGroupKeys: deviceGroupKeys) as AnyObject,
+            userSettings: UserSettingsMock(),
             taskManager: taskManagerMock,
             messageProcessorDelegate: self
         )
@@ -87,6 +96,7 @@ class MediatorMessageProcessorTests: XCTestCase {
     }
     
     func testProcessReflected() {
+
         let messageReflected =
             Data(
                 base64Encoded: "ggAAABAAAABrAgAAOdq1mnABAAByNgeC13aJplJlX+cv+jaZcTO0oUpqDeZNu9uFLPxl1L4e5tm1R7ZSBo8LFBhEnfP6ckPX1Eqyonirb3JPDrMRXiu6ugDjVPrzUPY3K50hG4sKIjXvUVvX/zMWkefgCcJtRPjFcB+5Tjv5VBKQ/25unQl3TCCSSmtDBftU+vDdAEnfJ3ReaQ8poPd9bg=="
@@ -105,7 +115,7 @@ class MediatorMessageProcessorTests: XCTestCase {
 
         let task = taskManagerMock.addedTasks
             .first { $0 as? TaskDefinitionReceiveReflectedMessage != nil } as! TaskDefinitionReceiveReflectedMessage
-        XCTAssertEqual(task.message.outgoingMessage.receiver.identity, "ECHOECHO")
+        XCTAssertEqual(task.message.outgoingMessage.conversation.contact, "ECHOECHO")
         XCTAssertEqual(task.message.outgoingMessage.type, .text)
         XCTAssertEqual(String(decoding: task.message.outgoingMessage.body, as: UTF8.self), "Muttis diweiss")
     }
@@ -118,7 +128,7 @@ extension MediatorMessageProcessorTests: SocketProtocolDelegate {
     
     func didRead(_ data: Data, tag: Int16) { }
     
-    func didDisconnect() { }
+    func didDisconnect(errorCode: Int) { }
 }
 
 // MARK: - MessageProcessorDelegate
@@ -139,8 +149,16 @@ extension MediatorMessageProcessorTests: MessageProcessorDelegate {
     func incomingMessageFailed(_ message: BoxedMessage) {
         // no-op
     }
+    
+    func incomingAbstractMessageFailed(_ message: AbstractMessage) {
+        // no-op
+    }
 
     func outgoingMessageFinished(_ message: AbstractMessage) { }
+
+    func readMessage(inConversations: Set<Conversation>?) {
+        // no-op
+    }
 
     func taskQueueEmpty(_ queueTypeName: String) { }
     

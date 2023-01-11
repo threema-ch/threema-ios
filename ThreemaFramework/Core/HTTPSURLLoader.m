@@ -53,11 +53,11 @@
     [ActivityIndicatorProxy startActivity];
 }
 
-- (void)startWithBlobId:(NSData*)blobId localOrigin:(BOOL) localOrigin onCompletion:(void (^)(NSData *))onCompletion onError:(void (^)(NSError *))onError {
+- (void)startWithBlobId:(NSData*)blobId origin:(BlobOrigin)origin onCompletion:(void (^)(NSData *))onCompletion onError:(void (^)(NSError *))onError {
 
-    BlobURL *blobUrl = [[BlobURL alloc] initWithServerConnector:[ServerConnector sharedServerConnector] userSettings:[UserSettings sharedUserSettings] localOrigin:localOrigin];
+    BlobURL *blobUrl = [[BlobURL alloc] initWithServerConnector:[ServerConnector sharedServerConnector] userSettings:[UserSettings sharedUserSettings]];
     
-    [blobUrl downloadWithBlobID:blobId completionHandler:^(NSURL * _Nullable downloadUrl, NSError * _Nullable error) {
+    [blobUrl downloadWithBlobID:blobId origin:origin completionHandler:^(NSURL * _Nullable downloadUrl, NSError * _Nullable error) {
         if (downloadUrl == nil) {
             onError(error);
             return;

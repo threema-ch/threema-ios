@@ -96,11 +96,7 @@ class TaskExecutionUpdateContactSync: TaskExecutionBlobTransaction {
         guard let encryptionKey = NaClCrypto.shared()?.randomBytes(kBlobKeyLen) else {
             throw TaskExecutionTransactionError.blobEncryptFailed
         }
-        let nonce = Data([
-            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01,
-        ]) // kNonce_1
+        let nonce = ThreemaProtocol.nonce01
         guard let encryptedProfileImageData = NaClCrypto.shared()?
             .symmetricEncryptData(data, withKey: encryptionKey, nonce: nonce) else {
             throw TaskExecutionTransactionError.blobUploadFailed
@@ -144,7 +140,10 @@ class TaskExecutionUpdateContactSync: TaskExecutionBlobTransaction {
                 break
             }
             
-            let envelope = frameworkInjector.mediatorMessageProtocol.getEnvelopeForContactSync(contact: syncContact)
+            let envelope = frameworkInjector.mediatorMessageProtocol.getEnvelopeForContactSync(
+                contact: syncContact,
+                syncAction: deltaSyncContact.syncAction
+            )
 
             reflectResults.append(Promise<Void> { $0.fulfill(try reflectMessage(
                 envelope: envelope,
@@ -179,108 +178,115 @@ class TaskExecutionUpdateContactSync: TaskExecutionBlobTransaction {
     /// - Returns: True if the contact has not changed since the task was created. False otherwise.
     private func checkPrecondition(delta: DeltaSyncContact) -> Bool {
         let sContact = delta.syncContact
-        
-        guard let contact = frameworkInjector.backgroundEntityManager.entityFetcher
-            .contact(for: sContact.identity) else {
-            DDLogInfo("Contact was deleted. Do not sync")
-            return false
-        }
-        
-        let conversation = contact.conversations?.first as? Conversation
-        
-        let samePublicKey = (sContact.hasPublicKey && sContact.publicKey == contact.publicKey) || !sContact.hasPublicKey
-        let sameVerificationLevel = (
-            sContact.hasVerificationLevel && sContact.verificationLevel.rawValue == contact
-                .verificationLevel.intValue
-        ) || !sContact.hasVerificationLevel
-        let sameWorkStatus = (
-            sContact.hasIdentityType && sContact
-                .identityType == (contact.workContact.intValue == 0 ? .regular : .work)
-        ) || !sContact.hasIdentityType
-        let sameAcquaintanceLevel = (
-            sContact.hasAcquaintanceLevel && sContact
-                .acquaintanceLevel == (contact.hidden.boolValue ? .group : .direct)
-        ) || !sContact.hasAcquaintanceLevel
-        
-        let sameFirstname = (sContact.hasFirstName && sContact.firstName == contact.firstName ?? "") || !sContact
-            .hasFirstName
-        let sameLastname = (sContact.hasLastName && sContact.lastName == contact.lastName ?? "") || !sContact
-            .hasLastName
-        let sameNickname = (sContact.hasNickname && sContact.nickname == contact.publicNickname ?? "") || !sContact
-            .hasNickname
-        
-        let sameProfilePictrue = (
-            ((
-                delta.profilePicture == .updated
-                    || delta.profilePicture == .unchanged
-            ) && contact.imageData != nil)
-                ||
+
+        var allTrue = false
+
+        frameworkInjector.backgroundEntityManager.performBlockAndWait {
+            guard let contact = self.frameworkInjector.backgroundEntityManager.entityFetcher
+                .contact(for: sContact.identity) else {
+                DDLogInfo("Contact was deleted. Do not sync")
+                return
+            }
+
+            let conversation = contact.conversations?.first as? Conversation
+
+            let samePublicKey = (sContact.hasPublicKey && sContact.publicKey == contact.publicKey) || !sContact
+                .hasPublicKey
+            let sameVerificationLevel = (
+                sContact.hasVerificationLevel && sContact.verificationLevel.rawValue == contact
+                    .verificationLevel.intValue
+            ) || !sContact.hasVerificationLevel
+            let sameWorkStatus = (
+                sContact.hasIdentityType && sContact
+                    .identityType ==
+                    (self.frameworkInjector.userSettings.workIdentities.contains(contact.identity) ? .work : .regular)
+            ) || !sContact.hasIdentityType
+            let sameAcquaintanceLevel = (
+                sContact.hasAcquaintanceLevel && sContact
+                    .acquaintanceLevel == (contact.isContactHidden ? .group : .direct)
+            ) || !sContact.hasAcquaintanceLevel
+
+            let sameFirstname = (sContact.hasFirstName && sContact.firstName == contact.firstName ?? "") || !sContact
+                .hasFirstName
+            let sameLastname = (sContact.hasLastName && sContact.lastName == contact.lastName ?? "") || !sContact
+                .hasLastName
+            let sameNickname = (sContact.hasNickname && sContact.nickname == contact.publicNickname ?? "") || !sContact
+                .hasNickname
+
+            let sameProfilePictrue = (
                 ((
-                    delta.profilePicture == .removed
+                    delta.profilePicture == .updated
                         || delta.profilePicture == .unchanged
-                ) && contact.imageData == nil)
-        )
+                ) && contact.imageData != nil)
+                    ||
+                    ((
+                        delta.profilePicture == .removed
+                            || delta.profilePicture == .unchanged
+                    ) && contact.imageData == nil)
+            )
 
-        var sameImage = false
-        if let image = contact.imageData {
-            sameImage = delta.profilePicture == .updated ? delta
-                .image == image : delta.profilePicture == .unchanged
-        }
-        else {
-            sameImage = delta.profilePicture == .removed || delta
-                .profilePicture == .unchanged
-        }
+            var sameImage = false
+            if let image = contact.imageData {
+                sameImage = delta.profilePicture == .updated ? delta
+                    .image == image : delta.profilePicture == .unchanged
+            }
+            else {
+                sameImage = delta.profilePicture == .removed || delta
+                    .profilePicture == .unchanged
+            }
 
-        let sameContactProfilePicture = (
-            ((
-                delta.contactProfilePicture == .updated
-                    || delta.contactProfilePicture == .unchanged
-            ) && contact.contactImage?.data != nil)
-                ||
+            let sameContactProfilePicture = (
                 ((
-                    delta.contactProfilePicture == .removed
+                    delta.contactProfilePicture == .updated
                         || delta.contactProfilePicture == .unchanged
-                ) && contact.contactImage?.data == nil)
-        )
-        
-        var sameContactImage = false
-        if let image = contact.contactImage?.data {
-            sameContactImage = delta.contactProfilePicture == .updated ? delta
-                .contactImage == image : delta.contactProfilePicture == .unchanged
+                ) && contact.contactImage?.data != nil)
+                    ||
+                    ((
+                        delta.contactProfilePicture == .removed
+                            || delta.contactProfilePicture == .unchanged
+                    ) && contact.contactImage?.data == nil)
+            )
+
+            var sameContactImage = false
+            if let image = contact.contactImage?.data {
+                sameContactImage = delta.contactProfilePicture == .updated ? delta
+                    .contactImage == image : delta.contactProfilePicture == .unchanged
+            }
+            else {
+                sameContactImage = delta.contactProfilePicture == .removed || delta
+                    .contactProfilePicture == .unchanged
+            }
+
+            let sameImportStatus = (
+                sContact.hasSyncState && sContact.syncState.rawValue == contact.importedStatus.rawValue
+            ) || !sContact.hasSyncState
+            let sameConversationCategory = (
+                sContact.hasConversationCategory && sContact.conversationCategory
+                    .rawValue == conversation?.conversationCategory.rawValue ?? ConversationCategory.default.rawValue
+            ) || !sContact.hasConversationCategory
+            let sameConversationVisibility = (
+                sContact.hasConversationVisibility && sContact.conversationVisibility
+                    .rawValue == conversation?.conversationVisibility.rawValue ?? ConversationVisibility.default
+                    .rawValue
+            ) || !sContact.hasConversationVisibility
+
+            allTrue = samePublicKey &&
+                sameVerificationLevel &&
+                sameWorkStatus &&
+                sameAcquaintanceLevel &&
+                sameImportStatus &&
+                sameConversationCategory &&
+                sameConversationVisibility &&
+                sameFirstname &&
+                sameLastname &&
+                sameNickname &&
+                sameProfilePictrue &&
+                sameImage &&
+                sameContactProfilePicture &&
+                sameContactImage &&
+                sameVerificationLevel
         }
-        else {
-            sameContactImage = delta.contactProfilePicture == .removed || delta
-                .contactProfilePicture == .unchanged
-        }
-        
-        let sameImportStatus = (
-            sContact.hasSyncState && sContact.syncState.rawValue == contact.importedStatus.rawValue
-        ) || !sContact.hasSyncState
-        let sameConversationCategory = (
-            sContact.hasConversationCategory && sContact.conversationCategory
-                .rawValue == conversation?.conversationCategory.rawValue ?? ConversationCategory.default.rawValue
-        ) || !sContact.hasConversationCategory
-        let sameConversationVisibility = (
-            sContact.hasConversationVisibility && sContact.conversationVisibility
-                .rawValue == conversation?.conversationVisibility.rawValue ?? ConversationVisibility.default.rawValue
-        ) || !sContact.hasConversationVisibility
-        
-        let allTrue = samePublicKey &&
-            sameVerificationLevel &&
-            sameWorkStatus &&
-            sameAcquaintanceLevel &&
-            sameImportStatus &&
-            sameConversationCategory &&
-            sameConversationVisibility &&
-            sameFirstname &&
-            sameLastname &&
-            sameNickname &&
-            sameProfilePictrue &&
-            sameImage &&
-            sameContactProfilePicture &&
-            sameContactImage &&
-            sameVerificationLevel
-        
+
         return allTrue
     }
 }

@@ -370,6 +370,59 @@ class EntityDestroyerTests: XCTestCase {
             totalContactsCount: 3
         )
     }
+
+    func testDeleteMessagesAndNullifyLastMessage() throws {
+        var conversation: Conversation?
+        var lastMessage: BaseMessage?
+
+        let dp = DatabasePreparer(context: objCnx)
+        dp.save {
+            conversation = dp.createConversation(
+                marked: false,
+                typing: false,
+                unreadMessageCount: 0,
+                complete: nil
+            )
+
+            dp.createTextMessage(
+                conversation: conversation!,
+                text: "1",
+                date: Date(),
+                delivered: true,
+                id: BytesUtility.generateRandomBytes(length: ThreemaProtocol.messageIDLength)!,
+                isOwn: true,
+                read: true,
+                sent: true,
+                userack: false,
+                sender: nil,
+                remoteSentDate: nil
+            )
+            lastMessage = dp.createTextMessage(
+                conversation: conversation!,
+                text: "1",
+                date: Date(),
+                delivered: true,
+                id: BytesUtility
+                    .generateRandomBytes(length: ThreemaProtocol.messageIDLength)!,
+                isOwn: true,
+                read: true,
+                sent: true,
+                userack: false,
+                sender: nil,
+                remoteSentDate: nil
+            )
+
+            conversation?.lastMessage = lastMessage
+        }
+
+        let deleteMessage = try XCTUnwrap(lastMessage)
+
+        let entityManager = EntityManager(databaseContext: DatabaseContext(mainContext: objCnx, backgroundContext: nil))
+        entityManager.entityDestroyer.deleteObject(object: deleteMessage)
+
+        XCTAssertNotNil(conversation)
+        XCTAssertNil(conversation?.lastMessage)
+    }
 }
 
 // MARK: - Helper Functions
@@ -427,7 +480,7 @@ extension EntityDestroyerTests {
             notDeletedContact.identity = "ECHOECH1"
             notDeletedContact.verificationLevel = 0
             notDeletedContact.publicNickname = "ECHOECH1"
-            notDeletedContact.hidden = 0
+            notDeletedContact.isContactHidden = false
             notDeletedContact.workContact = 0
             notDeletedContact.publicKey = BytesUtility.generateRandomBytes(length: Int(32))!
         }
@@ -437,7 +490,7 @@ extension EntityDestroyerTests {
             notDeletedContact2.identity = "ECHOECH2"
             notDeletedContact2.verificationLevel = 0
             notDeletedContact2.publicNickname = "ECHOECH2"
-            notDeletedContact2.hidden = 0
+            notDeletedContact2.isContactHidden = false
             notDeletedContact2.workContact = 0
             notDeletedContact2.publicKey = BytesUtility.generateRandomBytes(length: Int(32))!
         }
@@ -447,7 +500,7 @@ extension EntityDestroyerTests {
             notDeletedContact3.identity = "ECHOECH3"
             notDeletedContact3.verificationLevel = 0
             notDeletedContact3.publicNickname = "ECHOECH3"
-            notDeletedContact3.hidden = 0
+            notDeletedContact3.isContactHidden = false
             notDeletedContact3.workContact = 0
             notDeletedContact3.publicKey = BytesUtility.generateRandomBytes(length: Int(32))!
         }
@@ -464,7 +517,7 @@ extension EntityDestroyerTests {
             contact.identity = identity
             contact.verificationLevel = 0
             contact.publicNickname = identity
-            contact.hidden = 0
+            contact.isContactHidden = false
             contact.workContact = 0
             contact.publicKey = BytesUtility.generateRandomBytes(length: Int(32))!
         }

@@ -20,6 +20,7 @@
 
 #import "BallotMessageDecoder.h"
 #import "BallotKeys.h"
+#import "EntityCreator.h"
 #import "ThreemaFramework/ThreemaFramework-Swift.h"
 
 #ifdef DEBUG

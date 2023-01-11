@@ -50,7 +50,7 @@
 - (void)updateColors {
     _mainView.backgroundColor = Colors.backgroundHeaderView;
     
-    _accessoryView.backgroundColor = Colors.backgroundViewController;
+    _accessoryView.backgroundColor = Colors.backgroundGroupedViewController;
     _titleLabel.textColor = Colors.text;
     _createdByNameLabel.textColor = Colors.textLight;
     _dateLabel.textColor = Colors.textLight;

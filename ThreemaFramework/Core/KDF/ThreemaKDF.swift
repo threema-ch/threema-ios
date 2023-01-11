@@ -21,29 +21,33 @@
 import Foundation
 
 @objc class ThreemaKDF: NSObject {
-    private let personal: String
+    private let personal: Data
     
     @objc init(personal: String) {
+        self.personal = personal.data(using: .utf8)!
+    }
+    
+    init(personal: Data) {
         self.personal = personal
     }
     
     /// Derives a key from a key and a salt with BLAKE2b.
     ///
     /// - Parameter salt: Salt for key derivation
-    /// - Parameter key: Key of 32 bytes length to derive new key from
+    /// - Parameter key: Key of 32..64 bytes length to derive new key from
     ///
     /// - Returns: Derived key of 32 bytes length
-    @objc public func deriveKey(salt: String, key: Data) -> Data? {
-        guard key.count == THREEMA_KDF_KEYBYTES else {
+    public func deriveKey(salt: Data, key: Data) -> Data? {
+        guard key.count >= 32, key.count <= 64 else {
             return nil
         }
         
         let personalBytes = BytesUtility.padding(
-            [UInt8](personal.utf8),
+            [UInt8](personal),
             pad: 0x00,
             length: Int(BLAKE2B_PERSONALBYTES.rawValue)
         )
-        let saltBytes = BytesUtility.padding([UInt8](salt.utf8), pad: 0x00, length: Int(BLAKE2B_SALTBYTES.rawValue))
+        let saltBytes = BytesUtility.padding([UInt8](salt), pad: 0x00, length: Int(BLAKE2B_SALTBYTES.rawValue))
 
         let pOut = UnsafeMutablePointer<CUnsignedChar>.allocate(capacity: Int(THREEMA_KDF_KEYBYTES))
 
@@ -51,11 +55,15 @@ import Foundation
             pOut.deallocate()
         }
         
-        if blake2b_key_salt_personal(Array(key), saltBytes, personalBytes, pOut) != 0 {
+        if blake2b_key_salt_personal(Array(key), Int32(key.count), saltBytes, personalBytes, pOut) != 0 {
             return nil
         }
         
         return Data(UnsafeMutableBufferPointer(start: pOut, count: Int(THREEMA_KDF_KEYBYTES)))
+    }
+    
+    @objc public func deriveKey(salt: String, key: Data) -> Data? {
+        deriveKey(salt: salt.data(using: .utf8)!, key: key)
     }
     
     /// Calculates a keyed MAC using BLAKE2b.
@@ -82,25 +90,30 @@ import Foundation
         return Data(UnsafeMutableBufferPointer(start: pOut, count: Int(THREEMA_KDF_MAC_LENGTH)))
     }
     
-    /// Calculates a simple hash using BLAKE2b.
+    /// Calculates a simple hash with variable output length using BLAKE2b.
     ///
     /// - Parameter input: Input data of arbitrary length
+    /// - Parameter outputLen: Desired output length (1..64)
     ///
-    /// - Returns: hash of 32 bytes length
-    @objc public static func hash(input: Data) -> Data? {
-        let pOut = UnsafeMutablePointer<CUnsignedChar>.allocate(capacity: Int(THREEMA_KDF_HASH_LENGTH))
+    /// - Returns: hash of desired length
+    @objc public static func hash(input: Data, outputLen: Int) -> Data? {
+        guard outputLen > 0, outputLen <= 64 else {
+            return nil
+        }
+        
+        let pOut = UnsafeMutablePointer<CUnsignedChar>.allocate(capacity: outputLen)
         
         defer {
             pOut.deallocate()
         }
         
-        if blake2b_hash(Array(input), input.count, pOut) != 0 {
+        if blake2b_hash(Array(input), input.count, pOut, outputLen) != 0 {
             return nil
         }
         
-        return Data(UnsafeMutableBufferPointer(start: pOut, count: Int(THREEMA_KDF_HASH_LENGTH)))
+        return Data(UnsafeMutableBufferPointer(start: pOut, count: outputLen))
     }
-    
+
     static func blake2bSelfTest() -> Int32 {
         blake2b_self_test()
     }

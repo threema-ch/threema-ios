@@ -20,6 +20,7 @@
 
 import CocoaLumberjackSwift
 import Foundation
+import Intents
 import PromiseKit
 
 public enum UserNotificationStage: String, CaseIterable {
@@ -112,8 +113,8 @@ public class PendingUserNotificationManager: NSObject, PendingUserNotificationMa
     /// Create or update pending user notification for abstract message.
     /// - Parameters:
     ///     - for: Abstract message
-    ///     - stage: Stage for the notification
-    ///     - isPendingGroup: Set to true group was not found for this message
+    ///     - stage: Stage for the notification. Not used for fetching the pending notification
+    ///     - isPendingGroup: If set to true, indicates that the group for this message was not found
     /// - Returns: Pending user notification or nil, usually is 'abstract'
     public func pendingUserNotification(
         for abstractMessage: AbstractMessage,
@@ -213,25 +214,71 @@ public class PendingUserNotificationManager: NSObject, PendingUserNotificationMa
                         silent,
                         pendingUserNotification.baseMessage
                     )
+                    
+                    // Add communication notification if enabled
+                    if UserSettings.shared().donateInteractions,
+                       let interaction = pendingUserNotification.interaction {
 
-                    self.userNotificationCenterManager.add(
-                        key: pendingUserNotification.key,
-                        stage: pendingUserNotification.stage,
-                        notification: notification
-                    )
-                    .done { (fireDate: Date?) in
-                        PendingUserNotificationManager.pendingQueue.sync {
-                            pendingUserNotification.fireDate = fireDate
-                            PendingUserNotificationManager.savePendingUserNotifications()
-                        }
+                        // Donating
+                        interaction.donate { error in
                             
-                        seal(true)
+                            if let error = error {
+                                
+                                // Could not donate, we add a standard notification instead
+                                DDLogError("[Push] Could not donate Intent, error: \(error.localizedDescription)")
+                                
+                                self.addPendingUserNotification(
+                                    for: notification,
+                                    with: pendingUserNotification,
+                                    seal: seal
+                                )
+                                return
+                            }
+                            
+                            // Update notification content with intent
+                            do {
+        
+                                guard let updatedNotification = try notification
+                                    .updating(
+                                        from: interaction
+                                            .intent as! UNNotificationContentProviding
+                                    ) as? UNMutableNotificationContent
+                                else {
+                                    DDLogError("[Push] Could not cast to mutable notification. Post old.")
+                                        
+                                    self.addPendingUserNotification(
+                                        for: notification,
+                                        with: pendingUserNotification,
+                                        seal: seal
+                                    )
+                                        
+                                    return
+                                }
+                                    
+                                // Add communication notification
+                                self.addPendingUserNotification(
+                                    for: updatedNotification,
+                                    with: pendingUserNotification,
+                                    seal: seal
+                                )
+                            }
+                            catch {
+                                // Could not update, add standard notification instead
+                                DDLogError(
+                                    "[Push] Could not update notification content with intent, error: \(error.localizedDescription)"
+                                )
+                                
+                                self.addPendingUserNotification(
+                                    for: notification,
+                                    with: pendingUserNotification,
+                                    seal: seal
+                                )
+                            }
+                        }
                     }
-                    .catch { error in
-                        DDLogError(
-                            "[Push] Adding notification to knotification center failed: \(error.localizedDescription)"
-                        )
-                        seal(false)
+                    else {
+                        // Add standard notification
+                        addPendingUserNotification(for: notification, with: pendingUserNotification, seal: seal)
                     }
                 }
                 else {
@@ -243,6 +290,33 @@ public class PendingUserNotificationManager: NSObject, PendingUserNotificationMa
                 userNotificationCenterManager.remove(key: pendingUserNotification.key, exceptStage: nil)
                 seal(false)
             }
+        }
+    }
+    
+    private func addPendingUserNotification(
+        for notification: UNMutableNotificationContent,
+        with pendingUserNotification: PendingUserNotification,
+        seal: @escaping (Bool) -> Void
+    ) {
+        
+        userNotificationCenterManager.add(
+            key: pendingUserNotification.key,
+            stage: pendingUserNotification.stage,
+            notification: notification
+        )
+        .done { (fireDate: Date?) in
+            PendingUserNotificationManager.pendingQueue.sync {
+                pendingUserNotification.fireDate = fireDate
+                PendingUserNotificationManager.savePendingUserNotifications()
+            }
+                
+            seal(true)
+        }
+        .catch { error in
+            DDLogError(
+                "[Push] Adding notification to notification center failed: \(error.localizedDescription)"
+            )
+            seal(false)
         }
     }
     

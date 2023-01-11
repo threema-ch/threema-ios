@@ -40,8 +40,8 @@ class MediaPreviewCarouselAccessibilityElement: UIAccessibilityElement {
     
     override var accessibilityValue: String? {
         get {
-            let text = String(
-                format: BundleUtil.localizedString(forKey: "media_item_of"),
+            let text = String.localizedStringWithFormat(
+                BundleUtil.localizedString(forKey: "media_item_of"),
                 "\(currentMediaItem!.item + 1)",
                 " \(getTotalItems())"
             )

@@ -174,6 +174,8 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 #pragma mark NSObject
 
 - (void)dealloc {
+    [self removeConversationObservers];
+    
     for (NSManagedObjectID *objectID in _imageMessageObserverList) {
         [entityManager performBlockAndWait:^{
             BaseMessage *baseMessage = [[entityManager entityFetcher] getManagedObjectById:objectID];
@@ -196,14 +198,11 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
             }
         }];
     }
-    
     [_locationMessageObserverList removeAllObjects];
-    
+        
     if (sentMessageSound) {
         AudioServicesDisposeSystemSoundID(sentMessageSound);
     }
-    
-    [self removeConversationObservers];
     
     chatContent.delegate = nil;
     chatContent.dataSource = nil;
@@ -394,9 +393,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     [self updateContactDisplay];
     
     lastInterfaceOrientation = [[UIApplication sharedApplication] statusBarOrientation];
-    
-    [self registerForPreviewingWithDelegate:self sourceView:self.view];
-    
+        
     [self updateColors];
     
     self.deleteMediaTotal = 0;
@@ -636,7 +633,10 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         });
         prevAudioCategory = nil;
     }
-    else {
+    else if (state == CallStateIdle) {
+        // In iOS 15.7.1 we can set `AVAudioSessionCategoryPlayback` during an ongoing call which will disable the microphone.
+        // In iOS 16.1.1 the same will set an error `setCategoryErr`.
+        // Thus we do not set this during an active call. If we were to start playing a voice message we would set the category to playback again anyways.
         NSError *setCategoryErr = nil;
         [[AVAudioSession sharedInstance] setCategory: AVAudioSessionCategoryPlayback error:&setCategoryErr];
         prevAudioCategory = AVAudioSessionCategoryPlayback;
@@ -1052,13 +1052,17 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         [conversation removeObserver:self forKeyPath:@"displayName"];
         [conversation removeObserver:self forKeyPath:@"groupId"];
         [conversation removeObserver:self forKeyPath:@"members"];
-    } @catch (NSException * __unused exception) {}
+    } @catch (NSException * __unused exception) {
+        DDLogError(@"ObserverInfo: Can't remove conversation observers in old chat view");
+    }
     
     [conversation.members enumerateObjectsUsingBlock:^(Contact *contact, BOOL * _Nonnull stop) {
         @try {
             [contact removeObserver:self forKeyPath:@"displayName"];
         }
-        @catch (NSException * __unused exception) {}
+        @catch (NSException * __unused exception) {
+            DDLogError(@"ObserverInfo: Can't remove member observers in old chat view");
+        }
     }];
 }
 
@@ -1086,7 +1090,9 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         if (baseMessage != nil) {
             @try {
                 [baseMessage removeObserver:self forKeyPath:@"thumbnail"];
-            } @catch (NSException * __unused exception) {}
+            } @catch (NSException * __unused exception) {
+                DDLogError(@"ObserverInfo: Can't remove thumbnail observer in old chat view");
+            }
             
         }
         
@@ -1113,7 +1119,9 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         if (baseMessage != nil) {
             @try {
                 [baseMessage removeObserver:self forKeyPath:@"poiAddress"];
-            } @catch (NSException * __unused exception) {}
+            } @catch (NSException * __unused exception) {
+                DDLogError(@"ObserverInfo: Can't remove poiAddress observer in old chat view");
+            }
         }
         
         // Saved objectID in the _locationMessageObserverList can be a temporaryID. That's why we have to loop through the array and load all objects in the list to compare.
@@ -1154,14 +1162,16 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 - (void)setConversation:(Conversation *)newConversation {
     [entityManager performBlockAndWait:^{
         if (newConversation == nil) {
+            [self removeConversationObservers];
             return;
         }
         
         if (conversation.objectID == newConversation.objectID) {
             return;
         }
-
+        
         [self removeConversationObservers];
+        
         conversation = [entityManager.entityFetcher getManagedObjectById:newConversation.objectID];
         
         [self addConversationObservers];
@@ -1270,7 +1280,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     
     Old_ChatTableDataSource *tmpDatasource = [[Old_ChatTableDataSource alloc] init];
     tmpDatasource.chatVC = self;
-    tmpDatasource.backgroundColor = Colors.backgroundViewController;
+    tmpDatasource.backgroundColor = Colors.backgroundGroupedViewController;
     
     self.chatContent.dataSource = tmpDatasource;
     self.chatContent.delegate = tmpDatasource;
@@ -1354,10 +1364,11 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 - (void)updateConversationLastMessage {
     [entityManager performSyncBlockAndSafe:^{
         BaseMessage *baseMessage = [messageFetcher lastMessage];
-        if (baseMessage && conversation.lastMessage && ![baseMessage.objectID isEqual:conversation.lastMessage.objectID]) {
+        if ((baseMessage && !conversation.lastMessage)
+            || (baseMessage && conversation.lastMessage && ![baseMessage.objectID isEqual:conversation.lastMessage.objectID])) {
             conversation.lastMessage = baseMessage;
         }
-        else if (!baseMessage) {
+        else if (!baseMessage && conversation.lastMessage) {
             conversation.lastMessage = nil;
         }
     }];
@@ -1534,12 +1545,14 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         id obj = [entityManager.entityFetcher existingObjectWithID:objID];
         
         if (obj != nil) {
-            /* find cell in cell map and call table view update */
-            __block NSIndexPath *indexPath = [_tableDataSource indexPathForMessage:obj];
             dispatch_async(dispatch_get_main_queue(), ^{
-                [_tableDataSource removeObjectFromCellHeightCache:indexPath];
-                [self.chatContent reloadRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationAutomatic];
-                [self.chatContent scrollToRowAtIndexPath:indexPath atScrollPosition:UITableViewScrollPositionBottom animated:YES];
+                /* find cell in cell map and call table view update */
+                NSIndexPath *indexPath = [_tableDataSource indexPathForMessage:obj];
+                if (indexPath != nil) {
+                    [_tableDataSource removeObjectFromCellHeightCache:indexPath];
+                    [self.chatContent reloadRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationAutomatic];
+                    [self.chatContent scrollToRowAtIndexPath:indexPath atScrollPosition:UITableViewScrollPositionBottom animated:YES];
+                }
             });
         }
     }];
@@ -1648,7 +1661,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 }
 
 - (void)showSingleDetails {
-    SingleDetailsViewController *singleDetailsViewController = [[SingleDetailsViewController alloc] initForConversation: conversation displayStyle:DetailsDisplayStyleDefault];
+    SingleDetailsViewController *singleDetailsViewController = [[SingleDetailsViewController alloc] initForConversation: conversation displayStyle:DetailsDisplayStyleDefault delegate: nil];
     [self presentInNavigationController:singleDetailsViewController];
 }
 
@@ -1663,7 +1676,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         return;
     }
     
-    GroupDetailsViewController *groupDetailsViewController = [[GroupDetailsViewController alloc] initFor:group displayMode:GroupDetailsDisplayModeConversation displayStyle:DetailsDisplayStyleDefault];
+    GroupDetailsViewController *groupDetailsViewController = [[GroupDetailsViewController alloc] initFor:group displayMode:GroupDetailsDisplayModeConversation displayStyle:DetailsDisplayStyleDefault delegate:nil];
     
     [self presentInNavigationController: groupDetailsViewController];
 }
@@ -2126,7 +2139,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     SendMediaAction *sendMediaAction = [SendMediaAction actionForChatViewController:self];
     
     NSString *filename = [FileUtility getTemporaryFileName];
-    NSString *extension = [UTIConverter preferredFileExtensionForMimeType:[UTIConverter mimeTypeFromUTI:(__bridge NSString *)[ImageURLSenderItemCreator getUTIFor:data]]];
+    NSString *extension = [UTIConverter preferredFileExtensionForMimeType:[UTIConverter mimeTypeFromUTI:[ImageURLSenderItemCreator getUTIFor:data]]];
     NSURL *tempDir = [[NSFileManager defaultManager] temporaryDirectory];
     NSURL *fileURl = [[tempDir URLByAppendingPathComponent:filename] URLByAppendingPathExtension:extension];
     
@@ -2559,13 +2572,13 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     
     ImageURLSenderItemCreator *imageSender = [[ImageURLSenderItemCreator alloc] init];
     
-    CFStringRef uti = [ImageURLSenderItemCreator getUTIFor:imageData];
+    NSString* uti = [ImageURLSenderItemCreator getUTIFor:imageData];
     if (uti == nil) {
-        uti = kUTTypeJPEG;
+        uti = UTTypeJPEG.identifier;
     }
-    URLSenderItem *item = [imageSender senderItemFrom:imageData uti:(__bridge NSString *)uti];
+    URLSenderItem *item = [imageSender senderItemFrom:imageData uti:uti];
     
-    FileMessageSender *sender = [[FileMessageSender alloc] init];
+    Old_FileMessageSender *sender = [[Old_FileMessageSender alloc] init];
     [sender sendItem:item inConversation:conversation];
 }
 

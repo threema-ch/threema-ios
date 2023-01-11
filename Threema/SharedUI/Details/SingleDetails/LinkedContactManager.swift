@@ -379,8 +379,8 @@ extension LinkedContactManger {
     private func accessRestricted(in viewController: UIViewController) {
         if contactIsLinked {
             let localizedAlertTile = BundleUtil.localizedString(forKey: "restricted_contacts_access_title")
-            let localizedAlertMessage = String(
-                format: BundleUtil.localizedString(forKey: "restricted_linked_contact_access_message"),
+            let localizedAlertMessage = String.localizedStringWithFormat(
+                BundleUtil.localizedString(forKey: "restricted_linked_contact_access_message"),
                 ThreemaApp.currentName
             )
             let localizedUnlinkTitle = BundleUtil.localizedString(forKey: "unlink_contact")
@@ -753,8 +753,8 @@ extension LinkedContactManger {
     ) {
         
         let localizedRestrictedTitle = BundleUtil.localizedString(forKey: "restricted_contacts_access_title")
-        let localizedRestrictedMessage = String(
-            format: BundleUtil.localizedString(forKey: "restricted_linked_contact_access_edit_message"),
+        let localizedRestrictedMessage = String.localizedStringWithFormat(
+            BundleUtil.localizedString(forKey: "restricted_linked_contact_access_edit_message"),
             ThreemaApp.currentName
         )
         

@@ -182,6 +182,8 @@
 	<string>group.ch.threema</string>
 	<key>ThreemaAppIdentifier</key>
 	<string>ch.threema.iapp</string>
+	<key>ThreemaForwardSecurity</key>
+	<true/>
 	<key>CFBundleIcons</key>
 	<dict>
 		<key>CFBundlePrimaryIcon</key>

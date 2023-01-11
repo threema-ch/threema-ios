@@ -48,8 +48,9 @@
 
 /**
  @param messageProcessorDelegate: Progress information of message processing
- @param entityManager: Must be en EntityManager, is NSObject because EntityManager is implemented in Swift (circularity #import not possible)
+ @param entityManager: Must be an EntityManager, is NSObject because EntityManager is implemented in Swift (circularity #import not possible)
+ @param fsmp: Must be an ForwardSecurityMessageProcessor, is NSObject because EntityManager is implemented in Swift (circularity #import not possible)
  */
-- (instancetype)initWith:(id<MessageProcessorDelegate>)messageProcessorDelegate entityManager:(NSObject*)entityManagerObject;
+- (instancetype)initWith:(id<MessageProcessorDelegate>)messageProcessorDelegate entityManager:(NSObject *)entityManagerObject fsmp:(NSObject *)fsmp;
 
 @end

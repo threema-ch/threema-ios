@@ -285,8 +285,8 @@ public protocol NotificationManagerProtocol {
 extension NotificationManager {
     @objc final class func showNoAccessToDatabaseNotification(completionHandler: @escaping () -> Void) {
         let title = BundleUtil.localizedString(forKey: "new_message_no_access_title")
-        let message = String(
-            format: BundleUtil.localizedString(forKey: "new_message_no_access_message"),
+        let message = String.localizedStringWithFormat(
+            BundleUtil.localizedString(forKey: "new_message_no_access_message"),
             ThreemaApp.currentName
         )
         ThreemaUtilityObjC.sendErrorLocalNotification(title, body: message, userInfo: nil) {
@@ -296,8 +296,8 @@ extension NotificationManager {
     
     final class func showNoMicrophonePermissionNotification() {
         let title = BundleUtil.localizedString(forKey: "call_voip_not_supported_title")
-        let message = String(
-            format: BundleUtil.localizedString(forKey: "call_microphone_permission_text"),
+        let message = String.localizedStringWithFormat(
+            BundleUtil.localizedString(forKey: "call_microphone_permission_text"),
             ThreemaApp.currentName
         )
         ThreemaUtilityObjC.sendErrorLocalNotification(title, body: message, userInfo: nil)

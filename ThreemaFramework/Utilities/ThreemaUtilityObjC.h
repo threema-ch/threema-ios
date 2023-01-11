@@ -21,7 +21,7 @@
 #import <Foundation/Foundation.h>
 #import "Contact.h"
 
-__attribute__((deprecated("Use ThreemaUtilitySwift instead")))
+__attribute__((deprecated("Use ThreemaUtility instead")))
 @interface ThreemaUtilityObjC : NSObject
 
 + (BOOL)isSameDayWithDate1:(NSDate*)date1 date2:(NSDate*)date2 __deprecated_msg("Use Calendar.current.isDate(date1, inSameDayAs: date2)");
@@ -33,7 +33,7 @@ __attribute__((deprecated("Use ThreemaUtilitySwift instead")))
 + (time_t)systemUptime;
 
 + (NSString *)timeStringForSeconds: (NSInteger) totalSeconds;
-+ (NSString *)accessabilityTimeStringForSeconds: (NSInteger) totalSeconds;
++ (NSString *)accessibilityTimeStringForSeconds: (NSInteger) totalSeconds;
 + (NSString *)accessibilityStringAtTime:(NSTimeInterval)timeInterval withPrefix:(NSString *)prefixKey;
 
 + (NSDate*)parseISO8601DateString:(NSString*)dateString;
@@ -52,11 +52,11 @@ __attribute__((deprecated("Use ThreemaUtilitySwift instead")))
 
 + (NSData*)truncatedUTF8String:(NSString*)str maxLength:(NSUInteger)maxLength;
 
-+ (BOOL)hideThreemaTypeIconForContact:(Contact *)contact;
++ (BOOL)hideThreemaTypeIconForContact:(Contact *)contact __deprecated_msg("Use Contact.showOtherThreemaTypeIcon instead");
 
-+ (UIImage *)threemaTypeIcon;
++ (UIImage *)threemaTypeIcon __deprecated_msg("Use ThreemaUtility.otherThreemaTypeIcon or OtherThreemaTypeImageView instead");
 
-+ (NSString *)threemaTypeIconAccessibilityLabel;
++ (NSString *)threemaTypeIconAccessibilityLabel __deprecated_msg("Use ThreemaUtility.otherThreemaTypeAccessibilityLabel or OtherThreemaTypeImageView instead");
 
 + (NSArray *)getTrimmedMessages:(NSString *)message;
 

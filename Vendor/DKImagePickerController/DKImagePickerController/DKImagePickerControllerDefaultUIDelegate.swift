@@ -35,7 +35,10 @@ open class DKImagePickerControllerDefaultUIDelegate: NSObject, DKImagePickerCont
     open func updateDoneButtonTitle(_ button: UIButton) {
         /***** BEGIN THREEMA MODIFICATION: Add accessibilityLabel to done button *********/
         if self.imagePickerController.selectedAssets.count > 0 {
-            let title = String(format: DKImageLocalizedStringWithKey("select"), self.imagePickerController.selectedAssets.count)
+            let title = String.localizedStringWithFormat(
+                DKImageLocalizedStringWithKey("select"),
+                self.imagePickerController.selectedAssets.count
+            )
             button.setTitle(title, for: .normal)
             button.accessibilityLabel = title
         } else {
@@ -98,7 +101,14 @@ open class DKImagePickerControllerDefaultUIDelegate: NSObject, DKImagePickerCont
 	
 	open func imagePickerControllerDidReachMaxLimit(_ imagePickerController: DKImagePickerController) {
         /***** BEGIN THREEMA MODIFICATION: add gesture recognizer *********/
-        UIAlertTemplate.showAlert(owner: imagePickerController, title: DKImageLocalizedStringWithKey("maxLimitReached"), message: String(format: DKImageLocalizedStringWithKey("maxLimitReachedMessage"), imagePickerController.maxSelectableCount))        
+        UIAlertTemplate.showAlert(
+            owner: imagePickerController,
+            title: DKImageLocalizedStringWithKey("maxLimitReached"),
+            message: String.localizedStringWithFormat(
+                DKImageLocalizedStringWithKey("maxLimitReachedMessage"),
+                imagePickerController.maxSelectableCount
+            )
+        )
         /***** END THREEMA MODIFICATION: add gesture recognizer *********/
 	}
 	

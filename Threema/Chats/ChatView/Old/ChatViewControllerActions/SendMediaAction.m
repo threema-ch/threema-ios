@@ -28,7 +28,7 @@
 #import <Photos/Photos.h>
 #import "ModalPresenter.h"
 #import "UIDefines.h"
-#import "FileMessageSender.h"
+#import "Old_FileMessageSender.h"
 #import <MBProgressHUD/MBProgressHUD.h>
 #import "BundleUtil.h"
 #import "UTIConverter.h"
@@ -397,10 +397,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     for (long i = 0; i < k; i++) {
         @autoreleasepool {
             dispatch_semaphore_wait(_sequentialSema, DISPATCH_TIME_FOREVER);
-            
-            FileMessageSender *sender = [[FileMessageSender alloc] init];
-            [self.fileMessageSenders addObject:sender];
-            
+                       
             if (self.cancelled) {
                 dispatch_async(dispatch_get_main_queue(), ^{
                     [self hideVideoEncodeProgressHUD];
@@ -413,11 +410,24 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
                 if (![captions[i] isEqualToString:@""]) {
                     item.caption = captions[i];
                 }
-                sender.uploadProgressDelegate = self;
-                [sender sendItem:item
+                
+                if ([UserSettings sharedUserSettings].newChatViewActive) {
+                    dispatch_semaphore_signal(_sequentialSema);
+
+                    BlobManagerObjcWrapper *manager = [[BlobManagerObjcWrapper alloc] init];
+                    [manager createMessageAndSyncBlobsFor:item in:self.chatViewController.conversation correlationID:nil webRequestID:nil];
+                    
+                } else {
+                    
+                    Old_FileMessageSender *sender = [[Old_FileMessageSender alloc] init];
+                    [self.fileMessageSenders addObject:sender];
+                    sender.uploadProgressDelegate = self;
+                    [sender sendItem:item
                   inConversation:self.chatViewController.conversation
                        requestId:nil
                    correlationId:correlationID];
+                }
+                
             } else {
                 // Video
                 AVAsset *item = itemArray[i];
@@ -661,10 +671,17 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     }
     
     dispatch_async(dispatch_get_main_queue(), ^{
-        ImageURLSenderItemCreator *item = [[ImageURLSenderItemCreator alloc] init];
-        URLSenderItem *senderItem = [item senderItemFromImage:image];
-        FileMessageSender *sender = [[FileMessageSender alloc] init];
-        [sender sendItem:senderItem inConversation:self.chatViewController.conversation requestId:nil];
+        ImageURLSenderItemCreator *itemCreator = [[ImageURLSenderItemCreator alloc] init];
+        URLSenderItem *senderItem = [itemCreator senderItemFromImage:image];
+        
+        if ([UserSettings sharedUserSettings].newChatViewActive) {
+            BlobManagerObjcWrapper *manager = [[BlobManagerObjcWrapper alloc] init];
+            [manager createMessageAndSyncBlobsFor:senderItem in:self.chatViewController.conversation correlationID:nil webRequestID:nil];
+        }
+        else {
+            Old_FileMessageSender *sender = [[Old_FileMessageSender alloc] init];
+            [sender sendItem:senderItem inConversation:self.chatViewController.conversation requestId:nil];
+        }
     });
 }
 
@@ -707,11 +724,17 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         [self.videoEncoders addObject:exportSession];
         
         URLSenderItem *senderItem = [senderCreator senderItemFrom:asset on:exportSession];
+        if ([UserSettings sharedUserSettings].newChatViewActive) {
+            BlobManagerObjcWrapper *manager = [[BlobManagerObjcWrapper alloc] init];
+            [manager createMessageAndSyncBlobsFor:senderItem in:self.chatViewController.conversation correlationID:nil webRequestID:nil];
+        }
+        else {
+            Old_FileMessageSender *sender = [[Old_FileMessageSender alloc] init];
+            sender.uploadProgressDelegate = self;
+            
+            [sender sendItem:senderItem inConversation:self.chatViewController.conversation requestId:nil];
+        }
         
-        FileMessageSender *sender = [[FileMessageSender alloc] init];
-        sender.uploadProgressDelegate = self;
-        
-        [sender sendItem:senderItem inConversation:self.chatViewController.conversation requestId:nil];
         
         if (onCompletion != nil) {
             onCompletion();
@@ -784,14 +807,14 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     self.videoEncodeProgressHUD.label.font = [UIFont monospacedDigitSystemFontOfSize:self.videoEncodeProgressHUD.label.font.pointSize weight:UIFontWeightSemibold];
 }
 
-- (void)removeFileMessageSender:(FileMessageSender*)videoMessageSender {
+- (void)removeFileMessageSender:(Old_FileMessageSender*)videoMessageSender {
     dispatch_async(dispatch_get_main_queue(), ^{
         [self.fileMessageSenders removeObject:videoMessageSender];
     });
 }
 
 - (void)progressHUDCancelPressed {
-    for (FileMessageSender *fileMessageSender in self.fileMessageSenders) {
+    for (Old_FileMessageSender *fileMessageSender in self.fileMessageSenders) {
         [fileMessageSender uploadShouldCancel];
     }
     for (SDAVAssetExportSession *exportSession in self.videoEncoders) {
@@ -824,14 +847,14 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 
 #pragma mark - UploadProgressDelegate
 
-- (void)blobMessageSender:(BlobMessageSender*)blobMessageSender uploadFailedForMessage:(BaseMessage *)message error:(UploadError)error {
+- (void)blobMessageSender:(Old_BlobMessageSender*)blobMessageSender uploadFailedForMessage:(BaseMessage *)message error:(UploadError)error {
     dispatch_async(dispatch_get_main_queue(), ^{
         if (error == UploadErrorCancelled) {
             return;
         }
         
         NSString *errorTitle = [BundleUtil localizedStringForKey:@"error_sending_failed"];
-        NSString *errorMessage = [FileMessageSender messageForError:error];
+        NSString *errorMessage = [Old_FileMessageSender messageForError:error];
 
         static BOOL isAlertShowing = NO;
         if (isAlertShowing == NO) {
@@ -846,21 +869,21 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     dispatch_semaphore_signal(_sequentialSema);
 }
 
-- (void)blobMessageSender:(BlobMessageSender*)blobMessageSender uploadSucceededForMessage:(BaseMessage *)message {
-    if ([blobMessageSender isKindOfClass:FileMessageSender.class]) {
-        [self removeFileMessageSender:(FileMessageSender*)blobMessageSender];
+- (void)blobMessageSender:(Old_BlobMessageSender*)blobMessageSender uploadSucceededForMessage:(BaseMessage *)message {
+    if ([blobMessageSender isKindOfClass:Old_FileMessageSender.class]) {
+        [self removeFileMessageSender:(Old_FileMessageSender*)blobMessageSender];
     }
     
     dispatch_semaphore_signal(_sequentialSema);
 }
 
-- (BOOL)blobMessageSenderUploadShouldCancel:(BlobMessageSender*)blobMessageSender {
+- (BOOL)blobMessageSenderUploadShouldCancel:(Old_BlobMessageSender*)blobMessageSender {
     return NO;
 }
 
-- (void)blobMessageSender:(BlobMessageSender*)blobMessageSender uploadProgress:(NSNumber *)progress forMessage:(BaseMessage *)message {
-    if ([blobMessageSender isKindOfClass:FileMessageSender.class]) {
-        [self removeFileMessageSender:(FileMessageSender*)blobMessageSender];
+- (void)blobMessageSender:(Old_BlobMessageSender*)blobMessageSender uploadProgress:(NSNumber *)progress forMessage:(BaseMessage *)message {
+    if ([blobMessageSender isKindOfClass:Old_FileMessageSender.class]) {
+        [self removeFileMessageSender:(Old_FileMessageSender*)blobMessageSender];
     }
 }
 

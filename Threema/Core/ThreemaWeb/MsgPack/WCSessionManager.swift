@@ -822,21 +822,25 @@ extension WCSessionManager {
                 return
             }
             DDLogNotice("Updated contact on main context \(currentContact.identity)")
-            if (currentContact.identity != nil) &&
-                (
-                    changedValues.keys.contains("firstName") || changedValues.keys.contains("lastName") || changedValues
-                        .keys.contains("displayName") || changedValues.keys.contains("publicNickname") || changedValues
-                        .keys
-                        .contains("verificationLevel") || changedValues.keys.contains("state") || changedValues.keys
-                        .contains("featureLevel") || changedValues.keys.contains("workContact") || changedValues.keys
-                        .contains("hidden") || dirtyObjects
-                ) {
+            
+            if changedValues.keys.contains("firstName") ||
+                changedValues.keys.contains("lastName") ||
+                changedValues.keys.contains("displayName") ||
+                changedValues.keys.contains("publicNickname") ||
+                changedValues.keys.contains("verificationLevel") ||
+                changedValues.keys.contains("state") ||
+                changedValues.keys.contains("featureLevel") ||
+                changedValues.keys.contains("workContact") ||
+                changedValues.keys.contains("hidden") ||
+                dirtyObjects {
                 let objectMode: WebReceiverUpdate.ObjectMode = .modified
                 self.responseUpdateContact(contact: currentContact, objectMode: objectMode)
             }
+            
             if changedValues.keys.contains("contactImage") || changedValues.keys.contains("imageData") {
                 self.responseUpdateAvatar(contact: currentContact, group: nil)
             }
+            
             BackgroundTaskManager.shared.cancelBackgroundTask(key: backgroundKey)
         }
     }

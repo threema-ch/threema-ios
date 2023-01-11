@@ -41,7 +41,8 @@
     
 	_eraseDataSwitch = [[UISwitch alloc] init];
     [_eraseDataSwitch addTarget:self action:@selector(eraseDataSwitchChanged:) forControlEvents:UIControlEventValueChanged];
-    
+    _eraseDataSwitch.accessibilityIdentifier = @"KKPasscodeSettingsViewControllerEraseDataSwitch";
+
     _touchIdSwitch = [[UISwitch alloc] init];
     [_touchIdSwitch addTarget:self action:@selector(touchIdSwitchChanged:) forControlEvents:UIControlEventValueChanged];
     
@@ -250,6 +251,7 @@
         
         cell.textLabel.text = KKPasscodeLockLocalizedString(@"Require Passcode", @"");
         cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
+        cell.accessibilityIdentifier = @"Identifier2";
         cell.detailTextLabel.text = [KKPasscodeSettingsViewController textForGracePeriod:_gracePeriod shortForm:YES];
         
 	} else if (indexPath.section == 2) {

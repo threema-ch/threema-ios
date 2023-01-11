@@ -38,6 +38,7 @@ class ActionDetailsTableViewCell: ThemedCodeTableViewCell {
             }
             
             labelLabel.text = action.title
+            isUserInteractionEnabled = !action.disabled
             
             updateColors()
             updateIcon()

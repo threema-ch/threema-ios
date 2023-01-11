@@ -86,10 +86,7 @@ class PrivacySettingsViewController: ThemedTableViewController {
     @objc func incomingUpdate() {
         resetSwitches()
         disableCellsForMDM()
-        NotificationBannerHelper.newInfoToast(
-            title: BundleUtil.localizedString(forKey: "incoming_settings_sync_title"),
-            body: BundleUtil.localizedString(forKey: "incoming_settings_sync_message")
-        )
+        NotificationPresenterWrapper.shared.present(type: .settingsSyncSuccess)
     }
     
     override var shouldAutorotate: Bool {
@@ -112,7 +109,7 @@ class PrivacySettingsViewController: ThemedTableViewController {
     }
     
     func attemptSave() -> Promise<Void> {
-        if ServerConnector.shared()?.isMultiDeviceActivated ?? false {
+        if ServerConnector.shared().isMultiDeviceActivated {
             let syncHelper = UISyncHelper(
                 viewController: self,
                 progressString: BundleUtil.localizedString(forKey: "syncing_settings"),

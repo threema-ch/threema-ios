@@ -19,13 +19,14 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
-import ThreemaFramework
+@testable import ThreemaFramework
 
 class ContactStoreMock: NSObject, ContactStoreProtocol {
-
     private let callOnCompletion: Bool
     private var contact: Contact?
     private let errorHandler: NSError?
+
+    var deleteContactCalls = [String]()
 
     required init(callOnCompletion: Bool, _ contact: Contact? = nil, errorHandler: NSError? = nil) {
         self.callOnCompletion = callOnCompletion
@@ -59,6 +60,7 @@ class ContactStoreMock: NSObject, ContactStoreProtocol {
     
     func fetchPublicKey(
         for identity: String,
+        acquaintanceLevel: ContactAcquaintanceLevel,
         onCompletion: @escaping (Data) -> Void,
         onError: @escaping (Error) -> Void
     ) {
@@ -69,6 +71,7 @@ class ContactStoreMock: NSObject, ContactStoreProtocol {
 
     func fetchPublicKey(
         for identity: String?,
+        acquaintanceLevel: ContactAcquaintanceLevel,
         entityManager entityManagerObject: NSObject,
         onCompletion: @escaping (Data?) -> Void,
         onError: ((Error?) -> Void)? = nil
@@ -136,11 +139,23 @@ class ContactStoreMock: NSObject, ContactStoreProtocol {
         // no-op
     }
 
+    func addAsWork(identities: NSOrderedSet, contactSyncer mediatorSyncableContacts: MediatorSyncableContacts?) {
+        // no-op
+    }
+
+    func updateContact(withIdentity identity: String, avatar: Data?, firstName: String?, lastName: String?) {
+        // no-op
+    }
+    
     func updateAllContactsToCNContact() {
         // no-op
     }
 
     func updateAllContacts() {
         // no-op
+    }
+
+    func deleteContact(identity: String, entityManagerObject: NSObject) {
+        deleteContactCalls.append(identity)
     }
 }

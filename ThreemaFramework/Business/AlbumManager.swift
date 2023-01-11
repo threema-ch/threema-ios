@@ -61,6 +61,7 @@ import UIKit
         }
         else {
             DDLogNotice(successMessage)
+            NotificationPresenterWrapper.shared.present(type: .saveSuccess)
         }
     }
     
@@ -77,6 +78,7 @@ import UIKit
             }, completionHandler: { success, error in
                 if success {
                     DDLogNotice(self.successMessage)
+                    NotificationPresenterWrapper.shared.present(type: .saveSuccess)
                 }
                 else {
                     guard let err = error else {
@@ -138,6 +140,7 @@ import UIKit
             }, completionHandler: { success, error in
                 if success {
                     DDLogNotice(self.successMessage)
+                    NotificationPresenterWrapper.shared.present(type: .saveSuccess)
                     completionHandler(true)
                 }
                 else {
@@ -201,6 +204,7 @@ import UIKit
         }) { success, error in
             if success {
                 DDLogInfo(self.successMessage)
+                NotificationPresenterWrapper.shared.present(type: .saveSuccess)
             }
             else {
                 guard let err = error else {
@@ -270,6 +274,54 @@ import UIKit
             else {
                 DDLogNotice(self.permissionNotGrantedMessage)
             }
+        }
+    }
+    
+    /// Saves data of a movie to the devices photo-app if authorized, default extension used is ".mp4"
+    /// - Parameter data: Data of movie
+    public func saveMovie(data: Data, with extension: String = MEDIA_EXTENSION_VIDEO) {
+        let fileName = String(format: "%f.%@", Date().timeIntervalSinceReferenceDate, `extension`)
+        let tempURL = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(fileName)
+        
+        do {
+            try data.write(to: tempURL)
+            saveMovieToLibrary(movieURL: tempURL) { _ in
+                do {
+                    try FileManager.default.removeItem(atPath: tempURL.path)
+                }
+                catch {
+                    DDLogWarn("Remove movie file from temporary path failed")
+                }
+                NotificationPresenterWrapper.shared.present(type: .saveSuccess)
+            }
+        }
+        catch {
+            DDLogWarn("Writing movie to temporary file failed")
+            NotificationPresenterWrapper.shared.present(type: .saveError)
+        }
+    }
+    
+    /// Saves data of a GIF or animated Sticker to the devices photo-app if authorized, default extension used is ".gif"
+    /// - Parameter data: Data of animatedImage
+    public func saveAnimatedImage(data: Data, with extension: String = MEDIA_EXTENSION_GIF) {
+        let fileName = String(format: "%f.%@", Date().timeIntervalSinceReferenceDate, `extension`)
+        let tempURL = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(fileName)
+        
+        do {
+            try data.write(to: tempURL)
+            save(url: tempURL, isVideo: false) { _ in
+                do {
+                    try FileManager.default.removeItem(atPath: tempURL.path)
+                }
+                catch {
+                    DDLogWarn("Remove animatedImage file from temporary path failed")
+                }
+                NotificationPresenterWrapper.shared.present(type: .saveSuccess)
+            }
+        }
+        catch {
+            DDLogWarn("Writing animatedImage to temporary file failed")
+            NotificationPresenterWrapper.shared.present(type: .saveError)
         }
     }
 }

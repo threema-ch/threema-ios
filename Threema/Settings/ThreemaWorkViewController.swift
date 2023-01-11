@@ -54,12 +54,10 @@ class ThreemaWorkViewController: ThemedViewController {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
             
-        var lang: String? = Bundle.main.preferredLocalizations.first
-        if lang == nil {
-            lang = "en"
-        }
+        let lang = Bundle.main.preferredLocalizations.first ?? "en"
+        let version = AppInfo.appVersion.version ?? "-"
         
-        var theme: String! = ""
+        let theme: String
         switch Colors.theme {
         case .dark:
             theme = "dark"
@@ -67,12 +65,7 @@ class ThreemaWorkViewController: ThemedViewController {
             theme = "light"
         }
                 
-        let urlString = String(
-            format: "https://threema.ch/work_info/?lang=%@&version=%@&platform=ios&theme=%@",
-            lang!,
-            AppInfo.appVersion.version ?? "-",
-            theme
-        )
+        let urlString = "https://threema.ch/work_info/?lang=\(lang)&version=\(version)&platform=ios&theme=\(theme)"
         let threemaWorkURL = URL(string: urlString)!
         
         MBProgressHUD.showAdded(to: view, animated: true)

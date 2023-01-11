@@ -19,7 +19,6 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import CocoaLumberjackSwift
-import DiffableDataSources
 import UIKit
 
 extension GroupDetailsDataSource {
@@ -33,7 +32,7 @@ extension GroupDetailsDataSource {
 }
 
 /// Data source for `GroupDetailsViewController`
-final class GroupDetailsDataSource: TableViewDiffableDataSource<GroupDetails.Section, GroupDetails.Row> {
+final class GroupDetailsDataSource: UITableViewDiffableDataSource<GroupDetails.Section, GroupDetails.Row> {
     
     // MARK: - Properties
     
@@ -83,7 +82,7 @@ final class GroupDetailsDataSource: TableViewDiffableDataSource<GroupDetails.Sec
     @available(*, unavailable)
     override init(
         tableView: UITableView,
-        cellProvider: @escaping TableViewDiffableDataSource<GroupDetails.Section, GroupDetails.Row>.CellProvider
+        cellProvider: @escaping UITableViewDiffableDataSource<GroupDetails.Section, GroupDetails.Row>.CellProvider
     ) {
         fatalError("Just use init(...).")
     }
@@ -172,7 +171,7 @@ final class GroupDetailsDataSource: TableViewDiffableDataSource<GroupDetails.Sec
     // MARK: - Configure content
     
     func configureData() {
-        var snapshot = DiffableDataSourceSnapshot<GroupDetails.Section, GroupDetails.Row>()
+        var snapshot = NSDiffableDataSourceSnapshot<GroupDetails.Section, GroupDetails.Row>()
         
         // Only add a section if there are any rows to show
         func appendSectionIfNonEmptyItems(section: GroupDetails.Section, with items: [GroupDetails.Row]) {
@@ -303,7 +302,12 @@ extension GroupDetailsDataSource {
     }
     
     private func conversationQuickActions(in viewController: UIViewController) -> [QuickAction] {
-        [dndQuickAction(in: viewController)]
+        var conversationDetailsQuickActions = [QuickAction]()
+        
+        conversationDetailsQuickActions.append(dndQuickAction(in: viewController))
+        conversationDetailsQuickActions.append(contentsOf: searchChatQuickAction(in: viewController, for: conversation))
+        
+        return conversationDetailsQuickActions
     }
     
     private func dndQuickAction(in viewController: UIViewController) -> QuickAction {
@@ -337,6 +341,29 @@ extension GroupDetailsDataSource {
             strongViewController.present(dndNavigationController, animated: true)
         }
     }
+    
+    private func searchChatQuickAction(
+        in viewController: UIViewController,
+        for conversation: Conversation
+    ) -> [QuickAction] {
+        let messageFetcher = MessageFetcher(for: conversation, with: entityManager)
+        guard messageFetcher.count() > 0 else {
+            return []
+        }
+        
+        guard let groupDetailsViewController = viewController as? GroupDetailsViewController else {
+            return []
+        }
+        
+        let quickAction = QuickAction(
+            imageName: "magnifyingglass",
+            title: BundleUtil.localizedString(forKey: "search")
+        ) { [weak groupDetailsViewController] _ in
+            groupDetailsViewController?.startChatSearch()
+        }
+        
+        return [quickAction]
+    }
 }
 
 // MARK: - Media & Polls Quick Actions
@@ -354,8 +381,11 @@ extension GroupDetailsDataSource {
             quickActions.append(mediaQuickAction(for: conversation, in: viewController))
         }
         
-        // TODO: Implement!
-        // quickActions.append(contentsOf: ballotsQuickAction(for: conversation, in: viewController))
+        entityManager.performBlockAndWait {
+            if self.entityManager.entityFetcher.countBallots(for: self.conversation) > 0 {
+                quickActions.append(contentsOf: self.ballotsQuickAction(for: self.conversation, in: viewController))
+            }
+        }
         
         return quickActions
     }
@@ -382,11 +412,6 @@ extension GroupDetailsDataSource {
         for conversation: Conversation,
         in viewController: UIViewController
     ) -> [QuickAction] {
-        guard entityManager.entityFetcher.countBallots(for: conversation) > 0 else {
-            return []
-        }
-        
-        // This will fix itself when "IOS-1683" is implemented
         let localizedBallotsString = BundleUtil.localizedString(forKey: "ballots")
         
         return [QuickAction(
@@ -399,8 +424,11 @@ extension GroupDetailsDataSource {
             
             guard let ballotViewController = BallotListTableViewController.ballotListViewController(for: conversation)
             else {
-                // TODO: Localize String
-                UIAlertTemplate.showAlert(owner: weakViewController, title: "Polls unavailable", message: nil)
+                UIAlertTemplate.showAlert(
+                    owner: weakViewController,
+                    title: BundleUtil.localizedString(forKey: "ballot_load_error"),
+                    message: nil
+                )
                 return
             }
             
@@ -583,7 +611,6 @@ extension GroupDetailsDataSource {
                         strongSelf.entityManager.performSyncBlockAndSafe {
                             _ = strongSelf.entityManager.entityDestroyer
                                 .deleteMessages(of: strongSelf.conversation)
-                            strongSelf.conversation.lastMessage = nil
                             strongSelf.reload(sections: [.contentActions])
                         }
                     }
@@ -663,18 +690,11 @@ extension GroupDetailsDataSource {
                 
                 strongSelf.groupManger.sync(group: strongSelf.group)
                     .done {
-                        NotificationBannerHelper.newInfoToast(
-                            title: BundleUtil.localizedString(forKey: "group_sync_title"),
-                            body: BundleUtil.localizedString(forKey: "group_sync_message")
-                        )
+                        NotificationPresenterWrapper.shared.present(type: .groupSyncSuccess)
                     }
                     .catch { error in
-                        NotificationBannerHelper.newErrorToast(
-                            title: BundleUtil.localizedString(forKey: "group_sync_error_title"),
-                            body: BundleUtil.localizedString(forKey: "group_sync_error_message")
-                        )
-                        
                         DDLogError("Sync of group failed: \(error.localizedDescription)")
+                        NotificationPresenterWrapper.shared.present(type: .groupSyncError)
                     }
             }
             rows.append(.action(synchronizeGroupAction))

@@ -54,31 +54,14 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 - (void)logBoxedMessage:(BoxedMessage*)boxedMessage isIncoming:(BOOL)incoming description:(NSString *)description {
     if (![UserSettings sharedUserSettings].validationLogging)
         return;
-    
-    /* obtain public key for convenience */
-    NSString *publicKeyIdentity;
-    if (incoming) {
-        publicKeyIdentity = boxedMessage.fromIdentity;
-    } else {
-        publicKeyIdentity = boxedMessage.toIdentity;
-    }
-    
-    [[ContactStore sharedContactStore] fetchPublicKeyForIdentity:publicKeyIdentity onCompletion:^(NSData *publicKey) {
-        DDLogNotice(@"%@ message ID %@ from %@ to %@:\nDate: %@\nMetadata box: %@\nNonce: %@\nData: %@\nPublic key (%@): %@\nDescription: %@",
-                            incoming ? @"Incoming" : @"Outgoing",
-                            [NSString stringWithHexData:boxedMessage.messageId],
-                            boxedMessage.fromIdentity,
-                            boxedMessage.toIdentity,
-                            [DateFormatter shortStyleDateTimeSeconds:boxedMessage.date],
-                            [NSString stringWithHexData:boxedMessage.metadataBox],
-                            [NSString stringWithHexData:boxedMessage.nonce],
-                            [NSString stringWithHexData:boxedMessage.box],
-                            publicKeyIdentity,
-                            [NSString stringWithHexData:publicKey],
-                            description ? description : @"");
-    } onError:^(NSError *error) {
-        ;//ignore
-    }];
+
+    DDLogNotice(@"%@ message ID %@ from %@ to %@:\nDate: %@\nDescription: %@",
+                incoming ? @"Incoming" : @"Outgoing",
+                [NSString stringWithHexData:boxedMessage.messageId],
+                boxedMessage.fromIdentity,
+                boxedMessage.toIdentity,
+                [DateFormatter shortStyleDateTimeSeconds:boxedMessage.date],
+                description ? description : @"");
 }
 
 - (void)logSimpleMessage:(AbstractMessage*)message isIncoming:(BOOL)incoming description:(NSString *)description {

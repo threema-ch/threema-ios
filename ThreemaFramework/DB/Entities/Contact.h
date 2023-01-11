@@ -44,6 +44,7 @@ typedef NS_CLOSED_ENUM(NSInteger, ImportedStatus) {
 };
 
 NS_ASSUME_NONNULL_BEGIN
+
 @interface Contact : TMAManagedObject
 
 enum {
@@ -64,9 +65,7 @@ enum {
 @property (nonatomic, retain, nullable) NSNumber * abRecordId NS_SWIFT_NAME(abRecordID);
 @property (nonatomic, retain, nullable) NSString * cnContactId NS_SWIFT_NAME(cnContactID);
 @property (nonatomic, retain, nullable) NSDate * createdAt;
-@property (nonatomic, retain, nullable) NSNumber * featureLevel;
 @property (nonatomic, retain, nullable) NSString * firstName;
-@property (nonatomic, retain) NSNumber * hidden;
 @property (nonatomic, retain) NSString * identity;
 @property (nonatomic, retain, nullable) NSData * imageData;
 @property (nonatomic, retain, nullable) NSString * lastName;
@@ -83,6 +82,8 @@ enum {
 @property (nonatomic, retain, nullable) NSString * verifiedMobileNo;
 /// This only means it's a verified contact from the admin (in the same work package). To check if this contact is a work ID, use the work identities list in user settings bad naming because of the history...
 @property (nonatomic, retain) NSNumber * workContact;
+@property (nonatomic, retain) NSNumber * forwardSecurityEnabled;
+@property (nonatomic, retain) NSNumber * forwardSecurityState;
 
 // DB Relationships
 @property (nonatomic, retain, nullable) ImageData * contactImage;
@@ -92,6 +93,8 @@ enum {
 // Other Properties
 @property (readonly) NSString * displayName;
 @property (readonly) NSString * mentionName;
+@property (nonatomic) BOOL isContactHidden;
+@property (nonatomic) NSNumber * featureMask;
 @property (nonatomic) TypingIndicator typingIndicator;
 @property (nonatomic) ReadReceipt readReceipt;
 @property (nonatomic) ImportedStatus importedStatus;
@@ -111,9 +114,6 @@ enum {
 
 - (BOOL)isProfilePictureSet;
 
-- (void)setFeatureMask:(NSNumber *)featureMask;
-- (NSNumber *)featureMask;
-
 - (BOOL)isWorkContact;
 
 - (UIImage*)verificationLevelImageSmall;
@@ -123,8 +123,11 @@ enum {
 - (NSString*)verificationLevelAccessibilityLabel;
 
 - (BOOL)isVideoCallAvailable;
-NS_ASSUME_NONNULL_END
+- (BOOL)isForwardSecurityAvailable;
+
 @end
+
+NS_ASSUME_NONNULL_END
 
 @interface Contact (CoreDataGeneratedAccessors)
 

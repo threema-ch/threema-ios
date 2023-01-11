@@ -31,7 +31,7 @@
     return self.groupId;
 }
 
-- (BOOL)shouldPush {
+- (BOOL)flagShouldPush {
     return NO;
 }
 

@@ -313,14 +313,25 @@ import ThreemaFramework
     }
 
     // MARK: - back up and restore data
-    
-    func backupData() -> [UInt8]? {
+
+    /// Get all backup data.
+    /// - Parameter backupDeviceGroupKey: If false then DGK will not included in backup data (DGK must only included for device linking)
+    /// - Returns: Backup data
+    func backupData(backupDeviceGroupKey: Bool = false) -> [UInt8]? {
         // get identity
         if MyIdentityStore.shared().keySecret() == nil {
             return nil
         }
         let jUser = SafeJsonParser.SafeBackupData
             .User(privatekey: MyIdentityStore.shared().keySecret().base64EncodedString())
+
+        if backupDeviceGroupKey {
+            let deviceGroupKeyManager = DeviceGroupKeyManager(myIdentityStore: MyIdentityStore.shared())
+            if let dgk = deviceGroupKeyManager.dgk {
+                jUser.temporaryDeviceGroupKeyTodoRemove = dgk.base64EncodedString()
+            }
+        }
+
         jUser.nickname = MyIdentityStore.shared().pushFromName
         
         // get identity profile picture and its settings
@@ -375,10 +386,7 @@ import ThreemaFramework
                     )
                     jContact.publickey = contact.verificationLevel == 2 ? contact.publicKey.base64EncodedString() : nil
                     jContact.workVerified = contact.workContact != 0
-                    
-                    // function to hide contacts is not implemented in iOS; hidden could be nil
-                    // till then set hidden to false
-                    jContact.hidden = false
+                    jContact.hidden = contact.isContactHidden
                     
                     if let firstname = contact.firstName {
                         jContact.firstname = firstname
@@ -403,8 +411,12 @@ import ThreemaFramework
                     }
                     
                     jContact.readReceipts = contact.readReceipt.rawValue
-                    
                     jContact.typingIndicators = contact.typingIndicator.rawValue
+
+                    if let conversation = privateEntityManager.entityFetcher.conversation(for: contact),
+                       let lastUpdate = conversation.lastUpdate {
+                        jContact.lastUpdate = lastUpdate.millisecondsSince1970
+                    }
                     
                     jContacts.append(jContact)
                 }
@@ -438,15 +450,22 @@ import ThreemaFramework
                 
                 let name = group.name ?? ""
                 let members = Array(group.allMemberIdentities)
-                
+
+                var lastUpdate: UInt64?
+                if let date = conversation.lastUpdate {
+                    lastUpdate = date.millisecondsSince1970
+                }
+
                 let jGroup = SafeJsonParser.SafeBackupData.Group(
                     id: id,
                     creator: creator,
                     groupname: name,
                     members: members,
                     deleted: false,
+                    lastUpdate: lastUpdate,
                     private: conversation.conversationCategory == .private
                 )
+
                 jGroups.append(jGroup)
             }
         }
@@ -515,9 +534,15 @@ import ThreemaFramework
         }
         
         MyIdentityStore.shared().restore(fromBackup: identity, withSecretKey: secretKey, onCompletion: {
-            MyIdentityStore.shared().storeInKeychain()
-            
             // Store identity in keychain
+            MyIdentityStore.shared().storeInKeychain()
+
+            if let key = safeBackupData.user?.temporaryDeviceGroupKeyTodoRemove,
+               let dgk = Data(base64Encoded: key) {
+                let deviceGroupKeyManager = DeviceGroupKeyManager(myIdentityStore: MyIdentityStore.shared())
+                deviceGroupKeyManager.store(dgk: dgk)
+            }
+
             self.serverApiConnector.update(MyIdentityStore.shared(), onCompletion: { () in
                 MyIdentityStore.shared().storeInKeychain()
                 MyIdentityStore.shared().pendingCreateID = true
@@ -721,9 +746,9 @@ import ThreemaFramework
                                                 contact.firstName = bContact.firstname
                                                 contact.lastName = bContact.lastname
                                                 contact.publicNickname = bContact.nickname
-                                                // function to hide contacts is not implemented in iOS; hidden could be nil
-                                                // till then set hidden to false
-                                                contact.hidden = 0
+                                                if let hidden = bContact.hidden {
+                                                    contact.isContactHidden = hidden
+                                                }
                                             
                                                 contact.readReceipt = bContact
                                                     .readReceipts != nil ?
@@ -745,7 +770,7 @@ import ThreemaFramework
                                             
                                                 if let featureMasks = featureMasks,
                                                    let featureMask = featureMasks[index] as? Int {
-                                                    contact.setFeatureMask(NSNumber(integerLiteral: featureMask))
+                                                    contact.featureMask = NSNumber(integerLiteral: featureMask)
                                                 }
                                                 if let states = states,
                                                    let state = states[index] as? Int {
@@ -754,14 +779,14 @@ import ThreemaFramework
                                                 if let types = types,
                                                    let type = types[index] as? Int {
                                                     if type == 1 {
-                                                        let workIdentities = NSMutableOrderedSet(
-                                                            orderedSet: UserSettings
-                                                                .shared().workIdentities
-                                                        )
-                                                        if !workIdentities.contains(contact.identity) {
-                                                            workIdentities.add(contact.identity)
-                                                            UserSettings.shared().workIdentities = workIdentities
-                                                        }
+                                                        ContactStore.shared()
+                                                            .addAsWork(
+                                                                identities: NSOrderedSet(array: [
+                                                                    contact
+                                                                        .identity,
+                                                                ]),
+                                                                contactSyncer: nil
+                                                            )
                                                     }
                                                 }
                                                 // We create conversations for private contacts
@@ -826,7 +851,8 @@ import ThreemaFramework
                         groupID: Data(BytesUtility.toBytes(hexString: groupID)!),
                         creator: groupCreator.uppercased(),
                         members: Set<String>(members.map { $0.uppercased() }),
-                        systemMessageDate: nil
+                        systemMessageDate: nil,
+                        sourceCaller: .local
                     )
                     .done { group in
                         guard let group = group else {

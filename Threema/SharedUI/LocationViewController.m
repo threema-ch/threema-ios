@@ -43,6 +43,13 @@
 
 @synthesize locationMessage;
 
+- (instancetype)initWithLocationMessage:(LocationMessage *)locationMessage {
+    UIStoryboard *storyboard = [UIStoryboard storyboardWithName:@"MainStoryboard" bundle:[NSBundle mainBundle]];
+    self = [storyboard instantiateViewControllerWithIdentifier:@"LocationViewController"];
+    self.locationMessage = locationMessage;
+    return self;
+ }
+
 - (void)dealloc {
     self.mapView.delegate = nil;
 }

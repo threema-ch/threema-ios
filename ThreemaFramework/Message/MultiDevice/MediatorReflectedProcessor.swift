@@ -24,8 +24,15 @@ import PromiseKit
 import SwiftProtobuf
 
 enum MediatorReflectedProcessorError: Error {
-    case contactNotFound(message: String)
+    case contactNotFound(identity: String)
+    case contactToCreateAlreadyExists(identity: String)
+    case contactToDeleteNotExists(identity: String)
+    case contactToDeleteMemberOfGroup(identity: String)
+    case contactToUpdateNotExists(identity: String)
+    case createContactFailed(identity: String)
+    case doNotAckIncomingVoIPMessage
     case downloadFailed(message: String)
+    case groupCreateFailed(groupID: String, groupCreatorIdentity: String)
     case groupNotFound(message: String)
     case conversationNotFound(message: String)
     case messageDecodeFailed(message: String)
@@ -33,6 +40,7 @@ enum MediatorReflectedProcessorError: Error {
     case messageWontProcessed(message: String)
     case missingPublicKey(identity: String)
     case outgoingMessageTypeIsDeprecated(type: D2d_MessageType)
+    case outgoingMessageReceiverNotFound(message: String)
 }
 
 protocol MediatorReflectedProcessorProtocol {
@@ -81,9 +89,15 @@ protocol MediatorReflectedProcessorProtocol {
             return Promise()
         case .groupSync:
             return Promise()
-        case let .outgoingMessageSent(outgoingMessageSent):
-            let processor = MediatorReflectedOutgoingMessageSentProcessor(frameworkInjector: frameworkInjector)
-            return processor.process(outgoingMessageSent: outgoingMessageSent)
+        case let .incomingMessageUpdate(incomingMessageUpdate):
+            let processor = MediatorReflectedIncomingMessageUpdateProcessor(
+                frameworkInjector: frameworkInjector,
+                messageProcessorDelegate: messageProcessorDelegate
+            )
+            return processor.process(incomingMessageUpdate: incomingMessageUpdate)
+        case let .outgoingMessageUpdate(outgoingMessageUpdate):
+            let processor = MediatorReflectedOutgoingMessageUpdateProcessor(frameworkInjector: frameworkInjector)
+            return processor.process(outgoingMessageUpdate: outgoingMessageUpdate)
         case let .outgoingMessage(outgoingMessage):
             return Promise<AbstractMessage> { seal in
                 let decoder = MediatorReflectedMessageDecoder(frameworkBusinessInjector: frameworkInjector)
@@ -131,8 +145,6 @@ protocol MediatorReflectedProcessorProtocol {
                 abstractMessage.receivedAfterInitialQueueSend = receivedAfterInitialQueueSend
                 return try processor.process(incomingMessage: incomingMessage, abstractMessage: abstractMessage)
             }
-        case .none:
-            return Promise()
         case let .userProfileSync(userProfileSync):
             let processor = MediatorReflectedUserProfileSyncProcessor(
                 frameworkInjector: frameworkInjector
@@ -148,7 +160,7 @@ protocol MediatorReflectedProcessorProtocol {
                 frameworkInjector: frameworkInjector
             )
             return processor.process(settingsSync: settingsSync)
-        case .some:
+        case .none:
             return Promise()
         }
     }

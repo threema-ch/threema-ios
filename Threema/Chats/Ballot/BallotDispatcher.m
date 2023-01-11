@@ -38,7 +38,7 @@
     /* present open ballots as modal dialogs as the user must take action or cancel, and simply push closed ballots */
     if ([ballot isClosed]) {
         BallotResultViewController *viewController = [BallotResultViewController ballotResultViewControllerForBallot: ballot];
-        [navigationController pushViewController:viewController animated:YES];
+        [self presentAsModal:viewController onNavigationController:navigationController];
     } else {
         BallotVoteViewController *viewController = [BallotVoteViewController ballotVoteViewControllerForBallot: ballot];
         [self presentAsModal:viewController onNavigationController:navigationController];

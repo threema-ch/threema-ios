@@ -23,6 +23,8 @@
 
 @interface FileMessagePreview : NSObject
 
+/// You must store a reference to the returned instance otherwise it will be immediately deallocated and the preview will show "No file to preview"
+/// @param fileMessageEntity The FileMessageEntity for which the preview should be shown.
 + (instancetype)fileMessagePreviewFor:(FileMessageEntity *)fileMessageEntity;
 
 + (UIImage *)thumbnailForFileMessageEntity:(FileMessageEntity *)fileMessageEntity;

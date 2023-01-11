@@ -120,8 +120,12 @@ class PublicServerInfoProvider: ServerInfoProvider {
         )
     }
     
-    func mediatorServer(completionHandler: @escaping (MediatorServerInfo?, Error?) -> Void) {
+    func mediatorServer(
+        deviceGroupIDFirstByteHex: String,
+        completionHandler: @escaping (MediatorServerInfo?, Error?) -> Void
+    ) {
         completionHandler(MediatorServerInfo(
+            deviceGroupIDFirstByteHex: deviceGroupIDFirstByteHex,
             url: BundleUtil.object(forInfoDictionaryKey: "ThreemaMediatorServerURL") as! String,
             blob: BlobServerInfo(
                 downloadURL: BundleUtil.object(forInfoDictionaryKey: "ThreemaMediatorBlobURL") as! String,
@@ -130,7 +134,7 @@ class PublicServerInfoProvider: ServerInfoProvider {
             )
         ), nil)
     }
-    
+
     func webServer(ipv6: Bool, completionHandler: @escaping (WebServerInfo?, Error?) -> Void) {
         completionHandler(WebServerInfo(
             url: BundleUtil.object(forInfoDictionaryKey: "ThreemaWebURL") as! String,

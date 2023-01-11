@@ -19,11 +19,10 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import CocoaLumberjackSwift
-import DiffableDataSources
 import Foundation
 import MapKit
 
-final class SendLocationSearchDataSource: TableViewDiffableDataSource<SendLocationDetails.Section, PointOfInterest> {
+final class SendLocationSearchDataSource: UITableViewDiffableDataSource<SendLocationDetails.Section, PointOfInterest> {
     
     // MARK: - Properties
 
@@ -72,7 +71,7 @@ final class SendLocationSearchDataSource: TableViewDiffableDataSource<SendLocati
     @available(*, unavailable)
     override init(
         tableView: UITableView,
-        cellProvider: @escaping TableViewDiffableDataSource<SendLocationDetails.Section, PointOfInterest>.CellProvider
+        cellProvider: @escaping UITableViewDiffableDataSource<SendLocationDetails.Section, PointOfInterest>.CellProvider
     ) {
         fatalError("Just use init(tableView:).")
     }
@@ -86,7 +85,7 @@ final class SendLocationSearchDataSource: TableViewDiffableDataSource<SendLocati
         
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: "DefaultCell")
 
-        var snapshot = DiffableDataSourceSnapshot<SendLocationDetails.Section, PointOfInterest>()
+        var snapshot = NSDiffableDataSourceSnapshot<SendLocationDetails.Section, PointOfInterest>()
         
         // Standard POI Section
         snapshot.appendSections([.standardPOI])
@@ -178,7 +177,7 @@ extension SendLocationSearchDataSource {
             return
         }
         
-        HttpClient().downloadData(url: url, contentType: .json) { data, _, error in
+        HTTPClient().downloadData(url: url, contentType: .json) { data, _, error in
             do {
                 guard let data = data else {
                     return

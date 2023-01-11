@@ -20,10 +20,48 @@
 
 import CocoaLumberjackSwift
 import Foundation
+import OSLog
 import ThreemaFramework
 
+/// Migrate app to a new version
+///
+/// How to add a new migration:
+///
+/// 1. Add a new `AppMigrationVersion`. See its documentation for details
+/// 2. Add a new migrate function (`migrateToX_Y`)
+///     - Document the function and describe what is migrated
+///     - Check if the migration is as fast as possible and reduces resource usage (e.g. memory): E.g. for Core Data operations use batch (`NSBatch...`)
+///       and try to load the least amount of Core Data-Objects possible.
+/// 3. Call the migration in `run()`
+///
+/// ```swift
+/// ...
+/// @objc func run() {
+///     do {
+///         if migratedTo < .v4_8 {
+///             try migrateTo4_8()
+///             migratedTo = .v4_8
+///         }
+///         if migratedTo < .v4_9 {
+///             try migratedTo4_9()
+///             migratedTo = .v4_9
+///         }
+/// ...
+///
+/// /// Migrate to version 4.9:
+/// /// Describe migration steps here!
+/// private func migrateTo4_9() throws {
+///     DDLogNotice("[AppMigration] App migration to version 4.9 started")
+///     os_signpost(.begin, log: osPOILog, name: "4.9 migration")
+///     ...
+///     os_signpost(.end, log: osPOILog, name: "4.9 migration")
+///     DDLogNotice("[AppMigration] App migration to version 4.9 successfully finished")
+/// }
+/// ```
 @objc class AppMigration: NSObject {
 
+    private let osPOILog = OSLog(subsystem: "ch.threema.iapp.appMigration", category: .pointsOfInterest)
+    
     private let businessInjector: BusinessInjectorProtocol
 
     // Entity manager for main or background thread
@@ -44,9 +82,7 @@ import ThreemaFramework
     init(businessInjector: BusinessInjectorProtocol, reset: Bool = false) {
         self.businessInjector = businessInjector
 
-        // If `appMigratedToVersion` greater than latest migration version means, that the BETA user has downgraded the app.
-        // In this case run all migrations again.
-        if reset || businessInjector.userSettings.appMigratedToVersion > AppMigrationVersion.allCases.last!.rawValue {
+        if reset {
             businessInjector.userSettings.appMigratedToVersion = AppMigrationVersion.none.rawValue
         }
     }
@@ -55,18 +91,30 @@ import ThreemaFramework
         self.init(businessInjector: businessInjectorObjc as! BusinessInjectorProtocol)
     }
     
+    @available(
+        *,
+        deprecated,
+        message: "Only use from Objective-C. Use `AppMigrationVersion.isMigrationRequired(userSettings:)` otherwise",
+        renamed: "AppMigrationVersion.isMigrationRequired(userSettings:)"
+    )
     @objc static func isMigrationRequired(userSettings: UserSettingsProtocol) -> Bool {
         AppMigrationVersion.isMigrationRequired(userSettings: userSettings)
     }
 
     /// Runs all necessary migrations
     @objc func run() {
+        // We need to run this check to reset the latest version to the correct value if needed
+        guard AppMigrationVersion.isMigrationRequired(userSettings: businessInjector.userSettings) else {
+            DDLogNotice("[AppMigration] No migration needed")
+            return
+        }
+        
         do {
-            if migratedTo < .v48 {
-                try migrateTo48()
-                migratedTo = .v48
+            if migratedTo < .v4_8 {
+                try migrateTo4_8()
+                migratedTo = .v4_8
             }
-            // Add here a check is migration necessary for particular version...
+            // Add here a check if migration is necessary for a particular version...
         }
         catch {
             DDLogError("[AppMigration] (last migrated version \(migratedTo)) failed: \(error)")
@@ -82,8 +130,9 @@ import ThreemaFramework
     /// - Cleanup draft of all conversations
     /// - Add push settings for all group conversations
     /// - Mark all messages after latest readed message as read
-    private func migrateTo48() throws {
+    private func migrateTo4_8() throws {
         DDLogNotice("[AppMigration] App migration to version 4.8 started")
+        os_signpost(.begin, log: osPOILog, name: "4.8 migration")
 
         if DatabaseManager.db().shouldUpdateProtection() {
             businessInjector.myIdentityStore.updateConnectionRights()
@@ -168,6 +217,7 @@ import ThreemaFramework
         // See IOS-2811 for more information
         AppGroup.userDefaults().set(false, forKey: "PushReminderDoNotShowAgain")
         
+        os_signpost(.end, log: osPOILog, name: "4.8 migration")
         DDLogNotice("[AppMigration] App migration to version 4.8 successfully finished")
     }
 }

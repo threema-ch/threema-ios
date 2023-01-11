@@ -65,6 +65,8 @@ typedef enum : NSUInteger {
 
 - (NSArray *)messagesContaining:(NSString *)searchText inConversation:(Conversation *)conversation;
 
+- (NSArray *)messagesContaining:(NSString *)searchText inConversation:(Conversation *)conversation fetchLimit:(NSInteger)fetchLimit;
+
 - (NSArray *)textMessagesContaining:(NSString *)searchText inConversation:(Conversation *)conversation fetchLimit:(NSInteger)fetchLimit;
 
 - (Contact *)contactForId:(NSString *)identity NS_SWIFT_NAME(contact(for:));
@@ -73,9 +75,15 @@ typedef enum : NSUInteger {
 
 - (NSArray *)allContacts;
 
-- (NSArray *)contactsFilteredByWords:(NSArray *)searchWords;
-
 - (NSArray *)contactsFilteredByWords:(NSArray *)searchWords forContactTypes:(ContactTypes)types list:(ContactList)contactList members:(NSMutableSet *)members;
+
+/**
+ Checks if there are duplicate contacts in the contact table.
+
+ @param duplicateIdentities: Duplicate identities
+ @return: YES if it has duplicate contacts, NO otherwise.
+ */
+- (BOOL)hasDuplicateContactsWithDuplicateIdentities:(NSSet **)duplicateIdentities;
 
 - (NSArray *)allGroupConversations;
 
@@ -84,7 +92,7 @@ typedef enum : NSUInteger {
 // Is this still used somewhere?
 - (NSArray *)contactsWithVerificationLevel:(NSInteger)verificationLevel;
 
-- (NSArray *)contactsWithFeatureMaskNil;
+- (NSArray<Contact *> *)contactsWithFeatureMaskNil;
 
 - (NSArray *)contactsWithCustomTypingIndicator;
 
@@ -132,7 +140,7 @@ typedef enum : NSUInteger {
 
 - (BOOL)isMessageAlreadyInDb:(AbstractMessage *)message;
 
-- (BOOL)isNonceAlreadyInDb:(AbstractMessage *)message;
+- (BOOL)isNonceAlreadyInDB:(NSData *)nonce NS_SWIFT_NAME(isNonceAlreadyInDB(nonce:));
 
 - (GroupEntity *)groupEntityForGroupId:(NSData *)groupId groupCreator:(NSString *)groupCreator NS_SWIFT_NAME(groupEntity(for:with:));
 
@@ -158,7 +166,7 @@ typedef enum : NSUInteger {
 
 - (NSArray *)fileMessagesForConversation:(Conversation *)conversation;
 
-- (NSArray *)fileMessagesWOStickersForConversation:(Conversation *)conversation;
+- (NSArray *)filesMessagesFilteredForPhotoBrowserForConversation:(Conversation *)conversation;
 
 - (NSArray *)unreadMessagesForConversation:(Conversation *)conversation;
 
@@ -193,5 +201,7 @@ typedef enum : NSUInteger {
 - (NSArray *)allNotPermanentWebClientSessions;
 
 - (NSArray *)allLastGroupSyncRequests;
+
+- (NSArray *)allCallsWith:(NSString *)identity callID:(uint32_t)callID;
 
 @end

@@ -19,20 +19,4 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
-extension LocationMessage: QuoteMessage {
-    public var quoteMessageType: QuoteMessageType {
-        .location(quoteText, "mappin.circle.fill")
-    }
-    
-    private var quoteText: String {
-        if let poiName = poiName {
-            return poiName
-        }
-        else if let poiAddress = poiAddress {
-            return poiAddress
-        }
-        else {
-            return BundleUtil.localizedString(forKey: "location")
-        }
-    }
-}
+extension LocationMessage: QuoteMessage { }

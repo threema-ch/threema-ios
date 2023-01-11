@@ -55,6 +55,9 @@
 "error_other_connection_for_same_identity_title" = "Uyarı";
 "error_other_connection_for_same_identity_message" = "Sunucu, aynı Threema kimliğine sahip farklı cihazlardan iki veya daha fazla bağlantı algıladı.\n\nMevcut Threema kimliğini aynı anda birkaç cihazda kullanmak mümkün değildir. Yeni mesajlar yalnızca sunucuda en son oturum açan cihaza iletilir.\n\nYeni bir cihaza geçiyorsanız, lütfen eski cihazda %@ öğesini kaldırın veya devre dışı bırakın ve ardından yenisini yeniden başlatın.";
 
+"error_rogue_device_title" = "Başka bir cihazdan bağlantı algılandı";
+"error_rogue_device_message" = "Sunucu, aynı Threema kimliğine sahip farklı bir cihazdan bir bağlantı tespit etti.\n\nBu arada Threema kimliğinizi başka bir cihazda veya daha eski bir uygulama sürümünde kullanmadıysanız, lütfen destek ekibiyle iletişime geçin ve mümkünse günlük dosyasını gönderin.";
+
 "video_too_long_title" = "Video çok uzun";
 "video_too_long_message" = "Bu video gönderilemeyecek kadar uzun. İzin verilen maksimum uzunluk %.0f dakikadır.";
 

@@ -32,8 +32,10 @@ class MultiDeviceCell: ThemedCodeStackTableViewCell {
             }
 
             switch deviceInfo.platform {
-            case .unspecified, .android, .desktop, .ios, .web:
-                platformIcon.image = BundleUtil.imageNamed("ThreemaWeb\(Colors.theme.name)")
+            case .ios, .android:
+                platformIcon.image = UIImage(systemName: "iphone")
+            case .desktop, .web, .unspecified:
+                platformIcon.image = UIImage(systemName: "desktopcomputer")
             }
 
             deviceInfoLabel.text = deviceInfo.label
@@ -56,9 +58,10 @@ class MultiDeviceCell: ThemedCodeStackTableViewCell {
             }
 
             platformDetailsLabel.text = deviceInfo.platformDetails
-            lastLoginAtLabel
-                .text =
-                "Last login at \(DateFormatter.localizedString(from: deviceInfo.lastLoginAt, dateStyle: .short, timeStyle: .short))"
+            lastLoginAtLabel.text = String.localizedStringWithFormat(
+                BundleUtil.localizedString(forKey: "multi_device_linked_devices_last_login"),
+                DateFormatter.relativeLongStyleDateShortStyleTime(deviceInfo.lastLoginAt)
+            )
         }
     }
     
@@ -66,21 +69,21 @@ class MultiDeviceCell: ThemedCodeStackTableViewCell {
     
     // MARK: Subviews
     
-    private lazy var platformIcon: UIImageView = {
+    lazy var platformIcon: UIImageView = {
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFit
         
         imageView.heightAnchor.constraint(equalToConstant: 40.0).isActive = true
         imageView.widthAnchor.constraint(equalToConstant: 40.0).isActive = true
-        
+
         return imageView
     }()
     
-    private lazy var platformStack: UIStackView = {
+    lazy var platformStack: UIStackView = {
         let stackView = UIStackView(arrangedSubviews: [deviceInfoStack, detailsStack])
         
         stackView.axis = .vertical
-        stackView.spacing = 6
+        stackView.spacing = 4
         stackView.alignment = .fill
         stackView.distribution = .fill
         stackView.translatesAutoresizingMaskIntoConstraints = false
@@ -104,7 +107,7 @@ class MultiDeviceCell: ThemedCodeStackTableViewCell {
         let stackView = UIStackView(arrangedSubviews: [platformDetailsLabel, lastLoginAtLabel])
         
         stackView.axis = .vertical
-        stackView.spacing = 4
+        stackView.spacing = 2
         stackView.alignment = .fill
         stackView.distribution = .fill
         stackView.translatesAutoresizingMaskIntoConstraints = false
@@ -182,6 +185,15 @@ class MultiDeviceCell: ThemedCodeStackTableViewCell {
         contentStack.spacing = 16
         contentStack.addArrangedSubview(platformIcon)
         contentStack.addArrangedSubview(platformStack)
+    }
+    
+    // MARK: - Updates
+    
+    override func updateColors() {
+        super.updateColors()
+        
+        Colors.setTextColor(Colors.textLight, label: platformDetailsLabel)
+        Colors.setTextColor(Colors.textLight, label: lastLoginAtLabel)
     }
 }
 

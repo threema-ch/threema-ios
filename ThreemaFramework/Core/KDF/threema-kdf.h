@@ -27,20 +27,20 @@
 #define THREEMA_KDF_KEYBYTES 32
 #define THREEMA_KDF_SUBKEYBYTES 32
 #define THREEMA_KDF_MAC_LENGTH 32
-#define THREEMA_KDF_HASH_LENGTH 32
 
 /**
  * BLAKE2b function with key, salt and personalization.
  *
  * Notes:
  *
- * - `key` must be 32 bytes long
+ * - `key` must be 32..64 bytes long
  * - `salt` must be of size BLAKE2B_SALTBYTES
  * - `personal` must be of size BLAKE2B_PERSONALBYTES
  * - `out` must be 32 bytes long
  */
 int blake2b_key_salt_personal(
     const uint8_t* key,
+    const int      key_length,
     const uint8_t* salt,
     const uint8_t* personal,
     uint8_t*       out
@@ -61,15 +61,13 @@ int blake2b_mac(
 );
 
 /**
- * Helper function for using BLAKE2b as a simple hash.
- *
- * Notes:
- * - `out` must be 32 bytes long
+ * Helper function for using BLAKE2b as a simple hash with variable output length (up to 64 bytes).
  */
 int blake2b_hash(
     const uint8_t *input,
     size_t input_len,
-    uint8_t *out
+    uint8_t *output,
+    size_t output_len
 );
 
 /**

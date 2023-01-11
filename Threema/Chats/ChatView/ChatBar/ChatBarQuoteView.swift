@@ -42,20 +42,28 @@ final class ChatBarQuoteView: UIView {
     private lazy var quoteView: MessageQuoteStackView = {
         let messageQuoteView = MessageQuoteStackView()
         messageQuoteView.quoteMessage = quotedMessage
+        messageQuoteView.thumbnailDistribution = .spaced
         
         messageQuoteView.translatesAutoresizingMaskIntoConstraints = false
+        messageQuoteView.isAccessibilityElement = true
         
         return messageQuoteView
     }()
     
-    private lazy var closeQuoteButton = ChatBarButton(
-        sfSymbolName: "xmark.circle.fill",
-        accessibilityLabel: BundleUtil.localizedString(forKey: "chat_bar_quote_close_button"),
-        defaultColor: { Colors.backgroundButton },
-        action: { [weak self] _ in
-            self?.delegate?.quoteDismissed()
-        }
-    )
+    private lazy var closeQuoteButton: ChatBarButton = {
+        let button = ChatBarButton(
+            sfSymbolName: "xmark.circle.fill",
+            accessibilityLabel: BundleUtil.localizedString(forKey: "chat_bar_quote_close_button"),
+            defaultColor: { Colors.backgroundButton },
+            action: { [weak self] _ in
+                self?.delegate?.quoteDismissed()
+            }
+        )
+        button.accessibilityLabel = BundleUtil.localizedString(forKey: "accessibility_chatbar_close_quote_button_label")
+        button.accessibilityHint = BundleUtil.localizedString(forKey: "accessibility_chatbar_close_quote_button_hint")
+        
+        return button
+    }()
 
     private lazy var contentStackView: UIStackView = {
         let stackView = UIStackView(arrangedSubviews: [quoteView, closeQuoteButton])
@@ -84,6 +92,7 @@ final class ChatBarQuoteView: UIView {
         
         configureLayout()
         updateColors()
+        updateAccessibility()
         
         self.contentMode = .redraw
     }
@@ -112,6 +121,16 @@ final class ChatBarQuoteView: UIView {
                 constant: Config.leadingTrailingInset
             ),
         ])
+    }
+    
+    private func updateAccessibility() {
+        guard let message = quotedMessage as? MessageAccessibility else {
+            return
+        }
+        quoteView.accessibilityLabel = String.localizedStringWithFormat(
+            BundleUtil.localizedString(forKey: "accessibility_chatbar_quote_label"),
+            message.accessibilitySenderAndMessageTypeText
+        )
     }
     
     // MARK: - Update Functions

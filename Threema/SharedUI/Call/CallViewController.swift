@@ -1087,8 +1087,8 @@ extension CallViewController {
     }
 
     private func showCameraAccessAlert() {
-        let message = String(
-            format: BundleUtil.localizedString(forKey: "camera_disabled_message"),
+        let message = String.localizedStringWithFormat(
+            BundleUtil.localizedString(forKey: "camera_disabled_message"),
             ThreemaApp.currentName
         )
         DispatchQueue.main.async {

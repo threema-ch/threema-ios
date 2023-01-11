@@ -68,8 +68,8 @@
 // encrypted as defined by the Connection Rendezvous Protocol. All transmitted
 // messages are to be wrapped in:
 //
-// - `TowardsSourceDeviceEnvelope` when sending from DD to SD, and
-// - `TowardsDestinationDeviceEnvelope` when sending from SD to DD.
+// - `FromDestinationDeviceEnvelope` when sending from DD to SD, and
+// - `FromSourceDeviceEnvelope` when sending from SD to DD.
 //
 // #### History Transfer Flow
 //
@@ -150,14 +150,15 @@ extension History_MediaType: CaseIterable {
 
 #endif  // swift(>=4.2)
 
-/// Root message envelope for messages towards the source device.
-struct History_TowardsSourceDeviceEnvelope {
+/// Root message envelope for messages from the destination device (DD) to the
+/// source device (SD).
+struct History_FromDestinationDeviceEnvelope {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   /// The enveloped message
-  var content: History_TowardsSourceDeviceEnvelope.OneOf_Content? = nil
+  var content: History_FromDestinationDeviceEnvelope.OneOf_Content? = nil
 
   var getSummary: History_GetSummary {
     get {
@@ -183,7 +184,7 @@ struct History_TowardsSourceDeviceEnvelope {
     case beginTransfer(History_BeginTransfer)
 
   #if !swift(>=4.1)
-    static func ==(lhs: History_TowardsSourceDeviceEnvelope.OneOf_Content, rhs: History_TowardsSourceDeviceEnvelope.OneOf_Content) -> Bool {
+    static func ==(lhs: History_FromDestinationDeviceEnvelope.OneOf_Content, rhs: History_FromDestinationDeviceEnvelope.OneOf_Content) -> Bool {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
@@ -205,14 +206,15 @@ struct History_TowardsSourceDeviceEnvelope {
   init() {}
 }
 
-/// Root message envelope for messages towards the destination device.
-struct History_TowardsDestinationDeviceEnvelope {
+/// Root message envelope for messages from the source device (SD) to the
+/// destination device (DD).
+struct History_FromSourceDeviceEnvelope {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   /// The enveloped message
-  var content: History_TowardsDestinationDeviceEnvelope.OneOf_Content? = nil
+  var content: History_FromSourceDeviceEnvelope.OneOf_Content? = nil
 
   var summary: History_Summary {
     get {
@@ -247,7 +249,7 @@ struct History_TowardsDestinationDeviceEnvelope {
     case data(History_Data)
 
   #if !swift(>=4.1)
-    static func ==(lhs: History_TowardsDestinationDeviceEnvelope.OneOf_Content, rhs: History_TowardsDestinationDeviceEnvelope.OneOf_Content) -> Bool {
+    static func ==(lhs: History_FromSourceDeviceEnvelope.OneOf_Content, rhs: History_FromSourceDeviceEnvelope.OneOf_Content) -> Bool {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
@@ -642,8 +644,8 @@ extension History_MediaType: SwiftProtobuf._ProtoNameProviding {
   ]
 }
 
-extension History_TowardsSourceDeviceEnvelope: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  static let protoMessageName: String = _protobuf_package + ".TowardsSourceDeviceEnvelope"
+extension History_FromDestinationDeviceEnvelope: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = _protobuf_package + ".FromDestinationDeviceEnvelope"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "get_summary"),
     2: .standard(proto: "begin_transfer"),
@@ -704,15 +706,15 @@ extension History_TowardsSourceDeviceEnvelope: SwiftProtobuf.Message, SwiftProto
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  static func ==(lhs: History_TowardsSourceDeviceEnvelope, rhs: History_TowardsSourceDeviceEnvelope) -> Bool {
+  static func ==(lhs: History_FromDestinationDeviceEnvelope, rhs: History_FromDestinationDeviceEnvelope) -> Bool {
     if lhs.content != rhs.content {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
 }
 
-extension History_TowardsDestinationDeviceEnvelope: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  static let protoMessageName: String = _protobuf_package + ".TowardsDestinationDeviceEnvelope"
+extension History_FromSourceDeviceEnvelope: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = _protobuf_package + ".FromSourceDeviceEnvelope"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "summary"),
     2: .standard(proto: "blob_data"),
@@ -791,7 +793,7 @@ extension History_TowardsDestinationDeviceEnvelope: SwiftProtobuf.Message, Swift
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  static func ==(lhs: History_TowardsDestinationDeviceEnvelope, rhs: History_TowardsDestinationDeviceEnvelope) -> Bool {
+  static func ==(lhs: History_FromSourceDeviceEnvelope, rhs: History_FromSourceDeviceEnvelope) -> Bool {
     if lhs.content != rhs.content {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true

@@ -85,6 +85,10 @@
     }
 }
 
+- (void)insertSelectedConversation:(Conversation *) conversation {
+    [_selectedConversations addObject:conversation];
+}
+
 #pragma mark - ContactGroupDataSource
 
 - (void)filterByWords:(NSArray *)words {

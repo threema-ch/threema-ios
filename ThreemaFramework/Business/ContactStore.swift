@@ -20,30 +20,43 @@
 
 import CocoaLumberjackSwift
 import Foundation
+import PromiseKit
 
 extension ContactStore {
     @objc func batchAddWorkContacts(batchAddContacts: [BatchAddWorkContact]) {
         let mediatorSyncableContacts = MediatorSyncableContacts()
+        firstly { () -> Promise<[String]> in
+            let entityManager = EntityManager(withChildContextForBackgroundProcess: true)
+            var identities = [String]()
+            entityManager.performSyncBlockAndSafe {
+                for batchAddContact in batchAddContacts {
+                    guard let publicKey = batchAddContact.publicKey else {
+                        continue
+                    }
 
-        let entityManager = EntityManager(withChildContextForBackgroundProcess: true)
-        entityManager.performSyncBlockAndSafe {
-            for batchAddContact in batchAddContacts {
-                ContactStore.shared().batchAddWorkContact(
-                    with: batchAddContact.identity,
-                    publicKey: batchAddContact.publicKey,
-                    firstname: batchAddContact.firstName,
-                    lastname: batchAddContact.lastName,
-                    shouldUpdateFeatureMask: false,
-                    contactSyncer: mediatorSyncableContacts
-                )
+                    if let contact = self.addWorkContact(
+                        with: batchAddContact.identity,
+                        publicKey: publicKey,
+                        firstname: batchAddContact.firstName,
+                        lastname: batchAddContact.lastName,
+                        acquaintanceLevel: .direct,
+                        entityManager: entityManager,
+                        contactSyncer: mediatorSyncableContacts
+                    ) {
+                        identities.append(contact.identity)
+                    }
+                }
             }
+            return Promise { seal in seal.fulfill(identities) }
         }
-
-        mediatorSyncableContacts.sync()
-            .catch { error in
-                DDLogError("Sync contacts failed: \(error)")
-            }
-        
-        ContactStore.shared().updateFeatureMasks(for: batchAddContacts.map(\.identity))
+        .then { identities -> AnyPromise in
+            self.updateFeatureMasks(forIdentities: identities, contactSyncer: mediatorSyncableContacts)
+        }
+        .then { _ -> Promise<Void> in
+            mediatorSyncableContacts.sync()
+        }
+        .catch { error in
+            DDLogError("Sync contacts failed: \(error)")
+        }
     }
 }

@@ -18,16 +18,21 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import CocoaLumberjackSwift
 import Foundation
+import SwiftUI
+import ThreemaFramework
 
 class MultiThisDeviceCell: MultiDeviceCell {
     
     // MARK: - Public property
     
-    var activated = false {
+    weak var parentViewController: MultiDeviceViewController?
+    
+    var enabled = false {
         didSet {
-            activateSwitch.isOn = activated
-            activateSwitch.isEnabled = false
+            enabledSwitch.isOn = enabled
+            enabledSwitch.isEnabled = true
         }
     }
     
@@ -35,18 +40,96 @@ class MultiThisDeviceCell: MultiDeviceCell {
     
     // MARK: Subviews
     
-    private lazy var activateSwitch: UISwitch = {
+    lazy var enabledSwitch: UISwitch = {
         let uiSwitch = UISwitch()
+        
+        uiSwitch.addTarget(self, action: #selector(self.enabledSwitchValueChanged), for: .valueChanged)
         
         return uiSwitch
     }()
+    
+    @objc func enabledSwitchValueChanged(_ sender: UISwitch) {
+        if sender.isOn {
+            var duplicates: NSSet?
+            guard !BusinessInjector().entityManager.entityFetcher.hasDuplicateContacts(
+                withDuplicateIdentities: &duplicates
+            ) else {
+                var duplicateIdentitiesDesc = "?"
+                if let duplicateIdentities = duplicates as? Set<String> {
+                    duplicateIdentitiesDesc = duplicateIdentities.joined(separator: ", ")
+                }
+
+                UIAlertTemplate.showAlert(
+                    owner: parentViewController!,
+                    title: BundleUtil.localizedString(forKey: "multi_device_linked_duplicate_contacts_title"),
+                    message: String(
+                        format: BundleUtil.localizedString(forKey: "multi_device_linked_duplicate_contacts_desc"),
+                        duplicateIdentitiesDesc
+                    )
+                )
+                
+                enabledSwitch.isOn = false
+                return
+            }
+
+            MultiDeviceWizardManager.shared.showWizard(on: (parentViewController?.navigationController)!)
+        }
+        else {
+            UIAlertTemplate.showAlert(
+                owner: parentViewController!,
+                title: BundleUtil.localizedString(forKey: "multi_device_linked_devices_removed_devices_title"),
+                message: BundleUtil.localizedString(forKey: "multi_device_linked_devices_removed_devices_message"),
+                titleOk: BundleUtil.localizedString(forKey: "multi_device_linked_devices_removed_devices_ok")
+            ) { _ in
+                self.parentViewController?.activityIndicator.hidesWhenStopped = true
+                self.parentViewController?.activityIndicator.startAnimating()
+                
+                let dl = DeviceLinking(businessInjector: BusinessInjector())
+                dl.disableMultiDevice()
+                    .ensure {
+                        self.parentViewController?.load()
+                        self.parentViewController?.activityIndicator.stopAnimating()
+                    }
+                    .catch { error in
+                        self.enabledSwitch.isOn = true
+
+                        DDLogError("Disable Multi Device failed: \(error)")
+                        self.parentViewController?.showAlertRemoveDeviceFailed()
+                    }
+
+            } actionCancel: { _ in
+                self.enabledSwitch.isOn = true
+            }
+        }
+    }
     
     // MARK: - Lifecycle
     
     override func configureCell() {
         super.configureCell()
-               
+        
         // add switch to cell
-        accessoryView = activateSwitch
+        accessoryView = enabledSwitch
+
+        if BusinessInjector().userSettings.allowSeveralLinkedDevices {
+            let tapGestureRecognizer = UITapGestureRecognizer(
+                target: self,
+                action: #selector(platformIconTapped(tapGestureRecognizer:))
+            )
+            platformIcon.addGestureRecognizer(tapGestureRecognizer)
+            platformIcon.isUserInteractionEnabled = true
+        }
+    }
+
+    @objc
+    private func platformIconTapped(tapGestureRecognizer: UITapGestureRecognizer) {
+        let bi = BusinessInjector()
+        let deviceGroupKeyManager = DeviceGroupKeyManager(myIdentityStore: bi.myIdentityStore)
+        if deviceGroupKeyManager.dgk != nil, !bi.userSettings.blockCommunication {
+            MultiDeviceWizardManager.shared.showWizard(
+                on: (parentViewController?.navigationController)!,
+                additionalLinking: true
+            )
+        }
     }
 }

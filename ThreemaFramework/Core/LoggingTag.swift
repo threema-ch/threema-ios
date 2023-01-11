@@ -29,13 +29,15 @@ enum LoggingTag: UInt8 {
     case sendIncomingMessageAckToMediator = 0x65
     case reflectIncomingMessageToMediator = 0x91
     case receiveIncomingMessageAckFromMediator = 0x24
+    case reflectIncomingMessageUpdateToMediator = 0x31
+    case receiveIncomingMessageUpdateAckFromMediator = 0x56
 
     case sendOutgoingMessageToChat = 0x82
     case receiveOutgoingMessageAckFromChat = 0x93
     case reflectOutgoingMessageToMediator = 0x03
     case receiveOutgoingMessageAckFromMediator = 0x55
-    case reflectOutgoingMessageSentToMediator = 0x21
-    case receiveOutgoingMessageSentAckFromMediator = 0x52
+    case reflectOutgoingMessageUpdateToMediator = 0x21
+    case receiveOutgoingMessageUpdateAckFromMediator = 0x52
 
     case sendBeginTransactionToMediator = 0x34
     case receiveBeginTransactionAckFromMediator = 0x13

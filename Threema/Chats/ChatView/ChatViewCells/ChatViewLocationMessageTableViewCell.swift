@@ -23,16 +23,23 @@ import ThreemaFramework
 import UIKit
 
 /// Display a location message
-final class ChatViewLocationMessageTableViewCell: ChatViewBaseTableViewCell, MeasurableCell, MessageTextViewDelegate {
+final class ChatViewLocationMessageTableViewCell: ChatViewBaseTableViewCell, MeasurableCell {
     static var sizingCell = ChatViewLocationMessageTableViewCell()
     
     /// Location message to display
     ///
     /// Reset it when the message had any changes to update data shown in the views (e.g. date or status symbol).
-    var locationMessage: LocationMessage? {
+    var locationMessageAndNeighbors: (message: LocationMessage, neighbors: ChatViewDataSource.MessageNeighbors)? {
         didSet {
-            super.setMessage(to: locationMessage)
-            updateCell(for: locationMessage)
+            updateCell(for: locationMessageAndNeighbors?.message)
+            
+            super.setMessage(to: locationMessageAndNeighbors?.message, with: locationMessageAndNeighbors?.neighbors)
+        }
+    }
+    
+    override var shouldShowDateAndState: Bool {
+        didSet {
+            messageDateAndStateView.isHidden = !shouldShowDateAndState
         }
     }
     
@@ -49,7 +56,7 @@ final class ChatViewLocationMessageTableViewCell: ChatViewBaseTableViewCell, Mea
         return imageView
     }()
     
-    private lazy var messageTextView = MessageTextView(messageTextViewDelegate: self)
+    private lazy var messageTextView = MessageTextView(messageTextViewDelegate: nil)
     private lazy var messageSecondaryTextLabel = MessageSecondaryTextLabel()
     private lazy var messageDateAndStateView = MessageDateAndStateView()
     
@@ -60,7 +67,16 @@ final class ChatViewLocationMessageTableViewCell: ChatViewBaseTableViewCell, Mea
             messageSecondaryTextLabel,
             messageDateAndStateView,
         ]
-    )
+    ) { [weak self] in
+        guard let strongSelf = self else {
+            return
+        }
+        
+        strongSelf.chatViewTableViewCellDelegate?.didTap(
+            message: strongSelf.locationMessageAndNeighbors?.message,
+            in: strongSelf
+        )
+    }
     
     // MARK: - Configuration
     
@@ -81,6 +97,12 @@ final class ChatViewLocationMessageTableViewCell: ChatViewBaseTableViewCell, Mea
         messageDateAndStateView.updateColors()
     }
     
+    override func setEditing(_ editing: Bool, animated: Bool) {
+        super.setEditing(editing, animated: animated)
+        
+        iconMessageContentView.isUserInteractionEnabled = !editing
+    }
+    
     private func updateCell(for locationMessage: LocationMessage?) {
         // By accepting an optional the data is automatically reset when the text message is set to `nil`
         
@@ -91,17 +113,12 @@ final class ChatViewLocationMessageTableViewCell: ChatViewBaseTableViewCell, Mea
             chatViewTableViewCellDelegate?.clearCellHeightCache(for: locationMessage.objectID)
         }
         
-        // TODO: (IOS-2390) Replace by correct name label implementation
-        if let locationMessage = locationMessage,
-           locationMessage.conversation.isGroup(),
-           !locationMessage.isOwnMessage {
-            messageTextView.text = "\(locationMessage.quotedSender): \(locationMessage.poiName ?? "")"
-            messageTextView.isHidden = false
+        if let poiName = locationMessage?.poiName {
+            messageTextView.text = poiName
         }
-        else {
-            messageTextView.text = locationMessage?.poiName
-            messageTextView.isHidden = messageTextView.text.isEmpty
-        }
+        
+        messageTextView.isHidden = messageTextView.text.isEmpty
+
         messageSecondaryTextLabel.text = locationMessage?.poiAddress
     
         messageDateAndStateView.message = locationMessage
@@ -118,7 +135,7 @@ extension ChatViewLocationMessageTableViewCell: ContextMenuAction {
     
     func buildContextMenu(at indexPath: IndexPath) -> UIContextMenuConfiguration? {
         
-        guard let message = locationMessage else {
+        guard let message = locationMessageAndNeighbors?.message else {
             return nil
         }
 
@@ -142,7 +159,9 @@ extension ChatViewLocationMessageTableViewCell: ContextMenuAction {
         
         let copyHandler = {
             UIPasteboard.general.string = locationSummary
+            NotificationPresenterWrapper.shared.present(type: .copySuccess)
         }
+        
         let shareItems = [locationSummary as Any]
         
         let quoteHandler = {
@@ -152,12 +171,25 @@ extension ChatViewLocationMessageTableViewCell: ContextMenuAction {
             chatViewTableViewCellDelegate.showQuoteView(message: message)
         }
         
+        // Details
+        let detailsHandler = {
+            self.chatViewTableViewCellDelegate?.showDetails(for: message.objectID)
+        }
+        
+        // Edit
+        let editHandler = {
+            self.chatViewTableViewCellDelegate?.startMultiselect()
+        }
+        
         let defaultActions = Provider.defaultActions(
             message: message,
             speakText: locationSummary,
             shareItems: shareItems,
+            activityViewAnchor: contentView,
             copyHandler: copyHandler,
-            quoteHandler: quoteHandler
+            quoteHandler: quoteHandler,
+            detailsHandler: detailsHandler,
+            editHandler: editHandler
         )
         
         menuItems.append(contentsOf: defaultActions)

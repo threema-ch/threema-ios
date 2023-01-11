@@ -22,7 +22,7 @@
 //
 //     PSK = scrypt(
 //       password=<passphrase>,
-//       salt='3ma-mdev-join',
+//       salt=<random-32-byte-salt>,
 //       key-length=32,
 //       parameters={r=8, N=65536, p=1}
 //     )
@@ -83,8 +83,8 @@
 // encrypted as defined by the Connection Rendezvous Protocol. All transmitted
 // messages are to be wrapped in:
 //
-// - `TowardsExistingDeviceEnvelope` when sending from ND to ED, and
-// - `TowardsNewDeviceEnvlope` when sending from ED to ND.
+// - `FromNewDeviceEnvelope` when sending from ND to ED, and
+// - `FromExistingDeviceEnvelope` when sending from ED to ND.
 //
 // #### Device Join Flow
 //
@@ -120,14 +120,15 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
   typealias Version = _2
 }
 
-/// Root message envelope for messages towards the existing device (ED).
-struct Join_TowardsExistingDeviceEnvelope {
+/// Root message envelope for messages from the new device (ND) to the existing
+/// device (ED).
+struct Join_FromNewDeviceEnvelope {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   /// The enveloped message
-  var content: Join_TowardsExistingDeviceEnvelope.OneOf_Content? = nil
+  var content: Join_FromNewDeviceEnvelope.OneOf_Content? = nil
 
   var begin: Join_Begin {
     get {
@@ -153,7 +154,7 @@ struct Join_TowardsExistingDeviceEnvelope {
     case registered(Join_Registered)
 
   #if !swift(>=4.1)
-    static func ==(lhs: Join_TowardsExistingDeviceEnvelope.OneOf_Content, rhs: Join_TowardsExistingDeviceEnvelope.OneOf_Content) -> Bool {
+    static func ==(lhs: Join_FromNewDeviceEnvelope.OneOf_Content, rhs: Join_FromNewDeviceEnvelope.OneOf_Content) -> Bool {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
@@ -175,14 +176,15 @@ struct Join_TowardsExistingDeviceEnvelope {
   init() {}
 }
 
-/// Root message envelope for messages towards the new device (ND).
-struct Join_TowardsNewDeviceEnvelope {
+/// Root message envelope for messages from the existing device (ED) to the new
+/// device (ND).
+struct Join_FromExistingDeviceEnvelope {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   /// The enveloped message
-  var content: Join_TowardsNewDeviceEnvelope.OneOf_Content? = nil
+  var content: Join_FromExistingDeviceEnvelope.OneOf_Content? = nil
 
   var blobData: Common_BlobData {
     get {
@@ -208,7 +210,7 @@ struct Join_TowardsNewDeviceEnvelope {
     case essentialData(Join_EssentialData)
 
   #if !swift(>=4.1)
-    static func ==(lhs: Join_TowardsNewDeviceEnvelope.OneOf_Content, rhs: Join_TowardsNewDeviceEnvelope.OneOf_Content) -> Bool {
+    static func ==(lhs: Join_FromExistingDeviceEnvelope.OneOf_Content, rhs: Join_FromExistingDeviceEnvelope.OneOf_Content) -> Bool {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
@@ -296,10 +298,10 @@ struct Join_EssentialData {
   /// Clears the value of `mediatorServer`. Subsequent reads from it will return its default value.
   mutating func clearMediatorServer() {_uniqueStorage()._mediatorServer = nil}
 
-  /// The private key associated with the Threema ID
-  var privateKey: Data {
-    get {return _storage._privateKey}
-    set {_uniqueStorage()._privateKey = newValue}
+  /// The secret client key associated with the Threema ID
+  var clientKey: Data {
+    get {return _storage._clientKey}
+    set {_uniqueStorage()._clientKey = newValue}
   }
 
   /// The user's profile
@@ -418,8 +420,8 @@ struct Join_Registered {
 
 fileprivate let _protobuf_package = "join"
 
-extension Join_TowardsExistingDeviceEnvelope: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  static let protoMessageName: String = _protobuf_package + ".TowardsExistingDeviceEnvelope"
+extension Join_FromNewDeviceEnvelope: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = _protobuf_package + ".FromNewDeviceEnvelope"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "begin"),
     2: .same(proto: "registered"),
@@ -480,15 +482,15 @@ extension Join_TowardsExistingDeviceEnvelope: SwiftProtobuf.Message, SwiftProtob
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  static func ==(lhs: Join_TowardsExistingDeviceEnvelope, rhs: Join_TowardsExistingDeviceEnvelope) -> Bool {
+  static func ==(lhs: Join_FromNewDeviceEnvelope, rhs: Join_FromNewDeviceEnvelope) -> Bool {
     if lhs.content != rhs.content {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
 }
 
-extension Join_TowardsNewDeviceEnvelope: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  static let protoMessageName: String = _protobuf_package + ".TowardsNewDeviceEnvelope"
+extension Join_FromExistingDeviceEnvelope: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = _protobuf_package + ".FromExistingDeviceEnvelope"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "blob_data"),
     2: .standard(proto: "essential_data"),
@@ -549,7 +551,7 @@ extension Join_TowardsNewDeviceEnvelope: SwiftProtobuf.Message, SwiftProtobuf._M
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  static func ==(lhs: Join_TowardsNewDeviceEnvelope, rhs: Join_TowardsNewDeviceEnvelope) -> Bool {
+  static func ==(lhs: Join_FromExistingDeviceEnvelope, rhs: Join_FromExistingDeviceEnvelope) -> Bool {
     if lhs.content != rhs.content {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
@@ -579,7 +581,7 @@ extension Join_EssentialData: SwiftProtobuf.Message, SwiftProtobuf._MessageImple
   static let protoMessageName: String = _protobuf_package + ".EssentialData"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "mediator_server"),
-    2: .standard(proto: "private_key"),
+    2: .standard(proto: "client_key"),
     3: .standard(proto: "user_profile"),
     4: .same(proto: "settings"),
     5: .same(proto: "contacts"),
@@ -589,7 +591,7 @@ extension Join_EssentialData: SwiftProtobuf.Message, SwiftProtobuf._MessageImple
 
   fileprivate class _StorageClass {
     var _mediatorServer: Join_EssentialData.MediatorServer? = nil
-    var _privateKey: Data = Data()
+    var _clientKey: Data = Data()
     var _userProfile: Sync_UserProfile? = nil
     var _settings: Sync_Settings? = nil
     var _contacts: [Sync_Contact] = []
@@ -602,7 +604,7 @@ extension Join_EssentialData: SwiftProtobuf.Message, SwiftProtobuf._MessageImple
 
     init(copying source: _StorageClass) {
       _mediatorServer = source._mediatorServer
-      _privateKey = source._privateKey
+      _clientKey = source._clientKey
       _userProfile = source._userProfile
       _settings = source._settings
       _contacts = source._contacts
@@ -627,7 +629,7 @@ extension Join_EssentialData: SwiftProtobuf.Message, SwiftProtobuf._MessageImple
         // enabled. https://github.com/apple/swift-protobuf/issues/1034
         switch fieldNumber {
         case 1: try { try decoder.decodeSingularMessageField(value: &_storage._mediatorServer) }()
-        case 2: try { try decoder.decodeSingularBytesField(value: &_storage._privateKey) }()
+        case 2: try { try decoder.decodeSingularBytesField(value: &_storage._clientKey) }()
         case 3: try { try decoder.decodeSingularMessageField(value: &_storage._userProfile) }()
         case 4: try { try decoder.decodeSingularMessageField(value: &_storage._settings) }()
         case 5: try { try decoder.decodeRepeatedMessageField(value: &_storage._contacts) }()
@@ -644,8 +646,8 @@ extension Join_EssentialData: SwiftProtobuf.Message, SwiftProtobuf._MessageImple
       if let v = _storage._mediatorServer {
         try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
       }
-      if !_storage._privateKey.isEmpty {
-        try visitor.visitSingularBytesField(value: _storage._privateKey, fieldNumber: 2)
+      if !_storage._clientKey.isEmpty {
+        try visitor.visitSingularBytesField(value: _storage._clientKey, fieldNumber: 2)
       }
       if let v = _storage._userProfile {
         try visitor.visitSingularMessageField(value: v, fieldNumber: 3)
@@ -672,7 +674,7 @@ extension Join_EssentialData: SwiftProtobuf.Message, SwiftProtobuf._MessageImple
         let _storage = _args.0
         let rhs_storage = _args.1
         if _storage._mediatorServer != rhs_storage._mediatorServer {return false}
-        if _storage._privateKey != rhs_storage._privateKey {return false}
+        if _storage._clientKey != rhs_storage._clientKey {return false}
         if _storage._userProfile != rhs_storage._userProfile {return false}
         if _storage._settings != rhs_storage._settings {return false}
         if _storage._contacts != rhs_storage._contacts {return false}

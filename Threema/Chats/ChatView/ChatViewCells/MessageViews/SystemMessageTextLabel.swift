@@ -29,10 +29,19 @@ final class SystemMessageTextLabel: UILabel {
         }
     }
     
+    // TODO: (IOS-3021) Remove this workaround
+    override var textColor: UIColor! {
+        didSet {
+            if textColor != Colors.textLight {
+                textColor = Colors.textLight
+            }
+        }
+    }
+    
     override var intrinsicContentSize: CGSize {
         var contentSize = super.intrinsicContentSize
-        contentSize.height += ChatViewConfiguration.SystemMessageBackground.defaultSystemMessageTopBottomInset * 2
-        contentSize.width += ChatViewConfiguration.SystemMessageBackground.defaultSystemMessageLeadingTrailingInset * 2
+        contentSize.height += ChatViewConfiguration.SystemMessage.Background.defaultSystemMessageTopBottomInset * 2
+        contentSize.width += ChatViewConfiguration.SystemMessage.Background.defaultSystemMessageLeadingTrailingInset * 2
         return contentSize
     }
 
@@ -55,7 +64,7 @@ final class SystemMessageTextLabel: UILabel {
     }
     
     private func configureLabel() {
-        font = ChatViewConfiguration.SystemMessageText.font
+        font = ChatViewConfiguration.SystemMessageText.defaultFont
         adjustsFontForContentSizeCategory = true
         
         numberOfLines = 0
@@ -70,10 +79,10 @@ final class SystemMessageTextLabel: UILabel {
     
     override func drawText(in rect: CGRect) {
         let insets = UIEdgeInsets(
-            top: ChatViewConfiguration.SystemMessageBackground.defaultSystemMessageTopBottomInset,
-            left: ChatViewConfiguration.SystemMessageBackground.defaultSystemMessageLeadingTrailingInset,
-            bottom: ChatViewConfiguration.SystemMessageBackground.defaultSystemMessageTopBottomInset,
-            right: ChatViewConfiguration.SystemMessageBackground.defaultSystemMessageLeadingTrailingInset
+            top: ChatViewConfiguration.SystemMessage.Background.defaultSystemMessageTopBottomInset,
+            left: ChatViewConfiguration.SystemMessage.Background.defaultSystemMessageLeadingTrailingInset,
+            bottom: ChatViewConfiguration.SystemMessage.Background.defaultSystemMessageTopBottomInset,
+            right: ChatViewConfiguration.SystemMessage.Background.defaultSystemMessageLeadingTrailingInset
         )
         super.drawText(in: rect.inset(by: insets))
     }
@@ -81,7 +90,7 @@ final class SystemMessageTextLabel: UILabel {
     // MARK: - Update
     
     func updateColors() {
-        Colors.setTextColor(Colors.textLight, label: self)
+        textColor = Colors.textLight
         backgroundColor = Colors.newSystemMessageBackground
     }
     
@@ -91,11 +100,12 @@ final class SystemMessageTextLabel: UILabel {
         let buffer = 10.0
         
         // Ignore if view has no size
-        if frame.height < 2 * ChatViewConfiguration.SystemMessageBackground.cornerRadius + buffer, frame.height != 0.0 {
+        if frame.height < 2 * ChatViewConfiguration.SystemMessage.Background.cornerRadius + buffer,
+           frame.height != 0.0 {
             layer.cornerRadius = frame.height / 2
         }
         else {
-            layer.cornerRadius = ChatViewConfiguration.SystemMessageBackground.cornerRadius
+            layer.cornerRadius = ChatViewConfiguration.SystemMessage.Background.cornerRadius
         }
     }
 }

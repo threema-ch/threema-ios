@@ -177,19 +177,19 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 }
 
 + (NSArray*)videoQualities {
-    return @[@"low", @"high"];
+    return @[@"low", @"high", @"original"];
 }
 
 + (NSArray*)videoQualityMaxDurations {
-    int highMaxDuration = (int) [VideoConversionHelper getMaxdurationForVideoBitrate:kVideoBitrateHigh audioBitrate:kAudioBitrateHigh];
-    int lowMaxDuration = (int) [VideoConversionHelper getMaxdurationForVideoBitrate:kVideoBitrateLow audioBitrate:kAudioBitrateLow];
+    int highMaxDuration = (int) [VideoConversionHelper getMaxdurationInMinutesWithVideoBitrate:kVideoBitrateHigh audioBitrate:kAudioBitrateHigh];
+    int lowMaxDuration = (int) [VideoConversionHelper getMaxdurationInMinutesWithVideoBitrate:kVideoBitrateLow audioBitrate:kAudioBitrateLow];
     
     return @[[NSNumber numberWithInt:lowMaxDuration], [NSNumber numberWithInt:highMaxDuration]];
 }
 
 /// Returns the maximum duration for a video at the lowest possible quality in minutes.
 + (double)videoMaxDurationAtCurrentQuality {
-    long long lowMaxDuration = [VideoConversionHelper getMaxdurationForVideoBitrate:kVideoBitrateLow audioBitrate:kAudioBitrateLow];
+    long long lowMaxDuration = [VideoConversionHelper getMaxdurationInMinutesWithVideoBitrate:kVideoBitrateLow audioBitrate:kAudioBitrateLow];
     
     return lowMaxDuration;
 }
@@ -249,7 +249,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 }
 
 + (NSData *)PNGRepresentationFor: (UIImage *) image {
-    return [self representationForType:kUTTypePNG andImage:image];
+    return [self representationForType:UTTypePNG.identifier andImage:image];
 }
 
 + (NSData *)JPEGRepresentationFor: (UIImage *) image {
@@ -257,17 +257,19 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 }
 
 + (NSData *)JPEGRepresentationFor: (UIImage *) image withQuality:(NSNumber *)compressionQuality {
-    return [self representationForType:kUTTypeJPEG andImage:image andQuality:compressionQuality];
+    return [self representationForType:UTTypeJPEG.identifier andImage:image andQuality:compressionQuality];
 }
 
-+ (NSData *)representationForType: (CFStringRef) type andImage:(UIImage *) image {
++ (NSData *)representationForType: (NSString*) type andImage:(UIImage *) image {
     return [MediaConverter representationForType:type andImage:image andQuality:[NSNumber numberWithDouble:kJPEGCompressionQualityLow]];
 }
 
-+ (NSData *)representationForType: (CFStringRef) type andImage:(UIImage *) image andQuality:(NSNumber *)compressionQuality {
++ (NSData *)representationForType: (NSString*) type andImage:(UIImage *) image andQuality:(NSNumber *)compressionQuality {
     @autoreleasepool {
+        
+        CFStringRef cfType = (__bridge CFStringRef)type;
         CFMutableDataRef data = CFDataCreateMutable(nil, 0);
-        CGImageDestinationRef destination = CGImageDestinationCreateWithData(data, type, 1, nil);
+        CGImageDestinationRef destination = CGImageDestinationCreateWithData(data, cfType, 1, nil);
         if (destination == nil) {
             return nil;
         }

@@ -24,10 +24,11 @@
 #import "BundleUtil.h"
 #import <MBProgressHUD/MBProgressHUD.h>
 #import "ContactUtil.h"
-#import "FileMessageSender.h"
+#import "Old_FileMessageSender.h"
 #import <Contacts/Contacts.h>
 #import <ContactsUI/ContactsUI.h>
 #import <CocoaLumberjack/CocoaLumberjack.h>
+#import "UserSettings.h"
 
 @interface DocumentPicker () <UIDocumentPickerDelegate, UIDocumentMenuDelegate, UploadProgressDelegate, CNContactPickerDelegate>
 
@@ -87,11 +88,13 @@ static DocumentPicker *pickerStrongReference;
     else {
         CNContactStore *cnAddressBook = [CNContactStore new];
         [cnAddressBook requestAccessForEntityType:CNEntityTypeContacts completionHandler:^(BOOL granted, NSError * _Nullable error) {
-            if (granted) {
-                [self showContactPicker];
-            } else {
-                [self showContactAlert];
-            }
+            dispatch_async(dispatch_get_main_queue(), ^{
+                if (granted) {
+                    [self showContactPicker];
+                } else {
+                    [self showContactAlert];
+                }
+            });
         }];
     }
 }
@@ -124,15 +127,21 @@ static DocumentPicker *pickerStrongReference;
     NSString *ok = [BundleUtil localizedStringForKey:@"ok"];
     NSString *cancel = [BundleUtil localizedStringForKey:@"cancel"];
     UIAlertAction* defaultAction = [UIAlertAction actionWithTitle:ok style:UIAlertActionStyleDefault handler:^(UIAlertAction * action) {
-        [MBProgressHUD showHUDAddedTo:_presentingViewController.view animated:YES];
         
         if (captionTextField.text.length > 0) {
             item.caption = captionTextField.text;
         }
-
-        FileMessageSender *sender = [[FileMessageSender alloc] init];
-        sender.uploadProgressDelegate = self;
-        [sender sendItem:item inConversation:_conversation];
+        if ([UserSettings sharedUserSettings].newChatViewActive) {
+            BlobManagerObjcWrapper *manager = [[BlobManagerObjcWrapper alloc] init];
+            [manager createMessageAndSyncBlobsFor:item in:_conversation correlationID:nil webRequestID:nil];
+            
+        } else {
+            [MBProgressHUD showHUDAddedTo:_presentingViewController.view animated:YES];
+            Old_FileMessageSender *sender = [[Old_FileMessageSender alloc] init];
+            sender.uploadProgressDelegate = self;
+            [sender sendItem:item inConversation:_conversation];
+        }
+        
     }];
     [alertController addAction:defaultAction];
     
@@ -162,25 +171,25 @@ static DocumentPicker *pickerStrongReference;
 
 #pragma mark - UploadProgressDelegate
 
-- (BOOL)blobMessageSenderUploadShouldCancel:(BlobMessageSender *)blobMessageSender {
+- (BOOL)blobMessageSenderUploadShouldCancel:(Old_BlobMessageSender *)blobMessageSender {
     return NO;
 }
 
-- (void)blobMessageSender:(BlobMessageSender *)blobMessageSender uploadProgress:(NSNumber *)progress forMessage:(BaseMessage *)message {
+- (void)blobMessageSender:(Old_BlobMessageSender *)blobMessageSender uploadProgress:(NSNumber *)progress forMessage:(BaseMessage *)message {
     // hide as soon as progress starts which is visible in message bubble
     /// Progress might not be reported in note to self groups. To make sure the HUD is actually dimissed it will be dismissed again in `- (void)blobMessageSender:(BlobMessageSender *)blobMessageSender uploadSucceededForMessage:(BaseMessage *)message`
     [MBProgressHUD hideHUDForView:_presentingViewController.view animated:YES];
 }
 
-- (void)blobMessageSender:(BlobMessageSender *)blobMessageSender uploadFailedForMessage:(BaseMessage *)message error:(UploadError)error {
+- (void)blobMessageSender:(Old_BlobMessageSender *)blobMessageSender uploadFailedForMessage:(BaseMessage *)message error:(UploadError)error {
     [MBProgressHUD hideHUDForView:_presentingViewController.view animated:YES];
     
     NSString *errorTitle = [BundleUtil localizedStringForKey:@"error_sending_failed"];
-    NSString *errorMessage = [FileMessageSender messageForError:error];
+    NSString *errorMessage = [Old_FileMessageSender messageForError:error];
     [self showAlertWithTitle:errorTitle message:errorMessage closeOnOk:NO];
 }
 
-- (void)blobMessageSender:(BlobMessageSender *)blobMessageSender uploadSucceededForMessage:(BaseMessage *)message {
+- (void)blobMessageSender:(Old_BlobMessageSender *)blobMessageSender uploadSucceededForMessage:(BaseMessage *)message {
     // Upload succeeds immediately when sending files in note groups without ever reporting upload progress
     [MBProgressHUD hideHUDForView:_presentingViewController.view animated:YES];
     pickerStrongReference = nil;

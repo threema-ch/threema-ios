@@ -31,6 +31,12 @@ public extension Colors {
     }
     
     @objc class var textLight: UIColor {
+        
+        // We respect the increase contrast setting
+        if UIAccessibility.isDarkerSystemColorsEnabled {
+            return text
+        }
+        
         switch theme {
         case .light, .undefined:
             return Asset.SharedColors.gray550.color
@@ -40,6 +46,12 @@ public extension Colors {
     }
     
     @objc class var textVeryLight: UIColor {
+        
+        // We respect the increase contrast setting
+        if UIAccessibility.isDarkerSystemColorsEnabled {
+            return text
+        }
+        
         switch theme {
         case .light, .undefined:
             return Asset.SharedColors.gray400.color

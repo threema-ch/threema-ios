@@ -92,4 +92,13 @@ class UserSettingsMock: NSObject, UserSettingsProtocol {
     var masterDndEndTime: String?
     
     var hidePrivateChats = false
+
+    var enableMultiDevice = false
+    var allowSeveralLinkedDevices = false
+    var workIdentities: NSOrderedSet!
+    var profilePictureRequestList: [Any]!
+    var blockCommunication = false
+    var donateInteractions = false
+    
+    var voiceMessagesShowTimeRemaining = false
 }

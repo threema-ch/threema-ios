@@ -30,7 +30,7 @@ extension Ballot {
         }
         var choiceNames = [String]()
         for choice in choices {
-            if choice.getOwnResult().boolValue() {
+            if let myChoice = choice.getOwnResult()?.boolValue(), myChoice {
                 choiceNames.append(choice.name)
             }
         }

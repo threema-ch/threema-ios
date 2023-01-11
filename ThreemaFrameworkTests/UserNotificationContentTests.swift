@@ -118,7 +118,8 @@ class UserNotificationContentTests: XCTestCase {
                     read: false,
                     sent: false,
                     userack: false,
-                    sender: contact
+                    sender: contact,
+                    remoteSentDate: nil
                 )
             }
         }
@@ -160,7 +161,8 @@ class UserNotificationContentTests: XCTestCase {
                     read: false,
                     sent: false,
                     userack: false,
-                    sender: nil
+                    sender: nil,
+                    remoteSentDate: nil
                 )
             }
         }

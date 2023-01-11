@@ -32,6 +32,7 @@
 #import "ValidationLogger.h"
 #import "Conversation.h"
 #import "UTIConverter.h"
+#import "ServerConnector.h"
 
 #ifdef DEBUG
   static const DDLogLevel ddLogLevel = DDLogLevelVerbose;
@@ -94,21 +95,13 @@
     PinnedHTTPSURLLoader *loader = [[PinnedHTTPSURLLoader alloc] init];
     loader.delegate = self;
     
-    BOOL localOrigin = false;
-    if ([message isKindOfClass:FileMessageEntity.class]) {
-        FileMessageEntity *fileMessageEntity = (FileMessageEntity *)message;
-        if (fileMessageEntity.origin.intValue == 1) {
-            localOrigin = true;
-        }
-    }
-    
     // Set progress to 0 before starting the request to be sure this request will not called multiple times
     [_entityManager performSyncBlockAndSafe:^{
         BaseMessage<BlobData> *bmsg = [_entityManager.entityFetcher getManagedObjectById:messageObjectID];
         [bmsg blobUpdateProgress:[NSNumber numberWithFloat:0]];
     }];
     
-    [loader startWithBlobId:blobId localOrigin:localOrigin onCompletion:^(NSData *data) {
+    [loader startWithBlobId:blobId origin:message.blobGetOrigin onCompletion:^(NSData *data) {
         [_entityManager performSyncBlockAndSafe:^{
             BaseMessage<BlobData> *msg = [_entityManager.entityFetcher getManagedObjectById:messageObjectID];
 
@@ -127,8 +120,11 @@
 
             [self updateDBObject:msg with:decryptedData];
 
-            if (msg.conversation.groupId == nil || localOrigin) {
-                [MessageSender markBlobAsDone:blobId localOrigin:localOrigin];
+            if (msg.conversation.groupId == nil) {
+                [MessageSender markBlobAsDoneWithBlobID:blobId origin:msg.blobGetOrigin];
+            }
+            else if ([[ServerConnector sharedServerConnector] isMultiDeviceActivated]) {
+                [MessageSender markBlobAsDoneWithBlobID:blobId origin:BlobOriginLocal];
             }
 
             DDLogInfo(@"Blob successfully downloaded (%lu bytes)", (unsigned long)data.length);

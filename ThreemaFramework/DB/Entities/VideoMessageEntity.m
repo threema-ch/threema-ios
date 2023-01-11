@@ -80,6 +80,10 @@
     return self.videoBlobId;
 }
 
+- (void)blobSetDataID:(NSData *)dataID {
+    self.videoBlobId = dataID;
+}
+
 - (NSData *)blobGetThumbnailId {
     return nil;
 }
@@ -101,12 +105,29 @@
     self.video = dbData;
 }
 
+- (void)blobSetThumbnail:(NSData *)data {
+    ImageData *dbData = [NSEntityDescription
+                         insertNewObjectForEntityForName:@"ImageData"
+                         inManagedObjectContext:self.managedObjectContext];
+    
+    dbData.data = data;
+    self.thumbnail = dbData;
+}
+
 - (NSData *)blobGetThumbnail {
     if (self.thumbnail) {
         return self.thumbnail.data;
     }
     
     return nil;
+}
+
+- (void)blobSetOrigin:(BlobOrigin)origin {
+    // no-op
+}
+
+- (BlobOrigin)blobGetOrigin {
+    return BlobOriginPublic;
 }
 
 - (NSString *)blobGetUTI {

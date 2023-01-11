@@ -49,13 +49,13 @@
 	<key>ThreemaCoreDataVersion</key>
 	<string>$(COREDATA_VERSION)</string>
 	<key>ThreemaMediatorServerURL</key>
-	<string></string>
+	<string>wss://mediator-{prefix4}.threema.ch/{prefix8}</string>
 	<key>ThreemaMediatorBlobDoneURL</key>
-	<string></string>
+	<string>https://blob-mirror-{prefix4}.threema.ch/{prefix8}/{blobId}/done?deviceId={deviceId}&amp;deviceGroupId={deviceGroupId}&amp;scope={origin}</string>
 	<key>ThreemaMediatorBlobUploadURL</key>
-	<string></string>
+	<string>https://blob-mirror-{prefix4}.threema.ch/{prefix8}/upload?deviceId={deviceId}&amp;deviceGroupId={deviceGroupId}&amp;scope={origin}</string>
 	<key>ThreemaMediatorBlobURL</key>
-	<string></string>
+	<string>https://blob-mirror-{prefix4}.threema.ch/{prefix8}/{blobId}?deviceId={deviceId}&amp;deviceGroupId={deviceGroupId}&amp;scope={origin}</string>
 	<key>ThreemaOnPremPublicKeys</key>
 	<array>
 		<string>ek1qBp4DyRmLL9J5sCmsKSfwbsiGNB4veDAODjkwe/k=</string>
@@ -89,8 +89,6 @@
 	<string>w-</string>
 	<key>ThreemaWorkServerNamePrefixv6</key>
 	<string>ds.w-</string>
-	<key>WebSocketConnection</key>
-	<false/>
 	<key>ThreemaWebURL</key>
 	<string>https://web.threema.ch/</string>
 	<key>ThreemaPOINamesURL</key>

@@ -58,6 +58,7 @@ typedef NS_ENUM(NSInteger, ThreemaAudioMessagePlaySpeed) {
 @synthesize sendTypingIndicator;
 @synthesize blockUnknown;
 @synthesize enablePoi;
+@synthesize donateInteractions;
 @synthesize hideStaleContacts;
 
 @synthesize inAppSounds;
@@ -115,8 +116,9 @@ typedef NS_ENUM(NSInteger, ThreemaAudioMessagePlaySpeed) {
 
 @synthesize openPlusIconInChat;
 
+@synthesize enableMultiDevice;
 @synthesize deviceID;
-@synthesize reflectCounter;
+@synthesize allowSeveralLinkedDevices;
 
 @synthesize safeConfig;
 @synthesize safeIntroShown;
@@ -137,10 +139,14 @@ typedef NS_ENUM(NSInteger, ThreemaAudioMessagePlaySpeed) {
 @synthesize threemaVideoCallQualitySetting;
 
 @synthesize newChatViewActive;
+@synthesize initialScrollPositionAlt1;
+@synthesize flippedTableView;
 
 @synthesize unknownGroupAlertList;
 
 @synthesize hidePrivateChats;
+@synthesize blockCommunication;
+@synthesize voiceMessagesShowTimeRemaining;
 
 static UserSettings *instance;
 
@@ -201,6 +207,7 @@ static UserSettings *instance;
                                         [NSNumber numberWithBool:YES], @"InAppPreview",
                                         [NSNumber numberWithBool:NO],  @"BlockUnknown",
                                         [NSNumber numberWithBool:YES],  @"EnablePOI",
+                                        [NSNumber numberWithBool:NO],  @"DonateInteractions",
                                         [NSNumber numberWithBool:NO],  @"HideStaleContacts",
                                         @"large", @"ImageSize",
                                         @"high", @"VideoQuality",
@@ -236,8 +243,9 @@ static UserSettings *instance;
                                         [NSNumber numberWithFloat:50.0], @"PreviewLimit",
                                         [NSNumber numberWithBool:YES], @"ThreemaWeb",
                                         [NSNumber numberWithBool:NO], @"OpenPlusIconInChat",
+                                        [NSNumber numberWithBool:NO], @"EnableMultiDevice",
+                                        [NSNumber numberWithBool:NO], @"AllowSeveralLinkedDevices",
                                         [NSData data], @"DeviceID",
-                                        [NSNumber numberWithUnsignedLong:0], @"ReflectCounter",
                                         [NSData data], @"SafeConfig",
                                         [NSNumber numberWithBool:NO], @"SafeIntroShown",
                                         [NSNumber numberWithBool:defaultWorkInfoShown], @"WorkInfoShown",
@@ -250,11 +258,15 @@ static UserSettings *instance;
                                         @"17:00", @"MasterDNDEndTime",
                                         [NSNumber numberWithBool:YES], @"EnableVideoCall",
                                         [NSNumber numberWithBool:NO], @"NewChatViewActive",
+                                        [NSNumber numberWithBool:NO], @"initialScrollPositionAlt1",
+                                        [NSNumber numberWithBool:NO], @"flippedTableView",
                                         [NSNumber numberWithInt:ThreemaVideoCallQualitySettingAuto], @"ThreemaVideoCallQualitySetting",
                                         @"", @"SentryAppDevice",
                                         [NSMutableArray array], @"UnknownGroupAlertList",
                                         [NSNumber numberWithInt:ThreemaAudioMessagePlaySpeedSingle], @"ThreemaAudioMessagePlaySpeed",
                                         [NSNumber numberWithBool:NO], @"HidePrivateChats",
+                                        [NSNumber numberWithBool:NO], @"BlockCommunication",
+                                        [NSNumber numberWithBool:NO], @"VoiceMessagesShowTimeRemaining",
                                      nil];
         
         [defaults registerDefaults:appDefaults];
@@ -275,6 +287,7 @@ static UserSettings *instance;
     pushSettingsList = [NSOrderedSet orderedSetWithArray:[defaults arrayForKey:@"PushSettingsList"]];
     sendTypingIndicator = [defaults boolForKey:@"SendTypingIndicator"];
     blockUnknown = [defaults boolForKey:@"BlockUnknown"];
+    donateInteractions = [defaults boolForKey:@"DonateInteractions"];
     enablePoi = [defaults boolForKey:@"EnablePOI"];
     hideStaleContacts = [defaults boolForKey:@"HideStaleContacts"];
     
@@ -337,10 +350,11 @@ static UserSettings *instance;
     threemaWeb = [defaults boolForKey:@"ThreemaWeb"];
     
     openPlusIconInChat = [defaults boolForKey:@"OpenPlusIconInChat"];
-    
+
+    enableMultiDevice = [defaults boolForKey:@"EnableMultiDevice"];
     deviceID = [defaults dataForKey:@"DeviceID"];
-    reflectCounter = [defaults objectForKey:@"ReflectCounter"];
-    
+    allowSeveralLinkedDevices = [defaults boolForKey:@"AllowSeveralLinkedDevices"];
+
     safeConfig = [defaults dataForKey:@"SafeConfig"];
     safeIntroShown = [defaults boolForKey:@"SafeIntroShown"];
     
@@ -372,15 +386,22 @@ static UserSettings *instance;
     threemaAudioMessagePlaySpeed = [[defaults objectForKey:@"ThreemaAudioMessagePlaySpeed"] intValue];
     
     hidePrivateChats = [defaults boolForKey:@"HidePrivateChats"];
+    blockCommunication = [defaults boolForKey:@"BlockCommunication"];
+    voiceMessagesShowTimeRemaining = [defaults boolForKey:@"VoiceMessagesShowTimeRemaining"];
     
+    // TODO: (IOS-2860) Remove when new chat view released
     // Hide new chat view if it's not Debug or .workRed /.red
 #if !DEBUG
     if (ThreemaAppObjc.current != ThreemaAppWorkRed && ThreemaAppObjc.current != ThreemaAppRed ) {
         newChatViewActive = NO;
+        initialScrollPositionAlt1 = NO;
+        flippedTableView = NO;
         return;
     }
 #endif
     
+    flippedTableView = [defaults boolForKey:@"flippedTableView"];
+    initialScrollPositionAlt1 = [defaults boolForKey:@"initialScrollPositionAlt1"];
     newChatViewActive = [defaults boolForKey:@"NewChatViewActive"];
 }
 
@@ -451,6 +472,12 @@ static UserSettings *instance;
 - (void)setEnablePoi:(BOOL)newEnablePoi {
     enablePoi = newEnablePoi;
     [defaults setBool:enablePoi forKey:@"EnablePOI"];
+    [defaults synchronize];
+}
+
+- (void)setDonateInteractions:(BOOL)newDonateInteractions {
+    donateInteractions = newDonateInteractions;
+    [defaults setBool:donateInteractions forKey:@"DonateInteractions"];
     [defaults synchronize];
 }
 
@@ -777,15 +804,21 @@ static UserSettings *instance;
     [defaults synchronize];
 }
 
+- (void)setEnableMultiDevice:(BOOL)newEnableMultiDevice {
+    enableMultiDevice = newEnableMultiDevice;
+    [defaults setBool:enableMultiDevice forKey:@"EnableMultiDevice"];
+    [defaults synchronize];
+}
+
 - (void)setDeviceID:(NSData *)newDeviceID {
     deviceID = newDeviceID;
     [defaults setObject:deviceID forKey:@"DeviceID"];
     [defaults synchronize];
 }
 
-- (void)setReflectCounter:(NSNumber *)newReflectCounter {
-    reflectCounter = newReflectCounter;
-    [defaults setObject:reflectCounter forKey:@"ReflectCounter"];
+- (void)setAllowSeveralLinkedDevices:(BOOL)newAllowSeveralLinkedDevices {
+    allowSeveralLinkedDevices = newAllowSeveralLinkedDevices;
+    [defaults setBool:allowSeveralLinkedDevices forKey:@"AllowSeveralLinkedDevices"];
     [defaults synchronize];
 }
 
@@ -873,6 +906,18 @@ static UserSettings *instance;
     [defaults synchronize];
 }
 
+- (void)setInitialScrollPositionAlt1:(BOOL)newInitialScrollPositionAlt1 {
+    initialScrollPositionAlt1 = newInitialScrollPositionAlt1;
+    [defaults setBool:initialScrollPositionAlt1 forKey:@"initialScrollPositionAlt1"];
+    [defaults synchronize];
+}
+
+- (void)setFlippedTableView:(BOOL)newFlippedTableView {
+    flippedTableView = newFlippedTableView;
+    [defaults setBool:flippedTableView forKey:@"flippedTableView"];
+    [defaults synchronize];
+}
+
 - (void)setUnknownGroupAlertList:(NSMutableArray *)newUnknownGroupAlertList {
     unknownGroupAlertList = newUnknownGroupAlertList;
     [defaults setObject:unknownGroupAlertList forKey:@"UnknownGroupAlertList"];
@@ -921,6 +966,18 @@ static UserSettings *instance;
 - (void)setHidePrivateChats:(BOOL)newHidePrivateChats {
     hidePrivateChats = newHidePrivateChats;
     [defaults setBool:hidePrivateChats forKey:@"HidePrivateChats"];
+    [defaults synchronize];
+}
+
+- (void)setBlockCommunication:(BOOL)newBlockCommunication {
+    blockCommunication = newBlockCommunication;
+    [defaults setBool:blockCommunication forKey:@"BlockCommunication"];
+    [defaults synchronize];
+}
+
+- (void)setVoiceMessagesShowTimeRemaining:(BOOL)newVoiceMessagesShowTimeRemaining {
+    voiceMessagesShowTimeRemaining = newVoiceMessagesShowTimeRemaining;
+    [defaults setBool:voiceMessagesShowTimeRemaining forKey:@"VoiceMessagesShowTimeRemaining"];
     [defaults synchronize];
 }
 

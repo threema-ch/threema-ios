@@ -182,7 +182,7 @@ extension ReadReceiptsSettingsViewController {
     }
     
     private func attemptSave() {
-        if ServerConnector.shared()?.isMultiDeviceActivated ?? false {
+        if ServerConnector.shared().isMultiDeviceActivated {
             let syncHelper = UISyncHelper(
                 viewController: self,
                 progressString: BundleUtil.localizedString(forKey: "syncing_settings"),

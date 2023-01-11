@@ -22,6 +22,10 @@ import CocoaLumberjackSwift
 import ThreemaFramework
 import UIKit
 
+protocol ChatBarCoordinatorDelegate: AnyObject {
+    func didDismissQuoteView()
+}
+
 final class ChatBarCoordinator {
     
     // MARK: - Public properties
@@ -45,12 +49,30 @@ final class ChatBarCoordinator {
     // MARK: - Private properties
     
     private var conversation: Conversation
-    private var quoteMessage: QuoteMessage?
+    private var quoteMessage: QuoteMessage? {
+        didSet {
+            if let baseMessage = quoteMessage as? BaseMessage {
+                quotedMessageDeletionObserver = baseMessage.observe(\.willBeDeleted) { [weak self] baseMessage, _ in
+                    if baseMessage.willBeDeleted {
+                        self?.removeQuoteView()
+                    }
+                }
+            }
+            else {
+                quotedMessageDeletionObserver?.invalidate()
+                quotedMessageDeletionObserver = nil
+            }
+        }
+    }
+
     private var mentionsTableViewController: MentionsTableViewController?
     private weak var chatViewController: ChatViewController?
+    private weak var chatViewTableViewVoiceMessageCellDelegate: ChatViewTableViewVoiceMessageCellDelegate?
+    private weak var chatBarCoordinatorDelegate: ChatBarCoordinatorDelegate?
     
     private let groupManager: GroupManagerProtocol
     private let entityManager: EntityManager
+    private var quotedMessageDeletionObserver: NSKeyValueObservation?
     
     private lazy var messagePermission = MessagePermission(
         myIdentityStore: MyIdentityStore.shared(),
@@ -63,16 +85,23 @@ final class ChatBarCoordinator {
     
     private var mentionsVisible = false
     
+    /// Keeps track of the last sent typing state
+    private var lastTypingIndicatorState = false
+    
     // MARK: - Lifecycle
     
     init(
         conversation: Conversation,
         chatViewControllerActionsHelper: ChatViewControllerActionsHelper,
-        chatViewController: ChatViewController
+        chatViewController: ChatViewController,
+        chatBarCoordinatorDelegate: ChatBarCoordinatorDelegate?,
+        chatViewTableViewVoiceMessageCellDelegate: ChatViewTableViewVoiceMessageCellDelegate
     ) {
         self.conversation = conversation
         self.chatViewActionsHelper = chatViewControllerActionsHelper
         self.chatViewController = chatViewController
+        self.chatBarCoordinatorDelegate = chatBarCoordinatorDelegate
+        self.chatViewTableViewVoiceMessageCellDelegate = chatViewTableViewVoiceMessageCellDelegate
         self.entityManager = EntityManager()
         self.groupManager = GroupManager(entityManager: entityManager)
     }
@@ -82,14 +111,11 @@ final class ChatBarCoordinator {
         fatalError("init(coder:) has not been implemented")
     }
     
-    deinit {
-        saveDraft()
-    }
-    
     // MARK: - Updates
     
     func updateSettings() {
         chatBar.updateSettings()
+        updateMessagePermission()
     }
     
     func saveDraft() {
@@ -114,6 +140,7 @@ final class ChatBarCoordinator {
     func removeQuoteView() {
         quoteMessage = nil
         chatBarContainerView.removeQuoteView()
+        chatBarCoordinatorDelegate?.didDismissQuoteView()
     }
     
     /// Updates colors for all subviews
@@ -121,6 +148,16 @@ final class ChatBarCoordinator {
         chatBar.updateColors()
         chatBarContainerView.updateColors()
         mentionsTableViewController?.updateColors()
+    }
+    
+    /// Shows chat bar
+    func showChatBar() {
+        chatBarContainerView.isHidden = false
+    }
+    
+    /// Hides chat bar
+    func hideChatBar() {
+        chatBarContainerView.isHidden = true
     }
 }
 
@@ -225,6 +262,11 @@ extension ChatBarCoordinator: MentionsTableViewDelegate {
 // MARK: - ChatBarViewDelegate
 
 extension ChatBarCoordinator: ChatBarViewDelegate {
+
+    func setIsResettingKeyboard(_ setReset: Bool) {
+        chatViewController?.isResettingKeyboard = setReset
+    }
+
     func showCamera() {
         guard let action = SendMediaAction(for: chatViewActionsHelper) else {
             let message = "Could not create SendMediaAction in \(#function)"
@@ -281,10 +323,19 @@ extension ChatBarCoordinator: ChatBarViewDelegate {
             }
             
             let imageSender = ImageURLSenderItemCreator()
-            let senderItem = imageSender.senderItem(from: image, uti: uti)
-            
-            let sender = FileMessageSender()
-            sender.send(senderItem, in: conversation)
+            if let senderItem = imageSender.senderItem(from: image, uti: uti) {
+                Task {
+                    do {
+                        try await BlobManager.shared.createMessageAndSyncBlobs(
+                            for: senderItem,
+                            in: conversation.objectID
+                        )
+                    }
+                    catch {
+                        DDLogError("Could not create message and sync blobs due to: \(error)")
+                    }
+                }
+            }
             
             chatBar.resetKeyboard(andType: true)
         }
@@ -327,13 +378,18 @@ extension ChatBarCoordinator: ChatBarViewDelegate {
     }
     
     func canSendText() -> Bool {
+        canSendText().isAllowed
+    }
+    
+    func canSendText() -> (isAllowed: Bool, reason: String?) {
         if let group = groupManager.getGroup(conversation: conversation) {
             return messagePermission.canSend(groudID: group.groupID, groupCreatorIdentity: group.groupCreatorIdentity)
-                .isAllowed
         }
         else {
-            return conversation.contact != nil ? messagePermission.canSend(to: conversation.contact!.identity)
-                .isAllowed : false
+            guard let contact = conversation.contact else {
+                return (false, nil)
+            }
+            return messagePermission.canSend(to: contact.identity)
         }
     }
     
@@ -344,10 +400,11 @@ extension ChatBarCoordinator: ChatBarViewDelegate {
         
         var sendableRawText = rawText
         
-        if let quoteMessage = quoteMessage as? BaseMessage {
+        if let quoteMessage = quoteMessage {
             sendableRawText = QuoteUtil.generateText(rawText, with: quoteMessage.id)
         }
         
+        sendTypingIndicator(startTyping: false)
         MessageSender.sanitizeAndSendText(sendableRawText, in: conversation)
         
         MessageDraftStore.deleteDraft(for: conversation)
@@ -358,6 +415,8 @@ extension ChatBarCoordinator: ChatBarViewDelegate {
     }
     
     func startRecording() {
+        chatViewTableViewVoiceMessageCellDelegate?.pausePlaying()
+        
         PlayRecordAudioViewController.requestMicrophoneAccess {
             UIAccessibility.post(notification: UIAccessibility.Notification.screenChanged, argument: nil)
             guard let audioRecorder = PlayRecordAudioViewController(in: self.chatViewController) else {
@@ -380,8 +439,14 @@ extension ChatBarCoordinator: ChatBarViewDelegate {
     }
     
     func sendTypingIndicator(startTyping: Bool) {
-        if !conversation.isGroup(), let identity = conversation.contact?.identity {
+        // Only send typing indicator in groups
+        // Only send typing indicator if the conversation has a contact (equivalent to being a group but we want the identity to not be optional)
+        // Do not send false twice in a row
+        if !conversation.isGroup(), let identity = conversation.contact?.identity,
+           (!startTyping && lastTypingIndicatorState) || startTyping {
+            DDLogVerbose("Send typing indicator \(startTyping)")
             MessageSender.sendTypingIndicatorMessage(startTyping, toIdentity: identity)
+            lastTypingIndicatorState = startTyping
         }
     }
     
@@ -529,7 +594,6 @@ extension ChatBarCoordinator: PPAssetsActionHelperDelegate {
 
 extension ChatBarCoordinator: PlayRecordAudioDelegate {
     func audioPlayerDidHide() {
-        // TODO: Handle case where voice message is being played in a cell (IOS-2400)
         chatBar.isUserInteractionEnabled = true
         UIAccessibility.post(notification: UIAccessibility.Notification.screenChanged, argument: nil)
     }
@@ -544,5 +608,41 @@ extension ChatBarCoordinator: ChatBarQuoteViewDelegate {
     
     var textBeginningInset: CGFloat {
         chatBar.textBeginningInset
+    }
+}
+
+// MARK: - MessagePermission handling
+
+extension ChatBarCoordinator {
+    private func updateMessagePermission() {
+        if !canSendText() {
+            let catchTapOnDisabledView = UIView(frame: .zero)
+            catchTapOnDisabledView.backgroundColor = .clear
+            catchTapOnDisabledView.translatesAutoresizingMaskIntoConstraints = false
+            
+            let tapGr = UITapGestureRecognizer(target: self, action: #selector(showMessagePermissionNotGranted))
+            tapGr.cancelsTouchesInView = true
+            catchTapOnDisabledView.addGestureRecognizer(tapGr)
+            
+            chatBarContainerView.disableInteraction(with: catchTapOnDisabledView)
+        }
+        else {
+            chatBarContainerView.enableInteraction()
+        }
+    }
+    
+    @objc func showMessagePermissionNotGranted() {
+        guard let chatViewController = chatViewController else {
+            DDLogError("Cannot show alert for unable to send text because chatViewController is nil.")
+            return
+        }
+
+        let canSendText: (isAllowed: Bool, reason: String?) = canSendText()
+        if !canSendText.isAllowed, let reason = canSendText.reason {
+            UIAlertTemplate.showAlert(owner: chatViewController, title: reason, message: nil)
+        }
+        else {
+            updateMessagePermission()
+        }
     }
 }

@@ -101,6 +101,8 @@ import UIKit
     ///
     /// - Note: You will also have to reload the image where you used it
     @objc public class func resetThemedCache() {
+        Cache.workIcon = nil
+        Cache.houseIcon = nil
         Cache.scrollDownButtonIcon = nil
         Cache.checkedBackground = nil
     }
@@ -152,16 +154,17 @@ import UIKit
     
     // MARK: Small Generated Images (32 x 8 pt)
     
+    /// Image size for small verification levels
+    public static let verificationSmallSize = CGSize(width: 32, height: 8)
+    
     /// Verification level 0 image (32 x 8 pt)
     @objc public dynamic class var verificationSmall0: UIImage {
         if Cache.verificationSmall0 != nil {
             return Cache.verificationSmall0!
         }
         
-        let width = 32
-        let height = 8
-        UIGraphicsBeginImageContextWithOptions(CGSize(width: width, height: height), false, 0)
-        StyleKit.drawVerification(frame: CGRect(x: 0, y: 0, width: width, height: height), level: 0)
+        UIGraphicsBeginImageContextWithOptions(verificationSmallSize, false, 0)
+        StyleKit.drawVerification(frame: CGRect(origin: .zero, size: verificationSmallSize), level: 0)
         
         Cache.verificationSmall0 = UIGraphicsGetImageFromCurrentImageContext()!
             .resizableImage(withCapInsets: UIEdgeInsets.zero, resizingMode: .stretch)
@@ -176,10 +179,8 @@ import UIKit
             return Cache.verificationSmall1!
         }
         
-        let width = 32
-        let height = 8
-        UIGraphicsBeginImageContextWithOptions(CGSize(width: width, height: height), false, 0)
-        StyleKit.drawVerification(frame: CGRect(x: 0, y: 0, width: width, height: height), level: 1)
+        UIGraphicsBeginImageContextWithOptions(verificationSmallSize, false, 0)
+        StyleKit.drawVerification(frame: CGRect(origin: .zero, size: verificationSmallSize), level: 1)
         
         Cache.verificationSmall1 = UIGraphicsGetImageFromCurrentImageContext()!
             .resizableImage(withCapInsets: UIEdgeInsets.zero, resizingMode: .stretch)
@@ -194,10 +195,8 @@ import UIKit
             return Cache.verificationSmall2!
         }
         
-        let width = 32
-        let height = 8
-        UIGraphicsBeginImageContextWithOptions(CGSize(width: width, height: height), false, 0)
-        StyleKit.drawVerification(frame: CGRect(x: 0, y: 0, width: width, height: height), level: 2)
+        UIGraphicsBeginImageContextWithOptions(verificationSmallSize, false, 0)
+        StyleKit.drawVerification(frame: CGRect(origin: .zero, size: verificationSmallSize), level: 2)
         
         Cache.verificationSmall2 = UIGraphicsGetImageFromCurrentImageContext()!
             .resizableImage(withCapInsets: UIEdgeInsets.zero, resizingMode: .stretch)
@@ -212,10 +211,8 @@ import UIKit
             return Cache.verificationSmall3!
         }
         
-        let width = 32
-        let height = 8
-        UIGraphicsBeginImageContextWithOptions(CGSize(width: width, height: height), false, 0)
-        StyleKit.drawVerification(frame: CGRect(x: 0, y: 0, width: width, height: height), level: 3)
+        UIGraphicsBeginImageContextWithOptions(verificationSmallSize, false, 0)
+        StyleKit.drawVerification(frame: CGRect(origin: .zero, size: verificationSmallSize), level: 3)
         
         Cache.verificationSmall3 = UIGraphicsGetImageFromCurrentImageContext()!
             .resizableImage(withCapInsets: UIEdgeInsets.zero, resizingMode: .stretch)
@@ -230,10 +227,8 @@ import UIKit
             return Cache.verificationSmall4!
         }
         
-        let width = 32
-        let height = 8
-        UIGraphicsBeginImageContextWithOptions(CGSize(width: width, height: height), false, 0)
-        StyleKit.drawVerification(frame: CGRect(x: 0, y: 0, width: width, height: height), level: 4)
+        UIGraphicsBeginImageContextWithOptions(verificationSmallSize, false, 0)
+        StyleKit.drawVerification(frame: CGRect(origin: .zero, size: verificationSmallSize), level: 4)
         
         Cache.verificationSmall4 = UIGraphicsGetImageFromCurrentImageContext()!
             .resizableImage(withCapInsets: UIEdgeInsets.zero, resizingMode: .stretch)
@@ -244,16 +239,16 @@ import UIKit
     
     // MARK: Normal Generated Images (48 x 12 pt)
     
+    public static let verificationSize = CGSize(width: 48, height: 12)
+    
     /// Verification level 0 image (48 x 12 pt)
     @objc public dynamic class var verification0: UIImage {
         if Cache.verification0 != nil {
             return Cache.verification0!
         }
         
-        let width = 48
-        let height = 12
-        UIGraphicsBeginImageContextWithOptions(CGSize(width: width, height: height), false, 0)
-        StyleKit.drawVerification(frame: CGRect(x: 0, y: 0, width: width, height: height), level: 0)
+        UIGraphicsBeginImageContextWithOptions(verificationSize, false, 0)
+        StyleKit.drawVerification(frame: CGRect(origin: .zero, size: verificationSize), level: 0)
         
         Cache.verification0 = UIGraphicsGetImageFromCurrentImageContext()!
             .resizableImage(withCapInsets: UIEdgeInsets.zero, resizingMode: .stretch)
@@ -268,10 +263,8 @@ import UIKit
             return Cache.verification1!
         }
         
-        let width = 48
-        let height = 12
-        UIGraphicsBeginImageContextWithOptions(CGSize(width: width, height: height), false, 0)
-        StyleKit.drawVerification(frame: CGRect(x: 0, y: 0, width: width, height: height), level: 1)
+        UIGraphicsBeginImageContextWithOptions(verificationSize, false, 0)
+        StyleKit.drawVerification(frame: CGRect(origin: .zero, size: verificationSize), level: 1)
         
         Cache.verification1 = UIGraphicsGetImageFromCurrentImageContext()!
             .resizableImage(withCapInsets: UIEdgeInsets.zero, resizingMode: .stretch)
@@ -286,10 +279,8 @@ import UIKit
             return Cache.verification2!
         }
         
-        let width = 48
-        let height = 12
-        UIGraphicsBeginImageContextWithOptions(CGSize(width: width, height: height), false, 0)
-        StyleKit.drawVerification(frame: CGRect(x: 0, y: 0, width: width, height: height), level: 2)
+        UIGraphicsBeginImageContextWithOptions(verificationSize, false, 0)
+        StyleKit.drawVerification(frame: CGRect(origin: .zero, size: verificationSize), level: 2)
         
         Cache.verification2 = UIGraphicsGetImageFromCurrentImageContext()!
             .resizableImage(withCapInsets: UIEdgeInsets.zero, resizingMode: .stretch)
@@ -304,10 +295,8 @@ import UIKit
             return Cache.verification3!
         }
         
-        let width = 48
-        let height = 12
-        UIGraphicsBeginImageContextWithOptions(CGSize(width: width, height: height), false, 0)
-        StyleKit.drawVerification(frame: CGRect(x: 0, y: 0, width: width, height: height), level: 3)
+        UIGraphicsBeginImageContextWithOptions(verificationSize, false, 0)
+        StyleKit.drawVerification(frame: CGRect(origin: .zero, size: verificationSize), level: 3)
         
         Cache.verification3 = UIGraphicsGetImageFromCurrentImageContext()!
             .resizableImage(withCapInsets: UIEdgeInsets.zero, resizingMode: .stretch)
@@ -322,10 +311,8 @@ import UIKit
             return Cache.verification4!
         }
         
-        let width = 48
-        let height = 12
-        UIGraphicsBeginImageContextWithOptions(CGSize(width: width, height: height), false, 0)
-        StyleKit.drawVerification(frame: CGRect(x: 0, y: 0, width: width, height: height), level: 4)
+        UIGraphicsBeginImageContextWithOptions(verificationSize, false, 0)
+        StyleKit.drawVerification(frame: CGRect(origin: .zero, size: verificationSize), level: 4)
         
         Cache.verification4 = UIGraphicsGetImageFromCurrentImageContext()!
             .resizableImage(withCapInsets: UIEdgeInsets.zero, resizingMode: .stretch)
@@ -336,16 +323,16 @@ import UIKit
         
     // MARK: Big Generated Images (163 x 41 pt)
     
+    public static let verificationBigSize = CGSize(width: 163, height: 41)
+    
     /// Verification level 0 image (163 x 41 pt)
     @objc public dynamic class var verificationBig0: UIImage {
         if Cache.verificationBig0 != nil {
             return Cache.verificationBig0!
         }
         
-        let width = 163
-        let height = 41
-        UIGraphicsBeginImageContextWithOptions(CGSize(width: width, height: height), false, 0)
-        StyleKit.drawVerification(frame: CGRect(x: 0, y: 0, width: width, height: height), level: 0)
+        UIGraphicsBeginImageContextWithOptions(verificationBigSize, false, 0)
+        StyleKit.drawVerification(frame: CGRect(origin: .zero, size: verificationBigSize), level: 0)
         
         Cache.verificationBig0 = UIGraphicsGetImageFromCurrentImageContext()!
             .resizableImage(withCapInsets: UIEdgeInsets.zero, resizingMode: .stretch)
@@ -360,10 +347,8 @@ import UIKit
             return Cache.verificationBig1!
         }
         
-        let width = 163
-        let height = 41
-        UIGraphicsBeginImageContextWithOptions(CGSize(width: width, height: height), false, 0)
-        StyleKit.drawVerification(frame: CGRect(x: 0, y: 0, width: width, height: height), level: 1)
+        UIGraphicsBeginImageContextWithOptions(verificationBigSize, false, 0)
+        StyleKit.drawVerification(frame: CGRect(origin: .zero, size: verificationBigSize), level: 1)
         
         Cache.verificationBig1 = UIGraphicsGetImageFromCurrentImageContext()!
             .resizableImage(withCapInsets: UIEdgeInsets.zero, resizingMode: .stretch)
@@ -378,10 +363,8 @@ import UIKit
             return Cache.verificationBig2!
         }
         
-        let width = 163
-        let height = 41
-        UIGraphicsBeginImageContextWithOptions(CGSize(width: width, height: height), false, 0)
-        StyleKit.drawVerification(frame: CGRect(x: 0, y: 0, width: width, height: height), level: 2)
+        UIGraphicsBeginImageContextWithOptions(verificationBigSize, false, 0)
+        StyleKit.drawVerification(frame: CGRect(origin: .zero, size: verificationBigSize), level: 2)
         
         Cache.verificationBig2 = UIGraphicsGetImageFromCurrentImageContext()!
             .resizableImage(withCapInsets: UIEdgeInsets.zero, resizingMode: .stretch)
@@ -396,10 +379,8 @@ import UIKit
             return Cache.verificationBig3!
         }
         
-        let width = 163
-        let height = 41
-        UIGraphicsBeginImageContextWithOptions(CGSize(width: width, height: height), false, 0)
-        StyleKit.drawVerification(frame: CGRect(x: 0, y: 0, width: width, height: height), level: 3)
+        UIGraphicsBeginImageContextWithOptions(verificationBigSize, false, 0)
+        StyleKit.drawVerification(frame: CGRect(origin: .zero, size: verificationBigSize), level: 3)
         
         Cache.verificationBig3 = UIGraphicsGetImageFromCurrentImageContext()!
             .resizableImage(withCapInsets: UIEdgeInsets.zero, resizingMode: .stretch)
@@ -414,10 +395,8 @@ import UIKit
             return Cache.verificationBig4!
         }
         
-        let width = 163
-        let height = 41
-        UIGraphicsBeginImageContextWithOptions(CGSize(width: width, height: height), false, 0)
-        StyleKit.drawVerification(frame: CGRect(x: 0, y: 0, width: width, height: height), level: 4)
+        UIGraphicsBeginImageContextWithOptions(verificationBigSize, false, 0)
+        StyleKit.drawVerification(frame: CGRect(origin: .zero, size: verificationBigSize), level: 4)
         
         Cache.verificationBig4 = UIGraphicsGetImageFromCurrentImageContext()!
             .resizableImage(withCapInsets: UIEdgeInsets.zero, resizingMode: .stretch)

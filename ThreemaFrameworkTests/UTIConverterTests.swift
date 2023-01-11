@@ -21,11 +21,11 @@
 import XCTest
 @testable import ThreemaFramework
 
-class UTIConverterTests: XCTestCase {
+class UTIConverterTestsSwift: XCTestCase {
     
     private let rawFilename = "Bild-7"
     
-    let testBundle = Bundle(for: UTIConverterTests.self)
+    let testBundle = Bundle(for: UTIConverterTestsSwift.self)
     
     override func setUpWithError() throws {
         // Put setup code here. This method is called before the invocation of each test method in the class.
@@ -61,7 +61,7 @@ class UTIConverterTests: XCTestCase {
             let mimeType = UTIConverter.mimeType(fromUTI: uti)
 
             XCTAssert(
-                UTIConverter.type(uti, conformsTo: kUTTypeImage as String),
+                UTIConverter.type(uti, conformsTo: UTType.image.identifier),
                 "\(item.0) with uti \(String(describing: uti)) should conform to image but does not"
             )
             XCTAssert(

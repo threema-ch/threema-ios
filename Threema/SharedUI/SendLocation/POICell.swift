@@ -50,7 +50,7 @@ class POICell: ThemedCodeTableViewCell, Reusable {
     private let nameAddressStackView: UIStackView = {
         let stackView = UIStackView()
         stackView.axis = .vertical
-        stackView.distribution = .fillProportionally
+        stackView.distribution = .fill
         stackView.alignment = .leading
         stackView.translatesAutoresizingMaskIntoConstraints = false
         
@@ -152,18 +152,14 @@ class POICell: ThemedCodeTableViewCell, Reusable {
         super.setSelected(selected, animated: selected)
         updateColors()
         if selected {
-            UIView.animate(withDuration: 0.35) {
-                self.nameAddressStackView.addArrangedSubview(self.addressLabel)
-            }
+            nameAddressStackView.addArrangedSubview(addressLabel)
         }
         else {
-            UIView.animate(withDuration: 0.35) {
-                self.addressLabel.removeFromSuperview()
-            }
+            addressLabel.removeFromSuperview()
         }
     }
         
-    /// Assigns colours to the view's content
+    /// Assigns colors to the view's content
     override func updateColors() {
         super.updateColors()
         Colors.setTextColor(Colors.text, label: nameLabel)

@@ -49,6 +49,7 @@
 @property (nonatomic) BOOL isAppLocked;
 
 @property (nonatomic) BOOL isLockscreenDismissed;
+@property (nonatomic) UIInterfaceOrientationMask orientationLock;
 
 @property (weak, nonatomic) id<MagicTapHandler> magicTapHandler;
 

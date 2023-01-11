@@ -106,6 +106,8 @@ open class ThemedCodeModernGroupedTableViewController: ThemedViewController {
     override open func updateColors() {
         super.updateColors()
         
+        view.backgroundColor = Colors.backgroundGroupedViewController
+        
         Colors.update(tableView: tableView)
         tableView.reloadData()
     }

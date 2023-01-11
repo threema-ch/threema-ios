@@ -200,7 +200,7 @@ public class WebCreateFileMessageRequest: WebAbstractMessage {
                         return
                     }
                     item.caption = self.caption
-                    let sender = FileMessageSender()
+                    let sender = Old_FileMessageSender()
                     self.sendMessage(sender: sender, item: item, conversation: conversation, completion: completion)
                 }
                 else if !self.sendAsFile,
@@ -216,7 +216,7 @@ public class WebCreateFileMessageRequest: WebAbstractMessage {
                     guard let senderItem = creator.senderItem(from: videoURL) else {
                         return
                     }
-                    let fileSender = FileMessageSender()
+                    let fileSender = Old_FileMessageSender()
                     self.sendMessage(sender: fileSender, item: senderItem, conversation: conversation, completion: {
                         do {
                             try FileManager.default.removeItem(at: videoURL)
@@ -232,7 +232,7 @@ public class WebCreateFileMessageRequest: WebAbstractMessage {
                 // messages inside the app. Thus we don't have a special case for them here.
                 else {
                     DispatchQueue.main.async {
-                        let blobSender = FileMessageSender()
+                        let blobSender = Old_FileMessageSender()
                         blobSender.fileNameFromWeb = self.name
                         let item = URLSenderItem(
                             data: self.fileData,
@@ -261,7 +261,7 @@ public class WebCreateFileMessageRequest: WebAbstractMessage {
     }
     
     private func sendMessage(
-        sender: FileMessageSender,
+        sender: Old_FileMessageSender,
         item: URLSenderItem?,
         conversation: Conversation?,
         completion: @escaping () -> Void

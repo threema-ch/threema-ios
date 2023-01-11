@@ -59,7 +59,7 @@ let tmpDirectory = "tmpImages/"
         // Show our custom picker if we have full access or if we are < iOS 14
         PHPhotoLibrary.requestAuthorization { _ in
             let assetCollectionView = UITableView.appearance(whenContainedInInstancesOf: [DKImagePickerController.self])
-            assetCollectionView.backgroundColor = Colors.backgroundViewController
+            assetCollectionView.backgroundColor = Colors.backgroundGroupedViewController
             
             DispatchQueue.main.async {
                 self.pickerController = self.setupDKImagePickerController(limit: limit)
@@ -95,8 +95,8 @@ let tmpDirectory = "tmpImages/"
             .duration > (MediaConverter.videoMaxDurationAtCurrentQuality() + 1) * 60 {
             picker.deselectAsset(asset)
             let errorTitle = BundleUtil.localizedString(forKey: "video_too_long_title")
-            let errorMessage = String(
-                format: BundleUtil.localizedString(forKey: "video_too_long_message"),
+            let errorMessage = String.localizedStringWithFormat(
+                BundleUtil.localizedString(forKey: "video_too_long_message"),
                 MediaConverter.videoMaxDurationAtCurrentQuality()
             )
             

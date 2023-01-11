@@ -18,6 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import CocoaLumberjackSwift
 import Foundation
 
 class Old_CompanyDirectoryContactCell: UITableViewCell {
@@ -80,8 +81,14 @@ class Old_CompanyDirectoryContactCell: UITableViewCell {
             publicKey: contact.pk,
             firstname: contact.first,
             lastname: contact.last,
-            shouldUpdateFeatureMask: true
+            acquaintanceLevel: .direct
         )
-        setupCell()
+        .done { _ in
+            self.setupCell()
+        }
+        .catch { error in
+            DDLogError("Add work contact failed \(error)")
+            self.setupCell()
+        }
     }
 }

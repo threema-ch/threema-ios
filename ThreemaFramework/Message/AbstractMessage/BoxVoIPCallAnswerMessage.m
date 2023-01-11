@@ -32,11 +32,15 @@
     return body;
 }
 
-- (BOOL)shouldPush {
+- (BOOL)flagShouldPush {
     return YES;
 }
 
-- (BOOL)isVoIP {
+- (BOOL)flagImmediateDeliveryRequired {
+    return YES;
+}
+
+- (BOOL)flagIsVoIP {
     return YES;
 }
 

@@ -22,7 +22,7 @@ import CocoaLumberjackSwift
 import Foundation
 import PromiseKit
 
-class TaskExecutionBlobTransaction: TaskExecutionTransaction, BlobUploadDelegate {
+class TaskExecutionBlobTransaction: TaskExecutionTransaction, Old_BlobUploadDelegate {
     private let (promise, seal) = Promise<[Any]>.pending()
 
     func uploadShouldCancel() -> Bool {
@@ -52,15 +52,14 @@ class TaskExecutionBlobTransaction: TaskExecutionTransaction, BlobUploadDelegate
                 seal(
                     BlobURL(
                         serverConnector: frameworkInjector.serverConnector,
-                        userSettings: frameworkInjector.userSettings,
-                        localOrigin: true
+                        userSettings: frameworkInjector.userSettings
                     )
                 )
             }
         }
         .then { blobURL -> Promise<[Any]> in
-            let blobUploader = BlobUploader(blobURL: blobURL, delegate: self)
-            blobUploader.upload(blobs: blobs)
+            let blobUploader = Old_BlobUploader(blobURL: blobURL, delegate: self)
+            blobUploader.upload(blobs: blobs, origin: .local)
 
             return self.promise
         }

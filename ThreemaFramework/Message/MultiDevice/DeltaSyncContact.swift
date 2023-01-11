@@ -21,8 +21,13 @@
 import Foundation
 
 struct DeltaSyncContact: Codable {
-    init(syncContact: Sync_Contact) {
+    init(syncContact: Sync_Contact, syncAction: SyncAction) {
         self.syncContact = syncContact
+        self.syncAction = syncAction
+    }
+
+    enum SyncAction: Codable {
+        case create, update
     }
 
     var syncContact: Sync_Contact
@@ -30,9 +35,11 @@ struct DeltaSyncContact: Codable {
     var image: Data?
     var contactProfilePicture: DeltaUpdateType = .unchanged
     var contactImage: Data?
+    var syncAction: SyncAction
 
     private enum CodingKeys: String, CodingKey {
         case syncContact
+        case syncAction
         case profilePicture
         case image
         case contactProfilePicture
@@ -45,6 +52,7 @@ struct DeltaSyncContact: Codable {
         let dataSyncContact = try container.decode(Data.self, forKey: .syncContact)
 
         self.syncContact = try Sync_Contact(contiguousBytes: dataSyncContact)
+        self.syncAction = try container.decode(SyncAction.self, forKey: .syncAction)
         self.profilePicture = try container.decode(DeltaUpdateType.self, forKey: .profilePicture)
         self.image = try? container.decode(Data.self, forKey: .image)
         self.contactProfilePicture = try container.decode(DeltaUpdateType.self, forKey: .contactProfilePicture)
@@ -57,6 +65,7 @@ struct DeltaSyncContact: Codable {
         let dataSyncContact = try syncContact.serializedData()
 
         try container.encode(dataSyncContact, forKey: .syncContact)
+        try container.encode(syncAction, forKey: .syncAction)
         try container.encode(profilePicture, forKey: .profilePicture)
         try container.encode(image, forKey: .image)
         try container.encode(contactProfilePicture, forKey: .contactProfilePicture)

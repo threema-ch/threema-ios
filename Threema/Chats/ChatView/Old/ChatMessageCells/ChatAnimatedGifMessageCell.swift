@@ -591,16 +591,21 @@ extension ChatAnimatedGifMessageCell {
     
     @objc func resendMessage(_ menuController: UIMenuController) {
         let fileMessageEntity = message as! FileMessageEntity
-        let sender = FileMessageSender()
+        
+        let entityManager = EntityManager()
+        entityManager.performSyncBlockAndSafe {
+            // swiftformat:disable acronyms
+            fileMessageEntity.id = NaClCrypto.shared().randomBytes(kMessageIdLen)
+        }
+        
+        let sender = Old_FileMessageSender()
         sender.retryMessage(fileMessageEntity)
     }
     
     @objc func speakMessage(_ menuController: UIMenuController) {
         if _captionLabel?.text != nil {
             let speakText = "\(BundleUtil.localizedString(forKey: "image")). \(_captionLabel!.text!)"
-            let utterance = AVSpeechUtterance(string: speakText)
-            let syn = AVSpeechSynthesizer()
-            syn.speak(utterance)
+            SpeechSynthesizerManger().speak(speakText)
         }
     }
 }

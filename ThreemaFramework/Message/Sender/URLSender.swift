@@ -43,12 +43,24 @@ import Foundation
             senderItem?.caption = caption
         }
         
-        if senderItem == nil {
+        guard let senderItem = senderItem else {
             DDLogError("Could not create sender item")
             return
         }
         
-        let sender = FileMessageSender()
-        sender.send(senderItem, in: conversation)
+        if UserSettings.shared().newChatViewActive {
+            Task {
+                do {
+                    try await BlobManager.shared.createMessageAndSyncBlobs(for: senderItem, in: conversation.objectID)
+                }
+                catch {
+                    DDLogError("Could not send sender item, error: \(error)")
+                }
+            }
+        }
+        else {
+            let sender = Old_FileMessageSender()
+            sender.send(senderItem, in: conversation)
+        }
     }
 }

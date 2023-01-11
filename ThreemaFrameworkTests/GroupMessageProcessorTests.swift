@@ -136,6 +136,7 @@ class GroupMessageProcessorTests: XCTestCase {
             let userSettingsMock = UserSettingsMock()
             let groupManagerMock: GroupManagerProtocolObjc = GroupManagerMock()
 
+            (test[1] as! AbstractGroupMessage).nonce = BytesUtility.generateRandomBytes(length: Int(kNonceLen))
             (test[1] as! AbstractGroupMessage).groupCreator = test[2] as? String
             (test[1] as! AbstractGroupMessage).fromIdentity = test[3] as? String
 
@@ -289,6 +290,7 @@ class GroupMessageProcessorTests: XCTestCase {
             let entityManager = EntityManager(databaseContext: databaseCnx, myIdentityStore: myIdentityStoreMock)
 
             let groupManager = GroupManager(
+                ServerConnectorMock(),
                 myIdentityStoreMock,
                 ContactStoreMock(callOnCompletion: true),
                 taskManagerMock,
@@ -315,6 +317,7 @@ class GroupMessageProcessorTests: XCTestCase {
             XCTAssertNotNil(group)
 
             let message: AbstractGroupMessage = (test[1] as! AbstractGroupMessage)
+            message.nonce = BytesUtility.generateRandomBytes(length: Int(kNonceLen))
             message.groupID = expectedGroupID
             message.groupCreator = expectedCreator
             message.fromIdentity = test[2] as? String
@@ -511,6 +514,7 @@ class GroupMessageProcessorTests: XCTestCase {
             let entityManager = EntityManager(databaseContext: databaseCnx, myIdentityStore: myIdentityStoreMock)
 
             let groupManager = GroupManager(
+                ServerConnectorMock(),
                 myIdentityStoreMock,
                 ContactStoreMock(callOnCompletion: true),
                 taskManagerMock,
@@ -531,6 +535,7 @@ class GroupMessageProcessorTests: XCTestCase {
             XCTAssertNotNil(group)
 
             let message: AbstractGroupMessage = (test[1] as! AbstractGroupMessage)
+            message.nonce = BytesUtility.generateRandomBytes(length: Int(kNonceLen))
             message.groupID = expectedGroupID
             message.groupCreator = expectedCreator
             message.fromIdentity = test[2] as? String
@@ -648,6 +653,7 @@ class GroupMessageProcessorTests: XCTestCase {
             let entityManager = EntityManager(databaseContext: databaseCnx, myIdentityStore: myIdentityStoreMock)
 
             let groupManager = GroupManager(
+                ServerConnectorMock(),
                 myIdentityStoreMock,
                 ContactStoreMock(callOnCompletion: true),
                 taskManagerMock,
@@ -678,6 +684,7 @@ class GroupMessageProcessorTests: XCTestCase {
             XCTAssertEqual(.left, group.state)
 
             let message: AbstractGroupMessage = (test[1] as! AbstractGroupMessage)
+            message.nonce = BytesUtility.generateRandomBytes(length: Int(kNonceLen))
             message.groupID = expectedGroupID
             message.groupCreator = expectedCreator
             message.fromIdentity = (test[2] as! String)
@@ -713,8 +720,8 @@ class GroupMessageProcessorTests: XCTestCase {
             XCTAssertEqual(0, userSettingsMock.unknownGroupAlertList.count, testDescription)
             XCTAssertEqual(
                 test[3] as! Bool,
-                (taskManagerMock.addedTasks.first as? TaskDefinitionSendGroupCreateMessage)?
-                    .removedMembers?.contains(where: { $0 == test[2] as! String }) ?? false,
+                (taskManagerMock.addedTasks.first as? TaskDefinitionGroupDissolve)?
+                    .toMembers.contains(where: { $0 == (test[2] as! String) }) ?? false,
                 testDescription
             )
             XCTAssertEqual(test[4] as! Bool, groupMessageProcessor.addToPendingMessages, testDescription)
@@ -736,7 +743,8 @@ class GroupMessageProcessorTests: XCTestCase {
             groupID: groupID,
             creator: creator,
             members: members,
-            systemMessageDate: Date()
+            systemMessageDate: Date(),
+            sourceCaller: .local
         )
         .done { grp in
             group = grp

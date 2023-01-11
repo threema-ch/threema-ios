@@ -30,8 +30,8 @@ import Foundation
     }
     
     @objc public enum DeliveryReceiptType: Int {
-        case userAcknowledgment = 2
-        case userDeclined = 3
+        case acknowledged = 2
+        case declined = 3
     }
     
     @objc public var identity: String
@@ -51,13 +51,13 @@ import Foundation
     public func icon() -> UIImage {
         let deliveryReceiptType = DeliveryReceiptType(rawValue: deliveryReceiptTypeValue)
         switch deliveryReceiptType {
-        case .userAcknowledgment:
+        case .acknowledged:
             return UIImage(
                 systemName: identity == MyIdentityStore.shared()
                     .identity ? "hand.thumbsup.fill" : "hand.thumbsup"
             )!
                 .withTintColor(Colors.thumbUp, renderingMode: .alwaysOriginal)
-        case .userDeclined:
+        case .declined:
             return UIImage(
                 systemName: identity == MyIdentityStore.shared()
                     .identity ? "hand.thumbsdown.fill" : "hand.thumbsdown"

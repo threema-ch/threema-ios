@@ -21,12 +21,12 @@
 import CocoaLumberjackSwift
 import Combine
 import CoreData
-import DiffableDataSources
 import OSLog
 import PromiseKit
 import UIKit
 
-// Used to instrument new ChatView (TODO: Remove before release)
+// Used to instrument new ChatView
+// TODO: (IOS-2860) Remove when new chat view released
 private class PointsOfInterestSignpost: NSObject {
     static let log = OSLog(subsystem: "ch.threema.iapp.newChatView", category: .pointsOfInterest)
 }
@@ -40,8 +40,10 @@ private protocol Configuration {
     var limitEnabled: Bool { get }
     var isFixedWindowEnabled: Bool { get }
     // TODO: Maybe try an expanding window until a maximum size
-        
+    
     var windowSize: Int { get }
+    
+    var backgroundFetching: Bool { get }
 }
 
 private extension MessageProvider {
@@ -50,6 +52,8 @@ private extension MessageProvider {
         fileprivate let isFixedWindowEnabled = false
         
         fileprivate let windowSize = 150
+        
+        fileprivate let backgroundFetching = true
     }
     
     struct ProductionConfiguration: Configuration {
@@ -57,12 +61,20 @@ private extension MessageProvider {
         fileprivate let isFixedWindowEnabled = false // Makes the scroll bar less jumpy
         
         fileprivate let windowSize = 1000 // TODO: (IOS-2014) Measure what the sweet spot might be
+        
+        fileprivate let backgroundFetching = true
     }
 }
 
 /// Load messages of conversation and notify observer about changes
 public final class MessageProvider: NSObject {
-        
+    
+    public struct FetchRequestResultIdentifier {
+        public let firstMessage: NSManagedObjectID
+        public let lastMessage: NSManagedObjectID
+        public let messageCount: Int
+    }
+    
     /// A snapshot of the currently loaded messages and an indication if the previous snapshot contained the most recent messages
     public struct MessagesSnapshot {
         /// Snapshot to be used by the data source
@@ -77,21 +89,25 @@ public final class MessageProvider: NSObject {
     @Published public var currentMessages: MessagesSnapshot?
     
     // MARK: - Private properties
-        
+    
     private let fetchedResultsController: NSFetchedResultsController<BaseMessage>
     
-    private var configuration = TestConfiguration()
+    private static let configuration = TestConfiguration()
     
     // Keep track if the previous snapshot contained the newest messages
     // This is needed by the chat view to decide if we scrolled all the way to the bottom
     private var newestMessagesLoaded = false
     private var previouslyNewestMessagesLoaded = false
     
+    private var oldestMessagesLoaded = true
+    
     // TODO: (IOS-2468) Do we need to update this value more often?
     // - How about big insertions? How do we track them?
     // - Maybe we just ensure it runs on a background queue and update it on every query adjustments
     /// Number of messages updates at creation of provider and when batch deletes happen
     private var numberOfMessages: Int
+    
+    private var lastWillResignActiveNotification: Date?
     
     // If this is bigger than the available number of messages no messages will be loaded (but it won't crash)
     private var currentOffset = 0 {
@@ -101,6 +117,8 @@ public final class MessageProvider: NSObject {
                 currentOffset = 0
                 return
             }
+            
+            oldestMessagesLoaded = currentOffset == 0
         }
     }
     
@@ -128,24 +146,55 @@ public final class MessageProvider: NSObject {
     ///   - date: Date to do initial fetch around. If `nil` newest messages will be fetched.
     ///   - entityManager: Main context to fetch data used in UI
     ///   - backgroundEntityManager: Background context to fetch meta data information on
-    ///   - initialFetchCompletion: Called after initial fetch completes
-    public init(
+    public convenience init(
         for conversation: Conversation,
         around date: Date?,
         entityManager: EntityManager = EntityManager(),
-        backgroundEntityManager: EntityManager = EntityManager(withChildContextForBackgroundProcess: true),
-        initialFetchCompletion: @escaping () -> Void
+        backgroundEntityManager: EntityManager = EntityManager(withChildContextForBackgroundProcess: true)
+    ) {
+        let context: TMAManagedObjectContext
+        if MessageProvider.configuration.backgroundFetching {
+            context = DatabaseContext.directBackgroundContext(
+                withPersistentCoordinator: DatabaseManager.db().persistentStoreCoordinator
+            )
+        }
+        else {
+            context = DatabaseContext(persistentCoordinator: DatabaseManager.db().persistentStoreCoordinator).main
+        }
+        
+        self.init(
+            for: conversation,
+            around: date,
+            entityManager: entityManager,
+            backgroundEntityManager: backgroundEntityManager,
+            context: context
+        )
+    }
+    
+    /// Convenience init should be used everywhere except in tests.
+    /// See the comment for convenience init above for more information.
+    /// `context` is the context on which the `NSFetchedResultsController` is run. This is necessary due to how db access is currently
+    /// setup where most requests run on the main thread.
+    public init(
+        for conversation: Conversation,
+        around date: Date?,
+        entityManager: EntityManager,
+        backgroundEntityManager: EntityManager,
+        context: TMAManagedObjectContext
     ) {
         self.conversationObjectID = conversation.objectID
         self.entityManager = entityManager
         self.backgroundEntityManager = backgroundEntityManager
         
-        let localMessageFetcher = MessageFetcher(for: conversation, with: backgroundEntityManager)
-        self.messageFetcher = localMessageFetcher
-        
-        let context = DatabaseContext.directBackgroundContext(
-            withPersistentCoordinator: DatabaseManager.db().persistentStoreCoordinator
-        )
+        let localMessageFetcher: MessageFetcher
+        if MessageProvider.configuration.backgroundFetching {
+            localMessageFetcher = MessageFetcher(for: conversation, with: backgroundEntityManager)
+            self.messageFetcher = localMessageFetcher
+        }
+        else {
+            localMessageFetcher = MessageFetcher(for: conversation, with: entityManager)
+            self.messageFetcher = localMessageFetcher
+        }
         
         self.fetchedResultsController = NSFetchedResultsController(
             fetchRequest: localMessageFetcher.messagesFetchRequest,
@@ -160,15 +209,14 @@ public final class MessageProvider: NSObject {
         self.numberOfMessages = localMessageFetcher.count()
         
         super.init()
-
+        
         fetchedResultsController.delegate = self
         
         configureChangeObservation(for: context)
         
         configureInitialFetchRequest(around: date)
-        fetch().done {
-            initialFetchCompletion()
-        }
+        
+        fetch()
     }
     
     @available(*, unavailable)
@@ -183,7 +231,7 @@ public final class MessageProvider: NSObject {
         
         // Observe all changes that go through a normal Core Data save call
         context.automaticallyMergesChangesFromParent = true
-
+        
         // Custom notifications for batch actions
         
         NotificationCenter.default.addObserver(
@@ -199,6 +247,45 @@ public final class MessageProvider: NSObject {
             name: NSNotification.Name(kNotificationBatchDeletedOldMessages),
             object: nil
         )
+        
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(resetAndReload),
+            name: UIApplication.didBecomeActiveNotification,
+            object: nil
+        )
+        
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(willResignActiveNotification),
+            name: UIApplication.willResignActiveNotification,
+            object: nil
+        )
+    }
+    
+    @objc private func willResignActiveNotification() {
+        lastWillResignActiveNotification = Date()
+    }
+    
+    /// Workaround when using a direct background context which might miss updates through the NSE
+    @objc private func resetAndReload() {
+        guard let lastWillResignActiveNotification = lastWillResignActiveNotification else {
+            return
+        }
+        
+        backgroundEntityManager.performBlock { [weak self] in
+            guard let conversation = self?.backgroundEntityManager.entityFetcher
+                .existingObject(with: self?.conversationObjectID) as? Conversation,
+                let lastUpdate = conversation.lastUpdate else {
+                return
+            }
+            if lastUpdate > lastWillResignActiveNotification {
+                self?.fetchedResultsController.managedObjectContext.performAndWait {
+                    self?.fetchedResultsController.managedObjectContext.reset()
+                }
+                self?.refetch()
+            }
+        }
     }
     
     private func configureInitialFetchRequest(around date: Date?) {
@@ -215,52 +302,105 @@ public final class MessageProvider: NSObject {
     
     private func configureLoadingMessages(around date: Date) {
         let numberOfMessagesAfterDate = messageFetcher.numberOfMessages(after: date)
-        currentOffset = numberOfMessages - numberOfMessagesAfterDate - (configuration.windowSize / 2)
+        currentOffset = numberOfMessages - numberOfMessagesAfterDate - (MessageProvider.configuration.windowSize / 2)
     }
     
     private func configureLoadingMessagesAtBottom() {
-        if configuration.isFixedWindowEnabled {
-            currentOffset = numberOfMessages - configuration.windowSize
+        if MessageProvider.configuration.isFixedWindowEnabled {
+            currentOffset = numberOfMessages - MessageProvider.configuration.windowSize
         }
         else {
             currentOffset = numberOfMessages - currentWindowSize
         }
     }
     
+    private func configureLoadingMessagesAtTop() {
+        currentOffset = 0
+    }
+    
     // MARK: - Initial fetch with a new configuration
     
-    @discardableResult private func fetch() -> Guarantee<Void> {
+    @discardableResult private func fetch() -> Guarantee<NSManagedObjectID?> {
         DDLogVerbose("Fetch...")
-        if configuration.limitEnabled {
+        if MessageProvider.configuration.limitEnabled {
             limitFetchRequest()
         }
         
-        return Guarantee { seal in
-            // As this is probably happening on a background context we need to dispatch the fetch correctly
-            fetchedResultsController.managedObjectContext.perform {
-                do {
-                    DDLogVerbose("Start fetch")
-                    try self.fetchedResultsController.performFetch()
-                    DDLogVerbose("End fetch")
-                    seal(())
-                }
-                catch {
-                    // TODO: Fail more gracefully
-                    fatalError("Initial fetch of messages failed: \(error.localizedDescription)")
+        if MessageProvider.configuration.backgroundFetching {
+            return Guarantee { seal in
+                // As this is probably happening on a background context we need to dispatch the fetch correctly (is this true?)
+                fetchedResultsController.managedObjectContext.perform {
+                    do {
+                        let prevFetchedObjs = self.fetchedResultsController.fetchedObjects
+                        
+                        let startTime = CFAbsoluteTimeGetCurrent()
+                        DDLogVerbose("Start fetch")
+                        try self.fetchedResultsController.performFetch()
+                        DDLogVerbose("End fetch")
+                        
+                        let endTime = CFAbsoluteTimeGetCurrent()
+                        DDLogVerbose("fetchRequest duration \(endTime - startTime)s")
+                
+                        guard let fetchedObjs = self.fetchedResultsController.fetchedObjects,
+                              !fetchedObjs.isEmpty,
+                              let arr = fetchedObjs as NSArray?,
+                              let lastObj = arr[max(0, arr.count - 1)] as? BaseMessage,
+                              let firstObj = arr[0] as? BaseMessage else {
+                            return seal(nil)
+                        }
+                        
+                        if let prevFetchedObjs = prevFetchedObjs {
+                            guard !prevFetchedObjs.isEmpty,
+                                  let prevArr = prevFetchedObjs as NSArray?,
+                                  let prevLastObj = prevArr[max(0, prevArr.count - 1)] as? BaseMessage,
+                                  let prevFirstObj = prevArr[0] as? BaseMessage else {
+                                DDLogError("Couldn't access previous state")
+                                return seal(nil)
+                            }
+                            if lastObj == prevLastObj, firstObj == prevFirstObj, prevArr.count == arr.count {
+                                return seal(nil)
+                            }
+                        }
+                        
+                        seal(lastObj.objectID)
+                    }
+                    catch {
+                        // TODO: Fail more gracefully
+                        fatalError("Initial fetch of messages failed: \(error.localizedDescription)")
+                    }
                 }
             }
+        }
+        else {
+            do {
+                DDLogVerbose("Start fetch")
+                try fetchedResultsController.performFetch()
+                DDLogVerbose("End fetch")
+            }
+            catch {
+                // TODO: Fail more gracefully
+                fatalError("Initial fetch of messages failed: \(error.localizedDescription)")
+            }
+            guard let fetchedObjs = fetchedResultsController.fetchedObjects,
+                  !fetchedObjs.isEmpty,
+                  let arr = fetchedObjs as NSArray?,
+                  let lastObj = arr[max(0, arr.count - 1)] as? BaseMessage else {
+                return Guarantee { $0(nil) }
+            }
+            
+            return Guarantee { $0(lastObj.objectID) }
         }
     }
     
     private func limitFetchRequest() {
         // Set window size
-        if configuration.isFixedWindowEnabled {
-            if currentOffset + configuration.windowSize >= numberOfMessages {
+        if MessageProvider.configuration.isFixedWindowEnabled {
+            if currentOffset + MessageProvider.configuration.windowSize >= numberOfMessages {
                 fetchedResultsController.fetchRequest.fetchLimit = 0
                 newestMessagesLoaded = true
             }
             else {
-                fetchedResultsController.fetchRequest.fetchLimit = configuration.windowSize
+                fetchedResultsController.fetchRequest.fetchLimit = MessageProvider.configuration.windowSize
                 newestMessagesLoaded = false
             }
         }
@@ -282,47 +422,59 @@ public final class MessageProvider: NSObject {
     // MARK: - Public methods
     
     // TODO: (IOS-2393) Add a reload that reset the complete FRC so the section title are update (or maybe other things)
-        
+    
     /// Load more message at the top if there are any
     ///
     /// Fetching happens asynchronously.
     ///
     /// - Returns: Guarantee that is full-filled when initial fetch of loading completes or no new fetch is needed
-    public func loadMessagesAtTop() -> Guarantee<Void> {
+    public func loadMessagesAtTop() -> Guarantee<NSManagedObjectID?> {
         guard currentOffset > 0 else {
             // We're at the top
-            return Guarantee()
+            return Guarantee { $0(nil) }
         }
         
-        if configuration.isFixedWindowEnabled {
-            currentOffset = currentOffset - (2 * configuration.windowSize / 3)
+        if MessageProvider.configuration.isFixedWindowEnabled {
+            currentOffset = currentOffset - (2 * MessageProvider.configuration.windowSize / 3)
         }
         else {
-            currentWindowSize += configuration.windowSize
-            currentOffset -= configuration.windowSize
+            currentWindowSize += MessageProvider.configuration.windowSize
+            currentOffset -= MessageProvider.configuration.windowSize
         }
         
         return fetch()
     }
-
+    
+    public func refetch() {
+        DDLogVerbose("\(#function)")
+        do {
+            try fetchedResultsController.managedObjectContext.performAndWait {
+                try self.fetchedResultsController.performFetch()
+            }
+        }
+        catch {
+            DDLogError("An error occurred when refetching the current snapshot.")
+        }
+    }
+    
     /// Load more message at the bottom if there are any
     ///
     /// Fetching happens asynchronously.
     ///
     /// - Returns: Guarantee that is full-filled when initial fetch of loading completes or no new fetch is needed
-    public func loadMessagesAtBottom() -> Guarantee<Void> {
+    public func loadMessagesAtBottom() -> Guarantee<NSManagedObjectID?> {
         guard !newestMessagesLoaded else {
-            return Guarantee()
+            return Guarantee { $0(nil) }
         }
         
-        if configuration.isFixedWindowEnabled {
+        if MessageProvider.configuration.isFixedWindowEnabled {
             currentOffset = min(
-                currentOffset + (3 * configuration.windowSize / 4),
-                numberOfMessages - configuration.windowSize
+                currentOffset + (3 * MessageProvider.configuration.windowSize / 4),
+                numberOfMessages - MessageProvider.configuration.windowSize
             )
         }
         else {
-            currentWindowSize += configuration.windowSize
+            currentWindowSize += MessageProvider.configuration.windowSize
         }
         
         return fetch()
@@ -334,35 +486,51 @@ public final class MessageProvider: NSObject {
     ///
     /// - Parameter date: Date to load messages around
     /// - Returns: Guarantee that is full-filled when initial fetch of loading completes or no new fetch is needed
-    public func loadMessages(around date: Date) -> Guarantee<Void> {
+    public func loadMessages(around date: Date) -> Guarantee<NSManagedObjectID?> {
         let numberOfMessagesAfterDate = messageFetcher.numberOfMessages(after: date)
         let firstMessageAfterDateOffset = numberOfMessages - numberOfMessagesAfterDate
         
         // Don't do new fetch if messages around `date` are already loaded
-        guard currentOffset > (firstMessageAfterDateOffset - (configuration.windowSize / 2)) ||
-            currentOffset + currentWindowSize < firstMessageAfterDateOffset + (configuration.windowSize / 2)
+
+        guard currentOffset > (firstMessageAfterDateOffset - (MessageProvider.configuration.windowSize / 2)) ||
+            currentOffset + currentWindowSize < firstMessageAfterDateOffset +
+            (MessageProvider.configuration.windowSize / 2)
         else {
-            return Guarantee()
+            return Guarantee { $0(nil) }
         }
         
-        currentOffset = numberOfMessages - numberOfMessagesAfterDate - (configuration.windowSize / 2)
-        currentWindowSize = configuration.windowSize
+        currentOffset = numberOfMessages - numberOfMessagesAfterDate - (MessageProvider.configuration.windowSize / 2)
+        currentWindowSize = MessageProvider.configuration.windowSize
         
         return fetch()
     }
     
     /// Load newest messages
     /// - Returns: Guarantee that is full-filled when initial fetch of loading completes or no new fetch is needed
-    public func loadNewestMessages() -> Guarantee<Void> {
+    public func loadNewestMessages() -> Guarantee<NSManagedObjectID?> {
+
         guard !newestMessagesLoaded else {
-            return Guarantee()
+            return Guarantee { $0(nil) }
         }
         
         configureLoadingMessagesAtBottom()
         
         return fetch()
     }
+    
+    /// Load oldest messages
+    /// - Returns: Guarantee that is full-filled when initial fetch of loading completes or no new fetch is needed
+    public func loadOldestMessages() -> Guarantee<NSManagedObjectID?> {
+
+        guard !oldestMessagesLoaded else {
+            return Guarantee { $0(nil) }
+        }
         
+        configureLoadingMessagesAtTop()
+        
+        return fetch()
+    }
+    
     /// Get `BaseMessage` for id on main queue
     /// - Parameter objectID: Object to load
     /// - Returns: `BaseMessage` if one is found
@@ -372,7 +540,7 @@ public final class MessageProvider: NSObject {
             DDLogVerbose("Object not found or unable to cast to BaseMessage")
             return nil
         }
-
+        
         return message
     }
     
@@ -410,8 +578,33 @@ extension MessageProvider: NSFetchedResultsControllerDelegate {
         _ controller: NSFetchedResultsController<NSFetchRequestResult>,
         didChangeContentWith snapshot: NSDiffableDataSourceSnapshotReference
     ) {
-        DDLogVerbose("New snapshot...")
-        var newSnapshot = snapshot as NSDiffableDataSourceSnapshot<String, NSManagedObjectID>
+        DDLogNotice("New snapshot...")
+        let newSnapshot = snapshot as NSDiffableDataSourceSnapshot<String, NSManagedObjectID>
+        
+        var snapshotWithNeighbors = newSnapshot
+        
+        // Identify the cells neighboring the reloaded cells. Neighbours must be reloaded as well as they may be grouped together.
+        if #available(iOS 15.0, *) {
+            for reloadedItemIdentifier in newSnapshot.reloadedItemIdentifiers {
+                guard let index = newSnapshot.indexOfItem(reloadedItemIdentifier) else {
+                    continue
+                }
+                /// We may not insert the same identifier twice in the same call to reloadItems otherwise we get a crash. This is most likely not relevant for performance but it might still be fun to optimize this.
+                /// We use reconfigure to get the exact same cell back from the cell provider, this avoids flickering cells.
+                ///
+                snapshotWithNeighbors.reconfigureItems([
+                    newSnapshot.itemIdentifiers[max(0, index - 1)],
+                ])
+                snapshotWithNeighbors.reconfigureItems([
+                    newSnapshot.itemIdentifiers[index],
+                ])
+                snapshotWithNeighbors.reconfigureItems([
+                    newSnapshot.itemIdentifiers[min(newSnapshot.itemIdentifiers.count - 1, index + 1)],
+                ])
+            }
+            /// After this point the snapshot should not be changed anymore for devices running iOS 15 or newer
+            snapshotWithNeighbors = convertSnapshot(snapshot: snapshotWithNeighbors)
+        }
         
         if #available(iOS 15.0, *) {
             // Nothing needed
@@ -433,16 +626,46 @@ extension MessageProvider: NSFetchedResultsControllerDelegate {
             // TODO: (IOS-2427) Is there a more efficient way to find the items that changed?
             // This leads to a constant reload of the table view cells e.g. when downloading a blob (at least on iOS 14)
             // Maybe we should rewrite this delegate and the apply in Objective-C.
-            newSnapshot.reloadItems(newSnapshot.itemIdentifiers)
+            snapshotWithNeighbors.reloadItems(snapshotWithNeighbors.itemIdentifiers)
         }
         
         // Publish new snapshot
         currentMessages = MessagesSnapshot(
-            snapshot: newSnapshot,
+            snapshot: snapshotWithNeighbors,
             previouslyNewestMessagesLoaded: previouslyNewestMessagesLoaded
         )
         
+        DDLogNotice("New snapshot published")
+        
         // The new state is the new previous state
         previouslyNewestMessagesLoaded = newestMessagesLoaded
+    }
+    
+    /// We never want to reload cells because otherwise we might reuse a cell with different content when just updating the delivery state of our message causing weird flickering
+    /// Reconfigure always deques the *exact* same cell which means no weird flickering 🥳
+    /// - Parameter snapshot: Snapshot to convert
+    /// - Returns: snapshot with reloadItems moved into reconfigure
+    private func convertSnapshot(snapshot: NSDiffableDataSourceSnapshot<String, NSManagedObjectID>)
+        -> NSDiffableDataSourceSnapshot<String, NSManagedObjectID> {
+        
+        var newSnapshot = NSDiffableDataSourceSnapshot<String, NSManagedObjectID>()
+        newSnapshot.appendSections(snapshot.sectionIdentifiers)
+        
+        for sectionIdentifier in snapshot.sectionIdentifiers {
+            for objectID in snapshot.itemIdentifiers(inSection: sectionIdentifier) {
+                newSnapshot.appendItems([objectID], toSection: sectionIdentifier)
+            }
+        }
+        
+        if #available(iOS 15.0, *) {
+            newSnapshot.reconfigureItems(snapshot.reloadedItemIdentifiers)
+            newSnapshot.reconfigureItems(snapshot.reconfiguredItemIdentifiers)
+        }
+        else {
+            // Fallback on earlier versions
+            newSnapshot.reloadItems(newSnapshot.itemIdentifiers)
+        }
+        
+        return newSnapshot
     }
 }

@@ -21,6 +21,14 @@
 import Foundation
 
 public extension Contact {
+    
+    /// ID Color for this contact
+    ///
+    /// The color looks similar on all devices for the same ID.
+    var idColor: UIColor {
+        IDColor.forData(Data(identity.utf8))
+    }
+    
     /// Shorter version of `displayName` if available
     var shortDisplayName: String {
         // This is an "op-in" feature
@@ -33,5 +41,21 @@ public extension Contact {
         }
         
         return displayName
+    }
+    
+    /// Could an other-Threema-type-icon be shown next to this contact?
+    ///
+    /// Most of the time it's most appropriate to show or hide an `OtherThreemaTypeImageView`.
+    var showOtherThreemaTypeIcon: Bool {
+        if isEchoEcho() || isGatewayID() || ThreemaApp.current == .onPrem {
+            return false
+        }
+        
+        if ThreemaApp.current == .work || ThreemaApp.current == .workRed {
+            return !UserSettings.shared().workIdentities.contains(identity)
+        }
+        else {
+            return UserSettings.shared().workIdentities.contains(identity)
+        }
     }
 }

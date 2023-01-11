@@ -518,9 +518,7 @@ extension ChatImageMessageCell {
     @objc func speakMessage(_ menuController: UIMenuController) {
         if _captionLabel?.text != nil {
             let speakText = "\(BundleUtil.localizedString(forKey: "image")). \(_captionLabel!.text!)"
-            let utterance = AVSpeechUtterance(string: speakText)
-            let syn = AVSpeechSynthesizer()
-            syn.speak(utterance)
+            SpeechSynthesizerManger().speak(speakText)
         }
     }
 }

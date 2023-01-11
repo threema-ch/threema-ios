@@ -20,13 +20,6 @@
 
 import Foundation
 
-protocol ChatViewTableViewCellDelegate: AnyObject {
-    func clearCellHeightCache(for objectID: NSManagedObjectID)
-    func show(identity: String)
-    func didTap(message: BaseMessage?)
-    func showQuoteView(message: QuoteMessage)
-}
-
 /// Cache the cell hight and  estimated cell hight
 final class CellHeightCache {
     

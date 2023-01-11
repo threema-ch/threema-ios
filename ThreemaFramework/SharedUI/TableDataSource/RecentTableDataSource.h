@@ -20,9 +20,12 @@
 
 #import <Foundation/Foundation.h>
 #import "ContactGroupDataSource.h"
+#import "Conversation.h"
 
 @interface RecentTableDataSource : NSObject  <ContactGroupDataSource>
 
 + (instancetype)recentTableDataSource;
+
+- (void)insertSelectedConversation:(Conversation *) conversation;
 
 @end

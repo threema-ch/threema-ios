@@ -59,6 +59,7 @@ open class MediaPreviewViewController: UIViewController, UIGestureRecognizerDele
     public var sendIsChoose = false
     @objc public var disableAdd = false
     public var memoryConstrained = false
+    public var conversationDescription: NSAttributedString?
     
     var mainCollectionViewController: MainCollectionViewController?
     var miniController: ThumbnailCollectionViewController?
@@ -81,12 +82,14 @@ open class MediaPreviewViewController: UIViewController, UIGestureRecognizerDele
         
         addAccessibilityLabels()
         
+        currentItem = IndexPath(item: mediaData.count - 1, section: 0)
+
         if largeCollectionView.numberOfItems(inSection: currentItem.section) > 0 {
             largeCollectionView.selectItem(at: currentItem, animated: true, scrollPosition: .centeredHorizontally)
             smallCollectionView.selectItem(at: currentItem, animated: true, scrollPosition: .left)
         }
         
-        updateTextForIndex(indexPath: IndexPath(item: 0, section: 0), animated: false)
+        updateTextForIndex(indexPath: currentItem, animated: false)
         
         // There seems to be an issue in iOS 13 where the content view of an UINavigationBar can have the wrong height.
         // The issue still persists in an iOS 13.7 Simulator.
@@ -109,6 +112,8 @@ open class MediaPreviewViewController: UIViewController, UIGestureRecognizerDele
             stackViewToolbar!,
             smallCollectionView!,
         ]
+        
+        smallCollectionView.flashScrollIndicators()
     }
     
     override open func viewWillAppear(_ animated: Bool) {
@@ -205,7 +210,12 @@ open class MediaPreviewViewController: UIViewController, UIGestureRecognizerDele
         largeCollectionView.dataSource = mainCollectionViewController
         largeCollectionView.isPagingEnabled = true
         largeCollectionView.allowsMultipleSelection = false
+        largeCollectionViewContainerView.delegate = self
         
+        setupSmallCollectionView()
+    }
+    
+    private func setupSmallCollectionView() {
         smallCollectionView.delegate = miniController!
         smallCollectionView.dataSource = miniController!
         smallCollectionView.allowsMultipleSelection = false
@@ -215,7 +225,12 @@ open class MediaPreviewViewController: UIViewController, UIGestureRecognizerDele
         smallCollectionView.dragDelegate = miniController!
         smallCollectionView.dropDelegate = miniController!
         
-        largeCollectionViewContainerView.delegate = self
+        smallCollectionView.showsHorizontalScrollIndicator = true
+        
+        smallCollectionView.register(
+            ConversationDescriptionCell.self,
+            forCellWithReuseIdentifier: "ConversationDescriptionCell"
+        )
     }
     
     private func setupCaptionTextfield() {
@@ -406,8 +421,8 @@ open class MediaPreviewViewController: UIViewController, UIGestureRecognizerDele
         let items = errorList.count
         
         var title = BundleUtil.localizedString(forKey: "could_not_add_items_title")
-        var message = String(
-            format: BundleUtil.localizedString(forKey: "multiple_media_items_could_not_be_processed"),
+        var message = String.localizedStringWithFormat(
+            BundleUtil.localizedString(forKey: "multiple_media_items_could_not_be_processed"),
             items
         )
         
@@ -418,8 +433,8 @@ open class MediaPreviewViewController: UIViewController, UIGestureRecognizerDele
         }
         else if !errorList.isEmpty, errorList.filter({ $0 != .fileTooLargeForSending }).isEmpty {
             title = BundleUtil.localizedString(forKey: "could_not_add_all_items_memory_constrained_title")
-            message = String(
-                format: BundleUtil.localizedString(forKey: "error_message_file_too_big"),
+            message = String.localizedStringWithFormat(
+                BundleUtil.localizedString(forKey: "error_message_file_too_big"),
                 FileUtility.getFileSizeDescription(from: Int64(kMaxFileSize))
             )
         }
@@ -459,7 +474,11 @@ open class MediaPreviewViewController: UIViewController, UIGestureRecognizerDele
         let allowed = ByteCountFormatter.string(fromByteCount: Int64(kMaxFileSize), countStyle: .file)
         
         let title = BundleUtil.localizedString(forKey: "item_too_large_title")
-        let message = String(format: BundleUtil.localizedString(forKey: "maximum_file_size_exceeded"), allowed, size)
+        let message = String.localizedStringWithFormat(
+            BundleUtil.localizedString(forKey: "maximum_file_size_exceeded"),
+            allowed,
+            size
+        )
         
         UIAlertTemplate.showAlert(owner: self, title: title, message: message)
     }

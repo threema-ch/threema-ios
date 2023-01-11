@@ -18,6 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import CocoaLumberjackSwift
 import UIKit
 
 class ThumbnailCollectionViewController: NSObject, UICollectionViewDelegateFlowLayout, UICollectionViewDataSource {
@@ -37,14 +38,27 @@ class ThumbnailCollectionViewController: NSObject, UICollectionViewDelegateFlowL
             }
             return parent.disableAdd ? 0 : 1
         }
+        if section == 2 {
+            guard let parent = parent else {
+                return 0
+            }
+            return parent.conversationDescription == nil ? 0 : 1
+        }
         return 0
     }
     
     func numberOfSections(in collectionView: UICollectionView) -> Int {
+        var sections = 1
         guard let parent = parent else {
-            return 1
+            return sections
         }
-        return parent.disableAdd ? 1 : 2
+        if !parent.disableAdd {
+            sections = 2
+        }
+        if parent.conversationDescription != nil {
+            sections = 3
+        }
+        return sections
     }
     
     func collectionView(
@@ -71,7 +85,10 @@ class ThumbnailCollectionViewController: NSObject, UICollectionViewDelegateFlowL
         if section == 0 {
             return UIEdgeInsets(top: 13, left: 13.0, bottom: 13.0, right: (parent?.disableAdd ?? false) ? 13 : 0)
         }
-        return UIEdgeInsets(top: 13, left: 6.0, bottom: 13.0, right: 13)
+        if section == 1 {
+            return UIEdgeInsets(top: 13, left: 6.0, bottom: 13.0, right: 0)
+        }
+        return UIEdgeInsets(top: 13, left: 0.0, bottom: 13.0, right: 13)
     }
     
     func collectionView(
@@ -79,6 +96,21 @@ class ThumbnailCollectionViewController: NSObject, UICollectionViewDelegateFlowL
         layout collectionViewLayout: UICollectionViewLayout,
         sizeForItemAt indexPath: IndexPath
     ) -> CGSize {
+        if indexPath.section == 2 {
+            let collectionViewHeight = collectionView.frame.height
+            
+            let label = ConversationDescriptionCell.descriptionLabel
+            label.attributedText = parent?.conversationDescription
+            
+            let intrinsicWidth = label.intrinsicContentSize.width
+            let newWidth = min(1200, intrinsicWidth)
+            
+            let width: CGFloat = newWidth
+            let height = collectionViewHeight - collectionViewInsets * 2
+            
+            return CGSize(width: width, height: height)
+        }
+        
         let collectionViewHeight = collectionView.frame.height
         let width = collectionViewHeight - collectionViewInsets * 2
         let height = collectionViewHeight - collectionViewInsets * 2
@@ -96,6 +128,23 @@ class ThumbnailCollectionViewController: NSObject, UICollectionViewDelegateFlowL
                 for: indexPath
             ) as! PlusButtonCollectionViewCell
             cell.setup()
+            return cell
+        }
+        if indexPath.section == 2 {
+            guard let parent = parent else {
+                fatalError("Cannot create cell due to missing parent")
+            }
+            guard let conversationDescription = parent.conversationDescription else {
+                fatalError("Cannot create cell due to missing conversation description")
+            }
+            
+            let cell = collectionView.dequeueReusableCell(
+                withReuseIdentifier: "ConversationDescriptionCell",
+                for: indexPath
+            ) as! ConversationDescriptionCell
+
+            cell.setupCell(conversationDescription: conversationDescription)
+
             return cell
         }
         
@@ -133,12 +182,15 @@ class ThumbnailCollectionViewController: NSObject, UICollectionViewDelegateFlowL
             parent!.addButtonPressed()
             collectionView.deselectItem(at: indexPath, animated: false)
         }
-        else {
+        else if indexPath.section == 0 {
             parent!.largeCollectionView.scrollToItem(at: indexPath, at: .centeredHorizontally, animated: true)
             parent!.updateTextForIndex(indexPath: indexPath, animated: true)
             parent!.currentItem = indexPath
             collectionView.scrollToItem(at: indexPath, at: .centeredHorizontally, animated: true)
             NotificationCenter.default.post(name: NSNotification.Name(rawValue: kMediaPreviewPauseVideo), object: nil)
+        }
+        else {
+            DDLogVerbose("No interaction possible on")
         }
     }
     

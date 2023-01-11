@@ -46,14 +46,15 @@ import Foundation
                 _ = databasePreparer.createTextMessage(
                     conversation: conversation,
                     text: String(format: "Hi, this is a test message \n xyz %ld", index),
-                    date: Date(),
+                    date: .now,
                     delivered: true,
                     id: Data([1]),
                     isOwn: true,
                     read: false,
                     sent: true,
                     userack: true,
-                    sender: contact
+                    sender: contact,
+                    remoteSentDate: .now
                 )
             }
         }

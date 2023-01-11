@@ -49,10 +49,10 @@ class TaskExecutionSettingsSync: TaskExecutionTransaction {
                 || task.syncSettings.hasCallConnectionPolity
                 || task.syncSettings.hasCallPolicy
                 || task.syncSettings.hasContactSyncPolicy
-                || task.syncSettings.hasComposeMessagePolicy
+                || task.syncSettings.hasTypingIndicatorPolicy
                 || task.syncSettings.hasExcludeFromSyncIdentities
                 || task.syncSettings.hasUnknownContactPolicy
-                || task.syncSettings.hasReadMessagePolicy
+                || task.syncSettings.hasReadReceiptPolicy
         )
     }
     

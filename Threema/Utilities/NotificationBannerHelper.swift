@@ -63,8 +63,11 @@ import ThreemaFramework
             var body = message.previewText()
             body = TextStyleUtils.makeMentionsString(forText: body)
             
-            if message.conversation.groupID != nil {
-                body = "\(message.sender.displayName): \(body ?? "")"
+            if message.conversation.isGroup() {
+                // Quickfix: Sender should never be `nil` for an incoming group message
+                if let sender = message.sender {
+                    body = "\(sender.displayName): \(body ?? "")"
+                }
             }
             
             if message.conversation.conversationCategory == .private {
@@ -112,11 +115,11 @@ import ThreemaFramework
             if message.conversation.groupID != nil {
                 var contactString = ""
                 if !message.isKind(of: SystemMessage.self) {
-                    if message.sender == nil {
-                        contactString = String(format: "%@: ", BundleUtil.localizedString(forKey: "me"))
+                    if let sender = message.sender {
+                        contactString = "\(sender.displayName): "
                     }
                     else {
-                        contactString = String(format: "%@: ", message.sender.displayName)
+                        contactString = "\(BundleUtil.localizedString(forKey: "me")): "
                     }
                 }
                 
@@ -232,10 +235,12 @@ import ThreemaFramework
         }
     }
     
+    @available(*, deprecated, message: "Use `NotificationPresenterWrapper` instead")
     @objc class func newInfoToast(title: String, body: String) {
         newToast(title: title, body: body, bannerStyle: .warning)
     }
     
+    @available(*, deprecated, message: "Use `NotificationPresenterWrapper` instead")
     @objc class func newErrorToast(title: String, body: String) {
         newToast(title: title, body: body, bannerStyle: .danger)
     }
@@ -244,6 +249,7 @@ import ThreemaFramework
         newToast(title: title, body: body, bannerStyle: .success)
     }
     
+    @available(*, deprecated, message: "Use `NotificationPresenterWrapper` instead")
     private class func newToast(title: String, body: String, bannerStyle: BannerStyle) {
         DispatchQueue.main.async {
             let titleFontDescriptor = UIFontDescriptor.preferredFontDescriptor(withTextStyle: .headline)

@@ -46,51 +46,102 @@ class TaskDefinitionTests: XCTestCase {
         )
     }
 
-    func testTaskDefinitionEncodeDecode() {
+    func testTaskDefinitionEncodeDecode() throws {
         let task = TaskDefinition(isPersistent: true)
 
         let encoder = JSONEncoder()
-        if let data = try? encoder.encode(task) {
-            print(String(data: data, encoding: .utf8)!)
+        let data = try encoder.encode(task)
+        print(String(data: data, encoding: .utf8)!)
 
-            let decoder = JSONDecoder()
-            if let result = try? decoder.decode(TaskDefinition.self, from: data) {
-                XCTAssertTrue(result.isPersistent)
-                XCTAssertFalse(result.retry)
-            }
-            else {
-                XCTFail("Decoding task")
-            }
-        }
-        else {
-            XCTFail("Encoding task")
-        }
+        let decoder = JSONDecoder()
+        let result = try decoder.decode(TaskDefinition.self, from: data)
+        XCTAssertTrue(result.isPersistent)
+        XCTAssertFalse(result.retry)
     }
 
-    func testTaskDefinitionSendMessageEncodeDecode() {
+    func testTaskDefinitionGroupDissolveEncodeDecode() throws {
+        let expectedGroupID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!
+        let expectedGroupCreator = "CREATOR01"
+        let expectedMember = "MEMBER01"
+
+        var group: Group!
+        dbPreparer.save {
+            let contact = dbPreparer.createContact(
+                publicKey: BytesUtility.generateRandomBytes(length: 32)!,
+                identity: expectedGroupCreator,
+                verificationLevel: 0
+            )
+            let conversation = dbPreparer
+                .createConversation(marked: false, typing: false, unreadMessageCount: 0) { conversation in
+                    conversation.contact = contact
+                }
+            let groupEntity = dbPreparer.createGroupEntity(groupID: expectedGroupID, groupCreator: expectedGroupCreator)
+            group = Group(
+                myIdentityStore: MyIdentityStoreMock(),
+                userSettings: UserSettingsMock(),
+                groupEntity: groupEntity,
+                conversation: conversation,
+                lastSyncRequest: nil
+            )
+        }
+
+        let task = TaskDefinitionGroupDissolve(group: group)
+        task.toMembers = [expectedMember]
+
+        let encoder = JSONEncoder()
+        let data = try encoder.encode(task)
+        print(String(data: data, encoding: .utf8)!)
+
+        let decoder = JSONDecoder()
+        let result = try decoder.decode(TaskDefinitionGroupDissolve.self, from: data)
+        XCTAssertEqual(expectedGroupID, result.groupID)
+        XCTAssertEqual(expectedGroupCreator, result.groupCreatorIdentity)
+        XCTAssertEqual(1, result.toMembers.count)
+        XCTAssertTrue(result.toMembers.contains(expectedMember))
+    }
+
+    func testTaskDefinitionSendIncomingMessageUpdateEncodeDecode() throws {
+        let messageID = BytesUtility.generateRandomBytes(length: Int(8))!
+        let messageReadDate = Date()
+        // swiftformat:disable:next all
+        var conversationID = D2d_ConversationId()
+        conversationID.contact = "SENDER01"
+
+        let task = TaskDefinitionSendIncomingMessageUpdate(
+            messageIDs: [messageID],
+            messageReadDates: [messageReadDate],
+            conversationID: conversationID
+        )
+
+        let encoder = JSONEncoder()
+        let data = try encoder.encode(task)
+        print(String(data: data, encoding: .utf8)!)
+
+        let decoder = JSONDecoder()
+        let result = try decoder.decode(TaskDefinitionSendIncomingMessageUpdate.self, from: data)
+        XCTAssertTrue(result.messageIDs.contains(messageID))
+        XCTAssertTrue(result.messageReadDates.contains(messageReadDate))
+        XCTAssertEqual("SENDER01", result.conversationID.contact)
+        XCTAssertTrue(result.isPersistent)
+        XCTAssertFalse(result.retry)
+    }
+
+    func testTaskDefinitionSendMessageEncodeDecode() throws {
         let task = TaskDefinitionSendMessage(sendContactProfilePicture: false)
 
         let encoder = JSONEncoder()
-        if let data = try? encoder.encode(task) {
-            print(String(data: data, encoding: .utf8)!)
+        let data = try encoder.encode(task)
+        print(String(data: data, encoding: .utf8)!)
 
-            let decoder = JSONDecoder()
-            if let result = try? decoder.decode(TaskDefinitionSendMessage.self, from: data) {
-                XCTAssertFalse(result.sendContactProfilePicture ?? true)
-                XCTAssertTrue(result.isPersistent)
-                XCTAssertFalse(result.retry)
-            }
-            else {
-                XCTFail("Decoding task")
-            }
-        }
-        else {
-            XCTFail("Encoding task")
-        }
+        let decoder = JSONDecoder()
+        let result = try decoder.decode(TaskDefinitionSendMessage.self, from: data)
+        XCTAssertFalse(result.sendContactProfilePicture ?? true)
+        XCTAssertTrue(result.isPersistent)
+        XCTAssertFalse(result.retry)
     }
 
-    func testTaskDefinitionSendBallotVoteMessageEncodeDecode() {
-        let expectedBallotID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.ballotIDLength)!
+    func testTaskDefinitionSendBallotVoteMessageEncodeDecode() throws {
+        let expectedBallotID = BytesUtility.generateRandomBytes(length: Int(8))!
 
         var ballot: Ballot!
         dbPreparer.save {
@@ -109,27 +160,16 @@ class TaskDefinitionTests: XCTestCase {
         let task = TaskDefinitionSendBallotVoteMessage(ballot: ballot, group: nil, sendContactProfilePicture: true)
 
         let encoder = JSONEncoder()
-        if let data = try? encoder.encode(task) {
-            print(String(data: data, encoding: .utf8)!)
+        let data = try encoder.encode(task)
+        print(String(data: data, encoding: .utf8)!)
 
-            let decoder = JSONDecoder()
-            let result = try? decoder.decode(TaskDefinitionSendBallotVoteMessage.self, from: data)
-
-            if let result = result {
-                XCTAssertTrue(expectedBallotID.elementsEqual(result.ballotID))
-                XCTAssertFalse(result.isGroupMessage)
-                XCTAssertTrue(result.sendContactProfilePicture ?? false)
-                XCTAssertEqual(0, result.messageAlreadySentTo.count)
-                XCTAssertTrue(result.isPersistent)
-                XCTAssertFalse(result.retry)
-            }
-            else {
-                XCTFail()
-            }
-        }
-        else {
-            XCTFail()
-        }
+        let decoder = JSONDecoder()
+        let result = try decoder.decode(TaskDefinitionSendBallotVoteMessage.self, from: data)
+        XCTAssertEqual(expectedBallotID, result.ballotID)
+        XCTAssertFalse(result.isGroupMessage)
+        XCTAssertTrue(result.sendContactProfilePicture ?? false)
+        XCTAssertTrue(result.isPersistent)
+        XCTAssertFalse(result.retry)
     }
 
     func testTaskDefinitionSendBallotVoteMessageCreate() {
@@ -155,7 +195,7 @@ class TaskDefinitionTests: XCTestCase {
 
         if let result = result.taskDefinition as? TaskDefinitionSendBallotVoteMessage {
             XCTAssertFalse(result.isGroupMessage)
-            XCTAssertTrue(expectedBallotID.elementsEqual(result.ballotID))
+            XCTAssertEqual(expectedBallotID, result.ballotID)
             XCTAssertTrue(result.isPersistent)
             XCTAssertFalse(result.retry)
         }
@@ -199,7 +239,8 @@ class TaskDefinitionTests: XCTestCase {
                 read: true,
                 sent: false,
                 userack: false,
-                sender: contact
+                sender: contact,
+                remoteSentDate: nil
             )
         }
 
@@ -208,37 +249,21 @@ class TaskDefinitionTests: XCTestCase {
             group: group,
             sendContactProfilePicture: true
         )
-        task.messageAlreadySentTo.append(message.sender.identity)
+        task.messageAlreadySentTo.append(message.sender!.identity)
 
         let encoder = JSONEncoder()
-        if let data = try? encoder.encode(task) {
-            print(String(data: data, encoding: .utf8)!)
+        let data = try encoder.encode(task)
+        print(String(data: data, encoding: .utf8)!)
 
-            let decoder = JSONDecoder()
-            let result = try? decoder.decode(TaskDefinitionSendBaseMessage.self, from: data)
-
-            if let result = result {
-                XCTAssertTrue(result.isGroupMessage)
-                XCTAssertTrue(expectedMessageID.elementsEqual(result.messageID))
-                if let groupID = result.groupID {
-                    XCTAssertTrue(expectedGroupID.elementsEqual(groupID))
-                }
-                else {
-                    XCTFail()
-                }
-                XCTAssertEqual(expectedGroupCreator, result.groupCreatorIdentity)
-                XCTAssertTrue(result.sendContactProfilePicture ?? false)
-                XCTAssertTrue(result.isPersistent)
-                XCTAssertFalse(result.retry)
-                XCTAssertTrue(result.messageAlreadySentTo.contains(message.sender.identity))
-            }
-            else {
-                XCTFail()
-            }
-        }
-        else {
-            XCTFail()
-        }
+        let decoder = JSONDecoder()
+        let result = try decoder.decode(TaskDefinitionSendBaseMessage.self, from: data)
+        XCTAssertTrue(result.isGroupMessage)
+        XCTAssertEqual(expectedMessageID, result.messageID)
+        XCTAssertEqual(expectedGroupID, result.groupID)
+        XCTAssertEqual(expectedGroupCreator, result.groupCreatorIdentity)
+        XCTAssertTrue(result.sendContactProfilePicture ?? false)
+        XCTAssertTrue(result.isPersistent)
+        XCTAssertFalse(result.retry)
     }
 
     func testTaskDefinitionSendBaseMessageCreate() {
@@ -277,7 +302,8 @@ class TaskDefinitionTests: XCTestCase {
                 read: true,
                 sent: false,
                 userack: false,
-                sender: contact
+                sender: contact,
+                remoteSentDate: nil
             )
         }
 
@@ -292,7 +318,7 @@ class TaskDefinitionTests: XCTestCase {
         XCTAssertNotNil(result)
         if let result = result.taskDefinition as? TaskDefinitionSendBaseMessage {
             XCTAssertTrue(result.isGroupMessage)
-            XCTAssertTrue(expectedMessageID.elementsEqual(result.messageID))
+            XCTAssertEqual(expectedMessageID, result.messageID)
             XCTAssertEqual(expectedGroupID, try XCTUnwrap(result.groupID))
             XCTAssertEqual(expectedGroupCreator, result.groupCreatorIdentity)
             XCTAssertTrue(result.isPersistent)
@@ -303,7 +329,7 @@ class TaskDefinitionTests: XCTestCase {
         }
     }
 
-    func testTaskDefinitionSendLocationMessageEncodeDecode() {
+    func testTaskDefinitionSendLocationMessageEncodeDecode() throws {
         let expectedGroupID = BytesUtility.generateRandomBytes(length: 8)!
         let expectedGroupCreator = "ADMIN007"
         let expectedMessageID = BytesUtility.generateRandomBytes(length: 8)!
@@ -348,38 +374,22 @@ class TaskDefinitionTests: XCTestCase {
         )
 
         let encoder = JSONEncoder()
-        if let data = try? encoder.encode(task) {
-            print(String(data: data, encoding: .utf8)!)
+        let data = try encoder.encode(task)
+        print(String(data: data, encoding: .utf8)!)
 
-            let decoder = JSONDecoder()
-            let result = try? decoder.decode(TaskDefinitionSendLocationMessage.self, from: data)
-
-            if let result = result {
-                XCTAssertTrue(result.isGroupMessage)
-                XCTAssertTrue(expectedMessageID.elementsEqual(result.messageID))
-                if let groupID = result.groupID {
-                    XCTAssertTrue(expectedGroupID.elementsEqual(groupID))
-                }
-                else {
-                    XCTFail()
-                }
-                XCTAssertEqual(expectedGroupCreator, result.groupCreatorIdentity)
-                XCTAssertEqual(expectedMessagePoiAddress, result.poiAddress)
-                XCTAssertTrue(result.sendContactProfilePicture ?? false)
-                XCTAssertEqual(0, result.messageAlreadySentTo.count)
-                XCTAssertTrue(result.isPersistent)
-                XCTAssertFalse(result.retry)
-            }
-            else {
-                XCTFail()
-            }
-        }
-        else {
-            XCTFail()
-        }
+        let decoder = JSONDecoder()
+        let result = try decoder.decode(TaskDefinitionSendLocationMessage.self, from: data)
+        XCTAssertTrue(result.isGroupMessage)
+        XCTAssertEqual(expectedMessageID, result.messageID)
+        XCTAssertEqual(expectedGroupID, result.groupID)
+        XCTAssertEqual(expectedGroupCreator, result.groupCreatorIdentity)
+        XCTAssertEqual(expectedMessagePoiAddress, result.poiAddress)
+        XCTAssertTrue(result.sendContactProfilePicture ?? false)
+        XCTAssertTrue(result.isPersistent)
+        XCTAssertFalse(result.retry)
     }
 
-    func testTaskDefinitionSendVideoMessageEncodeDecode() {
+    func testTaskDefinitionSendVideoMessageEncodeDecode() throws {
         let expectedGroupID = BytesUtility.generateRandomBytes(length: 8)!
         let expectedGroupCreator = "ADMIN007"
         let expectedMessageID = BytesUtility.generateRandomBytes(length: 8)!
@@ -435,39 +445,19 @@ class TaskDefinitionTests: XCTestCase {
         )
 
         let encoder = JSONEncoder()
-        if let data = try? encoder.encode(task) {
-            let decoder = JSONDecoder()
-            let result = try? decoder.decode(TaskDefinitionSendVideoMessage.self, from: data)
+        let data = try encoder.encode(task)
 
-            if let result = result {
-                XCTAssertTrue(result.isGroupMessage)
-                XCTAssertTrue(expectedMessageID.elementsEqual(result.messageID))
-                if let groupID = result.groupID {
-                    XCTAssertTrue(expectedGroupID.elementsEqual(groupID))
-                }
-                else {
-                    XCTFail()
-                }
-                XCTAssertEqual(expectedGroupCreator, result.groupCreatorIdentity)
-                if let thumbnailBlobID = result.thumbnailBlobID {
-                    XCTAssertTrue(expectedThumbnailBlobID.elementsEqual(thumbnailBlobID))
-                }
-                else {
-                    XCTFail()
-                }
-                XCTAssertEqual(expectedThumbnailSize, result.thumbnailSize)
-                XCTAssertTrue(result.sendContactProfilePicture ?? false)
-                XCTAssertEqual(0, result.messageAlreadySentTo.count)
-                XCTAssertTrue(result.isPersistent)
-                XCTAssertFalse(result.retry)
-            }
-            else {
-                XCTFail()
-            }
-        }
-        else {
-            XCTFail()
-        }
+        let decoder = JSONDecoder()
+        let result = try decoder.decode(TaskDefinitionSendVideoMessage.self, from: data)
+        XCTAssertTrue(result.isGroupMessage)
+        XCTAssertEqual(expectedMessageID, result.messageID)
+        XCTAssertEqual(result.groupID, expectedGroupID)
+        XCTAssertEqual(result.groupCreatorIdentity, expectedGroupCreator)
+        XCTAssertEqual(result.thumbnailBlobID, expectedThumbnailBlobID)
+        XCTAssertEqual(result.thumbnailSize, expectedThumbnailSize)
+        XCTAssertTrue(result.sendContactProfilePicture ?? false)
+        XCTAssertTrue(result.isPersistent)
+        XCTAssertFalse(result.retry)
     }
 
     func testTaskDefinitionSendGroupCreateMessageEncodeDecode() throws {
@@ -537,43 +527,34 @@ class TaskDefinitionTests: XCTestCase {
         XCTAssertFalse(result.retry)
     }
 
-    func testTaskDefinitionSendGroupLeaveMessageEncodeDecode() {
+    func testTaskDefinitionSendGroupLeaveMessageEncodeDecode() throws {
         let expectedGroupID = BytesUtility.generateRandomBytes(length: 8)!
         let expectedGroupCreator = "CREATOR01"
         let expectedFromMember = "MEMBER01"
         let expectedToMembers = ["MEMBER03", "MEMBER04"]
+        let expectedHiddenContacts = ["MEMBER04"]
 
         let task = TaskDefinitionSendGroupLeaveMessage(sendContactProfilePicture: false)
         task.groupID = expectedGroupID
         task.groupCreatorIdentity = expectedGroupCreator
         task.fromMember = expectedFromMember
         task.toMembers = expectedToMembers
+        task.hiddenContacts = expectedHiddenContacts
 
         let encoder = JSONEncoder()
-        if let data = try? encoder.encode(task) {
-            print(String(data: data, encoding: .utf8)!)
+        let data = try encoder.encode(task)
+        print(String(data: data, encoding: .utf8)!)
 
-            let decoder = JSONDecoder()
-            let result = try? decoder.decode(TaskDefinitionSendGroupLeaveMessage.self, from: data)
-
-            if let result = result {
-                if let groupID = result.groupID {
-                    XCTAssertTrue(expectedGroupID.elementsEqual(groupID))
-                }
-                XCTAssertEqual(expectedGroupCreator, result.groupCreatorIdentity)
-                XCTAssertFalse(result.sendContactProfilePicture ?? true)
-                XCTAssertEqual(expectedFromMember, result.fromMember)
-                XCTAssertEqual(expectedToMembers, result.toMembers)
-                XCTAssertTrue(result.isPersistent)
-                XCTAssertFalse(result.retry)
-            }
-            else {
-                XCTFail()
-            }
-        }
-        else {
-            XCTFail()
-        }
+        let decoder = JSONDecoder()
+        let result = try decoder.decode(TaskDefinitionSendGroupLeaveMessage.self, from: data)
+        XCTAssertEqual(result.groupID, expectedGroupID)
+        XCTAssertEqual(expectedGroupCreator, result.groupCreatorIdentity)
+        XCTAssertFalse(result.sendContactProfilePicture ?? true)
+        XCTAssertEqual(expectedFromMember, result.fromMember)
+        XCTAssertEqual(expectedToMembers, result.toMembers)
+        XCTAssertEqual(expectedHiddenContacts, result.hiddenContacts)
+        XCTAssertTrue(result.isPersistent)
+        XCTAssertFalse(result.retry)
     }
 
     func testTaskDefinitionSendGroupRenameMessageEncodeDecode() throws {
@@ -652,7 +633,7 @@ class TaskDefinitionTests: XCTestCase {
         XCTAssertFalse(result.retry)
     }
 
-    func testTaskDefinitionSendAbstractMessageEncodeDecode() {
+    func testTaskDefinitionSendAbstractMessageEncodeDecode() throws {
         let expectedMessageID = BytesUtility.generateRandomBytes(length: 8)!
         let expectedText = "Test text"
         let expectedFromIdentity = "FROMID01"
@@ -669,24 +650,18 @@ class TaskDefinitionTests: XCTestCase {
         let task = TaskDefinitionSendAbstractMessage(message: abstractMessage)
 
         let encoder = JSONEncoder()
-        if let data = try? encoder.encode(task) {
-            let decoder = JSONDecoder()
-            let result = try? decoder.decode(TaskDefinitionSendAbstractMessage.self, from: data)
+        let data = try encoder.encode(task)
 
-            if let result = result,
-               let message = result.message as? BoxTextMessage {
-
-                XCTAssertTrue(expectedMessageID.elementsEqual(message.messageID))
-                XCTAssertEqual(expectedText, message.text)
-                XCTAssertEqual(expectedFromIdentity, message.fromIdentity)
-                XCTAssertEqual(expectedToIdentity, message.toIdentity)
-                XCTAssertEqual(expectedDate, message.date)
-                XCTAssertTrue(result.isPersistent)
-                XCTAssertFalse(result.retry)
-            }
-            else {
-                XCTFail()
-            }
+        let decoder = JSONDecoder()
+        let result = try decoder.decode(TaskDefinitionSendAbstractMessage.self, from: data)
+        if let message = result.message as? BoxTextMessage {
+            XCTAssertEqual(expectedMessageID, message.messageID)
+            XCTAssertEqual(expectedText, message.text)
+            XCTAssertEqual(expectedFromIdentity, message.fromIdentity)
+            XCTAssertEqual(expectedToIdentity, message.toIdentity)
+            XCTAssertEqual(expectedDate, message.date)
+            XCTAssertTrue(result.isPersistent)
+            XCTAssertFalse(result.retry)
         }
         else {
             XCTFail()
@@ -719,8 +694,7 @@ class TaskDefinitionTests: XCTestCase {
 
         let boxedMessage = abstractMessage.makeBox(
             contact,
-            myIdentityStore: myIdentityStoreMock,
-            entityManager: EntityManager(databaseContext: dbMainCnx)
+            myIdentityStore: myIdentityStoreMock
         )
 
         let data = NSMutableData()
@@ -766,7 +740,7 @@ class TaskDefinitionTests: XCTestCase {
         }
     }
 
-    func testTaskDefinitionUpdateContactSyncEncodeDecode() {
+    func testTaskDefinitionUpdateContactSyncEncodeDecode() throws {
         func generateContact() -> DeltaSyncContact {
             var sContact = Sync_Contact()
             sContact.identity = SwiftUtils.pseudoRandomString(length: 7)
@@ -779,7 +753,7 @@ class TaskDefinitionTests: XCTestCase {
             let profileImage = BytesUtility.generateRandomBytes(length: 500)!
             let customImage = BytesUtility.generateRandomBytes(length: 500)!
 
-            var delta = DeltaSyncContact(syncContact: sContact)
+            var delta = DeltaSyncContact(syncContact: sContact, syncAction: .update)
             delta.profilePicture = .updated
             delta.image = customImage
             delta.contactProfilePicture = .updated
@@ -796,38 +770,32 @@ class TaskDefinitionTests: XCTestCase {
             let taskDefinition = TaskDefinitionUpdateContactSync(deltaSyncContacts: originalContacts)
 
             let encoder = JSONEncoder()
-            if let data = try? encoder.encode(taskDefinition) {
-                let decoder = JSONDecoder()
-                let result = try? decoder.decode(TaskDefinitionUpdateContactSync.self, from: data)
+            let data = try encoder.encode(taskDefinition)
 
-                if let result = result {
-                    XCTAssertTrue(result.retry)
+            let decoder = JSONDecoder()
+            let result = try decoder.decode(TaskDefinitionUpdateContactSync.self, from: data)
+            XCTAssertTrue(result.retry)
 
-                    let contactList = result.deltaSyncContacts
-                    for i in 0..<contactList.count {
-                        let oContact = originalContacts[i].syncContact
-                        let nContact = contactList[i].syncContact
-                        XCTAssertEqual(oContact.identity, nContact.identity)
-                        XCTAssertEqual(oContact.identityType, nContact.identityType)
-                        XCTAssertEqual(oContact.publicKey, nContact.publicKey)
-                        XCTAssertEqual(oContact.verificationLevel, nContact.verificationLevel)
-                        XCTAssertEqual(oContact.nickname, nContact.nickname)
-                        XCTAssertEqual(oContact.firstName, nContact.firstName)
-                        XCTAssertEqual(oContact.lastName, nContact.lastName)
-                        XCTAssertEqual(originalContacts[i].profilePicture, contactList[i].profilePicture)
-                        XCTAssertEqual(originalContacts[i].image?.count, contactList[i].image?.count)
-                        XCTAssertEqual(originalContacts[i].contactProfilePicture, contactList[i].contactProfilePicture)
-                        XCTAssertEqual(originalContacts[i].contactImage?.count, contactList[i].contactImage?.count)
-                    }
-                }
-            }
-            else {
-                XCTFail()
+            let contactList = result.deltaSyncContacts
+            for i in 0..<contactList.count {
+                let oContact = originalContacts[i].syncContact
+                let nContact = contactList[i].syncContact
+                XCTAssertEqual(oContact.identity, nContact.identity)
+                XCTAssertEqual(oContact.identityType, nContact.identityType)
+                XCTAssertEqual(oContact.publicKey, nContact.publicKey)
+                XCTAssertEqual(oContact.verificationLevel, nContact.verificationLevel)
+                XCTAssertEqual(oContact.nickname, nContact.nickname)
+                XCTAssertEqual(oContact.firstName, nContact.firstName)
+                XCTAssertEqual(oContact.lastName, nContact.lastName)
+                XCTAssertEqual(originalContacts[i].profilePicture, contactList[i].profilePicture)
+                XCTAssertEqual(originalContacts[i].image?.count, contactList[i].image?.count)
+                XCTAssertEqual(originalContacts[i].contactProfilePicture, contactList[i].contactProfilePicture)
+                XCTAssertEqual(originalContacts[i].contactImage?.count, contactList[i].contactImage?.count)
             }
         }
     }
 
-    func testTaskDefinitionDeleteContactSyncEncodeDecode() {
+    func testTaskDefinitionDeleteContactSyncEncodeDecode() throws {
         for c in [0, 1, 2, 100, 500, 50 * 1000] {
             var identities = [String]()
             for _ in 0...c {
@@ -837,21 +805,15 @@ class TaskDefinitionTests: XCTestCase {
             let taskDefinition = TaskDefinitionDeleteContactSync(contacts: identities)
 
             let encoder = JSONEncoder()
-            if let data = try? encoder.encode(taskDefinition) {
-                let decoder = JSONDecoder()
-                let result = try? decoder.decode(TaskDefinitionDeleteContactSync.self, from: data)
+            let data = try encoder.encode(taskDefinition)
 
-                if let result = result {
-                    XCTAssertTrue(result.retry)
+            let decoder = JSONDecoder()
+            let result = try decoder.decode(TaskDefinitionDeleteContactSync.self, from: data)
+            XCTAssertTrue(result.retry)
 
-                    let contactList = result.contacts
-                    for i in 0..<contactList.count {
-                        XCTAssertEqual(contactList[i], identities[i])
-                    }
-                }
-            }
-            else {
-                XCTFail()
+            let contactList = result.contacts
+            for i in 0..<contactList.count {
+                XCTAssertEqual(contactList[i], identities[i])
             }
         }
     }
@@ -861,7 +823,7 @@ class TaskDefinitionTests: XCTestCase {
         let expectedGroupCreator = "CREATOR01"
         let expectedFromMember = "MEMBER01"
         let expectedToMembers = ["MEMBER03", "MEMBER04"]
-        let expectedReceiptType = UInt8(GroupDeliveryReceipt.DeliveryReceiptType.userAcknowledgment.rawValue)
+        let expectedReceiptType = UInt8(GroupDeliveryReceipt.DeliveryReceiptType.acknowledged.rawValue)
         let expectedReceiptMessageIDs = [
             BytesUtility.generateRandomBytes(length: 32)!,
             BytesUtility.generateRandomBytes(length: 32)!,

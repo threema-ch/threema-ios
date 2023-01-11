@@ -48,8 +48,8 @@ class WebMessagesUpdate: WebAbstractMessage {
         }
         else {
             self.type = "contact"
-            if baseMessage.sender != nil {
-                self.id = baseMessage.sender.identity
+            if let sender = baseMessage.sender {
+                self.id = sender.identity
             }
             else {
                 if let contact = conversation.contact {

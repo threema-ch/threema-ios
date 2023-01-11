@@ -155,7 +155,7 @@ class ImageAssetPreviewItem: ImagePreviewItem {
             return nil
         }
         let datetime = DateFormatter.accessibilityDateTime(date)
-        let text = String(format: BundleUtil.localizedString(forKey: "imagedate_date"), datetime)
+        let text = String.localizedStringWithFormat(BundleUtil.localizedString(forKey: "imagedate_date"), datetime)
         return text
     }
 }

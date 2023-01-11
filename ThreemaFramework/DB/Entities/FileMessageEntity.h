@@ -39,7 +39,6 @@
 @property (nonatomic, retain, nullable) FileData *data;
 @property (nonatomic, retain, nullable) ImageData *thumbnail;
 @property (nonatomic, retain, nullable) NSString * json;
-@property (nonatomic, retain, nullable) NSNumber * origin;
 
 // not stored in core data
 @property (nonatomic, retain, nullable) NSString *caption;

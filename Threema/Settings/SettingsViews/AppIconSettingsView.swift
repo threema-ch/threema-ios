@@ -26,60 +26,96 @@ struct AppIconSettingsView: View {
     @State var currentlySelected = UIApplication.shared.alternateIconName
     
     var body: some View {
+        
         List {
-            ForEach(AppIcon.allCases, id: \.self) { icon in
-                HStack {
-                    Image(uiImage: icon.preview)
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 75, height: 75)
-                        .clipShape(RoundedRectangle(cornerRadius: 15, style: .continuous))
-                        .padding(.trailing)
-                    
-                    VStack(alignment: .leading) {
-                        Text(icon.displayTitle)
-                        Text(icon.displayInfo)
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                    }
-                    
-                    Spacer()
-
-                    if icon.iconName == currentlySelected {
-                        Image(systemName: "checkmark.circle.fill")
-                            .foregroundColor(Color(uiColor: Colors.primary))
-                            .imageScale(.large)
-                    }
-                }
-                .contentShape(Rectangle())
-                .onTapGesture {
-                    setIcon(icon: icon)
+            
+            Section {
+                ForEach(AppIcon.defaultIcon, id: \.self) { icon in
+                    AppIconMenuItem(icon: icon, currentlySelected: $currentlySelected)
                 }
             }
-            .navigationTitle("App Icons")
+        header: {
+                Text(BundleUtil.localizedString(forKey: "settings_appicon_default_header"))
+            }
+            
+            Section {
+                ForEach(AppIcon.baseIcons, id: \.self) { icon in
+                    AppIconMenuItem(icon: icon, currentlySelected: $currentlySelected)
+                }
+            }
+        header: {
+                Text(BundleUtil.localizedString(forKey: "settings_appicon_legacy_header"))
+            }
+            
+            Section {
+                ForEach(AppIcon.specialIcons, id: \.self) { icon in
+                    AppIconMenuItem(icon: icon, currentlySelected: $currentlySelected)
+                }
+            } header: {
+                Text(BundleUtil.localizedString(forKey: "settings_appicon_special_header"))
+            }
+            .navigationTitle(
+                Text(BundleUtil.localizedString(forKey: "settings_appearance_hide_app_icon"))
+            )
             .navigationBarTitleDisplayMode(.inline)
-        }
-    }
-    
-    private func isSelectedIcon(icon: AppIcon) -> Bool {
-        let selected = UIApplication.shared.alternateIconName
-        return icon.iconName == selected
-    }
-    
-    private func setIcon(icon: AppIcon) {
-        UIApplication.shared.setAlternateIconName(icon.iconName) { error in
-            if let error = error {
-                DDLogError(
-                    "Error setting alternate icon: \(icon.iconName ?? "default"). Desc: \(error.localizedDescription)"
-                )
-            }
-            currentlySelected = icon.iconName
         }
     }
 }
 
 struct SwiftUIView_Previews: PreviewProvider {
     static var previews: some View {
-        AppIconSettingsView()
+        NavigationView {
+            AppIconSettingsView()
+        }
+    }
+}
+
+struct AppIconMenuItem: View {
+    
+    var icon: AppIcon
+    @Binding var currentlySelected: String?
+    
+    var body: some View {
+        HStack {
+            Image(uiImage: icon.preview)
+                .resizable()
+                .scaledToFit()
+                .frame(width: 75, height: 75)
+                .clipShape(RoundedRectangle(cornerRadius: 15, style: .continuous))
+                .padding(.trailing)
+            
+            VStack(alignment: .leading) {
+                Text(icon.displayTitle)
+                Text(icon.displayInfo)
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+            }
+            
+            Spacer()
+            
+            if icon.iconName == currentlySelected {
+                Image(systemName: "checkmark.circle.fill")
+                    .foregroundColor(Color(uiColor: Colors.primary))
+                    .imageScale(.large)
+            }
+        }
+        .contentShape(Rectangle())
+        .onTapGesture {
+            setIcon(icon: icon)
+        }
+    }
+    
+    private func setIcon(icon: AppIcon) {
+        Task { @MainActor in
+            do {
+                try await UIApplication.shared.setAlternateIconName(icon.iconName)
+                currentlySelected = icon.iconName
+            }
+            catch {
+                DDLogError(
+                    "Error setting alternate icon: \(icon.iconName ?? "default"). Desc: \(error.localizedDescription)"
+                )
+            }
+        }
     }
 }

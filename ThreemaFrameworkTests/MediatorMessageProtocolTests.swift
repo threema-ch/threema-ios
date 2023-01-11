@@ -23,9 +23,13 @@ import XCTest
 
 class MediatorMessageProtocolTests: XCTestCase {
     
-    private let deviceGroupPathKey = Data(
-        BytesUtility
-            .padding([UInt8](), pad: 0x01, length: Int(kDeviceGroupPathKeyLen))
+    private let deviceGroupKeys = DeviceGroupKeys(
+        dgpk: Data(BytesUtility.padding([UInt8](), pad: 0x01, length: Int(kDeviceGroupKeyLen))),
+        dgrk: Data(BytesUtility.padding([UInt8](), pad: 0x02, length: Int(kDeviceGroupKeyLen))),
+        dgdik: Data(BytesUtility.padding([UInt8](), pad: 0x03, length: Int(kDeviceGroupKeyLen))),
+        dgsddk: Data(BytesUtility.padding([UInt8](), pad: 0x04, length: Int(kDeviceGroupKeyLen))),
+        dgtsk: Data(BytesUtility.padding([UInt8](), pad: 0x05, length: Int(kDeviceGroupKeyLen))),
+        deviceGroupIDFirstByteHex: "a1"
     )
 
     func testIsMediatorMessage() {
@@ -59,7 +63,7 @@ class MediatorMessageProtocolTests: XCTestCase {
         let message = Data([1])
         let createdAt = Date()
 
-        let mediatorMessageProtocol = MediatorMessageProtocol(deviceGroupPathKey: deviceGroupPathKey)
+        let mediatorMessageProtocol = MediatorMessageProtocol(deviceGroupKeys: deviceGroupKeys!)
         let envelopeIncomigMessage = mediatorMessageProtocol.getEnvelopeForIncomingMessage(
             type: 0x01,
             body: message,
@@ -74,9 +78,8 @@ class MediatorMessageProtocolTests: XCTestCase {
 
         // Extract reflect ID, reflect Message and decrypt
         let reflectID = encryptedMessage.reflectMessage!.subdata(in: 8..<12)
-        let envelope = MediatorMessageProtocol.decryptEnvelope(
-            data: encryptedMessage.reflectMessage!.subdata(in: 12..<encryptedMessage.reflectMessage!.count),
-            deviceGroupPathKey: deviceGroupPathKey
+        let envelope = mediatorMessageProtocol.decryptEnvelope(
+            data: encryptedMessage.reflectMessage!.subdata(in: 12..<encryptedMessage.reflectMessage!.count)
         )
 
         XCTAssertEqual(encryptedMessage.reflectID, reflectID)
@@ -90,7 +93,7 @@ class MediatorMessageProtocolTests: XCTestCase {
         let message = Data([1])
         let createdAt = Date()
         
-        let mediatorMessageProtocol = MediatorMessageProtocol(deviceGroupPathKey: deviceGroupPathKey)
+        let mediatorMessageProtocol = MediatorMessageProtocol(deviceGroupKeys: deviceGroupKeys!)
         let envelopeOutgoinigMessage = mediatorMessageProtocol.getEnvelopeForOutgoingMessage(
             type: 0x01,
             body: message,
@@ -105,15 +108,14 @@ class MediatorMessageProtocolTests: XCTestCase {
 
         // Extract reflect ID, reflect Message and decrypt
         let reflectID = encryptedMessage.reflectMessage!.subdata(in: 8..<12)
-        let envelope = MediatorMessageProtocol.decryptEnvelope(
-            data: encryptedMessage.reflectMessage!.subdata(in: 12..<encryptedMessage.reflectMessage!.count),
-            deviceGroupPathKey: deviceGroupPathKey
+        let envelope = mediatorMessageProtocol.decryptEnvelope(
+            data: encryptedMessage.reflectMessage!.subdata(in: 12..<encryptedMessage.reflectMessage!.count)
         )
 
         XCTAssertEqual(encryptedMessage.reflectID, reflectID)
         XCTAssertEqual(envelope?.outgoingMessage.body, Data([1]))
         XCTAssertEqual(envelope?.outgoingMessage.createdAt, UInt64(createdAt.millisecondsSince1970))
         XCTAssertEqual(envelope?.outgoingMessage.messageID, 1)
-        XCTAssertEqual(envelope?.outgoingMessage.receiver.identity, "ECHOECHO")
+        XCTAssertEqual(envelope?.outgoingMessage.conversation.contact, "ECHOECHO")
     }
 }

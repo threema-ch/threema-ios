@@ -150,8 +150,6 @@ typedef enum : NSUInteger {
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(refreshDirtyObjects:) name:kNotificationDBRefreshedDirtyObject object:nil];
 
     [self setRefreshControlTitle:NO];
-
-    [self registerForPreviewingWithDelegate:self sourceView:self.view];
     
     [self updateColors];
     
@@ -506,7 +504,7 @@ typedef enum : NSUInteger {
 
 - (void)displayGroup {
     if (SYSTEM_IS_IPAD == NO) {
-        GroupDetailsViewController *groupDetailsViewController = [[GroupDetailsViewController alloc] initFor:groupForDetails displayMode:GroupDetailsDisplayModeDefault displayStyle:DetailsDisplayStyleDefault];
+        GroupDetailsViewController *groupDetailsViewController = [[GroupDetailsViewController alloc] initFor:groupForDetails displayMode:GroupDetailsDisplayModeDefault displayStyle:DetailsDisplayStyleDefault delegate:nil];
         [self showViewController:groupDetailsViewController sender:self];
     } else {
         [[NSNotificationCenter defaultCenter] postNotificationName:kNotificationShowGroup object:nil userInfo:[NSDictionary dictionaryWithObject:groupForDetails forKey:kKeyGroup]];
@@ -792,7 +790,7 @@ typedef enum : NSUInteger {
         }
         
         // Load group details
-        GroupDetailsViewController *groupDetailsViewController = [[GroupDetailsViewController alloc] initFor:group displayMode:GroupDetailsDisplayModeDefault displayStyle:DetailsDisplayStylePreview];
+        GroupDetailsViewController *groupDetailsViewController = [[GroupDetailsViewController alloc] initFor:group displayMode:GroupDetailsDisplayModeDefault displayStyle:DetailsDisplayStylePreview delegate:nil];
         
         // Compose actions
         
@@ -1157,7 +1155,7 @@ typedef enum : NSUInteger {
             return nil;
         }
         
-        GroupDetailsViewController *groupDetailsViewController = [[GroupDetailsViewController alloc] initFor:group displayMode:GroupDetailsDisplayModeDefault displayStyle:DetailsDisplayStylePreview];
+        GroupDetailsViewController *groupDetailsViewController = [[GroupDetailsViewController alloc] initFor:group displayMode:GroupDetailsDisplayModeDefault displayStyle:DetailsDisplayStylePreview delegate:nil];
         
         return groupDetailsViewController;
     }

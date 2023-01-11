@@ -19,7 +19,6 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import CocoaLumberjackSwift
-import DiffableDataSources
 import UIKit
 
 final class SingleDetailsViewController: ThemedCodeModernGroupedTableViewController {
@@ -27,6 +26,7 @@ final class SingleDetailsViewController: ThemedCodeModernGroupedTableViewControl
     // MARK: - Private properties
     
     private let state: SingleDetails.State
+    private weak var delegate: DetailsDelegate?
     
     private lazy var headerView: DetailsHeaderView = {
         
@@ -38,7 +38,7 @@ final class SingleDetailsViewController: ThemedCodeModernGroupedTableViewControl
         
         var mediaAndPollsActions = [QuickAction]()
         
-        // TODO: Remove when new chat view released
+        // TODO: (IOS-2860) Remove when new chat view released
         if UserSettings.shared().newChatViewActive {
             mediaAndPollsActions = mediaAndPollActions()
         }
@@ -98,12 +98,14 @@ final class SingleDetailsViewController: ThemedCodeModernGroupedTableViewControl
     /// Show details for a conversation with a contact
     /// - Precondition: This is not intended for groups
     /// - Parameters:
-    ///     - conversation: Conversation linked to a contact
-    ///     - displayStyle: Appearance of the details
-    @objc(initForConversation:displayStyle:)
+    ///   - conversation: Conversation linked to a contact
+    ///   - displayStyle: Appearance of the details
+    ///   - delegate: Details delegate that is called on certain actions
+    @objc(initForConversation:displayStyle:delegate:)
     init(
         for conversation: Conversation,
-        displayStyle: DetailsDisplayStyle = .default
+        displayStyle: DetailsDisplayStyle = .default,
+        delegate: DetailsDelegate?
     ) {
         precondition(!conversation.isGroup(), "This is not intended for groups")
         
@@ -114,6 +116,7 @@ final class SingleDetailsViewController: ThemedCodeModernGroupedTableViewControl
         self.state = .conversationDetails(contact: contact, conversation: conversation)
         self.contact = contact
         
+        self.delegate = delegate
         self.displayStyle = displayStyle
         
         super.init()
@@ -160,6 +163,13 @@ final class SingleDetailsViewController: ThemedCodeModernGroupedTableViewControl
         
         // Call it here to ensure we have the correct constraints
         updateHeaderLayout(animated: false)
+        
+        if ThreemaUtility.supportsForwardSecurity {
+            // Update feature mask for FS so that user can enable it if the contact has just updated the app
+            FeatureMask.check(Int(FEATURE_MASK_FORWARD_SECURITY), forContacts: [contact]) { _ in
+                // Feature mask has been updated in DB, observer will take care of updating the UI
+            }
+        }
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -172,6 +182,12 @@ final class SingleDetailsViewController: ThemedCodeModernGroupedTableViewControl
         super.viewWillDisappear(animated)
         
         publicKeyView.close()
+    }
+    
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        
+        delegate?.detailsDidDisappear()
     }
     
     override func willMove(toParent parent: UIViewController?) {
@@ -231,6 +247,10 @@ final class SingleDetailsViewController: ThemedCodeModernGroupedTableViewControl
         
         observeContact(\.publicNickname) { [weak self] in
             self?.dataSource.reload(sections: [.contactInfo])
+        }
+        
+        observeContact(\.featureMask) { [weak self] in
+            self?.dataSource.reload(sections: [.fsActions])
         }
     }
     
@@ -433,9 +453,9 @@ extension SingleDetailsViewController {
             }
             
             if animated {
-                // Use table view update to animate height change
-                // https://stackoverflow.com/a/32228700/286611
-                self.tableView.performBatchUpdates(updateHeight)
+                UIView.animate(withDuration: 0.6) {
+                    updateHeight()
+                }
             }
             else {
                 updateHeight()
@@ -482,6 +502,21 @@ extension SingleDetailsViewController: LegacyUIActionProvider {
     }
 }
 
+// MARK: - Search
+
+extension SingleDetailsViewController {
+    /// Tell delegate to start a search in the chat who these details belong to
+    ///
+    /// This is a workaround so a quick action can talk to the parent. If we end up with more of these we should
+    /// consider if there is a better way to communication actions from the details to the chat.
+    func startChatSearch() {
+        // To not have a delay from when the details disappear and the search field appears we show the search
+        // field before we dismiss ourself and then active the search after the dismissal.
+        delegate?.showChatSearch()
+        dismiss(animated: true)
+    }
+}
+
 // MARK: - UITableViewDelegate
 
 // The delegate is here instead of `SingleDetailsDataSource`, because otherwise
@@ -505,7 +540,10 @@ extension SingleDetailsViewController: UITableViewDelegate {
         
         switch section {
         case .groups:
-            title = String(format: BundleUtil.localizedString(forKey: "groups_header"), dataSource.numberOfGroups)
+            title = String.localizedStringWithFormat(
+                BundleUtil.localizedString(forKey: "groups_header"),
+                dataSource.numberOfGroups
+            )
             
             if dataSource.hasMoreGroupsToShow {
                 let localizedShowAllTitle = BundleUtil.localizedString(forKey: "show_all_button")
@@ -611,7 +649,7 @@ extension Contact {
     fileprivate var contentConfiguration: DetailsHeaderProfileView.ContentConfiguration {
         DetailsHeaderProfileView.ContentConfiguration(
             avatarImageProvider: avatarImageProvider(completion:),
-            hideThreemaTypeIcon: ThreemaUtilityObjC.hideThreemaTypeIcon(for: self),
+            hideThreemaTypeIcon: !showOtherThreemaTypeIcon,
             name: displayName,
             verificationLevelImage: verificationLevelImage(),
             verificationLevelAccessibilityLabel: verificationLevelAccessibilityLabel()

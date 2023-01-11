@@ -255,7 +255,6 @@ class MediatorReflectedOutgoingMessageProcessor {
         groupCreateMessage amsg: GroupCreateMessage
     ) throws -> Promise<Void> {
         messageStore.save(groupCreateMessage: amsg)
-        return Promise()
     }
 
     private func process(
@@ -486,13 +485,13 @@ class MediatorReflectedOutgoingMessageProcessor {
 
         frameworkInjector.backgroundEntityManager.performBlockAndWait {
             if let contact = self.frameworkInjector.backgroundEntityManager.entityFetcher
-                .contact(for: omsg.receiver.identity) {
+                .contact(for: omsg.conversation.contact) {
                 receiverIdentity = contact.identity
             }
         }
 
         guard let receiver = receiverIdentity else {
-            throw MediatorReflectedProcessorError.contactNotFound(message: omsg.loggingDescription)
+            throw MediatorReflectedProcessorError.outgoingMessageReceiverNotFound(message: omsg.loggingDescription)
         }
         return receiver
     }
@@ -504,8 +503,8 @@ class MediatorReflectedOutgoingMessageProcessor {
 
         frameworkInjector.backgroundEntityManager.performBlockAndWait {
             if let grp = self.frameworkInjector.backgroundGroupManager.getGroup(
-                NSData.convertBytes(omsg.receiver.group.groupID),
-                creator: omsg.receiver.group.creatorIdentity
+                NSData.convertBytes(omsg.conversation.group.groupID),
+                creator: omsg.conversation.group.creatorIdentity
             ) {
                 groupID = grp.groupID
                 groupCreatorIdentity = grp.groupCreatorIdentity

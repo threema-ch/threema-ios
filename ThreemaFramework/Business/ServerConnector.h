@@ -25,6 +25,7 @@
 #import "TaskExecutionTransactionDelegate.h"
 #import "SocketProtocolDelegate.h"
 #import "AbstractGroupMessage.h"
+#import "DeviceGroupKeys.h"
 
 @class BoxedMessage;
 
@@ -37,29 +38,36 @@ typedef NS_CLOSED_ENUM(NSInteger, ConnectionInitiator) {
     ConnectionInitiatorThreemaWeb
 };
 
+NS_ASSUME_NONNULL_BEGIN
+
 @protocol ServerConnectorProtocol <NSObject, ConnectionStateDelegate, MessageListenerDelegate, MessageProcessorDelegate, TaskExecutionTransactionDelegate>
 
 /**
  BusinessInjector for incoming message processor, will be set by Notification Extension to use the same background DB context
  */
-@property (nonatomic, readwrite) NSObject *businessInjectorForMessageProcessing;
+@property (nonatomic, readwrite, assign, nullable) NSObject *businessInjectorForMessageProcessing;
 
 @property (nonatomic, readonly) ConnectionState connectionState;
 
-@property (nonatomic, readonly) NSData *deviceGroupPathKey;
+@property (nonatomic, readonly, nullable) DeviceGroupKeys *deviceGroupKeys;
 
 @property (nonatomic, readonly) BOOL isMultiDeviceActivated;
 
 /**
  Encrypted device ID for chat server (CleVer extension).
  */
-@property (nonatomic, readonly) NSData *deviceId NS_SWIFT_NAME(deviceID);
+@property (nonatomic, readonly, nullable) NSData *deviceID;
 
 @property (nonatomic, readwrite) BOOL isAppInBackground;
 
 - (void)connect:(ConnectionInitiator)initiator NS_SWIFT_NAME(connect(initiator:));
 - (void)connectWait:(ConnectionInitiator)initiator NS_SWIFT_NAME(connectWait(initiator:));
+- (void)connectWaitDoNotUnblockIncomingMessages:(ConnectionInitiator)initiator NS_SWIFT_NAME(connectWaitDoNotUnblockIncomingMessages(initiator:));
 - (void)disconnect:(ConnectionInitiator)initiator NS_SWIFT_NAME(disconnect(initiator:));
+
+- (NSString*)nameForConnectionState:(ConnectionState)connectionState;
+
+- (void)deactivateMultiDevice;
 
 - (void)registerConnectionStateDelegate:(id<ConnectionStateDelegate>)delegate NS_SWIFT_NAME(registerConnectionStateDelegate(delegate:));
 - (void)unregisterConnectionStateDelegate:(id<ConnectionStateDelegate>)delegate NS_SWIFT_NAME(unregisterConnectionStateDelegate(delegate:));
@@ -105,7 +113,6 @@ typedef NS_CLOSED_ENUM(NSInteger, ConnectionInitiator) {
 - (void)disconnectWait:(ConnectionInitiator)initiator NS_SWIFT_NAME(disconnectWait(initiator:));
 
 - (void)reconnect;
-- (NSString*)nameForConnectionState:(ConnectionState)connectionState;
 
 - (void)completedProcessingAbstractMessage:(AbstractMessage *)msg;
 - (void)ping;
@@ -116,16 +123,15 @@ typedef NS_CLOSED_ENUM(NSInteger, ConnectionInitiator) {
  @param pushToken Token from registration of Apple Notification Service
  */
 - (void)setPushToken:(NSData *)pushToken;
+
 - (void)removePushToken;
 
-/**
- Set Voip Push Notification and send it as type of apple, for receiving Voip Push Notifications.
- 
- @param voIPPushToken Token from PKPushRegistry registration with PushKit
- */
-- (void)setVoIPPushToken:(NSData *)voIPPushToken;
 - (void)removeVoIPPushToken;
 
 - (void)sendPushAllowedIdentities;
 
+- (void)clearDeviceCookieChangedIndicator;
+
 @end
+
+NS_ASSUME_NONNULL_END

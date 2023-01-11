@@ -51,6 +51,8 @@
         self.scanIdentityCell.textLabel.alpha = 0.4;
     }
     
+    self.identityTextField.accessibilityIdentifier = @"AddContactViewControllerCTextField";
+    
     // Tint icon appropriately
     self.scanIdentityCell.imageView.image = [self.scanIdentityCell.imageView.image imageWithTint:Colors.primary];
     
@@ -71,8 +73,11 @@
     // A bar button item needs to be assigned the title before it is added to the
     // navigation bar
     UIBarButtonItem *item = [[UIBarButtonItem alloc] initWithTitle:[BundleUtil localizedStringForKey:@"add_button"] style:UIBarButtonItemStyleDone target:self action:@selector(doAdd)];
+    item.accessibilityIdentifier = @"AddContactModalAddButton";
     self.navigationItem.rightBarButtonItem = item;
     self.navigationItem.rightBarButtonItem.enabled = NO;
+    
+    self.navigationController.navigationBar.accessibilityIdentifier = @"AddContactModalNavigationBar";
 }
 
 - (void)refresh {

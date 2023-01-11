@@ -40,7 +40,7 @@ import Foundation
         modalNavController = pickerModal
         pickerVC.delegate = self
         pickerVC.submitOnSelect = false
-        
+
         let topView = AppDelegate.shared().currentTopViewController()
         topView?.present(pickerModal, animated: true)
     }
@@ -54,12 +54,9 @@ import Foundation
         sendAsFile: Bool
     ) {
         
+        let forwarder = MessageForwarder()
         for case let conversation as Conversation in conversations {
-            MessageForwarder.forwardMessage(message, to: conversation)
-            
-            if let text = contactPicker.additionalTextToSend {
-                MessageSender.sendMessage(text, in: conversation, quickReply: false, requestID: nil)
-            }
+            forwarder.forward(message, to: conversation, additionalText: contactPicker.additionalTextToSend)
         }
         
         modalNavController?.dismiss(animated: true)

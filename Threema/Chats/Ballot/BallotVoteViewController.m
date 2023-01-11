@@ -142,7 +142,7 @@
 }
 
 - (void)updateColors {
-    self.view.backgroundColor = Colors.backgroundViewController;
+    self.view.backgroundColor = Colors.backgroundGroupedViewController;
     
     _adminView.backgroundColor = Colors.backgroundView;
     

@@ -225,7 +225,7 @@ import ThreemaFramework
 
     private func updateUnreadMessagesCount(abstractMessage: AbstractMessage?, baseMessage: BaseMessage?) {
         // Check should push flag to reduces unnecessary counting of unread messages
-        if abstractMessage?.shouldPush() ?? true {
+        if abstractMessage?.flagShouldPush() ?? true {
             let notificationManager = NotificationManager()
             notificationManager.updateUnreadMessagesCount(baseMessage: baseMessage)
         }
@@ -248,7 +248,7 @@ extension IncomingMessageManager: MessageProcessorDelegate {
         }
     }
     
-    public func incomingMessageStarted(_ message: AbstractMessage) {
+    func incomingMessageStarted(_ message: AbstractMessage) {
         businessInjector.backgroundEntityManager.performBlockAndWait {
             if let pendingUserNotification = self.backgroundPendingUserNotificationManager.pendingUserNotification(
                 for: message,
@@ -264,7 +264,7 @@ extension IncomingMessageManager: MessageProcessorDelegate {
         }
     }
     
-    public func incomingMessageChanged(_ message: BaseMessage, fromIdentity: String) {
+    func incomingMessageChanged(_ message: BaseMessage, fromIdentity: String) {
         businessInjector.backgroundEntityManager.performBlockAndWait {
             if let msg = self.businessInjector.backgroundEntityManager.entityFetcher
                 .getManagedObject(by: message.objectID) as? BaseMessage {
@@ -294,7 +294,7 @@ extension IncomingMessageManager: MessageProcessorDelegate {
         }
     }
     
-    public func incomingMessageFinished(_ message: AbstractMessage, isPendingGroup: Bool) {
+    func incomingMessageFinished(_ message: AbstractMessage, isPendingGroup: Bool) {
         if let pendingUserNotification = pendingUserNotificationManager.pendingUserNotification(
             for: message,
             stage: .final,
@@ -332,10 +332,33 @@ extension IncomingMessageManager: MessageProcessorDelegate {
         }
     }
     
+    func readMessage(inConversations: Set<Conversation>?) {
+        if let inConversations = inConversations, !inConversations.isEmpty {
+            businessInjector.backgroundUnreadMessages.totalCount(doCalcUnreadMessagesCountOf: inConversations)
+        }
+
+        DispatchQueue.main.async {
+            let notificationManager = NotificationManager()
+            notificationManager.updateUnreadMessagesCount()
+        }
+    }
+
     func incomingMessageFailed(_ message: BoxedMessage) {
         if let pendingUserNotification = pendingUserNotificationManager.pendingUserNotification(
             for: message,
             stage: .initial
+        ) {
+            pendingUserNotificationManager.addAsProcessed(pendingUserNotification: pendingUserNotification)
+            pendingUserNotificationManager
+                .removeAllTimedUserNotifications(pendingUserNotification: pendingUserNotification)
+        }
+    }
+    
+    func incomingAbstractMessageFailed(_ message: AbstractMessage) {
+        if let pendingUserNotification = pendingUserNotificationManager.pendingUserNotification(
+            for: message,
+            stage: .abstract,
+            isPendingGroup: false
         ) {
             pendingUserNotificationManager.addAsProcessed(pendingUserNotification: pendingUserNotification)
             pendingUserNotificationManager
@@ -365,16 +388,7 @@ extension IncomingMessageManager: MessageProcessorDelegate {
             }
         }
     }
-    
-    public func outgoingMessageFinished(_ message: AbstractMessage) {
-        if !message.isVoIP() {
-            DispatchQueue.main.async {
-                let notificationManager = NotificationManager()
-                notificationManager.updateUnreadMessagesCount()
-            }
-        }
-    }
-    
+
     public func chatQueueDry() { }
     
     public func reflectionQueueDry() { }

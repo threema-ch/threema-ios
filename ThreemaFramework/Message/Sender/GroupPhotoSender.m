@@ -70,9 +70,9 @@
 - (void)startUpload {
     [ActivityIndicatorProxy startActivity];
     
-    BlobURL *blobUrl = [[BlobURL alloc] initWithServerConnector:[ServerConnector sharedServerConnector] userSettings:[UserSettings sharedUserSettings] localOrigin:isNoteGroup];
-    BlobUploader *uploader = [[BlobUploader alloc] initWithBlobURL:blobUrl delegate:self];
-    [uploader uploadWithBlobs:@[boxImageData]];
+    BlobURL *blobUrl = [[BlobURL alloc] initWithServerConnector:[ServerConnector sharedServerConnector] userSettings:[UserSettings sharedUserSettings]];
+    Old_BlobUploader *uploader = [[Old_BlobUploader alloc] initWithBlobURL:blobUrl delegate:self];
+    [uploader uploadWithBlobs:@[boxImageData] origin:isNoteGroup ? BlobOriginLocal : BlobOriginPublic];
 }
 
 - (void)uploadCompletedWithBlobId:(NSData*)blobId {

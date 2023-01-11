@@ -19,7 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import <Foundation/Foundation.h>
-#import "BlobUploadDelegate.h"
+#import "Old_BlobUploadDelegate.h"
 
 @class Conversation, Contact;
 
@@ -31,7 +31,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @end
 
-@interface GroupPhotoSender : NSObject <GroupPhotoSenderProtocol, BlobUploadDelegate>
+@interface GroupPhotoSender : NSObject <GroupPhotoSenderProtocol, Old_BlobUploadDelegate>
 
 @end
 

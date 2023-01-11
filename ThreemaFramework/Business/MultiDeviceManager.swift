@@ -24,12 +24,11 @@ import PromiseKit
 public protocol MultiDeviceManagerProtocol {
     var thisDevice: DeviceInfo { get }
     func otherDevices() -> Promise<[DeviceInfo]>
-    func drop(device: DeviceInfo) -> Promise<Bool>
+    func drop(device: DeviceInfo) -> Promise<Void>
 }
 
 public enum MultiDeviceManagerError: Error {
     case multiDeviceNotActivated
-    case dropThisDeviceNotAllowed
 }
 
 public class MultiDeviceManager: MultiDeviceManagerProtocol {
@@ -47,8 +46,8 @@ public class MultiDeviceManager: MultiDeviceManagerProtocol {
     /// - Returns: This device info
     public var thisDevice: DeviceInfo {
         DeviceInfo(
-            deviceID: NSData(data: serverConnector.deviceID).convertUInt64(),
-            label: "\(UIDevice().name) \(AppInfo.appVersion.version ?? "-") (\(AppInfo.appVersion.build ?? "-"))",
+            deviceID: serverConnector.deviceID != nil ? NSData(data: serverConnector.deviceID!).convertUInt64() : 0,
+            label: "\(UIDevice().name) \(ThreemaUtility.appAndBuildVersionPretty)",
             lastLoginAt: Date(),
             badge: nil,
             platform: .ios,
@@ -59,23 +58,27 @@ public class MultiDeviceManager: MultiDeviceManagerProtocol {
     /// Get other linked/paired devices.
     /// - Returns: List of other linked/paired devices
     public func otherDevices() -> Promise<[DeviceInfo]> {
-        let messageReceiver = MessageReceiver(
-            serverConnector: serverConnector,
-            mediatorMessageProtocol: MediatorMessageProtocol(deviceGroupPathKey: serverConnector.deviceGroupPathKey)
-        )
-        return messageReceiver.requestDevicesInfo()
-    }
-
-    /// Drop other linked/paired device.
-    /// - Parameter device: Linked/paired device that will dropped
-    public func drop(device: DeviceInfo) -> Promise<Bool> {
-        guard device.deviceID != NSData(data: serverConnector.deviceID).convertUInt64() else {
-            return Promise { seal in seal.reject(MultiDeviceManagerError.dropThisDeviceNotAllowed) }
+        guard let deviceGroupKeys = serverConnector.deviceGroupKeys, let deviceID = serverConnector.deviceID else {
+            return Promise { seal in seal.fulfill([DeviceInfo]()) }
         }
 
         let messageReceiver = MessageReceiver(
             serverConnector: serverConnector,
-            mediatorMessageProtocol: MediatorMessageProtocol(deviceGroupPathKey: serverConnector.deviceGroupPathKey)
+            mediatorMessageProtocol: MediatorMessageProtocol(deviceGroupKeys: deviceGroupKeys)
+        )
+        return messageReceiver.requestDevicesInfo(thisDeviceID: deviceID)
+    }
+
+    /// Drop other linked/paired device.
+    /// - Parameter device: Linked/paired device that will dropped
+    public func drop(device: DeviceInfo) -> Promise<Void> {
+        guard let deviceGroupKeys = serverConnector.deviceGroupKeys else {
+            return Promise()
+        }
+
+        let messageReceiver = MessageReceiver(
+            serverConnector: serverConnector,
+            mediatorMessageProtocol: MediatorMessageProtocol(deviceGroupKeys: deviceGroupKeys)
         )
         return messageReceiver.requestDropDevice(device: device)
     }

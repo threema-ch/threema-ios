@@ -99,7 +99,15 @@ class TaskExecutionSendMessage: TaskExecution, TaskExecutionProtocol {
                         if task.isNoteGroup ?? false {
                             task.sendContactProfilePicture = false
                             if let messageID = (task as? TaskDefinitionSendBaseMessage)?.messageID {
-                                self.frameworkInjector.backgroundEntityManager.markMessageAsSent(messageID)
+                                self.frameworkInjector.backgroundEntityManager.markMessageAsSent(
+                                    messageID,
+                                    isLocal: true
+                                )
+                            }
+                            else {
+                                DDLogError("MessageID missing for supposedly successfully sent note group message.")
+                                seal.reject(TaskExecutionError.missingMessageInformation)
+                                return
                             }
                         }
                         else if let allGroupMembers = task.allGroupMembers {
@@ -191,26 +199,29 @@ class TaskExecutionSendMessage: TaskExecution, TaskExecutionProtocol {
         .then { sentMessages -> Promise<Void> in
             // Get receiver, group or contact, from messages ware sent to all group members or one message to contact
             var messageSentMessageID: Data?
-            var messageSentReceiver: D2d_MessageReceiver?
+            // swiftformat:disable:next all
+            var messageConversationID: D2d_ConversationId?
 
             for sentMessage in sentMessages.filter({ msg in
                 msg != nil
             }) {
-                if messageSentReceiver == nil {
+                if messageConversationID == nil {
                     if let msg = sentMessage as? AbstractGroupMessage,
                        let groupID = task.groupID,
                        let groupCreatorIdentity = task.groupCreatorIdentity {
                         messageSentMessageID = msg.messageID
-                        messageSentReceiver = D2d_MessageReceiver()
-                        messageSentReceiver?.group.groupID = groupID.convert()
-                        messageSentReceiver?.group.creatorIdentity = groupCreatorIdentity
+                        // swiftformat:disable:next all
+                        messageConversationID = D2d_ConversationId()
+                        messageConversationID?.group.groupID = groupID.convert()
+                        messageConversationID?.group.creatorIdentity = groupCreatorIdentity
                     }
                     else if let msg = sentMessage,
                             task.groupID == nil,
                             task.groupCreatorIdentity == nil {
                         messageSentMessageID = msg.messageID
-                        messageSentReceiver = D2d_MessageReceiver()
-                        messageSentReceiver?.identity = msg.toIdentity
+                        // swiftformat:disable:next all
+                        messageConversationID = D2d_ConversationId()
+                        messageConversationID?.contact = msg.toIdentity
                     }
                     else {
                         return Promise(error: TaskExecutionError.sendMessageFailed(message: "Could not eval message"))
@@ -223,7 +234,7 @@ class TaskExecutionSendMessage: TaskExecution, TaskExecutionProtocol {
                     // TODO: Inject for testing
                     self.frameworkInjector.backgroundEntityManager.performBlockAndWait {
                         ContactPhotoSender(self.frameworkInjector.backgroundEntityManager)
-                            .sendProfilePicture(sentMessage!)
+                            .sendProfilePicture(message: sentMessage!)
                     }
                 }
             }
@@ -231,19 +242,19 @@ class TaskExecutionSendMessage: TaskExecution, TaskExecutionProtocol {
             // Reflect outgoing message sent
             if self.frameworkInjector.serverConnector.isMultiDeviceActivated,
                let messageID = messageSentMessageID,
-               let receiver = messageSentReceiver {
+               let receiver = messageConversationID {
 
                 let envelope = self.frameworkInjector.mediatorMessageProtocol
-                    .getEnvelopeForOutgoingMessageSent(
+                    .getEnvelopeForOutgoingMessageUpdate(
                         messageID: messageID,
-                        receiver: receiver
+                        conversationID: receiver
                     )
 
                 do {
                     try self.reflectMessage(
                         envelope: envelope,
-                        ltReflect: .reflectOutgoingMessageSentToMediator,
-                        ltAck: .receiveOutgoingMessageSentAckFromMediator
+                        ltReflect: .reflectOutgoingMessageUpdateToMediator,
+                        ltAck: .receiveOutgoingMessageUpdateAckFromMediator
                     )
                 }
                 catch {

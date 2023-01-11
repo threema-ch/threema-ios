@@ -25,7 +25,7 @@ extension BaseMessage {
     /// String (of `sectionDate`) used for sectioning messages
     @objc var sectionDateString: String {
         // TODO: (IOS-2393) Use relative dates
-        DateFormatter.getShortDate(sectionDate)
+        DateFormatter.relativeMediumDate(for: sectionDate)
     }
     
     /// Date that sectioning is based on. (See `sectionDateString`)

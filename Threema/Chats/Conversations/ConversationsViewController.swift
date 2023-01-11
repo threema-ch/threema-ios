@@ -136,6 +136,8 @@ class ConversationsViewController: ThemedTableViewController {
         navigationItem.searchController = searchController
         
         tableView.allowsMultipleSelectionDuringEditing = true
+        
+        tableView.register(ConversationTableViewCell.self, forCellReuseIdentifier: "ConversationTableViewCell")
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -153,6 +155,11 @@ class ConversationsViewController: ThemedTableViewController {
         archivedChatsButton.adjustsImageSizeForAccessibilityContentSizeCategory = true
         archivedChatsButton.titleLabel?.adjustsFontForContentSizeCategory = true
         archivedChatsButton.titleLabel?.adjustsFontSizeToFitWidth = true
+        updateArchivedButton()
+        
+        // This and the opposite in `viewWillDisappear` is needed to make a search controller work that is added in a
+        // child view controller using the same navigation bar. See ChatSearchController for details.
+        definesPresentationContext = true
     }
     
     override func viewWillDisappear(_ animated: Bool) {
@@ -162,16 +169,12 @@ class ConversationsViewController: ThemedTableViewController {
         if searchController.isActive {
             searchController.isActive = false
         }
-    }
-    
-    override func willMove(toParent parent: UIViewController?) {
-        super.willMove(toParent: parent)
         
-        if parent == nil {
-            removeAllObservers()
-        }
+        // This and the opposite in `viewWillAppear` is needed to make a search controller work that is added in a
+        // child view controller using the same navigation bar. See ChatSearchController for details.
+        definesPresentationContext = false
     }
-    
+        
     override func didReceiveMemoryWarning() {
         DDLogWarn("Memory warning, removing cached chat view controllers")
         Old_ChatViewControllerCache.clear()
@@ -204,35 +207,15 @@ extension ConversationsViewController {
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         guard let cell = tableView.dequeueReusableCell(
-            withIdentifier: "ConversationCell", for: indexPath
-        ) as? ConversationCell else {
-            DDLogError("Unable to create ConversationCell for cell at IndexPath: + \(indexPath)")
-            fatalError("Unable to create ConversationCell for cell at IndexPath: + \(indexPath)")
+            withIdentifier: "ConversationTableViewCell", for: indexPath
+        ) as? ConversationTableViewCell else {
+            DDLogError("Unable to create ConversationTableViewCell for cell at IndexPath: + \(indexPath)")
+            fatalError("Unable to create ConversationTableViewCell for cell at IndexPath: + \(indexPath)")
         }
-        cell.conversation = fetchedResultsController.object(at: indexPath) as? Conversation
+        cell.setConversation(to: fetchedResultsController.object(at: indexPath) as? Conversation)
         return cell
     }
-    
-    override func tableView(
-        _ tableView: UITableView,
-        willDisplay cell: UITableViewCell,
-        forRowAt indexPath: IndexPath
-    ) {
-        if let conversationCell = cell as? ConversationCell {
-            conversationCell.addObservers()
-        }
-    }
-    
-    override func tableView(
-        _ tableView: UITableView,
-        didEndDisplaying cell: UITableViewCell,
-        forRowAt indexPath: IndexPath
-    ) {
-        if let conversationCell = cell as? ConversationCell {
-            conversationCell.removeObservers()
-        }
-    }
-    
+        
     override func numberOfSections(in tableView: UITableView) -> Int {
         fetchedResultsController.sections?.count ?? 0
     }
@@ -361,6 +344,7 @@ extension ConversationsViewController {
         }
         
         archiveAction.image = BundleUtil.imageNamed("archivebox.fill_regular.L")
+        archiveAction.title = BundleUtil.localizedString(forKey: "archive")
         archiveAction.accessibilityLabel = BundleUtil.localizedString(forKey: "archive")
         archiveAction.backgroundColor = Colors.gray
         
@@ -383,6 +367,7 @@ extension ConversationsViewController {
         }
         
         deleteAction.image = BundleUtil.imageNamed("trash.fill_regular.L")
+        deleteAction.title = BundleUtil.localizedString(forKey: "delete")
         deleteAction.accessibilityLabel = BundleUtil.localizedString(forKey: "delete")
         
         let configuration = UISwipeActionsConfiguration(actions: [archiveAction, deleteAction])
@@ -423,7 +408,8 @@ extension ConversationsViewController {
         else {
             pinAction.image = BundleUtil.imageNamed("pin.fill_regular.L")
         }
-        
+
+        pinAction.title = pinTitle
         pinAction.accessibilityLabel = pinTitle
         pinAction.backgroundColor = Colors.backgroundPinChat
         return pinAction
@@ -462,7 +448,7 @@ extension ConversationsViewController {
         else {
             readAction.image = BundleUtil.imageNamed("envelope.badge.fill_regular.L")
         }
-        
+        readAction.title = unreadTitle
         readAction.accessibilityLabel = unreadTitle
         readAction.backgroundColor = Colors.blue
         return readAction
@@ -480,12 +466,12 @@ extension ConversationsViewController {
         
         guard !isEditing,
               UIDevice.current.userInterfaceIdiom != .pad,
-              let cell: ConversationCell = tableView.cellForRow(at: indexPath) as? ConversationCell,
+              let cell: ConversationTableViewCell = tableView.cellForRow(at: indexPath) as? ConversationTableViewCell,
               let chatViewController = Old_ChatViewControllerCache.newController(
                   for: cell.conversation,
                   forceTouch: true
               ),
-              cell.conversation.conversationCategory == .default else {
+              cell.conversation?.conversationCategory == .default else {
             return nil
         }
         
@@ -819,7 +805,7 @@ extension ConversationsViewController: UISearchResultsUpdating, UISearchControll
 extension ConversationsViewController {
     
     private func setBackButton(unread: Int) {
-        var backButtonTitle = ""
+        var backButtonTitle = " "
         
         if unread > 0 {
             backButtonTitle = String(unread)
@@ -1019,12 +1005,6 @@ extension ConversationsViewController {
     @objc public func removeSelectedConversation() {
         selectedConversation = nil
     }
-    
-    @objc public func removeAllObservers() {
-        for case let cell as ConversationCell in tableView.visibleCells {
-            cell.removeObservers()
-        }
-    }
 }
 
 // MARK: - Notifications
@@ -1123,7 +1103,7 @@ extension ConversationsViewController {
     @objc private func updateDraftForCell() {
         guard let selectedConversation = selectedConversation,
               let indexPath = fetchedResultsController.indexPath(forObject: selectedConversation),
-              let cell = tableView.cellForRow(at: indexPath) as? ConversationCell else {
+              let cell = tableView.cellForRow(at: indexPath) as? ConversationTableViewCell else {
             return
         }
         
@@ -1223,34 +1203,14 @@ extension ConversationsViewController: NSFetchedResultsControllerDelegate {
             }
             Old_ChatViewControllerCache.clear(conversation)
             tableView.deleteRows(at: [indexPath], with: .automatic)
-            
-        case .update:
-            guard let indexPath = indexPath,
-                  let cell = tableView.cellForRow(at: indexPath) as? ConversationCell,
-                  let conversation = anObject as? Conversation else {
-                return
-            }
-            let changedValues = conversation.changedValuesForCurrentEvent()
-            if !changedValues.isEmpty {
-                cell.changedValues(forConversation: changedValues)
-            }
-            
         case .move:
             if let indexPath = indexPath,
                let newIndexPath = newIndexPath {
-                if let conversation = anObject as? Conversation,
-                   let oldCell = tableView.cellForRow(at: indexPath) as? ConversationCell {
-                    
-                    let changedValues = conversation.changedValuesForCurrentEvent()
-                    if !changedValues.isEmpty {
-                        oldCell.removeObservers()
-                    }
-                }
-                
                 tableView.deleteRows(at: [indexPath], with: .automatic)
                 tableView.insertRows(at: [newIndexPath], with: .automatic)
             }
-            
+        case .update:
+            break
         @unknown default:
             DDLogInfo("Unknown default called on controller() in ConversationsVC")
         }
@@ -1271,11 +1231,6 @@ extension ConversationsViewController: Old_ChatViewControllerDelegate {
     }
     
     @objc func pushSettingChanged(_ conversation: Conversation) {
-        guard let path = fetchedResultsController.indexPath(forObject: conversation),
-              let cell: ConversationCell = tableView.cellForRow(at: path) as? ConversationCell else {
-            return
-        }
-        
-        cell.conversation = conversation
+        // do nothing, because cell is observe this by it self
     }
 }

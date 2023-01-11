@@ -55,6 +55,9 @@
 "error_other_connection_for_same_identity_title" = "Waarschuwing";
 "error_other_connection_for_same_identity_message" = "De server heeft twee of meer verbindingen van verschillende apparaten met dezelfde Threema-ID gedetecteerd.\n\nU kunt dezelfde Threema-ID niet tegelijkertijd op verschillende apparaten gebruiken. Nieuwe berichten worden alleen verzonden naar het apparaat dat als laatste op de server is ingelogd.\n\nAls u overschakelt naar een nieuw apparaat, verwijder dan %@ of schakel het uit op het oude apparaat en herstart het nieuwe apparaat.";
 
+"error_rogue_device_title" = "Er is een verbinding met een ander apparaat gedetecteerd";
+"error_rogue_device_message" = "De server heeft verbinding met een ander apparaat waargenomen dat hetzelfde Threema-ID heeft.\n\nAls u uw Threema-ID in de tussentijd niet op een ander apparaat of met een oudere app-versie heeft gebruikt, neem dan contact op met ondersteuning en stuur indien mogelijk het logbestand.";
+
 "video_too_long_title" = "Video te lang";
 "video_too_long_message" = "Deze video is te lang om te worden verstuurd. De maximum lengte is %.0f minuten.";
 

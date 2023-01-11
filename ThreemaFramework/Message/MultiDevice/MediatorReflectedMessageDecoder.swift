@@ -56,7 +56,7 @@ class MediatorReflectedMessageDecoder {
         amsg.toIdentity = frameworkInjector.myIdentityStore.identity
         amsg.receivedAfterInitialQueueSend = receivedAfterInitialQueueSend
 
-        if amsg.isGroup() {
+        if amsg.flagGroupMessage() {
             if amsg is GroupCreateMessage
                 || amsg is GroupRenameMessage
                 || amsg is GroupSetPhotoMessage
@@ -91,9 +91,9 @@ class MediatorReflectedMessageDecoder {
         }
         amsg.messageID = NSData.convertBytes(omsg.messageID)
         amsg.fromIdentity = frameworkInjector.myIdentityStore.identity
-        amsg.toIdentity = omsg.receiver.identity
+        amsg.toIdentity = omsg.conversation.contact
 
-        if amsg.isGroup() {
+        if amsg.flagGroupMessage() {
             if amsg is GroupCreateMessage
                 || amsg is GroupRenameMessage
                 || amsg is GroupSetPhotoMessage
@@ -101,7 +101,7 @@ class MediatorReflectedMessageDecoder {
                 (amsg as! AbstractGroupMessage).groupCreator = frameworkInjector.myIdentityStore.identity
             }
             else if amsg is GroupRequestSyncMessage {
-                (amsg as! AbstractGroupMessage).groupCreator = omsg.receiver.identity
+                (amsg as! AbstractGroupMessage).groupCreator = omsg.conversation.contact
             }
         }
 

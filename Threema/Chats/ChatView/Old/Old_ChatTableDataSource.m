@@ -174,7 +174,7 @@
 
 // appends added sections and rows to newSections or newRows collections
 - (void)addMessage:(BaseMessage *)message newSections:(NSMutableIndexSet *)newSections newRows:(NSMutableArray *)newRows visible:(BOOL)visible {
-    NSDate *currentSentDate = message.remoteSentDate;
+    NSDate *currentSentDate = message.date;
     NSString *dayString = [DateFormatter relativeMediumDateFor:currentSentDate];
     UIApplicationState applicationState = [[UIApplication sharedApplication] applicationState];
     BOOL showUnreadLine = YES;

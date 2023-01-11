@@ -41,7 +41,7 @@ final class IconMessageContentView: UIView {
     
     /// Offset of text label from leading side
     private lazy var textStackViewLeadingDistance: CGFloat = {
-        // The text stackview is as far away from the symbol center as its center is form the leading edge plus the space
+        // The text stack view is as far away from the symbol center as its center is form the leading edge plus the space
         let offset = 2 * iconXCenterLeadingDistance // This is already scaled
         let scaledSpace = UIFontMetrics.default.scaledValue(
             for: ChatViewConfiguration.Content.defaultIconAndTextSpace
@@ -49,7 +49,9 @@ final class IconMessageContentView: UIView {
         
         return offset + scaledSpace
     }()
-  
+    
+    private let tapAction: () -> Void
+    
     // MARK: - Lifecycle
     
     @available(*, unavailable)
@@ -62,8 +64,15 @@ final class IconMessageContentView: UIView {
         fatalError()
     }
     
-    init(iconView: UIView, arrangedSubviews views: [UIView]) {
+    init(iconView: UIView, arrangedSubviews views: [UIView], tapAction: @escaping () -> Void) {
+        self.tapAction = tapAction
+
         super.init(frame: .zero)
+        
+        let tapGestureRecognizer = UILongPressGestureRecognizer(target: self, action: #selector(handleTap(_:)))
+        tapGestureRecognizer.minimumPressDuration = 0.0
+        tapGestureRecognizer.delegate = self
+        addGestureRecognizer(tapGestureRecognizer)
         
         // Fill TextViewStack
         textStackView.translatesAutoresizingMaskIntoConstraints = false
@@ -78,15 +87,17 @@ final class IconMessageContentView: UIView {
     
     // Adds subviews and applies constraints
     private func configureLayout(iconView: UIView) {
-        let textStackViewLeadingConstraint: NSLayoutConstraint
         
+        // This adds the margin to the chat bubble border
         directionalLayoutMargins = NSDirectionalEdgeInsets(
-            top: ChatViewConfiguration.Content.defaultTopBottomInset,
-            leading: ChatViewConfiguration.Content.defaultLeadingTrailingInset,
-            bottom: ChatViewConfiguration.Content.defaultTopBottomInset,
-            trailing: ChatViewConfiguration.Content.defaultLeadingTrailingInset
+            top: -ChatViewConfiguration.Content.defaultTopBottomInset,
+            leading: -ChatViewConfiguration.Content.defaultLeadingTrailingInset,
+            bottom: -ChatViewConfiguration.Content.defaultTopBottomInset,
+            trailing: -ChatViewConfiguration.Content.defaultLeadingTrailingInset
         )
         
+        let textStackViewLeadingConstraint: NSLayoutConstraint
+
         // We only add the icon if user does not use accessibility fonts, and must set constraints accordingly
         if !traitCollection.preferredContentSizeCategory.isAccessibilityCategory {
             
@@ -98,33 +109,65 @@ final class IconMessageContentView: UIView {
                     equalTo: textStackView.firstBaselineAnchor
                 ),
                 iconView.centerXAnchor.constraint(
-                    equalTo: layoutMarginsGuide.leadingAnchor,
+                    equalTo: leadingAnchor,
                     constant: iconXCenterLeadingDistance
                 ),
             ])
             
             textStackViewLeadingConstraint = textStackView.leadingAnchor.constraint(
-                equalTo: layoutMarginsGuide.leadingAnchor,
+                equalTo: leadingAnchor,
                 constant: textStackViewLeadingDistance
             )
         }
         else {
             textStackViewLeadingConstraint = textStackView.leadingAnchor.constraint(
-                equalTo: layoutMarginsGuide.leadingAnchor
+                equalTo: leadingAnchor
             )
         }
         
         NSLayoutConstraint.activate([
             textStackView.topAnchor.constraint(
-                equalTo: layoutMarginsGuide.topAnchor
+                equalTo: topAnchor
             ),
             textStackViewLeadingConstraint,
             textStackView.bottomAnchor.constraint(
-                equalTo: layoutMarginsGuide.bottomAnchor
+                equalTo: bottomAnchor
             ),
             textStackView.trailingAnchor.constraint(
-                equalTo: layoutMarginsGuide.trailingAnchor
+                equalTo: trailingAnchor
             ),
         ])
+    }
+    
+    @objc func handleTap(_ sender: UITapGestureRecognizer) {
+        if sender.state == .ended {
+            tapAction()
+        }
+    }
+}
+
+// MARK: - UIGestureRecognizerDelegate
+
+// This resolves an issue where the gesture recognizer would infer with scrolling interactions
+extension IconMessageContentView: UIGestureRecognizerDelegate {
+    
+    func gestureRecognizer(
+        _ gestureRecognizer: UIGestureRecognizer,
+        shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer
+    ) -> Bool {
+        if otherGestureRecognizer is UIPanGestureRecognizer {
+            return true
+        }
+        return false
+    }
+    
+    func gestureRecognizer(
+        _ gestureRecognizer: UIGestureRecognizer,
+        shouldRequireFailureOf otherGestureRecognizer: UIGestureRecognizer
+    ) -> Bool {
+        if otherGestureRecognizer is UIPanGestureRecognizer {
+            return true
+        }
+        return false
     }
 }

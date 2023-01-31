@@ -1410,6 +1410,7 @@ If there are no (media) files missing in %@, empty the trash bin to permanently 
 "vote_system_message" = "“%@” voted in “%@”";
 "vote_system_message_hidden" = "Received new vote in “%@”";
 "vote_system_message_default" = "Received vote message for unknown Poll";
+"vote_system_message_update" = "“%@” changed the vote in “%@”";
 
 // ChatBar
 "chat_bar_quote_close_button" = "Close quote";
@@ -1572,3 +1573,6 @@ If there are no (media) files missing in %@, empty the trash bin to permanently 
 "anniversary_view_title" = "10 Years of Threema!";
 "anniversary_view_text" = "On December 12, 2022, Threema will turn ten. To mark the start of the celebration period, we have festooned our app icon.";
 "anniversary_view_icon_info" = "To change the app icon back to the default or to a legacy version, go to “Settings > Appearance > App Icon.”";
+
+// SystemMessage
+"systemMessage_unsupported_type" = "Unsupported system message type";

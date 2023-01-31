@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2022 Threema GmbH
+// Copyright (c) 2022-2023 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -74,10 +74,28 @@ public final class ThreemaUtility: NSObject {
         return "\(version)\(suffix) (\(build)\(ThreemaEnvironment.env().description()))"
     }()
     
+    private static let additionalMDMString: String = {
+        var mdmDescription = MDMSetup().supportDescriptionString() ?? ""
+        if AppGroup.getActiveType() == AppGroupTypeApp {
+            let mdmDes = MyIdentityStore.shared().lastWorkInfoMdmDescription
+            if mdmDescription != mdmDes {
+                MyIdentityStore.shared().lastWorkInfoMdmDescription = mdmDescription
+            }
+        }
+        else {
+            if let mdmDesc = MyIdentityStore.shared().lastWorkInfoMdmDescription {
+                mdmDescription = mdmDesc
+            }
+        }
+        
+        return mdmDescription
+    }()
+    
     /// Format: 4.7b2687;de/CH;iPhone7,2;15.1
     @objc public static let clientVersion: String = {
         var language = Locale.current.languageCode ?? "?"
-        var mdmDescription = MDMSetup().supportDescriptionString()?.appending(";") ?? ""
+        // call clientVersionMDMString to save it
+        let mdmDescription = additionalMDMString
         let countryCode = (Locale.current as NSLocale).object(forKey: .countryCode)
 
         if AppGroup.getActiveType() == AppGroupTypeApp {
@@ -85,22 +103,21 @@ public final class ThreemaUtility: NSObject {
             if language != lang {
                 MyIdentityStore.shared().lastWorkInfoLanguage = language
             }
-            
-            let mdmDes = MyIdentityStore.shared().lastWorkInfoMdmDescription
-            if mdmDescription != mdmDes {
-                MyIdentityStore.shared().lastWorkInfoMdmDescription = mdmDescription
-            }
         }
         else {
             if let lang = MyIdentityStore.shared().lastWorkInfoLanguage {
                 language = lang
             }
-            if let mdmDesc = MyIdentityStore.shared().lastWorkInfoMdmDescription {
-                mdmDescription = mdmDesc
-            }
         }
         
-        return "\(appAndBuildVersion);\(mdmDescription)I;\(language)/\(countryCode ?? "?");\(ThreemaUtility.modelName);\(UIDevice.current.systemVersion)"
+        return "\(appAndBuildVersion);I;\(language)/\(countryCode ?? "?");\(ThreemaUtility.modelName);\(UIDevice.current.systemVersion)"
+    }()
+    
+    @objc public static let clientVersionWithMDM: String = {
+        if !additionalMDMString.isEmpty {
+            return clientVersion + ";" + additionalMDMString
+        }
+        return clientVersion
     }()
     
     // MARK: - Other threema type

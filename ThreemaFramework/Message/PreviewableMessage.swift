@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2022 Threema GmbH
+// Copyright (c) 2022-2023 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -110,9 +110,11 @@ public extension PreviewableMessage {
         }
         
         // Add the sender name if specified in PreviewableMessageConfiguration
-        let containsName = configuration.includeSender && (conversation?.isGroup() ?? false)
+        let shouldShowName = configuration.includeSender &&
+            (conversation?.isGroup() ?? false) &&
+            !(self is SystemMessage) // TODO: We might need to update this for group calls
 
-        if containsName {
+        if shouldShowName {
             let attributedName: NSAttributedString
             
             if let name = sender?.displayName {

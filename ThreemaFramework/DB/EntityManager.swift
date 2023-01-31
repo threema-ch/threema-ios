@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2020-2022 Threema GmbH
+// Copyright (c) 2020-2023 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -217,15 +217,13 @@ public class EntityManager: NSObject {
     /// - Parameter isLocal: Is the message NOT sent to the chat server?
     public func markMessageAsSent(_ messageID: Data, isLocal: Bool = false) {
         performSyncBlockAndSafe {
-            if let dbMsg = self.entityFetcher.ownMessage(with: messageID) {
-                if let sent = Bool(exactly: dbMsg.sent), !sent {
-                    dbMsg.sent = true
-                    dbMsg.sendFailed = false
-                    
-                    // Only set remote sent date if it was actually sent to the chat server
-                    if !isLocal {
-                        dbMsg.remoteSentDate = .now
-                    }
+            if let dbMsg = self.entityFetcher.ownMessage(with: messageID), let sent = Bool(exactly: dbMsg.sent), !sent {
+                dbMsg.sent = true
+                dbMsg.sendFailed = false
+                        
+                // Only set remote sent date if it was actually sent to the chat server
+                if !isLocal {
+                    dbMsg.remoteSentDate = .now
                 }
             }
         }

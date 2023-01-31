@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2022 Threema GmbH
+// Copyright (c) 2022-2023 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -66,19 +66,21 @@ public class BallotManager: NSObject {
         ballotTitle: String,
         conversation: Conversation,
         contactID: String,
-        showIntermediateResults: Bool
+        showIntermediateResults: Bool,
+        updatedVote: Bool
     ) {
         
         let voteInfo = VoteInfo(
             ballotTitle: ballotTitle,
             voterID: contactID,
-            showIntermediateResults: showIntermediateResults
+            showIntermediateResults: showIntermediateResults,
+            updatedVote: updatedVote
         )
         let json = try? JSONEncoder().encode(voteInfo)
         
         let sysMsg = entityManager.entityCreator.systemMessage(for: conversation)
         let date = Date()
-        sysMsg?.type = NSNumber(integerLiteral: kSystemMessageVote)
+        sysMsg?.type = NSNumber(integerLiteral: updatedVote ? kSystemMessageVoteUpdated : kSystemMessageVote)
         sysMsg?.arg = json
         sysMsg?.date = date
         sysMsg?.remoteSentDate = date

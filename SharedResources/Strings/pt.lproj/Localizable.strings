@@ -548,6 +548,8 @@
 "forward_security_4dh" = "Concluído(s)";
 "forward_security_clear_sessions" = "Limpar todas as sessões";
 "forward_security_explainer_footer" = "A tecnologia Perfect Forward Secrecy (PFS) protege uma comunicação gravada da decodificação retroativa, mesmo que a chave de criptografia de longo prazo tenha sido comprometida.\nA opção pode ser ativada no app em ambos os lados compatíveis com PFS.";
+"md_wizard_pfs_warning" = "Perfect Forward Secrecy será desativado para todos os contatos após a ativação da Prévia de multidispositivos.";
+"md_wizard_disable_pfs_confirm" = "Desativar Perfect Forward Secrecy";
 
 /* create id */
 "lets_get_started" = "Vamos começar";
@@ -1407,6 +1409,7 @@ Caso não haja nenhum arquivo (de mídia) faltando no %@, esvazie a lixeira para
 "vote_system_message" = "“%@” votou em “%@”";
 "vote_system_message_hidden" = "Recebeu novo voto em \"%@\"";
 "vote_system_message_default" = "Recebeu nova mensagem para Enquete desconhecida";
+"vote_system_message_update" = "“%@” mudou o voto em “%@”";
 
 // ChatBar
 "chat_bar_quote_close_button" = "Fechar citação";
@@ -1569,3 +1572,6 @@ Caso não haja nenhum arquivo (de mídia) faltando no %@, esvazie a lixeira para
 "anniversary_view_title" = "10 anos de Threema!";
 "anniversary_view_text" = "Em 12 de dezembro de 2022, o Threema fará 10 anos. Para marcar o início do período de comemorações, nós \"enfeitamos\" o ícone do nosso app.";
 "anniversary_view_icon_info" = "Para usar o ícone padrão ou uma versão antiga dele, vá até \"Configurações > Aparência > Ícone do app.\"";
+
+// SystemMessage
+"systemMessage_unsupported_type" = "Tipo de mensagem do sistema não suportada";

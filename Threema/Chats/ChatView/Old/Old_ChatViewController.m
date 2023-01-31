@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2012-2022 Threema GmbH
+// Copyright (c) 2012-2023 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -1085,7 +1085,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     @try {
         /* observe this conversation in case new messages are added to it while we're open */
         [conversation addObserver:self forKeyPath:@"typing" options:0 context:nil];
-        [conversation addObserver:self forKeyPath:@"displayName" options:NSKeyValueObservingOptionNew|NSKeyValueObservingOptionOld context:nil];
+        [conversation addObserver:self forKeyPath:@"displayName" options:NSKeyValueObservingOptionNew|NSKeyValueObservingOptionOld|NSKeyValueObservingOptionInitial context:nil];
         [conversation addObserver:self forKeyPath:@"groupId" options:NSKeyValueObservingOptionNew|NSKeyValueObservingOptionOld context:nil];
         [conversation addObserver:self forKeyPath:@"members" options:NSKeyValueObservingOptionNew|NSKeyValueObservingOptionOld context:nil];
         
@@ -1353,10 +1353,6 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     
     if (newContentOffset < -self.chatContent.contentInset.top) {
         newContentOffset = -self.chatContent.contentInset.top;
-    }
-    
-    if (didHideHeader) {
-        newContentOffset -= 40;
     }
     
     self.chatContent.contentOffset = CGPointMake(0, newContentOffset);

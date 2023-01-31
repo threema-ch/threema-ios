@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2020-2022 Threema GmbH
+// Copyright (c) 2020-2023 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -265,7 +265,7 @@ import Foundation
             AVFormatIDKey: kAudioFormatMPEG4AAC,
             AVNumberOfChannelsKey: rate.audioChannels,
             AVSampleRateKey: 44100,
-            AVEncoderBitRateKey: rate.audioRate,
+            AVEncoderBitRatePerChannelKey: rate.audioRate,
         ]
         
         return exportSession
@@ -314,8 +314,8 @@ import Foundation
             return rates.last
         }
         
-        // There seems to be a minimum value of 32k for AVEncoderBitRateKey
-        let audioBitrate = max(Int(movieRateLow.audioRate), audioBitrate)
+        // There seems to be a minimum value of 32k and a maximum of 160k for AVEncoderBitRateKey
+        let audioBitrate = min(max(Int(movieRateLow.audioRate), audioBitrate), 160 * 1000)
         
         let originalSize = Int((videoBitrate + audioBitrate * audioChannels) / 8) * duration
         

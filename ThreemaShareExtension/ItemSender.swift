@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2021-2022 Threema GmbH
+// Copyright (c) 2021-2023 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -104,9 +104,8 @@ class ItemSender: NSObject {
                                 correlationID: self.correlationIDs[j]
                             )
                         }
-                        DatabaseManager.db()?.refreshDirtyObjects(false)
+                        // We do no longer call refreshDirtyObjects(false) since it lead to some changes not being saved correctly, and thus have higher memory usage in the share extension.
                     }
-                    
                     senderItem = nil
                 }
             }

@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2019-2022 Threema GmbH
+// Copyright (c) 2019-2023 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -93,7 +93,9 @@ import ThreemaFramework
     
     deinit {
         if message != nil {
-            message.removeObserver(self, forKeyPath: "data")
+            if _observedMessages.firstIndex(of: message.id) != nil {
+                message.removeObserver(self, forKeyPath: "data")
+            }
             _observedMessages.removeAll()
         }
     }

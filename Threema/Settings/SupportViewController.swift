@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2021-2022 Threema GmbH
+// Copyright (c) 2021-2023 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -98,7 +98,7 @@ class SupportViewController: UIViewController {
     }
     
     func moveToSupportChat(contact: Contact) {
-        let message = "My app version: \(ThreemaUtility.clientVersion)"
+        let message = "My app version: \(ThreemaUtility.clientVersionWithMDM)"
         let info = [
             kKeyContact: contact,
             kKeyForceCompose: NSNumber(value: true),

@@ -548,6 +548,8 @@
 "forward_security_4dh" = "完整保密";
 "forward_security_clear_sessions" = "清除所有会话";
 "forward_security_explainer_footer" = "完全正向保密（PFS）可以保护会话记录不被追溯解密，即使长期加密密钥已被盗用。\n如果双方的应用程序都支持完全正向保密的话，就可以启用此选项。";
+"md_wizard_pfs_warning" = "启用多设备预览后，所有联系人的完全正向保密将被禁用。";
+"md_wizard_disable_pfs_confirm" = "禁用完全正向保密";
 
 /* create id */
 "lets_get_started" = "让我们开始吧";
@@ -1408,6 +1410,7 @@
 "vote_system_message" = "“%@” 投了 “%@” 一票";
 "vote_system_message_hidden" = "“%@” 获得了新投票";
 "vote_system_message_default" = "收到不知名投票的投票消息";
+"vote_system_message_update" = "“%@” 更改了 “%@” 的投票";
 
 // ChatBar
 "chat_bar_quote_close_button" = "关闭引用";
@@ -1570,3 +1573,6 @@
 "anniversary_view_title" = "Threema 10周年！";
 "anniversary_view_text" = "到2022年12月12日，Threema就10岁了。作为庆典季的开始，我们对应用图标进行了装饰。";
 "anniversary_view_icon_info" = "想把应用图标改为默认或旧版本，请前往 “设置 > 外观 > 应用图标。”";
+
+// SystemMessage
+"systemMessage_unsupported_type" = "不支持的系统信息类型";

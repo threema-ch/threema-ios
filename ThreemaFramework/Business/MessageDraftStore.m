@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2016-2022 Threema GmbH
+// Copyright (c) 2016-2023 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -83,21 +83,23 @@
         return;
     }
     EntityManager *entityManager = [[EntityManager alloc] init];
-    NSArray *allContacts = [entityManager.entityFetcher allContacts];
-    NSMutableDictionary *newMessageDrafts = [NSMutableDictionary new];
-    
-    for (Contact *contact in allContacts) {
-        for (Conversation *conv in contact.conversations) {
-            NSString *draft = [self loadDraftForConversation:conv];
-            if(draft != nil){
-                NSString * __nonnull storeKey = [MessageDraftStore storeKeyForConversation:conv];
-                [newMessageDrafts setObject:draft forKey: storeKey];
+    [entityManager performBlockAndWait:^{
+        NSArray *allContacts = [entityManager.entityFetcher allContacts];
+        NSMutableDictionary *newMessageDrafts = [NSMutableDictionary new];
+
+        for (Contact *contact in allContacts) {
+            for (Conversation *conv in contact.conversations) {
+                NSString *draft = [self loadDraftForConversation:conv];
+                if(draft != nil){
+                    NSString * __nonnull storeKey = [MessageDraftStore storeKeyForConversation:conv];
+                    [newMessageDrafts setObject:draft forKey: storeKey];
+                }
             }
         }
-    }
-    [defaults setObject:newMessageDrafts forKey:@"MessageDrafts"];
-    [defaults setBool:YES forKey:@"AlreadyDeletedOldDrafts"];
-    [defaults synchronize];
+        [defaults setObject:newMessageDrafts forKey:@"MessageDrafts"];
+        [defaults setBool:YES forKey:@"AlreadyDeletedOldDrafts"];
+        [defaults synchronize];
+    }];
 }
 
 + (NSString*)storeKeyForConversation:(Conversation*)conversation {

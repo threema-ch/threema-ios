@@ -548,6 +548,8 @@
 "forward_security_4dh" = "Tamam";
 "forward_security_clear_sessions" = "Tüm Oturumları Temizle";
 "forward_security_explainer_footer" = "Mükemmel İletme Gizliliği (Perfect Forward Secrecy) (PFS), uzun süreli şifreleme anahtarı ele geçirilmiş olsa bile kaydedilmiş bir iletişimi geriye dönük olarak şifre çözme işleminden korur.\nHer iki taraftaki uygulama PFS'yi destekliyorsa seçenek etkinleştirilebilir.";
+"md_wizard_pfs_warning" = "Çoklu Cihaz Önizlemesini etkinleştirdikten sonra Mükemmel İletme Gizliliği tüm kişiler için devre dışı bırakılacaktır.";
+"md_wizard_disable_pfs_confirm" = "Mükemmel İletme Gizliliğini Devre Dışı Bırak";
 
 /* create id */
 "lets_get_started" = "Başlayalım";
@@ -1408,6 +1410,7 @@ Artık dosyaları çöp kutusuna taşıyın ve %@ içinde hiçbir (medya) dosyas
 "vote_system_message" = "“%@”, “%@” için oy verdi";
 "vote_system_message_hidden" = "“%@” içinde yeni oy aldı";
 "vote_system_message_default" = "Bilinmeyen anket için oy mesajı alındı";
+"vote_system_message_update" = "\"%@\", \"%@\" içindeki oyu değiştirdi";
 
 // ChatBar
 "chat_bar_quote_close_button" = "Alıntıyı kapat";
@@ -1571,3 +1574,6 @@ Artık dosyaları çöp kutusuna taşıyın ve %@ içinde hiçbir (medya) dosyas
 "anniversary_view_title" = "Threema'nın 10. Yılı!";
 "anniversary_view_text" = "12 Aralık 2022'de Threema on yaşına girecek. Kutlama döneminin başlangıcını vurgulamak için uygulama simgemizi süsledik.";
 "anniversary_view_icon_info" = "Uygulama simgesini varsayılana veya eski bir sürüme döndürmek için \"Ayarlar > Görünüm > Uygulama Simgesi\"ne gidin.";
+
+// SystemMessage
+"systemMessage_unsupported_type" = "Desteklenmeyen sistem mesajı türü";

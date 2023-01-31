@@ -548,6 +548,8 @@
 "forward_security_4dh" = "完整保密";
 "forward_security_clear_sessions" = "清除所有工作階段";
 "forward_security_explainer_footer" = "完全正向保密（PFS）可確保即使長期加密密鑰已遭盜用，仍可保護對話記錄不被追溯解密。 若雙方的應用程式都支援完全正向保密的話，就可以啟用此選項。";
+"md_wizard_pfs_warning" = "啟用多裝置預覽後，所有聯絡人的完全正向保密將被停用。";
+"md_wizard_disable_pfs_confirm" = "停用完全正向保密";
 
 /* create id */
 "lets_get_started" = "讓我們開始吧";
@@ -1408,6 +1410,7 @@
 "vote_system_message" = "「%@」投了「%@」一票";
 "vote_system_message_hidden" = "「%@」取得了新投票";
 "vote_system_message_default" = "收到不知名投票的投票訊息";
+"vote_system_message_update" = "「%@」變更了「%@」的投票";
 
 // ChatBar
 "chat_bar_quote_close_button" = "關閉引用";
@@ -1570,3 +1573,6 @@
 "anniversary_view_title" = "Threema 10 週年誌慶！";
 "anniversary_view_text" = "2022 年 12 月 12 日，Threema 正式面世 10 週年！我們率先帶來了精美的應用程式圖示，作為慶祝紀念！";
 "anniversary_view_icon_info" = "要將應用程式的圖示改回預設或較舊版本，請依序點進「設定」>「外觀」>「應用程式圖示」。";
+
+// SystemMessage
+"systemMessage_unsupported_type" = "不支援的系統訊息類型";

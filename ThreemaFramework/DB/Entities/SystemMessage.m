@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2013-2022 Threema GmbH
+// Copyright (c) 2013-2023 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -86,7 +86,13 @@
             } else {
                 return [NSString localizedStringWithFormat: [BundleUtil localizedStringForKey:@"vote_system_message_hidden"], dict[@"ballotTitle"]] ;
             }
-            
+        case kSystemMessageVoteUpdated:
+            dict = [self argAsDictionary];
+            if (dict[@"voterID"]) {
+                return [NSString localizedStringWithFormat:[BundleUtil localizedStringForKey:@"vote_system_message_update"], dict[@"voterID"], dict[@"ballotTitle"]];
+            } else {
+                return [BundleUtil localizedStringForKey:@"vote_system_message_default"];
+            }
         case kSystemMessageCallRejectedOffHours:
             dict = [self argAsDictionary];
             if ([dict[@"CallInitiator"] boolValue]) {
@@ -142,6 +148,8 @@
             return [BundleUtil localizedStringForKey:@"forward_security_status_disabled_outgoing"];
         case kSystemMessageFsNotSupportedAnymore:
             return [BundleUtil localizedStringForKey:@"forward_security_contact_has_downgraded_to_an_incompatible_version"];
+        case kSystemMessageUnsupportedType:
+            return [BundleUtil localizedStringForKey:@"systemMessage_unsupported_type"];
     }
     
     return nil;

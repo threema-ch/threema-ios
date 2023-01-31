@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2020-2022 Threema GmbH
+// Copyright (c) 2020-2023 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -132,7 +132,7 @@ typealias TaskCompletionHandler = (TaskDefinitionProtocol, Error?) -> Void
         }
     }
 
-    public static func isEmpty(queueType: TaskQueueType) -> Bool {
+    @objc public static func isEmpty(queueType: TaskQueueType) -> Bool {
         switch queueType {
         case .incoming:
             return TaskManager.incomingQueue?.list.isEmpty ?? true

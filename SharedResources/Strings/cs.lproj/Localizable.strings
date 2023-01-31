@@ -548,6 +548,8 @@
 "forward_security_4dh" = "Kompletní";
 "forward_security_clear_sessions" = "Vymazat všechny relace";
 "forward_security_explainer_footer" = "Dopředná bezpečnost (Perfect Forward Secrecy - PFS) chrání zaznamenanou komunikaci před zpětným dešifrováním, i když je dlouhodobý šifrovací klíč prozrazen.\nTuto možnost lze povolit, pokud aplikace na obou stranách podporuje PFS.";
+"md_wizard_pfs_warning" = "Po aktivaci náhledu pro více zařízení se u všech kontaktů vypne dopředná bezpečnost.";
+"md_wizard_disable_pfs_confirm" = "Deaktivovat dopřednou bezpečnost";
 
 /* create id */
 "lets_get_started" = "Pojďme na to";
@@ -1407,6 +1409,7 @@ Pokud vám v %@ nechybí žádné (mediální) soubory, vyprázdněte koš, abys
 "vote_system_message" = "Uživatel „%@“ hlasoval v „%@“";
 "vote_system_message_hidden" = "Přijato nové hlasování v „%@“";
 "vote_system_message_default" = "Přijata zpráva o hlasování pro neznámou anketu";
+"vote_system_message_update" = "„%@“ změnil(a) hlasování v „%@“";
 
 // ChatBar
 "chat_bar_quote_close_button" = "Uzavřít citaci";
@@ -1569,3 +1572,6 @@ Pokud vám v %@ nechybí žádné (mediální) soubory, vyprázdněte koš, abys
 "anniversary_view_title" = "10 let Threema!";
 "anniversary_view_text" = "Dne 12. prosince 2022 bude aplikaci Threema deset let. U příležitosti zahájení oslav jsme vyšperkovali naši ikonu.";
 "anniversary_view_icon_info" = "Chcete-li si změnit ikonu zpět na výchozí nebo starou verzi, přejděte do nabídky „Nastavení > Vzhled > Ikona aplikace“.";
+
+// SystemMessage
+"systemMessage_unsupported_type" = "Nepodporovaný typ systémové zprávy";

@@ -549,6 +549,8 @@
 "forward_security_4dh" = "Pełne";
 "forward_security_clear_sessions" = "Wyczyść wszystkie sesje";
 "forward_security_explainer_footer" = "Idealne utajnianie z wyprzedzeniem (PFS) chroni zapisaną wiadomość przed późniejszym odszyfrowaniem, nawet jeśli długoterminowy klucz szyfrujący zostanie ujawniony.\nOpcję tę można włączyć, jeśli aplikacja po obu stronach obsługuje PFS.";
+"md_wizard_pfs_warning" = "Po aktywacji opcji połączonych urządzeń zostanie wyłączone idealne utajnianie z wyprzedzeniem (PFS) dla wszystkich kontaktów.";
+"md_wizard_disable_pfs_confirm" = "Wyłącz idealne utajnianie z wyprzedzeniem (PFS)";
 
 /* create id */
 "lets_get_started" = "Zacznijmy";
@@ -1407,6 +1409,7 @@ Jeśli w %@ nie brakuje żadnych plików (multimedialnych), opróżnij kosz, aby
 "vote_system_message" = "„%@” głosuje w „%@”";
 "vote_system_message_hidden" = "Otrzymano nowy głos w „%@”";
 "vote_system_message_default" = "Otrzymano wiadomość głosowania na nieznaną ankietę";
+"vote_system_message_update" = "Użytkownik „%@” zmienił głos w „%@”";
 
 // ChatBar
 "chat_bar_quote_close_button" = "Zamknij cytat";
@@ -1570,3 +1573,6 @@ Jeśli w %@ nie brakuje żadnych plików (multimedialnych), opróżnij kosz, aby
 "anniversary_view_title" = "10 lat aplikacji Threema!";
 "anniversary_view_text" = "12 grudnia 2022 r. Threema będzie miała dziesięć lat. Aby uczcić tę okazję, udekorowaliśmy ikonę naszej aplikacji.";
 "anniversary_view_icon_info" = "Aby zmienić ikonę aplikacji na domyślną lub poprzednią, przejdź do „Ustawienia > Wygląd > Ikona aplikacji”.";
+
+// SystemMessage
+"systemMessage_unsupported_type" = "Nieobsługiwany typ komunikatu systemowego";

@@ -1411,6 +1411,7 @@ Sofern keine Medien und/oder Dateien in %@ fehlen, leeren Sie den Papierkorb, um
 "vote_system_message" = "«%@» hat in «%@» abgestimmt";
 "vote_system_message_hidden" = "Neue Stimme in «%@» erhalten";
 "vote_system_message_default" = "Stimme für unbekannte Umfrage erhalten.";
+"vote_system_message_update" = "«%@» hat in «%@» Änderungen vorgenommen";
 
 // ChatBar
 "chat_bar_quote_close_button" = "Zitat schliessen";
@@ -1573,3 +1574,6 @@ Sofern keine Medien und/oder Dateien in %@ fehlen, leeren Sie den Papierkorb, um
 "anniversary_view_title" = "10 Jahre Threema!";
 "anniversary_view_text" = "Am 12. Dezember 2022 wird Threema zehn Jahre alt. Um die Feierlichkeiten zu starten, haben wir das App-Icon festlich geschmückt.";
 "anniversary_view_icon_info" = "Um das App-Icon zur Standardversion zu ändern oder mit einer früheren Version zu ersetzen, gehen Sie zu «Einstellungen > Erscheinungsbild > App-Icon».";
+
+// SystemMessage
+"systemMessage_unsupported_type" = "Nicht unterstützte System-Nachricht";

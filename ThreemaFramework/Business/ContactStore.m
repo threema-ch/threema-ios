@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2012-2022 Threema GmbH
+// Copyright (c) 2012-2023 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -685,10 +685,13 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
         }
     }];
     
-    NSArray *linkedContacts = [allContacts filteredArrayUsingPredicate:[NSPredicate predicateWithBlock:^BOOL(id  _Nullable evaluatedObject, NSDictionary<NSString *,id> * _Nullable bindings) {
-        Contact *contact = (Contact *)evaluatedObject;
-        return contact.cnContactId != nil;
-    }]];
+    __block NSArray *linkedContacts;
+    [entityManager performBlockAndWait:^{
+        linkedContacts = [allContacts filteredArrayUsingPredicate:[NSPredicate predicateWithBlock:^BOOL(id  _Nullable evaluatedObject, NSDictionary<NSString *,id> * _Nullable bindings) {
+            Contact *contact = (Contact *)evaluatedObject;
+            return contact.cnContactId != nil;
+        }]];
+    }];
     if (linkedContacts == nil || linkedContacts.count == 0) {
         [mediatorSyncableContacts syncAsync];
         return;
@@ -1744,10 +1747,13 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
         return;
     }
     
-    NSArray *linkedContacts = [[entityManager.entityFetcher allContacts] filteredArrayUsingPredicate:[NSPredicate predicateWithBlock:^BOOL(id  _Nullable evaluatedObject, NSDictionary<NSString *,id> * _Nullable bindings) {
-        Contact *contact = (Contact *)evaluatedObject;
-        return contact.abRecordId != nil && contact.abRecordId.intValue != 0;
-    }]];
+    __block NSArray *linkedContacts;
+    [entityManager performBlockAndWait:^{
+        linkedContacts = [[entityManager.entityFetcher allContacts] filteredArrayUsingPredicate:[NSPredicate predicateWithBlock:^BOOL(id  _Nullable evaluatedObject, NSDictionary<NSString *,id> * _Nullable bindings) {
+            Contact *contact = (Contact *)evaluatedObject;
+            return contact.abRecordId != nil && contact.abRecordId.intValue != 0;
+        }]];
+    }];
     if (linkedContacts == nil || linkedContacts.count == 0) {
         NSUserDefaults *defaults = [AppGroup userDefaults];
         [defaults setBool:YES forKey:@"AlreadyUpdatedToCNContacts"];

@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2022 Threema GmbH
+// Copyright (c) 2022-2023 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -204,7 +204,7 @@ extension StorageManagementViewController {
         snapshot.appendSections([.conversations])
         
         if let allConversations = businessInjector.entityManager.entityFetcher.allConversations() as? [Conversation] {
-            let sorted = allConversations.sorted {
+            let sorted = allConversations.filter { $0.conversationCategory == .default }.sorted {
                 let messageFetcher0 = MessageFetcher(for: $0, with: businessInjector.entityManager)
                 let messageFetcher1 = MessageFetcher(for: $1, with: businessInjector.entityManager)
                 return messageFetcher0.count() > messageFetcher1.count()

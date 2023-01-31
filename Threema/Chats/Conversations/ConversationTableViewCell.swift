@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2022 Threema GmbH
+// Copyright (c) 2022-2023 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -170,7 +170,7 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
         label.highlightedTextColor = Colors.text
         label.numberOfLines = 1
         
-        if traitCollection.preferredContentSizeCategory >= .accessibilityMedium {
+        if UIApplication.shared.preferredContentSizeCategory.isAccessibilityCategory {
             label.numberOfLines = 2
         }
         
@@ -388,7 +388,6 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
                 constant: -dateLabelTrailingInset
             ),
             
-            displayStateImageView.firstBaselineAnchor.constraint(equalTo: nameLabel.firstBaselineAnchor),
             displayStateImageView.centerXAnchor.constraint(
                 equalTo: dateLastMessageStateContainerView.trailingAnchor,
                 constant: -statusSymbolXCenterTrailingDistance
@@ -449,6 +448,14 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
             threemaTypeImageView.leadingAnchor.constraint(equalTo: avatarImageView.leadingAnchor),
         ])
         
+        if UIApplication.shared.preferredContentSizeCategory.isAccessibilityCategory {
+            displayStateImageView.firstBaselineAnchor.constraint(equalTo: dateDraftLabel.firstBaselineAnchor)
+                .isActive = true
+        }
+        else {
+            displayStateImageView.firstBaselineAnchor.constraint(equalTo: nameLabel.firstBaselineAnchor).isActive = true
+        }
+        
         registerGlobalObservers()
     }
     
@@ -457,9 +464,9 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
     public func updateLastMessagePreview() {
         updateAccessibility()
         
-        guard let conversation = conversation,
-              let lastMessage = conversation.lastMessage else {
-            previewLabel.attributedText = NSAttributedString(string: "")
+        guard let conversation = conversation else {
+            previewLabel.attributedText = nil
+            dateDraftLabel.text = nil
             return
         }
         
@@ -480,6 +487,13 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
         }
         else {
             updateColorsForDateDraftLabel(isDraft: false)
+            
+            guard let lastMessage = conversation.lastMessage else {
+                previewLabel.attributedText = nil
+                dateDraftLabel.text = nil
+                return
+            }
+            
             dateDraftLabel.text = DateFormatter.relativeTimeTodayAndMediumDateOtherwise(for: lastMessage.displayDate)
             if let previewableMessage = lastMessage as? PreviewableMessage {
                 previewLabel.attributedText = previewableMessage
@@ -951,9 +965,19 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
         observeConversation(\.displayName, callOnCreation: false) {
             self.updateTitleLabel()
         }
+        
+        observeConversation(\.groupName, callOnCreation: false) {
+            self.updateTitleLabel()
+        }
+        
+        observeConversation(\.groupImage, callOnCreation: false) {
+            self.loadAvatar()
+        }
+        
         observeContact(\.imageData, callOnCreation: false) {
             self.loadAvatar()
         }
+        
         observeContact(\.contactImage, callOnCreation: false) {
             self.loadAvatar()
         }

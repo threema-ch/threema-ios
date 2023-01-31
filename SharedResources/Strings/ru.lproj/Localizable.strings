@@ -548,6 +548,8 @@
 "forward_security_4dh" = "Готово";
 "forward_security_clear_sessions" = "Очистить все сеансы";
 "forward_security_explainer_footer" = "Протокол Perfect Forward Secrecy (PFS) защищает записанный сеанс связи от ретроактивной расшифровки, если нарушена безопасность ключа шифрования долговременного пользования.\nЭтот параметр может быть активирован, если приложение с обеих сторон использует протокол PFS.";
+"md_wizard_pfs_warning" = "После того как вы активируете предпросмотр на нескольких устройствах, протокол Perfect Forward Secrecy будет отключен для всех контактов.";
+"md_wizard_disable_pfs_confirm" = "Отключить Perfect Forward Secrecy";
 
 /* create id */
 "lets_get_started" = "Начнем!";
@@ -1407,6 +1409,7 @@
 "vote_system_message" = "“%@” проголосовали в “%@”";
 "vote_system_message_hidden" = "Получен новый голос в “%@”";
 "vote_system_message_default" = "Получен голос по неизвестному опросу";
+"vote_system_message_update" = "«%@» изменил голос в «%@»";
 
 // ChatBar
 "chat_bar_quote_close_button" = "Закрыть цитату";
@@ -1569,3 +1572,6 @@
 "anniversary_view_title" = "10 лет Threema!";
 "anniversary_view_text" = "12 декабря 2022 года приложению Threema исполнится 10 лет. Чтобы отметить начало праздненств, мы украсили значок приложения.";
 "anniversary_view_icon_info" = "Чтобы вернуть стандартный или один из старых значков, откройте «Настройки > Внешний вид > Значок приложения».";
+
+// SystemMessage
+"systemMessage_unsupported_type" = "Неподдерживаемый тип системного сообщения";

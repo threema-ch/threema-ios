@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2014-2022 Threema GmbH
+// Copyright (c) 2014-2023 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -185,6 +185,8 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         return NO;
     }
     
+    BOOL updatedVote = [ballot hasVotesForIdentity:contactId];
+    
     for (NSArray *choice in choiceArray) {
         if ([choice count] != 2) {
             //ignore invalid entries
@@ -197,8 +199,12 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     }
     
     // We add votes system messages for ballots that are intermediate, or for those that the local identity created.
-    if (ballot.isIntermediate == YES || ballot.creatorId == MyIdentityStore.sharedMyIdentityStore.identity) {
-        [_ballotManager addVoteSystemMessageWithBallotTitle:ballot.title conversation:ballot.conversation contactID:contactId showIntermediateResults:ballot.isIntermediate];
+    if (ballot.isIntermediate == YES) {
+        [_ballotManager addVoteSystemMessageWithBallotTitle:ballot.title conversation:ballot.conversation contactID:contactId showIntermediateResults:ballot.isIntermediate updatedVote:updatedVote];
+    }
+    else if (ballot.creatorId == MyIdentityStore.sharedMyIdentityStore.identity && !updatedVote) {
+        // Do not show updated votes if ballot is not intermediate
+        [_ballotManager addVoteSystemMessageWithBallotTitle:ballot.title conversation:ballot.conversation contactID:contactId showIntermediateResults:ballot.isIntermediate updatedVote:updatedVote];
     }
     
     return YES;

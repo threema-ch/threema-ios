@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2022 Threema GmbH
+// Copyright (c) 2022-2023 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -38,6 +38,9 @@ public struct VoteInfo: Codable {
         let contact = fetcher.contact(for: voterID)
         return contact?.displayName
     }
+    
+    /// Optional if vote was updated or new
+    var updatedVote: Bool?
 }
 
 // MARK: - SystemMessage
@@ -77,6 +80,7 @@ public extension SystemMessage {
         case fsEnabledOutgoing
         case fsDisabledOutgoing
         case fsNotSupportedAnymore
+        case systemMessageUnsupportedType
         
         /// Localized Message to display
         public var localizedMessage: String {
@@ -124,6 +128,14 @@ public extension SystemMessage {
                 
                 if info.showIntermediateResults {
                     if let voterName = info.voterName {
+                        if let updatedVote = info.updatedVote,
+                           updatedVote == true {
+                            return String.localizedStringWithFormat(
+                                BundleUtil.localizedString(forKey: "vote_system_message_update"),
+                                voterName,
+                                info.ballotTitle
+                            )
+                        }
                         return String.localizedStringWithFormat(
                             BundleUtil.localizedString(forKey: "vote_system_message"),
                             voterName,
@@ -175,6 +187,8 @@ public extension SystemMessage {
             case .fsNotSupportedAnymore:
                 return BundleUtil
                     .localizedString(forKey: "forward_security_contact_has_downgraded_to_an_incompatible_version")
+            case .systemMessageUnsupportedType:
+                return BundleUtil.localizedString(forKey: "systemMessage_unsupported_type")
             }
         }
     }
@@ -505,9 +519,12 @@ public extension SystemMessage {
             return .systemMessage(type: .fsDisabledOutgoing)
         case 29:
             return .systemMessage(type: .fsNotSupportedAnymore)
+        case 30:
+            let voteInfo = try? JSONDecoder().decode(VoteInfo.self, from: arg)
+            return .systemMessage(type: .vote(info: voteInfo))
         default:
             DDLogError("Unsupported system message type with value")
-            fatalError("Unsupported system message type with value")
+            return .systemMessage(type: .systemMessageUnsupportedType)
         }
     }
 }

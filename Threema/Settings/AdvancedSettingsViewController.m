@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2013-2022 Threema GmbH
+// Copyright (c) 2013-2023 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -101,7 +101,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     if ([UserSettings sharedUserSettings].validationLogging) {
         [LogManager addFileLogger:[LogManager debugLogFile]];
         
-        DDLogNotice(@"Start logging %@", ThreemaUtility.clientVersion);
+        DDLogNotice(@"Start logging %@", ThreemaUtility.clientVersionWithMDM);
     }
     else {
         [LogManager removeFileLogger:[LogManager debugLogFile]];

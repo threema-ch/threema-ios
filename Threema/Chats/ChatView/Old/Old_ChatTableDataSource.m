@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2015-2022 Threema GmbH
+// Copyright (c) 2015-2023 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -588,7 +588,15 @@
     
     ChatSectionHeaderView *headerView = [[ChatSectionHeaderView alloc] initWithFrame:frame];
     headerView.fontSize = sentDateFontSize;
-    headerView.text = [_dayArray objectAtIndex:section];
+    
+    if (_dayArray != nil) {
+        if (_dayArray.count > section) {
+            id headerText = [_dayArray objectAtIndex:section];
+            if (headerText != nil && [headerText isKindOfClass:[NSString class]]) {
+                headerView.text = (NSString *)headerText;
+            }
+        }
+    }
     
     __block SectionHeaderCacheElement *foundObject;
     [_sectionHeaderViewCache enumerateObjectsUsingBlock:^(SectionHeaderCacheElement *cE, BOOL * _Nonnull stop) {
@@ -669,7 +677,7 @@
         } else {
             if (message.type.intValue == kSystemMessageContactOtherAppInfo) {
                 height = [ChatContactInfoSystemMessageCell heightFor:message forTableWidth:curTableWidth] + additionalBubbleMarging + 24.0;
-            } else if (message.type.intValue == kSystemMessageVote) {
+            } else if (message.type.intValue == kSystemMessageVote || message.type.intValue == kSystemMessageVoteUpdated) {
                 height = [ChatContactInfoSystemMessageCell heightFor:message forTableWidth:curTableWidth] + additionalBubbleMarging + 24.0;
             } else {
                 height = [ChatSystemMessageCell heightFor:message forTableWidth:curTableWidth] + additionalBubbleMarging + 5.0;

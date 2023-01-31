@@ -550,6 +550,8 @@
 "forward_security_4dh" = "完了";
 "forward_security_clear_sessions" = "すべてのセッションを消去";
 "forward_security_explainer_footer" = "PFS（Perfect Forward Secrecy）は、長期暗号鍵が漏洩した場合でも、記録された通信が遡って復号されないように保護する機能です。\nこのオプションは、双方のアプリがPFSをサポートしている場合に有効にすることができます。";
+"md_wizard_pfs_warning" = "マルチデバイスプレビューを有効にすると、すべての連絡先に対してPFS（Perfect Forward Secrecy）が無効になります。";
+"md_wizard_disable_pfs_confirm" = "PFS（Perfect Forward Secrecy）を無効にする";
 
 /* create id */
 "lets_get_started" = "さあ始めましょう";
@@ -1410,6 +1412,7 @@ iTunesのバックアップを作成してから行ってください。";
 "vote_system_message" = "“%@” が “%@” で投票しました";
 "vote_system_message_hidden" = "“%@” で新しい票を獲得";
 "vote_system_message_default" = "不明な投票に対する投票メッセージを受信しました";
+"vote_system_message_update" = "“%@” が “%@” で票を変更しました";
 
 // ChatBar
 "chat_bar_quote_close_button" = "引用終了";
@@ -1572,3 +1575,6 @@ iTunesのバックアップを作成してから行ってください。";
 "anniversary_view_title" = "Threema創設10周年！";
 "anniversary_view_text" = "2022年12月12日、Threemaは10年目を迎えます。この祝福すべき期間の開始を記念して、アプリアイコンを花づな装飾にしました。";
 "anniversary_view_icon_info" = "アプリアイコンをデフォルトまたはレガシーバージョンに戻すには、設定 > 外観 > アプリアイコンを選択してください。";
+
+// SystemMessage
+"systemMessage_unsupported_type" = "対応していないタイプのシステムメッセージ";

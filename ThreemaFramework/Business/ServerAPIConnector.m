@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2012-2022 Threema GmbH
+// Copyright (c) 2012-2023 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -614,7 +614,7 @@
                               @"licenseUsername": licenseUsername,
                               @"licensePassword": licensePassword,
                               @"publicNickname": (identityStore.pushFromName != nil ? identityStore.pushFromName : identityStore.identity),
-                              @"version": ThreemaUtility.clientVersion
+                              @"version": ThreemaUtility.clientVersionWithMDM
                               } mutableCopy];
     
     if (identityStore.firstName != nil)

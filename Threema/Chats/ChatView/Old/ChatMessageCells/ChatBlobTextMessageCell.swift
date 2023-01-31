@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2020-2022 Threema GmbH
+// Copyright (c) 2020-2023 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -374,11 +374,11 @@ extension ChatBlobTextMessageCell {
                         if checkTextResult(text: element.accessibilityLabel!) != nil {
                             let openString =
                                 "\(BundleUtil.localizedString(forKey: "open")): \(element.accessibilityLabel!)"
-                            let linkAction = UIAccessibilityCustomAction(
-                                name: openString,
-                                target: self,
-                                selector: #selector(openLink(with:))
-                            )
+
+                            let linkAction = UIAccessibilityCustomAction(name: openString) { _ in
+                                self.handleTapResult(result: self.checkTextResult(text: element.accessibilityLabel!)!)
+                                return true
+                            }
                             actions?.insert(linkAction, at: indexCounter)
                             indexCounter += 1
                             

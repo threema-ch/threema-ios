@@ -544,11 +544,13 @@ Nahláste prosím tento incident na security@threema.ch a ak je to možné, posk
 "exclude_deleted_id_exclude_button" = "Vylúčiť";
 
 "forward_security" = "Perfect Forward Secrecy";
-"forward_security_none" = "žiadny";
-"forward_security_2dh" = "jednostranný";
-"forward_security_4dh" = "jednostranný";
+"forward_security_none" = "Žiadny";
+"forward_security_2dh" = "Jednostranný";
+"forward_security_4dh" = "Dokončené";
 "forward_security_clear_sessions" = "Vymazať všetky relácie";
-"forward_security_explainer_footer" = "Perfect Forward Secrecy (dopredné zabezpečenie, PFS) chráni zaznamenanú komunikáciu pred retroaktívnym dešifrovaním, aj keď dôjde k prelomeniu dlhodobého šifrovacieho kľúča.\nTáto možnosť sa dá zapnúť, ak aplikácia na oboch stranách podporuje PFS.";
+"forward_security_explainer_footer" = "Perfect Forward Secrecy (PFS) chráni zaznamenanú komunikáciu pred spätným dešifrovaním, aj keď je ohrozený dlhodobý šifrovací kľúč.\nTúto možnosť je možné povoliť, ak aplikácia na oboch stranách podporuje PFS.";
+"md_wizard_pfs_warning" = "Po aktivácii náhľadu viacerých zariadení bude funkcia \"Perfect Forward Secrecy\" pre všetky kontakty deaktivovaná.";
+"md_wizard_disable_pfs_confirm" = "Vypnúť funkciu Perfect Forward Secrecy";
 
 /* create id */
 "lets_get_started" = "Začíname";
@@ -666,7 +668,7 @@ Nahláste prosím tento incident na security@threema.ch a ak je to možné, posk
 "new_message_no_access_title" = "Nová správa";
 "new_message_no_access_message" = "Pre stiahnutie prichádzajúcich správ otvorte %@.";
 "new_message_invalid_license" = "Platnosť vašej licencie vypršala. Ak chcete pokračovať, otvorte aplikáciu.";
-"new_message_db_requires_migration" = "Je potrebná migrácia databázy. Ak chcete pokračovať, otvorte aplikáciu.";
+"new_message_db_requires_migration" = "Threema bola aktualizovaná, otvorte prosím ;aplikáciu a dokončite aktualizáciu.";
 
 /* reminder messages */
 "push_reminder_title" = "Notifikácie nie sú povolené";
@@ -707,7 +709,7 @@ Nahláste prosím tento incident na security@threema.ch a ak je to možné, posk
 "draft" = "Koncept";
 "new_message_accessibility" = "Nová správa: ";
 "scoll_down_text" = "Posunúť nadol";
-"quote_interaction_hint" = "Klepnutím prejdete na citovanú správu.";
+"quote_interaction_hint" = "Preskočiť na citovanú správu";
 
 /* TTOpenInAppActivity */
 "Open in ..." = "Otvoriť v ...";
@@ -846,7 +848,7 @@ Nahláste prosím tento incident na security@threema.ch a ak je to možné, posk
 "privateChat_code_alert_confirm" = "Nastaviť teraz";
 "privateChat_set_alert_title" = "Chcete označiť túto konverzáciu ako súkromnú?";
 "privateChat_set_alert_message" = "Viditeľnosť súkromných konverzácií môžete prepnúť v nastaveniach ochrany osobných údajov.";
-"privateChat_setup_alert_message" = "Vaša bezpečná záloha aplikácie Threema obsahovala súkromné čety. Ak k nim chcete získať prístup, musíte si nastaviť prístupový kód.";
+"privateChat_setup_alert_message" = "Vaša bezpečná záloha Trezoru Threema obsahovala súkromné čety. Ak k ním chcete získať prístup, musíte si nastaviť prístupový kód.";
 "hide_private_toggle" = "Skryť súkromné konverzácie";
 "privacy_footer" = "Skryje všetky súkromné konverzácie v prehľade konverzácií. Ak chcete aktivovať toto nastavenie, musíte nastaviť prístupový kód.";
 
@@ -1280,7 +1282,7 @@ Pokiaľ vám v %@ nechýbajú žiadne (mediálne) súbory, vyprázdnite kôš, a
 "ballot_multiple_choice" = "Viaceré možnosti";
 "ballot_clone" = "Kopírovať existujúcu anketu";
 "ballot_clone_warning_title" = "Pozor";
-"ballot_clone_warning_message" = "Všetky aktuálne zadané údaje budú prepísané.";
+"ballot_clone_warning_message" = "Všetky existujúce vstupy budú prepísané.";
 "ballot_feature_level_warning_title" = "Upozornenie";
 "ballot_feature_level_warning_message" = "Niektorí z účastníkov používajú aplikáciu, ktorá ešte nepodporuje ankety: %@";
 "ballot_feature_level_error_message" = "Nikto z účastníkov nepoužíva aplikáciu, ktorá podporuje ankety: %@";
@@ -1316,7 +1318,7 @@ Pokiaľ vám v %@ nechýbajú žiadne (mediálne) súbory, vyprázdnite kôš, a
 "voteCancelMessage" = "Pokiaľ odídete pred odoslaním hlasu, bude zahodený.";
 "discardVoteTitle" = "Zahodiť";
 
-"ballot_load_error" = "Ankety sú nedostupné";
+"ballot_load_error" = "Ankety nie sú k dispozícii";
 
 "ballots_with_open_count_accessibility" = "Ankety (otvorené: %d)";
 
@@ -1353,10 +1355,10 @@ Pokiaľ vám v %@ nechýbajú žiadne (mediálne) súbory, vyprázdnite kôš, a
 "multi_device_linked_devices_last_login" = "Posledné prihlásenie: %@";
 "multi_device_linked_devices_remove_failed" = "Zariadenie sa nepodarilo odstrániť: %@";
 "multi_device_linked_devices_removed_devices_title" = "Zakázať viacero zariadení?";
-"multi_device_linked_devices_removed_devices_message" = "Týmto sa odstránia všetky pripojené zariadenia a deaktivuje sa viac zariadení";
+"multi_device_linked_devices_removed_devices_message" = "Týmto sa odstránia všetky pripojené zariadenia a deaktivuje sa možnosť viacerých zariadení";
 "multi_device_linked_devices_removed_devices_ok" = "Zakázať";
 "multi_device_linked_duplicate_contacts_title" = "Duplicitné kontakty";
-"multi_device_linked_duplicate_contacts_desc" = "Toto zariadenie nemôžete prepojiť pre duplicitné kontakty (%@). Kontaktujte, prosím, našu podporu.";
+"multi_device_linked_duplicate_contacts_desc" = "Toto zariadenie nemôžete prepojiť z dôvodu duplicitných kontaktov (%@). Kontaktujte prosím našu podporu.";
 
 "multi_device_linked_devices_failed_remove_title" = "Zariadenie sa nepodarilo odstrániť";
 "multi_device_linked_devices_failed_remove_message" = "Prepojené zariadenie sa nepodarilo odstrániť, skúste to znova.";
@@ -1409,6 +1411,7 @@ Pokiaľ vám v %@ nechýbajú žiadne (mediálne) súbory, vyprázdnite kôš, a
 "vote_system_message" = "„%@“ hlasovalo v „%@“";
 "vote_system_message_hidden" = "Prijatý nový hlas v „%@“";
 "vote_system_message_default" = "Prijatá hlasovacia správa pre neznámu anketu";
+"vote_system_message_update" = "„%@“ zmenil hlas v „%@“";
 
 // ChatBar
 "chat_bar_quote_close_button" = "Uzavrieť citát";
@@ -1456,13 +1459,13 @@ Pokiaľ vám v %@ nechýbajú žiadne (mediálne) súbory, vyprázdnite kôš, a
 "forward_security_messages_skipped_x" = "Od poslednej správy sa stratilo %d správ.";
 "forward_security_session_reset" = "Relácia Perfect Forward Secrecy s týmto kontaktom bola resetovaná. Môže sa to stať, ak kontakt zmenil zariadenie alebo preinštaloval aplikáciu.";
 "forward_security_message_out_of_order" = "Správa bola prijatá ako nefunkčná a nedá sa dešifrovať.";
-"forward_security_status_enabled_outgoing" = "Technológia Perfect Forward Secrecy sa zapla pre odchádzajúce správy.";
-"forward_security_status_disabled_outgoing" = "Technológia Perfect Forward Secrecy sa vypla pre odchádzajúce správy.";
-"forward_security_contact_has_downgraded_to_an_incompatible_version" = "Tento kontakt začal používať verziu aplikácie, ktorá nepodporuje technológiu Perfect Forward Secrecy. Správy sa odteraz budú posielať bez PFS.";
+"forward_security_status_enabled_outgoing" = "Perfect Forward Secrecy je pre odchádzajúce správy je povolené.";
+"forward_security_status_disabled_outgoing" = "Perfect Forward Secrecy je pre odchádzajúce správy je deaktivované.";
+"forward_security_contact_has_downgraded_to_an_incompatible_version" = "Tento kontakt začal používať verziu aplikácie, ktorá nepodporuje Perfect Forward Secrecy. Správy sa budú odteraz odosielať bez PFS.";
 
 // Profile view
-"accessibility_profile_button_hint_contact" = "Otvoriť kontaktné údaje.";
-"accessibility_profile_button_hint_group" = "Otvoriť podrobnosti skupiny.";
+"accessibility_profile_button_hint_contact" = "Otvoriť podrobnosti kontaktu";
+"accessibility_profile_button_hint_group" = "Otvorí podrobnosti skupiny";
 
 // Chat bar
 "accessibility_chatbar_label" = "Vstupné pole konverzácie.";
@@ -1532,7 +1535,7 @@ Pokiaľ vám v %@ nechýbajú žiadne (mediálne) súbory, vyprázdnite kôš, a
 
 "md_wizard_terms_backup" = "Môže dôjsť k strate údajov. Pred pokračovaním vytvorte zálohu.\n[Pokyny na zálohovanie](https://threema.ch/docs/threema/ios_backup_manual_en.pdf)";
 "md_wizard_terms_support" = "Táto ukážka podporuje textové správy. Pravidelne aktualizujte aplikácie pre iOS a desktop, aby ste získali najnovšie funkcie a vylepšenia. ";
-"md_wizard_terms_issues" = "Známe problémy a obmedzenia nájdete [tu](https://threema.ch/en/faq/md_preview).";
+"md_wizard_terms_issues" = "Známe problémy a obmedzenia nájdete [tu](https://threema.ch/faq/md_limit).";
 "md_wizard_terms_bugs" = "Problémy, s ktorými sa v tejto aplikácii stretnete, nahláste cez „Nastavenia > Spätná väzba k beta verzii“.";
 
 "md_wizard_terms_accept" = "Vytvoril som zálohu a chcem pokračovať.";
@@ -1540,8 +1543,7 @@ Pokiaľ vám v %@ nechýbajú žiadne (mediálne) súbory, vyprázdnite kôš, a
 "md_wizard_info_download_title" = "Stiahnúť";
 "md_wizard_info_download_text" = "Threema Tech Preview na vašom počítači:";
 "md_wizard_info_linking_title" = "Prepojte svoj počítač s týmto zariadením";
-"md_wizard_info_linking_text" = "Po prepojení počítača budú vaše základné údaje služby Threema (vaše ID, kontakty a skupiny) zašifrované a dočasne uložené na [serveri Threema Safe, ktorý momentálne používate](https://threema.ch/en/faq/threema_safe_webdav).
-(t.j. %@).";
+"md_wizard_info_linking_text" = "Pri prepojení vášho počítača budú vaše základné údaje Threema (vaše ID, kontakty a skupiny) zašifrované a dočasne uložené na [serveri Trezoru Threema, ktorý momentálne používate](https://threema.ch/en/faq/threema_safe_webdav). (Aktuálne nastavenie: %@).";
 
 "md_wizard_preparation_status" = "Pripravuje sa…";
 
@@ -1572,3 +1574,6 @@ Pokiaľ vám v %@ nechýbajú žiadne (mediálne) súbory, vyprázdnite kôš, a
 "anniversary_view_title" = "10 rokov aplikácie Threema!";
 "anniversary_view_text" = "12. decembra 2022 oslávi Threema desať rokov. Na znak oslavy tohto obdobia sme vytvorili sviatočnú verziu ikony aplikácie.";
 "anniversary_view_icon_info" = "Ak chcete ikonu aplikácie zmeniť späť na predvolenú alebo starú verziu, prejdite do sekcie Nastavenia > Vzhľad > Ikona aplikácie.";
+
+// SystemMessage
+"systemMessage_unsupported_type" = "Nepodporovaný typ systémovej správy";

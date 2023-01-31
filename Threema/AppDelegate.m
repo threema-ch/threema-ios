@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2012-2022 Threema GmbH
+// Copyright (c) 2012-2023 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -184,7 +184,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     appLaunchDate = [NSDate date];
     
     DDLogNotice(@"AppState: didFinishLaunchingWithOptions");
-    DDLogNotice(@"Current App Version: %@", [ThreemaUtility clientVersion]);
+    DDLogNotice(@"Current App Version: %@", [ThreemaUtility clientVersionWithMDM]);
     
     /* Instantiate various singletons now */
     [NaClCrypto sharedCrypto];
@@ -1162,14 +1162,23 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
         int timeout = 0;
         
         if ([[VoIPCallStateManager shared] currentCallState] != CallStateIdle) {
+            // call is active
             key = kAppVoIPBackgroundTask;
             timeout = kAppVoIPIncomCallBackgroundTaskTime;
-        } else if ([[WCSessionManager shared] isRunningWCSession] != true) {
-            key = kAppClosedByUserBackgroundTask;
-            timeout = [Old_FileMessageSender hasScheduledUploads] == YES ? kAppWCBackgroundTaskTime : kAppClosedByUserBackgroundTaskTime;
-        } else {
+        }
+        else if ([[WCSessionManager shared] isRunningWCSession] == true) {
+            // web client is activ
             key = kAppWCBackgroundTask;
             timeout = kAppWCBackgroundTaskTime;
+        }
+        else if ([Old_FileMessageSender hasScheduledUploads] == YES || ![TaskManager isEmptyWithQueueType:TaskQueueTypeOutgoing]) {
+            // queue has outgoing messages or is uploading a file
+            key = kAppClosedByUserBackgroundTask;
+            timeout = kAppSendingBackgroundTaskTime;
+        }
+        else {
+            key = kAppClosedByUserBackgroundTask;
+            timeout = kAppClosedByUserBackgroundTaskTime;
         }
         
         [[BackgroundTaskManager shared] newBackgroundTaskWithKey:key timeout:timeout completionHandler:nil];

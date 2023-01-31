@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2014-2022 Threema GmbH
+// Copyright (c) 2014-2023 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -145,13 +145,17 @@ static NSArray *orderSortDescriptors;
 }
 
 - (BOOL)localIdentityDidVote {
+    return [self hasVotesForIdentity:[MyIdentityStore sharedMyIdentityStore].identity];
+}
+
+- (BOOL)hasVotesForIdentity:(NSString *)identity {
     NSMutableSet *idSet = [NSMutableSet set];
 
     for (BallotChoice *choice in self.choices) {
         NSSet *participantsForChoice = [choice getAllParticipantIds];
         [idSet unionSet:participantsForChoice];
     }
-    return [idSet containsObject: [MyIdentityStore sharedMyIdentityStore].identity];
+    return [idSet containsObject: identity];
 }
 
 /// Returns set of contacts that did vote, does not include local user

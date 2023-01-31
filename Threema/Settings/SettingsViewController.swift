@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2019-2022 Threema GmbH
+// Copyright (c) 2019-2023 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -267,7 +267,7 @@ extension SettingsViewController {
         let info = [
             kKeyContact: contact,
             kKeyForceCompose: NSNumber(booleanLiteral: true),
-            kKeyText: "Version: \(ThreemaUtility.clientVersion)",
+            kKeyText: "Version: \(ThreemaUtility.clientVersionWithMDM)",
         ] as [String: Any]
         
         DispatchQueue.main.async {

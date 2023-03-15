@@ -28,6 +28,7 @@
 #import "ThreemaFramework/ThreemaFramework-Swift.h"
 #import "MDMSetup.h"
 #import "UserSettings.h"
+#import "ThreemaError.h"
 
 #ifdef DEBUG
   static const DDLogLevel ddLogLevel = DDLogLevelVerbose;
@@ -228,9 +229,16 @@
 }
 
 + (void)checkUpdateThreemaMDM:(void(^)(void))onCompletion onError:(void(^)(NSError*))onError {
+    if ([LicenseStore requiresLicenseKey] == NO) {
+        DDLogWarn(@"No license is required");
+        onCompletion();
+        return;
+    }
+
     if ([[UserSettings sharedUserSettings] blockCommunication]) {
-        DDLogWarn(@"Communication is blocked");
-        onError(nil);
+        NSError *error = [ThreemaError threemaError:@"Communication is blocked"];
+        DDLogError(@"Work API fetch failed: %@", error);
+        onError(error);
         return;
     }
 
@@ -254,8 +262,11 @@
             DDLogError(@"Work API fetch failed: %@", error);
             onError(error);
         }];
-    } else {
-        onError(nil);
+    }
+    else {
+        NSError *error = [ThreemaError threemaError:@"Missing credentials (user name or password)"];
+        DDLogError(@"Work API fetch failed: %@", error);
+        onError(error);
     }
 }
 

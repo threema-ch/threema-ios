@@ -813,9 +813,6 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     if ([[MyIdentityStore sharedMyIdentityStore] isKeychainLocked]) {
         [self presentProtectedDataUnavailable];
     } else {
-        [WorkDataFetcher checkUpdateThreemaMDM:^{
-        } onError:^(NSError *error) {
-        }];
         [self presentKeyGeneration];
     }
 }

@@ -49,6 +49,8 @@
 
 @property id<EnterLicenseDelegate> delegate;
 
+@property BOOL doWorkApiFetch;
+
 + (EnterLicenseViewController*)instantiate;
 
 - (IBAction)confirmAction:(id)sender;

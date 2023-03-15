@@ -61,7 +61,7 @@ import UIKit
         passwordAgainField.delegate = self
         passwordAgainField.placeholder = BundleUtil.localizedString(forKey: "password_again")
         advancedOptionsButton.setTitle(BundleUtil.localizedString(forKey: "safe_advanced_options"), for: .normal)
-        advancedOptionsButton.isHidden = mdmSetup.isSafeBackupForce()
+        advancedOptionsButton.isHidden = mdmSetup.isSafeBackupForce() || mdmSetup.isSafeBackupServerPreset()
         
         moreView.mainView = mainContentView
         moreView.moreButtonTitle = BundleUtil.localizedString(forKey: "more_information")

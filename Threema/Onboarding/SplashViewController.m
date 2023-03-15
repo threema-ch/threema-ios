@@ -115,12 +115,13 @@
     if ([LicenseStore requiresLicenseKey]) {
         _threemaLogoView.image = [BundleUtil imageNamed:@"ThreemaWork"];
     }
+
+    [self presentUI];
 }
 
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
 
-    _restoreButton.hidden = [mdmSetup disableBackups];
     _threemaLogoView.hidden = YES;
 }
 
@@ -265,33 +266,47 @@
     [super viewDidAppear:animated];
 
     _threemaLogoView.frame = CGRectMake(_threemaLogoView.frame.origin.x, self.view.safeAreaLayoutGuide.layoutFrame.origin.y + 26.0, _threemaLogoView.frame.size.width, _threemaLogoView.frame.size.height);
-
-    [self presentUI];
 }
 
 - (void)presentUI {
     AppSetupState *appSetupState = [[AppSetupState alloc] initWithMyIdentityStore:[MyIdentityStore sharedMyIdentityStore]];
     if ([[LicenseStore sharedLicenseStore] isValid] == NO) {
         [self performLicenseCheck];
-    } else if ([mdmSetup isSafeRestoreForce]) {
-        [self showRestoreSafeViewController:[self hasDataOnDevice]];
-        [self slideOut:self fromRightToLeft:YES onCompletion:nil];
-        [self slideIn:_restoreSafeViewController fromLeftToRight:YES  onCompletion:nil];
-    } else if ([mdmSetup hasIDBackup] && appSetupState.isAppSetupCompleted == false) {
-        [self restoreIDFromMDM];
-    } else if ([MyIdentityStore sharedMyIdentityStore].pendingCreateID) {
-        [self presentPageViewController];
-    } else {
-        _threemaLogoView.hidden = NO;
-        
-        [self setupAnimatedView];
-        [self checkRefreshStoreReceipt];
-        
-        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1200 * NSEC_PER_MSEC)), dispatch_get_main_queue(), ^{
-            if (_animatedView.superview == nil) {
-                [_containerView addSubview:_animatedView];
+    }
+    else {
+        [WorkDataFetcher checkUpdateThreemaMDM:^{
+            // Reload MDM parameter, could be changed after work data fetch
+            [mdmSetup loadIDCreationValues];
+            [mdmSetup loadRenewableValues];
+
+            _restoreButton.hidden = [mdmSetup disableBackups];
+
+            if ([mdmSetup isSafeRestoreForce]) {
+                [self showRestoreSafeViewController:[self hasDataOnDevice]];
+                [self slideOut:self fromRightToLeft:YES onCompletion:nil];
+                [self slideIn:_restoreSafeViewController fromLeftToRight:YES  onCompletion:nil];
+            } else if ([mdmSetup hasIDBackup] && appSetupState.isAppSetupCompleted == false) {
+                [self restoreIDFromMDM];
+            } else if ([MyIdentityStore sharedMyIdentityStore].pendingCreateID) {
+                [self presentPageViewController];
+            } else {
+                _threemaLogoView.hidden = NO;
+
+                [self setupAnimatedView];
+                [self checkRefreshStoreReceipt];
+
+                dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1200 * NSEC_PER_MSEC)), dispatch_get_main_queue(), ^{
+                    if (_animatedView.superview == nil) {
+                        [_containerView addSubview:_animatedView];
+                    }
+                });
             }
-        });
+        } onError:^(NSError *error) {
+            [UIAlertTemplate showAlertWithOwner:self title:[BundleUtil localizedStringForKey:@"work_data_fetch_failed_title"] message:[BundleUtil localizedStringForKey:@"work_data_fetch_failed_message"] actionOk:^(UIAlertAction *action __unused)  {
+                exit(0);
+            }];
+            return;
+        }];
     }
 }
 
@@ -381,6 +396,7 @@
 - (void)presentLicenseViewController {
     EnterLicenseViewController *viewController = [EnterLicenseViewController instantiate];
     viewController.delegate = self;
+    viewController.doWorkApiFetch = NO;
     viewController.modalPresentationStyle = UIModalPresentationFullScreen;
     [self presentViewController:viewController animated:NO completion:nil];
 }
@@ -915,6 +931,7 @@
 
 - (void)licenseConfirmed {
     [self dismissViewControllerAnimated:YES completion:nil];
+    [self presentUI];
 }
 
 #pragma mark - ZSWTappableLabel delegate

@@ -44,7 +44,10 @@
     }
     
     UIStoryboard *storyboard = [UIStoryboard storyboardWithName:storyboardName bundle:nil];
-    return [storyboard instantiateInitialViewController];
+    EnterLicenseViewController *viewController = [storyboard instantiateInitialViewController];
+    // Set default value
+    viewController.doWorkApiFetch = YES;
+    return viewController;
 }
 
 - (void)viewDidLoad {
@@ -268,21 +271,19 @@
     [_licenseStore performLicenseCheckWithCompletion:^(BOOL success) {
         dispatch_async(dispatch_get_main_queue(), ^{
             if (success) {
-                [WorkDataFetcher checkUpdateThreemaMDM:^{
-                    dispatch_async(dispatch_get_main_queue(), ^{
-                        [self showSuccessMessage:[BundleUtil localizedStringForKey:@"ok"]];
-                        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1000 * NSEC_PER_MSEC)), dispatch_get_main_queue(), ^{
-                            [_delegate licenseConfirmed];
+                if (_doWorkApiFetch == NO) {
+                    [self confirmLicenseCheck];
+                }
+                else {
+                    [WorkDataFetcher checkUpdateThreemaMDM:^{
+                        [self confirmLicenseCheck];
+                    } onError:^(NSError *error) {
+                        dispatch_async(dispatch_get_main_queue(), ^{
+                            [self showErrorMessage:[BundleUtil localizedStringForKey:@"work_data_fetch_failed_message"]];
+                            _confirmButton.hidden = false;
                         });
-                    });
-                } onError:^(NSError *error) {
-                    dispatch_async(dispatch_get_main_queue(), ^{
-                        [self showErrorMessage:_licenseStore.errorMessage];
-                        // disable button, user has to change key first
-                        _confirmButton.enabled = NO;
-                        _confirmButton.alpha = 0.7;
-                    });
-                }];
+                    }];
+                }
             } else {
                 [self showErrorMessage:_licenseStore.errorMessage];
                 // disable button, user has to change key first
@@ -291,6 +292,15 @@
             }
         });
     }];
+}
+
+- (void)confirmLicenseCheck {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self showSuccessMessage:[BundleUtil localizedStringForKey:@"ok"]];
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1000 * NSEC_PER_MSEC)), dispatch_get_main_queue(), ^{
+            [_delegate licenseConfirmed];
+        });
+    });
 }
 
 #pragma mark - UITextFieldDelegate

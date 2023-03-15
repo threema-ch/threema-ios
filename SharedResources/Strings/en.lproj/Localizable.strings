@@ -618,6 +618,9 @@
 "enter_license_password_placeholder" = "Password";
 "leave_group" = "Leave Group";
 
+"work_data_fetch_failed_title" = "Loading Threema Work data failed";
+"work_data_fetch_failed_message" = "Could not load Threema Work data, please check your Internet connection and try again.";
+
 /* License Key */
 "enter_license_title" = "Enter credentials";
 /* MWPhotoBrowser */

@@ -63,7 +63,7 @@ enum IdentityState {
 - (void)revokeIdForStore:(MyIdentityStore*)identityStore onCompletion:(void(^)(void))onCompletion onError:(void(^)(NSError *error))onError;
 
 - (void)validateLicenseUsername:(NSString*)licenseUsername password:(NSString*)licensePassword appId:(NSString*)appId version:(NSString*)version deviceId:(NSString*)deviceId onCompletion:(void(^)(BOOL success, NSDictionary *info))onCompletion onError:(void(^)(NSError *error))onError;
-- (void)updateWorkInfoForStore:(MyIdentityStore*)identityStore licenseUsername:(NSString*)licenseUsername password:(NSString*)licensePassword onCompletion:(void(^)(BOOL sent))onCompletion onError:(void(^)(NSError *error))onError;
+- (void)updateWorkInfoForStore:(MyIdentityStore*)identityStore licenseUsername:(NSString*)licenseUsername password:(NSString*)licensePassword force:(BOOL)force onCompletion:(void(^)(BOOL sent))onCompletion onError:(void(^)(NSError *error))onError;
 
 - (void)searchInDirectory:(NSString *)searchString categories:(NSArray *)categories page:(int)page forLicenseStore:(LicenseStore *)licenseStore forMyIdentityStore:(MyIdentityStore*)identityStore onCompletion:(void(^)(NSArray *contacts, NSDictionary *paging))onCompletion onError:(void(^)(NSError *error))onError;
 

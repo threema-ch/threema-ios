@@ -70,6 +70,11 @@ extension ConversationTableViewCell {
             scale: .small
         )
         
+        static let noteGroupConfiguration = UIImage.SymbolConfiguration(
+            textStyle: Configuration.dateDraftTextStyle,
+            scale: .medium
+        )
+        
         /// Lock image configuration
         static let lockImageConfiguration = UIImage.SymbolConfiguration(
             textStyle: Configuration.dateDraftTextStyle,
@@ -684,11 +689,23 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
         
         // Show group icon for groups
         guard !conversation.isGroup() else {
-            displayStateImageView.image = UIImage(
-                systemName: "person.3.fill",
-                withConfiguration: Configuration.displayStateConfiguration
-            )?
-                .withTintColor(Colors.grayCircleBackground, renderingMode: .alwaysOriginal)
+            // Check is group a note group
+            let groupManager = GroupManager(entityManager: BusinessInjector().entityManager)
+            if let group = groupManager.getGroup(conversation: conversation),
+               group.isNoteGroup {
+                displayStateImageView.image = UIImage(
+                    systemName: "note.text",
+                    withConfiguration: Configuration.noteGroupConfiguration
+                )?
+                    .withTintColor(Colors.grayCircleBackground, renderingMode: .alwaysOriginal)
+            }
+            else {
+                displayStateImageView.image = UIImage(
+                    systemName: "person.3.fill",
+                    withConfiguration: Configuration.displayStateConfiguration
+                )?
+                    .withTintColor(Colors.grayCircleBackground, renderingMode: .alwaysOriginal)
+            }
             displayStateImageView.isHidden = false
             return
         }

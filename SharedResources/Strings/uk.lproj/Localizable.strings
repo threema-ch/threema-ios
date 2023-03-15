@@ -1147,6 +1147,9 @@
 "settings_appearance_display_order" = "Порядок показування";
 "settings_appearance_show_gallery_preview" = "Попередній перегляд галереї";
 
+// Media
+"settings_media_autosave_private_footer" = "Медіафайли отримані в приватних чатах не будуть зберігатися автоматично.";
+
 // Sentry
 "sentry_crash_send_title" = "Аварійне завершення роботи %@";
 "sentry_crash_send_description" = "Ви можете надіслати анонімний звіт про аварійне завершення роботи. Деталі, які пояснюють причину збою, допоможуть розв'язати проблему, що призвела до цього.";

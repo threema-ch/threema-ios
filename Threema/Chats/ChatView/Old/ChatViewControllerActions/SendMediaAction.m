@@ -583,7 +583,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         /* image picked */
         UIImage *pickedImage = [info objectForKey:UIImagePickerControllerOriginalImage];
         
-        if (picker.sourceType == UIImagePickerControllerSourceTypeCamera && [UserSettings sharedUserSettings].autoSaveMedia) {
+        if (picker.sourceType == UIImagePickerControllerSourceTypeCamera && [UserSettings sharedUserSettings].autoSaveMedia && self.chatViewController.conversation.conversationCategory != ConversationCategoryPrivate) {
             [[AlbumManager shared] saveWithImage:pickedImage];
         }
         
@@ -608,7 +608,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         
         _pickedVideoSent = NO;
         _pickedVideoSaved = NO;
-        if (picker.sourceType == UIImagePickerControllerSourceTypeCamera && [UserSettings sharedUserSettings].autoSaveMedia) {
+        if (picker.sourceType == UIImagePickerControllerSourceTypeCamera && [UserSettings sharedUserSettings].autoSaveMedia && self.chatViewController.conversation.conversationCategory != ConversationCategoryPrivate) {
             [[AlbumManager shared] saveMovieToLibraryWithMovieURL:_pickedVideoURL completionHandler:^(BOOL success) {
                 _pickedVideoSaved = YES;
                 if (_pickedVideoSent && _pickedVideoSaved)

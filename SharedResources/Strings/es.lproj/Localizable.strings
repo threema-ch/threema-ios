@@ -1145,6 +1145,9 @@
 "settings_appearance_display_order" = "Mostrar como";
 "settings_appearance_show_gallery_preview" = "Vista previa de la galería";
 
+// Media
+"settings_media_autosave_private_footer" = "Los archivos multimedia recibidos en chats privados no se guardarán automáticamente.";
+
 // Sentry
 "sentry_crash_send_title" = "%@ salió de forma inesperada";
 "sentry_crash_send_description" = "Puedes enviar un informe de fallo de forma anónima. Los detalles que expliquen qué condujo al fallo nos ayudarán a identificar el problema subyacente.";

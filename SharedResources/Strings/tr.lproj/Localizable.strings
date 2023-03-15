@@ -1146,6 +1146,9 @@ Threema Safe'i kullanırken, cihazınıza erişiminizi kaybetmeniz durumunda Thr
 "settings_appearance_display_order" = "Görüntüleme sırası";
 "settings_appearance_show_gallery_preview" = "Galeri önizlemesini göster";
 
+// Media
+"settings_media_autosave_private_footer" = "Özel sohbetlerde alınan medya otomatik olarak kaydedilmez.";
+
 // Sentry
 "sentry_crash_send_title" = "%@ beklenmedik bir şekilde kapandı";
 "sentry_crash_send_description" = "Anonim bir çökme raporu gönderebilirsiniz. Kazaya neyin yol açtığını açıklayan ayrıntılar, altta yatan sorunun çözülmesine yardımcı olacaktır.";

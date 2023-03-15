@@ -1145,6 +1145,9 @@
 "settings_appearance_display_order" = "Отобpaжениe";
 "settings_appearance_show_gallery_preview" = "Предпросмотр галереи";
 
+// Media
+"settings_media_autosave_private_footer" = "Мультимедийные файлы, полученные в личных сообщениях, не будут сохраняться автоматически.";
+
 // Sentry
 "sentry_crash_send_title" = "%@: неожиданный выход";
 "sentry_crash_send_description" = "Вы можете отправить анонимный отчет о сбое. Данные, объясняющие, что привело к этому сбою, помогут устранить проблему, которая стала его причиной.";

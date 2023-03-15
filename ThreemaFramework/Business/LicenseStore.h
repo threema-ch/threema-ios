@@ -41,11 +41,14 @@
 
 - (void)performLicenseCheckWithCompletion:(nonnull void(^)(BOOL success))onCompletion;
 
-/*!
- * @function performUpdateWorkInfo
- * This function send the update if there is a valid license username and a valid threema id.
- * If there was nothing changed and the last request was earlier then 24 hours, the request will not be send to the server.
+/**
+ Send the update work info if there is a valid license username and a valid threema id.
+ If there was nothing changed and the last request was earlier then 24 hours, the request will not be send to the server.
+
+ @param force: Send request anyway
  */
+- (void)performUpdateWorkInfoForce:(BOOL)force NS_SWIFT_NAME(performUpdateWorkInfo(force:));
+
 - (void)performUpdateWorkInfo;
 
 - (void)deleteLicense;

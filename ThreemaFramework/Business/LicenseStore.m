@@ -130,6 +130,7 @@ static LicenseStore *singleton;
             return YES;
         }
         else {
+            // force license check on every app start
             [[ValidationLogger sharedValidationLogger] logString:@"License Check: it's not valid"];
             return NO;
         }
@@ -184,7 +185,7 @@ static LicenseStore *singleton;
     });
 }
 
-- (void)performUpdateWorkInfo {
+- (void)performUpdateWorkInfoForce:(BOOL)force {
     // Only send the update work info when there is a valid license username and a valid threema id
     AppSetupState *appSetupState = [[AppSetupState alloc] initWithMyIdentityStore:[MyIdentityStore sharedMyIdentityStore]];
     if (![LicenseStore requiresLicenseKey] || _licenseUsername.length < 1 || (!appSetupState.isAppSetupCompleted && ![MyIdentityStore sharedMyIdentityStore].pendingCreateID))
@@ -192,16 +193,20 @@ static LicenseStore *singleton;
     
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         ServerAPIConnector *connector = [[ServerAPIConnector alloc] init];
-        [connector updateWorkInfoForStore:[MyIdentityStore sharedMyIdentityStore] licenseUsername:_licenseUsername password:_licensePassword onCompletion:^(BOOL sent) {
+        [connector updateWorkInfoForStore:[MyIdentityStore sharedMyIdentityStore] licenseUsername:_licenseUsername password:_licensePassword force:force onCompletion:^(BOOL sent) {
             if (sent) {
                 DDLogNotice(@"Work info update completed (sent)");
             } else {
                 DDLogNotice(@"Work info update completed without changes (not sent)");
             }
         } onError:^(NSError *error) {
-            DDLogNotice(@"Work info update failed: %@", error);
+            DDLogError(@"Work info update failed: %@", error);
         }];
     });
+}
+
+- (void)performUpdateWorkInfo {
+    [self performUpdateWorkInfoForce:NO];
 }
 
 - (void)setLicenseUsername:(NSString *)licenseUsername {

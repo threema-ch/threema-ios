@@ -1145,6 +1145,9 @@
 "settings_appearance_display_order" = "Pořadí zobrazení";
 "settings_appearance_show_gallery_preview" = "Zobrazovat náhled galerie";
 
+// Media
+"settings_media_autosave_private_footer" = "U médií obdržených v rámci soukromých chatů nedojde k automatickému uložení.";
+
 // Sentry
 "sentry_crash_send_title" = "%@ – Neočekávané ukončení";
 "sentry_crash_send_description" = "Chcete odeslat anonymní zprávu o selhání programu? Podrobnosti vysvětlující, co vede k havárii, pomohou odhalit příčinu  problému.";

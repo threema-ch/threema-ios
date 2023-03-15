@@ -1145,6 +1145,9 @@
 "settings_appearance_display_order" = "Geef weer";
 "settings_appearance_show_gallery_preview" = "Albumvoorbeelden weergeven";
 
+// Media
+"settings_media_autosave_private_footer" = "Media ontvangen in privéchats worden niet automatisch opgeslagen.";
+
 // Sentry
 "sentry_crash_send_title" = "%@ is onverwacht afgesloten";
 "sentry_crash_send_description" = "Je kunt een anoniem crashrapport verzenden. Uitleg over wat de crash heeft veroorzaakt, zal helpen om het onderliggende probleem op te lossen.";

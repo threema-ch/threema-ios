@@ -321,9 +321,7 @@ struct pktExtension {
     doUnblockIncomingMessages = YES;
 
     dispatch_async(socketQueue, ^{
-        dispatch_sync(connectionInitiatorsQueue, ^{
-            [self connectBy:initiator];
-        });
+        [self connectBy:initiator];
 
         lastErrorDisplay = nil;
         [self _connect];
@@ -339,9 +337,7 @@ struct pktExtension {
     doUnblockIncomingMessages = YES;
 
     dispatch_sync(socketQueue, ^{
-        dispatch_sync(connectionInitiatorsQueue, ^{
-            [self connectBy:initiator];
-        });
+        [self connectBy:initiator];
 
         lastErrorDisplay = nil;
         [self _connect];
@@ -352,9 +348,7 @@ struct pktExtension {
     doUnblockIncomingMessages = NO;
 
     dispatch_sync(socketQueue, ^{
-        dispatch_sync(connectionInitiatorsQueue, ^{
-            [self connectBy:initiator];
-        });
+        [self connectBy:initiator];
 
         lastErrorDisplay = nil;
         [self _connect];
@@ -417,8 +411,8 @@ struct pktExtension {
         
         return;
     }
-    
-    [[LicenseStore sharedLicenseStore] performUpdateWorkInfo];
+
+    [licenseStore performUpdateWorkInfo];
 
     [serverConnectorConnectionState connecting];
     autoReconnect = YES;
@@ -565,25 +559,30 @@ struct pktExtension {
 }
 
 - (void)disconnect:(ConnectionInitiator)initiator {
-    dispatch_async(socketQueue, ^{
-        if ([self isOthersConnectedDisconnectBy:initiator] == YES) {
-            return;
+    [self isOthersConnectedDisconnectBy:initiator onCompletion:^(BOOL isOthersConnected) {
+        if (isOthersConnected == NO) {
+            dispatch_async(socketQueue, ^{
+                [self _disconnect];
+            });
         }
-
-        [self _disconnect];
-    });
+    }];
 }
 
-- (void)disconnectWait:(ConnectionInitiator)initiator {
-    if ([self isOthersConnectedDisconnectBy:initiator] == YES) {
-        return;
-    }
+- (void)disconnectWait:(ConnectionInitiator)initiator onCompletion:(void(^ _Nonnull)(BOOL))onCompletion {
+    [self isOthersConnectedDisconnectBy:initiator onCompletion:^(BOOL isOthersConnected) {
+        if (isOthersConnected == NO) {
+            dispatch_sync(socketQueue, ^{
+                [self _disconnect];
+            });
 
-    dispatch_sync(socketQueue, ^{
-        [self _disconnect];
-    });
-    
-    [serverConnectorConnectionState waitForStateDisconnected];
+            [serverConnectorConnectionState waitForStateDisconnected];
+
+            onCompletion(YES);
+        }
+        else {
+            onCompletion(NO);
+        }
+    }];
 }
 
 - (void)reconnect {
@@ -607,29 +606,35 @@ struct pktExtension {
 #pragma mark - Chat (Mediator) Server connection initiator handling
 
 - (void)connectBy:(ConnectionInitiator)initiator {
-    DDLogNotice(@"Connect initiated by (%@)", [self nameForConnectionInitiator:initiator]);
-    if (![connectionInitiators containsObject:[NSNumber numberWithInteger:initiator]]) {
-        [connectionInitiators addObject:[NSNumber numberWithInteger:initiator]];
-    }
+    dispatch_async(connectionInitiatorsQueue, ^{
+        DDLogNotice(@"Connect initiated by (%@)", [self nameForConnectionInitiator:initiator]);
+        if (![connectionInitiators containsObject:[NSNumber numberWithInteger:initiator]]) {
+            [connectionInitiators addObject:[NSNumber numberWithInteger:initiator]];
+        }
+    });
 }
 
-- (BOOL)isOthersConnectedDisconnectBy:(ConnectionInitiator)initiator {
-    DDLogNotice(@"Disconnect initiated by (%@)", [self nameForConnectionInitiator:initiator]);
-    [connectionInitiators removeObject:[NSNumber numberWithInteger:initiator]];
-    if ([connectionInitiators count] != 0) {
-        NSMutableString *initiators = [NSMutableString new];
+- (void)isOthersConnectedDisconnectBy:(ConnectionInitiator)initiator onCompletion:(void(^ _Nonnull)(BOOL))onCompletion {
+    dispatch_async(connectionInitiatorsQueue, ^{
+        DDLogNotice(@"Disconnect initiated by (%@)", [self nameForConnectionInitiator:initiator]);
+        [connectionInitiators removeObject:[NSNumber numberWithInteger:initiator]];
+        if ([connectionInitiators count] != 0) {
+            NSMutableString *initiators = [NSMutableString new];
 
-        for (int i = 0; i < [connectionInitiators count]; i++) {
-            ConnectionInitiator initiatorItem = (ConnectionInitiator)[(NSNumber *)[connectionInitiators objectAtIndex:i] intValue];
-            if ([initiators length] > 0) {
-                [initiators appendString:@", "];
+            for (int i = 0; i < [connectionInitiators count]; i++) {
+                ConnectionInitiator initiatorItem = (ConnectionInitiator)[(NSNumber *)[connectionInitiators objectAtIndex:i] intValue];
+                if ([initiators length] > 0) {
+                    [initiators appendString:@", "];
+                }
+                [initiators appendString:[self nameForConnectionInitiator:initiatorItem]];
             }
-            [initiators appendString:[self nameForConnectionInitiator:initiatorItem]];
+            DDLogNotice(@"Do not disconnect because maybe others are still connected (%@)", initiators);
+            onCompletion(YES);
         }
-        DDLogNotice(@"Do not disconnect because maybe others are still connected (%@)", initiators);
-        return YES;
-    }
-    return NO;
+        else {
+            onCompletion(NO);
+        }
+    });
 }
 
 - (NSString *)nameForConnectionInitiator:(ConnectionInitiator)initiator {

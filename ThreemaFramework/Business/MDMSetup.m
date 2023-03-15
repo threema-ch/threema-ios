@@ -433,8 +433,6 @@ static NSDictionary *_mdmCacheSetup;
     } else {
         identityStore.category = nil;
     }
-    
-    [[LicenseStore sharedLicenseStore] performUpdateWorkInfo];
 }
 
 - (BOOL)hasIDBackup {
@@ -487,7 +485,7 @@ static NSDictionary *_mdmCacheSetup;
         supportDescriptionString = [@"" stringByAppendingString:@"m"];
     }
     
-    if ([[self getMdmCompany] valueForKey:MDM_KEY_THREEMA_PARAMS] != nil && [[[self getMdmCompany] valueForKey:MDM_KEY_THREEMA_PARAMS] allKeys].count > 0) {
+    if ([self getMdmCompany] != nil && [[self getMdmCompany] allKeys].count > 0) {
         if (supportDescriptionString != nil) {
             supportDescriptionString = [supportDescriptionString stringByAppendingString:@"e"];
         } else {
@@ -503,8 +501,7 @@ static NSDictionary *_mdmCacheSetup;
     return [[mdm allKeys] containsObject:mdmKey];
 }
 
-/// Apply Threema MDM parameters (workData) to company MDM
-- (void)applyThreemaMdm:(NSDictionary *)workData {
+- (void)applyThreemaMdm:(NSDictionary *)workData sendForce:(BOOL)sendForce {
     if (!isLicenseRequired) {
         return;
     }
@@ -556,6 +553,8 @@ static NSDictionary *_mdmCacheSetup;
 
     [self loadIDCreationValues];
     [self loadRenewableValues];
+
+    [[LicenseStore sharedLicenseStore] performUpdateWorkInfoForce:sendForce];
 }
 
 - (NSDictionary*)getMdmCompany {

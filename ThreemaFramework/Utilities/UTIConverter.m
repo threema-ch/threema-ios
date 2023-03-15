@@ -105,7 +105,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 }
 
 + (NSArray<NSString *>*)renderingAudioMimetypes {
-    return @[@"audio/aac", @"audio/m4a", @"audio/x-m4a", @"audio/x-m4a"];
+    return @[@"audio/aac", @"audio/m4a", @"audio/x-m4a", @"audio/mp4"];
 }
 
 + (BOOL)isGifMimeType:(NSString *)mimeType {

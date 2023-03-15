@@ -1148,6 +1148,9 @@
 "settings_appearance_display_order" = "表示順序";
 "settings_appearance_show_gallery_preview" = "ショーギャラリープレビュー";
 
+// Media
+"settings_media_autosave_private_footer" = "プライベートチャットで受信したメディアは、自動保存されません。";
+
 // Sentry
 "sentry_crash_send_title" = "%@ 予期せずに終了";
 "sentry_crash_send_description" = "匿名でクラッシュレポートを提出することができます。原因を詳しく説明することで、根本的な問題を解決することができます。";

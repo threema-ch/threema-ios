@@ -198,7 +198,7 @@
 "export_chat" = "Exportovať konverzáciu";
 "send_profile_picture" = "Odoslať profilový obrázok";
 "public_key" = "Verejný kľúč";
-"public_key_of" = "Verejný kľúč %@";
+"public_key_of" = "Verejný kľúč pre %@";
 "block_contact" = "Blokovať kontakť";
 "profile_picture_recipient" = "Príjemca profilového obrázku";
 
@@ -1146,6 +1146,9 @@ V prípade, že stratíte prístup k vašemu zariadeniu, pomocou Trezoru Threema
 "settings_appearance_show_profile_pictures" = "Zobrazťiť profilové obrázky";
 "settings_appearance_display_order" = "Poradie zobrazenia";
 "settings_appearance_show_gallery_preview" = "Zobrazovať náhľad galérie";
+
+// Media
+"settings_media_autosave_private_footer" = "Média prijaté v súkromných četoch sa neuložia automaticky.";
 
 // Sentry
 "sentry_crash_send_title" = "Neočakávané ukončenie %@";

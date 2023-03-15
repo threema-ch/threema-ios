@@ -314,17 +314,9 @@ public extension MarkupParser {
                 if let mentionType = attributes[NSAttributedString.Key.contact] as? MentionType {
                     switch mentionType {
                     case .me:
-                        var name = businessInjector.myIdentityStore.pushFromName
-                        if name == nil {
-                            name = businessInjector.myIdentityStore.identity
-                        }
-                        guard let name = name else {
-                            // This doesn't actually happen because we always have an identity
-                            return
-                        }
                         parsedWithMentionNames.replaceCharacters(
                             in: range,
-                            with: "@\(name)"
+                            with: "@\(BundleUtil.localizedString(forKey: "me"))"
                         )
                     case .all:
                         parsedWithMentionNames.replaceCharacters(

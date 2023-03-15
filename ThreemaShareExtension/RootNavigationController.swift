@@ -650,9 +650,10 @@ class RootNavigationController: UINavigationController {
             ServerConnector.shared().disconnect(initiator: .shareExtension)
         }
         else {
-            ServerConnector.shared().disconnectWait(initiator: .shareExtension)
+            ServerConnector.shared().disconnectWait(initiator: .shareExtension) { _ in
+                self.commonCompletionHandler()
+            }
         }
-        commonCompletionHandler()
     }
     
     private func cancelAndClose() {

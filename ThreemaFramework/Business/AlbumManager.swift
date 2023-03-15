@@ -61,7 +61,6 @@ import UIKit
         }
         else {
             DDLogNotice(successMessage)
-            NotificationPresenterWrapper.shared.present(type: .saveSuccess)
         }
     }
     
@@ -78,7 +77,6 @@ import UIKit
             }, completionHandler: { success, error in
                 if success {
                     DDLogNotice(self.successMessage)
-                    NotificationPresenterWrapper.shared.present(type: .saveSuccess)
                 }
                 else {
                     guard let err = error else {
@@ -140,7 +138,6 @@ import UIKit
             }, completionHandler: { success, error in
                 if success {
                     DDLogNotice(self.successMessage)
-                    NotificationPresenterWrapper.shared.present(type: .saveSuccess)
                     completionHandler(true)
                 }
                 else {
@@ -204,7 +201,6 @@ import UIKit
         }) { success, error in
             if success {
                 DDLogInfo(self.successMessage)
-                NotificationPresenterWrapper.shared.present(type: .saveSuccess)
             }
             else {
                 guard let err = error else {
@@ -292,12 +288,10 @@ import UIKit
                 catch {
                     DDLogWarn("Remove movie file from temporary path failed")
                 }
-                NotificationPresenterWrapper.shared.present(type: .saveSuccess)
             }
         }
         catch {
             DDLogWarn("Writing movie to temporary file failed")
-            NotificationPresenterWrapper.shared.present(type: .saveError)
         }
     }
     
@@ -316,12 +310,10 @@ import UIKit
                 catch {
                     DDLogWarn("Remove animatedImage file from temporary path failed")
                 }
-                NotificationPresenterWrapper.shared.present(type: .saveSuccess)
             }
         }
         catch {
             DDLogWarn("Writing animatedImage to temporary file failed")
-            NotificationPresenterWrapper.shared.present(type: .saveError)
         }
     }
 }

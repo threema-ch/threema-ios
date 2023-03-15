@@ -418,11 +418,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     
     // Register message processor delegate
     [[ServerConnector sharedServerConnector] registerMessageProcessorDelegate:incomingMessageManager];
-    
-    // apply MDM parameter anyway, perhaps company MDM has changed
-    MDMSetup *mdmSetup = [[MDMSetup alloc] initWithSetup:NO];
-    [mdmSetup loadRenewableValues];
-    
+
     [AppDelegate sharedAppDelegate];
     
     [[KKPasscodeLock sharedLock] setDefaultSettings];
@@ -441,6 +437,10 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
         [self.window makeKeyAndVisible];
         return;
     }
+
+    // apply MDM parameter anyway, perhaps company MDM has changed
+    MDMSetup *mdmSetup = [[MDMSetup alloc] initWithSetup:NO];
+    [mdmSetup loadRenewableValues];
 
     [TypingIndicatorManager sharedInstance];
     
@@ -1184,9 +1184,9 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
         [[BackgroundTaskManager shared] newBackgroundTaskWithKey:key timeout:timeout completionHandler:nil];
     } else {
         /* Disconnect from server - from now on we want push notifications for new messages */
-        [[ServerConnector sharedServerConnector] disconnectWait:ConnectionInitiatorApp];
-
-        [[WCSessionManager shared] saveSessionsToArchive];
+        [[ServerConnector sharedServerConnector] disconnectWait:ConnectionInitiatorApp onCompletion:^(BOOL isDisconnected) {
+            [[WCSessionManager shared] saveSessionsToArchive];
+        }];
     }
 }
 
@@ -1798,7 +1798,12 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
         return;
     }
     
-    DDLogNotice(@"didReceiveIncomingPushWithPayload: %@", payload.dictionaryPayload);
+    if (payload.dictionaryPayload[@"NotificationExtensionOffer"]) {
+        DDLogNotice(@"didReceiveIncomingPushWithPayload from NotificationService");
+    } else {
+        DDLogNotice(@"didReceiveIncomingPushWithPayload: %@", payload.dictionaryPayload);
+    }
+    
     [AppGroup setActive:NO forType:AppGroupTypeNotificationExtension];
     [AppGroup setActive:NO forType:AppGroupTypeShareExtension];
     

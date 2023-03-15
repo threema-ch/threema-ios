@@ -274,10 +274,11 @@ class TaskExecutionReceiveMessageTests: XCTestCase {
                     message: "[0x15] receiveIncomingMessageFromChat (type: BoxedMessage; id: \(expectedBoxedMessage.messageID.hexString))"
                 )
         )
+
         XCTAssertTrue(
             ddLoggerMock
                 .exists(
-                    message: "[0x33] sendIncomingMessageAckToChat (type: groupText; id: \(expectedBoxedMessage.messageID.hexString))"
+                    message: "[0x33] sendIncomingMessageAckToChat (type: groupText; id: \(expectedBoxedMessage.messageID.hexString); groupCreator: \(expectedTextMessage.groupCreator!) - groupId: \(expectedTextMessage.groupID.hexString))"
                 )
         )
     }

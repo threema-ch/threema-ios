@@ -39,14 +39,22 @@
 @implementation WorkDataFetcher
 
 + (void)checkUpdateWorkDataForce:(BOOL)force onCompletion:(void(^)(void))onCompletion onError:(void(^)(NSError*))onError {
+    [WorkDataFetcher checkUpdateWorkDataForce:force sendForce:NO onCompletion:onCompletion onError:onError];
+}
+
++ (void)checkUpdateWorkDataForce:(BOOL)force sendForce:(BOOL)sendForce onCompletion:(void(^)(void))onCompletion onError:(void(^)(NSError*))onError {
     if ([[UserSettings sharedUserSettings] blockCommunication]) {
         DDLogWarn(@"Communication is blocked");
+        if (onCompletion != nil) {
+            onCompletion();
+        }
         return;
     }
 
     if (![LicenseStore requiresLicenseKey]) {
-        if (onCompletion != nil)
+        if (onCompletion != nil) {
             onCompletion();
+        }
         return;
     }
 
@@ -63,13 +71,17 @@
     if (!force) {
         if (lastWorkSync != nil && -[lastWorkSync timeIntervalSinceNow] < checkInterval) {
             DDLogInfo(@"Still within work check interval - not syncing");
+            if (onCompletion != nil) {
+                onCompletion();
+            }
             return;
         }
     }
     
     if ([LicenseStore sharedLicenseStore].licenseUsername == nil) {
-        if (onCompletion != nil)
+        if (onCompletion != nil) {
             onCompletion();
+        }
         return;
     }
     
@@ -87,8 +99,8 @@
         DDLogVerbose(@"Work data: %@", workData);
         
         MDMSetup *mdmSetup = [[MDMSetup alloc] initWithSetup:NO];
-        [mdmSetup applyThreemaMdm:workData];
-        
+        [mdmSetup applyThreemaMdm:workData sendForce:sendForce];
+
         /* Extract logo URL, if supplied */
         if (workData[@"logo"] != nil && [workData isKindOfClass:[NSDictionary class]]) {
             NSDictionary *logo = workData[@"logo"];
@@ -235,7 +247,7 @@
             NSDictionary *workData = (NSDictionary*)jsonObject;
         
             MDMSetup *mdmSetup = [[MDMSetup alloc] initWithSetup:YES];
-            [mdmSetup applyThreemaMdm:workData];
+            [mdmSetup applyThreemaMdm:workData sendForce:NO];
         
             onCompletion();
         } onError:^(NSError *error) {

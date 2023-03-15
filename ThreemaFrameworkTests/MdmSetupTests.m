@@ -284,7 +284,7 @@
     NSDictionary *workData = @{MDM_KEY_THREEMA_CONFIGURATION: @{MDM_KEY_THREEMA_OVERRIDE:@true,MDM_KEY_THREEMA_PARAMS:threemaMdm}};
     
     MDMSetup *mdmSetup = [[MDMSetup alloc] initWithSetup:NO];
-    [mdmSetup applyThreemaMdm:workData];
+    [mdmSetup applyThreemaMdm:workData sendForce:NO];
     
     [verify(_mockLicenseStore) setLicenseUsername:@"new-tester"];
     [verify(_mockLicenseStore) setLicensePassword:@"new-test1234"];
@@ -347,7 +347,7 @@
     NSDictionary *workData = @{MDM_KEY_THREEMA_CONFIGURATION: @{MDM_KEY_THREEMA_OVERRIDE:@true,MDM_KEY_THREEMA_PARAMS:threemaMdm}};
     
     MDMSetup *mdmSetup = [[MDMSetup alloc] initWithSetup:NO];
-    [mdmSetup applyThreemaMdm:workData];
+    [mdmSetup applyThreemaMdm:workData sendForce:NO];
     
     [verify(_mockLicenseStore) setLicenseUsername:@"new-tester"];
     [verify(_mockLicenseStore) setLicensePassword:@"new-test1234"];
@@ -407,7 +407,7 @@
     NSDictionary *workData = @{MDM_KEY_THREEMA_CONFIGURATION: @{MDM_KEY_THREEMA_OVERRIDE:@true,MDM_KEY_THREEMA_PARAMS:threemaMdm}};
    
     MDMSetup *mdmSetup = [[MDMSetup alloc] initWithSetup:NO];
-    [mdmSetup applyThreemaMdm:workData];
+    [mdmSetup applyThreemaMdm:workData sendForce:NO];
     
     [verify(_mockLicenseStore) setLicenseUsername:@"new-tester"];
     [verify(_mockLicenseStore) setLicensePassword:@"new-test1234"];
@@ -472,7 +472,7 @@
     NSDictionary *workData = @{MDM_KEY_THREEMA_CONFIGURATION: @{MDM_KEY_THREEMA_OVERRIDE:@true,MDM_KEY_THREEMA_PARAMS:threemaMdm}};
    
     MDMSetup *mdmSetup = [[MDMSetup alloc] initWithSetup:NO];
-    [mdmSetup applyThreemaMdm:workData];
+    [mdmSetup applyThreemaMdm:workData sendForce:NO];
     
     [verify(_mockLicenseStore) setLicenseUsername:@"new-tester"];
     [verify(_mockLicenseStore) setLicensePassword:@"new-test1234"];
@@ -531,7 +531,7 @@
     NSDictionary *workData = @{};
    
     MDMSetup *mdmSetup = [[MDMSetup alloc] initWithSetup:NO];
-    [mdmSetup applyThreemaMdm:workData];
+    [mdmSetup applyThreemaMdm:workData sendForce:NO];
 
     [verifyCount(_mockLicenseStore, times(0)) setLicenseUsername:anything()];
     [verifyCount(_mockLicenseStore, times(0)) setLicensePassword:anything()];
@@ -598,7 +598,7 @@
     NSDictionary *workData = @{MDM_KEY_THREEMA_CONFIGURATION: @{MDM_KEY_THREEMA_OVERRIDE:@true,MDM_KEY_THREEMA_PARAMS:mdm}};
    
     MDMSetup *mdmSetup = [[MDMSetup alloc] initWithSetup:NO];
-    [mdmSetup applyThreemaMdm:workData];
+    [mdmSetup applyThreemaMdm:workData sendForce:NO];
     
     [verify(_mockLicenseStore) setLicenseUsername:@"company-tester"];
     [verify(_mockLicenseStore) setLicensePassword:@"company-test1234"];
@@ -666,7 +666,7 @@
     NSDictionary *workData = @{MDM_KEY_THREEMA_CONFIGURATION: @{MDM_KEY_THREEMA_OVERRIDE:@true,MDM_KEY_THREEMA_PARAMS:mdm}};
    
     MDMSetup *mdmSetup = [[MDMSetup alloc] initWithSetup:YES];
-    [mdmSetup applyThreemaMdm:workData];
+    [mdmSetup applyThreemaMdm:workData sendForce:NO];
     
     [verify(_mockLicenseStore) setLicenseUsername:@"company-tester"];
     [verify(_mockLicenseStore) setLicensePassword:@"company-test1234"];
@@ -1048,8 +1048,9 @@
 }
 
 - (void)testEmptySupportDescriptionString {
-    NSDictionary *workData = @{MDM_KEY_THREEMA_OVERRIDE:@true,MDM_KEY_THREEMA_PARAMS:@{}};
-    [self setMdm:workData threemaMdm:workData];
+    NSDictionary *threemaWorkData = @{MDM_KEY_THREEMA_OVERRIDE:@true,MDM_KEY_THREEMA_PARAMS:@{}};
+    NSDictionary *companyWorkData = @{};
+    [self setMdm:companyWorkData threemaMdm:threemaWorkData];
     
     MDMSetup *mdmSetup = [[MDMSetup alloc] initWithSetup:NO];
     

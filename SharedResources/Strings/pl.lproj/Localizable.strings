@@ -1146,6 +1146,9 @@
 "settings_appearance_display_order" = "Kolejność Wyświetlania";
 "settings_appearance_show_gallery_preview" = "Pokaż Podgląd Galerii";
 
+// Media
+"settings_media_autosave_private_footer" = "Media otrzymane w czatach prywatnych nie będą automatycznie zapisywane.";
+
 // Sentry
 "sentry_crash_send_title" = "%@ Nieoczekiwane Zamknięcie";
 "sentry_crash_send_description" = "Możesz przesłać anonimowy raport o awarii. Szczegóły wyjaśniające, co doprowadziło do awarii, pomoże rozwiązać podstawowy problem.";

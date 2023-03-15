@@ -101,7 +101,10 @@ import Foundation
                 ServerConnector.shared().disconnect(initiator: .app)
             }
             else if internalKey.hasPrefix(kAppVoIPBackgroundTask) {
-                ServerConnector.shared().disconnect(initiator: .threemaCall)
+                // Do not disconnect if we are still in an active call
+                if !VoIPCallStateManager.shared.currentCallState().active {
+                    ServerConnector.shared().disconnect(initiator: .threemaCall)
+                }
             }
             else if internalKey.hasPrefix(kAppPushReplyBackgroundTask) {
                 ServerConnector.shared().disconnect(initiator: .notificationHandler)

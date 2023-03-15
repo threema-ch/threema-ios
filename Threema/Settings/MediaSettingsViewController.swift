@@ -69,6 +69,14 @@ class MediaSettingsViewController: ThemedTableViewController {
                 }
                 footerText.append(BundleUtil.localizedString(forKey: "image_resize_share_extension"))
             }
+            
+            if UserSettings.shared().autoSaveMedia {
+                if !footerText.isEmpty {
+                    footerText.append("\n\n")
+                }
+                footerText.append(BundleUtil.localizedString(forKey: "settings_media_autosave_private_footer"))
+            }
+            
             if !footerText.isEmpty {
                 return footerText
             }
@@ -87,5 +95,6 @@ class MediaSettingsViewController: ThemedTableViewController {
     
     @IBAction func autoSaveMediaChanged(_ sender: UISwitch) {
         UserSettings.shared().autoSaveMedia = autoSaveMediaSwitch.isOn
+        tableView.reloadData()
     }
 }

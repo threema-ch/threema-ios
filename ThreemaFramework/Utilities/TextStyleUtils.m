@@ -95,11 +95,7 @@ static NSString *regex = @"@\\[[0-9A-Z*@]{8}\\]";
         
         if (contact || [identity isEqualToString:[[MyIdentityStore sharedMyIdentityStore] identity]] || [identity isEqualToString:@"@@@@@@@@"]) {
             NSString *displayName = [BundleUtil localizedStringForKey:@"me"];
-            
-            if ([MyIdentityStore sharedMyIdentityStore].pushFromName.length > 0) {
-                displayName = [MyIdentityStore sharedMyIdentityStore].pushFromName;
-            }
-            
+                       
             if (contact) {
                 displayName = contact.mentionName;
             } else if ([identity isEqualToString:@"@@@@@@@@"]) {
@@ -203,11 +199,6 @@ static NSString *regex = @"@\\[[0-9A-Z*@]{8}\\]";
                 [attributes setObject:fontMentionMe forKey:NSForegroundColorAttributeName];
             } else {
                 // me
-                
-                if ([MyIdentityStore sharedMyIdentityStore].pushFromName.length > 0) {
-                    displayName = [MyIdentityStore sharedMyIdentityStore].pushFromName;
-                }
-                
                 [paddingAttributeLeft setObject:@YES forKey:@"ZSWTappableLabelTappableRegionAttributeName"];
                 [paddingAttributeLeft setObject:@"meContact" forKey:@"NSTextCheckingResult"];
                 [paddingAttributeRight setObject:@YES forKey:@"ZSWTappableLabelTappableRegionAttributeName"];

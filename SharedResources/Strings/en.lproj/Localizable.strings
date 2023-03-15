@@ -1146,6 +1146,9 @@ When using Threema Safe, your can restore your Threema ID, contacts ,and groups 
 "settings_appearance_display_order" = "Display Order";
 "settings_appearance_show_gallery_preview" = "Show Gallery Preview";
 
+// Media
+"settings_media_autosave_private_footer" = "Media received in private chats will not be automatically autosaved.";
+
 // Sentry
 "sentry_crash_send_title" = "%@ Quit Unexpectedly";
 "sentry_crash_send_description" = "You can submit an anonymous crash report. Details explaining what lead to the crash will help to address the underlying problem.";

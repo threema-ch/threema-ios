@@ -33,6 +33,8 @@
 #import "QuoteUtil.h"
 #import "TextStyleUtils.h"
 #import "ThreemaUtilityObjC.h"
+#import "ThreemaFramework/ThreemaFramework-Swift.h"
+#import "NSString+Hex.h"
 
 @implementation AbstractGroupMessage
 
@@ -109,6 +111,12 @@
 
 - (BOOL)noDeliveryReceiptFlagSet {
     return YES;
+}
+
+#pragma mark - LoggingDescriptionProtocol
+
+- (NSString * _Nonnull)loggingDescription {
+    return [NSString stringWithFormat:@"(type: %@; id: %@; groupCreator: %@ - groupId: %@)", [MediatorMessageProtocol getTypeDescriptionWithType:self.type], [NSString stringWithHexData:self.messageId], groupCreator, [NSString stringWithHexData:groupId]];
 }
 
 #pragma mark - NSCoding

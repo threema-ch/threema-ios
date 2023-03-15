@@ -109,6 +109,7 @@
     [self setNeedsStatusBarAppearanceUpdate];
 
     [mdmSetup loadIDCreationValues];
+    [mdmSetup loadRenewableValues];
 
     // Work logo
     if ([LicenseStore requiresLicenseKey]) {

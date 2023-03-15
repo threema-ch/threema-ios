@@ -602,7 +602,7 @@
     } onError:onError];
 }
 
-- (void)updateWorkInfoForStore:(MyIdentityStore*)identityStore licenseUsername:(NSString*)licenseUsername password:(NSString*)licensePassword onCompletion:(void(^)(BOOL sent))onCompletion onError:(void(^)(NSError *error))onError {
+- (void)updateWorkInfoForStore:(MyIdentityStore*)identityStore licenseUsername:(NSString*)licenseUsername password:(NSString*)licensePassword force:(BOOL)force onCompletion:(void(^)(BOOL sent))onCompletion onError:(void(^)(NSError *error))onError {
     
     if (identityStore.identity == nil) {
         onError([ThreemaError threemaError:@"store has no valid identity"]);
@@ -625,9 +625,11 @@
         request[@"csi"] = identityStore.csi;
     if (identityStore.category != nil)
         request[@"category"] = identityStore.category;
-    
-    if ([request isEqualToDictionary:identityStore.lastWorkUpdateRequest] && ![identityStore sendUpdateWorkInfoStatus]) {
+
+    if ((force == NO && [request isEqualToDictionary:identityStore.lastWorkUpdateRequest] && ![identityStore sendUpdateWorkInfoStatus])
+        || [AppGroup getActiveType] != AppGroupTypeApp) {
         // request hasn't changed since last update and it's the same date
+        // or it's a extension
         onCompletion(false);
         return;
     }

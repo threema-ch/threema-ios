@@ -56,6 +56,10 @@ class VoIPCallService: NSObject {
         case rejectedUnknown
         case microphoneDisabled
         
+        var active: Bool {
+            self != .idle
+        }
+        
         /// Return the string of the current state for the ValidationLogger
         /// - Returns: String of the current state
         func description() -> String {
@@ -303,14 +307,6 @@ extension VoIPCallService {
                 }
                 
                 startCallAsInitiator(action: action, completion: {
-                    // Store call in temporary call history
-                    Task {
-                        await CallHistoryManager(
-                            identity: action.contactIdentity,
-                            businessInjector: BusinessInjector()
-                        ).store(callID: self.callID!.callID, date: Date())
-                    }
-                    
                     self.delegate?.callServiceFinishedProcess()
                     action.completion?()
                     
@@ -1294,6 +1290,18 @@ extension VoIPCallService {
                     isDataChannelAvailable: false
                 )
                 self.callID = VoIPCallID.generate()
+                
+                // Store call in temporary call history
+                Task {
+                    guard let callID = self.callID else {
+                        DDLogVerbose("Cannot store call in call history because the callID was set to nil again")
+                        return
+                    }
+                    await CallHistoryManager(
+                        identity: action.contactIdentity,
+                        businessInjector: BusinessInjector()
+                    ).store(callID: callID.callID, date: Date())
+                }
                 
                 DDLogNotice(
                     "VoipCallService: [cid=\(self.callID!.callID)]: Handle new call with \(contactIdentity), we are the caller"

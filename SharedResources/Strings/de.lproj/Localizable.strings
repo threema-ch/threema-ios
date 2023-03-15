@@ -1147,6 +1147,9 @@ Threema Safe erlaubt, Ihre Threema-ID, Kontakte und Gruppen wiederherzustellen, 
 "settings_appearance_display_order" = "Anzeigefolge";
 "settings_appearance_show_gallery_preview" = "Schnellauswahl von Medien";
 
+// Media
+"settings_media_autosave_private_footer" = "Medien, welche in privaten Chats erhalten werden, werden nicht automatisch gespeichert.";
+
 // Sentry
 "sentry_crash_send_title" = "%@ wurde unerwartet beendet.";
 "sentry_crash_send_description" = "Sie können einen anonymen Absturzbericht einreichen. Details zum Hergang des Absturzes helfen, das zugrundeliegende Problem zu identifizieren.";

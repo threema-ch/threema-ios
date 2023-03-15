@@ -109,8 +109,9 @@ NS_ASSUME_NONNULL_BEGIN
  Wait (max. 3s) for connection state disconnected.
 
  @param initiator: Calling initiator of disconnect
+ @param onCompletion: BOOL is YES if disconnected
  */
-- (void)disconnectWait:(ConnectionInitiator)initiator NS_SWIFT_NAME(disconnectWait(initiator:));
+- (void)disconnectWait:(ConnectionInitiator)initiator onCompletion:(void(^ _Nonnull)(BOOL))onCompletion NS_SWIFT_NAME(disconnectWait(initiator:onCompletion:));
 
 - (void)reconnect;
 

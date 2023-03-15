@@ -35,8 +35,8 @@ import ThreemaFramework
     private var _playImageView: UIImageView?
     private var _durationLabel: UILabel?
     private var _downloadSizeLabel: UILabel?
-    
-    private var _observedMessages = [Data]()
+        
+    private var messageObserver: NSKeyValueObservation?
     
     @objc override public init!(style: UITableViewCell.CellStyle, reuseIdentifier: String!, transparent: Bool) {
         super.init(style: style, reuseIdentifier: reuseIdentifier, transparent: transparent)
@@ -92,12 +92,7 @@ import ThreemaFramework
     }
     
     deinit {
-        if message != nil {
-            if _observedMessages.firstIndex(of: message.id) != nil {
-                message.removeObserver(self, forKeyPath: "data")
-            }
-            _observedMessages.removeAll()
-        }
+        messageObserver?.invalidate()
     }
 }
 
@@ -439,20 +434,22 @@ extension ChatFileVideoMessageCell {
     // MARK: Public functions
         
     func setBaseMessage(newMessage: BaseMessage) {
-        if message != nil {
-            if let index = _observedMessages.firstIndex(of: message.id) {
-                message.removeObserver(self, forKeyPath: "data")
-                _observedMessages.remove(at: index)
-            }
-        }
+
+        messageObserver?.invalidate()
         
         let fileMessageEntity = newMessage as! FileMessageEntity
 
         super.message = newMessage
         
         if !chatVc.isOpenWithForceTouch {
-            _observedMessages.append(message.id)
-            message.addObserver(self, forKeyPath: "data", options: [], context: nil)
+            messageObserver = fileMessageEntity.observe(\.data) { [weak self] _, _ in
+                guard let self = self else {
+                    return
+                }
+                DispatchQueue.main.async {
+                    self.updateDownloadSize()
+                }
+            }
         }
 
         if let thumbnail = fileMessageEntity.thumbnail, let thumbnailUiImage = thumbnail.uiImage {

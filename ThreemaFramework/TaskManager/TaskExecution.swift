@@ -183,7 +183,7 @@ class TaskExecution: NSObject {
         Promise { seal in
             assert(ltSend != .none && ltAck != .none)
 
-            frameworkInjector.backgroundEntityManager.performBlockAndWait {
+            frameworkInjector.backgroundEntityManager.performBlock {
                 guard let toContact = self.frameworkInjector.backgroundEntityManager.entityFetcher
                     .contact(for: message.toIdentity) else {
                     seal.reject(
@@ -194,7 +194,7 @@ class TaskExecution: NSObject {
                     )
                     return
                 }
-                
+
                 guard toContact.isValid() else {
                     let msg =
                         "Do not sending message to invalid identity \(String(describing: message.toIdentity)) (\(String(describing: message.loggingDescription)))"
@@ -203,11 +203,11 @@ class TaskExecution: NSObject {
                         return
                     }
                     DDLogWarn(msg)
-                    
+
                     seal.fulfill(nil)
                     return
                 }
-                
+
                 if let task = self.taskDefinition as? TaskDefinitionSendMessageProtocol,
                    let toIdentity = message.toIdentity {
                     guard !self.isMessageAlreadySentTo(identity: toIdentity) else {
@@ -218,12 +218,12 @@ class TaskExecution: NSObject {
                         return
                     }
                 }
-                
+
                 var messageToSend = message
                 var auxMessage: ForwardSecurityEnvelopeMessage?
                 var sendCompletion: (() throws -> Void)?
                 var sendAuxFailure: (() -> Void)?
-                
+
                 // Check whether the message and the destination contact support forward security
                 if ThreemaUtility.supportsForwardSecurity, message.supportsForwardSecurity(),
                    toContact.forwardSecurityEnabled.boolValue,
@@ -249,7 +249,8 @@ class TaskExecution: NSObject {
                         return
                     }
                 }
-                
+
+                // Send message in own thread, because of possible network latency
                 DispatchQueue.global().async {
                     if let auxMessage = auxMessage {
                         var boxAuxMsg: BoxedMessage?
@@ -260,14 +261,14 @@ class TaskExecution: NSObject {
                                 myIdentityStore: self.frameworkInjector.myIdentityStore
                             )
                         }
-                        
+
                         guard let boxAuxMsg else {
                             sendAuxFailure?()
                             let err = TaskExecutionError.sendMessageFailed(message: auxMessage.loggingDescription)
                             seal.reject(err)
                             return
                         }
-                        
+
                         do {
                             try self.sendAndWait(
                                 abstractMessage: auxMessage,
@@ -284,13 +285,13 @@ class TaskExecution: NSObject {
                             return
                         }
                     }
-                    self.frameworkInjector.backgroundEntityManager.performBlockAndWait {
+                    self.frameworkInjector.backgroundEntityManager.performBlock {
                         // Save forward security mode in any case (could also be a message first sent with FS and then resent without)
                         self.frameworkInjector.backgroundEntityManager.setForwardSecurityMode(
                             message.messageID,
                             forwardSecurityMode: messageToSend.forwardSecurityMode
                         )
-                        
+
                         guard let boxMsg = messageToSend.makeBox(
                             toContact,
                             myIdentityStore: self.frameworkInjector.myIdentityStore
@@ -298,7 +299,7 @@ class TaskExecution: NSObject {
                             seal.reject(TaskExecutionError.sendMessageFailed(message: message.loggingDescription))
                             return
                         }
-                        
+
                         if !message.flagDontQueue() {
                             do {
                                 let nonceGuard = NonceGuard(
@@ -312,7 +313,7 @@ class TaskExecution: NSObject {
                                 return
                             }
                         }
-                        
+
                         DispatchQueue.global().async {
                             do {
                                 try self.sendAndWait(
@@ -322,7 +323,7 @@ class TaskExecution: NSObject {
                                     ltAck: ltAck,
                                     isAuxMessage: false
                                 )
-                                
+
                                 do {
                                     try sendCompletion?()
                                 }
@@ -336,7 +337,7 @@ class TaskExecution: NSObject {
                                 seal.reject(error)
                                 return
                             }
-                            
+
                             seal.fulfill(message)
                         }
                     }

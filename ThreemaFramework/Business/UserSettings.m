@@ -622,7 +622,7 @@ static UserSettings *instance;
     wallpaper = _wallpaper;
     
     if (_wallpaper != nil) {
-        NSData *wallpaperData = UIImagePNGRepresentation(wallpaper);
+        NSData *wallpaperData = [MediaConverter PNGRepresentationFor: wallpaper];
         [wallpaperData writeToFile:[self wallpaperPath] atomically:NO];
         [[ValidationLogger sharedValidationLogger] logString:@"Wallpaper: Set wallpaper"];
     } else {

@@ -72,6 +72,7 @@ typedef enum : NSUInteger {
 @implementation ContactsViewController {
     Contact *contactForDetails;
     Group *groupForDetails;
+    NSTimer *updateContactsTimer;
 }
 
 - (id)initWithCoder:(NSCoder *)aDecoder {
@@ -939,10 +940,18 @@ typedef enum : NSUInteger {
 
 - (void)controllerDidChangeContent:(NSFetchedResultsController *)controller
 {
-    [self updateNoContactsView];
-    
-    [self.tableView reloadData];
+    [self updateContactsTimer];
 }
+
+- (void)updateContactsTimer {
+    [updateContactsTimer invalidate];
+    updateContactsTimer = [NSTimer timerWithTimeInterval:0.3 repeats:false block:^(NSTimer * _Nonnull timer) {
+        [self updateNoContactsView];
+        [self.tableView reloadData];
+    }];
+    [[NSRunLoop mainRunLoop] addTimer:updateContactsTimer forMode:NSDefaultRunLoopMode];
+}
+
 
 #pragma mark - Search controller delegate
 
@@ -1094,7 +1103,7 @@ typedef enum : NSUInteger {
 }
 
 - (void)updateWorkDataAndEndRefreshing:(UIRefreshControl*)rfSender {
-    [WorkDataFetcher checkUpdateWorkDataForce:YES onCompletion:^{
+    [WorkDataFetcher checkUpdateWorkDataForce:YES sendForce:YES onCompletion:^{
         [self endRefreshingAndScrollUp:rfSender];
     } onError:^(NSError *error) {
         [self endRefreshingAndScrollUp:rfSender];

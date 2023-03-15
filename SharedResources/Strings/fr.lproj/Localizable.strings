@@ -1145,6 +1145,9 @@
 "settings_appearance_display_order" = "Ordre d’affichage";
 "settings_appearance_show_gallery_preview" = "Afficher l’aperçu de la galerie";
 
+// Media
+"settings_media_autosave_private_footer" = "Les médias reçus dans les discussions privées ne seront pas sauvegardés automatiquement.";
+
 // Sentry
 "sentry_crash_send_title" = "%@ a quitté inopinément";
 "sentry_crash_send_description" = "Vous pouvez soumettre un rapport de plantage. Les détails menant au plantage nous aideront à corriger le problème sous-jacent.";

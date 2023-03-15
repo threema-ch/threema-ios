@@ -157,6 +157,8 @@ import PromiseKit
                     let thumbnailData = thumbnailImage?
                         .jpegData(compressionQuality: CGFloat(kJPEGCompressionQualityLow))
                     
+                    var message: BaseMessage?
+                    
                     self.entityManager.performSyncBlockAndSafe {
                         guard let msg = self.entityManager.entityFetcher
                             .message(with: imageMessageID) as? ImageMessageEntity else {
@@ -166,7 +168,7 @@ import PromiseKit
                             )
                             return
                         }
-
+                        message = msg
                         msg.blobSetData(imageData)
 
                         let thumbnail = self.entityManager.entityCreator.imageData()
@@ -192,7 +194,9 @@ import PromiseKit
                     }
 
                     // Add to photo library
-                    if let image = image, self.userSettings.autoSaveMedia {
+                    if let image = image, self.userSettings.autoSaveMedia,
+                       let message,
+                       message.conversation.conversationCategory != .private {
                         AlbumManager.shared.save(image: image)
                     }
                 }

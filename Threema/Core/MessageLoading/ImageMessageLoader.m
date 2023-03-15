@@ -91,7 +91,7 @@
     }
 
     /* Add to photo library */
-    if ([UserSettings sharedUserSettings].autoSaveMedia && _image) {
+    if ([UserSettings sharedUserSettings].autoSaveMedia && _image && message.conversation.conversationCategory != ConversationCategoryPrivate) {
         [[AlbumManager shared] saveWithImage:_image];
     }
 }

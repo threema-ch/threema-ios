@@ -168,7 +168,7 @@
     message.sendFailed = [NSNumber numberWithBool:NO];
 
     /* Add to photo library */
-    if ([UserSettings sharedUserSettings].autoSaveMedia && [message isKindOfClass:FileMessageEntity.class]) {
+    if ([UserSettings sharedUserSettings].autoSaveMedia && [message isKindOfClass:FileMessageEntity.class] && message.conversation.conversationCategory != ConversationCategoryPrivate) {
         FileMessageEntity *fileMessageEntity = (FileMessageEntity *)message;
         NSString *filename = [FileUtility getTemporaryFileName];
         __block NSURL *tmpFileUrl = [fileMessageEntity tmpURL:filename];

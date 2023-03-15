@@ -1146,6 +1146,9 @@
 "settings_appearance_display_order" = "顯示順序";
 "settings_appearance_show_gallery_preview" = "顯示圖片庫預覽";
 
+// Media
+"settings_media_autosave_private_footer" = "不自動儲存在私密對話中接收的媒體。";
+
 // Sentry
 "sentry_crash_send_title" = "%@ 意外退出";
 "sentry_crash_send_description" = "您可以提交匿名崩潰報告。請您詳細解釋導致崩潰的原因，將有助於解決根本問題。";

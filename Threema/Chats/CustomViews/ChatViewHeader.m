@@ -594,19 +594,11 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 - (void)prepareMediaMessages {
     NSArray *imageMessages = [_entityManager.entityFetcher imageMessagesForConversation: _conversation];
     NSArray *videoMessages = [_entityManager.entityFetcher videoMessagesForConversation: _conversation];
-    NSArray *fileMessageEntities = [_entityManager.entityFetcher fileMessagesForConversation: _conversation];
-    NSMutableArray *filteredFileMessageEntities = [NSMutableArray new];
-
+    NSArray *fileMessages = [_entityManager.entityFetcher filesMessagesFilteredForPhotoBrowserForConversation:_conversation];
+    
     NSMutableArray *allMediaMessages = [NSMutableArray arrayWithArray:imageMessages];
     [allMediaMessages addObjectsFromArray:videoMessages];
-    
-    // remove sticker, gif and audio file messages
-    for (FileMessageEntity *fileMessageEntity in fileMessageEntities) {
-        if (!fileMessageEntity.renderFileAudioMessage && !fileMessageEntity.renderStickerFileMessage && !fileMessageEntity.renderFileGifMessage) {
-            [filteredFileMessageEntities addObject:fileMessageEntity];
-        }
-    }
-    [allMediaMessages addObjectsFromArray:filteredFileMessageEntities];
+    [allMediaMessages addObjectsFromArray:fileMessages];
 
     _mediaMessages = [allMediaMessages sortedArrayWithOptions:0 usingComparator:^NSComparisonResult(BaseMessage *msg1, BaseMessage *msg2) {
         return [msg1.date compare:msg2.date];

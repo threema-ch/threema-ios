@@ -179,7 +179,10 @@ typedef enum : int {
 
 - (BOOL)existsMdmKey:(NSString*)mdmKey;
 
-- (void)applyThreemaMdm:(NSDictionary *)workData;
+/// Apply Threema MDM parameters (workData) to company MDM
+/// @param workData: Threema MDM parameters
+/// @param sendForce: If YES send update work info any way
+- (void)applyThreemaMdm:(nullable NSDictionary *)workData sendForce:(BOOL)sendForce;
 
 - (void)deleteThreemaMdm;
 

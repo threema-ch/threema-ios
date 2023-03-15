@@ -38,34 +38,66 @@ public extension BaseMessage {
         case read
         case failed
         
+        /// Symbol variants
+        public enum SymbolVariant {
+            // Default without circle or filled
+            case `default`
+            // Filled symbol
+            case fill
+        }
+        
         /// Get symbol for current state if appropriate
         /// - Parameter defaultColor: Default color to use for symbol if it does not have a specific color
+        /// - Parameter variant: Optional variant configuration
         /// - Returns: Symbol image if appropriate for this state, otherwise `nil`
-        public func symbol(with defaultColor: UIColor) -> UIImage? {
+        public func symbol(with defaultColor: UIColor, variant: SymbolVariant = .fill) -> UIImage? {
             switch self {
             case .none:
                 return nil
+                
             case .userAcknowledged:
+                // We always use the filled variant here
                 return UIImage(systemName: "hand.thumbsup.fill")?
                     .withTintColor(Colors.thumbUp, renderingMode: .alwaysOriginal)
+                
             case .userDeclined:
+                // We always use the filled variant here
                 return UIImage(systemName: "hand.thumbsdown.fill")?
                     .withTintColor(Colors.thumbDown, renderingMode: .alwaysOriginal)
+                
             case .sending:
+                // We don't want a filled version here
                 return UIImage(systemName: "arrow.up.circle")?
                     .withTintColor(defaultColor, renderingMode: .alwaysOriginal)
+                
             case .sent:
-                return UIImage(systemName: "envelope.fill")?
+                let symbolName = resolvedSymbolName(for: "envelope", variant: variant)
+                return UIImage(systemName: symbolName)?
                     .withTintColor(defaultColor, renderingMode: .alwaysOriginal)
+                
             case .delivered:
-                return UIImage(systemName: "tray.and.arrow.down.fill")?
+                let symbolName = resolvedSymbolName(for: "tray.and.arrow.down", variant: variant)
+                return UIImage(systemName: symbolName)?
                     .withTintColor(defaultColor, renderingMode: .alwaysOriginal)
+                
             case .read:
-                return UIImage(systemName: "eye.fill")?
+                let symbolName = resolvedSymbolName(for: "eye", variant: variant)
+                return UIImage(systemName: symbolName)?
                     .withTintColor(defaultColor, renderingMode: .alwaysOriginal)
+                
             case .failed:
-                return UIImage(systemName: "exclamationmark.triangle.fill")?
+                let symbolName = resolvedSymbolName(for: "exclamationmark.triangle", variant: variant)
+                return UIImage(systemName: symbolName)?
                     .withTintColor(Colors.messageFailed, renderingMode: .alwaysOriginal)
+            }
+        }
+        
+        private func resolvedSymbolName(for symbolName: String, variant: SymbolVariant) -> String {
+            switch variant {
+            case .default:
+                return symbolName
+            case .fill:
+                return symbolName.appending(".fill")
             }
         }
         
@@ -146,8 +178,34 @@ public extension BaseMessage {
             }
         }
         
+        public func localizedLabel(for message: BaseMessage) -> String {
+            switch self {
+            case .none:
+                return BundleUtil.localizedString(forKey: "message_display_status_none")
+            case .userAcknowledged:
+                return BundleUtil.localizedString(forKey: "message_display_status_user_acknowledged")
+            case .userDeclined:
+                return BundleUtil.localizedString(forKey: "message_display_status_user_declined")
+            case .sending:
+                return BundleUtil.localizedString(forKey: "message_display_status_sending")
+            case .sent:
+                return BundleUtil.localizedString(forKey: "message_display_status_sent")
+            case .delivered:
+                if message.isOwnMessage {
+                    return BundleUtil.localizedString(forKey: "message_display_status_delivered")
+                }
+                else {
+                    return BundleUtil.localizedString(forKey: "message_display_status_delivered_incoming")
+                }
+            case .read:
+                return BundleUtil.localizedString(forKey: "message_display_status_read")
+            case .failed:
+                return BundleUtil.localizedString(forKey: "message_display_status_failed")
+            }
+        }
+        
         /// Accessibility label for current state
-        public func accessibilityLabel() -> String {
+        public var accessibilityLabel: String {
             switch self {
             case .none:
                 return ""
@@ -316,5 +374,45 @@ public extension BaseMessage {
         
         DDLogError("Unable to get date for displayDateForSingleMessage")
         return .now
+    }
+    
+    // MARK: - Date for state
+    
+    /// Date associated with a certain state
+    ///
+    /// This is "independent" of the current message state. I.e. if the message is not actually delivered, but a `deliveryDate` is set this will be returned.
+    ///
+    /// - Parameter state: State go get date for
+    /// - Returns: Date if there is any for this state
+    func date(for state: DisplayState) -> Date? {
+        switch state {
+        case .none:
+            return nil
+            
+        case .userAcknowledged, .userDeclined:
+            return userackDate
+            
+        case .sending:
+            return nil
+            
+        case .sent:
+            // `remoteSendDate` returns `date` if it is `nil`. To not just return `date` in general we only return
+            // `remoteSentDate` when an outgoing message is actually sent out
+            if isOwnMessage,
+               !sent.boolValue {
+                return nil
+            }
+            
+            return remoteSentDate
+            
+        case .delivered:
+            return deliveryDate
+            
+        case .read:
+            return readDate
+            
+        case .failed:
+            return nil
+        }
     }
 }

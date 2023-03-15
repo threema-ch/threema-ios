@@ -19,7 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import "Old_ChatTableDataSource.h"
-#import "Contact.h"
+#import "ContactEntity.h"
 #import "ChatDefines.h"
 #import "UserSettings.h"
 #import "CachedCellHeight.h"
@@ -540,14 +540,14 @@
         }
         
         return cell;
-    } else if ([object isKindOfClass:[Contact class]]) {
+    } else if ([object isKindOfClass:[ContactEntity class]]) {
         static NSString *kChatContactCell = @"ChatContactCell";
         ChatContactCell *cell = [tableView dequeueReusableCellWithIdentifier:kChatContactCell];
         if (cell == nil) {
             cell = [[ChatContactCell alloc] initWithStyle:UITableViewCellStyleDefault
                                           reuseIdentifier:kChatContactCell];
         }
-        cell.contact = (Contact*)object;
+        cell.contact = (ContactEntity*)object;
         [cell updateColors];
         
         return cell;
@@ -668,7 +668,7 @@
         else {
             height = [ChatFileMessageCell heightForMessage:(BaseMessage*)object forTableWidth:curTableWidth] + additionalBubbleMarging;
         }
-    } else if ([object isKindOfClass:[Contact class]]) {
+    } else if ([object isKindOfClass:[ContactEntity class]]) {
         height = 20;
     } else if ([object isKindOfClass:[SystemMessage class]]) {
         SystemMessage *message = (SystemMessage *)object;
@@ -743,7 +743,7 @@
         else {
             height = [ChatFileMessageCell heightForMessage:(BaseMessage*)object forTableWidth:curTableWidth] + 17.0f;
         }
-    } else if ([object isKindOfClass:[Contact class]]) {
+    } else if ([object isKindOfClass:[ContactEntity class]]) {
         height = 20;
     } else if ([object isKindOfClass:[SystemMessage class]]) {
         SystemMessage *message = (SystemMessage *)object;

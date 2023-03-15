@@ -19,7 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import "ContactsViewController.h"
-#import "Contact.h"
+#import "ContactEntity.h"
 #import "ContactStore.h"
 #import "UserSettings.h"
 #import "DatabaseManager.h"
@@ -70,7 +70,7 @@ typedef enum : NSUInteger {
 @end
 
 @implementation ContactsViewController {
-    Contact *contactForDetails;
+    ContactEntity *contactForDetails;
     Group *groupForDetails;
     NSTimer *updateContactsTimer;
 }
@@ -112,7 +112,11 @@ typedef enum : NSUInteger {
             [self.segmentedControl setSelectedSegmentIndex:ModeWorkContacts];
             self.navigationItem.title = NSLocalizedString(@"segmentcontrol_work_contacts", nil);
             _currentDataSource = [self workContactsDataSource];
-            self.tableView.tableHeaderView = [UserSettings sharedUserSettings].companyDirectory == true ? _companyDirectoryCell : nil;
+            _companyDirectoryCellView = [[CompanyDirectoryCellView alloc] init];
+            self.tableView.tableHeaderView = [UserSettings sharedUserSettings].companyDirectory == true ? _companyDirectoryCellView : nil;
+            if (self.tableView.tableHeaderView != nil) {
+                [[_companyDirectoryCellView.widthAnchor constraintEqualToAnchor:self.tableView.widthAnchor] setActive:true];
+            }
         }
     }
     
@@ -162,6 +166,7 @@ typedef enum : NSUInteger {
     self.searchController.delegate = self;
     self.searchController.searchBar.showsScopeBar = NO;
     self.searchController.searchBar.scopeButtonTitles = nil;
+    self.navigationItem.hidesSearchBarWhenScrolling = NO;
     self.tableView.keyboardDismissMode = UIScrollViewKeyboardDismissModeOnDrag;
     self.searchController.searchBar.delegate = self;
     self.searchController.searchResultsUpdater = self;
@@ -174,7 +179,7 @@ typedef enum : NSUInteger {
     self.navigationItem.searchController = _searchController;
     
     UITapGestureRecognizer *companyDirectoryRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(companyDirectoryTapped:)];
-    [_companyDirectoryCell addGestureRecognizer:companyDirectoryRecognizer];
+    [_companyDirectoryCellView addGestureRecognizer:companyDirectoryRecognizer];
     
     [self.tableView registerClass:ContactCell.class forCellReuseIdentifier:@"ContactCell"];
     [self.tableView registerClass:GroupCell.class forCellReuseIdentifier:@"GroupCell"];
@@ -182,7 +187,7 @@ typedef enum : NSUInteger {
 
 - (void)refresh {
     [self updateColors];
-    _companyDirectoryCell.titleLabel.text = [MyIdentityStore sharedMyIdentityStore].companyName;
+    [_companyDirectoryCellView refresh];
     [self.tableView reloadData];
 }
 
@@ -214,7 +219,7 @@ typedef enum : NSUInteger {
     _rfControl.backgroundColor = [UIColor clearColor];
     [self setRefreshControlTitle:NO];
     
-    [_companyDirectoryCell updateColors];
+    [_companyDirectoryCellView updateColors];
     
     _countContactsFooterLabel.textColor = Colors.textVeryLight;
 }
@@ -227,7 +232,7 @@ typedef enum : NSUInteger {
     } else {
         if (contactForDetails && _mode == ModeContacts) {
             if (contactForDetails.willBeDeleted) {
-                Contact *contact = [self getFirstContact];
+                ContactEntity *contact = [self getFirstContact];
                 if (contact) {
                     [self showDetailsForContact:contact];
                     [self setSelectionForContact:contact];
@@ -249,7 +254,7 @@ typedef enum : NSUInteger {
             }
         } else if (contactForDetails && _mode == ModeWorkContacts) {
             if (contactForDetails.willBeDeleted) {
-                Contact *contact = [self getFirstWorkContact];
+                ContactEntity *contact = [self getFirstWorkContact];
                 if (contact) {
                     [self showDetailsForWorkContact:contact];
                     [self setSelectionForWorkContact:contact];
@@ -346,7 +351,7 @@ typedef enum : NSUInteger {
 
 
 
-- (void)setSelectionForContact:(Contact *)contact {
+- (void)setSelectionForContact:(ContactEntity *)contact {
     if (_segmentedControl.selectedSegmentIndex != ModeContacts) {
         _segmentedControl.selectedSegmentIndex = ModeContacts;
         [self segmentedControlChanged:self];
@@ -376,7 +381,7 @@ typedef enum : NSUInteger {
     groupForDetails = group;
 }
 
-- (void)setSelectionForWorkContact:(Contact *)contact {
+- (void)setSelectionForWorkContact:(ContactEntity *)contact {
     if (_segmentedControl.selectedSegmentIndex != ModeWorkContacts) {
         _segmentedControl.selectedSegmentIndex = ModeWorkContacts;
         [self segmentedControlChanged:self];
@@ -402,7 +407,7 @@ typedef enum : NSUInteger {
     }
 }
 
-- (void)showDetailsForContact:(Contact*)contact {
+- (void)showDetailsForContact:(ContactEntity*)contact {
     [self setSelectionForContact:contact];
     
     [self displayContact];
@@ -414,7 +419,7 @@ typedef enum : NSUInteger {
     [self displayGroup];
 }
 
-- (void)showDetailsForWorkContact:(Contact*)contact {
+- (void)showDetailsForWorkContact:(ContactEntity*)contact {
     [self setSelectionForWorkContact:contact];
     
     [self displayContact];
@@ -432,7 +437,7 @@ typedef enum : NSUInteger {
 
 - (BOOL)showFirstEntryForCurrentMode {
     if (_mode == ModeContacts) {
-        Contact *contact = [self getFirstContact];
+        ContactEntity *contact = [self getFirstContact];
         if (contact) {
             [self showDetailsForContact:contact];
             return YES;
@@ -440,7 +445,7 @@ typedef enum : NSUInteger {
     }
     
     if (_mode == ModeWorkContacts) {
-        Contact *contact = [self getFirstWorkContact];
+        ContactEntity *contact = [self getFirstWorkContact];
         if (contact) {
             [self showDetailsForWorkContact:contact];
             return YES;
@@ -458,7 +463,7 @@ typedef enum : NSUInteger {
     return NO;
 }
 
-- (Contact *)getFirstContact {
+- (ContactEntity *)getFirstContact {
     if ([self hasContactData]) {
         if ([self.contactsDataSource tableView:self.tableView numberOfRowsInSection:0] > 0) {
             NSIndexPath *indexPath = [NSIndexPath indexPathForRow:0 inSection:0];
@@ -482,7 +487,7 @@ typedef enum : NSUInteger {
     return nil;
 }
 
-- (Contact *)getFirstWorkContact {
+- (ContactEntity *)getFirstWorkContact {
     if ([self hasWorkContactData]) {
         if ([self.workContactsDataSource tableView:self.tableView numberOfRowsInSection:0] > 0) {
             NSIndexPath *indexPath = [NSIndexPath indexPathForRow:0 inSection:0];
@@ -693,12 +698,8 @@ typedef enum : NSUInteger {
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView contactCellForIndexPath:(NSIndexPath *)indexPath {
-
     ContactCell *cell = [self.tableView dequeueReusableCellWithIdentifier:@"ContactCell"];
-    
-    Contact *contact = [self.contactsDataSource contactAtIndexPath:indexPath];
-    cell._contact = contact;
-    
+    cell._contact = [self.contactsDataSource contactAtIndexPath:indexPath];
     return cell;
 }
 
@@ -709,12 +710,8 @@ typedef enum : NSUInteger {
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView workContactCellForIndexPath:(NSIndexPath *)indexPath {
-    
     ContactCell *cell = [self.tableView dequeueReusableCellWithIdentifier:@"ContactCell"];
-    
-    Contact *contact = [self.workContactsDataSource workContactAtIndexPath:indexPath];
-    cell._contact = contact;
-    
+    cell._contact = [self.workContactsDataSource workContactAtIndexPath:indexPath];
     return cell;
 }
 
@@ -734,12 +731,12 @@ typedef enum : NSUInteger {
             [self updateNoContactsView];
         }
         else if (_mode == ModeWorkContacts) {
-            Contact *contact = [self.workContactsDataSource workContactAtIndexPath:indexPath];
+            ContactEntity *contact = [self.workContactsDataSource workContactAtIndexPath:indexPath];
             [self deleteContact:contact atIndexPath:indexPath];
             [self updateNoContactsView];
         }
         else {
-            Contact *contact = [self.contactsDataSource contactAtIndexPath:indexPath];
+            ContactEntity *contact = [self.contactsDataSource contactAtIndexPath:indexPath];
             [self deleteContact:contact atIndexPath:indexPath];
             [self updateNoContactsView];
         }
@@ -753,7 +750,7 @@ typedef enum : NSUInteger {
     if ([contextCell isKindOfClass:[ContactCell class]]) {
         
         // Load contact
-        Contact *contact = [self contactAtIndexPath:indexPath];
+        ContactEntity *contact = [self contactAtIndexPath:indexPath];
         if (contact == nil) {
             return nil;
         }
@@ -833,7 +830,7 @@ typedef enum : NSUInteger {
     }
 }
 
-- (nullable Contact *)contactAtIndexPath:(NSIndexPath *)indexPath {
+- (nullable ContactEntity *)contactAtIndexPath:(NSIndexPath *)indexPath {
     if (_mode == ModeContacts) {
         return [self.contactsDataSource contactAtIndexPath:indexPath];
     } else if (_mode == ModeWorkContacts) {
@@ -883,7 +880,7 @@ typedef enum : NSUInteger {
     }];
 }
 
-- (void)deleteContact:(nonnull Contact *)contact atIndexPath:(nonnull NSIndexPath *)indexPath {
+- (void)deleteContact:(nonnull ContactEntity *)contact atIndexPath:(nonnull NSIndexPath *)indexPath {
     DeleteContactAction *deleteContactAction = [[DeleteContactAction alloc] initFor:contact];
     _deleteAction = deleteContactAction;
     
@@ -949,6 +946,7 @@ typedef enum : NSUInteger {
         [self updateNoContactsView];
         [self.tableView reloadData];
     }];
+
     [[NSRunLoop mainRunLoop] addTimer:updateContactsTimer forMode:NSDefaultRunLoopMode];
 }
 
@@ -1013,7 +1011,8 @@ typedef enum : NSUInteger {
             [_groupsDataSource setIgnoreFRCUpdates:YES];
             
             [_currentDataSource filterByWords: [self searchWordsForText:_searchController.searchBar.text]];
-            self.tableView.tableHeaderView = [UserSettings sharedUserSettings].companyDirectory == true ? _companyDirectoryCell : nil;
+            self.tableView.tableHeaderView = [UserSettings sharedUserSettings].companyDirectory == true ? _companyDirectoryCellView : nil;
+            [[_companyDirectoryCellView.widthAnchor constraintEqualToAnchor:self.tableView.widthAnchor] setActive:true];
             
             [self updateNoContactsView];
             break;
@@ -1080,8 +1079,8 @@ typedef enum : NSUInteger {
             [[ContactStore sharedContactStore] synchronizeAddressBookForceFullSync:YES ignoreMinimumInterval:YES onCompletion:^(BOOL addressBookAccessGranted) {
                 [self updateWorkDataAndEndRefreshing:sender];
                 if (!addressBookAccessGranted) {
-                    NSString *message = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"no_contacts_permission_message"], [ThreemaAppObjc currentName]];
-                    [UIAlertTemplate showAlertWithOwner:self title:[BundleUtil localizedStringForKey:@"no_contacts_permission_title"] message:message actionOk:nil];
+                    // Show access prompt
+                    [UIAlertTemplate showOpenSettingsAlertWithOwner:self noAccessAlertType:NoAccessAlertTypeContacts];
                 }
             } onError:^(NSError *error) {
                 [UIAlertTemplate showAlertWithOwner:self title:error.localizedDescription message:error.localizedFailureReason actionOk:^(UIAlertAction * _Nonnull okAction) {
@@ -1148,7 +1147,7 @@ typedef enum : NSUInteger {
     
     if ([forceTouchedCell isKindOfClass:[ContactCell class]]) {
         
-        Contact *contact = [self contactAtIndexPath:indexPathOfForceTouchedCell];
+        ContactEntity *contact = [self contactAtIndexPath:indexPathOfForceTouchedCell];
         if (contact == nil) {
             return nil;
         }
@@ -1190,7 +1189,7 @@ typedef enum : NSUInteger {
 
 - (void)refreshWorkContactTableView:(NSNotification *)notification {
     [self refresh];
-    self.tableView.tableHeaderView = [UserSettings sharedUserSettings].companyDirectory == true ? _companyDirectoryCell : nil;
+    self.tableView.tableHeaderView = [UserSettings sharedUserSettings].companyDirectory == true ? _companyDirectoryCellView : nil;
 }
 
 - (void)refreshContactSortIndices:(NSNotification *)notification {

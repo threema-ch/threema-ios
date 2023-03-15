@@ -21,10 +21,6 @@
 import CocoaLumberjackSwift
 import Foundation
 
-protocol BlobUploaderDelegate: AnyObject {
-    func blobUploader(for objectID: NSManagedObjectID, didUpdate progress: Progress) async
-}
-
 class BlobUploader: NSObject {
     
     enum BlobUploaderError: Error {
@@ -67,7 +63,7 @@ class BlobUploader: NSObject {
         blobData: Data,
         origin: BlobOrigin,
         objectID: NSManagedObjectID,
-        delegate: BlobUploaderDelegate? = nil
+        delegate: BlobManagerDelegate? = nil
     ) async throws -> Data {
         try await withCheckedThrowingContinuation { continuation in
             blobURL.upload(origin: origin, completionHandler: { uploadURL, authorization, error in
@@ -115,7 +111,7 @@ class BlobUploader: NSObject {
                 self.activeTasks[objectID] = task
                 let observer = task.progress.observe(\.fractionCompleted) { progress, _ in
                     Task {
-                        await delegate?.blobUploader(for: objectID, didUpdate: progress)
+                        await delegate?.updateProgress(for: objectID, didUpdate: progress)
                     }
                 }
                 self.progressObservers[objectID] = observer

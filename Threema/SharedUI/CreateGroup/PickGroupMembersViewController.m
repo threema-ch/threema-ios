@@ -137,8 +137,20 @@ typedef enum : NSUInteger {
 
 - (void)setGroup:(Group *)group {
     _group = group;
-    
-    _selectedMembers = [NSMutableSet setWithSet: _group.members];
+
+    // Get ContactEntity for each Contact for selected members
+    _selectedMembers = [NSMutableSet<ContactEntity *> set];
+    if (_group.members) {
+        EntityManager *em = [EntityManager new];
+        [em performBlockAndWait:^{
+            for (Contact *contact in _group.members) {
+                ContactEntity *member = [em.entityFetcher contactForId:contact.identity];
+                if (member) {
+                    [_selectedMembers addObject:member];
+                }
+            }
+        }];
+    }
 }
 
 - (void)setMembers:(NSSet *)set {
@@ -180,7 +192,7 @@ typedef enum : NSUInteger {
 {
     Old_ContactCell *cell = [self.tableView dequeueReusableCellWithIdentifier:@"Old_GroupContactCell"];
     
-    Contact *contact;
+    ContactEntity *contact;
     if (_mode == ModeWorkContact) {
         contact = [((WorkContactTableDataSource *) _currentDataSource) workContactAtIndexPath:indexPath];
     } else {
@@ -201,7 +213,7 @@ typedef enum : NSUInteger {
 }
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
-    Contact *contact;
+    ContactEntity *contact;
     
     if (_mode == ModeWorkContact) {
         contact = [((WorkContactTableDataSource *) _currentDataSource) workContactAtIndexPath:indexPath];
@@ -251,7 +263,7 @@ typedef enum : NSUInteger {
 - (IBAction)saveAction:(id)sender {
     // Update group members
     NSMutableSet *groupMemberIdentities = [[NSMutableSet alloc] init];
-    for (Contact *contact in _selectedMembers) {
+    for (ContactEntity *contact in _selectedMembers) {
         [groupMemberIdentities  addObject:contact.identity];
     }
 

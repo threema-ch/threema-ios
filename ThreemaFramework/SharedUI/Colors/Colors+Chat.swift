@@ -143,7 +143,7 @@ public extension Colors {
     }
     
     @objc class var ballotHighestVote: UIColor {
-        primary
+        .primary
     }
     
     @objc class var ballotRowLight: UIColor {
@@ -165,7 +165,7 @@ public extension Colors {
     }
     
     @objc class var backgroundQuoteBar: UIColor {
-        primary
+        .primary
     }
     
     @objc class var backgroundPinChat: UIColor {

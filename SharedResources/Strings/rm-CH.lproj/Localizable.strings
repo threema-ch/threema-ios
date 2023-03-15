@@ -11,9 +11,6 @@
 
 /* Tabbar and title for list with all conversations */
 "chats_title" = "Messadis";
-
-"use_dynamic_font_size" = "Grondezza da la scrittira dal sistem";
-
 "SortOrder_Firstname" = "Prenum, num";
 "SortOrder_Lastname" = "Num, prenum";
 
@@ -173,11 +170,7 @@
 "sound_threema_alphorn" = "Tiba";
 
 "reset_wallpaper" = "Stizzar il maletg dal fund davos";
-"font_size_title" = "Grondezza da la scrittira";
-"font_size" = "%d pt.";
 "bigger_single_emojis" = "Engrondir singuls emojis";
-"received_message_time" = "Mussar il temp ch'il messadi è vegnì retschavì";
-"return_key_send" = "Tasta Enter = trametter";
 "identity_none" = "nagina";
 "message" = "Trametter messadi"; /* Short version for "Send Message" */
 "scan_identity" = "Scannar l'ID";
@@ -191,8 +184,6 @@
 "block_contact" = "Bloccar il contact";
 "profile_picture_recipient" = "Destinatur dal maletg da profil";
 
-"no_contacts_access_title" = "Nagin access als contacts";
-"no_contacts_access_message" = "P.pl. avrir las configuraziuns per dar access als contacts.";
 "no_linked_contact_access_title" = "Nagin access als contacts colliads";
 "no_linked_contact_access_message" = "P.pl. avrir las configuraziuns per dar access als contacts e mussar il contact collià. U interrumper permanentamain la colliaziun.";
 "no_linked_contact_access_edit_message" = "P.pl. avrir las configuraziuns per dar access als contacts e mussar il contact collià. U interrumper permanentamain la colliaziun per modifitgar il contact.";
@@ -213,8 +204,6 @@
 "[no access]" = "[Nagin access]";
 "[not found]" = "[Betg chattà]";
 "[restricted]" = "[restrenschì]";
-
-"go_to_settings" = "Avrir las configuraziuns";
 
 /* This shows the number of groups in parentheses */
 "groups_header" = "Gruppas (%lu)";
@@ -345,18 +334,8 @@
 "speed" = "Spertadad da reproducziun";
 
 "send_file_title" = "Trametter la datoteca";
-"camera_disabled_title" = "Nagin access";
 "send_file_message" = "Datoteca: %@\na\n%@";
-
 "quote_not_found" = "Betg chattà il messadi cità.";
-
-"camera_disabled_message" = "%@ n’ha nagin access a tia camera. P.pl. dar access sut Configuraziuns > Protecziun da datas > Camera.";
-
-"location_disabled_title" = "Nagin access a la posiziun";
-"location_disabled_message" =  "P.pl. avrir las configuraziuns e dar access al lieu.";
-
-"microphone_disabled_title" = "Nagin access al microfon";
-"microphone_disabled_message" = "%@ n’ha nagin access al microfon. P.pl. dar access sut Configuraziuns > Protecziun da datas > Microfon.";
 
 "include_media" = "Cun medias";
 "without_media" = "Senza medias";
@@ -446,8 +425,6 @@
 "invalid_country_code_message" = "I para che la regiun da tes apparat è configurada cun ina valur nunvalaivla. P.pl. avrir l'app da configuraziuns e tscherner sut Allgemein > Landeseinstellungen danovamain ina regiun per evitar problems durant cumparegliar numers da telefon.";
 
 /* Settings */
-"block_unknown_on" = "Mo persunas sin tia glista da contacts pon tramettar messadis a tai.";
-"block_unknown_off" = "Mintgin po trametter messadis a tai. Novs contacts vegnan agiuntads automaticamain suenter l'emprim messadi.";
 "show_stale_contacts_on" = "Contacts nunvalaivels e contacts ch’èn stads inactivs pli ditg che 3 mais, vegnan zuppentads.";
 "show_stale_contacts_off" = "Tut ils contacts vegnan mussads.";
 "hide_voip_call_ip_off" = "Utilisar, sche pussaivel, la colliaziun directa e telefonar mo a contacts betg verifitgads sur il server da Threema. Po tradir tia adressa IP.";
@@ -490,9 +467,7 @@
 "no_work_contacts" = "Utilisader da %@";
 "no_work_contacts_message" = "Chattà nagins contacts da %@ controllads da l’administratur.";
 
-"no_contacts_permission_title" = "Nagin access als contacts";
 "no_contacts_syncoff" = "Ti n’has anc nagins contacts. Activescha la sincronisaziun (Configuraziuns > Sfera privata) u agiuntescha manualmain contacts cun il nuv +.";
-"no_contacts_permission_message" = "%@ n’è betg autorisà d’acceder a tes contacts. P.pl. autorisar en las configuraziuns da la protecziun da datas da tes apparat.";
 
 "my_profile_picture_title" = "Tes maletg da profil";
 "release_profilepicture_to" = "Cundivider il maletg da profil cun";
@@ -661,7 +636,6 @@ Endatescha p.pl. tias datas d’access. Contactescha tes administratur, sche ti 
 "group_member_self_removed" = "Ti es vegnì allontanà da la gruppa.";
 "group_member_self_left" = "Ti has bandunà la gruppa.";
 "group_member_creator_left" = "*Questa gruppa è orfna*\nLa persuna che ha creà la gruppa l'ha bandunà. Ella n'è betg pli administrabla. Ina commembra u in commember da la gruppa restant duai clonar la gruppa (via detagls da la gruppa) per daventar la nova administratura resp. il nov administratur.";
-
 /* accessibility labels */
 "send_media_or_location" = "Trametter medias u il lieu";
 "my_profilepicture" = "Tes maletg da profil";
@@ -696,10 +670,6 @@ Endatescha p.pl. tias datas d’access. Contactescha tes administratur, sche ti 
 "threema_channel_failed" = "Deplorablamain betg stà pussaivel d'agiuntar Threema Channel.";
 
 /* Push decryption */
-"decryption_push_title" = "Vuls ti vesair ina prevista dal cuntegn en avis da push?";
-"decryption_push_text" = "Sche la prevista è deactivada stos ti l’emprim avrir %@ per vesair il cuntegn da novs messadis.";
-"decryption_push_activate" = "Activar la prevista";
-"decryption_push_deactivate" = "Deactivar la prevista";
 "decryption_push_reply" = "Respunder";
 "decryption_push_placeholder" = "Respunder ...";
 "decryption_push_agree" = "Confermar";
@@ -750,11 +720,8 @@ Endatescha p.pl. tias datas d’access. Contactescha tes administratur, sche ti 
 "call_reject" = "Refusar";
 "call_hide_call" = "Zuppentar il telefonat";
 "call_no_wifi" = "Telefon sur la rait per telefonia mobila. Leger dapli ...";
-
 "call_voip_not_supported_title" = "Telefonats da Threema";
 "call_voip_not_supported_text" = "Quest contact na sustegna anc nagins telefonats da Threema.";
-"call_microphone_permission_title" = "Refusà l'access dal microfon";
-"call_microphone_permission_text" = "Ti stos permetter l'access al microfon en las configuraziuns.";
 "call_contact_alert" = "Vuls ti telefonar a %@?";
 "call_contact_not_reachable" = "Il contact n’è actualmain betg disponibel.";
 "already_in_call" = "I n'è betg pussaivel da far plirs telefonats il medem mument.";
@@ -817,9 +784,6 @@ Endatescha p.pl. tias datas d’access. Contactescha tes administratur, sche ti 
 "privateChat_code_alert_confirm" = "Endrizzar ussa";
 "privateChat_set_alert_title" = "Vuls ti marcar quest chat sco privat?";
 "privateChat_set_alert_message" = "Ti pos determinar la visibilitad da chats privats en las configuraziuns da la sfera privata.";
-"hide_private_toggle" = "Zuppentar chats privats";
-"privacy_footer" = "Tut ils chats privats vegnan zuppentads en la survista dals chats. Per activar questa configuraziun sto esser activada la bloccada cun in code.";
-
 "group_leave_sheet_title" = "Bandunar «%@»";
 "group_leave_sheet_message" = "Sche ti bandunas sulettamain la gruppa, na pos ti betg pli participar a la conversaziun. La cronologia dals messadis d'enfin qua resta dentant mantegnida.";
 
@@ -1077,15 +1041,10 @@ Endatescha p.pl. tias datas d’access. Contactescha tes administratur, sche ti 
 "settings_advanced" = "Extendì";
 "settings_threema_work" = "Threema Work";
 "settings_feedback" = "Feedback Beta";
-"settings_dev_mode" = "Dev Mode";
 "tos_cell_title" = "Cundiziuns d'utilisaziun";
 
 "settings_advanced_flush_message_queue" = "Stizzar la colonna da spetga da messadis";
 "settings_advanced_orphaned_files_cleanup" = "Stizzar datotecas orfnas";
-// Dev Mode
-"settings_devmode_quote_v2" = "Quote V2";
-"settings_devmode_new_chat_view" = "New Chat View";
-"settings_devmode_stylekit_debug_view" = "StyleKit Debug View";
 // Appearance
 "settings_appearance_theme_section" = "Stil dal design";
 "settings_appearance_light_theme" = "Cler";
@@ -1284,12 +1243,6 @@ Svida il chanaster da palpiri, sche naginas medias e/u datotecas na mancan per s
 "readReceipt_sheetMessage" = "La configuraziun da standard per quest contact vegn recuverta.";
 "typingIndicator_sheetMessage" = "La configuraziun da standard per quest contact vegn recuverta.";
 
-"reset_overrides" = "Redefinir tut ils contacts";
-"resetButton_footer" = "Redefinescha ils parameters da standard per tut ils contacts.";
-"reset_overrides_alert_title" = "Redefinir";
-"reset_overrides_alert_message" = "Per tut ils contacts vegnan redefinids ils parameters da standard. Quest pass na pon ins betg revocar.";
-"reset_overrides_alert_action" = "Redefinir tuts";
-
 /* Multi Decvice */
 "multi_device_linked_devices_title" = "Apparats colliads";
 "multi_device_linked_devices_refresh" = "Trair engiu per actualisar";
@@ -1313,14 +1266,11 @@ Svida il chanaster da palpiri, sche naginas medias e/u datotecas na mancan per s
 // POI
 "poi_unavailable" = "Betg disponibel";
 "poi_not_marked" = "–";
-"poi_location_disabled_action" = "Avrir las configuraziuns";
 "poi_search_POI" = "Citads e vias";
 "poi_search_prefix" = "Tschertgar en in conturn da %@";
 "poi_away" = "Allontanà %@";
 "poi_dropped_pin_info_alert_title" = "Gluva";
 "poi_dropped_pin_info_alert_message" = "Tippar e tegnair sin la charta per plazzar ina gluva.";
-"poi_accuracy_info_alert_title" = "Nagin access a la posiziun precisa";
-"poi_accuracy_info_alert_message" = "P.pl. avrir las configuraziuns per dar access a tia posiziun.";
 "poi_current_location" = "Mia posiziun";
 "poi_marked_location" = "Gluva";
 
@@ -1348,14 +1298,6 @@ Svida il chanaster da palpiri, sche naginas medias e/u datotecas na mancan per s
 "vote_system_message" = "«%@» ha vuschà en «%@»";
 "vote_system_message_hidden" = "Survegnì ina nova vusch en «%@»";
 "vote_system_message_default" = "Survegnì ina vusch per in'enquista nunenconuschenta.";
-
 // ChatBar
 "chat_bar_quote_close_button" = "Serrar il citat";
 
-// ChatDetailView
-"detailView_title" = "Detagls dal messadi";
-"detailView_sent" = "Tramess";
-"detailView_delivered" = "Consegnà";
-"detailView_read" = "Legì";
-"detailView_ackd" = "Confermà";
-"detailView_messageID" = "ID dals messadis";

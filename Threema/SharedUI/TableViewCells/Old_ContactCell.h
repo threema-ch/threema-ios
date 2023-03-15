@@ -20,12 +20,12 @@
 
 #import <UIKit/UIKit.h>
 
-@class Contact;
+@class ContactEntity;
 @class ContactNameLabel;
 
 @interface Old_ContactCell : UITableViewCell
 
-@property (weak, nonatomic) Contact *contact;
+@property (weak, nonatomic) ContactEntity *contact;
 
 @property (weak, nonatomic) IBOutlet UIImageView *contactImage;
 @property (weak, nonatomic) IBOutlet ContactNameLabel *nameLabel;

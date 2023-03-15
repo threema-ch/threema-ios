@@ -20,9 +20,19 @@
 
 import CocoaLumberjackSwift
 import Foundation
+import Photos
 
 extension VideoMessageEntity: VideoMessage {
-        
+    
+    override public var showRetryAndCancelButton: Bool {
+        switch blobDisplayState {
+        case .pending, .sendingError, .uploading:
+            return true
+        default:
+            return false
+        }
+    }
+    
     // MARK: - FileMessageProvider
     
     public var fileMessageType: FileMessageType {
@@ -49,7 +59,7 @@ extension VideoMessageEntity: VideoMessage {
         // Take the thumbnail if it exists as this is what we show
         if let height = thumbnail?.height.intValue,
            let width = thumbnail?.width.intValue,
-           width != 0 {
+           width > 0, height > 0 {
             return Double(height) / Double(width)
         }
         
@@ -70,28 +80,38 @@ extension VideoMessageEntity: VideoMessage {
         return duration.doubleValue
     }
     
-    public var temporaryBlobDataURL: URL? {
+    public func temporaryBlobDataURL() -> URL? {
         guard let videoData = video?.data else {
             return nil
         }
         
-        let filename = "v1-videoMessage-\(objectID.hashValue)".hashValue
+        let filename = "v1-videoMessage-\(UUID().uuidString)"
         guard let url = FileUtility.appTemporaryDirectory?.appendingPathComponent(
             "\(filename).\(MEDIA_EXTENSION_VIDEO)"
         ) else {
             return nil
         }
         
-        if !FileUtility.isExists(fileURL: url) {
-            do {
-                try videoData.write(to: url)
-            }
-            catch {
-                DDLogWarn("Writing video blob data to temporary file failed: \(error)")
-                return nil
-            }
+        do {
+            try videoData.write(to: url)
+        }
+        catch {
+            DDLogWarn("Writing video blob data to temporary file failed: \(error)")
+            return nil
         }
         
         return url
+    }
+    
+    public func createSaveMediaItem(forAutosave: Bool) -> AlbumManager.SaveMediaItem? {
+        guard let url = temporaryBlobDataURL() else {
+            return nil
+        }
+        
+        return AlbumManager.SaveMediaItem(
+            url: url,
+            type: .video,
+            filename: readableFileName
+        )
     }
 }

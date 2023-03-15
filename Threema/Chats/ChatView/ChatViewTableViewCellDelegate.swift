@@ -32,19 +32,28 @@ protocol ChatViewTableViewCellDelegateProtocol: AnyObject {
     )
     
     func configure(swipeGestureRecognizer: UIPanGestureRecognizer)
+    
+    func playNextMessageIfPossible(from message: NSManagedObjectID)
 
     func didTap(message: BaseMessage?, in cell: ChatViewBaseTableViewCell?, customDefaultAction: (() -> Void)?)
+    func resendMessage(withID messageID: NSManagedObjectID)
     func showQuoteView(message: QuoteMessage)
-    func startMultiselect()
+    func startMultiselect(with messageObjectID: NSManagedObjectID)
     
     func quoteTapped(on quotedMessageID: Data)
     func show(identity: String)
+    func open(url: URL)
     func clearCellHeightCache(for objectID: NSManagedObjectID)
     func showDetails(for messageID: NSManagedObjectID)
+    func willDeleteMessage(with objectID: NSManagedObjectID)
+    func didDeleteMessages()
+    func sendAck(for message: BaseMessage, ack: Bool)
     
     func didSelectText(in textView: MessageTextView?)
     
     var currentSearchText: String? { get }
+    
+    var cellInteractionEnabled: Bool { get }
 }
 
 extension ChatViewTableViewCellDelegateProtocol {
@@ -75,13 +84,13 @@ final class ChatViewTableViewCellDelegate: NSObject, ChatViewTableViewCellDelega
     private lazy var chatViewBackgroundImageProvider = ChatViewBackgroundImageProvider()
     
     // MARK: Internal Properties
-
+    
     var chatViewHasCustomBackground: Bool {
         chatViewBackgroundImageProvider.hasCustomBackground
     }
     
     // MARK: - Lifecycle
-
+    
     init(chatViewController: ChatViewController, tableView: UITableView, entityManager: EntityManager) {
         self.chatViewController = chatViewController
         self.tableView = tableView
@@ -112,10 +121,15 @@ final class ChatViewTableViewCellDelegate: NSObject, ChatViewTableViewCellDelega
             }
         }
         
-        let messageDetailViewController = ChatViewMessageDetailView(
-            messageID: swipeMessageTableViewCell
-                .messageObjectID
+        guard let messageObjectID = swipeMessageTableViewCell.messageObjectID else {
+            DDLogError("Message object ID should not be nil")
+            return
+        }
+        
+        let messageDetailViewController = ChatViewMessageDetailsViewController(
+            messageManagedObjectID: messageObjectID
         )
+        
         animationProxy.handleSwipeLeft(recognizer, toViewController: messageDetailViewController) {
             for cell in tableView.visibleCells {
                 cell.alpha = 1.0
@@ -134,6 +148,12 @@ final class ChatViewTableViewCellDelegate: NSObject, ChatViewTableViewCellDelega
             swipeGestureRecognizer.canPrevent(tableView.panGestureRecognizer)
             tableView.panGestureRecognizer.require(toFail: swipeGestureRecognizer)
         }
+    }
+    
+    // MARK: - Voice Message Play
+    
+    func playNextMessageIfPossible(from message: NSManagedObjectID) {
+        chatViewController?.playNextMessageIfPossible(from: message)
     }
     
     // MARK: - Tap Interactions
@@ -161,7 +181,15 @@ final class ChatViewTableViewCellDelegate: NSObject, ChatViewTableViewCellDelega
             DDLogError("Can't find contact for tapped mention")
         }
     }
-
+    
+    func open(url: URL) {
+        guard let chatViewController else {
+            return
+        }
+        
+        IDNSafetyHelper.safeOpen(url: url, viewController: chatViewController)
+    }
+    
     func didTap(message: BaseMessage?, in cell: ChatViewBaseTableViewCell?, customDefaultAction: (() -> Void)?) {
         
         guard let message = message,
@@ -189,10 +217,54 @@ final class ChatViewTableViewCellDelegate: NSObject, ChatViewTableViewCellDelega
         chatViewController?.jump(to: quotedMessageID, animated: true, highlight: true)
     }
     
+    func willDeleteMessage(with objectID: NSManagedObjectID) {
+        chatViewController?.willDeleteMessage(with: objectID)
+    }
+    
+    func didDeleteMessages() {
+        chatViewController?.didDeleteMessages()
+    }
+    
+    func resendMessage(withID messageID: NSManagedObjectID) {
+        var message: BaseMessage?
+        
+        let entityManager = EntityManager()
+        entityManager.performSyncBlockAndSafe {
+            guard let fetchedMessage = entityManager.entityFetcher.existingObject(with: messageID) as? BaseMessage,
+                  let newID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.messageIDLength)
+            else {
+                return
+            }
+            fetchedMessage.id = newID
+            message = fetchedMessage
+        }
+        
+        guard let message else {
+            DDLogError("Message to be re-sent could not be loaded.")
+            return
+        }
+        
+        switch message {
+        case is FileMessage:
+            Task {
+                await BlobManager.shared.syncBlobs(for: messageID)
+            }
+        default:
+            MessageSender.send(message)
+        }
+    }
+    
     // MARK: - Multi-Select
-
-    func startMultiselect() {
-        chatViewController?.startMultiselect()
+    
+    func startMultiselect(with messageObjectID: NSManagedObjectID) {
+        chatViewController?.startMultiselect(with: messageObjectID)
+    }
+    
+    func sendAck(for message: BaseMessage, ack: Bool) {
+        let block = {
+            ChatViewTableViewCellDelegate.sendAck(message: message, ack: ack)
+        }
+        chatViewController?.contextMenuActionsQueue.append(block)
     }
     
     // MARK: - CellHeightCache
@@ -202,7 +274,7 @@ final class ChatViewTableViewCellDelegate: NSObject, ChatViewTableViewCellDelega
     }
     
     func showDetails(for messageID: NSManagedObjectID) {
-        let detailsVC = ChatViewMessageDetailView(messageID: messageID)
+        let detailsVC = ChatViewMessageDetailsViewController(messageManagedObjectID: messageID)
         chatViewController?.navigationController?.pushViewController(detailsVC, animated: true)
     }
     
@@ -212,7 +284,90 @@ final class ChatViewTableViewCellDelegate: NSObject, ChatViewTableViewCellDelega
         chatViewController?.selectedTextView = textView
     }
     
-    // MARK: - Search Highlighting
+    // MARK: - Search
     
     var currentSearchText: String?
+    
+    var cellInteractionEnabled: Bool {
+        chatViewController?.cellInteractionEnabled ?? false
+    }
+    
+    // MARK: - Helpers
+    
+    ///  Processes sending thumbsUp or thumbsDown
+    private static func sendAck(message: BaseMessage, ack: Bool) {
+        let entityManager = EntityManager()
+        
+        guard let entityMessage = entityManager.entityFetcher.existingObject(with: message.objectID) as? BaseMessage,
+              let conversation = entityMessage.conversation else {
+            return
+        }
+        
+        let groupManager = GroupManager(entityManager: entityManager)
+        let group = groupManager.getGroup(conversation: conversation)
+        var contact: ContactEntity?
+        
+        if conversation.isGroup() {
+            if entityMessage.isMyReaction(ack ? .acknowledged : .declined) {
+                return
+            }
+        }
+        else {
+            guard let c = conversation.contact else {
+                return
+            }
+            contact = c
+            // Only send changed acks
+            if entityMessage.userackDate != nil, let currentAck = entityMessage.userack, currentAck.boolValue == ack {
+                return
+            }
+        }
+        
+        if ack {
+            MessageSender.sendUserAck(
+                forMessages: [message],
+                toIdentity: contact?.identity,
+                group: group,
+                onCompletion: {
+                    entityManager.performSyncBlockAndSafe {
+                        if conversation.isGroup() {
+                            let groupDeliveryReceipt = GroupDeliveryReceipt(
+                                identity: MyIdentityStore.shared().identity,
+                                deliveryReceiptType: .acknowledged,
+                                date: Date()
+                            )
+                            message.add(groupDeliveryReceipt: groupDeliveryReceipt)
+                        }
+                        else {
+                            message.userack = NSNumber(booleanLiteral: ack)
+                            message.userackDate = Date()
+                        }
+                    }
+                }
+            )
+        }
+        else {
+            MessageSender.sendUserDecline(
+                forMessages: [message],
+                toIdentity: contact?.identity,
+                group: group,
+                onCompletion: {
+                    entityManager.performSyncBlockAndSafe {
+                        if conversation.isGroup() {
+                            let groupDeliveryReceipt = GroupDeliveryReceipt(
+                                identity: MyIdentityStore.shared().identity,
+                                deliveryReceiptType: .declined,
+                                date: Date()
+                            )
+                            message.add(groupDeliveryReceipt: groupDeliveryReceipt)
+                        }
+                        else {
+                            message.userack = NSNumber(booleanLiteral: ack)
+                            message.userackDate = Date()
+                        }
+                    }
+                }
+            )
+        }
+    }
 }

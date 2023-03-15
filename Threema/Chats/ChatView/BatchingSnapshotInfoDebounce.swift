@@ -74,7 +74,7 @@ extension Publishers.SnapshotDebouncer {
         
         var state = CombineXRelayState.waiting
         var demand: Subscribers.Demand = .none
-        var latest: Input?
+        var inputs = [Input]()
         
         init(pub: Pub, sub: Sub) {
             self.scheduler = pub.scheduler
@@ -102,7 +102,7 @@ extension Publishers.SnapshotDebouncer {
         
         func cancel() {
             lock.withLockGet(state.complete())?.cancel()
-            latest = nil
+            inputs.removeAll()
         }
         
         func receive(subscription: Subscription) {
@@ -121,12 +121,18 @@ extension Publishers.SnapshotDebouncer {
             guard state.isRelaying else {
                 return .none
             }
-            if let latest = latest {
+            // If one of the snapshots doesn't have any animations at all, we assume that taking the animation from the other will look good
+            if let newest = inputs.last,
+               (newest.rowAnimation == input.rowAnimation) || newest.rowAnimation == .none || input
+               .rowAnimation == .none {
                 DDLogVerbose("CombineSnapshot \(#function) Batch Snapshots")
-                self.latest = ChatViewSnapshotProvider.batchSnapshotsTogether(latest, input)
+                inputs.removeLast()
+                inputs.append(ChatViewSnapshotProvider.batchSnapshotsTogether(newest, input))
+                DDLogVerbose("Snapshot added, current size of queue: \(inputs.count)")
             }
             else {
-                latest = input
+                inputs.append(input)
+                DDLogVerbose("Snapshot added, current size of queue: \(inputs.count)")
             }
             
             lock.unlock()
@@ -149,11 +155,12 @@ extension Publishers.SnapshotDebouncer {
                     lock.unlock()
                     return
                 }
-                if let latest = latest {
-                    self.latest = nil
+                if let oldest = inputs.first {
+                    inputs.remove(at: 0)
+                    DDLogVerbose("Snapshot removed, current size of queue: \(inputs.count)")
                     demand -= 1
                     lock.unlock()
-                    let additionalDemand = subscriber.receive(latest)
+                    let additionalDemand = subscriber.receive(oldest)
                     
                     lock.withLock {
                         self.demand += additionalDemand
@@ -170,7 +177,7 @@ extension Publishers.SnapshotDebouncer {
                 return
             }
             subscription.cancel()
-            latest = nil
+            inputs.removeAll()
             
             subscriber.receive(completion: completion)
         }

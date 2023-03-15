@@ -663,6 +663,11 @@ BOOL doMigrateInProgress = false;
             }
         }
 
+        if ([dbContext directContexts] && [dbContext directContexts].count > 0) {
+            // Note that all objects will be merged even it is updated, inserted or deleted
+            [NSManagedObjectContext mergeChangesFromRemoteContextSave:@{NSUpdatedObjectsKey: notifyObjectIds} intoContexts:[dbContext directContexts]];
+        }
+
         [dbContext main].stalenessInterval = stalenessInterval;
     });
 

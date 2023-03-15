@@ -23,6 +23,10 @@ import Foundation
 @objc public class WCSessionHelper: NSObject {
     @objc public static var isWCSessionConnected = false {
         didSet {
+            guard isWCSessionConnected != oldValue else {
+                return
+            }
+            
             DispatchQueue.main.async {
                 NotificationCenter.default.post(
                     name: NSNotification.Name(rawValue: kNotificationNavigationBarColorShouldChange),

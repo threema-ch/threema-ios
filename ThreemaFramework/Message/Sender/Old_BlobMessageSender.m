@@ -20,7 +20,6 @@
 
 #import "Old_BlobMessageSender.h"
 #import "Conversation.h"
-#import "Contact.h"
 #import "ThreemaFramework/ThreemaFramework-Swift.h"
 #import "ServerConnector.h"
 #import "UserSettings.h"

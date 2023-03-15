@@ -111,7 +111,7 @@ typedef NS_ENUM(NSInteger, PeriodOffTime) {
 ///
 /// @param contact Contact
 /// @return Custom setting if stored, default setting otherwise
-+ (PushSetting *)pushSettingForContact:(Contact *)contact;
++ (PushSetting *)pushSettingForContact:(ContactEntity *)contact NS_SWIFT_NAME(init(for:));
 
 /// Get setting for a Threema ID
 ///

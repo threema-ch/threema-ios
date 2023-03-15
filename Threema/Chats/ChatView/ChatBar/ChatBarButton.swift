@@ -38,7 +38,7 @@ class ChatBarButton: ThemedCodeButton {
     init(
         sfSymbolName: String,
         accessibilityLabel: String,
-        defaultColor: @escaping (() -> UIColor) = { Colors.primary },
+        defaultColor: @escaping (() -> UIColor) = { .primary },
         customScalableSize: CGFloat? = nil,
         action: @escaping Action
     ) {

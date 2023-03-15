@@ -37,6 +37,8 @@ struct QuickAction {
     /// Title of action
     let title: String
     
+    let accessibilityIdentifier: String
+    
     /// Action performed when selected
     let action: (QuickActionUpdate) -> Void
     
@@ -45,9 +47,16 @@ struct QuickAction {
     ///   - imageNameProvider: Provider for name of current SF Symbol to show
     ///   - title: Quick action title
     ///   - action: Action called when quick action is invoked
-    init(imageNameProvider: @escaping ImageNameProvider, title: String, action: @escaping (QuickActionUpdate) -> Void) {
+    ///   - accessibilityIdentifier: Identifier to find the button in UI tests
+    init(
+        imageNameProvider: @escaping ImageNameProvider,
+        title: String,
+        accessibilityIdentifier: String,
+        action: @escaping (QuickActionUpdate) -> Void
+    ) {
         self.imageNameProvider = imageNameProvider
         self.title = title
+        self.accessibilityIdentifier = accessibilityIdentifier
         self.action = action
     }
     
@@ -56,8 +65,19 @@ struct QuickAction {
     ///   - imageName: Name of SF Symbol to show
     ///   - title: Quick action title
     ///   - action: Action called when quick action is invoked
-    init(imageName: String, title: String, action: @escaping (QuickActionUpdate) -> Void) {
-        self.init(imageNameProvider: { imageName }, title: title, action: action)
+    ///   - accessibilityIdentifier: Identifier to find the button in UI tests
+    init(
+        imageName: String,
+        title: String,
+        accessibilityIdentifier: String,
+        action: @escaping (QuickActionUpdate) -> Void
+    ) {
+        self.init(
+            imageNameProvider: { imageName },
+            title: title,
+            accessibilityIdentifier: accessibilityIdentifier,
+            action: action
+        )
     }
 }
 

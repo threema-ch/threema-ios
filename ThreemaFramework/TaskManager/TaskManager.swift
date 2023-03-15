@@ -223,7 +223,7 @@ typealias TaskCompletionHandler = (TaskDefinitionProtocol, Error?) -> Void
 // MARK: - TaskManagerProtocolObjc
 
 extension TaskManager: TaskManagerProtocolObjc {
-    @objc public func addObjc(taskDefinition: AnyObject) {
+    @objc func addObjc(taskDefinition: AnyObject) {
         assert(taskDefinition is TaskDefinition)
         guard let taskDefinition = taskDefinition as? TaskDefinition else {
             DDLogError("Worng type for taskDefinition")
@@ -233,7 +233,7 @@ extension TaskManager: TaskManagerProtocolObjc {
         add(taskDefinition: taskDefinition)
     }
 
-    @objc public func addObjc(taskDefinition: AnyObject, completionHandler: @escaping (AnyObject, Error?) -> Void) {
+    @objc func addObjc(taskDefinition: AnyObject, completionHandler: @escaping (AnyObject, Error?) -> Void) {
         assert(taskDefinition is TaskDefinition)
         guard let taskDefinition = taskDefinition as? TaskDefinition else {
             DDLogError("Worng type for taskDefinition")

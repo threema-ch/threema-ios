@@ -52,6 +52,7 @@ import PromiseKit
     
     @objc func downloadImage(
         imageMessageID: Data,
+        in conversationManagedObjectID: NSManagedObjectID,
         imageBlobID: Data,
         origin: BlobOrigin,
         imageBlobEncryptionKey: Data?,
@@ -65,6 +66,7 @@ import PromiseKit
             race(
                 downloadImage(
                     imageMessageID: imageMessageID,
+                    in: conversationManagedObjectID,
                     imageBlobID: imageBlobID,
                     origin: origin,
                     imageBlobEncryptionKey: imageBlobEncryptionKey,
@@ -84,6 +86,7 @@ import PromiseKit
         else {
             downloadImage(
                 imageMessageID: imageMessageID,
+                in: conversationManagedObjectID,
                 imageBlobID: imageBlobID,
                 origin: origin,
                 imageBlobEncryptionKey: imageBlobEncryptionKey,
@@ -102,6 +105,7 @@ import PromiseKit
     
     func downloadImage(
         imageMessageID: Data,
+        in conversationManagedObjectID: NSManagedObjectID,
         imageBlobID: Data,
         origin: BlobOrigin,
         imageBlobEncryptionKey: Data?,
@@ -160,8 +164,10 @@ import PromiseKit
                     var message: BaseMessage?
                     
                     self.entityManager.performSyncBlockAndSafe {
-                        guard let msg = self.entityManager.entityFetcher
-                            .message(with: imageMessageID) as? ImageMessageEntity else {
+                        guard let conversation = self.entityManager.entityFetcher
+                            .getManagedObject(by: conversationManagedObjectID) as? Conversation,
+                            let msg = self.entityManager.entityFetcher
+                            .message(with: imageMessageID, conversation: conversation) as? ImageMessageEntity else {
                             seal.reject(
                                 ImageMessageProcessorError
                                     .messageNotFound(message: "message id: \(imageMessageID.hexString)")

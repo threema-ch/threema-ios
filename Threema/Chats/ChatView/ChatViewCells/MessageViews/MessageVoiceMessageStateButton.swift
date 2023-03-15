@@ -60,13 +60,20 @@ final class MessageVoiceMessageStateButton: ThemedCodeButton {
             return
         }
         
+        let currentBlobDisplayState = voiceMessage.blobDisplayState
         let symbolConfig = UIImage.SymbolConfiguration(pointSize: config.circleFillSymbolSize)
         let symbolName: String
         
-        if let currentStateSymbolName = voiceMessage.blobDisplayState.circleFillSymbolName {
-            symbolName = currentStateSymbolName
-        }
-        else {
+        switch currentBlobDisplayState {
+        case .remote, .downloading, .fileNotFound, .dataDeleted, .sendingError:
+            if let fillSymbolName = currentBlobDisplayState.circleFillSymbolName {
+                symbolName = fillSymbolName
+            }
+            else {
+                symbolName = "play.slash.fill"
+            }
+            
+        case .processed, .pending, .uploading, .uploaded:
             if isPlaying {
                 symbolName = "pause.circle.fill"
             }
@@ -88,6 +95,6 @@ final class MessageVoiceMessageStateButton: ThemedCodeButton {
     }
     
     override func updateColors() {
-        tintColor = config.buttonTintColor
+        tintColor = Colors.textLight
     }
 }

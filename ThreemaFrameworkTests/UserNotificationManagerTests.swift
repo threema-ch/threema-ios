@@ -594,7 +594,7 @@ class UserNotificationManagerTests: XCTestCase {
             let expectedGroupID: String? = nil
 
             // Create contact for mocking
-            var contact: Contact!
+            var contact: ContactEntity!
             databasePreparer.save {
                 contact = databasePreparer.createContact(
                     publicKey: Data([1]),
@@ -708,8 +708,8 @@ class UserNotificationManagerTests: XCTestCase {
             userSettingsMock.pushDecrypt = testData["pushDecrypt"] as! Bool
             let groupManagerMock = GroupManagerMock()
 
-            var contact: Contact!
-            var creatorContact: Contact!
+            var contact: ContactEntity!
+            var creatorContact: ContactEntity!
             var groupEntity: GroupEntity!
             var conversation: Conversation!
             databasePreparer.save {
@@ -812,8 +812,8 @@ class UserNotificationManagerTests: XCTestCase {
         userSettingsMock.pushDecrypt = false
         let groupManagerMock = GroupManagerMock()
 
-        var contact: Contact!
-        var creatorContact: Contact!
+        var contact: ContactEntity!
+        var creatorContact: ContactEntity!
         var groupEntity: GroupEntity!
         var conversation: Conversation!
         databasePreparer.save {
@@ -931,7 +931,7 @@ class UserNotificationManagerTests: XCTestCase {
             let expectedGroupID: String? = nil
 
             // Create base message in single cnversation for mocking
-            var contact: Contact!
+            var contact: ContactEntity!
             var message: TextMessage!
             databasePreparer.save {
                 contact = databasePreparer.createContact(
@@ -1054,7 +1054,7 @@ class UserNotificationManagerTests: XCTestCase {
             let expectedIsGroupMessage = true
 
             // Create base message in group cnversation for mocking
-            var contact: Contact!
+            var contact: ContactEntity!
             var message: TextMessage!
             databasePreparer.save {
                 contact = databasePreparer.createContact(
@@ -1133,12 +1133,14 @@ class UserNotificationManagerTests: XCTestCase {
     func testApplyContent() throws {
         let groupID: Data = BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!
         let expectedGroupID: String = groupID.hexString
+        let expectedGroupCreator = "ECHOECHO"
 
         let testsData = [
             // Single push
             [
                 "cmd": "newmsg",
                 "expectedGroupId": nil,
+                "expectedGroupCreator": nil,
                 "pushDecrypt": false,
                 "pushGroupSound": "none",
                 "pushSound": "none",
@@ -1150,6 +1152,7 @@ class UserNotificationManagerTests: XCTestCase {
             [
                 "cmd": "newmsg",
                 "expectedGroupId": nil,
+                "expectedGroupCreator": nil,
                 "pushDecrypt": false,
                 "pushGroupSound": "none",
                 "pushSound": "pong",
@@ -1161,6 +1164,7 @@ class UserNotificationManagerTests: XCTestCase {
             [
                 "cmd": "newmsg",
                 "expectedGroupId": nil,
+                "expectedGroupCreator": nil,
                 "pushDecrypt": false,
                 "pushGroupSound": "pong",
                 "pushSound": "none",
@@ -1172,6 +1176,7 @@ class UserNotificationManagerTests: XCTestCase {
             [
                 "cmd": "newmsg",
                 "expectedGroupId": nil,
+                "expectedGroupCreator": nil,
                 "pushDecrypt": false,
                 "pushGroupSound": "none",
                 "pushSound": "none",
@@ -1183,6 +1188,7 @@ class UserNotificationManagerTests: XCTestCase {
             [
                 "cmd": "newmsg",
                 "expectedGroupId": nil,
+                "expectedGroupCreator": nil,
                 "pushDecrypt": true,
                 "pushGroupSound": "pong",
                 "pushSound": "pong",
@@ -1195,57 +1201,62 @@ class UserNotificationManagerTests: XCTestCase {
             [
                 "cmd": "newgroupmsg",
                 "expectedGroupId": expectedGroupID,
+                "expectedGroupCreator": expectedGroupCreator,
                 "pushDecrypt": false,
                 "pushGroupSound": "none",
                 "pushSound": "none",
                 "silent": false,
                 "expectedSound": false,
                 "expectedCategoryIdentifier": "",
-                "expectedThreadIdentifier": "GROUP-\(expectedGroupID)",
+                "expectedThreadIdentifier": "GROUP-\(expectedGroupID)-\(expectedGroupCreator)",
             ],
             [
                 "cmd": "newgroupmsg",
                 "expectedGroupId": expectedGroupID,
+                "expectedGroupCreator": expectedGroupCreator,
                 "pushDecrypt": false,
                 "pushGroupSound": "none",
                 "pushSound": "pong",
                 "silent": false,
                 "expectedSound": false,
                 "expectedCategoryIdentifier": "",
-                "expectedThreadIdentifier": "GROUP-\(expectedGroupID)",
+                "expectedThreadIdentifier": "GROUP-\(expectedGroupID)-\(expectedGroupCreator)",
             ],
             [
                 "cmd": "newgroupmsg",
                 "expectedGroupId": expectedGroupID,
+                "expectedGroupCreator": expectedGroupCreator,
                 "pushDecrypt": false,
                 "pushGroupSound": "pong",
                 "pushSound": "none",
                 "silent": false,
                 "expectedSound": true,
                 "expectedCategoryIdentifier": "",
-                "expectedThreadIdentifier": "GROUP-\(expectedGroupID)",
+                "expectedThreadIdentifier": "GROUP-\(expectedGroupID)-\(expectedGroupCreator)",
             ],
             [
                 "cmd": "newgroupmsg",
                 "expectedGroupId": expectedGroupID,
+                "expectedGroupCreator": expectedGroupCreator,
                 "pushDecrypt": false,
                 "pushGroupSound": "none",
                 "pushSound": "none",
                 "silent": true,
                 "expectedSound": false,
                 "expectedCategoryIdentifier": "",
-                "expectedThreadIdentifier": "GROUP-\(expectedGroupID)",
+                "expectedThreadIdentifier": "GROUP-\(expectedGroupID)-\(expectedGroupCreator)",
             ],
             [
                 "cmd": "newgroupmsg",
                 "expectedGroupId": expectedGroupID,
+                "expectedGroupCreator": expectedGroupCreator,
                 "pushDecrypt": true,
                 "pushGroupSound": "pong",
                 "pushSound": "pong",
                 "silent": true,
                 "expectedSound": false,
                 "expectedCategoryIdentifier": "GROUP",
-                "expectedThreadIdentifier": "GROUP-\(expectedGroupID)",
+                "expectedThreadIdentifier": "GROUP-\(expectedGroupID)-\(expectedGroupCreator)",
             ],
         ]
 
@@ -1269,6 +1280,7 @@ class UserNotificationManagerTests: XCTestCase {
             let userNotificationContent = UserNotificationContent(pendingUserNotification)
             userNotificationContent.body = expectedBody
             userNotificationContent.groupID = testData["expectedGroupId"] as? String
+            userNotificationContent.groupCreator = testData["expectedGroupCreator"] as? String
 
             let userNotificationManager = UserNotificationManager(
                 userSettingsMock,

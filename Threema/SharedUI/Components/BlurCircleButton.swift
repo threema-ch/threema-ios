@@ -27,6 +27,17 @@ final class BlurCircleButton: ThemedCodeButton {
 
     private let blurCircleView: BlurCircleView
     
+    override var isHighlighted: Bool {
+        didSet {
+            if oldValue == false, isHighlighted {
+                blurCircleView.highlight(true, highlightingAlpha: 0.5)
+            }
+            else if oldValue == true, !isHighlighted {
+                blurCircleView.highlight(false)
+            }
+        }
+    }
+    
     // MARK: - Lifecycle
     
     /// Create a new button
@@ -38,9 +49,10 @@ final class BlurCircleButton: ThemedCodeButton {
     init(
         sfSymbolName: String,
         accessibilityLabel: String,
+        configuration: BlurCircleView.BlurCircleViewConfigurationType = .default,
         action: @escaping Action
     ) {
-        self.blurCircleView = BlurCircleView(sfSymbolName: sfSymbolName)
+        self.blurCircleView = BlurCircleView(sfSymbolName: sfSymbolName, configuration: configuration)
         
         super.init(frame: .zero, action: action)
                 

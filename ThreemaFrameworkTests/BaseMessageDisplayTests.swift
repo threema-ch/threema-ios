@@ -529,4 +529,49 @@ class BaseMessageDisplayTests: XCTestCase {
         baseMessage.userackDate = expectedDeclineDate
         XCTAssertEqual(expectedDeclineDate, baseMessage.displayDate)
     }
+    
+    // MARK: - Date for state
+    
+    func testDateForState() {
+        var baseMessage: BaseMessage!
+        
+        let expectedDate = Date(timeIntervalSinceNow: -1000)
+        let expectedSentDate = Date(timeIntervalSinceNow: -900)
+        let expectedDeliveryDate = Date(timeIntervalSinceNow: -800)
+        let expectedReadDate = Date(timeIntervalSinceNow: -700)
+        let expectedAcknowledgeAndDeclineDate = Date(timeIntervalSinceNow: -600)
+
+        databasePreparer.save {
+            baseMessage = databasePreparer.createTextMessage(
+                conversation: conversation,
+                text: "Hello World",
+                date: expectedDate,
+                delivered: false,
+                id: BytesUtility.generateRandomBytes(length: ThreemaProtocol.messageIDLength)!,
+                isOwn: true,
+                read: false,
+                sent: false,
+                userack: false,
+                sender: nil,
+                remoteSentDate: expectedSentDate
+            )
+            
+            baseMessage.deliveryDate = expectedDeliveryDate
+            baseMessage.readDate = expectedReadDate
+            baseMessage.userackDate = expectedAcknowledgeAndDeclineDate
+        }
+    
+        XCTAssertNil(baseMessage.date(for: .none))
+        XCTAssertEqual(expectedAcknowledgeAndDeclineDate, baseMessage.date(for: .userAcknowledged))
+        XCTAssertEqual(expectedAcknowledgeAndDeclineDate, baseMessage.date(for: .userDeclined))
+        XCTAssertNil(baseMessage.date(for: .sending))
+        
+        XCTAssertNil(baseMessage.date(for: .sent))
+        baseMessage.sent = true
+        XCTAssertEqual(expectedSentDate, baseMessage.date(for: .sent))
+        
+        XCTAssertEqual(expectedDeliveryDate, baseMessage.date(for: .delivered))
+        XCTAssertEqual(expectedReadDate, baseMessage.date(for: .read))
+        XCTAssertNil(baseMessage.date(for: .failed))
+    }
 }

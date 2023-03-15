@@ -30,7 +30,7 @@
 #import "GroupRenameMessage.h"
 #import "GroupTextMessage.h"
 #import "GroupLocationMessage.h"
-#import "Contact.h"
+#import "ContactEntity.h"
 #import "ContactStore.h"
 #import "TextMessage.h"
 #import "LocationMessage.h"
@@ -143,7 +143,7 @@
             }
 
             if ([task isKindOfClass:[TaskDefinitionSendBaseMessage class]] == YES) {
-                BaseMessage *msg = [[entityManager entityFetcher] messageWithId:[(TaskDefinitionSendBaseMessage *)task messageID]];
+                BaseMessage *msg = [[entityManager entityFetcher] messageWithId:[(TaskDefinitionSendBaseMessage *)task messageID] conversation: conversation];
                 onCompletion(msg);
             }
             else {
@@ -191,7 +191,7 @@
         if ([taskDefinition isKindOfClass:TaskDefinitionSendLocationMessage.class]) {
             TaskDefinitionSendLocationMessage *locationTaskDef = (TaskDefinitionSendLocationMessage *) taskDefinition;
 
-            LocationMessage *message = (LocationMessage *)[[entityManager entityFetcher] messageWithId:[locationTaskDef messageID]];
+            LocationMessage *message = (LocationMessage *)[[entityManager entityFetcher] messageWithId:[locationTaskDef messageID] conversation:conversation];
             if (message != nil) {
                 onCompletion(locationTaskDef.messageID);
             }
@@ -212,7 +212,7 @@
 
 + (void)sendReadReceiptForMessages:(NSArray*)messages toIdentity:(NSString*)identity onCompletion:(void(^)(void))onCompletion {
     EntityManager *em = [[EntityManager alloc]init];
-    Contact *contact = [em.entityFetcher contactForId:identity];
+    ContactEntity *contact = [em.entityFetcher contactForId:identity];
     
     if (![MessageSender sendReadReceiptWithContact:contact]) {
         if (onCompletion) {
@@ -347,7 +347,7 @@
 
 + (void)sendTypingIndicatorMessage:(BOOL)typing toIdentity:(NSString*)identity {
     EntityManager *em = [[EntityManager alloc]init];
-    Contact *contact = [em.entityFetcher contactForId:identity];
+    ContactEntity *contact = [em.entityFetcher contactForId:identity];
 
     if (![MessageSender sendTypingIndicatorWithContact:contact]) {
         return;

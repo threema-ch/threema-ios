@@ -60,6 +60,7 @@ final class MessageGroupReactionStackView: UIStackView {
     private lazy var groupReactionAcknowledgedLabel: UILabel = {
         let label = UILabel()
         label.font = ChatViewConfiguration.MessageMetadata.font
+        label.adjustsFontForContentSizeCategory = true
         label.numberOfLines = 1
         return label
     }()
@@ -84,7 +85,7 @@ final class MessageGroupReactionStackView: UIStackView {
     private lazy var groupReactionDeclinedLabel: UILabel = {
         let label = UILabel()
         label.font = ChatViewConfiguration.MessageMetadata.font
-        label.textColor = Colors.thumbDown
+        label.adjustsFontForContentSizeCategory = true
         label.numberOfLines = 1
         return label
     }()
@@ -122,7 +123,7 @@ final class MessageGroupReactionStackView: UIStackView {
         Colors.setTextColor(Colors.thumbUp, label: groupReactionAcknowledgedLabel)
         Colors.setTextColor(Colors.thumbDown, label: groupReactionDeclinedLabel)
         
-        if let message = message {
+        if let message, !message.willBeDeleted {
             updateGroupAck(for: message)
         }
     }

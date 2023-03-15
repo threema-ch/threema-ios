@@ -218,12 +218,16 @@ public final class MessageProvider: NSObject {
         
         fetch()
     }
-    
+
     @available(*, unavailable)
     override init() {
         fatalError("Not available")
     }
     
+    deinit {
+        DatabaseContext.removeDirectBackgroundContext(with: self.fetchedResultsController.managedObjectContext)
+    }
+
     // MARK: - Configuration
     
     private func configureChangeObservation(for context: NSManagedObjectContext) {
@@ -301,7 +305,7 @@ public final class MessageProvider: NSObject {
     }
     
     private func configureLoadingMessages(around date: Date) {
-        let numberOfMessagesAfterDate = messageFetcher.numberOfMessages(after: date)
+        let numberOfMessagesAfterDate: Int = messageFetcher.numberOfMessages(after: date)
         currentOffset = numberOfMessages - numberOfMessagesAfterDate - (MessageProvider.configuration.windowSize / 2)
     }
     
@@ -487,22 +491,56 @@ public final class MessageProvider: NSObject {
     /// - Parameter date: Date to load messages around
     /// - Returns: Guarantee that is full-filled when initial fetch of loading completes or no new fetch is needed
     public func loadMessages(around date: Date) -> Guarantee<NSManagedObjectID?> {
-        let numberOfMessagesAfterDate = messageFetcher.numberOfMessages(after: date)
-        let firstMessageAfterDateOffset = numberOfMessages - numberOfMessagesAfterDate
-        
-        // Don't do new fetch if messages around `date` are already loaded
+        messageFetcher.numberOfMessages(after: date).then { numberOfMessagesAfterDate in
+            
+            let firstMessageAfterDateOffset = self.numberOfMessages - numberOfMessagesAfterDate
+            // Don't do new fetch if messages around `date` are already loaded
+            
+            // Note that the top (oldest) message has number 0
+            
+            let topLoadedLimit = self.currentOffset
+            let bottomLoadedLimit = self.currentOffset + self.currentWindowSize
+            let refetchThreshold = MessageProvider.configuration.windowSize / 4
+            
+            DDLogVerbose(
+                "\(#function) \(self.numberOfMessages) messages total; Loaded messages from \(topLoadedLimit) until \(bottomLoadedLimit); Loading around \(firstMessageAfterDateOffset)"
+            )
+            
+            // If all messages at the top are loaded we don't need to set any threshold to load more at the top
+            let topRefetchLimit: Int
+            if topLoadedLimit <= 0 {
+                topRefetchLimit = 0
+            }
+            else {
+                topRefetchLimit = topLoadedLimit + refetchThreshold
+            }
+            
+            // If all messages at the bottom are loaded we don't need to set any threshold to load more at the bottom
+            let bottomRefetchLimit: Int
+            if self.numberOfMessages <= bottomLoadedLimit {
+                bottomRefetchLimit = bottomLoadedLimit
+            }
+            else {
+                bottomRefetchLimit = bottomLoadedLimit - refetchThreshold
+            }
+            
+            let shouldRefetchTop = firstMessageAfterDateOffset < topRefetchLimit
+            let shouldRefetchBottom = firstMessageAfterDateOffset > bottomRefetchLimit
+            
+            DDLogVerbose(
+                "\(#function) Refetch if first message after date offset is not in \(topRefetchLimit)..<\(bottomRefetchLimit). First message is \(firstMessageAfterDateOffset); Refetching \(shouldRefetchTop || shouldRefetchBottom)"
+            )
 
-        guard currentOffset > (firstMessageAfterDateOffset - (MessageProvider.configuration.windowSize / 2)) ||
-            currentOffset + currentWindowSize < firstMessageAfterDateOffset +
-            (MessageProvider.configuration.windowSize / 2)
-        else {
-            return Guarantee { $0(nil) }
+            guard shouldRefetchTop || shouldRefetchBottom else {
+                return Guarantee { $0(nil) }
+            }
+            
+            self.currentOffset = self
+                .numberOfMessages - numberOfMessagesAfterDate - (MessageProvider.configuration.windowSize / 2)
+            self.currentWindowSize = MessageProvider.configuration.windowSize
+            
+            return self.fetch()
         }
-        
-        currentOffset = numberOfMessages - numberOfMessagesAfterDate - (MessageProvider.configuration.windowSize / 2)
-        currentWindowSize = MessageProvider.configuration.windowSize
-        
-        return fetch()
     }
     
     /// Load newest messages
@@ -581,10 +619,14 @@ extension MessageProvider: NSFetchedResultsControllerDelegate {
         DDLogNotice("New snapshot...")
         let newSnapshot = snapshot as NSDiffableDataSourceSnapshot<String, NSManagedObjectID>
         
-        var snapshotWithNeighbors = newSnapshot
-        
-        // Identify the cells neighboring the reloaded cells. Neighbours must be reloaded as well as they may be grouped together.
-        if #available(iOS 15.0, *) {
+        let convertedSnapshot: NSDiffableDataSourceSnapshot<String, NSManagedObjectID>
+        if UserSettings().featureFlagEnableNoMIMETypeFileMessagesFilter {
+            convertedSnapshot = convert(newSnapshot)
+        }
+        else {
+            var snapshotWithNeighbors = newSnapshot
+            
+            // Identify the cells neighboring the reloaded cells. Neighbours must be reloaded as well as they may be grouped together.
             for reloadedItemIdentifier in newSnapshot.reloadedItemIdentifiers {
                 guard let index = newSnapshot.indexOfItem(reloadedItemIdentifier) else {
                     continue
@@ -602,36 +644,12 @@ extension MessageProvider: NSFetchedResultsControllerDelegate {
                     newSnapshot.itemIdentifiers[min(newSnapshot.itemIdentifiers.count - 1, index + 1)],
                 ])
             }
-            /// After this point the snapshot should not be changed anymore for devices running iOS 15 or newer
-            snapshotWithNeighbors = convertSnapshot(snapshot: snapshotWithNeighbors)
-        }
-        
-        if #available(iOS 15.0, *) {
-            // Nothing needed
-        }
-        else {
-            // Pre iOS 15 reload items are lost when the snapshot is casted:
-            // > Before iOS 15, there was a bug in the implementation of how NSDiffableDataSourceSnapshot was bridged
-            // > between Swift and Objective-C, which caused the internally-stored reloaded identifiers to be lost
-            // > during the bridging process (which is what happens when you bridge from
-            // > NSDiffableDataSourceSnapshotReference to NSDiffableDataSourceSnapshot using the as keyword). Therefore,
-            // > automatic reloads have always worked when using NSFetchedResultsController and diffable data source
-            // > from Objective-C, as no bridging to/from Swift would take place. And as of iOS 15, they now work as
-            // > intended in Swift as well.
-            // swiftformat:disable:next acronyms
-            // > – https://developer.apple.com/forums/thread/692357?answerId=691483022#691483022
-            //
-            // As we didn't find any reliable solution to identify the updated items we reload all of them.
-            //
-            // TODO: (IOS-2427) Is there a more efficient way to find the items that changed?
-            // This leads to a constant reload of the table view cells e.g. when downloading a blob (at least on iOS 14)
-            // Maybe we should rewrite this delegate and the apply in Objective-C.
-            snapshotWithNeighbors.reloadItems(snapshotWithNeighbors.itemIdentifiers)
+            convertedSnapshot = convertSnapshot(snapshot: snapshotWithNeighbors)
         }
         
         // Publish new snapshot
         currentMessages = MessagesSnapshot(
-            snapshot: snapshotWithNeighbors,
+            snapshot: convertedSnapshot,
             previouslyNewestMessagesLoaded: previouslyNewestMessagesLoaded
         )
         
@@ -657,14 +675,78 @@ extension MessageProvider: NSFetchedResultsControllerDelegate {
             }
         }
         
-        if #available(iOS 15.0, *) {
-            newSnapshot.reconfigureItems(snapshot.reloadedItemIdentifiers)
-            newSnapshot.reconfigureItems(snapshot.reconfiguredItemIdentifiers)
+        newSnapshot.reconfigureItems(snapshot.reloadedItemIdentifiers)
+        newSnapshot.reconfigureItems(snapshot.reconfiguredItemIdentifiers)
+
+        return newSnapshot
+    }
+    
+    /// Convert and filter the snapshot
+    ///
+    /// We never want to reload cells because otherwise we might reuse a cell with different content when just updating the delivery state of our message causing
+    /// weird flickering. Reconfigure always deques the *exact* same cell which means no weird flickering 🥳
+    private func convert(
+        _ snapshot: NSDiffableDataSourceSnapshot<String, NSManagedObjectID>
+    ) -> NSDiffableDataSourceSnapshot<String, NSManagedObjectID> {
+        
+        var newSnapshot = NSDiffableDataSourceSnapshot<String, NSManagedObjectID>()
+        
+        // Because messages are saved really early in processing for the first time file message might have no MIME
+        // type. Leading them to be rendered as file messages. Because they might change to another type later on, on
+        // reconfiguring we crash (as the same cell (type)) is expected. Thus we filter all file messages that have no
+        // MIME type.
+        // Fetching should not happen on the main context. Otherwise we might deadlock if a chat is open and
+        // `mergeChanges(fromRemoteContextSave:into:)` is called in `refreshDirtyObjects(:_)`.
+        let fileMessageWithNoMIMETypeObjectIDs = Set(messageFetcher.fileMessagesWithNoMIMEType(
+            using: fetchedResultsController.managedObjectContext
+        ))
+        DDLogNotice("\(fileMessageWithNoMIMETypeObjectIDs.count) messages are filtered")
+        
+        // Go over all sections & rows and remove file messages with no MIME type (and sections if they are now empty)
+        for sectionIdentifier in snapshot.sectionIdentifiers {
+            newSnapshot.appendSections([sectionIdentifier])
+            
+            for itemIdentifier in snapshot.itemIdentifiers(inSection: sectionIdentifier) {
+                guard !fileMessageWithNoMIMETypeObjectIDs.contains(itemIdentifier) else {
+                    continue
+                }
+                
+                newSnapshot.appendItems([itemIdentifier], toSection: sectionIdentifier)
+            }
+            
+            if newSnapshot.itemIdentifiers(inSection: sectionIdentifier).isEmpty {
+                newSnapshot.deleteSections([sectionIdentifier])
+            }
         }
-        else {
-            // Fallback on earlier versions
-            newSnapshot.reloadItems(newSnapshot.itemIdentifiers)
+        
+        // Identify the cells neighboring the reloaded cells. Neighbours must be reloaded as well as they may be grouped
+        // together.
+        for reloadedItemIdentifier in snapshot.reloadedItemIdentifiers {
+            guard let index = newSnapshot.indexOfItem(reloadedItemIdentifier) else {
+                continue
+            }
+            // We may not insert the same identifier twice in the same call to reloadItems otherwise we get a crash.
+            // This is most likely not relevant for performance but it might still be fun to optimize this (e.g. by
+            // collecting all the item to reconfigure in a set an apply it once with `reconfigureItems(_:)`)
+            // We use reconfigure to get the exact same cell back from the cell provider, this avoids flickering cells.
+            newSnapshot.reconfigureItems([
+                newSnapshot.itemIdentifiers[max(0, index - 1)],
+            ])
+            newSnapshot.reconfigureItems([
+                newSnapshot.itemIdentifiers[index],
+            ])
+            newSnapshot.reconfigureItems([
+                newSnapshot.itemIdentifiers[min(newSnapshot.itemIdentifiers.count - 1, index + 1)],
+            ])
         }
+        
+        // If we try to reconfigure an item that's not in the snapshot it crashes thus we need to filter them out, too.
+        // Because we cannot delete items from `reconfiguredItemIdentifiers` we need to filter the original array first
+        // and then mark them as reconfigured.
+        let filteredReconfiguredItems = snapshot.reconfiguredItemIdentifiers.filter {
+            !fileMessageWithNoMIMETypeObjectIDs.contains($0)
+        }
+        newSnapshot.reconfigureItems(filteredReconfiguredItems)
         
         return newSnapshot
     }

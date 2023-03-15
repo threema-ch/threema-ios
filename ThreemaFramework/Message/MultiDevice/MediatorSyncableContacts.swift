@@ -127,7 +127,7 @@ class MediatorSyncableContacts: NSObject {
             delta.syncContact.verificationLevel = Sync_Contact
                 .VerificationLevel(rawValue: Int(truncating: contact.verificationLevel))!
 
-            delta.syncContact.workVerificationLevel = contact.isWork() ? .workSubscriptionVerified : .none
+            delta.syncContact.workVerificationLevel = contact.isWorkContact() ? .workSubscriptionVerified : .none
 
             switch contact.state?.intValue {
             case kStateActive:

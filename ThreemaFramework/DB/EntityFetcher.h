@@ -55,11 +55,9 @@ typedef enum : NSUInteger {
 
 - (__kindof NSManagedObject *)existingObjectWithID:(NSManagedObjectID *)objectID;
 
-- (BaseMessage *)ownMessageWithId:(NSData *)messageId NS_SWIFT_NAME(ownMessage(with:));
+- (nullable BaseMessage *)ownMessageWithId:(NSData *)messageId NS_SWIFT_NAME(ownMessage(with:));
 
-- (BaseMessage *)messageWithId:(NSData *)messageId NS_SWIFT_NAME(message(with:));
-
-- (BaseMessage *)messageWithId:(NSData *)messageId conversation:(Conversation *)conversation NS_SWIFT_NAME(message(with:conversation:));
+- (nullable BaseMessage *)messageWithId:(nonnull NSData *)messageId conversation:(nonnull Conversation *)conversation NS_SWIFT_NAME(message(with:conversation:));
 
 - (NSArray *)quoteMessagesContaining:(NSString *)searchText message:(BaseMessage *)message inConversation:(Conversation *)conversation;
 
@@ -69,9 +67,9 @@ typedef enum : NSUInteger {
 
 - (NSArray *)textMessagesContaining:(NSString *)searchText inConversation:(Conversation *)conversation fetchLimit:(NSInteger)fetchLimit;
 
-- (Contact *)contactForId:(NSString *)identity NS_SWIFT_NAME(contact(for:));
+- (ContactEntity *)contactForId:(NSString *)identity NS_SWIFT_NAME(contact(for:));
 
-- (Contact *)contactForId:(NSString *)identity error:(NSError **)error;
+- (ContactEntity *)contactForId:(NSString *)identity error:(NSError **)error;
 
 - (NSArray *)allContacts;
 
@@ -92,7 +90,7 @@ typedef enum : NSUInteger {
 // Is this still used somewhere?
 - (NSArray *)contactsWithVerificationLevel:(NSInteger)verificationLevel;
 
-- (NSArray<Contact *> *)contactsWithFeatureMaskNil;
+- (NSArray<ContactEntity *> *)contactsWithFeatureMaskNil;
 
 - (NSArray *)contactsWithCustomTypingIndicator;
 
@@ -104,7 +102,7 @@ typedef enum : NSUInteger {
 ///
 /// @param contact Only groups where this contact is member of are returned
 /// @return Array with `Conversation`s (might contain `nil` values)
-- (NSArray *)groupConversationsForContact:(Contact *)contact;
+- (NSArray *)groupConversationsForContact:(ContactEntity *)contact NS_SWIFT_NAME(groupConversations(for:));
 
 - (NSArray *)allConversations;
 
@@ -122,17 +120,15 @@ typedef enum : NSUInteger {
 
 - (NSString *)displayNameForContactId:(NSString *)identity NS_SWIFT_NAME(displayName(for:));
 
-- (Conversation *)conversationForGroupId:(NSData *)groupId NS_SWIFT_NAME(conversation(for:));
-
-- (Conversation *)conversationForContact:(Contact *)contact;
+- (Conversation *)conversationForContact:(ContactEntity *)contact NS_SWIFT_NAME(conversation(for:));
 
 - (Conversation *)conversationForIdentity:(NSString *)identity;
 
-- (NSArray *)conversationsForMember:(Contact *)contact;
+- (NSArray *)conversationsForMember:(ContactEntity *)contact;
 
 - (Conversation *)conversationForGroupMessage:(AbstractGroupMessage *)message;
 
-- (Conversation *)conversationForGroupId:(NSData *)groupId creator:(NSString *)creator NS_SWIFT_NAME(conversation(for:creator:));
+- (nullable Conversation *)conversationForGroupId:(nonnull NSData *)groupId creator:(nonnull NSString *)creator NS_SWIFT_NAME(conversation(for:creator:));
 
 - (Ballot *)ballotForBallotId:(NSData *)ballotId NS_SWIFT_NAME(ballot(for:));
 
@@ -144,7 +140,7 @@ typedef enum : NSUInteger {
 
 - (GroupEntity *)groupEntityForGroupId:(NSData *)groupId groupCreator:(NSString *)groupCreator NS_SWIFT_NAME(groupEntity(for:with:));
 
-- (GroupEntity *)groupEntityForConversation:(Conversation *)conversation;
+- (nullable GroupEntity *)groupEntityForConversation:(nonnull Conversation *)conversation;
 
 - (LastGroupSyncRequest *)lastGroupSyncRequestFor:(NSData *)groupId groupCreator:(NSString *)groupCreator sinceDate:(NSDate *)sinceDate;
 
@@ -153,6 +149,13 @@ typedef enum : NSUInteger {
 - (NSArray *)executeFetchRequest:(NSFetchRequest *)fetchRequest;
 
 - (NSInteger)executeCountFetchRequest:(NSFetchRequest *)fetchRequest;
+
+/// An alternative to `executeCountFetchRequest` which only calls non-blocking Core Data methods
+/// - Parameters:
+///   - fetchRequest: The count fetch request to execute
+///   - onCompletion: completion handler is called with the result of the count fetch request if the fetch succeeds. If onError is not set it will return 0 if it fails. Is always called on the main thread.
+///   - onError: called if the fetch request returns an error. Is always called on the main thread.
+- (void)executeCountFetchRequest:(nonnull NSFetchRequest *)fetchRequest onCompletion:(nonnull void(^)(NSInteger count))onCompletion onError:(nullable void(^)(NSError * _Nonnull))onError;
 
 - (NSBatchUpdateResult *)executeBatchUpdateRequest:(NSBatchUpdateRequest *)batchUpdateRequst;
 
@@ -178,7 +181,7 @@ typedef enum : NSUInteger {
 
 - (NSFetchedResultsController *)fetchedResultsControllerForGroups;
 
-- (NSFetchedResultsController *)fetchedResultsControllerForConversations;
+- (NSFetchedResultsController *)fetchedResultsControllerForConversationsWithSections:(BOOL)sections;
 
 - (NSFetchedResultsController *)fetchedResultsControllerForArchivedConversations;
 
@@ -202,6 +205,9 @@ typedef enum : NSUInteger {
 
 - (NSArray *)allLastGroupSyncRequests;
 
-- (NSArray *)allCallsWith:(NSString *)identity callID:(uint32_t)callID;
+- (nonnull NSArray *)allCallsWith:(nonnull NSString *)identity callID:(uint32_t)callID;
 
+- (nullable Conversation *)legacyConversationForGroupId:(nullable NSData *)groupId NS_SWIFT_NAME(legacyConversation(for:)); DEPRECATED_MSG_ATTRIBUTE("This is deprecated and will be removed together with the web client code. DO NOT USE THIS!");
+
+- (NSInteger)countFileMessagesWithNoMIMEType;
 @end

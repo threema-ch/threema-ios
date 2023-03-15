@@ -47,7 +47,7 @@ NSInteger count = 10000;
     DatabaseContext *dbCnx = [[DatabaseContext alloc] initWithPersistentCoordinator:[self->preparer persistentStoreCoordinator] forBackgroundProcess:NO];
     EntityManager *em = [[EntityManager alloc] initWithDatabaseContext:dbCnx];
     
-    Contact *contact = [[em entityFetcher] contactForId:@"ECHOECHO"];
+    ContactEntity *contact = [[em entityFetcher] contactForId:@"ECHOECHO"];
     Conversation *conversation = [[em entityFetcher] conversationForContact:contact];
     
     NSArray *result = [em.entityFetcher textMessagesContaining:@"gibts nicht" inConversation:conversation fetchLimit:0];
@@ -69,7 +69,7 @@ NSInteger count = 10000;
     DatabaseContext *dbCnx = [[DatabaseContext alloc] initWithPersistentCoordinator:[self->preparer persistentStoreCoordinator]];
     EntityManager *em = [[EntityManager alloc] initWithDatabaseContext:dbCnx];
     
-    Contact *contact = [[em entityFetcher] contactForId:@"ECHOECHO"];
+    ContactEntity *contact = [[em entityFetcher] contactForId:@"ECHOECHO"];
     Conversation *conversation = [[em entityFetcher] conversationForContact:contact];
     
     CFTimeInterval startTime = CACurrentMediaTime();

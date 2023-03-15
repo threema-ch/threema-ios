@@ -30,7 +30,7 @@
 #import "NSString+Emoji.h"
 #import "MyIdentityStore.h"
 #import "ContactStore.h"
-#import "Contact.h"
+#import "ContactEntity.h"
 #import "QuoteUtil.h"
 #import "BundleUtil.h"
 #import "TextStyleUtils.h"
@@ -592,8 +592,8 @@ static Theme currentTheme;
 }
 
 - (void)handleTapResult:(id)result {
-    if ([result isKindOfClass:[Contact class]]) {
-        [self.chatVc mentionTapped:(Contact *)result];
+    if ([result isKindOfClass:[ContactEntity class]]) {
+        [self.chatVc mentionTapped:(ContactEntity *)result];
     } else {
         if ([result isKindOfClass:[NSString class]]) {
             if ([(NSString *)result isEqualToString:@"meContact"]) {
@@ -671,8 +671,8 @@ static Theme currentTheme;
     if ([result isKindOfClass:[NSString class]]) {
         return;
     }
-    if ([result isKindOfClass:[Contact class]]) {
-        [self.chatVc mentionTapped:(Contact *)result];
+    if ([result isKindOfClass:[ContactEntity class]]) {
+        [self.chatVc mentionTapped:(ContactEntity *)result];
     }
     else if (result.resultType == NSTextCheckingTypeLink) {
         actionUrl = result.URL;
@@ -746,7 +746,7 @@ static Theme currentTheme;
     NSMutableAttributedString *quoteString = [[NSMutableAttributedString alloc] init];
     
     // Resolve identity to name
-    Contact *contact = [[ContactStore sharedContactStore] contactForIdentity:identity];
+    ContactEntity *contact = [[ContactStore sharedContactStore] contactForIdentity:identity];
     NSString *identityNewline = @"";
     
     if ([identity isEqualToString:[MyIdentityStore sharedMyIdentityStore].identity]) {
@@ -959,7 +959,7 @@ static Theme currentTheme;
     if ([identity isEqualToString:[BundleUtil localizedStringForKey:@"me"]]) {
         [self handleTapResult:@"meContact"];
     } else {
-        Contact *contact = [[ContactStore sharedContactStore] contactForIdentity:identity];
+        ContactEntity *contact = [[ContactStore sharedContactStore] contactForIdentity:identity];
         [self handleTapResult:contact];
     }
     return YES;

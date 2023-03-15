@@ -72,8 +72,9 @@ extension SystemMessage: MessageAccessibility {
     }
     
     public var accessibilityMessageTypeDescription: String {
+        // The other system message types do not need a description
         guard case .callMessage = systemMessageType else {
-            return "" // TODO: (IOS-3119) Add description
+            return ""
         }
         
         return BundleUtil.localizedString(forKey: "accessibility_systemCallMessage_description")

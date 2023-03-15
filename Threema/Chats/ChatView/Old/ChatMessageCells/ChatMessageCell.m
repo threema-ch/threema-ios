@@ -22,7 +22,6 @@
 #import "ChatDefines.h"
 #import "TextMessage.h"
 #import "Conversation.h"
-#import "Contact.h"
 #import "MessageSender.h"
 #import "Old_ChatViewController.h"
 #import "CustomResponderTextView.h"
@@ -191,7 +190,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     typingIndicator.image = [self getStatusImageNamed:@"Typing" withCustomColor:nil];
     
     UIView *v = [[UIView alloc] init];
-    v.backgroundColor = [Colors.primary colorWithAlphaComponent:0.1];
+    v.backgroundColor = [UIColor.primary colorWithAlphaComponent:0.1];
     self.selectedBackgroundView = v;
     
     quoteSlideIconImage.image = [[BundleUtil imageNamed:@"Quote"] imageWithTint:Colors.text];
@@ -452,11 +451,6 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         
     dateLabel.hidden = NO;
     
-    /* received message - show timestamp only if setting is enabled */
-    if (!message.isOwn.boolValue) {
-        dateLabel.hidden = ([UserSettings sharedUserSettings].showReceivedTimestamps == NO) && ([UserSettings sharedUserSettings].newChatViewActive == NO);
-    }
-    
     // Reset metaDataStackView hiding
     [metaDataStackView setHidden:NO];
 }
@@ -635,7 +629,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     }
     
     [groupSenderImageButton setImage:[BundleUtil imageNamed:@"Unknown"] forState:UIControlStateNormal];
-    [[AvatarMaker sharedAvatarMaker] avatarForContact:message.sender size:27.0f masked:YES onCompletion:^(UIImage *avatarImage, NSString *identity) {
+    [[AvatarMaker sharedAvatarMaker] avatarForContactEntity:message.sender size:27.0f masked:YES onCompletion:^(UIImage *avatarImage, NSString *identity) {
         if ([message.sender.identity isEqualToString:identity]) {
             dispatch_async(dispatch_get_main_queue(), ^{
                 [groupSenderImageButton setImage:avatarImage forState:UIControlStateNormal];

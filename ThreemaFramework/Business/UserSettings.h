@@ -34,6 +34,7 @@ enum SendProfilePicture {
 @property (nonatomic, strong) NSArray *profilePictureContactList;
 @property (nonatomic, readwrite) BOOL syncContacts;
 @property (nonatomic, readwrite) BOOL blockUnknown;
+@property (nonatomic, readwrite) BOOL enablePoi;
 @property (nonatomic, readwrite) BOOL sendReadReceipts;
 @property (nonatomic, readwrite) BOOL sendTypingIndicator;
 @property (nonatomic, readwrite) BOOL enableThreemaCall;
@@ -46,7 +47,6 @@ enum SendProfilePicture {
 
 @property (nonatomic, readwrite) BOOL sortOrderFirstName;
 @property (nonatomic, readwrite) float chatFontSize;
-@property (nonatomic, readwrite) BOOL useDynamicFontSize;
 @property (nonatomic, strong) NSString *imageSize;
 @property (nonatomic, strong) NSString *videoQuality;
 @property (nonatomic, strong) NSString *voIPSound;
@@ -69,14 +69,16 @@ enum SendProfilePicture {
 - (void)checkWallpaper;
 @property (nonatomic, strong) UIImage *wallpaper;
 @property (nonatomic, readwrite) BOOL disableBigEmojis;
-@property (nonatomic, readwrite) BOOL showReceivedTimestamps;
-@property (nonatomic, readwrite) BOOL returnToSend;
 
 @property (nonatomic, readwrite) BOOL enableMultiDevice;
 @property (nonatomic, readwrite) BOOL allowSeveralLinkedDevices;
 @property (nonatomic, strong) NSOrderedSet *workIdentities;
 @property (nonatomic, strong) NSArray *profilePictureRequestList;
 @property (nonatomic, readwrite) BOOL blockCommunication;
+
+@property (nonatomic, readwrite) BOOL flippedTableView;
+
+@property (nonatomic, readwrite) BOOL featureFlagEnableNoMIMETypeFileMessagesFilter;
 
 @end
 
@@ -112,11 +114,7 @@ enum ThreemaVideoCallQualitySetting {
 @property (nonatomic, strong) NSString *videoQuality;
 
 @property (nonatomic, readwrite) float chatFontSize;
-@property (nonatomic, readwrite) BOOL useDynamicFontSize;
 @property (nonatomic, readwrite) BOOL disableBigEmojis;
-// TODO: (IOS-2860) Remove when new chat view released
-@property (nonatomic, readwrite) BOOL showReceivedTimestamps DEPRECATED_MSG_ATTRIBUTE("This will be removed with the new chat view (newChatViewActive)");
-@property (nonatomic, readwrite) BOOL returnToSend;
 @property (nonatomic, readwrite) BOOL darkTheme;
 @property (nonatomic, readwrite) BOOL useSystemTheme;
 @property (nonatomic, readwrite) BOOL showProfilePictures;
@@ -171,8 +169,10 @@ enum ThreemaVideoCallQualitySetting {
 @property (nonatomic, readwrite) enum ThreemaVideoCallQualitySetting threemaVideoCallQualitySetting;
 
 @property (nonatomic, readwrite) BOOL newChatViewActive;
-@property (nonatomic, readwrite) BOOL initialScrollPositionAlt1;
 @property (nonatomic, readwrite) BOOL flippedTableView;
+
+@property (nonatomic, readwrite) BOOL featureFlagEnableNoMIMETypeFileMessagesFilter;
+
 
 @property (nonatomic, readwrite) BOOL hidePrivateChats;
 @property (nonatomic, readwrite) BOOL voiceMessagesShowTimeRemaining;

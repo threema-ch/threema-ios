@@ -105,7 +105,7 @@ final class ScrollToBottomView: UIView {
         }
         
         unreadMessagesSnapshot.$unreadMessagesState
-            .throttle(for: .milliseconds(Config.dataUpdateThrottleInMs), scheduler: processingQueue, latest: false)
+            .throttle(for: .milliseconds(Config.dataUpdateThrottleInMs), scheduler: processingQueue, latest: true)
             .receive(on: DispatchQueue.main)
             .sink { [weak self] unreadMessagesState in
                 if let unreadMessagesState = unreadMessagesState, unreadMessagesState.numberOfUnreadMessages <= 0 {
@@ -119,7 +119,7 @@ final class ScrollToBottomView: UIView {
             .store(in: &cancellables)
         
         unreadMessagesSnapshot.$userIsAtBottomOfTableView
-            .throttle(for: .milliseconds(Config.dataUpdateThrottleInMs), scheduler: processingQueue, latest: false)
+            .throttle(for: .milliseconds(Config.dataUpdateThrottleInMs), scheduler: processingQueue, latest: true)
             .receive(on: DispatchQueue.main)
             .sink { [weak self] userIsAtBottomOfTableView in
                 if userIsAtBottomOfTableView {
@@ -225,7 +225,7 @@ final class ScrollToBottomView: UIView {
     }
     
     func updateColors() {
-        unreadCountLabel.textColor = Colors.primary
+        unreadCountLabel.textColor = .primary
         backgroundColor = Colors.backgroundChatBar
     }
     

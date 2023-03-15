@@ -321,9 +321,13 @@ final class ChatProfileView: UIStackView {
         // Make the view tappable
         viewButton.addTarget(self, action: #selector(viewTapped), for: .touchUpInside)
         
-        // Get callbacks to animate tapping
-        viewButton.addTarget(self, action: #selector(touchDown), for: .touchDown)
-        viewButton.addTarget(self, action: #selector(touchUp), for: [.touchUpInside, .touchUpOutside, .touchCancel])
+        // Do not pause animation for UI tests, it will break the test
+        if !ProcessInfoHelper.isRunningForScreenshots {
+            // Get callbacks to animate tapping
+            viewButton.addTarget(self, action: #selector(touchDown), for: .touchDown)
+            viewButton.addTarget(self, action: #selector(touchUp), for: [.touchUpInside, .touchUpOutside, .touchCancel])
+        }
+        viewButton.accessibilityIdentifier = "ChatProfileViewViewButton"
         
         addSubview(viewButton)
         
@@ -555,7 +559,7 @@ final class ChatProfileView: UIStackView {
             // Do nothing
         }
     }
-    
+        
     override var accessibilityValue: String? {
         get {
             if !conversation.isGroup() {

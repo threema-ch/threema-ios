@@ -45,7 +45,7 @@
 }
 
 - (BOOL)allowSendingProfile {
-    return NO;
+    return YES;
 }
 
 - (BOOL)isGroupControlMessage {

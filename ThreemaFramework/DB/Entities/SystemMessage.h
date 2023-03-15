@@ -56,6 +56,7 @@ enum {
     kSystemMessageFsDisabledOutgoing = 28,
     kSystemMessageFsNotSupportedAnymore = 29,
     kSystemMessageUnsupportedType = 31,
+    kSystemMessageGroupAvatarChanged = 32,
 };
 
 @interface SystemMessage : BaseMessage

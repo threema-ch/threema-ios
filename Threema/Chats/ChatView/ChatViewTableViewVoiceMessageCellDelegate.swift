@@ -38,6 +38,14 @@ protocol ChatViewTableViewVoiceMessageCellDelegateProtocol: NSObject {
     func updateProgress(for voiceMessage: VoiceMessage, to progress: CGFloat)
     
     func getProgress(for voiceMessage: VoiceMessage) -> CGFloat
+    
+    func isMessageCurrentlyPlaying(_ message: BaseMessage) -> Bool
+    func reregisterCallbacks(
+        message: VoiceMessage,
+        progressCallback: @escaping (TimeInterval, CGFloat) -> Void,
+        pauseCallback: @escaping () -> Void,
+        finishedCallback: @escaping (Bool) -> Void
+    )
 }
 
 /// Handles the interaction between voice message cells and the AVAudioPlayer handling the playback
@@ -45,11 +53,16 @@ protocol ChatViewTableViewVoiceMessageCellDelegateProtocol: NSObject {
 final class ChatViewTableViewVoiceMessageCellDelegate: NSObject, ChatViewTableViewVoiceMessageCellDelegateProtocol {
     typealias config = ChatViewConfiguration.VoiceMessage
 
+    // MARK: - State Properties
+    
+    var didDisappear = false
+    
     // MARK: - Private Properties
 
     private weak var chatViewController: ChatViewController?
     
     private var currentlyPlaying: VoiceMessage?
+    private var currentlyPlayingURL: URL?
     private var audioPlayer: AVAudioPlayer?
     private var finishedCallback: ((Bool) -> Void)?
     private var progressCallback: ((TimeInterval, CGFloat) -> Void)?
@@ -133,13 +146,11 @@ final class ChatViewTableViewVoiceMessageCellDelegate: NSObject, ChatViewTableVi
     private func handleSimultaneousPlayIfNecessary(for newMessage: VoiceMessage, with exportedDataAtURL: URL) {
         if let currentlyPlaying = currentlyPlaying, currentlyPlaying.objectID != newMessage.objectID {
             audioPlayer?.stop()
+            audioPlayer = nil
+            
             playTimer?.invalidate()
             cleanupTemporaryFiles()
             finishedCallback?(true)
-
-            audioPlayer = try? AVAudioPlayer(contentsOf: exportedDataAtURL)
-            audioPlayer?.delegate = self
-            audioPlayer?.prepareToPlay()
         }
     }
     
@@ -173,7 +184,7 @@ final class ChatViewTableViewVoiceMessageCellDelegate: NSObject, ChatViewTableVi
         /// Clean up exported file for playback
         /// This can occur often if a user plays back the same voice messages lots of times
         /// If this fails, the temporary directory is cleaned up regularly by the app and on deinit of the ChatViewController
-        FileUtility.delete(at: currentlyPlaying?.temporaryBlobDataURL)
+        FileUtility.delete(at: currentlyPlayingURL)
     }
     
     // MARK: - ChatViewTableViewVoiceMessageCellDelegateProtocol Implementation
@@ -186,9 +197,16 @@ final class ChatViewTableViewVoiceMessageCellDelegate: NSObject, ChatViewTableVi
         pauseCallback: @escaping () -> Void,
         finishedCallback: @escaping (Bool) -> Void
     ) {
-        initializeAudioPlayerIfNeeded(url: url)
+        guard !didDisappear else {
+            DDLogError("Cannot start playing because we did disappear")
+            return
+        }
         
+        // Stop already running playback and remove temporary files
         handleSimultaneousPlayIfNecessary(for: message, with: url)
+        
+        // Start playback with new URL or continue to use the existing audio player
+        initializeAudioPlayerIfNeeded(url: url)
         
         guard let audioPlayer = audioPlayer else {
             let msg = "Couldn't create audioPlayer from audio message"
@@ -205,6 +223,8 @@ final class ChatViewTableViewVoiceMessageCellDelegate: NSObject, ChatViewTableVi
         
         // Start Playing
         currentlyPlaying = message
+        currentlyPlayingURL = url
+        
         audioPlayer.rate = Float(rate)
         
         if let progress = progressDictionary[message.objectID] {
@@ -213,8 +233,27 @@ final class ChatViewTableViewVoiceMessageCellDelegate: NSObject, ChatViewTableVi
         
         UIDevice.current.isProximityMonitoringEnabled = true
         audioPlayer.play()
+        audioPlayer.rate = Float(rate)
         
         createPlaybackProgressTimer()
+    }
+    
+    func reregisterCallbacks(
+        message: VoiceMessage,
+        progressCallback: @escaping (TimeInterval, CGFloat) -> Void,
+        pauseCallback: @escaping () -> Void,
+        finishedCallback: @escaping (Bool) -> Void
+    ) {
+        guard let currentlyPlaying = currentlyPlaying, currentlyPlaying.objectID == message.objectID else {
+            let msg =
+                "Currently playing message and message passed in for reregistering are different. This may happen if you're very unlucky with timing and we have just switched to the next message"
+            DDLogWarn(msg)
+            return
+        }
+            
+        self.finishedCallback = finishedCallback
+        self.progressCallback = progressCallback
+        self.pauseCallback = pauseCallback
     }
     
     func pausePlaying() {
@@ -268,10 +307,24 @@ final class ChatViewTableViewVoiceMessageCellDelegate: NSObject, ChatViewTableVi
         }
     }
     
+    func isMessageCurrentlyPlaying(_ message: BaseMessage) -> Bool {
+        guard let currentlyPlaying = currentlyPlaying else {
+            return false
+        }
+        
+        guard let audioPlayer, audioPlayer.isPlaying else {
+            return false
+        }
+        
+        return currentlyPlaying.objectID == message.objectID
+    }
+    
     // MARK: - Update functions
     
     /// Stops playback and removes all created temporary files
-    func stopPlayingAndDoCleanup() {
+    /// - Parameter cancel: Whether we should continue playing with the next continuous voice message if it exists
+    /// or cancel playback.
+    func stopPlayingAndDoCleanup(cancel: Bool = false) {
         if let audioPlayer = audioPlayer {
             let progress = CGFloat(audioPlayer.currentTime / audioPlayer.duration)
             if let currentlyPlaying = currentlyPlaying {
@@ -284,7 +337,7 @@ final class ChatViewTableViewVoiceMessageCellDelegate: NSObject, ChatViewTableVi
             }
         }
         
-        finishedCallback?(false)
+        finishedCallback?(cancel)
         playTimer?.invalidate()
         
         UIDevice.current.isProximityMonitoringEnabled = false

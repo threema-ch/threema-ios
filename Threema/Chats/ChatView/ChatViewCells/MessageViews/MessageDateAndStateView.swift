@@ -33,10 +33,28 @@ final class MessageDateAndStateView: UIView {
             guard let message = message else {
                 return
             }
-                    
-            updateDate(for: message)
-            updateState(to: message.messageDisplayState)
-            updateGroupAck(for: message)
+            
+            let block = {
+                self.updateDate(for: message)
+                self.updateState(to: message.messageDisplayState)
+                self.updateGroupAck(for: message)
+                
+                self.layoutIfNeeded()
+            }
+            
+            if let oldValue, message.objectID == oldValue.objectID {
+                UIView.animate(
+                    withDuration: ChatViewConfiguration.ChatBubble
+                        .dateAndStateViewShowAndHideAnimationDurationInSeconds,
+                    delay: 0.0,
+                    options: [.curveEaseInOut]
+                ) {
+                    block()
+                }
+            }
+            else {
+                block()
+            }
         }
     }
     
@@ -151,7 +169,7 @@ final class MessageDateAndStateView: UIView {
         
         groupReactionsStackView.updateColors()
         
-        if let message = message {
+        if let message, !message.willBeDeleted {
             updateState(to: message.messageDisplayState)
             updateGroupAck(for: message)
         }
@@ -195,10 +213,13 @@ final class MessageDateAndStateView: UIView {
         guard statusSymbolImageView.isHidden else {
             return
         }
-        statusSymbolImageView.isHidden = false
-
-        NSLayoutConstraint.activate(statusSymbolImageViewConstraints)
-        dateLabelNoGroupReactionsInsetConstraint.constant = -dateLabelTrailingInset
+        
+        UIView.performWithoutAnimation { [self] in
+            statusSymbolImageView.isHidden = false
+            
+            NSLayoutConstraint.activate(statusSymbolImageViewConstraints)
+            dateLabelNoGroupReactionsInsetConstraint.constant = -dateLabelTrailingInset
+        }
     }
     
     private func hideStatusSymbol() {

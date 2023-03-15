@@ -19,7 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import "QuoteView.h"
-#import "Contact.h"
+#import "ContactEntity.h"
 #import "UserSettings.h"
 #import "MyIdentityStore.h"
 #import "UILabel+Markup.h"
@@ -53,7 +53,7 @@ static CGFloat quoteIconSpacing = 8.0;
     UIImageView *quoteIcon;
     
     NSString *quotedText;
-    Contact *quotedContact;
+    ContactEntity *quotedContact;
 }
 
 - (instancetype)init {
@@ -152,7 +152,7 @@ static CGFloat quoteIconSpacing = 8.0;
     return quoteSize;
 }
 
-- (void)setQuotedText:(NSString *)newQuotedText quotedContact:(Contact *)newQuotedContact {
+- (void)setQuotedText:(NSString *)newQuotedText quotedContact:(ContactEntity *)newQuotedContact {
     quotedText = newQuotedText;
     quotedContact = newQuotedContact;
     
@@ -171,7 +171,7 @@ static CGFloat quoteIconSpacing = 8.0;
     
     quoteLabel.textAlignment = [quotedText textAlignment];
     
-    Contact *sender;
+    ContactEntity *sender;
     if (_quotedMessage.isOwn.boolValue) {
         sender = nil;
     } else if (_quotedMessage.sender != nil) {

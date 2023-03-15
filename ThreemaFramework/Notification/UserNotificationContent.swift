@@ -26,7 +26,7 @@ public class UserNotificationContent {
     init(_ pendingUserNotification: PendingUserNotification) {
         self.pendingUserNotification = pendingUserNotification
     }
-
+    
     var stage: UserNotificationStage {
         pendingUserNotification.stage
     }
@@ -54,7 +54,7 @@ public class UserNotificationContent {
     
     var cmd: String! {
         var commandValue: ThreemaPushNotification.Command?
-            
+        
         if let baseMsg = pendingUserNotification.baseMessage {
             commandValue = baseMsg.isGroupMessage ? .newGroupMessage : .newMessage
         }
@@ -65,7 +65,7 @@ public class UserNotificationContent {
         else if let command = pendingUserNotification.threemaPushNotification?.command {
             commandValue = command
         }
-            
+        
         return commandValue?.rawValue
     }
     
@@ -74,4 +74,34 @@ public class UserNotificationContent {
     }
     
     var groupID: String?
+    var groupCreator: String?
+    
+    var userInfo: [String: [String: String]] {
+        if isGroupMessage {
+            if let groupID, let groupCreator {
+                return [
+                    "threema": [
+                        "cmd": cmd,
+                        "from": senderID,
+                        "messageId": messageID,
+                        "groupId": groupID,
+                        "groupCreator": groupCreator,
+                    ],
+                ]
+            }
+            else {
+                // This can happen if base message was never set
+                return [
+                    "threema": [
+                        "cmd": cmd,
+                        "from": senderID,
+                        "messageId": messageID,
+                    ],
+                ]
+            }
+        }
+        else {
+            return ["threema": ["cmd": cmd, "from": senderID, "messageId": messageID]]
+        }
+    }
 }

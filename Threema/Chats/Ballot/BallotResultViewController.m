@@ -66,6 +66,7 @@
     [_headerPlaceholderView addSubview: _headerView];
     
     [_doneButton setTitle:[BundleUtil localizedStringForKey:@"Done"]];
+    _doneButton.accessibilityIdentifier = @"BallotResultViewControllerDoneBarButtonItem";
     
     if ([_ballot isClosed]) {
         [self setTitle:[BundleUtil localizedStringForKey:@"ballot_results"]];
@@ -113,6 +114,10 @@
 }
 
 - (void)updateContent {
+    if (_matrixView != nil) {
+        [_matrixView removeFromSuperview];
+        _matrixView = nil;
+    }
     CGRect rect = _resultView.bounds;
     _matrixView = [[BallotResultMatrixView alloc] initWithFrame: rect];
     _matrixView.autoresizingMask = UIViewAutoresizingFlexibleHeight | UIViewAutoresizingFlexibleWidth;

@@ -80,4 +80,13 @@ public extension FileMessageEntity {
         
         return .fileMessage
     }
+    
+    override var showRetryAndCancelButton: Bool {
+        switch blobDisplayState {
+        case .pending, .sendingError, .uploading:
+            return true
+        default:
+            return false
+        }
+    }
 }

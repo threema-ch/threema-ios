@@ -31,8 +31,9 @@ public protocol BusinessInjectorProtocol {
     var messageSender: MessageSenderProtocol { get }
     var multiDeviceManager: MultiDeviceManagerProtocol { get }
     var myIdentityStore: MyIdentityStoreProtocol { get }
-    var userSettings: UserSettingsProtocol { get }
     var serverConnector: ServerConnectorProtocol { get }
+    var userSettings: UserSettingsProtocol { get }
+    var settingsStore: any SettingsStoreProtocol { get }
 }
 
 protocol BusinessInternalInjectorProtocol {
@@ -40,6 +41,7 @@ protocol BusinessInternalInjectorProtocol {
     var messageProcessor: MessageProcessorProtocol { get }
     var dhSessionStore: DHSessionStoreProtocol { get }
     var fsmp: ForwardSecurityMessageProcessor { get }
+    var settingsStoreInternal: SettingsStoreInternalProtocol { get }
 }
 
 typealias FrameworkInjectorProtocol = BusinessInjectorProtocol & BusinessInternalInjectorProtocol

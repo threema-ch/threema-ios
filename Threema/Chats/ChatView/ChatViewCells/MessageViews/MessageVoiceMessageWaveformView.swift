@@ -57,12 +57,12 @@ final class MessageVoiceMessageWaveformView: UIView, UIGestureRecognizerDelegate
             }
             
             switch newValue.blobDisplayState {
-            case .remote, .processed, .pending, .uploaded, .dataDeleted, .fileNotFound:
+            case .remote, .processed, .pending, .uploading, .uploaded, .dataDeleted, .fileNotFound, .sendingError:
                 guard newValue.blobDisplayState == lastBlobState else {
                     updateView(with: newValue)
                     return
                 }
-            case .uploading(progress: _), .downloading(progress: _):
+            case .downloading:
                 break
             }
         }
@@ -159,6 +159,10 @@ final class MessageVoiceMessageWaveformView: UIView, UIGestureRecognizerDelegate
     
     // MARK: - Update Functions
     
+    func updateColor() {
+        updateView(with: voiceMessage)
+    }
+    
     private func updateView(with voiceMessage: VoiceMessage?) {
         guard let audioURL = blobDataURL(for: voiceMessage) else {
             let msg = "URL for blobdata was unexpectedly nil"
@@ -184,8 +188,8 @@ final class MessageVoiceMessageWaveformView: UIView, UIGestureRecognizerDelegate
         
         let configuredSize = targetImageSize(from: imageView)
         
-        let completeWaveformConfig = waveformConfig(size: configuredSize, color: config.unplayedBarColor)
-        let progressConfig = waveformConfig(size: configuredSize, color: config.playedBarColor)
+        let completeWaveformConfig = waveformConfig(size: configuredSize, color: Colors.textLight)
+        let progressConfig = waveformConfig(size: configuredSize, color: .primary)
         
         let waveformDrawer = DSWaveformImage.WaveformImageDrawer()
         async let maybeFullWaveformImage = waveformDrawer.waveformImage(
@@ -272,7 +276,7 @@ final class MessageVoiceMessageWaveformView: UIView, UIGestureRecognizerDelegate
         }
 
         /// If we do not have access to the blob we do nothing else and return
-        guard let audioURL = voiceMessage.temporaryBlobDataURL else {
+        guard let audioURL = voiceMessage.temporaryBlobDataURL() else {
             return silentAudioURL
         }
         

@@ -258,12 +258,14 @@ final class ChatBarContainerView: UIView {
         mentionsTableViewHeightConstraint = mentionsTableView.view.heightAnchor
             .constraint(equalToConstant: maxHeight)
         mentionsTableViewHeightConstraint?.isActive = true
+        mentionsTableView.tableView.isHidden = true
         
         UIView.animate(
             withDuration: ChatViewConfiguration.ChatBar.ContentInsetAnimation.totalDuration,
             delay: ChatViewConfiguration.ChatBar.ContentInsetAnimation.delay,
             options: .curveEaseInOut,
             animations: { [weak self] in
+                mentionsTableView.tableView.isHidden = false
                 self?.layoutIfNeeded()
             },
             completion: onCompletion
@@ -272,5 +274,12 @@ final class ChatBarContainerView: UIView {
     
     @discardableResult override func becomeFirstResponder() -> Bool {
         chatBarView?.becomeFirstResponder() ?? false
+    }
+    
+    override func resignFirstResponder() -> Bool {
+        guard let chatBarView else {
+            return false
+        }
+        return chatBarView.resignFirstResponder()
     }
 }

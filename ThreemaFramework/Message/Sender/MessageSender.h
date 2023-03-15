@@ -29,7 +29,7 @@
 #import "FileMessageEntity.h"
 
 @class Conversation;
-@class Contact;
+@class ContactEntity;
 @class Group;
 
 @protocol MessageSenderProtocol <NSObject>

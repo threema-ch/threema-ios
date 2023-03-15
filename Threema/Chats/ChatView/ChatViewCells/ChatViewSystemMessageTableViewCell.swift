@@ -35,16 +35,46 @@ final class ChatViewSystemMessageTableViewCell: ThemedCodeTableViewCell, Measura
         }
     }
     
-    // MARK: - Views & constraints
-
-    private lazy var systemMessageTextLabel = SystemMessageTextLabel()
+    // MARK: - Private properties
     
-    private lazy var topSpacingConstraint = systemMessageTextLabel.topAnchor.constraint(
+    private lazy var markupParser = MarkupParser()
+    
+    // MARK: Views & constraints
+    
+    private lazy var systemMessageLabel: UILabel = {
+        let label = UILabel()
+        
+        label.numberOfLines = 0
+        label.lineBreakMode = .byWordWrapping
+        label.textAlignment = .center
+        
+        label.font = UIFont.preferredFont(forTextStyle: ChatViewConfiguration.SystemMessageText.defaultTextStyle)
+        label.adjustsFontForContentSizeCategory = true
+        
+        return label
+    }()
+    
+    private lazy var systemMessageBackgroundView: UIView = {
+        let view = UIView()
+        
+        view.directionalLayoutMargins = NSDirectionalEdgeInsets(
+            top: ChatViewConfiguration.SystemMessage.Background.defaultSystemMessageTopBottomInset,
+            leading: ChatViewConfiguration.SystemMessage.Background.defaultSystemMessageLeadingTrailingInset,
+            bottom: ChatViewConfiguration.SystemMessage.Background.defaultSystemMessageTopBottomInset,
+            trailing: ChatViewConfiguration.SystemMessage.Background.defaultSystemMessageLeadingTrailingInset
+        )
+        
+        view.layer.cornerCurve = .continuous
+        
+        return view
+    }()
+    
+    private lazy var topSpacingConstraint = systemMessageBackgroundView.topAnchor.constraint(
         equalTo: contentView.topAnchor,
         constant: ChatViewConfiguration.SystemMessage.defaultTopBottomInset
     )
     
-    private lazy var bottomSpacingConstraint = systemMessageTextLabel.bottomAnchor.constraint(
+    private lazy var bottomSpacingConstraint = systemMessageBackgroundView.bottomAnchor.constraint(
         equalTo: contentView.bottomAnchor,
         constant: -ChatViewConfiguration.SystemMessage.defaultTopBottomInset
     )
@@ -55,26 +85,44 @@ final class ChatViewSystemMessageTableViewCell: ThemedCodeTableViewCell, Measura
         super.configureCell()
         
         if UserSettings.shared().flippedTableView {
-            contentView.transform = CGAffineTransform(scaleX: 1, y: -1)
+            transform = CGAffineTransform(scaleX: 1, y: -1)
         }
         
-        isUserInteractionEnabled = false
         backgroundConfiguration = UIBackgroundConfiguration.clear()
         
-        defaultMinimalHeightConstraint.isActive = false
+        // Layout
         
-        contentView.addSubview(systemMessageTextLabel)
-        systemMessageTextLabel.translatesAutoresizingMaskIntoConstraints = false
+        defaultMinimalHeightConstraint.isActive = false
 
+        // The label is a subview of the background view
+        contentView.addSubview(systemMessageBackgroundView)
+        systemMessageBackgroundView.addSubview(systemMessageLabel)
+        
+        systemMessageBackgroundView.translatesAutoresizingMaskIntoConstraints = false
+        systemMessageLabel.translatesAutoresizingMaskIntoConstraints = false
+        
         NSLayoutConstraint.activate([
             topSpacingConstraint,
             bottomSpacingConstraint,
-            systemMessageTextLabel.widthAnchor
-                .constraint(lessThanOrEqualTo: contentView.readableContentGuide.widthAnchor),
-            systemMessageTextLabel.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
+            
+            systemMessageBackgroundView.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
+            systemMessageBackgroundView.widthAnchor.constraint(
+                lessThanOrEqualTo: contentView.readableContentGuide.widthAnchor
+            ),
+            
+            systemMessageBackgroundView.layoutMarginsGuide.topAnchor.constraint(
+                equalTo: systemMessageLabel.topAnchor
+            ),
+            systemMessageBackgroundView.layoutMarginsGuide.leadingAnchor.constraint(
+                equalTo: systemMessageLabel.leadingAnchor
+            ),
+            systemMessageBackgroundView.layoutMarginsGuide.bottomAnchor.constraint(
+                equalTo: systemMessageLabel.bottomAnchor
+            ),
+            systemMessageBackgroundView.layoutMarginsGuide.trailingAnchor.constraint(
+                equalTo: systemMessageLabel.trailingAnchor
+            ),
         ])
-        
-        systemMessageTextLabel.updateCornerRadius()
     }
     
     // MARK: - Updates
@@ -82,32 +130,60 @@ final class ChatViewSystemMessageTableViewCell: ThemedCodeTableViewCell, Measura
     override func updateColors() {
         super.updateColors()
         
-        systemMessageTextLabel.updateColors()
+        systemMessageLabel.textColor = Colors.textLight
+        systemMessageLabel.highlightedTextColor = Colors.textLight
+        systemMessageBackgroundView.backgroundColor = Colors.newSystemMessageBackground
     }
     
     private func updateCell(for systemMessage: SystemMessage?) {
         guard case let .systemMessage(type: infoType) = systemMessage?.systemMessageType else {
             return
         }
-
-        systemMessageTextLabel.text = infoType.localizedMessage
-        systemMessageTextLabel.updateCornerRadius()
+        
+        systemMessageLabel.attributedText = markupParser.markify(
+            attributedString: NSAttributedString(string: infoType.localizedMessage),
+            font: UIFont.preferredFont(forTextStyle: ChatViewConfiguration.SystemMessageText.defaultTextStyle),
+            parseURL: false,
+            parseMention: false,
+            removeMarkups: true
+        )
         
         // Adjust insets depending on the neighbors
         
-        if shouldGroupWithPreviousSystemMessage {
+        if UserSettings.shared()
+            .flippedTableView ? shouldGroupWithNextSystemMessage : shouldGroupWithPreviousSystemMessage {
             topSpacingConstraint.constant = ChatViewConfiguration.SystemMessage.groupedDefaultTopBottomInset
         }
         else {
             topSpacingConstraint.constant = ChatViewConfiguration.SystemMessage.defaultTopBottomInset
         }
         
-        if shouldGroupWithNextSystemMessage {
+        if UserSettings.shared()
+            .flippedTableView ? shouldGroupWithPreviousSystemMessage : shouldGroupWithNextSystemMessage {
             bottomSpacingConstraint.constant = -ChatViewConfiguration.SystemMessage.groupedDefaultTopBottomInset
         }
         else {
             bottomSpacingConstraint.constant = -ChatViewConfiguration.SystemMessage.defaultTopBottomInset
         }
+    }
+    
+    // MARK: - Overrides
+    
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        
+        // Ensure that we always have a correct corner radius
+        var newCornerRadius = min(
+            ChatViewConfiguration.SystemMessage.Background.cornerRadius,
+            systemMessageBackgroundView.frame.height / 2
+        )
+        
+        // We sometimes ran into an issue where the frame height was 0 on initial loading in iOS 15.6.
+        if newCornerRadius == 0 {
+            newCornerRadius = ChatViewConfiguration.SystemMessage.Background.cornerRadius
+        }
+        
+        systemMessageBackgroundView.layer.cornerRadius = newCornerRadius
     }
     
     // MARK: - Neighboring helpers

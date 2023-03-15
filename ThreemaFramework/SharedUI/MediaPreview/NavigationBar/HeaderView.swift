@@ -124,12 +124,12 @@ class HeaderView: UIView {
             
             attributedTitleString.addAttribute(
                 NSAttributedString.Key.foregroundColor,
-                value: Colors.primary,
+                value: UIColor.primary,
                 range: range
             )
             
             let arrowAttach = NSTextAttachment()
-            arrowAttach.image = BundleUtil.imageNamed("ArrowNext")?.withTint(Colors.primary)
+            arrowAttach.image = BundleUtil.imageNamed("ArrowNext")?.withTint(.primary)
             
             let widthConst = optionsLabel.font.capHeight
             
@@ -155,8 +155,16 @@ class HeaderView: UIView {
             stackView.addArrangedSubview(optionsLabel)
             
             viewButton.addTarget(self, action: #selector(viewTapped), for: .touchUpInside)
-            viewButton.addTarget(self, action: #selector(touchDown), for: .touchDown)
-            viewButton.addTarget(self, action: #selector(touchUp), for: [.touchUpInside, .touchUpOutside, .touchCancel])
+            
+            // Do not pause animation for UI tests, it will break the test
+            if !ProcessInfoHelper.isRunningForScreenshots {
+                viewButton.addTarget(self, action: #selector(touchDown), for: .touchDown)
+                viewButton.addTarget(
+                    self,
+                    action: #selector(touchUp),
+                    for: [.touchUpInside, .touchUpOutside, .touchCancel]
+                )
+            }
             addSubview(viewButton)
         }
         

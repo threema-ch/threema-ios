@@ -38,14 +38,20 @@ class BlobManagerTests: XCTestCase {
     private var conversation: Conversation!
     private var groupConversation: Conversation!
     private var entityManager: EntityManager!
-    private var businessInjector: FrameworkInjectorProtocol!
     private var blobManager: BlobManager!
-    
+    private let myIdentityStoreMock = MyIdentityStoreMock()
     private let baseURLString = "https://example.com"
     private let encryptionKey = BytesUtility.generateRandomBytes(length: Int(kBlobKeyLen))!
     
     private let testThumbnailID = "546573745468756d62".data(using: .ascii)!
-    private let testThumbnailData = "This is test thumbnail data.".data(using: .utf8)!
+    private let testThumbnailData = try! Data(
+        contentsOf: Bundle(
+            for: BlobManagerTests.self
+        ).url(
+            forResource: "Bild-1-1-thumbnail",
+            withExtension: "jpg"
+        )!
+    )
     private lazy var encryptedThumbnailData: Data = NaClCrypto.shared().symmetricEncryptData(
         testThumbnailData,
         withKey: encryptionKey,
@@ -91,12 +97,8 @@ class BlobManagerTests: XCTestCase {
             mainContext: context,
             backgroundContext: backgroundManagedObjectContext
         )
-        entityManager = EntityManager(databaseContext: databaseContext)
         
-        businessInjector = BusinessInjectorMock(
-            entityManager: entityManager,
-            backgroundEntityManager: entityManager
-        )
+        entityManager = EntityManager(databaseContext: databaseContext, myIdentityStore: myIdentityStoreMock)
         
         blobManager = BlobManager(
             entityManager: entityManager,
@@ -233,11 +235,15 @@ class BlobManagerTests: XCTestCase {
         
         // Assert
         let actualThumbnailData = try XCTUnwrap(fileMessageEntity.blobGetThumbnail())
+        let thumbnail = try XCTUnwrap(fileMessageEntity.thumbnail)
+        let loadedThumbnailImage = try XCTUnwrap(UIImage(data: testThumbnailData))
         let actualBlobData = try XCTUnwrap(fileMessageEntity.blobGet())
         let blobProgress = fileMessageEntity.blobGetProgress()
         let blobError = fileMessageEntity.blobGetError()
         
         XCTAssertEqual(testThumbnailData, actualThumbnailData)
+        XCTAssertEqual(loadedThumbnailImage.size.width as NSNumber, thumbnail.width)
+        XCTAssertEqual(loadedThumbnailImage.size.height as NSNumber, thumbnail.height)
         XCTAssertEqual(testBlobData, actualBlobData)
         XCTAssertEqual(blobProgress, nil)
         XCTAssertEqual(blobError, false)
@@ -529,7 +535,12 @@ class BlobManagerTests: XCTestCase {
         )
         
         // Act
-        await blobManager.syncBlobs(for: fileMessageEntity.objectID)
+        do {
+            try await blobManager.syncBlobsThrows(for: fileMessageEntity.objectID)
+        }
+        catch {
+            XCTAssertEqual(error as! BlobManagerError, BlobManagerError.sendingFailed)
+        }
         
         wait(for: [expectationData], timeout: 5)
         
@@ -542,7 +553,7 @@ class BlobManagerTests: XCTestCase {
         XCTAssertEqual(testBlobID, receivedThumbnailID)
         XCTAssertEqual(testBlobID, receivedBlobID)
         XCTAssertEqual(blobProgress, nil)
-        XCTAssertEqual(blobError, false)
+        // We cannot test for error, since the sending of the message fails and an error is set
     }
     
     @MainActor
@@ -589,6 +600,91 @@ class BlobManagerTests: XCTestCase {
         let blobProgress = fileMessageEntity.blobGetProgress()
         let blobError = fileMessageEntity.blobGetError()
         
+        XCTAssertEqual(blobProgress, nil)
+        XCTAssertEqual(blobError, false)
+    }
+    
+    func testOutGoingDataNoteGroup() async throws {
+        
+        let myIdentityStoreMock = MyIdentityStoreMock()
+        let contactStoreMock = ContactStoreMock(callOnCompletion: true)
+        let taskManagerMock = TaskManagerMock()
+        let userSettingsMock = UserSettingsMock()
+
+        let expectedGroupID: Data = BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!
+        let expectedGroupCreator: String = myIdentityStoreMock.identity
+        
+        let groupManager = GroupManager(
+            ServerConnectorMock(),
+            myIdentityStoreMock,
+            contactStoreMock,
+            taskManagerMock,
+            userSettingsMock,
+            entityManager,
+            GroupPhotoSenderMock()
+        )
+        
+        let grp = createOrUpdateDBWait(
+            groupManager: groupManager,
+            groupID: expectedGroupID,
+            creator: expectedGroupCreator,
+            members: []
+        )
+        
+        XCTAssertNotNil(grp)
+        
+        let conversation = entityManager.entityFetcher.conversation(
+            for: grp!.groupID,
+            creator: grp!.groupIdentity.creator
+        )
+        
+        XCTAssertNotNil(conversation)
+
+        // Arrange
+        var fileMessageEntity: FileMessageEntity!
+        let fileData = databasePreparer.createFileData(data: testBlobData)
+        let thumbnailData = databasePreparer.createImageData(data: testThumbnailData, height: 10, width: 10)
+
+        databasePreparer.save {
+            fileMessageEntity = databasePreparer.createFileMessageEntity(
+                conversation: conversation!,
+                encryptionKey: encryptionKey,
+                blobID: testBlobID,
+                blobThumbnailID: testThumbnailID,
+                data: fileData,
+                thumbnail: thumbnailData,
+                isOwn: true
+            )
+        }
+
+        let dataURL = try await blobURL(with: baseURLString, and: testBlobID, direction: .outgoing)
+        let responseData = HTTPURLResponse(url: dataURL, statusCode: 200, httpVersion: nil, headerFields: nil)
+
+        URLProtocolMock.mockResponses[dataURL] = (
+            (nil, testBlobID, responseData),
+            {
+                XCTFail("This should not be called since, we do not have to upload the data of the file message.")
+            }
+        )
+
+        // Act
+        let blobManager = BlobManager(
+            entityManager: entityManager,
+            groupManager: groupManager,
+            sessionManager: URLSessionManager(with: TestSessionProvider()),
+            serverConnector: ServerConnectorMock(connectionState: .loggedIn),
+            serverInfoProvider: ServerInfoProviderMock(baseURLString: baseURLString),
+            userSettings: UserSettingsMock()
+        )
+
+        await blobManager.syncBlobs(for: fileMessageEntity.objectID)
+
+        // Assert
+        let blobProgress = fileMessageEntity.blobGetProgress()
+        let blobError = fileMessageEntity.blobGetError()
+
+        XCTAssertEqual(fileMessageEntity.blobID, ThreemaProtocol.nonUploadedBlobID)
+        XCTAssertEqual(fileMessageEntity.blobGetThumbnailID(), ThreemaProtocol.nonUploadedBlobID)
         XCTAssertEqual(blobProgress, nil)
         XCTAssertEqual(blobError, false)
     }
@@ -1095,5 +1191,36 @@ class BlobManagerTests: XCTestCase {
         }
 
         return data.hexString.data(using: .ascii)
+    }
+    
+    /// Create or update group in DB and wait until finished.
+    @discardableResult private func createOrUpdateDBWait(
+        groupManager: GroupManagerProtocol,
+        groupID: Data,
+        creator: String,
+        members: Set<String>
+    ) -> Group? {
+        var group: Group?
+
+        let expec = expectation(description: "Group create or update")
+
+        groupManager.createOrUpdateDB(
+            groupID: groupID,
+            creator: creator,
+            members: members,
+            systemMessageDate: Date(),
+            sourceCaller: .local
+        )
+        .done { grp in
+            group = grp
+            expec.fulfill()
+        }
+        .catch { _ in
+            expec.fulfill()
+        }
+
+        wait(for: [expec], timeout: 30)
+
+        return group
     }
 }

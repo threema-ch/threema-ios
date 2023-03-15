@@ -70,6 +70,9 @@
         }
     }
     
+    self.view.backgroundColor = [Colors backgroundViewController];
+    [Colors setTextColor:Colors.text in:self.view];
+    
     [self.navigationController.view setNeedsLayout];
     [self.navigationController.view layoutIfNeeded];
     [self.navigationController.view setNeedsDisplay];

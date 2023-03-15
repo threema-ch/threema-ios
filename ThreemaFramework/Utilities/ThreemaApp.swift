@@ -48,6 +48,10 @@ public enum ThreemaApp {
         Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as! String
     }
     
+    public static var appName: String {
+        BundleUtil.mainBundle()?.object(forInfoDictionaryKey: "CFBundleName") as! String
+    }
+    
     private static var isRed: Bool {
         let bundle = BundleUtil.mainBundle()
         return bundle?.bundleIdentifier?.contains(".red") ?? false

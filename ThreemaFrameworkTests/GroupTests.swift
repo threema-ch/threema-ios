@@ -45,7 +45,7 @@ class GroupTests: XCTestCase {
 
         var groupEntity: GroupEntity!
         var conversation: Conversation!
-        var member03: Contact!
+        var member03: ContactEntity!
         dbPreparer.save {
             let member01 = dbPreparer.createContact(
                 publicKey: BytesUtility.generateRandomBytes(length: Int(32))!,
@@ -374,7 +374,7 @@ class GroupTests: XCTestCase {
         let userSettings = UserSettingsMock()
         let groupPhotoSenderMock = GroupPhotoSenderMock()
             
-        var members = [Contact]()
+        var members = [ContactEntity]()
             
         let member01 = dbPreparer.createContact(
             publicKey: BytesUtility.generateRandomBytes(length: Int(32))!,
@@ -467,7 +467,7 @@ class GroupTests: XCTestCase {
         userSettings.sortOrderFirstName = false
         let groupPhotoSenderMock = GroupPhotoSenderMock()
 
-        var members = [Contact]()
+        var members = [ContactEntity]()
 
         let member01 = dbPreparer.createContact(
             publicKey: BytesUtility.generateRandomBytes(length: Int(32))!,

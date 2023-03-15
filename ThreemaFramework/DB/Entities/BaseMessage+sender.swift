@@ -46,7 +46,7 @@ public extension BaseMessage {
                 return sender.idColor
             }
             else {
-                return conversation?.contact?.idColor ?? Colors.primary
+                return conversation?.contact?.idColor ?? .primary
             }
         }
     }

@@ -19,7 +19,6 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import "SystemMessage.h"
-#import "Contact.h"
 #import "LicenseStore.h"
 #import "BundleUtil.h"
 #import "ThreemaFramework/ThreemaFramework-swift.h"

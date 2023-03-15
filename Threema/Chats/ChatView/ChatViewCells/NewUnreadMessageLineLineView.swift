@@ -38,7 +38,7 @@ class NewUnreadMessageLineLineView: UIView {
         let hairline = UIView()
         hairline.translatesAutoresizingMaskIntoConstraints = false
         
-        hairline.backgroundColor = Colors.primary
+        hairline.backgroundColor = .primary
         
         addSubview(hairline)
         
@@ -103,6 +103,6 @@ class NewUnreadMessageLineLineView: UIView {
     // - MARK: Update Functions
     
     func updateColors() {
-        hairlineView.backgroundColor = Colors.primary
+        hairlineView.backgroundColor = .primary
     }
 }

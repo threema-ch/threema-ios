@@ -176,6 +176,13 @@ class DateFormatterTests: XCTestCase {
         
         XCTAssertEqual(actual, expected)
     }
+    
+    func testGetDateForExport() {
+        let expected = "2020-02-01_13-14-15"
+        let actual = DateFormatter.getDateForExport(DateFormatterTests.testDate)
+        
+        XCTAssertEqual(actual, expected)
+    }
 
     func testTimeFormattedSeconds() {
         let expected = "00:59"

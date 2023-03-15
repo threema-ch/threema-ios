@@ -23,8 +23,8 @@ import Foundation
 import Intents
 
 public struct GroupIdentity {
-    let id: Data
-    let creator: String
+    public let id: Data
+    public let creator: String
 }
 
 /// Business representation of a Threema group
@@ -32,7 +32,7 @@ public class Group: NSObject {
 
     /// A member in a group
     public enum Member: CustomStringConvertible, Equatable {
-        case me
+        case me(String)
         case contact(Contact)
         case unknown
         
@@ -58,6 +58,14 @@ public class Group: NSObject {
                 return BundleUtil.localizedString(forKey: "(unknown)")
             }
         }
+
+        public var identity: String? {
+            switch self {
+            case let .contact(contact): return contact.identity
+            case let .me(identity): return identity
+            default: return nil
+            }
+        }
     }
     
     /// Creator of a group (same as `Member`)
@@ -73,16 +81,16 @@ public class Group: NSObject {
 
     /// It's `nil` if i am creator of the group
     private var conversationContact: Contact?
-    private var conversationContactIdentity: String?
 
-    struct MemberContact: Hashable {
-        let identity: String
-        let state: Int
-    }
-
-    private let membersQueue = DispatchQueue(label: "ch.threema.Group.membersQueue")
-    private var memberContacts = Set<MemberContact>()
-
+    /// Initialize Group properties, subscribe GroupEntity and Conversation on EntityObserver for updates.
+    /// Note: Group properties will be only refreshed if it's ContactEntity and Conversation object already saved in Core Data.
+    ///
+    /// - Parameters:
+    ///   - myIdentityStore: MyIdentityStore
+    ///   - userSettings: UserSettings
+    ///   - groupEntity: Core Data object
+    ///   - conversation: Core Data object
+    ///   - lastSyncRequest: From Core Data object `LastGroupSyncRequest.lastSyncRequest` (TODO: should be Core Data itself and subscribe on EntityObserver too)
     init(
         myIdentityStore: MyIdentityStoreProtocol,
         userSettings: UserSettingsProtocol,
@@ -101,8 +109,9 @@ public class Group: NSObject {
         self.userSettings = userSettings
         self.conversation = conversation
         self.conversationGroupMyIdentity = conversation.groupMyIdentity
-        self.conversationContact = conversation.contact
-        self.conversationContactIdentity = conversation.contact?.identity
+        if let contactEntity = conversation.contact {
+            self.conversationContact = Contact(contactEntity: contactEntity)
+        }
         self.groupIdentity = GroupIdentity(
             id: groupEntity.groupID,
             creator: groupEntity.groupCreator ?? myIdentityStore.identity
@@ -116,10 +125,7 @@ public class Group: NSObject {
         self.conversationVisibility = conversation.conversationVisibility
         self.lastPeriodicSync = groupEntity.lastPeriodicSync
 
-        self.members = conversation.members
-        self.memberContacts = Set(conversation.members.map { contact in
-            MemberContact(identity: contact.identity, state: contact.state?.intValue ?? kStateActive)
-        })
+        self.members = Set(conversation.members.map { Contact(contactEntity: $0) })
 
         super.init()
 
@@ -158,8 +164,9 @@ public class Group: NSObject {
                         return
                     }
                     self?.conversationGroupMyIdentity = conversation.groupMyIdentity
-                    self?.conversationContact = conversation.contact
-                    self?.conversationContactIdentity = conversation.contact?.identity
+                    if let contactEntity = conversation.contact {
+                        self?.conversationContact = Contact(contactEntity: contactEntity)
+                    }
                     self?.name = conversation.groupName
                     self?.photo = conversation.groupImage
                     self?.lastMessageDate = conversation.lastMessage?.date
@@ -167,18 +174,13 @@ public class Group: NSObject {
                     self?.conversationVisibility = conversation.conversationVisibility
 
                     // Check has members composition changed
-                    let newMemberContacts = Set(conversation.members.map { contact in
-                        MemberContact(identity: contact.identity, state: contact.state?.intValue ?? kStateActive)
-                    })
+                    let newMembers = Set(conversation.members.map { Contact(contactEntity: $0) })
 
-                    if self?.memberContacts != newMemberContacts {
-                        self?.membersQueue.sync {
-                            self?.members = conversation.members
-                            self?.memberContacts = newMemberContacts
-                            self?.sortedMembers = self?.allSortedMembers() ?? [Member]()
-                            self?.membersList = self?.sortedMembers.map(\.shortDisplayName)
-                                .joined(separator: ", ") ?? ""
-                        }
+                    if self?.members != newMembers {
+                        self?.members = newMembers
+                        self?.sortedMembers = self?.allSortedMembers() ?? [Member]()
+                        self?.membersList = self?.sortedMembers.map(\.shortDisplayName)
+                            .joined(separator: ", ") ?? ""
                     }
                 }
             }
@@ -266,7 +268,7 @@ public class Group: NSObject {
     }
     
     @objc public var groupCreatorIdentity: String {
-        if let identity = conversationContactIdentity {
+        if let identity = conversationContact?.identity {
             return identity
         }
         return myIdentityStore.identity
@@ -276,7 +278,7 @@ public class Group: NSObject {
     public var creator: Creator {
         if conversationGroupMyIdentity?.elementsEqual(myIdentityStore.identity) ?? false,
            conversationContact == nil {
-            return .me
+            return .me(myIdentityStore.identity)
         }
         else if let contact = conversationContact {
             return .contact(contact)
@@ -339,15 +341,9 @@ public class Group: NSObject {
 
     /// All group member identities including me
     @objc public var allMemberIdentities: Set<String> {
-        var identities = Set<String>()
-        membersQueue.sync {
-            for member in memberContacts {
-                identities.insert(member.identity)
-            }
-
-            if state == .active {
-                identities.insert(myIdentityStore.identity)
-            }
+        var identities = Set(members.map(\.identity))
+        if state == .active {
+            identities.insert(myIdentityStore.identity)
         }
         return identities
     }
@@ -357,11 +353,9 @@ public class Group: NSObject {
     /// This is useful to get all members that should receive a group message
     var allActiveMemberIdentitiesWithoutCreator: [String] {
         var identities: [String]!
-        membersQueue.sync {
-            identities = memberContacts
-                .filter { $0.state != kStateInvalid }
-                .map(\.identity)
-        }
+        identities = members
+            .filter { $0.state != kStateInvalid }
+            .map(\.identity)
         return identities
     }
     
@@ -378,16 +372,16 @@ public class Group: NSObject {
         
         // Add me if I'm a member and not the creator
         if isSelfMember, !isOwnGroup {
-            allSortedMembers.append(.me)
+            allSortedMembers.append(.me(myIdentityStore.identity))
         }
         
         // Add everybody else expect the creator
         allSortedMembers.append(
             contentsOf: members.sorted(with: userSettings)
                 .map(Member.contact)
-                .filter { $0 != creator }
+                .filter { $0.identity != creator.identity }
         )
-        
+
         return allSortedMembers
     }
 }

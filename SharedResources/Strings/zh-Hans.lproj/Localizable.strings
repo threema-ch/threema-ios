@@ -11,8 +11,7 @@
 
 /* Tabbar and title for list with all conversations */
 "chats_title" = "会话";
-
-"use_dynamic_font_size" = "系统字体大小";
+"chats_pinned" = "已置顶";
 
 "SortOrder_Firstname" = "名字，姓氏";
 "SortOrder_Lastname" = "姓氏，名字";
@@ -68,6 +67,7 @@
 "delete_identity" = "删除数据和ID";
 "copy" = "复制";
 "save" = "保存";
+"download" = "下载";
 "share" = "分享";
 "details" = "详情";
 "acknowledge" = "同意";
@@ -103,7 +103,7 @@
 "threema_id" = "Threema ID";
 "nickname" = "昵称";
 "add_button" = "添加";
-"chatview_contextmenu_more" = "更多…";
+"chatview_contextmenu_select" = "选择…";
 
 "file_message_image" = "图片";
 "file_message_sticker" = "表情包";
@@ -184,11 +184,7 @@
 "sound_threema_alphorn" = "长号";
 
 "reset_wallpaper" = "重置壁纸";
-"font_size_title" = "字体大小";
-"font_size" = "%d pt";
 "bigger_single_emojis" = "更大的单个表情符号";
-"received_message_time" = "接收消息时间";
-"return_key_send" = "输入回车键以发送";
 "identity_none" = "无";
 "message" = "发送消息"; /* Short version for "Send Message" */
 "scan_identity" = "扫描ID";
@@ -202,15 +198,13 @@
 "block_contact" = "屏蔽联系人";
 "profile_picture_recipient" = "个人头像接收者";
 
-"no_contacts_access_title" = "无法访问联系人";
-"no_contacts_access_message" = "请打开 “设置” 并允许 “通讯录” 访问。";
 "no_linked_contact_access_title" = "无法访问已链接的联系人";
 "no_linked_contact_access_message" = "请打开 “设置” 并允许 “通讯录” 访问以查看已链接的联系人，或者永久取消链接联系人。";
 "no_linked_contact_access_edit_message" = "请打开 “设置” 并允许 “通讯录” 访问以编辑已链接的联系人，或者编辑永久取消链接的联系人。";
 "restricted_contacts_access_title" = "通讯录访问受限";
-"restricted_contacts_access_message" = "请您的主管授予访问通讯录的权限。";
-"restricted_linked_contact_access_message" = "由于系统访问限制，%@ 无法访问您的已链接的联系人。请向您的主管授予访问通讯录的权限，或者永久取消链接联系人。";
-"restricted_linked_contact_access_edit_message" = "由于系统访问限制，%@ 无法访问您的已链接的联系人。请向您的主管授予访问通讯录的权限，或者编辑永久取消链接的联系人。";
+"restricted_contacts_access_message" = "请向您的主管授予访问通讯录的权限。";
+"restricted_linked_contact_access_message" = "由于系统访问限制，%@ 无法访问您的已链接联系人。请向您的主管授予访问通讯录的权限，或者永久取消链接联系人。";
+"restricted_linked_contact_access_edit_message" = "由于系统访问限制，%@ 无法访问您的已链接联系人。请向您的主管授予访问通讯录的权限，或者编辑永久取消链接的联系人。";
 "linked_contact_not_found_title" = "未找到已链接的联系人";
 "linked_contact_not_found_message" = "未找到已链接的联系人，您可以编辑永久取消链接的联系人。";
 
@@ -224,8 +218,6 @@
 "[no access]" = "[无法访问]";
 "[not found]" = "[未找到]";
 "[restricted]" = "[受限]";
-
-"go_to_settings" = "前往设置";
 
 /* This shows the number of groups in parentheses */
 "groups_header" = "群组（%lu）";
@@ -356,18 +348,8 @@
 "speed" = "播放速度";
 
 "send_file_title" = "发送文件";
-"camera_disabled_title" = "访问被拒绝";
 "send_file_message" = "文件：%@\n到\n%@";
-
 "quote_not_found" = "未找到引用的消息。";
-
-"camera_disabled_message" = "%@ 无法访问您的相机。请在 “设置” > “隐私” > “相机” 中给予权限。";
-
-"location_disabled_title" = "无法访问位置";
-"location_disabled_message" =  "请在 “设置” > “隐私” > “定位服务” 中给予位置权限。";
-
-"microphone_disabled_title" = "无法使用麦克风";
-"microphone_disabled_message" = "%@ 没有权限访问麦克风。请在 “设置” > “隐私” > “麦克风” 中给予权限。";
 
 "include_media" = "包含媒体";
 "without_media" = "不含媒体";
@@ -416,7 +398,7 @@
 "create_note_group_info_text" = "如果您不添加任何群组成员，发送到这个群组的信息将保留在本地。这样能方便您安全地存储笔记、媒体和文件，或将文件转移到桌面。";
 "remind_me_next_time" = "下次提醒我";
 "doNotShowAgain" = "下次不再提示";
-"add_note_group_info" = "*在此会话中只有您一个人能访问*\n将此会话作为保存文本、媒体和文件的安全笔记本。";
+"add_note_group_info" = "*在此会话中只有您一个人能访问*\n将此会话用作保存文本、媒体和文件的安全笔记本。";
 "end_note_group_info" = "*在此会话中不再只有您一个人能访问*\n新消息将被发送到所有群组成员。";
 
 "chat_search_searching" = "搜索中…";
@@ -463,8 +445,6 @@
 "invalid_country_code_message" = "您的设备上的 “地区” 似乎设置为无效值。 请打开系统 “设置”，转到 “通用” > “语言与地区”，然后重新选择 “地区”，以避免电话号码匹配出现问题。";
 
 /* Settings */
-"block_unknown_on" = "只有在通讯录的联系人才能向您发送消息。";
-"block_unknown_off" = "任何人都可以向您发送消息。当他向您发送第一条消息时，会自动添加到新联系人。";
 "show_stale_contacts_on" = "不活跃的 Threema ID（即至少三个月没有使用的ID）和被撤销的ID都会被隐藏。";
 "show_stale_contacts_off" = "所有 Threema ID 都列在通讯录中。";
 "hide_voip_call_ip_off" = "如果可以的话，则建立直接连接，并且只通过 Threema 服务器中继通话到未经核实的联系人。这可能会暴露您的 IP 地址。";
@@ -508,9 +488,7 @@
 "no_work_contacts" = "%@ 用户";
 "no_work_contacts_message" = "没有找到经管理员验证的 %@ 联系人。";
 
-"no_contacts_permission_title" = "没有访问联系人的权限";
 "no_contacts_syncoff" = "您还没有任何联系人。请开启同步（“设置” > “隐私”），或点击 “+ ” 按钮手动添加联系人。";
-"no_contacts_permission_message" = "%@ 没有权限访问您的通讯录。請到设备的隐私设置，并启用通讯录访问权限。";
 
 "my_profile_picture_title" = "您的个人头像";
 "release_profilepicture_to" = "将个人头像发布到";
@@ -691,6 +669,7 @@
 "group_member_self_removed" = "您已从群组中被移除";
 "group_member_self_left" = "您已退出群组";
 "group_member_creator_left" = "*此群组成为孤立群组*\n由于群组创建者已离开群组，管理员职位为空缺。其余成员应该克隆该群组（点击群组详细信息）以成为新的管理员。";
+"system_message_group_avatar_changed" = "群组头像已改变";
 
 /* accessibility labels */
 "send_media_or_location" = "发送媒体或位置";
@@ -726,10 +705,6 @@
 "threema_channel_failed" = "无法添加 Threema Channel";
 
 /* Push decryption */
-"decryption_push_title" = "您想在推送通知中看到消息内容的预览吗？";
-"decryption_push_text" = "如果预览被禁用，您需要打开 %@ 才能看到新消息的内容。";
-"decryption_push_activate" = "启用预览";
-"decryption_push_deactivate" = "禁用预览";
 "decryption_push_reply" = "回复";
 "decryption_push_placeholder" = "回复...";
 "decryption_push_agree" = "同意";
@@ -780,11 +755,10 @@
 "call_reject" = "拒绝";
 "call_hide_call" = "隐藏通话";
 "call_no_wifi" = "通过移动数据通话。了解更多...";
+"call_mic_access" = "无法使用麦克风";
 
 "call_voip_not_supported_title" = "Threema 通话";
 "call_voip_not_supported_text" = "您的联系人不支持 Threema 通话";
-"call_microphone_permission_title" = "麦克风访问被拒绝";
-"call_microphone_permission_text" = "您必须在 “设置” 中允许麦克风访问";
 "call_contact_alert" = "您要致电给%@吗？";
 "call_contact_not_reachable" = "无法联系到联系人...";
 "already_in_call" = "每次只能有运行一个呼叫。";
@@ -848,8 +822,6 @@
 "privateChat_set_alert_title" = "您要将此会话标记为私密会话吗？";
 "privateChat_set_alert_message" = "你可以在隐私设置中切换私密会话的可见性。";
 "privateChat_setup_alert_message" = "您的 Threema Safe 备份包含私密聊天记录，您必须设置密码才能访问备份内容。";
-"hide_private_toggle" = "隐藏私密会话";
-"privacy_footer" = "在会话界面中隐藏所有私密会话，您需要设置密码锁才能启用此设置。";
 
 "group_leave_sheet_title" = "离开 “%@”？";
 "group_leave_sheet_message" = "如果您只是离开群组，您将无法再参与会话，但您仍然可以查看以前的聊天记录。";
@@ -1070,6 +1042,7 @@
 "delete_messages_confirm" = "您要永久删除所有早于%@的消息吗？";
 "delete_messages_confirm_all" = "您要永久删除所有消息吗？";
 "delete_messages_explain" = "任何类型的消息都将被删除：文字和语音消息、媒体、文件、投票等。";
+"delete_in_progress" = "删除中…";
 "one_year_title" = "1年";
 "one_year" = "1年";
 "six_months_title" = "6个月";
@@ -1115,7 +1088,6 @@
 "settings_advanced" = "高级";
 "settings_threema_work" = "Threema Work";
 "settings_feedback" = "测试版反馈";
-"settings_dev_mode" = "开发者模式";
 "tos_cell_title" = "服务条款";
 
 "settings_advanced_flush_message_queue" = "刷新消息队列";
@@ -1124,11 +1096,32 @@
 "settings_advanced_reregister_push_notifications_footer_title" = "如果此应用关闭后，仍然没有收到新消息通知，您可以重新注册通知推送权限。";
 "settings_advanced_reregister_notifications_label" = "重新注册推送通知";
 
-// Dev Mode
-"settings_devmode_quote_v2" = "引用 V2";
-"settings_devmode_new_chat_view" = "新的聊天界面";
-"settings_devmode_stylekit_debug_view" = "StyleKit 调试视图";
-"settings_devmode_id_colors_debug_view" = "ID 颜色调试视图";
+"settings_md_sync_alert_title" = "同步失败";
+
+// Privacy
+"settings_privacy_contacts_header" = "联系人";
+"settings_privacy_sync_contacts" = "同步联系人";
+"settings_privacy_exclusion_list" = "排除名单";
+"settings_privacy_exclusion_list_alert_title" = "ID长度太短";
+"settings_privacy_exclusion_list_alert_message" = "请输入8个字符长度的 ID。";
+"settings_privacy_block_unknown" = "屏蔽未知者";
+"settings_privacy_block_unknown_footer_on"= "只有在通讯录的联系人才能向您发送消息。";
+"settings_privacy_block_unknown_foooter_off" = "任何人都可以向您发送消息。当他向您发送第一条消息时，会自动添加到新的联系人。";
+
+"settings_privacy_chat_header" = "会话";
+"settings_privacy_read_receipts" = "已读回执";
+"settings_privacy_typing_indicator" = "输入状态";
+
+"settings_privacy_TIRR_reset_all" = "重置所有联系人";
+"settings_privacy_TIRR_reset_footer" = "将所有联系人重置为默认设置。";
+"settings_privacy_TIRR_reset_alert_title" = "重置";
+"settings_privacy_TIRR_reset_alert_message" = "将所有联系人重置为默认设置。此操作不能被撤销。";
+"settings_privacy_TIRR_reset_alert_action" = "重置所有内容";
+
+"settings_privacy_choose_poi" = "选择POI";
+"settings_privacy_hide_private_chats" = "隐藏私密会话";
+"settings_privacy_hide_private_chats_footer" = "在会话界面中隐藏所有私密会话，您需要设置密码锁才能启用此设置。";
+
 
 // Appearance
 "settings_appearance_theme_section" = "设计主题";
@@ -1339,12 +1332,6 @@
 "readReceipt_sheetMessage" = "覆盖此联系人的默认设置。";
 "typingIndicator_sheetMessage" = "覆盖此联系人的默认设置。";
 
-"reset_overrides" = "重置所有联系人";
-"resetButton_footer" = "将所有联系人重置为默认设置。";
-"reset_overrides_alert_title" = "重置";
-"reset_overrides_alert_message" = "将所有联系人重置为默认设置。此操作不能被撤销。";
-"reset_overrides_alert_action" = "重置所有内容";
-
 /* Multi Decvice */
 "multi_device_linked_devices_title" = "多设备预览";
 "multi_device_linked_devices_desc" = "为这个设备激活或关闭多设备预览。";
@@ -1378,14 +1365,11 @@
 // POI
 "poi_unavailable" = "无法使用";
 "poi_not_marked" = "–";
-"poi_location_disabled_action" = "打开设置";
 "poi_search_POI" = "城市和街道";
 "poi_search_prefix" = "搜索 %@";
 "poi_away" = "%@ 已离开";
 "poi_dropped_pin_info_alert_title" = "图钉已放置";
 "poi_dropped_pin_info_alert_message" = "如要放置图钉，请在地图上长按。";
-"poi_accuracy_info_alert_title" = "无法访问准确的位置";
-"poi_accuracy_info_alert_message" = "请打开 “设置” 并开启 “精确位置” 。";
 "poi_current_location" = "我的位置";
 "poi_marked_location" = "图钉已放置";
 
@@ -1427,6 +1411,18 @@
 "detailView_messageID" = "消息识别码";
 "detailView_group_acknowledged" = "已同意 (%d)";
 "detailView_group_declined" = "不同意 (%d)";
+"detailView_group_file_size" = "文件大小";
+"detailView_created_footer" = "创建于：%@";
+
+"message_display_status_none" = "无";
+"message_display_status_user_acknowledged" = "已同意";
+"message_display_status_user_declined" = "不同意";
+"message_display_status_sending" = "发送中";
+"message_display_status_sent" = "已发送";
+"message_display_status_delivered" = "已送达";
+"message_display_status_delivered_incoming" = "已收到";
+"message_display_status_read" = "已阅读";
+"message_display_status_failed" = "失败";
 
 // In-app notifications
 "notification_copying_succeeded" = "项目已复制";
@@ -1435,7 +1431,11 @@
 "notification_saving_succeeded" = "项目已保存";
 "notification_saving_failed" = "保存失败";
 
+"notification_saving_to_photos_succeeded" = "已添加到相簿";
+"notification_saving_to_photos_failed" = "添加到相簿失败";
+
 "notification_sending_failed" = "发送失败";
+"notification_sending_failed_subtitle_size" = "项目体积太大";
 
 "notification_deleted_messages_count" = "%d条消息已删除";
 
@@ -1444,6 +1444,7 @@
 "notification_call_failed_connected" = "连接中断";
 "notification_call_failed_not_connected" = "建立连接失败";
 "notification_call_creation_failed" = "呼叫创建失败";
+"notification_call_creation_disabled" = "通话已禁用";
 
 "notification_sending_profile_picture_succeeded" = "头像已发送";
 "notification_sending_profile_picture_failed" = "发送失败";
@@ -1452,6 +1453,9 @@
 
 "notification_group_sync_succeeded" = "群组已同步";
 "notification_group_sync_failed" = "群组同步失败";
+
+"notification_settings_sync_pending" = "同步中…";
+"notification_settings_sync_succeeded" = "设置已同步";
 
 // Forward security status messages
 "forward_security_message_without" = "您收到一条没有完全正向保密的消息，您可以验证发件人是否主动禁用完全正向保密。";
@@ -1463,7 +1467,7 @@
 "forward_security_message_out_of_order" = "收到的消息发生故障，无法解密。";
 "forward_security_status_enabled_outgoing" = "已为发出消息开启完全正向保密。";
 "forward_security_status_disabled_outgoing" = "已为发出消息关闭完全正向保密。";
-"forward_security_contact_has_downgraded_to_an_incompatible_version" = "由于这个联系人正在使用的应用版本不支持完全正向保密，因此从现在开始之后发送的消息将没有保密。";
+"forward_security_contact_has_downgraded_to_an_incompatible_version" = "此联系人所使用的应用版本并不支持 “完全正向保密” 功能。从现在起，消息将在没有 “完全正向保密” 的情况下发送。";
 
 // Profile view
 "accessibility_profile_button_hint_contact" = "打开联系人详细消息";
@@ -1472,7 +1476,6 @@
 // Chat bar
 "accessibility_chatbar_label" = "聊天输入框";
 "accessibility_chatbar_hint" = "撰写消息";
-"accessibility_chatbar_value" = "当前文本：%@";
 "accessibility_chatbar_quote_label" = "所选的引用消息：%@。";
 "accessibility_chatbar_close_quote_button_label" = "结束引用";
 "accessibility_chatbar_close_quote_button_hint" = "结束引用所选消息";
@@ -1522,6 +1525,11 @@
 "accessibility_status_delivered_plus_time" = "已送达, %@";
 "accessibility_status_read_plus_time" = "已阅读, %@";
 "accessibility_status_failed_plus_time" = "失败, %@";
+
+// UIAccessibilityCustomActions
+"accessibility_action_open_link" = "打开 %@";
+"accessibility_action_call_phone" = "致电到%@";
+"accessibility_action_open_mention" = "显示%@的联系方式";
 
 // Multi-Device Wizard
 "md_wizard_header" = "多设备预览";
@@ -1579,3 +1587,18 @@
 
 // SystemMessage
 "systemMessage_unsupported_type" = "不支持的系统信息类型";
+
+// Alerts
+"alert_no_access_title_camera" = "无法访问相机";
+"alert_no_access_title_contacts" = "无法访问联系人";
+"alert_no_access_title_location" = "无法访问位置";
+"alert_no_access_title_location_precise" = "无法访问准确的位置";
+"alert_no_access_title_microphone" = "无法访问麦克风";
+
+"alert_no_access_message_camera" = "打开系统设置并允许相机访问。";
+"alert_no_access_message_contacts" = "打开系统设置并允许通讯录访问。";
+"alert_no_access_message_location" = "打开系统设置并允许位置访问。";
+"alert_no_access_message_location_precise" = "打开系统设置，在位置选项中允许精确位置的访问。";
+"alert_no_access_message_microphone" = "打开系统设置并允许麦克风访问。";
+
+"alert_no_access_open_settings" = "打开设置";

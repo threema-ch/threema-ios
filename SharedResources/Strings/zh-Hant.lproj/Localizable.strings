@@ -11,8 +11,7 @@
 
 /* Tabbar and title for list with all conversations */
 "chats_title" = "對話";
-
-"use_dynamic_font_size" = "系統字型大小";
+"chats_pinned" = "已置頂";
 
 "SortOrder_Firstname" = "名字，姓氏";
 "SortOrder_Lastname" = "姓氏，名字";
@@ -68,6 +67,7 @@
 "delete_identity" = "刪除資料和ID";
 "copy" = "複製";
 "save" = "儲存";
+"download" = "下載";
 "share" = "分享";
 "details" = "詳情";
 "acknowledge" = "同意";
@@ -103,7 +103,7 @@
 "threema_id" = "Threema ID";
 "nickname" = "暱稱";
 "add_button" = "新增";
-"chatview_contextmenu_more" = "更多…";
+"chatview_contextmenu_select" = "選擇…";
 
 "file_message_image" = "圖片";
 "file_message_sticker" = "貼圖";
@@ -184,11 +184,7 @@
 "sound_threema_alphorn" = "長號";
 
 "reset_wallpaper" = "重設背景圖片";
-"font_size_title" = "字型大小";
-"font_size" = "%d pt";
 "bigger_single_emojis" = "更大的單個表情符號";
-"received_message_time" = "收到訊息時間";
-"return_key_send" = "輸入「Enter」鍵以傳送";
 "identity_none" = "無";
 "message" = "傳送訊息"; /* Short version for "Send Message" */
 "scan_identity" = "掃描ID";
@@ -202,15 +198,13 @@
 "block_contact" = "封鎖聯絡人";
 "profile_picture_recipient" = "大頭貼收件者";
 
-"no_contacts_access_title" = "無法取用聯絡人";
-"no_contacts_access_message" = "請開啟「設定」並允許「通訊錄」取用。";
 "no_linked_contact_access_title" = "無法取用已連結的聯絡人";
 "no_linked_contact_access_message" = "請開啟「設定」並允許「通訊錄」取用以檢視已連結的聯絡人，或者永久取消連結聯絡人。";
 "no_linked_contact_access_edit_message" = "請開啟「設定」並允許「通訊錄」取用以編輯已連結的聯絡人，或者編輯永久取消連結的聯絡人。";
 "restricted_contacts_access_title" = "通訊錄取用受限制";
-"restricted_contacts_access_message" = "請您的主管授予取用通訊錄的權限。";
-"restricted_linked_contact_access_message" = "由於系統取用限制，%@ 無法取用您的已連結的聯絡人。請向您的主管授予取用通訊錄的權限，或者永久取消連結聯絡人。";
-"restricted_linked_contact_access_edit_message" = "由於系統取用限制，%@ 無法取用您的已連結的聯絡人。請向您的主管授予取用通訊錄的權限，或者編輯永久取消連結的聯絡人。";
+"restricted_contacts_access_message" = "請向您的主管授予取用通訊錄的權限。";
+"restricted_linked_contact_access_message" = "由於系統取用限制，%@ 無法取用您的已連結聯絡人。請向您的主管授予取用通訊錄的權限，或者永久取消連結聯絡人。";
+"restricted_linked_contact_access_edit_message" = "由於系統取用限制，%@ 無法取用您的已連結聯絡人。請向您的主管授予取用通訊錄的權限，或者編輯永久取消連結的聯絡人。";
 "linked_contact_not_found_title" = "未找到已連結的聯絡人";
 "linked_contact_not_found_message" = "未找到已連結的聯絡人，您可以編輯永久取消連結的聯絡人。";
 
@@ -224,8 +218,6 @@
 "[no access]" = "[受限]";
 "[not found]" = "[未找到]";
 "[restricted]" = "[受限制]";
-
-"go_to_settings" = "前往設定";
 
 /* This shows the number of groups in parentheses */
 "groups_header" = "群組（%lu）";
@@ -356,18 +348,8 @@
 "speed" = "播放速度";
 
 "send_file_title" = "傳送檔案";
-"camera_disabled_title" = "訪問被拒絕";
 "send_file_message" = "檔案：%@\n至\n%@";
-
 "quote_not_found" = "未找到引用的訊息。";
-
-"camera_disabled_message" = "%@ 没有權限取用您的相機。請在「設定」>「隱私權」>「相機」中授予權限。";
-
-"location_disabled_title" = "沒有權限取用位置";
-"location_disabled_message" =  "請在「設定」>「隱私權」>「定位服務」中授予位置權限。";
-
-"microphone_disabled_title" = "無法取用麥克風";
-"microphone_disabled_message" = "%@ 没有權限取用麥克風。請在「設定」>「隱私權」>「麥克風」中授予權限。";
 
 "include_media" = "包括媒體";
 "without_media" = "不包括媒體";
@@ -416,7 +398,7 @@
 "create_note_group_info_text" = "如果您不新增任何群組成員，傳送至這個群組的訊息將保留在本地。這樣能方便您安全地儲存筆記、媒體和檔案，或將檔案轉移至桌面。";
 "remind_me_next_time" = "下次提醒我";
 "doNotShowAgain" = "不再顯示";
-"add_note_group_info" = "*在此對話中只有您一個人能存取*\n將此對話作為儲存文字、媒體和檔案的安全筆記本。";
+"add_note_group_info" = "*在此對話中只有您一個人能存取*\n將此對話用作儲存文字、媒體和檔案的安全筆記本。";
 "end_note_group_info" = "*在此對話中不再只有您一個人能存取*\n新訊息將被傳送至所有群組成員。";
 
 "chat_search_searching" = "搜尋中…";
@@ -463,8 +445,6 @@
 "invalid_country_code_message" = "您的裝置上的「地區」似乎設定為無效值。請開啟系統 「設定」，轉到「一般」>「語言與地區」，然後重新選擇「地區」，以避免電話號碼相符出現問題。";
 
 /* Settings */
-"block_unknown_on" = "只有在通訊錄的聯絡人才能向您傳送訊息。";
-"block_unknown_off" = "任何人都可以向您傳送訊息。當他向您傳送第一則訊息時，會自動新增至新聯絡人。";
 "show_stale_contacts_on" = "非活躍的 Threema ID（即至少三個月沒有使用的ID）和被撤銷的ID都會被隱藏。";
 "show_stale_contacts_off" = "所有 Threema ID 都列在通訊錄中。";
 "hide_voip_call_ip_off" = "如果可以的話，則建立直接連線，並且僅透過 Threema 伺服器將呼叫中繼至未經驗證的聯絡人。這可能會暴露您的IP位址。";
@@ -508,9 +488,7 @@
 "no_work_contacts" = "%@ 使用者";
 "no_work_contacts_message" = "沒有找到經管理員驗證的 %@ 聯絡人。";
 
-"no_contacts_permission_title" = "没有權限取用通訊錄";
 "no_contacts_syncoff" = "您還沒有任何聯絡人。請開啟同步（「設定」> 「隱私權」），或按「+」按鈕手動新增聯絡人。";
-"no_contacts_permission_message" = "%@ 没有權限取用您的通訊錄。請到裝置的隱私權設定，並啟用通訊錄取用權限。";
 
 "my_profile_picture_title" = "您的大頭貼";
 "release_profilepicture_to" = "將大頭貼發佈至";
@@ -691,6 +669,7 @@
 "group_member_self_removed" = "您已從群組中被移除";
 "group_member_self_left" = "您已退出群組";
 "group_member_creator_left" = "*此群組變成為孤立群組*\n由於群組建立者已離開群組，管理員職位為空缺。其餘成員應該克隆該群組（按一下群組詳細資料）以成為新的管理員。";
+"system_message_group_avatar_changed" = "群組大頭貼已變更";
 
 /* accessibility labels */
 "send_media_or_location" = "傳送媒體或位置";
@@ -726,10 +705,6 @@
 "threema_channel_failed" = "無法新增 Threema Channel";
 
 /* Push decryption */
-"decryption_push_title" = "您想在推播通知中看到訊息內容的預覽嗎？";
-"decryption_push_text" = "如果預覽被停用，您需要開啟 %@ 才能看到新訊息的內容。";
-"decryption_push_activate" = "開啟預覽";
-"decryption_push_deactivate" = "停用預覽";
 "decryption_push_reply" = "回覆";
 "decryption_push_placeholder" = "回覆...";
 "decryption_push_agree" = "同意";
@@ -780,11 +755,10 @@
 "call_reject" = "拒絕";
 "call_hide_call" = "隱藏通話";
 "call_no_wifi" = "透過行動網路通話。了解更多...";
+"call_mic_access" = "無法取用麥克風";
 
 "call_voip_not_supported_title" = "Threema 通話";
 "call_voip_not_supported_text" = "您的聯絡人不支援 Threema 通話";
-"call_microphone_permission_title" = "麥克風取用被拒絕";
-"call_microphone_permission_text" = "您必須在「設定」中允許麥克風取用";
 "call_contact_alert" = "您要致電至%@嗎？";
 "call_contact_not_reachable" = "無法聯絡至聯絡人...";
 "already_in_call" = "每次只能有執行一個呼叫。";
@@ -848,8 +822,6 @@
 "privateChat_set_alert_title" = "您要將此對話標示為私密對話嗎？";
 "privateChat_set_alert_message" = "您可以在隱私權設定中切換私密對話的可見性。";
 "privateChat_setup_alert_message" = "您的 Threema Safe 備份包括私密對話記錄，您必須設定密碼才能取用備份內容。";
-"hide_private_toggle" = "隱藏私密對話";
-"privacy_footer" = "在對話畫面中隱藏所有私密對話，您需要設定密碼鎖才能啟用此設定。";
 
 "group_leave_sheet_title" = "離開「%@」？";
 "group_leave_sheet_message" = "如果您只是離開群組，您將無法再參與對話，但您仍然可以檢視歷史對話記錄。";
@@ -1070,6 +1042,7 @@
 "delete_messages_confirm" = "您要永久刪除所有早於%@的訊息嗎？";
 "delete_messages_confirm_all" = "您要永久刪除所有訊息嗎？";
 "delete_messages_explain" = "任何類型的訊息都將被刪除：文字和語音訊息、媒體、檔案、投票等。";
+"delete_in_progress" = "刪除中…";
 "one_year_title" = "1年";
 "one_year" = "1年";
 "six_months_title" = "6個月";
@@ -1115,7 +1088,6 @@
 "settings_advanced" = "進階";
 "settings_threema_work" = "Threema Work";
 "settings_feedback" = "測試版意見回饋";
-"settings_dev_mode" = "開發人員模式";
 "tos_cell_title" = "服務條款";
 
 "settings_advanced_flush_message_queue" = "重新整理訊息佇列";
@@ -1124,11 +1096,32 @@
 "settings_advanced_reregister_push_notifications_footer_title" = "如果此應用程式關閉後，仍然沒有收到新訊息通知，您可以重新註冊通知推播權限。";
 "settings_advanced_reregister_notifications_label" = "重新註冊推播通知";
 
-// Dev Mode
-"settings_devmode_quote_v2" = "引用 V2";
-"settings_devmode_new_chat_view" = "新的對話畫面";
-"settings_devmode_stylekit_debug_view" = "StyleKit 調試視圖";
-"settings_devmode_id_colors_debug_view" = "ID 顏色調試視圖";
+"settings_md_sync_alert_title" = "同步失敗";
+
+// Privacy
+"settings_privacy_contacts_header" = "聯絡人";
+"settings_privacy_sync_contacts" = "同步聯絡人";
+"settings_privacy_exclusion_list" = "排除清單";
+"settings_privacy_exclusion_list_alert_title" = "ID長度太短";
+"settings_privacy_exclusion_list_alert_message" = "請輸入8個字元長度的 ID。";
+"settings_privacy_block_unknown" = "封鎖未知者";
+"settings_privacy_block_unknown_footer_on"= "只有在通訊錄的聯絡人才能向您傳送訊息。";
+"settings_privacy_block_unknown_foooter_off" = "任何人都可以向您傳送訊息。當他向您傳送第一則訊息時，會自動新增至新聯絡人。";
+
+"settings_privacy_chat_header" = "對話";
+"settings_privacy_read_receipts" = "已讀標記";
+"settings_privacy_typing_indicator" = "打字狀態";
+
+"settings_privacy_TIRR_reset_all" = "重設所有聯絡人";
+"settings_privacy_TIRR_reset_footer" = "將所有聯絡人重設為預設設定。";
+"settings_privacy_TIRR_reset_alert_title" = "重設";
+"settings_privacy_TIRR_reset_alert_message" = "將所有聯絡人重設為預設設定。此作業不能被還原。";
+"settings_privacy_TIRR_reset_alert_action" = "重設所有內容";
+
+"settings_privacy_choose_poi" = "選擇POI";
+"settings_privacy_hide_private_chats" = "隱藏私密對話";
+"settings_privacy_hide_private_chats_footer" = "在對話畫面中隱藏所有私密對話，您需要設定密碼鎖才能啟用此設定。";
+
 
 // Appearance
 "settings_appearance_theme_section" = "設計主題";
@@ -1339,12 +1332,6 @@
 "readReceipt_sheetMessage" = "覆蓋此聯絡人的預設設定。";
 "typingIndicator_sheetMessage" = "覆蓋此聯絡人的預設設定。";
 
-"reset_overrides" = "重設所有聯絡人";
-"resetButton_footer" = "將所有聯絡人重設為預設設定。";
-"reset_overrides_alert_title" = "重設";
-"reset_overrides_alert_message" = "將所有聯絡人重設為預設設定。此作業不能被還原。";
-"reset_overrides_alert_action" = "重設所有內容";
-
 /* Multi Decvice */
 "multi_device_linked_devices_title" = "多裝置預覽";
 "multi_device_linked_devices_desc" = "您可以啟用或關閉此裝置的「多裝置預覽」功能。";
@@ -1378,14 +1365,11 @@
 // POI
 "poi_unavailable" = "無法使用";
 "poi_not_marked" = "–";
-"poi_location_disabled_action" = "開啟設定";
 "poi_search_POI" = "城市和街道";
 "poi_search_prefix" = "搜尋 %@";
 "poi_away" = "%@ 已離開";
 "poi_dropped_pin_info_alert_title" = "圖釘已放置";
 "poi_dropped_pin_info_alert_message" = "如要放置圖釘，請在地圖上長按。";
-"poi_accuracy_info_alert_title" = "沒有權限取用準確的位置";
-"poi_accuracy_info_alert_message" = "請開啟「設定」並啟用「準確位置」。";
 "poi_current_location" = "我的位置";
 "poi_marked_location" = "圖釘已放置";
 
@@ -1427,6 +1411,18 @@
 "detailView_messageID" = "訊息ID";
 "detailView_group_acknowledged" = "已同意 (%d)";
 "detailView_group_declined" = "不同意 (%d)";
+"detailView_group_file_size" = "檔案大小";
+"detailView_created_footer" = "建立於：%@";
+
+"message_display_status_none" = "無";
+"message_display_status_user_acknowledged" = "已同意";
+"message_display_status_user_declined" = "不同意";
+"message_display_status_sending" = "傳送中";
+"message_display_status_sent" = "已傳送";
+"message_display_status_delivered" = "已送達";
+"message_display_status_delivered_incoming" = "已收到";
+"message_display_status_read" = "已讀取";
+"message_display_status_failed" = "失敗";
 
 // In-app notifications
 "notification_copying_succeeded" = "項目已複製";
@@ -1435,7 +1431,11 @@
 "notification_saving_succeeded" = "項目已儲存";
 "notification_saving_failed" = "儲存失敗";
 
+"notification_saving_to_photos_succeeded" = "已新增至相簿";
+"notification_saving_to_photos_failed" = "新增至相簿失敗";
+
 "notification_sending_failed" = "傳送失敗";
+"notification_sending_failed_subtitle_size" = "專案體積太大";
 
 "notification_deleted_messages_count" = "%d則訊息已刪除";
 
@@ -1444,6 +1444,7 @@
 "notification_call_failed_connected" = "連線中斷";
 "notification_call_failed_not_connected" = "建立連線失敗";
 "notification_call_creation_failed" = "呼叫建立失敗";
+"notification_call_creation_disabled" = "通話已停用";
 
 "notification_sending_profile_picture_succeeded" = "大頭貼已傳送";
 "notification_sending_profile_picture_failed" = "傳送失敗";
@@ -1452,6 +1453,9 @@
 
 "notification_group_sync_succeeded" = "群組已同步";
 "notification_group_sync_failed" = "群組同步失敗";
+
+"notification_settings_sync_pending" = "同步中…";
+"notification_settings_sync_succeeded" = "設定已同步";
 
 // Forward security status messages
 "forward_security_message_without" = "您收到一則沒有完全正向保密的訊息，您可以驗證寄件者是否主動停用完全正向保密。";
@@ -1463,7 +1467,7 @@
 "forward_security_message_out_of_order" = "收到的訊息發生故障，無法解密。";
 "forward_security_status_enabled_outgoing" = "寄出的訊息已啟用「完全正向保密」";
 "forward_security_status_disabled_outgoing" = "寄出的訊息已關閉「完全正向保密」";
-"forward_security_contact_has_downgraded_to_an_incompatible_version" = "此聯絡人所啟用的應用程式版本並不支援「完全正向保密」功能。從現在起，訊息將在沒有「完全正向保密」的情況下發送。";
+"forward_security_contact_has_downgraded_to_an_incompatible_version" = "此聯絡人所使用的應用程式版本並不支援「完全正向保密」功能。從現在起，訊息將在沒有「完全正向保密」的情況下傳送。";
 
 // Profile view
 "accessibility_profile_button_hint_contact" = "開啟聯絡人詳細資訊";
@@ -1472,7 +1476,6 @@
 // Chat bar
 "accessibility_chatbar_label" = "對話輸入框";
 "accessibility_chatbar_hint" = "撰寫訊息";
-"accessibility_chatbar_value" = "目前文字：%@";
 "accessibility_chatbar_quote_label" = "已選定的引用訊息：%@。";
 "accessibility_chatbar_close_quote_button_label" = "結束引用";
 "accessibility_chatbar_close_quote_button_hint" = "結束引用已選定訊息";
@@ -1522,6 +1525,11 @@
 "accessibility_status_delivered_plus_time" = "已送達, %@";
 "accessibility_status_read_plus_time" = "已讀取, %@";
 "accessibility_status_failed_plus_time" = "失敗, %@";
+
+// UIAccessibilityCustomActions
+"accessibility_action_open_link" = "開啟 %@";
+"accessibility_action_call_phone" = "致電至%@";
+"accessibility_action_open_mention" = "顯示%@的聯絡方式";
 
 // Multi-Device Wizard
 "md_wizard_header" = "多裝置預覽";
@@ -1579,3 +1587,18 @@
 
 // SystemMessage
 "systemMessage_unsupported_type" = "不支援的系統訊息類型";
+
+// Alerts
+"alert_no_access_title_camera" = "無法取用相機";
+"alert_no_access_title_contacts" = "無法取用聯絡人";
+"alert_no_access_title_location" = "沒有權限取用位置";
+"alert_no_access_title_location_precise" = "沒有權限取用準確的位置";
+"alert_no_access_title_microphone" = "無法取用麥克風";
+
+"alert_no_access_message_camera" = "開啟系統設定並允許相機取用。";
+"alert_no_access_message_contacts" = "開啟系統設定並允許通訊錄取用。";
+"alert_no_access_message_location" = "開啟系統設定並允許位置取用。";
+"alert_no_access_message_location_precise" = "開啟系統設定，在位置選項中允許精確位置的取用。";
+"alert_no_access_message_microphone" = "開啟系統設定並允許麥克風取用。";
+
+"alert_no_access_open_settings" = "開啟設定";

@@ -32,15 +32,21 @@ import Foundation
     ///   - webRequestID: Optional String
     @objc public func createMessageAndSyncBlobs(
         for item: URLSenderItem,
-        in conversation: Conversation,
+        in conversation: Conversation?,
         correlationID: String?,
         webRequestID: String?
     ) {
         Task {
             do {
+                guard let objectID = conversation?.objectID else {
+                    NotificationPresenterWrapper.shared.present(type: .sendingError)
+                    DDLogError("ObjectID of conversation to create blob message for was nil.")
+                    return
+                }
+                
                 try await BlobManager.shared.createMessageAndSyncBlobs(
                     for: item,
-                    in: conversation.objectID,
+                    in: objectID,
                     correlationID: correlationID,
                     webRequestID: webRequestID
                 )
@@ -49,5 +55,25 @@ import Foundation
                 DDLogError("Could not create message and sync blobs due to: \(error)")
             }
         }
+    }
+    
+    /// Start up- or download of blobs in passed object, use to start automatic downloads
+    /// - Parameter messageID: NSManagedObjectID of message to be synced
+    @objc public func autoSyncBlobs(for messageID: NSManagedObjectID?) {
+        Task {
+     
+            guard let messageID else {
+                DDLogError("ObjectID of conversation to create blob message for was nil.")
+                return
+            }
+            
+            await BlobManager.shared.autoSyncBlobs(for: messageID)
+        }
+    }
+ 
+    /// Checks the non isolated state tracker if there are any active blob syncs. Might not return the correct value since it is not handled in actor isolation.
+    /// - Returns: `True` if there are probably some active syncs.
+    @objc public func hasActiveSyncs() -> Bool {
+        BlobManager.shared.hasActiveSyncs()
     }
 }

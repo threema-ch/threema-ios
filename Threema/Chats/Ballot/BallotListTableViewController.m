@@ -58,6 +58,7 @@
     // Only show done button if presented modally
     if (self.presentingViewController) {
         UIBarButtonItem *doneBarButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemDone target:self action:@selector(done)];
+        doneBarButtonItem.accessibilityIdentifier = @"BallotListTableViewControllerDoneBarButtonItem";
         self.navigationItem.rightBarButtonItem = doneBarButtonItem;
     }
 }
@@ -148,6 +149,8 @@
     }
     
     [cell.dateLabel setText: [DateFormatter shortStyleDateTime:date]];
+    
+    cell.accessibilityIdentifier = @"BallotListTableViewControllerBallotListTableCell";
     
     return cell;
 }

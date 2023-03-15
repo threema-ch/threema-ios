@@ -21,8 +21,8 @@
 enum SingleDetails {
     
     enum State {
-        case contactDetails(contact: Contact)
-        case conversationDetails(contact: Contact, conversation: Conversation)
+        case contactDetails(contact: ContactEntity)
+        case conversationDetails(contact: ContactEntity, conversation: Conversation)
     }
     
     enum Section {
@@ -44,7 +44,7 @@ enum SingleDetails {
         case value(label: String, value: String)
         
         // Contact info
-        case verificationLevel(contact: Contact)
+        case verificationLevel(contact: ContactEntity)
         case publicKey
         
         case linkedContact(_ linkedContactManger: LinkedContactManger)
@@ -53,9 +53,9 @@ enum SingleDetails {
         case group(_ group: Group)
         
         // Notifications
-        case doNotDisturb(action: Details.Action, contact: Contact)
+        case doNotDisturb(action: Details.Action, contact: ContactEntity)
         
         // Privacy Settings
-        case privacySettings(action: Details.Action, contact: Contact)
+        case privacySettings(action: Details.Action, contact: ContactEntity)
     }
 }

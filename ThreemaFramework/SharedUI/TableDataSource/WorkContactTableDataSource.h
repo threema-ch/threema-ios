@@ -20,7 +20,7 @@
 
 #import <Foundation/Foundation.h>
 #import "ContactGroupDataSource.h"
-#import "Contact.h"
+#import "ContactEntity.h"
 
 @interface WorkContactTableDataSource : NSObject <ContactGroupDataSource>
 
@@ -31,7 +31,7 @@
 @property (nonatomic) BOOL excludeGatewayContacts;
 @property (nonatomic) BOOL excludeEchoEcho;
 
-- (Contact *)workContactAtIndexPath:(NSIndexPath *)indexPath;
+- (ContactEntity *)workContactAtIndexPath:(NSIndexPath *)indexPath;
 
 - (NSIndexPath *)indexPathForObject:(id)object;
 

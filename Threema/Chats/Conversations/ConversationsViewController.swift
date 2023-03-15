@@ -74,7 +74,7 @@ class ConversationsViewController: ThemedTableViewController {
     private let entityManager = EntityManager()
     private lazy var fetchedResultsController: NSFetchedResultsController<NSFetchRequestResult> = {
         let fetchedResultsController: NSFetchedResultsController<NSFetchRequestResult> = entityManager.entityFetcher
-            .fetchedResultsControllerForConversations()
+            .fetchedResultsControllerForConversations(withSections: false)
         
         fetchedResultsController.delegate = self
         
@@ -222,6 +222,18 @@ extension ConversationsViewController {
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         fetchedResultsController.sections?[section].numberOfObjects ?? 0
+    }
+    
+    override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
+        if fetchedResultsController.sections?.count == 1 {
+            return nil
+        }
+        
+        if fetchedResultsController.sections?[section].name == "0" {
+            return BundleUtil.localizedString(forKey: "chats_title")
+        }
+        
+        return BundleUtil.localizedString(forKey: "chats_pinned")
     }
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
@@ -465,101 +477,23 @@ extension ConversationsViewController {
     ) -> UIContextMenuConfiguration? {
         
         guard !isEditing,
-              UIDevice.current.userInterfaceIdiom != .pad,
-              let cell: ConversationTableViewCell = tableView.cellForRow(at: indexPath) as? ConversationTableViewCell,
-              let chatViewController = Old_ChatViewControllerCache.newController(
-                  for: cell.conversation,
-                  forceTouch: true
-              ),
-              cell.conversation?.conversationCategory == .default else {
+              UIDevice.current.userInterfaceIdiom != .pad else {
+            DDLogError("No context menu is shown when editing and on iPad")
+            return nil
+        }
+
+        guard let conversation = fetchedResultsController.object(at: indexPath) as? Conversation else {
+            DDLogError("Could not select cell because there was no conversation for its indexPath")
             return nil
         }
         
-        let configuration = UIContextMenuConfiguration(identifier: indexPath as NSCopying) {
-            chatViewController
-        } actionProvider: { _ in
-            var actionArray = [UIAction]()
-            
-            if UIImagePickerController.isSourceTypeAvailable(.camera) {
-                let title = BundleUtil.localizedString(forKey: "take_photo_or_video")
-                let image = BundleUtil.imageNamed("ActionCamera")?.withTintColor(Colors.text)
-                let action = UIAction(title: title, image: image, identifier: nil) { _ in
-                    chatViewController.showContentAfterForceTouch()
-                    self.displayOldChat(oldChatViewController: chatViewController, animated: true)
-                    if let sendMediaAction = SendMediaAction(for: chatViewController) {
-                        sendMediaAction.mediaPickerType = MediaPickerTakePhoto
-                        chatViewController.setCurrentAction(sendMediaAction)
-                        sendMediaAction.execute()
-                    }
-                }
-                actionArray.append(action)
-            }
-            
-            if UIImagePickerController.isSourceTypeAvailable(.photoLibrary) {
-                let title = BundleUtil.localizedString(forKey: "choose_existing")
-                let image = BundleUtil.imageNamed("ActionPhoto")?.withTintColor(Colors.text)
-                let action = UIAction(title: title, image: image, identifier: nil) { _ in
-                    chatViewController.showContentAfterForceTouch()
-                    self.displayOldChat(oldChatViewController: chatViewController, animated: true)
-                    if let sendMediaAction = SendMediaAction(for: chatViewController) {
-                        sendMediaAction.mediaPickerType = MediaPickerChooseExisting
-                        chatViewController.setCurrentAction(sendMediaAction)
-                        sendMediaAction.execute()
-                    }
-                }
-                actionArray.append(action)
-            }
-            
-            let locationTitle = BundleUtil.localizedString(forKey: "send_location")
-            let locationImage = BundleUtil.imageNamed("ActionLocation")?.withTintColor(Colors.text)
-            let locationAction = UIAction(title: locationTitle, image: locationImage, identifier: nil) { _ in
-                chatViewController.showContentAfterForceTouch()
-                self.displayOldChat(oldChatViewController: chatViewController, animated: true)
-                if let sendLocationAction = SendLocationAction(for: chatViewController) {
-                    chatViewController.setCurrentAction(sendLocationAction)
-                    sendLocationAction.execute()
-                }
-            }
-            actionArray.append(locationAction)
-            
-            if PlayRecordAudioViewController.canRecordAudio() {
-                let title = BundleUtil.localizedString(forKey: "record_audio")
-                let image = BundleUtil.imageNamed("ActionMicrophone")?.withTintColor(Colors.text)
-                let action = UIAction(title: title, image: image, identifier: nil) { _ in
-                    chatViewController.showContentAfterForceTouch()
-                    self.displayOldChat(oldChatViewController: chatViewController, animated: true)
-                    chatViewController.startRecordingAudio()
-                }
-                actionArray.append(action)
-            }
-            
-            let ballotActionTitle = BundleUtil.localizedString(forKey: "ballot_create")
-            let ballotActionImage = BundleUtil.imageNamed("ActionBallot")?.withTintColor(Colors.text)
-            let ballotAction = UIAction(title: ballotActionTitle, image: ballotActionImage, identifier: nil) { _ in
-                chatViewController.showContentAfterForceTouch()
-                self.displayOldChat(oldChatViewController: chatViewController, animated: true)
-                chatViewController.createBallot()
-            }
-            actionArray.append(ballotAction)
-            
-            let shareActionTitle = BundleUtil.localizedString(forKey: "share_file")
-            let shareActionImage = BundleUtil.imageNamed("ActionFile")?.withTintColor(Colors.text)
-            let shareAction = UIAction(title: shareActionTitle, image: shareActionImage, identifier: nil) { _ in
-                chatViewController.showContentAfterForceTouch()
-                self.displayOldChat(oldChatViewController: chatViewController, animated: true)
-                chatViewController.sendFile()
-            }
-            actionArray.append(shareAction)
-            
-            return UIMenu(
-                title: chatViewController.conversation.displayName ?? "",
-                image: nil,
-                identifier: nil,
-                options: .displayInline,
-                children: actionArray
-            )
+        selectedConversation = conversation
+        
+        return UIContextMenuConfiguration(identifier: nil) {
+            let chatViewController = ChatViewController(for: conversation)
+            chatViewController.userInterfaceMode = .preview
+            return chatViewController
         }
-        return configuration
     }
 
     override func tableView(
@@ -567,12 +501,16 @@ extension ConversationsViewController {
         willPerformPreviewActionForMenuWith configuration: UIContextMenuConfiguration,
         animator: UIContextMenuInteractionCommitAnimating
     ) {
-        if let previewVC = animator.previewViewController as? Old_ChatViewController,
-           let chatVC = Old_ChatViewControllerCache.controller(for: previewVC.conversation) {
-            chatVC.showContentAfterForceTouch()
-            animator.addCompletion {
-                self.displayOldChat(oldChatViewController: chatVC, animated: true)
-            }
+        guard let chatViewController = animator.previewViewController as? ChatViewController else {
+            DDLogWarn("Unable to display chat after long press")
+            return
+        }
+        
+        animator.addCompletion {
+            self.show(chatViewController, sender: self)
+            // If we change the interface mode earlier the tab bar is still somewhat here and thus the chat bar appears
+            // too high
+            chatViewController.userInterfaceMode = .default
         }
     }
 }
@@ -1038,12 +976,6 @@ extension ConversationsViewController {
         )
         NotificationCenter.default.addObserver(
             self,
-            selector: #selector(updateDraftForCell),
-            name: NSNotification.Name(rawValue: kNotificationUpdateDraftForCell),
-            object: nil
-        )
-        NotificationCenter.default.addObserver(
-            self,
             selector: #selector(showProfilePictureChanged),
             name: NSNotification.Name(rawValue: kNotificationShowProfilePictureChanged),
             object: nil
@@ -1206,13 +1138,29 @@ extension ConversationsViewController: NSFetchedResultsControllerDelegate {
         case .move:
             if let indexPath = indexPath,
                let newIndexPath = newIndexPath {
-                tableView.deleteRows(at: [indexPath], with: .automatic)
-                tableView.insertRows(at: [newIndexPath], with: .automatic)
+                tableView.moveRow(at: indexPath, to: newIndexPath)
             }
         case .update:
             break
         @unknown default:
             DDLogInfo("Unknown default called on controller() in ConversationsVC")
+        }
+    }
+    
+    func controller(
+        _ controller: NSFetchedResultsController<NSFetchRequestResult>,
+        didChange sectionInfo: NSFetchedResultsSectionInfo,
+        atSectionIndex sectionIndex: Int,
+        for type: NSFetchedResultsChangeType
+    ) {
+        let section = IndexSet(integer: sectionIndex)
+        switch type {
+        case .delete:
+            tableView.deleteSections(section, with: .automatic)
+        case .insert:
+            tableView.insertSections(section, with: .automatic)
+        default:
+            break
         }
     }
 }

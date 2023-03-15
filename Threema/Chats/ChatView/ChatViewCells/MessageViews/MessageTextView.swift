@@ -29,12 +29,6 @@ protocol MessageTextViewDelegate: AnyObject {
     func didSelectText(in textView: MessageTextView?)
 }
 
-extension MessageTextViewDelegate {
-    func showContact(identity: String) {
-        // This is a empty implementation to allow this method to be optional
-    }
-}
-
 /// Label with correct font for a text message or caption
 ///
 /// With IOS-2392 this will automatically format text and show big emojis if enabled.
@@ -64,10 +58,10 @@ final class MessageTextView: RTLAligningTextView {
             }
             
             guard currentText == newText else {
-                DDLogVerbose("Text Unchanged")
+                DDLogVerbose("Text Changed")
                 return .textChanged(currentSearchTextRenderState)
             }
-            DDLogVerbose("Text changed")
+            DDLogVerbose("Text Unchanged")
             return .textUnchanged(currentSearchTextRenderState)
         }
     }
@@ -219,7 +213,8 @@ final class MessageTextView: RTLAligningTextView {
             }
         #endif
         
-        if text.containsOnlyEmoji,
+        if !UserSettings.shared().disableBigEmojis,
+           text.containsOnlyEmoji,
            text.emojis.count <= 3 {
             return NSAttributedString(
                 string: text,
@@ -239,16 +234,191 @@ final class MessageTextView: RTLAligningTextView {
                         .preferredFont(forTextStyle: ChatViewConfiguration.Text.textStyle),
                 ]
             )
-            return markupParser.markify(
-                attributedString: attributedString,
-                font: UIFont.preferredFont(forTextStyle: ChatViewConfiguration.Text.textStyle),
-                removeMarkups: true
-            ) as! NSMutableAttributedString
+            
+            if messageTextViewDelegate != nil {
+                return markupParser.markify(
+                    attributedString: attributedString,
+                    font: UIFont.preferredFont(forTextStyle: ChatViewConfiguration.Text.textStyle),
+                    removeMarkups: true
+                ) as! NSMutableAttributedString
+            }
+            else {
+                return NSMutableAttributedString(attributedString: attributedString)
+            }
         }
     }
     
     func resetTextSelection() {
         selectedTextRange = nil
+    }
+    
+    func accessibilityCustomActions(
+        openURLHandler: @escaping (URL) -> Void,
+        openDetailsHandler: @escaping (String) -> Void
+    ) -> [UIAccessibilityCustomAction]? {
+
+        var customActionsWithRanges = [(range: NSRange, action: UIAccessibilityCustomAction)]()
+
+        // Check for links and phone numbers
+        customActionsWithRanges.append(contentsOf: checkForURLs(in: attributedText, openURLHandler: openURLHandler))
+       
+        // Check for mentions
+        customActionsWithRanges
+            .append(contentsOf: checkForMentions(in: attributedText, openDetailsHandler: openDetailsHandler))
+        
+        // Check if we received actions
+        guard !customActionsWithRanges.isEmpty else {
+            return nil
+        }
+        
+        // Sort by order of occurrence
+        let sortedActions = customActionsWithRanges.sorted { $0.range.lowerBound < $1.range.lowerBound }
+        
+        // Extract actions and return
+        return sortedActions.map(\.action)
+    }
+    
+    private func checkForURLs(
+        in attributedString: NSAttributedString,
+        openURLHandler: @escaping (URL) -> Void
+    ) -> [(NSRange, UIAccessibilityCustomAction)] {
+       
+        var accessibilityCustomActionsURLs = [(NSRange, UIAccessibilityCustomAction)]()
+       
+        // Are there even results?
+        guard let results = checkForCheckingResults(in: attributedText) else {
+            return accessibilityCustomActionsURLs
+        }
+        
+        // Iterate over results
+        for result in results {
+            // We only care about links and phone numbers
+            switch result.resultType {
+                
+            case .link:
+                guard let url = result.url else {
+                    continue
+                }
+
+                let actionOpen =
+                    UIAccessibilityCustomAction(
+                        name: String.localizedStringWithFormat(
+                            BundleUtil.localizedString(forKey: "accessibility_action_open_link"),
+                            attributedText.attributedSubstring(from: result.range).string
+                        )
+                    ) { _ in
+                        openURLHandler(url)
+                        return true
+                    }
+                accessibilityCustomActionsURLs.append((result.range, actionOpen))
+                    
+            case .phoneNumber:
+                guard let phoneNumber = result.phoneNumber else {
+                    continue
+                }
+                    
+                let cleanString = phoneNumber.replacingOccurrences(of: "\u{00A0}", with: "")
+                guard let encodedString = cleanString
+                    .addingPercentEncoding(withAllowedCharacters: CharacterSet.urlHostAllowed),
+                    let phoneURL = URL(string: String(format: "tel:%@", encodedString)) else {
+                    continue
+                }
+                    
+                let actionOpen =
+                    UIAccessibilityCustomAction(
+                        name: String.localizedStringWithFormat(
+                            BundleUtil.localizedString(forKey: "accessibility_action_call_phone"),
+                            attributedText.attributedSubstring(from: result.range).string
+                        )
+                    ) { _ in
+                        openURLHandler(phoneURL)
+                        return true
+                    }
+                accessibilityCustomActionsURLs.append((result.range, actionOpen))
+
+            default:
+                continue
+            }
+        }
+        
+        return accessibilityCustomActionsURLs
+    }
+    
+    private func checkForMentions(
+        in attributedString: NSAttributedString,
+        openDetailsHandler: @escaping (String) -> Void
+    ) -> [(NSRange, UIAccessibilityCustomAction)] {
+        
+        let range = NSRange(location: 0, length: attributedText.length)
+        var accessibilityCustomActionsMentions = [(NSRange, UIAccessibilityCustomAction)]()
+        
+        attributedText.enumerateAttributes(in: range) { attributes, subrange, _ in
+            
+            // We only care if the subrange is of mention type and link
+            guard (
+                attributes.contains { $0.key == NSAttributedString.Key.tokenType } && attributes
+                    .contains { $0.key == NSAttributedString.Key.link }
+            ) else {
+                return
+            }
+            
+            guard let mentionString = attributes[NSAttributedString.Key.link] as? String else {
+                return
+            }
+            
+            let id = String(mentionString.suffix(8))
+            
+            guard id.count == 8 else {
+                return
+            }
+            
+            // Exclude @All
+            guard id != "@@@@@@@@" else {
+                return
+            }
+            
+            let actionOpen =
+                UIAccessibilityCustomAction(
+                    name: String.localizedStringWithFormat(
+                        BundleUtil.localizedString(forKey: "accessibility_action_open_mention"),
+                        attributedText.attributedSubstring(from: subrange).string
+                    )
+                ) { _ in
+                    openDetailsHandler(id)
+                    return true
+                }
+            accessibilityCustomActionsMentions.append((subrange, actionOpen))
+        }
+        
+        return accessibilityCustomActionsMentions
+    }
+    
+    private func checkForCheckingResults(in attributedString: NSAttributedString) -> [NSTextCheckingResult]? {
+        var typesToCheck: NSTextCheckingResult.CheckingType = .link
+        
+        if UIApplication.shared.canOpenURL(URL(string: "tel:0")!) {
+            typesToCheck.insert(.phoneNumber)
+        }
+        
+        var results = [NSTextCheckingResult]()
+        
+        do {
+            let dataDetector = try NSDataDetector(types: typesToCheck.rawValue)
+            
+            dataDetector.enumerateMatches(
+                in: attributedString.string,
+                range: NSRange(location: 0, length: attributedString.length)
+            ) { result, _, _ in
+                guard let result else {
+                    return
+                }
+                results.append(result)
+            }
+        }
+        catch {
+            return nil
+        }
+        return results
     }
 }
 

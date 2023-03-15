@@ -20,7 +20,7 @@
 
 #import <UIKit/UIKit.h>
 
-@class Contact;
+@class ContactEntity;
 @class BaseMessage;
 
 @protocol QuoteViewDelegate
@@ -35,7 +35,7 @@
 @property (nonatomic) CGFloat buttonWidthHint;
 @property (nonatomic, weak) BaseMessage *quotedMessage;
 
-- (void)setQuotedText:(NSString*)quotedText quotedContact:(Contact*)quotedContact;
+- (void)setQuotedText:(NSString*)quotedText quotedContact:(ContactEntity*)quotedContact;
 - (void)updateColors;
 
 @end

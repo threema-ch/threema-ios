@@ -196,7 +196,7 @@ class SafeActivatedViewController: ThemedTableViewController {
     
     override internal func updateColors() {
         super.updateColors()
-        let explainImage = explainButton.imageView?.image!.withTint(Colors.primary)
+        let explainImage = explainButton.imageView?.image!.withTint(.primary)
         explainButton.setImage(explainImage, for: .normal)
         
         serverNameValueLabel.textColor = Colors.textLight
@@ -207,7 +207,7 @@ class SafeActivatedViewController: ThemedTableViewController {
         lastResultValueLabel.textColor = Colors.textLight
         activityIndicator.style = Colors.activityIndicatorViewStyle
 
-        backupNowButtonLabel.textColor = Colors.primary
+        backupNowButtonLabel.textColor = .primary
         
         if lastResultValueLabel.text == BundleUtil.localizedString(forKey: "safe_successful") {
             lastResultValueLabel.textColor = Colors.green

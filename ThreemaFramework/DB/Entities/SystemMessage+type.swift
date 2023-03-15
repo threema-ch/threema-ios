@@ -67,6 +67,7 @@ public extension SystemMessage {
         case groupSelfAdded
         case groupSelfRemoved
         case groupSelfLeft
+        case groupAvatarChanged
         case groupNoteGroupStarted
         case groupNoteGroupEnded
         case groupCreatorLeft
@@ -111,7 +112,10 @@ public extension SystemMessage {
                 
             case .groupSelfLeft:
                 return BundleUtil.localizedString(forKey: "group_member_self_left")
-                
+            
+            case .groupAvatarChanged:
+                return BundleUtil.localizedString(forKey: "system_message_group_avatar_changed")
+
             case .groupNoteGroupStarted:
                 return BundleUtil.localizedString(forKey: "add_note_group_info")
                 
@@ -272,75 +276,41 @@ public extension SystemMessage {
         
         /// Symbol for call type
         public var symbol: UIImage? {
-            switch self {
-            // Incoming
-            case .endedIncomingSuccessful:
-                return UIImage(
-                    systemName: "phone.fill.arrow.down.left"
-                )?
-                    .withTintColor(Colors.green, renderingMode: .alwaysOriginal)
-            case .rejectedIncoming:
-                return UIImage(systemName: "phone.fill")?
-                    .withTintColor(Colors.orange, renderingMode: .alwaysOriginal)
-                
-            case .endedIncomingUnsuccessful,
-                 .missedIncoming,
-                 .rejectedBusyIncoming,
-                 .rejectedTimeoutIncoming,
-                 .rejectedDisabledIncoming,
-                 .rejectedUnknownIncoming,
-                 .rejectedOffHoursIncoming:
-                return UIImage(systemName: "phone.fill")?
-                    .withTintColor(Colors.red, renderingMode: .alwaysOriginal)
-                
-            // Outgoing
-            case .endedOutgoingSuccessful:
-                return UIImage(
-                    systemName: "phone.fill.arrow.up.right"
-                )?
-                    .withTintColor(Colors.green, renderingMode: .alwaysOriginal)
-                
-            case .endedOutgoingUnsuccessful:
-                return UIImage(
-                    systemName: "phone.fill.arrow.up.right"
-                )?
-                    .withTintColor(Colors.red, renderingMode: .alwaysOriginal)
-                
-            case .missedOutgoing,
-                 .rejectedOutgoing,
-                 .rejectedBusyOutgoing,
-                 .rejectedTimeoutOutgoing,
-                 .rejectedDisabledOutgoing,
-                 .rejectedUnknownOutgoing,
-                 .rejectedOffHoursOutgoing:
-                return UIImage(systemName: "phone.fill")?
-                    .withTintColor(Colors.red, renderingMode: .alwaysOriginal)
+            symbolImage?.withTintColor(tintColor, renderingMode: .alwaysOriginal)
+        }
+        
+        /// Helper to resolve system and non-system symbols
+        private var symbolImage: UIImage? {
+            if let systemSymbol = UIImage(systemName: symbolName) {
+                return systemSymbol
             }
+            else if let customSymbol = UIImage(named: symbolName) {
+                return customSymbol
+            }
+            
+            return nil
         }
         
         /// Name of symbol for call type
-        public var previewSymbolName: String? {
+        public var symbolName: String {
             switch self {
             // Incoming
             case .endedIncomingSuccessful:
                 return "phone.fill.arrow.down.left"
-            case .rejectedIncoming:
-                return "phone.fill"
                 
-            case .endedIncomingUnsuccessful,
+            case .rejectedIncoming,
+                 .endedIncomingUnsuccessful,
                  .missedIncoming,
                  .rejectedBusyIncoming,
                  .rejectedTimeoutIncoming,
                  .rejectedDisabledIncoming,
                  .rejectedUnknownIncoming,
                  .rejectedOffHoursIncoming:
-                return "phone.fill"
+                return "threema.phone.fill.arrow.bend.left"
                 
             // Outgoing
-            case .endedOutgoingSuccessful:
-                return "phone.fill.arrow.up.right"
-                
-            case .endedOutgoingUnsuccessful:
+            case .endedOutgoingSuccessful,
+                 .endedOutgoingUnsuccessful:
                 return "phone.fill.arrow.up.right"
 
             case .missedOutgoing,
@@ -350,16 +320,17 @@ public extension SystemMessage {
                  .rejectedDisabledOutgoing,
                  .rejectedUnknownOutgoing,
                  .rejectedOffHoursOutgoing:
-                return "phone.fill"
+                return "threema.phone.fill.arrow.bend.right"
             }
         }
         
-        /// Symbol for call type
-        public var previewSymbolTintColor: UIColor? {
+        /// Tint color for call type
+        public var tintColor: UIColor {
             switch self {
             // Incoming
             case .endedIncomingSuccessful:
                 return Colors.green
+                
             case .rejectedIncoming:
                 return Colors.orange
                 
@@ -415,14 +386,27 @@ public extension SystemMessage {
                 return StyleKit.houseIcon
             }
         }
+        
+        public var backgroundColor: UIColor {
+            switch self {
+            case .work:
+                return Colors.threemaWorkColor
+            case .consumer:
+                return Colors.threemaConsumerColor
+            }
+        }
     }
     
     // MARK: - systemMessageType
     
     /// Type of system message
     var systemMessageType: SystemMessageType {
+        guard let typeValue = type?.intValue else {
+            return .systemMessage(type: .systemMessageUnsupportedType)
+        }
+        
         // Since we use type to replace the direct use of itself, we can ignore the deprecate warning here
-        switch type.intValue {
+        switch typeValue {
         case 1:
             return .systemMessage(type: .groupRenamed(newName: argAsUTF8String()))
         case 2:
@@ -522,6 +506,8 @@ public extension SystemMessage {
         case 30:
             let voteInfo = try? JSONDecoder().decode(VoteInfo.self, from: arg)
             return .systemMessage(type: .vote(info: voteInfo))
+        case 32:
+            return .systemMessage(type: .groupAvatarChanged)
         default:
             DDLogError("Unsupported system message type with value")
             return .systemMessage(type: .systemMessageUnsupportedType)

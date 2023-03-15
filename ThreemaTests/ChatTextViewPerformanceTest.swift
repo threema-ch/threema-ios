@@ -247,15 +247,8 @@ class ChatTextViewPerformanceTest: XCTestCase {
             chatTextView.chatTextViewDelegate = self
             
             DispatchQueue.main.async {
-                let range = NSRange(location: 0, length: 0)
-                let oldParsedText = NSMutableAttributedString(attributedString: chatTextView.attributedText!)
-                let textView = chatTextView
-                _ = chatTextView.formattedString(
-                    range: range,
-                    oldParsedText: oldParsedText,
-                    text: text,
-                    textView: textView
-                )
+                chatTextView.text = text
+                
                 self.mySema.signal()
             }
             mySema.wait()
@@ -274,16 +267,7 @@ class ChatTextViewPerformanceTest: XCTestCase {
             chatTextView.chatTextViewDelegate = self
             
             DispatchQueue.main.async {
-                let range = NSRange(location: 0, length: 0)
-                let oldParsedText = NSMutableAttributedString(attributedString: chatTextView.attributedText!)
-                let text = baseText
-                let textView = chatTextView
-                _ = chatTextView.formattedString(
-                    range: range,
-                    oldParsedText: oldParsedText,
-                    text: text,
-                    textView: textView
-                )
+                chatTextView.text = baseText
                 self.mySema.signal()
             }
             mySema.wait()
@@ -291,16 +275,7 @@ class ChatTextViewPerformanceTest: XCTestCase {
             
             for i in 0...appendText.count - 1 {
                 DispatchQueue.main.async {
-                    let range = NSRange(location: chatTextView.attributedText.length, length: 0)
-                    let oldParsedText = NSMutableAttributedString(attributedString: chatTextView.attributedText!)
-                    let text = appendText[i, i + 1]
-                    let textView = chatTextView
-                    _ = chatTextView.formattedString(
-                        range: range,
-                        oldParsedText: oldParsedText,
-                        text: text,
-                        textView: textView
-                    )
+                    chatTextView.text = appendText[i, i + 1]
                     self.mySema.signal()
                 }
                 mySema.wait()

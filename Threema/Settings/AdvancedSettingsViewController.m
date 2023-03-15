@@ -71,6 +71,12 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     [self updateLogSize];
     
     _flushMessageQueueCell.textLabel.text = [BundleUtil localizedStringForKey:@"settings_advanced_flush_message_queue"];
+    
+    // Log this to check if there might be any file message that gets filtered in a chat
+    if ([[UserSettings sharedUserSettings] featureFlagEnableNoMIMETypeFileMessagesFilter]) {
+        EntityManager *entityManager = [[EntityManager alloc] init];
+        DDLogNotice(@"There are %ld file messages with no MIME type", (long)[entityManager.entityFetcher countFileMessagesWithNoMIMEType]);
+    }
 }
 
 - (void)updateLogSize {

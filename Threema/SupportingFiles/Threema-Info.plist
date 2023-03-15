@@ -90,7 +90,8 @@
 	<string>Your photo library is used when you pick an image from it and send it in a chat.</string>
 	<key>NSUserActivityTypes</key>
 	<array>
-		<string>INStartAudioCallIntent</string>
+        <string>INStartAudioCallIntent</string>
+        <string>INSendMessageIntent</string>
 	</array>
 	<key>PHPhotoLibraryPreventAutomaticLimitedAccessAlert</key>
 	<true/>

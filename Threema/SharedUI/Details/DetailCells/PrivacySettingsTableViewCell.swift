@@ -28,7 +28,7 @@ class PrivacySettingsTableViewCell: ThemedCodeStackTableViewCell {
     
     // MARK: - Public property
 
-    var contact: Contact?
+    var contact: ContactEntity?
     
     var action: Details.Action? {
         didSet {

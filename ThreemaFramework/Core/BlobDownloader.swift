@@ -22,10 +22,6 @@ import CocoaLumberjackSwift
 import Foundation
 import PromiseKit
 
-protocol BlobDownloaderDelegate: AnyObject {
-    func blobDownloader(for objectID: NSManagedObjectID, didUpdate progress: Progress) async
-}
-
 /// Used to keep track of URLSessionTasks and their progress. Should not be called directly but rather through BlobManager.
 class BlobDownloader: NSObject {
     
@@ -74,7 +70,7 @@ class BlobDownloader: NSObject {
         blobID: Data,
         origin: BlobOrigin,
         objectID: NSManagedObjectID,
-        delegate: BlobDownloaderDelegate? = nil
+        delegate: BlobManagerDelegate? = nil
     ) async throws -> Data {
         try await withCheckedThrowingContinuation { continuation in
             
@@ -110,7 +106,7 @@ class BlobDownloader: NSObject {
                 // Add created task to keep track
                 let observer = task.progress.observe(\.fractionCompleted) { progress, _ in
                     Task {
-                        await delegate?.blobDownloader(for: objectID, didUpdate: progress)
+                        await delegate?.updateProgress(for: objectID, didUpdate: progress)
                     }
                 }
 

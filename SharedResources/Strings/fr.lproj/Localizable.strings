@@ -11,8 +11,7 @@
 
 /* Tabbar and title for list with all conversations */
 "chats_title" = "Chats";
-
-"use_dynamic_font_size" = "Taille de police du système";
+"chats_pinned" = "Épinglé";
 
 "SortOrder_Firstname" = "Prénom Nom";
 "SortOrder_Lastname" = "Nom Prénom";
@@ -68,6 +67,7 @@
 "delete_identity" = "Supprimer les données et l’ID";
 "copy" = "Copier";
 "save" = "Enregistrer";
+"download" = "Télécharger";
 "share" = "Partager";
 "details" = "Détails";
 "acknowledge" = "Accepter";
@@ -103,7 +103,7 @@
 "threema_id" = "ID Threema";
 "nickname" = "Surnom public";
 "add_button" = "Ajouter";
-"chatview_contextmenu_more" = "Plus…";
+"chatview_contextmenu_select" = "Sélectionner…";
 
 "file_message_image" = "Image";
 "file_message_sticker" = "Autocollant";
@@ -184,11 +184,7 @@
 "sound_threema_alphorn" = "Alphorn";
 
 "reset_wallpaper" = "Réinitialiser le fond d’écran";
-"font_size_title" = "Taille de la police";
-"font_size" = "%d pt";
 "bigger_single_emojis" = "Émoticônes uniques plus grosses";
-"received_message_time" = "Heure de réception du message";
-"return_key_send" = "Retour = Envoyer";
 "identity_none" = "aucune";
 "message" = "Message"; /* Short version for "Send Message" */
 "scan_identity" = "Scanner l’ID";
@@ -202,8 +198,6 @@
 "block_contact" = "Bloquer le contact";
 "profile_picture_recipient" = "Destinataires d’image de profil";
 
-"no_contacts_access_title" = "Aucun accès aux contacts";
-"no_contacts_access_message" = "Veuillez ouvrir les Réglages et accorder l’accès aux contacts.";
 "no_linked_contact_access_title" = "Aucun accès au contact lié";
 "no_linked_contact_access_message" = "Veuillez ouvrir les Réglages et accorder l’accès aux contacts pour voir le contact lié. Vous pouvez sinon dissocier le contact de façon permanente.";
 "no_linked_contact_access_edit_message" = "Veuillez ouvrir les Réglages et accorder l’accès aux contacts pour modifier le contact lié. Vous pouvez sinon dissocier le contact de façon permanente pour apporter des modifications.";
@@ -224,8 +218,6 @@
 "[no access]" = "[Aucun accès]";
 "[not found]" = "[Introuvable]";
 "[restricted]" = "[Restreint]";
-
-"go_to_settings" = "Aller aux Réglages";
 
 /* This shows the number of groups in parentheses */
 "groups_header" = "Groupes (%lu)";
@@ -356,18 +348,8 @@
 "speed" = "Vitesse de lecture";
 
 "send_file_title" = "Envoyer fichier";
-"camera_disabled_title" = "Accès refusé";
 "send_file_message" = "Fichier : %@ \n à \n%@";
-
 "quote_not_found" = "Message cité pas trouvé.";
-
-"camera_disabled_message" = "%@ n’a pas accès à votre appareil photo. Veuillez donner l’autorisation dans Réglage > Confidentialité > Appareil photo.";
-
-"location_disabled_title" = "Aucun accès à Localisation";
-"location_disabled_message" =  "Ouvrez les paramètres et autorisez l‘accès à la Localisation.";
-
-"microphone_disabled_title" = "Accès refusé";
-"microphone_disabled_message" = "%@ n’a pas accès à votre microphone. Donnez-lui l’autorisation dans Réglages > Confidentialité > Micro.";
 
 "include_media" = "Inclure médias";
 "without_media" = "Sans médias";
@@ -463,8 +445,6 @@
 "invalid_country_code_message" = "Il semble que sur votre appareil, la valeur du format de région semble incorrecte. Accédez à Réglages > Général > International et sélectionnez à nouveau un format régional pour éviter de rencontrer des problèmes avec la correspondance des numéros de téléphone.";
 
 /* Settings */
-"block_unknown_on" = "Seules les personnes de votre liste de contacts peuvent vous envoyer un message.";
-"block_unknown_off" = "Tout le monde peut vous envoyer un message. Les nouveaux contacts seront automatiquement ajoutés à l’arrivée de leur premier message.";
 "show_stale_contacts_on" = "Les ID Threema inactifs (par exemple ceux qui n’ont pas été utilisés pendant au moins trois mois) et les ID révoqués sont cachés.";
 "show_stale_contacts_off" = "Tous les ID Threema sont listés dans la liste de contacts.";
 "hide_voip_call_ip_off" = "Établissez une connexion directe si possible et transmettez les appels vers des contacts non vérifiés uniquement via les serveurs Threema. Cela peut exposer votre adresse IP.";
@@ -508,9 +488,7 @@
 "no_work_contacts" = "Utilisateurs %@";
 "no_work_contacts_message" = "Aucun contact %@ vérifié par un administrateur n’a été trouvé.";
 
-"no_contacts_permission_title" = "Pas de permission d’accès aux contacts";
 "no_contacts_syncoff" = "Vous n’avez pas encore de contacts. Activez la synchronisation (Réglages > Confidentialité) ou ajoutez manuellement des contacts à l’aide du bouton +.";
-"no_contacts_permission_message" = "%@ n’a pas la permission d’accéder à vos contacts. Veuillez vérifier les réglages de confidentialité de votre appareil et permettre l’accès aux contacts.";
 
 "my_profile_picture_title" = "Votre image de profil";
 "release_profilepicture_to" = "Envoyer l’image de profil à";
@@ -691,6 +669,7 @@
 "group_member_self_removed" = "Vous avez été retiré du groupe.";
 "group_member_self_left" = "Vous avez quitté le groupe.";
 "group_member_creator_left" = "*Ce groupe est orphelin*\nLe créateur de ce groupe a quitté celui-ci, le groupe ne pourra donc plus être maintenu. L'un des membres restants devrait cloner le groupe (à partir des détails du groupe) pour en devenir le nouvel administrateur.";
+"system_message_group_avatar_changed" = "Image de groupe modifiée";
 
 /* accessibility labels */
 "send_media_or_location" = "Envoyer médias ou emplacement";
@@ -726,10 +705,6 @@
 "threema_channel_failed" = "Impossible d'ajouter Threema Channel.";
 
 /* Push decryption */
-"decryption_push_title" = "Voulez-vous afficher un aperçu du contenu du message dans les notifications Push ?";
-"decryption_push_text" = "Si les aperçus sont désactivés, vous devrez ouvrir %@ pour voir le contenu des nouveaux messages.";
-"decryption_push_activate" = "Activer l’aperçu";
-"decryption_push_deactivate" = "Désactiver l’aperçu";
 "decryption_push_reply" = "Répondre";
 "decryption_push_placeholder" = "Répondre...";
 "decryption_push_agree" = "Accuser réception";
@@ -780,11 +755,10 @@
 "call_reject" = "Rejeter";
 "call_hide_call" = "Cacher l’appel";
 "call_no_wifi" = "Appel via réseau cellulaire. En apprendre plus…";
+"call_mic_access" = "Pas d'accès au microphone.";
 
 "call_voip_not_supported_title" = "Appel Threema";
 "call_voip_not_supported_text" = "Ce contact n’est pas encore en mesure de recevoir des appels Threema.";
-"call_microphone_permission_title" = "Accès au micro refusé";
-"call_microphone_permission_text" = "Vous devez donner l’accès au micro dans les Réglages";
 "call_contact_alert" = "Est-ce que vous voulez appeler %@?";
 "call_contact_not_reachable" = "Impossible de joindre le contact…";
 "already_in_call" = "Il ne peut y avoir qu'un seul appel actif à la fois.";
@@ -848,8 +822,6 @@
 "privateChat_set_alert_title" = "Voulez-vous marquer cette discussion comme privée ?";
 "privateChat_set_alert_message" = "Vous pouvez activer/désactiver la visibilité des discussions privées dans les paramètres de confidentialité.";
 "privateChat_setup_alert_message" = "Votre sauvegarde Threema Safe comporte des chats privés, vous devez définir un code d'accès pour y accéder.";
-"hide_private_toggle" = "Masquer les discussions privées";
-"privacy_footer" = "Masquez toutes les discussions privées dans l'aperçu des discussions. Vous devez définir un code afin d'activer ce paramètre.";
 
 "group_leave_sheet_title" = "Quitter « %@ » ?";
 "group_leave_sheet_message" = "Si vous quittez le groupe, vous ne pourrez plus participer à la conversation, mais vous pourrez quand même accéder à l’historique de discussion.";
@@ -1069,6 +1041,7 @@
 "delete_messages_confirm" = "Voulez-vous supprimer définitivement tous les messages datant de plus de %@ ?";
 "delete_messages_confirm_all" = "Voulez-vous supprimer définitivement tous les messages ?";
 "delete_messages_explain" = "Les messages de tout type seront supprimés : messages textuels et vocaux, médias, fichiers, sondages, etc.";
+"delete_in_progress" = "Suppression…";
 "one_year_title" = "1 an";
 "one_year" = "1 an";
 "six_months_title" = "6 mois";
@@ -1114,7 +1087,6 @@
 "settings_advanced" = "Avancé";
 "settings_threema_work" = "Threema Work";
 "settings_feedback" = "Commentaires bêta";
-"settings_dev_mode" = "Mode développeur";
 "tos_cell_title" = "Conditions d'utilisation";
 
 "settings_advanced_flush_message_queue" = "Vider la queue des messages";
@@ -1123,11 +1095,32 @@
 "settings_advanced_reregister_push_notifications_footer_title" = "Si les messages entrants ne s'affichent pas en dehors de l'application en tant que notifications, vous pouvez vous inscrire de nouveau pour accéder aux notifications.";
 "settings_advanced_reregister_notifications_label" = "Inscrire de nouveau les notifications Push";
 
-// Dev Mode
-"settings_devmode_quote_v2" = "Citation v2";
-"settings_devmode_new_chat_view" = "Nouvelle vue de chat";
-"settings_devmode_stylekit_debug_view" = "Vue de débogage Stylekit";
-"settings_devmode_id_colors_debug_view" = "Affichage du débogage des couleurs de l’ID";
+"settings_md_sync_alert_title" = "Échec de synchronisation";
+
+// Privacy
+"settings_privacy_contacts_header" = "Contacts";
+"settings_privacy_sync_contacts" = "Synchroniser les contacts";
+"settings_privacy_exclusion_list" = "Liste d'exclusion";
+"settings_privacy_exclusion_list_alert_title" = "ID trop court";
+"settings_privacy_exclusion_list_alert_message" = "Veuillez saisir un ID comportant exactement 8 caractères.";
+"settings_privacy_block_unknown" = "Bloc inconnu";
+"settings_privacy_block_unknown_footer_on"= "Seules les personnes de votre liste de contacts peuvent vous envoyer un message.";
+"settings_privacy_block_unknown_foooter_off" = "Tout le monde peut vous envoyer un message. Les nouveaux contacts seront automatiquement ajoutés à l'arrivée de leur premier message.";
+
+"settings_privacy_chat_header" = "Chat";
+"settings_privacy_read_receipts" = "Confirmations de lecture";
+"settings_privacy_typing_indicator" = "Indicateurs de frappe";
+
+"settings_privacy_TIRR_reset_all" = "Réinitialiser pour tous les contacts";
+"settings_privacy_TIRR_reset_footer" = "Réinitialiser tous les contacts au paramètre par défaut.";
+"settings_privacy_TIRR_reset_alert_title" = "Réinitialiser";
+"settings_privacy_TIRR_reset_alert_message" = "Réinitialiser tous les contacts au paramètre par défaut. Cette action est irréversible.";
+"settings_privacy_TIRR_reset_alert_action" = "Tout réinitialiser";
+
+"settings_privacy_choose_poi" = "Choisir les points d'intérêt";
+"settings_privacy_hide_private_chats" = "Masquer les discussions privées";
+"settings_privacy_hide_private_chats_footer" = "Masquez toutes les discussions privées dans l'aperçu des discussions. Vous devez définir un code afin d'activer ce paramètre.";
+
 
 // Appearance
 "settings_appearance_theme_section" = "Apparence";
@@ -1338,12 +1331,6 @@ S’il ne manque aucun fichier (média) dans %@, videz la corbeille pour supprim
 "readReceipt_sheetMessage" = "Contourner le paramètre par défaut pour ce contact.";
 "typingIndicator_sheetMessage" = "Contourner le paramètre par défaut pour ce contact.";
 
-"reset_overrides" = "Réinitialiser pour tous les contacts";
-"resetButton_footer" = "Réinitialiser tous les contacts au paramètre par défaut.";
-"reset_overrides_alert_title" = "Réinitialiser";
-"reset_overrides_alert_message" = "Réinitialiser tous les contacts au paramètre par défaut. Cette action est irréversible.";
-"reset_overrides_alert_action" = "Tout réinitialiser";
-
 /* Multi Decvice */
 "multi_device_linked_devices_title" = "Aperçu multi-appareils";
 "multi_device_linked_devices_desc" = "Active ou désactive l'aperçu multi-appareils pour cet appareil.";
@@ -1377,14 +1364,11 @@ S’il ne manque aucun fichier (média) dans %@, videz la corbeille pour supprim
 // POI
 "poi_unavailable" = "Indisponible";
 "poi_not_marked" = "–";
-"poi_location_disabled_action" = "Ouvrir les paramètres";
 "poi_search_POI" = "Villes et rues";
 "poi_search_prefix" = "Rechercher autour de %@";
 "poi_away" = "à %@";
 "poi_dropped_pin_info_alert_title" = "Épingle placée";
 "poi_dropped_pin_info_alert_message" = "Pour placer une épingle, appuyez et maintenez enfoncé sur la carte.";
-"poi_accuracy_info_alert_title" = "Aucun accès à la Position exacte";
-"poi_accuracy_info_alert_message" = "Veuillez ouvrir les paramètres et autoriser l'accès à la Position exacte.";
 "poi_current_location" = "Ma position";
 "poi_marked_location" = "Épingle placée";
 
@@ -1426,6 +1410,18 @@ S’il ne manque aucun fichier (média) dans %@, videz la corbeille pour supprim
 "detailView_messageID" = "Identifiant du message";
 "detailView_group_acknowledged" = "Accepté (%d)";
 "detailView_group_declined" = "Refusé (%d)";
+"detailView_group_file_size" = "Taille de fichier";
+"detailView_created_footer" = "Créé : %@";
+
+"message_display_status_none" = "Aucun";
+"message_display_status_user_acknowledged" = "En accord";
+"message_display_status_user_declined" = "En désacord";
+"message_display_status_sending" = "Envoi";
+"message_display_status_sent" = "Envoyé";
+"message_display_status_delivered" = "Livré";
+"message_display_status_delivered_incoming" = "Reçu";
+"message_display_status_read" = "Lu";
+"message_display_status_failed" = "Échec";
 
 // In-app notifications
 "notification_copying_succeeded" = "Élément copié";
@@ -1434,7 +1430,11 @@ S’il ne manque aucun fichier (média) dans %@, videz la corbeille pour supprim
 "notification_saving_succeeded" = "Élément enregistré";
 "notification_saving_failed" = "Échec de l‘enregistrement";
 
+"notification_saving_to_photos_succeeded" = "Ajoutée aux Photos";
+"notification_saving_to_photos_failed" = "Échec d'ajout aux Photos";
+
 "notification_sending_failed" = "Échec de l’envoi";
+"notification_sending_failed_subtitle_size" = "Élément trop grand";
 
 "notification_deleted_messages_count" = "%d messages effacés";
 
@@ -1443,6 +1443,7 @@ S’il ne manque aucun fichier (média) dans %@, videz la corbeille pour supprim
 "notification_call_failed_connected" = "Connexion perdue";
 "notification_call_failed_not_connected" = "Échec de l’établissement de la connexion";
 "notification_call_creation_failed" = "Échec de la création de l’appel";
+"notification_call_creation_disabled" = "Appels désactivés";
 
 "notification_sending_profile_picture_succeeded" = "Photo de profil envoyée";
 "notification_sending_profile_picture_failed" = "Échec de l’envoi";
@@ -1451,6 +1452,9 @@ S’il ne manque aucun fichier (média) dans %@, videz la corbeille pour supprim
 
 "notification_group_sync_succeeded" = "Groupe synchronisé";
 "notification_group_sync_failed" = "Échec de la synchronisation du groupe";
+
+"notification_settings_sync_pending" = "Synchronisation…";
+"notification_settings_sync_succeeded" = "Réglages synchronisés";
 
 // Forward security status messages
 "forward_security_message_without" = "Un message sans Confidentialité de transmission parfaite a été reçu. Vérifiez que l'expéditeur a intentionnellement désactivé l’option de Confidentialité de transmission parfaite.";
@@ -1471,7 +1475,6 @@ S’il ne manque aucun fichier (média) dans %@, videz la corbeille pour supprim
 // Chat bar
 "accessibility_chatbar_label" = "Champ de saisie de la conversation.";
 "accessibility_chatbar_hint" = "Rédigez un message.";
-"accessibility_chatbar_value" = "Texte actuel : %@";
 "accessibility_chatbar_quote_label" = "Message cité sélectionné : %@.";
 "accessibility_chatbar_close_quote_button_label" = "Fin de citation.";
 "accessibility_chatbar_close_quote_button_hint" = "Termine la citation du message sélectionné.";
@@ -1521,6 +1524,11 @@ S’il ne manque aucun fichier (média) dans %@, videz la corbeille pour supprim
 "accessibility_status_delivered_plus_time" = "Livré, %@";
 "accessibility_status_read_plus_time" = "Lu, %@";
 "accessibility_status_failed_plus_time" = "Échoué, %@";
+
+// UIAccessibilityCustomActions
+"accessibility_action_open_link" = "Ouvrir %@";
+"accessibility_action_call_phone" = "Appeler %@";
+"accessibility_action_open_mention" = "Afficher le contact de %@";
 
 // Multi-Device Wizard
 "md_wizard_header" = "Aperçu multi-appareils";
@@ -1578,3 +1586,18 @@ S’il ne manque aucun fichier (média) dans %@, videz la corbeille pour supprim
 
 // SystemMessage
 "systemMessage_unsupported_type" = "Type de message système non pris en charge";
+
+// Alerts
+"alert_no_access_title_camera" = "Aucun accès à l'appareil photo";
+"alert_no_access_title_contacts" = "Aucun accès aux contacts";
+"alert_no_access_title_location" = "Aucun accès à la localisation";
+"alert_no_access_title_location_precise" = "Aucun accès à la position exacte";
+"alert_no_access_title_microphone" = "Aucun accès au microphone";
+
+"alert_no_access_message_camera" = "Ouvrez les réglages d'iOS et autorisez l'accès à l'appareil photo.";
+"alert_no_access_message_contacts" = "Ouvrez les réglages d'iOS et autorisez l'accès aux contacts.";
+"alert_no_access_message_location" = "Ouvrez les réglages d'iOS et autorisez l'accès à la localisation.";
+"alert_no_access_message_location_precise" = "Ouvrez les réglages d'iOS et autorisez l'accès à la position exacte dans la section Localisation;";
+"alert_no_access_message_microphone" = "Ouvrez les réglages d'iOS et autorisez l'accès au microphone.";
+
+"alert_no_access_open_settings" = "Ouvrir les réglages";

@@ -2251,7 +2251,10 @@ class GroupManagerTests: XCTestCase {
         XCTAssertNotNil(grp)
         XCTAssertEqual(grp?.groupID, expectedGroupID)
         
-        let conversation = entityManager.entityFetcher.conversation(for: grp!.groupID)
+        let conversation = entityManager.entityFetcher.conversation(
+            for: grp!.groupID,
+            creator: grp!.groupIdentity.creator
+        )
         
         XCTAssertNotNil(conversation)
         
@@ -2309,7 +2312,10 @@ class GroupManagerTests: XCTestCase {
         )
         XCTAssertNotNil(grp)
         
-        let conversation = entityManager.entityFetcher.conversation(for: grp!.groupID)
+        let conversation = entityManager.entityFetcher.conversation(
+            for: grp!.groupID,
+            creator: grp!.groupIdentity.creator
+        )
         XCTAssertNotNil(conversation)
         
         let messageFetcher = MessageFetcher(for: conversation!, with: entityManager)
@@ -2372,7 +2378,10 @@ class GroupManagerTests: XCTestCase {
         )
         XCTAssertNotNil(grp)
         
-        let conversation = entityManager.entityFetcher.conversation(for: grp!.groupID)
+        let conversation = entityManager.entityFetcher.conversation(
+            for: grp!.groupID,
+            creator: grp!.groupIdentity.creator
+        )
         XCTAssertNotNil(conversation)
         
         let messageFetcher = MessageFetcher(for: conversation!, with: entityManager)
@@ -2440,7 +2449,10 @@ class GroupManagerTests: XCTestCase {
         )
         XCTAssertNotNil(grp)
         
-        let conversation = entityManager.entityFetcher.conversation(for: grp!.groupID)
+        let conversation = entityManager.entityFetcher.conversation(
+            for: grp!.groupID,
+            creator: grp!.groupIdentity.creator
+        )
         XCTAssertNotNil(conversation)
         
         let messageFetcher = MessageFetcher(for: conversation!, with: entityManager)
@@ -2462,6 +2474,7 @@ class GroupManagerTests: XCTestCase {
         XCTAssertEqual(grp?.groupCreatorIdentity, expectedGroupCreator)
         XCTAssertEqual(grp?.allMemberIdentities.count, 1)
         XCTAssertTrue(grp?.allMemberIdentities.contains(myIdentityStoreMock.identity) ?? false)
+        XCTAssertTrue(grp?.isNoteGroup ?? false)
         XCTAssertNil(grp?.lastSyncRequest)
         XCTAssertEqual(startNoteGroupInfoCount, 2)
         XCTAssertEqual(endNoteGroupInfoCount, 1)

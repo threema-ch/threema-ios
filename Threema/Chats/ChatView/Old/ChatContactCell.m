@@ -20,7 +20,7 @@
 
 #import "ChatContactCell.h"
 #import "UserSettings.h"
-#import "Contact.h"
+#import "ContactEntity.h"
 #import "ChatDefines.h"
 #import "Threema-Swift.h"
 
@@ -93,7 +93,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     nameLabel.textColor = Colors.textLight;
 }
 
-- (void)setContact:(Contact *)newContact {
+- (void)setContact:(ContactEntity *)newContact {
     [contact removeObserver:self forKeyPath:@"displayName"];
     contact = newContact;
     [contact addObserver:self forKeyPath:@"displayName" options:0 context:nil];
@@ -108,9 +108,9 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 }
 
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context {
-    if ([object isKindOfClass:[Contact class]]) {
+    if ([object isKindOfClass:[ContactEntity class]]) {
         @try {
-            Contact *contactObject = (Contact *)object;
+            ContactEntity *contactObject = (ContactEntity *)object;
             if (contactObject.objectID == contact.objectID) {
                 dispatch_async(dispatch_get_main_queue(), ^{
                     [self updateName];

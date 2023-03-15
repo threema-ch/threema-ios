@@ -36,7 +36,7 @@ struct MultiDeviceWizardInformationView: View {
                     Text(BundleUtil.localizedString(forKey: "md_wizard_info_download_text"))
                     
                     Link("three.ma/md", destination: URL(string: "https://three.ma/md")!)
-                        .foregroundColor(Color(Colors.primary))
+                        .foregroundColor(Color(.primary))
                         .highPriorityGesture(DragGesture())
                 }
 

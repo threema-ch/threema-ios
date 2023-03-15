@@ -163,7 +163,7 @@ open class MediaPreviewViewController: UIViewController, UIGestureRecognizerDele
         else {
             rightBarButtonItem.setTitle(BundleUtil.localizedString(forKey: "send"), for: .normal)
         }
-        rightBarButtonItem.setTitleColor(Colors.primary, for: .normal)
+        rightBarButtonItem.setTitleColor(.primary, for: .normal)
         rightBarButtonItem.titleLabel?.font = UIFont
             .boldSystemFont(ofSize: rightBarButtonItem.titleLabel?.font.pointSize ?? 24.0)
         rightBarButtonItem.sizeToFit()
@@ -265,8 +265,8 @@ open class MediaPreviewViewController: UIViewController, UIGestureRecognizerDele
             stackViewToolbar.backgroundColor = .clear
         }
         
-        trashButton.setImage(BundleUtil.imageNamed("trash_")?.withTint(Colors.primary), for: .normal)
-        previewButton.setImage(BundleUtil.imageNamed("eye_")?.withTint(Colors.primary), for: .normal)
+        trashButton.setImage(BundleUtil.imageNamed("trash_")?.withTint(.primary), for: .normal)
+        previewButton.setImage(BundleUtil.imageNamed("eye_")?.withTint(.primary), for: .normal)
     }
     
     /// Setup of navigation items and header view
@@ -684,7 +684,7 @@ open class MediaPreviewViewController: UIViewController, UIGestureRecognizerDele
         DispatchQueue.main.async {
             let index = indexPath.item
             let textColor = Colors.text
-            let tintColor = Colors.primary
+            let tintColor: UIColor = .primary
             
             if !animated {
                 self.textField.text = self.mediaData[index].caption

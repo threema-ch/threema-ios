@@ -72,7 +72,7 @@
 
 - (void)refresh;
 
-- (void)addQuotedText:(NSString*)quotedText quotedContact:(Contact*)contact;
+- (void)addQuotedText:(NSString*)quotedText quotedContact:(ContactEntity*)contact;
 - (void)addQuotedMessage:(BaseMessage *)quotedMessage;
 
 - (void)resetKeyboardType:(BOOL)resetType;

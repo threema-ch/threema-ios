@@ -115,6 +115,7 @@ class TaskQueueTests: XCTestCase {
             multiDeviceManager: MultiDeviceManagerMock(),
             myIdentityStore: myIdentityStoreMock,
             userSettings: UserSettingsMock(),
+            settingsStore: SettingsStoreMock(),
             serverConnector: serverConnectorMock,
             mediatorMessageProtocol: MediatorMessageProtocolMock(),
             messageProcessor: MessageProcessorMock()
@@ -180,6 +181,7 @@ class TaskQueueTests: XCTestCase {
             multiDeviceManager: MultiDeviceManagerMock(),
             myIdentityStore: MyIdentityStoreMock(),
             userSettings: UserSettingsMock(),
+            settingsStore: SettingsStoreMock(),
             serverConnector: serverConnectorMock,
             mediatorMessageProtocol: MediatorMessageProtocolMock(),
             messageProcessor: messageProcessorMock
@@ -270,6 +272,7 @@ class TaskQueueTests: XCTestCase {
             multiDeviceManager: MultiDeviceManagerMock(),
             myIdentityStore: MyIdentityStoreMock(),
             userSettings: UserSettingsMock(),
+            settingsStore: SettingsStoreMock(),
             serverConnector: serverConnectorMock,
             mediatorMessageProtocol: MediatorMessageProtocolMock(),
             messageProcessor: MessageProcessorMock()
@@ -351,6 +354,7 @@ class TaskQueueTests: XCTestCase {
             multiDeviceManager: MultiDeviceManagerMock(),
             myIdentityStore: MyIdentityStoreMock(),
             userSettings: UserSettingsMock(),
+            settingsStore: SettingsStoreMock(),
             serverConnector: serverConnectorMock,
             mediatorMessageProtocol: MediatorMessageProtocolMock(),
             messageProcessor: MessageProcessorMock()
@@ -415,6 +419,7 @@ class TaskQueueTests: XCTestCase {
             multiDeviceManager: MultiDeviceManagerMock(),
             myIdentityStore: MyIdentityStoreMock(),
             userSettings: UserSettingsMock(),
+            settingsStore: SettingsStoreMock(),
             serverConnector: serverConnectorMock,
             mediatorMessageProtocol: MediatorMessageProtocolMock(),
             messageProcessor: MessageProcessorMock()
@@ -474,7 +479,7 @@ class TaskQueueTests: XCTestCase {
     }
 
     func testEncodeDecodeWithAllTaskTypes() throws {
-        var expectedContact: Contact!
+        var expectedContact: ContactEntity!
         var expectedConversation: Conversation!
         databasePreparer.save {
             expectedContact = databasePreparer.createContact(

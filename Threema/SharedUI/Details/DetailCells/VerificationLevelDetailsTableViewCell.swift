@@ -24,7 +24,7 @@ final class VerificationLevelDetailsTableViewCell: ThemedCodeStackTableViewCell 
     
     private var contactObserver: NSKeyValueObservation?
 
-    var contact: Contact? {
+    var contact: ContactEntity? {
         didSet {
             contactObserver?.invalidate()
 

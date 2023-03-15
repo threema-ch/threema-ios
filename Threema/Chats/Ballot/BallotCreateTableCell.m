@@ -39,7 +39,7 @@
     
     [Colors updateKeyboardAppearanceFor:_choiceTextField];
     
-    [_dateButton setImage:[UIImage imageNamed:@"Calendar" inColor:Colors.primary] forState:UIControlStateNormal];
+    [_dateButton setImage:[UIImage imageNamed:@"Calendar" inColor:UIColor.primary] forState:UIControlStateNormal];
     
     [_dateButton setAccessibilityLabel:[BundleUtil localizedStringForKey:@"ballot_date_button"]];
 }
@@ -132,7 +132,7 @@
     } else {
         _datePicker.minuteInterval = 5;
     }
-    [_datePicker setValue:Colors.primary forKey:@"textColor"];
+    [_datePicker setValue:UIColor.primary forKey:@"textColor"];
     [_datePicker addTarget:self action:@selector(dateChanged) forControlEvents:UIControlEventValueChanged];
     _datePicker.alpha = 0.0;
     [self addSubview:_datePicker];

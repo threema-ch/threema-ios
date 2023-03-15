@@ -33,7 +33,7 @@ class WebReceiverUpdate: WebAbstractMessage {
     var mode: String
     var type: String
     
-    init(updatedContact: Contact, objectMode: ObjectMode) {
+    init(updatedContact: ContactEntity, objectMode: ObjectMode) {
         
         self.id = updatedContact.identity
         self.mode = objectMode.rawValue

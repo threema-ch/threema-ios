@@ -44,13 +44,13 @@ final class ChatViewUnreadMessageLineCell: ThemedCodeTableViewCell {
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
         
-        label.textColor = Colors.primary
+        label.textColor = .primary
         label.font = Config.font
         
         label.numberOfLines = 0
         label.textAlignment = .center
         
-        label.textColor = Colors.primary
+        label.textColor = .primary
         label.adjustsFontForContentSizeCategory = true
         
         label.setContentHuggingPriority(.required, for: .horizontal)
@@ -111,7 +111,7 @@ final class ChatViewUnreadMessageLineCell: ThemedCodeTableViewCell {
         super.configureCell()
         
         if UserSettings.shared().flippedTableView {
-            contentView.transform = CGAffineTransform(scaleX: 1, y: -1)
+            transform = CGAffineTransform(scaleX: 1, y: -1)
         }
 
         isUserInteractionEnabled = false
@@ -171,7 +171,7 @@ final class ChatViewUnreadMessageLineCell: ThemedCodeTableViewCell {
     
     override func updateColors() {
         backgroundColor = .clear
-        textBox.textColor = Colors.primary
+        textBox.textColor = .primary
         leftLineView.updateColors()
         rightLineView.updateColors()
     }

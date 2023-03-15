@@ -66,7 +66,7 @@ class MediatorReflectedOutgoingMessageUpdateProcessor {
 
     private func saveMessageSent(messageID: UInt64, receiverIdentity: String) throws {
         if let id = NSData.convertBytes(messageID),
-           let message = frameworkInjector.backgroundEntityManager.entityFetcher.message(with: id) {
+           let message = frameworkInjector.backgroundEntityManager.entityFetcher.ownMessage(with: id) {
             guard let contact = message.conversation?.contact, contact.identity == receiverIdentity else {
                 throw MediatorReflectedProcessorError.messageNotProcessed(message: "id: \(id.hexString)")
             }
@@ -80,7 +80,7 @@ class MediatorReflectedOutgoingMessageUpdateProcessor {
 
     private func saveMessageSent(messageID: UInt64, receiverGroupID: UInt64, receiverGroupCreator: String) throws {
         if let id = NSData.convertBytes(messageID),
-           let message = frameworkInjector.backgroundEntityManager.entityFetcher.message(with: id) {
+           let message = frameworkInjector.backgroundEntityManager.entityFetcher.ownMessage(with: id) {
             guard let group = frameworkInjector.backgroundGroupManager.getGroup(conversation: message.conversation),
                   group.groupID.elementsEqual(NSData.convertBytes(receiverGroupID)),
                   group.groupCreatorIdentity == receiverGroupCreator else {

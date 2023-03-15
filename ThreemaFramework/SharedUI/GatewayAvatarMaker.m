@@ -22,7 +22,7 @@
 #import "EntityCreator.h"
 #import "EntityFetcher.h"
 #import "ThreemaFramework/ThreemaFramework-Swift.h"
-#import "Contact.h"
+#import "ContactEntity.h"
 #import "AppGroup.h"
 #import "HTTPSURLLoader.h"
 #import "BundleUtil.h"
@@ -148,7 +148,7 @@
     NSArray *gatewayContacts = [self.entityManager.entityFetcher allGatewayContacts];
 
     if ([gatewayContacts count] > 0) {
-        for (Contact *contact in gatewayContacts) {
+        for (ContactEntity *contact in gatewayContacts) {
             [self updateIdentity:contact.identity];
         }
         
@@ -158,7 +158,7 @@
 
 - (void)updateIdentity:(NSString *)identity {
     [self loadAvatarDataForId:identity onCompletion:^(NSData *data, NSString *expires) {
-        Contact *contact = [self.entityManager.entityFetcher contactForId:identity];
+        ContactEntity *contact = [self.entityManager.entityFetcher contactForId:identity];
         
         [self.entityManager performSyncBlockAndSafe:^{
             contact.imageData = data;
@@ -174,7 +174,7 @@
         [[NSNotificationCenter defaultCenter] postNotificationName:kNotificationIdentityAvatarChanged object:identity];
     } onError:^(NSError *error) {
         if (error.code == 404) {
-            Contact *contact = [self.entityManager.entityFetcher contactForId:identity];
+            ContactEntity *contact = [self.entityManager.entityFetcher contactForId:identity];
             
             [self.entityManager performSyncBlockAndSafe:^{
                 contact.imageData = nil;

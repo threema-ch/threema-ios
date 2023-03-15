@@ -113,6 +113,14 @@
                         inManagedObjectContext:self.managedObjectContext];
     
     dbData.data = data;
+    
+    // Load thumbnail image to get dimensions
+    UIImage *loadedThumbnail = [UIImage imageWithData:data];
+    if (loadedThumbnail) {
+        dbData.width = [NSNumber numberWithInt:loadedThumbnail.size.width];
+        dbData.height = [NSNumber numberWithInt:loadedThumbnail.size.height];
+    }
+    
     self.thumbnail = dbData;
 }
 

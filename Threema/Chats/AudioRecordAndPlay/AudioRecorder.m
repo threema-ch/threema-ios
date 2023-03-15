@@ -24,7 +24,7 @@
 #ifdef DEBUG
 static const DDLogLevel ddLogLevel = DDLogLevelVerbose;
 #else
-static const DDLogLevel ddLogLevel = DDLogLevelWarning;
+static const DDLogLevel ddLogLevel = DDLogLevelInfo;
 #endif
 
 #define kMaxRecordDuration 1800.0
@@ -118,7 +118,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     
     NSMutableDictionary *recordSettings = [[NSMutableDictionary alloc] initWithCapacity:10];
     [recordSettings setObject:[NSNumber numberWithInt:kAudioFormatMPEG4AAC] forKey:AVFormatIDKey];
-    [recordSettings setObject:[NSNumber numberWithFloat:22050.0] forKey: AVSampleRateKey];
+    [recordSettings setObject:[NSNumber numberWithFloat:44100.0] forKey: AVSampleRateKey];
     [recordSettings setObject:[NSNumber numberWithInt:1] forKey:AVNumberOfChannelsKey];
     [recordSettings setObject:[NSNumber numberWithInt:32000] forKey:AVEncoderBitRateKey];
     [recordSettings setObject:[NSNumber numberWithInt:16] forKey:AVLinearPCMBitDepthKey];
@@ -171,7 +171,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 - (void)registerForNotifications {
     NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
     [nc addObserver:self selector:@selector(avSessionInterrupted:)
-               name:AVAudioSessionInterruptionNotification object:nil];
+               name:AVAudioSessionInterruptionNotification object:[AVAudioSession sharedInstance]];
     [nc addObserver:self selector:@selector(applicationWillEnterForeground:)
                name:UIApplicationWillEnterForegroundNotification object:nil];
 }
@@ -209,6 +209,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 - (void)saveToTmpFile {
     // Do we already have a temporary recording? If so, join it with the current one
     if (_tmpRecorderFile) {
+        DDLogInfo(@"Join temp files");
         AVMutableComposition *composition = [AVMutableComposition composition];
         
         AVAsset *asset = [AVURLAsset URLAssetWithURL:_tmpRecorderFile options:nil];
@@ -231,6 +232,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         
         [self saveAudioAsset:immutableSnapshotComposition toURL:_tmpRecorderFile];
     } else {
+        DDLogInfo(@"New temp file");
         _tmpRecorderFile = [self tmpAudioUrlWithFileNamed:kRecordTmpFileName];
         
         AVAsset *asset = [AVURLAsset URLAssetWithURL:_recordAudioUrl options:nil];

@@ -470,10 +470,10 @@ extension EntityDestroyerTests {
         }
     }
     
-    private func createThreeGroupMembers(entityManager: EntityManager) -> [Contact] {
-        var notDeletedContact: Contact!
-        var notDeletedContact2: Contact!
-        var notDeletedContact3: Contact!
+    private func createThreeGroupMembers(entityManager: EntityManager) -> [ContactEntity] {
+        var notDeletedContact: ContactEntity!
+        var notDeletedContact2: ContactEntity!
+        var notDeletedContact3: ContactEntity!
         
         entityManager.performSyncBlockAndSafe {
             notDeletedContact = entityManager.entityCreator.contact()!
@@ -509,8 +509,8 @@ extension EntityDestroyerTests {
     }
     
     private func createContactAndConversation(entityManager: EntityManager, identity: String)
-        -> (contact: Contact, conversation: Conversation) {
-        var contact: Contact!
+        -> (contact: ContactEntity, conversation: Conversation) {
+        var contact: ContactEntity!
         
         entityManager.performSyncBlockAndSafe {
             contact = entityManager.entityCreator.contact()!

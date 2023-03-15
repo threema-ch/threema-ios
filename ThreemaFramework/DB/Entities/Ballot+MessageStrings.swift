@@ -161,7 +161,7 @@ extension Ballot {
             }
         }
         else {
-            let color = localIdentityDidVote() ? Colors.primary : Colors.textLight
+            let color = localIdentityDidVote() ? .primary : Colors.textLight
             return UIImage(systemName: "checkmark.circle.fill")?
                 .withTintColor(color, renderingMode: .alwaysOriginal)
         }

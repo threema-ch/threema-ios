@@ -11,8 +11,7 @@
 
 /* Tabbar and title for list with all conversations */
 "chats_title" = "Elkarrizketak";
-
-"use_dynamic_font_size" = "Sistemaren letra-tamaina";
+"chats_pinned" = "Pineatuta";
 
 "SortOrder_Firstname" = "Lehenengoa, Azkena";
 "SortOrder_Lastname" = "Lehenengoa, Azkena";
@@ -68,6 +67,7 @@
 "delete_identity" = "Datuak eta IDa ezabatu";
 "copy" = "Kopiatu";
 "save" = "Gorde";
+"download" = "Deskargatu";
 "share" = "Elkarbanatu";
 "details" = "Xehetsasunak";
 "acknowledge" = "Ados";
@@ -103,6 +103,15 @@
 "threema_id" = "Threemaren IDa";
 "nickname" = "Ezizen publikoa";
 "add_button" = "Gehitu";
+"chatview_contextmenu_select" = "Hautatu...";
+
+"file_message_image" = "Irudia";
+"file_message_sticker" = "Sticker";
+"file_message_animated_image" = "GIF";
+"file_message_video" = "Bideo";
+"file_message_voice" = "Ahots-mezua";
+"file_message_file" = "Fitxategia";
+
 "chat_back_button_accessibility" = "%d ez dira irakurri";
 
 "show_in_google_maps" = "Google Mapsen erakutsi";
@@ -144,6 +153,8 @@
 "high" = "Handia";
 "max_1_minute" = "Geh. 1 minutu";
 "max_x_minutes" = "Gehi. %d minutu";
+"still_compressed_note" = "Baliteke bideo oso handiak konprimitzea ezarpen hau kontuan hartu gabe.";
+
 /* Sound names */
 "push_sound_title" = "Jakinarazpen automatikoaren soinua";
 "push_group_sound_title" = "Taldearen jakinarazpen automatikoaren soinua";
@@ -173,11 +184,7 @@
 "sound_threema_alphorn" = "Alphorn";
 
 "reset_wallpaper" = "Pantailaren atzeko planoa berrezarri";
-"font_size_title" = "Letraren tamaina";
-"font_size" = "%d pt";
 "bigger_single_emojis" = "Banakako Emoji Handiak";
-"received_message_time" = "Mezua jaso den ordua";
-"return_key_send" = "Itzulera-tekla = Bidali";
 "identity_none" = "bat ere ez";
 "message" = "Mezua"; /* Short version for "Send Message" */
 "scan_identity" = "IDa eskaneatu";
@@ -191,8 +198,6 @@
 "block_contact" = "Kontaktua blokeatu";
 "profile_picture_recipient" = "Profileko argazki hartzaileak";
 
-"no_contacts_access_title" = "Ez dago kontaktuetarako sarbiderik";
-"no_contacts_access_message" = "Doikuntzak ireki, kontaktuen sarbidea ahalbidetzeko.";
 "no_linked_contact_access_title" = "Ez dago lotutako kontaktuetarako sarbiderik";
 "no_linked_contact_access_message" = "Doikuntzak ireki, kontaktuetara sartzea ahalbidetzeko eta kontaktu lotua ikusteko edo kontaktua etengabe deslotzeko.";
 "no_linked_contact_access_edit_message" = "Doikuntzak ireki, kontaktuetara sartzea ahalbidetzeko eta lotutako kontaktua editatzeko edo editatzeko kontaktua etengabe deslotzeko.";
@@ -213,8 +218,6 @@
 "[no access]" = "[Sarbiderik gabe]";
 "[not found]" = "[Ez da aurkitu]";
 "[restricted]" = "[Murriztua]";
-
-"go_to_settings" = "Hobespenetara joan";
 
 /* This shows the number of groups in parentheses */
 "groups_header" = "Taldeak (%lu)";
@@ -286,7 +289,7 @@
 "messages_delete_all_button" = "Mezu guztiak ezabatu";
 "messages_delete_all_confirm_title" = "Gailu honetatik txat honetako mezu guztiak ezabatu?";
 "messages_delete_all_confirm_message" = "Horrek barne hartzen ditu bitarteko eta dokumentu guztiak.";
-"messages_delete_selected_confirm" = "Gailu honetatik hautatutako mezuak ezabatu nahi?";
+"messages_delete_selected_confirm" = "Gailu honetatik hautatutako mezuak ezabatu nahi dituzu?";
 "conversation_delete_confirm" = "Txat hau gailu honetatik kendu nahi duzu?";
 "delete_all" = "Ezabatu guztiak";
 "delete_n" = "Ezabatu (%d)";
@@ -345,18 +348,8 @@
 "speed" = "Erreprodukzio-abiadura";
 
 "send_file_title" = "Fitxategia bidali";
-"camera_disabled_title" = "Ez dago sarbiderik";
 "send_file_message" = "Fitxategia: %@ \n%@-ra";
-
 "quote_not_found" = "Aipatutako mezua ez da aurkitu.";
-
-"camera_disabled_message" = "%@ ezin da kamerara sartu. Sartzeko, sakatu Hobespenak > Pribatutasuna > Kamera.";
-
-"location_disabled_title" = "Ez dago kokapenerako sarbiderik";
-"location_disabled_message" =  "Doikuntzak ireki eta kokapenera sartzeko aukera eman.";
-
-"microphone_disabled_title" = "Ez dago mikrofonorako sarbiderik";
-"microphone_disabled_message" = "%@ ez du mikrofonorako sarbiderik. Ra sartzen Hobespenak > Pribatutasuna > Mikrofonoa.";
 
 "include_media" = "Multimedia-elementuekin";
 "without_media" = "Multimedia-elementurik gabe";
@@ -408,6 +401,10 @@
 "add_note_group_info" = "*Ez zaude bakarrik hemen*\nErabili txat hau testu-mezuak, dokumentu-bitartekoak idazteko koaderno seguru gisa.";
 "end_note_group_info" = "*Ez zaude bakarrik txat honetan*\nMezu berriak taldekide guztiei bidaliko zaizkie.";
 
+"chat_search_searching" = "Bilatzen...";
+"chat_search_no_matches" = "Ez dago kointzidentziarik";
+"chat_search_matches" = "%d-tik %d kointzidentzia";
+
 "choose_recipient" = "Hautatu hartzailea";
 
 "msg_unknown_group_request_sync_x_title" = "Talde ezezagun batean jasotako mezua";
@@ -420,6 +417,8 @@
 "tap_to_change" = "Sakatu aldatzeko";
 "next" = "Hurrengoa";
 "unread_messages" = "Irakurri gabeko mezuak";
+"unread_messages_line_with_count" = "(%d) Irakurri gabeko mezuak";
+
 /* Verification level popovers in chat view */
 "verification_level_title" = "Segurtasun-maila";
 /* Verification level popovers in chat view */
@@ -446,8 +445,6 @@
 "invalid_country_code_message" = "Badirudi zure gailuaren eremua balio ez duen balio batean doitu dela. Ireki konfigurazio-aplikazioa eta, Orokorra > Herrialdea konfiguratu aukeran, hautatu berriro eskualde bat, sakelako telefonoen birbanaketarekin arazorik ez izateko";
 
 /* Settings */
-"block_unknown_on" = "Zure kontaktu-zerrendako pertsonek bakarrik bidal ditzakete mezuak.";
-"block_unknown_off" = "Denek bidal diezazkizukete mezuak. Lehenengo mezuarekin, kontaktu berriak automatikoki gehituko dira.";
 "show_stale_contacts_on" = "Threemaren ID ez-aktiboak (gutxienez hiru hilabetean erabili ez direnak) eta birlandatuak ezkutuan daude.";
 "show_stale_contacts_off" = "Threemaren ID guztiak kontaktuen zerrendan daude.";
 "hide_voip_call_ip_off" = "Zuzeneko konexio bat ezartzea eta, ahal bada, egiaztatu gabeko kontaktuetara deiak igortzea Threemaren zerbitzarien bidez bakarrik. Zure IP helbidea agerian gera daiteke.";
@@ -461,6 +458,7 @@
 "backgrounding_off" = "Aplikazioa berehala bigarren maila batera deskonektatuko da.";
 "proximity_monitoring_off" = "Hurbiltasun-sentsorea estaltzean ez da pantaila itzaliko.";
 "proximity_monitoring_on" = "Ahots-dei batean eta ahots-mezuak grabatu edo erreproduzitzean, pantaila itzaliko da hurbiltasun-sentsorea estaltzen bada.";
+"debug_log_clear" = "Erregistroa ezabatu";
 "log_empty_message" = "Arazketa-erregistroa hutsik dago.";
 "cannot_send_mail_message" = "Gailu honetan ez da posta elektronikoko konturik konfiguratu.";
 
@@ -490,9 +488,7 @@
 "no_work_contacts" = "%@-en erabiltzaileak";
 "no_work_contacts_message" = "Ez da aurkitu %@ kontakturik administratzaileak egiaztatuta.";
 
-"no_contacts_permission_title" = "Ez dago kontaktuetarako sarbiderik";
 "no_contacts_syncoff" = "Oraindik ez duzu harremanik. Aktibatu sinkronizazioa (Konfigurazioa > Esfera pribatua) edo gehitu kontaktuak eskuz «+» botoiarekin.";
-"no_contacts_permission_message" = "%@k ez du zure kontaktuetara sartzeko baimenik. Zure gailuaren datuen babeserako konfigurazioan sartzeko aukera ematea.";
 
 "my_profile_picture_title" = "Zure profileko argazkia";
 "release_profilepicture_to" = "Askatu profileko argazkia";
@@ -523,6 +519,15 @@
 "exclude_deleted_id_title" = "Sinkronizaziotik \"%@\" eko Threemaren ID baztertu?";
 "exclude_deleted_id_message" = "Esfera pribatuaren konfigurazioko salbuespenak administra ditzakezu.";
 "exclude_deleted_id_exclude_button" = "Baztertu";
+
+"forward_security" = "Perfect Forward Secrecy";
+"forward_security_none" = "Bat ere ez";
+"forward_security_2dh" = "Alde bakarrekoa";
+"forward_security_4dh" = "Osatua";
+"forward_security_clear_sessions" = "Saio guztiak itxi";
+"forward_security_explainer_footer" = "Perfect Forward Secrecy (PFS) sistemak komunikazio grabatu bat babesten du atzeraeraginezko deszifratzetik, baita epe luzerako zifratze-gakoa konprometituta badago ere. \nBi aldeetako aplikazioa PFSrekin bateragarria bada gaitu daiteke aukera.";
+"md_wizard_pfs_warning" = "Perfect Forward Secrecy kontaktu guztietarako desaktibatuko da, hainbat gailuren aurretiko bista aktibatu ondoren.";
+"md_wizard_disable_pfs_confirm" = "Perfect Forward Secrecy desgaitu";
 
 /* create id */
 "lets_get_started" = "Has gaitezen";
@@ -640,9 +645,14 @@
 "new_message_no_access_title" = "Mezu berriak";
 "new_message_no_access_message" = "Ireki %@ jasotako mezuak berreskuratzeko.";
 "new_message_invalid_license" = "Zure lizentzia amaitu da. Ireki aplikazioa jarraitzeko.";
+"new_message_db_requires_migration" = "Threema eguneratu egin da, ireki aplikazioa eguneraketa osatzeko.";
+
 /* reminder messages */
 "push_reminder_title" = "Gaitu gabeko jakinarazpenak";
 "push_reminder_message" = "Ez duzu mezu berriei edo sartzen diren deiei buruzko informaziorik jasoko %@ itxi arte.\n\nHori konpontzeko, sartu Sistemaren doikuntzak atalean eta aktibatu %@ko jakinarazpenak.";
+"push_reminder_not_now" = "Ez gogoratu berriro";
+"push_reminder_set_now" = "Jakinarazpenak baimendu";
+
 "updating_database" = "Datu-basea eguneratzen ari da...\n\nMesedez, mantendu Threema lehen planoan exekutatzen amaitu arte.\n\nHonek minutu batzuk behar ditu txat historia handia badu.";
 "database_migration_error_hints" = "Mesedez, ziurtatu zure gailuak nahikoa memoria duela eskura, berrabiarazi eta saiatu berriro.";
 "database_migration_storage_warning_title" = "Ez dago nahikoa leku";
@@ -659,6 +669,7 @@
 "group_member_self_removed" = "Taldetik ezabatu zaituzte.";
 "group_member_self_left" = "Taldea utzi duzu.";
 "group_member_creator_left" = "Talde hau umezurtz dago.\nTaldearen sortzaileak taldea utzi du eta ezin da mantendu. Gainerako kideetako batek taldea klonatu behar du (taldearen xehetasunen bidez), administratzaile berria izateko.";
+"system_message_group_avatar_changed" = "Taldearen irudia aldatu da";
 
 /* accessibility labels */
 "send_media_or_location" = "Multimedia-elementuak edo kokapena bidali";
@@ -694,10 +705,6 @@
 "threema_channel_failed" = "Ezin da Threema Channel gehitu.";
 
 /* Push decryption */
-"decryption_push_title" = "Push jakinarazpenetan mezuaren edukiaren aurrebista jaso nahi duzu?";
-"decryption_push_text" = "Aurrebista desaktibatuta dagoela, %@ ireki beharko duzu mezu berrien edukia ikusteko.";
-"decryption_push_activate" = "Aktibatu aurrebista";
-"decryption_push_deactivate" = "Desgaitu aurrebista";
 "decryption_push_reply" = "Erantzun";
 "decryption_push_placeholder" = "Erantzun...";
 "decryption_push_agree" = "Baieztatu";
@@ -748,11 +755,10 @@
 "call_reject" = "Ezeztatu";
 "call_hide_call" = "Deia ezkutatu";
 "call_no_wifi" = "Sare mugikorraren bidez deitu. Informazio gehiago...";
+"call_mic_access" = "Mikrofonorako sarbiderik ez.";
 
 "call_voip_not_supported_title" = "Threema ahotsa";
 "call_voip_not_supported_text" = "Kontaktu honek ezin du oraindik Threema deirik jaso.";
-"call_microphone_permission_title" = "Mikrofonora sartzea ukatu da";
-"call_microphone_permission_text" = "Ezarpenetan mikrofonora sartzeko baimena eman behar duzu.";
 "call_contact_alert" = "%@-ri deitu nahi diozu?";
 "call_contact_not_reachable" = "Ezin izan zen kontaktuarekin harremanetan jarri...";
 "already_in_call" = "Dei aktibo bakarra egon daiteke aldi berean.";
@@ -815,8 +821,7 @@
 "privateChat_code_alert_confirm" = "Konfiguratu orain";
 "privateChat_set_alert_title" = "Txat hau pribatu gisa markatu nahi duzu?";
 "privateChat_set_alert_message" = "Pribatutasun-doikuntzetan txat pribatuen ikusgarritasuna alda dezakezu.";
-"hide_private_toggle" = "Txat pribatuak ezkutatu";
-"privacy_footer" = "Ezkutatu txat pribatu guztiak txaten laburpenean. Doikuntza hori aktibatzeko kode bat ezarri behar duzu.";
+"privateChat_setup_alert_message" = "Zure Threema Safe segurtasun kopiak txat pribatuak zituen, sartzeko kode bat ezarri behar duzu horietan sartzeko.";
 
 "group_leave_sheet_title" = "\"%@\" utzi?";
 "group_leave_sheet_message" = "Taldea uzten baduzu, ezingo duzu elkarrizketan parte hartzen jarraitu, baina txataren historialean sartzen jarraitu ahal izango duzu.";
@@ -1036,6 +1041,7 @@
 "delete_messages_confirm" = "%@ baino gehiagoko antzinatasuna duten mezu guztiak betiko ezabatu nahi dituzu?";
 "delete_messages_confirm_all" = "Ziur zaude mezu guztiak betiko ezabatu nahi dituzula?";
 "delete_messages_explain" = "Testu-mezuak, ahots-mezuak, multimedia-mezuak, fitxategiak, inkestak eta abar ezabatuko dira.";
+"delete_in_progress" = "Ezabatzen...";
 "one_year_title" = "Urte 1";
 "one_year" = "Urte 1";
 "six_months_title" = "6 hilabete";
@@ -1053,7 +1059,13 @@
 "file_deleted_title" = "Fitxategia ezabatu da";
 "file_not_found_title" = "Fitxategia ez da aurkitu";
 
+"manage_all_conversations" = "Txat guztiak administratu";
+"manage_media_and_files" = "Artxiboak antolatu";
+"manage_messages" = "Mezuak antolatu";
 "messages" = "Mezuak";
+"files" = "Artxiboak";
+
+
 // Settings
 "settings_privacy" = "Eremu pribatua";
 "settings_appearance" = "Itxura";
@@ -1075,15 +1087,41 @@
 "settings_advanced" = "Hobetua";
 "settings_threema_work" = "Threema Work";
 "settings_feedback" = "Beta Feedback";
-"settings_dev_mode" = "Dev modua";
 "tos_cell_title" = "Zerbitzu-baldintzak";
 
 "settings_advanced_flush_message_queue" = "Mezu ilara hustu";
 "settings_advanced_orphaned_files_cleanup" = "Artxibo bakartiak ezabatu";
-// Dev Mode
-"settings_devmode_quote_v2" = "Quote V2";
-"settings_devmode_new_chat_view" = "Txat ikuspegi berria";
-"settings_devmode_stylekit_debug_view" = "StyleKit Debug View";
+"settings_advanced_reregister_push_notifications_header_title" = "Push jakinarazpenak";
+"settings_advanced_reregister_push_notifications_footer_title" = "Sartzen diren mezuak ez badira aplikaziotik kanpo agertzen jakinarazpen gisa, berriro erregistra zaitezke jakinarazpenak jasotzeko.";
+"settings_advanced_reregister_notifications_label" = "Berriro erregistratu push jakinarazpenak";
+
+"settings_md_sync_alert_title" = "Sinkronizazio-errorea";
+
+// Privacy
+"settings_privacy_contacts_header" = "Kontaktuak";
+"settings_privacy_sync_contacts" = "Kontaktuak sinkronizatu";
+"settings_privacy_exclusion_list" = "Baztertuen zerrenda";
+"settings_privacy_exclusion_list_alert_title" = "ID laburregia";
+"settings_privacy_exclusion_list_alert_message" = "Sartu 8 karaktereko luzera duen ID bat.";
+"settings_privacy_block_unknown" = "Ezezagunak blokeatu";
+"settings_privacy_block_unknown_footer_on"= "Zure kontaktu-zerrendako pertsonek bakarrik bidal ditzakete mezuak.";
+"settings_privacy_block_unknown_foooter_off" = "Edonork bidal diezaioke mezu bat. Kontaktu berriak automatikoki gehituko dira lehen mezua iristen denean.";
+
+"settings_privacy_chat_header" = "Txata";
+"settings_privacy_read_receipts" = "Irakurketaren korfirmazioa";
+"settings_privacy_typing_indicator" = "Idazketa adierazleak";
+
+"settings_privacy_TIRR_reset_all" = "Kontaktu guztiak berrezarri";
+"settings_privacy_TIRR_reset_footer" = "Kontaktu guztiak lehengoratu aurrez zehaztutako konfiguraziora.";
+"settings_privacy_TIRR_reset_alert_title" = "Berrezarri";
+"settings_privacy_TIRR_reset_alert_message" = "Kontaktu guztiak lehengoratu aurrez zehaztutako konfiguraziora. Ekintza hori ezin da desegin.";
+"settings_privacy_TIRR_reset_alert_action" = "Berrezarri dena";
+
+"settings_privacy_choose_poi" = "POI aukeratu";
+"settings_privacy_hide_private_chats" = "Txat pribatuak ezkutatu";
+"settings_privacy_hide_private_chats_footer" = "Ezkutatu txat pribatu guztiak txaten laburpenean. Doikuntza hori aktibatzeko kode bat ezarri behar duzu.";
+
+
 // Appearance
 "settings_appearance_theme_section" = "Gaia";
 "settings_appearance_light_theme" = "Argia";
@@ -1091,10 +1129,17 @@
 "settings_appearance_system_theme" = "Sistema";
 "settings_appearance_theme_selected" = "%@ gaia aktibatuta";
 "settings_appearance_theme_active" = "Aktibatuta";
+"settings_appearance_hide_app_icon" = "App ikonoa";
+"settings_appicon_default_header" = "Ikono lehenetsia";
+"settings_appicon_legacy_header" = "Threema ikonoak";
+"settings_appicon_special_header" = "Ikono bereziak";
 "settings_appearance_hide_stale_contacts" = "Ezkutatu ID ez aktiboak";
 "settings_appearance_show_profile_pictures" = "Bistaratu profil argazkiak";
 "settings_appearance_display_order" = "Erakutsi honela";
 "settings_appearance_show_gallery_preview" = "Galeriaren aurrebista";
+
+// Media
+"settings_media_autosave_private_footer" = "Txat pribatuetan jasotako multimediak ez dira automatikoki gordeko.";
 
 // Sentry
 "sentry_crash_send_title" = "%@ ustekabean irten da";
@@ -1215,6 +1260,8 @@ Fitxategi bakartiak zakarrontzira mugitu, eta %@ fitxategirik (multimedia) ez fa
 "unknown_file_type" = "Fitxategi-mota ezezaguna";
 "unknown_file_size" = "Fitxategiaren tamaina ezezaguna";
 "unknown_file_name" = "Fitxategiaren izena ezezaguna";
+"sending_to" = "Hartzaileak";
+
 /* Ballot */
 "ballot" = "Inkesta";
 "ballots" = "Inkestak";
@@ -1229,10 +1276,10 @@ Fitxategi bakartiak zakarrontzira mugitu, eta %@ fitxategirik (multimedia) ez fa
 "ballot_multiple_choice" = "Aukera anitza";
 "ballot_clone" = "Kopiatu Existitzen den Inkesta";
 "ballot_clone_warning_title" = "Arreta";
-"ballot_clone_warning_message" = "Sarrera guztiak baliogabetuko dira.";
+"ballot_clone_warning_message" = "Dauden sarrera guztiak baliogabetu egingo dira.";
 "ballot_feature_level_warning_title" = "Kontuan izan";
-"ballot_feature_level_warning_message" = "Parte-hartzaile batzuek inkestak onartzen ez dituen aplikazioaren bertsioa dute oraindik: %@";
-"ballot_feature_level_error_message" = "Parte-hartzaileek ez dute inkestak onartzen dituen aplikazioaren bertsio bat: %@";
+"ballot_feature_level_warning_message" = "Parte-hartzaile batzuek oraindik inkestarik onartzen ez duen aplikazioaren bertsio bat dute: %@";
+"ballot_feature_level_error_message" = "Parte-hartzaile batek ere ez du inkestak onartzen dituen aplikazioaren bertsiorik: %@";
 
 "ballot_add_choice" = "Aukera Gehitu";
 "ballot_create" = "Sortu Inkesta";
@@ -1265,6 +1312,8 @@ Fitxategi bakartiak zakarrontzira mugitu, eta %@ fitxategirik (multimedia) ez fa
 "voteCancelMessage" = "Botoa eman aurretik erretiratzen bazara, baztertu egingo zaitugu.";
 "discardVoteTitle" = "Baztertu";
 
+"ballot_load_error" = "Inkestak ez daude eskuragarri";
+
 "ballots_with_open_count_accessibility" = "Inkestak (%d irekita)";
 
 /* Custom Privacy Settings */
@@ -1282,24 +1331,28 @@ Fitxategi bakartiak zakarrontzira mugitu, eta %@ fitxategirik (multimedia) ez fa
 "readReceipt_sheetMessage" = "Kontaktu horren konfigurazio lehenetsia deuseztatu.";
 "typingIndicator_sheetMessage" = "Kontaktu horren konfigurazio lehenetsia deuseztatu.";
 
-"reset_overrides" = "Kontaktu guztiak berrezarri";
-"resetButton_footer" = "Kontaktu guztiak lehengoratu aurrez zehaztutako konfiguraziora.";
-"reset_overrides_alert_title" = "Berrezarri";
-"reset_overrides_alert_message" = "Kontaktu guztiak lehengoratu aurrez zehaztutako konfiguraziora. Ekintza hori ezin da desegin.";
-"reset_overrides_alert_action" = "Berrezarri dena";
-
 /* Multi Decvice */
 "multi_device_linked_devices_title" = "Gailu anitzeko aurretiko ikuspegia";
+"multi_device_linked_devices_desc" = "Aktibatu edo desaktibatu gailu honen aurretiko bista.";
 "multi_device_linked_devices_refresh" = "Irristatu eguneratzeko";
 "multi_device_linked_devices_loading_failed" = "Errorea gailuak kargatzean: %@";
 "multi_device_linked_devices_failed_to_load_title" = "Errorea gailuen zerrenda kargatzean";
 "multi_device_linked_devices_failed_to_load_message" = "Ezin izan dira lotutako gailuak kargatu. Egiaztatu Interneterako konexioa eta saiatu berriro.";
 "multi_device_linked_devices_this" = "Gailu horiek";
 "multi_device_linked_devices_others" = "Beste gailu batzuk";
+"multi_device_linked_devices_last_login" = "Azken sarbidea: %@";
 "multi_device_linked_devices_remove_failed" = "Errorea gailua ezabatzean: %@";
+"multi_device_linked_devices_removed_devices_title" = "Gailu anitz desaktibatu?";
+"multi_device_linked_devices_removed_devices_message" = "Horrek konektatutako gailu guztiak ezabatuko ditu eta gailu anitzak desgaitu.";
+"multi_device_linked_devices_removed_devices_ok" = "Deesgaitu";
+"multi_device_linked_duplicate_contacts_title" = "Kontaktu bikoiztuak";
+"multi_device_linked_duplicate_contacts_desc" = "Ezin duzu gailu hau lotu kontaktu bikoiztuak dituzulako (%@). Jar zaitez harremanetan gure euskarriarekin.";
+
 "multi_device_linked_devices_failed_remove_title" = "Errorea gailua ezabatzean";
 "multi_device_linked_devices_failed_remove_message" = "Ezin izan da ezabatu lotutako gailua. Saiatu berriro.";
 "multi_device_linked_devices_failed_remove_message_2" = "Ezin izan da ezabatu lotutako gailua. Egiaztatu Interneterako konexioa eta saiatu berriro.";
+"multi_device_slot_state_mismatch_alert" = "Gailu hori bereizi egin da. Horrek esan nahi du gaur egun ezin duzula mezu berririk bidali edo jaso. Ez baduzu aktibatu, kontuan izan arrazoi teknikoengatik gerta litekeela, aldez aurreko bista teknikoaren fasean. Barkatu eragozpenak. Berriro lotzeko, kontsultatu ohiko galderak: https://three.ma/faq";
+
 "myprofile_link_email_phone_footer" = "Zure helbide elektronikoa edo telefono mugikorraren zenbakia zure IDrekin lotzen baduzu, beste pertsona batzuek automatikoki aurkitu ahal izango zaituzte %@ helbide-libretan.";
 "myprofile_link_email_footer" = "Zure helbide elektronikoa zure IDrekin lotzen baduzu, beste pertsona batzuek automatikoki aurkitu ahal izango zaituzte %@ helbidean, betiere helbide-libretan bazaituzte.";
 "myprofile_link_email_onprem_footer" = "Zure helbide elektronikoa zure IDrekin lotzen baduzu, zerbitzari honetako beste pertsona batzuek (%@) automatikoki aurkitu ahal izango dute %@-en, betiere helbide-libretan bazaituzte.";
@@ -1311,14 +1364,11 @@ Fitxategi bakartiak zakarrontzira mugitu, eta %@ fitxategirik (multimedia) ez fa
 // POI
 "poi_unavailable" = "Ez dago eskuragarri";
 "poi_not_marked" = "–";
-"poi_location_disabled_action" = "Hobespenak ireki";
 "poi_search_POI" = "Hiriak eta kaleak";
 "poi_search_prefix" = "%@ inguruan bilatu";
 "poi_away" = "%@ distantzia";
 "poi_dropped_pin_info_alert_title" = "PIN posizionatua";
 "poi_dropped_pin_info_alert_message" = "Pin bat kokatzeko, mapa sakatuta eduki.";
-"poi_accuracy_info_alert_title" = "Ez dago kokapen zehatzerako sarbiderik";
-"poi_accuracy_info_alert_message" = "Ireki hobespenak eta kokapen zehatzera sarbidea ahalbidetu.";
 "poi_current_location" = "Nire kokapena";
 "poi_marked_location" = "PIN posizionatua";
 
@@ -1346,6 +1396,7 @@ Fitxategi bakartiak zakarrontzira mugitu, eta %@ fitxategirik (multimedia) ez fa
 "vote_system_message" = "\"%@\"-k \"%@\"-n bozkatu du";
 "vote_system_message_hidden" = "Boto berria jaso da \"%@\"-n";
 "vote_system_message_default" = "Boto-mezua jaso da inkesta ezezagunarentzat";
+"vote_system_message_update" = "“%@\"-ek botoa hona eman zuen “%@”";
 
 // ChatBar
 "chat_bar_quote_close_button" = "Kuota itxi";
@@ -1353,7 +1404,78 @@ Fitxategi bakartiak zakarrontzira mugitu, eta %@ fitxategirik (multimedia) ez fa
 // ChatDetailView
 "detailView_title" = "Mezuaren xehetasunak";
 "detailView_sent" = "Bidalita";
-"detailView_delivered" = "Jasota";
+"detailView_delivered" = "Entregatuta";
 "detailView_read" = "Irakurrita";
-"detailView_ackd" = "Onartuta";
+"detailView_ackd" = "Jasota";
 "detailView_messageID" = "Mezuaren IDa";
+"detailView_group_acknowledged" = "Ados (%d)";
+"detailView_group_declined" = "Ez ados (%d)";
+"detailView_group_file_size" = "Fitxategiaren tamaina";
+"detailView_created_footer" = "Sortua: %@";
+
+"message_display_status_none" = "Bat ere ez";
+"message_display_status_user_acknowledged" = "Ados";
+"message_display_status_user_declined" = "Ez ados";
+"message_display_status_sending" = "Bidaltzen";
+"message_display_status_sent" = "Bidalita";
+"message_display_status_delivered" = "Entregatuta";
+"message_display_status_delivered_incoming" = "Jasota";
+"message_display_status_read" = "Irakurrita";
+"message_display_status_failed" = "Akatzekin";
+
+// In-app notifications
+"notification_copying_succeeded" = "Kopiatutako elementua";
+"notification_copying_failed" = "Errorea kopiatzerakoan";
+
+"notification_saving_succeeded" = "Gordetako elementua";
+"notification_saving_failed" = "Errorea gordetzerakoan";
+
+"notification_saving_to_photos_succeeded" = "Argazkiei erantsi";
+"notification_saving_to_photos_failed" = "Errorea Argazkiak atalari eranstean";
+
+"notification_sending_failed" = "Errorea bidaltzean";
+"notification_sending_failed_subtitle_size" = "Elementua handiegia da";
+
+"notification_deleted_messages_count" = "%d mezu ezabatu dira";
+
+"notification_cannot_play_video" = "Ezin da bideoa erreproduzitu";
+
+"notification_call_failed_connected" = "Konexioa galdu da";
+"notification_call_failed_not_connected" = "Errorea konexioa ezartzean";
+"notification_call_creation_failed" = "Errorea deia sortzean";
+"notification_call_creation_disabled" = "Dei desaktibatuak";
+
+"notification_sending_profile_picture_succeeded" = "Profileko argazkia bidalita";
+"notification_sending_profile_picture_failed" = "Errorea bidaltzean";
+
+"notification_sending_profile_picture_failed_settings_sync_message" = "Doikuntza sinkronizatuak";
+
+"notification_group_sync_succeeded" = "Taldeak sinkronizatuak";
+"notification_group_sync_failed" = "Errorea taldea sinkronizatzean";
+
+"notification_settings_sync_pending" = "Sinkronizatzen...";
+"notification_settings_sync_succeeded" = "Doikuntza sinkronizatuak";
+
+// Forward security status messages
+"forward_security_message_without" = "Aurrera begirako sekretu perfekturik gabeko mezu bat jaso da (PFS). Egiaztatu bidaltzaileak PFS nahita desaktibatu duela.";
+"forward_security_session_established" = "Hemendik aurrera, txat honen mezuak babestuta daude Sekretu perfektua aurrera (PFS).";
+"forward_security_session_established_rx" = "Hemendik aurrera, txat honetan jasotako mezuak aurrera begirako sekretu perfektuak (PFS) babesten ditu. Aktibatu PFS kontaktuaren informazioan, bidalitako mezuak ere babesteko.";
+"forward_security_messages_skipped_1" = "Azken mezutik mezu bat galdu da.";
+"forward_security_messages_skipped_x" = "%d mezu galdu dira azken mezutik.";
+"forward_security_session_reset" = "Kontaktu honekin Aurrera begirako sekretu perfektuaren saioa (PFS) berrezarri da. Hori gerta daiteke kontaktuak gailua aldatu badu edo aplikazioa berriz instalatu badu.";
+"forward_security_message_out_of_order" = "Zerbitzuz kanpoko mezu bat jaso du eta ezin izan da deszifratu.";
+"forward_security_status_enabled_outgoing" = "Aurrera begirako sekretu perfektua (PFS) mezu irtenetarako aktibatuta.";
+"forward_security_status_disabled_outgoing" = "Aurrera begirako sekretu perfektua (PFS), mezu irtenetarako desaktibatua.";
+"forward_security_contact_has_downgraded_to_an_incompatible_version" = "Kontaktu hau Aurrera begirako sekretu perfektua (PFS) onartzen ez duen aplikazioaren bertsio bat erabiltzen hasi da. Hemendik aurrera, mezuak PFS gabe bidaliko dira.";
+
+// Profile view
+"accessibility_profile_button_hint_contact" = "Ireki harremanetarako informazioa";
+"accessibility_profile_button_hint_group" = "Ireki taldearen informazioa";
+
+// Chat bar
+"accessibility_chatbar_label" = "Txateko sarrera-eremua.";
+"accessibility_chatbar_hint" = "Mezua idatzi.";
+"accessibility_stickerMessage_description" = "Sticker";
+"accessibility_voiceMessage_description" = "Ahots-mezua";
+"accessibility_pollMessage_description" = "Inkesta";
+

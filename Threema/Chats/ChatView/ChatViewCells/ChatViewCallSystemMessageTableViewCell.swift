@@ -141,8 +141,8 @@ final class ChatViewCallSystemMessageTableViewCell: ChatViewBaseTableViewCell, M
             metaDataLabel.removeFromSuperview()
         }
         
-        // Fixes a bug where the call icon could be miss-aligned in iOS 13
-        if #available(iOS 14.0, *) {
+        // Fixes a bug where the call icon could be miss-aligned in iOS 15
+        if #available(iOS 16.0, *) {
             // Do nothing
         }
         else {
@@ -200,29 +200,43 @@ final class ChatViewCallSystemMessageTableViewCell: ChatViewBaseTableViewCell, M
 
 extension ChatViewCallSystemMessageTableViewCell: Reusable { }
 
-// MARK: - ContextMenuAction
+// MARK: - ChatViewMessageAction
 
-extension ChatViewCallSystemMessageTableViewCell: ContextMenuAction {
+extension ChatViewCallSystemMessageTableViewCell: ChatViewMessageAction {
     
-    func buildContextMenu(at indexPath: IndexPath) -> UIContextMenuConfiguration? {
+    func messageActions() -> [ChatViewMessageActionProvider.MessageAction]? {
 
         guard let message = callMessageAndNeighbors?.message else {
             return nil
         }
 
-        typealias Provider = ChatViewContextMenuActionProvider
+        typealias Provider = ChatViewMessageActionProvider
             
         let editAction = Provider.editAction {
-            self.chatViewTableViewCellDelegate?.startMultiselect()
+            self.chatViewTableViewCellDelegate?.startMultiselect(with: message.objectID)
         }
         
-        let deleteAction = Provider.deleteAction(message: message)
+        // Delete
+        let willDelete = {
+            self.chatViewTableViewCellDelegate?.willDeleteMessage(with: message.objectID)
+        }
+        
+        let didDelete = {
+            self.chatViewTableViewCellDelegate?.didDeleteMessages()
+        }
+        
+        let deleteAction = Provider.deleteAction(message: message, willDelete: willDelete, didDelete: didDelete)
         
         // Build menu
-        let menu = UIMenu(children: [editAction, deleteAction])
-        
-        return UIContextMenuConfiguration(identifier: indexPath as NSCopying, previewProvider: nil) { _ in
-            menu
+        return [editAction, deleteAction]
+    }
+    
+    override var accessibilityCustomActions: [UIAccessibilityCustomAction]? {
+        get {
+            buildAccessibilityCustomActions()
+        }
+        set {
+            // No-op
         }
     }
 }

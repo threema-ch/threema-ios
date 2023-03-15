@@ -270,7 +270,7 @@
     }
     
     /* add this ID to the contacts */
-    [[ContactStore sharedContactStore] addContactWithIdentity:targetId verificationLevel:kVerificationLevelUnverified onCompletion:^(Contact *contact, BOOL alreadyExists) {
+    [[ContactStore sharedContactStore] addContactWithIdentity:targetId verificationLevel:kVerificationLevelUnverified onCompletion:^(ContactEntity *contact, BOOL alreadyExists) {
         
         if (compose && [query objectForKey:@"text"][0] != nil) {
             ShareController *shareController = [[ShareController alloc] init];

@@ -20,7 +20,7 @@
 
 #import "BallotResultMatrixView.h"
 #import "Conversation.h"
-#import "Contact.h"
+#import "ContactEntity.h"
 #import "BallotChoice.h"
 #import "BallotResult.h"
 #import "RectUtil.h"
@@ -248,6 +248,7 @@
     _choicesView.horizontalScrollingEnabled = NO;
     [_choicesView.panGestureRecognizer requireGestureRecognizerToFail: _panGesture];
     [_choicesView setContent: choicesContent];
+    choicesContent.autoresizingMask = UIViewAutoresizingFlexibleWidth;
     [self addSubview:_choicesView];
 
     ScrollViewContent *contactsContent = [self makeContactsViewForSize:size];
@@ -564,14 +565,14 @@
         if (image) {
             [_participantAvatars addObject:[[AvatarMaker sharedAvatarMaker] maskedProfilePicture:image size:CONTACT_AVATAR_SIZE-2*CONTACT_AVATAR_PADDING]];
         } else {
-            [_participantAvatars addObject:[[AvatarMaker sharedAvatarMaker] avatarForContact:nil size:CONTACT_AVATAR_SIZE-2*CONTACT_AVATAR_PADDING masked:YES]];
+            [_participantAvatars addObject:[[AvatarMaker sharedAvatarMaker] avatarForContactEntity:nil size:CONTACT_AVATAR_SIZE-2*CONTACT_AVATAR_PADDING masked:YES]];
         }
     }
         
-    for (Contact *contact in _ballot.voters) {
+    for (ContactEntity *contact in _ballot.voters) {
         [_participantIds addObject:contact.identity];
         [_participantNames addObject:contact.displayName];
-        [_participantAvatars addObject:[[AvatarMaker sharedAvatarMaker] avatarForContact:contact size:CONTACT_AVATAR_SIZE-2*CONTACT_AVATAR_PADDING masked:YES]];
+        [_participantAvatars addObject:[[AvatarMaker sharedAvatarMaker] avatarForContactEntity:contact size:CONTACT_AVATAR_SIZE-2*CONTACT_AVATAR_PADDING masked:YES]];
     }
 }
 
@@ -581,7 +582,7 @@
     if (!_ballot.localIdentityDidVote){
         [_notParticipantNames addObject: [BundleUtil localizedStringForKey:@"me"]];
     }
-    for (Contact *contact in _ballot.nonVoters) {
+    for (ContactEntity *contact in _ballot.nonVoters) {
         [_notParticipantNames addObject:contact.displayName];
     }
     

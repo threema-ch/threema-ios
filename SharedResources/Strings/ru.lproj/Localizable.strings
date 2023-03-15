@@ -11,8 +11,7 @@
 
 /* Tabbar and title for list with all conversations */
 "chats_title" = "Чаты";
-
-"use_dynamic_font_size" = "Системный размер шрифта";
+"chats_pinned" = "Прикреплено";
 
 "SortOrder_Firstname" = "Имя, Фaмилия";
 "SortOrder_Lastname" = "Фaмилия, Имя";
@@ -68,6 +67,7 @@
 "delete_identity" = "Удалить данные и ID";
 "copy" = "Скопировать";
 "save" = "Сохранить";
+"download" = "Скачать";
 "share" = "Поделиться";
 "details" = "Подробно";
 "acknowledge" = "Принять";
@@ -103,7 +103,7 @@
 "threema_id" = "Threema ID";
 "nickname" = "Публичный ник";
 "add_button" = "Добавить";
-"chatview_contextmenu_more" = "Больше…";
+"chatview_contextmenu_select" = "Выберите...";
 
 "file_message_image" = "Изображение";
 "file_message_sticker" = "Стикер";
@@ -184,11 +184,7 @@
 "sound_threema_alphorn" = "Alphorn";
 
 "reset_wallpaper" = "Сбросить обои";
-"font_size_title" = "Размер шрифта";
-"font_size" = "%d pt";
 "bigger_single_emojis" = "Большие эмодзи";
-"received_message_time" = "Время получения сообщения";
-"return_key_send" = "Клавиша ввода = Отправить";
 "identity_none" = "нет";
 "message" = "Сообщение"; /* Short version for "Send Message" */
 "scan_identity" = "Сканировать ID";
@@ -202,8 +198,6 @@
 "block_contact" = "Блокировать контакт";
 "profile_picture_recipient" = "Получатели аватара";
 
-"no_contacts_access_title" = "Нет доступа к контактам";
-"no_contacts_access_message" = "Откройте настройки и разрешите доступ к контактам.";
 "no_linked_contact_access_title" = "Нет доступа к привязанным контактам.";
 "no_linked_contact_access_message" = "Откройте настройки и разрешите контактам доступ для просмотра привязанного контакта. Или отвяжите контакт окончательно.";
 "no_linked_contact_access_edit_message" = "Откройте доступ и разрешите контактам доступ для редактирования привязанного контакта. Или отсоедините контакт окончательно для редактирования.";
@@ -224,8 +218,6 @@
 "[no access]" = "[Нет доступа]";
 "[not found]" = "[Не найдено]";
 "[restricted]" = "[Ограничено]";
-
-"go_to_settings" = "Перейти в настройки";
 
 /* This shows the number of groups in parentheses */
 "groups_header" = "Группы (%lu)";
@@ -356,18 +348,8 @@
 "speed" = "Скорость воспроизведения";
 
 "send_file_title" = "Отправить файл";
-"camera_disabled_title" = "В доступе отказано";
 "send_file_message" = "Файл: %@ \n кому: \n%@";
-
 "quote_not_found" = "Котировочное сообщение не найдено.";
-
-"camera_disabled_message" = "У программы %@ нет доступа к вашей камере. Предоставьте ей доступ в меню \"Настройки > Конфиденциальность > Камера\".";
-
-"location_disabled_title" = "Нет доступа к геолокации";
-"location_disabled_message" =  "Откройте меню \"Настройки\" и предоставьте доступ к данным геолокации.";
-
-"microphone_disabled_title" = "Нет доступа к микрофону";
-"microphone_disabled_message" = "У программы %@ нет доступа к микрофону. Предоставьте ей доступ в меню \"Настройки > Конфиденциальность > Микрофон\".";
 
 "include_media" = "Включать мультимедиа";
 "without_media" = "Без мультимедиа";
@@ -463,8 +445,6 @@
 "invalid_country_code_message" = "Судя по всему, формат региона на вашем устройстве имеет неправильное значение. Откройте меню Настройки, перейдите в пункт Общее > Международные настройки и выберите формат региона, чтобы избежать проблем с номером телефона.";
 
 /* Settings */
-"block_unknown_on" = "Отправлять вам сообщения могут только люди из вашего списка контактов.";
-"block_unknown_off" = "Отправлять вам сообщения может любой человек. Новые контакты будут добавлены автоматически при получении от них первого сообщения.";
 "show_stale_contacts_on" = "Недействительные Threema ID (т.е. ID, которые не использовались больше 3 месяцев) и отозванные ID не показываются.";
 "show_stale_contacts_off" = "Все ID Threema в списке контактов.";
 "hide_voip_call_ip_off" = "По возможности устанавливать прямое соединение и ретранслировать звонки непроверенным контактам только через серверы Threema. Может быть виден ваш IP-адрес.";
@@ -508,9 +488,7 @@
 "no_work_contacts" = "Пользователи %@";
 "no_work_contacts_message" = "Проверенных администратором контактов %@ не найдено.";
 
-"no_contacts_permission_title" = "Нет разрешения на доступ к контактам";
 "no_contacts_syncoff" = "У вас еще нет контактов. Включите синхронизацию (Настройки > Приватность) или добавьте контакты вручную с помощью кнопки «+».";
-"no_contacts_permission_message" = "У программы %@ нет разрешения на доступ к вашим контактам. Перейдите в параметры приватности вашего устройства и разрешите доступ к контактам.";
 
 "my_profile_picture_title" = "Ваш аватар";
 "release_profilepicture_to" = "Открыть аватар";
@@ -691,6 +669,7 @@
 "group_member_self_removed" = "Вы исключены из группы.";
 "group_member_self_left" = "Вы покинули группу.";
 "group_member_creator_left" = "*Эта группа потеряна*\nСоздатель группы вышел из нее, и ее поддержка теперь невозможна. Один из оставшихся пользователей должен клонировать группу (из сведений о группе) и стать новым администратором.";
+"system_message_group_avatar_changed" = "Аватар группы изменен";
 
 /* accessibility labels */
 "send_media_or_location" = "Отправить мультимедиа или местоположение";
@@ -726,10 +705,6 @@
 "threema_channel_failed" = "Не удается добавить канал Threema.";
 
 /* Push decryption */
-"decryption_push_title" = "Хотите предварительно просматривать содержимое новых сообщений в push-уведомлениях?";
-"decryption_push_text" = "Если предварительный просмотр отключен, для просмотра содержимого новых сообщений необходимо открыть приложение %@.";
-"decryption_push_activate" = "Включить просмотр";
-"decryption_push_deactivate" = "Отключить просмотр";
 "decryption_push_reply" = "Ответить";
 "decryption_push_placeholder" = "Ответить...";
 "decryption_push_agree" = "Согласен";
@@ -780,11 +755,10 @@
 "call_reject" = "Отклонить";
 "call_hide_call" = "Скрыть звонок";
 "call_no_wifi" = "Звоните через мобильную сеть. Подробнее...";
+"call_mic_access" = "Нет доступа к микрофону.";
 
 "call_voip_not_supported_title" = "Звонок Threema";
 "call_voip_not_supported_text" = "Этот контакт пока не может принимать звонки Threema.";
-"call_microphone_permission_title" = "Доступ к микрофону запрещен";
-"call_microphone_permission_text" = "Откройте доступ к микрофону в Настройках";
 "call_contact_alert" = "Хотите позвонить пользователю %@?";
 "call_contact_not_reachable" = "Не удается связаться с контактом...";
 "already_in_call" = "Возможен только один активный звонок.";
@@ -848,8 +822,6 @@
 "privateChat_set_alert_title" = "Хотите пометить этот чат как личный?";
 "privateChat_set_alert_message" = "Вы можете переключать видимость личных чатов в настройках приватности.";
 "privateChat_setup_alert_message" = "Ваша резервная копия Threema Safe содержала личные чаты, вы должны задать пароль для доступа к ним.";
-"hide_private_toggle" = "Скрывать личные чаты";
-"privacy_footer" = "Скрывает все личные чаты на экране обзоре чатов. Чтобы активировать эту настройку, сначала настройте пароль.";
 
 "group_leave_sheet_title" = "Выйти из “%@”?";
 "group_leave_sheet_message" = "Если просто выйти, вы больше не сможете принимать участие в обсуждении, но у вас при этом будет доступ к истории чата для ее просмотра.";
@@ -1069,6 +1041,7 @@
 "delete_messages_confirm" = "Хотите удалить без возможности восстановления все сообщения старше %@?";
 "delete_messages_confirm_all" = "Хотите удалить без возможности восстановления все сообщения?";
 "delete_messages_explain" = "Будут удалены все типы сообщений: текстовые и голосовые сообщения, мультимедиа, файлы, опросы и т.д.";
+"delete_in_progress" = "Удаляем...";
 "one_year_title" = "1 год";
 "one_year" = "1 года";
 "six_months_title" = "6 месяцев";
@@ -1114,7 +1087,6 @@
 "settings_advanced" = "Расширенный";
 "settings_threema_work" = "Threema Work";
 "settings_feedback" = "Отзыв на бета-версию";
-"settings_dev_mode" = "Режим разработчика";
 "tos_cell_title" = "Условия обслуживания";
 
 "settings_advanced_flush_message_queue" = "Очистить очередь сообщений";
@@ -1123,11 +1095,32 @@
 "settings_advanced_reregister_push_notifications_footer_title" = "Если входящие сообщения не отображаются за пределами приложения как уведомления, вы можете перерегистрировать уведомления.";
 "settings_advanced_reregister_notifications_label" = "Перерегистрировать Push-уведомления";
 
-// Dev Mode
-"settings_devmode_quote_v2" = "Quote V2";
-"settings_devmode_new_chat_view" = "Новый вид чата";
-"settings_devmode_stylekit_debug_view" = "Вид отладки StyleKit";
-"settings_devmode_id_colors_debug_view" = "Вид отладки цветов ID";
+"settings_md_sync_alert_title" = "Не удалось синхронизировать";
+
+// Privacy
+"settings_privacy_contacts_header" = "Контакты";
+"settings_privacy_sync_contacts" = "Синхронизировать контакты";
+"settings_privacy_exclusion_list" = "Список исключений";
+"settings_privacy_exclusion_list_alert_title" = "Слишком короткий ID";
+"settings_privacy_exclusion_list_alert_message" = "Введите ID  длиной ровно 8 символов.";
+"settings_privacy_block_unknown" = "Блокировать неизвестных";
+"settings_privacy_block_unknown_footer_on"= "Только пользователи из вашего списка контактов могут отправить вам сообщение.";
+"settings_privacy_block_unknown_foooter_off" = "Отправить вам сообщение может кто угодно. Новые контакты будут добавлены автоматически после прихода первого сообщения от них.";
+
+"settings_privacy_chat_header" = "Чат";
+"settings_privacy_read_receipts" = "Подтверждения прочтения";
+"settings_privacy_typing_indicator" = "Индикаторы ввода текста";
+
+"settings_privacy_TIRR_reset_all" = "Сброс для всех контактов";
+"settings_privacy_TIRR_reset_footer" = "Сбросить все контакты до параметров по умолчанию.";
+"settings_privacy_TIRR_reset_alert_title" = "Сброс";
+"settings_privacy_TIRR_reset_alert_message" = "Сбросить все контакты до параметров по умолчанию. Это действие нельзя отменить.";
+"settings_privacy_TIRR_reset_alert_action" = "Сбросить все";
+
+"settings_privacy_choose_poi" = "Выбрать интересные места";
+"settings_privacy_hide_private_chats" = "Скрыть частные чаты";
+"settings_privacy_hide_private_chats_footer" = "Скрывает все частные чаты в обзоре чатов. Чтобы активировать эту настройку, необходимо задать пароль.";
+
 
 // Appearance
 "settings_appearance_theme_section" = "Тема интерфейса";
@@ -1338,12 +1331,6 @@
 "readReceipt_sheetMessage" = "Перезаписать настройку для этого контакта.";
 "typingIndicator_sheetMessage" = "Перезаписать настройку по умолчанию для этого контакта.";
 
-"reset_overrides" = "Сбросить для всех контактов";
-"resetButton_footer" = "Сбросить до настройки по умолчанию для всех контактов.";
-"reset_overrides_alert_title" = "Сброс";
-"reset_overrides_alert_message" = "Сбросить до настройки по умолчанию для всех контактов. Это действие нельзя отменить.";
-"reset_overrides_alert_action" = "Сбросить все";
-
 /* Multi Decvice */
 "multi_device_linked_devices_title" = "Предварительный просмотр на нескольких устройствах";
 "multi_device_linked_devices_desc" = "Активируйте или отключите предварительный просмотр на нескольких устройствах для этого устройства.";
@@ -1377,14 +1364,11 @@
 // POI
 "poi_unavailable" = "Недоступно";
 "poi_not_marked" = "–";
-"poi_location_disabled_action" = "Открыть настройки";
 "poi_search_POI" = "Города и улицы";
 "poi_search_prefix" = "Искать рядом с %@";
 "poi_away" = "%@";
 "poi_dropped_pin_info_alert_title" = "Поставлена шпилька";
 "poi_dropped_pin_info_alert_message" = "Чтобы поставить шпильку, зажмите место на карте.";
-"poi_accuracy_info_alert_title" = "Нет доступа к точным данным геолокации";
-"poi_accuracy_info_alert_message" = "Откройте настройки и предоставьте доступ к точным данным геолокации";
 "poi_current_location" = "Мое местоположение";
 "poi_marked_location" = "Поставлена шпилька";
 
@@ -1426,6 +1410,18 @@
 "detailView_messageID" = "Код сообщения";
 "detailView_group_acknowledged" = "Принято (%d)";
 "detailView_group_declined" = "Не принято (%d)";
+"detailView_group_file_size" = "Размер файла";
+"detailView_created_footer" = "Создано: %@";
+
+"message_display_status_none" = "Нет";
+"message_display_status_user_acknowledged" = "Согласен";
+"message_display_status_user_declined" = "Не согласен";
+"message_display_status_sending" = "Отправка";
+"message_display_status_sent" = "Отправлено";
+"message_display_status_delivered" = "Доставлено";
+"message_display_status_delivered_incoming" = "Получено";
+"message_display_status_read" = "Прочитано";
+"message_display_status_failed" = "Сбой";
 
 // In-app notifications
 "notification_copying_succeeded" = "Элемент скопирован";
@@ -1434,7 +1430,11 @@
 "notification_saving_succeeded" = "Элемент сохранен";
 "notification_saving_failed" = "Не удается сохранить";
 
+"notification_saving_to_photos_succeeded" = "Добавлено в фото";
+"notification_saving_to_photos_failed" = "Не удалось добавить в фото";
+
 "notification_sending_failed" = "Не удается отправить";
+"notification_sending_failed_subtitle_size" = "Слишком большой элемент";
 
 "notification_deleted_messages_count" = "%d сообщен. удалены";
 
@@ -1443,6 +1443,7 @@
 "notification_call_failed_connected" = "Соединение утеряно";
 "notification_call_failed_not_connected" = "Не удалось установить соединение";
 "notification_call_creation_failed" = "Не удалось создать звонок";
+"notification_call_creation_disabled" = "Звонки отключены";
 
 "notification_sending_profile_picture_succeeded" = "Аватар отправлен";
 "notification_sending_profile_picture_failed" = "Не удалось отправить";
@@ -1451,6 +1452,9 @@
 
 "notification_group_sync_succeeded" = "Группа синхронизирована";
 "notification_group_sync_failed" = "Не удалось синхронизировать группу";
+
+"notification_settings_sync_pending" = "Синхронизация...";
+"notification_settings_sync_succeeded" = "Настройки синхронизированы";
 
 // Forward security status messages
 "forward_security_message_without" = "Получено сообщение, не использующее протокол Perfect Forward Secrecy. Проверьте, что отправитель намеренно отключил Perfect Forward Secrecy.";
@@ -1471,7 +1475,6 @@
 // Chat bar
 "accessibility_chatbar_label" = "Поле ввода сообщений чата.";
 "accessibility_chatbar_hint" = "Написать сообщение";
-"accessibility_chatbar_value" = "Текущий текст: %@";
 "accessibility_chatbar_quote_label" = "Выбранное цитируемое сообщение: %@.";
 "accessibility_chatbar_close_quote_button_label" = "Завершение цитаты.";
 "accessibility_chatbar_close_quote_button_hint" = "Завершение цитирования выделенного сообщения.";
@@ -1521,6 +1524,11 @@
 "accessibility_status_delivered_plus_time" = "Доставлено, %@";
 "accessibility_status_read_plus_time" = "Прочитано, %@";
 "accessibility_status_failed_plus_time" = "Сбой, %@";
+
+// UIAccessibilityCustomActions
+"accessibility_action_open_link" = "Открыть %@";
+"accessibility_action_call_phone" = "Позвонить %@";
+"accessibility_action_open_mention" = "Показать контакт %@";
 
 // Multi-Device Wizard
 "md_wizard_header" = "Предпросмотр на нескольких устройствах";
@@ -1578,3 +1586,18 @@
 
 // SystemMessage
 "systemMessage_unsupported_type" = "Неподдерживаемый тип системного сообщения";
+
+// Alerts
+"alert_no_access_title_camera" = "Нет доступа к камере";
+"alert_no_access_title_contacts" = "Нет доступа к контактам";
+"alert_no_access_title_location" = "Нет доступа к геолокации";
+"alert_no_access_title_location_precise" = "Нет доступа к точным данным геолокации";
+"alert_no_access_title_microphone" = "Нет доступа к микрофону";
+
+"alert_no_access_message_camera" = "Откройте настройки iOS и предоставьте доступ к камере.";
+"alert_no_access_message_contacts" = "Откройте настройки iOS и предоставьте доступ к контактам.";
+"alert_no_access_message_location" = "Откройте настройки iOS и предоставьте доступ к данным геолокации.";
+"alert_no_access_message_location_precise" = "Откройте настройки iOS и предоставьте доступ к точным данным геолокации.";
+"alert_no_access_message_microphone" = "Откройте настройки iOS и предоставьте доступ к микрофону.";
+
+"alert_no_access_open_settings" = "Открыть настройки";

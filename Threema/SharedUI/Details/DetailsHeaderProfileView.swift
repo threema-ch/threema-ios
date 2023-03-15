@@ -349,6 +349,11 @@ final class DetailsHeaderProfileView: UIStackView {
     
     /// Show Threema type info if it was never shown before
     func autoShowThreemaTypeInfo() {
+        
+        guard !ProcessInfoHelper.isRunningForScreenshots else {
+            return
+        }
+        
         guard let infoShown = UserSettings.shared()?.workInfoShown,
               !infoShown,
               !contentConfiguration.hideThreemaTypeIcon else {
@@ -365,6 +370,11 @@ final class DetailsHeaderProfileView: UIStackView {
     ///
     /// - Parameter autoDismiss: Automatically dismiss overlay after some seconds
     @objc func showThreemaTypeInfo(autoDismiss: Bool = false) {
+        
+        guard !ProcessInfoHelper.isRunningForScreenshots else {
+            return
+        }
+        
         guard !threemaTypeIcon.isHidden else {
             return
         }

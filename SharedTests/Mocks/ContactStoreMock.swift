@@ -23,12 +23,12 @@ import Foundation
 
 class ContactStoreMock: NSObject, ContactStoreProtocol {
     private let callOnCompletion: Bool
-    private var contact: Contact?
+    private var contact: ContactEntity?
     private let errorHandler: NSError?
 
     var deleteContactCalls = [String]()
 
-    required init(callOnCompletion: Bool, _ contact: Contact? = nil, errorHandler: NSError? = nil) {
+    required init(callOnCompletion: Bool, _ contact: ContactEntity? = nil, errorHandler: NSError? = nil) {
         self.callOnCompletion = callOnCompletion
         self.contact = contact
         self.errorHandler = errorHandler
@@ -38,7 +38,7 @@ class ContactStoreMock: NSObject, ContactStoreProtocol {
         self.init(callOnCompletion: false)
     }
     
-    func contact(for identity: String?) -> Contact? {
+    func contact(for identity: String?) -> ContactEntity? {
         contact?.identity == identity ? contact : nil
     }
     
@@ -101,7 +101,7 @@ class ContactStoreMock: NSObject, ContactStoreProtocol {
         // no-op
     }
     
-    func reflect(_ contact: Contact?) {
+    func reflect(_ contact: ContactEntity?) {
         // no-op
     }
     
@@ -133,7 +133,7 @@ class ContactStoreMock: NSObject, ContactStoreProtocol {
     func addContact(
         with identity: String,
         verificationLevel: Int32,
-        onCompletion: @escaping (Contact?, Bool) -> Void,
+        onCompletion: @escaping (ContactEntity?, Bool) -> Void,
         onError: ((Error) -> Void)? = nil
     ) {
         // no-op

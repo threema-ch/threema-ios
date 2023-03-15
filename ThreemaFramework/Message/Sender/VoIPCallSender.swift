@@ -54,7 +54,8 @@ public class VoIPCallSender {
             msg.jsonData = try answer.encodeAsJson()
             msg.toIdentity = answer.contactIdentity
             msg.fromIdentity = myIdentityStore.identity
-
+            msg.isUserInteraction = answer.isUserInteraction
+                        
             DDLogNotice(
                 "VoipCallService: [cid=\(answer.callID.callID)]: Call answer enqueued to \(answer.contactIdentity ?? "?")"
             )
@@ -121,7 +122,22 @@ public class VoIPCallSender {
                     dispatchGroup = nil
                 })
                 
-                dispatchGroup?.wait()
+                // We only wait when there is a connection, or if it is being built up. Otherwise the UI freezes and one cannot escape the situation.
+                let state = ServerConnector.shared().connectionState
+                let wait: Int
+                
+                if state == .connecting || state == .connected || state == .loggedIn {
+                    wait = 5
+                }
+                else {
+                    wait = 10
+                }
+                
+                let result = dispatchGroup?.wait(timeout: .now() + .seconds(wait))
+                
+                if let result, result == .timedOut {
+                    DDLogWarn("Sending hangup message timed out")
+                }
             }
             else {
                 MessageSender.send(msg, isPersistent: false, onCompletion: nil)

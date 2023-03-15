@@ -28,7 +28,7 @@ extension TextMessage: QuoteMessageProvider {
             return nil
         }
         
-        return EntityManager().entityFetcher.message(with: quotedMessageID) as? QuoteMessage
+        return EntityManager().entityFetcher.message(with: quotedMessageID, conversation: conversation) as? QuoteMessage
     }
 }
 

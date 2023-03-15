@@ -57,12 +57,12 @@ import SwiftUI
     
     /// Presents an unobtrusive notification in pill-shape
     /// - Parameters:
-    ///   - text: Text to be displayed in notification, If nil, a default value is used.
-    ///   - style: Style to use in notification.
+    ///   - type:  Type to use for notification
+    ///   - subtitle: Optional subtitle
     ///   - completion: Called after notification is displayed.
     public func present(
-        text: String? = nil,
         type: NotificationPresenterType,
+        subtitle: String? = nil,
         completion: NotificationPresenterCompletion? = nil
     ) {
         
@@ -74,6 +74,37 @@ import SwiftUI
                     
                     completion?(presenter)
                 }
+            
+            NotificationPresenterWrapper.presenter.updateSubtitle(subtitle)
+            
+            if let imageView = type.notificationStyle.notificationImageView {
+                NotificationPresenterWrapper.presenter.displayLeftView(imageView)
+            }
+            
+            if let hapticType = type.notificationStyle.hapticType {
+                NotificationPresenterWrapper.hapticGenerator.prepare()
+                NotificationPresenterWrapper.hapticGenerator.notificationOccurred(hapticType)
+            }
+        }
+    }
+    
+    /// Presents an unobtrusive notification in pill-shape indefinitely
+    /// - Parameters:
+    ///   - text: Text to be displayed in notification, If nil, a default value is used.
+    ///   - style: Style to use in notification.
+    ///   - completion: Called after notification is displayed.
+    public func presentIndefinitely(
+        text: String? = nil,
+        type: NotificationPresenterType,
+        completion: NotificationPresenterCompletion? = nil
+    ) {
+        
+        Task { @MainActor in
+            NotificationPresenterWrapper.presenter
+                .present(text: type.notificationText, customStyle: type.notificationStyle.id) { presenter in
+                    
+                    completion?(presenter)
+                }
             if let imageView = type.notificationStyle.notificationImageView {
                 NotificationPresenterWrapper.presenter.displayLeftView(imageView)
             }
@@ -82,6 +113,10 @@ import SwiftUI
                 NotificationPresenterWrapper.hapticGenerator.notificationOccurred(hapticType)
             }
         }
+    }
+
+    @objc public func dismissAllPresentedNotifications() {
+        NotificationPresenterWrapper.presenter.dismiss()
     }
     
     @available(*, deprecated, message: "Do not use from Obj-C anymore")
@@ -101,7 +136,8 @@ import SwiftUI
             .addStyle(styleName: NotificationPresenterStyle.none.id) { style in
                 applyDefaultBackgroundParameters(to: &style.backgroundStyle)
                 applyDefaultTextParameters(to: &style.textStyle)
-                
+                applyDefaultImageParameters(to: &style.leftViewStyle)
+
                 return style
             }
         
@@ -110,7 +146,8 @@ import SwiftUI
             .addStyle(styleName: NotificationPresenterStyle.success.id) { style in
                 applyDefaultBackgroundParameters(to: &style.backgroundStyle)
                 applyDefaultTextParameters(to: &style.textStyle)
-                
+                applyDefaultImageParameters(to: &style.leftViewStyle)
+
                 return style
             }
         
@@ -119,7 +156,8 @@ import SwiftUI
             .addStyle(styleName: NotificationPresenterStyle.error.id) { style in
                 applyDefaultBackgroundParameters(to: &style.backgroundStyle)
                 applyDefaultTextParameters(to: &style.textStyle)
-                
+                applyDefaultImageParameters(to: &style.leftViewStyle)
+
                 return style
             }
     }
@@ -135,5 +173,9 @@ import SwiftUI
     private func applyDefaultTextParameters(to style: inout StatusBarNotificationTextStyle) {
         style.textColor = Colors.textLight
         style.font = Configuration.defaultFont
+    }
+    
+    private func applyDefaultImageParameters(to style: inout StatusBarNotificationLeftViewStyle) {
+        style.alignment = .left
     }
 }

@@ -454,8 +454,13 @@ class TaskExecution: NSObject {
     func getConversation(_ task: TaskDefinitionProtocol) -> Conversation? {
         var conversation: Conversation?
         if let task = task as? TaskDefinitionSendBaseMessage,
-           let message = frameworkInjector.backgroundEntityManager.entityFetcher.message(with: task.messageID) {
-            conversation = message.conversation
+           let groupCreatorIdentity = task.groupCreatorIdentity ?? frameworkInjector.myIdentityStore.identity,
+           let internalConversation = task.isGroupMessage ? frameworkInjector.backgroundEntityManager.entityFetcher
+           .conversation(
+               for: task.groupID!,
+               creator: groupCreatorIdentity
+           ) : frameworkInjector.backgroundEntityManager.entityFetcher.ownMessage(with: task.messageID)?.conversation {
+            conversation = internalConversation
         }
         else if let task = task as? TaskDefinitionSendBallotVoteMessage,
                 let ballot = frameworkInjector.backgroundEntityManager.entityFetcher
@@ -478,8 +483,17 @@ class TaskExecution: NSObject {
         _ fromIdentity: String,
         _ toIdentity: String
     ) -> AbstractMessage? {
+        
         if let task = task as? TaskDefinitionSendBaseMessage,
-           let message = frameworkInjector.backgroundEntityManager.entityFetcher.message(with: task.messageID) {
+           let conversation = task.isGroupMessage ? frameworkInjector.backgroundEntityManager.entityFetcher
+           .conversation(
+               for: task.groupID!,
+               creator: task.groupCreatorIdentity!
+           ) : frameworkInjector.backgroundEntityManager.entityFetcher.ownMessage(with: task.messageID)?.conversation,
+           let message = frameworkInjector.backgroundEntityManager.entityFetcher.message(
+               with: task.messageID,
+               conversation: conversation
+           ) {
 
             if let message = message as? TextMessage {
                 let msg: AbstractMessage = task.isGroupMessage ? GroupTextMessage() : BoxTextMessage()

@@ -181,7 +181,7 @@
     __block NSMutableSet<NSString *> *hiddenMembers = [NSMutableSet new];
     [entityManager performSyncBlockAndSafe:^{
         if (deleteHiddenContacts) {
-            for (Contact *member in _conversation.members) {
+            for (ContactEntity *member in _conversation.members) {
                 if (member.isContactHidden) {
                     [hiddenMembers addObject:member.identity];
                 }

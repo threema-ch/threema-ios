@@ -34,7 +34,8 @@ class EntityObserverTests: XCTestCase {
 
         myIdentityStoreMock = MyIdentityStoreMock()
 
-        (_, mainCnx, backgroundCnx) = DatabasePersistentContext.devNullContext()
+        (_, mainCnx, backgroundCnx) = DatabasePersistentContext
+            .devNullContext(withChildContextForBackgroundProcess: true)
     }
 
     func testWithoutBusinessAbstraction() throws {
@@ -143,7 +144,7 @@ class EntityObserverTests: XCTestCase {
         let conversation: Conversation = entityManager.entityFetcher.conversation(
             for: groupID,
             creator: groupCreatorIdentity
-        )
+        )!
 
         measureMetrics([.wallClockTime], automaticallyStartMeasuring: false) {
             var expects = [XCTestExpectation]()
@@ -212,7 +213,7 @@ class EntityObserverTests: XCTestCase {
         let conversation: Conversation = entityManager.entityFetcher.conversation(
             for: groupID,
             creator: groupCreatorIdentity
-        )
+        )!
 
         var isGroupDeleted = false
         var deletedManagedObject: NSManagedObject?
@@ -264,12 +265,13 @@ class EntityObserverTests: XCTestCase {
         let conversation: Conversation = entityManager.entityFetcher.conversation(
             for: groupID,
             creator: groupCreatorIdentity
-        )
+        )!
 
         var isGroupDeleted = false
         var deletedManagedObject: NSManagedObject?
 
         let expect = expectation(description: "conversation delete")
+        var isExpectFullfilled = false
 
         let subscriptionToken = EntityObserver.shared.subscribe(
             managedObject: conversation,
@@ -278,7 +280,11 @@ class EntityObserverTests: XCTestCase {
             isGroupDeleted = true
             deletedManagedObject = managedObject
 
-            expect.fulfill()
+            // Full fill only once (closure will be called twice on child and main context)
+            if !isExpectFullfilled {
+                isExpectFullfilled = true
+                expect.fulfill()
+            }
         }
 
         entityManager.performSyncBlockAndSafe {
@@ -316,7 +322,7 @@ class EntityObserverTests: XCTestCase {
         let conversation: Conversation = entityManager.entityFetcher.conversation(
             for: groupID,
             creator: groupCreatorIdentity
-        )
+        )!
 
         var groupNameChanged: String? = conversation.groupName
 
@@ -342,7 +348,7 @@ class EntityObserverTests: XCTestCase {
                 let conversation: Conversation = backgroundEntityManager.entityFetcher.conversation(
                     for: groupID,
                     creator: groupCreatorIdentity
-                )
+                )!
                 conversation.groupName = "GRP2"
             }
         }
@@ -378,7 +384,7 @@ class EntityObserverTests: XCTestCase {
         let conversation: Conversation = entityManager.entityFetcher.conversation(
             for: groupID,
             creator: groupCreatorIdentity
-        )
+        )!
 
         var groupNameChanged: String? = conversation.groupName
 
@@ -390,14 +396,17 @@ class EntityObserverTests: XCTestCase {
         ) { managedObject, _ in
             groupNameChanged = (managedObject as? Conversation)?.groupName
 
-            expect.fulfill()
+            // Fullfill only on main context
+            if managedObject?.managedObjectContext?.parent == nil {
+                expect.fulfill()
+            }
         }
 
         entityManager.performSyncBlockAndSafe {
             let conversation: Conversation = entityManager.entityFetcher.conversation(
                 for: groupID,
                 creator: groupCreatorIdentity
-            )
+            )!
             conversation.groupName = "GRP2"
         }
 

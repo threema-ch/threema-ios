@@ -630,7 +630,7 @@ import UIKit
         //// Color Declarations
         let color2 = Colors.gray as UIColor
         let color3 = UIColor.white
-        let color4 = Colors.primary as UIColor
+        let color4 = .primary as UIColor
         
         //// Subframes
         let group = CGRect(x: frame.minX + 1, y: frame.minY + 1, width: frame.width - 2, height: frame.height - 2)
@@ -1422,7 +1422,7 @@ import UIKit
         //// Color Declarations
         let chatBarBackground: UIColor = Colors.backgroundChatBar
         let chatBarBorder: UIColor = Colors.hairLine
-        let main: UIColor = Colors.primary
+        let main: UIColor = .primary
 
         //// Subframes
         let fullImage = CGRect(
@@ -1571,7 +1571,7 @@ import UIKit
     /// - Parameter frame: Frame of the image
     @objc public dynamic class func drawCheckedBackground(frame: CGRect = CGRect(x: 0, y: 0, width: 62, height: 62)) {
         //// Color Declarations
-        let color = Colors.primary
+        let color: UIColor = .primary
 
         //// Bezier Drawing
         let bezierPath = UIBezierPath()

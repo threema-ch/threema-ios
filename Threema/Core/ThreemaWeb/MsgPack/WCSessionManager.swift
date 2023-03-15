@@ -549,13 +549,13 @@ extension WCSessionManager {
         }
     }
     
-    private func responseUpdateContact(contact: Contact, objectMode: WebReceiverUpdate.ObjectMode) {
+    private func responseUpdateContact(contact: ContactEntity, objectMode: WebReceiverUpdate.ObjectMode) {
         let receiverUpdate = WebReceiverUpdate(updatedContact: contact, objectMode: objectMode)
         DDLogVerbose("[Threema Web] MessagePack -> Send update/receiver")
         sendMessagePackToAllActiveSessions(messagePack: receiverUpdate.messagePack(), blackListed: false)
     }
     
-    private func responseUpdateAvatar(contact: Contact?, group: Group?) {
+    private func responseUpdateAvatar(contact: ContactEntity?, group: Group?) {
         if contact != nil {
             let avatarUpdate = WebAvatarUpdate(contact: contact!)
             DDLogVerbose("[Threema Web] MessagePack -> Send update/avatar")
@@ -655,7 +655,7 @@ extension WCSessionManager {
     
     private func responseUpdateDeletedConversation(
         conversation: Conversation,
-        contact: Contact?,
+        contact: ContactEntity?,
         objectMode: WebConversationUpdate.ObjectMode
     ) {
         let conversationResponse = WebConversationUpdate(
@@ -713,8 +713,8 @@ extension WCSessionManager {
                 DDLogNotice("managedObjectContextDidChange on wrong context")
                 for managedObject in managedObjectContext.insertedObjects {
                     switch managedObject {
-                    case is Contact:
-                        let contact = managedObject as! Contact
+                    case is ContactEntity:
+                        let contact = managedObject as! ContactEntity
                         DDLogNotice("New contact added on wrong context \(contact.identity)")
                     case is BaseMessage:
                         let baseMessage = managedObject as! BaseMessage
@@ -737,8 +737,8 @@ extension WCSessionManager {
                 }
                 for managedObject in managedObjectContext.updatedObjects {
                     switch managedObject {
-                    case is Contact:
-                        let contact = managedObject as! Contact
+                    case is ContactEntity:
+                        let contact = managedObject as! ContactEntity
                         DDLogNotice("Updated contact on wrong context \(contact.identity)")
                     case is BaseMessage:
                         let baseMessage = managedObject as! BaseMessage
@@ -766,9 +766,18 @@ extension WCSessionManager {
     private func handleUpdatedObjects(updatedObjects: Set<NSManagedObject>, _ dirtyObjects: Bool = false) {
         for managedObject in updatedObjects {
             switch managedObject {
-            case is Contact:
-                updateContact(managedObject as! Contact, dirtyObjects: dirtyObjects)
+            case is ContactEntity:
+                updateContact(managedObject as! ContactEntity, dirtyObjects: dirtyObjects)
             case is BaseMessage:
+                // This is a workaround for an issue that was introduced with IOS-3233 / IOS-3212
+                // With the new changes we do not insert new file messages immediately but wait until they are properly decoded (we check if the mimeType has changed/been set) and only then insert them into the web client.
+                // These changes caused a crash when using web client because we force unwrap `fileName`, `fileSize` and `mimeType` when creating a `WebFile` struct.
+                // As we're sunsetting the web client we just avoid the crash (the message will be updated later anyways so the user impact is low) instead of fixing it properly.
+                if let fileMessageEntity = managedObject as? FileMessageEntity,
+                   fileMessageEntity.changedValues().keys.contains("mimeType") {
+                    insertBaseMessage(managedObject as! BaseMessage)
+                    continue
+                }
                 updateBaseMessage(managedObject as! BaseMessage, dirtyObjects: dirtyObjects)
             case is Conversation:
                 updateConversation(managedObject as! Conversation, dirtyObjects: dirtyObjects)
@@ -781,9 +790,16 @@ extension WCSessionManager {
     private func handleInsertedObjects(insertedObjects: Set<NSManagedObject>) {
         for managedObject in insertedObjects {
             switch managedObject {
-            case is Contact:
-                insertContact(managedObject as! Contact)
+            case is ContactEntity:
+                insertContact(managedObject as! ContactEntity)
             case is BaseMessage:
+                if let fileMessageEntity = managedObject as? FileMessageEntity {
+                    guard fileMessageEntity.fileName != nil, fileMessageEntity.fileSize != nil,
+                          fileMessageEntity.mimeType != nil else {
+                        continue
+                    }
+                }
+                
                 insertBaseMessage(managedObject as! BaseMessage)
             case is Conversation:
                 insertConversation(managedObject as! Conversation)
@@ -796,8 +812,8 @@ extension WCSessionManager {
     private func handleDeletedObjects(deletedObjects: Set<NSManagedObject>) {
         for managedObject in deletedObjects {
             switch managedObject {
-            case is Contact:
-                deleteContact(managedObject as! Contact)
+            case is ContactEntity:
+                deleteContact(managedObject as! ContactEntity)
             case is BaseMessage:
                 deleteBaseMessage(managedObject as! BaseMessage)
             case is Conversation:
@@ -808,7 +824,7 @@ extension WCSessionManager {
         }
     }
         
-    private func updateContact(_ contact: Contact, dirtyObjects: Bool = false) {
+    private func updateContact(_ contact: ContactEntity, dirtyObjects: Bool = false) {
         let changedValues = contact.changedValues()
         
         let backgroundKey = kAppAckBackgroundTask + SwiftUtils.pseudoRandomString(length: 10)
@@ -817,7 +833,7 @@ extension WCSessionManager {
             timeout: Int(kAppCoreDataProcessMessageBackgroundTaskTime)
         ) {
             guard let currentContact = self.entityManager.entityFetcher
-                .getManagedObject(by: contact.objectID) as? Contact else {
+                .getManagedObject(by: contact.objectID) as? ContactEntity else {
                 BackgroundTaskManager.shared.cancelBackgroundTask(key: backgroundKey)
                 return
             }
@@ -971,14 +987,14 @@ extension WCSessionManager {
         }
     }
     
-    private func insertContact(_ contact: Contact) {
+    private func insertContact(_ contact: ContactEntity) {
         let backgroundKey = kAppAckBackgroundTask + SwiftUtils.pseudoRandomString(length: 10)
         BackgroundTaskManager.shared.newBackgroundTask(
             key: backgroundKey,
             timeout: Int(kAppCoreDataProcessMessageBackgroundTaskTime)
         ) {
             guard let currentContact = self.entityManager.entityFetcher
-                .getManagedObject(by: contact.objectID) as? Contact else {
+                .getManagedObject(by: contact.objectID) as? ContactEntity else {
                 BackgroundTaskManager.shared.cancelBackgroundTask(key: backgroundKey)
                 return
             }
@@ -1064,7 +1080,7 @@ extension WCSessionManager {
         }
     }
     
-    private func deleteContact(_ contact: Contact) {
+    private func deleteContact(_ contact: ContactEntity) {
         let objectMode: WebReceiverUpdate.ObjectMode = .removed
         responseUpdateContact(contact: contact, objectMode: objectMode)
     }
@@ -1119,7 +1135,7 @@ extension WCSessionManager {
     private func deleteConversation(_ conversation: Conversation) {
         let changedValuesForCurrentEvent = conversation.changedValuesForCurrentEvent()
         let objectMode: WebConversationUpdate.ObjectMode = .removed
-        let contact: Contact? = changedValuesForCurrentEvent["contact"] as? Contact
+        let contact: ContactEntity? = changedValuesForCurrentEvent["contact"] as? ContactEntity
         responseUpdateDeletedConversation(conversation: conversation, contact: contact, objectMode: objectMode)
     }
     

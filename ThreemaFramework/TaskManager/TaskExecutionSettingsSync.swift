@@ -61,14 +61,7 @@ class TaskExecutionSettingsSync: TaskExecutionTransaction {
             return Promise<Void> { $0.reject(TaskExecutionError.wrongTaskDefinitionType) }
         }
         
-        let settingsStore = SettingsStore(
-            serverConnector: frameworkInjector.serverConnector,
-            myIdentityStore: frameworkInjector.myIdentityStore,
-            contactStore: frameworkInjector.contactStore,
-            userSettings: frameworkInjector.userSettings,
-            taskManager: nil
-        )
-        settingsStore.save(syncSettings: task.syncSettings)
+        frameworkInjector.settingsStoreInternal.updateSettingsStore(with: task.syncSettings)
         
         return Promise()
     }

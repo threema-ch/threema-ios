@@ -676,7 +676,7 @@ class TaskDefinitionTests: XCTestCase {
         let expectedFromIdentity = myIdentityStoreMock.identity
         let expectedToIdentity = "ECHOECHO"
         let expectedDate = Date()
-        var contact: Contact!
+        var contact: ContactEntity!
         dbPreparer.save {
             contact = dbPreparer.createContact(
                 publicKey: BytesUtility.generateRandomBytes(length: 32)!,

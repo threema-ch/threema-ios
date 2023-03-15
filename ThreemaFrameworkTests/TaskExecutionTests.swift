@@ -75,6 +75,7 @@ class TaskExecutionTests: XCTestCase {
             multiDeviceManager: MultiDeviceManagerMock(),
             myIdentityStore: myIdentityStoreMock,
             userSettings: userSettingsMock,
+            settingsStore: SettingsStoreMock(),
             serverConnector: serverConnectorMock,
             mediatorMessageProtocol: MediatorMessageProtocolMock(),
             messageProcessor: MessageProcessorMock()

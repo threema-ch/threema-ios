@@ -46,7 +46,7 @@ class BallotMessageCoderTests: XCTestCase {
         // Arrange:
         let entityManager = EntityManager(databaseContext: dBContext)
         let ballotDecoder = BallotMessageDecoder(entityManager)
-        let conversation = entityManager.entityFetcher.conversation(for: Data([1]))
+        let conversation = try XCTUnwrap(entityManager.entityFetcher.conversation(for: Data([1]), creator: "ECHOECHO"))
         
         // Create Ballot
         let ballot = createLocalBallot()
@@ -57,7 +57,11 @@ class BallotMessageCoderTests: XCTestCase {
         // Encode:
         let boxBallotCreateMessage = BallotMessageEncoder.encodeCreateMessage(for: ballot)
         // Decode:
-        let ballotMessage = ballotDecoder?.decodeCreateBallot(fromBox: boxBallotCreateMessage, for: conversation)
+        let ballotMessage = ballotDecoder?.decodeCreateBallot(
+            fromBox: boxBallotCreateMessage,
+            sender: nil,
+            conversation: conversation
+        )
         let decodedBallot = ballotMessage?.ballot
         
         // Assert:
@@ -70,7 +74,7 @@ class BallotMessageCoderTests: XCTestCase {
         // Arrange:
         let entityManager = EntityManager(databaseContext: dBContext)
         let ballotDecoder = BallotMessageDecoder(entityManager)
-        let conversation = entityManager.entityFetcher.conversation(for: Data([1]))
+        let conversation = try XCTUnwrap(entityManager.entityFetcher.conversation(for: Data([1]), creator: "ECHOECHO"))
         
         // Create Ballot
         let ballot = createLocalBallot()
@@ -80,7 +84,11 @@ class BallotMessageCoderTests: XCTestCase {
         // Encode:
         let boxBallotCreateMessage = BallotMessageEncoder.encodeCreateMessage(for: ballot)
         // Decode:
-        let ballotMessage = ballotDecoder?.decodeCreateBallot(fromBox: boxBallotCreateMessage, for: conversation)
+        let ballotMessage = ballotDecoder?.decodeCreateBallot(
+            fromBox: boxBallotCreateMessage,
+            sender: nil,
+            conversation: conversation
+        )
         let decodedBallot = ballotMessage?.ballot
         
         // Assert:
@@ -93,7 +101,7 @@ class BallotMessageCoderTests: XCTestCase {
         // Arrange:
         let entityManager = EntityManager(databaseContext: dBContext)
         let ballotDecoder = BallotMessageDecoder(entityManager)
-        let conversation = entityManager.entityFetcher.conversation(for: Data([1]))
+        let conversation = try XCTUnwrap(entityManager.entityFetcher.conversation(for: Data([1]), creator: "ECHOECHO"))
         
         // Create Ballot
         let ballot = createLocalBallot()
@@ -113,7 +121,11 @@ class BallotMessageCoderTests: XCTestCase {
         entityManager.entityDestroyer.deleteObject(object: ballot)
         
         // Decode:
-        let ballotMessage = ballotDecoder?.decodeCreateBallot(fromBox: boxBallotCreateMessage, for: conversation)
+        let ballotMessage = ballotDecoder?.decodeCreateBallot(
+            fromBox: boxBallotCreateMessage,
+            sender: nil,
+            conversation: conversation
+        )
         let decodedBallot = ballotMessage?.ballot
         
         // Assert:
@@ -133,7 +145,7 @@ class BallotMessageCoderTests: XCTestCase {
         // Arrange:
         let entityManager = EntityManager(databaseContext: dBContext)
         let ballotDecoder = BallotMessageDecoder(entityManager)
-        let conversation = entityManager.entityFetcher.conversation(for: Data([1]))
+        let conversation = try XCTUnwrap(entityManager.entityFetcher.conversation(for: Data([1]), creator: "ECHOECHO"))
         let boxBallotCreateMessage = BoxBallotCreateMessage()
         let jsonString = preparer.loadContentAsString(
             "BallotCoderTests_testDecodeMessageCreateBallot",
@@ -143,7 +155,11 @@ class BallotMessageCoderTests: XCTestCase {
         boxBallotCreateMessage.jsonData = jsonString?.data(using: String.Encoding.utf8)
         
         // Act:
-        let ballotMessage = ballotDecoder?.decodeCreateBallot(fromBox: boxBallotCreateMessage, for: conversation)
+        let ballotMessage = ballotDecoder?.decodeCreateBallot(
+            fromBox: boxBallotCreateMessage,
+            sender: nil,
+            conversation: conversation
+        )
         let ballot = ballotMessage?.ballot
         guard let choices = ballot?.choicesSortedByOrder() as? [BallotChoice] else {
             XCTFail("Could not decode choices")
@@ -212,7 +228,7 @@ class BallotMessageCoderTests: XCTestCase {
         // Arrange:
         let entityManager = EntityManager(databaseContext: dBContext)
         let ballotDecoder = BallotMessageDecoder(entityManager)
-        let conversation = entityManager.entityFetcher.conversation(for: Data([1]))
+        let conversation = try XCTUnwrap(entityManager.entityFetcher.conversation(for: Data([1]), creator: "ECHOECHO"))
         let boxBallotCreateMessage = BoxBallotCreateMessage()
         let jsonString = preparer.loadContentAsString(
             "BallotCoderTests_testDecodeMessageCreateNoResult",
@@ -222,7 +238,11 @@ class BallotMessageCoderTests: XCTestCase {
         boxBallotCreateMessage.jsonData = jsonString?.data(using: String.Encoding.utf8)
         
         // Act:
-        let ballotMessage = ballotDecoder?.decodeCreateBallot(fromBox: boxBallotCreateMessage, for: conversation)
+        let ballotMessage = ballotDecoder?.decodeCreateBallot(
+            fromBox: boxBallotCreateMessage,
+            sender: nil,
+            conversation: conversation
+        )
         let ballot = ballotMessage?.ballot
         guard let choices = ballot?.choicesSortedByOrder() as? [BallotChoice] else {
             XCTFail("Could not decode choices")
@@ -247,7 +267,7 @@ class BallotMessageCoderTests: XCTestCase {
         // Arrange:
         let entityManager = EntityManager(databaseContext: dBContext)
         let ballotDecoder = BallotMessageDecoder(entityManager)
-        let conversation = entityManager.entityFetcher.conversation(for: Data([1]))
+        let conversation = try XCTUnwrap(entityManager.entityFetcher.conversation(for: Data([1]), creator: "ECHOECHO"))
         let boxBallotCreateMessage = BoxBallotCreateMessage()
         let jsonString = preparer.loadContentAsString(
             "BallotCoderTests_testDecodeMessageSummaryModeSetsTotalVotesOfChoices",
@@ -257,7 +277,11 @@ class BallotMessageCoderTests: XCTestCase {
         boxBallotCreateMessage.jsonData = jsonString?.data(using: String.Encoding.utf8)
         
         // Act:
-        let ballotMessage = ballotDecoder?.decodeCreateBallot(fromBox: boxBallotCreateMessage, for: conversation)
+        let ballotMessage = ballotDecoder?.decodeCreateBallot(
+            fromBox: boxBallotCreateMessage,
+            sender: nil,
+            conversation: conversation
+        )
         let ballot = ballotMessage?.ballot
         guard let choices = ballot?.choicesSortedByOrder() as? [BallotChoice] else {
             XCTFail("Could not decode choices")

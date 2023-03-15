@@ -22,7 +22,7 @@
 #import "Old_BlobUploadDelegate.h"
 #import "AbstractMessage.h"
 
-@class Conversation, Contact;
+@class Conversation, ContactEntity;
 
 @interface ContactPhotoSender : NSObject <Old_BlobUploadDelegate>
 
@@ -41,7 +41,7 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (void)sendProfilePicture:(AbstractMessage *)message NS_SWIFT_NAME(sendProfilePicture(message:));
 
-- (void)startWithImageToMember:(Contact*)toMember onCompletion:(void (^ _Nullable)(void))onCompletion onError:(void (^ _Nullable) ( NSError * _Nullable ))onError;
+- (void)startWithImageToMember:(ContactEntity*)toMember onCompletion:(void (^ _Nullable)(void))onCompletion onError:(void (^ _Nullable) ( NSError * _Nullable ))onError;
 
 NS_ASSUME_NONNULL_END
 

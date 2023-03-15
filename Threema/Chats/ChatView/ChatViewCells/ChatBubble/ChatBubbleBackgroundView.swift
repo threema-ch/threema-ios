@@ -18,6 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import CocoaLumberjackSwift
 import UIKit
 
 /// View that draws a chat bubble in its bounds
@@ -54,19 +55,59 @@ final class ChatBubbleBackgroundView: UIView {
     
     private(set) var backgroundPath = UIBezierPath() {
         didSet {
+            guard animate else {
+                backgroundLayer.path = backgroundPath.cgPath
+                return
+            }
+                
+            CATransaction.begin()
+                
+            let morph = CABasicAnimation(keyPath: "path")
+                
+            // If we are already animating, which will happen for example when adding the date and state view (where we first get taller and then wider)
+            // we already have an animation in progress when starting the next one.
+            // This gets the current position of our bubble and starts the next animation from it
+            if let presentationLayer = backgroundLayer.presentation(),
+               let currentPresentationLayerValue = presentationLayer.path {
+                DDLogVerbose(
+                    "Starting from existing animation with bounding box \(currentPresentationLayerValue.boundingBox)"
+                )
+                morph.fromValue = currentPresentationLayerValue
+            }
+            else {
+                DDLogVerbose("Starting from current value \(String(describing: backgroundLayer.path?.boundingBox))")
+                morph.fromValue = backgroundLayer.path
+            }
+                
+            morph.toValue = backgroundPath.cgPath
+                
+            morph.duration = ChatViewConfiguration.ChatBubble.bubbleSizeChangeAnimationDurationInSeconds
+            morph.timingFunction = CAMediaTimingFunction(name: CAMediaTimingFunctionName.easeInEaseOut)
+                
+            // Set value that the path should have after the animation
+            // Use this instead of `.fillMode`and `isRemovedOnCompletion` because those will keep the animation "running"
             backgroundLayer.path = backgroundPath.cgPath
+                
+            backgroundLayer.add(morph, forKey: nil)
+                
+            // Commit our animation
+            CATransaction.commit()
         }
     }
-        
-    override var bounds: CGRect {
-        set {
-            super.bounds = newValue
-
-            // Updates paths to fill new dimensions
-            updatePaths(for: newValue)
+    
+    /// Used to update the bubble frame for animations
+    var bubbleFrame: CGRect? {
+        didSet {
+            guard let bubbleFrame else {
+                return
+            }
+            
+            updatePaths(for: bubbleFrame)
         }
-        get { super.bounds }
     }
+    
+    // Indicates whether the next change to `bubbleFrame` should be animated or not
+    var animate = false
     
     private func updatePaths(for frame: CGRect) {
         // This could probably be optimized by caching the previous frame and only update if it changes or

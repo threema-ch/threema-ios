@@ -18,6 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import CocoaLumberjackSwift
 import Combine
 import MBProgressHUD
 import UIKit
@@ -97,6 +98,7 @@ final class ChatSearchController: NSObject {
     
     private let conversation: Conversation
     private weak var delegate: ChatSearchControllerDelegate?
+    private let context: NSManagedObjectContext
     private let entityFetcher: EntityFetcher
     private let entityManager: EntityManager
     
@@ -231,6 +233,8 @@ final class ChatSearchController: NSObject {
         // onto a background thread.
         let context: TMAManagedObjectContext = DatabaseContext
             .directBackgroundContext(withPersistentCoordinator: DatabaseManager.db().persistentStoreCoordinator)
+        
+        self.context = context
 
         self.entityFetcher = EntityFetcher(context, myIdentityStore: BusinessInjector().myIdentityStore)
         
@@ -280,13 +284,15 @@ final class ChatSearchController: NSObject {
                 }
                 
                 // TODO: (IOS-2904) Only fetch object IDs
-                self.filteredMessageObjectIDs = self.entityFetcher.messagesContaining(
-                    searchText,
-                    in: self.conversation,
-                    fetchLimit: ChatViewConfiguration.SearchResultsFetching.maxItemsToFetch
-                )
-                .compactMap { $0 as? BaseMessage }
-                .map(\.objectID)
+                self.context.performAndWait {
+                    self.filteredMessageObjectIDs = self.entityFetcher.messagesContaining(
+                        searchText,
+                        in: self.conversation,
+                        fetchLimit: ChatViewConfiguration.SearchResultsFetching.maxItemsToFetch
+                    )
+                    .compactMap { $0 as? BaseMessage }
+                    .map(\.objectID)
+                }
                 
                 DispatchQueue.main.async {
                     MBProgressHUD.hide(for: self.chatSearchResultsViewController.view, animated: true)
@@ -311,7 +317,7 @@ final class ChatSearchController: NSObject {
     
     @objc private func previousResultBarButtonItemTapped() {
         guard let currentResultOffset = currentResultOffset else {
-            DDLogNotice("Failed to jump to next search result. No search result selected.")
+            DDLogVerbose("Failed to jump to next search result. No search result selected.")
             return
         }
         
@@ -322,7 +328,7 @@ final class ChatSearchController: NSObject {
     
     @objc private func nextResultBarButtonItemTapped() {
         guard let currentResultOffset = currentResultOffset else {
-            DDLogNotice("Failed to jump to previous search result. No search result selected.")
+            DDLogVerbose("Failed to jump to previous search result. No search result selected.")
             return
         }
         

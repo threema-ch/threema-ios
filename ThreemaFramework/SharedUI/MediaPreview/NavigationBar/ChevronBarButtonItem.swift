@@ -109,7 +109,11 @@ class ChevronBarButtonItem: UIButton {
                 return
             }
             
-            highlightAnimator.pauseAnimation()
+            // Do not pause animation for UI tests, it will break the test
+            if !ProcessInfoHelper.isRunningForScreenshots {
+                highlightAnimator.pauseAnimation()
+            }
+            
             if isHighlighted {
                 highlightAnimator.isReversed = false
                 highlightAnimator.startAnimation()

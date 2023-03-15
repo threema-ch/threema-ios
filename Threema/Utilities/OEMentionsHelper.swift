@@ -411,7 +411,7 @@ extension OEMentionsHelper: OEMentionsDelegate {
         let cell = MentionCell(style: UITableViewCell.CellStyle.default, reuseIdentifier: "MentionCell")
         cell.backgroundColor = UIColor.clear
         cell.selectionStyle = UITableViewCell.SelectionStyle.none
-        if let contact = oeObject.object as? Contact {
+        if let contact = oeObject.object as? ContactEntity {
             cell.contact = contact
         }
         else {
@@ -445,7 +445,7 @@ extension OEMentionsHelper: OEMentionsDelegate {
 
 class MentionCell: UITableViewCell {
     
-    var contact: Contact? {
+    var contact: ContactEntity? {
         didSet {
             avatar.image = AvatarMaker.shared().avatar(for: contact!, size: 16.0, masked: true)
             mentionNameLabel.text = contact?.displayName

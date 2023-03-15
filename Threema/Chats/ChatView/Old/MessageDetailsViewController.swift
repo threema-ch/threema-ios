@@ -136,7 +136,7 @@ import UIKit
         navigationBarTitle = BundleUtil.localizedString(forKey: "detailView_title")
         tableView.delegate = self
         tableView.dataSource = self
-        tableView.register(MessageDetailReactionCell.self, forCellReuseIdentifier: "reactionCell")
+        tableView.register(Old_MessageDetailReactionCell.self, forCellReuseIdentifier: "reactionCell")
                 
         if ThreemaEnvironment.env() == .xcode {
             tableView.rowHeight = UITableView.automaticDimension
@@ -193,11 +193,11 @@ import UIKit
 
         messageIDCell.detailTextLabel!.text = NSString(hexData: message.id) as String?
         
-        let forwardSecurityMode = ForwardSecurityMode(message.forwardSecurityMode.uintValue)
+        let forwardSecurityMode = ForwardSecurityMode(rawValue: message.forwardSecurityMode.uintValue) ?? .none
         switch forwardSecurityMode {
-        case kForwardSecurityModeTwoDH:
+        case .twoDH:
             forwardSecurityCell.detailTextLabel!.text = BundleUtil.localizedString(forKey: "forward_security_2dh")
-        case kForwardSecurityModeFourDH:
+        case .fourDH:
             forwardSecurityCell.detailTextLabel!.text = BundleUtil.localizedString(forKey: "forward_security_4dh")
         default:
             forwardSecurityCell.detailTextLabel!.text = BundleUtil.localizedString(forKey: "forward_security_none")
@@ -335,8 +335,9 @@ extension MessageDetailsViewController: UITableViewDelegate, UITableViewDataSour
         case 0:
             return cellForRow(indexPath.row)
         case 1:
-            let cell = tableView.dequeueReusableCell(withIdentifier: "reactionCell") as? MessageDetailReactionCell ??
-                MessageDetailReactionCell(style: .value1, reuseIdentifier: "reactionCell")
+            let cell = tableView
+                .dequeueReusableCell(withIdentifier: "reactionCell") as? Old_MessageDetailReactionCell ??
+                Old_MessageDetailReactionCell(style: .value1, reuseIdentifier: "reactionCell")
             var groupDeliveryReceipt: GroupDeliveryReceipt
             if !groupAckList.isEmpty {
                 groupDeliveryReceipt = groupAckList[indexPath.row]
@@ -350,8 +351,9 @@ extension MessageDetailsViewController: UITableViewDelegate, UITableViewDataSour
             
             return cell
         case 2:
-            let cell = tableView.dequeueReusableCell(withIdentifier: "reactionCell") as? MessageDetailReactionCell ??
-                MessageDetailReactionCell(style: .value1, reuseIdentifier: "reactionCell")
+            let cell = tableView
+                .dequeueReusableCell(withIdentifier: "reactionCell") as? Old_MessageDetailReactionCell ??
+                Old_MessageDetailReactionCell(style: .value1, reuseIdentifier: "reactionCell")
             cell.setGroupDeliveryReceipt(
                 groupDeliveryReceipt: groupDeclineList[indexPath.row]
             )

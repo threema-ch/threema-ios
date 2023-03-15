@@ -179,6 +179,7 @@ class TaskExecutionTransactionTests: XCTestCase {
                 multiDeviceManager: MultiDeviceManagerMock(),
                 myIdentityStore: MyIdentityStoreMock(),
                 userSettings: UserSettingsMock(),
+                settingsStore: SettingsStoreMock(),
                 serverConnector: serverConnectorMock,
                 mediatorMessageProtocol: MediatorMessageProtocolMock(),
                 messageProcessor: MessageProcessorMock()
@@ -282,6 +283,7 @@ class TaskExecutionTransactionTests: XCTestCase {
             multiDeviceManager: MultiDeviceManagerMock(),
             myIdentityStore: MyIdentityStoreMock(),
             userSettings: UserSettingsMock(),
+            settingsStore: SettingsStoreMock(),
             serverConnector: serverConnectorMock,
             mediatorMessageProtocol: MediatorMessageProtocolMock(),
             messageProcessor: MessageProcessorMock()

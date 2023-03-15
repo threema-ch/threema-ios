@@ -76,9 +76,10 @@
     
     if ([self.navigationController isKindOfClass:[CreateGroupNavigationController class]]) {
         NSData *cloneGroupId = ((CreateGroupNavigationController *)self.navigationController).cloneGroupId;
+        NSString *cloneGroupCreator = ((CreateGroupNavigationController *)self.navigationController).cloneGroupCreator;
         if (cloneGroupId) {
             EntityManager *entityManager = [[EntityManager alloc] init];
-            Conversation *conversation = [entityManager.entityFetcher conversationForGroupId:cloneGroupId];
+            Conversation *conversation = [entityManager.entityFetcher conversationForGroupId:cloneGroupId creator:cloneGroupCreator];
             
             if (conversation) {
                 _nameTextField.text = conversation.groupName;

@@ -21,6 +21,7 @@
 import XCTest
 
 @testable import Threema
+@testable import ThreemaFramework
 
 class DBLoadTests: XCTestCase {
 
@@ -67,7 +68,7 @@ class DBLoadTests: XCTestCase {
         
         var conversation: Conversation?
         
-        createContacts(for: ["ECHOECHO"])
+        _ = createContacts(for: ["ECHOECHO"])
         
         let entityManager = EntityManager()
         entityManager.performSyncBlockAndSafe {
@@ -153,7 +154,7 @@ class DBLoadTests: XCTestCase {
         for num in 0..<1000 {
             for groupConversation in entityManager.entityFetcher.allGroupConversations() as! [Conversation] {
                 entityManager.performSyncBlockAndSafe {
-                    for contact in entityManager.entityFetcher.allContacts() as! [Contact] {
+                    for contact in entityManager.entityFetcher.allContacts() as! [ContactEntity] {
                         let calendar = Calendar.current
                         let date = calendar.date(byAdding: .hour, value: 1, to: Date(timeIntervalSince1970: 0))
                         let message = entityManager.entityCreator.textMessage(for: groupConversation)!
@@ -241,7 +242,7 @@ class DBLoadTests: XCTestCase {
     func testAssignImagesToAllContacts() {
         let entityManager = EntityManager()
         
-        for contact in entityManager.entityFetcher.allContacts() as! [Contact] {
+        for contact in entityManager.entityFetcher.allContacts() as! [ContactEntity] {
             
             let testBundle = Bundle(for: DBLoadTests.self)
             let testImageURL = testBundle.url(forResource: "Bild-1-0", withExtension: "jpg")
@@ -263,7 +264,7 @@ class DBLoadTests: XCTestCase {
     func testLoadImageFileMessages() {
         var conversation: Conversation?
         
-        createContacts(for: ["ECHOECHO"])
+        _ = createContacts(for: ["ECHOECHO"])
         let entityManager = EntityManager(withChildContextForBackgroundProcess: false)
         entityManager.performSyncBlockAndSafe {
             if let contact = entityManager.entityFetcher.contact(for: "ECHOECHO") {
@@ -324,7 +325,7 @@ class DBLoadTests: XCTestCase {
         let group = try createGroup(named: "Quote Messages", with: [], entityManager: entityManager)
         
         // Sender
-        createContacts(for: ["ECHOECHO"])
+        _ = createContacts(for: ["ECHOECHO"])
         let senderContact = try XCTUnwrap(entityManager.entityFetcher.contact(for: "ECHOECHO"))
         
         // Load texts
@@ -433,14 +434,16 @@ class DBLoadTests: XCTestCase {
                 for senderItem in senderItems {
                     let ownFileMessageEntity = try entityManager.entityCreator.createFileMessageEntity(
                         for: senderItem,
-                        in: group.conversation
+                        in: group.conversation,
+                        with: .public
                     )
                     ownFileMessageEntity.isOwn = true
                     quotableMessages.append(ownFileMessageEntity)
                     
                     let otherFileMessageEntity = try entityManager.entityCreator.createFileMessageEntity(
                         for: senderItem,
-                        in: group.conversation
+                        in: group.conversation,
+                        with: .public
                     )
                     otherFileMessageEntity.isOwn = false
                     otherFileMessageEntity.sender = senderContact
@@ -450,7 +453,8 @@ class DBLoadTests: XCTestCase {
                     senderItem.caption = texts.randomElement() ?? "Caption"
                     let captionFileMessageEntity = try entityManager.entityCreator.createFileMessageEntity(
                         for: senderItem,
-                        in: group.conversation
+                        in: group.conversation,
+                        with: .public
                     )
                     captionFileMessageEntity.isOwn = false
                     captionFileMessageEntity.sender = senderContact
@@ -744,6 +748,215 @@ class DBLoadTests: XCTestCase {
         )
     }
     
+    // MARK: Call Status Message
+    
+    func testCallStatusMessages() {
+        let numberOfMessagesToAdd = 500
+        let alternateEveryXMessage = 10
+        let identity = "ECHOECHO"
+        
+        _ = createContacts(for: [identity])
+        
+        let entityManager = EntityManager()
+        
+        // Load conversation
+        var conversation: Conversation!
+        
+        entityManager.performSyncBlockAndSafe {
+            if let contact = entityManager.entityFetcher.contact(for: identity) {
+                conversation = entityManager.conversation(forContact: contact, createIfNotExisting: true)
+            }
+        }
+        
+        let incomingCallStates: [Int] = [
+            kSystemMessageCallMissed,
+            kSystemMessageCallRejected,
+            kSystemMessageCallRejectedBusy,
+            kSystemMessageCallRejectedTimeout,
+            kSystemMessageCallEnded,
+            kSystemMessageCallRejectedDisabled,
+            kSystemMessageCallRejectedUnknown,
+        ]
+        
+        let outgoingCallStates: [Int] = [
+            kSystemMessageCallRejected,
+            kSystemMessageCallRejectedBusy,
+            kSystemMessageCallRejectedTimeout,
+            kSystemMessageCallEnded,
+            kSystemMessageCallRejectedDisabled,
+            kSystemMessageCallRejectedUnknown,
+        ]
+        
+        for index in 0..<numberOfMessagesToAdd {
+            let isIncoming = index % (alternateEveryXMessage * 2) >= alternateEveryXMessage
+            let callType = isIncoming ? incomingCallStates[index % incomingCallStates.count] :
+                outgoingCallStates[index % outgoingCallStates.count]
+            
+            entityManager.performSyncBlockAndSafe {
+                guard let systemMessage = entityManager.entityCreator.systemMessage(for: conversation) else {
+                    XCTFail("Could not create system message")
+                    return
+                }
+                
+                systemMessage.remoteSentDate = Date()
+                systemMessage.type = NSNumber(integerLiteral: callType)
+                
+                var callInfo = [
+                    "DateString": DateFormatter.shortStyleTimeNoDate(Date()),
+                    "CallInitiator": NSNumber(booleanLiteral: isIncoming),
+                ] as [String: Any]
+                
+                if index % (incomingCallStates.count + outgoingCallStates.count) == 0,
+                   callType == kSystemMessageCallEnded {
+                    callInfo["CallTime"] = DateFormatter.timeFormatted(Int.random(in: 1..<60 * 60 * 48))
+                }
+                
+                do {
+                    let callInfoData = try JSONSerialization.data(withJSONObject: callInfo, options: .prettyPrinted)
+                    systemMessage.arg = callInfoData
+                    systemMessage.isOwn = NSNumber(booleanLiteral: isIncoming)
+                    systemMessage.conversation = conversation
+                    conversation.lastMessage = systemMessage
+                    conversation.lastUpdate = Date()
+                }
+                catch {
+                    XCTFail(error.localizedDescription)
+                }
+            }
+        }
+    }
+    
+    // MARK: Ballot Messages
+    
+    func testGroupWithBallotMessages() throws {
+        // Configuration
+        // There is more configuration in the loop below
+        let numberOfMessagesToAdd = 100
+        let alternateEveryXMessage = 20
+        let choicesPerBallot = 2..<15
+        let totalVotes = 0..<256
+        
+        // Load test data
+        let testBundle = Bundle(for: DBLoadTests.self)
+
+        guard let textsPath = testBundle.url(forResource: "test_ballot_titles", withExtension: "json") else {
+            XCTFail("Cannot find file with test texts")
+            return
+        }
+        let ballotTitles = try XCTUnwrap(JSONDecoder().decode([String].self, from: Data(contentsOf: textsPath)))
+        
+        guard let textsPath = testBundle.url(forResource: "test_ballot_options", withExtension: "json") else {
+            XCTFail("Cannot find file with test texts")
+            return
+        }
+        let ballotOptions = try XCTUnwrap(JSONDecoder().decode([String].self, from: Data(contentsOf: textsPath)))
+        
+        let filePath = try XCTUnwrap(testBundle.path(forResource: "test_ids", ofType: "txt"))
+        
+        // Prepare Group
+        // Load test identities
+        var fetchIdentities = ["ECHOECHO"]
+        
+        let ids = try XCTUnwrap(String(contentsOfFile: filePath, encoding: .utf8))
+        for id in ids.components(separatedBy: .newlines) {
+            if !id.isEmpty {
+                fetchIdentities.append(id)
+            }
+        }
+        
+        var participants = createContacts(for: fetchIdentities.reversed())
+        
+        let entityManager = EntityManager()
+        
+        let myIdentityStoreMock = MyIdentityStoreMock()
+        
+        participants.append(myIdentityStoreMock.identity)
+        
+        // Create group
+        let group = try XCTUnwrap(createGroup(
+            named: "Ballot Messages (\(DateFormatter.accessibilityDateTime(Date())))",
+            with: participants,
+            entityManager: entityManager
+        ))
+        let conversation = group.conversation
+        
+        for index in 0..<numberOfMessagesToAdd {
+            let isIncoming = index % (alternateEveryXMessage * 2) >= alternateEveryXMessage
+            let isClosed = index % 2 == 1
+            let intermediateResults = index % 5 == 0
+            let multipleChoice = index % 3 == 0
+            
+            entityManager.performSyncBlockAndSafe {
+                // Setup ballot
+                let baseBallot = entityManager.entityCreator.ballot()!
+                baseBallot.id = BytesUtility.generateRandomBytes(length: ThreemaProtocol.ballotIDLength)
+                baseBallot.createDate = Date()
+                baseBallot.creatorID = isIncoming ? "ECHOECHO" : myIdentityStoreMock.identity
+                baseBallot.conversation = conversation
+                baseBallot.title = ballotTitles[index % ballotTitles.count]
+                baseBallot.setIntermediate(intermediateResults)
+                baseBallot.setMultipleChoice(multipleChoice)
+                
+                if isClosed {
+                    baseBallot.setClosed()
+                }
+                
+                var ballotChoices = [BallotChoice]()
+                
+                // Setup choices
+                for choiceNo in 0..<Int.random(in: choicesPerBallot) {
+                    let ballotChoice = entityManager.entityCreator.ballotChoice()!
+                    ballotChoice.ballot = baseBallot
+                    ballotChoice.createDate = Date()
+                    ballotChoice.id = NSNumber(value: choiceNo)
+                    ballotChoice.name = ballotOptions[choiceNo % ballotOptions.count]
+                    ballotChoice.orderPosition = NSNumber(value: choiceNo)
+                    
+                    ballotChoices.append(ballotChoice)
+                }
+                
+                // Setup votes
+                // We don't post vote messages here to avoid cluttering up the chat
+                let ballotManager = BallotManager(entityManager: entityManager)
+                for participant in 0..<Int.random(in: totalVotes) {
+                    let maxChoices = multipleChoice ? 1 : Int.random(in: choicesPerBallot)
+                    for _ in 0..<maxChoices {
+                        ballotManager.updateChoice(
+                            ballotChoices[Int.random(in: 0..<ballotChoices.count)],
+                            with: NSNumber(booleanLiteral: true),
+                            for: participants[participant % participants.count]
+                        )
+                    }
+                }
+                
+                // Get sender
+                let sender = entityManager.entityFetcher
+                    .contact(
+                        for: isIncoming ? participants
+                            .filter { $0 != myIdentityStoreMock.identity
+                            }[Int.random(in: 0..<(participants.count - 1))] :
+                            myIdentityStoreMock.identity
+                    )
+                
+                // Always create open ballot message
+                let ballotOpenMessage = entityManager.entityCreator.ballotMessage(for: conversation)!
+                ballotOpenMessage.isOwn = NSNumber(value: !isIncoming)
+                ballotOpenMessage.ballot = baseBallot
+                ballotOpenMessage.sender = sender
+                ballotOpenMessage.ballotState = NSNumber(value: kBallotStateOpen)
+                
+                // Only sometimes create ballot close message
+                if isClosed {
+                    let ballotCloseMessage = entityManager.entityCreator.ballotMessage(for: conversation)!
+                    ballotCloseMessage.isOwn = NSNumber(value: !isIncoming)
+                    ballotCloseMessage.ballot = baseBallot
+                    ballotCloseMessage.sender = sender
+                    ballotCloseMessage.ballotState = NSNumber(value: kBallotStateClosed)
+                }
+            }
+        }
+    }
+    
     // MARK: File message helper
     
     private func add(
@@ -760,7 +973,7 @@ class DBLoadTests: XCTestCase {
         let testCaptionsURL = try XCTUnwrap(testBundle.url(forResource: "test_texts", withExtension: "json"))
         let captions = try JSONDecoder().decode([String].self, from: Data(contentsOf: testCaptionsURL))
         
-        createContacts(for: ["ECHOECHO"])
+        _ = createContacts(for: ["ECHOECHO"])
         let senderContact = try XCTUnwrap(entityManager.entityFetcher.contact(for: "ECHOECHO"))
         
         for index in 0..<times {
@@ -783,7 +996,8 @@ class DBLoadTests: XCTestCase {
                 do {
                     let fileMessageEntity = try entityManager.entityCreator.createFileMessageEntity(
                         for: senderItem,
-                        in: group.conversation
+                        in: group.conversation,
+                        with: .public
                     )
                     
                     if index % (alternateEveryXMessage * 2) >= alternateEveryXMessage {
@@ -819,7 +1033,7 @@ class DBLoadTests: XCTestCase {
         let group = try createGroup(named: "Location Messages", with: [], entityManager: entityManager)
         
         // Fetch contact
-        createContacts(for: ["ECHOECHO"])
+        _ = _ = createContacts(for: ["ECHOECHO"])
         let senderContact = try XCTUnwrap(entityManager.entityFetcher.contact(for: "ECHOECHO"))
         
         // Load and add locations
@@ -861,8 +1075,6 @@ class DBLoadTests: XCTestCase {
         let longitude: Double
         let accuracy: Double
     }
-    
-    // TODO: Ballot messages (IOS-3033)
     
     // MARK: System messages
     
@@ -960,7 +1172,7 @@ class DBLoadTests: XCTestCase {
         let entityManager = EntityManager()
 
         // Load all contacts and assign the names
-        let members = try groupMemberIDsAndNames.map { id, name -> Contact in
+        let members = try groupMemberIDsAndNames.map { id, name -> ContactEntity in
             let contact = try XCTUnwrap(entityManager.entityFetcher.contact(for: id))
             
             let names = name.components(separatedBy: .whitespaces)
@@ -1025,7 +1237,8 @@ class DBLoadTests: XCTestCase {
             do {
                 let fileMessageEntity = try entityManager.entityCreator.createFileMessageEntity(
                     for: fileSenderItem,
-                    in: group.conversation
+                    in: group.conversation,
+                    with: .public
                 )
                 
                 fileMessageEntity.isOwn = false
@@ -1084,28 +1297,33 @@ class DBLoadTests: XCTestCase {
     }
     
     // Workaround to add contacts as `addContacts(for:entityManager:)` doesn't seem to work
-    private func createContacts(for ids: [String]) {
+    private func createContacts(for ids: [String]) -> [String] {
+        var createdContacts = [String]()
         var contactStoreExpectations = [XCTestExpectation]()
         for id in ids {
+            print("Checking \(id)")
             let contactStoreExpectation = expectation(description: "Add contact to contact store")
             ContactStore.shared().addContact(
                 with: id,
                 verificationLevel: Int32(kVerificationLevelUnverified)
             ) { _, _ in
+                createdContacts.append(id)
                 contactStoreExpectation.fulfill()
             } onError: { error in
-                XCTFail(error.localizedDescription)
+                print("Failed to create contact from \(id) \(error.localizedDescription)")
                 contactStoreExpectation.fulfill()
             }
             contactStoreExpectations.append(contactStoreExpectation)
         }
-        wait(for: contactStoreExpectations, timeout: 10)
+        wait(for: contactStoreExpectations, timeout: 30)
+        
+        return createdContacts
     }
     
     private func addTextMessage(
         _ text: String,
         quoteID: Data? = nil,
-        sender: Contact? = nil,
+        sender: ContactEntity? = nil,
         in group: Group,
         entityManager: EntityManager
     ) {
@@ -1143,7 +1361,7 @@ class DBLoadTests: XCTestCase {
         
         var conversation: Conversation?
         
-        createContacts(for: ["ECHOECHO"])
+        _ = createContacts(for: ["ECHOECHO"])
         
         let entityManager = EntityManager()
         entityManager.performSyncBlockAndSafe {

@@ -88,7 +88,7 @@ class WebClientSessionCell: UITableViewCell {
         
         if (webClientSession.active?.boolValue)! {
             accessoryType = .none
-            accessoryView = UIImageView(image: UIImage(named: "WebClientConnection", in: Colors.primary))
+            accessoryView = UIImageView(image: UIImage(named: "WebClientConnection", in: .primary))
             cellAccessibility.append(". ")
             cellAccessibility.append(BundleUtil.localizedString(forKey: "status_loggedIn"))
             cellAccessibilityActions.append(UIAccessibilityCustomAction(

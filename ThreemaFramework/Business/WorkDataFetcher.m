@@ -24,7 +24,7 @@
 #import "MyIdentityStore.h"
 #import "LicenseStore.h"
 #import "ContactStore.h"
-#import "Contact.h"
+#import "ContactEntity.h"
 #import "ThreemaFramework/ThreemaFramework-Swift.h"
 #import "MDMSetup.h"
 #import "UserSettings.h"
@@ -131,7 +131,7 @@
             [MyIdentityStore sharedMyIdentityStore].licenseSupportUrl = workData[@"support"];
         
         /* Process supplied contacts */
-        if ([[NSUserDefaults standardUserDefaults] boolForKey:@"FASTLANE_SNAPSHOT"]) {
+        if (ProcessInfoHelper.isRunningForScreenshots)  {
             // do not update for screenshots
         } else {
             NSArray *workContacts = workData[@"contacts"];
@@ -165,7 +165,7 @@
             
             /* Get all work verified contacts from DB and set those that have not been supplied in this sync back to non-work */
             NSArray *allContacts = [[ContactStore sharedContactStore] allContacts];
-            for (Contact *contact in allContacts) {
+            for (ContactEntity *contact in allContacts) {
                 BOOL isWorkContact = [workContactIds containsObject:contact.identity];
                 if (contact.workContact == nil || contact.workContact.boolValue != isWorkContact) {
                     [[ContactStore sharedContactStore] setWorkContact:contact workContact:isWorkContact];

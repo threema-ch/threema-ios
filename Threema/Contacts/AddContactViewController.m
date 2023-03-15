@@ -22,7 +22,7 @@
 #import "ScanIdentityController.h"
 #import "ProtocolDefines.h"
 #import "ContactStore.h"
-#import "Contact.h"
+#import "ContactEntity.h"
 #import "InviteController.h"
 #import <MBProgressHUD/MBProgressHUD.h>
 #import "AppDelegate.h"
@@ -54,7 +54,7 @@
     self.identityTextField.accessibilityIdentifier = @"AddContactViewControllerCTextField";
     
     // Tint icon appropriately
-    self.scanIdentityCell.imageView.image = [self.scanIdentityCell.imageView.image imageWithTint:Colors.primary];
+    self.scanIdentityCell.imageView.image = [self.scanIdentityCell.imageView.image imageWithTint:UIColor.primary];
     
     [Colors updateKeyboardAppearanceFor:self.identityTextField];
     
@@ -198,7 +198,7 @@
     
     [MBProgressHUD showHUDAddedTo:self.view animated:YES];
     
-    [[ContactStore sharedContactStore] addContactWithIdentity:enteredId verificationLevel:kVerificationLevelUnverified onCompletion:^(Contact * _Nullable contact, __unused BOOL alreadyExists) {
+    [[ContactStore sharedContactStore] addContactWithIdentity:enteredId verificationLevel:kVerificationLevelUnverified onCompletion:^(ContactEntity * _Nullable contact, __unused BOOL alreadyExists) {
         [MBProgressHUD hideHUDForView:self.view animated:YES];
         
         [self dismissViewControllerAnimated:YES completion:^{

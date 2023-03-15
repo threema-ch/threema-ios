@@ -91,7 +91,9 @@ class MediatorReflectedMessageDecoder {
         }
         amsg.messageID = NSData.convertBytes(omsg.messageID)
         amsg.fromIdentity = frameworkInjector.myIdentityStore.identity
-        amsg.toIdentity = omsg.conversation.contact
+        if !omsg.conversation.contact.isEmpty {
+            amsg.toIdentity = omsg.conversation.contact
+        }
 
         if amsg.flagGroupMessage() {
             if amsg is GroupCreateMessage

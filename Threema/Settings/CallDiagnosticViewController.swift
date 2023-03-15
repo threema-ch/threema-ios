@@ -145,8 +145,8 @@ class CallDiagnosticViewController: UIViewController, RTCPeerConnectionDelegate 
         
         diagnosticTextView.font = UIFont.systemFont(ofSize: 15.0)
         
-        startButton.setTitleColor(Colors.primary, for: .normal)
-        copyButton.setTitleColor(Colors.primary, for: .normal)
+        startButton.setTitleColor(.primary, for: .normal)
+        copyButton.setTitleColor(.primary, for: .normal)
         
         diagnosticTextView.layer.borderWidth = 1.0
         diagnosticTextView.layer.borderColor = Colors.textVeryLight.cgColor

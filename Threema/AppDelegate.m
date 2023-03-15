@@ -35,7 +35,7 @@
 #import "MyIdentityStore.h"
 #import "PortraitNavigationController.h"
 #import "ThreemaUtilityObjC.h"
-#import "Contact.h"
+#import "ContactEntity.h"
 #import "ContactsViewController.h"
 #import "ProtocolDefines.h"
 #import "PhoneNumberNormalizer.h"
@@ -193,20 +193,13 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     notificationManager = [[NotificationManager alloc] init];
 
     self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
-    if ([[NSUserDefaults standardUserDefaults] boolForKey:@"FASTLANE_SNAPSHOT"]) {
-        NSString *theme = [[NSUserDefaults standardUserDefaults] objectForKey:@"theme"];
-        [[UserSettings sharedUserSettings] setUseSystemTheme:false];
-        
-        if ([theme isEqualToString:@"dark"]) {
-            [Colors setTheme:ThemeDark];
-        } else {
-            [Colors setTheme:ThemeLight];
-        }
+
+    if (ProcessInfoHelper.isRunningForScreenshots) {
         [[UserSettings sharedUserSettings] setIncludeCallsInRecents:false];
-    } else {
-        [Colors initTheme];
+        [UIView setAnimationsEnabled:false];
     }
     
+    [Colors initTheme];
     [Colors updateWithWindow:_window];
     pendingShortCutItem = [launchOptions objectForKey:UIApplicationLaunchOptionsShortcutItemKey];
 
@@ -220,7 +213,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleLicenseMissing:) name:kNotificationLicenseMissing object:nil];
     
-    if ([[NSUserDefaults standardUserDefaults] boolForKey:@"FASTLANE_SNAPSHOT"]) {
+    if (ProcessInfoHelper.isRunningForScreenshots)  {
         [[AVAudioSession sharedInstance] requestRecordPermission:^(BOOL granted) {
             //
         }];
@@ -636,26 +629,23 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
             [notificationManager handleThreemaNotificationWithPayload:remoteNotification receivedWhileRunning:NO notification:nil withCompletionHandler:nil];
         }
         
-        /* A good chance to show reminders, if necessary */
-        [UserReminder checkRemindersOnCompletion:^(BOOL check) {
-            if (![UserSettings sharedUserSettings].acceptedPrivacyPolicyDate) {
-                [UserSettings sharedUserSettings].acceptedPrivacyPolicyDate = [NSDate date];
-                [UserSettings sharedUserSettings].acceptedPrivacyPolicyVariant = AcceptPrivacyPolicyVariantUpdate;
-            }
-            
-            if ([[UserSettings sharedUserSettings] openPlusIconInChat] == YES) {
-                [[UserSettings sharedUserSettings] setOpenPlusIconInChat:NO];
-                [[UserSettings sharedUserSettings] setShowGalleryPreview:NO];
-            }
+        if (![UserSettings sharedUserSettings].acceptedPrivacyPolicyDate) {
+            [UserSettings sharedUserSettings].acceptedPrivacyPolicyDate = [NSDate date];
+            [UserSettings sharedUserSettings].acceptedPrivacyPolicyVariant = AcceptPrivacyPolicyVariantUpdate;
+        }
+        
+        if ([[UserSettings sharedUserSettings] openPlusIconInChat] == YES) {
+            [[UserSettings sharedUserSettings] setOpenPlusIconInChat:NO];
+            [[UserSettings sharedUserSettings] setShowGalleryPreview:NO];
+        }
 
-            [self handlePresentingScreens];
-            shouldLoadUIForEnterForeground = false;
-        }];
+        [self handlePresentingScreens];
+        shouldLoadUIForEnterForeground = false;
     }
 }
 
 - (void)handlePresentingScreens {
-    //shouldLoadUIForEnterForeground == false: means UI was never loaded before
+    // ShouldLoadUIForEnterForeground == false: means UI was never loaded before
     if (shouldLoadUIForEnterForeground == false) {
         if (![[VoIPHelper shared] isCallActiveInBackground] && [[VoIPCallStateManager shared] currentCallState] != CallStateIdle) {
             if ([lastViewController.presentedViewController isKindOfClass:[CallViewController class]] || SYSTEM_IS_IPAD) {
@@ -664,72 +654,45 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
                 });
             }
         } else {
-            // show Threema Safe Intro once after App update
-            if ([[NSUserDefaults standardUserDefaults] boolForKey:@"FASTLANE_SNAPSHOT"]) {
-                // do not show threema safe intro
-            } else {
+            // Show Threema Safe Intro once after App update
+            if (ProcessInfoHelper.isRunningForScreenshots)  {
+                // Do not show threema safe intro
+                return;
+            }
                               
-                // Check if backup is forced from MDM
-                SafeConfigManager *safeConfigManager = [[SafeConfigManager alloc] init];
-                SafeStore *safeStore = [[SafeStore alloc] initWithSafeConfigManagerAsObject:safeConfigManager serverApiConnector:[[ServerAPIConnector alloc] init] groupManager:[[GroupManager alloc] init]];
-                SafeManager *safeManager = [[SafeManager alloc] initWithSafeConfigManagerAsObject:safeConfigManager safeStore:safeStore safeApiService:[[SafeApiService alloc] init]];
-                MDMSetup *mdmSetup = [[MDMSetup alloc] initWithSetup:NO];
-                
-                // check if Threema Safe is forced and not activated yet
-                if (![safeManager isActivated] && [mdmSetup isSafeBackupForce]) {
-                    if ([mdmSetup safePassword] == nil) {
-                        // show password without cancel button for Threema Safe
-                        dispatch_async(dispatch_get_main_queue(), ^{
-                            UIViewController *vc = [UIApplication sharedApplication].windows.firstObject.rootViewController;
-                            UIStoryboard *storyboard = [AppDelegate getMyIdentityStoryboard];
-                            UINavigationController *safeSetupNavigationViewController = [storyboard instantiateViewControllerWithIdentifier:@"SafeIntroNavigationController"];
-                            SafeSetupPasswordViewController *safeSetupPasswordViewController = (SafeSetupPasswordViewController*)[safeSetupNavigationViewController topViewController];
-                            safeSetupPasswordViewController.isForcedBackup = true;
-                            [vc presentViewController:safeSetupNavigationViewController animated:YES completion:nil];
-                        });
-                    } else {
-                        // activate with the password of the MDM
-                        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-                            // or if password is already set from MDM (automaticly perform safe)
-                            NSString *customServer = nil;
-                            NSString *server = nil;
-                            if ([mdmSetup isSafeBackupServerPreset]) {
-                                // server is given by MDM
-                                customServer = [mdmSetup safeServerUrl];
-                                server = [safeStore composeSafeServerAuthWithServer:[mdmSetup safeServerUrl] user:[mdmSetup safeServerUsername] password:[mdmSetup safeServerPassword]].absoluteString;
-                            }
-                            [safeManager activateWithIdentity:[MyIdentityStore sharedMyIdentityStore].identity password:[mdmSetup safePassword] customServer:customServer server:server maxBackupBytes:nil retentionDays:nil completion:^(NSError * _Nullable error) {
-                                DDLogError(@"Failed to activate Threema Safe: %@", error);
-                            }];
-                        });
-                    }
-                }
-                // if Threema Safe is disabled by MDM and Safe is activated, deactivate Safe
-                else if ([safeManager isActivated] && [mdmSetup isSafeBackupDisable]) {
-                    [safeManager deactivate];
-                }
-                // if Safe activated, check if server has been changed by MDM
-                else if ([safeManager isActivated] && [mdmSetup isManaged]) {
+            // Check if backup is forced from MDM
+            SafeConfigManager *safeConfigManager = [[SafeConfigManager alloc] init];
+            SafeStore *safeStore = [[SafeStore alloc] initWithSafeConfigManagerAsObject:safeConfigManager serverApiConnector:[[ServerAPIConnector alloc] init] groupManager:[[GroupManager alloc] init]];
+            SafeManager *safeManager = [[SafeManager alloc] initWithSafeConfigManagerAsObject:safeConfigManager safeStore:safeStore safeApiService:[[SafeApiService alloc] init]];
+            MDMSetup *mdmSetup = [[MDMSetup alloc] initWithSetup:NO];
+            
+            // Check if Threema Safe is forced and not activated yet
+            if (![safeManager isActivated] && [mdmSetup isSafeBackupForce] && [mdmSetup safePassword] == nil) {
+                // Activate with the password of the MDM
+                dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+                    // Or if password is already set from MDM (automatically perform safe)
+                    NSString *customServer = nil;
+                    NSString *server = nil;
                     if ([mdmSetup isSafeBackupServerPreset]) {
-                        [safeManager applyServerWithServer:[mdmSetup safeServerUrl] username:[mdmSetup safeServerUsername] password:[mdmSetup safeServerPassword]];
-                    } else {
-                        [safeManager applyServerWithServer:nil username:nil password:nil];
+                        // Server is given by MDM
+                        customServer = [mdmSetup safeServerUrl];
+                        server = [safeStore composeSafeServerAuthWithServer:[mdmSetup safeServerUrl] user:[mdmSetup safeServerUsername] password:[mdmSetup safeServerPassword]].absoluteString;
                     }
-                }
-                else {
-                    // if Safe not activated and not disabled by MDM, show intro if is necessary
-                    if ([[UserSettings sharedUserSettings] safeIntroShown] == NO && ![safeManager isActivated] && ![mdmSetup isSafeBackupDisable]) {
-                        [[UserSettings sharedUserSettings] setSafeIntroShown:YES];
-
-                        if (![safeManager isActivated]) {
-                            dispatch_async(dispatch_get_main_queue(), ^{
-                                UIViewController *vc = [UIApplication sharedApplication].windows.firstObject.rootViewController;
-                                UIStoryboard *storyboard = [AppDelegate getMyIdentityStoryboard];
-                                UIViewController *safeIntroViewController = [storyboard instantiateViewControllerWithIdentifier:@"SafeIntroViewController"];
-                                [vc presentViewController:safeIntroViewController animated:YES completion:nil];
-                            });
-                        }
-                    }
+                    [safeManager activateWithIdentity:[MyIdentityStore sharedMyIdentityStore].identity password:[mdmSetup safePassword] customServer:customServer server:server maxBackupBytes:nil retentionDays:nil completion:^(NSError * _Nullable error) {
+                        DDLogError(@"Failed to activate Threema Safe: %@", error);
+                    }];
+                });
+            }
+            // If Threema Safe is disabled by MDM and Safe is activated, deactivate Safe
+            else if ([safeManager isActivated] && [mdmSetup isSafeBackupDisable]) {
+                [safeManager deactivate];
+            }
+            // If Safe activated, check if server has been changed by MDM
+            else if ([safeManager isActivated] && [mdmSetup isManaged]) {
+                if ([mdmSetup isSafeBackupServerPreset]) {
+                    [safeManager applyServerWithServer:[mdmSetup safeServerUrl] username:[mdmSetup safeServerUsername] password:[mdmSetup safeServerPassword]];
+                } else {
+                    [safeManager applyServerWithServer:nil username:nil password:nil];
                 }
             }
         }
@@ -814,32 +777,6 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
         [self presentProtectedDataUnavailable];
     } else {
         [self presentKeyGeneration];
-    }
-}
-
-- (void)askForPushDecryption {
-    if (![UserSettings sharedUserSettings].askedForPushDecryption) {
-        MDMSetup *mdmSetup = [[MDMSetup alloc] initWithSetup:NO];
-        if ([mdmSetup existsMdmKey:MDM_KEY_DISABLE_MESSAGE_PREVIEW]) {
-            [[UserSettings sharedUserSettings] setPushDecrypt:NO];
-        } else {
-            NSString *message = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"decryption_push_text"], [ThreemaAppObjc currentName]];
-            UIAlertController * alert = [UIAlertController alertControllerWithTitle:[BundleUtil localizedStringForKey:@"decryption_push_title"] message:message preferredStyle:UIAlertControllerStyleAlert];
-            UIAlertAction* yesButton = [UIAlertAction actionWithTitle:[BundleUtil localizedStringForKey:@"decryption_push_activate"] style:UIAlertActionStyleDefault handler:^(__unused UIAlertAction *action) {
-                [[UserSettings sharedUserSettings] setPushDecrypt:YES];
-                [[UserSettings sharedUserSettings] setAskedForPushDecryption:YES];
-            }];
-            
-            UIAlertAction* noButton = [UIAlertAction actionWithTitle:[BundleUtil localizedStringForKey:@"decryption_push_deactivate"] style:UIAlertActionStyleDefault handler:^(__unused UIAlertAction *action) {
-                [[UserSettings sharedUserSettings] setPushDecrypt:NO];
-                [[UserSettings sharedUserSettings] setAskedForPushDecryption:YES];
-            }];
-            
-            [alert addAction:yesButton];
-            [alert addAction:noButton];
-            
-            [_window.rootViewController presentViewController:alert animated:YES completion:nil];
-        }
     }
 }
 
@@ -1153,23 +1090,25 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
         }
     }
     
-    /* Is protected data still available? If not, then there's no point in starting a background task */
+    // If protected data is not available, then there's no point in starting a background task.
     if (!protectedDataWillBecomeUnavailable) {
+        
+        BlobManagerObjcWrapper *manager = [[BlobManagerObjcWrapper alloc] init];
         NSString *key = nil;
         int timeout = 0;
         
         if ([[VoIPCallStateManager shared] currentCallState] != CallStateIdle) {
-            // call is active
+            // Call is active
             key = kAppVoIPBackgroundTask;
             timeout = kAppVoIPIncomCallBackgroundTaskTime;
         }
         else if ([[WCSessionManager shared] isRunningWCSession] == true) {
-            // web client is activ
+            // Web client is active
             key = kAppWCBackgroundTask;
             timeout = kAppWCBackgroundTaskTime;
         }
-        else if ([Old_FileMessageSender hasScheduledUploads] == YES || ![TaskManager isEmptyWithQueueType:TaskQueueTypeOutgoing]) {
-            // queue has outgoing messages or is uploading a file
+        else if ([Old_FileMessageSender hasScheduledUploads] == YES || [manager hasActiveSyncs] || ![TaskManager isEmptyWithQueueType:TaskQueueTypeOutgoing]) {
+            // Queue has outgoing messages or is syncing files
             key = kAppClosedByUserBackgroundTask;
             timeout = kAppSendingBackgroundTaskTime;
         }
@@ -1180,7 +1119,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
         
         [[BackgroundTaskManager shared] newBackgroundTaskWithKey:key timeout:timeout completionHandler:nil];
     } else {
-        /* Disconnect from server - from now on we want push notifications for new messages */
+        // Disconnect from server - from now on we want push notifications for new messages
         [[ServerConnector sharedServerConnector] disconnectWait:ConnectionInitiatorApp onCompletion:^(BOOL isDisconnected) {
             [[WCSessionManager shared] saveSessionsToArchive];
         }];
@@ -1251,6 +1190,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     
     [[ServerConnector sharedServerConnector] connect:ConnectionInitiatorApp];
     [[TypingIndicatorManager sharedInstance] resetTypingIndicators];
+    [[NotificationPresenterWrapper shared] dismissAllPresentedNotifications];
     
 }
 
@@ -1316,7 +1256,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     UNUserNotificationCenter *center = [UNUserNotificationCenter currentNotificationCenter];
     [center removeAllDeliveredNotifications];
 
-    if ([[NSUserDefaults standardUserDefaults] boolForKey:@"FASTLANE_SNAPSHOT"]) {
+    if (ProcessInfoHelper.isRunningForScreenshots)  {
         NSMutableOrderedSet *workIdentities = [NSMutableOrderedSet new];
 
         if ([LicenseStore requiresLicenseKey] == YES) {
@@ -1367,10 +1307,12 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     return orientationLock;
 }
 
-#pragma mark - Audio call intent
+#pragma mark - Intent handling
 
 - (BOOL)application:(UIApplication *)application continueUserActivity:(NSUserActivity *)userActivity restorationHandler:(void (^)(NSArray<id<UIUserActivityRestoring>> *restorationHandler))restorationHandler {
-    if ([userActivity.activityType isEqualToString:@"INStartAudioCallIntent"]) {
+    if([userActivity.activityType isEqualToString:@"INSendMessageIntent"]) {
+        return [self handleINSendMessageIntentWithUserActivity:userActivity];
+    } else if ([userActivity.activityType isEqualToString:@"INStartAudioCallIntent"]) {
         return [self handleStartAudioCallIntent:userActivity];
     } else if ([userActivity.activityType isEqualToString:NSUserActivityTypeBrowsingWeb]) {
         [URLHandler handleURL:userActivity.webpageURL];
@@ -1385,7 +1327,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     INPersonHandle *personHandle = person.personHandle;
     if (personHandle.value) {
         EntityManager *entityManager = [[EntityManager alloc] init];
-        Contact *contact = [entityManager.entityFetcher contactForId:personHandle.value];
+        ContactEntity *contact = [entityManager.entityFetcher contactForId:personHandle.value];
         if (contact) {
             [FeatureMask checkFeatureMask:FEATURE_MASK_VOIP forContacts:[NSSet setWithObjects:contact, nil] onCompletion:^(NSArray *unsupportedContacts) {
                 if (unsupportedContacts.count == 0) {
@@ -1413,7 +1355,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 
 - (void)application:(UIApplication *)application didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken {
     [[ServerConnector sharedServerConnector] setPushToken:deviceToken];
-    [self askForPushDecryption];
+    // TODO: IOS-3014: Removed alert to ask for pushDecrypt (preview in notifs, also take care of MDM_KEY_DISABLE_MESSAGE_PREVIEW and comm notifs)
 }
 
 #pragma mark - UNUserNotificationCenterDelegate

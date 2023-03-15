@@ -21,6 +21,12 @@
 import CocoaLumberjackSwift
 import Foundation
 
+// MARK: - BlobManagerDelegate
+
+protocol BlobManagerDelegate: AnyObject {
+    func updateProgress(for objectID: NSManagedObjectID, didUpdate progress: Progress) async
+}
+
 /// Central manager creating, coordinating and observing blob up- & downloads of BlobData asynchronously
 public actor BlobManager: BlobManagerProtocol {
     
@@ -31,6 +37,7 @@ public actor BlobManager: BlobManagerProtocol {
     // MARK: - Private properties
 
     private static let state = BlobManagerState()
+    private static let activeState = BlobManagerActiveState()
     
     private let sessionManager: URLSessionManager
     private let serverConnector: ServerConnectorProtocol
@@ -43,17 +50,25 @@ public actor BlobManager: BlobManagerProtocol {
     private let blobUploader: BlobUploader
 
     private let injectedEntityManager: EntityManager?
-    
+    private let injectedGroupManager: GroupManagerProtocol?
+
     /// The entityManager is implemented like this, because we needed a
     /// possibility to override it for testing.
     /// Further, to solve CoreData context syncing issues, we create a new
     /// one every time we save or fetch something.
-    private lazy var entityManager: EntityManager = {
+    private var entityManager: EntityManager {
         if let entityManager = injectedEntityManager {
             return entityManager
         }
         return EntityManager(withChildContextForBackgroundProcess: true)
-    }()
+    }
+    
+    private var groupManager: GroupManagerProtocol {
+        if let groupManager = injectedGroupManager {
+            return groupManager
+        }
+        return GroupManager(entityManager: entityManager)
+    }
     
     // MARK: - Lifecycle
     
@@ -67,6 +82,7 @@ public actor BlobManager: BlobManagerProtocol {
     ///   - blobMessageSender: BlobMessageSender, default is `BlobMessageSender.shared`
     init(
         entityManager: EntityManager? = nil,
+        groupManager: GroupManagerProtocol? = nil,
         sessionManager: URLSessionManager = URLSessionManager.shared,
         serverConnector: ServerConnectorProtocol = ServerConnector.shared(),
         serverInfoProvider: ServerInfoProvider = ServerInfoProviderFactory.makeServerInfoProvider(),
@@ -74,6 +90,7 @@ public actor BlobManager: BlobManagerProtocol {
         blobMessageSender: BlobMessageSender = BlobMessageSender.shared
     ) {
         self.injectedEntityManager = entityManager
+        self.injectedGroupManager = groupManager
         self.sessionManager = sessionManager
         self.serverConnector = serverConnector
         self.serverInfoProvider = serverInfoProvider
@@ -101,7 +118,7 @@ public actor BlobManager: BlobManagerProtocol {
     ///   - webRequestID: Optional String used to identify the web request
     public func createMessageAndSyncBlobs(
         for item: URLSenderItem,
-        in conversationID: NSManagedObjectID,
+        in conversationObjectID: NSManagedObjectID,
         correlationID: String? = nil,
         webRequestID: String? = nil
     ) async throws {
@@ -109,12 +126,10 @@ public actor BlobManager: BlobManagerProtocol {
         // Check if we actually have data and if it is smaller than the max file size
         guard let data = item.getData(),
               data.count < kMaxFileSize else {
-            throw BlobManagerError.tooBig
-        }
-        
-        // Check if we actually have data and if it is smaller than the max file size
-        guard let data = item.getData(),
-              data.count < kMaxFileSize else {
+            NotificationPresenterWrapper.shared.present(
+                type: .sendingError,
+                subtitle: BundleUtil.localizedString(forKey: "notification_sending_failed_subtitle_size")
+            )
             throw BlobManagerError.tooBig
         }
         
@@ -125,14 +140,26 @@ public actor BlobManager: BlobManagerProtocol {
         let em = entityManager
         em.performBlockAndWait {
             var messageID: Data?
+            var conversation: Conversation!
             // Create message
             em.performSyncBlockAndSafe {
                 do {
-                    let conversation = em.entityFetcher
-                        .existingObject(with: conversationID) as! Conversation
+                    conversation = em.entityFetcher
+                        .existingObject(with: conversationObjectID) as? Conversation
+                    
+                    let origin: BlobOrigin!
+                    if conversation.isGroup(), let group = self.groupManager.getGroup(conversation: conversation),
+                       group.isNoteGroup {
+                        origin = .local
+                    }
+                    else {
+                        origin = .public
+                    }
+                    
                     let fileMessageEntity = try em.entityCreator.createFileMessageEntity(
                         for: item,
                         in: conversation,
+                        with: origin,
                         correlationID: correlationID,
                         webRequestID: webRequestID
                     )
@@ -143,15 +170,23 @@ public actor BlobManager: BlobManagerProtocol {
                 }
             }
             
-            // Fetch it again to get a non temporary objectID
-            guard let fileMessage = em.entityFetcher.message(with: messageID) as? FileMessageEntity else {
-                creationError = BlobManagerError.messageNotFound
+            guard let messageID else {
+                creationError = BlobManagerError.noID
                 return
             }
             
-            fileMessageEntityObjectID = fileMessage.objectID
+            em.performBlockAndWait {
+                // Fetch it again to get a non temporary objectID
+                guard let fileMessage = em.entityFetcher
+                    .message(with: messageID, conversation: conversation) as? FileMessageEntity else {
+                    creationError = BlobManagerError.messageNotFound
+                    return
+                }
+                
+                fileMessageEntityObjectID = fileMessage.objectID
+            }
         }
-
+        
         guard let fileMessageObjectID = fileMessageEntityObjectID, creationError == nil else {
             throw creationError!
         }
@@ -214,22 +249,39 @@ public actor BlobManager: BlobManagerProtocol {
     /// - Parameter objectID: Object to sync blobs for
     public func syncBlobsThrows(for objectID: NSManagedObjectID) async throws {
         
-        // We do not even attempt to sync if we are not connected
+        // We do not even attempt to sync if blob is for note group or we are not connected
+        guard !isForNoteGroup(objectID: objectID) else {
+            DDLogNotice("[BlobManager] Tried to sync for note group.")
+            return
+        }
+        
         guard serverConnector.connectionState == .loggedIn else {
             DDLogNotice("[BlobManager] Tried to sync while not connected.")
             return
         }
         
         try await BlobManager.state.addActiveObjectID(objectID)
-
+        BlobManager.activeState.hasActiveSyncs = true
+        
         do {
             try await startSync(for: objectID)
             resetStatesForBlob(with: objectID)
             await BlobManager.state.removeActiveObjectIDAndProgress(for: objectID)
+           
+            // Update non isolated state tracker
+            if !(await BlobManager.state.hasActiveObjectIDs()) {
+                BlobManager.activeState.hasActiveSyncs = false
+            }
         }
         catch {
             setErrorStateForBlob(with: objectID)
             await BlobManager.state.removeActiveObjectIDAndProgress(for: objectID)
+            
+            // Update non isolated state tracker
+            if !(await BlobManager.state.hasActiveObjectIDs()) {
+                BlobManager.activeState.hasActiveSyncs = false
+            }
+            
             throw error
         }
     }
@@ -244,6 +296,17 @@ public actor BlobManager: BlobManagerProtocol {
             blobUploader.cancelUpload(for: objectID)
             resetStatesForBlob(with: objectID)
         }
+        
+        // Update non isolated state tracker
+        if !(await BlobManager.state.hasActiveObjectIDs()) {
+            BlobManager.activeState.hasActiveSyncs = false
+        }
+    }
+    
+    /// Checks the non isolated state tracker if there are any active blob syncs. Might not return the correct value since it is not handled in actor isolation.
+    /// - Returns: `True` if there are probably some active syncs.
+    public nonisolated func hasActiveSyncs() -> Bool {
+        BlobManager.activeState.hasActiveSyncs
     }
     
     // MARK: - State handling and processing logic
@@ -251,48 +314,57 @@ public actor BlobManager: BlobManagerProtocol {
     private func startSync(for objectID: NSManagedObjectID) async throws {
 
         // Safely load data and states concurrently
-        var blobData: BlobData?
         var blobDataState: BlobState!
         var thumbnailState: BlobState!
         
-        let em = entityManager
+        var em = entityManager
         em.performBlockAndWait {
-            guard let bD = em.entityFetcher
+            guard let blobData = em.entityFetcher
                 .existingObject(with: objectID) as? BlobData
             else {
                 DDLogError("[BlobManager] Unable to load message as BlobData for object ID: \(objectID)")
                 return
             }
             
-            blobData = bD
-            blobDataState = bD.dataState
-            thumbnailState = bD.thumbnailState
-        }
-        
-        guard let blobData = blobData else {
-            return
+            blobDataState = blobData.dataState
+            thumbnailState = blobData.thumbnailState
         }
         
         // Differentiate between incoming and outgoing
         if case let .incoming(incomingThumbnailState) = thumbnailState,
            case let .incoming(incomingDataState) = blobDataState {
             // We don't do this in parallel for now to make everything testable
-            try await syncIncomingThumbnail(for: blobData, of: objectID, with: incomingThumbnailState)
-            try await syncIncomingData(for: blobData, of: objectID, with: incomingDataState)
+            try await syncIncomingThumbnail(of: objectID, with: incomingThumbnailState)
+            try await syncIncomingData(of: objectID, with: incomingDataState)
         }
         else if case let .outgoing(outgoingThumbnailState) = thumbnailState,
                 case let .outgoing(outgoingDataState) = blobDataState {
+            
+            // We directly return if blob is for note group
+            guard !isForNoteGroup(objectID: objectID) else {
+                DDLogNotice("[BlobManager] Tried to sync for note group.")
+                return
+            }
+            
             // We don't do this in parallel for now to make everything testable
-            try await syncOutgoingThumbnail(for: blobData, of: objectID, with: outgoingThumbnailState)
-            try await syncOutgoingData(for: blobData, of: objectID, with: outgoingDataState)
+            try await syncOutgoingThumbnail(of: objectID, with: outgoingThumbnailState)
+            try await syncOutgoingData(of: objectID, with: outgoingDataState)
             
             // Upload succeeded, we reset the progress
-            entityManager.performSyncBlockAndSafe {
+            em = entityManager
+            em.performSyncBlockAndSafe {
+                guard let blobData = em.entityFetcher
+                    .existingObject(with: objectID) as? BlobData
+                else {
+                    DDLogError("[BlobManager] Unable to load message as BlobData for object ID: \(objectID)")
+                    return
+                }
+                
                 blobData.blobUpdateProgress(nil)
             }
             
             // Send the message
-            await blobMessageSender.sendBlobMessage(with: objectID)
+            try await blobMessageSender.sendBlobMessage(with: objectID)
         }
         else {
             DDLogError("[BlobManager] Thumbnail and Data have different directions.")
@@ -303,7 +375,6 @@ public actor BlobManager: BlobManagerProtocol {
     // MARK: Incoming Thumbnail
     
     private func syncIncomingThumbnail(
-        for blobData: BlobData,
         of objectID: NSManagedObjectID,
         with state: IncomingBlobState
     ) async throws {
@@ -313,29 +384,43 @@ public actor BlobManager: BlobManagerProtocol {
             return
         }
         
+        var blobData: BlobData?
         var encryptionKey: Data?
         var thumbnailID: Data?
         var origin: BlobOrigin?
         
-        entityManager.performBlockAndWait {
-            encryptionKey = blobData.blobGetEncryptionKey()
-            thumbnailID = blobData.blobGetThumbnailID()
-            origin = blobData.blobGetOrigin()
+        let em = entityManager
+        em.performBlockAndWait {
+            guard let bd = em.entityFetcher
+                .existingObject(with: objectID) as? BlobData
+            else {
+                DDLogError("[BlobManager] Unable to load message as BlobData for object ID: \(objectID)")
+                return
+            }
+            blobData = bd
+            encryptionKey = bd.blobGetEncryptionKey()
+            thumbnailID = bd.blobGetThumbnailID()
+            origin = bd.blobGetOrigin()
         }
         
-        guard let thumbnailID = thumbnailID else {
+        guard let blobData else {
+            DDLogError("[BlobManager] Unable to load message as BlobData for object ID: \(objectID)")
+            return
+        }
+        
+        guard let thumbnailID else {
             DDLogNotice("[BlobManager] There is no thumbnailID available for given blob.")
             return
         }
         
-        guard let origin = origin else {
+        guard let origin else {
             DDLogNotice("[BlobManager] There is no origin available for given blob.")
             return
         }
                 
         switch state {
         case .remote:
-            entityManager.performSyncBlockAndSafe {
+            em.performSyncBlockAndSafe {
                 // Note: This will also reset the error of the belonging incomingDataState
                 blobData.blobSetError(false)
                 if blobData.blobGetProgress() == nil {
@@ -346,7 +431,6 @@ public actor BlobManager: BlobManagerProtocol {
             
             let thumbnail = try await downloadBlob(
                 for: thumbnailID,
-                of: blobData,
                 origin: origin,
                 objectID: objectID,
                 encryptionKey: encryptionKey,
@@ -356,7 +440,7 @@ public actor BlobManager: BlobManagerProtocol {
             
             // This is save. Delegate calls will not result in another update of the progress as the
             // objectID is no-more in `activeObjectIDs`.
-            entityManager.performSyncBlockAndSafe {
+            em.performSyncBlockAndSafe {
                 blobData.blobSetThumbnail?(thumbnail)
             }
             
@@ -372,7 +456,6 @@ public actor BlobManager: BlobManagerProtocol {
     // MARK: Incoming Data
     
     private func syncIncomingData(
-        for blobData: BlobData,
         of objectID: NSManagedObjectID,
         with state: IncomingBlobState
     ) async throws {
@@ -382,29 +465,44 @@ public actor BlobManager: BlobManagerProtocol {
             return
         }
         
+        var blobData: BlobData?
         var encryptionKey: Data?
         var dataID: Data?
         var origin: BlobOrigin?
         
-        entityManager.performBlockAndWait {
-            encryptionKey = blobData.blobGetEncryptionKey()
-            dataID = blobData.blobGetID()
-            origin = blobData.blobGetOrigin()
+        let em = entityManager
+        em.performBlockAndWait {
+            guard let bd = em.entityFetcher
+                .existingObject(with: objectID) as? BlobData
+            else {
+                DDLogError("[BlobManager] Unable to load message as BlobData for object ID: \(objectID)")
+                return
+            }
+            
+            blobData = bd
+            encryptionKey = bd.blobGetEncryptionKey()
+            dataID = bd.blobGetID()
+            origin = bd.blobGetOrigin()
         }
         
-        guard let dataID = dataID else {
+        guard let blobData else {
+            DDLogError("[BlobManager] Unable to load message as BlobData for object ID: \(objectID)")
+            return
+        }
+        
+        guard let dataID else {
             DDLogNotice("[BlobManager] There is no dataID available for given blob.")
             throw BlobManagerError.noID
         }
         
-        guard let origin = origin else {
+        guard let origin else {
             DDLogNotice("[BlobManager] There is no origin available for given blob.")
             throw BlobManagerError.noOrigin
         }
         
         switch state {
         case .remote:
-            entityManager.performSyncBlockAndSafe {
+            em.performSyncBlockAndSafe {
                 blobData.blobSetError(false)
                 if blobData.blobGetProgress() == nil {
                     // If not already done, we set the progress to 0.0 to indicate work has started
@@ -414,7 +512,6 @@ public actor BlobManager: BlobManagerProtocol {
             
             let data = try await downloadBlob(
                 for: dataID,
-                of: blobData,
                 origin: origin,
                 objectID: objectID,
                 encryptionKey: encryptionKey,
@@ -424,16 +521,18 @@ public actor BlobManager: BlobManagerProtocol {
             
             // This is save. Delegate calls will not result in another update of the progress as the
             // objectID is no-more in `activeObjectIDs`.
-            entityManager.performSyncBlockAndSafe {
+            em.performSyncBlockAndSafe {
                 blobData.blobSetData(data)
             }
             
             try await markDownloadDone(for: dataID, objectID: objectID, origin: origin)
             
             // Download succeeded, we reset the progress
-            entityManager.performSyncBlockAndSafe {
+            em.performSyncBlockAndSafe {
                 blobData.blobUpdateProgress(nil)
             }
+            
+            autoSaveMedia(objectID: objectID)
             
         default:
             DDLogNotice("[BlobManager] Data of blob does not need any action, current state is \(state.description).")
@@ -442,7 +541,6 @@ public actor BlobManager: BlobManagerProtocol {
     
     private func downloadBlob(
         for blobID: Data,
-        of blobData: BlobData,
         origin: BlobOrigin,
         objectID: NSManagedObjectID,
         encryptionKey: Data?,
@@ -462,11 +560,15 @@ public actor BlobManager: BlobManagerProtocol {
             objectID: objectID,
             delegate: self
         )
-        let decryptedData: Data! = NaClCrypto.shared().symmetricDecryptData(
+        
+        guard let decryptedData = NaClCrypto.shared().symmetricDecryptData(
             encryptedData,
             withKey: encryptionKey,
             nonce: nonce
-        )
+        ) else {
+            DDLogNotice("[BlobManager] Data of blob could not be decrypted.")
+            throw BlobManagerError.cryptographyFailed
+        }
         
         return decryptedData
     }
@@ -497,10 +599,39 @@ public actor BlobManager: BlobManagerProtocol {
         try await client.sendDone(url: url)
     }
     
+    private func autoSaveMedia(objectID: NSManagedObjectID) {
+        guard UserSettings.shared().autoSaveMedia else {
+            return
+        }
+    
+        Task {
+            let em = entityManager
+            
+            em.performBlockAndWait {
+                guard let fetchedMessage = em.entityFetcher.existingObject(with: objectID) as? ThumbnailDisplayMessage
+                else {
+                    DDLogInfo("[BlobManager] ThumbnailDisplayMessage of media to be autosaved not found.")
+                    return
+                }
+                
+                guard fetchedMessage.conversation.conversationCategory != .private else {
+                    DDLogInfo("[BlobManager] Skip autosave, because message is from private chat.")
+                    return
+                }
+                
+                guard let saveMediaItem = fetchedMessage.createSaveMediaItem(forAutosave: true) else {
+                    DDLogInfo("[BlobManager] Getting SaveMediaItem to auto-save failed.")
+                    return
+                }
+                
+                AlbumManager.shared.save(saveMediaItem, showNotifications: false)
+            }
+        }
+    }
+    
     // MARK: Outgoing Thumbnail
     
     private func syncOutgoingThumbnail(
-        for blobData: BlobData,
         of objectID: NSManagedObjectID,
         with state: OutgoingBlobState
     ) async throws {
@@ -511,14 +642,29 @@ public actor BlobManager: BlobManagerProtocol {
             return
         }
         
+        var blobData: BlobData?
         var thumbnailData: Data?
         var encryptionKey: Data?
         var origin: BlobOrigin?
         
-        entityManager.performBlockAndWait {
-            thumbnailData = blobData.blobGetThumbnail()
-            encryptionKey = blobData.blobGetEncryptionKey()
-            origin = blobData.blobGetOrigin()
+        let em = entityManager
+        em.performBlockAndWait {
+            guard let bd = em.entityFetcher
+                .existingObject(with: objectID) as? BlobData
+            else {
+                DDLogError("[BlobManager] Unable to load message as BlobData for object ID: \(objectID)")
+                return
+            }
+            
+            blobData = bd
+            thumbnailData = bd.blobGetThumbnail()
+            encryptionKey = bd.blobGetEncryptionKey()
+            origin = bd.blobGetOrigin()
+        }
+        
+        guard let blobData else {
+            DDLogError("[BlobManager] Unable to load message as BlobData for object ID: \(objectID)")
+            return
         }
         
         guard let encryptionKey = encryptionKey else {
@@ -539,7 +685,7 @@ public actor BlobManager: BlobManagerProtocol {
                        
         switch state {
         case .pendingUpload:
-            entityManager.performSyncBlockAndSafe {
+            em.performSyncBlockAndSafe {
                 // Note: This will also reset the error of the belonging outgoingDataState
                 blobData.blobSetError(false)
                 if blobData.blobGetProgress() == nil {
@@ -551,7 +697,6 @@ public actor BlobManager: BlobManagerProtocol {
             // Upload data to get ID
             let thumbnailID = try await uploadBlob(
                 for: thumbnailData,
-                of: blobData,
                 origin: origin,
                 objectID: objectID,
                 encryptionKey: encryptionKey,
@@ -564,7 +709,7 @@ public actor BlobManager: BlobManagerProtocol {
             }
 
             // Assign ID to message & save
-            entityManager.performSyncBlockAndSafe {
+            em.performSyncBlockAndSafe {
                 blobData.blobSetThumbnailID?(thumbnailID)
             }
             
@@ -581,24 +726,38 @@ public actor BlobManager: BlobManagerProtocol {
     // MARK: Outgoing Data
 
     private func syncOutgoingData(
-        for blobData: BlobData,
         of objectID: NSManagedObjectID,
         with state: OutgoingBlobState
     ) async throws {
         
-        // We return directly if the data is already uploaded
+        // If the data was uploaded successfully and we still reach this point, the message sending failed and we try to resend it, and return
         guard state != .remote else {
             return
         }
         
+        var blobData: BlobData?
         var data: Data?
         var encryptionKey: Data?
         var origin: BlobOrigin?
         
-        entityManager.performBlockAndWait {
-            data = blobData.blobGet()
-            encryptionKey = blobData.blobGetEncryptionKey()
-            origin = blobData.blobGetOrigin()
+        let em = entityManager
+        em.performBlockAndWait {
+            guard let bd = em.entityFetcher
+                .existingObject(with: objectID) as? BlobData
+            else {
+                DDLogError("[BlobManager] Unable to load message as BlobData for object ID: \(objectID)")
+                return
+            }
+
+            blobData = bd
+            data = bd.blobGet()
+            encryptionKey = bd.blobGetEncryptionKey()
+            origin = bd.blobGetOrigin()
+        }
+        
+        guard let blobData else {
+            DDLogError("[BlobManager] Unable to load message as BlobData for object ID: \(objectID)")
+            return
         }
         
         guard let encryptionKey = encryptionKey else {
@@ -622,7 +781,7 @@ public actor BlobManager: BlobManagerProtocol {
             // There might have been an issue where the app was terminated while uploading and we need to clean up
             await BlobManager.state.removeProgress(for: objectID)
             
-            entityManager.performSyncBlockAndSafe {
+            em.performSyncBlockAndSafe {
                 blobData.blobSetError(false)
                 if blobData.blobGetProgress() == nil {
                     // If not already done, we set the progress to 0.0 to indicate work has started
@@ -633,7 +792,6 @@ public actor BlobManager: BlobManagerProtocol {
             // Upload data to get ID
             let dataID = try await uploadBlob(
                 for: data,
-                of: blobData,
                 origin: origin,
                 objectID: objectID,
                 encryptionKey: encryptionKey,
@@ -646,7 +804,7 @@ public actor BlobManager: BlobManagerProtocol {
             }
             
             // Assign ID to message & save
-            entityManager.performSyncBlockAndSafe {
+            em.performSyncBlockAndSafe {
                 blobData.blobSetDataID(dataID)
             }
             
@@ -657,7 +815,6 @@ public actor BlobManager: BlobManagerProtocol {
     
     private func uploadBlob(
         for data: Data,
-        of blobData: BlobData,
         origin: BlobOrigin,
         objectID: NSManagedObjectID,
         encryptionKey: Data?,
@@ -718,9 +875,7 @@ public actor BlobManager: BlobManagerProtocol {
         // Reset BlobData values, to reflect state
         let em = entityManager
         em.performSyncBlockAndSafe {
-            guard let blob = em.entityFetcher
-                .existingObject(with: objectID) as? BlobData
-            else {
+            guard let blob = em.entityFetcher.existingObject(with: objectID) as? BlobData else {
                 DDLogWarn("[BlobManager] Could not set blob error because it was not found.")
                 return
             }
@@ -729,43 +884,45 @@ public actor BlobManager: BlobManagerProtocol {
             blob.blobSetError(true)
         }
     }
-}
-
-// MARK: - BlobDownloaderDelegate
-
-extension BlobManager: BlobDownloaderDelegate {
     
-    func blobDownloader(for objectID: NSManagedObjectID, didUpdate progress: Progress) async {
-        guard await BlobManager.state.isActive(objectID),
-              let lastProgress = await BlobManager.state.progress(for: objectID)
-        else {
-            return
+    private func isForNoteGroup(objectID: NSManagedObjectID) -> Bool {
+        
+        // We upload anyways if MD is activated
+        if serverConnector.isMultiDeviceActivated {
+            return false
         }
         
-        // We artificially limit the saving of the progress to at least every 1% to reduce the amount of snapshots
-        // applied in the chat view
-        let newProgress = Double((100 * progress.fractionCompleted).rounded(.up) / 100)
-        guard abs(lastProgress - newProgress) >= 0.01 else {
-            return
-        }
-        
-        await BlobManager.state.setProgress(for: objectID, to: newProgress)
         let em = entityManager
+        
+        var isNoteGroup = false
+        
         em.performSyncBlockAndSafe {
-            guard let blobData = em.entityFetcher.existingObject(with: objectID) as? BlobData else {
+            guard let message = em.entityFetcher.existingObject(with: objectID) as? FileMessageEntity,
+                  message.conversation.isGroup(),
+                  let group = self.groupManager.getGroup(conversation: message.conversation),
+                  group.isNoteGroup else {
                 return
             }
-
-            blobData.blobUpdateProgress(NSNumber(value: progress.fractionCompleted))
+            message.sent = true
+            message.blobSetError(false)
+            message.progress = nil
+            message.blobSetDataID(ThreemaProtocol.nonUploadedBlobID)
+            
+            if message.blobGetThumbnail() != nil {
+                message.blobSetThumbnailID(ThreemaProtocol.nonUploadedBlobID)
+            }
+            
+            isNoteGroup = true
         }
+        return isNoteGroup
     }
 }
 
-// MARK: - BlobUploaderDelegate
+// MARK: - BlobManagerDelegate
 
-extension BlobManager: BlobUploaderDelegate {
+extension BlobManager: BlobManagerDelegate {
     
-    func blobUploader(for objectID: NSManagedObjectID, didUpdate progress: Progress) async {
+    func updateProgress(for objectID: NSManagedObjectID, didUpdate progress: Progress) async {
         guard await BlobManager.state.isActive(objectID),
               let lastProgress = await BlobManager.state.progress(for: objectID)
         else {
@@ -785,6 +942,7 @@ extension BlobManager: BlobUploaderDelegate {
             guard let blobData = em.entityFetcher.existingObject(with: objectID) as? BlobData else {
                 return
             }
+
             blobData.blobUpdateProgress(NSNumber(value: progress.fractionCompleted))
         }
     }

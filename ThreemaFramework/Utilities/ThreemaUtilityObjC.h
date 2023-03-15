@@ -19,7 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import <Foundation/Foundation.h>
-#import "Contact.h"
+#import "ContactEntity.h"
 
 __attribute__((deprecated("Use ThreemaUtility instead")))
 @interface ThreemaUtilityObjC : NSObject
@@ -52,7 +52,7 @@ __attribute__((deprecated("Use ThreemaUtility instead")))
 
 + (NSData*)truncatedUTF8String:(NSString*)str maxLength:(NSUInteger)maxLength;
 
-+ (BOOL)hideThreemaTypeIconForContact:(Contact *)contact __deprecated_msg("Use Contact.showOtherThreemaTypeIcon instead");
++ (BOOL)hideThreemaTypeIconForContact:(ContactEntity *)contact __deprecated_msg("Use ContactEntity.showOtherThreemaTypeIcon instead");
 
 + (UIImage *)threemaTypeIcon __deprecated_msg("Use ThreemaUtility.otherThreemaTypeIcon or OtherThreemaTypeImageView instead");
 

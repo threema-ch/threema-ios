@@ -80,7 +80,7 @@ class ThreemaWebViewController: ThemedTableViewController {
         
         cleanupWebClientSessions()
         
-        cameraButton.image = BundleUtil.imageNamed("QRScan")?.withTint(Colors.primary)
+        cameraButton.image = BundleUtil.imageNamed("QRScan")?.withTint(.primary)
         cameraButton.accessibilityLabel = BundleUtil.localizedString(forKey: "scan_qr")
         
         tableView.reloadData()

@@ -68,6 +68,7 @@ class AppMigrationTests: XCTestCase {
             multiDeviceManager: MultiDeviceManagerMock(),
             myIdentityStore: MyIdentityStoreMock(),
             userSettings: userSettingsMock,
+            settingsStore: SettingsStoreMock(),
             serverConnector: ServerConnectorMock()
         )
 

@@ -356,7 +356,7 @@ struct pktExtension {
 }
 
 - (void)_connect {
-    if ([[NSUserDefaults standardUserDefaults] boolForKey:@"FASTLANE_SNAPSHOT"]) {
+    if (ProcessInfoHelper.isRunningForScreenshots)  {
         return;
     }
 

@@ -76,7 +76,7 @@ final class SingleDetailsViewController: ThemedCodeModernGroupedTableViewControl
         linkedContactManager: linkedContactManager
     )
     
-    private let contact: Contact
+    private let contact: ContactEntity
     private lazy var linkedContactManager = LinkedContactManger(for: contact)
     private lazy var publicKeyView = PublicKeyView(for: contact)
     
@@ -89,7 +89,7 @@ final class SingleDetailsViewController: ThemedCodeModernGroupedTableViewControl
     // Backwards compatibility
     
     @available(*, deprecated, message: "Only use this for old code to keep it working")
-    @objc var _contact: Contact {
+    @objc var _contact: ContactEntity {
         contact
     }
     
@@ -130,8 +130,9 @@ final class SingleDetailsViewController: ThemedCodeModernGroupedTableViewControl
     ///     - contact: Contact to show details for
     ///     - displayStyle: Appearance of the details
     @objc
+    @available(*, deprecated, message: "Use init(for: Contact)")
     init(
-        for contact: Contact,
+        for contact: ContactEntity,
         displayStyle: DetailsDisplayStyle = .default
     ) {
         self.state = .contactDetails(contact: contact)
@@ -140,7 +141,15 @@ final class SingleDetailsViewController: ThemedCodeModernGroupedTableViewControl
         
         super.init()
     }
-    
+
+    convenience init(
+        for contact: Contact,
+        displayStyle: DetailsDisplayStyle = .default
+    ) {
+        let em = EntityManager()
+        self.init(for: em.entityFetcher.contact(for: contact.identity), displayStyle: displayStyle)
+    }
+
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -216,7 +225,7 @@ final class SingleDetailsViewController: ThemedCodeModernGroupedTableViewControl
         // Update title on display name change (e.g. when a new contact is linked)
         observeContact(\.displayName) { [weak self] in
             self?.navigationBarTitle = self?.contact.displayName
-            self?.updateHeader()
+            self?.updateHeader(animated: false)
         }
 
         NotificationCenter.default.addObserver(
@@ -234,15 +243,15 @@ final class SingleDetailsViewController: ThemedCodeModernGroupedTableViewControl
         )
         
         observeContact(\.imageData) { [weak self] in
-            self?.updateHeader()
+            self?.updateHeader(animated: false)
         }
         
         observeContact(\.contactImage) { [weak self] in
-            self?.updateHeader()
+            self?.updateHeader(animated: false)
         }
         
         observeContact(\.verificationLevel) { [weak self] in
-            self?.updateHeader()
+            self?.updateHeader(animated: false)
         }
         
         observeContact(\.publicNickname) { [weak self] in
@@ -272,7 +281,7 @@ final class SingleDetailsViewController: ThemedCodeModernGroupedTableViewControl
     ///   - keyPath: Key path in `Contact` to observe
     ///   - changeHandler: Handler called on each observed change.
     ///                     Don't forget to capture `self` weakly! Dispatched on the main queue.
-    private func observeContact<Value>(_ keyPath: KeyPath<Contact, Value>, changeHandler: @escaping () -> Void) {
+    private func observeContact<Value>(_ keyPath: KeyPath<ContactEntity, Value>, changeHandler: @escaping () -> Void) {
 
         let observer = contact.observe(keyPath) { [weak self] _, _ in
             guard let strongSelf = self else {
@@ -310,9 +319,9 @@ final class SingleDetailsViewController: ThemedCodeModernGroupedTableViewControl
         publicKeyView.updateColors()
     }
     
-    private func updateHeader() {
+    private func updateHeader(animated: Bool = true) {
         headerView.profileContentConfiguration = contact.contentConfiguration
-        updateHeaderLayout()
+        updateHeaderLayout(animated: animated)
     }
 
     // MARK: - Actions
@@ -401,7 +410,7 @@ extension SingleDetailsViewController {
                 target: self,
                 action: #selector(doneButtonTapped)
             )
-            doneButton.accessibilityIdentifier = "DismissButton"
+            doneButton.accessibilityIdentifier = "SingleDetailsViewControllerDoneButton"
             navigationItem.rightBarButtonItem = doneButton
         }
         else {
@@ -450,6 +459,7 @@ extension SingleDetailsViewController {
         DispatchQueue.main.async {
             let updateHeight = {
                 self.tableView.tableHeaderView = self.headerView
+                self.headerView.layoutIfNeeded()
             }
             
             if animated {
@@ -514,6 +524,18 @@ extension SingleDetailsViewController {
         // field before we dismiss ourself and then active the search after the dismissal.
         delegate?.showChatSearch()
         dismiss(animated: true)
+    }
+}
+
+// MARK: - Deleting messages
+
+extension SingleDetailsViewController {
+    func willDeleteMessages(with objectIDs: [NSManagedObjectID]) {
+        delegate?.willDeleteMessages(with: objectIDs)
+    }
+    
+    func willDeleteAllMessages() {
+        delegate?.willDeleteAllMessages()
     }
 }
 
@@ -644,7 +666,7 @@ extension SingleDetailsViewController {
     }
 }
 
-extension Contact {
+extension ContactEntity {
     /// Get a content configuration base on this `Contact`
     fileprivate var contentConfiguration: DetailsHeaderProfileView.ContentConfiguration {
         DetailsHeaderProfileView.ContentConfiguration(

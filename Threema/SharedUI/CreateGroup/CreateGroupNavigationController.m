@@ -31,7 +31,7 @@
 #import "ModalPresenter.h"
 #import "UserSettings.h"
 #import "ContactStore.h"
-#import "Contact.h"
+#import "ContactEntity.h"
 #import <PromiseKit/PromiseKit.h>
 #import "BundleUtil.h"
 #import "AppGroup.h"
@@ -92,7 +92,7 @@
     NSString *groupCreator = [MyIdentityStore sharedMyIdentityStore].identity;
     
     NSMutableSet *groupMemberIdentities = [[NSMutableSet alloc] init];
-    for (Contact *contact in _groupMembers) {
+    for (ContactEntity *contact in _groupMembers) {
         [groupMemberIdentities  addObject:contact.identity];
     }
     

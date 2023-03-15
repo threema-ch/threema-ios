@@ -20,7 +20,7 @@
 
 #import "BallotHeaderView.h"
 #import "EntityFetcher.h"
-#import "Contact.h"
+#import "ContactEntity.h"
 #import "BundleUtil.h"
 #import "AvatarMaker.h"
 
@@ -84,7 +84,7 @@
     EntityManager *entityManager = [[EntityManager alloc] init];
     [_createdByNameLabel setText: [entityManager.entityFetcher displayNameForContactId: _ballot.creatorId]];
     
-    Contact *creatorContact = [entityManager.entityFetcher contactForId:_ballot.creatorId];
-    [_imageView setImage: [[AvatarMaker sharedAvatarMaker] avatarForContact:creatorContact size:_imageView.frame.size.width masked:NO]];
+    ContactEntity *creatorContact = [entityManager.entityFetcher contactForId:_ballot.creatorId];
+    [_imageView setImage: [[AvatarMaker sharedAvatarMaker] avatarForContactEntity:creatorContact size:_imageView.frame.size.width masked:NO]];
 }
 @end

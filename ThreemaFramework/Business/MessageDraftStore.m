@@ -19,7 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import "MessageDraftStore.h"
-#import "Contact.h"
+#import "ContactEntity.h"
 #import "Conversation.h"
 #import "NSString+Hex.h"
 #import "AppGroup.h"
@@ -47,8 +47,7 @@
     [[AppGroup userDefaults] setObject:newMessageDrafts forKey:@"MessageDrafts"];
     [[AppGroup userDefaults] synchronize];
     
-    if (SYSTEM_IS_IPAD)
-        [[NSNotificationCenter defaultCenter] postNotificationName:kNotificationUpdateDraftForCell object:nil];
+    [NSNotificationCenter.defaultCenter postNotificationName:kNotificationUpdateDraftForCell object:nil userInfo: @{kKeyConversation: conversation}];
 }
 
 + (void)deleteDraftForConversation:(Conversation *)conversation {
@@ -65,6 +64,8 @@
     [newMessageDrafts removeObjectForKey:storeKey];
     [[AppGroup userDefaults] setObject:newMessageDrafts forKey:@"MessageDrafts"];
     [[AppGroup userDefaults] synchronize];
+    
+    [NSNotificationCenter.defaultCenter postNotificationName:kNotificationUpdateDraftForCell object:nil userInfo: @{kKeyConversation: conversation}];
 }
 
 + (NSString *)loadDraftForConversation:(Conversation *)conversation {
@@ -87,7 +88,7 @@
         NSArray *allContacts = [entityManager.entityFetcher allContacts];
         NSMutableDictionary *newMessageDrafts = [NSMutableDictionary new];
 
-        for (Contact *contact in allContacts) {
+        for (ContactEntity *contact in allContacts) {
             for (Conversation *conv in contact.conversations) {
                 NSString *draft = [self loadDraftForConversation:conv];
                 if(draft != nil){

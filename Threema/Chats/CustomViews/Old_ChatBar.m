@@ -25,7 +25,7 @@
 #import "BundleUtil.h"
 #import "UIImage+ColoredImage.h"
 #import "RectUtil.h"
-#import "Contact.h"
+#import "ContactEntity.h"
 #import "QuoteView.h"
 #import <MobileCoreServices/MobileCoreServices.h>
 #import "AppDelegate.h"
@@ -147,7 +147,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         addButton.autoresizingMask = UIViewAutoresizingFlexibleTopMargin;
         addButton.imageEdgeInsets = UIEdgeInsetsMake(addButtonYOffset, 2, 0, 0);
         addButton.accessibilityLabel = [BundleUtil localizedStringForKey:@"send_media_or_location"];
-        addButton.accessibilityIdentifier = @"PlusButton";
+        addButton.accessibilityIdentifier = @"ChatBarViewImageButton";
         [addButton addTarget:self action:@selector(addAction:) forControlEvents:UIControlEventTouchUpInside];
         [self addSubview:addButton];
         
@@ -213,14 +213,14 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     
     hairlineView.backgroundColor = Colors.hairLine;
     
-    [addButton setImage:[UIImage imageNamed:@"Plus"inColor:Colors.primary] forState:UIControlStateNormal];
+    [addButton setImage:[UIImage imageNamed:@"Plus"inColor:UIColor.primary] forState:UIControlStateNormal];
     [addButton setImage:[UIImage imageNamed:@"Plus"inColor:Colors.text] forState:UIControlStateHighlighted];
 
-    [sendButton setTitleColor:Colors.primary forState:UIControlStateNormal];
+    [sendButton setTitleColor:UIColor.primary forState:UIControlStateNormal];
     [sendButton setTitleColor:Colors.textLight forState:UIControlStateDisabled];
     [sendButton setTitleColor:Colors.text forState:UIControlStateHighlighted];
     
-    microphoneImage = [UIImage imageNamed:@"Microphone" inColor:Colors.primary];
+    microphoneImage = [UIImage imageNamed:@"Microphone" inColor:UIColor.primary];
     if (microphoneShowing) {
         [self.sendButton setImage:microphoneImage forState:UIControlStateNormal];
     }
@@ -623,15 +623,6 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
             dispatch_resume(typing_timer);
         }
     }
-    
-    if ([text isEqualToString:@"\n"] && [UserSettings sharedUserSettings].returnToSend) {
-        if ([ServerConnector sharedServerConnector].connectionState == ConnectionStateLoggedIn) {
-            dispatch_async(dispatch_get_main_queue(), ^{
-                [self sendText];
-            });
-        }
-        return NO;
-    }
     return YES;
 }
 
@@ -702,7 +693,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     [self showQuotedMessage];
 }
 
-- (void)addQuotedText:(NSString*)quotedText quotedContact:(Contact*)contact {
+- (void)addQuotedText:(NSString*)quotedText quotedContact:(ContactEntity*)contact {
     [quoteView setQuotedText:quotedText quotedContact:contact];
     
     [self showQuotedMessage];

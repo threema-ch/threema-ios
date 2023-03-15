@@ -19,7 +19,6 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import "ErrorNotificationHandler.h"
-#import "Contact.h"
 #import "AppDelegate.h"
 #import "AppGroup.h"
 #import "BundleUtil.h"

@@ -81,34 +81,35 @@ class MediatorReflectedIncomingMessageUpdateProcessor {
         var readMessageConversations = Set<Conversation>()
 
         frameworkInjector.backgroundEntityManager.performBlockAndWait {
+            let conversation: Conversation
+            if let senderIdentity,
+               let contactConversation = self.frameworkInjector.backgroundEntityManager.conversation(
+                   for: senderIdentity,
+                   createIfNotExisting: false
+               ) {
+                conversation = contactConversation
+            }
+            else if let senderGroupIdentity,
+                    let groupConversation = self.frameworkInjector.backgroundEntityManager.entityFetcher.conversation(
+                        for: senderGroupIdentity.id,
+                        creator: senderGroupIdentity.creator
+                    ) {
+                conversation = groupConversation
+            }
+            else {
+                internalError = MediatorReflectedProcessorError
+                    .messageNotProcessed(
+                        message: "Incoming message (ID: \(NSData.convertBytes(messageID)?.hexString ?? "No message ID")) update failed, could get neither conversation for contact nor group"
+                    )
+                return
+            }
+            
             if let id = NSData.convertBytes(messageID),
-               let message = self.frameworkInjector.backgroundEntityManager.entityFetcher.message(with: id) {
-
-                // Validate message sender
-                if let senderIdentity = senderIdentity {
-                    guard let contact = message.conversation?.contact, contact.identity == senderIdentity else {
-                        internalError = MediatorReflectedProcessorError
-                            .messageNotProcessed(
-                                message: "Incoming message (ID: \(id.hexString)) update failed, sender contact mismatch"
-                            )
-                        return
-                    }
-                }
-                else if let senderGroupIdentity = senderGroupIdentity {
-                    guard let groupID = message.conversation?.groupID, groupID == senderGroupIdentity.id else {
-                        internalError = MediatorReflectedProcessorError
-                            .messageNotProcessed(
-                                message: "Incoming message (ID: \(id.hexString)) update failed, sender group mismatch"
-                            )
-                        return
-                    }
-                }
-                else {
-                    internalError = MediatorReflectedProcessorError
-                        .messageNotProcessed(message: "Incoming message (ID: \(id.hexString)) update failed")
-                    return
-                }
-
+               let message = self.frameworkInjector.backgroundEntityManager.entityFetcher.message(
+                   with: id,
+                   conversation: conversation
+               ) {
+                
                 // Is not a message from myself update as read and refresh unread badge
                 if !message.isOwnMessage {
                     self.frameworkInjector.backgroundEntityManager.performSyncBlockAndSafe {

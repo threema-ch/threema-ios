@@ -21,7 +21,7 @@
 import ThreemaFramework
 import UIKit
 
-/// Display a system message
+/// Displays the work/consumer info at the beginning of chats with the other type
 final class ChatViewWorkConsumerInfoSystemMessageTableViewCell: ThemedCodeTableViewCell, MeasurableCell {
     
     static var sizingCell = ChatViewWorkConsumerInfoSystemMessageTableViewCell()
@@ -32,12 +32,51 @@ final class ChatViewWorkConsumerInfoSystemMessageTableViewCell: ThemedCodeTableV
     var systemMessage: SystemMessage? {
         didSet {
             updateCell(for: systemMessage)
+            updateColors()
         }
     }
-    
-    // MARK: - Views
 
-    private lazy var systemMessageWorkConsumerLabel = SystemMessageWorkConsumerLabel()
+    // MARK: Views & constraints
+    
+    private lazy var systemMessageWorkConsumerLabel: UILabel = {
+        let label = UILabel()
+        
+        label.numberOfLines = 0
+        label.lineBreakMode = .byWordWrapping
+        label.textAlignment = .center
+        label.font = ChatViewConfiguration.SystemMessageText.workConsumerFont
+        label.adjustsFontForContentSizeCategory = true
+        
+        return label
+    }()
+    
+    private lazy var systemMessageWorkConsumerImageView: UIImageView = {
+        let imageView = UIImageView()
+        let scaledFontSize = UIFontMetrics.default
+            .scaledValue(for: ChatViewConfiguration.SystemMessageText.workConsumerFont.capHeight) * 1.75
+        imageView.widthAnchor.constraint(equalToConstant: scaledFontSize).isActive = true
+        imageView.heightAnchor.constraint(equalToConstant: scaledFontSize).isActive = true
+
+        imageView.clipsToBounds = true
+        imageView.accessibilityIgnoresInvertColors = true
+        
+        return imageView
+    }()
+    
+    private lazy var systemMessageBackgroundView: UIView = {
+        let view = UIView()
+        
+        view.directionalLayoutMargins = NSDirectionalEdgeInsets(
+            top: ChatViewConfiguration.SystemMessage.Background.defaultSystemMessageTopBottomInset,
+            leading: ChatViewConfiguration.SystemMessage.Background.defaultSystemMessageLeadingTrailingInset / 2,
+            bottom: ChatViewConfiguration.SystemMessage.Background.defaultSystemMessageTopBottomInset,
+            trailing: ChatViewConfiguration.SystemMessage.Background.defaultSystemMessageLeadingTrailingInset
+        )
+                
+        view.layer.cornerCurve = .continuous
+        
+        return view
+    }()
 
     // MARK: - Configuration
     
@@ -45,26 +84,57 @@ final class ChatViewWorkConsumerInfoSystemMessageTableViewCell: ThemedCodeTableV
         super.configureCell()
         
         if UserSettings.shared().flippedTableView {
-            contentView.transform = CGAffineTransform(scaleX: 1, y: -1)
+            transform = CGAffineTransform(scaleX: 1, y: -1)
         }
-
-        isUserInteractionEnabled = false
         
-        contentView.addSubview(systemMessageWorkConsumerLabel)
+        backgroundConfiguration = UIBackgroundConfiguration.clear()
+        
+        // Layout
+        
+        defaultMinimalHeightConstraint.isActive = false
+
+        // The label is a subview of the background view
+        contentView.addSubview(systemMessageBackgroundView)
+        systemMessageBackgroundView.addSubview(systemMessageWorkConsumerLabel)
+        systemMessageBackgroundView.addSubview(systemMessageWorkConsumerImageView)
+
+        systemMessageBackgroundView.translatesAutoresizingMaskIntoConstraints = false
         systemMessageWorkConsumerLabel.translatesAutoresizingMaskIntoConstraints = false
-
+        systemMessageWorkConsumerImageView.translatesAutoresizingMaskIntoConstraints = false
+        
         NSLayoutConstraint.activate([
-            systemMessageWorkConsumerLabel.topAnchor.constraint(equalTo: contentView.layoutMarginsGuide.topAnchor),
-            systemMessageWorkConsumerLabel.bottomAnchor
-                .constraint(equalTo: contentView.layoutMarginsGuide.bottomAnchor),
-            systemMessageWorkConsumerLabel.widthAnchor
+            
+            systemMessageBackgroundView.topAnchor.constraint(
+                equalTo: contentView.topAnchor,
+                constant: ChatViewConfiguration.SystemMessage.defaultTopBottomInset
+            ),
+            systemMessageBackgroundView.bottomAnchor.constraint(
+                equalTo: contentView.bottomAnchor,
+                constant: -ChatViewConfiguration.SystemMessage.defaultTopBottomInset
+            ),
+            systemMessageBackgroundView.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
+            systemMessageBackgroundView.widthAnchor
                 .constraint(lessThanOrEqualTo: contentView.readableContentGuide.widthAnchor),
-            systemMessageWorkConsumerLabel.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
+            
+            systemMessageBackgroundView.layoutMarginsGuide.topAnchor.constraint(
+                equalTo: systemMessageWorkConsumerLabel.topAnchor
+            ),
+            systemMessageBackgroundView.layoutMarginsGuide.leadingAnchor.constraint(
+                equalTo: systemMessageWorkConsumerImageView.leadingAnchor
+            ),
+            systemMessageBackgroundView.layoutMarginsGuide.bottomAnchor.constraint(
+                equalTo: systemMessageWorkConsumerLabel.bottomAnchor
+            ),
+            systemMessageBackgroundView.layoutMarginsGuide.trailingAnchor.constraint(
+                equalTo: systemMessageWorkConsumerLabel.trailingAnchor
+            ),
+            systemMessageWorkConsumerImageView.trailingAnchor.constraint(
+                equalTo: systemMessageWorkConsumerLabel.leadingAnchor,
+                constant: -ChatViewConfiguration.SystemMessage.typeIconLabelSpace
+            ),
+            systemMessageWorkConsumerImageView.centerYAnchor
+                .constraint(equalTo: systemMessageWorkConsumerLabel.centerYAnchor),
         ])
-        
-        systemMessageWorkConsumerLabel.updateCornerRadius()
-        
-        backgroundColor = .clear
     }
     
     // MARK: - Updates
@@ -72,15 +142,44 @@ final class ChatViewWorkConsumerInfoSystemMessageTableViewCell: ThemedCodeTableV
     override func updateColors() {
         super.updateColors()
         
-        systemMessageWorkConsumerLabel.updateColors()
+        guard let systemMessage,
+              !systemMessage.willBeDeleted,
+              case let .workConsumerInfo(type: workConsumerType) = systemMessage.systemMessageType
+        else {
+            return
+        }
+        
+        systemMessageWorkConsumerLabel.textColor = .white
+        systemMessageWorkConsumerLabel.highlightedTextColor = .white
+        systemMessageBackgroundView.backgroundColor = workConsumerType.backgroundColor
     }
     
     private func updateCell(for systemMessage: SystemMessage?) {
         guard case let .workConsumerInfo(type: workConsumerType) = systemMessage?.systemMessageType else {
             return
         }
-        systemMessageWorkConsumerLabel.type = workConsumerType
-        systemMessageWorkConsumerLabel.updateCornerRadius()
+        
+        systemMessageWorkConsumerLabel.text = workConsumerType.localizedMessage
+        systemMessageWorkConsumerImageView.image = workConsumerType.symbol
+    }
+    
+    // MARK: - Overrides
+    
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        
+        // Ensure that we always have a correct corner radius
+        var newCornerRadius = min(
+            ChatViewConfiguration.SystemMessage.Background.cornerRadius,
+            systemMessageBackgroundView.frame.height / 2
+        )
+        
+        // We sometimes ran into an issue where the frame height was 0 on initial loading in iOS 15.6.
+        if newCornerRadius == 0 {
+            newCornerRadius = ChatViewConfiguration.SystemMessage.Background.cornerRadius
+        }
+        
+        systemMessageBackgroundView.layer.cornerRadius = newCornerRadius
     }
 }
 

@@ -21,7 +21,7 @@
 #import "LocationViewController.h"
 #import "LocationMessage.h"
 #import "Conversation.h"
-#import "Contact.h"
+#import "ContactEntity.h"
 #import "MyIdentityStore.h"
 #import "UIImage+ColoredImage.h"
 #import "BundleUtil.h"
@@ -183,7 +183,7 @@
         if (markerAnnotation == nil) {
             markerAnnotation = [[MKMarkerAnnotationView alloc] initWithAnnotation:self reuseIdentifier:markerAnnotationIdentifier];
             markerAnnotation.canShowCallout = true;
-            markerAnnotation.markerTintColor = Colors.primary;
+            markerAnnotation.markerTintColor = UIColor.primary;
             markerAnnotation.animatesWhenAdded = true;
         }
         return markerAnnotation;

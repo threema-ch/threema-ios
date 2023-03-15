@@ -98,7 +98,7 @@ class MessageDecoderTests: XCTestCase {
         XCTAssertEqual(result?.jsonData, msg.jsonData)
     }
     
-    func testDecodeBoxUpdateExtistingBallot() {
+    func testDecodeBoxUpdateExtistingBallot() throws {
         let myIdentityStoreMock = MyIdentityStoreMock()
         
         let expectedResults = [
@@ -131,19 +131,22 @@ class MessageDecoderTests: XCTestCase {
         for result in expectedResults {
             let msg = newBoxBallotCreateMessage(result[2])
             
-            let boxBallotCreateMessage = MessageDecoder.decode(
-                MSGTYPE_BALLOT_CREATE,
-                body: msg.body()
-            ) as? BoxBallotCreateMessage
+            let boxBallotCreateMessage = try XCTUnwrap(
+                MessageDecoder.decode(
+                    MSGTYPE_BALLOT_CREATE,
+                    body: msg.body()
+                ) as? BoxBallotCreateMessage
+            )
             let ballotMessage = ballotMessageDecoder!.decodeCreateBallot(
                 fromBox: boxBallotCreateMessage,
-                for: conversation
+                sender: nil,
+                conversation: conversation
             )
             checkBallotResult(ballotMessage: ballotMessage, result: result)
         }
     }
     
-    func testDecodeBoxCloseExistingBallot() {
+    func testDecodeBoxCloseExistingBallot() throws {
         let myIdentityStoreMock = MyIdentityStoreMock()
         
         let expectedResults = [
@@ -177,13 +180,16 @@ class MessageDecoderTests: XCTestCase {
         for result in expectedResults {
             let msg = newBoxBallotCreateMessage(result[3])
             
-            let boxBallotCreateMessage = MessageDecoder.decode(
-                MSGTYPE_BALLOT_CREATE,
-                body: msg.body()
-            ) as? BoxBallotCreateMessage
+            let boxBallotCreateMessage = try XCTUnwrap(
+                MessageDecoder.decode(
+                    MSGTYPE_BALLOT_CREATE,
+                    body: msg.body()
+                ) as? BoxBallotCreateMessage
+            )
             let ballotMessage = ballotMessageDecoder!.decodeCreateBallot(
                 fromBox: boxBallotCreateMessage,
-                for: conversation
+                sender: nil,
+                conversation: conversation
             )
             
             XCTAssertEqual(ballotMessage?.ballotState, result[2] as? NSNumber)
@@ -192,7 +198,7 @@ class MessageDecoderTests: XCTestCase {
         }
     }
     
-    func testDecodeBoxCloseWrongExistingBallot() {
+    func testDecodeBoxCloseWrongExistingBallot() throws {
         let myIdentityStoreMock = MyIdentityStoreMock()
         
         let expectedResults = [
@@ -258,14 +264,17 @@ class MessageDecoderTests: XCTestCase {
         let initialResult = expectedResults[0]
         let initialMessage = newBoxBallotCreateMessage(initialResult[4])
 
-        let boxBallotCreateInitialMessage = MessageDecoder.decode(
-            MSGTYPE_BALLOT_CREATE,
-            body: initialMessage.body()
-        ) as? BoxBallotCreateMessage
-        
+        let boxBallotCreateInitialMessage = try XCTUnwrap(
+            MessageDecoder.decode(
+                MSGTYPE_BALLOT_CREATE,
+                body: initialMessage.body()
+            ) as? BoxBallotCreateMessage
+        )
+
         let ballotInitialMessage: BallotMessage? = ballotMessageDecoder!.decodeCreateBallot(
             fromBox: boxBallotCreateInitialMessage,
-            for: conversation
+            sender: nil,
+            conversation: conversation
         )
         
         // Check Initial Choices exist
@@ -285,14 +294,17 @@ class MessageDecoderTests: XCTestCase {
         let differentResult = expectedResults[1]
         let resultMessage = newBoxBallotCreateMessage(differentResult[4])
 
-        let boxBallotCreateResultMessage = MessageDecoder.decode(
-            MSGTYPE_BALLOT_CREATE,
-            body: resultMessage.body()
-        ) as? BoxBallotCreateMessage
-        
-        let ballotResultMessage: BallotMessage? = ballotMessageDecoder!.decodeCreateBallot(
+        let boxBallotCreateResultMessage = try XCTUnwrap(
+            MessageDecoder.decode(
+                MSGTYPE_BALLOT_CREATE,
+                body: resultMessage.body()
+            ) as? BoxBallotCreateMessage
+        )
+
+        ballotMessageDecoder!.decodeCreateBallot(
             fromBox: boxBallotCreateResultMessage,
-            for: conversation
+            sender: nil,
+            conversation: conversation
         )
         
         // Check Results Message Overrides Initial (Local) Message
@@ -309,8 +321,8 @@ class MessageDecoderTests: XCTestCase {
         XCTAssertEqual(resultChoice2.name, differentResult[1] as? String)
     }
     
-    private func createConversation() -> (Contact, Conversation) {
-        var contact: Contact!
+    private func createConversation() -> (ContactEntity, Conversation) {
+        var contact: ContactEntity!
         var conversation: Conversation!
         
         let databasePreparer = DatabasePreparer(context: mainCnx)

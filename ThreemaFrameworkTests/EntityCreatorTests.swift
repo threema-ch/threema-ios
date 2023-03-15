@@ -75,6 +75,7 @@ class EntityCreatorTests: XCTestCase {
             createdFileMessageEntity = try? self.entityManager.entityCreator.createFileMessageEntity(
                 for: senderItem,
                 in: self.conversation,
+                with: .public,
                 correlationID: correlationID,
                 webRequestID: webRequestID
             )
@@ -111,6 +112,7 @@ class EntityCreatorTests: XCTestCase {
             createdFileMessageEntity = try? self.entityManager.entityCreator.createFileMessageEntity(
                 for: senderItem,
                 in: self.conversation,
+                with: .public,
                 correlationID: correlationID,
                 webRequestID: webRequestID
             )
@@ -147,6 +149,7 @@ class EntityCreatorTests: XCTestCase {
             createdFileMessageEntity = try? self.entityManager.entityCreator.createFileMessageEntity(
                 for: senderItem,
                 in: self.conversation,
+                with: .public,
                 correlationID: correlationID,
                 webRequestID: webRequestID
             )
@@ -179,6 +182,7 @@ class EntityCreatorTests: XCTestCase {
             createdFileMessageEntity = try? self.entityManager.entityCreator.createFileMessageEntity(
                 for: senderItem,
                 in: self.conversation,
+                with: .public,
                 correlationID: correlationID,
                 webRequestID: webRequestID
             )

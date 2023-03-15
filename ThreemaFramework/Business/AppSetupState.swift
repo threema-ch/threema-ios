@@ -57,7 +57,7 @@ import Foundation
     ///
     /// - Returns: True means database already exitsts on first instanced
     @objc public func existsDatabaseFile() -> Bool {
-        if UserDefaults.standard.bool(forKey: "FASTLANE_SNAPSHOT") {
+        if ProcessInfoHelper.isRunningForScreenshots {
             // We create DB for screenshots. Return true to skip wizard
             return true
         }

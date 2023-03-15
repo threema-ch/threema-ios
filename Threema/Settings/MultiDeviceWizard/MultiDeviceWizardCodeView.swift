@@ -55,7 +55,7 @@ struct MultiDeviceWizardCodeView: View {
                     .resizable()
                     .scaledToFit()
                     .frame(width: 130, height: 130)
-                    .foregroundColor(Color(Colors.primary))
+                    .foregroundColor(Color(.primary))
                     .rotationEffect(Angle(degrees: animate ? 360 : 0.0))
                     .animation(animation, value: animate)
                 

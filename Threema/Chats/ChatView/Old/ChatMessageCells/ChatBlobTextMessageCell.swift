@@ -224,7 +224,7 @@ extension ChatBlobTextMessageCell {
     // MARK: Private functions
     
     private func handleTapResult(result: Any) {
-        if result.self is Contact {
+        if result.self is ContactEntity {
             chatVc.mentionTapped(result)
         }
         else if result.self is NSString || result.self is String {
@@ -264,7 +264,7 @@ extension ChatBlobTextMessageCell {
         if result.self is NSString || result.self is String {
             return
         }
-        else if result.self is Contact {
+        else if result.self is ContactEntity {
             chatVc.mentionTapped(result)
         }
         else if result.self is NSTextCheckingResult {

@@ -68,6 +68,10 @@ public extension BaseMessage {
         return true
     }
     
+    @objc var showRetryAndCancelButton: Bool {
+        messageState == .failed
+    }
+    
     // MARK: - Private helper
     
     private var ownMessageState: State {

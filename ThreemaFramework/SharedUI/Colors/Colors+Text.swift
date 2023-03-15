@@ -86,7 +86,7 @@ public extension Colors {
     }
     
     @objc class var textLink: UIColor {
-        Colors.primary
+        .primary
     }
         
     @objc class var textQuoteID: UIColor {

@@ -28,7 +28,7 @@ public class MarkupParser {
     private enum MentionType {
         case me
         case all
-        case contact(Contact)
+        case contact(ContactEntity)
     }
     
     private static let BOUNDARY_PATTERN = "[\\s.,!?¡¿‽⸮;:&(){}\\[\\]⟨⟩‹›«»'\"‘’“”*~\\-_…⋯᠁]"
@@ -136,12 +136,12 @@ public class MarkupParser {
                 ]
             case .url:
                 return [
-                    NSAttributedString.Key.foregroundColor: Colors.primary,
+                    NSAttributedString.Key.foregroundColor: UIColor.primary,
                     NSAttributedString.Key.tokenType: TokenType.url,
                 ]
             case .mention:
                 return [
-                    NSAttributedString.Key.foregroundColor: Colors.primary,
+                    NSAttributedString.Key.foregroundColor: UIColor.primary,
                     NSAttributedString.Key.tokenType: TokenType.mention,
                 ]
             default:
@@ -334,8 +334,8 @@ public extension MarkupParser {
     
     func highlightOccurrences(of searchString: String, in originalString: NSAttributedString) -> NSAttributedString {
         let mutableOriginalString = NSMutableAttributedString(attributedString: originalString)
-        let totalLength = mutableOriginalString.string.count
-        let searchStringLength = searchString.count
+        let totalLength = mutableOriginalString.length
+        let searchStringLength = NSString(string: searchString).length
         
         var range = NSRange(location: 0, length: mutableOriginalString.length)
         while range.location != NSNotFound {

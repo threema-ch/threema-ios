@@ -223,16 +223,16 @@ struct plOutgoingMessageAck {
     char message_id[kMessageIdLen];
 };
 
-typedef enum ForwardSecurityMode: NSUInteger {
+typedef NS_ENUM(NSUInteger, ForwardSecurityMode) {
     kForwardSecurityModeNone = 0,
     kForwardSecurityModeTwoDH = 1,
     kForwardSecurityModeFourDH = 2
-} ForwardSecurityMode;
+};
 
-typedef enum ForwardSecurityState: NSUInteger {
+typedef NS_ENUM(NSUInteger, ForwardSecurityState) {
     kForwardSecurityStateOff = 0,
     kForwardSecurityStateOn = 1
-} ForwardSecurityState;
+};
 
 #pragma pack(pop)
 

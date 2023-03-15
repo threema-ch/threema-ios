@@ -75,6 +75,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
             multiDeviceManager: MultiDeviceManagerMock(),
             myIdentityStore: MyIdentityStoreMock(),
             userSettings: UserSettingsMock(),
+            settingsStore: SettingsStoreMock(),
             serverConnector: serverConnectorMock,
             mediatorMessageProtocol: MediatorMessageProtocolMock(),
             messageProcessor: MessageProcessorMock()
@@ -161,6 +162,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
             multiDeviceManager: MultiDeviceManagerMock(),
             myIdentityStore: MyIdentityStoreMock(),
             userSettings: UserSettingsMock(),
+            settingsStore: SettingsStoreMock(),
             serverConnector: serverConnectorMock,
             mediatorMessageProtocol: MediatorMessageProtocolMock(),
             messageProcessor: MessageProcessorMock()
@@ -240,6 +242,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
             multiDeviceManager: MultiDeviceManagerMock(),
             myIdentityStore: MyIdentityStoreMock(),
             userSettings: UserSettingsMock(),
+            settingsStore: SettingsStoreMock(),
             serverConnector: serverConnectorMock,
             mediatorMessageProtocol: MediatorMessageProtocolMock(),
             messageProcessor: MessageProcessorMock()
@@ -348,6 +351,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
             multiDeviceManager: MultiDeviceManagerMock(),
             myIdentityStore: MyIdentityStoreMock(),
             userSettings: UserSettingsMock(),
+            settingsStore: SettingsStoreMock(),
             serverConnector: serverConnectorMock,
             mediatorMessageProtocol: MediatorMessageProtocolMock(
                 deviceGroupKeys: deviceGroupKeys,
@@ -472,6 +476,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
             multiDeviceManager: MultiDeviceManagerMock(),
             myIdentityStore: myIdentityStoreMock,
             userSettings: userSettingsMock,
+            settingsStore: SettingsStoreMock(),
             serverConnector: serverConnectorMock,
             mediatorMessageProtocol: MediatorMessageProtocolMock(
                 deviceGroupKeys: deviceGroupKeys,
@@ -492,7 +497,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
         var textMessage: TextMessage!
         var group: Group!
         dbPreparer.save {
-            var members = Set<Contact>()
+            var members = Set<ContactEntity>()
             for member in expectedMembers {
                 let contact = dbPreparer.createContact(
                     publicKey: BytesUtility.generateRandomBytes(length: 32)!,
@@ -622,6 +627,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
             multiDeviceManager: MultiDeviceManagerMock(),
             myIdentityStore: myIdentityStoreMock,
             userSettings: userSettingsMock,
+            settingsStore: SettingsStoreMock(),
             serverConnector: serverConnectorMock,
             mediatorMessageProtocol: MediatorMessageProtocolMock(
                 deviceGroupKeys: deviceGroupKeys,
@@ -642,7 +648,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
         var textMessage: TextMessage!
         var group: Group!
         dbPreparer.save {
-            var members = Set<Contact>()
+            var members = Set<ContactEntity>()
             for member in expectedMembers {
                 let contact = dbPreparer.createContact(
                     publicKey: BytesUtility.generateRandomBytes(length: 32)!,
@@ -781,6 +787,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
             multiDeviceManager: MultiDeviceManagerMock(),
             myIdentityStore: myIdentityStoreMock,
             userSettings: userSettingsMock,
+            settingsStore: SettingsStoreMock(),
             serverConnector: serverConnectorMock,
             mediatorMessageProtocol: MediatorMessageProtocolMock(
                 deviceGroupKeys: deviceGroupKeys,
@@ -801,7 +808,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
         var textMessage: TextMessage!
         var group: Group!
         dbPreparer.save {
-            var members = Set<Contact>()
+            var members = Set<ContactEntity>()
             for member in expectedMembers {
                 let contact = dbPreparer.createContact(
                     publicKey: BytesUtility.generateRandomBytes(length: 32)!,
@@ -913,17 +920,21 @@ class TaskExecutionSendMessageTests: XCTestCase {
         let myIdentityStoreMock = MyIdentityStoreMock()
         let deviceGroupKeys = try XCTUnwrap(serverConnectorMock.deviceGroupKeys, "Device group keys missing")
         let frameworkInjectorMock = BusinessInjectorMock(
-            backgroundEntityManager: EntityManager(databaseContext: dbBackgroundCnx),
+            backgroundEntityManager: EntityManager(
+                databaseContext: dbBackgroundCnx,
+                myIdentityStore: myIdentityStoreMock
+            ),
             backgroundGroupManager: GroupManagerMock(),
             backgroundUnreadMessages: UnreadMessagesMock(),
             contactStore: ContactStoreMock(),
-            entityManager: EntityManager(databaseContext: dbMainCnx),
+            entityManager: EntityManager(databaseContext: dbMainCnx, myIdentityStore: myIdentityStoreMock),
             groupManager: GroupManagerMock(),
             licenseStore: LicenseStore.shared(),
             messageSender: MessageSenderMock(),
             multiDeviceManager: MultiDeviceManagerMock(),
             myIdentityStore: myIdentityStoreMock,
             userSettings: UserSettingsMock(),
+            settingsStore: SettingsStoreMock(),
             serverConnector: serverConnectorMock,
             mediatorMessageProtocol: MediatorMessageProtocolMock(
                 deviceGroupKeys: deviceGroupKeys,
@@ -943,11 +954,14 @@ class TaskExecutionSendMessageTests: XCTestCase {
         dbPreparer.save {
             let groupEntity = dbPreparer.createGroupEntity(
                 groupID: BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!,
+                /// See `GroupManager` line 227 for why this has to be nil
                 groupCreator: nil
             )
             dbPreparer.createConversation(marked: false, typing: false, unreadMessageCount: 0) { conversation in
                 conversation.groupID = groupEntity.groupID
                 conversation.groupMyIdentity = myIdentityStoreMock.identity
+                /// See `GroupManager` line 227 for why this has to be nil
+                conversation.contact = nil
                 textMessage = self.dbPreparer.createTextMessage(
                     conversation: conversation,
                     text: expectedText,
@@ -1060,6 +1074,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
                 multiDeviceManager: MultiDeviceManagerMock(),
                 myIdentityStore: myIdentityStoreMock,
                 userSettings: UserSettingsMock(),
+                settingsStore: SettingsStoreMock(),
                 serverConnector: serverConnectorMock,
                 mediatorMessageProtocol: MediatorMessageProtocolMock(
                     deviceGroupKeys: deviceGroupKeys,
@@ -1080,7 +1095,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
             var textMessage: TextMessage!
             var group: Group!
             dbPreparer.save {
-                var members = Set<Contact>()
+                var members = Set<ContactEntity>()
                 for member in expectedMembers {
                     let contact = dbPreparer.createContact(
                         publicKey: BytesUtility.generateRandomBytes(length: 32)!,
@@ -1202,6 +1217,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
             multiDeviceManager: MultiDeviceManagerMock(),
             myIdentityStore: MyIdentityStoreMock(),
             userSettings: UserSettingsMock(),
+            settingsStore: SettingsStoreMock(),
             serverConnector: serverConnectorMock,
             mediatorMessageProtocol: MediatorMessageProtocolMock(
                 deviceGroupKeys: deviceGroupKeys,

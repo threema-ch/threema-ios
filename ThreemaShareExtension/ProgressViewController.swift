@@ -53,7 +53,7 @@ class ProgressViewController: UIViewController {
     func updateColors() {
         view.backgroundColor = Colors.backgroundGroupedViewController
         
-        view.tintColor = Colors.primary
+        view.tintColor = .primary
         contentView!.backgroundColor = view.backgroundColor
         if Colors.theme == .dark {
             darkenVisualEffectsView()

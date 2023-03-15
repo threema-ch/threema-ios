@@ -114,6 +114,10 @@ public class UserNotificationManager: UserNotificationManagerProtocol {
         }
         else if let baseMessage = pendingUserNotification.baseMessage {
             userNotificationContent.baseMessage = baseMessage
+            userNotificationContent.groupID = entityManager.entityFetcher.groupEntity(for: baseMessage.conversation)?
+                .groupID.base64EncodedString(options: NSData.Base64EncodingOptions(rawValue: 0))
+            userNotificationContent.groupCreator = entityManager.entityFetcher
+                .groupEntity(for: baseMessage.conversation)?.groupCreator ?? MyIdentityStore.shared().identity
             userNotificationContent.pushSetting = pushSettingManager.find(forConversation: baseMessage.conversation)
         }
         
@@ -330,16 +334,7 @@ public class UserNotificationManager: UserNotificationManagerProtocol {
         }
         to.badge = NSNumber(integerLiteral: badge)
         
-        if from.categoryIdentifier.elementsEqual("GROUP"),
-           let groupID = from.groupID {
-            
-            to
-                .userInfo =
-                ["threema": ["cmd": from.cmd, "from": from.senderID, "messageId": from.messageID, "groupId": groupID]]
-        }
-        else {
-            to.userInfo = ["threema": ["cmd": from.cmd, "from": from.senderID, "messageId": from.messageID]]
-        }
+        to.userInfo = from.userInfo
         
         if from.categoryIdentifier.elementsEqual("SINGLE") || from.categoryIdentifier.elementsEqual("GROUP") {
             to.categoryIdentifier = userSettings.pushDecrypt ? from.categoryIdentifier : ""
@@ -353,9 +348,9 @@ public class UserNotificationManager: UserNotificationManagerProtocol {
             to.threadIdentifier = "SINGLE-\(from.senderID!)"
         }
         else if from.categoryIdentifier.elementsEqual("GROUP"),
-                let groupID = from.groupID {
+                let groupID = from.groupID, let groupCreator = from.groupCreator {
             
-            to.threadIdentifier = "GROUP-\(groupID)"
+            to.threadIdentifier = "GROUP-\(groupID)-\(groupCreator)"
             
             if let fromName = from.fromName {
                 to.summaryArgument = fromName

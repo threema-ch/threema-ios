@@ -31,22 +31,28 @@ import UIKit
 /// whenever your message changes.
 ///
 /// View hierarchy:
-///
-///                           ┌─────────────┐
-///                           │ contentView │
-///                           └──────▲──────┘
-///                                  ├──────────────────┐
-///                          ┌───────┴───────┐          │
-///                          │chatBubbleView │  ┌───────────────┐
-///                          └───────▲───────┘  │avatarImageView│
-///                                  │          └───────────────┘
-///                  ┌───────────────┴──────┬────────────────┐
-///                  │                      │                │
-///     ┌─────────────────────────┐         │                │
-///     │chatBubbleBackgroundView │ ┌───────────────┐        │
-///     └─────────────────────────┘ │   nameLabel   │ ┌────────────┐
-///                                 └───────────────┘ │  rootView  │
-///                                                   └────────────┘
+///                                        +-----------+
+///                                        |contentView|
+///                                        +-----^-----+
+///                                              |
+///                                              |
+///               +------------------------------+-------------------------------+
+///               |                              |                               |
+///               |                              |                               |
+///               |                              |                               |
+/// +-------------+-----------+          +-------+------+               +--------+-------+
+/// | chatBubbleBackgroundView|          |chatBubbleView|               |avatarImageView |
+/// +-------------------------+          +------^-------+               +----------------+
+///                                             |
+///                                             |
+///                                             |
+///                                             +-------------------------------+
+///                                             |                               |
+///                                             |                               |
+///                                             |                               |
+///                                       +-----+----+                      +---+----+
+///                                       | nameLabel|                      |rootView|
+///                                       +----------+                      +--------+
 ///
 class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
     
@@ -96,19 +102,70 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
     
     // MARK: Views and constraints
     
-    /// Contains the message cell itself & the `chatBubbleBackgroundView`. It is added to `contentView`.
-    private(set) lazy var chatBubbleView = UIView()
+    /// Contains the message view (added in root view) & the `nameLabel`. It is added to `contentView`.
+    private(set) lazy var chatBubbleView = {
+        let chatBubbleView = ChatBubbleView { [weak self] _ in
+            // On changing the bounds or the frame of chatBubbleView, we need to layout ourselves as well
+            // to propagate the changes to the chatBubbleBackgroundView
+            // The new value for the bubble of chatBubbleBackgroundView will be set in `layoutSubviews`
+            self?.setNeedsLayout()
+        }
+       
+        return chatBubbleView
+    }()
     
     var chatBubbleBorderPath: UIBezierPath {
         chatBubbleBackgroundView.backgroundPath
     }
     
-    var customIdentityTransform: CGAffineTransform? {
-        guard UserSettings.shared().flippedTableView else {
-            return nil
+    /// Should the cell be flipped?
+    ///
+    /// This allows to override the flipping behavior if needed
+    var flipped = UserSettings.shared().flippedTableView {
+        didSet {
+            transform = customIdentityTransform
+        }
+    }
+    
+    var customIdentityTransform: CGAffineTransform {
+        guard flipped else {
+            return .identity
         }
         return CGAffineTransform(scaleX: 1, y: -1)
     }
+    
+    override var transform: CGAffineTransform {
+        didSet {
+            // Verify that we did not accidentally undo our transform
+            // TODO: IOS-3389 Undo this check
+            
+            assert((flipped && transform.d == -1) || (!flipped && transform.d == 1))
+            
+            if ChatViewConfiguration.strictMode {
+                if flipped, transform.d != -1 {
+                    fatalError("Our transform is wrong.")
+                }
+            }
+        }
+    }
+    
+    /// Top spacing constraint
+    ///
+    /// Set the `constant` to another value if you don't want the default spacing used in the chat view. This might be overridden again after updating the
+    /// message or its neighbors.
+    private(set) lazy var bubbleTopSpacingConstraint = chatBubbleView.topAnchor.constraint(
+        equalTo: contentView.topAnchor,
+        constant: ChatViewConfiguration.ChatBubble.defaultTopBottomInset
+    )
+    
+    /// Bottom spacing constraint
+    ///
+    /// Set the `constant` to another value if you don't want the default spacing used in the chat view. This might be overridden again after updating the
+    /// message or its neighbors.
+    private(set) lazy var bubbleBottomSpacingConstraint = chatBubbleView.bottomAnchor.constraint(
+        equalTo: contentView.bottomAnchor,
+        constant: -ChatViewConfiguration.ChatBubble.defaultTopBottomInset
+    )
     
     // MARK: - Internal state
     
@@ -120,6 +177,17 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
                 return
             }
             
+            if let oldMessage = oldValue.message, let newMessage = messageAndNeighbors.message,
+               oldMessage.objectID == newMessage.objectID {
+                // We are reconfiguring this cell (or conveniently reusing our own cell) which means animations will look good
+                // i.e. elements won't come flying in from the side
+                chatBubbleBackgroundView.animate = true
+            }
+            else {
+                // We are most likely a new cell and don't animate our content configuration or update
+                chatBubbleBackgroundView.animate = false
+            }
+            
             if message.isOwnMessage {
                 setLayoutForOwnMessage()
                 hideNameLabel()
@@ -127,7 +195,8 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
             else {
                 setLayoutForOtherMessage()
             }
-            
+
+            updateRetryAndCancelButton()
             updateColors()
             
             if debugColors, let neighbors = messageAndNeighbors.neighbors {
@@ -159,6 +228,14 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
     // MARK: Views
     
     private lazy var chatBubbleBackgroundView = ChatBubbleBackgroundView()
+    
+    private lazy var retryAndCancelButton = BlurCircleButton(
+        sfSymbolName: "play.fill",
+        accessibilityLabel: "",
+        configuration: .retryAndCancel
+    ) { _ in
+        self.retryOrCancel()
+    }
     
     private lazy var nameLabel: UILabel = {
         let label = UILabel()
@@ -196,21 +273,16 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
     private lazy var nameConstraints = [NSLayoutConstraint]()
     private lazy var noNameConstraints = [NSLayoutConstraint]()
     
-    private lazy var bubbleTopSpacingConstraint = chatBubbleView.topAnchor.constraint(
-        equalTo: contentView.topAnchor,
-        constant: ChatViewConfiguration.ChatBubble.defaultTopBottomInset
-    )
-    
-    private lazy var bubbleBottomSpacingConstraint = chatBubbleView.bottomAnchor.constraint(
-        equalTo: contentView.bottomAnchor,
-        constant: -ChatViewConfiguration.ChatBubble.defaultTopBottomInset
-    )
-    
     private lazy var ownMessageConstraints: [NSLayoutConstraint] = [
         chatBubbleView.trailingAnchor.constraint(
             equalTo: contentView.trailingAnchor,
             constant: -ChatViewConfiguration.ChatBubble.defaultLeadingTrailingInset
         ),
+        retryAndCancelButton.trailingAnchor.constraint(
+            equalTo: chatBubbleView.leadingAnchor,
+            constant: -ChatViewConfiguration.ChatBubble.RetryAndCancelButton.buttonChatBubbleSpacing
+        ),
+        retryAndCancelButton.centerYAnchor.constraint(equalTo: chatBubbleView.centerYAnchor),
     ]
     
     private lazy var otherMessageNoAvatarConstraints: [NSLayoutConstraint] = [
@@ -250,10 +322,10 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
     override func configureCell() {
         super.configureCell()
         
-        if UserSettings.shared().flippedTableView, let customIdentityTransform {
+        if flipped {
             transform = customIdentityTransform
         }
-
+        
         configureBackgrounds()
         configureViewsAndLayout()
         
@@ -279,11 +351,11 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
         // TODO: (IOS-2014) Maybe use backgroundView from cell?
         
         // Add views
+        contentView.addSubview(chatBubbleBackgroundView)
+        chatBubbleBackgroundView.translatesAutoresizingMaskIntoConstraints = false
+        
         contentView.addSubview(chatBubbleView)
         chatBubbleView.translatesAutoresizingMaskIntoConstraints = false
-        
-        chatBubbleView.addSubview(chatBubbleBackgroundView)
-        chatBubbleBackgroundView.translatesAutoresizingMaskIntoConstraints = false
         
         chatBubbleView.addSubview(nameLabel)
         nameLabel.translatesAutoresizingMaskIntoConstraints = false
@@ -292,6 +364,9 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
         
         contentView.addSubview(avatarImageView)
         avatarImageView.translatesAutoresizingMaskIntoConstraints = false
+        
+        contentView.addSubview(retryAndCancelButton)
+        retryAndCancelButton.translatesAutoresizingMaskIntoConstraints = false
         
         // Configure layout
         
@@ -309,14 +384,22 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
                 multiplier: bubbleWidthRatio
             ),
             
-            // Add background to `chatBubbleView`
-            chatBubbleBackgroundView.topAnchor.constraint(equalTo: chatBubbleView.topAnchor),
-            chatBubbleBackgroundView.leadingAnchor.constraint(equalTo: chatBubbleView.leadingAnchor),
-            chatBubbleBackgroundView.bottomAnchor.constraint(equalTo: chatBubbleView.bottomAnchor),
-            chatBubbleBackgroundView.trailingAnchor.constraint(equalTo: chatBubbleView.trailingAnchor),
+            // Add background of `chatBubbleView` to `contentView`
+            chatBubbleBackgroundView.topAnchor.constraint(equalTo: contentView.topAnchor),
+            chatBubbleBackgroundView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
+            chatBubbleBackgroundView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
+            chatBubbleBackgroundView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
         ])
         
         NSLayoutConstraint.activate(avatarImageViewConstraints)
+    }
+    
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        
+        // This will animate depending on whether the message that was set in `messageAndNeighbors`
+        // has changed.
+        chatBubbleBackgroundView.bubbleFrame = chatBubbleView.frame
     }
     
     // MARK: - For child classes
@@ -388,6 +471,17 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
     
     // MARK: - Update
     
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        
+        assert((flipped && transform.d == -1) || (!flipped && transform.d == 1))
+        
+        if transform.d != -1, flipped {
+            DDLogWarn("Transform is incorrect. We have \(transform) but flipped is \(flipped)")
+            transform = customIdentityTransform
+        }
+    }
+    
     override func updateColors() {
         super.updateColors()
         
@@ -397,7 +491,7 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
     }
     
     private func updateNameLabelColor() {
-        let nameLabelColor = messageAndNeighbors.message?.sender?.idColor ?? Colors.primary
+        let nameLabelColor = messageAndNeighbors.message?.sender?.idColor ?? .primary
         nameLabel.textColor = nameLabelColor
         nameLabel.highlightedTextColor = nameLabelColor
     }
@@ -463,14 +557,32 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
     }
     
     override func setSelected(_ selected: Bool, animated: Bool) {
+        guard isSelected != selected else {
+            return
+        }
+        
         super.setSelected(selected, animated: animated)
         highlightCompleteCell(selected)
     }
         
     override func setEditing(_ editing: Bool, animated: Bool) {
-        super.setEditing(editing, animated: animated)
+        guard isEditing != editing else {
+            return
+        }
         
+        super.setEditing(editing, animated: animated)
         avatarImageView.isUserInteractionEnabled = !editing
+    }
+    
+    func updateRetryAndCancelButton() {
+        
+        guard let fileMessage = messageAndNeighbors.message as? BlobData,
+              let symbolName = fileMessage.blobDisplayState.symbolName else {
+            retryAndCancelButton.updateSymbol(to: ChatViewConfiguration.ChatBubble.RetryAndCancelButton.symbolName)
+            return
+        }
+        
+        retryAndCancelButton.updateSymbol(to: symbolName)
     }
     
     // MARK: - Update layout & views
@@ -495,7 +607,8 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
     private func setLayoutForOwnMessage() {
         
         avatarImageView.isHidden = true
-        
+        retryAndCancelButton.isHidden = !(messageAndNeighbors.message?.showRetryAndCancelButton ?? false)
+               
         NSLayoutConstraint.deactivate(otherMessageNoAvatarConstraints)
         NSLayoutConstraint.deactivate(otherMessageAvatarConstraints)
         NSLayoutConstraint.activate(ownMessageConstraints)
@@ -517,6 +630,8 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
     private func setLayoutForOtherMessage() {
         let isGroup = messageAndNeighbors.message?.isGroupMessage ?? false
         
+        retryAndCancelButton.isHidden = true
+
         // Set base layout
         if isGroup {
             setLayoutForOtherMessageInGroup()
@@ -540,7 +655,7 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
         // See workaround above for details about why the insets are set this way
         
         // Top insets: Add everything needed expect in certain cases
-        if shouldUseDefaultTopInset {
+        if UserSettings.shared().flippedTableView ? shouldUseDefaultBottomInset : shouldUseDefaultTopInset {
             if isGroup {
                 bubbleTopSpacingConstraint.constant = ChatViewConfiguration.ChatBubble.defaultGroupTopBottomInset
             }
@@ -566,7 +681,7 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
         
         // Bottom insets: Normally set to the minimum we always have. Some cells may indicate that the default bottom
         // inset should be used
-        if shouldUseDefaultBottomInset {
+        if UserSettings.shared().flippedTableView ? shouldUseDefaultTopInset : shouldUseDefaultBottomInset {
             if isGroup {
                 bubbleBottomSpacingConstraint.constant = -ChatViewConfiguration.ChatBubble.defaultGroupTopBottomInset
             }
@@ -694,6 +809,34 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
 
         chatViewTableViewCellDelegate?.show(identity: sender.identity)
     }
+    
+    private func retryOrCancel() {
+        
+        guard let message = messageAndNeighbors.message else {
+            return
+        }
+        
+        // If it is not a message of type BlobData, we simply resend
+        guard let fileMessage = message as? BlobData else {
+            chatViewTableViewCellDelegate?.resendMessage(withID: message.objectID)
+            return
+        }
+                
+        switch fileMessage.blobDisplayState {
+
+        case .pending, .sendingError:
+            Task {
+                await BlobManager.shared.syncBlobs(for: message.objectID)
+            }
+        case .uploading:
+            Task {
+                await BlobManager.shared.cancelBlobsSync(for: message.objectID)
+            }
+        default:
+            assertionFailure("RetryAndCancelButton should not have been visible")
+            DDLogError("RetryAndCancelButton button should not have been visible")
+        }
+    }
 
     // MARK: - Neighboring helpers
         
@@ -744,16 +887,11 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
             return false
         }
         
-        let interval: TimeInterval
-        if UserSettings.shared().flippedTableView {
-            interval = abs(DateInterval(start: rhs.sectionDate, end: lhs.sectionDate).duration)
-        }
-        else {
-            interval = abs(DateInterval(start: lhs.sectionDate, end: rhs.sectionDate).duration)
-        }
-        
         // It needs to be in the predefined interval
-        guard interval
+        guard abs(
+            rhs.sectionDate.timeIntervalSinceReferenceDate - lhs.sectionDate
+                .timeIntervalSinceReferenceDate
+        )
             < ChatViewConfiguration.CellGrouping.maxDurationForGroupingTogether else {
             return false
         }
@@ -776,6 +914,11 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
         
         // Same state?
         guard message.messageDisplayState == nextMessage.messageDisplayState else {
+            return false
+        }
+        
+        // Is the state not .failed?
+        guard message.messageDisplayState != .failed else {
             return false
         }
         
@@ -874,7 +1017,8 @@ extension ChatViewBaseTableViewCell: ChatViewTableViewCellHorizontalSwipeHandler
     }
     
     var canQuote: Bool {
-        messageAndNeighbors.message is QuoteMessage
+        (messageAndNeighbors.message is QuoteMessage) &&
+            (chatViewTableViewCellDelegate?.cellInteractionEnabled ?? false)
     }
     
     func showQuoteView() {

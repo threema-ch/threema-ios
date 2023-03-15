@@ -151,7 +151,7 @@ class ActionDetailsTableViewCell: ThemedCodeTableViewCell {
             Colors.setTextColor(Colors.red, in: self)
         }
         else {
-            iconImageView.tintColor = Colors.primary
+            iconImageView.tintColor = .primary
             // Button color is automatically set to `main()`
         }
     }

@@ -174,7 +174,7 @@
 "sC4-2F-pcW.text" = "推送令牌";
 
 /* Class = "UILabel"; text = "Block Unknown"; ObjectID = "t3A-s5-ui3"; */
-"t3A-s5-ui3.text" = "封锁未知者";
+"t3A-s5-ui3.text" = "屏蔽未知者";
 
 /* Class = "UITableViewSection"; headerTitle = "Networking"; ObjectID = "ukQ-aK-GUe"; */
 "ukQ-aK-GUe.headerTitle" = "联网中";

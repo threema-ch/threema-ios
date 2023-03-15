@@ -76,9 +76,11 @@ class ChatViewSnapshotProviderTests: XCTestCase {
             unreadMessagesSnapshot: UnreadMessagesStateManager(
                 conversation: conversation,
                 entityManager: entityManager,
-                notificationManager: NotificationManagerMock()
+                notificationManager: NotificationManagerMock(),
+                unreadMessagesStateManagerDelegate: UnreadMessagesStateManagerDelegateMock()
             ),
-            delegate: self
+            delegate: self,
+            userSettings: UserSettingsMock()
         )
         
         let expectation = expectation(description: "Single Snapshot")
@@ -94,10 +96,8 @@ class ChatViewSnapshotProviderTests: XCTestCase {
                     return
                 }
             
-                if #available(iOS 15.0, *) {
-                    XCTAssertEqual(diffableDataSourceSnapshot.reloadedItemIdentifiers.count, 0)
-                    XCTAssertEqual(diffableDataSourceSnapshot.reconfiguredItemIdentifiers.count, 0)
-                }
+                XCTAssertEqual(diffableDataSourceSnapshot.reloadedItemIdentifiers.count, 0)
+                XCTAssertEqual(diffableDataSourceSnapshot.reconfiguredItemIdentifiers.count, 0)
 
                 XCTAssertEqual(diffableDataSourceSnapshot.numberOfSections, 1)
                 XCTAssertEqual(diffableDataSourceSnapshot.itemIdentifiers.count, 1)
@@ -140,9 +140,11 @@ class ChatViewSnapshotProviderTests: XCTestCase {
             unreadMessagesSnapshot: UnreadMessagesStateManager(
                 conversation: conversation,
                 entityManager: entityManager,
-                notificationManager: NotificationManagerMock()
+                notificationManager: NotificationManagerMock(),
+                unreadMessagesStateManagerDelegate: UnreadMessagesStateManagerDelegateMock()
             ),
-            delegate: self
+            delegate: self,
+            userSettings: UserSettingsMock()
         )
         
         var cancellables = Set<AnyCancellable>()
@@ -155,10 +157,8 @@ class ChatViewSnapshotProviderTests: XCTestCase {
         let checks: [Check] = [
             (
                 { diffableDataSourceSnapshot in
-                    if #available(iOS 15.0, *) {
-                        XCTAssertEqual(diffableDataSourceSnapshot.reloadedItemIdentifiers.count, 0)
-                        XCTAssertEqual(diffableDataSourceSnapshot.reconfiguredItemIdentifiers.count, 0)
-                    }
+                    XCTAssertEqual(diffableDataSourceSnapshot.reloadedItemIdentifiers.count, 0)
+                    XCTAssertEqual(diffableDataSourceSnapshot.reconfiguredItemIdentifiers.count, 0)
 
                     XCTAssertEqual(diffableDataSourceSnapshot.numberOfSections, 1)
                     XCTAssertEqual(diffableDataSourceSnapshot.itemIdentifiers.count, 1)
@@ -171,10 +171,8 @@ class ChatViewSnapshotProviderTests: XCTestCase {
             ),
             (
                 { diffableDataSourceSnapshot in
-                    if #available(iOS 15.0, *) {
-                        XCTAssertEqual(diffableDataSourceSnapshot.reloadedItemIdentifiers.count, 0)
-                        XCTAssertEqual(diffableDataSourceSnapshot.reconfiguredItemIdentifiers.count, 0)
-                    }
+                    XCTAssertEqual(diffableDataSourceSnapshot.reloadedItemIdentifiers.count, 0)
+                    XCTAssertEqual(diffableDataSourceSnapshot.reconfiguredItemIdentifiers.count, 0)
 
                     XCTAssertEqual(diffableDataSourceSnapshot.numberOfSections, 1)
                     XCTAssertEqual(diffableDataSourceSnapshot.itemIdentifiers.count, 2)
@@ -207,6 +205,325 @@ class ChatViewSnapshotProviderTests: XCTestCase {
         waitForExpectations(timeout: 10)
     }
     
+    func testBasicAddUnreadMessageLineFlipped() {
+        basicUnreadMessageLine(flipped: true)
+    }
+    
+    func testBasicAddUnreadMessageLineNonFlipped() {
+        basicUnreadMessageLine(flipped: false)
+    }
+    
+    func basicUnreadMessageLine(flipped: Bool) {
+        let entityManager = EntityManager(databaseContext: databaseMainCnx)
+        _ = EntityManager(databaseContext: databaseBackgroundCnx)
+        
+        let conversation = createContactAndConversation(
+            entityManager: entityManager,
+            identity: "ECHOECHO"
+        ).conversation
+        
+        createMessage(in: conversation, entityManager: entityManager)
+        
+        XCTAssertEqual(MessageFetcher(for: conversation, with: entityManager).count(), 1)
+        
+        let messageProvider = MessageProvider(
+            for: conversation,
+            around: nil,
+            entityManager: entityManager,
+            backgroundEntityManager: entityManager,
+            context: databaseMainCnx.current
+        )
+        
+        let typingIndicatorInformationProvider = ChatViewTypingIndicatorInformationProviderMock()
+        let userSettingsMock = UserSettingsMock()
+        userSettingsMock.flippedTableView = flipped
+        
+        let snapshotProvider = ChatViewSnapshotProvider(
+            conversation: conversation,
+            entityManager: entityManager,
+            messageProvider: messageProvider,
+            unreadMessagesSnapshot: UnreadMessagesStateManager(
+                conversation: conversation,
+                entityManager: entityManager,
+                notificationManager: NotificationManagerMock(),
+                unreadMessagesStateManagerDelegate: UnreadMessagesStateManagerDelegateMock()
+            ),
+            typingIndicatorInformationProvider: typingIndicatorInformationProvider,
+            delegate: self,
+            userSettings: userSettingsMock
+        )
+        
+        var cancellables = Set<AnyCancellable>()
+        
+        typealias Check = (
+            check: (ChatViewSnapshotProvider.ChatViewDiffableDataSourceSnapshot) -> Void,
+            postcheck: () -> Void
+        )
+        
+        let checks: [Check] = [
+            (
+                // Check 0
+                { diffableDataSourceSnapshot in
+                    XCTAssertEqual(diffableDataSourceSnapshot.reloadedItemIdentifiers.count, 0)
+                    XCTAssertEqual(diffableDataSourceSnapshot.reconfiguredItemIdentifiers.count, 0)
+                    
+                    XCTAssertEqual(diffableDataSourceSnapshot.numberOfSections, 1)
+                    XCTAssertEqual(diffableDataSourceSnapshot.itemIdentifiers.count, 1)
+                },
+                {
+                    DispatchQueue.global().async {
+                        self.createMessage(in: conversation, entityManager: entityManager)
+                    }
+                }
+            ),
+            (
+                // Check 1
+                { diffableDataSourceSnapshot in
+                    XCTAssertEqual(diffableDataSourceSnapshot.reloadedItemIdentifiers.count, 0)
+                    XCTAssertEqual(diffableDataSourceSnapshot.reconfiguredItemIdentifiers.count, 0)
+                    
+                    XCTAssertEqual(diffableDataSourceSnapshot.numberOfSections, 1)
+                    XCTAssertEqual(diffableDataSourceSnapshot.itemIdentifiers.count, 2)
+                },
+                {
+                    self.internalInitialSetupCompleted = true
+                    typingIndicatorInformationProvider.currentlyTyping = true
+                }
+            ),
+            (
+                // Check 2
+                { diffableDataSourceSnapshot in
+                    XCTAssertEqual(diffableDataSourceSnapshot.reloadedItemIdentifiers.count, 0)
+                    XCTAssertEqual(diffableDataSourceSnapshot.reconfiguredItemIdentifiers.count, 0)
+                    
+                    XCTAssertEqual(diffableDataSourceSnapshot.numberOfSections, 1)
+                    XCTAssertEqual(diffableDataSourceSnapshot.itemIdentifiers.count, 3)
+                    
+                    XCTAssert(diffableDataSourceSnapshot.itemIdentifiers.contains(.typingIndicator))
+                    
+                    if flipped {
+                        XCTAssertEqual(diffableDataSourceSnapshot.itemIdentifiers.first, .typingIndicator)
+                    }
+                    else {
+                        XCTAssertEqual(diffableDataSourceSnapshot.itemIdentifiers.last, .typingIndicator)
+                    }
+                    
+                },
+                { }
+            ),
+        ]
+        
+        let expectation = expectation(description: "Single Snapshot")
+        expectation.expectedFulfillmentCount = checks.count
+        expectation.assertForOverFulfill = true
+        
+        var i = 0
+        snapshotProvider.$snapshotInfo
+            .receive(on: DispatchQueue.global())
+            .sink { snapshot in
+                guard let diffableDataSourceSnapshot = snapshot?.snapshot else {
+                    return
+                }
+            
+                checks[i].check(diffableDataSourceSnapshot)
+            
+                checks[i].postcheck()
+            
+                print("Executed check \(i)")
+                
+                i += 1
+            
+                expectation.fulfill()
+            }.store(in: &cancellables)
+        
+        waitForExpectations(timeout: 10)
+    }
+    
+    func testUnreadMessageLineStillLastAfterNewMessageSentFlipped() {
+        basicUnreadMessageLine(flipped: true)
+    }
+    
+    func testUnreadMessageLineStillLastAfterNewMessageSentNonFlipped() {
+        basicUnreadMessageLine(flipped: false)
+    }
+    
+    func unreadMessageLineStillLastAfterNewMessageSent(flipped: Bool) {
+        let entityManager = EntityManager(databaseContext: databaseMainCnx)
+        _ = EntityManager(databaseContext: databaseBackgroundCnx)
+        
+        let conversation = createContactAndConversation(
+            entityManager: entityManager,
+            identity: "ECHOECHO"
+        ).conversation
+        
+        createMessage(in: conversation, entityManager: entityManager)
+        
+        XCTAssertEqual(MessageFetcher(for: conversation, with: entityManager).count(), 1)
+        
+        let messageProvider = MessageProvider(
+            for: conversation,
+            around: nil,
+            entityManager: entityManager,
+            backgroundEntityManager: entityManager,
+            context: databaseMainCnx.current
+        )
+        
+        let typingIndicatorInformationProvider = ChatViewTypingIndicatorInformationProviderMock()
+        let userSettingsMock = UserSettingsMock()
+        userSettingsMock.flippedTableView = flipped
+        
+        let snapshotProvider = ChatViewSnapshotProvider(
+            conversation: conversation,
+            entityManager: entityManager,
+            messageProvider: messageProvider,
+            unreadMessagesSnapshot: UnreadMessagesStateManager(
+                conversation: conversation,
+                entityManager: entityManager,
+                notificationManager: NotificationManagerMock(),
+                unreadMessagesStateManagerDelegate: UnreadMessagesStateManagerDelegateMock()
+            ),
+            typingIndicatorInformationProvider: typingIndicatorInformationProvider,
+            delegate: self,
+            userSettings: userSettingsMock
+        )
+        
+        var cancellables = Set<AnyCancellable>()
+        
+        typealias Check = (
+            check: (ChatViewSnapshotProvider.ChatViewDiffableDataSourceSnapshot) -> Void,
+            postcheck: () -> Void
+        )
+        
+        let checks: [Check] = [
+            (
+                // Check 0
+                { diffableDataSourceSnapshot in
+                    XCTAssertEqual(diffableDataSourceSnapshot.reloadedItemIdentifiers.count, 0)
+                    XCTAssertEqual(diffableDataSourceSnapshot.reconfiguredItemIdentifiers.count, 0)
+                    
+                    XCTAssertEqual(diffableDataSourceSnapshot.numberOfSections, 1)
+                    XCTAssertEqual(diffableDataSourceSnapshot.itemIdentifiers.count, 1)
+                },
+                {
+                    DispatchQueue.global().async {
+                        self.createMessage(in: conversation, entityManager: entityManager)
+                    }
+                }
+            ),
+            (
+                // Check 1
+                { diffableDataSourceSnapshot in
+                    XCTAssertEqual(diffableDataSourceSnapshot.reloadedItemIdentifiers.count, 0)
+                    XCTAssertEqual(diffableDataSourceSnapshot.reconfiguredItemIdentifiers.count, 0)
+                    
+                    XCTAssertEqual(diffableDataSourceSnapshot.numberOfSections, 1)
+                    XCTAssertEqual(diffableDataSourceSnapshot.itemIdentifiers.count, 2)
+                },
+                {
+                    entityManager.performSyncBlockAndSafe {
+                        conversation.typing = NSNumber(booleanLiteral: true)
+                        self.internalInitialSetupCompleted = true
+                        typingIndicatorInformationProvider.currentlyTyping = true
+                    }
+                }
+            ),
+            (
+                // Check 2
+                { diffableDataSourceSnapshot in
+                    XCTAssertEqual(diffableDataSourceSnapshot.reloadedItemIdentifiers.count, 0)
+                    XCTAssertEqual(diffableDataSourceSnapshot.reconfiguredItemIdentifiers.count, 0)
+                    
+                    XCTAssertEqual(diffableDataSourceSnapshot.numberOfSections, 1)
+                    XCTAssertEqual(diffableDataSourceSnapshot.itemIdentifiers.count, 3)
+                    
+                    XCTAssert(diffableDataSourceSnapshot.itemIdentifiers.contains(.typingIndicator))
+                    
+                    if flipped {
+                        XCTAssertEqual(diffableDataSourceSnapshot.itemIdentifiers.first, .typingIndicator)
+                    }
+                    else {
+                        XCTAssertEqual(diffableDataSourceSnapshot.itemIdentifiers.last, .typingIndicator)
+                    }
+                    
+                },
+                {
+                    DispatchQueue.global().async {
+                        self.createMessage(in: conversation, entityManager: entityManager)
+                    }
+                }
+            ),
+            (
+                // Check 3
+                { diffableDataSourceSnapshot in
+                    // Correct number of reloads
+                    XCTAssertEqual(diffableDataSourceSnapshot.reloadedItemIdentifiers.count, 0)
+                    XCTAssertEqual(diffableDataSourceSnapshot.reconfiguredItemIdentifiers.count, 0)
+                    
+                    // Correct number of items
+                    XCTAssertEqual(diffableDataSourceSnapshot.numberOfSections, 1)
+                    XCTAssertEqual(diffableDataSourceSnapshot.itemIdentifiers.count, 3)
+                    
+                    // Correct State for Unread Message line
+                    XCTAssert(diffableDataSourceSnapshot.itemIdentifiers.contains(.typingIndicator))
+                    
+                    if flipped {
+                        XCTAssertEqual(diffableDataSourceSnapshot.itemIdentifiers.first, .typingIndicator)
+                    }
+                    else {
+                        XCTAssertEqual(diffableDataSourceSnapshot.itemIdentifiers.last, .typingIndicator)
+                    }
+                },
+                {
+                    DispatchQueue.global().async {
+                        typingIndicatorInformationProvider.currentlyTyping = false
+                        self.createMessage(in: conversation, entityManager: entityManager)
+                    }
+                }
+            ),
+            (
+                // Check 4
+                { diffableDataSourceSnapshot in
+                    // Correct number of reloads
+                    XCTAssertEqual(diffableDataSourceSnapshot.reloadedItemIdentifiers.count, 0)
+                    XCTAssertEqual(diffableDataSourceSnapshot.reconfiguredItemIdentifiers.count, 0)
+                    
+                    // Correct number of items
+                    XCTAssertEqual(diffableDataSourceSnapshot.numberOfSections, 1)
+                    XCTAssertEqual(diffableDataSourceSnapshot.itemIdentifiers.count, 3)
+                    
+                    // Correct State for Unread Message line
+                    XCTAssertFalse(diffableDataSourceSnapshot.itemIdentifiers.contains(.typingIndicator))
+                },
+                { }
+            ),
+        ]
+        
+        let expectation = expectation(description: "Single Snapshot")
+        expectation.expectedFulfillmentCount = checks.count
+        expectation.assertForOverFulfill = true
+        
+        var i = 0
+        snapshotProvider.$snapshotInfo
+            .receive(on: DispatchQueue.global())
+            .sink { snapshot in
+                guard let diffableDataSourceSnapshot = snapshot?.snapshot else {
+                    return
+                }
+            
+                checks[i].check(diffableDataSourceSnapshot)
+            
+                checks[i].postcheck()
+            
+                print("Executed check \(i)")
+                
+                i += 1
+            
+                expectation.fulfill()
+            }.store(in: &cancellables)
+        
+        waitForExpectations(timeout: 10)
+    }
+    
     private func createMessage(in conversation: Conversation, entityManager: EntityManager) {
         entityManager.performSyncBlockAndSafe {
             let textMessage = entityManager.entityCreator.textMessage(for: conversation)!
@@ -215,8 +532,8 @@ class ChatViewSnapshotProviderTests: XCTestCase {
     }
     
     private func createContactAndConversation(entityManager: EntityManager, identity: String)
-        -> (contact: Contact, conversation: Conversation) {
-        var contact: Contact!
+        -> (contact: ContactEntity, conversation: Conversation) {
+        var contact: ContactEntity!
         
         entityManager.performSyncBlockAndSafe {
             contact = entityManager.entityCreator.contact()!
@@ -256,5 +573,9 @@ extension ChatViewSnapshotProviderTests: ChatViewSnapshotProviderDelegate {
     
     var previousUnreadMessage: NSManagedObjectID? {
         nil
+    }
+    
+    var deletedMessagesObjectIDs: Set<NSManagedObjectID> {
+        Set()
     }
 }

@@ -73,6 +73,7 @@ final class UIComponentsViewController: ThemedViewController {
     private lazy var quickActionButton = QuickActionButton(
         imageNameProvider: { "bell.fill" },
         title: "Do Not Distrub",
+        accessibilityIdentifier: "ThemedViewControllerDndQuickActionButton",
         action: { quickActionUpdate in
             print("QuickActionButton tapped")
             quickActionUpdate.reload()

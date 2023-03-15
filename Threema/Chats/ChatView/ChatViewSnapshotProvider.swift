@@ -25,6 +25,8 @@ import ThreemaFramework
 
 protocol ChatViewSnapshotProviderDelegate: AnyObject {
     var initialSetupCompleted: Bool { get }
+    /// Object IDs of all deleted messages since the creation of this delegate
+    var deletedMessagesObjectIDs: Set<NSManagedObjectID> { get }
 }
 
 final class ChatViewSnapshotProvider {
@@ -39,7 +41,7 @@ final class ChatViewSnapshotProvider {
     
     struct SnapshotInfo {
         let snapshot: ChatViewDiffableDataSourceSnapshot
-        let shouldAnimate: Bool
+        let rowAnimation: UITableView.RowAnimation
         let mustWaitForApply: Bool
         let snapshotChanged: NSManagedObjectID?
         let previouslyNewestMessagesLoaded: Bool
@@ -61,6 +63,7 @@ final class ChatViewSnapshotProvider {
     private let entityManager: EntityManager
     private let messageProvider: MessageProvider
     private let conversation: Conversation
+    private let flippedTableView: Bool
     
     private var refreshAndWaitOnce = false
     
@@ -80,12 +83,8 @@ final class ChatViewSnapshotProvider {
         target: nil
     )
     
-    private lazy var chatViewTypingIndicatorInformationProvider: ChatViewTypingIndicatorInformationProvider? =
-        ChatViewTypingIndicatorInformationProvider(
-            conversation: conversation,
-            entityManager: entityManager
-        )
-    
+    private var chatViewTypingIndicatorInformationProvider: ChatViewTypingIndicatorInformationProviderProtocol?
+        
     // MARK: - Lifecycle
     
     init(
@@ -93,13 +92,26 @@ final class ChatViewSnapshotProvider {
         entityManager: EntityManager,
         messageProvider: MessageProvider,
         unreadMessagesSnapshot: UnreadMessagesStateManager,
-        delegate: ChatViewSnapshotProviderDelegate
+        typingIndicatorInformationProvider: ChatViewTypingIndicatorInformationProviderProtocol? = nil,
+        delegate: ChatViewSnapshotProviderDelegate,
+        userSettings: UserSettingsProtocol
     ) {
         self.conversation = conversation
         self.entityManager = entityManager
         self.messageProvider = messageProvider
         self.delegate = delegate
         self.unreadMessagesSnapshot = unreadMessagesSnapshot
+        self.flippedTableView = userSettings.flippedTableView
+        
+        if let typingIndicatorInformationProvider {
+            self.chatViewTypingIndicatorInformationProvider = typingIndicatorInformationProvider
+        }
+        else {
+            self.chatViewTypingIndicatorInformationProvider = ChatViewTypingIndicatorInformationProvider(
+                conversation: conversation,
+                entityManager: entityManager
+            )
+        }
         
         loadInitialMessagesAndObserveChanges()
         
@@ -115,7 +127,7 @@ final class ChatViewSnapshotProvider {
     private func loadInitialMessagesAndObserveChanges() {
         let typingIndicatorThrottle = ChatViewConfiguration.DataSource.typingIndicatorThrottle
         
-        chatViewTypingIndicatorInformationProvider?.$currentlyTyping
+        chatViewTypingIndicatorInformationProvider?.currentlyTypingPublisher
             .receive(on: snapshotProviderQueue)
             .throttle(
                 for: RunLoop.SchedulerTimeType.Stride(typingIndicatorThrottle),
@@ -139,7 +151,7 @@ final class ChatViewSnapshotProvider {
             .throttle(
                 for: .milliseconds(Config.unreadMessagesSnapshotStateThrottleInMs),
                 scheduler: snapshotProviderQueue,
-                latest: true
+                latest: false
             )
             .receive(on: snapshotProviderQueue)
             .sink { [weak self] unreadMessagesState in
@@ -185,9 +197,9 @@ final class ChatViewSnapshotProvider {
     }
     
     private func prepareAndPublishSnapshot(messages: MessageProvider.MessagesSnapshot) {
-        DDLogNotice("prepareAndPublishSnapshot async")
+        DDLogVerbose("prepareAndPublishSnapshot async")
         snapshotProviderQueue.async { [weak self] in
-            DDLogNotice("prepareAndPublishSnapshot start")
+            DDLogVerbose("prepareAndPublishSnapshot start")
             guard let strongSelf = self else {
                 return
             }
@@ -197,7 +209,7 @@ final class ChatViewSnapshotProvider {
                 convertedSnapshot,
                 previouslyNewestMessagesLoaded: messages.previouslyNewestMessagesLoaded
             )
-            DDLogNotice("prepareAndPublishSnapshot end")
+            DDLogVerbose("prepareAndPublishSnapshot end")
         }
     }
     
@@ -216,10 +228,11 @@ final class ChatViewSnapshotProvider {
                 previousSnapshot: strongSelf.previousSnapshotInfo,
                 nextSnap: snapshot
             )
+            let defaultAnimation: UITableView.RowAnimation = strongSelf.flippedTableView ? .top : .bottom
             
             let newSnapshotInfo = SnapshotInfo(
                 snapshot: snapshot,
-                shouldAnimate: shouldAnimate,
+                rowAnimation: shouldAnimate ? defaultAnimation : .none,
                 mustWaitForApply: mustWaitForApply,
                 snapshotChanged: snapshotChanged,
                 previouslyNewestMessagesLoaded: previouslyNewestMessagesLoaded
@@ -239,7 +252,6 @@ final class ChatViewSnapshotProvider {
         
         var newSnapshot = ChatViewDiffableDataSourceSnapshot()
         
-        let flippedTableView = UserSettings.shared().flippedTableView
         let sectionIdentifiers = !flippedTableView ? snapshot.sectionIdentifiers : snapshot.sectionIdentifiers
             .reversed()
         newSnapshot.appendSections(sectionIdentifiers)
@@ -248,9 +260,14 @@ final class ChatViewSnapshotProvider {
             let itemIdentifiers = !flippedTableView ? snapshot.itemIdentifiers(inSection: sectionIdentifier) : snapshot
                 .itemIdentifiers(inSection: sectionIdentifier).reversed()
             for objectID in itemIdentifiers {
+                // Don't add deleted messages to converted snapshot
+                guard let delegate, !delegate.deletedMessagesObjectIDs.contains(objectID) else {
+                    continue
+                }
+                
                 if let unreadMessagesState = unreadMessagesSnapshot.unreadMessagesState,
                    objectID == unreadMessagesState.oldestConsecutiveUnreadMessage {
-                    if !UserSettings.shared().flippedTableView {
+                    if !flippedTableView {
                         newSnapshot.appendItems(
                             [CellType.unreadLine(state: unreadMessagesState)],
                             toSection: sectionIdentifier
@@ -260,16 +277,25 @@ final class ChatViewSnapshotProvider {
                 
                 newSnapshot.appendItems([CellType.message(objectID: objectID)], toSection: sectionIdentifier)
             }
+            
+            // Remove empty sections that might exist after filtering deleted messages
+            if newSnapshot.itemIdentifiers(inSection: sectionIdentifier).isEmpty {
+                newSnapshot.deleteSections([sectionIdentifier])
+            }
         }
         
         if let unreadMessagesState = unreadMessagesSnapshot.unreadMessagesState,
-           let objectID = unreadMessagesState.oldestConsecutiveUnreadMessage {
-            if UserSettings.shared().flippedTableView {
+           let objectID = unreadMessagesState.oldestConsecutiveUnreadMessage,
+           newSnapshot.itemIdentifiers.contains(CellType.message(objectID: objectID)) {
+            if flippedTableView {
                 newSnapshot.insertItems(
                     [CellType.unreadLine(state: unreadMessagesState)],
                     afterItem: CellType.message(objectID: objectID)
                 )
             }
+        }
+        else {
+            DDLogVerbose("\(#function) Don't add unread message line")
         }
         
         // Handle Typing Indicator
@@ -280,26 +306,57 @@ final class ChatViewSnapshotProvider {
         /// (Note that the cell immediately before the typing indicator always contains a message if it contains more than one item.)
         /// With this check in place we may still incorrectly remove the typing indicator when sending a message ourselves while our contact is still typing. We thus
         /// additionally check if the last cell was the typing indicator and  the last message in the new snapshot is ours, then we continue to show the typing indicator
-        if let previousSnapshotInfo = previousSnapshotInfo, let delegate = delegate {
-            let currentSnapshot = previousSnapshotInfo.snapshot
-            let currentIdentifierCount = currentSnapshot.itemIdentifiers.count
+        if let delegate = delegate {
             let isTypingDuringInitialSetup = isCurrentlyTyping(conversation: conversation) &&
                 !delegate.initialSetupCompleted
             let lastMessageIsOurs: Bool
-            let lastMessageFromContactIsUnchanged = currentSnapshot.itemIdentifiers.last == .typingIndicator
-                && currentIdentifierCount > 1
-                && currentSnapshot.itemIdentifiers[currentIdentifierCount - 2] == newSnapshot.itemIdentifiers.last
+            let lastMessageFromContactIsUnchanged: Bool
             
-            if let lastItem = snapshot.itemIdentifiers.last,
-               messageIsOwn(messageID: lastItem),
-               currentSnapshot.itemIdentifiers.last == .typingIndicator {
-                lastMessageIsOurs = true
+            if let previousSnapshotInfo {
+                let currentSnapshot = previousSnapshotInfo.snapshot
+                let currentIdentifierCount = currentSnapshot.itemIdentifiers.count
+                
+                let currentSnapshotLastMessage = flippedTableView ? currentSnapshot.itemIdentifiers.first :
+                    currentSnapshot.itemIdentifiers.last
+                let newSnapshotLastMessage = flippedTableView ? newSnapshot.itemIdentifiers.first :
+                    newSnapshot.itemIdentifiers.last
+                
+                // Has our contact sent a new message?
+                let flippedPrePreviousMessage = currentSnapshot.numberOfItems == 0 ? nil : currentSnapshot
+                    .itemIdentifiers[min(2, max(currentSnapshot.numberOfItems - 1, 0))]
+                let regularPrePreviousMessage = currentSnapshot.numberOfItems == 0 ? nil : currentSnapshot
+                    .itemIdentifiers[max(0, currentIdentifierCount - 2)]
+                let prePreviousMessage = flippedTableView ? flippedPrePreviousMessage : regularPrePreviousMessage
+                
+                // Did we previously show the typing indicator and this is just some snapshot that isn't adding any more items?
+                let flippedPreviousMessage = currentSnapshot.numberOfItems == 0 ? nil : currentSnapshot
+                    .itemIdentifiers[min(1, max(currentSnapshot.numberOfItems - 1, 0))]
+                let regularPreviousMessage = currentSnapshot.numberOfItems == 0 ? nil : currentSnapshot
+                    .itemIdentifiers[max(0, currentIdentifierCount - 1)]
+                let previousMessage = flippedTableView ? flippedPreviousMessage : regularPreviousMessage
+                
+                lastMessageFromContactIsUnchanged = currentSnapshotLastMessage == .typingIndicator
+                    && currentIdentifierCount > 1
+                    && prePreviousMessage != nil
+                    && (prePreviousMessage == newSnapshotLastMessage || previousMessage == newSnapshotLastMessage)
+                
+                // Note that snapshot is not flipped
+                if let lastItem = snapshot.itemIdentifiers.last,
+                   messageIsOwn(messageID: lastItem),
+                   currentSnapshotLastMessage == .typingIndicator {
+                    lastMessageIsOurs = true
+                }
+                else {
+                    lastMessageIsOurs = false
+                }
             }
             else {
                 lastMessageIsOurs = false
+                lastMessageFromContactIsUnchanged = false
             }
             
             if (lastMessageIsOurs || lastMessageFromContactIsUnchanged) || isTypingDuringInitialSetup {
+                DDLogVerbose("Insert typing indicator")
                 insertTypingIndicatorIntoSnapshot(snapshot: &newSnapshot)
             }
         }
@@ -332,17 +389,21 @@ final class ChatViewSnapshotProvider {
             }
         }
         
-        if #available(iOS 15.0, *) {
-            for objectID in snapshot.reloadedItemIdentifiers {
-                newSnapshot.reloadItems([CellType.message(objectID: objectID)])
+        for objectID in snapshot.reloadedItemIdentifiers {
+            // These items shouldn't be reloaded and are most likely not in the converted snapshot
+            guard let delegate, !delegate.deletedMessagesObjectIDs.contains(objectID) else {
+                continue
             }
-            for objectID in snapshot.reconfiguredItemIdentifiers {
-                newSnapshot.reconfigureItems([CellType.message(objectID: objectID)])
-            }
+            
+            newSnapshot.reloadItems([CellType.message(objectID: objectID)])
         }
-        else {
-            // Fallback on earlier versions
-            newSnapshot.reloadItems(newSnapshot.itemIdentifiers)
+        for objectID in snapshot.reconfiguredItemIdentifiers {
+            // These items shouldn't be reconfigured and are most likely not in the converted snapshot
+            guard let delegate, !delegate.deletedMessagesObjectIDs.contains(objectID) else {
+                continue
+            }
+            
+            newSnapshot.reconfigureItems([CellType.message(objectID: objectID)])
         }
         
         return newSnapshot
@@ -372,7 +433,7 @@ final class ChatViewSnapshotProvider {
             
             strongSelf.snapshotInfo = SnapshotInfo(
                 snapshot: newSnapshot,
-                shouldAnimate: true,
+                rowAnimation: .fade,
                 mustWaitForApply: true,
                 snapshotChanged: nil,
                 previouslyNewestMessagesLoaded: strongSelf.previousSnapshotInfo?
@@ -392,12 +453,14 @@ final class ChatViewSnapshotProvider {
                 strongSelf.insertTypingIndicatorIntoSnapshot(snapshot: &newSnapshot)
             }
             else {
-                newSnapshot.deleteItems([.typingIndicator])
+                if newSnapshot.indexOfItem(.typingIndicator) != nil {
+                    newSnapshot.deleteItems([.typingIndicator])
+                }
             }
             
             strongSelf.snapshotInfo = SnapshotInfo(
                 snapshot: newSnapshot,
-                shouldAnimate: true,
+                rowAnimation: .fade,
                 mustWaitForApply: true,
                 snapshotChanged: nil,
                 previouslyNewestMessagesLoaded: strongSelf.previousSnapshotInfo?
@@ -410,7 +473,7 @@ final class ChatViewSnapshotProvider {
     /// - Parameter snapshot: Snapshot in which the typing indicator should be inserted
     private func insertTypingIndicatorIntoSnapshot(snapshot: inout NSDiffableDataSourceSnapshot<String, CellType>) {
         let sectionIdentifier: String
-        if UserSettings.shared().flippedTableView {
+        if flippedTableView {
             sectionIdentifier = snapshot.sectionIdentifiers.first ?? DateFormatter
                 .relativeMediumDate(for: Date())
         }
@@ -423,12 +486,86 @@ final class ChatViewSnapshotProvider {
             snapshot.appendSections([sectionIdentifier])
         }
         
-        if UserSettings.shared().flippedTableView,
+        if flippedTableView,
            let firstItem = snapshot.itemIdentifiers(inSection: sectionIdentifier).first {
-            snapshot.insertItems([.typingIndicator], beforeItem: firstItem)
+            guard firstItem != .typingIndicator else {
+                DDLogVerbose("Do not insert typing indicator because it is already at the correct position")
+                return
+            }
+            
+            insertOrMove(itemIdentifier: .typingIndicator, beforeItem: firstItem, in: &snapshot)
+        }
+        else if let lastItem = snapshot.itemIdentifiers(inSection: sectionIdentifier).last {
+            guard lastItem != .typingIndicator else {
+                DDLogVerbose("Do not insert typing indicator because it is already at the correct position")
+                return
+            }
+            
+            appendOrMove(itemIdentifier: .typingIndicator, afterItem: lastItem, in: &snapshot)
         }
         else {
-            snapshot.appendItems([.typingIndicator], toSection: sectionIdentifier)
+            let message = "Couldn't insert typing indicator because section was invalid"
+            if ChatViewConfiguration.strictMode {
+                #if DEBUG
+                    raise(SIGINT)
+                #else
+                    fatalError(message)
+                #endif
+            }
+            else {
+                DDLogError(message)
+            }
+        }
+    }
+    
+    private func insertOrMove(
+        itemIdentifier: CellType,
+        beforeItem: CellType,
+        in snapshot: inout NSDiffableDataSourceSnapshot<String, CellType>
+    ) {
+        assert(itemIdentifier != beforeItem)
+        
+        if snapshot.itemIdentifiers.contains(where: { cellType in
+            cellType == itemIdentifier.self
+        }) {
+            if let currentIndex = snapshot.indexOfItem(itemIdentifier),
+               let beforeItemIndex = snapshot.indexOfItem(beforeItem) {
+                guard currentIndex != beforeItemIndex - 1 else {
+                    // We are already at the requested index
+                    return
+                }
+            }
+            let currentIndex = snapshot.indexOfItem(itemIdentifier)
+            let beforeItemIndex = snapshot.indexOfItem(beforeItem)
+            
+            snapshot.moveItem(itemIdentifier, beforeItem: beforeItem)
+        }
+        else {
+            snapshot.insertItems([.typingIndicator], beforeItem: beforeItem)
+        }
+    }
+    
+    private func appendOrMove(
+        itemIdentifier: CellType,
+        afterItem: CellType,
+        in snapshot: inout NSDiffableDataSourceSnapshot<String, CellType>
+    ) {
+        assert(itemIdentifier != afterItem)
+        
+        if snapshot.itemIdentifiers.contains(where: { cellType in
+            cellType == itemIdentifier.self
+        }) {
+            if let currentIndex = snapshot.indexOfItem(itemIdentifier),
+               let beforeItemIndex = snapshot.indexOfItem(afterItem) {
+                guard currentIndex != beforeItemIndex + 1 else {
+                    // We are already at the requested index
+                    return
+                }
+            }
+            snapshot.moveItem(itemIdentifier, afterItem: afterItem)
+        }
+        else {
+            snapshot.insertItems([itemIdentifier], afterItem: afterItem)
         }
     }
     
@@ -437,9 +574,9 @@ final class ChatViewSnapshotProvider {
     private func isCurrentlyTyping(conversation: Conversation) -> Bool {
         var isTyping = false
         entityManager.performBlockAndWait {
-            if let message = self.entityManager.entityFetcher
+            if let conversation = self.entityManager.entityFetcher
                 .existingObject(with: conversation.objectID) as? Conversation {
-                isTyping = message.typing.boolValue
+                isTyping = conversation.typing.boolValue
             }
         }
         return isTyping
@@ -470,26 +607,22 @@ final class ChatViewSnapshotProvider {
         nextSnap: ChatViewDiffableDataSourceSnapshot,
         previousSnapshotInfo: SnapshotInfo?
     ) -> Bool {
-        /// Do not animate before first snaphot has been applied
+        /// Do not animate before first snapshot has been applied
         guard previousSnapshotInfo != nil else {
             return false
         }
         
-        /// Do not animate before first snaphot has been applied
+        /// Do not animate before first snapshot has been applied
         /// This is in practice equivalent to the statement above
         guard let currSnap = currSnap else {
             return false
         }
-        
-        guard currSnap.numberOfItems == nextSnap.numberOfItems else {
-            return true
+                
+        guard !Set(currSnap.itemIdentifiers).intersection(nextSnap.itemIdentifiers).isEmpty else {
+            return false
         }
         
-        guard currSnap.itemIdentifiers.last == nextSnap.itemIdentifiers.last else {
-            return true
-        }
-        
-        return false
+        return true
     }
     
     /// Approximates a changed snapshot by checking whether the last item identifier has changed
@@ -499,9 +632,10 @@ final class ChatViewSnapshotProvider {
     /// - Returns: The last item identifier of snapshots A and B if they have identical last item identifiers and nil otherwise
     private static func checkSnapshotChanged(
         previousSnapshot: SnapshotInfo?,
-        nextSnap: ChatViewDiffableDataSourceSnapshot
+        nextSnap: ChatViewDiffableDataSourceSnapshot,
+        userSettings: UserSettingsProtocol = UserSettings.shared()
     ) -> NSManagedObjectID? {
-        if UserSettings.shared().flippedTableView {
+        if userSettings.flippedTableView {
             guard case let .message(curr) = previousSnapshot?.snapshot.itemIdentifiers.first,
                   case let .message(next) = nextSnap.itemIdentifiers.first, next == curr else {
                 return nil
@@ -520,6 +654,7 @@ final class ChatViewSnapshotProvider {
 
 extension ChatViewSnapshotProvider {
     /// Batches two snapshots together retaining all relevant information.
+    /// The two snapshots must have equal values for `rowAnimations` otherwise the output is undefined.
     /// The items from `snapshotB` will be used and merged with the reconfigured / reloaded item identifiers from the previous `snapshotA`.
     /// - Parameters:
     ///   - snapshotA: Older snapshot
@@ -531,6 +666,7 @@ extension ChatViewSnapshotProvider {
             let endTime = CACurrentMediaTime()
             DDLogVerbose("Combined Snapshots in \(endTime - startTime) s")
         }
+                
         var newSnapshot = NSDiffableDataSourceSnapshot<String, CellType>()
         
         newSnapshot = snapshotB.snapshot
@@ -556,12 +692,6 @@ extension ChatViewSnapshotProvider {
         
         DDLogVerbose("Combined Snapshots from \(aCount) and \(bCount) to \(nCount) didChange \(nCount != bCount)")
         
-        let shouldAnimate = snapshotA.shouldAnimate || ChatViewSnapshotProvider.shouldAnimate(
-            currSnap: snapshotA.snapshot,
-            nextSnap: snapshotB.snapshot,
-            previousSnapshotInfo: snapshotA
-        )
-        
         let mustWaitForApply = true
         
         let snapshotChanged = ChatViewSnapshotProvider.checkSnapshotChanged(
@@ -569,9 +699,30 @@ extension ChatViewSnapshotProvider {
             nextSnap: snapshotB.snapshot
         ) ?? snapshotA.snapshotChanged
         
+        // We need to check if one of the two snapshots has an animation that is not none.
+        let rowAnimation: UITableView.RowAnimation
+        switch (snapshotA.rowAnimation, snapshotB.rowAnimation) {
+        case (.none, .none):
+            rowAnimation = .none
+            
+        case let (a, b) where a != .none && b == .none:
+            rowAnimation = a
+            
+        case let (a, b) where a == .none && b != .none:
+            rowAnimation = b
+            
+        case let (a, b) where a == b:
+            rowAnimation = a
+        default:
+            DDLogError(
+                "Animations were both not none (a:\(snapshotA.rowAnimation), b: \(snapshotB.rowAnimation), This must not occur. Will use .fade as fallback."
+            )
+            rowAnimation = .fade
+        }
+        
         let newSnapshotInfo = SnapshotInfo(
             snapshot: newSnapshot,
-            shouldAnimate: shouldAnimate,
+            rowAnimation: rowAnimation,
             mustWaitForApply: mustWaitForApply,
             snapshotChanged: snapshotChanged,
             previouslyNewestMessagesLoaded: snapshotA.previouslyNewestMessagesLoaded

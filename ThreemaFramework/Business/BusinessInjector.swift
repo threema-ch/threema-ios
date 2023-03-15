@@ -22,7 +22,7 @@ import CocoaLumberjackSwift
 import Foundation
 
 public class BusinessInjector: NSObject, FrameworkInjectorProtocol {
-
+        
     // MARK: BusinessInjectorProtocol
 
     @objc public lazy var backgroundEntityManager = EntityManager(withChildContextForBackgroundProcess: true)
@@ -62,6 +62,14 @@ public class BusinessInjector: NSObject, FrameworkInjectorProtocol {
 
     @objc public lazy var userSettings: UserSettingsProtocol = UserSettings.shared()
 
+    public lazy var settingsStore: any SettingsStoreProtocol = SettingsStore(
+        serverConnector: serverConnector,
+        myIdentityStore: myIdentityStore,
+        contactStore: contactStore,
+        userSettings: userSettings,
+        taskManager: TaskManager(frameworkInjector: self)
+    )
+    
     public lazy var serverConnector: ServerConnectorProtocol = ServerConnector.shared()
 
     // MARK: BusinessInternalInjectorProtocol
@@ -110,6 +118,8 @@ public class BusinessInjector: NSObject, FrameworkInjectorProtocol {
     public var dhSessionStore: DHSessionStoreProtocol {
         BusinessInjector.dhSessionStoreInstance
     }
+    
+    lazy var settingsStoreInternal: SettingsStoreInternalProtocol = settingsStore as! SettingsStoreInternalProtocol
     
     class MessageSenderAdapter: ForwardSecurityMessageSenderProtocol {
         func send(message: AbstractMessage) {

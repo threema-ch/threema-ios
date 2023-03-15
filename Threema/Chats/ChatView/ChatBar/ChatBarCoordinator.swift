@@ -18,6 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import AudioToolbox
 import CocoaLumberjackSwift
 import ThreemaFramework
 import UIKit
@@ -39,8 +40,11 @@ final class ChatBarCoordinator {
     
     /// chatBar should only be used in extensions of ChatBarCoordinator
     lazy var chatBar: ChatBarView = {
-        let draftText = MessageDraftStore.loadDraft(for: self.conversation)
-        let chatBarView = ChatBarView(conversation: conversation, mentionsDelegate: self, draftText: draftText)
+        let chatBarView = ChatBarView(
+            conversation: conversation,
+            mentionsDelegate: self,
+            precomposedText: precomposedText
+        )
         chatBarView.chatBarViewDelegate = self
         
         return chatBarView
@@ -81,9 +85,21 @@ final class ChatBarCoordinator {
         entityManager: entityManager
     )
     
+    private lazy var sentMessageSoundID: SystemSoundID? = {
+        guard let soundURL = BundleUtil.url(forResource: "sent_message", withExtension: "caf") else {
+            return nil
+        }
+        
+        var sentMessageSoundID: SystemSoundID = 0
+        AudioServicesCreateSystemSoundID(soundURL as CFURL, &sentMessageSoundID)
+        return sentMessageSoundID
+    }()
+    
     private var chatViewActionsHelper: ChatViewControllerActionsHelper
     
     private var mentionsVisible = false
+    
+    private var precomposedText: String?
     
     /// Keeps track of the last sent typing state
     private var lastTypingIndicatorState = false
@@ -95,7 +111,8 @@ final class ChatBarCoordinator {
         chatViewControllerActionsHelper: ChatViewControllerActionsHelper,
         chatViewController: ChatViewController,
         chatBarCoordinatorDelegate: ChatBarCoordinatorDelegate?,
-        chatViewTableViewVoiceMessageCellDelegate: ChatViewTableViewVoiceMessageCellDelegate
+        chatViewTableViewVoiceMessageCellDelegate: ChatViewTableViewVoiceMessageCellDelegate,
+        showConversationInformation: ShowConversationInformation? = nil
     ) {
         self.conversation = conversation
         self.chatViewActionsHelper = chatViewControllerActionsHelper
@@ -104,6 +121,18 @@ final class ChatBarCoordinator {
         self.chatViewTableViewVoiceMessageCellDelegate = chatViewTableViewVoiceMessageCellDelegate
         self.entityManager = EntityManager()
         self.groupManager = GroupManager(entityManager: entityManager)
+                    
+        // If we received an notification, we check if it has text or an image in it,
+        // else we check for draft texts.
+        if let notificationText = showConversationInformation?.precomposedText {
+            self.precomposedText = notificationText
+        }
+        else if let image = showConversationInformation?.image {
+            previewPrecomposedImage(image)
+        }
+        else {
+            self.precomposedText = MessageDraftStore.loadDraft(for: self.conversation)
+        }
     }
     
     @available(*, unavailable)
@@ -114,12 +143,16 @@ final class ChatBarCoordinator {
     // MARK: - Updates
     
     func updateSettings() {
-        chatBar.updateSettings()
         updateMessagePermission()
     }
     
-    func saveDraft() {
-        let currentOrEmptyText = chatBar.removeCurrentText()?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+    func saveDraft(andDeleteText: Bool = false) {
+        guard let currentOrEmptyText = chatBar.getCurrentText(andRemove: andDeleteText)?
+            .trimmingCharacters(in: .whitespacesAndNewlines) else {
+            MessageDraftStore.deleteDraft(for: conversation)
+            return
+        }
+        
         MessageDraftStore.saveDraft(currentOrEmptyText, for: conversation)
     }
     
@@ -285,6 +318,8 @@ extension ChatBarCoordinator: ChatBarViewDelegate {
             action.mediaPickerType = MediaPickerChooseExisting
         }
         
+        resignFirstResponder()
+        
         action.execute()
     }
     
@@ -364,6 +399,36 @@ extension ChatBarCoordinator: ChatBarViewDelegate {
         sendMediaAction.showPreview(forAssets: items)
     }
     
+    private func previewPrecomposedImage(_ image: UIImage) {
+        let item = ImagePreviewItem()
+        let filename = "composed-image-\(UUID().uuidString).png"
+        
+        guard let url = FileUtility.appTemporaryDirectory?.appendingPathComponent(filename) else {
+            showPasteError()
+            return
+        }
+        guard let imageData = MediaConverter.pngRepresentation(for: image) else {
+            showPasteError()
+            return
+        }
+        do {
+            try imageData.write(to: url)
+        }
+        catch {
+            showPasteError()
+        }
+        
+        item.itemURL = url
+        item.filename = filename
+        
+        guard let sendMediaAction = SendMediaAction(for: chatViewActionsHelper) else {
+            showPasteError()
+            return
+        }
+        
+        sendMediaAction.showPreview(forAssets: [item])
+    }
+    
     func showPasteError() {
         let title = BundleUtil.localizedString(forKey: "pasteErrorMessageTitle")
         let message = BundleUtil.localizedString(forKey: "pasteErrorMessageMessage")
@@ -403,14 +468,19 @@ extension ChatBarCoordinator: ChatBarViewDelegate {
         if let quoteMessage = quoteMessage {
             sendableRawText = QuoteUtil.generateText(rawText, with: quoteMessage.id)
         }
-        
-        sendTypingIndicator(startTyping: false)
+                
         MessageSender.sanitizeAndSendText(sendableRawText, in: conversation)
         
         MessageDraftStore.deleteDraft(for: conversation)
         
+        ConversationActions(entityManager: entityManager).unarchive(conversation)
+        
         if quoteMessage != nil {
             removeQuoteView()
+        }
+        
+        if UserSettings.shared().inAppSounds, let sentMessageSoundID {
+            AudioServicesPlaySystemSound(sentMessageSoundID)
         }
     }
     

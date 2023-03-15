@@ -52,7 +52,7 @@ class WebAvatarResponse: WebAbstractMessage {
         }
         else if type == "group" {
             let groupID = request.id.hexadecimal()
-            let conversation = entityManager.entityFetcher.conversation(for: groupID)
+            let conversation = entityManager.entityFetcher.legacyConversation(for: groupID)
             
             if conversation != nil {
                 if let avatarImage = AvatarMaker.shared()
@@ -99,7 +99,7 @@ class WebAvatarResponse: WebAbstractMessage {
         )
     }
     
-    init(requestID: String?, contact: Contact) {
+    init(requestID: String?, contact: ContactEntity) {
         self.type = "contact"
         self.id = contact.identity
         self.highResolution = false

@@ -118,9 +118,12 @@ final class ChatViewLocationMessageTableViewCell: ChatViewBaseTableViewCell, Mea
         }
         
         messageTextView.isHidden = messageTextView.text.isEmpty
-
-        messageSecondaryTextLabel.text = locationMessage?.poiAddress
-    
+        if let poiAddress = locationMessage?.poiAddress {
+            messageSecondaryTextLabel.text = poiAddress
+        }
+        else {
+            messageSecondaryTextLabel.text = locationMessage?.formattedCoordinates
+        }
         messageDateAndStateView.message = locationMessage
     }
 }
@@ -129,18 +132,18 @@ final class ChatViewLocationMessageTableViewCell: ChatViewBaseTableViewCell, Mea
 
 extension ChatViewLocationMessageTableViewCell: Reusable { }
 
-// MARK: - ContextMenuAction
+// MARK: - ChatViewMessageAction
 
-extension ChatViewLocationMessageTableViewCell: ContextMenuAction {
+extension ChatViewLocationMessageTableViewCell: ChatViewMessageAction {
     
-    func buildContextMenu(at indexPath: IndexPath) -> UIContextMenuConfiguration? {
-        
+    func messageActions() -> [ChatViewMessageActionProvider.MessageAction]? {
+
         guard let message = locationMessageAndNeighbors?.message else {
             return nil
         }
 
-        typealias Provider = ChatViewContextMenuActionProvider
-        var menuItems = [UIAction]()
+        typealias Provider = ChatViewMessageActionProvider
+        var menuItems = [ChatViewMessageActionProvider.MessageAction]()
 
         // We create a more readable string
         var locationSummary = ""
@@ -178,7 +181,21 @@ extension ChatViewLocationMessageTableViewCell: ContextMenuAction {
         
         // Edit
         let editHandler = {
-            self.chatViewTableViewCellDelegate?.startMultiselect()
+            self.chatViewTableViewCellDelegate?.startMultiselect(with: message.objectID)
+        }
+        
+        // Delete
+        let willDelete = {
+            self.chatViewTableViewCellDelegate?.willDeleteMessage(with: message.objectID)
+        }
+        
+        let didDelete = {
+            self.chatViewTableViewCellDelegate?.didDeleteMessages()
+        }
+        
+        // Ack
+        let ackHandler = { (message: BaseMessage, ack: Bool) in
+            self.chatViewTableViewCellDelegate?.sendAck(for: message, ack: ack)
         }
         
         let defaultActions = Provider.defaultActions(
@@ -189,16 +206,23 @@ extension ChatViewLocationMessageTableViewCell: ContextMenuAction {
             copyHandler: copyHandler,
             quoteHandler: quoteHandler,
             detailsHandler: detailsHandler,
-            editHandler: editHandler
+            editHandler: editHandler,
+            willDelete: willDelete,
+            didDelete: didDelete,
+            ackHandler: ackHandler
         )
         
         menuItems.append(contentsOf: defaultActions)
         
-        // Build menu
-        let menu = UIMenu(children: menuItems)
-        
-        return UIContextMenuConfiguration(identifier: indexPath as NSCopying, previewProvider: nil) { _ in
-            menu
+        return menuItems
+    }
+    
+    override var accessibilityCustomActions: [UIAccessibilityCustomAction]? {
+        get {
+            buildAccessibilityCustomActions()
+        }
+        set {
+            // No-op
         }
     }
 }

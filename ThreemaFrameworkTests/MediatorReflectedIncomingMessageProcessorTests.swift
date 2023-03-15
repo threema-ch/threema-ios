@@ -332,6 +332,7 @@ class MediatorReflectedIncomingMessageProcessorTests: XCTestCase {
                 multiDeviceManager: MultiDeviceManagerMock(),
                 myIdentityStore: MyIdentityStoreMock(),
                 userSettings: UserSettingsMock(),
+                settingsStore: SettingsStoreMock(),
                 serverConnector: ServerConnectorMock(),
                 mediatorMessageProtocol: MediatorMessageProtocolMock(),
                 messageProcessor: MessageProcessorMock()

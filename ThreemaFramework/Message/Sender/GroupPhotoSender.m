@@ -28,7 +28,6 @@
 #import "ActivityIndicatorProxy.h"
 #import "SSLCAHelper.h"
 #import "GroupSetPhotoMessage.h"
-#import "Contact.h"
 #import "ThreemaError.h"
 #import "ServerConnector.h"
 #import "UserSettings.h"

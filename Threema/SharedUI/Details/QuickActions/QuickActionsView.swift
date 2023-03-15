@@ -123,6 +123,7 @@ class QuickActionsView: UIStackView {
             QuickActionButton(
                 imageNameProvider: $0.imageNameProvider,
                 title: $0.title,
+                accessibilityIdentifier: $0.accessibilityIdentifier,
                 action: $0.action,
                 shadow: buttonShadow
             )

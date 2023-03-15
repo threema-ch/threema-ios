@@ -95,7 +95,7 @@ extension MessageSender {
         return sendTypingIndicator(contact: conversation.contact)
     }
 
-    @objc static func sendTypingIndicator(contact: Contact?) -> Bool {
+    @objc static func sendTypingIndicator(contact: ContactEntity?) -> Bool {
         guard let contact = contact else {
             return false
         }
@@ -112,7 +112,7 @@ extension MessageSender {
         return sendReadReceipt(contact: conversation.contact)
     }
 
-    @objc static func sendReadReceipt(contact: Contact?) -> Bool {
+    @objc static func sendReadReceipt(contact: ContactEntity?) -> Bool {
         guard let contact = contact else {
             return false
         }

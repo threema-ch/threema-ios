@@ -23,7 +23,7 @@
 #import "BallotResult.h"
 #import "MyIdentityStore.h"
 #import "Conversation.h"
-#import "Contact.h"
+#import "ContactEntity.h"
 
 @implementation BallotChoice
 
@@ -104,7 +104,7 @@
         return YES;
     }
     
-    for (Contact *contact in self.ballot.conversation.participants) {
+    for (ContactEntity *contact in self.ballot.conversation.participants) {
         if ([contact.identity isEqualToString:participantId]) {
             return YES;
         }

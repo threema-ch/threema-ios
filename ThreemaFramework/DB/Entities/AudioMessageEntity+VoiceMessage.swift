@@ -23,6 +23,15 @@ import Foundation
 
 extension AudioMessageEntity: VoiceMessage {
     
+    override public var showRetryAndCancelButton: Bool {
+        switch blobDisplayState {
+        case .pending, .sendingError, .uploading:
+            return true
+        default:
+            return false
+        }
+    }
+    
     // MARK: - FileMessageProvider
     
     public var fileMessageType: FileMessageType {
@@ -53,26 +62,25 @@ extension AudioMessageEntity: VoiceMessage {
         return duration.doubleValue
     }
     
-    public var temporaryBlobDataURL: URL? {
-        guard let audioData = audio.data else {
+    public func temporaryBlobDataURL() -> URL? {
+        guard let audio = audio,
+              let audioData = audio.data else {
             return nil
         }
         
-        let filename = "v1-audioMessage-\(objectID.hashValue)".hashValue
+        let filename = "v1-audioMessage-\(UUID().uuidString)"
         guard let url = FileUtility.appTemporaryDirectory?.appendingPathComponent(
             "\(filename).\(MEDIA_EXTENSION_AUDIO)"
         ) else {
             return nil
         }
         
-        if !FileUtility.isExists(fileURL: url) {
-            do {
-                try audioData.write(to: url)
-            }
-            catch {
-                DDLogWarn("Writing audio blob data to temporary file failed: \(error)")
-                return nil
-            }
+        do {
+            try audioData.write(to: url)
+        }
+        catch {
+            DDLogWarn("Writing audio blob data to temporary file failed: \(error)")
+            return nil
         }
         
         return url

@@ -18,6 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import CocoaLumberjackSwift
 import UIKit
 
 /// Access messages of a conversation
@@ -79,6 +80,12 @@ public class MessageFetcher: NSObject {
     
     private var conversationUnreadPredicate: NSPredicate {
         NSPredicate(format: "conversation == %@ AND read == false AND isOwn == false", conversation)
+    }
+    
+    private var conversationWithFilteredNoMIMETypeFileMessages: NSPredicate {
+        let fileMessagePredicate = NSPredicate(format: "%K == nil", "mimeType")
+
+        return NSCompoundPredicate(andPredicateWithSubpredicates: [conversationPredicate, fileMessagePredicate])
     }
     
     // MARK: Fetch requests
@@ -165,6 +172,13 @@ public class MessageFetcher: NSObject {
         return fetchRequest
     }()
     
+    private lazy var fileMessagesWithNoMIMETypeFetchRequest: NSFetchRequest<NSFetchRequestResult> = {
+        let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: fileEntityName)
+        fetchRequest.predicate = conversationWithFilteredNoMIMETypeFileMessages
+        // Sorting doesn't matter because we just need them to filter later
+        return fetchRequest
+    }()
+    
     // MARK: - Lifecycle
     
     /// Initialize for a fixed conversation
@@ -208,6 +222,33 @@ public class MessageFetcher: NSObject {
         ])
         
         return entityManager.entityFetcher.executeCount(dateFetchRequest)
+    }
+    
+    /// Number of messages in conversation after the passed date
+    /// - Parameter date: All messages with a `date` or `remoteSentDate` newer than this are counted
+    /// - Returns: Number of messages in this conversation after the passed date or zero if an error occurred during execution
+    /// This is consistent with the behavior of the standard `numberOfMessages` where `executeCount` returns 0 if the fetch request failed
+    public func numberOfMessages(after date: Date) -> Guarantee<Int> {
+        Guarantee { seal in
+            let fetchRequest = dateFetchRequest
+            
+            let datePredicates = NSCompoundPredicate(orPredicateWithSubpredicates: [
+                NSPredicate(format: "%K > %@", #keyPath(BaseMessage.date), date as NSDate),
+                NSPredicate(format: "%K > %@", #keyPath(BaseMessage.remoteSentDate), date as NSDate),
+            ])
+            
+            fetchRequest.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [
+                conversationPredicate,
+                datePredicates,
+            ])
+            
+            entityManager.entityFetcher.executeCount(fetchRequest) { count in
+                seal(count)
+            } onError: { error in
+                DDLogError("An error occurred: \(error)")
+                seal(0)
+            }
+        }
     }
     
     /// Load messages starting at `offset`. Up to `count` messages are returned.
@@ -283,6 +324,29 @@ public class MessageFetcher: NSObject {
         mediaCount += entityManager.entityFetcher.executeCount(countAudioMessagesFetchRequest)
         
         return mediaCount
+    }
+    
+    /// Object IDs of file messages with a `nil` MIME typ. They have no particular order.
+    /// - Parameter managedObjectContext: Context to execute fetch request on. If you use the main context you might deadlock
+    /// - Returns: Object IDs of file messages with a `nil` MIME typ
+    func fileMessagesWithNoMIMEType(using managedObjectContext: NSManagedObjectContext) -> [NSManagedObjectID] {
+        fileMessagesWithNoMIMETypeFetchRequest.resultType = .managedObjectIDResultType
+        
+        var result = [NSManagedObjectID]()
+        
+        managedObjectContext.performAndWait {
+            do {
+                let fetchResult = try managedObjectContext.fetch(fileMessagesWithNoMIMETypeFetchRequest)
+                if let fetchResult = fetchResult as? [NSManagedObjectID] {
+                    result = fetchResult
+                }
+            }
+            catch {
+                DDLogError("Unable to fetch file messages with no MIME type")
+            }
+        }
+        
+        return result
     }
     
     /// Most recent 20 messages

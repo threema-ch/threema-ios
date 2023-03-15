@@ -47,8 +47,10 @@ class BusinessInjectorMock: BusinessInjectorProtocol {
 
     var userSettings: UserSettingsProtocol
 
-    var serverConnector: ServerConnectorProtocol
+    var settingsStore: SettingsStoreProtocol
 
+    var serverConnector: ServerConnectorProtocol
+        
     init(
         backgroundEntityManager: EntityManager,
         backgroundGroupManager: GroupManagerProtocol,
@@ -61,6 +63,7 @@ class BusinessInjectorMock: BusinessInjectorProtocol {
         multiDeviceManager: MultiDeviceManagerProtocol,
         myIdentityStore: MyIdentityStoreProtocol,
         userSettings: UserSettingsProtocol,
+        settingsStore: SettingsStoreProtocol,
         serverConnector: ServerConnectorProtocol
     ) {
         self.backgroundEntityManager = backgroundEntityManager
@@ -74,6 +77,7 @@ class BusinessInjectorMock: BusinessInjectorProtocol {
         self.multiDeviceManager = multiDeviceManager
         self.myIdentityStore = myIdentityStore
         self.userSettings = userSettings
+        self.settingsStore = settingsStore
         self.serverConnector = serverConnector
     }
 
@@ -90,5 +94,6 @@ class BusinessInjectorMock: BusinessInjectorProtocol {
         self.myIdentityStore = MyIdentityStoreMock()
         self.userSettings = UserSettingsMock()
         self.serverConnector = ServerConnectorMock()
+        self.settingsStore = SettingsStoreMock()
     }
 }

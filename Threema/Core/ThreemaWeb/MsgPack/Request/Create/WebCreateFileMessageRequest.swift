@@ -138,7 +138,7 @@ public class WebCreateFileMessageRequest: WebAbstractMessage {
             }
         }
         else {
-            conversation = entityManager.entityFetcher.conversation(for: groupID)
+            conversation = entityManager.entityFetcher.legacyConversation(for: groupID)
         }
         
         if conversation != nil {

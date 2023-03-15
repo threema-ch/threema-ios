@@ -32,6 +32,4 @@
 
 + (void)checkFeatureMask:(NSInteger)featureMask forContacts:(NSSet *)contacts forceRefresh:(BOOL)forceRefresh onCompletion:(void (^)(NSArray *unsupportedContacts))onCompletion;
 
-+ (void)updateFeatureMaskForAllContacts:(NSArray *)allContacts onCompletion:(void(^)(void))onCompletion;
-
 @end

@@ -19,14 +19,14 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import <Foundation/Foundation.h>
-#import "Contact.h"
+#import "ContactEntity.h"
 
 @interface ShareController : NSObject
 
 @property (nonatomic, strong) NSString *text;
 @property (nonatomic, strong) UIImage *image;
 @property (nonatomic, strong) NSURL *url;
-@property (nonatomic, strong) Contact *contact; // if nil, a contact picker will be shown
+@property (nonatomic, strong) ContactEntity *contact; // if nil, a contact picker will be shown
 
 - (void)startShare;
 

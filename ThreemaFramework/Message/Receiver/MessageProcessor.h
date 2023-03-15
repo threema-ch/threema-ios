@@ -25,7 +25,7 @@
     
 @class BoxedMessage;
 @class Conversation;
-@class Contact;
+@class ContactEntity;
 
 @protocol MessageProcessorProtocol <NSObject>
 

@@ -21,7 +21,7 @@
 #import <Foundation/Foundation.h>
 #import "DatabaseManager.h"
 
-@class Contact, Conversation;
+@class ContactEntity, Conversation;
 
 @interface AvatarMaker : NSObject
 
@@ -29,10 +29,10 @@
 
 - (void)clearCacheForProfilePicture;
 
-- (void)avatarForContact:(Contact*)contact size:(CGFloat)size masked:(BOOL)masked onCompletion:(void (^)(UIImage *avatarImage, NSString *identity))onCompletion;
-- (UIImage*)avatarForContact:(Contact*)contact size:(CGFloat)size masked:(BOOL)masked;
-- (UIImage*)avatarForContact:(Contact*)contact size:(CGFloat)size masked:(BOOL)masked scaled:(BOOL)scaled;
-- (UIImage *)initialsAvatarForContact:(nonnull Contact *)contact size:(CGFloat)size masked:(BOOL)masked;
+- (void)avatarForContactEntity:(ContactEntity*)contact size:(CGFloat)size masked:(BOOL)masked onCompletion:(void (^)(UIImage *avatarImage, NSString *identity))onCompletion;
+- (UIImage*)avatarForContactEntity:(ContactEntity*)contact size:(CGFloat)size masked:(BOOL)masked;
+- (UIImage*)avatarForContactEntity:(ContactEntity*)contact size:(CGFloat)size masked:(BOOL)masked scaled:(BOOL)scaled;
+- (UIImage *)initialsAvatarForContactEntity:(nonnull ContactEntity *)contact size:(CGFloat)size masked:(BOOL)masked;
 
 - (void)avatarForConversation:(Conversation*)conversation size:(CGFloat)size masked:(BOOL)masked onCompletion:(void (^)(UIImage *avatarImage, NSManagedObjectID *objectID))onCompletion;
 
@@ -44,13 +44,13 @@
 
 - (UIImage* _Nullable)maskedProfilePicture:(UIImage * _Nonnull)image size:(CGFloat)size;
 
-- (nullable UIImage *)callBackgroundForContact:(nonnull Contact *)contact;
+- (nullable UIImage *)callBackgroundForContactEntity:(nonnull ContactEntity *)contact;
 
 - (UIImage * _Nullable)companyImage;
 - (UIImage * _Nullable)unknownPersonImage;
 - (UIImage * _Nullable)unknownGroupImage;
 
-- (BOOL)isDefaultAvatarForContact:(Contact * _Nullable)contact;
+- (BOOL)isDefaultAvatarForContactEntity:(ContactEntity * _Nullable)contact;
 
 + (UIImage *_Nonnull)avatarWithString:(NSString* _Nullable)string size:(CGFloat)size;
 

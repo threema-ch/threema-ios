@@ -38,7 +38,7 @@ final class EditGroupViewController: ThemedCodeModernGroupedTableViewController 
         
         // These are here for future use
         case meContact
-        case contact(_ contact: Contact)
+        case contact(_ contact: ContactEntity)
         case membersAction(_ action: Details.Action)
     }
     

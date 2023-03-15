@@ -288,7 +288,7 @@ import Foundation
             
             MessageDraftStore.deleteDraft(for: conversation)
         }
-        else if let contact = object as? Contact {
+        else if let contact = object as? ContactEntity {
             // Remove all conversations and messages for this contact
             if let conversations = contact.conversations {
                 for genericConversation in conversations {
@@ -553,7 +553,7 @@ import Foundation
     ///
     /// - Returns:
     ///    Count of deleted messages
-    private func deleteMessages(for contact: Contact) -> Int {
+    private func deleteMessages(for contact: ContactEntity) -> Int {
         let fetchMessages = NSFetchRequest<NSFetchRequestResult>(entityName: "Message")
         fetchMessages.predicate = NSPredicate(format: "sender = %@", contact)
         return deleteMessages(with: fetchMessages)

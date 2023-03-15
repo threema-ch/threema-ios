@@ -44,34 +44,24 @@ class MessageStore: MessageStoreProtocol {
     ) throws {
         messageProcessorDelegate.incomingMessageStarted(audioMessage)
 
-        var msg: AudioMessageEntity?
-        var err: Error?
+        let (conversation, _) = try conversationSender(forMessage: audioMessage, isOutgoing: false)
+
+        guard let msg = frameworkInjector.backgroundEntityManager.getOrCreateMessage(
+            for: audioMessage,
+            sender: nil,
+            conversation: conversation,
+            thumbnail: nil
+        ) as? AudioMessageEntity else {
+            throw MediatorReflectedProcessorError
+                .messageNotProcessed(message: "Could not find/create audio message in DB")
+        }
+        
         frameworkInjector.backgroundEntityManager.performSyncBlockAndSafe {
-            guard let conversation = self.frameworkInjector.backgroundEntityManager.conversation(
-                for: conversationIdentity,
-                createIfNotExisting: true
-            ) else {
-                err = MediatorReflectedProcessorError.conversationNotFound(message: audioMessage.loggingDescription)
-                return
-            }
-
-            msg = self.frameworkInjector.backgroundEntityManager.entityCreator.audioMessageEntity(fromBox: audioMessage)
-            msg?.conversation = conversation
-
-            msg?.date = timestamp
-            msg?.isOwn = NSNumber(booleanLiteral: false)
-
-            conversation.lastMessage = msg
-            conversation.lastUpdate = Date.now
-        }
-        if let err = err {
-            throw err
+            msg.date = timestamp
+            msg.isOwn = NSNumber(booleanLiteral: false)
         }
 
-        if let msg = msg {
-            messageProcessorDelegate.incomingMessageChanged(msg, fromIdentity: conversationIdentity)
-        }
-
+        messageProcessorDelegate.incomingMessageChanged(msg, fromIdentity: conversationIdentity)
         messageProcessorDelegate.incomingMessageFinished(audioMessage, isPendingGroup: false)
     }
 
@@ -88,54 +78,40 @@ class MessageStore: MessageStoreProtocol {
                 messageProcessorDelegate.incomingMessageStarted(fileMessage)
             }
 
-            frameworkInjector.backgroundEntityManager.performBlockAndWait {
-                guard let conversation = self.frameworkInjector.backgroundEntityManager.conversation(
-                    for: conversationIdentity,
-                    createIfNotExisting: true
-                ) else {
-                    seal
-                        .reject(
-                            MediatorReflectedProcessorError
-                                .conversationNotFound(message: fileMessage.loggingDescription)
-                        )
-                    return
-                }
+            let (conversation, _) = try conversationSender(forMessage: fileMessage, isOutgoing: isOutgoing)
 
-                FileMessageDecoder.decodeMessage(
-                    fromBox: fileMessage,
-                    forConversation: conversation,
-                    isReflectedMessage: true,
-                    timeoutDownloadThumbnail: Int32(timeoutDownloadThumbnail),
-                    entityManager: self.frameworkInjector.backgroundEntityManager,
-                    onCompletion: { msg in
-                        self.frameworkInjector.backgroundEntityManager.performSyncBlockAndSafe {
-                            msg?.id = fileMessage.messageID
-                            msg?.date = timestamp
-
-                            conversation.lastMessage = msg
-                            conversation.lastUpdate = Date.now
-                        }
-
-                        if !isOutgoing {
-                            if let msg = msg {
-                                self.messageProcessorDelegate.incomingMessageChanged(
-                                    msg,
-                                    fromIdentity: conversationIdentity
-                                )
-                            }
-
-                            self.messageProcessorDelegate.incomingMessageFinished(fileMessage, isPendingGroup: false)
-                        }
-
-                        seal.fulfill_()
+            FileMessageDecoder.decodeMessage(
+                fromBox: fileMessage,
+                sender: nil,
+                conversation: conversation,
+                isReflectedMessage: true,
+                timeoutDownloadThumbnail: Int32(timeoutDownloadThumbnail),
+                entityManager: self.frameworkInjector.backgroundEntityManager,
+                onCompletion: { msg in
+                    self.frameworkInjector.backgroundEntityManager.performSyncBlockAndSafe {
+                        msg?.id = fileMessage.messageID
+                        msg?.date = timestamp
                     }
-                ) { error in
-                    seal.reject(
-                        MediatorReflectedProcessorError.messageNotProcessed(
-                            message: "Could not process file message: \(error?.localizedDescription ?? "")"
-                        )
-                    )
+
+                    if !isOutgoing {
+                        if let msg = msg {
+                            self.messageProcessorDelegate.incomingMessageChanged(
+                                msg,
+                                fromIdentity: conversationIdentity
+                            )
+                        }
+
+                        self.messageProcessorDelegate.incomingMessageFinished(fileMessage, isPendingGroup: false)
+                    }
+
+                    seal.fulfill_()
                 }
+            ) { error in
+                seal.reject(
+                    MediatorReflectedProcessorError.messageNotProcessed(
+                        message: "Could not process file message: \(error?.localizedDescription ?? "")"
+                    )
+                )
             }
         }
     }
@@ -151,35 +127,24 @@ class MessageStore: MessageStoreProtocol {
             messageProcessorDelegate.incomingMessageStarted(textMessage)
         }
 
-        var msg: TextMessage?
-        var err: Error?
-        frameworkInjector.backgroundEntityManager.performSyncBlockAndSafe {
-            guard let conversation = self.frameworkInjector.backgroundEntityManager.conversation(
-                for: conversationIdentity,
-                createIfNotExisting: true
-            ) else {
-                err = MediatorReflectedProcessorError.conversationNotFound(message: textMessage.loggingDescription)
-                return
-            }
+        let (conversation, _) = try conversationSender(forMessage: textMessage, isOutgoing: isOutgoing)
 
-            msg = self.frameworkInjector.backgroundEntityManager.entityCreator.textMessage(fromBox: textMessage)
-            msg?.conversation = conversation
-
-            msg?.date = timestamp
-            msg?.isOwn = NSNumber(booleanLiteral: isOutgoing)
-
-            conversation.lastMessage = msg
-            conversation.lastUpdate = Date.now
+        guard let msg = frameworkInjector.backgroundEntityManager.getOrCreateMessage(
+            for: textMessage,
+            sender: nil,
+            conversation: conversation,
+            thumbnail: nil
+        ) as? TextMessage else {
+            throw MediatorReflectedProcessorError.messageNotProcessed(message: "Could not find/create text message")
         }
-        if let err = err {
-            throw err
+
+        frameworkInjector.backgroundEntityManager.performSyncBlockAndSafe {
+            msg.date = timestamp
+            msg.isOwn = NSNumber(booleanLiteral: isOutgoing)
         }
 
         if !isOutgoing {
-            if let msg = msg {
-                messageProcessorDelegate.incomingMessageChanged(msg, fromIdentity: conversationIdentity)
-            }
-
+            messageProcessorDelegate.incomingMessageChanged(msg, fromIdentity: conversationIdentity)
             messageProcessorDelegate.incomingMessageFinished(textMessage, isPendingGroup: false)
         }
     }
@@ -226,43 +191,55 @@ class MessageStore: MessageStoreProtocol {
 
         for id in deliveryReceiptMessage.receiptMessageIDs {
             if let messageID = id as? Data {
-                if let msg = frameworkInjector.backgroundEntityManager.entityFetcher.message(with: messageID) {
-                    if deliveryReceiptMessage.receiptType == DELIVERYRECEIPT_MSGRECEIVED {
-                        frameworkInjector.backgroundEntityManager.performSyncBlockAndSafe {
-                            msg.delivered = true
-                            msg.deliveryDate = deliveryReceiptMessage.date
+                var error: Error?
+                frameworkInjector.backgroundEntityManager.performBlock {
+                    if let conversation = self.frameworkInjector.backgroundEntityManager.conversation(
+                        forMessage: deliveryReceiptMessage
+                    ),
+                        let msg = self.frameworkInjector.backgroundEntityManager.entityFetcher.message(
+                            with: messageID,
+                            conversation: conversation
+                        ) {
+                        if deliveryReceiptMessage.receiptType == DELIVERYRECEIPT_MSGRECEIVED {
+                            self.frameworkInjector.backgroundEntityManager.performSyncBlockAndSafe {
+                                msg.delivered = true
+                                msg.deliveryDate = deliveryReceiptMessage.date
+                            }
                         }
-                    }
-                    else if deliveryReceiptMessage.receiptType == DELIVERYRECEIPT_MSGREAD {
-                        frameworkInjector.backgroundEntityManager.performSyncBlockAndSafe {
-                            msg.read = true
-                            msg.readDate = deliveryReceiptMessage.date
+                        else if deliveryReceiptMessage.receiptType == DELIVERYRECEIPT_MSGREAD {
+                            self.frameworkInjector.backgroundEntityManager.performSyncBlockAndSafe {
+                                msg.read = true
+                                msg.readDate = deliveryReceiptMessage.date
 
-                            messageReadConversations.insert(msg.conversation)
+                                messageReadConversations.insert(msg.conversation)
+                            }
                         }
-                    }
-                    else if deliveryReceiptMessage.receiptType == DELIVERYRECEIPT_MSGUSERACK {
-                        frameworkInjector.backgroundEntityManager.performSyncBlockAndSafe {
-                            msg.userack = true
-                            msg.userackDate = deliveryReceiptMessage.date
+                        else if deliveryReceiptMessage.receiptType == DELIVERYRECEIPT_MSGUSERACK {
+                            self.frameworkInjector.backgroundEntityManager.performSyncBlockAndSafe {
+                                msg.userack = true
+                                msg.userackDate = deliveryReceiptMessage.date
+                            }
                         }
-                    }
-                    else if deliveryReceiptMessage.receiptType == DELIVERYRECEIPT_MSGUSERDECLINE {
-                        frameworkInjector.backgroundEntityManager.performSyncBlockAndSafe {
-                            msg.userack = false
-                            msg.userackDate = deliveryReceiptMessage.date
+                        else if deliveryReceiptMessage.receiptType == DELIVERYRECEIPT_MSGUSERDECLINE {
+                            self.frameworkInjector.backgroundEntityManager.performSyncBlockAndSafe {
+                                msg.userack = false
+                                msg.userackDate = deliveryReceiptMessage.date
+                            }
                         }
+                        else {
+                            DDLogWarn(
+                                "Unknown delivery receipt type \(deliveryReceiptMessage.receiptType) with message ID \(messageID.hexString)"
+                            )
+                        }
+                        self.messageProcessorDelegate.changedManagedObjectID(msg.objectID)
                     }
                     else {
-                        DDLogWarn(
-                            "Unknown delivery receipt type \(deliveryReceiptMessage.receiptType) with message ID \(messageID.hexString)"
-                        )
+                        error = MediatorReflectedProcessorError
+                            .messageNotProcessed(message: deliveryReceiptMessage.loggingDescription)
                     }
-                    messageProcessorDelegate.changedManagedObjectID(msg.objectID)
                 }
-                else {
-                    throw MediatorReflectedProcessorError
-                        .messageNotProcessed(message: deliveryReceiptMessage.loggingDescription)
+                if let error {
+                    throw error
                 }
             }
         }
@@ -285,40 +262,28 @@ class MessageStore: MessageStoreProtocol {
     ) throws {
         messageProcessorDelegate.incomingMessageStarted(groupAudioMessage)
 
-        var msg: AudioMessageEntity?
-        var err: Error?
+        let (conversation, sender) = try conversationSender(forMessage: groupAudioMessage, isOutgoing: false)
+
+        guard let sender else {
+            throw MediatorReflectedProcessorError.senderNotFound(identity: senderIdentity)
+        }
+
+        guard let msg = frameworkInjector.backgroundEntityManager.getOrCreateMessage(
+            for: groupAudioMessage,
+            sender: sender,
+            conversation: conversation,
+            thumbnail: nil
+        ) as? AudioMessageEntity else {
+            throw MediatorReflectedProcessorError
+                .messageNotProcessed(message: "Could not find/create group audio message in DB")
+        }
+
         frameworkInjector.backgroundEntityManager.performSyncBlockAndSafe {
-            guard let conversation = self.frameworkInjector.backgroundEntityManager.entityFetcher
-                .conversation(for: groupAudioMessage) else {
-                err = MediatorReflectedProcessorError
-                    .conversationNotFound(message: groupAudioMessage.loggingDescription)
-                return
-            }
-            guard let sender = self.frameworkInjector.backgroundEntityManager.entityFetcher
-                .contact(for: senderIdentity) else {
-                err = MediatorReflectedProcessorError.contactNotFound(identity: senderIdentity)
-                return
-            }
-
-            msg = self.frameworkInjector.backgroundEntityManager.entityCreator
-                .audioMessageEntity(fromGroupBox: groupAudioMessage)
-            msg?.conversation = conversation
-            msg?.sender = sender
-
-            msg?.date = timestamp
-            msg?.isOwn = NSNumber(booleanLiteral: false)
-
-            conversation.lastMessage = msg
-            conversation.lastUpdate = Date.now
-        }
-        if let err = err {
-            throw err
+            msg.date = timestamp
+            msg.isOwn = NSNumber(booleanLiteral: false)
         }
 
-        if let msg = msg {
-            messageProcessorDelegate.incomingMessageChanged(msg, fromIdentity: senderIdentity)
-        }
-
+        messageProcessorDelegate.incomingMessageChanged(msg, fromIdentity: senderIdentity)
         messageProcessorDelegate.incomingMessageFinished(groupAudioMessage, isPendingGroup: false)
     }
 
@@ -408,66 +373,44 @@ class MessageStore: MessageStoreProtocol {
                 messageProcessorDelegate.incomingMessageStarted(groupFileMessage)
             }
 
-            frameworkInjector.backgroundEntityManager.performBlockAndWait {
-                guard let conversation = self.frameworkInjector.backgroundEntityManager.entityFetcher
-                    .conversation(for: groupFileMessage) else {
-                    seal
-                        .reject(
-                            MediatorReflectedProcessorError
-                                .conversationNotFound(message: groupFileMessage.loggingDescription)
-                        )
-                    return
-                }
+            let (conversation, sender) = try conversationSender(forMessage: groupFileMessage, isOutgoing: isOutgoing)
 
-                var sender: Contact?
-                if !isOutgoing {
-                    sender = self.frameworkInjector.backgroundEntityManager.entityFetcher.contact(for: senderIdentity)
-                    if sender == nil {
-                        seal
-                            .reject(
-                                MediatorReflectedProcessorError
-                                    .contactNotFound(identity: senderIdentity)
-                            )
-                        return
+            guard isOutgoing || (!isOutgoing && sender != nil) else {
+                throw MediatorReflectedProcessorError.senderNotFound(identity: senderIdentity)
+            }
+
+            FileMessageDecoder.decodeGroupMessage(
+                fromBox: groupFileMessage,
+                sender: sender,
+                conversation: conversation,
+                isReflectedMessage: true,
+                timeoutDownloadThumbnail: Int32(timeoutDownloadThumbnail),
+                entityManager: self.frameworkInjector.backgroundEntityManager,
+                onCompletion: { msg in
+                    self.frameworkInjector.backgroundEntityManager.performSyncBlockAndSafe {
+                        msg?.id = groupFileMessage.messageID
+                        msg?.date = timestamp
                     }
-                }
 
-                FileMessageDecoder.decodeGroupMessage(
-                    fromBox: groupFileMessage,
-                    forConversation: conversation,
-                    isReflectedMessage: true,
-                    timeoutDownloadThumbnail: Int32(timeoutDownloadThumbnail),
-                    entityManager: self.frameworkInjector.backgroundEntityManager,
-                    onCompletion: { msg in
-                        self.frameworkInjector.backgroundEntityManager.performSyncBlockAndSafe {
-                            msg?.id = groupFileMessage.messageID
-                            msg?.sender = sender
-                            msg?.date = timestamp
-
-                            conversation.lastMessage = msg
-                            conversation.lastUpdate = Date.now
+                    if !isOutgoing {
+                        if let msg = msg {
+                            self.messageProcessorDelegate.incomingMessageChanged(msg, fromIdentity: senderIdentity)
                         }
 
-                        if !isOutgoing {
-                            if let msg = msg {
-                                self.messageProcessorDelegate.incomingMessageChanged(msg, fromIdentity: senderIdentity)
-                            }
-
-                            self.messageProcessorDelegate.incomingMessageFinished(
-                                groupFileMessage,
-                                isPendingGroup: false
-                            )
-                        }
-
-                        seal.fulfill_()
-                    }
-                ) { error in
-                    seal.reject(
-                        MediatorReflectedProcessorError.messageNotProcessed(
-                            message: "Could not process group file message: \(error?.localizedDescription ?? "")"
+                        self.messageProcessorDelegate.incomingMessageFinished(
+                            groupFileMessage,
+                            isPendingGroup: false
                         )
+                    }
+
+                    seal.fulfill_()
+                }
+            ) { error in
+                seal.reject(
+                    MediatorReflectedProcessorError.messageNotProcessed(
+                        message: "Could not process group file message: \(error?.localizedDescription ?? "")"
                     )
-                }
+                )
             }
         }
     }
@@ -485,120 +428,95 @@ class MessageStore: MessageStoreProtocol {
         maxBytesToDecrypt: Int
     ) throws -> Promise<Void> {
         assert(imageMessage is BoxImageMessage || imageMessage is GroupImageMessage)
+        assert(senderIdentity == imageMessage.fromIdentity)
 
         guard !(imageMessage is BoxImageMessage && imageMessage is GroupImageMessage) else {
             throw MediatorReflectedProcessorError
-                .messageNotProcessed(message: "Wrong message type, nust be BoxImageMessage or GroupImageMessage")
+                .messageNotProcessed(message: "Wrong message type, must be BoxImageMessage or GroupImageMessage")
+        }
+
+        let (conversation, sender) = try conversationSender(forMessage: imageMessage, isOutgoing: false)
+
+        guard let sender else {
+            throw MediatorReflectedProcessorError.contactNotFound(identity: senderIdentity)
         }
 
         return Promise { seal in
             messageProcessorDelegate.incomingMessageStarted(imageMessage)
 
+            guard let msg = frameworkInjector.backgroundEntityManager.getOrCreateMessage(
+                for: imageMessage,
+                sender: nil,
+                conversation: conversation,
+                thumbnail: nil
+            ) as? ImageMessageEntity else {
+                seal
+                    .reject(
+                        MediatorReflectedProcessorError
+                            .messageNotProcessed(message: "Could not find/create (group) image message in DB")
+                    )
+                return
+            }
+
+            var senderPublicKey: Data!
+            var messageID: Data!
+            var conversationObjectID: NSManagedObjectID!
+            var blobID: Data!
+            var blobOrigin: BlobOrigin!
+            var encryptionKey: Data!
+            var nonce: Data!
+
+            frameworkInjector.backgroundEntityManager.performSyncBlockAndSafe {
+                msg.date = timestamp
+                msg.isOwn = NSNumber(booleanLiteral: false)
+
+                senderPublicKey = sender.publicKey
+                messageID = msg.id
+                conversationObjectID = conversation.objectID
+                blobID = msg.blobGetID()
+                blobOrigin = msg.blobGetOrigin()
+                encryptionKey = msg.encryptionKey
+                nonce = msg.imageNonce
+            }
+
             // Create image message in DB and download and decrypt blob
-            frameworkInjector.backgroundEntityManager.performBlockAndWait {
-                var msg: ImageMessageEntity!
-                var senderPublicKey: Data?
+            self.messageProcessorDelegate.incomingMessageChanged(msg, fromIdentity: senderIdentity)
 
-                // Check is message already created
-                self.frameworkInjector.backgroundEntityManager.entityFetcher.message(with: imageMessage.messageID)
-                if msg == nil {
-                    var conversation: Conversation!
-                    if imageMessage is BoxImageMessage {
-                        conversation = self.frameworkInjector.backgroundEntityManager.conversation(
-                            for: senderIdentity,
-                            createIfNotExisting: true
-                        )
-                    }
-                    else if let imageMessage = imageMessage as? GroupVideoMessage {
-                        conversation = self.frameworkInjector.backgroundEntityManager.entityFetcher
-                            .conversation(for: imageMessage)
-                    }
-                    guard conversation != nil else {
-                        seal
-                            .reject(
-                                MediatorReflectedProcessorError
-                                    .conversationNotFound(message: imageMessage.loggingDescription)
-                            )
-                        return
-                    }
+            let downloadQueue = DispatchQueue.global(qos: .default)
 
-                    // TOCHECK: Is there always a sender?
-                    guard let sender = self.frameworkInjector.backgroundEntityManager.entityFetcher
-                        .contact(for: senderIdentity) else {
-                        seal.reject(
-                            MediatorReflectedProcessorError
-                                .contactNotFound(identity: senderIdentity)
-                        )
-                        return
-                    }
-                    senderPublicKey = sender.publicKey
-
-                    self.frameworkInjector.backgroundEntityManager.performSyncBlockAndSafe {
-                        if let imageMessage = imageMessage as? BoxImageMessage {
-                            msg = self.frameworkInjector.backgroundEntityManager.entityCreator
-                                .imageMessageEntity(fromBox: imageMessage)
-                        }
-                        else if let imageMessage = imageMessage as? GroupImageMessage {
-                            msg = self.frameworkInjector.backgroundEntityManager.entityCreator
-                                .imageMessageEntity(fromGroupBox: imageMessage)
-                            msg?.sender = sender
-                        }
-                        msg?.conversation = conversation
-
-                        msg?.date = timestamp
-                        msg?.isOwn = NSNumber(booleanLiteral: false)
-
-                        conversation.lastMessage = msg
-                        conversation.lastUpdate = Date.now
-                    }
-                }
-
-                if let msg = msg {
-                    self.messageProcessorDelegate.incomingMessageChanged(msg, fromIdentity: senderIdentity)
-
-                    let downloadQueue = DispatchQueue.global(qos: .default)
-
-                    let processor = ImageMessageProcessor(
-                        blobDownloader: BlobDownloader(blobURL: BlobURL(
-                            serverConnector: self.frameworkInjector.serverConnector,
-                            userSettings: self.frameworkInjector.userSettings,
-                            queue: DispatchQueue.global(qos: .userInitiated)
-                        ), queue: downloadQueue),
-                        serverConnector: self.frameworkInjector.serverConnector,
-                        myIdentityStore: self.frameworkInjector.myIdentityStore,
-                        userSettings: self.frameworkInjector.userSettings,
-                        entityManager: self.frameworkInjector.backgroundEntityManager
-                    )
-                    processor.downloadImage(
-                        imageMessageID: msg.id,
-                        imageBlobID: msg.imageBlobID,
-                        origin: msg.blobGetOrigin(),
-                        imageBlobEncryptionKey: msg.blobGetEncryptionKey(),
-                        imageBlobNonce: msg.imageNonce,
-                        senderPublicKey: senderPublicKey,
-                        maxBytesToDecrypt: maxBytesToDecrypt
-                    )
-                    .done {
-                        self.messageProcessorDelegate.incomingMessageChanged(msg, fromIdentity: senderIdentity)
-                        seal.fulfill_()
-                    }
-                    .ensure {
-                        self.messageProcessorDelegate.incomingMessageFinished(
-                            imageMessage,
-                            isPendingGroup: false
-                        )
-                    }
-                    .catch { error in
-                        seal.reject(error)
-                    }
-                }
-                else {
-                    seal
-                        .reject(
-                            MediatorReflectedProcessorError
-                                .messageNotProcessed(message: "Could not create image message.")
-                        )
-                }
+            let processor = ImageMessageProcessor(
+                blobDownloader: BlobDownloader(blobURL: BlobURL(
+                    serverConnector: self.frameworkInjector.serverConnector,
+                    userSettings: self.frameworkInjector.userSettings,
+                    queue: DispatchQueue.global(qos: .userInitiated)
+                ), queue: downloadQueue),
+                serverConnector: self.frameworkInjector.serverConnector,
+                myIdentityStore: self.frameworkInjector.myIdentityStore,
+                userSettings: self.frameworkInjector.userSettings,
+                entityManager: self.frameworkInjector.backgroundEntityManager
+            )
+            processor.downloadImage(
+                imageMessageID: messageID,
+                in: conversationObjectID,
+                imageBlobID: blobID,
+                origin: blobOrigin,
+                imageBlobEncryptionKey: encryptionKey,
+                imageBlobNonce: nonce,
+                senderPublicKey: senderPublicKey,
+                maxBytesToDecrypt: maxBytesToDecrypt
+            )
+            .done {
+                self.messageProcessorDelegate.incomingMessageChanged(msg, fromIdentity: senderIdentity)
+                seal.fulfill_()
+            }
+            .ensure {
+                self.messageProcessorDelegate.incomingMessageFinished(
+                    imageMessage,
+                    isPendingGroup: false
+                )
+            }
+            .catch { error in
+                seal.reject(error)
             }
         }
     }
@@ -614,49 +532,32 @@ class MessageStore: MessageStoreProtocol {
             messageProcessorDelegate.incomingMessageStarted(groupLocationMessage)
         }
 
-        var msg: LocationMessage?
-        var err: Error?
-        frameworkInjector.backgroundEntityManager.performSyncBlockAndSafe {
-            guard let conversation = self.frameworkInjector.backgroundEntityManager.entityFetcher
-                .conversation(for: groupLocationMessage) else {
-                err = MediatorReflectedProcessorError
-                    .conversationNotFound(message: groupLocationMessage.loggingDescription)
-                return
-            }
+        let (conversation, sender) = try conversationSender(forMessage: groupLocationMessage, isOutgoing: isOutgoing)
 
-            var sender: Contact?
-            if !isOutgoing {
-                sender = self.frameworkInjector.backgroundEntityManager.entityFetcher.contact(for: senderIdentity)
-                if sender == nil {
-                    err = MediatorReflectedProcessorError
-                        .contactNotFound(identity: senderIdentity)
-                    return
-                }
-            }
-
-            msg = self.frameworkInjector.backgroundEntityManager.entityCreator
-                .locationMessage(fromGroupBox: groupLocationMessage)
-            msg?.conversation = conversation
-            msg?.sender = sender
-
-            msg?.date = timestamp
-            msg?.isOwn = NSNumber(booleanLiteral: isOutgoing)
-
-            conversation.lastMessage = msg
-            conversation.lastUpdate = Date.now
+        guard isOutgoing || (!isOutgoing && sender != nil) else {
+            throw MediatorReflectedProcessorError.contactNotFound(identity: senderIdentity)
         }
-        if let err = err {
-            throw err
+
+        guard let msg = frameworkInjector.backgroundEntityManager.getOrCreateMessage(
+            for: groupLocationMessage,
+            sender: sender,
+            conversation: conversation,
+            thumbnail: nil
+        ) as? LocationMessage else {
+            throw MediatorReflectedProcessorError
+                .messageNotProcessed(message: "Could not find/create group location message in DB")
+        }
+
+        frameworkInjector.backgroundEntityManager.performSyncBlockAndSafe {
+            msg.date = timestamp
+            msg.isOwn = NSNumber(booleanLiteral: false)
         }
 
         // Caution this is async
         setPoiAddress(message: msg)
             .done {
                 if !isOutgoing {
-                    if let msg = msg {
-                        self.messageProcessorDelegate.incomingMessageChanged(msg, fromIdentity: senderIdentity)
-                    }
-
+                    self.messageProcessorDelegate.incomingMessageChanged(msg, fromIdentity: senderIdentity)
                     self.messageProcessorDelegate.incomingMessageFinished(groupLocationMessage, isPendingGroup: false)
                 }
             }
@@ -676,36 +577,33 @@ class MessageStore: MessageStoreProtocol {
             messageProcessorDelegate.incomingMessageStarted(groupBallotCreateMessage)
         }
 
+        let (conversation, sender) = try conversationSender(
+            forMessage: groupBallotCreateMessage,
+            isOutgoing: isOutgoing
+        )
+
+        guard isOutgoing || (!isOutgoing && sender != nil) else {
+            throw MediatorReflectedProcessorError.senderNotFound(identity: groupBallotCreateMessage.fromIdentity)
+        }
+
         var msg: BallotMessage?
         var err: Error?
         frameworkInjector.backgroundEntityManager.performSyncBlockAndSafe {
-            guard let conversation = self.frameworkInjector.backgroundEntityManager.entityFetcher
-                .conversation(for: groupBallotCreateMessage) else {
+            let decoder = BallotMessageDecoder(self.frameworkInjector.backgroundEntityManager)
+            msg = decoder?.decodeCreateBallot(
+                fromGroupBox: groupBallotCreateMessage,
+                sender: sender,
+                conversation: conversation
+            )
+
+            guard let msg else {
                 err = MediatorReflectedProcessorError
-                    .conversationNotFound(message: groupBallotCreateMessage.loggingDescription)
+                    .messageNotProcessed(message: "Could not find/create ballot message in DB")
                 return
             }
 
-            var sender: Contact?
-            if !isOutgoing {
-                sender = self.frameworkInjector.backgroundEntityManager.entityFetcher.contact(for: senderIdentity)
-                if sender == nil {
-                    err = MediatorReflectedProcessorError
-                        .contactNotFound(identity: senderIdentity)
-                    return
-                }
-            }
-
-            let decoder = BallotMessageDecoder(self.frameworkInjector.backgroundEntityManager)
-            msg = decoder?.decodeCreateBallot(fromGroupBox: groupBallotCreateMessage, for: conversation)
-            msg?.conversation = conversation
-            msg?.sender = sender
-
-            msg?.date = timestamp
-            msg?.isOwn = NSNumber(booleanLiteral: isOutgoing)
-
-            conversation.lastMessage = msg
-            conversation.lastUpdate = Date.now
+            msg.date = timestamp
+            msg.isOwn = NSNumber(booleanLiteral: isOutgoing)
         }
         if let err = err {
             throw err
@@ -783,8 +681,19 @@ class MessageStore: MessageStoreProtocol {
                 var err: Error?
 
                 frameworkInjector.backgroundEntityManager.performBlockAndWait {
-                    if let msg = self.frameworkInjector.backgroundEntityManager.entityFetcher.message(with: messageID),
-                       msg.conversation.groupID == groupDeliveryReceiptMessage.groupID {
+                    guard let conversation = self.frameworkInjector.backgroundEntityManager.conversation(
+                        forMessage: groupDeliveryReceiptMessage
+                    ) else {
+                        err = MediatorReflectedProcessorError
+                            .conversationNotFound(message: groupDeliveryReceiptMessage.loggingDescription)
+                        return
+                    }
+                    
+                    if let msg = self.frameworkInjector.backgroundEntityManager.entityFetcher.message(
+                        with: messageID,
+                        conversation: conversation
+                    ),
+                        msg.conversation.groupID == groupDeliveryReceiptMessage.groupID {
                         self.frameworkInjector.backgroundEntityManager.performSyncBlockAndSafe {
                             let receipt = GroupDeliveryReceipt(
                                 identity: groupDeliveryReceiptMessage.fromIdentity,
@@ -820,43 +729,31 @@ class MessageStore: MessageStoreProtocol {
             messageProcessorDelegate.incomingMessageStarted(groupTextMessage)
         }
 
-        var msg: TextMessage?
-        var err: Error?
-        frameworkInjector.backgroundEntityManager.performSyncBlockAndSafe {
-            guard let conversation = self.frameworkInjector.backgroundEntityManager.entityFetcher
-                .conversation(for: groupTextMessage) else {
-                err = MediatorReflectedProcessorError.conversationNotFound(message: groupTextMessage.loggingDescription)
-                return
-            }
-            var sender: Contact?
-            if !isOutgoing {
-                sender = self.frameworkInjector.backgroundEntityManager.entityFetcher.contact(for: senderIdentity)
-                if sender == nil {
-                    err = MediatorReflectedProcessorError.contactNotFound(identity: senderIdentity)
-                    return
-                }
-            }
-
-            msg = self.frameworkInjector.backgroundEntityManager.entityCreator
-                .textMessage(fromGroupBox: groupTextMessage)
-            msg?.conversation = conversation
-            msg?.sender = sender
-
-            msg?.date = timestamp
-            msg?.isOwn = NSNumber(booleanLiteral: isOutgoing)
-
-            conversation.lastMessage = msg
-            conversation.lastUpdate = Date.now
+        let (conversation, sender) = try conversationSender(forMessage: groupTextMessage, isOutgoing: isOutgoing)
+        frameworkInjector.backgroundEntityManager.performBlockAndWait {
+            print("\(conversation.groupID?.hexString ?? "-")")
         }
-        if let err = err {
-            throw err
+
+        guard isOutgoing || (!isOutgoing && sender != nil) else {
+            throw MediatorReflectedProcessorError.senderNotFound(identity: groupTextMessage.fromIdentity)
+        }
+
+        guard let msg = frameworkInjector.backgroundEntityManager.getOrCreateMessage(
+            for: groupTextMessage,
+            sender: sender,
+            conversation: conversation,
+            thumbnail: nil
+        ) as? TextMessage else {
+            throw MediatorReflectedProcessorError.messageNotProcessed(message: "Could not find/create text message")
+        }
+
+        frameworkInjector.backgroundEntityManager.performSyncBlockAndSafe {
+            msg.date = timestamp
+            msg.isOwn = NSNumber(booleanLiteral: isOutgoing)
         }
 
         if !isOutgoing {
-            if let msg = msg {
-                messageProcessorDelegate.incomingMessageChanged(msg, fromIdentity: senderIdentity)
-            }
-
+            messageProcessorDelegate.incomingMessageChanged(msg, fromIdentity: senderIdentity)
             messageProcessorDelegate.incomingMessageFinished(groupTextMessage, isPendingGroup: false)
         }
     }
@@ -877,128 +774,84 @@ class MessageStore: MessageStoreProtocol {
 
         guard !(videoMessage is BoxVideoMessage && videoMessage is GroupVideoMessage) else {
             throw MediatorReflectedProcessorError
-                .messageNotProcessed(message: "Wrong message type, nust be BoxVideoMessage or GroupVideoMessage")
+                .messageNotProcessed(message: "Wrong message type, must be BoxVideoMessage or GroupVideoMessage")
+        }
+
+        let (conversation, sender) = try conversationSender(forMessage: videoMessage, isOutgoing: false)
+
+        guard let sender else {
+            throw MediatorReflectedProcessorError.contactNotFound(identity: senderIdentity)
         }
 
         return Promise { seal in
             messageProcessorDelegate.incomingMessageStarted(videoMessage)
 
-            frameworkInjector.backgroundEntityManager.performBlockAndWait {
-                // Save message first and after try download thumbnail
-                var thumbnailBlobID: Data!
-                var msg: VideoMessageEntity!
+            // Save message first and after try download thumbnail
+            guard let msg = frameworkInjector.backgroundEntityManager.getOrCreateMessage(
+                for: videoMessage,
+                sender: sender,
+                conversation: conversation,
+                thumbnail: UIImage(imageLiteralResourceName: "Video")
+            ) as? VideoMessageEntity else {
+                throw MediatorReflectedProcessorError
+                    .messageNotProcessed(message: "Could not find/create (group) video message")
+            }
 
-                // Check is message already created
-                msg = self.frameworkInjector.backgroundEntityManager.entityFetcher
-                    .message(with: videoMessage.messageID) as? VideoMessageEntity
-                if msg == nil {
-                    var conversation: Conversation!
-                    if videoMessage is BoxVideoMessage {
-                        conversation = self.frameworkInjector.backgroundEntityManager.conversation(
-                            for: senderIdentity,
-                            createIfNotExisting: true
-                        )
-                    }
-                    else if let videoMessage = videoMessage as? GroupVideoMessage {
-                        conversation = self.frameworkInjector.backgroundEntityManager.entityFetcher
-                            .conversation(for: videoMessage)
-                    }
-                    guard conversation != nil else {
-                        seal
-                            .reject(
-                                MediatorReflectedProcessorError
-                                    .conversationNotFound(message: videoMessage.loggingDescription)
-                            )
-                        return
-                    }
-                    guard let sender = self.frameworkInjector.backgroundEntityManager.entityFetcher
-                        .contact(for: senderIdentity) else {
-                        seal
-                            .reject(
-                                MediatorReflectedProcessorError
-                                    .contactNotFound(identity: senderIdentity)
-                            )
-                        return
-                    }
+            var thumbnailBlobID: Data!
 
-                    // Create video message in DB
-                    self.frameworkInjector.backgroundEntityManager.performSyncBlockAndSafe {
-                        if let videoMessage = videoMessage as? BoxVideoMessage {
-                            thumbnailBlobID = videoMessage.thumbnailBlobID
-                            msg = self.frameworkInjector.backgroundEntityManager.entityCreator
-                                .videoMessageEntity(fromBox: videoMessage)
-                        }
-                        else if let videoMessage = videoMessage as? GroupVideoMessage {
-                            thumbnailBlobID = videoMessage.thumbnailBlobID
-                            msg = self.frameworkInjector.backgroundEntityManager.entityCreator
-                                .videoMessageEntity(fromGroupBox: videoMessage)
-                            msg?.sender = sender
-                        }
-                        msg?.conversation = conversation
+            if let videoMessage = videoMessage as? BoxVideoMessage {
+                thumbnailBlobID = videoMessage.thumbnailBlobID
+            }
+            else if let videoMessage = videoMessage as? GroupVideoMessage {
+                thumbnailBlobID = videoMessage.thumbnailBlobID
+            }
 
-                        let thumbnailImage = UIImage(imageLiteralResourceName: "Video")
-                        let thumbnail: ImageData = self.frameworkInjector.backgroundEntityManager.entityCreator
-                            .imageData()
-                        thumbnail.data = thumbnailImage.jpegData(compressionQuality: 1.0)
-                        thumbnail.width = NSNumber(value: Float(thumbnailImage.size.width))
-                        thumbnail.height = NSNumber(value: Float(thumbnailImage.size.height))
-                        msg?.thumbnail = thumbnail
+            var conversationObjectID: NSManagedObjectID!
+            var messageID: Data!
+            var blobOrigin: BlobOrigin!
 
-                        msg?.date = timestamp
-                        msg?.isOwn = NSNumber(booleanLiteral: false)
+            frameworkInjector.backgroundEntityManager.performSyncBlockAndSafe {
+                msg.date = timestamp
+                msg.isOwn = NSNumber(booleanLiteral: false)
 
-                        conversation.lastMessage = msg
-                        conversation.lastUpdate = Date.now
-                    }
-                }
-                else {
-                    thumbnailBlobID = videoMessage is BoxVideoMessage ? (videoMessage as! BoxVideoMessage)
-                        .thumbnailBlobID
-                        : (videoMessage as! GroupVideoMessage).thumbnailBlobID
-                }
+                conversationObjectID = conversation.objectID
+                messageID = msg.id
+                blobOrigin = msg.blobGetOrigin()
+            }
 
-                if msg != nil {
-                    self.messageProcessorDelegate.incomingMessageChanged(msg, fromIdentity: senderIdentity)
+            self.messageProcessorDelegate.incomingMessageChanged(msg, fromIdentity: senderIdentity)
 
-                    // A VideoMessage never has a local blob because all note group cabable devices send everything as FileMessage (-> localOrigin: false)
-                    // Download, decrypt and save blob of thumbnail
-                    let downloadQueue = DispatchQueue.global(qos: .default)
-                    let videoProcessor = VideoMessageProcessor(
-                        blobDownloader: BlobDownloader(blobURL: BlobURL(
-                            serverConnector: self.frameworkInjector.serverConnector,
-                            userSettings: self.frameworkInjector.userSettings,
-                            queue: DispatchQueue.global(qos: .userInitiated)
-                        ), queue: downloadQueue),
-                        serverConnector: self.frameworkInjector.serverConnector,
-                        entityManager: self.frameworkInjector.backgroundEntityManager
-                    )
-                    videoProcessor.downloadVideoThumbnail(
-                        videoMessageID: msg.id,
-                        origin: msg.blobGetOrigin(),
-                        thumbnailBlobID: thumbnailBlobID,
-                        maxBytesToDecrypt: maxBytesToDecrypt
-                    )
-                    .done {
-                        self.messageProcessorDelegate.incomingMessageChanged(msg, fromIdentity: senderIdentity)
-                        seal.fulfill_()
-                    }
-                    .ensure {
-                        self.messageProcessorDelegate.incomingMessageFinished(
-                            videoMessage,
-                            isPendingGroup: false
-                        )
-                    }
-                    .catch { error in
-                        seal.reject(error)
-                    }
-                }
-                else {
-                    seal
-                        .reject(
-                            MediatorReflectedProcessorError
-                                .messageNotProcessed(message: "Could not create video message")
-                        )
-                }
+            // A VideoMessage never has a local blob because all note group cabable devices send everything as FileMessage (-> localOrigin: false)
+            // Download, decrypt and save blob of thumbnail
+            let downloadQueue = DispatchQueue.global(qos: .default)
+            let videoProcessor = VideoMessageProcessor(
+                blobDownloader: BlobDownloader(blobURL: BlobURL(
+                    serverConnector: self.frameworkInjector.serverConnector,
+                    userSettings: self.frameworkInjector.userSettings,
+                    queue: DispatchQueue.global(qos: .userInitiated)
+                ), queue: downloadQueue),
+                serverConnector: self.frameworkInjector.serverConnector,
+                entityManager: self.frameworkInjector.backgroundEntityManager
+            )
+            videoProcessor.downloadVideoThumbnail(
+                videoMessageID: messageID,
+                in: conversationObjectID,
+                origin: blobOrigin,
+                thumbnailBlobID: thumbnailBlobID,
+                maxBytesToDecrypt: maxBytesToDecrypt
+            )
+            .done {
+                self.messageProcessorDelegate.incomingMessageChanged(msg, fromIdentity: senderIdentity)
+                seal.fulfill_()
+            }
+            .ensure {
+                self.messageProcessorDelegate.incomingMessageFinished(
+                    videoMessage,
+                    isPendingGroup: false
+                )
+            }
+            .catch { error in
+                seal.reject(error)
             }
         }
     }
@@ -1014,43 +867,32 @@ class MessageStore: MessageStoreProtocol {
             messageProcessorDelegate.incomingMessageStarted(locationMessage)
         }
 
-        var msg: LocationMessage?
-        var err: Error?
-        frameworkInjector.backgroundEntityManager.performSyncBlockAndSafe {
-            guard let conversation = self.frameworkInjector.backgroundEntityManager.conversation(
-                for: conversationIdentity,
-                createIfNotExisting: true
-            ) else {
-                err = MediatorReflectedProcessorError.conversationNotFound(message: locationMessage.loggingDescription)
-                return
-            }
+        let (conversation, _) = try conversationSender(forMessage: locationMessage, isOutgoing: isOutgoing)
 
-            msg = self.frameworkInjector.backgroundEntityManager.entityCreator.locationMessage(fromBox: locationMessage)
-            msg?.conversation = conversation
-
-            msg?.date = timestamp
-            msg?.isOwn = NSNumber(booleanLiteral: isOutgoing)
-
-            conversation.lastMessage = msg
-            conversation.lastUpdate = Date.now
+        guard let msg = frameworkInjector.backgroundEntityManager.getOrCreateMessage(
+            for: locationMessage,
+            sender: nil,
+            conversation: conversation,
+            thumbnail: nil
+        ) as? LocationMessage else {
+            throw MediatorReflectedProcessorError.messageNotProcessed(message: "Could not find/create location message")
         }
-        if let err = err {
-            throw err
+
+        frameworkInjector.backgroundEntityManager.performSyncBlockAndSafe {
+            msg.date = timestamp
+            msg.isOwn = NSNumber(booleanLiteral: isOutgoing)
         }
 
         // Caution this is async
         setPoiAddress(message: msg)
             .done {
                 if !isOutgoing {
-                    if let msg = msg {
-                        self.messageProcessorDelegate.incomingMessageChanged(msg, fromIdentity: conversationIdentity)
-                    }
-
+                    self.messageProcessorDelegate.incomingMessageChanged(msg, fromIdentity: conversationIdentity)
                     self.messageProcessorDelegate.incomingMessageFinished(locationMessage, isPendingGroup: false)
                 }
             }
             .catch { error in
-                DDLogError("Set POI address failed \(error.localizedDescription)")
+                DDLogError("Set POI address failed \(error)")
             }
     }
 
@@ -1065,37 +907,33 @@ class MessageStore: MessageStoreProtocol {
             messageProcessorDelegate.incomingMessageStarted(ballotCreateMessage)
         }
 
-        var msg: BallotMessage?
+        let (conversation, sender) = try conversationSender(forMessage: ballotCreateMessage, isOutgoing: isOutgoing)
+
+        guard isOutgoing || (!isOutgoing && sender != nil) else {
+            throw MediatorReflectedProcessorError.senderNotFound(identity: ballotCreateMessage.fromIdentity)
+        }
+
+        var msg: BallotMessage!
         var err: Error?
         frameworkInjector.backgroundEntityManager.performSyncBlockAndSafe {
-            guard let conversation = self.frameworkInjector.backgroundEntityManager.conversation(
-                for: conversationIdentity,
-                createIfNotExisting: true
-            ) else {
+            let decoder = BallotMessageDecoder(self.frameworkInjector.backgroundEntityManager)
+            msg = decoder?.decodeCreateBallot(fromBox: ballotCreateMessage, sender: sender, conversation: conversation)
+
+            guard let msg else {
                 err = MediatorReflectedProcessorError
-                    .conversationNotFound(message: ballotCreateMessage.loggingDescription)
+                    .messageNotProcessed(message: "Could not find/create ballot message")
                 return
             }
 
-            let decoder = BallotMessageDecoder(self.frameworkInjector.backgroundEntityManager)
-            msg = decoder?.decodeCreateBallot(fromBox: ballotCreateMessage, for: conversation)
-            msg?.conversation = conversation
-
-            msg?.date = timestamp
-            msg?.isOwn = NSNumber(booleanLiteral: isOutgoing)
-
-            conversation.lastMessage = msg
-            conversation.lastUpdate = Date.now
+            msg.date = timestamp
+            msg.isOwn = NSNumber(booleanLiteral: isOutgoing)
         }
         if let err = err {
             throw err
         }
 
         if !isOutgoing {
-            if let msg = msg {
-                messageProcessorDelegate.incomingMessageChanged(msg, fromIdentity: conversationIdentity)
-            }
-
+            messageProcessorDelegate.incomingMessageChanged(msg, fromIdentity: conversationIdentity)
             messageProcessorDelegate.incomingMessageFinished(ballotCreateMessage, isPendingGroup: false)
         }
     }
@@ -1196,5 +1034,43 @@ class MessageStore: MessageStoreProtocol {
                 }
             }
         }
+    }
+
+    private func conversationSender(
+        forMessage message: AbstractMessage,
+        isOutgoing: Bool
+    ) throws -> (conversation: Conversation, sender: ContactEntity?) {
+        var conversationIdentity: String?
+        var result = frameworkInjector.backgroundEntityManager.existingConversationSenderReceiver(for: message)
+        if !isOutgoing {
+            guard let sender = result.sender else {
+                throw MediatorReflectedProcessorError.senderNotFound(identity: message.fromIdentity)
+            }
+            frameworkInjector.backgroundEntityManager.performBlockAndWait {
+                conversationIdentity = sender.identity
+            }
+        }
+        else if !(message is AbstractGroupMessage) {
+            guard let receiver = result.receiver else {
+                throw MediatorReflectedProcessorError.receiverNotFound(identity: message.toIdentity)
+            }
+            frameworkInjector.backgroundEntityManager.performBlockAndWait {
+                conversationIdentity = receiver.identity
+            }
+        }
+
+        if let conversationIdentity, result.conversation == nil, !(message is AbstractGroupMessage) {
+            frameworkInjector.backgroundEntityManager.performSyncBlockAndSafe {
+                result.conversation = self.frameworkInjector.backgroundEntityManager.conversation(
+                    for: conversationIdentity,
+                    createIfNotExisting: true
+                )
+            }
+        }
+        guard let conversation = result.conversation else {
+            throw MediatorReflectedProcessorError.conversationNotFound(message: message.loggingDescription)
+        }
+
+        return (conversation, result.sender)
     }
 }

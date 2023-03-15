@@ -215,7 +215,10 @@ import UserNotifications
     ) -> Bool {
         
         // VoIP notification from Threema Web
-        if dictionaryPayload["3mw"] != nil {
+        // Other invalid VoIP push payloads
+        guard dictionaryPayload["3mw"] == nil,
+              let callerIdentity = dictionaryPayload["NotificationExtensionOffer"] as? String else {
+            DDLogError("Received invalid push payload with dictionary \(dictionaryPayload)")
             startAndCancelCall(
                 from: BundleUtil.localizedString(forKey: ThreemaApp.currentName),
                 completion: completion,
@@ -227,7 +230,7 @@ import UserNotifications
         // Due to changes in the iOS 15 SDK, the app crashed because we took too long to report an incoming call to call kit when the app was in background. Therefore we start an initial call which then gets updated later, when the offer message is received from the server.
         // This must not fail to report a call.
         callService.reportInitialCall(
-            from: dictionaryPayload["NotificationExtensionOffer"] as! String,
+            from: callerIdentity,
             name: dictionaryPayload["NotificationExtensionCallerName"] as? String
         )
         return true
@@ -344,9 +347,9 @@ extension VoIPCallStateManager {
         lockQueue.sync {
             element = callQueue.dequeue()
         }
-        if element != nil {
+        if let element {
             managerQueue.async {
-                self.callService.startProcess(element: element!)
+                self.callService.startProcess(element: element)
             }
         }
     }

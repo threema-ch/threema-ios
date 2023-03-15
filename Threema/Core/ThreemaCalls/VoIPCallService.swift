@@ -108,7 +108,7 @@ class VoIPCallService: NSObject {
             case .rejectedDisabled: return BundleUtil.localizedString(forKey: "call_rejected_disabled")
             case .rejectedOffHours: return BundleUtil.localizedString(forKey: "call_rejected")
             case .rejectedUnknown: return BundleUtil.localizedString(forKey: "call_rejected")
-            case .microphoneDisabled: return BundleUtil.localizedString(forKey: "call_microphone_permission_title")
+            case .microphoneDisabled: return BundleUtil.localizedString(forKey: "call_mic_access")
             }
         }
     }
@@ -297,7 +297,7 @@ extension VoIPCallService {
         if let action = element as? VoIPCallUserAction {
             switch action.action {
             case .call:
-                if UserDefaults.standard.bool(forKey: "FASTLANE_SNAPSHOT") {
+                if ProcessInfoHelper.isRunningForScreenshots {
                     callInitiator = true
                     contactIdentity = action.contactIdentity
                     presentCallViewController()
@@ -327,7 +327,7 @@ extension VoIPCallService {
                 action.completion?()
                 delegate?.callServiceFinishedProcess()
             case .end:
-                if UserDefaults.standard.bool(forKey: "FASTLANE_SNAPSHOT") {
+                if ProcessInfoHelper.isRunningForScreenshots {
                     dismissCallView()
                     delegate?.callServiceFinishedProcess()
                     action.completion?()
@@ -457,7 +457,7 @@ extension VoIPCallService {
     /// Present the CallViewController
     func presentCallViewController() {
         if let identity = contactIdentity,
-           alreadyAccepted || UserDefaults.standard.bool(forKey: "FASTLANE_SNAPSHOT") {
+           alreadyAccepted || ProcessInfoHelper.isRunningForScreenshots {
             presentCallView(
                 contactIdentity: identity,
                 alreadyAccepted: alreadyAccepted,
@@ -717,47 +717,25 @@ extension VoIPCallService {
                                 receivingVideo: false,
                                 viewWasHidden: false,
                                 completion: {
-                                    // no access to microphone, stopp call
-                                    let alertTitle = BundleUtil
-                                        .localizedString(forKey: "call_microphone_permission_title")
-                                    let alertMessage = BundleUtil
-                                        .localizedString(forKey: "call_microphone_permission_text")
-                                    let alert = UIAlertController(
-                                        title: alertTitle,
-                                        message: alertMessage,
-                                        preferredStyle: .alert
-                                    )
-                                    alert
-                                        .addAction(UIAlertAction(
-                                            title: BundleUtil.localizedString(forKey: "settings"),
-                                            style: .default,
-                                            handler: { _ in
-                                                self.dismissCallView()
-                                                self.disconnectPeerConnection()
-                                                UIApplication.shared.open(
-                                                    NSURL(string: UIApplication.openSettingsURLString)! as URL,
-                                                    options: [:],
-                                                    completionHandler: nil
-                                                )
-                                            }
-                                        ))
-                                    alert
-                                        .addAction(UIAlertAction(
-                                            title: BundleUtil.localizedString(forKey: "ok"),
-                                            style: .default,
-                                            handler: { _ in
-                                                self.dismissCallView()
-                                                self.disconnectPeerConnection()
-                                            }
-                                        ))
-                                
+                                    
+                                    // No access to microphone, stop call
                                     let rootVC = self.callViewController != nil ? self
                                         .callViewController! : UIApplication
                                         .shared.windows.first!.rootViewController!
+                                    
                                     DispatchQueue.main.async {
-                                        rootVC.present(alert, animated: true, completion: nil)
+                                        UIAlertTemplate.showOpenSettingsAlert(
+                                            owner: rootVC,
+                                            noAccessAlertType: .microphone
+                                        ) {
+                                            self.dismissCallView()
+                                            self.disconnectPeerConnection()
+                                        } actionCancel: {
+                                            self.dismissCallView()
+                                            self.disconnectPeerConnection()
+                                        }
                                     }
-                                
+                                    
                                     completion()
                                 }
                             )
@@ -1137,32 +1115,16 @@ extension VoIPCallService {
                         ServerConnector.shared().connect(initiator: .threemaCall)
                     }
                     else {
-                        // no access to microphone, stop call
-                        let alertTitle = BundleUtil.localizedString(forKey: "call_microphone_permission_title")
-                        let alertMessage = BundleUtil.localizedString(forKey: "call_microphone_permission_text")
-                        let alert = UIAlertController(title: alertTitle, message: alertMessage, preferredStyle: .alert)
-                        alert
-                            .addAction(UIAlertAction(
-                                title: BundleUtil.localizedString(forKey: "settings"),
-                                style: .default,
-                                handler: { _ in
-                                    UIApplication.shared.open(
-                                        NSURL(string: UIApplication.openSettingsURLString)! as URL,
-                                        options: [:],
-                                        completionHandler: nil
-                                    )
-                                }
-                            ))
-                        alert
-                            .addAction(UIAlertAction(
-                                title: BundleUtil.localizedString(forKey: "ok"),
-                                style: .default,
-                                handler: nil
-                            ))
                         DispatchQueue.main.async {
+                            // No access to microphone, stop call
                             let rootVC = UIApplication.shared.windows.first!.rootViewController!
-                            rootVC.present(alert, animated: true, completion: nil)
+                        
+                            UIAlertTemplate.showOpenSettingsAlert(
+                                owner: rootVC,
+                                noAccessAlertType: .microphone
+                            )
                         }
+                    
                         completion()
                     }
                 }
@@ -1212,6 +1174,7 @@ extension VoIPCallService {
                         rejectReason: nil,
                         features: nil,
                         isVideoAvailable: self.threemaVideoCallAvailable,
+                        isUserInteraction: true,
                         callID: self.callID!,
                         completion: nil
                     )
@@ -1366,13 +1329,21 @@ extension VoIPCallService {
                                     ) {
                                         DispatchQueue.global(qos: .userInitiated).async {
                                             RTCAudioSession.sharedInstance().isAudioEnabled = false
-                                            DDLogNotice("VoipCallService: [cid=\(self.callID!)]: Call ringing timeout")
-                                            let hangupMessage = VoIPCallHangupMessage(
-                                                contactIdentity: contactIdentity,
-                                                callID: self.callID!,
-                                                completion: nil
-                                            )
-                                            self.voIPCallSender.sendVoIPCallHangup(hangupMessage: hangupMessage)
+                                            
+                                            if let callID = self.callID {
+                                                DDLogNotice("VoipCallService: [cid=\(callID)]: Call ringing timeout")
+                                                let hangupMessage = VoIPCallHangupMessage(
+                                                    contactIdentity: contactIdentity,
+                                                    callID: callID,
+                                                    completion: nil
+                                                )
+                                                self.voIPCallSender.sendVoIPCallHangup(hangupMessage: hangupMessage)
+                                            }
+                                            else {
+                                                assertionFailure("This should not have happened.")
+                                                DDLogError("VoipCallService: [cid=CID WAS NIL]: Call ringing timeout")
+                                            }
+                                            
                                             self.state = .ended
                                             self.disconnectPeerConnection()
                                             DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(1)) {
@@ -1619,7 +1590,7 @@ extension VoIPCallService {
             callViewController!.threemaVideoCallAvailable = isThreemaVideoCallAvailable
             callViewController!.isLocalVideoActive = videoActive
             callViewController!.isReceivingRemoteVideo = receivingVideo
-            if UserDefaults.standard.bool(forKey: "FASTLANE_SNAPSHOT") {
+            if ProcessInfoHelper.isRunningForScreenshots {
                 callViewController!.isTesting = true
             }
             callViewController!.modalPresentationStyle = .overFullScreen
@@ -1677,6 +1648,11 @@ extension VoIPCallService {
                         completion?()
                     })
                 }
+                
+                NotificationCenter.default.post(
+                    name: NSNotification.Name(rawValue: kNotificationNavigationItemPromptShouldChange),
+                    object: self.callDurationTime
+                )
             }
         }
     }
@@ -1727,6 +1703,7 @@ extension VoIPCallService {
             rejectReason: reason,
             features: nil,
             isVideoAvailable: UserSettings.shared().enableVideoCall,
+            isUserInteraction: false,
             callID: action.callID!,
             completion: nil
         )
@@ -1746,7 +1723,7 @@ extension VoIPCallService {
     
     /// It will check the current call state and play the correct tone if it's needed
     private func handleTones(state: VoIPCallService.CallState, oldState: VoIPCallService.CallState) {
-        if UserDefaults.standard.bool(forKey: "FASTLANE_SNAPSHOT") {
+        if ProcessInfoHelper.isRunningForScreenshots {
             return
         }
         switch state {
@@ -2099,7 +2076,7 @@ extension VoIPCallService {
             
             let businessInjector = BusinessInjector()
             let entityManager = businessInjector.entityManager
-            var contact: Contact?
+            var contact: ContactEntity?
             
             entityManager.performSyncBlockAndSafe {
                 contact = entityManager.entityFetcher.contact(for: self.contactIdentity)
@@ -2216,7 +2193,7 @@ extension VoIPCallService {
             break
         case .ended, .remoteEnded:
             // add call message
-            if UserDefaults.standard.bool(forKey: "FASTLANE_SNAPSHOT") {
+            if ProcessInfoHelper.isRunningForScreenshots {
                 return
             }
             

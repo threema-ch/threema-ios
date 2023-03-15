@@ -32,6 +32,7 @@ public enum BlobManagerError: Error {
     case uploadFailed
     case noOrigin
     case markDoneFailed
+    case sendingFailed
 }
 
 /// Defines the public functions used in BlobManager.swift

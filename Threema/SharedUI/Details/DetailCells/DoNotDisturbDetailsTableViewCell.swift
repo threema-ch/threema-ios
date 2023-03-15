@@ -23,7 +23,7 @@ import UIKit
 class DoNotDisturbDetailsTableViewCell: ThemedCodeStackTableViewCell {
 
     enum PushSettingType {
-        case contact(_: Contact)
+        case contact(_: ContactEntity)
         case group(_: Group)
     }
     

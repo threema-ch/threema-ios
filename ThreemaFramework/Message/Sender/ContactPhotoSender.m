@@ -28,7 +28,7 @@
 #import "NSString+Hex.h"
 #import "ActivityIndicatorProxy.h"
 #import "SSLCAHelper.h"
-#import "Contact.h"
+#import "ContactEntity.h"
 #import "ThreemaError.h"
 #import "ContactStore.h"
 #import "EntityCreator.h"
@@ -47,7 +47,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 
 @implementation ContactPhotoSender {
     EntityManager *entityManager;
-    Contact *toMember;
+    ContactEntity *toMember;
     NSData *boxImageData;
     NSData *nonce;
     NSData *encryptionKey;
@@ -82,7 +82,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 
 // MARK: - Profile picture send/upload
 
-- (Contact *)shouldSendProfilePictureToContact:(NSString *)identity {
+- (ContactEntity *)shouldSendProfilePictureToContact:(NSString *)identity {
     enum SendProfilePicture preference = [UserSettings sharedUserSettings].sendProfilePicture;
     
     if (preference == SendProfilePictureNone) {
@@ -96,7 +96,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         }
     }
     
-    Contact *contact = [[entityManager entityFetcher] contactForId:identity];
+    ContactEntity *contact = [[entityManager entityFetcher] contactForId:identity];
     
     if (contact.isGatewayId || contact.isEchoEcho) {
         return nil;
@@ -117,7 +117,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 
 - (void)sendProfilePicture:(AbstractMessage *)message {
     if ([message allowSendingProfile]) {
-        Contact *contact = [self shouldSendProfilePictureToContact:message.toIdentity];
+        ContactEntity *contact = [self shouldSendProfilePictureToContact:message.toIdentity];
         if (contact) {
             // send profile picture
             [self startWithImageToMember:contact onCompletion:nil onError:nil];
@@ -133,7 +133,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     }
 }
 
-- (void)startWithImageToMember:(Contact*)_toMember onCompletion:(void (^)(void))_onCompletion onError:(void (^)(NSError *))_onError {
+- (void)startWithImageToMember:(ContactEntity*)_toMember onCompletion:(void (^)(void))_onCompletion onError:(void (^)(NSError *))_onError {
     
     toMember = _toMember;
     onCompletion = _onCompletion;
@@ -201,7 +201,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     if (toMember != nil) {
         // Reload CoreData object because of concurrency problem
         [entityManager performBlock:^{
-            Contact *member = [[entityManager entityFetcher] getManagedObjectById:toMember.objectID];
+            ContactEntity *member = [[entityManager entityFetcher] getManagedObjectById:toMember.objectID];
 
             /* send to the specified member only */
             [self sendSetPhotoMessageToIdentity:member.identity withBlobId:blobId];

@@ -43,6 +43,8 @@ public enum BlobDisplayState: CustomStringConvertible, Equatable {
     case uploading(progress: Float)
     /// Blob is uploaded on server
     case uploaded
+    /// An error occurred during the sending of the message
+    case sendingError
     
     // Shared
     
@@ -65,6 +67,8 @@ public enum BlobDisplayState: CustomStringConvertible, Equatable {
             return "uploading... (\(progress))"
         case .uploaded:
             return "uploaded"
+        case .sendingError:
+            return "sendingError"
         case .dataDeleted:
             return "dataDeleted"
         case .fileNotFound:
@@ -81,8 +85,8 @@ public enum BlobDisplayState: CustomStringConvertible, Equatable {
             return "stop.fill"
         case .processed, .uploaded:
             return nil
-        case .pending:
-            return "arrow.up"
+        case .pending, .sendingError:
+            return "arrow.clockwise"
         case .dataDeleted:
             return "rectangle.slash.fill"
         case .fileNotFound:
@@ -99,8 +103,8 @@ public enum BlobDisplayState: CustomStringConvertible, Equatable {
             return "stop.circle.fill"
         case .processed, .uploaded:
             return nil
-        case .pending:
-            return "arrow.up.circle.fill"
+        case .pending, .sendingError:
+            return "arrow.clockwise.circle.fill"
         case .dataDeleted:
             return "rectangle.slash.fill"
         case .fileNotFound:
@@ -197,7 +201,11 @@ public extension BlobData {
         case .remote:
             switch outgoingThumbnailState {
             case .pendingUpload, .remote, .noData(.noThumbnail):
+                if blobGetError() {
+                    return .sendingError
+                }
                 return .uploaded
+                
             case .uploading:
                 return .uploading(progress: blobGetProgress()?.floatValue ?? 0)
             default:

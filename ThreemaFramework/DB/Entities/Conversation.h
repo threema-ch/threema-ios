@@ -33,7 +33,7 @@ typedef NS_ENUM(NSInteger, ConversationVisibility) {
     ConversationVisibilityArchived = 1,
 };
 
-@class Ballot, BaseMessage, Contact, ImageData, Tag;
+@class Ballot, BaseMessage, ContactEntity, ImageData, Tag;
 
 NS_ASSUME_NONNULL_BEGIN
 @interface Conversation : TMAManagedObject
@@ -55,10 +55,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 // Relationships
 @property (nonatomic, retain, nullable) NSOrderedSet *ballots;
-@property (nonatomic, retain, nullable) Contact *contact;
+@property (nonatomic, retain, nullable) ContactEntity *contact;
 @property (nonatomic, retain, nullable) ImageData *groupImage;
 @property (nonatomic, retain, nullable) BaseMessage *lastMessage;
-@property (nonatomic, retain) NSSet<Contact *> *members;
+@property (nonatomic, retain) NSSet<ContactEntity *> *members;
 @property (nonatomic, retain, nullable) NSSet *tags;
 
 // Derived properties
@@ -89,8 +89,8 @@ NS_ASSUME_NONNULL_END
 - (void)addBallots:(nullable NSOrderedSet *)values;
 - (void)removeBallots:(nullable NSOrderedSet *)values;
 
-- (void)addMembersObject:(nullable Contact *)value;
-- (void)removeMembersObject:(nullable Contact *)value;
+- (void)addMembersObject:(nullable ContactEntity *)value;
+- (void)removeMembersObject:(nullable ContactEntity *)value;
 - (void)addMembers:(nullable NSSet *)values;
 - (void)removeMembers:(nullable NSSet *)values;
 

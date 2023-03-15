@@ -37,8 +37,8 @@
  */
 - (instancetype)initWith:(NSObject *)entityManagerObject;
 
-- (BallotMessage *)decodeCreateBallotFromBox:(BoxBallotCreateMessage *)boxMessage forConversation:(Conversation *)conversation;
-- (BallotMessage *)decodeCreateBallotFromGroupBox:(GroupBallotCreateMessage *)boxMessage forConversation:(Conversation *)conversation;
+- (nullable BallotMessage *)decodeCreateBallotFromBox:(nonnull BoxBallotCreateMessage *)boxMessage sender:(nullable ContactEntity *)sender conversation:(nonnull Conversation *)conversation;
+- (nullable BallotMessage *)decodeCreateBallotFromGroupBox:(nonnull GroupBallotCreateMessage *)boxMessage sender:(nullable ContactEntity *)sender conversation:(nonnull Conversation *)conversation;
 
 + (NSString *)decodeCreateBallotTitleFromBox:(BoxBallotCreateMessage *)boxMessage;
 + (NSNumber *)decodeNotificationCreateBallotStateFromBox:(BoxBallotCreateMessage *)boxMessage;

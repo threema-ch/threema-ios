@@ -142,7 +142,7 @@ class EntityObserver: NSObject {
     ) {
         let subscribersForObjectIDs = Set<NSManagedObjectID>(
             subscribers
-                .map { subscriber in
+                .compactMap { subscriber in
                     subscriber.managedObjectID
                 }
         )

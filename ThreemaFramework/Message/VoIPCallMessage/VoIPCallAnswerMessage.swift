@@ -68,6 +68,7 @@ import WebRTC
     public let rejectReason: MessageRejectReason?
     let features: [String: Any?]?
     public let isVideoAvailable: Bool
+    public let isUserInteraction: Bool
     
     public init(
         action: MessageAction,
@@ -76,6 +77,7 @@ import WebRTC
         rejectReason: MessageRejectReason?,
         features: [String: Any?]?,
         isVideoAvailable: Bool,
+        isUserInteraction: Bool,
         callID: VoIPCallID,
         completion: (() -> Void)?
     ) {
@@ -86,6 +88,7 @@ import WebRTC
         self.completion = completion
         self.features = features
         self.isVideoAvailable = isVideoAvailable
+        self.isUserInteraction = isUserInteraction
         self.callID = callID
         super.init()
     }
@@ -136,6 +139,7 @@ extension VoIPCallAnswerMessage: VoIPCallMessageProtocol {
             rejectReason: tmpRejectReason,
             features: tmpFeatures,
             isVideoAvailable: isVideoAvailable,
+            isUserInteraction: false,
             callID: tmpCallID,
             completion: nil
         ) as! T

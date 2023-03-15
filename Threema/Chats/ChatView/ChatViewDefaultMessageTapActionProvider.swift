@@ -28,16 +28,25 @@ class ChatViewDefaultMessageTapActionProvider: NSObject {
     
     private weak var chatViewController: ChatViewController?
     private let entityManager: EntityManager
+    // This needs to be a class property to work
     var fileMessagePreview: FileMessagePreview?
 
     private lazy var photoBrowserWrapper = MWPhotoBrowserWrapper(
         for: chatViewController!.conversation,
         in: chatViewController,
-        entityManager: entityManager
+        entityManager: entityManager,
+        delegate: self
     )
     
     /// Temporary file that might have ben used to show/play the cell content and should be deleted when it is not shown anymore
     private var temporaryFileToCleanUp: URL?
+    
+    // Video playing state
+    
+    /// Keeps track of the set audio session category before playing a video (if no VoIP call is active)
+    private var previousAudioSessionCategory: AVAudioSession.Category?
+    /// Keeps track if the video is shown picture in picture
+    private var videoIsPictureInPicture = false
     
     // MARK: - Lifecycle
     
@@ -62,10 +71,10 @@ class ChatViewDefaultMessageTapActionProvider: NSObject {
         
         case let fileMessageProvider as FileMessageProvider:
             switch fileMessageProvider.blobDisplayState {
-            case .remote, .pending:
+            case .remote:
                 syncBlobsAction(objectID: message.objectID)
                 
-            case .processed, .uploaded:
+            case .processed, .pending, .uploading, .uploaded, .sendingError:
                 switch fileMessageProvider.fileMessageType {
                 case let .file(fileMessage):
                     guard let fileMessageEntity = fileMessage as? FileMessageEntity else {
@@ -82,7 +91,7 @@ class ChatViewDefaultMessageTapActionProvider: NSObject {
                 default:
                     photoBrowserWrapper.openPhotoBrowser(for: message)
                 }
-            case .downloading, .uploading:
+            case .downloading:
                 cancelBlobSyncAction(objectID: message.objectID)
             case .dataDeleted, .fileNotFound:
                 return
@@ -104,7 +113,7 @@ class ChatViewDefaultMessageTapActionProvider: NSObject {
         
         default:
             assertionFailure("[ChatViewDefaultMessageTapActionProvider] no action for this cell available.")
-            DDLogError("[ChatViewDefaultMessageTapActionProvider] no action for this cell available.")
+            DDLogWarn("[ChatViewDefaultMessageTapActionProvider] no action for this cell available.")
         }
     }
     
@@ -114,7 +123,7 @@ class ChatViewDefaultMessageTapActionProvider: NSObject {
         // This plays a video directly using the default UI.
         // This should be revised when a more coherent interface for file cell interactions is implemented
         // (e.g. a replacement of the current MWPhotoBrowser (IOS-559))
-        guard let temporaryBlobDataURL = videoMessage.temporaryBlobDataURL else {
+        guard let temporaryBlobDataURL = videoMessage.temporaryBlobDataURL() else {
             DDLogError("Unable to play video")
             NotificationPresenterWrapper.shared.present(type: .playingError)
             return
@@ -126,7 +135,12 @@ class ChatViewDefaultMessageTapActionProvider: NSObject {
         let playerViewController = AVPlayerViewController()
         playerViewController.player = player
         playerViewController.delegate = self
-
+        let voipCallState = VoIPCallStateManager.shared.currentCallState()
+        if voipCallState == .idle {
+            previousAudioSessionCategory = AVAudioSession.sharedInstance().category
+            try? AVAudioSession.sharedInstance().setCategory(.playback)
+        }
+                
         chatViewController?.present(playerViewController, animated: true) {
             player.play()
         }
@@ -151,14 +165,19 @@ class ChatViewDefaultMessageTapActionProvider: NSObject {
         // Starts a VoIP Call if contact supports it
         if UserSettings.shared()?.enableThreemaCall == true,
            let contact = callMessage.conversation?.contact {
-            let contactSet = Set<Contact>([contact])
+            let contactSet = Set<ContactEntity>([contact])
 
             FeatureMask.check(Int(FEATURE_MASK_VOIP), forContacts: contactSet) { unsupportedContacts in
                 if unsupportedContacts?.isEmpty == true {
                     self.chatViewController?.startVoIPCall()
                 }
-                // TODO: (IOS-3058) Show error to user
+                else {
+                    NotificationPresenterWrapper.shared.present(type: .callCreationError)
+                }
             }
+        }
+        else {
+            NotificationPresenterWrapper.shared.present(type: .callDisabledError)
         }
     }
     
@@ -178,8 +197,59 @@ class ChatViewDefaultMessageTapActionProvider: NSObject {
 // MARK: - AVPlayerViewControllerDelegate
 
 extension ChatViewDefaultMessageTapActionProvider: AVPlayerViewControllerDelegate {
-    func playerViewControllerDidEndDismissalTransition(_ playerViewController: AVPlayerViewController) {
+    
+    // We support basic picture in picture (pip). Exiting pip will close the player thus we don't need to keep
+    // track of this transition. We will only keep track when we enter pip and cleanup whenever pip is exited.
+    //
+    // Note: Most `AVPlayerViewControllerDelegate` methods are only called on tvOS!
+    
+    func playerViewController(
+        _ playerViewController: AVPlayerViewController,
+        willEndFullScreenPresentationWithAnimationCoordinator coordinator: UIViewControllerTransitionCoordinator
+    ) {
+        // This resolve the issue of scrubbing accidentally stopping the AudioSession
+        coordinator.animateAlongsideTransition(in: nil, animation: nil) { _ in
+            if !self.videoIsPictureInPicture {
+                self.resetAudioSessionAndCleanUpVideoFile()
+            }
+        }
+    }
+    
+    func playerViewControllerWillStartPictureInPicture(_ playerViewController: AVPlayerViewController) {
+        // This is called before `playerViewController(_:willEndFullScreenPresentationWithAnimationCoordinator:)`
+        // (in iOS 16)
+        videoIsPictureInPicture = true
+    }
+    
+    func playerViewControllerDidStopPictureInPicture(_ playerViewController: AVPlayerViewController) {
+        resetAudioSessionAndCleanUpVideoFile()
+        videoIsPictureInPicture = false
+    }
+    
+    private func resetAudioSessionAndCleanUpVideoFile() {
+        // Reset audio category and resume other playing audio
+        let currentCallState = VoIPCallStateManager.shared.currentCallState()
+        if currentCallState == .idle {
+            do {
+                try AVAudioSession.sharedInstance().setCategory(previousAudioSessionCategory ?? .soloAmbient)
+                try AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+            }
+            catch {
+                DDLogError("Unable to reset audio session: \(error)")
+            }
+            previousAudioSessionCategory = nil
+        }
+        
         // Delete temporary file that was played if there was any
         FileUtility.delete(at: temporaryFileToCleanUp)
+        temporaryFileToCleanUp = nil
+    }
+}
+
+// MARK: - MWPhotoBrowserWrapperDelegate
+
+extension ChatViewDefaultMessageTapActionProvider: MWPhotoBrowserWrapperDelegate {
+    func willDeleteMessages(with objectIDs: [NSManagedObjectID]) {
+        chatViewController?.willDeleteMessages(with: objectIDs)
     }
 }

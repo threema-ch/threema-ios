@@ -33,7 +33,6 @@
 #import "EntityFetcher.h"
 #import "NSString+Hex.h"
 #import "Conversation.h"
-#import "Contact.h"
 
 typedef NS_ENUM(NSInteger, ThreemaAudioMessagePlaySpeed) {
     ThreemaAudioMessagePlaySpeedHalf = 0,
@@ -74,12 +73,8 @@ typedef NS_ENUM(NSInteger, ThreemaAudioMessagePlaySpeed) {
 @synthesize videoQuality;
 @synthesize autoSaveMedia;
 
-@synthesize chatFontSize;
-@synthesize useDynamicFontSize;
 @synthesize disableBigEmojis;
 @synthesize wallpaper;
-@synthesize showReceivedTimestamps;
-@synthesize returnToSend;
 @synthesize darkTheme;
 @synthesize useSystemTheme;
 @synthesize showProfilePictures;
@@ -139,8 +134,8 @@ typedef NS_ENUM(NSInteger, ThreemaAudioMessagePlaySpeed) {
 @synthesize threemaVideoCallQualitySetting;
 
 @synthesize newChatViewActive;
-@synthesize initialScrollPositionAlt1;
 @synthesize flippedTableView;
+@synthesize featureFlagEnableNoMIMETypeFileMessagesFilter;
 
 @synthesize unknownGroupAlertList;
 
@@ -212,11 +207,7 @@ static UserSettings *instance;
                                         @"large", @"ImageSize",
                                         @"high", @"VideoQuality",
                                         [NSNumber numberWithBool:NO],  @"AutoSaveMedia",
-                                        [NSNumber numberWithFloat:16.0f], @"ChatFontSize",
-                                        [NSNumber numberWithBool:YES], @"UseDynamicFontSize",
                                         [NSNumber numberWithBool:NO], @"DisableBigEmojis",
-                                        [NSNumber numberWithBool:YES], @"ShowReceivedTimestamps",
-                                        [NSNumber numberWithBool:NO], @"ReturnToSend",
                                         [NSNumber numberWithBool:defaultDarkTheme], @"DarkTheme",
                                         [NSNumber numberWithBool:defaultUseSystemTheme], @"UseSystemTheme",
                                         [NSNumber numberWithBool:YES], @"ShowProfilePictures",
@@ -257,9 +248,9 @@ static UserSettings *instance;
                                         @"08:00", @"MasterDNDStartTime",
                                         @"17:00", @"MasterDNDEndTime",
                                         [NSNumber numberWithBool:YES], @"EnableVideoCall",
-                                        [NSNumber numberWithBool:NO], @"NewChatViewActive",
-                                        [NSNumber numberWithBool:NO], @"initialScrollPositionAlt1",
-                                        [NSNumber numberWithBool:NO], @"flippedTableView",
+                                        [NSNumber numberWithBool:YES], @"NewChatViewActive",
+                                        [NSNumber numberWithBool:YES], @"flippedTableView",
+                                        [NSNumber numberWithBool:YES], @"featureFlagEnableNoMIMETypeFileMessagesFilter",
                                         [NSNumber numberWithInt:ThreemaVideoCallQualitySettingAuto], @"ThreemaVideoCallQualitySetting",
                                         @"", @"SentryAppDevice",
                                         [NSMutableArray array], @"UnknownGroupAlertList",
@@ -304,11 +295,7 @@ static UserSettings *instance;
     videoQuality = [defaults stringForKey:@"VideoQuality"];
     autoSaveMedia = [defaults boolForKey:@"AutoSaveMedia"];
     
-    chatFontSize = [defaults floatForKey:@"ChatFontSize"];
-    useDynamicFontSize = [defaults boolForKey:@"UseDynamicFontSize"];
     disableBigEmojis = [defaults boolForKey:@"DisableBigEmojis"];
-    showReceivedTimestamps = [defaults boolForKey:@"ShowReceivedTimestamps"];
-    returnToSend = [defaults boolForKey:@"ReturnToSend"];
     darkTheme = [defaults boolForKey:@"DarkTheme"];
     useSystemTheme = [defaults boolForKey:@"UseSystemTheme"];
     showProfilePictures = [defaults boolForKey:@"ShowProfilePictures"];
@@ -389,20 +376,11 @@ static UserSettings *instance;
     blockCommunication = [defaults boolForKey:@"BlockCommunication"];
     voiceMessagesShowTimeRemaining = [defaults boolForKey:@"VoiceMessagesShowTimeRemaining"];
     
-    // TODO: (IOS-2860) Remove when new chat view released
-    // Hide new chat view if it's not Debug or .workRed /.red
-#if !DEBUG
-    if (ThreemaAppObjc.current != ThreemaAppWorkRed && ThreemaAppObjc.current != ThreemaAppRed ) {
-        newChatViewActive = NO;
-        initialScrollPositionAlt1 = NO;
-        flippedTableView = NO;
-        return;
-    }
-#endif
-    
+    // TODO: (IOS-2860) Remove
+    newChatViewActive = YES;
     flippedTableView = [defaults boolForKey:@"flippedTableView"];
-    initialScrollPositionAlt1 = [defaults boolForKey:@"initialScrollPositionAlt1"];
-    newChatViewActive = [defaults boolForKey:@"NewChatViewActive"];
+    
+    featureFlagEnableNoMIMETypeFileMessagesFilter = [defaults boolForKey:@"featureFlagEnableNoMIMETypeFileMessagesFilter"];
 }
 
 - (void)pushSettingsMigration:(NSOrderedSet *)tmpNoPushIdentities {
@@ -553,44 +531,11 @@ static UserSettings *instance;
     [defaults synchronize];
 }
 
-- (void)setChatFontSize:(float)newChatFontSize {
-    chatFontSize = newChatFontSize;
-    [defaults setFloat:chatFontSize forKey:@"ChatFontSize"];
-    [defaults synchronize];
-    
-    [[NSNotificationCenter defaultCenter] postNotificationName:kNotificationFontSizeChanged object:nil];
-}
-
+// TODO: (IOS-2860) Remove
 - (float)chatFontSize {
-    if (useDynamicFontSize) {
-        UIFontDescriptor *fontDescriptor = [UIFontDescriptor preferredFontDescriptorWithTextStyle:UIFontTextStyleBody];
-        CGFloat size = fontDescriptor.pointSize;
-        return size;
-    } else {
-        return chatFontSize;
-    }
-}
-
-- (void)setUseDynamicFontSize:(BOOL)newUseDynamicFontSize {
-    useDynamicFontSize = newUseDynamicFontSize;
-    [defaults setBool:useDynamicFontSize forKey:@"UseDynamicFontSize"];
-    [defaults synchronize];
-    
-    [[NSNotificationCenter defaultCenter] postNotificationName:kNotificationFontSizeChanged object:nil];
-}
-
-- (void)setShowReceivedTimestamps:(BOOL)newShowReceivedTimestamps {
-    showReceivedTimestamps = newShowReceivedTimestamps;
-    [defaults setBool:showReceivedTimestamps forKey:@"ShowReceivedTimestamps"];
-    [defaults synchronize];
-    
-    [[NSNotificationCenter defaultCenter] postNotificationName:kNotificationShowTimestampSettingsChanged object:nil];
-}
-
-- (void)setReturnToSend:(BOOL)newReturnToSend {
-    returnToSend = newReturnToSend;
-    [defaults setBool:returnToSend forKey:@"ReturnToSend"];
-    [defaults synchronize];
+    UIFontDescriptor *fontDescriptor = [UIFontDescriptor preferredFontDescriptorWithTextStyle:UIFontTextStyleBody];
+    CGFloat size = fontDescriptor.pointSize;
+    return size;
 }
 
 - (void)setDarkTheme:(BOOL)newDarkTheme {
@@ -705,8 +650,6 @@ static UserSettings *instance;
     disableBigEmojis = newDisableBigEmojis;
     [defaults setBool:disableBigEmojis forKey:@"DisableBigEmojis"];
     [defaults synchronize];
-    
-    [[NSNotificationCenter defaultCenter] postNotificationName:kNotificationFontSizeChanged object:nil];
 }
 
 - (void)setAskedForPushDecryption:(BOOL)newAskedForPushDecryption {
@@ -900,21 +843,15 @@ static UserSettings *instance;
     [defaults synchronize];
 }
 
-- (void)setNewChatViewActive:(BOOL)newNewChatViewActive {
-    newChatViewActive = newNewChatViewActive;
-    [defaults setBool:newChatViewActive forKey:@"NewChatViewActive"];
-    [defaults synchronize];
-}
-
-- (void)setInitialScrollPositionAlt1:(BOOL)newInitialScrollPositionAlt1 {
-    initialScrollPositionAlt1 = newInitialScrollPositionAlt1;
-    [defaults setBool:initialScrollPositionAlt1 forKey:@"initialScrollPositionAlt1"];
-    [defaults synchronize];
-}
-
 - (void)setFlippedTableView:(BOOL)newFlippedTableView {
     flippedTableView = newFlippedTableView;
     [defaults setBool:flippedTableView forKey:@"flippedTableView"];
+    [defaults synchronize];
+}
+
+- (void)setFeatureFlagEnableNoMIMETypeFileMessagesFilter:(BOOL)newFeatureFlagEnableNoMIMETypeFileMessagesFilter {
+    featureFlagEnableNoMIMETypeFileMessagesFilter = newFeatureFlagEnableNoMIMETypeFileMessagesFilter;
+    [defaults setBool:featureFlagEnableNoMIMETypeFileMessagesFilter forKey:@"featureFlagEnableNoMIMETypeFileMessagesFilter"];
     [defaults synchronize];
 }
 

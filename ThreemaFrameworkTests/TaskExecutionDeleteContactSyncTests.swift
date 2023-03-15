@@ -51,10 +51,10 @@ class TaskExecutionDeleteContactSyncTests: XCTestCase {
     func testShouldSkip() throws {
         let deviceID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.deviceIDLength)!
         
-        let contact = Contact(context: databaseMainCnx.main)
+        let contact = ContactEntity(context: databaseMainCnx.main)
         contact.identity = "ECHOECHO"
         contact.publicNickname = "ECHOECHO"
-        
+
         let frameworkInjectorMock = BusinessInjectorMock(
             backgroundEntityManager: EntityManager(databaseContext: databaseBackgroundCnx),
             backgroundGroupManager: GroupManagerMock(),
@@ -67,6 +67,7 @@ class TaskExecutionDeleteContactSyncTests: XCTestCase {
             multiDeviceManager: MultiDeviceManagerMock(),
             myIdentityStore: MyIdentityStoreMock(),
             userSettings: UserSettingsMock(),
+            settingsStore: SettingsStoreMock(),
             serverConnector: ServerConnectorMock(
                 connectionState: .loggedIn,
                 deviceID: deviceID,
@@ -87,7 +88,7 @@ class TaskExecutionDeleteContactSyncTests: XCTestCase {
     func testSuccessPrecondition() throws {
         let deviceID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.deviceIDLength)!
 
-        let contact = Contact(context: databaseMainCnx.main)
+        let contact = ContactEntity(context: databaseMainCnx.main)
         contact.identity = "ECHOECHO"
         contact.publicNickname = "ECHOECHO"
 
@@ -103,6 +104,7 @@ class TaskExecutionDeleteContactSyncTests: XCTestCase {
             multiDeviceManager: MultiDeviceManagerMock(),
             myIdentityStore: MyIdentityStoreMock(),
             userSettings: UserSettingsMock(),
+            settingsStore: SettingsStoreMock(),
             serverConnector: ServerConnectorMock(
                 connectionState: .loggedIn,
                 deviceID: deviceID,
@@ -134,6 +136,7 @@ class TaskExecutionDeleteContactSyncTests: XCTestCase {
             multiDeviceManager: MultiDeviceManagerMock(),
             myIdentityStore: MyIdentityStoreMock(),
             userSettings: UserSettingsMock(),
+            settingsStore: SettingsStoreMock(),
             serverConnector: ServerConnectorMock(
                 connectionState: .loggedIn,
                 deviceID: deviceID,

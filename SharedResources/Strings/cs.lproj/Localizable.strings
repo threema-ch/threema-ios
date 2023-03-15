@@ -11,8 +11,7 @@
 
 /* Tabbar and title for list with all conversations */
 "chats_title" = "Chaty";
-
-"use_dynamic_font_size" = "Velikost textu";
+"chats_pinned" = "Připnuto";
 
 "SortOrder_Firstname" = "Jméno Příjmení";
 "SortOrder_Lastname" = "Příjmení Jméno";
@@ -68,6 +67,7 @@
 "delete_identity" = "Smazat data a ID";
 "copy" = "Zkopírovat";
 "save" = "Uložit";
+"download" = "Stáhnout";
 "share" = "Sdílet";
 "details" = "Podrobnosti";
 "acknowledge" = "Souhlasím";
@@ -103,7 +103,7 @@
 "threema_id" = "Threema ID";
 "nickname" = "Přezdívka";
 "add_button" = "Přidat";
-"chatview_contextmenu_more" = "Více…";
+"chatview_contextmenu_select" = "Vybrat…";
 
 "file_message_image" = "Obrázek";
 "file_message_sticker" = "Nálepka";
@@ -184,11 +184,7 @@
 "sound_threema_alphorn" = "Alpský roh";
 
 "reset_wallpaper" = "Resetovat tapetu";
-"font_size_title" = "Velikost písma";
-"font_size" = "%d pt";
 "bigger_single_emojis" = "Větší jednoduchá emoji";
-"received_message_time" = "Čas přijetí zprávy";
-"return_key_send" = "Enter = odeslat";
 "identity_none" = "žádná";
 "message" = "Zpráva"; /* Short version for "Send Message" */
 "scan_identity" = "Naskenovat ID";
@@ -202,8 +198,6 @@
 "block_contact" = "Blokovat kontakt";
 "profile_picture_recipient" = "Příjemce profilového obrázku";
 
-"no_contacts_access_title" = "Bez přístupu ke kontaktům";
-"no_contacts_access_message" = "Otevřete Nastavení a povolte přístup ke kontaktům.";
 "no_linked_contact_access_title" = "Bez přístupu k propojenému kontaktu";
 "no_linked_contact_access_message" = "Chcete-li zobrazit propojený kontakt, otevřete Nastavení a povolte přístup ke kontaktům. Můžete také kontakt trvale odpojit.";
 "no_linked_contact_access_edit_message" = "Chcete-li upravit propojený kontakt, otevřete Nastavení a povolte přístup ke kontaktům. Můžete také kontakt trvale odpojit a pak provést jeho úpravu.";
@@ -224,8 +218,6 @@
 "[no access]" = "[Bez přístupu]";
 "[not found]" = "[Nenalezeno]";
 "[restricted]" = "[Omezeno]";
-
-"go_to_settings" = "Přejít do Nastavení";
 
 /* This shows the number of groups in parentheses */
 "groups_header" = "Skupiny (%lu)";
@@ -356,18 +348,8 @@
 "speed" = "Rychlost přehrávání";
 
 "send_file_title" = "Poslat soubor";
-"camera_disabled_title" = "Přístup byl odepřen";
 "send_file_message" = "Soubor: %@ \n pro \n%@";
-
 "quote_not_found" = "Citovaná zpráva nebyla nalezena.";
-
-"camera_disabled_message" = "%@ nemá přístup k vaší kameře. Udělte oprávnění v nabídce Nastavení > Soukromí > Kamera.";
-
-"location_disabled_title" = "Bez přístupu k Poloze";
-"location_disabled_message" =  "Otevřete nabídku Nastavení a umožněte přístup k Poloze.";
-
-"microphone_disabled_title" = "Chybí přístup k mikrofonu";
-"microphone_disabled_message" = "%@ nemá přístup k mikrofonu. Udělte oprávnění v nabídce Nastavení > Soukromí > Mikrofon.";
 
 "include_media" = "Přidat média";
 "without_media" = "Bez médií";
@@ -416,7 +398,7 @@
 "create_note_group_info_text" = "Pokud nepřidáte žádné členy skupiny, zprávy do této skupiny zůstanou místní. To se hodí pro bezpečné ukládání poznámek, médií a dokumentů nebo pro přenos položek na plochu.";
 "remind_me_next_time" = "Připomenout příště";
 "doNotShowAgain" = "Neukazovat znovu";
-"add_note_group_info" = "* Jste tu sami *\nPoužijte tento chat jako svůj zabezpečený poznámkový blok pro text, média a dokumenty.";
+"add_note_group_info" = "*Jste tu sami*\nPoužijte tento chat jako svůj zabezpečený poznámkový blok pro text, média a dokumenty.";
 "end_note_group_info" = "* V tomto chatu už nejste sami *\nNové zprávy budou odeslány všem členům skupiny.";
 
 "chat_search_searching" = "Vyhledávání...";
@@ -463,8 +445,6 @@
 "invalid_country_code_message" = "Zdá se, že formát regionu na vašem zařízení je nastavený na neplatnou hodnotu. Otevřete nabídku nastavení aplikace, přejděte do sekce Všeobecné > Mezinárodní a zvolte formát regionu znovu, abyste tak předešli problémům s přiřazováním telefonního čísla.";
 
 /* Settings */
-"block_unknown_on" = "Zprávy vám mohou posílat pouze lidé z vašeho seznamu kontaktů.";
-"block_unknown_off" = "Zprávy vám může posílat kdokoliv. Nové kontakty budou přidávány automaticky poté, co od nich obdržíte první zprávu.";
 "show_stale_contacts_on" = "Neaktivní Threema ID (tj. ID, která nebyla použita alespoň tři měsíce) a zrušená ID jsou skrytá.";
 "show_stale_contacts_off" = "V seznamu kontaktů jsou uvedena všechna Threema ID.";
 "hide_voip_call_ip_off" = "Navazovat přímé spojení, je-li to možné, a přes servery Threema směrovat pouze hovory s neověřenými kontakty. Může dojít k zobrazení vaší IP adresy.";
@@ -508,9 +488,7 @@
 "no_work_contacts" = "Uživatelé %@";
 "no_work_contacts_message" = "Nebyly nalezeny žádné správcem ověřené kontakty %@.";
 
-"no_contacts_permission_title" = "Chybí oprávnění pro přístup ke kontaktům";
 "no_contacts_syncoff" = "Zatím nemáte žádné kontakty. Zapněte synchronizaci (Nastavení > Soukromí) nebo přidejte kontakty ručně pomocí tlačítka +.";
-"no_contacts_permission_message" = "%@ nemá přístup k vašim kontaktům. Přejděte ve svém zařízení do nastavení soukromí a povolte přístup ke kontaktům.";
 
 "my_profile_picture_title" = "Váš profilový obrázek";
 "release_profilepicture_to" = "Uvolnit profilový obrázek pro";
@@ -691,6 +669,7 @@
 "group_member_self_removed" = "Došlo k vašemu odstranění ze skupiny.";
 "group_member_self_left" = "Opustili jste skupinu.";
 "group_member_creator_left" = "*Tato skupina je osiřelá*\nTvůrce skupiny ji opustil a již ji nelze spravovat. Jeden ze zbývajících členů by měl skupinu naklonovat (prostřednictvím podrobností o skupině) a stát se novým správcem.";
+"system_message_group_avatar_changed" = "Skupinový obrázek se změnil";
 
 /* accessibility labels */
 "send_media_or_location" = "Poslat médium nebo lokaci";
@@ -726,10 +705,6 @@
 "threema_channel_failed" = "Nelze přidat kanál Threema.";
 
 /* Push decryption */
-"decryption_push_title" = "Chcete v nabízených oznámeních zobrazovat náhled obsahu zprávy?";
-"decryption_push_text" = "Pokud náhledy deaktivujete, budete muset k zobrazení obsahu nových zpráv otevřít aplikaci %@.";
-"decryption_push_activate" = "Aktivovat náhled";
-"decryption_push_deactivate" = "Deaktivovat náhled";
 "decryption_push_reply" = "Odpovědět";
 "decryption_push_placeholder" = "Odpovědět...";
 "decryption_push_agree" = "Souhlasit";
@@ -780,11 +755,10 @@
 "call_reject" = "Zamítnout";
 "call_hide_call" = "Skrýt hovor";
 "call_no_wifi" = "Volání přes mobilní síť. Zjistit více…";
+"call_mic_access" = "Chybí přístup k mikrofonu.";
 
 "call_voip_not_supported_title" = "Hovor Threema";
 "call_voip_not_supported_text" = "Váš kontakt nepodporuje hovory Threema";
-"call_microphone_permission_title" = "Přístup k mikrofonu byl zamítnut";
-"call_microphone_permission_text" = "Musíte v nabídce Nastavení povolit přístup k mikrofonu";
 "call_contact_alert" = "Chcete zavolat uživateli %@?";
 "call_contact_not_reachable" = "S kontaktem se nelze spojit.";
 "already_in_call" = "V jednom okamžiku může být aktivní pouze jeden hovor.";
@@ -848,8 +822,6 @@
 "privateChat_set_alert_title" = "Chcete tento chat označit jako soukromý?";
 "privateChat_set_alert_message" = "Viditelnost soukromých chatů můžete přepnout v nastavení Soukromí.";
 "privateChat_setup_alert_message" = "Záloha vašeho Trezoru Threema obsahovala soukromé konverzace, pro jejich otevření musíte nastavit přístupový kód.";
-"hide_private_toggle" = "Skrýt soukromé chaty";
-"privacy_footer" = "Skryje všechny soukromé chaty v přehledu chatů. Pro aktivaci tohoto nastavení je třeba nastavit přístupový kód.";
 
 "group_leave_sheet_title" = "Opustit „%@“?";
 "group_leave_sheet_message" = "Pokud prostě odejdete, nemůžete se již konverzace účastnit, ale stále máte přístup k historii chatu a můžete si ji prohlížet.";
@@ -1069,6 +1041,7 @@
 "delete_messages_confirm" = "Chcete trvale smazat všechny zprávy starší než %@?";
 "delete_messages_confirm_all" = "Opravdu si přejete trvale smazat všechny zprávy?";
 "delete_messages_explain" = "Zprávy jakéhokoli druhu budou smazány: textové a hlasové zprávy, média, soubory, hlasování atd.";
+"delete_in_progress" = "Mazání…";
 "one_year_title" = "1 rok";
 "one_year" = "1 rok";
 "six_months_title" = "6 měsíců";
@@ -1114,7 +1087,6 @@
 "settings_advanced" = "Pokročilé";
 "settings_threema_work" = "Threema Work";
 "settings_feedback" = "Zpětná vazba beta verze";
-"settings_dev_mode" = "Režim pro vývojáře";
 "tos_cell_title" = "Smluvní podmínky";
 
 "settings_advanced_flush_message_queue" = "Pročistit frontu zpráv";
@@ -1123,11 +1095,32 @@
 "settings_advanced_reregister_push_notifications_footer_title" = "Pokud se vám příchozí zprávy nezobrazují mimo aplikaci jako oznámení, můžete si je znovu aktivovat.";
 "settings_advanced_reregister_notifications_label" = "Znovu aktivovat nabízená oznámení";
 
-// Dev Mode
-"settings_devmode_quote_v2" = "Citování V2";
-"settings_devmode_new_chat_view" = "Zobrazení nového chatu";
-"settings_devmode_stylekit_debug_view" = "Kontrolní zobrazení StyleKit";
-"settings_devmode_id_colors_debug_view" = "Zobrazit ladění barev ID";
+"settings_md_sync_alert_title" = "Synchronizace se nezdařila";
+
+// Privacy
+"settings_privacy_contacts_header" = "Kontakty";
+"settings_privacy_sync_contacts" = "Synchronizovat kontakty";
+"settings_privacy_exclusion_list" = "Seznam vyřazených";
+"settings_privacy_exclusion_list_alert_title" = "ID je příliš krátké";
+"settings_privacy_exclusion_list_alert_message" = "Zadejte ID, které bude dlouhé přesně 8 znaků.";
+"settings_privacy_block_unknown" = "Blokovat neznámé";
+"settings_privacy_block_unknown_footer_on"= "Zprávy vám mohou posílat pouze lidé z vašeho seznamu kontaktů.";
+"settings_privacy_block_unknown_foooter_off" = "Zprávy vám může posílat kdokoliv. Nové kontakty budou přidávány automaticky poté, co od nich obdržíte první zprávu.";
+
+"settings_privacy_chat_header" = "Chat";
+"settings_privacy_read_receipts" = "Potvrzení o přečtení";
+"settings_privacy_typing_indicator" = "Ukazatele psaní";
+
+"settings_privacy_TIRR_reset_all" = "Resetovat pro všechny kontakty";
+"settings_privacy_TIRR_reset_footer" = "Resetovat všechny kontakty do výchozího nastavení.";
+"settings_privacy_TIRR_reset_alert_title" = "Resetovat";
+"settings_privacy_TIRR_reset_alert_message" = "Resetovat všechny kontakty do výchozího nastavení. Akci nelze vzít zpět.";
+"settings_privacy_TIRR_reset_alert_action" = "Resetovat vše";
+
+"settings_privacy_choose_poi" = "Vybrat body zájmu";
+"settings_privacy_hide_private_chats" = "Skrýt soukromé chaty";
+"settings_privacy_hide_private_chats_footer" = "Skryje všechny soukromé chaty v přehledu chatů. Pro aktivaci tohoto nastavení je třeba nastavit přístupový kód.";
+
 
 // Appearance
 "settings_appearance_theme_section" = "Vizuální motiv";
@@ -1338,12 +1331,6 @@ Pokud vám v %@ nechybí žádné (mediální) soubory, vyprázdněte koš, abys
 "readReceipt_sheetMessage" = "Přepsat výchozí nastavení tohoto kontaktu.";
 "typingIndicator_sheetMessage" = "Přepsat výchozí nastavení tohoto kontaktu.";
 
-"reset_overrides" = "Resetovat pro všechny kontakty";
-"resetButton_footer" = "Resetovat všechny kontakty do výchozího nastavení.";
-"reset_overrides_alert_title" = "Resetovat";
-"reset_overrides_alert_message" = "Resetovat všechny kontakty do výchozího nastavení. Akci nelze vzít zpět.";
-"reset_overrides_alert_action" = "Resetovat vše";
-
 /* Multi Decvice */
 "multi_device_linked_devices_title" = "Náhled pro více zařízení";
 "multi_device_linked_devices_desc" = "Aktivujte nebo deaktivujte náhled pro více zařízení pro toto zařízení.";
@@ -1377,14 +1364,11 @@ Pokud vám v %@ nechybí žádné (mediální) soubory, vyprázdněte koš, abys
 // POI
 "poi_unavailable" = "Nedostupný";
 "poi_not_marked" = "–";
-"poi_location_disabled_action" = "Otevřít nastavení";
 "poi_search_POI" = "Města a ulice";
 "poi_search_prefix" = "Hledat v okolí %@";
 "poi_away" = "%@ pryč";
 "poi_dropped_pin_info_alert_title" = "Umístěný špendlík";
 "poi_dropped_pin_info_alert_message" = "Chcete-li umístit špendlík, podržte stisknuté místo na mapě.";
-"poi_accuracy_info_alert_title" = "Není přístup k přesné poloze";
-"poi_accuracy_info_alert_message" = "Otevřete Nastavení a povolte přístup k přesné poloze.";
 "poi_current_location" = "Moje poloha";
 "poi_marked_location" = "Umístěný špendlík";
 
@@ -1426,6 +1410,18 @@ Pokud vám v %@ nechybí žádné (mediální) soubory, vyprázdněte koš, abys
 "detailView_messageID" = "ID zprávy";
 "detailView_group_acknowledged" = "Souhlas (%d)";
 "detailView_group_declined" = "Nesouhlas (%d)";
+"detailView_group_file_size" = "Velikost souboru";
+"detailView_created_footer" = "Vytvořeno: %@";
+
+"message_display_status_none" = "Nic";
+"message_display_status_user_acknowledged" = "Souhlas";
+"message_display_status_user_declined" = "Nesouhlas";
+"message_display_status_sending" = "Odesílání";
+"message_display_status_sent" = "Odesláno";
+"message_display_status_delivered" = "Doručeno";
+"message_display_status_delivered_incoming" = "Obdrženo";
+"message_display_status_read" = "Přečteno";
+"message_display_status_failed" = "Neúspěch";
 
 // In-app notifications
 "notification_copying_succeeded" = "Položka zkopírována";
@@ -1434,7 +1430,11 @@ Pokud vám v %@ nechybí žádné (mediální) soubory, vyprázdněte koš, abys
 "notification_saving_succeeded" = "Položka uložena";
 "notification_saving_failed" = "Uložení se nezdařilo";
 
+"notification_saving_to_photos_succeeded" = "Přidáno do fotografií";
+"notification_saving_to_photos_failed" = "Přidání do fotografií se nezdařilo";
+
 "notification_sending_failed" = "Odeslání se nezdařilo";
+"notification_sending_failed_subtitle_size" = "Položka je příliš velká";
 
 "notification_deleted_messages_count" = "Smazáno zpráv: %d";
 
@@ -1443,6 +1443,7 @@ Pokud vám v %@ nechybí žádné (mediální) soubory, vyprázdněte koš, abys
 "notification_call_failed_connected" = "Ztráta spojení";
 "notification_call_failed_not_connected" = "Navázání spojení se nezdařilo";
 "notification_call_creation_failed" = "Vytvoření hovoru se nezdařilo";
+"notification_call_creation_disabled" = "Hovory byly deaktivovány";
 
 "notification_sending_profile_picture_succeeded" = "Profilový obrázek odeslán";
 "notification_sending_profile_picture_failed" = "Odesílání se nezdařilo";
@@ -1451,6 +1452,9 @@ Pokud vám v %@ nechybí žádné (mediální) soubory, vyprázdněte koš, abys
 
 "notification_group_sync_succeeded" = "Skupina synchronizována";
 "notification_group_sync_failed" = "Synchronizace skupiny se nezdařila";
+
+"notification_settings_sync_pending" = "Synchronizace…";
+"notification_settings_sync_succeeded" = "Nastavení bylo synchronizováno";
 
 // Forward security status messages
 "forward_security_message_without" = "Byla přijata zpráva bez dopředné bezpečnosti. Ověřte, zda odesílatel záměrně vypnul funkci PFS.";
@@ -1471,7 +1475,6 @@ Pokud vám v %@ nechybí žádné (mediální) soubory, vyprázdněte koš, abys
 // Chat bar
 "accessibility_chatbar_label" = "Vstupní pole chatu.";
 "accessibility_chatbar_hint" = "Sestavení zprávy.";
-"accessibility_chatbar_value" = "Aktuální text: %@";
 "accessibility_chatbar_quote_label" = "Vybraná citace zprávy: %@.";
 "accessibility_chatbar_close_quote_button_label" = "Konec citace.";
 "accessibility_chatbar_close_quote_button_hint" = "Ukončí citování vybrané zprávy.";
@@ -1521,6 +1524,11 @@ Pokud vám v %@ nechybí žádné (mediální) soubory, vyprázdněte koš, abys
 "accessibility_status_delivered_plus_time" = "Doručeno, %@";
 "accessibility_status_read_plus_time" = "Přečteno, %@";
 "accessibility_status_failed_plus_time" = "Neúspěch, %@";
+
+// UIAccessibilityCustomActions
+"accessibility_action_open_link" = "Otevřít %@";
+"accessibility_action_call_phone" = "Zavolat %@";
+"accessibility_action_open_mention" = "Zobrazit kontakt %@";
 
 // Multi-Device Wizard
 "md_wizard_header" = "Náhled pro více zařízení";
@@ -1578,3 +1586,18 @@ Pokud vám v %@ nechybí žádné (mediální) soubory, vyprázdněte koš, abys
 
 // SystemMessage
 "systemMessage_unsupported_type" = "Nepodporovaný typ systémové zprávy";
+
+// Alerts
+"alert_no_access_title_camera" = "Bez přístupu ke kameře";
+"alert_no_access_title_contacts" = "Bez přístupu ke kontaktům";
+"alert_no_access_title_location" = "Bez přístupu k poloze";
+"alert_no_access_title_location_precise" = "Bez přístupu k přesné poloze";
+"alert_no_access_title_microphone" = "Bez přístupu k mikrofonu";
+
+"alert_no_access_message_camera" = "Otevřete Nastavení iOS a povolte přístup ke kameře.";
+"alert_no_access_message_contacts" = "Otevřete Nastavení iOS a povolte přístup ke kontaktům.";
+"alert_no_access_message_location" = "Otevřete Nastavení iOS a povolte přístup k poloze.";
+"alert_no_access_message_location_precise" = "Otevřete Nastavení iOS a povolte v nabídce Poloha přístup k přesné poloze.";
+"alert_no_access_message_microphone" = "Otevřete Nastavení iOS a povolte přístup k mikrofonu.";
+
+"alert_no_access_open_settings" = "Otevřít nastavení";

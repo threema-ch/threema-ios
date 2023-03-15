@@ -507,7 +507,10 @@ class ConversationsViewControllerHelper {
             
             GroupManager(entityManager: entityManager).dissolve(groupID: group.groupID, to: nil)
 
-            guard let conversation = entityManager.entityFetcher.conversation(for: group.groupID) else {
+            guard let conversation = entityManager.entityFetcher.conversation(
+                for: group.groupIdentity.id,
+                creator: group.groupIdentity.creator
+            ) else {
                 handler(false)
                 return
             }

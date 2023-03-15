@@ -87,7 +87,7 @@ class SwitchDetailsTableViewCell: ThemedCodeStackTableViewCell {
             switchControl.onTintColor = Colors.red
         }
         else {
-            switchControl.onTintColor = Colors.primary
+            switchControl.onTintColor = .primary
         }
     }
     

@@ -19,7 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import "Old_ContactCell.h"
-#import "Contact.h"
+#import "ContactEntity.h"
 #import "ContactNameLabel.h"
 #import "BundleUtil.h"
 #import "AvatarMaker.h"
@@ -37,13 +37,13 @@
     _threemaTypeIcon.accessibilityIgnoresInvertColors = true;
 }
 
-- (void)setContact:(Contact *)contact {
+- (void)setContact:(ContactEntity *)contact {
     _contact = contact;
     
     self.nameLabel.contact = contact;
     
     self.contactImage.image = [BundleUtil imageNamed:@"Unknown"];
-    [[AvatarMaker sharedAvatarMaker] avatarForContact:contact size:40.0f masked:YES onCompletion:^(UIImage *avatarImage, NSString *identity) {
+    [[AvatarMaker sharedAvatarMaker] avatarForContactEntity:contact size:40.0f masked:YES onCompletion:^(UIImage *avatarImage, NSString *identity) {
         if ([contact.identity isEqualToString:identity]) {
             dispatch_async(dispatch_get_main_queue(), ^{
                 self.contactImage.image = avatarImage;

@@ -159,7 +159,7 @@ class PPOptionsViewController: UITableViewController {
         cell.textLabel?.font = config.font
         cell.imageView?.image = nil
         cell.contentView.alignmentRect(forFrame: CGRect(x: 100, y: 0, width: 0, height: 0))
-        
+        cell.accessibilityIdentifier = nil
         if indexPath.section == 0 {
             cell.textLabel?.textAlignment = config.textAlignment
             
@@ -267,7 +267,7 @@ class PPOptionsViewController: UITableViewController {
             cell.textLabel?.textAlignment = .center
             cell.textLabel?.text = NSLocalizedString("cancel", comment: "")
             cell.accessibilityLabel = NSLocalizedString("cancel", comment: "")
-            cell.accessibilityIdentifier = "Cancel"
+            cell.accessibilityIdentifier = "PPOptionsViewControllerCancelCell"
             /***** BEGIN THREEMA MODIFICATION: Use bold font for cancel *********/
             cell.textLabel?.font = UIFont.boldSystemFont(ofSize: 19.0)
             /***** END THREEMA MODIFICATION: Use bold font for cancel *********/

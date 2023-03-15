@@ -21,19 +21,7 @@
 import Foundation
 
 public extension Colors {
-    @objc class var primary: UIColor {
-        switch ThreemaApp.current {
-        case .threema:
-            return color(for: Asset.TargetColors.Threema.primary)
-        case .work:
-            return color(for: Asset.TargetColors.ThreemaWork.primary)
-        case .red, .workRed:
-            return color(for: Asset.TargetColors.ThreemaRed.primary)
-        case .onPrem:
-            return color(for: Asset.TargetColors.OnPrem.primary)
-        }
-    }
-
+    
     @objc class var primaryWizard: UIColor {
         switch ThreemaApp.current {
         case .threema:

@@ -55,7 +55,7 @@ class ForwardSecurityMessageProcessorTests: XCTestCase {
             senderContext: aliceContext,
             recipientContext: bobContext,
             expectedMessage: ForwardSecurityMessageProcessorTests.aliceMessage1,
-            expectedMode: kForwardSecurityModeTwoDH
+            expectedMode: .twoDH
         )
         
         // At this point, Bob should have enqueued one FS message: Accept
@@ -120,7 +120,7 @@ class ForwardSecurityMessageProcessorTests: XCTestCase {
             senderContext: aliceContext,
             recipientContext: bobContext,
             expectedMessage: ForwardSecurityMessageProcessorTests.aliceMessage2,
-            expectedMode: kForwardSecurityModeFourDH
+            expectedMode: .fourDH
         )
         
         // At this point, Bob should not have enqueued any further messages
@@ -142,7 +142,7 @@ class ForwardSecurityMessageProcessorTests: XCTestCase {
             senderContext: bobContext,
             recipientContext: aliceContext,
             expectedMessage: ForwardSecurityMessageProcessorTests.bobMessage1,
-            expectedMode: kForwardSecurityModeFourDH
+            expectedMode: .fourDH
         )
     }
     
@@ -167,7 +167,7 @@ class ForwardSecurityMessageProcessorTests: XCTestCase {
             senderContext: aliceContext,
             recipientContext: bobContext,
             expectedMessage: ForwardSecurityMessageProcessorTests.aliceMessage4,
-            expectedMode: kForwardSecurityModeFourDH
+            expectedMode: .fourDH
         )
         
         // At this point, Bob should not have enqueued any further messages
@@ -276,7 +276,7 @@ class ForwardSecurityMessageProcessorTests: XCTestCase {
             senderContext: bobContext,
             recipientContext: aliceContext,
             expectedMessage: ForwardSecurityMessageProcessorTests.bobMessage2,
-            expectedMode: kForwardSecurityModeTwoDH
+            expectedMode: .twoDH
         )
         
         // Alice should have enqueued an Accept for the new session to Bob
@@ -290,7 +290,7 @@ class ForwardSecurityMessageProcessorTests: XCTestCase {
             senderContext: aliceContext,
             recipientContext: bobContext,
             expectedMessage: ForwardSecurityMessageProcessorTests.aliceMessage6,
-            expectedMode: kForwardSecurityModeFourDH
+            expectedMode: .fourDH
         )
         
         // Alice and Bob should now each have one matching 4DH session
@@ -392,7 +392,7 @@ class ForwardSecurityMessageProcessorTests: XCTestCase {
             senderContext: bobContext,
             recipientContext: aliceContext,
             expectedMessage: ForwardSecurityMessageProcessorTests.bobMessage2,
-            expectedMode: kForwardSecurityModeTwoDH
+            expectedMode: .twoDH
         )
         
         // Now Bob finally gets the initial messages from Alice, after he has already started his own session.
@@ -401,7 +401,7 @@ class ForwardSecurityMessageProcessorTests: XCTestCase {
             senderContext: aliceContext,
             recipientContext: bobContext,
             expectedMessage: ForwardSecurityMessageProcessorTests.aliceMessage1,
-            expectedMode: kForwardSecurityModeTwoDH
+            expectedMode: .twoDH
         )
         
         // Bob now sends another message, this time in 4DH mode using the session with the lower ID
@@ -412,7 +412,7 @@ class ForwardSecurityMessageProcessorTests: XCTestCase {
             senderContext: bobContext,
             recipientContext: aliceContext,
             expectedMessage: ForwardSecurityMessageProcessorTests.bobMessage3,
-            expectedMode: kForwardSecurityModeFourDH
+            expectedMode: .fourDH
         )
         
         // Alice also sends a message to Bob
@@ -423,7 +423,7 @@ class ForwardSecurityMessageProcessorTests: XCTestCase {
             senderContext: aliceContext,
             recipientContext: bobContext,
             expectedMessage: ForwardSecurityMessageProcessorTests.aliceMessage6,
-            expectedMode: kForwardSecurityModeFourDH
+            expectedMode: .fourDH
         )
         
         // Both sides should now agree on the best session
@@ -440,7 +440,7 @@ class ForwardSecurityMessageProcessorTests: XCTestCase {
             senderContext: bobContext,
             recipientContext: aliceContext,
             expectedMessage: ForwardSecurityMessageProcessorTests.bobMessage2,
-            expectedMode: kForwardSecurityModeTwoDH
+            expectedMode: .twoDH
         )
         
         // Alice now sends a message to Bob in 4DH mode
@@ -454,12 +454,12 @@ class ForwardSecurityMessageProcessorTests: XCTestCase {
             (receivedMessages[0] as! BoxTextMessage).text,
             ForwardSecurityMessageProcessorTests.aliceMessage1
         )
-        XCTAssertEqual(receivedMessages[0].forwardSecurityMode, kForwardSecurityModeTwoDH)
+        XCTAssertEqual(receivedMessages[0].forwardSecurityMode, .twoDH)
         XCTAssertEqual(
             (receivedMessages[1] as! BoxTextMessage).text,
             ForwardSecurityMessageProcessorTests.aliceMessage6
         )
-        XCTAssertEqual(receivedMessages[1].forwardSecurityMode, kForwardSecurityModeFourDH)
+        XCTAssertEqual(receivedMessages[1].forwardSecurityMode, .fourDH)
         
         // Bob now sends another message, this time in 4DH mode using the session with the lower ID
         try sendTextMessage(message: ForwardSecurityMessageProcessorTests.bobMessage3, senderContext: bobContext)
@@ -469,7 +469,7 @@ class ForwardSecurityMessageProcessorTests: XCTestCase {
             senderContext: bobContext,
             recipientContext: aliceContext,
             expectedMessage: ForwardSecurityMessageProcessorTests.bobMessage3,
-            expectedMode: kForwardSecurityModeFourDH
+            expectedMode: .fourDH
         )
         
         // Alice now sends another message, this time in 4DH mode using the session with the lower ID
@@ -480,7 +480,7 @@ class ForwardSecurityMessageProcessorTests: XCTestCase {
             senderContext: aliceContext,
             recipientContext: bobContext,
             expectedMessage: ForwardSecurityMessageProcessorTests.aliceMessage7,
-            expectedMode: kForwardSecurityModeFourDH
+            expectedMode: .fourDH
         )
         
         // Both sides should now agree on the best session

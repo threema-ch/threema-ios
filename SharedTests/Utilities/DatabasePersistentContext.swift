@@ -61,12 +61,11 @@ class DatabasePersistentContext {
     ///
     /// - Returns:
     ///    DB context for testing
-    static func devNullContext()
-        -> (
-            persistentStoreCoordinator: NSPersistentStoreCoordinator,
-            mainContext: TMAManagedObjectContext,
-            backgroundContext: NSManagedObjectContext
-        ) {
+    static func devNullContext(withChildContextForBackgroundProcess: Bool = false) -> (
+        persistentStoreCoordinator: NSPersistentStoreCoordinator,
+        mainContext: TMAManagedObjectContext,
+        childContext: TMAManagedObjectContext?
+    ) {
         var modelURL = BundleUtil.url(forResource: "ThreemaData", withExtension: "momd")
         let coreDataModelVersion = BundleUtil.object(forInfoDictionaryKey: "ThreemaCoreDataVersion") as! String
         modelURL = modelURL?
@@ -77,10 +76,16 @@ class DatabasePersistentContext {
         container.loadPersistentStores { _, error in
             XCTAssertNil(error)
         }
-            
-        let cont = TMAManagedObjectContext(concurrencyType: .mainQueueConcurrencyType)
-        cont.persistentStoreCoordinator = container.persistentStoreCoordinator
 
-        return (container.persistentStoreCoordinator, cont, container.newBackgroundContext())
+        let mainContext = TMAManagedObjectContext(concurrencyType: .mainQueueConcurrencyType)
+        mainContext.persistentStoreCoordinator = container.persistentStoreCoordinator
+
+        var childContext: TMAManagedObjectContext?
+        if withChildContextForBackgroundProcess {
+            childContext = TMAManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
+            childContext?.parent = mainContext
+        }
+
+        return (container.persistentStoreCoordinator, mainContext, childContext)
     }
 }

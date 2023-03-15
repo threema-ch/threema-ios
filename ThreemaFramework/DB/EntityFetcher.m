@@ -22,7 +22,7 @@
 #import "DatabaseManager.h"
 #import "AbstractGroupMessage.h"
 #import "MyIdentityStore.h"
-#import "Contact.h"
+#import "ContactEntity.h"
 #import "UserSettings.h"
 #import "BaseMessage.h"
 #import "BundleUtil.h"
@@ -74,10 +74,6 @@
 
 - (BaseMessage *)ownMessageWithId:(NSData *)messageId {
     return [self singleEntityNamed:@"Message" withPredicate: @"id == %@ AND isOwn == YES", messageId];
-}
-
-- (BaseMessage *)messageWithId:(NSData *)messageId {
-    return [self singleEntityNamed:@"Message" withPredicate: @"id == %@", messageId];
 }
 
 - (BaseMessage *)messageWithId:(NSData *)messageId conversation:(Conversation *)conversation {
@@ -151,11 +147,7 @@
     return [self entitiesNamed:@"FileMessage" fetchLimit:fetchLimit sortedBy:sortDescriptors withPredicate: @"fileName contains[cd] %@ AND conversation == %@", searchText, conversation];
 }
 
-- (Conversation *)conversationForGroupId:(NSData *)groupId {
-    return [self singleEntityNamed:@"Conversation" withPredicate: @"groupId == %@", groupId];
-}
-
-- (Conversation *)conversationForContact:(Contact *)contact {
+- (Conversation *)conversationForContact:(ContactEntity *)contact {
     return [self singleEntityNamed:@"Conversation" withPredicate: @"contact == %@ AND groupId == nil", contact];
 }
 
@@ -163,7 +155,7 @@
     return [self singleEntityNamed:@"Conversation" withPredicate: @"contact.identity == %@ AND groupId == nil", identity];
 }
 
-- (NSArray *)conversationsForMember:(Contact *)contact {
+- (NSArray *)conversationsForMember:(ContactEntity *)contact {
     return [self allEntitiesNamed:@"Conversation" sortedBy:nil withPredicate: @"%@ IN members", contact];
 }
 
@@ -180,13 +172,13 @@
     }
 }
 
-- (Contact *)contactForId:(NSString *)identity {
+- (ContactEntity *)contactForId:(NSString *)identity {
     return [self singleEntityNamed:@"Contact" withPredicate: @"identity == %@", identity];
 }
 
-- (Contact *)contactForId:(NSString *)identity error:(NSError **)error {
+- (ContactEntity *)contactForId:(NSString *)identity error:(NSError **)error {
     NSError *err;
-    Contact *contact = [self singleEntityNamed:@"Contact" error:&err withPredicate:@"identity == %@", identity];
+    ContactEntity *contact = [self singleEntityNamed:@"Contact" error:&err withPredicate:@"identity == %@", identity];
     if (err) {
         *error = err;
         return nil;
@@ -207,7 +199,7 @@
     return [self allEntitiesNamed:@"Contact" sortedBy:nil withPredicate: @"verificationLevel == %@", [NSNumber numberWithInteger:verificationLevel]];
 }
 
-- (NSArray<Contact *> *)contactsWithFeatureMaskNil {
+- (NSArray<ContactEntity *> *)contactsWithFeatureMaskNil {
     return [self allEntitiesNamed:@"Contact" sortedBy:nil withPredicate: @"featureLevel == nil"];
 }
     
@@ -270,7 +262,7 @@
     
     if ([UserSettings sharedUserSettings].hideStaleContacts) {
         if (members.count > 0) {
-            for (Contact *contact in members) {
+            for (ContactEntity *contact in members) {
                 NSMutableArray *andPredicates = [NSMutableArray array];
                 NSPredicate *memberPredicate = [NSPredicate predicateWithFormat:@"identity == %@", contact.identity];
                 [andPredicates addObject:memberPredicate];
@@ -329,7 +321,7 @@
     return [self allEntitiesNamed:@"Conversation" sortedBy:sortDescriptors withPredicate:@"groupId != nil"];
 }
 
-- (NSArray *)groupConversationsForContact:(Contact *)contact {
+- (NSArray *)groupConversationsForContact:(ContactEntity *)contact {
     NSPredicate *predicate = [NSPredicate predicateWithFormat:@"%@ IN members", contact];
     NSFetchRequest *fetchRequest = [[NSFetchRequest alloc] initWithEntityName:@"Conversation"];
     fetchRequest.predicate = predicate;
@@ -403,7 +395,7 @@
     if ([identity isEqual:[self->myIdentityStore identity]])
         return [BundleUtil localizedStringForKey:@"me"];
     
-    Contact *contact = [self contactForId:identity];
+    ContactEntity *contact = [self contactForId:identity];
     if (contact == nil) {
         return identity;
     }
@@ -558,6 +550,23 @@
     }
 }
 
+- (void)executeCountFetchRequest:(NSFetchRequest *)fetchRequest onCompletion:(void(^)(NSUInteger count))onCompletion onError:(void(^)(NSError *))onError {
+    __block NSError *error;
+    [_managedObjectContext performBlock:^{
+        NSUInteger count = 0;
+        count = [_managedObjectContext countForFetchRequest:fetchRequest error:&error];
+        if (error && onError) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                onError(error);
+            });
+        } else {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                onCompletion(count);
+            });
+        }
+    }];
+}
+
 - (NSBatchUpdateResult *)executeBatchUpdateRequest:(NSBatchUpdateRequest *)batchUpdateRequst {
     NSError *error;
     NSBatchUpdateResult *result;
@@ -641,7 +650,7 @@
     
     if ([UserSettings sharedUserSettings].hideStaleContacts) {
         if (members.count > 0) {
-            for (Contact *contact in members) {
+            for (ContactEntity *contact in members) {
                 NSPredicate *memberPredicate = [NSPredicate predicateWithFormat:@"identity == %@", contact.identity];
                 [allPredicates addObject:memberPredicate];
             }
@@ -673,7 +682,7 @@
     return fetchedResultsController;
 }
 
-- (NSFetchedResultsController *)fetchedResultsControllerForConversations {
+- (NSFetchedResultsController *)fetchedResultsControllerForConversationsWithSections:(BOOL)sections {
     NSFetchRequest *fetchRequest = [[NSFetchRequest alloc] init];
     NSEntityDescription *entity = [NSEntityDescription entityForName:@"Conversation" inManagedObjectContext:_managedObjectContext];
     [fetchRequest setEntity:entity];
@@ -695,7 +704,9 @@
                                  [NSSortDescriptor sortDescriptorWithKey:@"lastMessage.date" ascending:NO]];
     [fetchRequest setSortDescriptors:sortDescriptors];
     
-    NSFetchedResultsController *fetchedResultsController = [[NSFetchedResultsController alloc] initWithFetchRequest:fetchRequest managedObjectContext:_managedObjectContext sectionNameKeyPath:nil cacheName:nil];
+    NSString *sectionString = sections ? @"marked" : nil;
+    
+    NSFetchedResultsController *fetchedResultsController = [[NSFetchedResultsController alloc] initWithFetchRequest:fetchRequest managedObjectContext:_managedObjectContext sectionNameKeyPath:sectionString cacheName:nil];
 
     return fetchedResultsController;
 }
@@ -877,6 +888,14 @@
 
 - (Tag *)tagForName:(NSString *)name {
     return [self singleEntityNamed:@"Tag" withPredicate:@"name == %@", name];
+}
+
+- (Conversation *)legacyConversationForGroupId:(NSData *)groupId {
+    return [self singleEntityNamed:@"Conversation" withPredicate: @"groupId == %@", groupId];
+}
+
+- (NSInteger)countFileMessagesWithNoMIMEType {
+    return [self countEntityNamed:@"FileMessage" withPredicate:@"mimeType == nil"];
 }
 
 @end

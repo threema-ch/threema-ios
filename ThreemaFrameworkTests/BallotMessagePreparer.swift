@@ -42,6 +42,7 @@ import XCTest
                 .createConversation(marked: false, typing: false, unreadMessageCount: 0) { conversation in
                     conversation.groupID = Data([1])
                     conversation.groupMyIdentity = "TESTERID"
+                    conversation.contact = contact
                     conversation.groupName = "TestGroup BallotMessageDecoder"
                     conversation.addMembers([contact])
                 }

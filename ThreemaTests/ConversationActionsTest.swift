@@ -51,7 +51,7 @@ class ConversationActionsTest: XCTestCase {
         category: ConversationCategory,
         visibility: ConversationVisibility
     ) -> Conversation {
-        var contact: Contact!
+        var contact: ContactEntity!
         var conversation: Conversation!
         
         let databasePreparer = DatabasePreparer(context: mainCnx)

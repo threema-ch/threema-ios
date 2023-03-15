@@ -79,8 +79,11 @@ class RootNavigationController: UINavigationController {
                 }
             }
             else {
-                if let groupID = Data(base64Encoded: selectedIdentity),
-                   let group = EntityManager().entityFetcher.conversation(for: groupID) {
+                let groupComponents = selectedIdentity.components(separatedBy: ";")
+                let (creatorID, groupID) = (groupComponents[0], groupComponents[1])
+                
+                if let groupID = Data(base64Encoded: groupID),
+                   let group = EntityManager().entityFetcher.conversation(for: groupID, creator: creatorID) {
                     self.selectedIdentity = group
                     if var recipientConversations = recipientConversations {
                         recipientConversations.insert(group)
@@ -332,7 +335,7 @@ class RootNavigationController: UINavigationController {
             
             for item in items {
                 let attributes: [NSAttributedString.Key: Any] = [
-                    NSAttributedString.Key.foregroundColor: Colors.primary as Any,
+                    NSAttributedString.Key.foregroundColor: UIColor.primary as Any,
                 ]
                 
                 item.setTitleTextAttributes(attributes, for: .normal)

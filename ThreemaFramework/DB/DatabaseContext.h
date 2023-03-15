@@ -37,6 +37,9 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @property (strong, nonatomic) TMAManagedObjectContext *current;
 
+
+@property (strong, nonatomic, nullable) NSArray<TMAManagedObjectContext *> *directContexts;
+
 - (instancetype)init NS_UNAVAILABLE;
 
 /**
@@ -69,6 +72,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 /// A new background context directly accessing the persistent store [Workaround]
 ///
+/// This context will be stored for refreshing changed objects, the context should be removed if not used anymore.
+///
 /// In our current architecture all background (private) contexts are child contexts of the main context. This leads to a crash in Threema on iOS 13 when a background context is
 /// used in a `NSFetchedResultsController`. This is a workaround to resolve this problem especially for `MessageProvider`.
 ///
@@ -76,6 +81,10 @@ NS_ASSUME_NONNULL_BEGIN
 ///
 /// @param persistentCoordinator  Persistent store coordinator to use (from `DatabaseManager`)
 + (TMAManagedObjectContext *)directBackgroundContextWithPersistentCoordinator:(NSPersistentStoreCoordinator *)persistentCoordinator;
+
+/// Remove stored background context from list.
+/// @param context Context to remove
++ (void)removeDirectBackgroundContextWithContext:(nonnull __kindof NSManagedObjectContext *)context;
 
 /**
  Set main DB context to nil. [Workaround]

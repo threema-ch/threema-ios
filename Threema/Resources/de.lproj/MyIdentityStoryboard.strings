@@ -33,7 +33,7 @@
 "NUr-0t-zng.footerTitle" = "Wenn Sie Ihre E-Mail-Adresse oder Telefonnummer mit Ihrer ID verknüpfen, können andere Leute Sie auf Threema automatisch finden, sofern sie Sie im Adressbuch haben.";
 
 /* Class = "UILabel"; text = "Threema ID"; ObjectID = "PG7-5d-WL5"; */
-"PG7-5d-WL5.text" = "Threema ID";
+"PG7-5d-WL5.text" = "Threema-ID";
 
 /* Class = "UILabel"; text = "Phone Number"; ObjectID = "QCC-2k-HfZ"; */
 "QCC-2k-HfZ.text" = "Telefonnummer";

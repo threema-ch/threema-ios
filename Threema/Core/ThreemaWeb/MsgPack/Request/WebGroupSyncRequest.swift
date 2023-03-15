@@ -34,7 +34,7 @@ class WebGroupSyncRequest: WebAbstractMessage {
     func syncGroup() {
         ack = WebAbstractMessageAcknowledgement(requestID, false, nil)
         let entityManager = EntityManager()
-        guard let conversation = entityManager.entityFetcher.conversation(for: id) else {
+        guard let conversation = entityManager.entityFetcher.legacyConversation(for: id) else {
             ack!.success = false
             ack!.error = "invalidGroup"
             return

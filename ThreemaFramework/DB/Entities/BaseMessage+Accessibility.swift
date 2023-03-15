@@ -63,7 +63,7 @@ public extension BaseMessage {
         }
         else {
             // Style: "Delivered, Today at 15:44."
-            return "\(String.localizedStringWithFormat(messageDisplayState.accessibilityLabel(), dateString))."
+            return "\(String.localizedStringWithFormat(messageDisplayState.accessibilityLabel, dateString))."
         }
     }
     

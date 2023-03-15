@@ -38,13 +38,7 @@ class UserSettingsMock: NSObject, UserSettingsProtocol {
     }
     
     var wallpaper: UIImage!
-    
-    var useDynamicFontSize = true
-    
-    var showReceivedTimestamps = true
-    
-    var returnToSend = true
-    
+        
     var disableBigEmojis = true
     
     var chatFontSize: Float = 0.0
@@ -56,6 +50,8 @@ class UserSettingsMock: NSObject, UserSettingsProtocol {
     var syncContacts = false
     
     var blockUnknown = false
+    
+    var enablePoi = true
     
     var sendReadReceipts = true
     
@@ -101,4 +97,8 @@ class UserSettingsMock: NSObject, UserSettingsProtocol {
     var donateInteractions = false
     
     var voiceMessagesShowTimeRemaining = false
+    
+    var flippedTableView = true
+    
+    var featureFlagEnableNoMIMETypeFileMessagesFilter = true
 }

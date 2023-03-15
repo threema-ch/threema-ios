@@ -27,11 +27,17 @@
 }
 
 static TMAManagedObjectContext *mainContext;
-static dispatch_queue_t dispatchQueue;
+static dispatch_queue_t mainContextQueue;
+
+static NSMutableArray<TMAManagedObjectContext *> *directContexts;
+static dispatch_queue_t directContextsQueue;
 
 + (void)initialize {
-    if (dispatchQueue == nil) {
-        dispatchQueue = dispatch_queue_create("ch.threema.DatabaseContext.main", NULL);
+    if (mainContextQueue == nil) {
+        mainContextQueue = dispatch_queue_create("ch.threema.DatabaseContext.mainContextQueue", NULL);
+    }
+    if (directContextsQueue == nil) {
+        directContextsQueue = dispatch_queue_create("ch.threema.DatabaseContext.directContextsQueue", NULL);
     }
 }
 
@@ -39,7 +45,7 @@ static dispatch_queue_t dispatchQueue;
 {
     self = [super init];
     if (self) {
-        dispatch_sync(dispatchQueue, ^{
+        dispatch_sync(mainContextQueue, ^{
             if (mainContext == nil) {
                 mainContext = [[TMAManagedObjectContext alloc] initWithConcurrencyType:NSMainQueueConcurrencyType];
                 [mainContext setPersistentStoreCoordinator:persistentCoordinator];
@@ -68,7 +74,7 @@ static dispatch_queue_t dispatchQueue;
     if (self) {
         mainContext = mainCnx;
 
-        if (privateContext) {
+        if (backgroundCnx) {
             privateContext = backgroundCnx;
             [privateContext setParentContext:mainContext];
         }
@@ -82,7 +88,25 @@ static dispatch_queue_t dispatchQueue;
 + (TMAManagedObjectContext *)directBackgroundContextWithPersistentCoordinator:(NSPersistentStoreCoordinator *)persistentCoordinator {
     TMAManagedObjectContext *context = [[TMAManagedObjectContext alloc] initWithConcurrencyType:NSPrivateQueueConcurrencyType];
     [context setPersistentStoreCoordinator:persistentCoordinator];
+
+    dispatch_sync(directContextsQueue, ^{
+        if (directContexts == nil) {
+            directContexts = [NSMutableArray new];
+        }
+        if ([directContexts containsObject:context] == NO) {
+            [directContexts addObject:context];
+        }
+    });
+
     return context;
+}
+
++ (void)removeDirectBackgroundContextWithContext:(nonnull __kindof NSManagedObjectContext *)context {
+    dispatch_sync(directContextsQueue, ^{
+        if (directContexts) {
+            [directContexts removeObject:context];
+        }
+    });
 }
 
 - (TMAManagedObjectContext *)main
@@ -99,8 +123,16 @@ static dispatch_queue_t dispatchQueue;
     return privateContext != nil ? privateContext : mainContext;
 }
 
+- (NSArray<TMAManagedObjectContext *> *)directContexts {
+    __block NSArray<TMAManagedObjectContext *> *contexts;
+    dispatch_sync(directContextsQueue, ^{
+        contexts = [directContexts copy];
+    });
+    return contexts;
+}
+
 + (void)reset {
-    dispatch_sync(dispatchQueue, ^{
+    dispatch_sync(mainContextQueue, ^{
         if (mainContext != nil) {
             mainContext = nil;
         }

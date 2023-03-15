@@ -20,7 +20,6 @@
 
 #import "ForwardTextActivity.h"
 #import "ContactGroupPickerViewController.h"
-#import "Contact.h"
 #import "MessageSender.h"
 #import "BundleUtil.h"
 

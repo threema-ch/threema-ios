@@ -164,7 +164,8 @@ public final class ThreemaUtility: NSObject {
     /// Checks if the otherTypeIcon should be hidden for a given contact
     /// - Parameter contact: Contact to check
     /// - Returns: Bool that states if icon should be hidden
-    public static func shouldHideOtherTypeIcon(for contact: Contact?) -> Bool {
+    @available(*, deprecated, message: "Use ContactEntity.showOtherThreemaTypeIcon instead")
+    public static func shouldHideOtherTypeIcon(for contact: ContactEntity?) -> Bool {
         
         guard let contact = contact else {
             return true

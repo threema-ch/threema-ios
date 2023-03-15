@@ -171,7 +171,7 @@ struct MultiDeviceWizardCancelButtonView: View {
             }
         }
         .buttonStyle(.bordered)
-        .tint(Color(Colors.primary))
+        .tint(Color(.primary))
     }
 }
 

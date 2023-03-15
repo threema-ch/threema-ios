@@ -71,7 +71,7 @@ class WebUpdateGroupRequest: WebAbstractMessage {
         ack = WebAbstractMessageAcknowledgement(requestID, false, nil)
         DispatchQueue.main.sync {
             let entityManager = EntityManager()
-            guard let conversation = entityManager.entityFetcher.conversation(for: id) else {
+            guard let conversation = entityManager.entityFetcher.legacyConversation(for: id) else {
                 ack!.success = false
                 ack!.error = "invalidGroup"
                 completion()

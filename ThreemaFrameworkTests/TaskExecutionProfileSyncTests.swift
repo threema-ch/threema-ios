@@ -199,6 +199,7 @@ class TaskExecutionProfileSyncTests: XCTestCase {
                 multiDeviceManager: MultiDeviceManagerMock(),
                 myIdentityStore: test.initialConfig.identityStore,
                 userSettings: test.initialConfig.userSettings,
+                settingsStore: SettingsStoreMock(),
                 serverConnector: serverConnectorMock,
                 mediatorMessageProtocol: MediatorMessageProtocolMock(
                     deviceGroupKeys: deviceGroupKeys!,

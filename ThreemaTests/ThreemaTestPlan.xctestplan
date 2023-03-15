@@ -72,7 +72,8 @@
       "enabled" : false,
       "skippedTests" : [
         "ScreenshotsSimpleStep",
-        "ScreenshotsWithData"
+        "ScreenshotsWithData",
+        "ScreenshotsWithRestoreID"
       ],
       "target" : {
         "containerPath" : "container:Threema.xcodeproj",

@@ -22,7 +22,7 @@
 #import <CoreData/CoreData.h>
 #import "Old_ThemedViewController.h"
 
-@class Contact;
+@class ContactEntity;
 
 @interface ContactPickerViewController : Old_ThemedViewController <UISearchControllerDelegate, UISearchBarDelegate, UISearchResultsUpdating>
 

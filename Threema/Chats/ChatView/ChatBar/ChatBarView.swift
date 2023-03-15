@@ -77,14 +77,14 @@ final class ChatBarView: UIView {
     private var currentSingleLineHeight: CGFloat = Config.defaultSingleLineHeight
     private var updatableConstraints = [UpdatableConstraint]()
     
-    private let draftText: String?
+    private let precomposedText: String?
     private lazy var feedbackGenerator = UINotificationFeedbackGenerator()
     
     // MARK: - Views
     
     private lazy var chatTextView: ChatTextView = {
         let chatTextView = ChatTextView(
-            draftText: draftText,
+            precomposedText: precomposedText,
             conversationIdentifier: conversation.objectID.uriRepresentation().absoluteString
         )
         
@@ -114,6 +114,7 @@ final class ChatBarView: UIView {
         
         imageButton.setContentHuggingPriority(.defaultHigh, for: .horizontal)
         imageButton.setContentCompressionResistancePriority(.required, for: .horizontal)
+        imageButton.accessibilityIdentifier = "ChatBarViewImageButton"
         
         return imageButton
     }()
@@ -143,7 +144,7 @@ final class ChatBarView: UIView {
             sfSymbolName: "arrow.up.circle.fill",
             accessibilityLabel: BundleUtil
                 .localizedString(forKey: "compose_bar_send_message_button_accessibility_label"),
-            defaultColor: { Colors.primary },
+            defaultColor: { .primary },
             customScalableSize: Config.sendButtonSize
         ) { [weak self] _ in
             
@@ -165,19 +166,26 @@ final class ChatBarView: UIView {
         return imageButton
     }()
     
-    private lazy var recordButton = ChatBarButton(
-        sfSymbolName: "mic.fill",
-        accessibilityLabel: BundleUtil.localizedString(forKey: "compose_bar_record_button_accessibility_label"),
-        defaultColor: { Colors.backgroundChatBarButton }
-    ) { [weak self] _ in
-        guard let strongSelf = self else {
-            return
+    private lazy var recordButton = {
+        let button = ChatBarButton(
+            sfSymbolName: "mic.fill",
+            accessibilityLabel: BundleUtil.localizedString(forKey: "compose_bar_record_button_accessibility_label"),
+            defaultColor: { Colors.backgroundChatBarButton }
+        ) { [weak self] _ in
+            guard let strongSelf = self else {
+                return
+            }
+            
+            if strongSelf.chatBarViewDelegate?.canSendText() ?? false {
+                strongSelf.chatBarViewDelegate?.startRecording()
+            }
         }
         
-        if strongSelf.chatBarViewDelegate?.canSendText() ?? false {
-            strongSelf.chatBarViewDelegate?.startRecording()
-        }
-    }
+        // This is deprecated but since we're not using UIButtonConfiguration anyways this doesn't matter
+        button.contentEdgeInsets = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: Config.textInputButtonSpacing)
+        
+        return button
+    }()
     
     private lazy var cameraButton = ChatBarButton(
         sfSymbolName: "camera.fill",
@@ -197,9 +205,9 @@ final class ChatBarView: UIView {
     
     // MARK: - Lifecycle
     
-    init(conversation: Conversation, mentionsDelegate: MentionsTableViewDelegate, draftText: String? = nil) {
+    init(conversation: Conversation, mentionsDelegate: MentionsTableViewDelegate, precomposedText: String? = nil) {
         self.conversation = conversation
-        self.draftText = draftText
+        self.precomposedText = precomposedText
         
         super.init(frame: .zero)
         
@@ -210,7 +218,7 @@ final class ChatBarView: UIView {
         chatTextView.mentionsTableViewDelegate = mentionsDelegate
         chatTextView.alwaysBounceVertical = true
         
-        if draftText != nil {
+        if precomposedText != nil {
             showSendButton()
         }
     }
@@ -292,8 +300,7 @@ final class ChatBarView: UIView {
         
         NSLayoutConstraint.activate([
             rightButtonsStackView.trailingAnchor.constraint(
-                equalTo: safeAreaLayoutGuide.trailingAnchor,
-                constant: -Config.textInputButtonSpacing
+                equalTo: safeAreaLayoutGuide.trailingAnchor
             ),
             cameraMicButtonConstraint!,
         ])
@@ -369,9 +376,9 @@ final class ChatBarView: UIView {
         else {
             // This should give an effect similar to the one in the tab bar
             backgroundColor = .clear
-            
-            chatTextView.updateColors()
         }
+        
+        chatTextView.updateColors()
     }
     
     // MARK: - Animations
@@ -431,9 +438,13 @@ final class ChatBarView: UIView {
     /// Stops editing, removes the current text from the text view and replaces it with an empty string.
     /// Stops the typing indicator if currently typing
     /// - Returns: If the current text is empty it returns nil otherwise it returns the text
-    public func removeCurrentText() -> String? {
-        let text = chatTextView.removeCurrentText()
-        chatTextViewDidChange(chatTextView, changeTyping: false)
+    public func getCurrentText(andRemove: Bool = false) -> String? {
+        let text = chatTextView.getCurrentText()
+        if andRemove {
+            _ = chatTextView.removeCurrentText()
+            chatTextViewDidChange(chatTextView, changeTyping: false)
+        }
+        
         return text
     }
     
@@ -446,7 +457,6 @@ final class ChatBarView: UIView {
             // Note: This is a hacky solution to the self.chatTextView.becomeFirstResponder() always being animated
             // XCode 14.1, filed FB11715663 on 24.10.2022
             if self.chatTextView.isFirstResponder {
-                self.chatTextView.keyboardType = .alphabet
                 self.chatTextView.reloadInputViews()
                 self.chatTextView.keyboardType = .default
                 self.chatTextView.reloadInputViews()
@@ -463,11 +473,6 @@ final class ChatBarView: UIView {
     @discardableResult
     override func becomeFirstResponder() -> Bool {
         chatTextView.becomeFirstResponder()
-    }
-    
-    /// Updates the UI if applicable settings have been changed
-    public func updateSettings() {
-        chatTextView.updateSettings()
     }
     
     /// Sends endEditing to the textView
@@ -507,17 +512,20 @@ extension ChatBarView: ChatTextViewDelegate {
             return
         }
         
-        guard let text = removeCurrentText(), !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+        guard let text = getCurrentText(andRemove: true),
+              !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             return
         }
         
         // Switch back to default keyboard (in case we're currently using the numeric or emoji keypad)
         resetKeyboard(andType: true)
         
+        sendStartOrStopTypingIndicator()
+        
         chatBarViewDelegate.sendText(rawText: text)
+        
         feedbackGenerator.prepare()
         feedbackGenerator.notificationOccurred(.success)
-        isTyping = false
     }
     
     func canStartEditing() -> Bool {
@@ -555,6 +563,9 @@ extension ChatBarView: ChatTextViewDelegate {
             }
         )
         
+        DDLogVerbose(
+            "Shouldchange \(isTyping != chatTextView.isEditing) isTyping \(isTyping) chatTextView.isEditing \(chatTextView.isEditing)"
+        )
         guard isTyping != chatTextView.isEditing else {
             return
         }

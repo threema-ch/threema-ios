@@ -21,7 +21,7 @@
 #import "Ballot.h"
 #import "BallotChoice.h"
 #import "Conversation.h"
-#import "Contact.h"
+#import "ContactEntity.h"
 #import "MyIdentityStore.h"
 
 static NSString *fieldDisplayMode = @"displayMode";
@@ -167,7 +167,7 @@ static NSArray *orderSortDescriptors;
         NSSet *participantsForChoice = [choice getAllParticipantIds];
         [idSet unionSet:participantsForChoice];
     }
-    for (Contact *contact in self.conversation.participants) {
+    for (ContactEntity *contact in self.conversation.participants) {
         if([idSet containsObject: contact.identity]) {
             [contactSet addObject:contact];
         }
@@ -185,7 +185,7 @@ static NSArray *orderSortDescriptors;
         NSSet *participantsForChoice = [choice getAllParticipantIds];
         [idSet unionSet:participantsForChoice];
     }
-    for (Contact* contact in self.conversation.participants) {
+    for (ContactEntity* contact in self.conversation.participants) {
         if(![idSet containsObject:contact.identity]) {
             [contactSet addObject:contact];
         }

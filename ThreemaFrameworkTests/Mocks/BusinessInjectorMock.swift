@@ -22,7 +22,6 @@ import Foundation
 @testable import ThreemaFramework
 
 class BusinessInjectorMock: FrameworkInjectorProtocol {
-
     // MARK: BusinessInjectorProtocol
 
     var backgroundEntityManager: EntityManager
@@ -48,7 +47,9 @@ class BusinessInjectorMock: FrameworkInjectorProtocol {
     var userSettings: UserSettingsProtocol
 
     var serverConnector: ServerConnectorProtocol
-
+    
+    var settingsStore: SettingsStoreProtocol
+    
     // MARK: BusinessInternalInjectorProtocol
 
     var mediatorMessageProtocol: MediatorMessageProtocolProtocol
@@ -58,6 +59,8 @@ class BusinessInjectorMock: FrameworkInjectorProtocol {
     var fsmp: ForwardSecurityMessageProcessor
     
     var dhSessionStore: DHSessionStoreProtocol
+    
+    var settingsStoreInternal: SettingsStoreInternalProtocol
 
     init(
         backgroundEntityManager: EntityManager,
@@ -71,6 +74,7 @@ class BusinessInjectorMock: FrameworkInjectorProtocol {
         multiDeviceManager: MultiDeviceManagerProtocol,
         myIdentityStore: MyIdentityStoreProtocol,
         userSettings: UserSettingsProtocol,
+        settingsStore: SettingsStoreInternalProtocol & SettingsStoreProtocol,
         serverConnector: ServerConnectorProtocol,
         mediatorMessageProtocol: MediatorMessageProtocolProtocol,
         messageProcessor: MessageProcessorProtocol
@@ -95,6 +99,8 @@ class BusinessInjectorMock: FrameworkInjectorProtocol {
             identityStore: myIdentityStore,
             messageSender: DummySender()
         )
+        self.settingsStore = settingsStore
+        self.settingsStoreInternal = settingsStore
     }
 
     init(entityManager: EntityManager, backgroundEntityManager: EntityManager) {
@@ -118,6 +124,8 @@ class BusinessInjectorMock: FrameworkInjectorProtocol {
             identityStore: myIdentityStore,
             messageSender: DummySender()
         )
+        self.settingsStore = SettingsStoreMock()
+        self.settingsStoreInternal = SettingsStoreMock()
     }
     
     class DummySender: ForwardSecurityMessageSenderProtocol {

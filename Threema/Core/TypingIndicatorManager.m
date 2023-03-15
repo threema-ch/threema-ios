@@ -20,7 +20,6 @@
 
 #import "TypingIndicatorManager.h"
 #import "Conversation.h"
-#import "Contact.h"
 #import "EntityFetcher.h"
 #import "AppDelegate.h"
 #import "Threema-Swift.h"

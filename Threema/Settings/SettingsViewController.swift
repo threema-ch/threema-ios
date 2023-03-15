@@ -20,6 +20,7 @@
 
 import CocoaLumberjackSwift
 import Foundation
+import SwiftUI
 import ThreemaFramework
 
 class SettingsViewController: ThemedTableViewController {
@@ -173,7 +174,7 @@ extension SettingsViewController {
         feedbackCell.textLabel?.text = BundleUtil.localizedString(forKey: "settings_feedback")
         feedbackCell.imageView?.image = BundleUtil.imageNamed("DevMode\(suffix)")
         
-        devModeCell.textLabel?.text = BundleUtil.localizedString(forKey: "settings_dev_mode")
+        devModeCell.textLabel?.text = "Developer Settings"
         devModeCell.imageView?.image = BundleUtil.imageNamed("DevMode\(suffix)")
         
         passcodeLockCell.textLabel?.text = BundleUtil.localizedString(forKey: "settings_passcode_lock")
@@ -263,7 +264,7 @@ extension SettingsViewController {
             .localizedString(forKey: BusinessInjector().serverConnector.isMultiDeviceActivated ? "On" : "Off")
     }
     
-    private func showConversation(for contact: Contact) {
+    private func showConversation(for contact: ContactEntity) {
         let info = [
             kKeyContact: contact,
             kKeyForceCompose: NSNumber(booleanLiteral: true),
@@ -371,19 +372,8 @@ extension SettingsViewController {
             case .appStore:
                 // Remove multi device cells
                 return numberOfRows - 1
-            case .testFlight:
-                // Show MD for red and workRed
-                switch ThreemaApp.current {
-                case .red, .workRed:
-                    return numberOfRows
-                case .threema, .work, .onPrem:
-                    // Remove multi device cells, if app version less than 5
-                    guard AppInfo.version.major >= 5 else {
-                        return numberOfRows - 1
-                    }
-                    return numberOfRows
-                }
-            case .xcode:
+            case .testFlight, .xcode:
+                // Show MD only in beta
                 return numberOfRows
             }
         }
@@ -474,6 +464,18 @@ extension SettingsViewController {
                     DDLogError("Can't add \(Constants.betaFeedbackIdentity) as contact \(error)")
                 }
             }
+        }
+        else if indexPath.section == 0, indexPath.row == 1 {
+            let vc = UIHostingController(rootView: DeveloperSettingsView())
+            vc.navigationItem.largeTitleDisplayMode = .never
+            navigationController?.pushViewController(vc, animated: true)
+        }
+        else if indexPath.section == 1, indexPath.row == 0 {
+            let vc = UIHostingController(
+                rootView: PrivacySettingsView(settingsVM: BusinessInjector().settingsStore as! SettingsStore)
+            )
+            vc.navigationItem.largeTitleDisplayMode = .never
+            navigationController?.pushViewController(vc, animated: true)
         }
         else if indexPath.section == 1, indexPath.row == 6 {
             let vc = KKPasscodeSettingsViewController(style: .grouped)

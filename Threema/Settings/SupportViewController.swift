@@ -97,7 +97,7 @@ class SupportViewController: UIViewController {
             )
     }
     
-    func moveToSupportChat(contact: Contact) {
+    func moveToSupportChat(contact: ContactEntity) {
         let message = "My app version: \(ThreemaUtility.clientVersionWithMDM)"
         let info = [
             kKeyContact: contact,

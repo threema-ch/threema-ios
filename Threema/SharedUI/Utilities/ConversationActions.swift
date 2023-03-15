@@ -80,18 +80,18 @@ class ConversationActions: NSObject {
     /// - Parameters:
     ///   - conversationObjectID: The conversation to which the messages below
     ///   - messages: messages which will be marked as read
-    /// - Returns: a promise which is fulfilled after all messages were marked as read
+    /// - Returns: a promise which is fulfilled after all messages were marked as read containing the number of messages that were marked as read or 0 if none were marked as read.
     func read(
         _ conversationObjectID: NSManagedObjectID,
         messages: [BaseMessage]
-    ) -> Guarantee<Void> {
+    ) -> Guarantee<Int> {
         Guarantee { seal in
             entityManager.performBlock {
                 let conversation = self.entityManager.entityFetcher
                     .getManagedObject(by: conversationObjectID) as! Conversation
                 self.read(conversation, messages: messages)
-                    .done {
-                        seal(())
+                    .done { markedAsRead in
+                        seal(markedAsRead)
                     }
             }
         }
@@ -101,10 +101,14 @@ class ConversationActions: NSObject {
         _ conversation: Conversation,
         messages: [BaseMessage],
         isAppInBackground: Bool = AppDelegate.shared().isAppInBackground()
-    ) -> Guarantee<Void> {
+    ) -> Guarantee<Int> {
         Guarantee { seal in
             entityManager.performBlock {
-                self.unreadMessages.read(for: messages, in: conversation, isAppInBackground: isAppInBackground)
+                let markedAsRead = self.unreadMessages.read(
+                    for: messages,
+                    in: conversation,
+                    isAppInBackground: isAppInBackground
+                )
 
                 self.entityManager.performBlockAndWait {
                     if conversation.unreadMessageCount == -1 {
@@ -116,7 +120,7 @@ class ConversationActions: NSObject {
 
                 self.notificationManager.updateUnreadMessagesCount()
 
-                seal(())
+                seal(markedAsRead)
             }
         }
     }

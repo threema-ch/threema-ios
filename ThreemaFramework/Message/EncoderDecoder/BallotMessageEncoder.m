@@ -24,7 +24,6 @@
 #import "BallotMessage.h"
 #import "BallotKeys.h"
 #import "Conversation.h"
-#import "Contact.h"
 #import "MyIdentityStore.h"
 #import "JsonUtil.h"
 

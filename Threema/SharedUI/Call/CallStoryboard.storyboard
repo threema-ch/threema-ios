@@ -38,9 +38,9 @@
                                             <stackView opaque="NO" contentMode="scaleToFill" distribution="equalSpacing" alignment="center" spacing="20" translatesAutoresizingMaskIntoConstraints="NO" id="WBc-Wz-Q0y">
                                                 <rect key="frame" x="0.0" y="0.0" width="343" height="45"/>
                                                 <subviews>
-                                                    <button opaque="NO" contentMode="scaleAspectFit" misplaced="YES" contentHorizontalAlignment="left" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="T5Q-Ll-URe">
-                                                        <rect key="frame" x="0.0" y="0.0" width="50" height="36"/>
-                                                        <accessibility key="accessibilityConfiguration" identifier="HideButton"/>
+                                                    <button opaque="NO" contentMode="scaleAspectFit" contentHorizontalAlignment="left" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="T5Q-Ll-URe">
+                                                        <rect key="frame" x="0.0" y="4.5" width="50" height="36"/>
+                                                        <accessibility key="accessibilityConfiguration" identifier="CallViewControllerHideButton"/>
                                                         <constraints>
                                                             <constraint firstAttribute="width" constant="50" id="Htc-cO-pTz"/>
                                                             <constraint firstAttribute="height" constant="36" id="nCs-qw-VoS"/>
@@ -77,10 +77,10 @@
                                                                     <action selector="switchCameraAction:forEvent:" destination="AQ2-Ik-2Xo" eventType="touchUpInside" id="sm0-V1-o1O"/>
                                                                 </connections>
                                                             </button>
-                                                            <button opaque="NO" contentMode="scaleToFill" misplaced="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="AxK-1x-RHZ">
+                                                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="AxK-1x-RHZ">
                                                                 <rect key="frame" x="150" y="0.0" width="45" height="45"/>
                                                                 <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                                                                <accessibility key="accessibilityConfiguration" identifier="VideoButton"/>
+                                                                <accessibility key="accessibilityConfiguration" identifier="CallViewControllerVideoButton"/>
                                                                 <constraints>
                                                                     <constraint firstAttribute="width" constant="45" id="6gm-E4-WJT"/>
                                                                     <constraint firstAttribute="height" constant="45" id="Y4w-z4-y5h"/>
@@ -191,7 +191,7 @@
                                             </button>
                                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="mQM-IK-Y2i">
                                                 <rect key="frame" x="70" y="5" width="70" height="70"/>
-                                                <accessibility key="accessibilityConfiguration" identifier="EndButton"/>
+                                                <accessibility key="accessibilityConfiguration" identifier="CallViewControllerEndButton"/>
                                                 <constraints>
                                                     <constraint firstAttribute="width" constant="70" id="Jol-3M-Xog"/>
                                                     <constraint firstAttribute="height" constant="70" id="NM8-30-SMi"/>

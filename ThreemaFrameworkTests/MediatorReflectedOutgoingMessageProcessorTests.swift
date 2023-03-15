@@ -410,6 +410,7 @@ class MediatorReflectedOutgoingMessageProcessorTests: XCTestCase {
                 multiDeviceManager: MultiDeviceManagerMock(),
                 myIdentityStore: MyIdentityStoreMock(),
                 userSettings: UserSettingsMock(),
+                settingsStore: SettingsStoreMock(),
                 serverConnector: ServerConnectorMock(),
                 mediatorMessageProtocol: MediatorMessageProtocolMock(),
                 messageProcessor: MessageProcessorMock()

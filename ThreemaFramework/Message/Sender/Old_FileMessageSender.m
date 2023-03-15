@@ -27,7 +27,6 @@
 #import "GroupFileMessage.h"
 #import "FileMessageEncoder.h"
 #import "MyIdentityStore.h"
-#import "Contact.h"
 #import "UTIConverter.h"
 #import "BundleUtil.h"
 #import "MediaConverter.h"

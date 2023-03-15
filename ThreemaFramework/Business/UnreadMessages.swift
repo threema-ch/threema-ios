@@ -23,8 +23,8 @@ import Foundation
 import PromiseKit
 
 public protocol UnreadMessagesProtocol: UnreadMessagesProtocolObjc {
-    func read(for conversation: Conversation, isAppInBackground: Bool)
-    func read(for messages: [BaseMessage], in conversation: Conversation, isAppInBackground: Bool)
+    func read(for conversation: Conversation, isAppInBackground: Bool) -> Int
+    func read(for messages: [BaseMessage], in conversation: Conversation, isAppInBackground: Bool) -> Int
 }
 
 @objc public protocol UnreadMessagesProtocolObjc {
@@ -130,11 +130,12 @@ public protocol UnreadMessagesProtocol: UnreadMessagesProtocolObjc {
     /// - Parameters:
     ///   - conversation: Conversation to send receipts
     ///   - isAppInBackground: If App is in background
-    public func read(for conversation: Conversation, isAppInBackground: Bool) {
+    /// - Returns: The number of messages that were marked as read or zero if none were marked as read
+    public func read(for conversation: Conversation, isAppInBackground: Bool) -> Int {
 
-        // Only send receipt if not Group and App is in foreground
+        // Only send receipt if not Group
         guard let messages = entityManager.entityFetcher.unreadMessages(for: conversation) as? [BaseMessage] else {
-            return
+            return 0
         }
 
         return read(for: messages, in: conversation, isAppInBackground: isAppInBackground)
@@ -144,11 +145,11 @@ public protocol UnreadMessagesProtocol: UnreadMessagesProtocolObjc {
         for messages: [BaseMessage],
         in conversation: Conversation,
         isAppInBackground: Bool
-    ) {
+    ) -> Int {
         // Only send receipt if not Group and App is in foreground
         guard !isAppInBackground else {
             DDLogVerbose("App is not in foreground do not mark as read.")
-            return
+            return 0
         }
 
         // Unread messages are only incoming messages
@@ -163,7 +164,7 @@ public protocol UnreadMessagesProtocol: UnreadMessagesProtocolObjc {
         }
 
         guard !unreadMessages.isEmpty else {
-            return
+            return 0
         }
 
         // Update message read
@@ -188,6 +189,8 @@ public protocol UnreadMessagesProtocol: UnreadMessagesProtocolObjc {
                 onCompletion: nil
             )
         }
+        
+        return unreadMessages.count
     }
 
     private func updateMessageRead(messages: [BaseMessage]) {

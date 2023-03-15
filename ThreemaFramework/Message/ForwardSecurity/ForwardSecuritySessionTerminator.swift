@@ -31,7 +31,7 @@ public class ForwardSecuritySessionTerminator {
         self.store = store ?? newStore
     }
     
-    public func terminateAllSessions(with contact: Contact) throws {
+    public func terminateAllSessions(with contact: ContactEntity) throws {
         while let session = try store.bestDHSession(
             myIdentity: businessInjector.myIdentityStore.identity,
             peerIdentity: contact.identity

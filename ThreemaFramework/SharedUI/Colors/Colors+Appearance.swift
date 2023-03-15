@@ -41,9 +41,9 @@ extension Colors {
         update(searchBar: UISearchBar.appearance())
         
         // MARK: UIView
-        UIView.appearance(whenContainedInInstancesOf: [UIAlertController.self]).tintColor = Colors.primary
-        UIView.appearance(whenContainedInInstancesOf: [UIDocumentMenuViewController.self]).tintColor = Colors.primary
-        UIView.appearance(whenContainedInInstancesOf: [UIWindow.self, UIView.self]).tintColor = Colors.primary
+        UIView.appearance(whenContainedInInstancesOf: [UIAlertController.self]).tintColor = .primary
+        UIView.appearance(whenContainedInInstancesOf: [UIDocumentMenuViewController.self]).tintColor = .primary
+        UIView.appearance(whenContainedInInstancesOf: [UIWindow.self, UIView.self]).tintColor = .primary
                 
         // MARK: UITableView
         update(tableView: UITableView.appearance())
@@ -52,7 +52,7 @@ extension Colors {
         update(cell: UITableViewCell.appearance())
         
         // MARK: UIButton
-        UIButton.appearance(whenContainedInInstancesOf: [UIDocumentMenuViewController.self]).tintColor = Colors.primary
+        UIButton.appearance(whenContainedInInstancesOf: [UIDocumentMenuViewController.self]).tintColor = .primary
                 
         // MARK: UILabel
         // Do not change it for cells, because cells have their own appearance
@@ -60,7 +60,7 @@ extension Colors {
             
         // MARK: UITextView
         UITextView.appearance().textColor = Colors.text
-        UITextView.appearance().tintColor = Colors.primary
+        UITextView.appearance().tintColor = .primary
         UITextView.appearance(whenContainedInInstancesOf: [PageContentViewController.self]).textColor = Colors.white
 //        UITextView.appearance(whenContainedInInstancesOf: [PageContentViewController.self]).keyboardAppearance = .dark
         
@@ -73,12 +73,12 @@ extension Colors {
         update(switchAppearance: UISwitch.appearance())
         
         // MARK: UIBarButtonItem
-        UIBarButtonItem.appearance().tintColor = Colors.primary
+        UIBarButtonItem.appearance().tintColor = .primary
         UIBarButtonItem.appearance(whenContainedInInstancesOf: [UISearchBar.self])
-            .setTitleTextAttributes([.foregroundColor: Colors.primary], for: .normal)
+            .setTitleTextAttributes([.foregroundColor: UIColor.primary], for: .normal)
         
         // MARK: UIProgressView
-        UIProgressView.appearance().tintColor = Colors.primary
+        UIProgressView.appearance().tintColor = .primary
                
         // MARK: UIActivityIndicatorView
         UIActivityIndicatorView.appearance().color = Colors.text
@@ -97,7 +97,7 @@ public extension Colors {
             }
             
             textField.textColor = Colors.text
-            textField.tintColor = Colors.primary
+            textField.tintColor = .primary
             
             if let placeholder = textField.attributedPlaceholder {
                 let p = NSMutableAttributedString(attributedString: placeholder)
@@ -118,12 +118,12 @@ public extension Colors {
                 textView.keyboardAppearance = .dark
             }
             textView.textColor = Colors.text
-            textView.tintColor = Colors.primary
+            textView.tintColor = .primary
         }
     }
     
     @objc class func update(tableView: UITableView) {
-        tableView.sectionIndexColor = Colors.primary
+        tableView.sectionIndexColor = .primary
         tableView.separatorInsetReference = .fromAutomaticInsets
     }
     
@@ -138,7 +138,7 @@ public extension Colors {
         else if cell.accessibilityTraits == .button, cell.accessoryType != .disclosureIndicator,
                 cell.accessoryType != .detailButton,
                 !(cell.accessoryView?.isKind(of: UISwitch.self) ?? false) {
-            textColor = Colors.primary
+            textColor = .primary
             detailTextColor = Colors.textLight
         }
         
@@ -149,7 +149,7 @@ public extension Colors {
         if let detailTextLabel = cell.detailTextLabel {
             detailTextLabel.textColor = detailTextColor
         }
-        cell.tintColor = Colors.primary
+        cell.tintColor = .primary
     }
     
     /// Check if a call or web session is active and return the correct appearance
@@ -195,7 +195,7 @@ public extension Colors {
     }
             
     @objc class func update(navigationBar: UINavigationBar) {
-        navigationBar.tintColor = Colors.primary
+        navigationBar.tintColor = .primary
         navigationBar.barTintColor = colorForBarTint()
 
         switch theme {
@@ -209,7 +209,7 @@ public extension Colors {
     }
         
     @objc class func update(tabBar: UITabBar) {
-        tabBar.tintColor = Colors.primary
+        tabBar.tintColor = .primary
         tabBar.isTranslucent = true
         tabBar.isOpaque = false
 
@@ -228,12 +228,12 @@ public extension Colors {
     }
     
     @objc class func update(toolBar: UIToolbar) {
-        toolBar.tintColor = Colors.primary
+        toolBar.tintColor = .primary
         toolBar.barTintColor = Colors.backgroundToolbar
     }
     
     @objc class func update(window: UIWindow) {
-        window.tintColor = Colors.primary
+        window.tintColor = .primary
         
         if !UserSettings.shared().useSystemTheme, window.overrideUserInterfaceStyle == .unspecified {
             window.overrideUserInterfaceStyle = theme == .dark ? .dark : .light
@@ -259,13 +259,13 @@ public extension Colors {
         searchBar.isTranslucent = true
         
         UIBarButtonItem.appearance(whenContainedInInstancesOf: [UISearchBar.self])
-            .setTitleTextAttributes([.foregroundColor: Colors.primary], for: .normal)
+            .setTitleTextAttributes([.foregroundColor: UIColor.primary], for: .normal)
         
         searchBar.searchTextField.textColor = Colors.text
     }
     
     @objc class func update(switchAppearance: UISwitch) {
-        switchAppearance.onTintColor = Colors.primary
+        switchAppearance.onTintColor = .primary
     }
         
     @objc class func setTextColor(_ color: UIColor, in parentView: UIView) {

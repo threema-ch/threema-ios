@@ -30,17 +30,35 @@ public enum ThreemaProtocol {
     public static let ballotIDLength = Int(kBallotIdLen)
     public static let deviceIDLength = Int(kDeviceIdLen)
     
-    // kNonce_1[]
+    /// kNonce_1[]
     static let nonce01 = Data([
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01,
     ])
     
-    // kNonce_2[]
+    /// kNonce_2[]
     static let nonce02 = Data([
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02,
     ])
+    
+    /// Used for blobs in local note groups
+    static let nonUploadedBlobID = Data(BytesUtility.padding([], pad: 0, length: blobIDLength))
+}
+
+public extension ForwardSecurityMode {
+    var localizedLabel: String {
+        switch self {
+        case .none:
+            return BundleUtil.localizedString(forKey: "forward_security_none")
+        case .twoDH:
+            return BundleUtil.localizedString(forKey: "forward_security_2dh")
+        case .fourDH:
+            return BundleUtil.localizedString(forKey: "forward_security_4dh")
+        @unknown default:
+            return BundleUtil.localizedString(forKey: "forward_security_none")
+        }
+    }
 }

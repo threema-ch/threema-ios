@@ -45,6 +45,7 @@ import PromiseKit
 
     @objc func downloadVideoThumbnail(
         videoMessageID: Data,
+        in conversationManagedObjectID: NSManagedObjectID,
         thumbnailBlobID: Data,
         origin: BlobOrigin,
         maxBytesToDecrypt: Int,
@@ -55,6 +56,7 @@ import PromiseKit
             race(
                 downloadVideoThumbnail(
                     videoMessageID: videoMessageID,
+                    in: conversationManagedObjectID,
                     origin: origin,
                     thumbnailBlobID: thumbnailBlobID,
                     maxBytesToDecrypt: maxBytesToDecrypt
@@ -71,6 +73,7 @@ import PromiseKit
         else {
             downloadVideoThumbnail(
                 videoMessageID: videoMessageID,
+                in: conversationManagedObjectID,
                 origin: origin,
                 thumbnailBlobID: thumbnailBlobID,
                 maxBytesToDecrypt: maxBytesToDecrypt
@@ -86,6 +89,7 @@ import PromiseKit
     
     func downloadVideoThumbnail(
         videoMessageID: Data,
+        in conversationManagedObjectID: NSManagedObjectID,
         origin: BlobOrigin,
         thumbnailBlobID: Data,
         maxBytesToDecrypt: Int
@@ -105,10 +109,14 @@ import PromiseKit
                     seal.reject(VideoMessageProcessorError.downloadFailed(message: "Download video thumbnail missing."))
                     return
                 }
-
+                
                 self.entityManager.performSyncBlockAndSafe {
-                    guard let msg = self.entityManager.entityFetcher
-                        .message(with: videoMessageID) as? VideoMessageEntity
+                    guard let conversation = self.entityManager.entityFetcher
+                        .existingObject(with: conversationManagedObjectID) as? Conversation,
+                        let msg = self.entityManager.entityFetcher.message(
+                            with: videoMessageID,
+                            conversation: conversation
+                        ) as? VideoMessageEntity
                     else {
                         seal.reject(
                             VideoMessageProcessorError

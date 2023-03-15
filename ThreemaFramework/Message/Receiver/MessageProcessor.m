@@ -52,7 +52,7 @@
 #import "ContactRequestPhotoMessage.h"
 #import "GroupDeletePhotoMessage.h"
 #import "UnknownTypeMessage.h"
-#import "Contact.h"
+#import "ContactEntity.h"
 #import "ContactStore.h"
 #import "Conversation.h"
 #import "ImageData.h"
@@ -171,8 +171,8 @@ static NSMutableOrderedSet *pendingGroupMessages;
                     adapter(nil, nil);
                     return;
                 } else {
-                    if ([entityManager.entityFetcher isMessageAlreadyInDb:amsg]) {
-                        NSString *errorDescription = @"Message already in database";
+                    if ([nonceGuard isProcessedWithMessage:amsg isReflected:NO]) {
+                        NSString *errorDescription = @"Nonce already in database";
                         if ([amsg isKindOfClass:[BoxTextMessage class]] || [amsg isKindOfClass:[GroupTextMessage class]]) {
                             [[ValidationLogger sharedValidationLogger] logBoxedMessage:boxmsg isIncoming:YES description:errorDescription];
                         } else {
@@ -184,24 +184,10 @@ static NSMutableOrderedSet *pendingGroupMessages;
                         adapter(nil, nil);
                         return;
                     } else {
-                        if ([nonceGuard isProcessedWithMessage:amsg isReflected:NO]) {
-                            NSString *errorDescription = @"Nonce already in database";
-                            if ([amsg isKindOfClass:[BoxTextMessage class]] || [amsg isKindOfClass:[GroupTextMessage class]]) {
-                                [[ValidationLogger sharedValidationLogger] logBoxedMessage:boxmsg isIncoming:YES description:errorDescription];
-                            } else {
-                                [[ValidationLogger sharedValidationLogger] logSimpleMessage:amsg isIncoming:YES description:errorDescription];
-                            }
-
-                            // Do not process message, send server ack
-                            [messageProcessorDelegate incomingMessageFailed:boxmsg];
-                            adapter(nil, nil);
-                            return;
+                        if ([amsg isKindOfClass:[BoxTextMessage class]] || [amsg isKindOfClass:[GroupTextMessage class]]) {
+                            [[ValidationLogger sharedValidationLogger] logBoxedMessage:boxmsg isIncoming:YES description:nil];
                         } else {
-                            if ([amsg isKindOfClass:[BoxTextMessage class]] || [amsg isKindOfClass:[GroupTextMessage class]]) {
-                                [[ValidationLogger sharedValidationLogger] logBoxedMessage:boxmsg isIncoming:YES description:nil];
-                            } else {
-                                [[ValidationLogger sharedValidationLogger] logSimpleMessage:amsg isIncoming:YES description:nil];
-                            }
+                            [[ValidationLogger sharedValidationLogger] logSimpleMessage:amsg isIncoming:YES description:nil];
                         }
                     }
                 }
@@ -232,12 +218,6 @@ static NSMutableOrderedSet *pendingGroupMessages;
         return;
     }
     
-    if ([entityManager.entityFetcher isMessageAlreadyInDb:amsg]) {
-        DDLogInfo(@"Message ID %@ from %@ already in database", amsg.messageId, amsg.fromIdentity);
-        onCompletion(nil);
-        return;
-    }
-    
     if ([nonceGuard isProcessedWithMessage:amsg isReflected:NO]) {
         DDLogInfo(@"Message nonce for %@ already in database", amsg.messageId);
         onCompletion(nil);
@@ -246,7 +226,7 @@ static NSMutableOrderedSet *pendingGroupMessages;
     
     /* Find contact for message */
     
-    Contact *contact = [entityManager.entityFetcher contactForId: amsg.fromIdentity];
+    ContactEntity *contact = [entityManager.entityFetcher contactForId: amsg.fromIdentity];
     if (contact == nil) {
         /* This should never happen, as without an entry in the contacts database, we wouldn't have
          been able to decrypt this message in the first place (no sender public key) */
@@ -337,34 +317,52 @@ Process incoming message.
 @param onError: Error handler
 */
 - (void)processIncomingMessage:(AbstractMessage*)amsg onCompletion:(void(^ _Nonnull)(id<MessageProcessorDelegate> _Nullable delegate))onCompletion onError:(void(^ _Nonnull)(NSError *err))onError {
-    
-    Conversation *conversation = [self preprocessStorableMessage:amsg];
+
+    ContactEntity *sender;
+    ContactEntity *receiver;
+    __block Conversation *conversation = [entityManager existingConversationSenderReceiverFor:amsg sender:&sender receiver:&receiver];
+
+    if (sender == nil) {
+        onError([ThreemaError threemaError:@"Sender not found as contact"]);
+        return;
+    }
+
+    if (conversation == nil) {
+        [entityManager performSyncBlockAndSafe:^{
+            conversation = [entityManager conversationForContact:sender createIfNotExisting:[amsg canCreateConversation]];
+        }];
+    }
+
     if ([amsg needsConversation] && conversation == nil) {
         onCompletion(nil);
         return;
     }
-    
+
     if ([amsg isKindOfClass:[BoxTextMessage class]]) {
-        if ([self isAlreadyProcessedMessage:amsg onError:onError]) {
+        TextMessage *message = (TextMessage *)[entityManager getOrCreateMessageFor:amsg sender:sender conversation:conversation thumbnail:nil];
+        if (message == nil) {
+            onError([ThreemaError threemaError:@"Could not find/create text message"]);
             return;
         }
-        TextMessage *message = [entityManager.entityCreator textMessageFromBox: amsg];
+
         [self finalizeMessage:message inConversation:conversation fromBoxMessage:amsg onCompletion:^{
             onCompletion(nil);
         }];
     } else if ([amsg isKindOfClass:[BoxImageMessage class]]) {
-        [self processIncomingImageMessage:(BoxImageMessage *)amsg conversation:conversation onCompletion:^{
+        [self processIncomingImageMessage:(BoxImageMessage *)amsg sender:sender conversation:conversation onCompletion:^{
             onCompletion(nil);
         } onError:onError];
     } else if ([amsg isKindOfClass:[BoxVideoMessage class]]) {
-        [self processIncomingVideoMessage:(BoxVideoMessage*)amsg conversation:conversation onCompletion:^{
+        [self processIncomingVideoMessage:(BoxVideoMessage*)amsg sender:sender conversation:conversation onCompletion:^{
             onCompletion(nil);
         } onError:onError];
     } else if ([amsg isKindOfClass:[BoxLocationMessage class]]) {
-        if ([self isAlreadyProcessedMessage:amsg onError:onError]) {
+        LocationMessage *message = (LocationMessage *)[entityManager getOrCreateMessageFor:amsg sender:sender conversation:conversation thumbnail:nil];
+        if (message == nil) {
+            onError([ThreemaError threemaError:@"Could not find/create location message"]);
             return;
         }
-        LocationMessage *message = [entityManager.entityCreator locationMessageFromBox:(BoxLocationMessage*)amsg];
+
         [self finalizeMessage:message inConversation:conversation fromBoxMessage:amsg onCompletion:^{
             [self resolveAddressFor:message]
                 .thenInBackground(^{
@@ -372,17 +370,16 @@ Process incoming message.
             });
         }];
     } else if ([amsg isKindOfClass:[BoxAudioMessage class]]) {
-        if ([self isAlreadyProcessedMessage:amsg onError:onError]) {
+        AudioMessageEntity *message = (AudioMessageEntity *)[entityManager getOrCreateMessageFor:amsg sender:sender conversation:conversation thumbnail:nil];
+        if (message == nil) {
+            onError([ThreemaError threemaError:@"Could not find/create audio message"]);
             return;
         }
-        AudioMessageEntity *message = [entityManager.entityCreator audioMessageEntityFromBox:(BoxAudioMessage*) amsg];
+
         [self finalizeMessage:message inConversation:conversation fromBoxMessage:amsg onCompletion:^{
             onCompletion(nil);
         }];
     } else if ([amsg isKindOfClass:[DeliveryReceiptMessage class]]) {
-        if ([self isAlreadyProcessedMessage:amsg onError:onError]) {
-            return;
-        }
         [self processIncomingDeliveryReceipt:(DeliveryReceiptMessage*)amsg onCompletion:^{
             onCompletion(nil);
         }];
@@ -390,14 +387,10 @@ Process incoming message.
         [self processIncomingTypingIndicator:(TypingIndicatorMessage*)amsg];
         onCompletion(nil);
     } else if ([amsg isKindOfClass:[BoxBallotCreateMessage class]]) {
-        if ([self isAlreadyProcessedMessage:amsg onError:onError]) {
-            return;
-        }
         BallotMessageDecoder *decoder = [[BallotMessageDecoder alloc] initWith:entityManager];
-        BallotMessage *ballotMessage = [decoder decodeCreateBallotFromBox:(BoxBallotCreateMessage *)amsg forConversation:conversation];
+        BallotMessage *ballotMessage = [decoder decodeCreateBallotFromBox:(BoxBallotCreateMessage *)amsg sender:sender conversation:conversation];
         if (ballotMessage == nil) {
-            NSError *error = [ThreemaError threemaError:@"Error parsing json for ballot create"];
-            onError(error);
+            onError([ThreemaError threemaError:@"Could not find/create audio message"]);
             return;
         }
 
@@ -405,17 +398,15 @@ Process incoming message.
             onCompletion(nil);
         }];
     } else if ([amsg isKindOfClass:[BoxBallotVoteMessage class]]) {
-        if ([self isAlreadyProcessedMessage:amsg onError:onError]) {
-            return;
-        }
+        // TODO: This could be generate duplicate system messages, if message will processed multiple (race condition)
         [self processIncomingBallotVoteMessage:(BoxBallotVoteMessage*)amsg onCompletion:^{
             onCompletion(nil);
         } onError:onError];
     } else if ([amsg isKindOfClass:[BoxFileMessage class]]) {
-        [FileMessageDecoder decodeMessageFromBox:(BoxFileMessage *)amsg forConversation:conversation isReflectedMessage:NO timeoutDownloadThumbnail:timeoutDownloadThumbnail entityManager:entityManager onCompletion:^(BaseMessage *message) {
+        [FileMessageDecoder decodeMessageFromBox:(BoxFileMessage *)amsg sender:sender conversation:conversation isReflectedMessage:NO timeoutDownloadThumbnail:timeoutDownloadThumbnail entityManager:entityManager onCompletion:^(BaseMessage *message) {
             // Do not download blob when message will processed via Notification Extension,
             // to keep notifications fast and because option automatically save to photos gallery
-            // dosen't work within Notification Extension
+            // doesn't work from Notification Extension
             if ([AppGroup getActiveType] != AppGroupTypeNotificationExtension) {
                 [self conditionallyStartLoadingFileFromMessage:(FileMessageEntity *)message];
             }
@@ -424,23 +415,14 @@ Process incoming message.
             }];
         } onError:onError];
     } else if ([amsg isKindOfClass:[ContactSetPhotoMessage class]]) {
-        if ([self isAlreadyProcessedMessage:amsg onError:onError]) {
-            return;
-        }
         [self processIncomingContactSetPhotoMessage:(ContactSetPhotoMessage *)amsg onCompletion:^{
             onCompletion(nil);
         } onError:onError];
     } else if ([amsg isKindOfClass:[ContactDeletePhotoMessage class]]) {
-        if ([self isAlreadyProcessedMessage:amsg onError:onError]) {
-            return;
-        }
         [self processIncomingContactDeletePhotoMessage:(ContactDeletePhotoMessage *)amsg onCompletion:^{
             onCompletion(nil);
         } onError:onError];
     } else if ([amsg isKindOfClass:[ContactRequestPhotoMessage class]]) {
-        if ([self isAlreadyProcessedMessage:amsg onError:onError]) {
-            return;
-        }
         [self processIncomingContactRequestPhotoMessage:(ContactRequestPhotoMessage *)amsg onCompletion:^{
             onCompletion(nil);
         }];
@@ -460,17 +442,6 @@ Process incoming message.
         onError([ThreemaError threemaError:@"Invalid message class"]);
     }
 }
-
-- (Conversation*)preprocessStorableMessage:(AbstractMessage*)msg {
-    Contact *contact = [entityManager.entityFetcher contactForId: msg.fromIdentity];
-    
-    /* Try to find an existing Conversation for the same contact */
-    // check if type allow to create the conversation
-    Conversation *conversation = [entityManager conversationForContact: contact createIfNotExisting:[msg canCreateConversation]];
-
-    return conversation;
-}
-
 
 - (void)processIncomingGroupMessage:(AbstractGroupMessage * _Nonnull)amsg onCompletion:(void(^ _Nonnull)(void))onCompletion onError:(void(^ _Nonnull)(NSError * error))onError {
     
@@ -504,21 +475,24 @@ Process incoming message.
             onCompletion();
             return;
         }
-        // messages not handled by GroupProcessor, e.g. messages that can be processed after delayed group create
-        Conversation *conversation = groupProcessor.conversation;
 
+        // messages not handled by GroupProcessor, e.g. messages that can be processed after delayed group create
+        ContactEntity *sender;
+        ContactEntity *receiver;
+        Conversation *conversation = [entityManager existingConversationSenderReceiverFor:amsg sender:&sender receiver:&receiver];
+
+        if (sender == nil) {
+            onError([ThreemaError threemaError:@"Sender not found as contact"]);
+            return;
+        }
+
+        // Conversation must be there at this time, should be created with creation of the group
         if (conversation == nil) {
             onCompletion();
             return;
         }
-        
-        Contact *sender = [entityManager.entityFetcher contactForId: amsg.fromIdentity];
-        
-        if ([amsg isKindOfClass:[GroupRenameMessage class]]) {
-            if ([self isAlreadyProcessedMessage:amsg onError:onError]) {
-                return;
-            }
 
+        if ([amsg isKindOfClass:[GroupRenameMessage class]]) {
             GroupManager *groupManager = [[GroupManager alloc] initWithEntityManager:entityManager];
             [groupManager setNameObjcWithGroupID:amsg.groupId creator:amsg.groupCreator name:((GroupRenameMessage *)amsg).name systemMessageDate:amsg.date send:YES]
                 .thenInBackground(^{
@@ -528,16 +502,8 @@ Process incoming message.
                     onError(error);
                 });
         } else if ([amsg isKindOfClass:[GroupSetPhotoMessage class]]) {
-            if ([self isAlreadyProcessedMessage:amsg onError:onError]) {
-                return;
-            }
-
             [self processIncomingGroupSetPhotoMessage:(GroupSetPhotoMessage*)amsg onCompletion:onCompletion onError:onError];
         } else if ([amsg isKindOfClass:[GroupDeletePhotoMessage class]]) {
-            if ([self isAlreadyProcessedMessage:amsg onError:onError]) {
-                return;
-            }
-
             GroupManager *groupManager = [[GroupManager alloc] initWithEntityManager:entityManager];
             [groupManager deletePhotoObjcWithGroupID:amsg.groupId creator:amsg.groupCreator sentDate:[amsg date] send:NO]
                 .thenInBackground(^{
@@ -548,70 +514,57 @@ Process incoming message.
                     onError(error);
                 });
         } else if ([amsg isKindOfClass:[GroupTextMessage class]]) {
-            if ([self isAlreadyProcessedMessage:amsg onError:onError]) {
+            TextMessage *message = (TextMessage *)[entityManager getOrCreateMessageFor:amsg sender:sender conversation:conversation thumbnail:nil];
+            if (message == nil) {
+                onError([ThreemaError threemaError:@"Could not find/create text message"]);
                 return;
             }
-            TextMessage *message = [entityManager.entityCreator textMessageFromGroupBox: (GroupTextMessage *)amsg];
+
             [self finalizeGroupMessage:message inConversation:conversation fromBoxMessage:amsg sender:sender onCompletion:onCompletion];
         } else if ([amsg isKindOfClass:[GroupLocationMessage class]]) {
-            if ([self isAlreadyProcessedMessage:amsg onError:onError]) {
+            LocationMessage *message = (LocationMessage *)[entityManager getOrCreateMessageFor:amsg sender:sender conversation:conversation thumbnail:nil];
+            if (message == nil) {
+                onError([ThreemaError threemaError:@"Could not find/create location message"]);
                 return;
             }
-            LocationMessage *message = [entityManager.entityCreator locationMessageFromGroupBox:(GroupLocationMessage *)amsg];
-            
-            BaseMessage *dbMessage = [[entityManager entityFetcher] existingObjectWithID:message.objectID];
-            Conversation *dbConversation = [[entityManager entityFetcher] existingObjectWithID:conversation.objectID];
-            Contact *dbSender = [[entityManager entityFetcher] existingObjectWithID:sender.objectID];
-            if (dbMessage == nil || dbConversation == nil || dbSender == nil) {
-                NSError *error = [ThreemaError threemaError:@"Could not fetch needed values to finalize group location message."];
-                onError(error);
-                return;
-            }
-            
-            [self finalizeGroupMessage:dbMessage inConversation:dbConversation fromBoxMessage:amsg sender:dbSender onCompletion:^{
+
+            [self finalizeGroupMessage:message inConversation:conversation fromBoxMessage:amsg sender:sender onCompletion:^{
                 [self resolveAddressFor:message]
                     .thenInBackground(^{
                     onCompletion();
                 });
             }];
         } else if ([amsg isKindOfClass:[GroupImageMessage class]]) {
-            [self processIncomingImageMessage:(GroupImageMessage *)amsg conversation:conversation onCompletion:onCompletion onError:onError];
+            [self processIncomingImageMessage:(GroupImageMessage *)amsg sender:sender conversation:conversation onCompletion:onCompletion onError:onError];
         } else if ([amsg isKindOfClass:[GroupVideoMessage class]]) {
-            [self processIncomingVideoMessage:(GroupVideoMessage*)amsg conversation:conversation onCompletion:onCompletion onError:onError];
+            [self processIncomingVideoMessage:(GroupVideoMessage*)amsg sender:sender conversation:conversation onCompletion:onCompletion onError:onError];
         } else if ([amsg isKindOfClass:[GroupAudioMessage class]]) {
-            if ([self isAlreadyProcessedMessage:amsg onError:onError]) {
+            AudioMessageEntity *message = (AudioMessageEntity *)[entityManager getOrCreateMessageFor:amsg sender:sender conversation:conversation thumbnail:nil];
+            if (message == nil) {
+                onError([ThreemaError threemaError:@"Could not find/create audio message"]);
                 return;
             }
-            AudioMessageEntity *message = [entityManager.entityCreator audioMessageEntityFromGroupBox:(GroupAudioMessage *)amsg];
+
             [self finalizeGroupMessage:message inConversation:conversation fromBoxMessage:amsg sender:sender onCompletion:onCompletion];
         } else if ([amsg isKindOfClass:[GroupBallotCreateMessage class]]) {
-            if ([self isAlreadyProcessedMessage:amsg onError:onError]) {
-                return;
-            }
             BallotMessageDecoder *decoder = [[BallotMessageDecoder alloc] initWith:entityManager];
-            BallotMessage *message = [decoder decodeCreateBallotFromGroupBox:(GroupBallotCreateMessage *)amsg forConversation:conversation];
+            BallotMessage *message = [decoder decodeCreateBallotFromGroupBox:(GroupBallotCreateMessage *)amsg sender:sender conversation:conversation];
             if (message == nil) {
-                NSError *error = [ThreemaError threemaError:@"Error parsing json for ballot create"];
-                onError(error);
+                onError([ThreemaError threemaError:@"Could not find/create ballot message"]);
                 return;
             }
             
             [self finalizeGroupMessage:message inConversation:conversation fromBoxMessage:amsg sender:sender onCompletion:onCompletion];
         } else if ([amsg isKindOfClass:[GroupBallotVoteMessage class]]) {
-            if ([self isAlreadyProcessedMessage:amsg onError:onError]) {
-                return;
-            }
+            // TODO: This could be generate duplicate system messages, if message will processed multiple (race condition)
             [self processIncomingGroupBallotVoteMessage:(GroupBallotVoteMessage*)amsg onCompletion:onCompletion onError:onError];
         } else if ([amsg isKindOfClass:[GroupFileMessage class]]) {
-            [FileMessageDecoder decodeGroupMessageFromBox:(GroupFileMessage *)amsg forConversation:conversation isReflectedMessage:NO timeoutDownloadThumbnail:timeoutDownloadThumbnail entityManager:entityManager onCompletion:^(BaseMessage *message) {
+            [FileMessageDecoder decodeGroupMessageFromBox:(GroupFileMessage *)amsg sender:sender conversation:conversation isReflectedMessage:NO timeoutDownloadThumbnail:timeoutDownloadThumbnail entityManager:entityManager onCompletion:^(BaseMessage *message) {
                 [self finalizeGroupMessage:message inConversation:conversation fromBoxMessage:amsg sender:sender onCompletion:onCompletion];
             } onError:^(NSError *err) {
                 onError(err);
             }];
         } else if ([amsg isKindOfClass:[GroupDeliveryReceiptMessage class]]) {
-            if ([self isAlreadyProcessedMessage:amsg onError:onError]) {
-                return;
-            }
             [self processIncomingGroupDeliveryReceipt:(GroupDeliveryReceiptMessage*)amsg onCompletion:onCompletion];
         } else {
             onError([ThreemaError threemaError:@"Invalid message class"]);
@@ -633,234 +586,148 @@ Process incoming message.
     onCompletion(unwrappedMessage);
 }
 
-- (void)appendNewMessage:(BaseMessage *)message toConversation:(Conversation *)conversation fromBoxMessage:(AbstractMessage*)boxMessage {
-    [entityManager performSyncBlockAndSafe:^{
-        message.conversation = conversation;
-        if (message != nil) {
-            conversation.lastMessage = message;
-            conversation.lastUpdate = [NSDate date];
-        }
-        conversation.conversationVisibility = ConversationVisibilityDefault;
-
-        [nonceGuard processedWithMessage:boxMessage isReflected:NO error:nil];
-    }];
-
-    // Refault managed object to release memory, because Core Data loads `Conversation.messages` of conversation when assign conversation
-    [conversation.managedObjectContext refreshObject:conversation mergeChanges:NO];
-}
-
 - (void)finalizeMessage:(BaseMessage*)message inConversation:(Conversation*)conversation fromBoxMessage:(AbstractMessage*)boxMessage onCompletion:(void(^_Nonnull)(void))onCompletion {
     if ([ThreemaUtility supportsForwardSecurity]) {
         int systemMessageType = 0;
-        
+        NSNumber *contactForwardSecurityState = @0;
+
         if (message.forwardSecurityMode.intValue == kForwardSecurityModeNone &&
             conversation.contact.forwardSecurityState.intValue == kForwardSecurityStateOn) {
             // Contact has sent FS messages before, but this is not an FS message. Warn the user.
             systemMessageType = kSystemMessageFsMessageWithoutForwardSecurity;
-            conversation.contact.forwardSecurityState = [NSNumber numberWithInt:kForwardSecurityStateOff];
+            contactForwardSecurityState = [NSNumber numberWithInt:kForwardSecurityStateOff];
         } else if (message.forwardSecurityMode.intValue == kForwardSecurityModeFourDH &&
                    conversation.contact.forwardSecurityState.intValue == kForwardSecurityStateOff) {
             // Contact has sent the first 4DH message
             systemMessageType = conversation.contact.forwardSecurityEnabled.boolValue ? kSystemMessageFsSessionEstablished : kSystemMessageFsSessionEstablishedRcvd;
-            conversation.contact.forwardSecurityState = [NSNumber numberWithInt:kForwardSecurityStateOn];
+            contactForwardSecurityState = [NSNumber numberWithInt:kForwardSecurityStateOn];
         }
-        
+
         if (systemMessageType != 0) {
-            SystemMessage *systemMessage = [entityManager.entityCreator systemMessageForConversation:conversation];
-            systemMessage.type = [NSNumber numberWithInt:systemMessageType];
-            systemMessage.remoteSentDate = [NSDate date];
-            conversation.lastMessage = systemMessage;
-            conversation.lastUpdate = [NSDate date];
+            [entityManager performSyncBlockAndSafe:^{
+                conversation.contact.forwardSecurityState = contactForwardSecurityState;
+
+                SystemMessage *systemMessage = [entityManager.entityCreator systemMessageForConversation:conversation];
+                systemMessage.type = [NSNumber numberWithInt:systemMessageType];
+                systemMessage.remoteSentDate = [NSDate date];
+                conversation.lastMessage = systemMessage;
+                conversation.lastUpdate = [NSDate date];
+            }];
         }
-        
-        // Changes will be saved with appendNewMessage below
     }
-    
-    [self appendNewMessage:message toConversation:conversation fromBoxMessage:boxMessage];
+
     [messageProcessorDelegate incomingMessageChanged:message fromIdentity:boxMessage.fromIdentity];
     onCompletion();
 }
 
-- (void)finalizeGroupMessage:(BaseMessage*)message inConversation:(Conversation*)conversation fromBoxMessage:(AbstractGroupMessage*)boxMessage sender:(Contact *)sender onCompletion:(void(^_Nonnull)(void))onCompletion {
-    message.sender = sender;
-    [self appendNewMessage:message toConversation:conversation fromBoxMessage:boxMessage];
-
-    // Refault managed object to release memory, because Core Data loads `Contact.messages` of sender when assign sender
-    [sender.managedObjectContext refreshObject:sender mergeChanges:NO];
-
+- (void)finalizeGroupMessage:(BaseMessage*)message inConversation:(Conversation*)conversation fromBoxMessage:(AbstractGroupMessage*)boxMessage sender:(ContactEntity *)sender onCompletion:(void(^_Nonnull)(void))onCompletion {
     [messageProcessorDelegate incomingMessageChanged:message fromIdentity:boxMessage.fromIdentity];
     onCompletion();
 }
 
 - (void)conditionallyStartLoadingFileFromMessage:(FileMessageEntity*)message {
-    if ([UTIConverter isGifMimeType:message.mimeType] == YES) {
-        // only load if not too big
-        if (message.fileSize.floatValue > 1*1024*1024) {
-            return;
-        }
-        
-        AnimGifMessageLoader *loader = [[AnimGifMessageLoader alloc] init];
-        [loader startWithMessage:message onCompletion:^(BaseMessage *message) {
-            DDLogInfo(@"File message blob load completed");
-        } onError:^(NSError *error) {
-            DDLogError(@"File message blob load failed with error: %@", error);
-        }];
-    } else {
-        if ([message renderFileImageMessage] == true || [message renderFileAudioMessage] == true) {
-            BlobMessageLoader *loader = [[BlobMessageLoader alloc] init];
-            [loader startWithMessage:message onCompletion:^(BaseMessage *message) {
-                DDLogInfo(@"File message blob load completed");
-            } onError:^(NSError *error) {
-                DDLogError(@"File message blob load failed with error: %@", error);
-            }];            
-        }
-    }
+    BlobManagerObjcWrapper *manager = [[BlobManagerObjcWrapper alloc] init];
+    [manager autoSyncBlobsFor:message.objectID];
 }
 
-- (void)processIncomingImageMessage:(AbstractMessage *)amsg conversation:(Conversation *)conversation onCompletion:(void(^ _Nonnull)(void))onCompletion onError:(void(^ _Nonnull)(NSError *err))onError {
+- (void)processIncomingImageMessage:(nonnull AbstractMessage *)amsg sender:(nonnull ContactEntity *)sender conversation:(nonnull Conversation *)conversation onCompletion:(void(^ _Nonnull)(void))onCompletion onError:(void(^ _Nonnull)(NSError *err))onError {
     
-    assert([amsg isKindOfClass:[BoxImageMessage class]] || [amsg isKindOfClass:[GroupImageMessage class]]);
+    NSAssert([amsg isKindOfClass:[BoxImageMessage class]] || [amsg isKindOfClass:[GroupImageMessage class]], @"Abstract message type should be BoxImageMessage or GroupImageMessage");
     
     if ([amsg isKindOfClass:[BoxImageMessage class]] == NO && [amsg isKindOfClass:[GroupImageMessage class]] == NO) {
         onError([ThreemaError threemaError:@"Wrong message type, must be BoxImageMessage or GroupImageMessage"]);
         return;
     }
-    
+
+    BOOL isGroupMessage = [amsg isKindOfClass:[GroupImageMessage class]];
+
+    ImageMessageEntity *msg = (ImageMessageEntity *)[entityManager getOrCreateMessageFor:amsg sender:sender conversation:conversation thumbnail:nil];
+    if (msg == nil) {
+        onError([ThreemaError threemaError:@"Create image message failed"]);
+        return;
+    }
+
     if (conversation == nil) {
         onError([ThreemaError threemaError:@"Parameter 'conversation' should be not nil"]);
         return;
     }
-    
-    BOOL isGroupMessage = [amsg isKindOfClass:[GroupImageMessage class]];
 
-    Contact *sender = isGroupMessage == NO ? [conversation contact] : [entityManager.entityFetcher contactForId:amsg.fromIdentity];
-    if (sender == nil) {
-        onError([ThreemaError threemaError:@"Could not process image message, sender is missing"]);
-        return;
-    }
+    [messageProcessorDelegate incomingMessageChanged:msg fromIdentity:[sender identity]];
 
-    if ([self isAlreadyProcessedMessage:amsg onError:onError]) {
-        return;
-    }
+    dispatch_queue_t downloadQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
 
-    __block ImageMessageEntity *msg;
-    [entityManager performSyncBlockAndSafe:^{
+    // An ImageMessage never has a local blob because all note group cabable devices send everything as FileMessage
+    BlobURL *blobUrl = [[BlobURL alloc] initWithServerConnector:[ServerConnector sharedServerConnector] userSettings:[UserSettings sharedUserSettings] queue:downloadQueue];
+    BlobDownloader *blobDownloader = [[BlobDownloader alloc] initWithBlobURL:blobUrl queue:downloadQueue];
+    ImageMessageProcessor *processor = [[ImageMessageProcessor alloc] initWithBlobDownloader:blobDownloader serverConnector:[ServerConnector sharedServerConnector] myIdentityStore:[MyIdentityStore sharedMyIdentityStore] userSettings:[UserSettings sharedUserSettings] entityManager:entityManager];
+    [processor downloadImageWithImageMessageID:msg.id in:conversation.objectID imageBlobID:msg.imageBlobId origin:BlobOriginPublic imageBlobEncryptionKey:msg.encryptionKey imageBlobNonce:msg.imageNonce senderPublicKey:sender.publicKey maxBytesToDecrypt:self->maxBytesToDecrypt timeoutDownloadThumbnail:timeoutDownloadThumbnail completion:^(NSError *error) {
+
+        if (error != nil) {
+            DDLogError(@"Could not process image message %@", error);
+        }
+
         if (isGroupMessage == NO) {
-            msg = [[entityManager entityCreator] imageMessageEntityFromBox:(BoxImageMessage *)amsg];
+            [self finalizeMessage:msg inConversation:conversation fromBoxMessage:amsg onCompletion:onCompletion];
         }
         else {
-            msg = [[entityManager entityCreator] imageMessageEntityFromGroupBox:(GroupImageMessage *)amsg];
-            msg.sender = sender;
+            [self finalizeGroupMessage:msg inConversation:conversation fromBoxMessage:(AbstractGroupMessage *)amsg sender:sender onCompletion:onCompletion];
         }
-        msg.conversation = conversation;
     }];
-     
-    if (msg != nil) {
-        [messageProcessorDelegate incomingMessageChanged:msg fromIdentity:[sender identity]];
-
-        dispatch_queue_t downloadQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
-
-        // An ImageMessage never has a local blob because all note group cabable devices send everything as FileMessage
-        BlobURL *blobUrl = [[BlobURL alloc] initWithServerConnector:[ServerConnector sharedServerConnector] userSettings:[UserSettings sharedUserSettings] queue:downloadQueue];
-        BlobDownloader *blobDownloader = [[BlobDownloader alloc] initWithBlobURL:blobUrl queue:downloadQueue];
-        ImageMessageProcessor *processor = [[ImageMessageProcessor alloc] initWithBlobDownloader:blobDownloader serverConnector:[ServerConnector sharedServerConnector] myIdentityStore:[MyIdentityStore sharedMyIdentityStore] userSettings:[UserSettings sharedUserSettings] entityManager:entityManager];
-        [processor downloadImageWithImageMessageID:msg.id imageBlobID:msg.imageBlobId origin:BlobOriginPublic imageBlobEncryptionKey:msg.encryptionKey imageBlobNonce:msg.imageNonce senderPublicKey:sender.publicKey maxBytesToDecrypt:self->maxBytesToDecrypt timeoutDownloadThumbnail:timeoutDownloadThumbnail completion:^(NSError *error) {
-
-            if (error != nil) {
-                DDLogError(@"Could not process image message %@", error);
-            }
-
-            if (isGroupMessage == NO) {
-                [self finalizeMessage:msg inConversation:conversation fromBoxMessage:amsg onCompletion:onCompletion];
-            }
-            else {
-                [self finalizeGroupMessage:msg inConversation:conversation fromBoxMessage:(AbstractGroupMessage *)amsg sender:sender onCompletion:onCompletion];
-            }
-        }];
-    }
-    else {
-        onError([ThreemaError threemaError:@"Could not process image message"]);
-        return;
-    }
 }
 
-- (void)processIncomingVideoMessage:(AbstractMessage *)amsg conversation:(Conversation *)conversation onCompletion:(void(^ _Nonnull)(void))onCompletion onError:(void(^ _Nonnull)(NSError *err))onError {
+- (void)processIncomingVideoMessage:(nonnull AbstractMessage *)amsg sender:(nonnull ContactEntity *)sender conversation:(nonnull Conversation *)conversation onCompletion:(void(^ _Nonnull)(void))onCompletion onError:(void(^ _Nonnull)(NSError *err))onError {
     
-    assert([amsg isKindOfClass:[BoxVideoMessage class]] || [amsg isKindOfClass:[GroupVideoMessage class]]);
+    NSAssert([amsg isKindOfClass:[BoxVideoMessage class]] || [amsg isKindOfClass:[GroupVideoMessage class]], @"Abstract message type should be BoxVideoMessage or GroupVideoMessage");
     
     if ([amsg isKindOfClass:[BoxVideoMessage class]] == NO && [amsg isKindOfClass:[GroupVideoMessage class]] == NO) {
         onError([ThreemaError threemaError:@"Wrong message type, must be BoxVideoMessage or GroupVideoMessage"]);
         return;
     }
-    
+
     if (conversation == nil) {
         onError([ThreemaError threemaError:@"Parameter 'conversation' should be not nil"]);
         return;
     }
     
+    VideoMessageEntity *msg = (VideoMessageEntity *)[entityManager getOrCreateMessageFor:amsg sender:sender conversation:conversation thumbnail:[UIImage imageNamed:@"Video"]];
+    if (msg == nil) {
+        onError([ThreemaError threemaError:@"Create video message failed"]);
+        return;
+    }
+
+    [messageProcessorDelegate incomingMessageChanged:msg fromIdentity:[sender identity]];
+
     BOOL isGroupMessage = [amsg isKindOfClass:[GroupVideoMessage class]];
-    
-    Contact *sender = isGroupMessage == NO ? [conversation contact] : [entityManager.entityFetcher contactForId: amsg.fromIdentity];
-    if (sender == nil) {
-        onError([ThreemaError threemaError:@"Could not process video message, sender is missing"]);
-        return;
-    }
 
-    if ([self isAlreadyProcessedMessage:amsg onError:onError]) {
-        return;
-    }
-
-    __block VideoMessageEntity *msg;
-    __block NSData *thumbnailBlobId;
-    [entityManager performSyncBlockAndSafe:^{
-        if (isGroupMessage == NO) {
-            BoxVideoMessage *videoMessage = (BoxVideoMessage *)amsg;
-            thumbnailBlobId = [videoMessage thumbnailBlobId];
-            msg = [[entityManager entityCreator] videoMessageEntityFromBox:videoMessage];
-        }
-        else {
-            GroupVideoMessage *videoMessage = (GroupVideoMessage *)amsg;
-            thumbnailBlobId = [videoMessage thumbnailBlobId];
-            msg = [[entityManager entityCreator] videoMessageEntityFromGroupBox:videoMessage];
-            msg.sender = sender;
-        }
-        msg.conversation = conversation;
-        
-        UIImage *thumbnailImage = [UIImage imageNamed:@"Video"];
-        ImageData *thumbnail = [entityManager.entityCreator imageData];
-        thumbnail.data = UIImageJPEGRepresentation(thumbnailImage, kJPEGCompressionQualityLow);
-        thumbnail.width = [NSNumber numberWithInt:thumbnailImage.size.width];
-        thumbnail.height = [NSNumber numberWithInt:thumbnailImage.size.height];
-        msg.thumbnail = thumbnail;
-    }];
-     
-    if (msg != nil) {
-        [messageProcessorDelegate incomingMessageChanged:msg fromIdentity:[sender identity]];
-
-        dispatch_queue_t downloadQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
-
-        // A VideoMessage never has a local blob because all note group capable devices send everything as FileMessage
-        BlobURL *blobUrl = [[BlobURL alloc] initWithServerConnector:[ServerConnector sharedServerConnector] userSettings:[UserSettings sharedUserSettings] queue:downloadQueue];
-        BlobDownloader *blobDownloader = [[BlobDownloader alloc] initWithBlobURL:blobUrl queue:downloadQueue];
-        VideoMessageProcessor *processor = [[VideoMessageProcessor alloc] initWithBlobDownloader:blobDownloader serverConnector:[ServerConnector sharedServerConnector] entityManager:entityManager];
-        [processor downloadVideoThumbnailWithVideoMessageID:msg.id thumbnailBlobID:thumbnailBlobId origin:BlobOriginPublic maxBytesToDecrypt:self->maxBytesToDecrypt timeoutDownloadThumbnail:self->timeoutDownloadThumbnail completion:^(NSError *error) {
-
-            if (error != nil) {
-                DDLogError(@"Error while downloading video thumbnail: %@", error);
-            }
-            
-            if (isGroupMessage == NO) {
-                [self finalizeMessage:msg inConversation:conversation fromBoxMessage:amsg onCompletion:onCompletion];
-            }
-            else {
-                [self finalizeGroupMessage:msg inConversation:conversation fromBoxMessage:(AbstractGroupMessage *)amsg sender:sender onCompletion:onCompletion];
-            }
-        }];
+    NSData *thumbnailBlobId;
+    if (isGroupMessage == NO) {
+        BoxVideoMessage *videoMessage = (BoxVideoMessage *)amsg;
+        thumbnailBlobId = [videoMessage thumbnailBlobId];
     }
     else {
-        onError([ThreemaError threemaError:@"Could not process video message"]);
-        return;
+        GroupVideoMessage *videoMessage = (GroupVideoMessage *)amsg;
+        thumbnailBlobId = [videoMessage thumbnailBlobId];
     }
+
+    dispatch_queue_t downloadQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+
+    // A VideoMessage never has a local blob because all note group capable devices send everything as FileMessage
+    BlobURL *blobUrl = [[BlobURL alloc] initWithServerConnector:[ServerConnector sharedServerConnector] userSettings:[UserSettings sharedUserSettings] queue:downloadQueue];
+    BlobDownloader *blobDownloader = [[BlobDownloader alloc] initWithBlobURL:blobUrl queue:downloadQueue];
+    VideoMessageProcessor *processor = [[VideoMessageProcessor alloc] initWithBlobDownloader:blobDownloader serverConnector:[ServerConnector sharedServerConnector] entityManager:entityManager];
+    [processor downloadVideoThumbnailWithVideoMessageID:msg.id in:conversation.objectID thumbnailBlobID:thumbnailBlobId origin:BlobOriginPublic maxBytesToDecrypt:self->maxBytesToDecrypt timeoutDownloadThumbnail:self->timeoutDownloadThumbnail completion:^(NSError *error) {
+
+        if (error != nil) {
+            DDLogError(@"Error while downloading video thumbnail: %@", error);
+        }
+
+        if (isGroupMessage == NO) {
+            [self finalizeMessage:msg inConversation:conversation fromBoxMessage:amsg onCompletion:onCompletion];
+        }
+        else {
+            [self finalizeGroupMessage:msg inConversation:conversation fromBoxMessage:(AbstractGroupMessage *)amsg sender:sender onCompletion:onCompletion];
+        }
+    }];
 }
 
 - (AnyPromise*)resolveAddressFor:(LocationMessage*)message {
@@ -1179,14 +1046,6 @@ Process incoming message.
 
 #pragma private methods
 
-- (BOOL)isAlreadyProcessedMessage:(AbstractMessage * _Nonnull)message onError:(void(^ _Nonnull)(NSError *error))onError {
-    if ([nonceGuard isProcessedWithMessage:message isReflected:NO]) {
-        onError([ThreemaError threemaError:@"Message already processed" withCode:kMessageAlreadyProcessedErrorCode]);
-        return YES;
-    }
-    return NO;
-}
-
 /// Check is the sender in the black list. If it's a group control message and the sender is on the black list, we will process the message if the group is still active on the receiver side
 /// @param amsg Decoded abstract message
 - (BOOL)isBlacklisted:(AbstractMessage *)amsg {
@@ -1218,7 +1077,7 @@ Process incoming message.
 
 - (void)changedContactWithIdentity:(NSString * _Nonnull)identity {
     [entityManager performBlockAndWait:^{
-        Contact *contact = [entityManager.entityFetcher contactForId:identity];
+        ContactEntity *contact = [entityManager.entityFetcher contactForId:identity];
         if (contact) {
             [messageProcessorDelegate changedManagedObjectID:contact.objectID];
         }

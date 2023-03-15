@@ -22,7 +22,7 @@
 #import <PromiseKit/PromiseKit.h>
 #import "UserSettings.h"
 
-@class Contact, Conversation;
+@class ContactEntity, Conversation;
 @class MediatorSyncableContacts;
 
 typedef NS_CLOSED_ENUM(NSInteger, ContactAcquaintanceLevel) {
@@ -34,7 +34,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @protocol ContactStoreProtocol <NSObject>
 
-- (nullable Contact *)contactForIdentity:(nullable NSString *)identity
+- (nullable ContactEntity *)contactForIdentity:(nullable NSString *)identity
     NS_SWIFT_NAME(contact(for:))
     DEPRECATED_MSG_ATTRIBUTE("Use EntityManager to load contact in the right database context");
 
@@ -51,7 +51,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)removeProfilePictureFlagForAllContacts;
 - (void)removeProfilePictureRequest:(NSString *)identity;
 
-- (void)addContactWithIdentity:(NSString *)identity verificationLevel:(int32_t)verificationLevel onCompletion:(void(^)(Contact * _Nullable contact, BOOL alreadyExists))onCompletion onError:(nullable void(^)(NSError *error))onError
+- (void)addContactWithIdentity:(NSString *)identity verificationLevel:(int32_t)verificationLevel onCompletion:(void(^)(ContactEntity * _Nullable contact, BOOL alreadyExists))onCompletion onError:(nullable void(^)(NSError *error))onError
     NS_SWIFT_NAME(addContact(with:verificationLevel:onCompletion:onError:));
 
 - (void)updateContactWithIdentity:(NSString * _Nonnull)identity avatar:(NSData * _Nullable)avatar firstName:(NSString * _Nullable)firstName lastName:(NSString * _Nullable)lastName;
@@ -62,7 +62,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)synchronizeAddressBookForceFullSync:(BOOL)forceFullSync ignoreMinimumInterval:(BOOL)ignoreMinimumInterval onCompletion:(nullable void(^)(BOOL addressBookAccessGranted))onCompletion onError:(nullable void(^)(NSError * _Nullable error))onError
     NS_SWIFT_NAME(synchronizeAddressBook(forceFullSync:ignoreMinimumInterval:onCompletion:onError:));
 
-- (void)reflectContact:(nullable Contact *)contact;
+- (void)reflectContact:(nullable ContactEntity *)contact NS_SWIFT_NAME(reflect(_:));
 
 - (void)reflectDeleteContact:(nullable NSString *)identity;
 
@@ -98,23 +98,23 @@ NS_ASSUME_NONNULL_BEGIN
 - (instancetype)initWithUserSettings:(id<UserSettingsProtocol>)userSettingsProtocol entityManager:(NSObject *)entityManagerObject;
 #endif
 
-- (void)addContactWithIdentity:(nullable NSString *)identity publicKey:(nullable NSData *)publicKey cnContactId:(nullable NSString *)cnContactId verificationLevel:(int32_t)verificationLevel state:(nullable NSNumber *)state type:(nullable NSNumber *)type featureMask:(nullable NSNumber *)featureMask acquaintanceLevel:(ContactAcquaintanceLevel)acquaintanceLevel alerts:(BOOL)alerts onCompletion:(nonnull void(^)(Contact * nullable))onCompletion
+- (void)addContactWithIdentity:(nullable NSString *)identity publicKey:(nullable NSData *)publicKey cnContactId:(nullable NSString *)cnContactId verificationLevel:(int32_t)verificationLevel state:(nullable NSNumber *)state type:(nullable NSNumber *)type featureMask:(nullable NSNumber *)featureMask acquaintanceLevel:(ContactAcquaintanceLevel)acquaintanceLevel alerts:(BOOL)alerts onCompletion:(nonnull void(^)(ContactEntity * nullable))onCompletion
     NS_SWIFT_NAME(addContact(with:publicKey:cnContactID:verificationLevel:state:type:featureMask:acquaintanceLevel:alerts:onCompletion:));
 
 - (AnyPromise *)addWorkContactAndUpdateFeatureMaskWithIdentity:(nonnull NSString *)identity publicKey:(nonnull NSData *)publicKey firstname:(nullable NSString *)firstname lastname:(nullable NSString *)lastname acquaintanceLevel:(ContactAcquaintanceLevel)acquaintanceLevel
     NS_SWIFT_NAME(addWorkContact(with:publicKey:firstname:lastname:acquaintanceLevel:));
-- (nullable Contact *)addWorkContactWithIdentity:(nonnull NSString *)identity publicKey:(nonnull NSData *)publicKey firstname:(nullable NSString *)firstname lastname:(nullable NSString *)lastname acquaintanceLevel:(ContactAcquaintanceLevel)acquaintanceLevel entityManager:(NSObject * _Nonnull)entityManagerObject contactSyncer:(nullable MediatorSyncableContacts *)mediatorSyncableContacts
+- (nullable ContactEntity *)addWorkContactWithIdentity:(nonnull NSString *)identity publicKey:(nonnull NSData *)publicKey firstname:(nullable NSString *)firstname lastname:(nullable NSString *)lastname acquaintanceLevel:(ContactAcquaintanceLevel)acquaintanceLevel entityManager:(NSObject * _Nonnull)entityManagerObject contactSyncer:(nullable MediatorSyncableContacts *)mediatorSyncableContacts
     NS_SWIFT_NAME(addWorkContact(with:publicKey:firstname:lastname:acquaintanceLevel:entityManager:contactSyncer:));
 
 - (void)resetImportedStatus;
 
-- (void)linkContact:(Contact *)contact toCnContactId:(NSString *)cnContactId
+- (void)linkContact:(ContactEntity *)contact toCnContactId:(NSString *)cnContactId
     NS_SWIFT_NAME(link(_:toCnContactID:));
-- (void)unlinkContact:(Contact *)contact
+- (void)unlinkContact:(ContactEntity *)contact
     NS_SWIFT_NAME(unlink(_:));
-- (void)upgradeContact:(Contact *)contact toVerificationLevel:(int32_t)verificationLevel
+- (void)upgradeContact:(ContactEntity *)contact toVerificationLevel:(int32_t)verificationLevel
     NS_SWIFT_NAME(upgrade(_:toVerificationLevel:));
-- (void)setWorkContact:(nullable Contact *)contact workContact:(BOOL)workContact;
+- (void)setWorkContact:(nullable ContactEntity *)contact workContact:(BOOL)workContact;
 
 - (void)updateNickname:(nonnull NSString *)identity nickname:(NSString *)nickname shouldReflect:(BOOL)shouldReflect;
 
@@ -137,8 +137,8 @@ NS_ASSUME_NONNULL_BEGIN
 - (nullable NSArray<NSString *> *)contactsWithFeatureMaskNil;
 - (nullable NSArray *)allContacts;
 
-- (nullable NSArray<NSDictionary<NSString *, NSString *> *> *)cnContactEmailsForContact:(Contact *)contact;
-- (nullable NSArray<NSDictionary<NSString *, NSString *> *> *)cnContactPhoneNumbersForContact:(Contact *)contact;
+- (nullable NSArray<NSDictionary<NSString *, NSString *> *> *)cnContactEmailsForContact:(ContactEntity *)contact NS_SWIFT_NAME(cnContactEmails(for:));
+- (nullable NSArray<NSDictionary<NSString *, NSString *> *> *)cnContactPhoneNumbersForContact:(ContactEntity *)contact NS_SWIFT_NAME(cnContactPhoneNumbers(for:));
 
 // Just for unit test
 #if DEBUG

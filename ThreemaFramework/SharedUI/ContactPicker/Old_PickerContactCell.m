@@ -34,7 +34,7 @@
     _threemaTypeIcon.image = [ThreemaUtilityObjC threemaTypeIcon];
 }
 
-- (void)setContact:(Contact *)contact {
+- (void)setContact:(ContactEntity *)contact {
     if (_contact != contact) {
         _contact = contact;
         
@@ -43,7 +43,7 @@
         _verificationLevelImage.image = [contact verificationLevelImageSmall];
         
         _avatarImage.image = [BundleUtil imageNamed:@"Unknown"];
-        [[AvatarMaker sharedAvatarMaker] avatarForContact:contact size:_avatarImage.frame.size.width masked:NO onCompletion:^(UIImage *avatarImage, NSString *identity) {
+        [[AvatarMaker sharedAvatarMaker] avatarForContactEntity:contact size:_avatarImage.frame.size.width masked:NO onCompletion:^(UIImage *avatarImage, NSString *identity) {
             if ([contact.identity isEqualToString:identity]) {
                 dispatch_async(dispatch_get_main_queue(), ^{
                     _avatarImage.image = avatarImage;

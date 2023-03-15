@@ -82,4 +82,15 @@ actor BlobManagerState {
     func setProgress(for objectID: NSManagedObjectID, to progress: Double) {
         objectIDProgress[objectID] = progress
     }
+    
+    /// Checks if there are any active objectIDs
+    /// - Returns: True if there are, false otherwise
+    func hasActiveObjectIDs() -> Bool {
+        !activeObjectIDs.isEmpty
+    }
+}
+
+/// Used to track if there are active syncs in a non actor isolated context
+public class BlobManagerActiveState {
+    public var hasActiveSyncs = false
 }

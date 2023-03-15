@@ -21,7 +21,15 @@
 #import <Foundation/Foundation.h>
 #import "PasswordCallback.h"
 
+@protocol RevocationKeyDelegate <NSObject>
+
+- (void)revocationKeyChanged;
+
+@end
+
 @interface RevocationKeyHandler : NSObject  <PasswordCallback>
+
+@property id<RevocationKeyDelegate> delegate;
 
 - (void)updateLastSetDateForLabel:(UILabel *)label;
 

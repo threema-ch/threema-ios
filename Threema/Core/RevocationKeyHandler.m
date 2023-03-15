@@ -65,11 +65,12 @@
                 [self showAlertWithMessage:[BundleUtil localizedStringForKey:@"revocation_request_failed"]];
             }
         }];
+        [_delegate revocationKeyChanged];
     });
 }
 
 - (void)showAlertWithMessage:(NSString *)message {
-    [UIAlertTemplate showAlertWithOwner:[[AppDelegate sharedAppDelegate] currentTopViewController] title:@"" message:message actionOk:nil];
+    [UIAlertTemplate showAlertWithOwner:[[AppDelegate sharedAppDelegate] currentTopViewController] title:message message:nil actionOk:nil];
 }
 
 - (void)updateLastSetDateForLabel:(UILabel *)label {

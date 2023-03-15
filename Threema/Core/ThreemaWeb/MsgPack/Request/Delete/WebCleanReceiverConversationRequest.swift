@@ -45,13 +45,14 @@ class WebCleanReceiverConversationRequest: WebAbstractMessage {
             let entityManager = EntityManager()
             
             if identity != nil {
-                let conversation = entityManager.entityFetcher.conversation(forIdentity: identity)
-                entityManager.performSyncBlockAndSafe {
-                    entityManager.entityDestroyer.deleteObject(object: conversation!)
+                if let conversation = entityManager.entityFetcher.conversation(forIdentity: identity) {
+                    entityManager.performSyncBlockAndSafe {
+                        entityManager.entityDestroyer.deleteObject(object: conversation)
+                    }
                 }
             }
             else if groupID != nil {
-                if let conversation = entityManager.entityFetcher.conversation(for: groupID) {
+                if let conversation = entityManager.entityFetcher.legacyConversation(for: groupID) {
                     entityManager.performSyncBlockAndSafe {
                         var imageData: Data?
                         var imageHeight: NSNumber?

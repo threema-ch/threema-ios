@@ -51,6 +51,22 @@ final class ChatViewVoiceMessageTableViewCell: ChatViewBaseTableViewCell, Measur
     weak var voiceMessageCellDelegate: ChatViewTableViewVoiceMessageCellDelegateProtocol? {
         didSet {
             waveformView.delegate = voiceMessageCellDelegate
+            
+            if let voiceMessageCellDelegate,
+               let voiceMessage = voiceMessageAndNeighbors?.message,
+               voiceMessageCellDelegate.isMessageCurrentlyPlaying(voiceMessage) {
+                voiceMessageCellDelegate.reregisterCallbacks(
+                    message: voiceMessage,
+                    progressCallback: handleProgressCallback,
+                    pauseCallback: handlePauseCallback,
+                    finishedCallback: handleFinishedCallback
+                )
+                
+                isPlaying = true
+            }
+            else {
+                isPlaying = false
+            }
         }
     }
     
@@ -101,6 +117,16 @@ final class ChatViewVoiceMessageTableViewCell: ChatViewBaseTableViewCell, Measur
         return label
     }()
     
+    private lazy var spacerView: UIView = {
+        let spacerView = UIView()
+        
+        let spacerViewWidthConstraint = spacerView.widthAnchor.constraint(equalToConstant: .greatestFiniteMagnitude)
+        spacerViewWidthConstraint.priority = .defaultLow
+        spacerViewWidthConstraint.isActive = true
+        
+        return spacerView
+    }()
+    
     // Added during up- and download to get a fixed width (with numbers up to 100%)
     private lazy var fileSizeSizingLabel: MessageMetadataTextLabel = {
         let label = MessageMetadataTextLabel()
@@ -110,7 +136,7 @@ final class ChatViewVoiceMessageTableViewCell: ChatViewBaseTableViewCell, Measur
         return label
     }()
     
-    private lazy var dateAndStateView: MessageDateAndStateView = {
+    private lazy var inlineDateAndStateView: MessageDateAndStateView = {
         let dateAndStateView = MessageDateAndStateView()
         dateAndStateView.setContentHuggingPriority(.defaultHigh, for: .horizontal)
         return dateAndStateView
@@ -119,7 +145,8 @@ final class ChatViewVoiceMessageTableViewCell: ChatViewBaseTableViewCell, Measur
     private lazy var metadataStack: UIStackView = {
         let stackView = UIStackView(arrangedSubviews: [
             fileSizeLabel,
-            dateAndStateView,
+            spacerView,
+            inlineDateAndStateView,
         ])
         
         stackView.axis = .horizontal
@@ -139,7 +166,7 @@ final class ChatViewVoiceMessageTableViewCell: ChatViewBaseTableViewCell, Measur
         view.translatesAutoresizingMaskIntoConstraints = false
         
         NSLayoutConstraint.activate([
-            view.heightAnchor.constraint(equalToConstant: ChatViewConfiguration.VoiceMessage.waveformHeight),
+            view.heightAnchor.constraint(lessThanOrEqualToConstant: ChatViewConfiguration.VoiceMessage.waveformHeight),
         ])
         
         accessibilityTraits = .allowsDirectInteraction
@@ -233,7 +260,7 @@ final class ChatViewVoiceMessageTableViewCell: ChatViewBaseTableViewCell, Measur
         return stackView
     }()
     
-    private lazy var contentAndCaptionStack: DefaultMessageContentStackView = {
+    private lazy var contentStack: DefaultMessageContentStackView = {
         let stackView = DefaultMessageContentStackView(arrangedSubviews: [
             leftSideStackView,
             mainContentStack,
@@ -267,14 +294,36 @@ final class ChatViewVoiceMessageTableViewCell: ChatViewBaseTableViewCell, Measur
         return view
     }()
     
-    private lazy var captionStackViewConstraints: [NSLayoutConstraint] = {
+    private lazy var contentStackViewConstraints: [NSLayoutConstraint] = {
         [
-            contentAndCaptionStack.topAnchor.constraint(equalTo: containerView.topAnchor),
-            contentAndCaptionStack.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
-            contentAndCaptionStack.bottomAnchor.constraint(equalTo: containerView.bottomAnchor),
-            contentAndCaptionStack.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
+            contentStack.topAnchor.constraint(equalTo: containerView.topAnchor),
+            contentStack.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
+            contentStackViewNoCaptionBottomConstraint,
+            contentStack.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
         ]
     }()
+    
+    // These are only shown if there is a caption...
+    private lazy var captionTextLabel = MessageTextView(messageTextViewDelegate: self)
+    private lazy var captionDateAndStateView = MessageDateAndStateView()
+    private lazy var captionStack = DefaultMessageContentStackView(arrangedSubviews: [
+        captionTextLabel,
+        captionDateAndStateView,
+    ])
+    
+    private lazy var captionStackViewConstraints: [NSLayoutConstraint] = {
+        [
+            captionStack.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
+            captionStack.bottomAnchor.constraint(equalTo: containerView.bottomAnchor),
+            captionStack.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
+        ]
+    }()
+    
+    private lazy var contentStackViewCaptionBottomConstraint = contentStack.bottomAnchor.constraint(
+        equalTo: captionStack.topAnchor, constant: -ChatViewConfiguration.Content.defaultTopBottomInset
+    )
+    private lazy var contentStackViewNoCaptionBottomConstraint = contentStack
+        .bottomAnchor.constraint(equalTo: containerView.bottomAnchor)
     
     // MARK: - Internal Views
     
@@ -294,13 +343,18 @@ final class ChatViewVoiceMessageTableViewCell: ChatViewBaseTableViewCell, Measur
     override func configureCell() {
         super.configureCell()
         
-        containerView.addSubview(contentAndCaptionStack)
-        NSLayoutConstraint.activate(captionStackViewConstraints)
-        
+        containerView.addSubview(contentStack)
+
         containerView.addSubview(fileSizeSizingLabel)
         fileSizeSizingLabel.isHidden = true
         fileSizeSizingLabel.translatesAutoresizingMaskIntoConstraints = false
         
+        containerView.addSubview(captionStack)
+        captionStack.isHidden = true
+        captionStack.translatesAutoresizingMaskIntoConstraints = false
+        
+        NSLayoutConstraint.activate(contentStackViewConstraints)
+        NSLayoutConstraint.activate(captionStackViewConstraints)
         NSLayoutConstraint.activate([
             // Connect the shown label with the sizing label
             fileSizeLabel.widthAnchor.constraint(greaterThanOrEqualTo: fileSizeSizingLabel.widthAnchor),
@@ -343,7 +397,12 @@ final class ChatViewVoiceMessageTableViewCell: ChatViewBaseTableViewCell, Measur
         super.updateColors()
         
         Colors.setTextColor(Colors.textLight, label: fileSizeLabel)
-        dateAndStateView.updateColors()
+        waveformView.updateColor()
+        micIconOrPlaybackSpeedButton.updateColors()
+        stateButton.updateColors()
+        inlineDateAndStateView.updateColors()
+        captionDateAndStateView.updateColors()
+        captionTextLabel.updateColors()
     }
     
     func updateMessageMetadataFileSizeLabel(voiceMessage: VoiceMessage?) {
@@ -361,7 +420,7 @@ final class ChatViewVoiceMessageTableViewCell: ChatViewBaseTableViewCell, Measur
         }
         
         switch voiceMessage.blobDisplayState {
-        case .remote, .pending, .processed, .uploaded:
+        case .remote, .pending, .processed, .uploaded, .sendingError:
             let duration = voiceMessage.durationTimeInterval ?? 0.0
             fileSizeLabel.text = DateFormatter.timeFormatted(Int(duration))
             fileSizeSizingLabel.text = "\(timePrefix)\(DateFormatter.timeFormatted(Int(duration)))"
@@ -393,22 +452,42 @@ final class ChatViewVoiceMessageTableViewCell: ChatViewBaseTableViewCell, Measur
         }
     }
     
+    func downloadAndPlay() {
+        guard let objectID = voiceMessageAndNeighbors?.message.objectID else {
+            return
+        }
+        
+        Task {
+            await BlobManager.shared.autoSyncBlobs(for: objectID)
+            startPlayback()
+        }
+    }
+    
     private func updateCell(for voiceMessage: VoiceMessage?) {
         updateMessageMetadataFileSizeLabel(voiceMessage: voiceMessage)
         
-        dateAndStateView.message = voiceMessage
+        inlineDateAndStateView.message = voiceMessage
+        captionDateAndStateView.message = voiceMessage
         stateButton.voiceMessage = voiceMessage
         waveformView.voiceMessage = voiceMessage
         
         if let message = voiceMessage, let voiceMessageCellDelegate = voiceMessageCellDelegate {
             waveformView.updateProgressWaveform(voiceMessageCellDelegate.getProgress(for: message))
         }
+        
+        if !(voiceMessage?.showDateAndStateInline ?? false) {
+            captionTextLabel.text = voiceMessage?.caption
+            showCaptionAndDateAndState()
+        }
+        else {
+            hideCaptionAndDateAndState()
+        }
     }
     
     override func setEditing(_ editing: Bool, animated: Bool) {
         super.setEditing(editing, animated: animated)
 
-        if isPlaying {
+        if editing, isPlaying {
             pausePlayback()
         }
         
@@ -422,10 +501,32 @@ final class ChatViewVoiceMessageTableViewCell: ChatViewBaseTableViewCell, Measur
         guard let objectID = message?.objectID else {
             return
         }
-           
+        
         Task {
             await BlobManager.shared.autoSyncBlobs(for: objectID)
         }
+    }
+    
+    // MARK: - Show and hide
+    
+    private func showCaptionAndDateAndState() {
+        guard captionStack.isHidden else {
+            return
+        }
+        inlineDateAndStateView.isHidden = true
+        captionStack.isHidden = false
+        NSLayoutConstraint.deactivate([contentStackViewNoCaptionBottomConstraint])
+        NSLayoutConstraint.activate([contentStackViewCaptionBottomConstraint])
+    }
+    
+    private func hideCaptionAndDateAndState() {
+        guard !captionStack.isHidden else {
+            return
+        }
+        inlineDateAndStateView.isHidden = false
+        captionStack.isHidden = true
+        NSLayoutConstraint.deactivate([contentStackViewCaptionBottomConstraint])
+        NSLayoutConstraint.activate([contentStackViewNoCaptionBottomConstraint])
     }
 }
 
@@ -444,6 +545,18 @@ extension ChatViewVoiceMessageTableViewCell: MessageVoiceMessageWaveformViewDele
     }
 }
 
+// MARK: - MessageTextViewDelegate
+
+extension ChatViewVoiceMessageTableViewCell: MessageTextViewDelegate {
+    func showContact(identity: String) {
+        chatViewTableViewCellDelegate?.show(identity: identity)
+    }
+    
+    func didSelectText(in textView: MessageTextView?) {
+        chatViewTableViewCellDelegate?.didSelectText(in: textView)
+    }
+}
+
 // MARK: - Playback State Handling
 
 extension ChatViewVoiceMessageTableViewCell {
@@ -456,7 +569,7 @@ extension ChatViewVoiceMessageTableViewCell {
         }
         
         switch voiceMessage.blobDisplayState {
-        case .processed, .uploaded:
+        case .processed, .pending, .uploading, .uploaded, .sendingError:
             if !isPlaying {
                 startPlayback()
             }
@@ -464,13 +577,17 @@ extension ChatViewVoiceMessageTableViewCell {
                 pausePlayback()
             }
             
-        case .uploading, .downloading:
+            if let voiceMessageButton = button as? MessageVoiceMessageStateButton {
+                voiceMessageButton.isPlaying = isPlaying
+            }
+            
+        case .downloading:
             DDLogVerbose("Cancel sync for message with id: \(voiceMessage.objectID)")
             Task {
                 await BlobManager.shared.cancelBlobsSync(for: voiceMessage.objectID)
             }
             
-        case .remote, .pending:
+        case .remote:
             DDLogVerbose("Start sync for message with id: \(voiceMessage.objectID)")
             Task {
                 await BlobManager.shared.syncBlobs(for: voiceMessage.objectID)
@@ -499,10 +616,20 @@ extension ChatViewVoiceMessageTableViewCell {
     }
     
     private func startPlayback() {
+        guard let voiceMessageAndNeighbors else {
+            DDLogWarn("Could not start playback because voice message was nil")
+            return
+        }
+        
+        guard let url = voiceMessageAndNeighbors.message.temporaryBlobDataURL() else {
+            DDLogError("Could not get temporary URL for audio message")
+            return
+        }
+        
         let rate = UserSettings.shared().threemaAudioMessagePlaySpeedCurrentValue()
         voiceMessageCellDelegate?.startPlaying(
-            message: voiceMessageAndNeighbors!.message,
-            url: voiceMessageAndNeighbors!.message.temporaryBlobDataURL!,
+            message: voiceMessageAndNeighbors.message,
+            url: url,
             rate: rate,
             progressCallback: handleProgressCallback,
             pauseCallback: handlePauseCallback,
@@ -525,8 +652,6 @@ extension ChatViewVoiceMessageTableViewCell {
         else {
             fileSizeLabel.text = DateFormatter.timeFormatted(Int(currentTime))
         }
-        
-        isPlaying = true
     }
     
     func handleFinishedCallback(cancelled: Bool) {
@@ -543,6 +668,33 @@ extension ChatViewVoiceMessageTableViewCell {
         }
         
         isPlaying = false
+        
+        // Only play next message if our playback wasn't cancelled
+        guard !cancelled else {
+            return
+        }
+        
+        if let currentMessage = voiceMessageAndNeighbors?.message,
+           let nextMessage = flipped ? voiceMessageAndNeighbors?.neighbors.previousMessage : voiceMessageAndNeighbors?
+           .neighbors.nextMessage,
+           let nextFileMessageProvider = nextMessage as? FileMessageProvider {
+            if case .voice = nextFileMessageProvider.fileMessageType {
+                if (currentMessage.sender == nil && nextMessage.sender == nil) ||
+                    (currentMessage.sender != nil && nextMessage.sender != nil) {
+                    // It needs to be in the predefined interval
+                    guard abs(
+                        nextMessage.sectionDate.timeIntervalSinceReferenceDate - currentMessage.sectionDate
+                            .timeIntervalSinceReferenceDate
+                    )
+                        < ChatViewConfiguration.VoiceMessage.NeighborPlayback
+                        .maxDurationForNeighborAutomaticPlaybackInSeconds else {
+                        return
+                    }
+                    
+                    chatViewTableViewCellDelegate?.playNextMessageIfPossible(from: currentMessage.objectID)
+                }
+            }
+        }
     }
     
     func handlePauseCallback() {
@@ -550,27 +702,18 @@ extension ChatViewVoiceMessageTableViewCell {
     }
 }
 
-// MARK: - UITableViewCell Overrides
+// MARK: - ChatViewMessageAction
 
-extension ChatViewVoiceMessageTableViewCell {
-    override func prepareForReuse() {
-        // On reuse we might loose the connection to our delegate; as reuse is rare on iOS 15 and newer so we just pause playback
-        // TODO: IOS-2762 Check whether we can improve this
-        voiceMessageCellDelegate?.pausePlaying()
-    }
-}
+extension ChatViewVoiceMessageTableViewCell: ChatViewMessageAction {
+    
+    func messageActions() -> [ChatViewMessageActionProvider.MessageAction]? {
 
-// MARK: - ContextMenuAction
-
-extension ChatViewVoiceMessageTableViewCell: ContextMenuAction {
-    func buildContextMenu(at indexPath: IndexPath) -> UIContextMenuConfiguration? {
-       
         guard let message = voiceMessageAndNeighbors?.message else {
             return nil
         }
 
-        typealias Provider = ChatViewContextMenuActionProvider
-        var menuItems = [UIAction]()
+        typealias Provider = ChatViewMessageActionProvider
+        var menuItems = [ChatViewMessageActionProvider.MessageAction]()
         
         // Speak
         let speakText = message.fileMessageType.localizedDescription
@@ -612,7 +755,21 @@ extension ChatViewVoiceMessageTableViewCell: ContextMenuAction {
         
         // Edit
         let editHandler = {
-            self.chatViewTableViewCellDelegate?.startMultiselect()
+            self.chatViewTableViewCellDelegate?.startMultiselect(with: message.objectID)
+        }
+        
+        // Delete
+        let willDelete = {
+            self.chatViewTableViewCellDelegate?.willDeleteMessage(with: message.objectID)
+        }
+        
+        let didDelete = {
+            self.chatViewTableViewCellDelegate?.didDeleteMessages()
+        }
+        
+        // Ack
+        let ackHandler = { (message: BaseMessage, ack: Bool) in
+            self.chatViewTableViewCellDelegate?.sendAck(for: message, ack: ack)
         }
         
         let defaultActions = Provider.defaultActions(
@@ -623,16 +780,24 @@ extension ChatViewVoiceMessageTableViewCell: ContextMenuAction {
             copyHandler: copyHandler,
             quoteHandler: quoteHandler,
             detailsHandler: detailsHandler,
-            editHandler: editHandler
+            editHandler: editHandler,
+            willDelete: willDelete,
+            didDelete: didDelete,
+            ackHandler: ackHandler
         )
                 
         // Build menu
         menuItems.append(contentsOf: defaultActions)
         
-        let menu = UIMenu(children: menuItems)
-        
-        return UIContextMenuConfiguration(identifier: indexPath as NSCopying, previewProvider: nil) { _ in
-            menu
+        return menuItems
+    }
+    
+    override var accessibilityCustomActions: [UIAccessibilityCustomAction]? {
+        get {
+            buildAccessibilityCustomActions()
+        }
+        set {
+            // No-op
         }
     }
 }

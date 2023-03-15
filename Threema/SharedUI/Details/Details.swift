@@ -33,6 +33,13 @@
     
     /// Show a chat search in the delegate
     func showChatSearch()
+    
+    /// Called before the detail view deletes messages
+    /// - Parameter objectIDs: Object IDs of messages that will be deleted
+    func willDeleteMessages(with objectIDs: [NSManagedObjectID])
+    
+    /// Called before the detail view will delete all messages in this conversation
+    func willDeleteAllMessages()
 }
 
 enum Details {

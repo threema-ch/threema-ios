@@ -127,6 +127,10 @@ class ArchivedConversationsViewController: ThemedTableViewController {
         if UIDevice.current.userInterfaceIdiom == .pad {
             setSelection(for: selectedConversation)
         }
+        
+        // This and the opposite in `viewWillDisappear` is needed to make a search controller work that is added in a
+        // child view controller using the same navigation bar. See ChatSearchController for details.
+        definesPresentationContext = true
     }
     
     override func viewWillDisappear(_ animated: Bool) {
@@ -136,6 +140,10 @@ class ArchivedConversationsViewController: ThemedTableViewController {
         if searchController.isActive {
             searchController.isActive = false
         }
+        
+        // This and the opposite in `viewWillAppear` is needed to make a search controller work that is added in a
+        // child view controller using the same navigation bar. See ChatSearchController for details.
+        definesPresentationContext = false
     }
 }
 
@@ -297,6 +305,54 @@ extension ArchivedConversationsViewController {
         configuration.performsFirstActionWithFullSwipe = true
         
         return configuration
+    }
+}
+
+// MARK: - CellContextMenu
+
+extension ArchivedConversationsViewController {
+    override func tableView(
+        _ tableView: UITableView,
+        contextMenuConfigurationForRowAt indexPath: IndexPath,
+        point: CGPoint
+    ) -> UIContextMenuConfiguration? {
+        
+        guard !isEditing,
+              UIDevice.current.userInterfaceIdiom != .pad else {
+            DDLogError("No context menu is shown when editing and on iPad")
+            return nil
+        }
+
+        guard let conversation = fetchedResultsController.object(at: indexPath) as? Conversation else {
+            DDLogError("Could not select cell because there was no conversation for its indexPath")
+            return nil
+        }
+        
+        selectedConversation = conversation
+        
+        return UIContextMenuConfiguration(identifier: nil) {
+            let chatViewController = ChatViewController(for: conversation)
+            chatViewController.userInterfaceMode = .preview
+            return chatViewController
+        }
+    }
+
+    override func tableView(
+        _ tableView: UITableView,
+        willPerformPreviewActionForMenuWith configuration: UIContextMenuConfiguration,
+        animator: UIContextMenuInteractionCommitAnimating
+    ) {
+        guard let chatViewController = animator.previewViewController as? ChatViewController else {
+            DDLogWarn("Unable to display chat after long press")
+            return
+        }
+        
+        animator.addCompletion {
+            self.show(chatViewController, sender: self)
+            // If we change the interface mode earlier the tab bar is still somewhat here and thus the chat bar appears
+            // too high
+            chatViewController.userInterfaceMode = .default
+        }
     }
 }
 
@@ -614,12 +670,6 @@ extension ArchivedConversationsViewController {
             self,
             selector: #selector(colorThemeChanged),
             name: NSNotification.Name(rawValue: kNotificationColorThemeChanged),
-            object: nil
-        )
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(updateDraftForCell),
-            name: NSNotification.Name(rawValue: kNotificationUpdateDraftForCell),
             object: nil
         )
         NotificationCenter.default.addObserver(

@@ -49,13 +49,13 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     return self;
 }
 
-- (BallotMessage *)decodeCreateBallotFromBox:(BoxBallotCreateMessage *)boxMessage forConversation:(Conversation *)conversation {
-    return [self decodeBallotCreateMessage:boxMessage forConversation:conversation];
+- (nullable BallotMessage *)decodeCreateBallotFromBox:(nonnull BoxBallotCreateMessage *)boxMessage sender:(nullable ContactEntity *)sender conversation:(nonnull Conversation *)conversation {
+    return [self decodeBallotCreateMessage:boxMessage sender:sender conversation:conversation];
 }
 
 
-- (BallotMessage *)decodeCreateBallotFromGroupBox:(GroupBallotCreateMessage *)boxMessage forConversation:(Conversation *)conversation {
-    return [self decodeBallotCreateMessage:boxMessage forConversation:conversation];
+- (nullable BallotMessage *)decodeCreateBallotFromGroupBox:(nonnull GroupBallotCreateMessage *)boxMessage sender:(nullable ContactEntity *)sender conversation:(nonnull Conversation *)conversation {
+    return [self decodeBallotCreateMessage:boxMessage sender:sender conversation:conversation];
 }
 
 + (NSString *)decodeCreateBallotTitleFromBox:(BoxBallotCreateMessage *)boxMessage {
@@ -85,7 +85,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     return [json objectForKey: JSON_KEY_STATE];
 }
 
-- (BallotMessage *)decodeBallotCreateMessage:(AbstractMessage *)boxMessage forConversation:(Conversation *)conversation {
+- (BallotMessage *)decodeBallotCreateMessage:(AbstractMessage *)boxMessage sender:(nullable ContactEntity *)sender conversation:(nonnull Conversation *)conversation {
     
     NSData *ballotId;
     NSData *jsonData;
@@ -101,28 +101,35 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     }
     
     /* Create Message in DB */
-    BallotMessage *message = [_entityManager.entityCreator ballotMessageFromBox:boxMessage];
-    
-    Ballot *ballot = [_entityManager.entityFetcher ballotForBallotId:ballotId];
-    if (ballot != nil) {
-        [self updateExistingBallot:ballot jsonData:jsonData];
-    } else {
-        ballot = [self createNewBallotWithId:ballotId creatorId:boxMessage.fromIdentity jsonData:jsonData];
+    __block BallotMessage *message = (BallotMessage *)[_entityManager getOrCreateMessageFor:boxMessage sender:sender conversation:conversation thumbnail:nil];
+    if (message == nil) {
+        DDLogError(@"Could not find/create ballot message");
+        return message;
     }
-    
-    // error parsing data
-    if (ballot == nil) {
-        if (message) {
-            [[_entityManager entityDestroyer] deleteObjectWithObject:message];
+
+    [_entityManager performSyncBlockAndSafe:^{
+        Ballot *ballot = [_entityManager.entityFetcher ballotForBallotId:ballotId];
+        if (ballot != nil) {
+            [self updateExistingBallot:ballot jsonData:jsonData];
+        } else {
+            ballot = [self createNewBallotWithId:ballotId creatorId:boxMessage.fromIdentity jsonData:jsonData];
         }
-        
-        return nil;
-    }
-    
-    ballot.modifyDate = [NSDate date];
-    ballot.conversation = conversation;
-    message.ballot = ballot;
-    
+
+        // error parsing data
+        if (ballot == nil) {
+            if (message) {
+                DDLogError(@"Parsing of ballot failed, message will be deleted");
+                [[_entityManager entityDestroyer] deleteObjectWithObject:message];
+            }
+            message = nil;
+            return;
+        }
+
+        ballot.modifyDate = [NSDate date];
+        ballot.conversation = conversation;
+        message.ballot = ballot;
+    }];
+
     return message;
 }
 

@@ -105,8 +105,8 @@ static const NSUInteger newMaxLength = 6;
     
     [Colors updateWithNavigationBar:self.navigationController.navigationBar];
     
-    _pincodeView.pincodeColor = Colors.primary;
-    _tintColor = Colors.primary;
+    _pincodeView.pincodeColor = UIColor.primary;
+    _tintColor = UIColor.primary;
     [self tintSubviewsWithColor:_tintColor];
 }
 //------------------ Threema edit end ---------------------------

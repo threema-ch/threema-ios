@@ -22,12 +22,12 @@ import Foundation
 import ThreemaFramework
 
 class UnreadMessagesMock: UnreadMessagesProtocol {
-    func read(for conversation: Conversation, isAppInBackground: Bool) {
-        // no-op
+    func read(for conversation: Conversation, isAppInBackground: Bool) -> Int {
+        0
     }
     
-    func read(for messages: [BaseMessage], in conversation: Conversation, isAppInBackground: Bool) {
-        // no-op
+    func read(for messages: [BaseMessage], in conversation: Conversation, isAppInBackground: Bool) -> Int {
+        0
     }
 
     func count(for conversation: Conversation) -> Int {

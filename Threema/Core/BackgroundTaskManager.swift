@@ -63,10 +63,8 @@ import Foundation
                 self.endBackgroundTaskWithDisconnect(internalKey)
             }
             
-            if completionHandler != nil {
-                DispatchQueue.main.async {
-                    completionHandler!()
-                }
+            DispatchQueue.main.async {
+                completionHandler?()
             }
         }
     }

@@ -174,7 +174,7 @@
 + (NSString *)stringFromContacts:(NSArray *)contacts {
     NSMutableString *result = [NSMutableString string];
     NSInteger count = [contacts count];
-    [contacts enumerateObjectsUsingBlock:^(Contact *contact, NSUInteger idx, BOOL *stop) {
+    [contacts enumerateObjectsUsingBlock:^(ContactEntity *contact, NSUInteger idx, BOOL *stop) {
         [result appendString:contact.displayName];
         
         if (idx < count - 1) {
@@ -257,7 +257,7 @@
     return data;
 }
 
-+ (BOOL)hideThreemaTypeIconForContact:(Contact *)contact {
++ (BOOL)hideThreemaTypeIconForContact:(ContactEntity *)contact {
     // Always hide if there is no contact (e.g. it's a group)
     if (!contact) {
         return YES;

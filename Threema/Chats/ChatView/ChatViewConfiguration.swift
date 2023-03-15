@@ -24,7 +24,7 @@ import UIKit
 /// Configuration constants for chat view
 enum ChatViewConfiguration {
     /// If `strictMode` is enabled failing sanity checks do not only print errors but may also crash for release builds
-    static let strictMode = true
+    static let strictMode = false
     
     // TODO: Scale the value according with dynamic type?
     
@@ -98,14 +98,18 @@ enum ChatViewConfiguration {
         /// Default top and bottom insets for section headers (we remove the inset coming from the bubbles around it)
         static let defaultTopAndBottomInset = 16.0 - ChatBubble.defaultTopBottomInset
         
+        /// Corner radius for background
+        static let cornerRadius = 12.5
+        /// Blur effect style for background and vibrancy effect
+        static let blurEffectStyle = UIBlurEffect.Style.systemThinMaterial
+
         /// Configuration for date label in section headers
         enum DateLabel {
-            static let cornerRadius = 12.5
             static let font = UIFont.preferredFont(forTextStyle: .footnote).bold()
             
-            /// Default top and bottom inset of content of the label
+            /// Default top and bottom inset of the label
             static let defaultTopBottomInset = 3.5
-            /// Default leading and trailing inset of content of the label
+            /// Default leading and trailing inset of the label
             static let defaultLeadingTrailingInset = 10.0
         }
     }
@@ -139,6 +143,16 @@ enum ChatViewConfiguration {
         /// Ratio of readable content width that should be the maximum width of a bubble of a voice message cell
         static let voiceMessageCellMaxWidthRatio: CGFloat = 0.85
         
+        /// Duration in seconds of the size change animation if subviews are added to or removed from the chatBubbleView
+        /// Should in general be less than or equal to the row height change animation of the table view because otherwise
+        /// you will get overlapping cells which doesn't look nice.
+        static let bubbleSizeChangeAnimationDurationInSeconds: CGFloat = 0.25
+        
+        /// Duration in seconds of the show/hide animation of the date and state view for every message
+        /// Should in general be less than or equal to the row height change animation of the table view because otherwise
+        /// you will get overlapping view which doesn't look nice.
+        static let dateAndStateViewShowAndHideAnimationDurationInSeconds: CGFloat = 0.25
+        
         enum SwipeInteraction {
             /// This blocks the swipe to quote interaction within n pixels of the left border
             static let swipeDeadZone: CGFloat = 50
@@ -148,7 +162,9 @@ enum ChatViewConfiguration {
             /// Should be chosen such that the multiplicative inverse is a rational number representable with the same type.
             static let startQuoteAnimationScaleFactor = 1.25
             ///  Factor by which the cell moves slower than the finger on the screen after the swipe to quote action was activated
-            static let bubbleSlowdownFactor: Double = 1 / 8
+            static let bubbleSlowdownFactorQuote: Double = 1 / 8
+            ///  Factor by which the cell moves slower than the finger on the screen after the swipe to details action was activated
+            static let bubbleSlowdownFactorDetails: Double = 1 / 4
             /// Number of pixels to swipe before the action activates
             static let swipeActionOffsetThreshold: Double = 55
             /// Number of pixels by which the quote icon is inset from the left edge of the cell bubble
@@ -178,6 +194,13 @@ enum ChatViewConfiguration {
             static let highlightedDurationTap = 0.15
             /// Delay after the tableView has stopped scrolling and the blinkFadeIn should start
             static let highlightDelayAfterScroll = 0.125
+        }
+        
+        enum RetryAndCancelButton {
+            /// Name of the SFSymbol displayed in button
+            static let symbolName = "arrow.clockwise"
+            /// Spacing between the button and the bubble
+            static let buttonChatBubbleSpacing = 16.0
         }
     }
     
@@ -211,6 +234,9 @@ enum ChatViewConfiguration {
         static let defaultTopBottomInset = 8.0
         /// Default top and bottom space between system message when they are grouped (4 means 8 in total)
         static let groupedDefaultTopBottomInset = 4.0
+        
+        /// Space between icon and label in WorkConsumerInfoSystemMessageCell
+        static let typeIconLabelSpace = 4.0
         
         /// Configuration for background of system message cells
         enum Background {
@@ -399,7 +425,7 @@ enum ChatViewConfiguration {
     /// Voice Message Views
     enum VoiceMessage {
         /// The point height of the waveform view. the height constraint is set to this.
-        /// Together with `PlaybackStateButton.symbolPointSize` this is the major influence on the cell height.
+        /// Together with `PlaybackStateButton.circleFillSymbolSize` this is the major influence on the cell height.
         static let waveformHeight: CGFloat = 35
         
         /// UIStackView spacing between the speed button / mic icon and the waveform view
@@ -407,9 +433,6 @@ enum ChatViewConfiguration {
         
         /// TimeInterval in which progress is reported by the voice message cell delegate back to the relevant voice message cell
         static let progressCallbackInterval: CGFloat = 0.01
-        
-        /// Color used for the speed and play state buttons
-        static let buttonTintColor: UIColor = Colors.textLight
         
         /// Button showing either a mic symbol or the current playback speed when playing a voice message
         enum SpeedButton {
@@ -426,8 +449,6 @@ enum ChatViewConfiguration {
             /// Corner radius of the background around the speed label
             static let cornerRadius: CGFloat = 10
             
-            static let buttonTintColor: UIColor = ChatViewConfiguration.VoiceMessage.buttonTintColor
-            
             /// Label showing the current playback speed
             enum SpeedLabel {
                 /// Font used for the speed label
@@ -441,8 +462,6 @@ enum ChatViewConfiguration {
             static let circleFillSymbolInset: CGFloat = 5
             /// Symbol size for play and pause symbols used in the playback state button
             static let circleFillSymbolSize: CGFloat = 44
-            
-            static let buttonTintColor: UIColor = ChatViewConfiguration.VoiceMessage.buttonTintColor
         }
         
         /// View displaying the waveform for the voice message
@@ -455,13 +474,12 @@ enum ChatViewConfiguration {
             /// The spacing between two bars in the waveform view
             static let barSpacing: CGFloat = 2
             
-            /// The color of the unplayed part of the waveform view
-            static let unplayedBarColor: UIColor = Colors.textLight
-            /// The color of the played part of the waveform view
-            static let playedBarColor: UIColor = Colors.primary
-            
             /// Height of the rendered waveform image. Ideally this is the height of the waveform's parent view minus two times the insets
             static let waveformRenderHeight: CGFloat = 35
+        }
+        
+        enum NeighborPlayback {
+            static let maxDurationForNeighborAutomaticPlaybackInSeconds = 0.5 * 60 * 60
         }
     }
 
@@ -472,13 +490,13 @@ enum ChatViewConfiguration {
 
     /// System Message text
     enum SystemMessageText {
-        /// Default font for system messages
-        static let defaultFont = UIFont.preferredFont(forTextStyle: .footnote)
+        /// Default text style for system messages
+        static let defaultTextStyle = UIFont.TextStyle.footnote
         /// Work / consumer font for system messages
-        static let workConsumerFont = UIFont.preferredFont(forTextStyle: .footnote).bold()
+        static let workConsumerFont = UIFont.preferredFont(forTextStyle: defaultTextStyle).bold()
         /// Configuration for work / consumer info
         static let workConsumerSymbolConfiguration = UIImage.SymbolConfiguration(
-            textStyle: .footnote,
+            textStyle: defaultTextStyle,
             scale: .large
         )
     }
@@ -677,5 +695,23 @@ enum ChatViewConfiguration {
         static let animationDuration = 0.25
         /// Delay in ms before the `scrollCompletion` block is called to signal that the scrolling animation has completed
         static let completionBlockCallDelay = 50
+    }
+    
+    enum ScrollBehavior {
+        /// Feature Flag for additional workarounds when using flipped mode of the table view
+        /// Must not be set to true if flipped table view is disabled
+        static var overrideDefaultTableViewBehavior = {
+            if !UserSettings.shared().flippedTableView {
+                return false
+            }
+            
+            // Actual configuration value
+            return true
+        }()
+        
+        /// We need some non-zero additional space above the content height of newly added cells when checking
+        /// whether we can adjust the content offset or must scroll down to avoid glitches
+        /// You can find a more detailed description of the workaround in `willApplySnapshot(currentDoesIncludeNewestMessage:)` of `ChatViewController`
+        static let newCellsContentHeightLeeway = 1.0
     }
 }

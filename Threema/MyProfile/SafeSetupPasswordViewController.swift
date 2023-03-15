@@ -31,6 +31,9 @@ class SafeSetupPasswordViewController: ThemedTableViewController {
     @IBOutlet var serverUserNameField: UITextField!
     @IBOutlet var serverPasswordField: UITextField!
     
+    // TODO: (IOS-3251) Remove
+    weak var launchModalDelegate: LaunchModalManagerDelegate?
+    
     private var safeStore: SafeStore
     private var safeManager: SafeManager
     private var mdmSetup: MDMSetup
@@ -100,6 +103,11 @@ class SafeSetupPasswordViewController: ThemedTableViewController {
             target: self,
             action: #selector(done)
         )
+    }
+
+    // TODO: (IOS-3251) Remove
+    override func viewDidDisappear(_ animated: Bool) {
+        launchModalDelegate?.didDismiss()
     }
     
     // MARK: - Navigation

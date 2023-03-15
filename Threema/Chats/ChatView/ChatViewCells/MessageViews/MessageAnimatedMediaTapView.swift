@@ -41,6 +41,12 @@ final class MessageAnimatedMediaTapView: UIView {
 
     private lazy var fileSizeFormatter = ByteCountFormatter()
     
+    private lazy var progressFormatter: NumberFormatter = {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .percent
+        return formatter
+    }()
+    
     private var tapAction: () -> Void
     
     // MARK: - Views & constraints
@@ -237,14 +243,14 @@ final class MessageAnimatedMediaTapView: UIView {
         
         // Center state view
         switch currentBlobDisplayState {
-        case .remote, .downloading, .pending, .uploading, .fileNotFound:
+        case .remote, .downloading, .fileNotFound:
             if let symbolName = currentBlobDisplayState.symbolName {
                 showCenterStateBlurView(with: symbolName)
             }
             else {
                 hideCenterStateBlurView()
             }
-        case .processed, .uploaded:
+        case .processed, .pending, .uploading, .uploaded, .sendingError:
             hideCenterStateBlurView()
             
         case .dataDeleted:
@@ -256,30 +262,44 @@ final class MessageAnimatedMediaTapView: UIView {
             showProgressView()
             progressView.setProgress(progress, animated: true)
         }
-        else if case let .uploading(progress: progress) = currentBlobDisplayState {
-            showProgressView()
-            progressView.setProgress(progress, animated: true)
-        }
         else {
             hideProgressView()
         }
         
         // Metadata view
         switch currentBlobDisplayState {
-        case .remote, .downloading, .pending, .uploading:
+        case .remote, .pending:
             metadataView.symbolName = thumbnailDisplayMessage?.fileMessageType.symbolName
             metadataView.metadataString = fileSizeFormatter
                 .string(for: thumbnailDisplayMessage?.dataBlobFileSize)
             metadataBlurBackgroundContainerView.isHidden = false
+            
+        case let .uploading(progress: progress), let .downloading(progress: progress):
+            
+            metadataView.symbolName = thumbnailDisplayMessage?.fileMessageType.symbolName
+
+            metadataBlurBackgroundContainerView.isHidden = false
+            if let progressString = progressFormatter.string(from: Double(progress) as NSNumber) {
+                metadataView.metadataString = """
+                    \(fileSizeFormatter.string(for: thumbnailDisplayMessage?.dataBlobFileSize) ?? "") \
+                    (\(progressString))
+                    """
+            }
+            else {
+                metadataView.metadataString = fileSizeFormatter.string(for: thumbnailDisplayMessage?.dataBlobFileSize)
+            }
+            
         case .fileNotFound:
             metadataView.symbolName = nil
             metadataView.metadataString = BundleUtil.localizedString(forKey: "file_not_found_title")
             metadataBlurBackgroundContainerView.isHidden = false
+            
         case .dataDeleted:
             metadataView.symbolName = currentBlobDisplayState.symbolName
             metadataView.metadataString = nil
             metadataBlurBackgroundContainerView.isHidden = false
-        case .processed, .uploaded:
+            
+        case .processed, .uploaded, .sendingError:
             metadataBlurBackgroundContainerView.isHidden = true
         }
 
@@ -293,21 +313,26 @@ final class MessageAnimatedMediaTapView: UIView {
         }
         
         // We directly start animating if media is ready
-        if let animatedMediaData = thumbnailDisplayMessage?.blobGet(),
-           currentBlobDisplayState == .uploaded || currentBlobDisplayState == .processed {
-            animatedMediaView.animatedImage = FLAnimatedImage(animatedGIFData: animatedMediaData)
-
-            if !UIAccessibility.isReduceMotionEnabled,
-               UIAccessibility.isVideoAutoplayEnabled {
-                animatedMediaView.startAnimating()
-            }
-            else {
-                animatedMediaView.stopAnimating()
+        if let animatedMediaData = thumbnailDisplayMessage?.blobGet() {
+            switch currentBlobDisplayState {
+            case .pending, .uploading, .uploaded, .processed, .sendingError:
                 
-                if let defaultSymbol = self.thumbnailDisplayMessage?.fileMessageType
-                    .defaultInteractionSymbolName {
-                    showCenterStateBlurView(with: defaultSymbol)
+                animatedMediaView.animatedImage = FLAnimatedImage(animatedGIFData: animatedMediaData)
+                
+                if !UIAccessibility.isReduceMotionEnabled,
+                   UIAccessibility.isVideoAutoplayEnabled {
+                    animatedMediaView.startAnimating()
                 }
+                else {
+                    animatedMediaView.stopAnimating()
+                    
+                    if let defaultSymbol = self.thumbnailDisplayMessage?.fileMessageType
+                        .defaultInteractionSymbolName {
+                        showCenterStateBlurView(with: defaultSymbol)
+                    }
+                }
+            case .remote, .downloading, .dataDeleted, .fileNotFound:
+                break
             }
         }
         else if let thumbnailData = thumbnailDisplayMessage?.blobGetThumbnail(),

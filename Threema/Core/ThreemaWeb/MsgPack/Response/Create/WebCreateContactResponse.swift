@@ -24,7 +24,7 @@ import ThreemaFramework
 class WebCreateContactResponse: WebAbstractMessage {
 
     var identity: String
-    var contact: Contact?
+    var contact: ContactEntity?
     
     init(request: WebCreateContactRequest) {
 

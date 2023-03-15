@@ -71,29 +71,35 @@ final class ChatSearchResultsViewController: ThemedViewController {
         return tableView
     }()
 
-    private lazy var dataSource = UITableViewDiffableDataSource<
-        Section,
-        NSManagedObjectID
-    >(tableView: tableView) { [weak self] tableView, indexPath, messageObjectID in
-        
-        let searchResultsCell: ChatSearchResultsTableViewCell = tableView.dequeueCell(for: indexPath)
-        
-        var baseMessage: BaseMessage?
-        self?.entityManager.performBlockAndWait {
-            baseMessage = self?.entityManager.entityFetcher.existingObject(with: messageObjectID) as? BaseMessage
+    private lazy var dataSource: UITableViewDiffableDataSource<Section, NSManagedObjectID> = {
+        let dataSource = UITableViewDiffableDataSource<
+            Section,
+            NSManagedObjectID
+        >(tableView: tableView) { [weak self] tableView, indexPath, messageObjectID in
             
-            searchResultsCell.message = baseMessage
+            let searchResultsCell: ChatSearchResultsTableViewCell = tableView.dequeueCell(for: indexPath)
+            
+            var baseMessage: BaseMessage?
+            self?.entityManager.performBlockAndWait {
+                baseMessage = self?.entityManager.entityFetcher.existingObject(with: messageObjectID) as? BaseMessage
+                
+                searchResultsCell.message = baseMessage
+            }
+            
+            guard let baseMessage = baseMessage else {
+                DDLogWarn(
+                    "Unable to fetch message (\(messageObjectID.uriRepresentation().absoluteString)) for search result"
+                )
+                return nil
+            }
+            
+            return searchResultsCell
         }
         
-        guard let baseMessage = baseMessage else {
-            DDLogWarn(
-                "Unable to fetch message (\(messageObjectID.uriRepresentation().absoluteString)) for search result"
-            )
-            return nil
-        }
+        dataSource.defaultRowAnimation = .top
         
-        return searchResultsCell
-    }
+        return dataSource
+    }()
     
     // MARK: - Lifecycle
     

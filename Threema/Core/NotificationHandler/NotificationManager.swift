@@ -139,11 +139,15 @@ public protocol NotificationManagerProtocol {
                     }
                     else if cmd == "newgroupmsg" {
                         // Try to find an appropriate group - if there is only one conversation in which
-                        // the sender is a member, then it must be the right one. Otherwise we cannot know
-                        
+                        // the sender is a member, then it must be the right one. If there are more we cannot know.
+                        // In the regular case we get the groupID and groupCreator anyways
                         if let groupIDString = threemaPayload["groupId"] as? String,
                            let groupID = Data(base64Encoded: groupIDString),
-                           let conversation = businessInjector.entityManager.entityFetcher.conversation(for: groupID) {
+                           let groupCreator = threemaPayload["groupCreator"] as? String,
+                           let conversation = businessInjector.entityManager.entityFetcher.conversation(
+                               for: groupID,
+                               creator: groupCreator
+                           ) {
                             info = [
                                 kKeyConversation: conversation,
                                 kKeyForceCompose: true,
@@ -297,7 +301,7 @@ extension NotificationManager {
     final class func showNoMicrophonePermissionNotification() {
         let title = BundleUtil.localizedString(forKey: "call_voip_not_supported_title")
         let message = String.localizedStringWithFormat(
-            BundleUtil.localizedString(forKey: "call_microphone_permission_text"),
+            BundleUtil.localizedString(forKey: "alert_no_access_message_microphone"),
             ThreemaApp.currentName
         )
         ThreemaUtilityObjC.sendErrorLocalNotification(title, body: message, userInfo: nil)

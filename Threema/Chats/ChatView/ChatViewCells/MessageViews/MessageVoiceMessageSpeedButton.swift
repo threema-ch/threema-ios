@@ -163,7 +163,7 @@ final class MessageVoiceMessageSpeedButton: ThemedCodeButton {
     
     override func updateColors() {
         speedLabel.textColor = Colors.textInverted
-        tintColor = config.buttonTintColor
-        speedLabelContainer.backgroundColor = config.buttonTintColor
+        tintColor = Colors.textLight
+        speedLabelContainer.backgroundColor = Colors.textLight
     }
 }

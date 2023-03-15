@@ -38,6 +38,4 @@
 
 - (void)handleMessageOnCompletion:(void (^ _Nonnull)(BOOL))onCompletion onError:(void(^ _Nonnull)(NSError * _Nonnull error))onError;
 
-- (nullable Conversation *)conversation;
-
 @end

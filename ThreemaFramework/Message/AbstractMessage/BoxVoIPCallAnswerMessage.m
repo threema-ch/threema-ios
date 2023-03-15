@@ -49,7 +49,7 @@
 }
 
 - (BOOL)allowSendingProfile {
-    return NO;
+    return _isUserInteraction;
 }
 
 - (BOOL)noDeliveryReceiptFlagSet {

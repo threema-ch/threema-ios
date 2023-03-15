@@ -123,8 +123,8 @@
                 });
             } else {
                 dispatch_async(dispatch_get_main_queue(), ^{
-                    NSString *message = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"no_contacts_permission_message"], [ThreemaAppObjc currentName]];
-                    [UIAlertTemplate showAlertWithOwner:[[AppDelegate sharedAppDelegate] currentTopViewController] title:[BundleUtil localizedStringForKey:@"no_contacts_permission_title"] message:message actionOk:nil];
+                    // Show access prompt
+                    [UIAlertTemplate showOpenSettingsAlertWithOwner:[[AppDelegate sharedAppDelegate] currentTopViewController] noAccessAlertType:NoAccessAlertTypeContacts];
                 });
             }
         }];

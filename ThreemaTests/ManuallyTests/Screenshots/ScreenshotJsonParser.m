@@ -20,7 +20,7 @@
 
 #import "ScreenshotJsonParser.h"
 #import "MyIdentityStore.h"
-#import "Contact.h"
+#import "ContactEntity.h"
 #import "Conversation.h"
 #import "NSString+Hex.h"
 #import "MediaConverter.h"
@@ -34,6 +34,7 @@
 #import <ThreemaFramework/EntityCreator.h>
 #import <ThreemaFramework/EntityFetcher.h>
 #import <ThreemaFramework/FileMessageEncoder.h>
+#import <ThreemaFramework/QuoteUtil.h>
 #import <CommonCrypto/CommonDigest.h>
 
 #import <UIKit/UIImage.h>
@@ -77,7 +78,7 @@
         }
 
         NSArray *contacts = [_entityManager.entityFetcher allContacts];
-        for (Contact* contact in contacts) {
+        for (ContactEntity* contact in contacts) {
             [[_entityManager entityDestroyer] deleteObjectWithObject:contact];
         }
     }];
@@ -117,7 +118,7 @@
     _myIdentity = [MyIdentityStore sharedMyIdentityStore].identity;
         
     NSMutableDictionary *profile = [NSMutableDictionary new];
-    [profile setValue:[self imageDataFromFileNamed:@"me.jpg"] forKey:@"ProfilePicture"];
+    [profile setValue:[self fileDataFromFileNamed:@"me.jpg"] forKey:@"ProfilePicture"];
     [profile removeObjectForKey:@"LastUpload"];
     [[MyIdentityStore sharedMyIdentityStore] setProfilePicture:profile];
     
@@ -181,9 +182,9 @@
 }
 
 - (void)handleContact:(NSString *)identity data:(NSDictionary *)data {
-    Contact *contact = [_entityManager.entityCreator contact];
+    ContactEntity *contact = [_entityManager.entityCreator contact];
     contact.identity = identity;
-    contact.imageData = [self localizedImageForKey:@"avatar" in:data];
+    contact.imageData = [self localizedFileForKey:@"avatar" in:data];
     contact.verifiedEmail = [self localizedStringForKey:@"mail" in:data];
     
     NSNumber *verificationLevel = [data objectForKey:@"verification"];
@@ -267,7 +268,7 @@
         
         NSString *state = [messageData objectForKey:@"state"];
         if ([state isEqualToString:@"USERACK"]) {
-            message.userackDate = [NSDate date];
+            message.userackDate = message.date;
             message.userack = [NSNumber numberWithBool:YES];
         }
         
@@ -289,13 +290,13 @@
     
     NSString *creator = [groupData objectForKey:@"creator"];
     if ([creator isEqualToString:_myIdentity] == NO) {
-        Contact *creatorContact = [_entityManager.entityFetcher contactForId:creator];
+        ContactEntity *creatorContact = [_entityManager.entityFetcher contactForId:creator];
         conversation.contact = creatorContact;
         groupEntity.groupCreator = creator;
     }
     groupEntity.state = [[NSNumber alloc] initWithInt:GroupStateActive];
     
-    NSData *avatar = [self localizedImageForKey:@"avatar" in:groupData];
+    NSData *avatar = [self localizedFileForKey:@"avatar" in:groupData];
     if (avatar) {
         ImageData *dbImage = [_entityManager.entityCreator imageData];
         dbImage.data = avatar;
@@ -316,7 +317,7 @@
     NSMutableSet *members = [NSMutableSet setWithCapacity:memberNames.count];
     
     for (NSString *name in memberNames) {
-        Contact *contact = [_entityManager.entityFetcher contactForId:name];
+        ContactEntity *contact = [_entityManager.entityFetcher contactForId:name];
         [members addObject:contact];
     }
     
@@ -334,9 +335,19 @@
     }
 }
 
+
+/// Handle text and parse QuoteV1 into QuoteV2
 - (BaseMessage *)handleTextMessage:(NSDictionary *)messageData inConversation:(Conversation *)conversation {
+    BaseMessage *lastMessage = conversation.lastMessage;
     TextMessage *message = [_entityManager.entityCreator textMessageForConversation:conversation];
     message.text = [self localizedStringForKey:@"content" in:messageData];
+    if ([message.text containsString:@"> "]) {
+        message.quotedMessageId = lastMessage.id;
+        NSString *quotedIdentity = nil;
+        NSString *remainingBody = nil;
+        NSString *quotedText = [QuoteUtil parseQuoteFromMessage:message.text quotedIdentity:&quotedIdentity remainingBody:&remainingBody];
+        message.text = remainingBody;
+    }
     
     return message;
 }
@@ -362,7 +373,7 @@
     message.mimeTypeThumbnail = @"image/jpeg";
 
     FileData *fileData = [_entityManager.entityCreator fileData];
-    NSData *data = [self localizedImageForKey:@"content" in:messageData];
+    NSData *data = [self localizedFileForKey:@"content" in:messageData];
     if (data) {
         fileData.data = data;
 
@@ -390,7 +401,19 @@
 
 - (BaseMessage *)handleAudioMessage:(NSDictionary *)messageData inConversation:(Conversation *)conversation {
     AudioMessageEntity *message = [_entityManager.entityCreator audioMessageEntityForConversation:conversation];
+    
+    unsigned char digest[CC_SHA256_DIGEST_LENGTH];
+    message.encryptionKey = [NSData dataWithBytes:digest length:16];
     message.duration = [NSNumber numberWithInt:42];
+    message.audioSize = [NSNumber numberWithInt:2308565];
+    message.audioBlobId = [NSData dataWithBytes:digest length:16];
+
+    NSData *data = [self localizedFileForKey:@"content" in:messageData];
+    if (data) {
+        AudioData *audioData = [_entityManager.entityCreator audioData];
+        audioData.data = data;
+        message.audio = audioData;
+    }
     
     return message;
 }
@@ -512,17 +535,17 @@
     return (NSString *)[self localizedObjectForKey:key in:dictionary];
 }
 
-- (NSData *)localizedImageForKey:(NSString *)key in:(NSDictionary *)dictionary {
-    NSString *imageName = [self localizedObjectForKey:key in:dictionary];
+- (NSData *)localizedFileForKey:(NSString *)key in:(NSDictionary *)dictionary {
+    NSString *fileName = [self localizedObjectForKey:key in:dictionary];
     
-    return [self imageDataFromFileNamed:imageName];
+    return [self fileDataFromFileNamed:fileName];
 }
 
 - (NSArray *)localizedArrayForKey:(NSString *)key in:(NSDictionary *)dictionary {
     return (NSArray *)[self localizedObjectForKey:key in:dictionary];
 }
 
-- (NSData *)imageDataFromFileNamed:(NSString *)imageName {
+- (NSData *)fileDataFromFileNamed:(NSString *)imageName {
     NSString *path = [_bundle pathForResource:imageName ofType:nil];
     NSData *data = [NSData dataWithContentsOfFile:path];
 

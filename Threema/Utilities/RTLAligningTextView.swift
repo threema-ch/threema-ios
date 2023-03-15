@@ -35,6 +35,7 @@ class RTLAligningTextView: UITextView {
 
     override public var attributedText: NSAttributedString! {
         didSet {
+            let text = attributedText.string
             if !text.isEmpty {
                 textAlignment = text.textAlignment
             }

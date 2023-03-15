@@ -84,11 +84,9 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(showSafeSetup:) name:kSafeSetupUI object:nil];
     
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(wallpaperChanged:) name:kNotificationWallpaperChanged object:nil];
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(chatFontSizeChanged:) name:kNotificationFontSizeChanged object:nil];
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(chatFontSizeChanged:) name:UIContentSizeCategoryDidChangeNotification object:nil];
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(timestampSettingsChanged:) name:kNotificationShowTimestampSettingsChanged object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(colorThemeChanged:) name:kNotificationColorThemeChanged object:nil];
-    
+    // TODO: (IOS-2860) Remove
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(chatFontSizeChanged:) name:UIContentSizeCategoryDidChangeNotification object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(applicationDidReceiveMemoryWarning:) name:UIApplicationDidReceiveMemoryWarningNotification object:nil];
     
     [Colors updateWithTabBar:self.tabBar];
@@ -110,7 +108,9 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     if (_isFirstAppearance) {
         self.selectedIndex = kDefaultInitialTabIndex;
         _isFirstAppearance = NO;
-        [self showBetaFeedBackVC];
+        
+        // We check for modals to be shown
+        [LaunchModalManager.shared checkLaunchModals];
     }
 }
 
@@ -207,7 +207,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         _conversationsNavigationController,
         self
     ];
-    [self switchConversation:nil];
+    [self switchConversation:nil notification:nil];
 }
 
 - (void)switchToContacts {
@@ -224,7 +224,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     [self switchContact];
 }
 
-- (void)switchConversation:(Conversation *)conversation {
+- (void)switchConversation:(Conversation *)conversation notification:(NSNotification *) notification{
     
     // New ChatView iPad
     if([[UserSettings sharedUserSettings] newChatViewActive]) {
@@ -235,7 +235,8 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         }
 
         if (conv) {
-            chatViewController = [[ChatViewController alloc]initWithConversation: conv];
+            ShowConversationInformation* info = [ShowConversationInformation createInfoFor:notification];
+            chatViewController = [[ChatViewController alloc]initWithConversation: conv showConversationInformation: info];
         }
         
         if (chatViewController && conv.willBeDeleted == NO) {
@@ -379,28 +380,6 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     });
 }
 
-- (void)showBetaFeedBackVC {
-    if ([[NSUserDefaults standardUserDefaults] boolForKey:@"FASTLANE_SNAPSHOT"]) {
-        return;
-    }
-
-    BOOL doNotShowAgain = [[AppGroup userDefaults] boolForKey:kShowedTestFlightFeedbackView];
-    if ([ThreemaEnvironment env] != EnvironmentTypeAppStore && !doNotShowAgain) {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            UIViewController *feedbackVC = [FeedbackViewController new];
-            if(SYSTEM_IS_IPAD){
-                [self showModal:feedbackVC];
-            } else {
-                ModalNavigationController* modalVC = [[ModalNavigationController alloc] init];
-                modalVC.showDoneButton = YES;
-                [modalVC pushViewController:feedbackVC animated:true];
-                [self showViewController:modalVC sender:nil];
-            }
-        });
-        return;
-    }
-}
-
 #pragma mark - notifications
 
 - (void)selectedGroup:(NSNotification*)notification {
@@ -435,7 +414,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         return;
     }
     
-    Contact *contact = [notification.userInfo objectForKey:kKeyContact];
+    ContactEntity *contact = [notification.userInfo objectForKey:kKeyContact];
     
     _groupDetailViewController = nil;
     
@@ -509,11 +488,11 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     if (SYSTEM_IS_IPAD) {
         if (self.selectedIndex == kChatTabBarIndex) {
             Conversation *conv = [Old_ChatViewControllerCache getConversationForNotificationInfo:notification.userInfo createIfNotExisting:YES];
-            [self switchConversation: conv];
+            [self switchConversation: conv notification:notification];
         } else {
             [self setSelectedIndex:kChatTabBarIndex];
             Conversation *conv = [Old_ChatViewControllerCache getConversationForNotificationInfo:notification.userInfo createIfNotExisting:YES];
-            [self switchConversation: conv];
+            [self switchConversation: conv notification:notification];
         }
     } else {
         // New ChatView iPhone
@@ -521,13 +500,9 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
             if (_conversationsViewController == nil) {
                 _conversationsNavigationController = self.viewControllers[kChatTabBarIndex];
             }
-            
+            ShowConversationInformation* info = [ShowConversationInformation createInfoFor:notification];
             Conversation *conv = [Old_ChatViewControllerCache getConversationForNotificationInfo:notification.userInfo createIfNotExisting:YES];
-            ChatViewController *chatViewController = [[ChatViewController alloc]initWithConversation:conv];
-            
-            if ([[UserSettings sharedUserSettings] initialScrollPositionAlt1]) {
-                [CATransaction begin];
-            }
+            ChatViewController *chatViewController = [[ChatViewController alloc]initWithConversation:conv showConversationInformation:info];
             
             if ([_conversationsNavigationController.topViewController isKindOfClass:[ArchivedConversationsViewController class]]) {
                 _archivedConversationsViewController = (ArchivedConversationsViewController *) _conversationsNavigationController.topViewController;
@@ -543,7 +518,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
                 // Check if open chat is same we want to open
                 if ([_conversationsNavigationController.topViewController isKindOfClass:[ChatViewController class]]) {
                     ChatViewController * topChatViewController = (ChatViewController *) _conversationsNavigationController.topViewController;
-                    if (topChatViewController.conversation == chatViewController.conversation) {
+                    if (topChatViewController.conversation == chatViewController.conversation && notification == nil) {
                         return;
                     }
                 }
@@ -598,7 +573,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         if (selectedConversation == deletedConversation) {
             _old_ChatViewController = nil;
             if (self.selectedIndex == kChatTabBarIndex) {
-                [self switchConversation: nil];
+                [self switchConversation: nil notification:notification];
             }
         }
         
@@ -613,7 +588,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 
 - (void)deletedContact:(NSNotification*)notification {
     if (SYSTEM_IS_IPAD) {
-        Contact *deletedContact = [notification.userInfo objectForKey:kKeyContact];
+        ContactEntity *deletedContact = [notification.userInfo objectForKey:kKeyContact];
         if (_singleDetailViewController._contact == deletedContact) {
             _singleDetailViewController = nil;
             if (self.selectedIndex == kContactsTabBarIndex) {
@@ -626,13 +601,13 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
             ChatViewController *chatViewController = navigationController.viewControllers.firstObject;
             if (chatViewController.conversation.willBeDeleted) {
                 _conversationsViewController.selectedConversation = nil;
-                [self switchConversation:nil];
+                [self switchConversation:nil notification:nil];
             }
         }
         else {
             if (!_old_ChatViewController.conversation.isGroup && _old_ChatViewController.conversation.contact == nil) {
                 _old_ChatViewController = nil;
-                [self switchConversation:nil];
+                [self switchConversation:nil notification:nil];
             }
         }
     }
@@ -718,6 +693,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     }
 }
 
+// TODO: (IOS-2860) Remove
 - (void)chatFontSizeChanged:(NSNotification*)notification {
     if ([[UserSettings sharedUserSettings] newChatViewActive]) {
         return;
@@ -726,11 +702,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     [self resetChats];
 }
 
-- (void)timestampSettingsChanged:(NSNotification*)notification {
-    DDLogInfo(@"Timestamp settings changed, removing cached chat view controllers");
-    [self resetChats];
-}
-
+// TODO: (IOS-2860) Investigate if still needed
 - (void)resetChats {
     [Old_ChatViewControllerCache clearCache];
     
@@ -741,13 +713,13 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     if (SYSTEM_IS_IPAD) {
         if([[UserSettings sharedUserSettings] newChatViewActive]) {
             Conversation *selectedConversation = [_conversationsViewController selectedConversation];
-            [self switchConversation:selectedConversation];
+            [self switchConversation:selectedConversation notification:nil];
         }
         else {
             if (_old_ChatViewController) {
                 Conversation *conversation = _old_ChatViewController.conversation;
                 _old_ChatViewController = [Old_ChatViewControllerCache controllerForConversation:conversation];
-                [self switchConversation: nil];
+                [self switchConversation: nil notification:nil];
             }
         }
     } else {
@@ -825,7 +797,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     
     if([[UserSettings sharedUserSettings] newChatViewActive]) {
         Conversation *conversation = [_conversationsViewController getFirstConversation];
-        ChatViewController *chatViewController = [[ChatViewController alloc]initWithConversation: conversation];
+        ChatViewController *chatViewController = [[ChatViewController alloc]initWithConversation: conversation showConversationInformation:nil];
         [navigationController setViewControllers:@[chatViewController]];
         [_conversationsViewController setSelectionFor: conversation];
         

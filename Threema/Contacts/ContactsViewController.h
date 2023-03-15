@@ -23,7 +23,7 @@
 #import <CoreData/CoreData.h>
 #import "Threema-Swift.h"
 
-@class Contact;
+@class ContactEntity;
 
 @interface ContactsViewController : ThemedTableViewController <NSFetchedResultsControllerDelegate, UISearchControllerDelegate, UISearchBarDelegate, UISearchResultsUpdating>
 
@@ -34,7 +34,7 @@
 @property (weak, nonatomic) IBOutlet UILabel *noContactsMessageLabel;
 @property (weak, nonatomic) IBOutlet UIView *countContactsFooterView;
 @property (weak, nonatomic) IBOutlet UILabel *countContactsFooterLabel;
-@property (weak, nonatomic) IBOutlet CompanyDirectoryCell *companyDirectoryCell;
+@property CompanyDirectoryCellView *companyDirectoryCellView;
 
 @property (strong, nonatomic) UISearchController *searchController;
 
@@ -42,12 +42,12 @@
 
 - (BOOL)isWorkActive;
 
-- (void)showDetailsForContact:(Contact *)contact;
+- (void)showDetailsForContact:(ContactEntity *)contact;
 - (void)showDetailsForGroup:(Group *)group;
 
-- (void)setSelectionForContact:(Contact *)contact;
+- (void)setSelectionForContact:(ContactEntity *)contact;
 - (void)setSelectionForGroup:(Group *)group;
-- (void)setSelectionForWorkContact:(Contact *)contact;
+- (void)setSelectionForWorkContact:(ContactEntity *)contact;
 
 - (BOOL)showFirstEntryForCurrentMode;
 

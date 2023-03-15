@@ -35,7 +35,7 @@ class LinkedContactManger: NSObject {
     
     // MARK: - Private properties
     
-    private let contact: Contact
+    private let contact: ContactEntity
     private var cnContactIDObserver: NSKeyValueObservation?
     
     private lazy var cnContactStore = CNContactStore()
@@ -68,7 +68,7 @@ class LinkedContactManger: NSObject {
     
     // MARK: - Lifecycle
     
-    init(for contact: Contact) {
+    init(for contact: ContactEntity) {
         self.contact = contact
         
         super.init()
@@ -235,7 +235,7 @@ private extension CNContactViewController {
     // Some custom settings are needed to make `CNContactViewController` appear as expected.
     func applyWorkarounds() {
         // Enforce appearance to match app tint color
-        view.tintColor = Colors.primary
+        view.tintColor = .primary
         
         // Because `CNContactViewController` comes with a custom "header view" that runs behind
         // the navigation bar we hide the navigation bar.
@@ -337,7 +337,7 @@ extension LinkedContactManger {
     
     private func accessDenied(in viewController: UIViewController) {
 
-        let localizedOpenSettingsTitle = BundleUtil.localizedString(forKey: "go_to_settings")
+        let localizedOpenSettingsTitle = BundleUtil.localizedString(forKey: "alert_no_access_open_settings")
         
         if contactIsLinked {
             let localizedAlertTitle = BundleUtil.localizedString(forKey: "no_linked_contact_access_title")
@@ -363,15 +363,10 @@ extension LinkedContactManger {
             )
         }
         else {
-            let localizedAlertTitle = BundleUtil.localizedString(forKey: "no_contacts_access_title")
-            let localizedAlertMessage = BundleUtil.localizedString(forKey: "no_contacts_access_message")
-            
-            UIAlertTemplate.showAlert(
+            // Show access prompt
+            UIAlertTemplate.showOpenSettingsAlert(
                 owner: viewController,
-                title: localizedAlertTitle,
-                message: localizedAlertMessage,
-                titleOk: localizedOpenSettingsTitle,
-                actionOk: openSettingsClosure
+                noAccessAlertType: .contacts
             )
         }
     }
@@ -439,7 +434,7 @@ extension LinkedContactManger {
         let picker = CNContactPickerViewController()
         picker.delegate = self
         picker.modalPresentationStyle = .formSheet
-        picker.view.tintColor = Colors.primary // Ensure everything gets the correct tint color
+        picker.view.tintColor = .primary // Ensure everything gets the correct tint color
         
         viewController.present(picker, animated: true)
     }
@@ -642,7 +637,7 @@ extension LinkedContactManger {
     /// Allow lazy loading of app edit contact screen
     /// - Parameter contact: Contact to edit
     /// - Returns: Edit screen ready to be presented modally
-    typealias EditContactViewControllerProvider = (_ contact: Contact) -> UIViewController
+    typealias EditContactViewControllerProvider = (_ contact: ContactEntity) -> UIViewController
     
     /// Edit contact managed by this contact
     ///
@@ -731,7 +726,7 @@ extension LinkedContactManger {
             handler: unlinkAndEditClosure(in: viewController, provider: provider)
         )
         
-        let localizedOpenSettingsTitle = BundleUtil.localizedString(forKey: "go_to_settings")
+        let localizedOpenSettingsTitle = BundleUtil.localizedString(forKey: "alert_no_access_open_settings")
         let openSettingsAction = UIAlertAction(
             title: localizedOpenSettingsTitle,
             style: .default,

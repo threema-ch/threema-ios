@@ -153,7 +153,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     }
 }
 
-- (Contact *)contactAtIndexPath:(NSIndexPath *)indexPath {
+- (ContactEntity *)contactAtIndexPath:(NSIndexPath *)indexPath {
     if (_filteredContacts) {
         return [_filteredContacts objectAtIndex:indexPath.row];
     }
@@ -179,10 +179,10 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 }
 
 - (void)refreshContactSortIndices {
-    for (Contact *contact in _fetchedResultsController.fetchedObjects) {
+    for (ContactEntity *contact in _fetchedResultsController.fetchedObjects) {
         [contact updateSortInitial];
     }
-    for (Contact *contact in _gatewayFetchedResultsController.fetchedObjects) {
+    for (ContactEntity *contact in _gatewayFetchedResultsController.fetchedObjects) {
         [contact updateSortInitial];
     }
 }
@@ -217,7 +217,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 
 - (NSSet *)selectedConversations {
     NSMutableSet *conversations = [NSMutableSet setWithCapacity:[_selectedContacts count]];
-    for (Contact *contact in _selectedContacts) {
+    for (ContactEntity *contact in _selectedContacts) {
         __block Conversation *conversation = [_entityManager.entityFetcher conversationForContact:contact];
         if (conversation == nil) {
             // create & immediately save
@@ -232,7 +232,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 }
 
 - (void)selectedCellAtIndexPath:(NSIndexPath *)indexPath selected:(BOOL)selected {
-    Contact *contact = [self contactAtIndexPath:indexPath];
+    ContactEntity *contact = [self contactAtIndexPath:indexPath];
     
     if (selected) {
         if (![_selectedContacts containsObject:contact]) {
@@ -355,7 +355,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
-    Contact *contact = [self contactAtIndexPath:indexPath];
+    ContactEntity *contact = [self contactAtIndexPath:indexPath];
     
     Old_PickerContactCell *cell = [tableView dequeueReusableCellWithIdentifier:@"Old_PickerContactCell"];
     cell.contact = contact;

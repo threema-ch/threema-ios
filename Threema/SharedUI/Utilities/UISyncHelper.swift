@@ -29,7 +29,6 @@ class UISyncHelper {
     private let progressString: String
     
     private var execProfileSync: (() -> Void)?
-    private var execSettingsSync: (() -> Void)?
     
     private var promise: Promise<Void>?
     private var seal: Resolver<Void>?
@@ -69,29 +68,6 @@ class UISyncHelper {
         return newPromise
     }
     
-    public func execute(settings: SettingsStore.Settings) -> Promise<Void> {
-        let (newPromise, newSeal) = Promise<Void>.pending()
-        promise = newPromise
-        seal = newSeal
-        
-        execSettingsSync = {
-            self.showProgress()
-            
-            let settingsStore = SettingsStore()
-            settingsStore.syncAndSave(settings)
-                .done {
-                    self.successHandler()
-                }
-                .catch { error in
-                    self.errorHandler(error: error)
-                }
-        }
-        
-        execSettingsSync?()
-        
-        return newPromise
-    }
-    
     private func showProgress() {
         DispatchQueue.main.async {
             let hud = MBProgressHUD(view: self.getViewForHud())
@@ -126,7 +102,6 @@ class UISyncHelper {
                         // Do nothing and let the user hit done again
                         self.shouldShowGraceTime = false
                         self.execProfileSync?()
-                        self.execSettingsSync?()
                     },
                     titleCancel: BundleUtil.localizedString(forKey: "cancel")
                 ) { _ in

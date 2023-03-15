@@ -217,8 +217,8 @@
 }
 
 - (void)showCameraAccessAlert {
-    NSString *message = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"camera_disabled_message"], [ThreemaAppObjc currentName]];
-    [UIAlertTemplate showAlertWithOwner:self title:[BundleUtil localizedStringForKey:@"camera_disabled_title"] message:message actionOk:nil];
+    // Show access prompt
+    [UIAlertTemplate showOpenSettingsAlertWithOwner:self noAccessAlertType:NoAccessAlertTypeCamera];
 }
 
 - (void)setupCaptureSession {

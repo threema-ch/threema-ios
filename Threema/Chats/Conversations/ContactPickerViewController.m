@@ -19,7 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import "ContactPickerViewController.h"
-#import "Contact.h"
+#import "ContactEntity.h"
 #import "ProtocolDefines.h"
 #import "AppDelegate.h"
 #import "ServerAPIConnector.h"
@@ -262,6 +262,9 @@ typedef enum : NSUInteger {
         if ([[UserSettings sharedUserSettings] companyDirectory] == true) {
             if (indexPath.section == 0) {
                 cell = [self.tableView dequeueReusableCellWithIdentifier:@"CompanyDirectoryCell"];
+                if (cell == nil) {
+                    cell = [[CompanyDirectoryCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:@"CompanyDirectoryCell"];
+                }
                 [((CompanyDirectoryCell *)cell) updateColors];
             } else {
                 NSIndexPath *convertedIndex = [NSIndexPath indexPathForRow:indexPath.row inSection:indexPath.section - 1];
@@ -281,10 +284,7 @@ typedef enum : NSUInteger {
 
 - (UITableViewCell *)tableView:(UITableView *)tableView contactCellForIndexPath:(NSIndexPath *)indexPath {
     ContactCell *cell = [self.tableView dequeueReusableCellWithIdentifier:@"ContactCell"];
-    
-    Contact *contact = [self.contactsDataSource contactAtIndexPath:indexPath];
-    cell._contact = contact;
-    
+    cell._contact = [self.contactsDataSource contactAtIndexPath:indexPath];;
     return cell;
 }
 
@@ -296,10 +296,7 @@ typedef enum : NSUInteger {
 
 - (UITableViewCell *)tableView:(UITableView *)tableView workContactCellForIndexPath:(NSIndexPath *)indexPath {
     ContactCell *cell = [self.tableView dequeueReusableCellWithIdentifier:@"ContactCell"];
-    
-    Contact *contact = [self.workContactsDataSource workContactAtIndexPath:indexPath];
-    cell._contact = contact;
-    
+    cell._contact = [self.workContactsDataSource workContactAtIndexPath:indexPath];
     return cell;
 }
 
@@ -307,7 +304,7 @@ typedef enum : NSUInteger {
     
     UIViewController *presentingVC = self.presentingViewController;
     Group *group = nil;
-    Contact *contact = nil;
+    ContactEntity *contact = nil;
     
     if (_mode == ModeGroups) {
         if (indexPath.section != 0) {
@@ -379,7 +376,7 @@ typedef enum : NSUInteger {
                                                       userInfo:info];
 }
 
-- (void)showConversationForContact:(Contact *)contact {
+- (void)showConversationForContact:(ContactEntity *)contact {
     NSDictionary *info = [NSDictionary dictionaryWithObjectsAndKeys:
                           contact, kKeyContact,
                           [NSNumber numberWithBool:YES], kKeyForceCompose,

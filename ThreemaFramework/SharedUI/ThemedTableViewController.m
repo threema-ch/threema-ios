@@ -46,6 +46,10 @@
     
     self.navigationController.view.backgroundColor = Colors.backgroundView;
     
+    if (self.tableView.style == UITableViewStyleInsetGrouped) {
+        self.view.backgroundColor = Colors.backgroundView;
+    }
+    
     self.tableView.estimatedRowHeight = UITableViewAutomaticDimension;
     self.tableView.rowHeight = UITableViewAutomaticDimension;
     
@@ -111,6 +115,7 @@
             });
         }
     }
+    [self updateColors];
     [self.navigationController.view setNeedsLayout];
     [self.navigationController.view layoutIfNeeded];
     [self.navigationController.view setNeedsDisplay];

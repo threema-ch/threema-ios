@@ -267,7 +267,7 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
             systemName: "pin.circle.fill",
             withConfiguration: Configuration.iconsConfiguration
         )?
-            .withTintColor(Colors.grayCircleBackground, renderingMode: .alwaysOriginal)
+            .withTintColor(Colors.backgroundPinChat, renderingMode: .alwaysOriginal)
         let imageView = UIImageView(
             image: image
         )
@@ -282,7 +282,7 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
         
         return imageView
     }()
-        
+
     private lazy var nameDateLastMessageStateStackView: UIStackView = {
         let stackView = UIStackView(arrangedSubviews: [nameLabel, dateLastMessageStateContainerView])
         stackView.spacing = Configuration.nameDateLastMessageStateStackViewSpacing
@@ -350,7 +350,7 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
             guard conversation != nil else {
                 return
             }
-            
+
             updateCell()
         }
     }
@@ -486,8 +486,9 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
         if let draft = MessageDraftStore.loadDraft(for: conversation) {
             updateColorsForDateDraftLabel(isDraft: true)
             dateDraftLabel.text = BundleUtil.localizedString(forKey: "draft").uppercased()
-            let index = draft.index(draft.startIndex, offsetBy: min(draft.count, 100))
-            let trimmedDraft = draft[..<index]
+            let parsedDraft = MarkupParser().previewString(for: draft)
+            let index = parsedDraft.index(parsedDraft.startIndex, offsetBy: min(parsedDraft.count, 100))
+            let trimmedDraft = parsedDraft[..<index]
             previewLabel.attributedText = NSAttributedString(string: String(trimmedDraft))
         }
         else {
@@ -545,13 +546,13 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
         let iconConfig = traitCollection.preferredContentSizeCategory.isAccessibilityCategory ?
             Configuration.iconsAccessibilityConfiguration
             : Configuration.iconsConfiguration
-        
         let pinImage = UIImage(
             systemName: "pin.circle.fill",
             withConfiguration: iconConfig
         )?
-            .withTintColor(Colors.grayCircleBackground, renderingMode: .alwaysOriginal)
+            .withTintColor(Colors.backgroundPinChat, renderingMode: .alwaysOriginal)
         pinImageView.image = pinImage
+        
         updateDisplayStateImage()
         updateTypingIndicator()
         updateDndImage()
@@ -610,7 +611,7 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
         updateDndImage()
         
         updatePinImage()
-        
+                
         loadAvatar()
         
         if !conversation.isGroup(),
@@ -627,14 +628,14 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
     private func updateTitleLabel() {
         guard let conversation = conversation,
               let displayName = conversation.displayName else {
-            nameLabel.attributedText = nil
+            // This should not occur, but we assign an empty string to make the firstBaseline alignment of dateDraftLabel work anyways.
+            nameLabel.attributedText = NSAttributedString(string: " ")
             return
         }
         
         guard !conversation.isGroup() else {
             // Group conversation
-            let groupManager = GroupManager(entityManager: BusinessInjector().entityManager)
-            if let group = groupManager.getGroup(conversation: conversation),
+            if let group = BusinessInjector().groupManager.getGroup(conversation: conversation),
                !group.isSelfMember {
                 let attributeString = NSMutableAttributedString(string: displayName)
                 attributeString.addAttribute(
@@ -787,7 +788,7 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
         pinImageView.isHidden = false
         updateIconStackView()
     }
-    
+       
     private func updateIconStackView() {
         iconsStackView.isHidden = dndImageView.isHidden && pinImageView.isHidden && typingIndicatorImageView.isHidden
     }
@@ -938,6 +939,22 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
         }
         
         NotificationCenter.default.addObserver(
+            forName: NSNotification.Name(rawValue: kNotificationUpdateDraftForCell),
+            object: nil,
+            queue: nil
+        ) { [weak self] notification in
+            guard let strongSelf = self else {
+                return
+            }
+            
+            if let conversation = notification.userInfo?[kKeyConversation] as? Conversation,
+               conversation.objectID == self?.conversation?.objectID {
+                strongSelf.updateLastMessagePreview()
+                strongSelf.updateColors()
+            }
+        }
+        
+        NotificationCenter.default.addObserver(
             forName: UIContentSizeCategory.didChangeNotification,
             object: nil,
             queue: nil
@@ -953,13 +970,14 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
     
     private func addAllObjectObservers() {
         observeConversation(\.lastMessage, callOnCreation: false) {
+
             self.removeLastMessageObservers()
             self.observeLastMessageProperties()
             self.updateTitleLabel()
             self.updateLastMessagePreview()
             self.updateDisplayStateImage()
         }
-        
+
         observeConversation(\.typing, callOnCreation: false) {
             self.updateTypingIndicator()
         }
@@ -967,7 +985,7 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
         observeConversation(\.marked, callOnCreation: false) {
             self.updatePinImage()
         }
-        
+                
         observeConversation(\.conversationCategory, callOnCreation: false) {
             self.updateDisplayStateImage()
             self.updateLastMessagePreview()
@@ -1001,25 +1019,46 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
     }
     
     private func observeLastMessageProperties() {
+        if let lastMessage = conversation?.lastMessage as? BallotMessage {
+            observeLastMessage(lastMessage, keyPath: \.ballot, callOnCreation: false) {
+                self.updateLastMessagePreview()
+            }
+        }
+        else if let lastMessage = conversation?.lastMessage as? FileMessageEntity {
+            observeLastMessage(lastMessage, keyPath: \.mimeType, callOnCreation: false) {
+                self.updateLastMessagePreview()
+            }
+
+            observeLastMessage(lastMessage, keyPath: \.caption, callOnCreation: false) {
+                self.updateLastMessagePreview()
+            }
+        }
+
         if let conversation = conversation,
            conversation.isGroup() {
             return
         }
-        
-        observeLastMessage(\.userack, callOnCreation: false) {
-            self.updateDisplayStateImage()
-        }
-        observeLastMessage(\.read, callOnCreation: false) {
-            self.updateDisplayStateImage()
-        }
-        observeLastMessage(\.delivered, callOnCreation: false) {
-            self.updateDisplayStateImage()
-        }
-        observeLastMessage(\.sendFailed, callOnCreation: false) {
-            self.updateDisplayStateImage()
-        }
-        observeLastMessage(\.sent, callOnCreation: false) {
-            self.updateDisplayStateImage()
+
+        if let lastMessage = conversation?.lastMessage {
+            observeLastMessage(lastMessage, keyPath: \.userack, callOnCreation: false) {
+                self.updateDisplayStateImage()
+            }
+
+            observeLastMessage(lastMessage, keyPath: \.read, callOnCreation: false) {
+                self.updateDisplayStateImage()
+            }
+
+            observeLastMessage(lastMessage, keyPath: \.delivered, callOnCreation: false) {
+                self.updateDisplayStateImage()
+            }
+
+            observeLastMessage(lastMessage, keyPath: \.sendFailed, callOnCreation: false) {
+                self.updateDisplayStateImage()
+            }
+
+            observeLastMessage(lastMessage, keyPath: \.sent, callOnCreation: false) {
+                self.updateDisplayStateImage()
+            }
         }
     }
     
@@ -1056,30 +1095,27 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
     /// All observers are stored in the `observers` property.
     ///
     /// - Parameters:
-    ///   - keyPath: Key path in `lastMessage` to observe
+    ///   - lastMessage: Message set as `Conversation.lastMessage`
+    ///   - keyPath: Key path depending of type `lastMessage` to observe
     ///   - callOnCreation: Should the handler be called during observer creation?
     ///   - changeHandler: Handler called on each observed change.
     ///                     Don't forget to capture `self` weakly! Dispatched on the main queue.
-    private func observeLastMessage<Value>(
-        _ keyPath: KeyPath<BaseMessage, Value>,
+    private func observeLastMessage<Message: BaseMessage, Value>(
+        _ lastMessage: Message,
+        keyPath: KeyPath<Message, Value>,
         callOnCreation: Bool = true,
         changeHandler: @escaping () -> Void
     ) {
-        
-        guard let conversation = conversation,
-              let lastMessage = conversation.lastMessage else {
-            return
-        }
         let options: NSKeyValueObservingOptions = callOnCreation ? .initial : []
-        
+
         let observer = lastMessage.observe(keyPath, options: options) { _, _ in
             // Because `changeHandler` updates UI elements we need to ensure that it runs on the main queue
             DispatchQueue.main.async(execute: changeHandler)
         }
-        
+
         lastMessageObservers.append(observer)
     }
-    
+
     /// Helper to add observers to the `contact` property
     ///
     /// All observers are stored in the `observers` property.
@@ -1090,7 +1126,7 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
     ///   - changeHandler: Handler called on each observed change.
     ///                     Don't forget to capture `self` weakly! Dispatched on the main queue.
     private func observeContact<Value>(
-        _ keyPath: KeyPath<Contact, Value>,
+        _ keyPath: KeyPath<ContactEntity, Value>,
         callOnCreation: Bool = true,
         changeHandler: @escaping () -> Void
     ) {

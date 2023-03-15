@@ -51,6 +51,6 @@ public enum Constants {
     
     /// Showed TestFlight feedback info screen key
     public static let showedTestFlightFeedbackViewKey = kShowedTestFlightFeedbackView
-    /// Showed 10 Year Anniversary info screen key
-    public static let showed10YearsAnniversaryView = kShowed10YearsAnniversaryView
+    /// Showed notification type selection view
+    public static let showedNotificationTypeSelectionView = kShowedNotificationTypeSelectionView
 }

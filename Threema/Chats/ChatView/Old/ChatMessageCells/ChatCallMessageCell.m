@@ -28,7 +28,6 @@
 #import "ImageUtils.h"
 #import "QBPopupMenuItem.h"
 #import "QBPopupMenu.h"
-#import "Contact.h"
 #import "UIDefines.h"
 #import "TextStyleUtils.h"
 #import "BundleUtil.h"

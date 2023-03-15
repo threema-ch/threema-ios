@@ -24,8 +24,7 @@ import UIKit
 // If you have a new cell you need to add it in 4 places: (also see Step 1 - 4 comments below)
 //  1. Register in `registerCells(in:)`
 //  2. Dequeue, assign message and return in `cell(for:in:at:)`
-//  3. Add cell type for a new cell
-//  4. Assign and load sizing cell in `estimatedCellHeight(for:with:)`
+//  3. Assign and load sizing cell in `estimatedCellHeight(for:with:)`
 
 // MARK: - Register and load cells
 
@@ -283,93 +282,6 @@ struct ChatViewCellProvider {
     ) -> ChatViewCloseToZeroHeightTableViewCell {
         tableView.dequeueCell(for: indexPath)
     }
-    
-    // MARK: - Static cells
-    
-    /// Returns a single cell for a given base message without a delegate
-    /// - Parameter message: BaseMessage of the cell
-    /// - Returns: ChatViewBaseTableView cell of the message
-    static func cellType(for message: BaseMessage) -> ChatViewBaseTableViewCell {
-        
-        switch message {
-            
-        case let textMessage as TextMessage:
-            let cell = ChatViewTextMessageTableViewCell()
-            cell.textMessageAndNeighbors = (textMessage, ChatViewDataSource.MessageNeighbors.noNeighbors)
-            return cell
-            
-        case let fileMessageProvider as FileMessageProvider:
-            switch fileMessageProvider.fileMessageType {
-                
-            case let .image(imageMessage):
-                let cell = ChatViewThumbnailDisplayMessageTableViewCell()
-                cell.thumbnailDisplayMessageAndNeighbors = (
-                    imageMessage,
-                    ChatViewDataSource.MessageNeighbors.noNeighbors
-                )
-                return cell
-                
-            case let .sticker(stickerMessage):
-                let cell = ChatViewStickerMessageTableViewCell()
-                cell.stickerMessageAndNeighbors = (stickerMessage, ChatViewDataSource.MessageNeighbors.noNeighbors)
-                return cell
-                
-            case let .animatedImage(animatedImageMessage):
-                let cell = ChatViewAnimatedImageMessageTableViewCell()
-                cell.animatedImageMessageAndNeighbors = (
-                    animatedImageMessage,
-                    ChatViewDataSource.MessageNeighbors.noNeighbors
-                )
-                return cell
-                
-            case let .animatedSticker(animatedStickerMessage):
-                let cell = ChatViewAnimatedStickerMessageTableViewCell()
-                cell.animatedStickerMessageAndNeighbors = (
-                    animatedStickerMessage,
-                    ChatViewDataSource.MessageNeighbors.noNeighbors
-                )
-                return cell
-                
-            case let .video(videoMessage):
-                let cell = ChatViewThumbnailDisplayMessageTableViewCell()
-                cell.thumbnailDisplayMessageAndNeighbors = (
-                    videoMessage,
-                    ChatViewDataSource.MessageNeighbors.noNeighbors
-                )
-                return cell
-                
-            case let .voice(voiceMessage):
-                let cell = ChatViewVoiceMessageTableViewCell()
-                cell.voiceMessageAndNeighbors = (voiceMessage, ChatViewDataSource.MessageNeighbors.noNeighbors)
-                return cell
-                
-            case let .file(fileMessage):
-                let cell = ChatViewFileMessageTableViewCell()
-                cell.fileMessageAndNeighbors = (fileMessage, ChatViewDataSource.MessageNeighbors.noNeighbors)
-                return cell
-            }
-            
-        case let locationMessage as LocationMessage:
-            let cell = ChatViewLocationMessageTableViewCell()
-            cell.locationMessageAndNeighbors = (locationMessage, ChatViewDataSource.MessageNeighbors.noNeighbors)
-            return cell
-            
-        case let ballotMessage as BallotMessage:
-            let cell = ChatViewBallotMessageTableViewCell()
-            cell.ballotMessageAndNeighbors = (ballotMessage, ChatViewDataSource.MessageNeighbors.noNeighbors)
-            return cell
-            
-        case let systemMessage as SystemMessage:
-            let cell = ChatViewCallSystemMessageTableViewCell()
-            cell.callMessageAndNeighbors = (systemMessage, ChatViewDataSource.MessageNeighbors.noNeighbors)
-            return cell
-        
-        // Step 3
-        
-        default:
-            fatalError("Not supported message type: \(message.loggingDescription)")
-        }
-    }
 }
 
 // MARK: - Measure cell height
@@ -469,7 +381,7 @@ enum ChatViewCellSizeProvider {
                 measurableCell = ChatViewWorkConsumerInfoSystemMessageTableViewCell.sizingCell
             }
             
-        // Step 4
+        // Step 3
             
         default:
             fatalError("Not supported message type: \(message.loggingDescription)")

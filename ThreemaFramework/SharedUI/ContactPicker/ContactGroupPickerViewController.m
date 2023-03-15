@@ -174,10 +174,10 @@ typedef enum : NSUInteger {
     _sendAsFileLabel.textColor = Colors.textLink;
     
     [self.navigationItem.leftBarButtonItem setTitleTextAttributes:[NSDictionary dictionaryWithObjectsAndKeys:
-                                                                   Colors.primary, NSForegroundColorAttributeName,
+                                                                   UIColor.primary, NSForegroundColorAttributeName,
                                         nil] forState:UIControlStateNormal];
     [self.navigationItem.leftBarButtonItem setTitleTextAttributes:[NSDictionary dictionaryWithObjectsAndKeys:
-                                                                   Colors.primary, NSForegroundColorAttributeName,
+                                                                   UIColor.primary, NSForegroundColorAttributeName,
                                                                    nil] forState:UIControlStateHighlighted];
 }
 

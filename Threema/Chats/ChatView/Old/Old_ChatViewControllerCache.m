@@ -99,11 +99,11 @@ static NSMutableDictionary *cache;
 
 + (Conversation *)getConversationForNotificationInfo:(NSDictionary *)info createIfNotExisting:(BOOL)createIfNotExisting {
     __block Conversation *conversation = [info objectForKey:kKeyConversation];
-    __block Contact *notificationContact = [info objectForKey:kKeyContact];
+    __block ContactEntity *notificationContact = [info objectForKey:kKeyContact];
     if (conversation == nil) {
         EntityManager *entityManager = [[EntityManager alloc] init];
         [entityManager performSyncBlockAndSafe:^{
-            Contact *contact = (Contact *)[entityManager.entityFetcher getManagedObjectById:notificationContact.objectID];
+            ContactEntity *contact = (ContactEntity *)[entityManager.entityFetcher getManagedObjectById:notificationContact.objectID];
             if (contact) {
                 conversation = [entityManager conversationForContact:contact createIfNotExisting:createIfNotExisting];
             }

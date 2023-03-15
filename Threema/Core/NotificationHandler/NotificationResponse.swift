@@ -18,6 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import CocoaLumberjackSwift
 import Foundation
 
 @objc class NotificationResponse: NSObject {
@@ -28,12 +29,16 @@ import Foundation
     @objc var userText: String?
     @objc var identity: String?
     @objc var messageID: String?
+    
     @objc var userInfo: [AnyHashable: Any]
 
     @objc var notificationIdentifier: String
     @objc var completionHandler: () -> Void
     
     private let notificationManager = NotificationManager()
+    private lazy var entityManager = EntityManager()
+    
+    private var conversation: Conversation?
 
     @objc init(response: UNNotificationResponse, completion: @escaping (() -> Void)) {
         if let tmpThreemaDict = response.notification.request.content.userInfo["threema"] as? [AnyHashable: Any] {
@@ -48,6 +53,20 @@ import Foundation
             }
             else {
                 self.notificationIdentifier = kAppPushReplyBackgroundTask
+            }
+            
+            let entityManager = EntityManager()
+            
+            if let threemaDict, let groupIDString = threemaDict["groupId"] as? String,
+               let groupCreator = threemaDict["groupCreator"] as? String,
+               let groupID = Data(base64Encoded: groupIDString) {
+                self.conversation = entityManager.entityFetcher.conversation(for: groupID, creator: groupCreator)
+            }
+            else if let threemaDict, let senderIdentity = threemaDict["from"] as? String {
+                self.conversation = entityManager.entityFetcher.conversation(forIdentity: senderIdentity)
+            }
+            else {
+                DDLogError("Could not find conversation for push notification")
             }
             
             self.identity = response.notification.request.identifier
@@ -154,7 +173,11 @@ import Foundation
     private func handleThumbUp() {
         ServerConnectorHelper.waitUntilConnected(timeout: 20, onConnect: {
             let entityManager = EntityManager()
-            guard let baseMessage = entityManager.entityFetcher.message(with: self.messageID!.decodeHex()),
+            guard let messageID = self.messageID, let conversation = self.conversation,
+                  let baseMessage = entityManager.entityFetcher.message(
+                      with: messageID.decodeHex(),
+                      conversation: conversation
+                  ),
                   let conversation = baseMessage.conversation else {
                 self.sendThumbUpError()
                 self.finishResponse()
@@ -212,7 +235,7 @@ import Foundation
     private func sendUserAck(
         for baseMessage: BaseMessage,
         conversation: Conversation,
-        contact: Contact?,
+        contact: ContactEntity?,
         group: Group?,
         entityManager: EntityManager
     ) {
@@ -256,7 +279,11 @@ import Foundation
     private func handleThumbDown() {
         ServerConnectorHelper.waitUntilConnected(timeout: 20, onConnect: {
             let entityManager = EntityManager()
-            guard let baseMessage = entityManager.entityFetcher.message(with: self.messageID!.decodeHex()),
+            guard let messageID = self.messageID, let conversation = self.conversation,
+                  let baseMessage = entityManager.entityFetcher.message(
+                      with: messageID.decodeHex(),
+                      conversation: conversation
+                  ),
                   let conversation = baseMessage.conversation else {
                 self.sendThumbDownError()
                 self.finishResponse()
@@ -317,7 +344,7 @@ import Foundation
     private func sendUserDecline(
         for baseMessage: BaseMessage,
         conversation: Conversation,
-        contact: Contact?,
+        contact: ContactEntity?,
         group: Group?,
         entityManager: EntityManager
     ) {
@@ -361,7 +388,11 @@ import Foundation
         ServerConnectorHelper.waitUntilConnected(timeout: 20, onConnect: {
             let entityManager = EntityManager()
             
-            if let baseMessage = entityManager.entityFetcher.message(with: self.messageID!.decodeHex()),
+            if let messageID = self.messageID, let conversation = self.conversation,
+               let baseMessage = entityManager.entityFetcher.message(
+                   with: messageID.decodeHex(),
+                   conversation: conversation
+               ),
                let conversation = baseMessage.conversation {
 
                 if !baseMessage.isGroupMessage,
@@ -391,7 +422,11 @@ import Foundation
             }
         }) {
             let entityManager = EntityManager()
-            if let baseMessage = entityManager.entityFetcher.message(with: self.messageID!.decodeHex()),
+            if let messageID = self.messageID, let conversation = self.conversation,
+               let baseMessage = entityManager.entityFetcher.message(
+                   with: messageID.decodeHex(),
+                   conversation: conversation
+               ),
                let conversation = baseMessage.conversation {
                 
                 self.updateMessageAsRead(for: baseMessage, entityManager: entityManager)

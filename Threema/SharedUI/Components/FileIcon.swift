@@ -153,6 +153,12 @@ final class FileIcon: UIImageView {
         ])
     }
     
+    // MARK: - Updates
+    
+    func updateColors() {
+        fileSymbolLabel.textColor = Colors.black
+    }
+    
     // MARK: - Set file type
     
     /// Switch file symbol to new value

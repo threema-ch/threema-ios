@@ -109,7 +109,7 @@ class CallViewController: UIViewController {
         }
     }
     
-    private var contact: Contact?
+    private var contact: ContactEntity?
     
     private var statsTimer: Timer?
     
@@ -384,7 +384,7 @@ extension CallViewController {
         case .rejectedDisabled:
             timerString = BundleUtil.localizedString(forKey: "call_rejected_disabled")
         case .microphoneDisabled:
-            timerString = BundleUtil.localizedString(forKey: "call_microphone_permission_title")
+            timerString = BundleUtil.localizedString(forKey: "call_mic_access")
         }
         DispatchQueue.main.async {
             self.timerLabel?.text = timerString
@@ -550,7 +550,7 @@ extension CallViewController {
         }
     }
     
-    func setBackgroundForContact(contact: Contact) {
+    func setBackgroundForContact(contact: ContactEntity) {
         guard let avatarImage = AvatarMaker.shared().callBackground(for: contact) else {
             DDLogError("Could not create avatar image")
             return
@@ -694,7 +694,7 @@ extension CallViewController {
         cameraSwitchButton.isEnabled = true
                 
         DispatchQueue.main.async {
-            self.timerLabel.text = "08:15"
+            self.timerLabel.text = "12:12"
         }
         speakerButton.setImage(UIImage(named: "SpeakerInactive"), for: .normal)
         speakerButton.setImage(UIImage(named: "SpeakerActive"), for: .highlighted)
@@ -729,7 +729,7 @@ extension CallViewController {
         cameraButton?.setImage(UIImage(named: cameraImageName), for: .highlighted)
         
         DispatchQueue.main.async {
-            self.timerLabel.text = "08:15"
+            self.timerLabel.text = "12:12"
         }
         speakerButton.setImage(UIImage(named: "SpeakerActive"), for: .normal)
         speakerButton.setImage(UIImage(named: "SpeakerActive"), for: .highlighted)
@@ -1087,15 +1087,11 @@ extension CallViewController {
     }
 
     private func showCameraAccessAlert() {
-        let message = String.localizedStringWithFormat(
-            BundleUtil.localizedString(forKey: "camera_disabled_message"),
-            ThreemaApp.currentName
-        )
+        // Show access prompt
         DispatchQueue.main.async {
-            UIAlertTemplate.showAlert(
+            UIAlertTemplate.showOpenSettingsAlert(
                 owner: self,
-                title: BundleUtil.localizedString(forKey: "camera_disabled_title"),
-                message: message
+                noAccessAlertType: .camera
             )
         }
     }
@@ -1315,7 +1311,7 @@ extension CallViewController {
                     .localizedString(forKey: "call_threema_video_in_chat_info_title")
                 initiatorVideoCallShowcase!.secondaryText = BundleUtil
                     .localizedString(forKey: "call_threema_initiator_video_info")
-                initiatorVideoCallShowcase!.backgroundPromptColor = Colors.primary
+                initiatorVideoCallShowcase!.backgroundPromptColor = .primary
                 
                 initiatorVideoCallShowcase!.backgroundPromptColorAlpha = 0.7
                 initiatorVideoCallShowcase!.backgroundRadius = -1
@@ -1660,6 +1656,12 @@ extension CallViewController {
             VoIPHelper.shared()?.contactName = contact?.displayName
             wasProximityMonitoringEnabled = UIDevice.current.isProximityMonitoringEnabled
             UIDevice.current.isProximityMonitoringEnabled = false
+            
+            NotificationCenter.default.post(
+                name: NSNotification.Name(rawValue: kNotificationNavigationItemPromptShouldChange),
+                object: nil
+            )
+            
             dismiss(animated: true) {
                 if AppDelegate.shared()?.isAppLocked == true {
                     AppDelegate.shared()?.presentPasscodeView()

@@ -19,7 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import "Conversation.h"
-#import "Contact.h"
+#import "ContactEntity.h"
 #import "BaseMessage.h"
 #import "ImageData.h"
 #import "UserSettings.h"
@@ -142,8 +142,8 @@ static NSString *fieldVisibility = @"visibility";
     [self didChangeValueForKey:fieldVisibility];
 }
 
-- (NSSet<Contact*>*) members {
-    NSSet<Contact*>* set = [self primitiveValueForKey:@"members"];
+- (NSSet<ContactEntity*>*) members {
+    NSSet<ContactEntity*>* set = [self primitiveValueForKey:@"members"];
     if(set == nil) {
         return [[NSSet alloc]init];
     }

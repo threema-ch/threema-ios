@@ -19,7 +19,6 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import "BallotVoteViewController.h"
-#import "Contact.h"
 #import "BallotVoteTableCell.h"
 #import "BallotChoice.h"
 #import "BallotResult.h"

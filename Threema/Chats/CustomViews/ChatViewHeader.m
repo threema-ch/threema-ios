@@ -21,7 +21,7 @@
 #import "VoIPHelper.h"
 #import <Contacts/Contacts.h>
 #import "ChatViewHeader.h"
-#import "Contact.h"
+#import "ContactEntity.h"
 #import "ImageData.h"
 #import "MWPhotoBrowser.h"
 #import "ImageMessageEntity.h"
@@ -109,14 +109,14 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 }
 
 - (void)updateColors {
-    UIImage *image = [UIImage imageNamed:@"Search" inColor:Colors.primary];
+    UIImage *image = [UIImage imageNamed:@"Search" inColor:UIColor.primary];
     [_searchButton setImage:image forState:UIControlStateNormal];
     
     PushSetting *pushSetting = [PushSetting pushSettingForConversation:_conversation];
     UIImage *pushSettingIcon = [pushSetting imageForPushSetting];
-    [_notificationsSettingsButton setImage:[pushSettingIcon imageWithTint:Colors.primary] forState:UIControlStateNormal];
+    [_notificationsSettingsButton setImage:[pushSettingIcon imageWithTint:UIColor.primary] forState:UIControlStateNormal];
     
-    UIImage *origPhoneImage = [UIImage imageNamed:@"ThreemaPhone" inColor:Colors.primary];
+    UIImage *origPhoneImage = [UIImage imageNamed:@"ThreemaPhone" inColor:UIColor.primary];
     UIImage *phoneImage = [ImageUtils imageWithImage:origPhoneImage scaledToSize:CGSizeMake(30, 30)];
     
     _callButton.imageView.contentMode = UIViewContentModeCenter;
@@ -370,7 +370,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     
     [backgroundEntityManager performBlock:^{
         for (NSString *identity in _group.allMemberIdentities) {
-            Contact *contact = [[backgroundEntityManager entityFetcher] contactForId:identity];
+            ContactEntity *contact = [[backgroundEntityManager entityFetcher] contactForId:identity];
             if (contact == nil) {
                 continue;
             }
@@ -378,9 +378,9 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
                 continue;
             }
             
-            [[AvatarMaker sharedAvatarMaker] avatarForContact:contact size:width masked:YES onCompletion:^(UIImage *avatarImage, NSString *identity) {
+            [[AvatarMaker sharedAvatarMaker] avatarForContactEntity:contact size:width masked:YES onCompletion:^(UIImage *avatarImage, NSString *identity) {
                 dispatch_async(dispatch_get_main_queue(), ^{
-                    Contact *mContact = [[mainThreadEntityManager entityFetcher] contactForId:identity];
+                    ContactEntity *mContact = [[mainThreadEntityManager entityFetcher] contactForId:identity];
                     if (mContact != nil) {
                         UIImageView *imageView = [[UIImageView alloc] initWithFrame:imageRect];
                         imageView.image = avatarImage;
@@ -406,7 +406,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     _verificationLevel.hidden = NO;
     _verificationLevel.accessibilityLabel = [_conversation.contact verificationLevelAccessibilityLabel];
 
-    [_avatarButton setImage:[[AvatarMaker sharedAvatarMaker] avatarForContact:_conversation.contact size:_avatarButton.frame.size.width masked:YES] forState:UIControlStateNormal];
+    [_avatarButton setImage:[[AvatarMaker sharedAvatarMaker] avatarForContactEntity:_conversation.contact size:_avatarButton.frame.size.width masked:YES] forState:UIControlStateNormal];
     
     _avatarButton.accessibilityLabel = nil;
     
@@ -472,7 +472,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 }
 
 - (void)checkEnableCallButtons {
-    if ([[NSUserDefaults standardUserDefaults] boolForKey:@"FASTLANE_SNAPSHOT"]) {
+    if (ProcessInfoHelper.isRunningForScreenshots)  {
         _callButton.enabled = YES;
     } else {
         _callButton.enabled = [UserSettings sharedUserSettings].enableThreemaCall && [ServerConnector sharedServerConnector].connectionState == ConnectionStateLoggedIn && [VoIPHelper shared].isCallActiveInBackground == NO;
@@ -488,7 +488,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 }
 
 - (void)startVoipCall:(BOOL)withVideo {
-    if ([[NSUserDefaults standardUserDefaults] boolForKey:@"FASTLANE_SNAPSHOT"]) {
+    if (ProcessInfoHelper.isRunningForScreenshots)  {
         VoIPCallUserAction *action = [[VoIPCallUserAction alloc] initWithAction:withVideo ? ActionCallWithVideo : ActionCall contactIdentity:self.conversation.contact.identity callID:nil completion:nil];
         [[VoIPCallStateManager shared] processUserAction:action];
     } else {
@@ -506,7 +506,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
                 [_showCase setTargetViewWithView:_callButton];
                 _showCase.primaryText = [BundleUtil localizedStringForKey:@"call_threema_video_in_chat_info_title"];
                 _showCase.secondaryText = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"call_threema_video_in_chat_info_description"], [ThreemaAppObjc currentName]];
-                _showCase.backgroundPromptColor = Colors.primary;
+                _showCase.backgroundPromptColor = UIColor.primary;
                 _showCase.backgroundPromptColorAlpha = 0.93;
                 _showCase.primaryTextSize = 24.0;
                 _showCase.secondaryTextSize = 18.0;
@@ -927,7 +927,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     __block BOOL needsUpdate = NO;
     [_entityManager performBlockAndWait:^{
         if (_conversation.isGroup) {
-            for (Contact *contact in _conversation.members) {
+            for (ContactEntity *contact in _conversation.members) {
                 if ([contact.identity isEqualToString:notification.object]) {
                     needsUpdate = YES;
                 }

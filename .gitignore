@@ -17,6 +17,7 @@ xcuserdata/
 ## Test Files
 ThreemaUITests/safeID
 ThreemaUITests/safeIDPW
+Screenshots/
 
 ## Swift Package Manager
 .swiftpm

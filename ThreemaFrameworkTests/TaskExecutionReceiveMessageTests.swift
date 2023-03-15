@@ -121,6 +121,7 @@ class TaskExecutionReceiveMessageTests: XCTestCase {
             multiDeviceManager: MultiDeviceManagerMock(),
             myIdentityStore: MyIdentityStoreMock(),
             userSettings: UserSettingsMock(),
+            settingsStore: SettingsStoreMock(),
             serverConnector: serverConnectorMock,
             mediatorMessageProtocol: MediatorMessageProtocolMock(),
             messageProcessor: MessageProcessorMock()
@@ -208,6 +209,7 @@ class TaskExecutionReceiveMessageTests: XCTestCase {
             multiDeviceManager: MultiDeviceManagerMock(),
             myIdentityStore: myIdentityStoreMock,
             userSettings: userSettingsMock,
+            settingsStore: SettingsStoreMock(),
             serverConnector: serverConnectorMock,
             mediatorMessageProtocol: mediatorMessageProtocolMock,
             messageProcessor: messageProcessorMock
@@ -216,6 +218,7 @@ class TaskExecutionReceiveMessageTests: XCTestCase {
         let expectedTextMessage = GroupTextMessage()
         expectedTextMessage.groupID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!
         expectedTextMessage.groupCreator = frameworkInjectorMock.myIdentityStore.identity
+        expectedTextMessage.nonce = BytesUtility.generateRandomBytes(length: Int(kNonceLen))!
         expectedTextMessage.fromIdentity = "ECHOECHO"
         expectedTextMessage.toIdentity = frameworkInjectorMock.myIdentityStore.identity
         expectedTextMessage.text = "Bla bla bla..."
@@ -334,6 +337,7 @@ class TaskExecutionReceiveMessageTests: XCTestCase {
             multiDeviceManager: MultiDeviceManagerMock(),
             myIdentityStore: MyIdentityStoreMock(),
             userSettings: UserSettingsMock(),
+            settingsStore: SettingsStoreMock(),
             serverConnector: serverConnectorMock,
             mediatorMessageProtocol: mediatorMessageProtocolMock,
             messageProcessor: messageProcessorMock
@@ -343,6 +347,7 @@ class TaskExecutionReceiveMessageTests: XCTestCase {
         expectedTextMessage.fromIdentity = "ECHOECHO"
         expectedTextMessage.toIdentity = frameworkInjectorMock.myIdentityStore.identity
         expectedTextMessage.text = "Bla bla bla..."
+        expectedTextMessage.nonce = BytesUtility.generateRandomBytes(length: Int(kNonceLen))!
 
         messageProcessorMock.abstractMessage = expectedTextMessage
 

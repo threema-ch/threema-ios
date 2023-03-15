@@ -35,7 +35,7 @@ extension SystemMessage: PreviewableMessage {
     public var previewSymbolName: String? {
         switch systemMessageType {
         case let .callMessage(type: callType):
-            return callType.previewSymbolName
+            return callType.symbolName
         default:
             return nil
         }
@@ -44,7 +44,7 @@ extension SystemMessage: PreviewableMessage {
     public var previewSymbolTintColor: UIColor? {
         switch systemMessageType {
         case let .callMessage(type: callType):
-            return callType.previewSymbolTintColor
+            return callType.tintColor
         default:
             return nil
         }

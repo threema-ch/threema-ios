@@ -200,7 +200,7 @@ final class MessageQuoteStackView: UIStackView {
     }
     
     private func updateQuoteBarColor() {
-        quoteBar.backgroundColor = quoteMessage?.senderIDColor ?? Colors.primary
+        quoteBar.backgroundColor = quoteMessage?.senderIDColor ?? .primary
     }
     
     private func updateContent() {

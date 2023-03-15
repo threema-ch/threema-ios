@@ -225,7 +225,7 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
         }
 
         // Am I the creator? Then Conversation.contact and GroupEntity.groupCreator have to be `nil`.
-        var creatorContact: Contact?
+        var creatorContact: ContactEntity?
         if !creator.elementsEqual(myIdentityStore.identity) {
 
             // If the creator blocked and group not found, then send leave messages to sender and all provided members
@@ -683,12 +683,24 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
                 if dbImage == nil {
                     dbImage = self.entityManager.entityCreator.imageData()
                 }
+                
+                guard dbImage?.data != imageData else {
+                    return
+                }
+                
                 dbImage?.data = imageData
                 dbImage?.width = NSNumber(floatLiteral: Double(image.size.width))
                 dbImage?.height = NSNumber(floatLiteral: Double(image.size.height))
 
                 conversation.groupImageSetDate = sentDate
                 conversation.groupImage = dbImage
+                
+                self.postSystemMessage(
+                    in: conversation,
+                    type: kSystemMessageGroupAvatarChanged,
+                    arg: nil,
+                    date: Date()
+                )
             }
 
             imageDataSend = imageData
@@ -754,8 +766,14 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
             
             if let groupImage = conversation.groupImage {
                 self.entityManager.entityDestroyer.deleteObject(object: groupImage)
-                conversation.groupImageSetDate = sentDate
                 conversation.groupImage = nil
+                
+                self.postSystemMessage(
+                    in: conversation,
+                    type: kSystemMessageGroupAvatarChanged,
+                    arg: nil,
+                    date: Date.now
+                )
             }
         }
         if let internalError = internalError {
@@ -1190,11 +1208,16 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
     /// - Parameter conversation: Conversation for group
     /// - Returns: The group or nil
     @objc public func getGroup(conversation: Conversation) -> Group? {
-        guard let groupEntity = entityManager.entityFetcher.groupEntity(for: conversation) else {
-            return nil
+        var group: Group?
+
+        entityManager.performBlockAndWait {
+            guard let groupEntity = self.entityManager.entityFetcher.groupEntity(for: conversation) else {
+                return
+            }
+            group = self.getGroup(groupEntity: groupEntity, conversation: conversation)
         }
-        
-        return getGroup(groupEntity: groupEntity, conversation: conversation)
+
+        return group
     }
 
     private func getGroup(groupEntity: GroupEntity, conversation: Conversation) -> Group {
@@ -1216,18 +1239,21 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
         )
     }
     
-    /// Get all members of existing group except me.
+    /// Get all members of existing group except me. It will remove the hidden flag for all members.
     ///
     /// - Parameters:
     ///   - groupID: ID 8 Bytes
     ///   - creator: Creator of group
     /// - Returns: Members of the group
-    @objc func getGroupMembersForClone(_ groupID: Data, creator: String) -> Set<Contact>? {
+    @objc func getGroupMembersForClone(_ groupID: Data, creator: String) -> Set<ContactEntity>? {
         guard let conversation = getConversation(for: GroupIdentity(id: groupID, creator: creator)) else {
             DDLogError("Group conversation not found")
             return nil
         }
-        
+                
+        // Mark all contacts as visible
+        removeContactHiddenFlags(for: conversation)
+
         return conversation.members.filter { member -> Bool in
             !member.identity.elementsEqual(myIdentityStore.identity)
         }
@@ -1272,7 +1298,7 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
     
     // MARK: - Private functions
     
-    private func postSystemMessage(in conversation: Conversation, member: Contact, type: Int, date: Date) {
+    private func postSystemMessage(in conversation: Conversation, member: ContactEntity, type: Int, date: Date) {
         postSystemMessage(in: conversation, type: type, arg: member.displayName.data(using: .utf8), date: date)
     }
     
@@ -1569,6 +1595,22 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
         if unknownGroupAlertList.map({ $0 as! [String: AnyHashable] == groupDict }).contains(true) {
             unknownGroupAlertList.remove(groupDict)
             userSettings.unknownGroupAlertList = unknownGroupAlertList
+        }
+    }
+    
+    private func removeContactHiddenFlags(for conversation: Conversation) {
+        // Get all hidden contacts and mark them as visible
+        let hiddenMembers = conversation.members.filter { member -> Bool in
+            !member.identity.elementsEqual(myIdentityStore.identity)
+                && member.isContactHidden
+        }
+        
+        if !hiddenMembers.isEmpty {
+            entityManager.performSyncBlockAndSafe {
+                for member in hiddenMembers {
+                    member.isContactHidden = false
+                }
+            }
         }
     }
 }

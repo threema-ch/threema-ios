@@ -92,7 +92,8 @@
 	<string>Your photo library is used when you pick an image from it and send it in a chat.</string>
 	<key>NSUserActivityTypes</key>
 	<array>
-		<string>INSendMessageIntent</string>
+        <string>INStartAudioCallIntent</string>
+        <string>INSendMessageIntent</string>
 	</array>
 	<key>SentryClientDsn</key>
 	<string>https://8d95950d8b9c472fbd68a79bea8fa26b@bugs.threema.ch/11</string>

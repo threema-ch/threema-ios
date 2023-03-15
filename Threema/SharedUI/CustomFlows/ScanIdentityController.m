@@ -26,7 +26,7 @@
 #import "NSString+Hex.h"
 #import "NaClCrypto.h"
 #import "ContactStore.h"
-#import "Contact.h"
+#import "ContactEntity.h"
 #import "UserSettings.h"
 #import "ServerAPIConnector.h"
 #import <MBProgressHUD/MBProgressHUD.h>
@@ -52,7 +52,7 @@ static void soundCompletionCallback(SystemSoundID soundId, __unused void* __null
 @implementation ScanIdentityController {
     NSString *scannedIdentity;
     NSData *scannedPublicKey;
-    Contact *existingContact;
+    ContactEntity *existingContact;
 }
 
 + (BOOL)canScan {
@@ -202,7 +202,7 @@ static void soundCompletionCallback(SystemSoundID soundId, __unused void* __null
                         
                         [UIAlertTemplate showAlertWithOwner:[[AppDelegate sharedAppDelegate] currentTopViewController] title:[BundleUtil localizedStringForKey:@"public_key_server_mismatch_title"] message:[BundleUtil localizedStringForKey:@"public_key_server_mismatch_message"] actionOk:nil];
                     } else {
-                        [[ContactStore sharedContactStore] addContactWithIdentity:scannedIdentity publicKey:publicKey cnContactId:nil verificationLevel:kVerificationLevelFullyVerified state:state type:type featureMask:featureMask acquaintanceLevel:ContactAcquaintanceLevelDirect alerts:YES onCompletion:^(Contact * _Nullable contact) {
+                        [[ContactStore sharedContactStore] addContactWithIdentity:scannedIdentity publicKey:publicKey cnContactId:nil verificationLevel:kVerificationLevelFullyVerified state:state type:type featureMask:featureMask acquaintanceLevel:ContactAcquaintanceLevelDirect alerts:YES onCompletion:^(ContactEntity * _Nullable contact) {
 
                             if (contact == nil) {
                                 DDLogError(@"Unable to store scanned contact: %@", scannedIdentity);

@@ -478,7 +478,7 @@ extension StorageManagementConversationViewController {
 
         MBProgressHUD.showAdded(to: view, animated: true)
         MBProgressHUD.forView(view)?.label.text = BundleUtil
-            .localizedString(forKey: "delete")
+            .localizedString(forKey: "delete_in_progress")
                 
         Timer.scheduledTimer(withTimeInterval: TimeInterval(0.3), repeats: false) { _ in
             self.mediaDelete(option)
@@ -524,7 +524,7 @@ extension StorageManagementConversationViewController {
 
         MBProgressHUD.showAdded(to: view, animated: true)
         MBProgressHUD.forView(view)?.label.text = BundleUtil
-            .localizedString(forKey: "delete")
+            .localizedString(forKey: "delete_in_progress")
         
         Timer.scheduledTimer(withTimeInterval: TimeInterval(0.3), repeats: false) { _ in
             self.messageDelete(option)

@@ -52,10 +52,11 @@
 #import <ThreemaFramework/BoxVoIPCallRingingMessage.h>
 #import <ThreemaFramework/BundleUtil.h>
 #import <ThreemaFramework/Constants.h>
-#import <ThreemaFramework/Contact.h>
+#import <ThreemaFramework/ContactEntity.h>
 #import <ThreemaFramework/ContactDeletePhotoMessage.h>
 #import <ThreemaFramework/ContactNameLabel.h>
 #import <ThreemaFramework/ContactPhotoSender.h>
+#import <ThreemaFramework/ContactUtil.h>
 #import <ThreemaFramework/ContactRequestPhotoMessage.h>
 #import <ThreemaFramework/ContactSetPhotoMessage.h>
 #import <ThreemaFramework/ContactStore.h>

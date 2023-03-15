@@ -56,8 +56,8 @@ class DatabasePreparer {
         identity: String,
         verificationLevel: Int,
         nickname: String?
-    ) -> Contact {
-        let contact = createEntity(objectType: Contact.self)
+    ) -> ContactEntity {
+        let contact = createEntity(objectType: ContactEntity.self)
         contact.publicKey = publicKey
         contact.identity = identity
         contact.verificationLevel = NSNumber(integerLiteral: verificationLevel)
@@ -71,7 +71,7 @@ class DatabasePreparer {
         publicKey: Data,
         identity: String,
         verificationLevel: Int
-    ) -> Contact {
+    ) -> ContactEntity {
         createContact(publicKey: publicKey, identity: identity, verificationLevel: verificationLevel, nickname: nil)
     }
     
@@ -169,7 +169,7 @@ class DatabasePreparer {
         longitude: Double,
         poiName: String?,
         id: Data,
-        sender: Contact
+        sender: ContactEntity
     ) -> LocationMessage {
         let locationMessage = createEntity(objectType: LocationMessage.self)
         locationMessage.conversation = conversation
@@ -198,7 +198,7 @@ class DatabasePreparer {
         read: Bool,
         sent: Bool,
         userack: Bool,
-        sender: Contact?,
+        sender: ContactEntity?,
         remoteSentDate: Date? // can be set to nil for outgoing messages
     ) -> TextMessage {
         let textMessage = createEntity(objectType: TextMessage.self)
@@ -282,7 +282,7 @@ class DatabasePreparer {
     private func createEntity<T: NSManagedObject>(objectType: T.Type) -> T {
         var entityName: String
         
-        if objectType is Contact.Type {
+        if objectType is ContactEntity.Type {
             entityName = "Contact"
         }
         else if objectType is Conversation.Type {

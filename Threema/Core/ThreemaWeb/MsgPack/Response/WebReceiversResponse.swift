@@ -27,7 +27,7 @@ class WebReceiversResponse: WebAbstractMessage {
     var groups = [Any]()
     var distributionList = [Any]()
     
-    init(requestID: String?, allContacts: [Contact], allGroupConversations: [Conversation]) {
+    init(requestID: String?, allContacts: [ContactEntity], allGroupConversations: [Conversation]) {
         for c in allContacts {
             let webcontact = WebContact(c)
             contacts.append(webcontact.objectDict())
@@ -76,7 +76,7 @@ struct WebContact {
     var isBlocked = false
     var access: Access
     
-    init(_ contact: Contact) {
+    init(_ contact: ContactEntity) {
         self.id = contact.identity
         self.displayName = contact.displayName
         self.color = "#181818"
@@ -211,7 +211,7 @@ struct WebGroup {
         self.color = "#181818"
         self.disabled = false
         self.members = group.members.filter { member -> Bool in
-            member.state ?? NSNumber(value: kStateInvalid) != NSNumber(value: kStateInvalid)
+            member.state != kStateInvalid
         }.map(\.identity)
         // Add myself to members list if isSelfMember
         if group.isSelfMember {

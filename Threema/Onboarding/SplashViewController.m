@@ -48,7 +48,6 @@
 #import "EnterLicenseViewController.h"
 #import "MDMSetup.h"
 #import "ContactStore.h"
-#import "Contact.h"
 #import "GatewayAvatarMaker.h"
 #import "Threema-Swift.h"
 #import "WorkDataFetcher.h"

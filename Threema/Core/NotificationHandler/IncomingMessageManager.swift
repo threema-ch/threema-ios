@@ -177,13 +177,13 @@ import ThreemaFramework
                         entityManager.performBlock {
                             let pushSetting = PushSetting(for: message.conversation)
                             if pushSetting.canSendPush(for: message) {
-                                let messageID = message.id
+                                let messageObjectID = message.objectID
 
                                 DispatchQueue.main.async {
                                     NotificationCenter.default.post(
                                         name: NSNotification
                                             .Name(rawValue: IncomingMessageManager.inAppNotificationNewMessage),
-                                        object: messageID,
+                                        object: messageObjectID,
                                         userInfo: nil
                                     )
                                 }

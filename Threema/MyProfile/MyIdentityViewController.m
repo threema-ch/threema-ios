@@ -49,7 +49,7 @@
 #define SEGUE_NICKNAME @"EditProfile"
 #define SEGUE_SAFE_SETUP @"segueSafeSetup"
 
-@interface MyIdentityViewController () <PasswordCallback, UIScrollViewDelegate, ModalNavigationControllerDelegate>
+@interface MyIdentityViewController () <PasswordCallback, UIScrollViewDelegate, ModalNavigationControllerDelegate, RevocationKeyDelegate>
 
 @property RevocationKeyHandler *revocationKeyHandler;
 @property LockScreen *lockScreen;
@@ -112,6 +112,7 @@
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(incomingSync) name:kNotificationIncomingProfileSynchronization object:nil];
     
     _revocationKeyHandler = [[RevocationKeyHandler alloc] init];
+    _revocationKeyHandler.delegate = self;
     _lockScreen = [[LockScreen alloc] initWithIsLockScreenController:NO];
     
     [BrandingUtils updateTitleLogoOf:self.navigationItem in:self.navigationController];
@@ -312,10 +313,10 @@
     threemaIdLabel.shadowColor = nil;
     threemaIdLabel.textColor = Colors.text;
     
-    UIImage *editImage = [self.editButton.imageView.image imageWithTint:Colors.primary];
+    UIImage *editImage = [self.editButton.imageView.image imageWithTint:UIColor.primary];
     [self.editButton setImage:editImage forState:UIControlStateNormal];
     
-    UIImage *shareIdImage = [self.shareIdButton.imageView.image imageWithTint:Colors.primary];
+    UIImage *shareIdImage = [self.shareIdButton.imageView.image imageWithTint:UIColor.primary];
     [self.shareIdButton setImage:shareIdImage forState:UIControlStateNormal];
     
     UIImage *qrBackgroundImage = [self.qrBackgroundImageView.image imageWithTint:Colors.backgroundQrCode];
@@ -685,6 +686,11 @@
 
 - (void)willDismissModalNavigationController {
     [self updateView];
+}
+
+#pragma mark - RevocationKeyDelegate
+- (void) revocationKeyChanged {
+    [_revocationKeyHandler updateLastSetDateForLabel:_revocationLabelDetail];
 }
 
 @end

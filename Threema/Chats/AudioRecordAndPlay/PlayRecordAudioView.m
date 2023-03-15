@@ -86,7 +86,7 @@
     [_speedButton setTitleColor:Colors.text forState:UIControlStateNormal];
     _speedButton.layer.cornerRadius = 15.0;
     
-    [_sendButton setTitleColor:Colors.primary forState:UIControlStateNormal];
+    [_sendButton setTitleColor:UIColor.primary forState:UIControlStateNormal];
     
     _timeCursorLabel.textColor = Colors.text;
     _durationLabel.textColor = Colors.text;

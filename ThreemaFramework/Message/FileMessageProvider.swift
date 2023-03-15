@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import Photos
 
 // MARK: - FileMessageProvider
 
@@ -109,6 +110,11 @@ public protocol CommonFileMessageMetadata: BlobData {
     var caption: String? { get }
     /// When this message is displayed should it try to inline the date and state with the thumbnail?
     var showDateAndStateInline: Bool { get }
+    
+    /// Creates a new temporary URL to the blob data
+    ///
+    /// Please remove the data if it is no longer needed.
+    func temporaryBlobDataURL() -> URL?
 }
 
 public extension CommonFileMessageMetadata {
@@ -126,6 +132,21 @@ public protocol ThumbnailDisplayMessage: BaseMessage & FileMessageProvider & Com
     var thumbnailImage: UIImage? { get }
     /// Aspect ratio of (thumbnail) image (heigh/width)
     var heightToWidthAspectRatio: Double { get }
+    
+    /// Creates a `SaveMediaItem` that can be saved to photos using `AlbumManager`
+    /// - Parameter forAutosave: If the created item is used to auto save
+    /// - Returns: `SaveMediaItem` to be used in AlbumManager`
+    func createSaveMediaItem(forAutosave: Bool) -> AlbumManager.SaveMediaItem?
+}
+
+public extension ThumbnailDisplayMessage {
+    var readableFileName: String {
+        "\(ThreemaApp.currentName.replacingOccurrences(of: " ", with: "_"))_\(DateFormatter.getDateForExport(date))"
+    }
+    
+    func createSaveMediaItem() -> AlbumManager.SaveMediaItem? {
+        createSaveMediaItem(forAutosave: false)
+    }
 }
 
 // MARK: - ImageMessage
@@ -142,20 +163,12 @@ public protocol StickerMessage: ThumbnailDisplayMessage { }
 
 public protocol VideoMessage: ThumbnailDisplayMessage {
     var durationTimeInterval: TimeInterval? { get }
-    /// Temporary URL to the video blob data
-    ///
-    /// Please remove the data if it is no longer needed.
-    var temporaryBlobDataURL: URL? { get }
 }
 
 // MARK: - VoiceMessage
 
 public protocol VoiceMessage: BaseMessage & FileMessageProvider & CommonFileMessageMetadata {
     var durationTimeInterval: TimeInterval? { get }
-    /// Temporary URL to the audio blob data
-    ///
-    /// Please remove the data if it is no longer needed.
-    var temporaryBlobDataURL: URL? { get }
 }
 
 // MARK: - FileMessage

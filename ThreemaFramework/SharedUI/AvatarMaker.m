@@ -19,7 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import "AvatarMaker.h"
-#import "Contact.h"
+#import "ContactEntity.h"
 #import "Conversation.h"
 #import "ImageData.h"
 #import "UIImage+Mask.h"
@@ -122,7 +122,7 @@ static AvatarMaker *sharedInstance = nil;
         NSSet *insertedObjects = (NSSet *)notification.userInfo[NSInsertedObjectIDsKey];
         for (NSManagedObject *object in insertedObjects) {
             // isKindOf:Conversation.class would always return nil. Thus we use string comparison here
-            if([[[object entity] name] isEqualToString:Conversation.entity.name] || [[[object entity] name] isEqualToString:Contact.entity.name]) {
+            if([[[object entity] name] isEqualToString:Conversation.entity.name] || [[[object entity] name] isEqualToString:ContactEntity.entity.name]) {
                 [self setInvalidateBackgroundEntityManager:@YES];
             }
         }
@@ -175,13 +175,12 @@ static AvatarMaker *sharedInstance = nil;
     [_maskedImageCache removeObjectForKey:managedObject.objectID];
 }
 
-- (void)avatarForContact:(Contact*)contact size:(CGFloat)size masked:(BOOL)masked onCompletion:(void (^)(UIImage *avatarImage, NSString *identity))onCompletion {
+- (void)avatarForContactEntity:(ContactEntity*)contact size:(CGFloat)size masked:(BOOL)masked onCompletion:(void (^)(UIImage *avatarImage, NSString *identity))onCompletion {
     if (contact) {
         [self performOnCurrentEntityManager:^{
-            Contact *privateContact = [_backgroundEntityManager.entityFetcher existingObjectWithID:contact.objectID];
+            ContactEntity *privateContact = [_backgroundEntityManager.entityFetcher existingObjectWithID:contact.objectID];
             __block NSString *identity = privateContact.identity;
-
-            __block UIImage *avatarImage = [self avatarForContact:privateContact size:size masked:masked];
+            __block UIImage *avatarImage = [self avatarForContactEntity:privateContact size:size masked:masked];
             dispatch_async(dispatch_get_main_queue(), ^{
                 onCompletion(avatarImage, identity);
             });
@@ -194,11 +193,11 @@ static AvatarMaker *sharedInstance = nil;
     }
 }
 
-- (UIImage*)avatarForContact:(Contact*)contact size:(CGFloat)size masked:(BOOL)masked {
-    return [self avatarForContact:contact size:size masked:masked scaled:YES];
+- (UIImage*)avatarForContactEntity:(ContactEntity*)contact size:(CGFloat)size masked:(BOOL)masked {
+    return [self avatarForContactEntity:contact size:size masked:masked scaled:YES];
 }
 
-- (UIImage*)avatarForContact:(Contact*)contact size:(CGFloat)size masked:(BOOL)masked scaled:(BOOL)scaled {
+- (UIImage*)avatarForContactEntity:(ContactEntity*)contact size:(CGFloat)size masked:(BOOL)masked scaled:(BOOL)scaled {
     /* If this contact has sent us an image, we'll use that and not make an avatar */
     CGFloat sizeScaled = size;
     if (scaled)
@@ -207,7 +206,7 @@ static AvatarMaker *sharedInstance = nil;
         if (contact.contactImage.data != nil) {
             UIImage *avatar;
             if (masked) {
-                avatar = [self maskedImageForContact:contact ownImage:NO];
+                avatar = [self maskedImageForContactEntity:contact ownImage:NO];
             } else {
                 avatar = [UIImage imageWithData:contact.contactImage.data];
             }
@@ -221,7 +220,7 @@ static AvatarMaker *sharedInstance = nil;
     if (contact.imageData != nil && (contact.cnContactId == nil)) {
         UIImage *avatar;
         if (masked) {
-            avatar = [self maskedImageForContact:contact ownImage:YES];
+            avatar = [self maskedImageForContactEntity:contact ownImage:YES];
         } else {
             avatar = [UIImage imageWithData:contact.imageData];
         }
@@ -234,7 +233,7 @@ static AvatarMaker *sharedInstance = nil;
     if (contact.imageData != nil && contact.cnContactId != nil) {
         UIImage *avatar;
         if (masked) {
-            avatar = [self maskedImageForContact:contact ownImage:YES];
+            avatar = [self maskedImageForContactEntity:contact ownImage:YES];
         } else {
             avatar = [UIImage imageWithData:contact.imageData];
         }
@@ -256,21 +255,21 @@ static AvatarMaker *sharedInstance = nil;
         return [avatar imageWithTint:Colors.textLight];
     }
     
-    UIImage *avatar = [self initialsAvatarForContact:contact size:sizeScaled masked:masked scaled:NO];
+    UIImage *avatar = [self initialsAvatarForContactEntity:contact size:sizeScaled masked:masked scaled:NO];
     
     return avatar;
 }
 
-- (UIImage *)initialsAvatarForContact:(nonnull Contact *)contact size:(CGFloat)size masked:(BOOL)masked {
-    return [self initialsAvatarForContact:contact size:size masked:masked scaled:YES];
+- (UIImage *)initialsAvatarForContactEntity:(nonnull ContactEntity *)contact size:(CGFloat)size masked:(BOOL)masked {
+    return [self initialsAvatarForContactEntity:contact size:size masked:masked scaled:YES];
 }
 
-- (UIImage *)initialsAvatarForContact:(nonnull Contact *)contact size:(CGFloat)size masked:(BOOL)masked scaled:(BOOL)scaled {
+- (UIImage *)initialsAvatarForContactEntity:(nonnull ContactEntity *)contact size:(CGFloat)size masked:(BOOL)masked scaled:(BOOL)scaled {
     CGFloat sizeScaled = size;
     if (scaled)
         sizeScaled = sizeScaled * [UIScreen mainScreen].scale;
     
-    NSString *initials = [self initialsForContact:contact];
+    NSString *initials = [self initialsForContactEntity:contact];
     
     /* check cache first */
     NSString *cacheKey = [NSString stringWithFormat:@"%@-%.0f", initials, sizeScaled];
@@ -304,7 +303,7 @@ static AvatarMaker *sharedInstance = nil;
 
 - (UIImage* _Nullable)avatarForConversation:(Conversation* _Nonnull)conversation size:(CGFloat)size masked:(BOOL)masked scaled:(BOOL)scaled {
     if (conversation.groupId == nil)
-        return [self avatarForContact:conversation.contact size:size masked:masked];
+        return [self avatarForContactEntity:conversation.contact size:size masked:masked];
     
     /* For groups, use the group image if available, or a default image otherwise */
     if (conversation.groupImage != nil) {
@@ -373,7 +372,7 @@ static AvatarMaker *sharedInstance = nil;
     return maskedImage;
 }
 
-- (nullable UIImage *)callBackgroundForContact:(nonnull Contact *)contact {
+- (nullable UIImage *)callBackgroundForContactEntity:(nonnull ContactEntity *)contact {
     /* If this contact has send us a image, we'll use that and not make an avatar */
     if (contact.contactImage != nil && [UserSettings sharedUserSettings].showProfilePictures) {
         return [UIImage imageWithData:contact.contactImage.data];
@@ -389,7 +388,7 @@ static AvatarMaker *sharedInstance = nil;
         return [UIImage imageWithData:contact.imageData];
     }
     
-    NSString *initials = [self initialsForContact:contact];
+    NSString *initials = [self initialsForContactEntity:contact];
     
     /* check cache first */
     NSString *cacheKey = [NSString stringWithFormat:@"%@-background", initials];
@@ -406,7 +405,7 @@ static AvatarMaker *sharedInstance = nil;
     return avatar;
 }
 
-- (UIImage*)maskedImageForContact:(Contact*)contact ownImage:(BOOL)ownImage {
+- (UIImage*)maskedImageForContactEntity:(ContactEntity*)contact ownImage:(BOOL)ownImage {
     if (ownImage) {
         return [self maskedImageForManagedObject:contact imageData:contact.imageData];
     }
@@ -445,7 +444,7 @@ static AvatarMaker *sharedInstance = nil;
 }
 
 - (UIImage * _Nullable)companyImage {
-    return [[BundleUtil imageNamed:@"Asterisk"] imageWithTint:Colors.primary];
+    return [[BundleUtil imageNamed:@"Asterisk"] imageWithTint:UIColor.primary];
 }
 
 - (UIImage * _Nullable)unknownPersonImage {
@@ -456,7 +455,7 @@ static AvatarMaker *sharedInstance = nil;
     return [[BundleUtil imageNamed:@"UnknownGroup"] imageWithTint:Colors.textLight];
 }
 
-- (NSString*)initialsForContact:(Contact*)contact {
+- (NSString*)initialsForContactEntity:(ContactEntity*)contact {
     if (contact.firstName.length > 0 && contact.lastName.length > 0) {
         if ([UserSettings sharedUserSettings].displayOrderFirstName)
             return [NSString stringWithFormat:@"%@%@", [contact.firstName substringToIndex:1], [contact.lastName substringToIndex:1]];
@@ -469,7 +468,7 @@ static AvatarMaker *sharedInstance = nil;
     }
 }
 
-- (BOOL)isDefaultAvatarForContact:(Contact *_Nullable)contact {
+- (BOOL)isDefaultAvatarForContactEntity:(ContactEntity *_Nullable)contact {
     /* If this contact has send us a image, we'll use that and not make an avatar */
     if (contact.contactImage != nil && [UserSettings sharedUserSettings].showProfilePictures) {
         return false;

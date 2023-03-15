@@ -49,7 +49,7 @@ public class IntentCreator {
             return nil
         }
         
-        var fetchedContact: Contact?
+        var fetchedContact: ContactEntity?
         var isPrivate = false
         
         entityManager.performBlockAndWait {
@@ -123,7 +123,7 @@ public class IntentCreator {
             return nil
         }
         
-        var fetchedContact: Contact?
+        var fetchedContact: ContactEntity?
         var groupConversation: Conversation?
         var isPrivate = false
         
@@ -166,7 +166,10 @@ public class IntentCreator {
                 return
             }
             
-            conversationIdentifier = groupConversation.groupID?.base64EncodedString()
+            if let base64GroupID = groupConversation.groupID?.base64EncodedString() {
+                conversationIdentifier = creatorID + ";" + base64GroupID
+            }
+            
             recipientCount = groupConversation.members.count
             
             if let fetchedGroupName = groupConversation.groupName {
@@ -237,7 +240,7 @@ extension IntentCreator {
         }
     }
     
-    func donateInteraction(for contact: Contact) -> Promise<Void> {
+    func donateInteraction(for contact: ContactEntity) -> Promise<Void> {
         Promise { seal in
             guard let interaction = self.inSendMessageIntentInteraction(
                 for: contact.identity,

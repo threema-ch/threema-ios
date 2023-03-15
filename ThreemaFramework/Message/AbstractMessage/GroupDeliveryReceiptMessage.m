@@ -20,6 +20,7 @@
 
 #import "GroupDeliveryReceiptMessage.h"
 #import "ProtocolDefines.h"
+#import "ThreemaFramework/ThreemaFramework-Swift.h"
 
 @implementation GroupDeliveryReceiptMessage
 
@@ -53,7 +54,14 @@
 }
 
 - (BOOL)allowSendingProfile {
-    return NO;
+    switch (receiptType) {
+        case DeliveryReceiptTypeDeclined:
+        case DeliveryReceiptTypeAcknowledged:
+            return YES;
+        default:
+            return NO;
+    }
+
 }
 
 - (BOOL)canCreateConversation {

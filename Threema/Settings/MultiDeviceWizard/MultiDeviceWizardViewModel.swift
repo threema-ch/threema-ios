@@ -186,10 +186,11 @@ class MultiDeviceWizardViewModel: ObservableObject {
         }
     }
     
-    private func pfsEnabledContacts() -> [Contact] {
-        var pfsEnabledContacts = [Contact]()
+    private func pfsEnabledContacts() -> [ContactEntity] {
+        var pfsEnabledContacts = [ContactEntity]()
         businessInjector.entityManager.performBlockAndWait {
-            guard let allContacts = self.businessInjector.entityManager.entityFetcher.allContacts() as? [Contact] else {
+            guard let allContacts = self.businessInjector.entityManager.entityFetcher.allContacts() as? [ContactEntity]
+            else {
                 return
             }
             
@@ -198,7 +199,7 @@ class MultiDeviceWizardViewModel: ObservableObject {
         return pfsEnabledContacts
     }
                                       
-    private func disablePFS(for contacts: [Contact]) throws {
+    private func disablePFS(for contacts: [ContactEntity]) throws {
         let sessionTerminator = try ForwardSecuritySessionTerminator(businessInjector: businessInjector)
         
         businessInjector.entityManager.performSyncBlockAndSafe {

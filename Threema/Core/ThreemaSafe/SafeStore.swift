@@ -377,7 +377,7 @@ import ThreemaFramework
             let allContacts = privateEntityManager.entityFetcher.allContacts() ?? []
             for item in allContacts {
                 // do not backup me as contact
-                if let contact = item as? Contact,
+                if let contact = item as? ContactEntity,
                    contact.identity != MyIdentityStore.shared()?.identity {
                     
                     let jContact = SafeJsonParser.SafeBackupData.Contact(
@@ -517,8 +517,32 @@ import ThreemaFramework
         do {
             safeBackupData = try parser.getSafeBackupData(from: Data(data))
         }
-        catch {
-            throw SafeError.restoreFailed(message: error.localizedDescription)
+        catch let error as DecodingError {
+            // Log more informations about the parser error
+            switch error {
+            case let .typeMismatch(_, value):
+                throw SafeError
+                    .restoreFailed(
+                        message: "\(error.localizedDescription) (TypeMissmatch: \(value.debugDescription), \(self.allKeys(from: value.codingPath)))"
+                    )
+            case let .valueNotFound(_, value):
+                throw SafeError
+                    .restoreFailed(
+                        message: "\(error.localizedDescription) (ValueNotFound: \(value.debugDescription), \(self.allKeys(from: value.codingPath)))"
+                    )
+            case let .keyNotFound(_, value):
+                throw SafeError
+                    .restoreFailed(
+                        message: "\(error.localizedDescription) (KeyNotFound: \(value.debugDescription), \(self.allKeys(from: value.codingPath)))"
+                    )
+            case let .dataCorrupted(context):
+                throw SafeError
+                    .restoreFailed(
+                        message: "\(error.localizedDescription) (DataCorrupted: \(context.debugDescription), \(context.codingPath)"
+                    )
+            default:
+                throw SafeError.restoreFailed(message: error.localizedDescription)
+            }
         }
         
         guard safeBackupData.info.version == 1 else {
@@ -901,7 +925,7 @@ import ThreemaFramework
             var profilePicRequest = [String]()
             
             let entityManager = EntityManager()
-            if let contacts = entityManager.entityFetcher.allContacts() as? [Contact] {
+            if let contacts = entityManager.entityFetcher.allContacts() as? [ContactEntity] {
                 for contact in contacts {
                     if contact.identity != "ECHOECHO", contact.identity != MyIdentityStore.shared()?.identity {
                         profilePicRequest.append(contact.identity)
@@ -980,5 +1004,16 @@ import ThreemaFramework
         }, onError: { _ in
             DDLogError("Safe restore linking email with identity failed")
         })
+    }
+    
+    /// Get all keys from the CodingKey array
+    /// - Parameter codingKeys: CodingKey array
+    /// - Returns: A array with all keys
+    private func allKeys(from codingKeys: [CodingKey]) -> [String] {
+        var allKeys = [String]()
+        for codingKey in codingKeys {
+            allKeys.append(codingKey.stringValue)
+        }
+        return allKeys
     }
 }

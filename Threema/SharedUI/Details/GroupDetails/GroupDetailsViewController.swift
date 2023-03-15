@@ -161,7 +161,7 @@ final class GroupDetailsViewController: ThemedCodeModernGroupedTableViewControll
 
         observeGroup(\.name) { [weak self] in
             self?.navigationBarTitle = self?.group.name
-            self?.updateHeader()
+            self?.updateHeader(animated: false)
         }
         
         observeGroup(\.conversation.willBeDeleted) { [weak self] in
@@ -176,7 +176,7 @@ final class GroupDetailsViewController: ThemedCodeModernGroupedTableViewControll
         }
 
         observeGroup(\.photo) { [weak self] in
-            self?.updateHeader()
+            self?.updateHeader(animated: false)
         }
 
         // TODO: Observe each member and explicitly reload the cells that have a changed member
@@ -187,7 +187,7 @@ final class GroupDetailsViewController: ThemedCodeModernGroupedTableViewControll
 
         observeGroup(\.state) { [weak self] in
             self?.dataSource.reload(sections: [.members, .creator, .destructiveGroupActions])
-            self?.updateHeader()
+            self?.updateHeader(animated: false)
         }
     }
     
@@ -240,9 +240,9 @@ final class GroupDetailsViewController: ThemedCodeModernGroupedTableViewControll
 
     // MARK: - Updates
     
-    private func updateHeader() {
+    private func updateHeader(animated: Bool = true) {
         headerView.profileContentConfiguration = group.contentConfiguration
-        updateHeaderLayout()
+        updateHeaderLayout(animated: animated)
     }
 
     // MARK: - Actions
@@ -324,7 +324,7 @@ extension GroupDetailsViewController {
                 target: self,
                 action: #selector(doneButtonTapped)
             )
-            doneButton.accessibilityIdentifier = "DismissButton"
+            doneButton.accessibilityIdentifier = "GroupDetailsViewControllerDoneButton"
             navigationItem.rightBarButtonItem = doneButton
         }
         else {
@@ -368,6 +368,8 @@ extension GroupDetailsViewController {
         DispatchQueue.main.async {
             let updateHeight = {
                 self.tableView.tableHeaderView = self.headerView
+                self.headerView.layoutIfNeeded()
+                self.tableView.layoutIfNeeded()
             }
 
             if animated {
@@ -419,6 +421,18 @@ extension GroupDetailsViewController {
         // field before we dismiss ourself and then active the search after the dismissal.
         delegate?.showChatSearch()
         dismiss(animated: true)
+    }
+}
+
+// MARK: - Deleting messages
+
+extension GroupDetailsViewController {
+    func willDeleteMessages(with objectIDs: [NSManagedObjectID]) {
+        delegate?.willDeleteMessages(with: objectIDs)
+    }
+    
+    func willDeleteAllMessages() {
+        delegate?.willDeleteAllMessages()
     }
 }
 

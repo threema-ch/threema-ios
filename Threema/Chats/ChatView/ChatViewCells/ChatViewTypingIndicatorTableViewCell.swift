@@ -28,6 +28,8 @@ final class ChatViewTypingIndicatorTableViewCell: ThemedCodeTableViewCell {
     
     // MARK: - Private Properties
 
+    private lazy var flipped = UserSettings.shared().flippedTableView
+    
     /// Contains the message cell itself, plus the chatBubbleBackgroundView and is added to content view
     private lazy var chatBubbleView = UIView()
     
@@ -66,6 +68,18 @@ final class ChatViewTypingIndicatorTableViewCell: ThemedCodeTableViewCell {
     ]
     
     private var previousBoundsSize: CGRect?
+    
+    // MARK: - Overrides
+    
+    override var frame: CGRect {
+        didSet {
+            // When appearing together with the chat view `layoutSubviews` is not sufficient to
+            // get the bounds of `messageTextViewSizeApproximationView`.
+            typingIndicatorImageView.drawFrame = messageTextViewSizeApproximationView.bounds
+            
+            chatBubbleBackgroundView.bubbleFrame = chatBubbleView.bounds
+        }
+    }
     
     // MARK: - Views
     
@@ -106,8 +120,8 @@ final class ChatViewTypingIndicatorTableViewCell: ThemedCodeTableViewCell {
     override func configureCell() {
         super.configureCell()
         
-        if UserSettings.shared().flippedTableView {
-            contentView.transform = CGAffineTransform(scaleX: 1, y: -1)
+        if flipped {
+            transform = CGAffineTransform(scaleX: 1, y: -1)
         }
 
         isUserInteractionEnabled = false
@@ -222,6 +236,10 @@ final class ChatViewTypingIndicatorTableViewCell: ThemedCodeTableViewCell {
         // This is necessary on iOS 15 (maybe in other versions as well) because otherwise the animation would stop on reuse.
         // It looks like UIImageView with an animated image isn't meant to be used in UITableView.
         typingIndicatorImageView.animationRepeatCount = 0
+        
+        if flipped {
+            transform = CGAffineTransform(scaleX: 1, y: -1)
+        }
     }
 }
 

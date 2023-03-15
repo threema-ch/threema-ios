@@ -18,9 +18,20 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import CocoaLumberjackSwift
 import Foundation
+import Photos
 
 extension ImageMessageEntity: ImageMessage {
+    
+    override public var showRetryAndCancelButton: Bool {
+        switch blobDisplayState {
+        case .pending, .sendingError, .uploading:
+            return true
+        default:
+            return false
+        }
+    }
     
     // MARK: - FileMessageProvider
     
@@ -48,14 +59,14 @@ extension ImageMessageEntity: ImageMessage {
         // Take the thumbnail if it exists as this is what we show
         if let height = thumbnail?.height.intValue,
            let width = thumbnail?.width.intValue,
-           width != 0 {
+           width > 0, height > 0 {
             return Double(height) / Double(width)
         }
         
         // Take the metadata if no thumbnail data is available
         if let height = image?.height.intValue,
            let width = image?.width.intValue,
-           width != 0 {
+           width > 0, height > 0 {
             return Double(height) / Double(width)
         }
         
@@ -65,5 +76,40 @@ extension ImageMessageEntity: ImageMessage {
     
     public var caption: String? {
         image?.getCaption()
+    }
+    
+    public func temporaryBlobDataURL() -> URL? {
+        guard let imageData = image?.data else {
+            return nil
+        }
+        
+        let filename = "v1-imageMessage-\(UUID().uuidString)"
+        guard let url = FileUtility.appTemporaryDirectory?.appendingPathComponent(
+            "\(filename).\(MEDIA_EXTENSION_IMAGE)"
+        ) else {
+            return nil
+        }
+        
+        do {
+            try imageData.write(to: url)
+        }
+        catch {
+            DDLogWarn("Writing image blob data to temporary file failed: \(error)")
+            return nil
+        }
+        
+        return url
+    }
+    
+    public func createSaveMediaItem(forAutosave: Bool) -> AlbumManager.SaveMediaItem? {
+        guard let url = temporaryBlobDataURL() else {
+            return nil
+        }
+        
+        return AlbumManager.SaveMediaItem(
+            url: url,
+            type: .photo,
+            filename: readableFileName
+        )
     }
 }

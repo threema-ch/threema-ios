@@ -39,7 +39,7 @@
                                    |B|
  ----------------------------------| |----------------------------------
  Group file message                |M|
-        ┌────────┐ upload:public   |I| download:public ┌────────┐
+        ┌────────┐ upload:public * |I| download:public ┌────────┐
  Leader │Device 1│––––––––––––––––→|R|←–––––––––––––––→│Device 1│ Leader
         └────────┘                 |R| done:local      └────────┘
                                    |O|
@@ -48,7 +48,8 @@
         └────────┘ done:local      | | done:local      └────────┘
                                    | |
  ```
-
+* If group is a note group, we upload with origin local, since we are the only ones that download the blob anyways.
+ 
  The origin of deprecated message types, `AudioMessageEntity`, `ImageMessageEntity` and `VideoMessageEntity`
  are always `public`, because they will never be reflected as outgoing message! In new version this types will
  send/reflected as `FileMessageEntity`.

@@ -43,6 +43,7 @@ typedef void (^ErrorBlock)(NSError *err);
 @interface FileMessageDecoder ()
 
 @property Conversation *conversation;
+@property ContactEntity *sender;
 @property AbstractMessage *boxMessage;
 @property NSDictionary *json;
 @property NSData *jsonData;
@@ -58,20 +59,20 @@ typedef void (^ErrorBlock)(NSError *err);
     EntityManager *entityManager;
 }
 
-+ (void)decodeMessageFromBox:(BoxFileMessage *)message forConversation:conversation isReflectedMessage:(BOOL)isReflected timeoutDownloadThumbnail:(int)timeout entityManager:(nonnull NSObject *)entityManagerObject onCompletion:(void (^)(BaseMessage *))onCompletion onError:(void (^)(NSError *))onError {
++ (void)decodeMessageFromBox:(nonnull BoxFileMessage *)message sender:(nullable ContactEntity *)sender conversation:(nonnull Conversation *)conversation isReflectedMessage:(BOOL)isReflected timeoutDownloadThumbnail:(int)timeout entityManager:(nonnull NSObject *)entityManagerObject onCompletion:(void (^)(BaseMessage *))onCompletion onError:(void (^)(NSError *))onError {
     NSAssert([entityManagerObject isKindOfClass:[EntityManager class]], @"Object must be type of EntityManager");
 
-    FileMessageDecoder *decoder = [FileMessageDecoder fileMessageDecoderOnCompletion:onCompletion onError:onError conversation:conversation timeoutDownloadThumbnail:timeout];
+    FileMessageDecoder *decoder = [FileMessageDecoder fileMessageDecoderOnCompletion:onCompletion onError:onError sender:sender conversation:conversation timeoutDownloadThumbnail:timeout];
 
     decoder->isReflectedMessage = isReflected;
     decoder->entityManager = (EntityManager *)entityManagerObject;
     [decoder decodeMessageFromBox:message];
 }
 
-+ (void)decodeGroupMessageFromBox:(GroupFileMessage *)message forConversation:conversation isReflectedMessage:(BOOL)isReflected timeoutDownloadThumbnail:(int)timeout entityManager:(nonnull NSObject *)entityManagerObject onCompletion:(void (^)(BaseMessage *))onCompletion onError:(void (^)(NSError *))onError {
++ (void)decodeGroupMessageFromBox:(nonnull GroupFileMessage *)message sender:(nullable ContactEntity *)sender conversation:(nonnull Conversation *)conversation isReflectedMessage:(BOOL)isReflected timeoutDownloadThumbnail:(int)timeout entityManager:(nonnull NSObject *)entityManagerObject onCompletion:(void (^)(BaseMessage *))onCompletion onError:(void (^)(NSError *))onError {
     NSAssert([entityManagerObject isKindOfClass:[EntityManager class]], @"Object must be type of EntityManager");
 
-    FileMessageDecoder *decoder = [FileMessageDecoder fileMessageDecoderOnCompletion:onCompletion onError:onError conversation:conversation timeoutDownloadThumbnail:timeout];
+    FileMessageDecoder *decoder = [FileMessageDecoder fileMessageDecoderOnCompletion:onCompletion onError:onError sender:sender conversation:conversation timeoutDownloadThumbnail:timeout];
     
     decoder->isReflectedMessage = isReflected;
     decoder->entityManager = (EntityManager *)entityManagerObject;
@@ -116,11 +117,12 @@ typedef void (^ErrorBlock)(NSError *err);
 
 #pragma mark - private
 
-+ (instancetype)fileMessageDecoderOnCompletion:(void(^)(BaseMessage *message))onCompletion onError:(void(^)(NSError *err))onError conversation:(Conversation *)conversation timeoutDownloadThumbnail:(int)timeoutDownloadThumbnail {
++ (instancetype)fileMessageDecoderOnCompletion:(void(^)(BaseMessage *message))onCompletion onError:(void(^)(NSError *err))onError sender:(nullable ContactEntity *)sender conversation:(nonnull Conversation *)conversation timeoutDownloadThumbnail:(int)timeoutDownloadThumbnail {
     FileMessageDecoder *decoder = [[FileMessageDecoder alloc] init];
     decoder.onCompletion = onCompletion;
     decoder.onError = onError;
-    
+
+    decoder.sender = sender;
     decoder.conversation = conversation;
     decoder->timeoutDownloadThumbnail = timeoutDownloadThumbnail;
 
@@ -168,7 +170,13 @@ typedef void (^ErrorBlock)(NSError *err);
 }
 
 - (void)fetchThumbnail:(FileMessageEntity *)fileMessageEntity {
-    NSData *blobID = fileMessageEntity.blobThumbnailId;
+    __block NSData *blobID;
+    __block BlobOrigin blobOrigin;
+    [entityManager performBlockAndWait:^{
+        blobID = fileMessageEntity.blobThumbnailId;
+        blobOrigin = fileMessageEntity.blobGetOrigin;
+    }];
+
     if (blobID) {
         dispatch_semaphore_t sema = dispatch_semaphore_create(0);
         dispatch_queue_t dispatchQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
@@ -192,7 +200,7 @@ typedef void (^ErrorBlock)(NSError *err);
         
         BlobURL *blobUrl = [[BlobURL alloc] initWithServerConnector:[ServerConnector sharedServerConnector] userSettings:[UserSettings sharedUserSettings] queue:dispatchQueue];
         BlobDownloader *downloader = [[BlobDownloader alloc] initWithBlobURL:blobUrl queue:dispatchQueue];
-        [downloader downloadWithBlobID:blobID origin:fileMessageEntity.blobGetOrigin completion:^(NSData *data, NSError *error) {
+        [downloader downloadWithBlobID:blobID origin:blobOrigin completion:^(NSData *data, NSError *error) {
             if (data != nil && error == nil) {
                 NSString *encryptionKeyHex = [_json objectForKey: JSON_FILE_KEY_ENCRYPTION_KEY];
                 NSData *encryptionKey = [encryptionKeyHex decodeHex];
@@ -240,18 +248,9 @@ typedef void (^ErrorBlock)(NSError *err);
 }
 
 - (FileMessageEntity *)createDBMessage {
-    __block FileMessageEntity *fileMessageEntity;
+    __block FileMessageEntity *fileMessageEntity = (FileMessageEntity *)[entityManager getOrCreateMessageFor:_boxMessage sender:_sender conversation:_conversation thumbnail:nil];
 
     [entityManager performSyncBlockAndSafe:^{
-        NonceGuard *nonceGuard = [[NonceGuard alloc] initWithEntityManager:entityManager];
-        if ([nonceGuard isProcessedWithMessage:_boxMessage isReflected:isReflectedMessage] == YES) {
-            _onError([ThreemaError threemaError:@"Message already processed" withCode:kMessageAlreadyProcessedErrorCode]);
-            return;
-        }
-
-        fileMessageEntity = [entityManager.entityCreator fileMessageEntityFromBox:_boxMessage];
-        fileMessageEntity.conversation = _conversation;
-
         BOOL isOutgoingMessage = _boxMessage.fromIdentity == [[MyIdentityStore sharedMyIdentityStore] identity];
         fileMessageEntity.isOwn = [NSNumber numberWithBool:isOutgoingMessage];
         
@@ -298,14 +297,6 @@ typedef void (^ErrorBlock)(NSError *err);
         }
         
         fileMessageEntity.json = [[NSString alloc] initWithData:_jsonData encoding:NSUTF8StringEncoding];
-        
-        /* Find contact for message */
-        /* A FileMessage with sender != nil will be treated as a file message sent in a group*/
-        if ([_boxMessage isKindOfClass:AbstractGroupMessage.class]) {
-            fileMessageEntity.sender = [entityManager.entityFetcher contactForId: _boxMessage.fromIdentity];
-        }
-
-        [nonceGuard processedWithMessage:_boxMessage isReflected:self->isReflectedMessage error:nil];
     }];
 
     return fileMessageEntity;

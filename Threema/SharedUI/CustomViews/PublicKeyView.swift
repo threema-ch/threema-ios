@@ -23,7 +23,7 @@ import UIKit
 final class PublicKeyView: UIView {
     // MARK: - Private properties
     
-    private var contact: Contact?
+    private var contact: ContactEntity?
     private var identity: String?
     private var publicKey: Data?
 
@@ -109,7 +109,7 @@ final class PublicKeyView: UIView {
        
     // MARK: - Initialization
     
-    @objc init(for contact: Contact) {
+    @objc init(for contact: ContactEntity) {
         super.init(frame: UIScreen.main.bounds)
         
         self.contact = contact
@@ -214,8 +214,8 @@ final class PublicKeyView: UIView {
 
         hairline.backgroundColor = Colors.hairLine
         
-        okButton.tintColor = Colors.primary
-        okButton.setTitleColor(Colors.primary, for: .normal)
+        okButton.tintColor = .primary
+        okButton.setTitleColor(.primary, for: .normal)
         okButton.backgroundColor = Colors.backgroundAlertView
     }
         

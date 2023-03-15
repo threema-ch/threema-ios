@@ -103,7 +103,7 @@
         case ConnectionStateConnecting:
         case ConnectionStateDisconnecting:
         case ConnectionStateDisconnected:
-            if ([[NSUserDefaults standardUserDefaults] boolForKey:@"FASTLANE_SNAPSHOT"]) {
+            if (ProcessInfoHelper.isRunningForScreenshots)  {
                 barBgColor = @"green";
             } else {
                 barBgColor = @"red";
@@ -133,7 +133,7 @@
         case ConnectionStateConnecting:
         case ConnectionStateDisconnecting:
         case ConnectionStateDisconnected:
-            if ([[NSUserDefaults standardUserDefaults] boolForKey:@"FASTLANE_SNAPSHOT"]) {
+            if (ProcessInfoHelper.isRunningForScreenshots)  {
                 statusView.hidden = true;
             } else {
                 statusView.hidden = false;
@@ -147,10 +147,10 @@
 
 - (void)navigationBarColorShouldChange:(NSNotification*)notification {
     if ([[VoIPHelper shared] isCallActiveInBackground] || [WCSessionHelper isWCSessionConnected]) {
-        if (!tap)
+        if (tap == nil) {
             tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(navigationBarTapped:)];
-
-        [self addGestureRecognizer:tap];
+            [self addGestureRecognizer:tap];
+        }
     } else {
         dispatch_async(dispatch_get_main_queue(), ^{
             [self removeGestureRecognizer:tap];

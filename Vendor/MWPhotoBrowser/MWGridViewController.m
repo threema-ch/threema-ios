@@ -107,7 +107,9 @@
             }
         }
         if (!currentVisible) {
-            [self.collectionView scrollToItemAtIndexPath:currentPhotoIndexPath atScrollPosition:UICollectionViewScrollPositionNone animated:NO];
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [self.collectionView scrollToItemAtIndexPath:currentPhotoIndexPath atScrollPosition:UICollectionViewScrollPositionBottom animated:NO];
+            });
         }
     }
     

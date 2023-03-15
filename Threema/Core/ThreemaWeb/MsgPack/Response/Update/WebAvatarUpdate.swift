@@ -25,7 +25,7 @@ class WebAvatarUpdate: WebAbstractMessage {
     var type: String
     var id: String
         
-    init(contact: Contact) {
+    init(contact: ContactEntity) {
         self.type = "contact"
         self.id = contact.identity
     

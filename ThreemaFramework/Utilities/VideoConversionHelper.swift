@@ -235,6 +235,22 @@ import Foundation
         let videoWidth = roundf(Float(targetVideoSize.width / 16.0)) * 16
         let videoHeight = roundf(Float(targetVideoSize.height / 16.0)) * 16
         
+        // We check for certain values to be higher than 0. otherwise the AVAssetWriter crashes during export.
+        guard videoWidth > 0 else {
+            DDLogError("[VideoConversionHelper] Video width was less than 0.")
+            return nil
+        }
+        
+        guard videoHeight > 0 else {
+            DDLogError("[VideoConversionHelper] Video height was less than 0.")
+            return nil
+        }
+        
+        guard rate.videoRate > 0 else {
+            DDLogError("[VideoConversionHelper] VideoRate was less than 0.")
+            return nil
+        }
+        
         guard let exportSession = SDAVAssetExportSession(asset: asset) else {
             return nil
         }

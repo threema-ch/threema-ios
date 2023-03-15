@@ -74,7 +74,7 @@ class DeleteContactAction: NSObject {
     // MARK: Private properties
     
     /// Contact to be deleted with this action
-    private let contact: Contact
+    private let contact: ContactEntity
     
     private lazy var entityManager = EntityManager()
     
@@ -82,7 +82,7 @@ class DeleteContactAction: NSObject {
     ///
     /// - Parameter contact: Contact to be deleted
     @objc
-    init(for contact: Contact) {
+    init(for contact: ContactEntity) {
         self.contact = contact
     }
     

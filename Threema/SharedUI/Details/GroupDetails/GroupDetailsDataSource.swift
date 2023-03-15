@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import CocoaLumberjackSwift
+import MBProgressHUD
 import UIKit
 
 extension GroupDetailsDataSource {
@@ -50,7 +51,12 @@ final class GroupDetailsDataSource: UITableViewDiffableDataSource<GroupDetails.S
     
     private lazy var photoBrowserWrapper: MWPhotoBrowserWrapper? = {
         if let viewController = groupDetailsViewController {
-            return MWPhotoBrowserWrapper(for: conversation, in: viewController, entityManager: self.entityManager)
+            return MWPhotoBrowserWrapper(
+                for: conversation,
+                in: viewController,
+                entityManager: self.entityManager,
+                delegate: self
+            )
         }
         return nil
     }()
@@ -74,7 +80,7 @@ final class GroupDetailsDataSource: UITableViewDiffableDataSource<GroupDetails.S
         self.conversation = em.entityFetcher.conversation(
             for: group.groupID,
             creator: group.groupCreatorIdentity
-        )
+        )!
 
         super.init(tableView: tableView, cellProvider: cellProvider)
     }
@@ -277,7 +283,8 @@ extension GroupDetailsDataSource {
         if group.isSelfMember {
             let messageQuickAction = QuickAction(
                 imageName: "threema.bubble.fill",
-                title: BundleUtil.localizedString(forKey: "message")
+                title: BundleUtil.localizedString(forKey: "message"),
+                accessibilityIdentifier: "GroupDetailsDataSourceMessageQuickActionButton"
             ) { [weak self] _ in
                 guard let strongSelf = self else {
                     return
@@ -322,7 +329,8 @@ extension GroupDetailsDataSource {
                 
         return QuickAction(
             imageNameProvider: dndImageNameProvider,
-            title: BundleUtil.localizedString(forKey: "doNotDisturb_title")
+            title: BundleUtil.localizedString(forKey: "doNotDisturb_title"),
+            accessibilityIdentifier: "GroupDetailsDataSourceDndQuickActionButton"
         ) { [weak self, weak viewController] quickAction in
             guard let strongSelf = self,
                   let strongViewController = viewController
@@ -357,7 +365,8 @@ extension GroupDetailsDataSource {
         
         let quickAction = QuickAction(
             imageName: "magnifyingglass",
-            title: BundleUtil.localizedString(forKey: "search")
+            title: BundleUtil.localizedString(forKey: "search"),
+            accessibilityIdentifier: "GroupDetailsDataSourceSearchQuickActionButton"
         ) { [weak groupDetailsViewController] _ in
             groupDetailsViewController?.startChatSearch()
         }
@@ -399,7 +408,8 @@ extension GroupDetailsDataSource {
         
         return QuickAction(
             imageName: "photo.fill.on.rectangle.fill",
-            title: localizedMediaString
+            title: localizedMediaString,
+            accessibilityIdentifier: "GroupDetailsDataSourceMediaQuickActionButton"
         ) { _ in
             guard let photoBrowser = self.photoBrowserWrapper else {
                 return
@@ -416,7 +426,8 @@ extension GroupDetailsDataSource {
         
         return [QuickAction(
             imageName: "chart.pie.fill",
-            title: localizedBallotsString
+            title: localizedBallotsString,
+            accessibilityIdentifier: "GroupDetailsDataSourceBallotQuickActionButton"
         ) { [weak conversation, weak viewController] _ in
             guard let weakViewController = viewController else {
                 return
@@ -449,10 +460,7 @@ extension GroupDetailsDataSource {
         let numberOfInlineMembers = configuration.maxNumberOfMembersShownInline
 
         // Add members
-        var sortedMembers: ArraySlice<Group.Member>!
-        entityManager.performBlockAndWait {
-            sortedMembers = ArraySlice(self.group.sortedMembers)
-        }
+        var sortedMembers = ArraySlice(group.sortedMembers)
 
         if limited {
             sortedMembers = sortedMembers.prefix(numberOfInlineMembers)
@@ -608,10 +616,28 @@ extension GroupDetailsDataSource {
                     message: localizedMessage,
                     titleDestructive: localizedDelete,
                     actionDestructive: { _ in
-                        strongSelf.entityManager.performSyncBlockAndSafe {
+                        if let tableView = strongSelf.tableView {
+                            RunLoop.main.schedule {
+                                let hud = MBProgressHUD(view: tableView)
+                                hud.minShowTime = 1.0
+                                hud.label.text = BundleUtil.localizedString(forKey: "delete_in_progress")
+                                tableView.addSubview(hud)
+                                hud.show(animated: true)
+                            }
+                        }
+                        
+                        strongGroupDetailsViewController.willDeleteAllMessages()
+                        
+                        strongSelf.entityManager.performBlock {
                             _ = strongSelf.entityManager.entityDestroyer
                                 .deleteMessages(of: strongSelf.conversation)
                             strongSelf.reload(sections: [.contentActions])
+                            
+                            DispatchQueue.main.async {
+                                if let tableView = strongSelf.tableView {
+                                    MBProgressHUD.hide(for: tableView, animated: true)
+                                }
+                            }
                         }
                     }
                 )
@@ -880,5 +906,13 @@ extension GroupDetailsDataSource {
         let groupMembersTableViewController = GroupMembersTableViewController(groupDetailsDataSource: self)
         
         viewController.show(groupMembersTableViewController, sender: viewController)
+    }
+}
+
+// MARK: - MWPhotoBrowserWrapperDelegate
+
+extension GroupDetailsDataSource: MWPhotoBrowserWrapperDelegate {
+    func willDeleteMessages(with objectIDs: [NSManagedObjectID]) {
+        groupDetailsViewController?.willDeleteMessages(with: objectIDs)
     }
 }

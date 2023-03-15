@@ -33,7 +33,7 @@ class ThumbnailCollectionViewCell: UICollectionViewCell {
     }
     
     func updateSelectionState() {
-        layer.borderColor = isSelected ? Colors.primary.cgColor : Colors.backgroundTableViewCell.cgColor
+        layer.borderColor = isSelected ? UIColor.primary.cgColor : Colors.backgroundTableViewCell.cgColor
     }
     
     override func prepareForReuse() {
@@ -48,7 +48,7 @@ class ThumbnailCollectionViewCell: UICollectionViewCell {
         layer.borderWidth = 2
         layer.cornerRadius = 5
         if isSelected {
-            layer.borderColor = Colors.primary.cgColor
+            layer.borderColor = UIColor.primary.cgColor
         }
         else {
             layer.borderColor = Colors.backgroundView.cgColor

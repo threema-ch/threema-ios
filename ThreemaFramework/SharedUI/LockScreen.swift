@@ -60,6 +60,8 @@ import Foundation
     }()
     
     private var enteredCorrectly: (() -> Void)?
+    private var enteredIncorrectly: (() -> Void)?
+    private var unlockCancelled: (() -> Void)?
     private var didDismissAfterSuccess: (() -> Void)?
     private var isLockScreenController: Bool
     
@@ -91,9 +93,13 @@ import Foundation
         viewController: UIViewController,
         style: UIModalPresentationStyle = .automatic,
         enteredCorrectly: (() -> Void)? = nil,
+        enteredIncorrectly: (() -> Void)? = nil,
+        unlockCancelled: (() -> Void)? = nil,
         didDismissAfterSuccess: (() -> Void)? = nil
     ) {
         self.enteredCorrectly = enteredCorrectly
+        self.enteredIncorrectly = enteredIncorrectly
+        self.unlockCancelled = unlockCancelled
         self.didDismissAfterSuccess = didDismissAfterSuccess
 
         passCodeViewController.modalPresentationStyle = style
@@ -109,6 +115,14 @@ import Foundation
 
     @objc func didPasscodeEnteredCorrectly(_ viewController: JKLLockScreenViewController!) {
         enteredCorrectly?()
+    }
+    
+    @objc func didPasscodeEnteredIncorrectly(_ viewController: JKLLockScreenViewController!) {
+        enteredIncorrectly?()
+    }
+    
+    @objc func unlockWasCancelledLockScreenViewController(_ lockScreenViewController: JKLLockScreenViewController!) {
+        unlockCancelled?()
     }
     
     func didPasscodeViewDismiss(_ viewController: JKLLockScreenViewController!) {

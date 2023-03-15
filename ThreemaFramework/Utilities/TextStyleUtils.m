@@ -20,7 +20,7 @@
 
 #import "TextStyleUtils.h"
 #import "ContactStore.h"
-#import "Contact.h"
+#import "ContactEntity.h"
 #import "MyIdentityStore.h"
 #import "UILabel+Markup.h"
 #import "BundleUtil.h"
@@ -91,7 +91,7 @@ static NSString *regex = @"@\\[[0-9A-Z*@]{8}\\]";
         NSString *mentionTag = [text substringWithRange:result.range];
         NSString *identity = [mentionTag substringWithRange:NSMakeRange(2, 8)].uppercaseString;
         
-        Contact *contact = [[ContactStore sharedContactStore] contactForIdentity:identity];
+        ContactEntity *contact = [[ContactStore sharedContactStore] contactForIdentity:identity];
         
         if (contact || [identity isEqualToString:[[MyIdentityStore sharedMyIdentityStore] identity]] || [identity isEqualToString:@"@@@@@@@@"]) {
             NSString *displayName = [BundleUtil localizedStringForKey:@"me"];
@@ -142,7 +142,7 @@ static NSString *regex = @"@\\[[0-9A-Z*@]{8}\\]";
         NSString *mentionTag = [origTextAttributed.string substringWithRange:result.range];
         NSString *identity = [mentionTag substringWithRange:NSMakeRange(2, 8)].uppercaseString;
         
-        Contact *contact = [[ContactStore sharedContactStore] contactForIdentity:identity];
+        ContactEntity *contact = [[ContactStore sharedContactStore] contactForIdentity:identity];
         UIColor *backgroundMention = [Colors backgroundMentionWithMessageInfo:messageInfo];
         NSMutableDictionary *paddingAttributeLeft = [[NSMutableDictionary alloc] initWithDictionary:@{@"TTTBackgroundFillColor": backgroundMention,
                                                                                              NSForegroundColorAttributeName: backgroundMention,

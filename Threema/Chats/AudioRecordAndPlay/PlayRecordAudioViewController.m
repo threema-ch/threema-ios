@@ -425,8 +425,8 @@
                     onCompletion();
                 } else {
                     DDLogInfo(@"Microphone access not granted.");
-                    NSString *message = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"microphone_disabled_message"], [ThreemaAppObjc currentName]];
-                    [UIAlertTemplate showAlertWithOwner:[[AppDelegate sharedAppDelegate] currentTopViewController] title:[BundleUtil localizedStringForKey:@"microphone_disabled_title"] message:message actionOk:nil];
+                    // Show access prompt
+                    [UIAlertTemplate showOpenSettingsAlertWithOwner:[[AppDelegate sharedAppDelegate] currentTopViewController] noAccessAlertType:NoAccessAlertTypeMicrophone];
                 }
             });
         }];

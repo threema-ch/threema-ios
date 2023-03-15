@@ -31,6 +31,7 @@ public extension EntityCreator {
     func createFileMessageEntity(
         for item: URLSenderItem,
         in conversation: Conversation,
+        with origin: BlobOrigin,
         correlationID: String? = nil,
         webRequestID: String? = nil
     ) throws -> FileMessageEntity {
@@ -63,6 +64,7 @@ public extension EntityCreator {
         entity.caption = item.caption
         entity.fileSize = NSNumber(integerLiteral: data.count)
         entity.fileName = item.getName() // We do not support web in the new file manager yet
+        entity.blobSetOrigin(origin)
         
         if let renderType = item.renderType {
             entity.type = renderType

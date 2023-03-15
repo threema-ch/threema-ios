@@ -23,7 +23,7 @@
 #import "UserSettings.h"
 #import "SystemMessage.h"
 #import "Conversation.h"
-#import "Contact.h"
+#import "ContactEntity.h"
 #import "Old_ChatViewController.h"
 #import "AppDelegate.h"
 #import "UIDefines.h"
@@ -63,13 +63,13 @@
 - (void)newMessageReceived:(NSNotification*)notification {
     DDLogVerbose(@"newMessageReceived: %@", notification);
 
-    NSData *messageID = (NSData *)notification.object;
-    if (messageID) {
+    NSManagedObjectID *messageObjectID = (NSManagedObjectID *)notification.object;
+    if (messageObjectID) {
         EntityManager *entityManager = [EntityManager new];
         [entityManager performBlock:^{
-            BaseMessage *message = [[entityManager entityFetcher] messageWithId:messageID];
+            BaseMessage *message = [[entityManager entityFetcher] existingObjectWithID:messageObjectID];
             if (![message.read boolValue]) {
-                Contact *contact = message.sender;
+                ContactEntity *contact = message.sender;
                 if (contact == nil) {
                     contact = message.conversation.contact;
                 }

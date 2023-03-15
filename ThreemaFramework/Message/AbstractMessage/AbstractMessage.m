@@ -50,7 +50,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     return self;
 }
 
-- (BoxedMessage*)makeBox:(Contact *  _Nonnull)toContact myIdentityStore:(id<MyIdentityStoreProtocol> _Nonnull)myIdentityStore {
+- (BoxedMessage*)makeBox:(ContactEntity *  _Nonnull)toContact myIdentityStore:(id<MyIdentityStoreProtocol> _Nonnull)myIdentityStore {
     /* prepare data for box */
     uint8_t type = self.type;
     NSData *_body = self.body;

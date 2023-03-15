@@ -20,11 +20,11 @@
 
 #import <UIKit/UIKit.h>
 
-@class Contact;
+@class ContactEntity;
 
 @interface ChatContactCell : UITableViewCell
 
-@property (nonatomic, strong) Contact* contact;
+@property (nonatomic, strong) ContactEntity* contact;
 
 - (void)willDisplay;
 - (void)updateColors;

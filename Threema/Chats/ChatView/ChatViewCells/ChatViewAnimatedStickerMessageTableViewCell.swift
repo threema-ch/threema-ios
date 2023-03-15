@@ -206,18 +206,18 @@ extension ChatViewAnimatedStickerMessageTableViewCell: MessageTextViewDelegate {
     }
 }
 
-// MARK: - ContextMenuAction
+// MARK: - ChatViewMessageAction
 
-extension ChatViewAnimatedStickerMessageTableViewCell: ContextMenuAction {
+extension ChatViewAnimatedStickerMessageTableViewCell: ChatViewMessageAction {
     
-    func buildContextMenu(at indexPath: IndexPath) -> UIContextMenuConfiguration? {
-       
-        guard let message = animatedStickerMessageAndNeighbors?.message else {
+    func messageActions() -> [ChatViewMessageActionProvider.MessageAction]? {
+
+        guard let message = animatedStickerMessageAndNeighbors?.message as? StickerMessage else {
             return nil
         }
 
-        typealias Provider = ChatViewContextMenuActionProvider
-        var menuItems = [UIAction]()
+        typealias Provider = ChatViewMessageActionProvider
+        var menuItems = [ChatViewMessageActionProvider.MessageAction]()
         
         // Speak
         var speakText = message.fileMessageType.localizedDescription
@@ -266,21 +266,21 @@ extension ChatViewAnimatedStickerMessageTableViewCell: ContextMenuAction {
         
         // Edit
         let editHandler = {
-            self.chatViewTableViewCellDelegate?.startMultiselect()
+            self.chatViewTableViewCellDelegate?.startMultiselect(with: message.objectID)
         }
         
-        // Save
-        let albumManager = AlbumManager.shared
-        let saveHandler = {
-            guard !MDMSetup(setup: false).disableShareMedia() else {
-                fatalError()
-            }
-            
-            guard let data = message.blobGet() else {
-                NotificationPresenterWrapper.shared.present(type: .saveError)
-                return
-            }
-            albumManager.saveAnimatedImage(data: data)
+        // Delete
+        let willDelete = {
+            self.chatViewTableViewCellDelegate?.willDeleteMessage(with: message.objectID)
+        }
+        
+        let didDelete = {
+            self.chatViewTableViewCellDelegate?.didDeleteMessages()
+        }
+        
+        // Ack
+        let ackHandler = { (message: BaseMessage, ack: Bool) in
+            self.chatViewTableViewCellDelegate?.sendAck(for: message, ack: ack)
         }
         
         let defaultActions = Provider.defaultActions(
@@ -291,28 +291,62 @@ extension ChatViewAnimatedStickerMessageTableViewCell: ContextMenuAction {
             copyHandler: copyHandler,
             quoteHandler: quoteHandler,
             detailsHandler: detailsHandler,
-            editHandler: editHandler
+            editHandler: editHandler,
+            willDelete: willDelete,
+            didDelete: didDelete,
+            ackHandler: ackHandler
         )
-        
-        let saveAction = Provider.saveAction(handler: saveHandler)
         
         // Build menu
         menuItems.append(contentsOf: defaultActions)
         
-        // Save action is inserted before default action, depending if ack/dec is possible at a different position
-        if !MDMSetup(setup: false).disableShareMedia() {
-            if message.isUserAckEnabled {
-                menuItems.insert(saveAction, at: 2)
+        if message.isDataAvailable {
+            let saveAction = Provider.saveAction {
+                guard !MDMSetup(setup: false).disableShareMedia() else {
+                    DDLogWarn(
+                        "[ChatViewThumbnailDisplayMessageTableViewCell] Tried to save media, even if MDM disabled it."
+                    )
+                    return
+                }
+                
+                if let saveMediaItem = message.createSaveMediaItem() {
+                    AlbumManager.shared.save(saveMediaItem)
+                }
             }
-            else {
-                menuItems.insert(saveAction, at: 0)
+            
+            // Save action is inserted before default action, depending if ack/dec is possible at a different position
+            if !MDMSetup(setup: false).disableShareMedia() {
+                if message.isUserAckEnabled {
+                    menuItems.insert(saveAction, at: 2)
+                }
+                else {
+                    menuItems.insert(saveAction, at: 0)
+                }
             }
         }
-        
-        let menu = UIMenu(children: menuItems)
-        
-        return UIContextMenuConfiguration(identifier: indexPath as NSCopying, previewProvider: nil) { _ in
-            menu
+        else {
+            let downloadAction = Provider.downloadAction {
+                Task {
+                    await BlobManager.shared.syncBlobs(for: message.objectID)
+                }
+            }
+            // Download action is inserted before default action, depending if ack/dec is possible at a different position
+            if message.isUserAckEnabled {
+                menuItems.insert(downloadAction, at: 2)
+            }
+            else {
+                menuItems.insert(downloadAction, at: 0)
+            }
+        }
+        return menuItems
+    }
+    
+    override var accessibilityCustomActions: [UIAccessibilityCustomAction]? {
+        get {
+            buildAccessibilityCustomActions()
+        }
+        set {
+            // No-op
         }
     }
 }

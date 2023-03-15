@@ -32,6 +32,7 @@ extension BlurCircleView {
     public enum BlurCircleViewConfigurationType {
         case `default`
         case thumbnail
+        case retryAndCancel
     }
     
     private struct DefaultConfiguration: BlurCircleViewConfiguration {
@@ -73,6 +74,26 @@ extension BlurCircleView {
         let textStyle: UIFont.TextStyle = .caption1
         let textStyleFontMetrics = UIFontMetrics(forTextStyle: .caption1)
     }
+    
+    private struct RetryAndCancelButtonConfiguration: BlurCircleViewConfiguration {
+        
+        /// Diameter of circular view adjusted for current content size
+        var scaledSize: CGFloat {
+            let defaultSize: CGFloat = 40
+            return textStyleFontMetrics.scaledValue(for: defaultSize)
+        }
+        
+        /// Configuration of symbol in the center
+        var symbolConfiguration: UIImage.SymbolConfiguration {
+            let textStyleAndScaleConfiguration = UIImage.SymbolConfiguration(textStyle: textStyle, scale: .medium)
+            let weightConfiguration = UIImage.SymbolConfiguration(weight: .bold)
+            return textStyleAndScaleConfiguration.applying(weightConfiguration)
+        }
+        
+        // These should always use the same TextStyle
+        let textStyle: UIFont.TextStyle = .body
+        let textStyleFontMetrics = UIFontMetrics(forTextStyle: .body)
+    }
 }
 
 /// Circle view with an vibrant symbol in the center and a blurry background
@@ -97,7 +118,7 @@ final class BlurCircleView: UIVisualEffectView {
     }()
     
     // All the stuff to make it blurry and vibrant
-    private let blurEffect: UIBlurEffect
+    private let blurEffect = UIBlurEffect(style: .systemMaterial)
     private lazy var vibrantEffectView = UIVisualEffectView(
         effect: UIVibrancyEffect(blurEffect: blurEffect, style: .fill)
     )
@@ -119,10 +140,11 @@ final class BlurCircleView: UIVisualEffectView {
             self.viewConfiguration = DefaultConfiguration()
         case .thumbnail:
             self.viewConfiguration = ThumbnailConfiguration()
+        case .retryAndCancel:
+            self.viewConfiguration = RetryAndCancelButtonConfiguration()
         }
         
         self.currentSfSymbolName = sfSymbolName
-        self.blurEffect = UIBlurEffect(style: .systemMaterial)
         
         super.init(effect: blurEffect)
         

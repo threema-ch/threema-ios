@@ -133,14 +133,14 @@ final class ChatViewBallotMessageTableViewCell: ChatViewBaseTableViewCell, Measu
         super.updateColors()
         
         // We must change the icon based on the closing state and re-assign the attributed text for the icons to change color as well
-        if let ballotMessage = ballotMessageAndNeighbors?.message {
+        if let ballotMessage = ballotMessageAndNeighbors?.message, !ballotMessage.willBeDeleted {
             if ballotMessage.isClosed() {
                 iconView.image = iconView.image?.withTintColor(Colors.textLight)
             }
             else {
                 iconView.image = iconView.image?.withTintColor(Colors.text)
                 messageSecondaryTextLabel.attributedText =
-                    ballotMessage.ballot.localizedMessageSecondaryText(
+                    ballotMessage.ballot?.localizedMessageSecondaryText(
                         configuration: ChatViewConfiguration.SecondaryText.symbolConfiguration
                     )
             }
@@ -163,6 +163,10 @@ final class ChatViewBallotMessageTableViewCell: ChatViewBaseTableViewCell, Measu
     
     private func updateCell(for ballotMessage: BallotMessage?) {
         // By accepting an optional the data is automatically reset when the ballot message is set to `nil`
+        
+        guard !(ballotMessage?.willBeDeleted ?? false) else {
+            return
+        }
                 
         messageQuoteStackView.quoteMessage = ballotMessage?.quoteMessage
         
@@ -176,17 +180,17 @@ final class ChatViewBallotMessageTableViewCell: ChatViewBaseTableViewCell, Measu
                 iconView.image = symbol.withConfiguration(ChatViewConfiguration.Text.symbolConfiguration)
             }
             
-            messageSecondaryTextLabel.text = ballotMessage?.ballot.localizedClosingMessageText
+            messageSecondaryTextLabel.text = ballotMessage?.ballot?.localizedClosingMessageText
         }
         else {
             messageQuoteStackView.isHidden = true
             messageTextView.isHidden = false
-            messageTextView.text = ballotMessage?.ballot.title
+            messageTextView.text = ballotMessage?.ballot?.title ?? ""
             
             // We need to assign it with the color here again, otherwise there is an issue during re-use
             iconView.image = defaultSymbol
             messageSecondaryTextLabel.attributedText =
-                ballotMessage?.ballot.localizedMessageSecondaryText(
+                ballotMessage?.ballot?.localizedMessageSecondaryText(
                     configuration: ChatViewConfiguration.SecondaryText.smallSymbolConfiguration
                 )
         }
@@ -227,17 +231,17 @@ final class ChatViewBallotMessageTableViewCell: ChatViewBaseTableViewCell, Measu
 
 extension ChatViewBallotMessageTableViewCell: Reusable { }
 
-// MARK: - ContextMenuAction
+// MARK: - ChatViewMessageAction
 
-extension ChatViewBallotMessageTableViewCell: ContextMenuAction {
+extension ChatViewBallotMessageTableViewCell: ChatViewMessageAction {
     
-    func buildContextMenu(at indexPath: IndexPath) -> UIContextMenuConfiguration? {
+    func messageActions() -> [ChatViewMessageActionProvider.MessageAction]? {
 
         guard let message = ballotMessageAndNeighbors?.message else {
             return nil
         }
-
-        typealias Provider = ChatViewContextMenuActionProvider
+        
+        typealias Provider = ChatViewMessageActionProvider
         
         // Details
         let detailsHandler = {
@@ -247,16 +251,29 @@ extension ChatViewBallotMessageTableViewCell: ContextMenuAction {
         let detailsAction = Provider.detailsAction(handler: detailsHandler)
         
         let editAction = Provider.editAction {
-            self.chatViewTableViewCellDelegate?.startMultiselect()
+            self.chatViewTableViewCellDelegate?.startMultiselect(with: message.objectID)
         }
         
-        let deleteAction = Provider.deleteAction(message: message)
+        // Delete
+        let willDelete = {
+            self.chatViewTableViewCellDelegate?.willDeleteMessage(with: message.objectID)
+        }
         
-        // Build menu
-        let menu = UIMenu(children: [detailsAction, editAction, deleteAction])
+        let didDelete = {
+            self.chatViewTableViewCellDelegate?.didDeleteMessages()
+        }
         
-        return UIContextMenuConfiguration(identifier: indexPath as NSCopying, previewProvider: nil) { _ in
-            menu
+        let deleteAction = Provider.deleteAction(message: message, willDelete: willDelete, didDelete: didDelete)
+        
+        return [detailsAction, editAction, deleteAction]
+    }
+    
+    override var accessibilityCustomActions: [UIAccessibilityCustomAction]? {
+        get {
+            buildAccessibilityCustomActions()
+        }
+        set {
+            // No-op
         }
     }
 }

@@ -33,16 +33,28 @@ protocol ChatTextViewDelegate: AnyObject {
     func didEndEditing()
 }
 
-final class ChatTextView: RTLAligningTextView {
+final class ChatTextView: UITextView {
     
     // MARK: - Public properties
     
-    override public var attributedText: NSAttributedString! {
+    override var textAlignment: NSTextAlignment {
         didSet {
-            if !isDummy {
-                resizeTextView()
-                updatePlaceholder()
-            }
+            // This is to work around an issue where the cursor position would switch back to left (even though we explicitly set it to right) after
+            // sending a few messages.
+            textViewDidChange(self)
+        }
+    }
+    
+    override var typingAttributes: [NSAttributedString.Key: Any] {
+        set {
+            super.typingAttributes = newValue
+        }
+        get {
+            [
+                NSAttributedString.Key.foregroundColor: Colors.text,
+                NSAttributedString.Key.font: UIFont
+                    .preferredFont(forTextStyle: ChatViewConfiguration.ChatTextView.textStyle),
+            ]
         }
     }
     
@@ -76,7 +88,7 @@ final class ChatTextView: RTLAligningTextView {
     
     fileprivate var isDummy = false
     
-    private let draftText: String?
+    private let precomposedText: String?
     private var conversationIdentifier: String?
     
     private let markupParser = MarkupParser()
@@ -84,9 +96,7 @@ final class ChatTextView: RTLAligningTextView {
     private var textChangeQueue = [TextChangeItem]()
     
     private lazy var mentionsHelper = MentionsHelper()
-    
-    private var returnToSend = UserSettings.shared().returnToSend
-    
+        
     private lazy var heightConstraint: NSLayoutConstraint = {
         let heightConstraint = heightAnchor.constraint(equalToConstant: minHeight)
         heightConstraint.isActive = true
@@ -110,14 +120,8 @@ final class ChatTextView: RTLAligningTextView {
     
     private lazy var dummyTextView: ChatTextView = {
         let dummyTextView = ChatTextView(asDummy: true)
-        let formattedString = dummyTextView.formattedString(
-            range: NSMakeRange(0, 0),
-            oldParsedText: NSMutableAttributedString(string: ""),
-            text: "3ma",
-            textView: dummyTextView
-        )
         
-        dummyTextView.attributedText = formattedString.attributedString
+        dummyTextView.customTextStorage?.replaceAndParse("3ma")
         dummyTextView.contentMode = .redraw
 
         dummyTextView.sizeToFit()
@@ -142,39 +146,41 @@ final class ChatTextView: RTLAligningTextView {
     
     private let textViewKeyboardWorkaroundHandler = TextViewKeyboardWorkaroundHandler()
     
+    private var customTextStorage: MarkupParsingTextStorage?
+    
     // MARK: - Lifecycle
     
-    override init(frame: CGRect, textContainer: NSTextContainer?) {
-        self.draftText = nil
-        
-        super.init(frame: frame, textContainer: textContainer)
-        
-        configureTextView()
-    }
-    
-    required init?(coder aDecoder: NSCoder) {
-        self.draftText = nil
-        
-        super.init(coder: aDecoder)
-        
-        configureTextView()
-    }
-    
-    init(draftText: String? = nil, conversationIdentifier: String? = nil) {
-        self.draftText = draftText
+    init(precomposedText: String? = nil, conversationIdentifier: String? = nil) {
+        self.precomposedText = precomposedText
         self.conversationIdentifier = conversationIdentifier
-        super.init(frame: .zero, textContainer: nil)
+        
+        let container = NSTextContainer(size: .zero)
+        container.widthTracksTextView = true
+        
+        let layoutManager = NSLayoutManager()
+        layoutManager.addTextContainer(container)
+        
+        let textStorage = MarkupParsingTextStorage()
+        textStorage.addLayoutManager(layoutManager)
+        
+        super.init(frame: .zero, textContainer: container)
+        
+        self.customTextStorage = textStorage
         
         configureTextView()
     }
     
-    private init(asDummy: Bool) {
-        self.isDummy = asDummy
-        self.draftText = nil
+    private convenience init(asDummy: Bool) {
+        self.init(precomposedText: nil)
         
-        super.init(frame: .zero, textContainer: nil)
+        self.isDummy = asDummy
         
         configureTextView()
+    }
+    
+    @available(*, unavailable)
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
     }
     
     deinit {
@@ -199,18 +205,9 @@ final class ChatTextView: RTLAligningTextView {
         
         delegate = self
             
-        // Load draft
-        if let draftText = draftText {
-            let range = NSMakeRange(0, 0)
-            
-            let formattedString = formattedString(
-                range: range,
-                oldParsedText: NSMutableAttributedString(string: ""),
-                text: draftText,
-                textView: self
-            )
-            
-            attributedText = formattedString.attributedString
+        // Set precomposed text
+        if let precomposedText = precomposedText {
+            customTextStorage?.replaceAndParse(precomposedText)
         }
         
         // Design
@@ -234,7 +231,6 @@ final class ChatTextView: RTLAligningTextView {
         updatePlaceholder()
         updateColors()
         resizeTextView()
-        updateTextAlignment()
     }
     
     private func configureLayout() {
@@ -302,28 +298,18 @@ final class ChatTextView: RTLAligningTextView {
     
     // MARK: - Update
     
-    func updateSettings() {
-        returnToSend = UserSettings.shared().returnToSend
-    }
-    
     func updateColors() {
         backgroundColor = Colors.chatBarInput
         layer.borderColor = Colors.hairLine.cgColor
         
         placeholderLabel.textColor = Colors.textPlaceholder
         
-        let formattedString = formattedString(
-            range: NSMakeRange(0, 0),
-            oldParsedText: NSMutableAttributedString(string: ""),
-            text: attributedText.string,
-            textView: self
-        )
-        
-        attributedText = formattedString.attributedString
+        // This reformats the text using the new colors
+        customTextStorage?.reformatText()
     }
     
     private func updatePlaceholder() {
-        if attributedText.string.isEmpty {
+        if text.isEmpty {
             placeholderLabel.isHidden = false
         }
         else {
@@ -371,17 +357,6 @@ final class ChatTextView: RTLAligningTextView {
         layoutIfNeeded()
     }
     
-    @objc func updateTextAlignment() {
-        if let inputModeLocale = textInputMode?.primaryLanguage {
-            if NSLocale.characterDirection(forLanguage: inputModeLocale) == .rightToLeft {
-                textAlignment = .right
-            }
-            else {
-                textAlignment = .left
-            }
-        }
-    }
-    
     // MARK: - Observers
     
     private func addObservers() {
@@ -394,8 +369,8 @@ final class ChatTextView: RTLAligningTextView {
         
         NotificationCenter.default.addObserver(
             self,
-            selector: #selector(updateTextAlignment),
-            name: UITextInputMode.currentInputModeDidChangeNotification,
+            selector: #selector(updateLayoutForKeyboard),
+            name: UIResponder.keyboardWillHideNotification,
             object: nil
         )
     }
@@ -407,16 +382,8 @@ final class ChatTextView: RTLAligningTextView {
     // MARK: - Notifications
     
     @objc private func preferredContentSizeCategoryDidChange() {
-        let range = NSMakeRange(0, 0)
-        
-        let formattedString = formattedString(
-            range: range,
-            oldParsedText: NSMutableAttributedString(string: ""),
-            text: attributedText.string,
-            textView: self
-        )
-        
-        attributedText = formattedString.attributedString
+        // This reformats the text using the new text size
+        customTextStorage?.reformatText()
         
         prevSingleLineHeight = 0.0
         configureInsetsIfNeeded()
@@ -430,8 +397,13 @@ final class ChatTextView: RTLAligningTextView {
         super.traitCollectionDidChange(previousTraitCollection)
         
         if previousTraitCollection?.preferredContentSizeCategory != traitCollection.preferredContentSizeCategory {
-            textViewDidChange(self)
+            customTextStorage?.reformatText()
         }
+    }
+    
+    @objc func updateLayoutForKeyboard(notification: NSNotification) {
+        isEditing = false
+        chatTextViewDelegate?.didEndEditing()
     }
     
     @objc private func sendOnHWKReturn() {
@@ -455,6 +427,26 @@ final class ChatTextView: RTLAligningTextView {
         ]
     }
     
+    // MARK: Overrides
+    
+    override func setBaseWritingDirection(_ writingDirection: NSWritingDirection, for range: UITextRange) {
+        switch writingDirection {
+        case .natural:
+            textAlignment = .natural
+        case .leftToRight:
+            textAlignment = .left
+        case .rightToLeft:
+            textAlignment = .right
+        @unknown default:
+            DDLogWarn("Unknown default case \(writingDirection)")
+            textAlignment = .natural
+        }
+        
+        textViewDidChange(self)
+        
+        configureInsetsIfNeeded()
+    }
+    
     // MARK: - Get information
     
     /// Approximation of number of lines
@@ -469,15 +461,23 @@ final class ChatTextView: RTLAligningTextView {
     }
     
     var isEmpty: Bool {
-        attributedText.string.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
     
     /// Stops editing, removes the current text from the text view and replaces it with an empty string.
     /// - Returns: If the current text is empty it returns nil otherwise it returns the text
     func removeCurrentText() -> String? {
-        let parsedMentions = markupParser.parseMentionNamesToMarkup(parsed: attributedText)
-        let text = parsedMentions.string
-        attributedText = NSAttributedString(string: "")
+        defer {
+            updatePlaceholder()
+            resizeTextView()
+            setNeedsDisplay()
+            
+            // Workaround
+            /// When removing the text we also need to reset the selected range to properly update predictive typing
+            selectedRange = NSRange(location: 0, length: 0)
+        }
+        
+        let currentText = customTextStorage?.removeCurrentText()
         
         guard chatTextViewDelegate != nil else {
             let message = "chatTextViewDelegate should not be nil"
@@ -488,133 +488,50 @@ final class ChatTextView: RTLAligningTextView {
         
         isEditing = false
         
-        if text != "" {
-            return text
+        if currentText != "" {
+            return currentText
         }
         return nil
     }
     
-    /// This method processes the changes from shouldChangeTextIn and formats the text
-    /// - Parameters:
-    ///   - range: The range of the changes as defined in shouldChangeTextIn
-    ///   - oldParsedText: The parsed text that was displayed in the UITextView before the current changes were applied
-    ///   - text: The text that should be entered in range. As defined in shouldChangeTextIn.
-    ///   - textView: The textView that has the current changes
-    /// - Returns: A tuple of the newly formatted attributedString and the UITextRange describing the current cursor position
-    func formattedString(
-        range: NSRange,
-        oldParsedText: NSMutableAttributedString,
-        text: String,
-        textView: UITextView
-    ) -> (attributedString: NSAttributedString, textRange: UITextRange?) {
-        let currentPosition = textView.beginningOfDocument
-        
-        let currentReplacementRange = currentReplacementRange(range: range, oldParsedText: oldParsedText)
-        
-        let replacementText = NSAttributedString(string: text, attributes: nil)
-        oldParsedText.replaceCharacters(in: currentReplacementRange, with: replacementText)
-        
-        notParsedText = markupParser.parseMentionNamesToMarkup(parsed: oldParsedText)
-        
-        var attributedString = NSAttributedString(
-            string: notParsedText.string,
-            attributes: [
-                NSAttributedString.Key.foregroundColor: Colors.text,
-                NSAttributedString.Key.font: UIFont.preferredFont(forTextStyle: Config.textStyle),
-            ]
-        )
-        
-        attributedString = markupParser.markify(
-            attributedString: attributedString,
-            font: UIFont.preferredFont(forTextStyle: Config.textStyle),
-            parseMention: true
-        ) as! NSMutableAttributedString
-        
-        let diff = calcPositionOffsetDiff(
-            attributedString: attributedString,
-            currentReplacementRange: currentReplacementRange
-        )
-        var textRange: UITextRange?
-        if let cursorLocation = position(
-            from: currentPosition,
-            offset: currentReplacementRange.location + text.utf16.count + diff
-        ) {
-            textRange = self.textRange(from: cursorLocation, to: cursorLocation)
+    /// Stops editing, removes the current text from the text view and replaces it with an empty string.
+    /// - Returns: If the current text is empty it returns nil otherwise it returns the text
+    func getCurrentText() -> String? {
+        guard let customTextStorage else {
+            return nil
         }
         
-        handleMentions(with: currentReplacementRange, replacementText: text)
-        
-        return (attributedString, textRange)
+        let parsedMentions = markupParser.parseMentionNamesToMarkup(parsed: customTextStorage.getRawText())
+        if parsedMentions.string != "" {
+            return parsedMentions.string
+        }
+        return nil
     }
+    
+    // MARK: - Change text in text view
     
     /// Should be called to reformat the currently editing mention
     /// - Parameter identity: the mentioned identity
     func mentionsTableViewHasSelected(identity: String) {
-        let fullText = attributedText.string as NSString
+        let fullText = text as NSString
         
         let replaceRange = mentionsHelper.getReplacementRange(fullText: fullText)
-        let replaceText = mentionsHelper.getReplacementText(identity: identity)
+        let replaceText = mentionsHelper.getReplacementText(identity: identity) + " "
         
         mentionsHelper.resetMentions()
-        _ = textView(self, shouldChangeTextIn: replaceRange, replacementText: replaceText)
-        textViewDidChange(self)
+        
+        let prevLength = textStorage.length
+        textStorage.replaceCharacters(in: replaceRange, with: replaceText)
+        
+        let newLength = textStorage.length
+        let diff = newLength - prevLength
+        selectedRange = NSRange(location: replaceRange.upperBound + diff, length: 0)
+        
+        updatePlaceholder()
+        resizeTextView()
     }
     
     // MARK: - Private Functions
-    
-    private func currentReplacementRange(range: NSRange, oldParsedText: NSAttributedString) -> NSRange {
-        
-        guard range.location < oldParsedText.length else {
-            return range
-        }
-        
-        var currentReplacementRange = range
-        var foundTokenRange = NSRange()
-        let searchToken = NSAttributedString.Key.contact
-        
-        if range.length == 0,
-           oldParsedText.attribute(searchToken, at: range.location, effectiveRange: &foundTokenRange) != nil,
-           range.location != foundTokenRange.location {
-            currentReplacementRange = NSUnionRange(currentReplacementRange, foundTokenRange)
-        }
-        else {
-            // search the range for any instances of the desired text attribute
-            oldParsedText.enumerateAttribute(
-                searchToken,
-                in: range,
-                options: .longestEffectiveRangeNotRequired,
-                using: { _, attributedRange, _ in
-                    // get the attribute's full range and merge it with the original
-                    if oldParsedText.attribute(
-                        searchToken,
-                        at: attributedRange.location,
-                        effectiveRange: &foundTokenRange
-                    ) != nil {
-                        currentReplacementRange = NSUnionRange(currentReplacementRange, foundTokenRange)
-                    }
-                }
-            )
-        }
-        
-        return currentReplacementRange
-    }
-    
-    private func calcPositionOffsetDiff(attributedString: NSAttributedString, currentReplacementRange: NSRange) -> Int {
-        var diff = 0
-        attributedString.enumerateAttributes(
-            in: NSRange(location: 0, length: attributedString.length)
-        ) { attributes, mentionRange, stop in
-            if attributes[NSAttributedString.Key.tokenType] as? MarkupParser.TokenType == .mention,
-               currentReplacementRange.location >= mentionRange.location,
-               currentReplacementRange.location < mentionRange.location + mentionRange.length,
-               let contact = attributes[NSAttributedString.Key.contact] as? Contact {
-                // add the difference between the mention code and the mention name
-                diff = contact.displayName.count + 2 - 11
-                stop.pointee = true
-            }
-        }
-        return diff
-    }
     
     private func handleMentions(with currentReplacementRange: NSRange, replacementText text: String) {
         if let mentionString = mentionsHelper.couldBeMention(text: text, location: currentReplacementRange) {
@@ -641,35 +558,9 @@ extension ChatTextView {
         }
     }
     
-    override var accessibilityValue: String? {
-        get {
-            if isEmpty {
-                return nil
-            }
-            else {
-                return String.localizedStringWithFormat(
-                    BundleUtil.localizedString(forKey: "accessibility_chatbar_value"),
-                    text
-                )
-            }
-        }
-        set {
-            // Do nothing
-        }
-    }
-    
     override var accessibilityHint: String? {
         get {
             BundleUtil.localizedString(forKey: "accessibility_chatbar_hint")
-        }
-        set {
-            // Do nothing
-        }
-    }
-    
-    override var accessibilityTraits: UIAccessibilityTraits {
-        get {
-            .allowsDirectInteraction
         }
         set {
             // Do nothing
@@ -701,22 +592,17 @@ extension ChatTextView: UITextViewDelegate {
         shouldChangeTextIn range: NSRange,
         replacementText text: String
     ) -> Bool {
-        guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
-            (!isEmpty && text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+        guard range.length != 0 ||
+            (
+                !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
+                    (!isEmpty && text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+            )
         else {
             return false
         }
         
-        let adjustedRange = getAdjustedRange(from: range, with: textView.markedTextRange, in: textView)
+        handleMentions(with: range, replacementText: text)
 
-        let oldParsedText = NSMutableAttributedString(attributedString: textView.attributedText)
-        
-        textChangeQueue.append(textViewKeyboardWorkaroundHandler.nextTextViewChange(
-            shouldChangeTextIn: adjustedRange,
-            replacementText: text,
-            oldText: oldParsedText
-        ))
-        
         return true
     }
     
@@ -735,35 +621,42 @@ extension ChatTextView: UITextViewDelegate {
             return
         }
         
-        while !textChangeQueue.isEmpty {
-            let (range, oldParsedText, text) = textChangeQueue.removeFirst()
-            
-            let (attributedString, textRange) = formattedString(
-                range: range,
-                oldParsedText: oldParsedText,
-                text: text,
-                textView: textView
+        if let delegate = chatTextViewDelegate, let chatTextView = textView as? ChatTextView {
+            delegate.chatTextViewDidChange(chatTextView)
+        }
+        
+        DDLogVerbose("TextChange \(#function) \(textView.textStorage.string)")
+        
+        if let customTextStorage, let currentReplacementRange = customTextStorage.lastReplacementRange,
+           let lastTextChange = customTextStorage.lastTextChange {
+            let diff = calcPositionOffsetDiff(
+                attributedString: customTextStorage.getRawText(),
+                currentReplacementRange: currentReplacementRange
             )
-            
-            attributedText = attributedString
-            
+            var textRange: UITextRange?
+            if let cursorLocation = position(
+                from: textView.beginningOfDocument,
+                offset: currentReplacementRange.location + lastTextChange.utf16.count + diff
+            ) {
+                textRange = self.textRange(from: cursorLocation, to: cursorLocation)
+            }
+            else if let cursorLocation = position(
+                from: textView.beginningOfDocument,
+                offset: customTextStorage.length
+            ) {
+                textRange = self.textRange(from: cursorLocation, to: cursorLocation)
+            }
+
             if let textRange = textRange {
                 selectedTextRange = textRange
             }
-            
-            if let delegate = chatTextViewDelegate, let chatTextView = textView as? ChatTextView {
-                delegate.chatTextViewDidChange(chatTextView)
-            }
-            
-            if returnToSend, text == "\n", !isEmpty {
-                isEditing = false
-                chatTextViewDelegate?.sendText()
-            }
-            
-            updatePlaceholder()
         }
+
+        updatePlaceholder()
         resizeTextView()
         setNeedsDisplay()
+        
+        isEditing = !isEmpty
     }
     
     func textViewDidBeginEditing(_ textView: UITextView) {
@@ -784,31 +677,22 @@ extension ChatTextView: UITextViewDelegate {
         resignFirstResponder()
     }
     
-    private func getAdjustedRange(
-        from range: NSRange,
-        with lastMarkedTextRange: UITextRange?,
-        in textView: UITextView
-    ) -> NSRange {
-        /// If we are in multi stage text input mode we need to make sure that we replace the full text instead of just inserting the newly combined character and leaving the previously provisionally inserted text.
-        
-        var adjustedRange = range
-        
-        if let lastMarkedTextRange = lastMarkedTextRange {
-            let markedStart = textView.offset(from: textView.beginningOfDocument, to: lastMarkedTextRange.start)
-            let markedEnd = textView.offset(from: textView.beginningOfDocument, to: lastMarkedTextRange.end)
-            let markedLength = markedEnd - markedStart
-            
-            if let preferredLanguage = Bundle.main.preferredLocalizations.first,
-               NSLocale.characterDirection(forLanguage: preferredLanguage) == .rightToLeft {
-                adjustedRange.location = max(markedStart, adjustedRange.location)
+    // MARK: Private Helper Functions
+    
+    private func calcPositionOffsetDiff(attributedString: NSAttributedString, currentReplacementRange: NSRange) -> Int {
+        var diff = 0
+        attributedString.enumerateAttributes(
+            in: NSRange(location: 0, length: attributedString.length)
+        ) { attributes, mentionRange, stop in
+            if attributes[NSAttributedString.Key.tokenType] as? MarkupParser.TokenType == .mention,
+               currentReplacementRange.location >= mentionRange.location,
+               currentReplacementRange.location < mentionRange.location + mentionRange.length,
+               let contact = attributes[NSAttributedString.Key.contact] as? ContactEntity {
+                // add the difference between the mention code and the mention name
+                diff = contact.displayName.count + 2 - 11
+                stop.pointee = true
             }
-            else {
-                adjustedRange.location = min(markedStart, adjustedRange.location)
-            }
-            
-            adjustedRange.length = max(markedLength, adjustedRange.length)
         }
-        
-        return adjustedRange
+        return diff
     }
 }

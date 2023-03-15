@@ -44,48 +44,10 @@ final class DoNotDisturbViewController: ThemedCodeModernGroupedTableViewControll
         case foreverButton
         case notifyWhenMentionedSetting
     }
-    
-    /// Simple subclass to provide easy header and footer string configuration
-    private class DataSource: UITableViewDiffableDataSource<Section, Row> {
-        typealias SupplementaryProvider = (UITableView, Section) -> String?
-        
-        let headerProvider: SupplementaryProvider
-        let footerProvider: SupplementaryProvider
-        
-        init(
-            tableView: UITableView,
-            cellProvider: @escaping UITableViewDiffableDataSource<Section, Row>.CellProvider,
-            headerProvider: @escaping SupplementaryProvider,
-            footerProvider: @escaping SupplementaryProvider
-        ) {
-            self.headerProvider = headerProvider
-            self.footerProvider = footerProvider
-            
-            super.init(tableView: tableView, cellProvider: cellProvider)
-        }
-        
-        @available(*, unavailable)
-        override init(
-            tableView: UITableView,
-            cellProvider: @escaping UITableViewDiffableDataSource<Section, Row>.CellProvider
-        ) {
-            fatalError("Not supported.")
-        }
-        
-        override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
-            let section = snapshot().sectionIdentifiers[section]
-            return headerProvider(tableView, section)
-        }
-        
-        override func tableView(_ tableView: UITableView, titleForFooterInSection section: Int) -> String? {
-            let section = snapshot().sectionIdentifiers[section]
-            return footerProvider(tableView, section)
-        }
-    }
         
     // MARK: - Properties
     
-    private lazy var dataSource = DataSource(
+    private lazy var dataSource = TableViewDiffableSimpleHeaderAndFooterDataSource<Section, Row>(
         tableView: tableView,
         cellProvider: { [weak self] tableView, indexPath, row -> UITableViewCell? in
         
@@ -233,7 +195,7 @@ final class DoNotDisturbViewController: ThemedCodeModernGroupedTableViewControll
     /// - Parameters:
     ///   - contact: The settings of this contact are shown and can be changed
     ///   - willDismiss: This closure will be called with the final `PushSetting` just before the view controller is dismissed
-    init(for contact: Contact, willDismiss: ((PushSetting) -> Void)? = nil) {
+    init(for contact: ContactEntity, willDismiss: ((PushSetting) -> Void)? = nil) {
         self.pushSetting = PushSetting(for: contact)
         self.willDismiss = willDismiss
         

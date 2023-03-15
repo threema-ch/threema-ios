@@ -44,10 +44,7 @@ public protocol PendingUserNotificationManagerProtocol {
         -> PendingUserNotification?
     func startTimedUserNotification(pendingUserNotification: PendingUserNotification) -> Guarantee<Bool>
     func startTestUserNotification(payload: [AnyHashable: Any], completion: @escaping () -> Void)
-    func editThreemaWebNotification(
-        payload: [AnyHashable: Any],
-        completion: @escaping (_ content: UNMutableNotificationContent) -> Void
-    )
+    func editThreemaWebNotification(payload: [AnyHashable: Any]) -> UNMutableNotificationContent
     func removeAllTimedUserNotifications(pendingUserNotification: PendingUserNotification)
     func addAsProcessed(pendingUserNotification: PendingUserNotification)
     func isProcessed(pendingUserNotification: PendingUserNotification) -> Bool
@@ -342,15 +339,10 @@ public class PendingUserNotificationManager: NSObject, PendingUserNotificationMa
     }
     
     /// Edit threema web notification content.
-    /// - Parameters:
-    ///     - payload: Information about threema web push
-    ///     - completion: Notification's completion handler
-    public func editThreemaWebNotification(
-        payload: [AnyHashable: Any],
-        completion: @escaping (_ content: UNMutableNotificationContent) -> Void
-    ) {
-        let notificationContent = userNotificationManager.threemaWebNotificationContent(payload: payload)
-        completion(notificationContent)
+    /// - Parameter payload: Information about threema web push
+    /// - Returns: User notification for user notification center
+    public func editThreemaWebNotification(payload: [AnyHashable: Any]) -> UNMutableNotificationContent {
+        userNotificationManager.threemaWebNotificationContent(payload: payload)
     }
 
     /// Remove all timed user notifications from notification center for pending user notification.
@@ -491,9 +483,11 @@ public class PendingUserNotificationManager: NSObject, PendingUserNotificationMa
                         }
                         else {
                             if pendingUserNotification.baseMessage == nil,
-                               let baseMessageID = pendingUserNotification.baseMessageID {
+                               let baseMessageID = pendingUserNotification.baseMessageID,
+                               let abstractMessage = pendingUserNotification.abstractMessage,
+                               let conversation = entityManager.conversation(forMessage: abstractMessage) {
                                 pendingUserNotification.baseMessage = self.entityManager
-                                    .entityFetcher.message(with: baseMessageID)
+                                    .entityFetcher.message(with: baseMessageID, conversation: conversation)
                             }
                             PendingUserNotificationManager.pendingUserNotifications?.append(pendingUserNotification)
                         }

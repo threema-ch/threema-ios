@@ -18,6 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import CocoaLumberjackSwift
 import Foundation
 
 class WebDeleteMessageRequest: WebAbstractMessage {
@@ -25,6 +26,7 @@ class WebDeleteMessageRequest: WebAbstractMessage {
     let type: String
     var identity: String?
     var groupID: Data?
+    var conversation: Conversation?
     
     let messageID: Data
     
@@ -42,54 +44,60 @@ class WebDeleteMessageRequest: WebAbstractMessage {
         let messageIDBase64 = message.args!["messageId"] as! String
         self.messageID = Data(base64Encoded: messageIDBase64, options: .ignoreUnknownCharacters)!
         super.init(message: message)
+        
+        let entityManager = EntityManager()
+        if let identity {
+            entityManager.performBlockAndWait {
+                self.conversation = entityManager.entityFetcher.conversation(forIdentity: identity)
+            }
+        }
+        else if let groupID {
+            entityManager.performBlockAndWait {
+                self.conversation = entityManager.entityFetcher.legacyConversation(for: groupID)
+            }
+        }
+        else {
+            DDLogError("Neither identity nor groupID were set.")
+        }
     }
     
     func delete() {
         ack = WebAbstractMessageAcknowledgement(requestID, false, nil)
-        let entityManager = EntityManager()
-        let message = entityManager.entityFetcher.message(with: messageID)
+        guard let conversation else {
+            DDLogError("Conversation was nil when it must not be.")
+            return
+        }
+        
         var chatViewController: Old_ChatViewController?
-        if message != nil {
-            let groupID = message!.conversation.groupID
-            var identity: String?
-            if let contact = message?.conversation?.contact {
-                identity = contact.identity
+        let entityManager = EntityManager()
+        
+        guard let message = entityManager.entityFetcher.message(with: messageID, conversation: conversation) else {
+            DDLogError("Could not fetch message")
+            ack!.success = false
+            ack!.error = "invalidMessage"
+            
+            return
+        }
+        
+        entityManager.performSyncBlockAndSafe {
+            if message.isKind(of: BaseMessage.self) {
+                message.conversation = nil
+                entityManager.entityDestroyer.deleteObject(object: message)
+            }
+            if message.isKind(of: SystemMessage.self) {
+                entityManager.entityDestroyer.deleteObject(object: message)
             }
             
-            if message != nil {
-                entityManager.performSyncBlockAndSafe {
-                    if message!.isKind(of: BaseMessage.self) {
-                        message?.conversation = nil
-                        entityManager.entityDestroyer.deleteObject(object: message!)
-                    }
-                    if message!.isKind(of: SystemMessage.self) {
-                        entityManager.entityDestroyer.deleteObject(object: message!)
-                    }
-                    
-                    var conversation: Conversation?
-                    if groupID != nil {
-                        conversation = entityManager.entityFetcher.conversation(for: groupID)
-                    }
-                    else if identity != nil {
-                        conversation = entityManager.entityFetcher.conversation(forIdentity: identity)
-                    }
-                    
-                    if let conversation = conversation {
-                        let messageFetcher = MessageFetcher(for: conversation, with: entityManager)
-                        conversation.lastMessage = messageFetcher.lastMessage()
-                        chatViewController = Old_ChatViewControllerCache.controller(for: conversation)
-                        chatViewController?.updateConversationLastMessage()
-                    }
-                }
-                DispatchQueue.main.async {
-                    chatViewController?.updateConversation()
-                }
-                ack!.success = true
-            }
-            else {
-                ack!.success = false
-                ack!.error = "invalidMessage"
+            if let conversation = self.conversation {
+                let messageFetcher = MessageFetcher(for: conversation, with: entityManager)
+                conversation.lastMessage = messageFetcher.lastMessage()
+                chatViewController = Old_ChatViewControllerCache.controller(for: conversation)
+                chatViewController?.updateConversationLastMessage()
             }
         }
+        DispatchQueue.main.async {
+            chatViewController?.updateConversation()
+        }
+        ack!.success = true
     }
 }

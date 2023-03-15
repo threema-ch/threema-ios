@@ -22,11 +22,11 @@ import Foundation
 
 class WebContactDetailResponse: WebAbstractMessage {
     
-    var contact: Contact?
+    var contact: ContactEntity?
     var identity: String
     var systemContact: [AnyHashable: Any?]?
     
-    init(contact: Contact?, contactDetailRequest: WebContactDetailRequest) {
+    init(contact: ContactEntity?, contactDetailRequest: WebContactDetailRequest) {
         self.identity = contactDetailRequest.identity
         var tmpAck = WebAbstractMessageAcknowledgement(contactDetailRequest.requestID, true, nil)
         

@@ -94,6 +94,7 @@ class TaskExecutionSendBallotVoteMessageTests: XCTestCase {
             multiDeviceManager: MultiDeviceManagerMock(),
             myIdentityStore: myIdentityStoreMock,
             userSettings: UserSettingsMock(),
+            settingsStore: SettingsStoreMock(),
             serverConnector: serverConnectorMock,
             mediatorMessageProtocol: MediatorMessageProtocolMock(
                 deviceGroupKeys: serverConnectorMock.deviceGroupKeys!,
@@ -202,6 +203,7 @@ class TaskExecutionSendBallotVoteMessageTests: XCTestCase {
             multiDeviceManager: MultiDeviceManagerMock(),
             myIdentityStore: MyIdentityStoreMock(),
             userSettings: UserSettingsMock(),
+            settingsStore: SettingsStoreMock(),
             serverConnector: serverConnectorMock,
             mediatorMessageProtocol: MediatorMessageProtocolMock(
                 deviceGroupKeys: serverConnectorMock.deviceGroupKeys!,
@@ -310,6 +312,7 @@ class TaskExecutionSendBallotVoteMessageTests: XCTestCase {
             multiDeviceManager: MultiDeviceManagerMock(),
             myIdentityStore: myIdentityStoreMock,
             userSettings: userSettingsMock,
+            settingsStore: SettingsStoreMock(),
             serverConnector: serverConnectorMock,
             mediatorMessageProtocol: MediatorMessageProtocolMock(
                 deviceGroupKeys: serverConnectorMock.deviceGroupKeys!,
@@ -330,7 +333,7 @@ class TaskExecutionSendBallotVoteMessageTests: XCTestCase {
         var ballot: Ballot!
         var group: Group!
         dbPreparer.save {
-            var members = Set<Contact>()
+            var members = Set<ContactEntity>()
             for member in expectedMembers {
                 let contact = dbPreparer.createContact(
                     publicKey: BytesUtility.generateRandomBytes(length: 32)!,

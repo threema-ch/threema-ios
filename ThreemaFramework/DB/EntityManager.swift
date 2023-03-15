@@ -23,8 +23,11 @@ import Foundation
 
 public class EntityManager: NSObject {
     
-    private let dbContext: DatabaseContext
-    
+    fileprivate let dbContext: DatabaseContext
+    fileprivate let myIdentityStore: MyIdentityStoreProtocol
+
+    fileprivate let getOrCreateMessageQueue = DispatchQueue(label: "ch.threema.EntityManager.getOrCreateMessageQueue")
+
     @objc public let entityCreator: EntityCreator
     @objc public let entityFetcher: EntityFetcher
     @objc public let entityDestroyer: EntityDestroyer
@@ -36,9 +39,10 @@ public class EntityManager: NSObject {
     }
     
     /// With DB main context.
-    /// - Parameter myIdenityStore: To fetch group conversation and  contact display name
+    /// - Parameter myIdentityStore: To fetch group conversation and  contact display name
     public required init(myIdentityStore: MyIdentityStoreProtocol) {
         self.dbContext = DatabaseManager.db().getDatabaseContext()
+        self.myIdentityStore = myIdentityStore
         self.entityCreator = EntityCreator(dbContext.current)
         self.entityFetcher = EntityFetcher(dbContext.current, myIdentityStore: myIdentityStore)
         self.entityDestroyer = EntityDestroyer(managedObjectContext: dbContext.current)
@@ -61,6 +65,7 @@ public class EntityManager: NSObject {
     public required init(withChildContextForBackgroundProcess: Bool, myIdentityStore: MyIdentityStoreProtocol) {
         self.dbContext = DatabaseManager.db()
             .getDatabaseContext(withChildContextforBackgroundProcess: withChildContextForBackgroundProcess)
+        self.myIdentityStore = myIdentityStore
         self.entityCreator = EntityCreator(dbContext.current)
         self.entityFetcher = EntityFetcher(dbContext.current, myIdentityStore: myIdentityStore)
         self.entityDestroyer = EntityDestroyer(managedObjectContext: dbContext.current)
@@ -73,6 +78,7 @@ public class EntityManager: NSObject {
     
     public init(databaseContext: DatabaseContext, myIdentityStore: MyIdentityStoreProtocol) {
         self.dbContext = databaseContext
+        self.myIdentityStore = myIdentityStore
         self.entityCreator = EntityCreator(dbContext.current)
         self.entityFetcher = EntityFetcher(dbContext.current, myIdentityStore: myIdentityStore)
         self.entityDestroyer = EntityDestroyer(managedObjectContext: dbContext.current)
@@ -157,7 +163,7 @@ public class EntityManager: NSObject {
         var isProcessed = false
 
         let isNonceAlreadyInDB: (Data) -> Void = { nonce in
-            let entityFetcherOnMain = EntityFetcher(self.dbContext.main, myIdentityStore: MyIdentityStore.shared())
+            let entityFetcherOnMain = EntityFetcher(self.dbContext.main, myIdentityStore: self.myIdentityStore)
             self.dbContext.main.performAndWait {
                 isProcessed = entityFetcherOnMain?.isNonceAlreadyInDB(nonce: nonce) ?? false
             }
@@ -174,43 +180,6 @@ public class EntityManager: NSObject {
         return isProcessed
     }
 
-    @objc public func conversation(forContact: Contact, createIfNotExisting: Bool) -> Conversation? {
-        let conversation = entityFetcher.conversation(forIdentity: forContact.identity)
-
-        if createIfNotExisting, conversation == nil,
-           let conversation = entityCreator.conversation() {
-            conversation.contact = forContact
-
-            if forContact.isContactHidden {
-                forContact.isContactHidden = false
-
-                let mediatorSyncableContacts = MediatorSyncableContacts()
-                mediatorSyncableContacts.updateAcquaintanceLevel(
-                    identity: forContact.identity,
-                    value: NSNumber(integerLiteral: ContactAcquaintanceLevel.direct.rawValue)
-                )
-                mediatorSyncableContacts.syncAsync()
-            }
-
-            if forContact.showOtherThreemaTypeIcon {
-                // Add work info as first message
-                let systemMessage = entityCreator.systemMessage(for: conversation)
-                systemMessage?.type = NSNumber(value: kSystemMessageContactOtherAppInfo)
-                systemMessage?.remoteSentDate = Date()
-            }
-            return conversation
-        }
-
-        return conversation
-    }
-
-    @objc public func conversation(for contactIdentity: String, createIfNotExisting: Bool) -> Conversation? {
-        guard let contact = entityFetcher.contact(for: contactIdentity) else {
-            return nil
-        }
-        return conversation(forContact: contact, createIfNotExisting: createIfNotExisting)
-    }
-    
     /// Set sent property of own message to true and save.
     ///
     /// - Parameter messageID: Message to set sent true
@@ -332,5 +301,374 @@ private extension EntityManager {
                 }
             }
         }
+    }
+}
+
+// MARK: Convenience functions to accessing multiple contexts (current and main)
+
+extension EntityManager {
+    enum EntityManagerError: Error {
+        case incomingMessageSenderMyself, missingSender, missingConversation, wrongBaseMessageType,
+             unknownAbstractMessage
+    }
+
+    @objc public func conversation(
+        forContact contactEntity: ContactEntity,
+        createIfNotExisting: Bool
+    ) -> Conversation? {
+        let conversation = entityFetcher.conversation(forIdentity: contactEntity.identity)
+
+        if createIfNotExisting, conversation == nil,
+           let conversation = entityCreator.conversation() {
+            conversation.contact = contactEntity
+
+            if contactEntity.isContactHidden {
+                contactEntity.isContactHidden = false
+
+                let mediatorSyncableContacts = MediatorSyncableContacts()
+                mediatorSyncableContacts.updateAcquaintanceLevel(
+                    identity: contactEntity.identity,
+                    value: NSNumber(integerLiteral: ContactAcquaintanceLevel.direct.rawValue)
+                )
+                mediatorSyncableContacts.syncAsync()
+            }
+
+            if contactEntity.showOtherThreemaTypeIcon {
+                // Add work info as first message
+                let systemMessage = entityCreator.systemMessage(for: conversation)
+                systemMessage?.type = NSNumber(value: kSystemMessageContactOtherAppInfo)
+                systemMessage?.remoteSentDate = Date()
+            }
+            return conversation
+        }
+        else if createIfNotExisting {
+            DDLogError("Create conversation failed")
+        }
+
+        return conversation
+    }
+
+    @objc public func conversation(for identity: String, createIfNotExisting: Bool) -> Conversation? {
+        guard let contact = entityFetcher.contact(for: identity) else {
+            return nil
+        }
+        return conversation(forContact: contact, createIfNotExisting: createIfNotExisting)
+    }
+
+    func conversation(forMessage message: AbstractMessage) -> Conversation? {
+        if let groupMessage = message as? AbstractGroupMessage {
+            return groupConversation(forMessage: groupMessage, fetcher: entityFetcher)
+        }
+        else {
+            return oneToOneConversation(forMessage: message, fetcher: entityFetcher)
+        }
+    }
+
+    /// Looking for existing contact entity (sender) and conversation in current and in main DB context.
+    ///
+    /// - Parameter abstractMessage: Get sender and conversation from DB for that message
+    /// - Returns: Conversation if is exists
+    ///     Outgoing:
+    ///         - Sender is nil because its me
+    ///         - Receiver of one to one conversation otherwise nil
+    ///     Incoming:
+    ///         - Sender of the message
+    ///         - Receiver is nil because its me
+    func existingConversationSenderReceiver(for abstractMessage: AbstractMessage)
+        -> (conversation: Conversation?, sender: ContactEntity?, receiver: ContactEntity?) {
+
+        // Get DB objects Conversation and ContactEntity from particular entity fetcher
+        func conversationSenderReceiver(fetcher: EntityFetcher)
+            -> (conversation: Conversation?, sender: ContactEntity?, receiver: ContactEntity?) {
+            var sender: ContactEntity?
+            var receiver: ContactEntity?
+            var conversation: Conversation?
+
+            if let groupMessage = abstractMessage as? AbstractGroupMessage {
+                conversation = groupConversation(forMessage: groupMessage, fetcher: fetcher)
+
+                // From identity it's me if the message is a reflected outgoing message
+                if abstractMessage.fromIdentity != myIdentityStore.identity {
+                    sender = fetcher.contact(for: abstractMessage.fromIdentity)
+                }
+
+                assert(receiver == nil, "Receiver is always nil for group messages")
+            }
+            else {
+                conversation = oneToOneConversation(forMessage: abstractMessage, fetcher: fetcher)
+                
+                if let conversation {
+                    // From identity it's me if the message is a reflected outgoing message
+                    if abstractMessage.fromIdentity != myIdentityStore.identity {
+                        sender = conversation.contact
+                    }
+                    else {
+                        receiver = conversation.contact
+                    }
+                }
+                else {
+                    if abstractMessage.fromIdentity != myIdentityStore.identity {
+                        sender = fetcher.contact(for: abstractMessage.fromIdentity)
+                    }
+                    else {
+                        receiver = fetcher.contact(for: abstractMessage.toIdentity)
+                    }
+                }
+                
+                assert(
+                    (sender != nil && receiver == nil) || (sender == nil && receiver != nil),
+                    "Sender or receiver have to be set, but never both (because I'm one of them)"
+                )
+            }
+                
+            return (conversation, sender, receiver)
+        }
+
+        var result: (conversation: Conversation?, sender: ContactEntity?, receiver: ContactEntity?)!
+        dbContext.current.performAndWait {
+            result = conversationSenderReceiver(fetcher: entityFetcher)
+        }
+
+        if result.conversation == nil, result.sender == nil, result.receiver == nil, !isMainDBContext {
+            DDLogWarn("Looking for contact entity and conversation on main DB context")
+            var resultObjectIDs: (
+                conversationObjectID: NSManagedObjectID?,
+                senderObjectID: NSManagedObjectID?,
+                receiverObjectID: NSManagedObjectID?
+            )
+            dbContext.main.performAndWait {
+                let resultObject =
+                    conversationSenderReceiver(fetcher: EntityFetcher(
+                        dbContext.main,
+                        myIdentityStore: myIdentityStore
+                    ))
+                resultObjectIDs = (
+                    resultObject.conversation?.objectID,
+                    resultObject.sender?.objectID,
+                    resultObject.receiver?.objectID
+                )
+            }
+
+            // Apply contact entity and conversation to current DB context
+            if let conversationObjectID = resultObjectIDs.conversationObjectID {
+                result.conversation = dbContext.current.object(with: conversationObjectID) as? Conversation
+            }
+            if let senderObjectID = resultObjectIDs.senderObjectID {
+                result.sender = dbContext.current.object(with: senderObjectID) as? ContactEntity
+            }
+            if let receiverObjectID = resultObjectIDs.receiverObjectID {
+                result.receiver = dbContext.current.object(with: receiverObjectID) as? ContactEntity
+            }
+        }
+
+        return result
+    }
+
+    @available(*, deprecated, message: "Just for Objective-C calls")
+    @objc func existingConversationSenderReceiver(
+        for abstractMessage: AbstractMessage,
+        sender: UnsafeMutablePointer<ContactEntity?>,
+        receiver: UnsafeMutablePointer<ContactEntity?>
+    ) -> Conversation? {
+        let result = existingConversationSenderReceiver(for: abstractMessage)
+        sender.pointee = result.sender
+        receiver.pointee = result.receiver
+        return result.conversation
+    }
+
+    /// Looking for existing message in current and in main DB context or creating new message it was not found.
+    ///
+    /// - Parameters:
+    ///   - abstractMessage: Get or create message from DB for that message
+    ///   - sender: Is only necessary for group message and I'm not the sender
+    ///   - conversation: Search or insert message in this conversation
+    ///   - thumbnail: Is needed to create deprecated `VideoMessageEntity`, because thumbnail is not optional
+    /// - Returns: Existing or new (unsaved) message from DB or nil if message type isn't supported
+    @objc func getOrCreateMessage(
+        for abstractMessage: AbstractMessage,
+        sender: ContactEntity?,
+        conversation: Conversation,
+        thumbnail: UIImage?
+    ) -> BaseMessage? {
+
+        // Get DB objects BaseMessage from particular entity fetcher
+        func getMessage(for conversation: Conversation, fetcher: EntityFetcher) -> BaseMessage? {
+            fetcher.message(with: abstractMessage.messageID, conversation: conversation)
+        }
+
+        var message: BaseMessage?
+
+        getOrCreateMessageQueue.sync {
+            dbContext.current.performAndWait {
+                message = getMessage(for: conversation, fetcher: entityFetcher)
+            }
+
+            if message == nil, !isMainDBContext {
+                DDLogWarn("Looking for the message on main DB context")
+                var messageObjectID: NSManagedObjectID?
+                dbContext.main.performAndWait {
+                    messageObjectID = getMessage(
+                        for: conversation,
+                        fetcher: EntityFetcher(dbContext.main, myIdentityStore: myIdentityStore)
+                    )?.objectID
+                }
+
+                // Apply message to current DB context
+                if let messageObjectID {
+                    message = dbContext.current.object(with: messageObjectID) as? BaseMessage
+                }
+            }
+
+            if message != nil {
+                // Validate type of existing message
+                if abstractMessage is BoxAudioMessage || abstractMessage is GroupAudioMessage {
+                    guard message is AudioMessageEntity else {
+                        DDLogError("\(EntityManagerError.wrongBaseMessageType)")
+                        message = nil
+                        return
+                    }
+                }
+                else if abstractMessage is BoxBallotCreateMessage || abstractMessage is GroupBallotCreateMessage {
+                    guard message is BallotMessage else {
+                        DDLogError("\(EntityManagerError.wrongBaseMessageType)")
+                        message = nil
+                        return
+                    }
+                }
+                else if abstractMessage is BoxFileMessage || abstractMessage is GroupFileMessage {
+                    guard message is FileMessageEntity else {
+                        DDLogError("\(EntityManagerError.wrongBaseMessageType)")
+                        message = nil
+                        return
+                    }
+                }
+                else if abstractMessage is BoxImageMessage || abstractMessage is GroupImageMessage {
+                    guard message is ImageMessage else {
+                        DDLogError("\(EntityManagerError.wrongBaseMessageType)")
+                        message = nil
+                        return
+                    }
+                }
+                else if abstractMessage is BoxLocationMessage || abstractMessage is GroupLocationMessage {
+                    guard message is LocationMessage else {
+                        DDLogError("\(EntityManagerError.wrongBaseMessageType)")
+                        message = nil
+                        return
+                    }
+                }
+                else if abstractMessage is BoxTextMessage || abstractMessage is GroupTextMessage {
+                    guard message is TextMessage else {
+                        DDLogError("\(EntityManagerError.wrongBaseMessageType)")
+                        message = nil
+                        return
+                    }
+                }
+                else if abstractMessage is BoxVideoMessage || abstractMessage is GroupVideoMessage {
+                    guard message is VideoMessageEntity else {
+                        DDLogError("\(EntityManagerError.wrongBaseMessageType)")
+                        message = nil
+                        return
+                    }
+                }
+            }
+            else {
+                // Create new message and save it to DB (without applying sender and conversation)
+                performSyncBlockAndSafe {
+                    if let amsg = abstractMessage as? BoxAudioMessage {
+                        message = self.entityCreator.audioMessageEntity(fromBox: amsg)
+                    }
+                    else if let amsg = abstractMessage as? BoxBallotCreateMessage {
+                        message = self.entityCreator.ballotMessage(fromBox: amsg)
+                    }
+                    else if let amsg = abstractMessage as? BoxFileMessage {
+                        message = self.entityCreator.fileMessageEntity(fromBox: amsg)
+                    }
+                    else if let amsg = abstractMessage as? BoxImageMessage {
+                        message = self.entityCreator.imageMessageEntity(fromBox: amsg)
+                    }
+                    else if let amsg = abstractMessage as? BoxLocationMessage {
+                        message = self.entityCreator.locationMessage(fromBox: amsg)
+                    }
+                    else if let amsg = abstractMessage as? BoxTextMessage {
+                        message = self.entityCreator.textMessage(fromBox: amsg)
+                    }
+                    else if let amsg = abstractMessage as? BoxVideoMessage {
+                        message = self.entityCreator.videoMessageEntity(fromBox: amsg)
+                    }
+                    else if let amsg = abstractMessage as? GroupAudioMessage {
+                        message = self.entityCreator.audioMessageEntity(fromGroupBox: amsg)
+                        message?.sender = sender
+                    }
+                    else if let amsg = abstractMessage as? GroupBallotCreateMessage {
+                        message = self.entityCreator.ballotMessage(fromBox: amsg)
+                        message?.sender = sender
+                    }
+                    else if let amsg = abstractMessage as? GroupFileMessage {
+                        message = self.entityCreator.fileMessageEntity(fromBox: amsg)
+                        message?.sender = sender
+                    }
+                    else if let amsg = abstractMessage as? GroupImageMessage {
+                        message = self.entityCreator.imageMessageEntity(fromGroupBox: amsg)
+                        message?.sender = sender
+                    }
+                    else if let amsg = abstractMessage as? GroupLocationMessage {
+                        message = self.entityCreator.locationMessage(fromGroupBox: amsg)
+                        message?.sender = sender
+                    }
+                    else if let amsg = abstractMessage as? GroupTextMessage {
+                        message = self.entityCreator.textMessage(fromGroupBox: amsg)
+                        message?.sender = sender
+                    }
+                    else if let amsg = abstractMessage as? GroupVideoMessage {
+                        message = self.entityCreator.videoMessageEntity(fromGroupBox: amsg)
+                        message?.sender = sender
+                    }
+
+                    if message is VideoMessageEntity {
+                        if let thumbnail,
+                           let imageData = self.entityCreator.imageData() {
+
+                            imageData.data = thumbnail.jpegData(compressionQuality: kJPEGCompressionQualityLow)
+                            imageData.width = NSNumber(floatLiteral: thumbnail.size.width)
+                            imageData.height = NSNumber(floatLiteral: thumbnail.size.height)
+
+                            (message as? VideoMessageEntity)?.thumbnail = imageData
+                        }
+                        else {
+                            fatalError("Create video message failed because of missing thumbnail")
+                        }
+                    }
+
+                    message?.conversation = conversation
+
+                    conversation.lastMessage = message
+                    conversation.lastUpdate = .now
+                    conversation.conversationVisibility = .default
+                }
+            }
+        }
+
+        return message
+    }
+
+    private func groupConversation(forMessage message: AbstractGroupMessage, fetcher: EntityFetcher) -> Conversation? {
+        fetcher.conversation(for: message.groupID, creator: message.groupCreator)
+    }
+
+    private func oneToOneConversation(forMessage message: AbstractMessage, fetcher: EntityFetcher) -> Conversation? {
+        assert(!(message is AbstractGroupMessage))
+
+        if message.toIdentity == myIdentityStore.identity {
+            return fetcher.conversation(forIdentity: message.fromIdentity)
+        }
+        else if message.fromIdentity == myIdentityStore.identity {
+            return fetcher.conversation(forIdentity: message.toIdentity)
+        }
+
+        return nil
+    }
+
+    private var isMainDBContext: Bool {
+        dbContext.main === dbContext.current
     }
 }

@@ -30,14 +30,54 @@ final class ChatViewTextMessageTableViewCell: ChatViewBaseTableViewCell, Measura
     /// Reset it when the message had any changes to update data shown in the views (e.g. date or status symbol).
     var textMessageAndNeighbors: (message: TextMessage, neighbors: ChatViewDataSource.MessageNeighbors)? {
         didSet {
-            updateCell(for: textMessageAndNeighbors?.message)
+            let block = {
+                self.updateCell(for: self.textMessageAndNeighbors?.message)
+                
+                super.setMessage(
+                    to: self.textMessageAndNeighbors?.message,
+                    with: self.textMessageAndNeighbors?.neighbors
+                )
+            }
             
-            super.setMessage(to: textMessageAndNeighbors?.message, with: textMessageAndNeighbors?.neighbors)
+            if let oldValue, oldValue.message.objectID == textMessageAndNeighbors?.message.objectID {
+                UIView.animate(
+                    withDuration: ChatViewConfiguration.ChatBubble.bubbleSizeChangeAnimationDurationInSeconds,
+                    delay: 0.0,
+                    options: .curveEaseInOut
+                ) {
+                    block()
+                    self.layoutIfNeeded()
+                }
+            }
+            else {
+                block()
+            }
         }
     }
     
     override var shouldShowDateAndState: Bool {
         didSet {
+            // Both of these animations are typically covered within a bigger animation block
+            // or a block that doesn't animate at all. Both cases look good.
+            if shouldShowDateAndState {
+                // When adding the date and state view, this is an animation that doesn't look half bad since the view will
+                // animate in from the bottom.
+                UIView.animate(
+                    withDuration: ChatViewConfiguration.ChatBubble.bubbleSizeChangeAnimationDurationInSeconds,
+                    delay: ChatViewConfiguration.ChatBubble.bubbleSizeChangeAnimationDurationInSeconds,
+                    options: .curveEaseInOut
+                ) {
+                    self.messageDateAndStateView.alpha = 1
+                }
+            }
+            else {
+                // We don't use the same animation when hiding the date and state view because it'll animate out to the top
+                // and will cover the text which is still showing in the cell.
+                UIView.performWithoutAnimation {
+                    self.messageDateAndStateView.alpha = 0
+                }
+            }
+            
             messageDateAndStateView.isHidden = !shouldShowDateAndState
             
             guard oldValue != shouldShowDateAndState else {
@@ -189,8 +229,6 @@ final class ChatViewTextMessageTableViewCell: ChatViewBaseTableViewCell, Measura
         guard textMessageAndNeighbors?.message.quoteMessage != nil else {
             return
         }
-        
-        // TODO: IOS-3119 construct accessibility label for different types
         accessibilityHint = BundleUtil.localizedString(forKey: "quote_interaction_hint")
     }
     
@@ -220,18 +258,18 @@ extension ChatViewTextMessageTableViewCell: MessageTextViewDelegate {
 
 extension ChatViewTextMessageTableViewCell: Reusable { }
 
-// MARK: - ContextMenuAction
+// MARK: - ChatViewMessageAction
 
-extension ChatViewTextMessageTableViewCell: ContextMenuAction {
+extension ChatViewTextMessageTableViewCell: ChatViewMessageAction {
     
-    func buildContextMenu(at indexPath: IndexPath) -> UIContextMenuConfiguration? {
-       
+    func messageActions() -> [ChatViewMessageActionProvider.MessageAction]? {
+
         guard let message = textMessageAndNeighbors?.message else {
             return nil
         }
 
-        typealias Provider = ChatViewContextMenuActionProvider
-        var menuItems = [UIAction]()
+        typealias Provider = ChatViewMessageActionProvider
+        var menuItems = [ChatViewMessageActionProvider.MessageAction]()
         
         // Copy
         let copyHandler = {
@@ -258,7 +296,21 @@ extension ChatViewTextMessageTableViewCell: ContextMenuAction {
         
         // Edit
         let editHandler = {
-            self.chatViewTableViewCellDelegate?.startMultiselect()
+            self.chatViewTableViewCellDelegate?.startMultiselect(with: message.objectID)
+        }
+        
+        // Delete
+        let willDelete = {
+            self.chatViewTableViewCellDelegate?.willDeleteMessage(with: message.objectID)
+        }
+        
+        let didDelete = {
+            self.chatViewTableViewCellDelegate?.didDeleteMessages()
+        }
+        
+        // Ack
+        let ackHandler = { (message: BaseMessage, ack: Bool) in
+            self.chatViewTableViewCellDelegate?.sendAck(for: message, ack: ack)
         }
         
         let defaultActions = Provider.defaultActions(
@@ -269,16 +321,30 @@ extension ChatViewTextMessageTableViewCell: ContextMenuAction {
             copyHandler: copyHandler,
             quoteHandler: quoteHandler,
             detailsHandler: detailsHandler,
-            editHandler: editHandler
+            editHandler: editHandler,
+            willDelete: willDelete,
+            didDelete: didDelete,
+            ackHandler: ackHandler
         )
         
         menuItems.append(contentsOf: defaultActions)
         
-        // Build menu
-        let menu = UIMenu(children: menuItems)
-        
-        return UIContextMenuConfiguration(identifier: indexPath as NSCopying, previewProvider: nil) { _ in
-            menu
+        return menuItems
+    }
+    
+    override var accessibilityCustomActions: [UIAccessibilityCustomAction]? {
+        get {
+            var actions = messageTextView.accessibilityCustomActions(openURLHandler: { url in
+                self.chatViewTableViewCellDelegate?.open(url: url)
+            }, openDetailsHandler: { identity in
+                self.showContact(identity: identity)
+            }) ?? [UIAccessibilityCustomAction]()
+            
+            actions += buildAccessibilityCustomActions() ?? [UIAccessibilityCustomAction]()
+            return actions
+        }
+        set {
+            // No-op
         }
     }
 }

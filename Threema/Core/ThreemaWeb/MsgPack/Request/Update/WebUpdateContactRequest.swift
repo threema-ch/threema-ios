@@ -29,7 +29,7 @@ class WebUpdateContactRequest: WebAbstractMessage {
     var avatar: Data?
     var deleteAvatar = false
     
-    var contact: Contact?
+    var contact: ContactEntity?
     
     override init(message: WebAbstractMessage) {
         

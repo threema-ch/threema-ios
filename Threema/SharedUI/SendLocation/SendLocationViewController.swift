@@ -92,7 +92,7 @@ class SendLocationViewController: ThemedViewController {
     
     private lazy var mapView: MKMapView = {
         let mapView = MKMapView()
-        mapView.tintColor = Colors.primary
+        mapView.tintColor = .primary
         mapView.translatesAutoresizingMaskIntoConstraints = false
         mapView.showsUserLocation = false
         
@@ -312,7 +312,7 @@ extension SendLocationViewController: MKMapViewDelegate {
         }
         
         annotationView?.accessibilityElementsHidden = true
-        annotationView?.markerTintColor = Colors.primary
+        annotationView?.markerTintColor = .primary
         
         // If Annotation does not belong to fetched POI, it belongs to current- or markedLocation
         guard let poi = mapDataSource.pointsOfInterest.first(where: { annotation.type == $0.type }) else {
@@ -703,29 +703,17 @@ extension SendLocationViewController {
     
     /// Shows alert that location access is denied, with option to take the user to the settings-app
     private func showDeniedAlert() {
-        
-        UIAlertTemplate.showAlert(
+        UIAlertTemplate.showOpenSettingsAlert(
             owner: self,
-            title: BundleUtil.localizedString(forKey: "location_disabled_title"),
-            message: BundleUtil.localizedString(forKey: "location_disabled_message"),
-            titleOk: BundleUtil.localizedString(forKey: "go_to_settings"),
-            actionOk: { _ in
-                UIApplication.shared.open(URL(string: UIApplication.openSettingsURLString)!)
-            }
+            noAccessAlertType: .location
         )
     }
     
     /// Shows alert that precise location is turned off, with option to take the user to the settings-app
     private func showAccuracyAlert() {
-        
-        UIAlertTemplate.showAlert(
+        UIAlertTemplate.showOpenSettingsAlert(
             owner: self,
-            title: BundleUtil.localizedString(forKey: "poi_accuracy_info_alert_title"),
-            message: BundleUtil.localizedString(forKey: "poi_accuracy_info_alert_message"),
-            titleOk: BundleUtil.localizedString(forKey: "go_to_settings"),
-            actionOk: { _ in
-                UIApplication.shared.open(URL(string: UIApplication.openSettingsURLString)!)
-            }
+            noAccessAlertType: .preciseLocation
         )
     }
     

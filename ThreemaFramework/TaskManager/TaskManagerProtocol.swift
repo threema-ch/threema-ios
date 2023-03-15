@@ -50,7 +50,7 @@ protocol TaskManagerProtocol: TaskManagerProtocolObjc {
     static func isEmpty(queueType: TaskQueueType) -> Bool
 }
 
-@objc public protocol TaskManagerProtocolObjc {
+@objc protocol TaskManagerProtocolObjc {
     func addObjc(taskDefinition: AnyObject)
     func addObjc(taskDefinition: AnyObject, completionHandler: @escaping (AnyObject, Error?) -> Void)
 }

@@ -23,7 +23,6 @@
 #import "AbstractMessage.h"
 #import "NSString+Hex.h"
 #import "ContactStore.h"
-#import "Contact.h"
 #import "BoxVoIPCallOfferMessage.h"
 #import "BoxVoIPCallAnswerMessage.h"
 #import "BoxVoIPCallIceCandidatesMessage.h"

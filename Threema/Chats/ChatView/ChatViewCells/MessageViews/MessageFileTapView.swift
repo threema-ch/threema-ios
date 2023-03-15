@@ -238,7 +238,7 @@ final class MessageFileTapView: UIView {
         }
         
         switch currentBlobDisplayState {
-        case .remote, .downloading, .pending, .uploading, .fileNotFound:
+        case .remote, .downloading, .pending, .uploading, .fileNotFound, .sendingError:
             if let symbolName = currentBlobDisplayState.symbolName {
                 blobStateCircle.updateSymbol(to: symbolName)
                 blobStateCircle.isHidden = false
@@ -267,7 +267,7 @@ final class MessageFileTapView: UIView {
         // Metdata
         
         switch currentBlobDisplayState {
-        case .remote, .pending, .processed, .uploaded:
+        case .remote, .pending, .processed, .uploaded, .sendingError:
             fileIcon.alpha = 1.0
             
             fileSizeLabel.text = fileSizeFormatter.string(for: fileMessage?.dataBlobFileSize)
@@ -319,6 +319,7 @@ final class MessageFileTapView: UIView {
         Colors.setTextColor(Colors.textLight, label: fileNameLabel)
         fileSizeLabel.updateColors()
         dateAndStateView.updateColors()
+        fileIcon.updateColors()
         
         // Works around `Colors` resetting our colors when we actually want to highlight text
         if let currentSearchText = delegate?.currentSearchText, let fileMessageName = fileMessage?.name {

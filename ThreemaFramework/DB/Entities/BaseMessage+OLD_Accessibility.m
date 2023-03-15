@@ -20,7 +20,6 @@
 
 #import "BaseMessage+OLD_Accessibility.h"
 #import "Conversation.h"
-#import "Contact.h"
 #import "BundleUtil.h"
 
 #import "ThreemaFramework/ThreemaFramework-swift.h"

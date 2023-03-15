@@ -31,6 +31,9 @@ class SafeIntroViewController: ThemedViewController {
     @IBOutlet var okButton: SetupButton!
     @IBOutlet var cancelButton: SetupButton!
 
+    // TODO: (IOS-3251) Remove
+    weak var launchModalDelegate: LaunchModalManagerDelegate?
+
     override func viewDidLoad() {
         super.viewDidLoad()
 
@@ -41,7 +44,14 @@ class SafeIntroViewController: ThemedViewController {
         cancelButton.setTitle(BundleUtil.localizedString(forKey: "safe_intro_cancel"), for: .normal)
         okButton.setTitle(BundleUtil.localizedString(forKey: "safe_intro_enable"), for: .normal)
         
+        isModalInPresentation = true
+        
         updateColors()
+    }
+    
+    // TODO: (IOS-3251) Remove
+    override func viewDidDisappear(_ animated: Bool) {
+        launchModalDelegate?.didDismiss()
     }
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
@@ -58,9 +68,9 @@ class SafeIntroViewController: ThemedViewController {
     override func updateColors() {
         super.updateColors()
         
-        cancelButton.accentColor = Colors.primary
+        cancelButton.accentColor = .primary
         cancelButton.textColor = Colors.text
-        okButton.accentColor = Colors.primary
+        okButton.accentColor = .primary
         okButton.textColor = Colors.textInverted
 
         introCircle.backgroundColor = UIColor(red: 235.0 / 255.0, green: 235.0 / 255.0, blue: 235.0 / 255.0, alpha: 1.0)
@@ -69,6 +79,7 @@ class SafeIntroViewController: ThemedViewController {
 
 extension SafeIntroViewController {
     @IBAction func touchDownButton(_ sender: UIButton, forEvent event: UIEvent) {
+        UserSettings.shared().safeIntroShown = true
         dismiss(animated: true, completion: nil)
     }
 

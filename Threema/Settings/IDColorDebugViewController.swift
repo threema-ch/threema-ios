@@ -28,7 +28,7 @@ class IDColorDebugViewController: UIViewController {
     private lazy var debugStackView: UIStackView = {
         let stack = UIStackView()
         
-        Colors.IDColor.debugColors.forEach { color in
+        UIColor.IDColor.debugColors.forEach { color in
             let label = label(with: color)
             stack.addArrangedSubview(label)
             
@@ -50,7 +50,7 @@ class IDColorDebugViewController: UIViewController {
     private lazy var debugStackView2: UIStackView = {
         let stack = UIStackView()
         
-        Colors.IDColor.debugColors.forEach { color in
+        UIColor.IDColor.debugColors.forEach { color in
             let label = label(with: color)
             stack.addArrangedSubview(label)
             

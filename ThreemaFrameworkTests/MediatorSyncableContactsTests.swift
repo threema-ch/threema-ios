@@ -167,7 +167,7 @@ class MediatorSyncableContactsTests: XCTestCase {
         let userSettingsMock = UserSettingsMock()
 
         struct TestInput {
-            var contact: Contact
+            var contact: ContactEntity
         }
         struct TestOutput {
             var delta: DeltaSyncContact
@@ -360,7 +360,7 @@ class MediatorSyncableContactsTests: XCTestCase {
 
     // Expected result of `MediatorSyncableContacts.updateAll(...)` implementation -> makes this sense for testing???
     private func expectedDeltaSyncContact(
-        from contact: Contact,
+        from contact: ContactEntity,
         userSettings: UserSettingsProtocol
     ) -> DeltaSyncContact {
         let conversation = contact.conversations!.first as? Conversation
@@ -486,8 +486,8 @@ class MediatorSyncableContactsTests: XCTestCase {
         setProfilePicture: Bool,
         setContactProfilePicture: Bool,
         isWorkContact: Bool
-    ) -> Contact {
-        let contact: Contact = getMinimalContact()
+    ) -> ContactEntity {
+        let contact: ContactEntity = getMinimalContact()
         databasePreparer.save {
             let imageURL = testBundle.url(forResource: "Bild-1-0", withExtension: "jpg")
             let imageData = (try? Data(contentsOf: imageURL!))!
@@ -523,8 +523,8 @@ class MediatorSyncableContactsTests: XCTestCase {
         return contact
     }
     
-    private func getMinimalContact() -> Contact {
-        var contact: Contact!
+    private func getMinimalContact() -> ContactEntity {
+        var contact: ContactEntity!
         databasePreparer.save {
             let publicKey = BytesUtility.generateRandomBytes(length: 32)!
             let identity = SwiftUtils.pseudoRandomString(length: 7)

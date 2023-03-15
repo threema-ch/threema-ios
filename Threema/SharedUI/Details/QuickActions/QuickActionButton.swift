@@ -34,6 +34,7 @@ class QuickActionButton: UIButton {
     init(
         imageNameProvider: @escaping QuickAction.ImageNameProvider,
         title: String,
+        accessibilityIdentifier identifier: String,
         action: @escaping (QuickActionUpdate) -> Void,
         shadow: Bool = true
     ) {
@@ -43,6 +44,7 @@ class QuickActionButton: UIButton {
         super.init(frame: .zero)
         
         configureButton(with: title, shadow: shadow)
+        accessibilityIdentifier = identifier
         updateColors()
         
         NotificationCenter.default.addObserver(
@@ -155,8 +157,8 @@ class QuickActionButton: UIButton {
     }
     
     @objc private func updateColors() {
-        tintColor = Colors.primary
-        buttonTitleLabel.textColor = Colors.primary
+        tintColor = .primary
+        buttonTitleLabel.textColor = .primary
         backgroundColor = Colors.backgroundQuickActionButton
     }
     
@@ -165,15 +167,19 @@ class QuickActionButton: UIButton {
             guard isHighlighted != oldValue else {
                 return
             }
-                        
-            highlightAnimator.pauseAnimation()
-            if isHighlighted {
-                highlightAnimator.isReversed = false
-                highlightAnimator.startAnimation()
-            }
-            else {
-                highlightAnimator.isReversed = true
-                highlightAnimator.startAnimation()
+                    
+            // Do not pause animation for UI tests, it will break the test
+            if !ProcessInfoHelper.isRunningForScreenshots {
+                highlightAnimator.pauseAnimation()
+                
+                if isHighlighted {
+                    highlightAnimator.isReversed = false
+                    highlightAnimator.startAnimation()
+                }
+                else {
+                    highlightAnimator.isReversed = true
+                    highlightAnimator.startAnimation()
+                }
             }
         }
     }
@@ -185,15 +191,21 @@ class QuickActionButton: UIButton {
             }
             backgroundColor = Colors.backgroundQuickActionButton
             if isSelected {
-                // Reset highlight animation
-                highlightAnimator.pauseAnimation()
-                // TODO: Because this still animates the change there's a weird fade in of the
-                //       selected background change.
-                highlightAnimator.fractionComplete = 0
-                               
-                // Automatically reset after 0.1 s
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                    self.isSelected = false
+                // Do not pause animation for UI tests, it will break the test
+                if ProcessInfoHelper.isRunningForScreenshots {
+                    isSelected = false
+                }
+                else {
+                    // Reset highlight animation
+                    highlightAnimator.pauseAnimation()
+                    // TODO: Because this still animates the change there's a weird fade in of the
+                    //       selected background change.
+                    highlightAnimator.fractionComplete = 0
+                    
+                    // Automatically reset after 0.1 s
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        self.isSelected = false
+                    }
                 }
             }
         }

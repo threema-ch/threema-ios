@@ -29,6 +29,7 @@
 #import <ContactsUI/ContactsUI.h>
 #import <CocoaLumberjack/CocoaLumberjack.h>
 #import "UserSettings.h"
+#import "Threema-Swift.h"
 
 @interface DocumentPicker () <UIDocumentPickerDelegate, UIDocumentMenuDelegate, UploadProgressDelegate, CNContactPickerDelegate>
 
@@ -107,10 +108,8 @@ static DocumentPicker *pickerStrongReference;
 }
 
 - (void)showContactAlert {
-    NSString *title = [BundleUtil localizedStringForKey:@"no_contacts_permission_title"];
-    NSString *message = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"no_contacts_permission_message"], [ThreemaAppObjc currentName]];
-    
-    [self showAlertWithTitle:title message:message closeOnOk:YES];
+    // Show access prompt
+    [UIAlertTemplate showOpenSettingsAlertWithOwner:_presentingViewController noAccessAlertType:NoAccessAlertTypeContacts];
 }
 
 - (void)sendItem:(URLSenderItem *)item {

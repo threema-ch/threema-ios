@@ -66,13 +66,13 @@ public final class ContactCell: ThemedCodeTableViewCell {
     
     /// Only use with Obj-C. It's here for backward compatibility and should be removed if no more Obj-C code uses this cell.
     /// Use `content` from Swift.
-    @objc var _contact: Contact? {
+    @objc var _contact: ContactEntity? {
         didSet {
             guard let contact = _contact else {
                 return
             }
             
-            content = .contact(contact)
+            content = .contact(Contact(contactEntity: contact))
         }
     }
     
@@ -295,31 +295,39 @@ public final class ContactCell: ThemedCodeTableViewCell {
     }
     
     private func configureContactCell(for contact: Contact) {
-        AvatarMaker.shared()
-            .avatar(for: contact, size: configuration.maxAvatarSize, masked: true) { avatarImage, identity in
-                guard let avatarImage = avatarImage,
-                      let identity = identity else {
-                    // Show placeholder
-                    self.avatarImageView.image = AvatarMaker.shared().unknownPersonImage()
-                    return
-                }
-            
-                if identity == contact.identity {
-                    DispatchQueue.main.async {
-                        self.avatarImageView.image = avatarImage
+        let em = BusinessInjector().entityManager
+        let contactEntity = em.entityFetcher.contact(for: contact.identity)
+        em.performBlock {
+            AvatarMaker.shared()
+                .avatar(
+                    for: contactEntity,
+                    size: self.configuration.maxAvatarSize,
+                    masked: true
+                ) { avatarImage, identity in
+                    guard let avatarImage = avatarImage,
+                          let identity = identity else {
+                        // Show placeholder
+                        self.avatarImageView.image = AvatarMaker.shared().unknownPersonImage()
+                        return
+                    }
+
+                    if identity == contact.identity {
+                        DispatchQueue.main.async {
+                            self.avatarImageView.image = avatarImage
+                        }
                     }
                 }
-            }
-        
-        otherThreemaTypeIcon.isHidden = !contact.showOtherThreemaTypeIcon
-        
-        nameLabel.contact = contact
-        
-        verificationLevelImageView.image = contact.verificationLevelImageSmall()
-        if traitCollection.preferredContentSizeCategory.isAccessibilityCategory {
-            verificationLevelImageView.image = contact.verificationLevelImage()
+
+            self.otherThreemaTypeIcon.isHidden = !contactEntity!.showOtherThreemaTypeIcon
+
+            self.nameLabel.contact = contactEntity
         }
-        verificationLevelImageView.accessibilityLabel = contact.verificationLevelAccessibilityLabel()
+
+        verificationLevelImageView.image = contact.verificationLevelImageSmall
+        if traitCollection.preferredContentSizeCategory.isAccessibilityCategory {
+            verificationLevelImageView.image = contact.verificationLevelImage
+        }
+        verificationLevelImageView.accessibilityLabel = contact.verificationLevelAccessibilityLabel
         
         var nickname = ""
         if let publicNickname = contact.publicNickname,
@@ -330,7 +338,7 @@ public final class ContactCell: ThemedCodeTableViewCell {
         
         identityLabel.text = contact.identity
         
-        if contact.isActive() {
+        if contact.isActive {
             containerStack.alpha = 1
         }
         else {

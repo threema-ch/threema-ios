@@ -29,7 +29,7 @@ typedef NS_ENUM(NSInteger, BallotDisplayMode) {
 };
 
 
-@class Contact,BallotChoice, BallotMessage, Conversation;
+@class ContactEntity,BallotChoice, BallotMessage, Conversation;
 
 @interface Ballot : TMAManagedObject
 
@@ -64,8 +64,8 @@ typedef NS_ENUM(NSInteger, BallotDisplayMode) {
 - (void)addMessage:(NSSet *)values;
 - (void)removeMessage:(NSSet *)values;
 
-- (void)addParticipantsObject:(Contact *)value;
-- (void)removeParticipantsObject:(Contact *)value;
+- (void)addParticipantsObject:(ContactEntity *)value;
+- (void)removeParticipantsObject:(ContactEntity *)value;
 - (void)addParticipants:(NSSet *)values;
 - (void)removeParticipants:(NSSet *)values;
 

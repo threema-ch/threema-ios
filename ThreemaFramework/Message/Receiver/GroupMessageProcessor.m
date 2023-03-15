@@ -170,8 +170,4 @@
     }
 }
 
-- (nullable Conversation *)conversation {
-    return [self->entityManager.entityFetcher conversationForGroupMessage:_message];
-}
-
 @end

@@ -11,8 +11,7 @@
 
 /* Tabbar and title for list with all conversations */
 "chats_title" = "Chats";
-
-"use_dynamic_font_size" = "Systeemlettergrootte";
+"chats_pinned" = "Gemarkeerd";
 
 "SortOrder_Firstname" = "Voornaam, Achternaam";
 "SortOrder_Lastname" = "Achternaam, Voornaam";
@@ -68,6 +67,7 @@
 "delete_identity" = "Gegevens en ID verwijderen";
 "copy" = "Kopiëren";
 "save" = "Opslaan";
+"download" = "Downloaden";
 "share" = "Delen";
 "details" = "Details";
 "acknowledge" = "Accepteren";
@@ -103,7 +103,7 @@
 "threema_id" = "Threema ID";
 "nickname" = "Nickname";
 "add_button" = "Toevoegen";
-"chatview_contextmenu_more" = "Meer...";
+"chatview_contextmenu_select" = "Selecteren...";
 
 "file_message_image" = "Afbeelding";
 "file_message_sticker" = "Sticker";
@@ -184,11 +184,7 @@
 "sound_threema_alphorn" = "Alphorn";
 
 "reset_wallpaper" = "Achtergrond herstellen";
-"font_size_title" = "Lettergrootte";
-"font_size" = "%d pt";
 "bigger_single_emojis" = "Grotere losse emojis";
-"received_message_time" = "Ontvangsttijd";
-"return_key_send" = "Enter = Versturen";
 "identity_none" = "geen";
 "message" = "Bericht"; /* Short version for "Send Message" */
 "scan_identity" = "ID scannen";
@@ -202,8 +198,6 @@
 "block_contact" = "Contactpersoon blokkeren";
 "profile_picture_recipient" = "Ontvangers profielafbeeldingen";
 
-"no_contacts_access_title" = "Geen toegang tot Contactpersonen";
-"no_contacts_access_message" = "Open de Instellingen en geef toegang tot Contactpersonen";
 "no_linked_contact_access_title" = "Geen toegang tot gekoppelde contactpersoon";
 "no_linked_contact_access_message" = "Open de Instellingen en geef toegang tot contactpersonen om gekoppelde contactpersonen te bekijken. Of verbreek de koppeling met de contactpersoon permanent.";
 "no_linked_contact_access_edit_message" = "Open de Instellingen en geef toegang tot Contactpersonen om de gekoppelde contactpersoon te bewerken. Of verbreek de koppeling met de contactpersoon permanent om deze te bewerken.";
@@ -224,8 +218,6 @@
 "[no access]" = "[Geen toegang]";
 "[not found]" = "[Niet gevonden]";
 "[restricted]" = "[Beperkt]";
-
-"go_to_settings" = "Naar Instellingen";
 
 /* This shows the number of groups in parentheses */
 "groups_header" = "Groepen (%lu)";
@@ -356,18 +348,8 @@
 "speed" = "Afspeelsnelheid";
 
 "send_file_title" = "Bestand versturen";
-"camera_disabled_title" = "Toegang geweigerd";
 "send_file_message" = "Bestand: %@\nnaar\n%@";
-
 "quote_not_found" = "Geciteerd bericht niet gevonden.";
-
-"camera_disabled_message" = "%@ heeft geen toegang tot je camera. Geef toegang via Instellingen > Privacy > Camera.";
-
-"location_disabled_title" = "Geen toegang tot locatie";
-"location_disabled_message" =  "Geef locatietoegang via Instellingen.";
-
-"microphone_disabled_title" = "Geen toegang tot microfoon";
-"microphone_disabled_message" = "%@ heeft geen toegang tot je microfoon. Geef toegang via Instellingen > Privacy > Microfoon.";
 
 "include_media" = "Media bijsluiten";
 "without_media" = "Zonder media";
@@ -463,8 +445,6 @@
 "invalid_country_code_message" = "Zo te zien heeft de regiocode van je apparaat een ongeldige waarde. Open de Instellingen, ga naar Algemeen > Internationaal en kies een nieuwe Regiocode om problemen met het matchen van telefoonnummers te voorkomen.";
 
 /* Settings */
-"block_unknown_on" = "Alleen mensen op je lijst van contactpersonen kunnen je een bericht sturen.";
-"block_unknown_off" = "Iedereen kan je een bericht sturen. Nieuwe contactpersonen worden automatisch toegevoegd als hun eerste bericht aankomt.";
 "show_stale_contacts_on" = "Inactieve Threema ID’s (d.w.z. ID’s die al meer dan 3 maanden niet zijn gebruikt) en ingetrokken ID’s worden verborgen.";
 "show_stale_contacts_off" = "Alle Threema ID’s worden weergegeven in de lijst met contactpersonen.";
 "hide_voip_call_ip_off" = "Een directe verbinding maken, indien mogelijk, en oproepen naar niet-geverifieerde contactpersonen alleen doorschakelen via Threema-servers. Dit kan uw IP-adres kenbaar maken.";
@@ -508,9 +488,7 @@
 "no_work_contacts" = "%@-gebruikers";
 "no_work_contacts_message" = "Geen door administrator geverifieerde %@-contactpersonen gevonden.";
 
-"no_contacts_permission_title" = "Geen toegang tot contactpersonen";
 "no_contacts_syncoff" = "U heeft nog geen contactpersonen. Schakel synchronisatie in (Instellingen > Privacy), of voeg contactpersonen handmatig toe met de +-knop.";
-"no_contacts_permission_message" = "%@ heeft geen toegang tot uw contactpersonen. Ga naar de privacy-instellingen van uw apparaat en geef toegang tot uw contactpersonen.";
 
 "my_profile_picture_title" = "Je profielafbeelding";
 "release_profilepicture_to" = "Profielafbeelding vrijgeven aan";
@@ -691,6 +669,7 @@
 "group_member_self_removed" = "Je bent uit de groep verwijderd.";
 "group_member_self_left" = "Je hebt de groep verlaten.";
 "group_member_creator_left" = "*Deze groep heeft geen eigenaar*\nDe groep kan niet meer worden beheerd omdat degene die de groep heeft aangemaakt de groep heeft verlaten. Een van de resterende leden kan de groep klonen om de rol van beheerder over te nemen.";
+"system_message_group_avatar_changed" = "Groepsfoto gewijzigd";
 
 /* accessibility labels */
 "send_media_or_location" = "Media of locatie versturen";
@@ -726,10 +705,6 @@
 "threema_channel_failed" = "Threema Channel niet toegevoegd.";
 
 /* Push decryption */
-"decryption_push_title" = "Wilt u een voorbeeld van het bericht zien in de pushmeldingen?";
-"decryption_push_text" = "Als voorbeelden zijn uitgeschakeld, moet je %@ openen om de inhoud van nieuwe berichten te bekijken.";
-"decryption_push_activate" = "Voorbeeld inschakelen";
-"decryption_push_deactivate" = "Voorbeeld uitschakelen";
 "decryption_push_reply" = "Antwoorden";
 "decryption_push_placeholder" = "Antwoorden...";
 "decryption_push_agree" = "Akkoord";
@@ -780,11 +755,10 @@
 "call_reject" = "Afwijzen";
 "call_hide_call" = "Oproep verbergen";
 "call_no_wifi" = "Oproep via mobiel netwerk. Meer informatie…";
+"call_mic_access" = "Geen toegang tot de microfoon.";
 
 "call_voip_not_supported_title" = "Threema-Oproep";
 "call_voip_not_supported_text" = "Deze contactpersoon kan geen oproepen via Threema ontvangen.";
-"call_microphone_permission_title" = "Toegang tot microfoon geweigerd";
-"call_microphone_permission_text" = "U moet via de Instellingen toegang geven tot de microfoon";
 "call_contact_alert" = "Wil je %@ bellen?";
 "call_contact_not_reachable" = "Contactpersoon is niet bereikbaar…";
 "already_in_call" = "Je kunt slechts één actieve oproep tegelijkertijd hebben.";
@@ -848,8 +822,6 @@
 "privateChat_set_alert_title" = "Wil je deze chat aanmerken als privé?";
 "privateChat_set_alert_message" = "Je kunt de zichtbaarheid van privéchats in- en uitschakelen via de Privacy-instellingen.";
 "privateChat_setup_alert_message" = "Uw Threema Safe back-up bevat privéchats, u moet een wachtwoord instellen om toegang te krijgen.";
-"hide_private_toggle" = "Privéchats verbergen";
-"privacy_footer" = "Dit verbergt alle privéchats in het chatoverzicht. Je moet een beveiligingscode instellen om deze optie te activeren.";
 
 "group_leave_sheet_title" = "“%@” verlaten?";
 "group_leave_sheet_message" = "Als u het gesprek verlaat, kunt u niet meer deelnemen. U hebt nog wel toegang tot de chatgeschiedenis.";
@@ -1069,6 +1041,7 @@
 "delete_messages_confirm" = "Wil je permanent alle berichten verwijderen die ouder zijn dan %@?";
 "delete_messages_confirm_all" = "Wil je permanent alle berichten verwijderen?";
 "delete_messages_explain" = "Dit omvat alle berichtsoorten (tekst- en spraakberichten, media, bestanden, polls, enz. worden verwijderd).";
+"delete_in_progress" = "Wordt verwijderd...";
 "one_year_title" = "1 jaar";
 "one_year" = "1 jaar";
 "six_months_title" = "6 maanden";
@@ -1114,7 +1087,6 @@
 "settings_advanced" = "Geavanceerd";
 "settings_threema_work" = "Threema Work";
 "settings_feedback" = "Beta-feedback";
-"settings_dev_mode" = "Ontwikkelaarsmodus";
 "tos_cell_title" = "Gebruiksvoorwaarden";
 
 "settings_advanced_flush_message_queue" = "Berichtenwachtrij leegmaken";
@@ -1123,11 +1095,32 @@
 "settings_advanced_reregister_push_notifications_footer_title" = "Indien inkomende berichten niet buiten de app als meldingen worden getoond, kunt u zich opnieuw voor meldingen registreren.";
 "settings_advanced_reregister_notifications_label" = "Pushmeldingen opnieuw registreren";
 
-// Dev Mode
-"settings_devmode_quote_v2" = "Quote V2";
-"settings_devmode_new_chat_view" = "Nieuwe chatweergave";
-"settings_devmode_stylekit_debug_view" = "StyleKit-debugweergave";
-"settings_devmode_id_colors_debug_view" = "ID-kleuren debug-weergave";
+"settings_md_sync_alert_title" = "Synchronisatie is mislukt";
+
+// Privacy
+"settings_privacy_contacts_header" = "Contacten";
+"settings_privacy_sync_contacts" = "Contactpersonen synchroniseren";
+"settings_privacy_exclusion_list" = "Uitsluitingslijst";
+"settings_privacy_exclusion_list_alert_title" = "ID is te kort";
+"settings_privacy_exclusion_list_alert_message" = "Voer een ID in die minstens 8 leestekens bevat.";
+"settings_privacy_block_unknown" = "Onbekenden blokkeren";
+"settings_privacy_block_unknown_footer_on"= "Alleen mensen op uw contactlijst kunnen u een bericht sturen.";
+"settings_privacy_block_unknown_foooter_off" = "Iedereen kan u een bericht sturen. Nieuwe contacten worden automatisch toegevoegd wanneer hun eerste bericht aankomt.";
+
+"settings_privacy_chat_header" = "Chatten";
+"settings_privacy_read_receipts" = "Ontvangstbevestigingen";
+"settings_privacy_typing_indicator" = "Invoerindicators";
+
+"settings_privacy_TIRR_reset_all" = "Voor alle contactpersonen herstellen";
+"settings_privacy_TIRR_reset_footer" = "Standaardinstellingen voor alle contactpersonen herstellen.";
+"settings_privacy_TIRR_reset_alert_title" = "Herstellen";
+"settings_privacy_TIRR_reset_alert_message" = "Standaardinstellingen voor alle contactpersonen herstellen. Dit kan niet ongedaan worden gemaakt.";
+"settings_privacy_TIRR_reset_alert_action" = "Alles herstellen";
+
+"settings_privacy_choose_poi" = "Point of Interest kiezen";
+"settings_privacy_hide_private_chats" = "Privéchats verbergen";
+"settings_privacy_hide_private_chats_footer" = "Dit verbergt alle privéchats in het chatoverzicht. Je moet een beveiligingscode instellen om deze optie te activeren.";
+
 
 // Appearance
 "settings_appearance_theme_section" = "Thema ontwerpen";
@@ -1338,12 +1331,6 @@ Als er geen (media)bestanden in %@ ontbreken, maak de prullenbak dan leeg om de 
 "readReceipt_sheetMessage" = "Standaardinstelling voor deze contactpersoon overschrijven.";
 "typingIndicator_sheetMessage" = "Standaardinstelling voor deze contactpersoon overschrijven.";
 
-"reset_overrides" = "Voor alle contactpersonen herstellen";
-"resetButton_footer" = "Standaardinstellingen voor alle contactpersonen herstellen";
-"reset_overrides_alert_title" = "Herstellen";
-"reset_overrides_alert_message" = "Standaardinstellingen voor alle contactpersonen herstellen. Dit kan niet ongedaan worden gemaakt.";
-"reset_overrides_alert_action" = "Alles herstellen";
-
 /* Multi Decvice */
 "multi_device_linked_devices_title" = "Multi-device preview";
 "multi_device_linked_devices_desc" = "Multi-device preview in- of uitschakelen voor dit apparaat.";
@@ -1377,14 +1364,11 @@ Als er geen (media)bestanden in %@ ontbreken, maak de prullenbak dan leeg om de 
 // POI
 "poi_unavailable" = "Niet beschikbaar";
 "poi_not_marked" = "-";
-"poi_location_disabled_action" = "Instellingen openen";
 "poi_search_POI" = "Steden en Straten";
 "poi_search_prefix" = "Zoeken rond %@";
 "poi_away" = "Tot %@";
 "poi_dropped_pin_info_alert_title" = "Geplaatste markering";
 "poi_dropped_pin_info_alert_message" = "Druk lang op de kaart om een markering te plaatsen.";
-"poi_accuracy_info_alert_title" = "Geen toegang tot precieze locatie";
-"poi_accuracy_info_alert_message" = "Open de Instellingen en geef toegang tot de Precieze locatie.";
 "poi_current_location" = "Mijn locatie";
 "poi_marked_location" = "Geplaatste markering";
 
@@ -1426,6 +1410,18 @@ Als er geen (media)bestanden in %@ ontbreken, maak de prullenbak dan leeg om de 
 "detailView_messageID" = "Bericht-ID";
 "detailView_group_acknowledged" = "Akkoord (%d)";
 "detailView_group_declined" = "Niet akkoord (%d)";
+"detailView_group_file_size" = "Bestandsgrootte";
+"detailView_created_footer" = "Aangemaakt: %@";
+
+"message_display_status_none" = "Geen";
+"message_display_status_user_acknowledged" = "Akkoord";
+"message_display_status_user_declined" = "Niet akkoord";
+"message_display_status_sending" = "Wordt verzonden";
+"message_display_status_sent" = "Verzonden";
+"message_display_status_delivered" = "Geleverd";
+"message_display_status_delivered_incoming" = "Ontvangen";
+"message_display_status_read" = "Gelezen";
+"message_display_status_failed" = "Mislukt";
 
 // In-app notifications
 "notification_copying_succeeded" = "Item gekopieerd";
@@ -1434,7 +1430,11 @@ Als er geen (media)bestanden in %@ ontbreken, maak de prullenbak dan leeg om de 
 "notification_saving_succeeded" = "Item opgeslagen";
 "notification_saving_failed" = "Opslaan mislukt";
 
+"notification_saving_to_photos_succeeded" = "Aan foto's toegevoegd";
+"notification_saving_to_photos_failed" = "Toevoegen aan foto's is mislukt";
+
 "notification_sending_failed" = "Verzending mislukt";
+"notification_sending_failed_subtitle_size" = "Het item is te groot";
 
 "notification_deleted_messages_count" = "%d berichten verwijderd";
 
@@ -1443,6 +1443,7 @@ Als er geen (media)bestanden in %@ ontbreken, maak de prullenbak dan leeg om de 
 "notification_call_failed_connected" = "Verbinding verbroken";
 "notification_call_failed_not_connected" = "Geen verbinding tot stand gebracht";
 "notification_call_creation_failed" = "Geen gesprek gevoerd";
+"notification_call_creation_disabled" = "Oproepen zijn uitgeschakeld";
 
 "notification_sending_profile_picture_succeeded" = "Profielafbeelding verzonden";
 "notification_sending_profile_picture_failed" = "Niet verzonden";
@@ -1451,6 +1452,9 @@ Als er geen (media)bestanden in %@ ontbreken, maak de prullenbak dan leeg om de 
 
 "notification_group_sync_succeeded" = "Groep gesynchroniseerd";
 "notification_group_sync_failed" = "Groep niet gesynchroniseerd";
+
+"notification_settings_sync_pending" = "Wordt gesynchroniseerd...";
+"notification_settings_sync_succeeded" = "Instellingen zijn gesynchroniseerd";
 
 // Forward security status messages
 "forward_security_message_without" = "Er is een bericht zonder Perfect forward secrecy ontvangen. Controleer of de afzender Perfect forward secrecy opzettelijk heeft uitgeschakeld.";
@@ -1471,7 +1475,6 @@ Als er geen (media)bestanden in %@ ontbreken, maak de prullenbak dan leeg om de 
 // Chat bar
 "accessibility_chatbar_label" = "Chat invoerveld.";
 "accessibility_chatbar_hint" = "Bericht samenstellen.";
-"accessibility_chatbar_value" = "Huidige tekst: %@";
 "accessibility_chatbar_quote_label" = "Geselecteerd citaatbericht: %@.";
 "accessibility_chatbar_close_quote_button_label" = "Einde citaat";
 "accessibility_chatbar_close_quote_button_hint" = "Beëindigt het citeren van het geselecteerde bericht.";
@@ -1521,6 +1524,11 @@ Als er geen (media)bestanden in %@ ontbreken, maak de prullenbak dan leeg om de 
 "accessibility_status_delivered_plus_time" = "Afgeleverd, %@";
 "accessibility_status_read_plus_time" = "Gelezen, %@";
 "accessibility_status_failed_plus_time" = "Mislukt, %@";
+
+// UIAccessibilityCustomActions
+"accessibility_action_open_link" = "%@ openen";
+"accessibility_action_call_phone" = "%@ opbellen";
+"accessibility_action_open_mention" = "Contactpersoon van %@ weergeven";
 
 // Multi-Device Wizard
 "md_wizard_header" = "Multi-device preview";
@@ -1578,3 +1586,18 @@ Als er geen (media)bestanden in %@ ontbreken, maak de prullenbak dan leeg om de 
 
 // SystemMessage
 "systemMessage_unsupported_type" = "Dit type systeembericht wordt niet ondersteund";
+
+// Alerts
+"alert_no_access_title_camera" = "Geen toegang tot de camera";
+"alert_no_access_title_contacts" = "Geen toegang tot contactpersonen";
+"alert_no_access_title_location" = "Geen toegang tot locatie";
+"alert_no_access_title_location_precise" = "Geen toegang tot de exacte locatie";
+"alert_no_access_title_microphone" = "Geen toegang tot microfoon";
+
+"alert_no_access_message_camera" = "Open de iOS-instellingen en geef toegang tot de camera.";
+"alert_no_access_message_contacts" = "Open de iOS-instellingen en geef toegang tot contacten.";
+"alert_no_access_message_location" = "Open de iOS-instellingen en geef toegang tot de locatie.";
+"alert_no_access_message_location_precise" = "Open de iOS-instellingen en ga naar 'Locatie' om toegang tot de exacte locatie te geven.";
+"alert_no_access_message_microphone" = "Open de iOS-instellingen en geef toegang tot de microfoon.";
+
+"alert_no_access_open_settings" = "Open instellingen";

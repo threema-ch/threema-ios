@@ -20,13 +20,19 @@
 
 import Foundation
 
-class ChatViewTypingIndicatorInformationProvider {
+protocol ChatViewTypingIndicatorInformationProviderProtocol {
+    var currentlyTypingPublisher: Published<Bool>.Publisher { get }
+}
+
+class ChatViewTypingIndicatorInformationProvider: ChatViewTypingIndicatorInformationProviderProtocol {
     // MARK: - Properties
 
-    @Published var currentlyTyping: Bool
+    var currentlyTypingPublisher: Published<Bool>.Publisher { $currentlyTyping }
     
     // MARK: - Private Properties
 
+    @Published private var currentlyTyping: Bool
+    
     private var conversationIsTypingToken: NSKeyValueObservation?
     
     // MARK: - Lifecycle

@@ -107,7 +107,7 @@ public class PPAssetsActionHelper: NSObject {
         
         let shareLocation = PPOption(
             withTitle: BundleUtil.localizedString(forKey: "send_location"),
-            withIcon: UIImage(named: "ActionLocation", in: Colors.primary)
+            withIcon: UIImage(named: "ActionLocation", in: .primary)
         ) {
             self.delegate?.assetsActionHelperDidSelectLocation(self)
         }
@@ -116,7 +116,7 @@ public class PPAssetsActionHelper: NSObject {
         if PlayRecordAudioViewController.canRecordAudio() {
             let recordAudio = PPOption(
                 withTitle: BundleUtil.localizedString(forKey: "record_audio"),
-                withIcon: UIImage(named: "ActionMicrophone", in: Colors.primary)
+                withIcon: UIImage(named: "ActionMicrophone", in: .primary)
             ) {
                 self.delegate?.assetsActionHelperDidSelectRecordAudio(self)
             }
@@ -125,7 +125,7 @@ public class PPAssetsActionHelper: NSObject {
         
         let ballotCreate = PPOption(
             withTitle: BundleUtil.localizedString(forKey: "ballot_create"),
-            withIcon: UIImage(named: "ActionBallot", in: Colors.primary)
+            withIcon: UIImage(named: "ActionBallot", in: .primary)
         ) {
             self.delegate?.assetsActionHelperDidSelectCreateBallot(self)
         }
@@ -133,7 +133,7 @@ public class PPAssetsActionHelper: NSObject {
 
         let shareFile = PPOption(
             withTitle: BundleUtil.localizedString(forKey: "share_file"),
-            withIcon: UIImage(named: "ActionFile", in: Colors.primary)
+            withIcon: UIImage(named: "ActionFile", in: .primary)
         ) {
             self.delegate?.assetsActionHelperDidSelectShareFile(self)
         }
@@ -168,12 +168,12 @@ public class PPAssetsActionHelper: NSObject {
         
         config.useOwnSnapButton = true
         config.ownSnapButtonText = BundleUtil.localizedString(forKey: "choose_existing")
-        config.ownSnapButtonIcon = UIImage(named: "ActionPhoto", in: Colors.primary)
+        config.ownSnapButtonIcon = UIImage(named: "ActionPhoto", in: .primary)
 
         config.previewReplacementText = BundleUtil.localizedString(forKey: "take_photo_or_video")
-        config.previewReplacementIcon = UIImage(named: "ActionCamera", in: Colors.primary)
+        config.previewReplacementIcon = UIImage(named: "ActionCamera", in: .primary)
         
-        config.tintColor = Colors.primary
+        config.tintColor = .primary
         config.tableBackground = Colors.backgroundNavigationController
         
         config.showAdditionalOptionWhenAssetIsSelected = true

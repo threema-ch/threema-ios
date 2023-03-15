@@ -112,7 +112,7 @@
 
 - (BallotMessage *)ballotMessageForConversation:(Conversation *)conversation;
 
-- (Contact *)contact;
+- (ContactEntity *)contact;
 
 - (LastGroupSyncRequest *)lastGroupSyncRequest;
 

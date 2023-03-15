@@ -52,7 +52,7 @@ class WebUpdateConversationRequest: WebAbstractMessage {
             let entityManager = EntityManager()
             
             if groupID != nil {
-                let conversation = entityManager.entityFetcher.conversation(for: groupID)
+                let conversation = entityManager.entityFetcher.legacyConversation(for: groupID)
                 
                 if conversation == nil {
                     ack!.success = false

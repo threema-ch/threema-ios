@@ -22,17 +22,33 @@ import CocoaLumberjackSwift
 import Foundation
 import UIKit
 
+protocol MWPhotoBrowserWrapperDelegate: AnyObject {
+    /// Called before the browser deletes messages
+    /// - Parameter objectIDs: Object IDs of messages that will be deleted
+    func willDeleteMessages(with objectIDs: [NSManagedObjectID])
+}
+
 class MWPhotoBrowserWrapper: NSObject, MWPhotoBrowserDelegate, MWVideoDelegate, MWFileDelegate,
     ModalNavigationControllerDelegate {
 
     let conversation: Conversation
     weak var parentViewController: UIViewController?
     let entityManager: EntityManager
+    // This needs to be a class property to work
+    var fileMessagePreview: FileMessagePreview?
     
-    init(for conversation: Conversation, in parentViewController: UIViewController?, entityManager: EntityManager) {
+    private weak var delegate: MWPhotoBrowserWrapperDelegate?
+    
+    init(
+        for conversation: Conversation,
+        in parentViewController: UIViewController?,
+        entityManager: EntityManager,
+        delegate: MWPhotoBrowserWrapperDelegate
+    ) {
         self.conversation = conversation
         self.parentViewController = parentViewController
         self.entityManager = entityManager
+        self.delegate = delegate
         
         super.init()
         NotificationCenter.default.addObserver(
@@ -49,26 +65,31 @@ class MWPhotoBrowserWrapper: NSObject, MWPhotoBrowserDelegate, MWVideoDelegate, 
     private var selectedMediaMessages = Set<UInt>()
     
     func openPhotoBrowser(for message: BaseMessage?) {
-        switch message {
-        case let message as FileMessageEntity:
-            prepareMedia()
-            
-            guard let index = mediaMessages.firstIndex(of: message) else {
-                DDLogError("Tapped media not found in fetched ones.")
-                return
-            }
-            
-            let autoPlayOnAppear = message.renderType == .videoMessage
-            
-            openPhotoBrowser(currentMediaIndex: UInt(index), showGrid: false, autoPlayOnAppear: autoPlayOnAppear)
-        
-        default:
-            print("Message Type not implemented yet")
+        guard let message else {
+            return
         }
+        prepareMedia()
+        
+        guard let index = mediaMessages.firstIndex(of: message) else {
+            DDLogError("Tapped media not found in fetched ones.")
+            return
+        }
+        
+        var autoPlayOnAppear = false
+        if let fileMessageProvider = message as? FileMessageProvider {
+            switch fileMessageProvider.fileMessageType {
+            case .video:
+                autoPlayOnAppear = true
+            default:
+                autoPlayOnAppear = false
+            }
+        }
+        
+        openPhotoBrowser(currentMediaIndex: UInt(index), showGrid: false, autoPlayOnAppear: autoPlayOnAppear)
     }
     
     func openPhotoBrowser() {
-        openPhotoBrowser(currentMediaIndex: UInt(mediaMessages.count), showGrid: true)
+        openPhotoBrowser(currentMediaIndex: nil, showGrid: true)
     }
     
     // MARK: - MWPhotoBrowserDelegate
@@ -173,7 +194,10 @@ class MWPhotoBrowserWrapper: NSObject, MWPhotoBrowserDelegate, MWVideoDelegate, 
     
     func photoBrowserSelectAll(_ photoBrowser: MWPhotoBrowser!) {
         selectedMediaMessages.removeAll()
-        selectedMediaMessages = Set(0..<mediaMessages.count) as! Set<UInt>
+        let setOfSelectedIndexes = Set(0..<mediaMessages.count)
+        selectedMediaMessages = Set(setOfSelectedIndexes.compactMap {
+            UInt($0)
+        })
     }
     
     @objc func mediaPhotoSelection() -> Set<AnyHashable>! {
@@ -200,20 +224,18 @@ class MWPhotoBrowserWrapper: NSObject, MWPhotoBrowserDelegate, MWVideoDelegate, 
     // MARK: - MWVideoDelegate
 
     func play(_ video: MediaBrowserVideo!) {
-        // TODO: IOS-2386
-        print("TODO")
+        try? AVAudioSession.sharedInstance().setCategory(.playback)
     }
     
     func showFile(_ fileMessageEntity: FileMessageEntity!) {
-        // TODO: IOS-2386
-        print("TODO")
+        fileMessagePreview = FileMessagePreview(for: fileMessageEntity)
+        fileMessagePreview?.show(on: photoBrowser)
     }
     
     // MARK: - MWFileDelegate
 
     func playFileVideo(_ fileMessageEntity: FileMessageEntity!) {
-        // TODO: IOS-2386
-        print("TODO")
+        try? AVAudioSession.sharedInstance().setCategory(.playback)
     }
     
     func toggleControls() {
@@ -264,8 +286,7 @@ class MWPhotoBrowserWrapper: NSObject, MWPhotoBrowserDelegate, MWVideoDelegate, 
     }
     
     func openPhotoBrowser(currentMediaIndex: UInt?, showGrid: Bool = true, autoPlayOnAppear: Bool = false) {
-        // TODO: (IOS-2844) When opening videos two modals get opened at the same time
-
+        
         if photoBrowser == nil {
             photoBrowser = createPhotoBrowser()
         }
@@ -312,9 +333,14 @@ class MWPhotoBrowserWrapper: NSObject, MWPhotoBrowserDelegate, MWVideoDelegate, 
     }
     
     private func deleteMedia(for indexes: Set<UInt>, completion: @escaping () -> Void) {
+        let mediaEntitiesToDelete = indexes.map { index in
+            self.mediaMessages[Int(index)]
+        }
+        
+        delegate?.willDeleteMessages(with: mediaEntitiesToDelete.map(\.objectID))
+        
         entityManager.performSyncBlockAndSafe {
-            for index in indexes {
-                let mediaEntity = self.mediaMessages[Int(index)]
+            for mediaEntity in mediaEntitiesToDelete {
                 mediaEntity.conversation = nil
                 self.entityManager.entityDestroyer.deleteObject(object: mediaEntity)
             }

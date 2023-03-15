@@ -40,6 +40,12 @@ final class MessageThumbnailTapView: UIView {
     // MARK: - Private properties
 
     private lazy var fileSizeFormatter = ByteCountFormatter()
+    
+    private lazy var progressFormatter: NumberFormatter = {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .percent
+        return formatter
+    }()
    
     private var tapAction: () -> Void
         
@@ -216,14 +222,14 @@ final class MessageThumbnailTapView: UIView {
         
         // Center state view
         switch currentBlobDisplayState {
-        case .remote, .downloading, .pending, .uploading, .fileNotFound:
+        case .remote, .downloading, .fileNotFound:
             if let symbolName = currentBlobDisplayState.symbolName {
                 showCenterStateBlurView(with: symbolName)
             }
             else {
                 hideCenterStateBlurView()
             }
-        case .processed, .uploaded:
+        case .processed, .pending, .uploading, .uploaded:
             if let processedOrUploadedSymbolName = thumbnailDisplayMessage?.fileMessageType
                 .defaultInteractionSymbolName {
                 showCenterStateBlurView(with: processedOrUploadedSymbolName)
@@ -231,16 +237,12 @@ final class MessageThumbnailTapView: UIView {
             else {
                 hideCenterStateBlurView()
             }
-        case .dataDeleted:
+        case .dataDeleted, .sendingError:
             hideCenterStateBlurView()
         }
         
         // Progress view
         if case let .downloading(progress: progress) = currentBlobDisplayState {
-            showProgressView()
-            progressView.setProgress(progress, animated: true)
-        }
-        else if case let .uploading(progress: progress) = currentBlobDisplayState {
             showProgressView()
             progressView.setProgress(progress, animated: true)
         }
@@ -250,20 +252,38 @@ final class MessageThumbnailTapView: UIView {
         
         // Metadata view
         switch currentBlobDisplayState {
-        case .remote, .downloading, .pending, .uploading:
+        case .remote, .pending:
             metadataView.symbolName = thumbnailDisplayMessage?.fileMessageType.symbolName
             metadataView.metadataString = fileSizeFormatter
                 .string(for: thumbnailDisplayMessage?.dataBlobFileSize)
             metadataBlurBackgroundContainerView.isHidden = false
+            
+        case let .uploading(progress: progress), let .downloading(progress: progress):
+            
+            metadataView.symbolName = thumbnailDisplayMessage?.fileMessageType.symbolName
+
+            metadataBlurBackgroundContainerView.isHidden = false
+            if let progressString = progressFormatter.string(from: Double(progress) as NSNumber) {
+                metadataView.metadataString = """
+                    \(fileSizeFormatter.string(for: thumbnailDisplayMessage?.dataBlobFileSize) ?? "") \
+                    (\(progressString))
+                    """
+            }
+            else {
+                metadataView.metadataString = fileSizeFormatter.string(for: thumbnailDisplayMessage?.dataBlobFileSize)
+            }
+            
         case .fileNotFound:
             metadataView.symbolName = nil
             metadataView.metadataString = BundleUtil.localizedString(forKey: "file_not_found_title")
             metadataBlurBackgroundContainerView.isHidden = false
+            
         case .dataDeleted:
             metadataView.symbolName = currentBlobDisplayState.symbolName
             metadataView.metadataString = nil
             metadataBlurBackgroundContainerView.isHidden = false
-        case .processed, .uploaded:
+            
+        case .processed, .uploaded, .sendingError:
             if case let .video(videoThumbnailDisplayMessage) = thumbnailDisplayMessage?.fileMessageType,
                let duration = videoThumbnailDisplayMessage.durationTimeInterval {
                 metadataView.symbolName = videoThumbnailDisplayMessage.fileMessageType.symbolName

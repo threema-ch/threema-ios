@@ -30,7 +30,6 @@
 #import "RectUtil.h"
 #import "BallotCreateDetailViewController.h"
 #import "ContactStore.h"
-#import "Contact.h"
 #import "AppGroup.h"
 #import "FeatureMask.h"
 #import "BundleUtil.h"

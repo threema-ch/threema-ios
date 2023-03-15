@@ -1,0 +1,171 @@
+{
+  "configurations" : [
+    {
+      "id" : "20A3D1AD-46CA-41AB-B21B-7B1AD15507DC",
+      "name" : "English",
+      "options" : {
+        "language" : "en",
+        "region" : "GB"
+      }
+    },
+    {
+      "id" : "0031E47E-5190-4AE0-82FA-C226AB0C40DF",
+      "name" : "German",
+      "options" : {
+        "language" : "de",
+        "region" : "DE"
+      }
+    },
+    {
+      "id" : "C5D2EB78-25AF-403F-889F-BC7C201EB2C8",
+      "name" : "Italian",
+      "options" : {
+        "language" : "it",
+        "region" : "IT"
+      }
+    },
+    {
+      "id" : "C7CC5EA1-B241-4910-B412-1D36A26571FD",
+      "name" : "French",
+      "options" : {
+        "language" : "fr",
+        "region" : "FR"
+      }
+    },
+    {
+      "id" : "6C526610-EAF4-410C-A789-90CB0E76346C",
+      "name" : "Spanish",
+      "options" : {
+        "language" : "es",
+        "region" : "ES",
+        "uiTestingScreenshotsLifetime" : "keepAlways"
+      }
+    },
+    {
+      "id" : "00334F49-5F31-46DA-BC88-A853D2E7898C",
+      "name" : "Bazilian",
+      "options" : {
+        "language" : "pt-BR",
+        "region" : "BR"
+      }
+    },
+    {
+      "id" : "8F0274BB-E25B-487C-A423-D7609B876875",
+      "name" : "Russian",
+      "options" : {
+        "language" : "ru",
+        "region" : "RU"
+      }
+    },
+    {
+      "id" : "A42C53F0-C7E5-4CED-BB85-F52572E9BAF2",
+      "name" : "Polish",
+      "options" : {
+        "language" : "pl",
+        "region" : "PL"
+      }
+    },
+    {
+      "id" : "D66F2F8A-FDA4-400C-BC1F-0EE9091D2EBB",
+      "name" : "Dutch",
+      "options" : {
+        "language" : "nl",
+        "region" : "NL"
+      }
+    },
+    {
+      "id" : "5D8F77E4-B3CA-4463-9951-95730EB98E90",
+      "name" : "Czech",
+      "options" : {
+        "language" : "cs",
+        "region" : "CZ"
+      }
+    },
+    {
+      "id" : "EC845021-B223-446B-9F0B-301CCC1DD319",
+      "name" : "Chinese Simplifed",
+      "options" : {
+        "language" : "zh-Hans",
+        "region" : "CN"
+      }
+    },
+    {
+      "id" : "4C2C43FD-669D-4207-A8A5-81F7612878A0",
+      "name" : "Chinese Traditional",
+      "options" : {
+        "commandLineArgumentEntries" : [
+          {
+            "argument" : "screenshot"
+          }
+        ],
+        "language" : "zh-Hant",
+        "region" : "CN"
+      }
+    },
+    {
+      "id" : "5F24C305-05C1-4EA1-B095-9F2155DE95E6",
+      "name" : "Turkish",
+      "options" : {
+        "commandLineArgumentEntries" : [
+          {
+            "argument" : ""
+          }
+        ],
+        "language" : "tr",
+        "region" : "TR"
+      }
+    },
+    {
+      "id" : "174332E4-794C-4DD5-A60C-A0A6E5B72919",
+      "name" : "Japanese",
+      "options" : {
+        "commandLineArgumentEntries" : [
+          {
+            "argument" : ""
+          }
+        ],
+        "language" : "ja",
+        "region" : "JP"
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "codeCoverage" : false,
+    "commandLineArgumentEntries" : [
+      {
+        "argument" : "-screenshot"
+      }
+    ],
+    "environmentVariableEntries" : [
+      {
+        "key" : "SRCROOT",
+        "value" : "${SRCROOT}"
+      }
+    ],
+    "targetForVariableExpansion" : {
+      "containerPath" : "container:Threema.xcodeproj",
+      "identifier" : "0A7DF6C11C9FDBDE002D4DC3",
+      "name" : "Threema Work"
+    }
+  },
+  "testTargets" : [
+    {
+      "skippedTests" : [
+        "AudioTrackAnalyzerTests"
+      ],
+      "target" : {
+        "containerPath" : "container:Threema.xcodeproj",
+        "identifier" : "4D5C4CA11CD79C8500512FE6",
+        "name" : "Threema Work Tests"
+      }
+    },
+    {
+      "target" : {
+        "containerPath" : "container:Threema.xcodeproj",
+        "identifier" : "CEFBD1901E51FB6C00722ED7",
+        "name" : "ScreenshotsWithDataWork"
+      }
+    }
+  ],
+  "version" : 1
+}

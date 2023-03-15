@@ -35,19 +35,71 @@ final class ChatViewThumbnailDisplayMessageTableViewCell: ChatViewBaseTableViewC
         neighbors: ChatViewDataSource.MessageNeighbors
     )? {
         didSet {
-            updateCell(for: thumbnailDisplayMessageAndNeighbors?.message)
+            let block = {
+                self.updateCell(for: self.thumbnailDisplayMessageAndNeighbors?.message)
+                
+                super.setMessage(
+                    to: self.thumbnailDisplayMessageAndNeighbors?.message,
+                    with: self.thumbnailDisplayMessageAndNeighbors?.neighbors
+                )
+            }
             
-            super.setMessage(
-                to: thumbnailDisplayMessageAndNeighbors?.message,
-                with: thumbnailDisplayMessageAndNeighbors?.neighbors
-            )
+            if let oldValue, oldValue.message.objectID == thumbnailDisplayMessageAndNeighbors?.message.objectID {
+                UIView.animate(
+                    withDuration: ChatViewConfiguration.ChatBubble.bubbleSizeChangeAnimationDurationInSeconds,
+                    delay: 0.0,
+                    options: .curveEaseInOut
+                ) {
+                    block()
+                    self.layoutIfNeeded()
+                }
+            }
+            else {
+                block()
+            }
         }
     }
     
     override var shouldShowDateAndState: Bool {
         didSet {
-            if !(thumbnailDisplayMessageAndNeighbors?.message.showDateAndStateInline ?? false) {
-                messageDateAndStateView.isHidden = !shouldShowDateAndState
+            guard !(thumbnailDisplayMessageAndNeighbors?.message.showDateAndStateInline ?? false) else {
+                return
+            }
+            
+            // Both of these animations are typically covered within a bigger animation block
+            // or a block that doesn't animate at all. Both cases look good.
+            if shouldShowDateAndState {
+                // When adding the date and state view, this is an animation that doesn't look half bad since the view will
+                // animate in from the bottom.
+                UIView.animate(
+                    withDuration: ChatViewConfiguration.ChatBubble.bubbleSizeChangeAnimationDurationInSeconds,
+                    delay: ChatViewConfiguration.ChatBubble.bubbleSizeChangeAnimationDurationInSeconds,
+                    options: .curveEaseInOut
+                ) {
+                    self.messageDateAndStateView.alpha = 1
+                }
+            }
+            else {
+                // We don't use the same animation when hiding the date and state view because it'll animate out to the top
+                // and will cover the text which is still showing in the cell.
+                UIView.performWithoutAnimation {
+                    self.messageDateAndStateView.alpha = 0
+                }
+            }
+            
+            messageDateAndStateView.isHidden = !shouldShowDateAndState
+            
+            guard oldValue != shouldShowDateAndState else {
+                return
+            }
+            
+            // The length of the rendered text in the message might be shorter than `messageDateAndStateView`.
+            // Thus we fully remove it to avoid having it set the width of the message bubble.
+            if messageDateAndStateView.isHidden {
+                captionStack.removeArrangedSubview(messageDateAndStateView)
+            }
+            else {
+                captionStack.addArrangedSubview(messageDateAndStateView)
             }
         }
     }
@@ -189,18 +241,18 @@ extension ChatViewThumbnailDisplayMessageTableViewCell: MessageTextViewDelegate 
     }
 }
 
-// MARK: - ContextMenuAction
+// MARK: - ChatViewMessageAction
 
-extension ChatViewThumbnailDisplayMessageTableViewCell: ContextMenuAction {
+extension ChatViewThumbnailDisplayMessageTableViewCell: ChatViewMessageAction {
     
-    func buildContextMenu(at indexPath: IndexPath) -> UIContextMenuConfiguration? {
-       
-        guard let message = thumbnailDisplayMessageAndNeighbors?.message else {
+    func messageActions() -> [ChatViewMessageActionProvider.MessageAction]? {
+
+        guard let message = thumbnailDisplayMessageAndNeighbors?.message as? ThumbnailDisplayMessage else {
             return nil
         }
 
-        typealias Provider = ChatViewContextMenuActionProvider
-        var menuItems = [UIAction]()
+        typealias Provider = ChatViewMessageActionProvider
+        var menuItems = [ChatViewMessageActionProvider.MessageAction]()
         
         // Speak
         var speakText = message.fileMessageType.localizedDescription
@@ -263,36 +315,21 @@ extension ChatViewThumbnailDisplayMessageTableViewCell: ContextMenuAction {
         
         // Edit
         let editHandler = {
-            self.chatViewTableViewCellDelegate?.startMultiselect()
+            self.chatViewTableViewCellDelegate?.startMultiselect(with: message.objectID)
         }
         
-        // Save
-        let albumManager = AlbumManager.shared
-        let saveHandler = {
-            guard !MDMSetup(setup: false).disableShareMedia() else {
-                fatalError()
-            }
-            
-            guard let data = message.blobGet() else {
-                NotificationPresenterWrapper.shared.present(type: .saveError)
-                return
-            }
-            
-            switch message.fileMessageType {
-            case .image, .animatedImage:
-                guard let image = UIImage(data: data) else {
-                    NotificationPresenterWrapper.shared.present(type: .saveError)
-                    DDLogError("[CV CxtMenu] Could not create image to save.")
-                    return
-                }
-
-                albumManager.save(image: image)
-
-            case .video:
-                albumManager.saveMovie(data: data)
-            default:
-                DDLogError("[CV CxtMenu] Message has invalid type.")
-            }
+        // Delete
+        let willDelete = {
+            self.chatViewTableViewCellDelegate?.willDeleteMessage(with: message.objectID)
+        }
+        
+        let didDelete = {
+            self.chatViewTableViewCellDelegate?.didDeleteMessages()
+        }
+        
+        // Ack
+        let ackHandler = { (message: BaseMessage, ack: Bool) in
+            self.chatViewTableViewCellDelegate?.sendAck(for: message, ack: ack)
         }
         
         let defaultActions = Provider.defaultActions(
@@ -303,28 +340,63 @@ extension ChatViewThumbnailDisplayMessageTableViewCell: ContextMenuAction {
             copyHandler: copyHandler,
             quoteHandler: quoteHandler,
             detailsHandler: detailsHandler,
-            editHandler: editHandler
+            editHandler: editHandler,
+            willDelete: willDelete,
+            didDelete: didDelete,
+            ackHandler: ackHandler
         )
-        
-        let saveAction = Provider.saveAction(handler: saveHandler)
         
         // Build menu
         menuItems.append(contentsOf: defaultActions)
         
-        // Save action is inserted before default action, depending if ack/dec is possible at a different position
-        if !MDMSetup(setup: false).disableShareMedia() {
-            if message.isUserAckEnabled {
-                menuItems.insert(saveAction, at: 2)
+        if message.isDataAvailable {
+            let saveAction = Provider.saveAction {
+                guard !MDMSetup(setup: false).disableShareMedia() else {
+                    DDLogWarn(
+                        "[ChatViewThumbnailDisplayMessageTableViewCell] Tried to save media, even if MDM disabled it."
+                    )
+                    return
+                }
+                
+                if let saveMediaItem = message.createSaveMediaItem() {
+                    AlbumManager.shared.save(saveMediaItem)
+                }
             }
-            else {
-                menuItems.insert(saveAction, at: 0)
+            
+            // Save action is inserted before default action, depending if ack/dec is possible at a different position
+            if !MDMSetup(setup: false).disableShareMedia() {
+                if message.isUserAckEnabled {
+                    menuItems.insert(saveAction, at: 2)
+                }
+                else {
+                    menuItems.insert(saveAction, at: 0)
+                }
             }
         }
-        
-        let menu = UIMenu(children: menuItems)
-        
-        return UIContextMenuConfiguration(identifier: indexPath as NSCopying, previewProvider: nil) { _ in
-            menu
+        else {
+            let downloadAction = Provider.downloadAction {
+                Task {
+                    await BlobManager.shared.syncBlobs(for: message.objectID)
+                }
+            }
+            // Download action is inserted before default action, depending if ack/dec is possible at a different position
+            if message.isUserAckEnabled {
+                menuItems.insert(downloadAction, at: 2)
+            }
+            else {
+                menuItems.insert(downloadAction, at: 0)
+            }
+        }
+            
+        return menuItems
+    }
+    
+    override var accessibilityCustomActions: [UIAccessibilityCustomAction]? {
+        get {
+            buildAccessibilityCustomActions()
+        }
+        set {
+            // No-op
         }
     }
 }

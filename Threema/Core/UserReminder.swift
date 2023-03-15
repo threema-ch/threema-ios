@@ -68,25 +68,6 @@ import Foundation
         AppGroup.userDefaults().bool(forKey: "PushReminderDoNotShowAgain")
     }
     
-    @objc public static func checkReminders(onCompletion: @escaping (Bool) -> Void) {
-        checkReminders(businessInjector: BusinessInjector(), onCompletion: onCompletion)
-    }
-    
-    private static func checkReminders(
-        businessInjector: BusinessInjectorProtocol,
-        onCompletion: @escaping (Bool) -> Void
-    ) {
-        guard businessInjector.myIdentityStore.isProvisioned() else {
-            onCompletion(false)
-            return
-        }
-        
-        Task {
-            let check = await checkPushReminder()
-            onCompletion(check)
-        }
-    }
-    
     private static func isPushEnabled() async -> Bool {
         await withCheckedContinuation { continuation in
             UNUserNotificationCenter.current().getNotificationSettings { notificationSettings in
@@ -115,7 +96,7 @@ import Foundation
         }
     }
     
-    private static func checkPushReminder() async -> Bool {
+    public static func checkPushReminder() async -> Bool {
         let isPushEnabled = await isPushEnabled()
         
         guard !isPushEnabled || debug else {
@@ -131,10 +112,6 @@ import Foundation
         guard shouldShowPushNotificationReminder || debug else {
             DDLogVerbose("Push Reminder disabled or already shown")
             return false
-        }
-        Task {
-            let pushReminderDialog = await PushNotificationReminderViewController.create()
-            await AppDelegate.shared().currentTopViewController().present(pushReminderDialog, animated: true)
         }
         
         return true

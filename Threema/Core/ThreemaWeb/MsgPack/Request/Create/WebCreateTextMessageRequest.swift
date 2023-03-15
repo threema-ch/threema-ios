@@ -103,7 +103,7 @@ public class WebCreateTextMessageRequest: WebAbstractMessage {
             }
         }
         else {
-            conversation = entityManager.entityFetcher.conversation(for: groupID)
+            conversation = entityManager.entityFetcher.legacyConversation(for: groupID)
 
             guard conversation != nil,
                   let group = groupManager.getGroup(conversation: conversation)

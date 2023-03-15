@@ -157,7 +157,7 @@
 {
     Old_ContactCell *cell = [self.tableView dequeueReusableCellWithIdentifier:@"Old_ContactCell"];
     
-    Contact *contact;
+    ContactEntity *contact;
     if (_searchController.isActive) {
         contact = [_searchDatasource contactAtIndexPath:indexPath];
     } else {
@@ -182,7 +182,7 @@
 }
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
-    Contact *contact;
+    ContactEntity *contact;
     if (_searchController.isActive) {
         contact = [_searchDatasource contactAtIndexPath:indexPath];
     } else {

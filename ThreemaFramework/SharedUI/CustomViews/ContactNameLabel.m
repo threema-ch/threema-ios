@@ -19,14 +19,14 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import "ContactNameLabel.h"
-#import "Contact.h"
+#import "ContactEntity.h"
 #import "UserSettings.h"
 #import "BundleUtil.h"
 #import "ThreemaFramework/ThreemaFramework-swift.h"
 
 @implementation ContactNameLabel
 
-- (void)setContact:(Contact*)contact {
+- (void)setContact:(ContactEntity*)contact {
     
     _contact = contact;
     

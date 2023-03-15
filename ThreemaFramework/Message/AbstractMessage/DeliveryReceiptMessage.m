@@ -20,6 +20,7 @@
 
 #import "DeliveryReceiptMessage.h"
 #import "ProtocolDefines.h"
+#import "ThreemaFramework/ThreemaFramework-Swift.h"
 
 @implementation DeliveryReceiptMessage
 
@@ -51,7 +52,13 @@
 }
 
 - (BOOL)allowSendingProfile {
-    return NO;
+    switch (receiptType) {
+        case DeliveryReceiptTypeDeclined:
+        case DeliveryReceiptTypeAcknowledged:
+            return YES;
+        default:
+            return NO;
+    }
 }
 
 - (BOOL)canCreateConversation {

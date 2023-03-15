@@ -20,7 +20,7 @@
 
 #import <Foundation/Foundation.h>
 #import "BoxedMessage.h"
-#import "Contact.h"
+#import "ContactEntity.h"
 #import "MyIdentityStore.h"
 #import "LoggingDescriptionProtocol.h"
 #import "ProtocolDefines.h"
@@ -51,7 +51,7 @@
  @param toContact: Receiver contact of the message
  @param myIdentityStore: Sender of the message, with secret key
  */
-- (BoxedMessage* _Nullable)makeBox:(Contact* _Nonnull)toContact myIdentityStore:(id<MyIdentityStoreProtocol>  _Nonnull)myIdentityStore;
+- (BoxedMessage* _Nullable)makeBox:(ContactEntity* _Nonnull)toContact myIdentityStore:(id<MyIdentityStoreProtocol>  _Nonnull)myIdentityStore;
 
 + (NSData*)randomMessageId NS_SWIFT_NAME(randomMessageID());
 

@@ -21,7 +21,7 @@
 #import "PushSetting.h"
 #import "Conversation.h"
 #import "NSString+Hex.h"
-#import "Contact.h"
+#import "ContactEntity.h"
 #import "UserSettings.h"
 #import "TextStyleUtils.h"
 
@@ -37,7 +37,7 @@
     return [PushSetting pushSettingForIdentity:[PushSetting identityForConversation:conversation]];
 }
 
-+ (PushSetting *)pushSettingForContact:(Contact *)contact {
++ (PushSetting *)pushSettingForContact:(ContactEntity *)contact {
     return [PushSetting pushSettingForIdentity:[PushSetting identityForContact:contact]];
 }
 
@@ -59,7 +59,7 @@
     }
 }
 
-+ (NSString *)identityForContact:(Contact *)contact {
++ (NSString *)identityForContact:(ContactEntity *)contact {
     return contact.identity;
 }
 

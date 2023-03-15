@@ -92,7 +92,7 @@ class TaskExecutionReceiveMessage: TaskExecution, TaskExecutionProtocol {
             if let delivered = processedMsg.delivered,
                let deliveryDate = processedMsg.deliveryDate {
                 self.update(
-                    messageID: processedMsg.messageID,
+                    message: processedMsg,
                     delivered: delivered.boolValue,
                     deliveryDate: deliveryDate
                 )
@@ -101,7 +101,7 @@ class TaskExecutionReceiveMessage: TaskExecution, TaskExecutionProtocol {
             else {
                 return self.frameworkInjector.messageSender.sendDeliveryReceipt(for: processedMsg)
                     .then { _ -> Promise<AbstractMessage?> in
-                        self.update(messageID: processedMsg.messageID, delivered: true, deliveryDate: Date())
+                        self.update(message: processedMsg, delivered: true, deliveryDate: Date())
                         return Promise { $0.fulfill(processedMsg) }
                     }
             }
@@ -125,6 +125,11 @@ class TaskExecutionReceiveMessage: TaskExecution, TaskExecutionProtocol {
                 DDLogNotice(
                     "\(LoggingTag.sendIncomingMessageAckToChat.hexString) \(LoggingTag.sendIncomingMessageAckToChat) \(processedMsg?.loggingDescription ?? task.message.loggingDescription)"
                 )
+
+                if let processedMsg {
+                    let nonceGuard = NonceGuard(entityManager: self.frameworkInjector.backgroundEntityManager)
+                    try nonceGuard.processed(message: processedMsg, isReflected: false)
+                }
             }
             
             self.frameworkInjector.backgroundEntityManager.performBlockAndWait {
@@ -142,12 +147,41 @@ class TaskExecutionReceiveMessage: TaskExecution, TaskExecutionProtocol {
         }
     }
 
-    private func update(messageID: Data, delivered: Bool, deliveryDate: Date) {
+    private func update(message: AbstractMessage, delivered: Bool, deliveryDate: Date) {
         frameworkInjector.backgroundEntityManager.performSyncBlockAndSafe {
-            if let msg = self.frameworkInjector.backgroundEntityManager.entityFetcher.message(with: messageID) {
-                msg.delivered = NSNumber(booleanLiteral: delivered)
-                msg.deliveryDate = deliveryDate
+            var conversation: Conversation?
+            
+            if message.flagGroupMessage() {
+                guard let groupMessage = message as? AbstractGroupMessage else {
+                    DDLogError("Could not update message because it is not group message")
+                    return
+                }
+                
+                conversation = self.frameworkInjector.backgroundEntityManager.entityFetcher.conversation(
+                    for: groupMessage.groupID,
+                    creator: groupMessage.groupCreator
+                )
             }
+            else {
+                conversation = self.frameworkInjector.backgroundEntityManager.entityFetcher
+                    .conversation(forIdentity: message.fromIdentity)
+            }
+            
+            guard let conversation else {
+                DDLogError("Could not update message because we could not find the conversation")
+                return
+            }
+            
+            guard let msg = self.frameworkInjector.backgroundEntityManager.entityFetcher.message(
+                with: message.messageID,
+                conversation: conversation
+            ) else {
+                DDLogError("Could not update message because we could not find the message")
+                return
+            }
+            
+            msg.delivered = NSNumber(booleanLiteral: delivered)
+            msg.deliveryDate = deliveryDate
         }
     }
 }

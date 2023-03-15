@@ -55,6 +55,7 @@ class CallHistoryManagerTests: XCTestCase {
             multiDeviceManager: MultiDeviceManagerMock(),
             myIdentityStore: MyIdentityStoreMock(),
             userSettings: userSettingsMock,
+            settingsStore: SettingsStoreMock(),
             serverConnector: ServerConnectorMock(), mediatorMessageProtocol: MediatorMessageProtocolMock(),
             messageProcessor: MessageProcessorMock()
         )
@@ -105,6 +106,7 @@ class CallHistoryManagerTests: XCTestCase {
             multiDeviceManager: MultiDeviceManagerMock(),
             myIdentityStore: MyIdentityStoreMock(),
             userSettings: userSettingsMock,
+            settingsStore: SettingsStoreMock(),
             serverConnector: ServerConnectorMock(), mediatorMessageProtocol: MediatorMessageProtocolMock(),
             messageProcessor: MessageProcessorMock()
         )

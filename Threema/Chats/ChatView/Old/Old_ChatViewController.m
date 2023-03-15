@@ -445,8 +445,8 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     self.loadEarlierMessages.backgroundColor = [Colors.backgroundView colorWithAlphaComponent:0.7];
     self.loadEarlierMessages.layer.cornerRadius = 4.0;
     
-    [self.loadEarlierMessages setTitleColor:Colors.primary forState:UIControlStateNormal];
-    [self.loadEarlierMessages setTitleColor:Colors.primary forState:UIControlStateHighlighted];
+    [self.loadEarlierMessages setTitleColor:UIColor.primary forState:UIControlStateNormal];
+    [self.loadEarlierMessages setTitleColor:UIColor.primary forState:UIControlStateHighlighted];
     
     [self.navigationController.view setBackgroundColor:Colors.backgroundView];
     chatBarWrapper.backgroundColor = Colors.backgroundChatBar;
@@ -1071,7 +1071,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         DDLogError(@"ObserverInfo: Can't remove conversation observers in old chat view");
     }
     
-    [conversation.members enumerateObjectsUsingBlock:^(Contact *contact, BOOL * _Nonnull stop) {
+    [conversation.members enumerateObjectsUsingBlock:^(ContactEntity *contact, BOOL * _Nonnull __unused stop) {
         @try {
             [contact removeObserver:self forKeyPath:@"displayName"];
         }
@@ -1091,7 +1091,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         
     } @catch (NSException * __unused exception) {}
     
-    [conversation.members enumerateObjectsUsingBlock:^(Contact *contact, BOOL * _Nonnull stop) {
+    [conversation.members enumerateObjectsUsingBlock:^(ContactEntity *contact, BOOL * _Nonnull __unused stop) {
         @try {
             [contact addObserver:self forKeyPath:@"displayName" options:NSKeyValueObservingOptionNew|NSKeyValueObservingOptionOld context:nil];
         }
@@ -1554,7 +1554,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         NSManagedObjectID *objectID = [(FileMessageEntity *)object objectID];
         [self updateObjectWithID:objectID];
         [self removeImageMessageObserverFor:objectID];
-    } else if ([object isKindOfClass:[Contact class]] && [keyPathCopy isEqualToString:@"displayName"]) {
+    } else if ([object isKindOfClass:[ContactEntity class]] && [keyPathCopy isEqualToString:@"displayName"]) {
         dispatch_async(dispatch_get_main_queue(), ^{
             if ([changeCopy[@"old"] isKindOfClass:NSString.class] && [changeCopy[@"old"] length] != 0) {
                 [self updateConversationTimer];
@@ -1689,7 +1689,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     [self presentInNavigationController:singleDetailsViewController];
 }
 
-- (void)showDetailsForContact:(nonnull Contact *)contact {
+- (void)showDetailsForContact:(nonnull ContactEntity *)contact {
     SingleDetailsViewController *singleDetailsViewController = [[SingleDetailsViewController alloc] initFor:contact displayStyle:DetailsDisplayStyleDefault];
     [self presentInNavigationController:singleDetailsViewController];
 }
@@ -2261,7 +2261,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 }
 
 - (BOOL)canBecomeFirstResponder {
-    if ([[NSUserDefaults standardUserDefaults] boolForKey:@"FASTLANE_SNAPSHOT"]) {
+    if (ProcessInfoHelper.isRunningForScreenshots)  {
         return false;
     }
     return ![self.presentedViewController isKindOfClass:[CallViewController class]] && self.presentedViewController == nil;
@@ -2462,10 +2462,10 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 
 - (void)mentionTapped:(id)mentionObject {
     [self hideKeyboardTemporarily:NO];
-    if ([mentionObject isKindOfClass:[Contact class]]) {
-        [self showDetailsForContact:(Contact *)mentionObject];
+    if ([mentionObject isKindOfClass:[ContactEntity class]]) {
+        [self showDetailsForContact:(ContactEntity *)mentionObject];
     } else {
-        [self performSegueWithIdentifier:@"ShowMeContact" sender:(Contact *)mentionObject];
+        [self performSegueWithIdentifier:@"ShowMeContact" sender:(ContactEntity *)mentionObject];
     }
 }
 
@@ -2824,7 +2824,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 
 - (void)updateMembersObserver:(NSSet *)oldMembers newMembers:(NSSet *)newMembers {
     if (oldMembers != nil && oldMembers != (id)[NSNull null]) {
-        [oldMembers enumerateObjectsUsingBlock:^(Contact *contact, BOOL * _Nonnull stop) {
+        [oldMembers enumerateObjectsUsingBlock:^(ContactEntity *contact, BOOL * _Nonnull stop) {
             @try {
                 [contact removeObserver:self forKeyPath:@"displayName"];
             }
@@ -2832,7 +2832,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         }];
     }
     if (newMembers != nil && newMembers != (id)[NSNull null]) {
-        [newMembers enumerateObjectsUsingBlock:^(Contact *contact, BOOL * _Nonnull stop) {
+        [newMembers enumerateObjectsUsingBlock:^(ContactEntity *contact, BOOL * _Nonnull stop) {
             @try {
                 [contact addObserver:self forKeyPath:@"displayName" options:0 context:nil];
             }

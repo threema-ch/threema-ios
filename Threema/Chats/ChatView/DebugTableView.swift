@@ -22,113 +22,124 @@ import CocoaLumberjackSwift
 import Foundation
 
 class DebugTableView: UITableView {
+    #if DEBUG
+        override func insertRows(at indexPaths: [IndexPath], with animation: UITableView.RowAnimation) {
+            super.insertRows(at: indexPaths, with: animation)
+            DDLogVerbose("Insert rows at \(indexPaths), animation is \(animation)")
+        }
     
-    override func insertRows(at indexPaths: [IndexPath], with animation: UITableView.RowAnimation) {
-        super.insertRows(at: indexPaths, with: animation)
-        DDLogNotice("Insert rows at \(indexPaths)")
-    }
+        override func reconfigureRows(at indexPaths: [IndexPath]) {
+            super.reconfigureRows(at: indexPaths)
+            DDLogVerbose("Reconfigure rows at \(indexPaths)")
+        }
     
-    override func reconfigureRows(at indexPaths: [IndexPath]) {
-        super.reconfigureRows(at: indexPaths)
-        DDLogNotice("Reconfigure rows at \(indexPaths)")
-    }
+        override func reloadRows(at indexPaths: [IndexPath], with animation: UITableView.RowAnimation) {
+            super.reloadRows(at: indexPaths, with: animation)
+            DDLogVerbose("Reload rows at \(indexPaths), animation is \(animation)")
+        }
     
-    override func reloadRows(at indexPaths: [IndexPath], with animation: UITableView.RowAnimation) {
-        super.reloadRows(at: indexPaths, with: animation)
-        DDLogNotice("Reload rows at \(indexPaths)")
-    }
+        override func deleteRows(at indexPaths: [IndexPath], with animation: UITableView.RowAnimation) {
+            super.deleteRows(at: indexPaths, with: animation)
+            DDLogVerbose("Delete rows at \(indexPaths), animation is \(animation)")
+        }
     
-    override func deleteRows(at indexPaths: [IndexPath], with animation: UITableView.RowAnimation) {
-        super.deleteRows(at: indexPaths, with: animation)
-        DDLogNotice("Delete rows at \(indexPaths)")
-    }
+        override func moveRow(at indexPath: IndexPath, to newIndexPath: IndexPath) {
+            super.moveRow(at: indexPath, to: newIndexPath)
+            DDLogVerbose("Move row at \(indexPath) to \(newIndexPath)")
+        }
     
-    override func moveRow(at indexPath: IndexPath, to newIndexPath: IndexPath) {
-        super.moveRow(at: indexPath, to: newIndexPath)
-        DDLogNotice("Move row at \(indexPath) to \(newIndexPath)")
-    }
+        override func insertSections(_ sections: IndexSet, with animation: UITableView.RowAnimation) {
+            super.insertSections(sections, with: animation)
+            DDLogVerbose("insertSections \(sections), animation is \(animation)")
+        }
     
-    override func insertSections(_ sections: IndexSet, with animation: UITableView.RowAnimation) {
-        super.insertSections(sections, with: animation)
-        DDLogNotice("insertSections \(sections)")
-    }
+        override func deleteSections(_ sections: IndexSet, with animation: UITableView.RowAnimation) {
+            super.deleteSections(sections, with: animation)
+            DDLogVerbose("deleteSections \(sections), animation is \(animation)")
+        }
     
-    override func deleteSections(_ sections: IndexSet, with animation: UITableView.RowAnimation) {
-        super.deleteSections(sections, with: animation)
-        DDLogNotice("deleteSections \(sections)")
-    }
+        override func moveSection(_ section: Int, toSection newSection: Int) {
+            super.moveSection(section, toSection: newSection)
+            DDLogVerbose("moveSection \(section) to \(newSection)")
+        }
     
-    override func moveSection(_ section: Int, toSection newSection: Int) {
-        super.moveSection(section, toSection: newSection)
-        DDLogNotice("moveSection \(section) to \(newSection)")
-    }
+        override func reloadSections(_ sections: IndexSet, with animation: UITableView.RowAnimation) {
+            super.reloadSections(sections, with: animation)
+            DDLogVerbose("reloadSections \(sections), animation is \(animation)")
+        }
     
-    override func reloadSections(_ sections: IndexSet, with animation: UITableView.RowAnimation) {
-        super.reloadSections(sections, with: animation)
-        DDLogNotice("reloadSections \(sections)")
-    }
+        override func reloadData() {
+            super.reloadData()
+            DDLogVerbose("\(#function)")
+        }
     
-    override func reloadData() {
-        super.reloadData()
-        DDLogNotice("\(#function)")
-    }
+        override func performBatchUpdates(_ updates: (() -> Void)?, completion: ((Bool) -> Void)? = nil) {
+            DDLogVerbose("Start performBatchUpdates")
+            super.performBatchUpdates(updates, completion: { val in
+                completion?(val)
+                DDLogVerbose("End performBatchUpdates")
+            })
+        }
     
-    override func performBatchUpdates(_ updates: (() -> Void)?, completion: ((Bool) -> Void)? = nil) {
-        DDLogNotice("Start performBatchUpdates")
-        super.performBatchUpdates(updates, completion: { val in
-            completion?(val)
-            DDLogNotice("End performBatchUpdates")
-        })
-    }
+        override func layoutSubviews() {
+            DDLogVerbose("Start \(#function)")
+            defer { DDLogVerbose("End \(#function)") }
+            super.layoutSubviews()
+        }
     
-    override func layoutSubviews() {
-        DDLogVerbose("Start \(#function)")
-        defer { DDLogVerbose("End \(#function)") }
+        override func setNeedsLayout() {
+            DDLogVerbose("\(#function)")
+            super.setNeedsLayout()
+        }
+    
+        override func scrollToRow(
+            at indexPath: IndexPath,
+            at scrollPosition: UITableView.ScrollPosition,
+            animated: Bool
+        ) {
+            DDLogVerbose("\(#function), IndexPath: \(indexPath)")
+            super.scrollToRow(at: indexPath, at: scrollPosition, animated: animated)
+        }
+    
+        override var contentSize: CGSize {
+            didSet {
+                DDLogVerbose("\(#function) \(contentSize)")
+                super.layoutSubviews()
+            }
+        }
+    
+        override var frame: CGRect {
+            didSet {
+                DDLogVerbose("\(#function) \(frame)")
+            }
+        }
+    
+        override func setContentOffset(_ contentOffset: CGPoint, animated: Bool) {
+            super.setContentOffset(contentOffset, animated: animated)
         
-        super.layoutSubviews()
-    }
-    
-    override func setNeedsLayout() {
-        DDLogVerbose("\(#function)")
-        super.setNeedsLayout()
-    }
-    
-    override func scrollToRow(at indexPath: IndexPath, at scrollPosition: UITableView.ScrollPosition, animated: Bool) {
-        DDLogVerbose("\(#function)")
-        super.scrollToRow(at: indexPath, at: scrollPosition, animated: animated)
-    }
-    
-    override var contentSize: CGSize {
-        didSet {
-            DDLogVerbose("\(#function) \(contentSize)")
+            DDLogVerbose("\(#function) contentOffset \(contentOffset) animated \(animated)")
         }
-    }
     
-    override var contentInset: UIEdgeInsets {
-        didSet {
-            DDLogVerbose("\(#function) \(contentInset)")
+        override var contentInset: UIEdgeInsets {
+            didSet {
+                DDLogVerbose("\(#function) \(contentInset)")
+            }
         }
-    }
     
-    override var contentOffset: CGPoint {
-        didSet {
-            DDLogVerbose("\(#function) \(contentOffset)")
+        override var contentOffset: CGPoint {
+            didSet {
+                DDLogVerbose("\(#function) \(contentOffset)")
+            }
         }
-    }
     
-    override func safeAreaInsetsDidChange() {
-        DDLogVerbose("\(#function) \(safeAreaInsets)")
-    }
-    
-    override var bounds: CGRect {
-        didSet {
-            DDLogVerbose("\(#function) \(bounds)")
+        override func safeAreaInsetsDidChange() {
+            DDLogVerbose("\(#function) \(safeAreaInsets)")
         }
-    }
     
-    override var frame: CGRect {
-        didSet {
-            DDLogVerbose("\(#function) \(frame)")
+        override var bounds: CGRect {
+            didSet {
+                DDLogVerbose("\(#function) \(bounds), oldValue: \(oldValue)")
+            }
         }
-    }
+    #endif
 }

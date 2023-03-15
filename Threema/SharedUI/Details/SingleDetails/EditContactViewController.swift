@@ -58,7 +58,7 @@ final class EditContactViewController: ThemedCodeModernGroupedTableViewControlle
         return editNameCell
     }
     
-    private let contact: Contact
+    private let contact: ContactEntity
     
     private var avatarImageData: Data?
     private let avatarImageIsEditable: Bool
@@ -118,7 +118,7 @@ final class EditContactViewController: ThemedCodeModernGroupedTableViewControlle
     
     /// Create a new edit contact view controller to present modally embedded in a navigation controller
     /// - Parameter contact: Contact to be edited
-    init(for contact: Contact) {
+    init(for contact: ContactEntity) {
         assert(contact.cnContactID == nil, "Only use with a contact that is not linked to a system contact")
         
         self.contact = contact

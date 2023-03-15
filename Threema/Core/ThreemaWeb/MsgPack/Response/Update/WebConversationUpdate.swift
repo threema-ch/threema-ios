@@ -85,7 +85,7 @@ class WebConversationUpdate: WebAbstractMessage {
         )
     }
     
-    init(conversation: Conversation, contact: Contact?, objectMode: ObjectMode) {
+    init(conversation: Conversation, contact: ContactEntity?, objectMode: ObjectMode) {
         self.mode = objectMode.rawValue
         
         let webConversation = WebConversation(deletedConversation: conversation, contact: contact)

@@ -44,8 +44,8 @@ class ChatProfileViewTests: XCTestCase {
     
     // MARK: - Chats
     
-    private func createConversation() -> (Contact, Conversation) {
-        var contact: Contact!
+    private func createConversation() -> (ContactEntity, Conversation) {
+        var contact: ContactEntity!
         var conversation: Conversation!
         
         let databasePreparer = DatabasePreparer(context: managedObjectContext)
@@ -123,7 +123,7 @@ class ChatProfileViewTests: XCTestCase {
         let memberNames = ["MEMBER01", "MEMBER02", "MEMBER03"]
         let databasePreparer = DatabasePreparer(context: managedObjectContext)
 
-        let members = memberNames.map { name -> Contact in
+        let members = memberNames.map { name -> ContactEntity in
             databasePreparer.createContact(publicKey: Data([1]), identity: name, verificationLevel: 1)
         }
         

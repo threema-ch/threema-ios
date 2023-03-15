@@ -28,7 +28,7 @@ import Foundation
         if let conversation = object as? Conversation {
             delete(conversation)
         }
-        else if let contact = object as? Contact {
+        else if let contact = object as? ContactEntity {
             delete(contact)
         }
         else if let message = object as? BaseMessage {
@@ -49,7 +49,7 @@ import Foundation
         super.delete(conversation)
     }
     
-    private func delete(_ contact: Contact) {
+    private func delete(_ contact: ContactEntity) {
         if let conversationsObjects = contact.conversations {
             if let conversations = conversationsObjects as? Set<Conversation> {
                 guard verifyNoLeftOverMessages(in: conversations) else {
@@ -93,7 +93,10 @@ import Foundation
     ///  Will crash if the fetch request for messages fails
     /// - Parameter conversation: the conversation to verify
     /// - Returns: true if no messages were found, false if messages were found
-    private func verifyNoLeftOverMessages(in conversations: Set<Conversation>, from contact: Contact? = nil) -> Bool {
+    private func verifyNoLeftOverMessages(
+        in conversations: Set<Conversation>,
+        from contact: ContactEntity? = nil
+    ) -> Bool {
         let fetchMessages = NSFetchRequest<NSFetchRequestResult>(entityName: "Message")
         if let contact = contact {
             fetchMessages.predicate = NSPredicate(format: "conversation IN %@ && sender = %@", conversations, contact)

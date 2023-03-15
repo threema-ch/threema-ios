@@ -52,7 +52,7 @@ class ConversationExporter: NSObject, PasswordCallback {
     ///   - entityManager: the entityManager used for querying the db
     ///   - contact: The contact for which the chat is exported
     ///   - withMedia: Whether media should be included or not
-    init(password: String, entityManager: EntityManager, contact: Contact?, withMedia: Bool) {
+    init(password: String, entityManager: EntityManager, contact: ContactEntity?, withMedia: Bool) {
         self.password = password
         self.conversation = entityManager.entityFetcher.conversation(for: contact)
         self.entityManager = entityManager
@@ -65,7 +65,12 @@ class ConversationExporter: NSObject, PasswordCallback {
     ///   - contact: Will export the conversation for this contact
     ///   - entityManager: Will query the associated db
     ///   - withMedia: Whether media should be exported
-    @objc init(viewController: UIViewController, contact: Contact, entityManager: EntityManager, withMedia: Bool) {
+    @objc init(
+        viewController: UIViewController,
+        contact: ContactEntity,
+        entityManager: EntityManager,
+        withMedia: Bool
+    ) {
         self.viewController = viewController
         self.conversation = entityManager.entityFetcher.conversation(for: contact)
         self.entityManager = entityManager

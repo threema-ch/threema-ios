@@ -11,8 +11,7 @@
 
 /* Tabbar and title for list with all conversations */
 "chats_title" = "Sohbetler";
-
-"use_dynamic_font_size" = "Sistem yazı tipi boyutu";
+"chats_pinned" = "Sabitlendi";
 
 "SortOrder_Firstname" = "İsim, Soyisim";
 "SortOrder_Lastname" = "Soyisim, İsim";
@@ -68,6 +67,7 @@
 "delete_identity" = "Verileri ve kimliği sil";
 "copy" = "Kopyala";
 "save" = "Kaydet";
+"download" = "İndir";
 "share" = "Paylaş";
 "details" = "Detaylar";
 "acknowledge" = "Katılıyorum";
@@ -103,7 +103,7 @@
 "threema_id" = "Threema kimliği";
 "nickname" = "Takma isim";
 "add_button" = "Ekle";
-"chatview_contextmenu_more" = "Daha...";
+"chatview_contextmenu_select" = "Seç…";
 
 "file_message_image" = "Resim";
 "file_message_sticker" = "Çıkartma";
@@ -184,11 +184,7 @@
 "sound_threema_alphorn" = "Avcı borusu";
 
 "reset_wallpaper" = "Duvar kağıdını sıfırla";
-"font_size_title" = "Yazı boyutu";
-"font_size" = "%d nokta";
 "bigger_single_emojis" = "Daha büyük tek emojiler";
-"received_message_time" = "Mesajın alındığı zaman";
-"return_key_send" = "Return tuşu = Gönder";
 "identity_none" = "hiçbiri";
 "message" = "Mesaj"; /* Short version for "Send Message" */
 "scan_identity" = "Kimlik tara";
@@ -202,8 +198,6 @@
 "block_contact" = "Kişiyi engelle";
 "profile_picture_recipient" = "Profil resmi alıcısı";
 
-"no_contacts_access_title" = "Kişilere erişim yok";
-"no_contacts_access_message" = "Lütfen Ayarlar’ı açın ve Kişiler'e erişim izni verin.";
 "no_linked_contact_access_title" = "Bağlı kişiye erişim yok";
 "no_linked_contact_access_message" = "Lütfen Ayarlar'ı açın ve bağlı kişiyi görmek için Kişiler'e erişim izni verin veya kişinin bağlantısını kalıcı olarak kaldırın.";
 "no_linked_contact_access_edit_message" = "Lütfen Ayarlar'ı açın ve bağlı kişiyi düzenlemek için Kişiler'e erişim izin verin veya düzenlemek için kişinin bağlantısını kalıcı olarak kaldırın.";
@@ -224,8 +218,6 @@
 "[no access]" = "[Erişim yok]";
 "[not found]" = "[Bulunamadı]";
 "[restricted]" = "[Kısıtlı]";
-
-"go_to_settings" = "Ayarlar’a git";
 
 /* This shows the number of groups in parentheses */
 "groups_header" = "Gruplar (%lu)";
@@ -356,18 +348,8 @@
 "speed" = "Oynatma hızı";
 
 "send_file_title" = "Dosya gönder";
-"camera_disabled_title" = "Erişim reddedildi";
 "send_file_message" = "Dosya: %@\n-e/-a\n%@";
-
 "quote_not_found" = "Alıntılanan mesaj bulunamadı.";
-
-"camera_disabled_message" = "%@ kameranıza erişemiyor. Lütfen Ayarlar > Gizlilik > Kamera'ya erişim izni verin.";
-
-"location_disabled_title" = "Konuma erişim yok";
-"location_disabled_message" =  "Lütfen Ayarlar > Gizlilik > Konum'a erişim izni verin.";
-
-"microphone_disabled_title" = "Mikrofona erişim yok";
-"microphone_disabled_message" = "%@ mikrofona erişimi yok. Lütfen Ayarlar > Gizlilik > Mikrofon'a erişim izni verin.";
 
 "include_media" = "Medyayı dahil et";
 "without_media" = "Medyasız";
@@ -416,7 +398,7 @@
 "create_note_group_info_text" = "Herhangi bir grup üyesi eklemezseniz, bu gruba gönderilen mesajlar yerel olarak kalacaktır. Bu, notları, medyayı ve belgeleri güvenli bir şekilde depolamak veya öğeleri masaüstüne aktarmak için idealdir.";
 "remind_me_next_time" = "Bir dahaki sefere bana hatırlat";
 "doNotShowAgain" = "Tekrar gösterme";
-"add_note_group_info" = "* Burada yalnızsınız *\nBu sohbeti metin, medya ve belgeler için güvenli bir not defteri olarak kullanın.";
+"add_note_group_info" = "*Burada yalnızsınız*\nBu sohbeti metin, medya ve belgeler için güvenli bir not defteri olarak kullanın.";
 "end_note_group_info" = "* Artık bu sohbette yalnız değilsiniz *\nTüm grup üyelerine yeni mesajlar gönderilecektir.";
 
 "chat_search_searching" = "Aranıyor...";
@@ -463,8 +445,6 @@
 "invalid_country_code_message" = "Cihazınızdaki bölge biçimi geçersiz bir değere ayarlanmış gibi görünüyor. Telefon numarası eşleşmesiyle ilgili sorunları önlemek için lütfen Ayarlar uygulamasını açın, Genel > Uluslararası'ya gidin ve tekrar bir bölge biçimi seçin.";
 
 /* Settings */
-"block_unknown_on" = "Yalnızca adres listenizdeki kişiler size mesaj gönderebilir.";
-"block_unknown_off" = "Herhangi biri size mesaj gönderebilir. Yeni kişiler, ilk mesajları geldiğinde otomatik olarak eklenecektir.";
 "show_stale_contacts_on" = "Etkin olmayan Threema kimlikleri (örneğin, en az üç aydır kullanılmayan kimlikler) ve iptal edilen kimlikler gizlenir.";
 "show_stale_contacts_off" = "Tüm Threema kimlikleri rehberde listelenir.";
 "hide_voip_call_ip_off" = "Mümkünse doğrudan bir bağlantı kurun ve aramaları yalnızca Threema sunucuları aracılığıyla doğrulanmamış kişilere aktarın. IP adresinizi açığa çıkarabilir.";
@@ -508,9 +488,7 @@
 "no_work_contacts" = "%@ kullanıcı";
 "no_work_contacts_message" = "Yönetici tarafından doğrulanmış %@ kişi bulunamadı.";
 
-"no_contacts_permission_title" = "Kişilere erişim izni yok";
 "no_contacts_syncoff" = "Henüz hiç kişiniz yok. Eşitlemeyi açın (Ayarlar > Gizlilik) veya + düğmesini kullanarak kişileri manuel olarak ekleyin.";
-"no_contacts_permission_message" = "%@ kişilerinize erişim iznine sahip değil. Lütfen cihazınızın gizlilik ayarlarına gidin ve kişilere erişim izni verin.";
 
 "my_profile_picture_title" = "Profil resminiz";
 "release_profilepicture_to" = "Profil resmini gönder";
@@ -691,6 +669,7 @@
 "group_member_self_removed" = "Gruptan çıkarıldınız.";
 "group_member_self_left" = "Gruptan ayrıldınız.";
 "group_member_creator_left" = "*Bu grup yöneticisiz kaldı*\nGrubu kuran kişi gruptan ayrıldı ve artık grup sürdürülemez. Kalan üyelerden biri, yeni yönetici olmak için grubu kopyalamalıdır (grup ayrıntıları üzerinden).";
+"system_message_group_avatar_changed" = "Grup resmi değiştirildi";
 
 /* accessibility labels */
 "send_media_or_location" = "Medya veya konum gönder";
@@ -726,10 +705,6 @@
 "threema_channel_failed" = "Threema kanalı eklenemiyor.";
 
 /* Push decryption */
-"decryption_push_title" = "Anlık bildirimlerde mesaj içeriğinin bir önizlemesini görmek ister misiniz?";
-"decryption_push_text" = "Önizlemeler devre dışı bırakılmışsa, yeni mesajların içeriğini görmek için %@ açmanız gerekir.";
-"decryption_push_activate" = "Önizlemeyi etkinleştir";
-"decryption_push_deactivate" = "Önizlemeyi devre dışı bırak";
 "decryption_push_reply" = "Cevap ver";
 "decryption_push_placeholder" = "Cevap ver...";
 "decryption_push_agree" = "Katılıyorum";
@@ -780,11 +755,10 @@
 "call_reject" = "Reddet";
 "call_hide_call" = "Aramayı gizle";
 "call_no_wifi" = "Hücresel ağ üzerinden ara. Daha fazla bilgi edinin...";
+"call_mic_access" = "Mikrofon erişimi yok.";
 
 "call_voip_not_supported_title" = "Threema aramaları";
 "call_voip_not_supported_text" = "Kişiniz Threema aramalarını desteklemiyor";
-"call_microphone_permission_title" = "Mikrofon erişimi reddedildi";
-"call_microphone_permission_text" = "Ayarlar'dan mikrofona erişim izni vermelisiniz";
 "call_contact_alert" = "%@ aransın mı?";
 "call_contact_not_reachable" = "Ulaşılamıyor...";
 "already_in_call" = "Bir seferde yalnızca bir aktif arama olabilir.";
@@ -848,8 +822,6 @@
 "privateChat_set_alert_title" = "Bu sohbeti özel olarak işaretlemek istiyor musunuz?";
 "privateChat_set_alert_message" = "Gizlilik ayarlarında özel sohbetlerin görünürlüğünü değiştirebilirsiniz.";
 "privateChat_setup_alert_message" = "Threema Safe yedeklemeniz özel sohbetler içeriyordu, bunlara erişmek için bir parola belirlemeniz gerekir.";
-"hide_private_toggle" = "Özel sohbetleri gizle";
-"privacy_footer" = "Sohbetlere genel bakışta tüm özel sohbetleri gizler. Bu ayarı etkinleştirmek için bir şifre belirlemeniz gerekir.";
 
 "group_leave_sheet_title" = "“%@\" çıkılsın mı?";
 "group_leave_sheet_message" = "Ayrılırsanız, artık sohbete katılamazsınız, ancak yine de sohbet geçmişine erişebilir ve sohbet geçmişini görebilirsiniz.";
@@ -1070,6 +1042,7 @@ Threema Safe'i kullanırken, cihazınıza erişiminizi kaybetmeniz durumunda Thr
 "delete_messages_confirm" = "%@ eski tüm mesajları kalıcı olarak silmek istiyor musunuz?";
 "delete_messages_confirm_all" = "Tüm mesajları kalıcı olarak silmek istiyor musunuz?";
 "delete_messages_explain" = "Her türlü mesaj silinecektir: metin ve sesli mesajlar, medya, dosyalar, anketler, vb.";
+"delete_in_progress" = "Siliniyor ...";
 "one_year_title" = "1 yıl";
 "one_year" = "1 yıl";
 "six_months_title" = "6 ay";
@@ -1115,7 +1088,6 @@ Threema Safe'i kullanırken, cihazınıza erişiminizi kaybetmeniz durumunda Thr
 "settings_advanced" = "Gelişmiş";
 "settings_threema_work" = "Threema İş";
 "settings_feedback" = "Beta geri bildirimi";
-"settings_dev_mode" = "Geliştirici modu";
 "tos_cell_title" = "Kullanım şartları";
 
 "settings_advanced_flush_message_queue" = "Mesaj sırasını temizle";
@@ -1124,11 +1096,32 @@ Threema Safe'i kullanırken, cihazınıza erişiminizi kaybetmeniz durumunda Thr
 "settings_advanced_reregister_push_notifications_footer_title" = "Gelen mesajlar uygulama dışında bildirim olarak görünmüyorsa, bildirimler için yeniden kaydolabilirsiniz.";
 "settings_advanced_reregister_notifications_label" = "Anlık Bildirimleri Yeniden Kaydet";
 
-// Dev Mode
-"settings_devmode_quote_v2" = "Alıntı V2";
-"settings_devmode_new_chat_view" = "Yeni sohbet görünümü";
-"settings_devmode_stylekit_debug_view" = "StyleKit hata ayıklama görünümü";
-"settings_devmode_id_colors_debug_view" = "Kimlik Renkleri Hata Ayıklama Görünümü";
+"settings_md_sync_alert_title" = "Senkronizasyon başarısız oldu";
+
+// Privacy
+"settings_privacy_contacts_header" = "Kişiler";
+"settings_privacy_sync_contacts" = "Kişileri Senkronize Et";
+"settings_privacy_exclusion_list" = "Hariç Listesi";
+"settings_privacy_exclusion_list_alert_title" = "Kimlik çok kısa";
+"settings_privacy_exclusion_list_alert_message" = "Lütfen tam olarak 8 karakter uzunluğunda bir kimlik girin.";
+"settings_privacy_block_unknown" = "Bilinmeyeni Engelle";
+"settings_privacy_block_unknown_footer_on"= "Yalnızca adres defterinizdeki kişiler size mesaj gönderebilir.";
+"settings_privacy_block_unknown_foooter_off" = "Herkes size mesaj gönderebilir. İlk mesajları geldiğinde yeni kişiler otomatik olarak eklenecektir.";
+
+"settings_privacy_chat_header" = "Sohbet";
+"settings_privacy_read_receipts" = "Okundu Bilgisi";
+"settings_privacy_typing_indicator" = "Yazma Göstergesi";
+
+"settings_privacy_TIRR_reset_all" = "Tüm Kişiler için Sıfırla";
+"settings_privacy_TIRR_reset_footer" = "Tüm kişileri varsayılan ayara sıfırlar.";
+"settings_privacy_TIRR_reset_alert_title" = "Sıfırla";
+"settings_privacy_TIRR_reset_alert_message" = "Tüm kişileri varsayılan ayara sıfırlar. İşlem geri alınamaz.";
+"settings_privacy_TIRR_reset_alert_action" = "Hepsini Sıfırla";
+
+"settings_privacy_choose_poi" = "İÇN seç";
+"settings_privacy_hide_private_chats" = "Özel Sohbetleri Gizle";
+"settings_privacy_hide_private_chats_footer" = "Sohbetlere genel bakışta tüm özel sohbetleri gizler. Bu ayarı etkinleştirmek için bir şifre belirlemeniz gerekir.";
+
 
 // Appearance
 "settings_appearance_theme_section" = "Tasarım teması";
@@ -1339,12 +1332,6 @@ Artık dosyaları çöp kutusuna taşıyın ve %@ içinde hiçbir (medya) dosyas
 "readReceipt_sheetMessage" = "Bu kişi için varsayılan ayarı geçersiz kıl.";
 "typingIndicator_sheetMessage" = "Bu kişi için varsayılan ayarı geçersiz kıl.";
 
-"reset_overrides" = "Tüm kişiler için sıfırla";
-"resetButton_footer" = "Tüm kişiler için varsayılan ayara sıfırlayın.";
-"reset_overrides_alert_title" = "Sıfırla";
-"reset_overrides_alert_message" = "Tüm kişileri varsayılan ayara sıfırlayın. İşlem geri alınamaz.";
-"reset_overrides_alert_action" = "Hepsini sıfırla";
-
 /* Multi Decvice */
 "multi_device_linked_devices_title" = "Çoklu Cihaz Önizlemesi";
 "multi_device_linked_devices_desc" = "Bu cihaz için Çoklu Cihaz Önizlemesini etkinleştirin veya devre dışı bırakın.";
@@ -1378,14 +1365,11 @@ Artık dosyaları çöp kutusuna taşıyın ve %@ içinde hiçbir (medya) dosyas
 // POI
 "poi_unavailable" = "Kullanım dışı";
 "poi_not_marked" = "–";
-"poi_location_disabled_action" = "Ayarları aç";
 "poi_search_POI" = "Şehirler ve sokaklar";
 "poi_search_prefix" = "%@ çevresinde ara";
 "poi_away" = "%@ uzakta";
 "poi_dropped_pin_info_alert_title" = "Bırakılan iğne";
 "poi_dropped_pin_info_alert_message" = "Bir iğne bırakmak için harita üzerinde basılı tutun.";
-"poi_accuracy_info_alert_title" = "Kesin konuma erişim yok";
-"poi_accuracy_info_alert_message" = "Lütfen Ayarlar'ı açın ve tam konuma erişim izni verin.";
 "poi_current_location" = "Konumum";
 "poi_marked_location" = "Bırakılan iğne";
 
@@ -1427,6 +1411,18 @@ Artık dosyaları çöp kutusuna taşıyın ve %@ içinde hiçbir (medya) dosyas
 "detailView_messageID" = "Mesaj Kimliği";
 "detailView_group_acknowledged" = "Kabul Edildi (%d)";
 "detailView_group_declined" = "Kabul Edilmedi (%d)";
+"detailView_group_file_size" = "Dosya Boyutu";
+"detailView_created_footer" = "Oluşturuldu: %@";
+
+"message_display_status_none" = "Hiçbiri";
+"message_display_status_user_acknowledged" = "Kabul";
+"message_display_status_user_declined" = "Ret";
+"message_display_status_sending" = "Gönderilen";
+"message_display_status_sent" = "Gönderildi";
+"message_display_status_delivered" = "Teslim edildi";
+"message_display_status_delivered_incoming" = "Teslim alındı";
+"message_display_status_read" = "Okundu";
+"message_display_status_failed" = "Başarısız";
 
 // In-app notifications
 "notification_copying_succeeded" = "Öğe Kopyalandı";
@@ -1435,7 +1431,11 @@ Artık dosyaları çöp kutusuna taşıyın ve %@ içinde hiçbir (medya) dosyas
 "notification_saving_succeeded" = "Öğe Kaydedildi";
 "notification_saving_failed" = "Kaydetme Başarısız";
 
+"notification_saving_to_photos_succeeded" = "Fotoğraflara Eklendi";
+"notification_saving_to_photos_failed" = "Fotoğraflara Ekleme Başarısız";
+
 "notification_sending_failed" = "Gönderme Başarısız";
+"notification_sending_failed_subtitle_size" = "Öğe çok büyük";
 
 "notification_deleted_messages_count" = "%d Mesaj Silindi";
 
@@ -1444,6 +1444,7 @@ Artık dosyaları çöp kutusuna taşıyın ve %@ içinde hiçbir (medya) dosyas
 "notification_call_failed_connected" = "Bağlantı Koptu";
 "notification_call_failed_not_connected" = "Bağlantı Kurulamadı";
 "notification_call_creation_failed" = "Arama Oluşturulamadı";
+"notification_call_creation_disabled" = "Aramalar Devre Dışı Bırakıldı";
 
 "notification_sending_profile_picture_succeeded" = "Profil Resmi Gönderildi";
 "notification_sending_profile_picture_failed" = "Gönderme Başarısız";
@@ -1452,6 +1453,9 @@ Artık dosyaları çöp kutusuna taşıyın ve %@ içinde hiçbir (medya) dosyas
 
 "notification_group_sync_succeeded" = "Grup Senkronize Edildi";
 "notification_group_sync_failed" = "Grup Senkronizasyonu Başarısız";
+
+"notification_settings_sync_pending" = "Senkronize ediliyor…";
+"notification_settings_sync_succeeded" = "Ayarlar senkronize edildi";
 
 // Forward security status messages
 "forward_security_message_without" = "Kusursuz İletme Gizliliği olmayan bir mesaj alındı.  Gönderenin Kusursuz İletme Gizliliğini kasıtlı olarak devre dışı bıraktığını doğrulayın.";
@@ -1472,7 +1476,6 @@ Artık dosyaları çöp kutusuna taşıyın ve %@ içinde hiçbir (medya) dosyas
 // Chat bar
 "accessibility_chatbar_label" = "Sohbet giriş alanı.";
 "accessibility_chatbar_hint" = "Mesaj oluştur.";
-"accessibility_chatbar_value" = "Geçerli metin: %@";
 "accessibility_chatbar_quote_label" = "Seçili alıntılanmış mesaj: %@.";
 "accessibility_chatbar_close_quote_button_label" = "Alıntılamayı bitir.";
 "accessibility_chatbar_close_quote_button_hint" = "Seçilen mesajın alıntılanmasını sonlandırır.";
@@ -1522,6 +1525,11 @@ Artık dosyaları çöp kutusuna taşıyın ve %@ içinde hiçbir (medya) dosyas
 "accessibility_status_delivered_plus_time" = "Teslim edildi, %@";
 "accessibility_status_read_plus_time" = "Okundu, %@";
 "accessibility_status_failed_plus_time" = "Başarısız oldu, %@";
+
+// UIAccessibilityCustomActions
+"accessibility_action_open_link" = "%@ aç";
+"accessibility_action_call_phone" = "%@ ara";
+"accessibility_action_open_mention" = "%@ kişisini göster";
 
 // Multi-Device Wizard
 "md_wizard_header" = "Çoklu Cihaz Önizlemesi";
@@ -1580,3 +1588,18 @@ Artık dosyaları çöp kutusuna taşıyın ve %@ içinde hiçbir (medya) dosyas
 
 // SystemMessage
 "systemMessage_unsupported_type" = "Desteklenmeyen sistem mesajı türü";
+
+// Alerts
+"alert_no_access_title_camera" = "Kameraya Erişim Yok";
+"alert_no_access_title_contacts" = "Kişilere Erişim Yok";
+"alert_no_access_title_location" = "Konuma Erişim Yok";
+"alert_no_access_title_location_precise" = "Tam Konuma Erişim Yok";
+"alert_no_access_title_microphone" = "Mikrofona Erişim Yok";
+
+"alert_no_access_message_camera" = "iOS Ayarlarını açın ve Kamera erişimine izin verin.";
+"alert_no_access_message_contacts" = "iOS Ayarlarını açın ve Kişiler erişimine izin verin.";
+"alert_no_access_message_location" = "iOS Ayarlarını açın ve Konum erişimine izin verin.";
+"alert_no_access_message_location_precise" = "iOS Ayarlarını açın ve Konum'da Tam Konum erişimine izin verin.";
+"alert_no_access_message_microphone" = "iOS Ayarlarını açın ve Mikrofon erişimine izin verin.";
+
+"alert_no_access_open_settings" = "Ayarları Aç";

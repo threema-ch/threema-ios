@@ -19,6 +19,8 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import CocoaLumberjackSwift
+import Combine
+import MBProgressHUD
 import PromiseKit
 import ThreemaFramework
 
@@ -35,7 +37,7 @@ final class SingleDetailsDataSource: UITableViewDiffableDataSource<SingleDetails
     
     private let state: SingleDetails.State
     
-    private let contact: Contact
+    private let contact: ContactEntity
     
     private weak var singleDetailsViewController: SingleDetailsViewController?
     private weak var tableView: UITableView?
@@ -44,10 +46,18 @@ final class SingleDetailsDataSource: UITableViewDiffableDataSource<SingleDetails
     private lazy var entityManager = EntityManager()
     private lazy var groupManager = GroupManager()
     
+    var settingsStore = BusinessInjector().settingsStore as! SettingsStore
+    private var cancellables = Set<AnyCancellable>()
+    
     private lazy var photoBrowserWrapper: MWPhotoBrowserWrapper? = {
         if case let .conversationDetails(contact: _, conversation: conversation) = state,
            let viewController = singleDetailsViewController {
-            return MWPhotoBrowserWrapper(for: conversation, in: viewController, entityManager: self.entityManager)
+            return MWPhotoBrowserWrapper(
+                for: conversation,
+                in: viewController,
+                entityManager: self.entityManager,
+                delegate: self
+            )
         }
         return nil
     }()
@@ -79,6 +89,23 @@ final class SingleDetailsDataSource: UITableViewDiffableDataSource<SingleDetails
         }
         
         super.init(tableView: tableView, cellProvider: cellProvider)
+
+        settingsStore.$syncFailed.sink { [weak self] syncFailed in
+            guard let strongSelf = self
+            else {
+                return
+            }
+            
+            if syncFailed {
+                strongSelf.refresh(sections: [.contactActions])
+            }
+            
+            NotificationCenter.default.post(
+                name: NSNotification.Name(rawValue: kNotificationBlockedContact),
+                object: strongSelf.contact.identity
+            )
+        }
+        .store(in: &cancellables)
     }
     
     @available(*, unavailable)
@@ -309,7 +336,11 @@ extension SingleDetailsDataSource {
         let localizesMessageTitle = BundleUtil.localizedString(forKey: "message")
         
         var contactDetailsQuickActions = [
-            QuickAction(imageName: "threema.bubble.fill", title: localizesMessageTitle) { [weak self] _ in
+            QuickAction(
+                imageName: "threema.bubble.fill",
+                title: localizesMessageTitle,
+                accessibilityIdentifier: "SingleDetailsDataSourceMessageQuickActionButton"
+            ) { [weak self] _ in
                 guard let strongSelf = self else {
                     return
                 }
@@ -358,7 +389,8 @@ extension SingleDetailsDataSource {
         
         return QuickAction(
             imageNameProvider: dndImageNameProvider,
-            title: BundleUtil.localizedString(forKey: "doNotDisturb_title")
+            title: BundleUtil.localizedString(forKey: "doNotDisturb_title"),
+            accessibilityIdentifier: "SingleDetailsDataSourceDndQuickActionButton"
         ) { [weak self, weak viewController] quickAction in
             guard let strongSelf = self,
                   let strongViewController = viewController
@@ -392,7 +424,8 @@ extension SingleDetailsDataSource {
         
         let quickAction = QuickAction(
             imageName: "magnifyingglass",
-            title: BundleUtil.localizedString(forKey: "search")
+            title: BundleUtil.localizedString(forKey: "search"),
+            accessibilityIdentifier: "SingleDetailsDataSourceSearchQuickActionButton"
         ) { [weak singleDetailsViewController] _ in
             singleDetailsViewController?.startChatSearch()
         }
@@ -411,14 +444,15 @@ extension SingleDetailsDataSource {
         // feature mask) instead of checking when the action is actually triggered?
         let quickAction = QuickAction(
             imageName: "threema.phone.fill",
-            title: BundleUtil.localizedString(forKey: "call")
+            title: BundleUtil.localizedString(forKey: "call"),
+            accessibilityIdentifier: "SingleDetailsDataSourceCallQuickActionButton"
         ) { [weak self, weak viewController] _ in
             guard let strongSelf = self else {
                 return
             }
             
             // Check feature mask
-            let contactSet = Set<Contact>([strongSelf.contact])
+            let contactSet = Set<ContactEntity>([strongSelf.contact])
             FeatureMask
                 .check(
                     Int(FEATURE_MASK_VOIP),
@@ -464,7 +498,8 @@ extension SingleDetailsDataSource {
         
         let quickAction = QuickAction(
             imageName: "qrcode.viewfinder",
-            title: BundleUtil.localizedString(forKey: "scan")
+            title: BundleUtil.localizedString(forKey: "scan"),
+            accessibilityIdentifier: "SingleDetailsDataSourceScanQuickActionButton"
         ) { [weak self, weak viewController] quickAction in
             guard let strongSelf = self,
                   let strongViewController = viewController
@@ -529,7 +564,8 @@ extension SingleDetailsDataSource {
         
         return QuickAction(
             imageName: "photo.fill.on.rectangle.fill",
-            title: localizedMediaString
+            title: localizedMediaString,
+            accessibilityIdentifier: "SingleDetailsDataSourceMediaQuickActionButton"
         ) { _ in
             guard let photoBrowser = self.photoBrowserWrapper else {
                 return
@@ -547,7 +583,8 @@ extension SingleDetailsDataSource {
         
         return [QuickAction(
             imageName: "chart.pie.fill",
-            title: localizedBallotsString
+            title: localizedBallotsString,
+            accessibilityIdentifier: "SingleDetailsDataSourceBallotQuickActionButton"
         ) { [weak conversation, weak viewController] _ in
             guard let weakViewController = viewController else {
                 return
@@ -655,10 +692,28 @@ extension SingleDetailsDataSource {
                     message: localizedMessage,
                     titleDestructive: localizedDelete,
                     actionDestructive: { _ in
-                        strongSelf.entityManager.performSyncBlockAndSafe {
+                        if let tableView = strongSelf.tableView {
+                            RunLoop.main.schedule {
+                                let hud = MBProgressHUD(view: tableView)
+                                hud.minShowTime = 1.0
+                                hud.label.text = BundleUtil.localizedString(forKey: "delete_in_progress")
+                                tableView.addSubview(hud)
+                                hud.show(animated: true)
+                            }
+                        }
+                        
+                        strongSingleDetailsViewController.willDeleteAllMessages()
+                        
+                        strongSelf.entityManager.performBlock {
                             _ = strongSelf.entityManager.entityDestroyer
                                 .deleteMessages(of: conversation)
                             strongSelf.reload(sections: [.contentActions])
+                            
+                            DispatchQueue.main.async {
+                                if let tableView = strongSelf.tableView {
+                                    MBProgressHUD.hide(for: tableView, animated: true)
+                                }
+                            }
                         }
                     }
                 )
@@ -974,19 +1029,17 @@ extension SingleDetailsDataSource {
             boolProvider: { [weak self] in
                 self?.contact.isBlocked ?? false
             }, action: { [weak self, weak singleDetailsViewController] isSet in
-                guard let strongSelf = self,
-                      let strongSingleDetailsViewController = singleDetailsViewController
+                guard let strongSelf = self
                 else {
                     return
                 }
                 
-                strongSelf.contact.block(isSet, in: strongSingleDetailsViewController)
-                    .catch { error in
-                        DDLogWarn("Unable to block contact: \(error.localizedDescription)")
-                        
-                        // Reset block state if we could not save the current state
-                        strongSelf.refresh(sections: [.contactActions])
-                    }
+                if isSet {
+                    strongSelf.settingsStore.blacklist.insert(strongSelf.contact.identity)
+                }
+                else {
+                    strongSelf.settingsStore.blacklist.remove(strongSelf.contact.identity)
+                }
             }
         )
         
@@ -1017,7 +1070,8 @@ extension SingleDetailsDataSource {
             destructive: false,
             disabled: !contact.isForwardSecurityAvailable(),
             boolProvider: { [weak self] in
-                self?.contact.forwardSecurityEnabled.boolValue ?? false
+                (self?.contact.forwardSecurityEnabled.boolValue ?? false) &&
+                    (self?.contact.isForwardSecurityAvailable() ?? false)
             }, action: { [weak self] isEnabled in
                 guard let strongSelf = self else {
                     return
@@ -1128,9 +1182,17 @@ extension SingleDetailsDataSource {
     }
 }
 
+// MARK: - MWPhotoBrowserWrapperDelegate
+
+extension SingleDetailsDataSource: MWPhotoBrowserWrapperDelegate {
+    func willDeleteMessages(with objectIDs: [NSManagedObjectID]) {
+        singleDetailsViewController?.willDeleteMessages(with: objectIDs)
+    }
+}
+
 // MARK: - Contact+ProfilePicture & Contact+block
 
-private extension Contact {
+private extension ContactEntity {
     var canBePickedAsProfilePictureRecipient: Bool {
         guard !(isEchoEcho() || isGatewayID()) else {
             return false
@@ -1168,35 +1230,6 @@ private extension Contact {
             }
             
             return elementID == identity
-        }
-    }
-    
-    func block(_ block: Bool, in viewController: UIViewController) -> Promise<Void> {
-        Promise { seal in
-            let settingsStore = SettingsStore()
-            var settings = settingsStore.settings
-            
-            if block {
-                settings.blacklist.insert(identity)
-            }
-            else {
-                settings.blacklist.remove(identity)
-            }
-            
-            let progressString = BundleUtil.localizedString(forKey: "syncing_settings")
-            let syncHelper = UISyncHelper(viewController: viewController, progressString: progressString)
-            
-            syncHelper.execute(settings: settings)
-                .done {
-                    NotificationCenter.default.post(
-                        name: NSNotification.Name(rawValue: kNotificationBlockedContact),
-                        object: self.identity
-                    )
-                    seal.fulfill_()
-                }
-                .catch { error in
-                    seal.reject(error)
-                }
         }
     }
 }

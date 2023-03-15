@@ -20,6 +20,7 @@
 
 import CocoaLumberjackSwift
 import Foundation
+import Photos
 
 // MARK: - FileMessageEntity + FileMessageProvider
 
@@ -70,14 +71,14 @@ extension FileMessageEntity: ImageMessage, StickerMessage {
         // Take the thumbnail if it exists as this is what we show
         if let height = thumbnail?.height.intValue,
            let width = thumbnail?.width.intValue,
-           width != 0 {
+           width > 0, height > 0 {
             return Double(height) / Double(width)
         }
         
         // Take the metadata if no thumbnail data is available
         if let height = height?.intValue,
            let width = width?.intValue,
-           width != 0 {
+           width > 0, height > 0 {
             return Double(height) / Double(width)
         }
         
@@ -99,7 +100,7 @@ extension FileMessageEntity: VideoMessage, VoiceMessage {
         return duration.doubleValue
     }
 
-    public var temporaryBlobDataURL: URL? {
+    public func temporaryBlobDataURL() -> URL? {
         guard let data = data?.data else {
             return nil
         }
@@ -117,22 +118,65 @@ extension FileMessageEntity: VideoMessage, VoiceMessage {
             return nil
         }
         
-        let filename = "v1-fileMessage-\(objectID.hashValue)".hashValue
+        let filename = "v1-fileMessage-\(UUID().uuidString)"
         guard let url = FileUtility.appTemporaryDirectory?.appendingPathComponent("\(filename).\(ext)") else {
             return nil
         }
         
-        if !FileUtility.isExists(fileURL: url) {
-            do {
-                try data.write(to: url)
-            }
-            catch {
-                DDLogWarn("Writing blob data to temporary file failed: \(error)")
-                return nil
-            }
+        do {
+            try data.write(to: url)
+        }
+        catch {
+            DDLogWarn("Writing blob data to temporary file failed: \(error)")
+            return nil
         }
         
         return url
+    }
+}
+
+// MARK: - FileMessageEntity + ThumbnailDisplayMessage
+
+extension FileMessageEntity: ThumbnailDisplayMessage {
+    
+    private var assetResourceType: PHAssetResourceType? {
+        switch fileMessageType {
+        case .image, .animatedImage, .sticker, .animatedSticker:
+            return .photo
+        case .video:
+            return .video
+        case .voice, .file:
+            return nil
+        }
+    }
+    
+    private var assetResourceTypeForAutosave: PHAssetResourceType? {
+        switch fileMessageType {
+        case .image, .animatedImage:
+            return .photo
+        case .video:
+            return .video
+        case .voice, .file, .sticker, .animatedSticker:
+            return nil
+        }
+    }
+    
+    public func createSaveMediaItem(forAutosave: Bool) -> AlbumManager.SaveMediaItem? {
+       
+        let type = forAutosave ? assetResourceTypeForAutosave : assetResourceType
+        
+        guard let url = temporaryBlobDataURL(),
+              let type else {
+            DDLogNotice(
+                "[ThumbnailDisplayMessage] SaveMediaItem creation failed, or type is not supported for auto-saving."
+            )
+            return nil
+        }
+        return AlbumManager.SaveMediaItem(
+            url: url,
+            type: type,
+            filename: readableFileName
+        )
     }
 }
 

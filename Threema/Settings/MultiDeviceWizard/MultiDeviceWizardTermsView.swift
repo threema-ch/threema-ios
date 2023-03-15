@@ -85,7 +85,7 @@ struct MultiDeviceWizardTermsView: View {
                     Text(BundleUtil.localizedString(forKey: "md_wizard_terms_accept"))
                         .font(.headline)
                 }
-                .tint(Color(Colors.primary))
+                .tint(Color(.primary))
                 .padding(.trailing)
                 
                 .onChange(of: didAcceptTerms) { newValue in

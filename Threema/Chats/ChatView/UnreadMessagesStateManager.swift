@@ -23,6 +23,11 @@ import Combine
 import Foundation
 import ThreemaFramework
 
+protocol UnreadMessagesStateManagerDelegate: AnyObject {
+    /// Should unread messages be marked as read?
+    var shouldMarkMessagesAsRead: Bool { get }
+}
+
 /// Manages the unread message state for a conversation in an instance of `ChatViewController`
 final class UnreadMessagesStateManager {
     private typealias Config = ChatViewConfiguration.UnreadMessageLine
@@ -49,15 +54,7 @@ final class UnreadMessagesStateManager {
     }
     
     /// True if the user is at the bottom of the `tableView` in ChatViewController
-    @Published var userIsAtBottomOfTableView = true {
-        didSet {
-            if userIsAtBottomOfTableView, !oldValue {
-                DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(Config.timeBeforeDisappear)) {
-                    self.resetState()
-                }
-            }
-        }
-    }
+    @Published var userIsAtBottomOfTableView = true
     
     // MARK: - Private Properties
 
@@ -65,6 +62,7 @@ final class UnreadMessagesStateManager {
     private let messageFetcher: MessageFetcher
     private let conversation: Conversation
     private let notificationManager: NotificationManagerProtocol
+    private weak var delegate: UnreadMessagesStateManagerDelegate?
     
     private lazy var unreadMessages = UnreadMessages(entityManager: entityManager)
     
@@ -93,17 +91,45 @@ final class UnreadMessagesStateManager {
         target: nil
     )
     
+    private var threadSafeDelegateShouldMarkMessagesAsRead: Bool {
+        var shouldMarkMessagesAsRead = false
+        
+        if Thread.isMainThread {
+            if ChatViewConfiguration.strictMode {
+                fatalError("Don't call this on the main thread or you will deadlock")
+            }
+            else {
+                resetState()
+                return false
+            }
+        }
+        
+        let dispatchGroup = DispatchGroup()
+        dispatchGroup.enter()
+        
+        DispatchQueue.main.async {
+            shouldMarkMessagesAsRead = self.delegate?.shouldMarkMessagesAsRead ?? false
+            dispatchGroup.leave()
+        }
+        
+        dispatchGroup.wait()
+        
+        return shouldMarkMessagesAsRead
+    }
+    
     // MARK: - Lifecycle
 
     init(
         conversation: Conversation,
         entityManager: EntityManager,
-        notificationManager: NotificationManagerProtocol = NotificationManager()
+        notificationManager: NotificationManagerProtocol = NotificationManager(),
+        unreadMessagesStateManagerDelegate: UnreadMessagesStateManagerDelegate
     ) {
         self.messageFetcher = MessageFetcher(for: conversation, with: entityManager)
         self.entityManager = entityManager
         self.conversation = conversation
         self.notificationManager = notificationManager
+        self.delegate = unreadMessagesStateManagerDelegate
         
         let dbState = currentUnreadDBState
         self.unreadMessagesState = UnreadMessagesState(
@@ -119,7 +145,7 @@ final class UnreadMessagesStateManager {
         let startTime = CFAbsoluteTimeGetCurrent()
         defer {
             let endTime = CFAbsoluteTimeGetCurrent()
-            DDLogNotice("Duration of \(#function) \(endTime - startTime) s")
+            DDLogVerbose("Duration of \(#function) \(endTime - startTime) s")
         }
         
         if Thread.isMainThread {
@@ -138,8 +164,8 @@ final class UnreadMessagesStateManager {
             dispatchGroup.leave()
         }
         
-        if dispatchGroup.wait(timeout: .now() + .seconds(5)) == .timedOut {
-            fatalError("Assume we are deadlocked, exit.")
+        if dispatchGroup.wait(timeout: .now() + .seconds(15)) == .timedOut {
+            DDLogError("\(#function) timed out even though it shouldn't. This is most likely an error.")
         }
     }
     
@@ -153,6 +179,8 @@ final class UnreadMessagesStateManager {
     func tick(willStayAtBottomOfView: Bool, isSetup: Bool = false) -> Promise<Void> {
         Promise { seal in
             updateQueue.async { [self] in
+                let shouldMarkAsRead = threadSafeDelegateShouldMarkMessagesAsRead
+                
                 let (unreadMessages, newestUnreadMessage) = self.currentUnreadDBState
                 
                 if !unreadMessages.isEmpty, newestUnreadMessage == nil {
@@ -177,38 +205,55 @@ final class UnreadMessagesStateManager {
                 
                 let newState: UnreadMessagesState
                 
+                let numberOfMessagesMarkedAsRead: Int
+                if shouldMarkAsRead {
+                    numberOfMessagesMarkedAsRead = markAsReadAndWait(unreadMessages)
+                }
+                else {
+                    numberOfMessagesMarkedAsRead = 0
+                }
+                
                 if willStayAtBottomOfView,
                    let unreadMessagesState = unreadMessagesState,
                    unreadMessagesState.numberOfUnreadMessages == 0,
                    unreadMessagesState.oldestConsecutiveUnreadMessage == nil {
                     
+                    DDLogVerbose("Keep at zero because it was zero before and we're at the bottom of the view")
                     newState = UnreadMessagesState(
                         oldestConsecutiveUnreadMessage: nil,
                         numberOfUnreadMessages: 0
                     )
                 }
-                else if firstRoundCompleted {
-                    // Regular case
+                else if !shouldMarkAsRead {
                     DDLogVerbose(
-                        "Setting unread count to \(previousCount) + \(unreadMessages.count) = \(previousCount + unreadMessages.count)"
+                        "Setting unread count to current CD unread state \(unreadMessages.count)"
                     )
                     newState = UnreadMessagesState(
                         oldestConsecutiveUnreadMessage: oldestConsecutiveUnreadMessage,
-                        numberOfUnreadMessages: previousCount + unreadMessages.count
+                        numberOfUnreadMessages: unreadMessages.count
+                    )
+                }
+                else if firstRoundCompleted {
+                    // Regular case
+                    DDLogVerbose(
+                        "Setting unread count to \(previousCount) + \(numberOfMessagesMarkedAsRead) = \(previousCount + numberOfMessagesMarkedAsRead)"
+                    )
+                    newState = UnreadMessagesState(
+                        oldestConsecutiveUnreadMessage: oldestConsecutiveUnreadMessage,
+                        numberOfUnreadMessages: previousCount + numberOfMessagesMarkedAsRead
                     )
                 }
                 else {
+                    DDLogVerbose("First run")
                     // The state is initialized with the current unread count when opening the chat
                     // without marking any messages as read for performance reasons.
                     // Thus we don't add the unread messages in the first iteration.
                     newState = UnreadMessagesState(
                         oldestConsecutiveUnreadMessage: oldestConsecutiveUnreadMessage,
-                        numberOfUnreadMessages: unreadMessages.count
+                        numberOfUnreadMessages: numberOfMessagesMarkedAsRead
                     )
                     firstRoundCompleted = true
                 }
-                
-                markAsReadAndWait(unreadMessages)
                 
                 maybeUpdate(to: newState)
                 
@@ -232,27 +277,40 @@ final class UnreadMessagesStateManager {
     
     // MARK: - Private Helper Functions
 
-    private func markAsReadAndWait(_ unreadMessages: [BaseMessage]) {
+    private func markAsReadAndWait(_ unreadMessages: [BaseMessage]) -> Int {
+        DDLogVerbose("\(#function)")
+        
         if Thread.isMainThread {
             if ChatViewConfiguration.strictMode {
                 fatalError("Don't call this on the main thread or you will deadlock")
             }
             else {
                 resetState()
-                return
+                return 0
             }
+        }
+        
+        var numberOfMessagesMarkedAsRead = 0
+        let shouldMarkMessagesAsRead = threadSafeDelegateShouldMarkMessagesAsRead
+
+        guard shouldMarkMessagesAsRead else {
+            return 0
         }
         
         let dispatchGroup = DispatchGroup()
         dispatchGroup.enter()
+        
         _ = ConversationActions(
             unreadMessages: UnreadMessages(entityManager: entityManager),
             entityManager: entityManager,
             notificationManager: notificationManager
         )
         .read(conversation.objectID, messages: unreadMessages)
-        .done {
-            DDLogVerbose("Marked \(unreadMessages.count) messages as read")
+        .done { markedAsRead in
+            DDLogError(
+                "Requested mark as read for  \(unreadMessages.count) messages and marked \(markedAsRead) messages as read"
+            )
+            numberOfMessagesMarkedAsRead = markedAsRead
         }
         .ensure {
             dispatchGroup.leave()
@@ -263,11 +321,15 @@ final class UnreadMessagesStateManager {
                 
             fatalError(msg)
         }
+        
         dispatchGroup.wait()
+        
+        return numberOfMessagesMarkedAsRead
     }
     
     @discardableResult
     private func maybeUpdate(to newState: UnreadMessagesState) -> Bool {
+        DDLogVerbose("\(#function)")
         if unreadMessagesState?.numberOfUnreadMessages != newState.numberOfUnreadMessages {
             unreadMessagesState = newState
             return true

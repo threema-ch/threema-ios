@@ -523,6 +523,26 @@ public class DateFormatter: NSObject {
         return webDateFormatter!.string(from: date)
     }
     
+    /// Date independent of locale, used when exporting media
+    ///
+    /// Example: 2020-01-02_13-14-15
+    ///
+    /// - Parameter date: Date to format
+    /// - Returns: Formatted date or empty string if `date` is nil
+    public static func getDateForExport(_ date: Date?) -> String {
+        guard let date = date else {
+            return ""
+        }
+        
+        if exportDateFormatter == nil {
+            exportDateFormatter = Foundation.DateFormatter()
+            exportDateFormatter?.locale = Locale(identifier: "en_US_POSIX")
+            exportDateFormatter?.dateFormat = "yyyy-MM-dd_HH-mm-ss"
+        }
+        
+        return exportDateFormatter!.string(from: date)
+    }
+    
     @objc
     public static func getNowDateString() -> String {
         if nowDateFormatter == nil {
@@ -617,6 +637,7 @@ public class DateFormatter: NSObject {
         accessibilityRelativeDateTimeDateFormatter = nil
         
         webDateFormatter = nil
+        exportDateFormatter = nil
         
         locale = Locale.current
     }
@@ -643,6 +664,7 @@ public class DateFormatter: NSObject {
     private static var accessibilityRelativeDateTimeDateFormatter: Foundation.DateFormatter?
     
     private static var webDateFormatter: Foundation.DateFormatter?
+    private static var exportDateFormatter: Foundation.DateFormatter?
     private static var nowDateFormatter: Foundation.DateFormatter?
     
     // MARK: - Private helper functions

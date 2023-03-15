@@ -112,8 +112,22 @@ public struct NotificationPresenterType {
         notificationStyle: .error
     )
     
+    public static let saveToPhotosSuccess = NotificationPresenterType(
+        notificationText: BundleUtil.localizedString(forKey: "notification_saving_to_photos_succeeded"),
+        notificationStyle: .success
+    )
+    public static let saveToPhotosError = NotificationPresenterType(
+        notificationText: BundleUtil.localizedString(forKey: "notification_saving_to_photos_failed"),
+        notificationStyle: .error
+    )
+    
     public static let sendingError = NotificationPresenterType(
         notificationText: BundleUtil.localizedString(forKey: "notification_sending_failed"),
+        notificationStyle: .error
+    )
+    
+    public static let sendingErrorSize = NotificationPresenterType(
+        notificationText: BundleUtil.localizedString(forKey: "notification_sending_failed_size"),
         notificationStyle: .error
     )
     
@@ -134,6 +148,10 @@ public struct NotificationPresenterType {
         notificationText: BundleUtil.localizedString(forKey: "notification_call_creation_failed"),
         notificationStyle: .error
     )
+    public static let callDisabledError = NotificationPresenterType(
+        notificationText: BundleUtil.localizedString(forKey: "notification_call_creation_disabled"),
+        notificationStyle: .error
+    )
     
     public static let profilePictureSentSuccess = NotificationPresenterType(
         notificationText: BundleUtil.localizedString(forKey: "notification_sending_profile_picture_succeeded"),
@@ -144,11 +162,16 @@ public struct NotificationPresenterType {
         notificationStyle: .error
     )
     
+    public static let settingsSyncPending = NotificationPresenterType(
+        notificationText: BundleUtil.localizedString(forKey: "notification_settings_sync_pending"),
+        notificationStyle: .none
+    )
+    
     public static let settingsSyncSuccess = NotificationPresenterType(
-        notificationText: BundleUtil.localizedString(forKey: "notification_settings_sync_message"),
+        notificationText: BundleUtil.localizedString(forKey: "notification_settings_sync_succeeded"),
         notificationStyle: .success
     )
-
+    
     public static let groupSyncSuccess = NotificationPresenterType(
         notificationText: BundleUtil.localizedString(forKey: "notification_group_sync_succeeded"),
         notificationStyle: .success

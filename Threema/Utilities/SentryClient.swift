@@ -142,12 +142,30 @@ import Sentry
         ]
         
         var linesArray = exceptionDescription.linesArray
-
+        
+        let em = EntityManager()
+        var idList: Set<String> = []
+        
+        em.performBlockAndWait {
+            guard let contacts = em.entityFetcher.allContacts() as? [ContactEntity] else {
+                return
+            }
+            
+            contacts.forEach {
+                idList.insert($0.identity)
+            }
+        }
+        
         for i in 0..<linesArray.count {
             for k in keys {
                 if linesArray[i].contains(k) {
                     let range = linesArray[i].range(of: k)!
                     linesArray[i] = linesArray[i][..<range.lowerBound] + "***redacted***"
+                }
+            }
+            for id in idList {
+                if linesArray[i].contains(id) {
+                    linesArray[i] = linesArray[i].replacingOccurrences(of: id, with: "***redacted***")
                 }
             }
         }

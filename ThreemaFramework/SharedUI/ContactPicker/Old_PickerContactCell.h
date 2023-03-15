@@ -20,7 +20,7 @@
 
 #import <UIKit/UIKit.h>
 #import "ContactNameLabel.h"
-#import "Contact.h"
+#import "ContactEntity.h"
 
 @interface Old_PickerContactCell : UITableViewCell
 
@@ -30,7 +30,7 @@
 @property (weak, nonatomic) IBOutlet UILabel *identityLabel;
 @property (weak, nonatomic) IBOutlet UIImageView *threemaTypeIcon;
 
-@property (weak, nonatomic) Contact *contact;
+@property (weak, nonatomic) ContactEntity *contact;
 
 - (void)updateColors;
 

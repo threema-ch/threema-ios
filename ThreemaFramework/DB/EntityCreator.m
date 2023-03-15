@@ -235,8 +235,8 @@
     return (BallotMessage *)message;
 }
 
-- (Contact *)contact {
-    return (Contact *)[self createEntityOfType: @"Contact"];
+- (ContactEntity *)contact {
+    return (ContactEntity *)[self createEntityOfType: @"Contact"];
 }
 
 - (LastGroupSyncRequest *)lastGroupSyncRequest {

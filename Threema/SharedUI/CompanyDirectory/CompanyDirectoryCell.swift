@@ -22,50 +22,28 @@ import Foundation
 
 class CompanyDirectoryCell: UITableViewCell {
     
-    @IBOutlet var companyAvatar: UIImageView!
-    @IBOutlet var titleLabel: UILabel!
-    @IBOutlet var descriptionLabel: UILabel!
-    @IBOutlet var labelStack: UIStackView!
-    @IBOutlet var containerStack: UIStackView!
+    private lazy var companyDirectoryView = CompanyDirectoryCellView()
     
-    private lazy var configuration = CellConfiguration(size: .small)
-    
-    override func awakeFromNib() {
-        super.awakeFromNib()
+    override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
+        super.init(style: style, reuseIdentifier: reuseIdentifier)
         
-        setup()
+        contentView.addSubview(companyDirectoryView)
+        companyDirectoryView.translatesAutoresizingMaskIntoConstraints = false
+        
+        NSLayoutConstraint.activate([
+            companyDirectoryView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 5),
+            companyDirectoryView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 5),
+            companyDirectoryView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -5),
+            companyDirectoryView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -5),
+        ])
+    }
+    
+    @available(*, unavailable)
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
     }
     
     @objc func updateColors() {
-        titleLabel.textColor = Colors.text
-        descriptionLabel.textColor = Colors.textLight
-        companyAvatar.image = AvatarMaker.shared().companyImage()
-        tintColor = Colors.primary
-    }
-
-    private func setup() {
-        companyAvatar.image = AvatarMaker.shared().companyImage()
-        titleLabel.text = MyIdentityStore.shared().companyName
-        descriptionLabel.text = BundleUtil.localizedString(forKey: "companydirectory_description")
-        
-        labelStack.spacing = configuration.verticalSpacing
-        
-        containerStack.spacing = configuration.horizontalSpacing
-        containerStack.alignment = .center
-        
-        updateColors()
-    }
-    
-    override public func layoutMarginsDidChange() {
-        super.layoutMarginsDidChange()
-        
-        guard !traitCollection.preferredContentSizeCategory.isAccessibilityCategory else {
-            separatorInset = .zero
-            return
-        }
-        
-        // Adjust separator inset
-        let leftSeparatorInset = configuration.maxAvatarSize + configuration.horizontalSpacing
-        separatorInset = UIEdgeInsets(top: 0, left: leftSeparatorInset, bottom: 0, right: 0)
+        companyDirectoryView.updateColors()
     }
 }

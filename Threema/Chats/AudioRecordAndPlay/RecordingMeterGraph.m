@@ -37,7 +37,7 @@
 
 #define COLOR_RECORDING [UIColor redColor]
 #define COLOR_PLAY_FUTURE Colors.textLight
-#define COLOR_PLAY_PAST Colors.primary
+#define COLOR_PLAY_PAST UIColor.primary
 #define COLOR_PLAY_CURRENT COLOR_PLAY_PAST
 
 @interface RecordingMeterGraph () <AudioTrackAnalyzerDelegate>

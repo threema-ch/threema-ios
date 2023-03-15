@@ -46,7 +46,7 @@ typedef NS_OPTIONS(NSInteger, BaseMessageFlags) {
 
 
 @class Conversation;
-@class Contact;
+@class ContactEntity;
 
 @interface BaseMessage : TMAManagedObject
 
@@ -90,7 +90,7 @@ typedef NS_OPTIONS(NSInteger, BaseMessageFlags) {
 @property (nonatomic, retain) NSArray *groupDeliveryReceipts;
 
 @property (nonatomic, retain) Conversation *conversation;
-@property (nullable, nonatomic, retain) Contact *sender;
+@property (nullable, nonatomic, retain) ContactEntity *sender;
 
 @property (nonatomic, retain) NSNumber *forwardSecurityMode;
 

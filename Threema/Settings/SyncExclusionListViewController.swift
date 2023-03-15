@@ -23,12 +23,10 @@ import Foundation
 
 class SyncExclusionListViewController: ThemedTableViewController {
     
-    private let settingsStore: SettingsStore
-    private var settings: SettingsStore.Settings
+    private var settingsStore: SettingsStoreProtocol
 
     required init?(coder: NSCoder) {
-        self.settingsStore = SettingsStore()
-        self.settings = settingsStore.settings
+        self.settingsStore = BusinessInjector().settingsStore
         super.init(coder: coder)
     }
     
@@ -61,29 +59,7 @@ class SyncExclusionListViewController: ThemedTableViewController {
     }
     
     func updateView() {
-        settings = settingsStore.settings
-
         tableView.reloadData()
-    }
-    
-    func attemptSave() {
-        if ServerConnector.shared().isMultiDeviceActivated {
-            let syncHelper = UISyncHelper(
-                viewController: self,
-                progressString: BundleUtil.localizedString(forKey: "syncing_settings")
-            )
-            
-            syncHelper.execute(settings: settings)
-                .catch { error in
-                    DDLogWarn("Unable to sync exclusion list: \(error.localizedDescription)")
-                }
-                .finally {
-                    self.updateView()
-                }
-        }
-        else {
-            settingsStore.save(settings)
-        }
     }
     
     override func numberOfSections(in tableView: UITableView) -> Int {
@@ -91,18 +67,18 @@ class SyncExclusionListViewController: ThemedTableViewController {
     }
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        settings.syncExclusionList.count + 1
+        settingsStore.syncExclusionList.count + 1
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        if indexPath.row < settings.syncExclusionList.count {
+        if indexPath.row < settingsStore.syncExclusionList.count {
             let cell = tableView.dequeueReusableCell(withIdentifier: "ExclusionCell")!
-            cell.textLabel?.text = settings.syncExclusionList[indexPath.row]
+            cell.textLabel?.text = settingsStore.syncExclusionList[indexPath.row]
             return cell
         }
         else {
             let cell = tableView.dequeueReusableCell(withIdentifier: "AddCell")!
-            cell.imageView?.image = UIImage(named: "AddMember", in: Colors.primary)
+            cell.imageView?.image = UIImage(named: "AddMember", in: .primary)
             return cell
         }
     }
@@ -113,16 +89,15 @@ class SyncExclusionListViewController: ThemedTableViewController {
         forRowAt indexPath: IndexPath
     ) {
         if editingStyle == .delete {
-            var newArray = [String](settings.syncExclusionList)
+            var newArray = [String](settingsStore.syncExclusionList)
             newArray.remove(at: indexPath.row)
-            settings.syncExclusionList = newArray
-            attemptSave()
+            settingsStore.syncExclusionList = newArray
             tableView.deleteRows(at: [indexPath], with: .fade)
         }
     }
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        if indexPath.row == settings.syncExclusionList.count {
+        if indexPath.row == settingsStore.syncExclusionList.count {
             let title = BundleUtil.localizedString(forKey: "enter_id_to_exclude")
             let alert = UIAlertController(title: title, message: nil, preferredStyle: .alert)
             alert.addTextField(configurationHandler: nil)
@@ -137,16 +112,17 @@ class SyncExclusionListViewController: ThemedTableViewController {
                 }
                 
                 if excludeID.count == kIdentityLen {
-                    var set = Set(self.settings.syncExclusionList)
+                    var set = Set(self.settingsStore.syncExclusionList)
                     set.insert(excludeID)
-                    self.settings.syncExclusionList = set.sorted { $0.caseInsensitiveCompare($1) == .orderedAscending }
-                    self.attemptSave()
+                    self.settingsStore.syncExclusionList = set
+                        .sorted { $0.caseInsensitiveCompare($1) == .orderedAscending }
                     self.tableView.reloadData()
                 }
                 else {
                     alert.dismiss(animated: true) {
-                        let title = BundleUtil.localizedString(forKey: "id_too_short_title")
-                        let message = BundleUtil.localizedString(forKey: "id_too_short_message")
+                        let title = BundleUtil.localizedString(forKey: "settings_privacy_exclusion_list_alert_title")
+                        let message = BundleUtil
+                            .localizedString(forKey: "settings_privacy_exclusion_list_alert_message")
                         UIAlertTemplate.showAlert(owner: self, title: title, message: message)
                     }
                 }
@@ -164,6 +140,6 @@ class SyncExclusionListViewController: ThemedTableViewController {
     }
     
     override func tableView(_ tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
-        indexPath.row < settings.syncExclusionList.count
+        indexPath.row < settingsStore.syncExclusionList.count
     }
 }

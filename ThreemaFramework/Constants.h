@@ -70,8 +70,6 @@
 #define kNotificationLicenseMissing @"ThreemaLicenseMissing"
 
 #define kNotificationWallpaperChanged @"ThreemaWallpaperChanged"
-#define kNotificationFontSizeChanged @"ThreemaChatFontSizeChanged"
-#define kNotificationShowTimestampSettingsChanged @"ThreemaShowTimestampSettingsChanged"
 #define kNotificationColorThemeChanged @"ThreemaColorThemeChanged"
 #define kNotificationShowProfilePictureChanged @"ShowProfilePictureChanged"
 #define kNotificationIncomingProfileSynchronization @"IncomingProfileSynchronization"
@@ -174,6 +172,7 @@ static NSString * const kThreemaVideoCallsQualitySettingChanged = @"ThreemaVideo
 #define kLastPushOverrideSendDate @"LastPushOverrideSendDate"
 #define kShowedTestFlightFeedbackView @"ShowedTestFlightFeedbackView"
 #define kShowed10YearsAnniversaryView @"Showed10YearsAnniversaryView"
+#define kShowedNotificationTypeSelectionView @"showedNotificationTypeSelectionView"
 
 #pragma mark - Push notification keys
 

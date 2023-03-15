@@ -21,7 +21,7 @@
 #import "FeatureMask.h"
 #import "MyIdentityStore.h"
 #import "ServerAPIConnector.h"
-#import "Contact.h"
+#import "ContactEntity.h"
 #import "Conversation.h"
 #import "ContactStore.h"
 #import "UIDefines.h"
@@ -77,7 +77,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 
 + (NSSet *)filterContactsWithUnsupportedFeatureMask:(NSInteger)featureMask fromContacts:(NSSet *)inputContacts {
     NSMutableSet *unsupportedContacts = [NSMutableSet set];
-    for (Contact *contact in inputContacts) {
+    for (ContactEntity *contact in inputContacts) {
         //make sure the object is in sync
         [contact.managedObjectContext refreshObject:contact mergeChanges:YES];
         
@@ -95,7 +95,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     
     for (Conversation *conversation in conversations) {
         if ([conversation isGroup]) {
-            for (Contact *contact in conversation.participants) {
+            for (ContactEntity *contact in conversation.participants) {
                 [contacts addObject:contact];
             }
         } else {
@@ -140,21 +140,5 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
             onCompletion(unsupportedContacts.allObjects);
         });
 }
-
-+ (void)updateFeatureMaskForAllContacts:(NSArray *)allContacts onCompletion:(void(^)(void))onCompletion {
-    __block MediatorSyncableContacts *mediatorSyncableContacts = [[MediatorSyncableContacts alloc] init];
-    ContactStore *contactStore = [ContactStore sharedContactStore];
-    [contactStore updateFeatureMasksForContacts:allContacts contactSyncer:mediatorSyncableContacts]
-        .then(^{
-            return [mediatorSyncableContacts syncObjc];
-        })
-        .then(^{
-            onCompletion();
-        })
-        .catch(^(NSError *error){
-            onCompletion();
-        });
-}
-
 
 @end

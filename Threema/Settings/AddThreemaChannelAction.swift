@@ -72,7 +72,7 @@ struct AddThreemaChannelAction {
         )
     }
     
-    private static func notificationInfo(for contact: Contact) -> [AnyHashable: Any] {
+    private static func notificationInfo(for contact: ContactEntity) -> [AnyHashable: Any] {
         [
             kKeyContact: contact,
             kKeyForceCompose: NSNumber(value: false),

@@ -32,10 +32,10 @@ struct IDColor {
               !UIAccessibility.isDarkerSystemColorsEnabled else {
             // We don't expect this to ever happen
             DDLogWarn("Unable to get first byte for ID Color")
-            return Colors.primary
+            return .primary
         }
         
-        return Colors.IDColor.forByte(firstByte)
+        return UIColor.IDColor.forByte(firstByte)
     }
     
     /// Cache first byte calculation

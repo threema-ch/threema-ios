@@ -161,10 +161,10 @@ class ChatViewTableViewCellHorizontalSwipeHandler: NSObject {
             return
         }
         
+        cell.center = CGPoint(x: originalCellCenter.x, y: cell.center.y)
+
         // Move right to quote
         if displacement.x >= 0 {
-            cell.center = CGPoint(x: originalCellCenter.x, y: originalCellCenter.y)
-            
             quoteSymbolView.alpha = displacement.x / Config.swipeActionOffsetThreshold
             
             if displacement.x > Config.swipeActionOffsetThreshold {
@@ -172,7 +172,7 @@ class ChatViewTableViewCellHorizontalSwipeHandler: NSObject {
                     performActivationAnimation()
                 }
                 cell.transform = cell.transform.translatedBy(
-                    x: (displacement.x - prevDisplacement) * Config.bubbleSlowdownFactor,
+                    x: (displacement.x - prevDisplacement) * Config.bubbleSlowdownFactorQuote,
                     y: 0
                 )
             }
@@ -187,15 +187,10 @@ class ChatViewTableViewCellHorizontalSwipeHandler: NSObject {
         // Move left to show details
         else {
             // Push view controller
-            cell.center = CGPoint(x: originalCellCenter.x, y: originalCellCenter.y)
-            if let baseCell = self.cell as? ChatViewBaseTableViewCell,
-               let customIdentityTransform = baseCell.customIdentityTransform {
-                cell.transform = customIdentityTransform
-                    .concatenating(CGAffineTransform(translationX: displacement.x, y: 0))
-            }
-            else {
-                cell.transform = CGAffineTransform(translationX: displacement.x, y: 0)
-            }
+            cell.transform = cell.transform.translatedBy(
+                x: (displacement.x - prevDisplacement) * Config.bubbleSlowdownFactorDetails,
+                y: 0
+            )
         }
     }
     
@@ -205,7 +200,13 @@ class ChatViewTableViewCellHorizontalSwipeHandler: NSObject {
         if activated, let delegate = delegate, delegate.canQuote {
             delegate.showQuoteView()
         }
-        
+
+        // Reset center after gesture to fix cell overlap that might have occurred when a snapshot was applied during swipe
+        if let cell = cell as? ChatViewBaseTableViewCell,
+           let originalCellCenter {
+            cell.center = CGPoint(x: originalCellCenter.x, y: originalCellCenter.y)
+            cell.transform = cell.customIdentityTransform
+        }
         quoteSymbolView.alpha = 0.0
         
         prevDisplacement = 0.0
@@ -263,9 +264,8 @@ class ChatViewTableViewCellHorizontalSwipeHandler: NSObject {
             animations: {
                 self.cell?.center = originalCellCenter
                 
-                if let cell = self.cell as? ChatViewBaseTableViewCell,
-                   let customIdentityTransform = cell.customIdentityTransform {
-                    self.cell?.transform = customIdentityTransform
+                if let cell = self.cell as? ChatViewBaseTableViewCell {
+                    self.cell?.transform = cell.customIdentityTransform
                 }
                 else {
                     self.cell?.transform = CGAffineTransform(rotationAngle: 0)

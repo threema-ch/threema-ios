@@ -41,6 +41,8 @@ enum MediatorReflectedProcessorError: Error {
     case missingPublicKey(identity: String)
     case outgoingMessageTypeIsDeprecated(type: D2d_MessageType)
     case outgoingMessageReceiverNotFound(message: String)
+    case receiverNotFound(identity: String)
+    case senderNotFound(identity: String)
 }
 
 protocol MediatorReflectedProcessorProtocol {

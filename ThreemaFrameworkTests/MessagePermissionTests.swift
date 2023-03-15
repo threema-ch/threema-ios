@@ -366,7 +366,7 @@ class MessagePermissionTests: XCTestCase {
             dbPreparer.createConversation(marked: false, typing: false, unreadMessageCount: 0) { dbConversation in
                 dbConversation.contact = dbContactGroupCreator
                 dbConversation.groupID = dbGroup.groupID
-                dbConversation.members = Set<Contact>([dbContactGroupMember])
+                dbConversation.members = Set<ContactEntity>([dbContactGroupMember])
 
                 conversation = dbConversation
             }

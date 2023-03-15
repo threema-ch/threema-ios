@@ -156,14 +156,14 @@ protocol ForwardSecurityMessageSenderProtocol {
             return (
                 session.myRatchet2DH,
                 CspE2eFs_ForwardSecurityEnvelope.Message.DHType.twodh,
-                kForwardSecurityModeTwoDH
+                .twoDH
             )
         }
         else {
             return (
                 session.myRatchet4DH,
                 CspE2eFs_ForwardSecurityEnvelope.Message.DHType.fourdh,
-                kForwardSecurityModeFourDH
+                .fourDH
             )
         }
         }()
@@ -409,9 +409,9 @@ protocol ForwardSecurityMessageSenderProtocol {
         // Obtain appropriate ratchet and turn to match the message's counter value
         let (ratchet, mode): (KDFRatchet?, ForwardSecurityMode) = try { switch message.type {
         case .twodh:
-            return (session.peerRatchet2DH, kForwardSecurityModeTwoDH)
+            return (session.peerRatchet2DH, .twoDH)
         case .fourdh:
-            return (session.peerRatchet4DH, kForwardSecurityModeFourDH)
+            return (session.peerRatchet4DH, .fourDH)
         default:
             throw ForwardSecurityError.invalidMode
         }}()
@@ -484,7 +484,7 @@ protocol ForwardSecurityMessageSenderProtocol {
         // next message from the peer must have a ratchet count of at least one higher
         ratchet.turn()
 
-        if mode == kForwardSecurityModeFourDH {
+        if mode == .fourDH {
             // If this was a 4DH message, then we should erase the 2DH peer ratchet, as we shall not
             // receive (or send) any further 2DH messages in this session
             if session.peerRatchet2DH != nil {

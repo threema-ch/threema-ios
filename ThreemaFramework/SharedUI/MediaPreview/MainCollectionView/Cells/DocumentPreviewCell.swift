@@ -102,7 +102,7 @@ class DocumentPreviewCell: ScreenWidthSizedCell, QLPreviewControllerDelegate {
         // Redraw image
         source.draw(in: sourceSizedRect, blendMode: .normal, alpha: 1.0)
         
-        context.setStrokeColor(Colors.primary.cgColor)
+        context.setStrokeColor(UIColor.primary.cgColor)
         
         let coloredPath = UIBezierPath(roundedRect: sourceSizedRect, cornerRadius: cornerRadius)
         coloredPath.lineWidth = lineWidth

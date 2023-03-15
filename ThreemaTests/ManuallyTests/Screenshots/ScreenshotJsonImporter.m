@@ -54,13 +54,13 @@ static const DDLogLevel ddLogLevel = DDLogLevelVerbose;
     NSString *prefix = [self pathPrefix];
     NSString *path = [prefix stringByAppendingPathComponent:@"language.txt"];
     NSCharacterSet *trimCharacterSet = [NSCharacterSet whitespaceAndNewlineCharacterSet];
-    _language = [NSString stringWithContentsOfFile:path encoding:NSUTF8StringEncoding error:nil];
-    _language = [_language stringByTrimmingCharactersInSet:trimCharacterSet];
-    
-    //** uncomment for manual testing
-    //  _language = @"zh_Hans";
-    //  _language = @"de_DE";
-    //**
+    _language = [[NSLocale preferredLanguages] firstObject];
+    if([_language isEqualToString:@"tr"]) {
+        _language = @"tr-TR";
+    }
+    else if([_language isEqualToString:@"ja"]) {
+        _language = @"ja-JP";
+    }
 }
 
 - (void)testLoadJsonFile {
@@ -69,8 +69,6 @@ static const DDLogLevel ddLogLevel = DDLogLevelVerbose;
     [PHPhotoLibrary requestAuthorization:^(PHAuthorizationStatus status) {
         
     }];
-    
-    NSString *regionCode = _language;
 
     NSString *resetDevice = [self getResetCommand];
     if (resetDevice) {
@@ -101,43 +99,14 @@ static const DDLogLevel ddLogLevel = DDLogLevelVerbose;
     NSString *screenshotProject = [NSString stringWithFormat:@"screenshot/chat_data/%@", appPath                                                                  ];
     NSURL *screenShotDataURL = [NSURL URLWithString:[srcroot stringByReplacingOccurrencesOfString:@"ios-client" withString:screenshotProject]];
 
-//** uncomment for manual testing
-    //  regionCode = @"zh_Hans";
-    //  _language = @"zh-Hans";
-    
-    //  regionCode = @"de-DE";
-    //  _language = @"de";
-//**
         
-    if (regionCode == nil) {
-        XCTFail(@"no language code %@, probably not started from screenshot environment", regionCode);
+    if (_language == nil) {
+        XCTFail(@"no language code %@, probably not started from screenshot environment", _language);
         return;
     }
+
+    parser.languageCode = _language;
     
-    if ([regionCode isEqualToString:@"pt_BR"]) {
-        parser.languageCode = @"pt-BR";
-    }
-    else if ([regionCode isEqualToString:@"rm_CH"]) {
-        parser.languageCode = @"rm-CH";
-    }
-    else if ([regionCode isEqualToString:@"cs_CZ"]) {
-        parser.languageCode = @"cs";
-    }
-    else if ([regionCode isEqualToString:@"tr_TR"]) {
-        parser.languageCode = @"tr-TR";
-    }
-    else if ([regionCode isEqualToString:@"zh_Hans_CN"]) {
-        parser.languageCode = @"zh-Hans";
-    }
-    else if ([regionCode isEqualToString:@"zh_Hant_CN"]) {
-        parser.languageCode = @"zh-Hant";
-    }
-    else if ([regionCode isEqualToString:@"ja_JP"]) {
-        parser.languageCode = @"ja-JP";
-    }
-    else {
-        parser.languageCode = [regionCode substringToIndex:2];
-    }
 
     parser.referenceDate = [self referenceDateForHour:9];
     

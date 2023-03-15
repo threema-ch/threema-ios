@@ -24,12 +24,13 @@ import XCTest
 final class EntityFetcherTests: XCTestCase {
 
     private var mainCnx: NSManagedObjectContext!
-    
+
     override func setUpWithError() throws {
         // Necessary for ValidationLogger
         AppGroup.setGroupID("group.ch.threema") // THREEMA_GROUP_IDENTIFIER @"group.ch.threema"
 
-        mainCnx = DatabasePersistentContext.devNullContext().mainContext
+        let dbContext = DatabasePersistentContext.devNullContext()
+        mainCnx = dbContext.mainContext
     }
 
     func testHasDuplicateContactsEmptyDB() {

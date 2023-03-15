@@ -38,13 +38,11 @@ class ThreemaCallsSettingsViewController: ThemedTableViewController {
     @IBOutlet var videoQualityCellDetailLabel: UILabel!
     
     private let mdmSetup: MDMSetup
-    private let settingsStore: SettingsStore
-    private var settings: SettingsStore.Settings
+    private var settingsStore: SettingsStoreProtocol
     
     required init?(coder aDecoder: NSCoder) {
         self.mdmSetup = MDMSetup(setup: false)
-        self.settingsStore = SettingsStore()
-        self.settings = settingsStore.settings
+        self.settingsStore = BusinessInjector().settingsStore
         super.init(coder: aDecoder)
     }
     
@@ -73,13 +71,7 @@ class ThreemaCallsSettingsViewController: ThemedTableViewController {
     }
     
     @objc func incomingUpdate() {
-        loadSettings()
         updateView()
-        NotificationPresenterWrapper.shared.present(type: .settingsSyncSuccess)
-    }
-    
-    private func loadSettings() {
-        settings = settingsStore.settings
     }
     
     private func updateView() {
@@ -142,28 +134,6 @@ class ThreemaCallsSettingsViewController: ThemedTableViewController {
         }
         return nil
     }
-    
-    func attemptSave() {
-        if ServerConnector.shared().isMultiDeviceActivated {
-            let syncHelper = UISyncHelper(
-                viewController: self,
-                progressString: BundleUtil.localizedString(forKey: "syncing_settings")
-            )
-            
-            syncHelper.execute(settings: settings)
-                .catch { error in
-                    DDLogWarn("Unable to sync call settings: \(error.localizedDescription)")
-                }
-                .finally {
-                    self.updateView()
-                }
-        }
-        else {
-            settingsStore.save(settings)
-            
-            updateView()
-        }
-    }
 }
 
 private extension ThreemaCallsSettingsViewController {
@@ -189,8 +159,8 @@ private extension ThreemaCallsSettingsViewController {
     }
     
     private func setupSwitches() {
-        enableThreemaCallSwitch.isOn = UserSettings.shared().enableThreemaCall
-        alwaysRelayThreemaCallsSwitch.isOn = UserSettings.shared().alwaysRelayCalls
+        enableThreemaCallSwitch.isOn = settingsStore.enableThreemaCall
+        alwaysRelayThreemaCallsSwitch.isOn = settingsStore.alwaysRelayCalls
         includeCallsInRecentsSwitch.isOn = UserSettings.shared().includeCallsInRecents
         enableVideoSwitch.isOn = UserSettings.shared().enableVideoCall
     }
@@ -213,15 +183,12 @@ private extension ThreemaCallsSettingsViewController {
     // MARK: IBActions
     
     @IBAction func enableThreemaCallSwitchChanged(sender: UISwitch) {
-        settings.enableThreemaCall = sender.isOn
-        
-        attemptSave()
+        settingsStore.enableThreemaCall = sender.isOn
+        updateView()
     }
     
     @IBAction func alwaysRelayCallsSwitchChanged(sender: UISwitch) {
-        settings.alwaysRelayCalls = sender.isOn
-        
-        attemptSave()
+        settingsStore.alwaysRelayCalls = sender.isOn
     }
     
     @IBAction func includeCallsInRecentsSwitchChanged(sender: UISwitch) {

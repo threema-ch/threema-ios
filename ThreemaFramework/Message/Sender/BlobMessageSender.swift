@@ -23,13 +23,6 @@ import Foundation
 
 public class BlobMessageSender {
     
-    public enum BlobMessageSenderError: Error {
-        case tooBig
-        case fileDataCreationFailed
-        case entityCreationFailed
-        case uploadFailed
-    }
-    
     /// Global blob message sender
     ///
     /// Use this if you're not testing the sender
@@ -52,7 +45,7 @@ public class BlobMessageSender {
     
     // MARK: - Public Functions
     
-    public func sendBlobMessage(with objectID: NSManagedObjectID) async {
+    public func sendBlobMessage(with objectID: NSManagedObjectID) async throws {
                 
         // Concurrency Loading
         var fileMessage: FileMessage?
@@ -71,14 +64,14 @@ public class BlobMessageSender {
         
         guard let fileMessage = fileMessage else {
             DDLogError("[BlobMessageSender]: Unable to load message as FileMessage for object ID: \(objectID)")
-            return
+            throw BlobManagerError.sendingFailed
         }
         
         guard isMessageReadyToSend(with: objectID) else {
             DDLogError(
                 "[BlobMessageSender]: State of BlobData for file message with object ID: \(objectID) does not allow sending"
             )
-            return
+            throw BlobManagerError.sendingFailed
         }
 
         businessInjector.entityManager.performBlockAndWait {
@@ -95,16 +88,16 @@ public class BlobMessageSender {
     // MARK: - Private Functions
 
     private func isMessageReadyToSend(with objectID: NSManagedObjectID) -> Bool {
+        // Due to the business injector entity manager having outdated info about the object belonging to the ID passed in here, we create a new one.
+        let entityManager = EntityManager(withChildContextForBackgroundProcess: true)
         var isReady = false
         
-        businessInjector.entityManager.performBlockAndWait {
-            guard let fileMessage = self.businessInjector.entityManager.entityFetcher
-                .existingObject(with: objectID) as? FileMessage else {
+        entityManager.performBlockAndWait {
+            guard let fileMessage = entityManager.entityFetcher.existingObject(with: objectID) as? FileMessage else {
                 return
             }
             
-            guard !fileMessage.blobGetError(),
-                  fileMessage.blobGetID() != nil,
+            guard fileMessage.blobGetID() != nil,
                   fileMessage.blobGetProgress() == nil else {
                 return
             }
@@ -112,6 +105,14 @@ public class BlobMessageSender {
             if fileMessage.blobGetThumbnail() != nil,
                fileMessage.blobGetThumbnailID() == nil {
                 return
+            }
+            
+            // If we have a a blobID, and possibly a thumbnail and its ID, this means that the upload has succeeded
+            // and just the sending of the message must have failed, so we reset the error and mark it as ready
+            if fileMessage.blobGetError() == true {
+                entityManager.performSyncBlockAndSafe {
+                    fileMessage.blobSetError(false)
+                }
             }
             
             isReady = true

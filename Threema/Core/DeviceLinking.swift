@@ -192,24 +192,40 @@ class DeviceLinking: NSObject {
         return polling()
     }
 
-    /// Disable multi device if App version less than version 5 and isn't Red or Work Red.
-    /// This is needs when the App will downgrade the TestFlight version from 5 to 4.9 (TestFlight or Release).
+    /// Disable multi device if app doesn't support it
+    ///
+    /// This should always be in sync with the multi device setting showing up in settings (`SettingsViewController`)
     @objc func disableMultiDeviceForVersionLessThan5() {
-        // Do not disable MD for Xcode build or is red and workRed
-        guard ThreemaEnvironment.env() != .xcode else {
+        // Only disable it if it was previously enabled
+        guard businessInjector.userSettings.enableMultiDevice else {
             return
         }
-
-        switch ThreemaApp.current {
-        case .red, .workRed:
-            return
-        default:
-            guard AppInfo.version.major < 5 || ThreemaEnvironment.env() == .appStore,
-                  businessInjector.userSettings.enableMultiDevice else {
-                return
+        
+        switch ThreemaEnvironment.env() {
+        case .appStore:
+            // Disable it for all app store versions
+            autoDisableMultiDevice()
+        case .testFlight:
+            switch ThreemaApp.current {
+            case .threema:
+                // Disable it if we downgrade consumer from 5.0
+                if AppInfo.version.major < 5 {
+                    autoDisableMultiDevice()
+                }
+            case .work, .onPrem:
+                // Always disable it for work and onprem
+                autoDisableMultiDevice()
+            case .red, .workRed:
+                // Never disable it for red & work red
+                break
             }
+        case .xcode:
+            // Never disable it of Xcode builds
+            break
         }
-
+    }
+    
+    private func autoDisableMultiDevice() {
         businessInjector.serverConnector.registerConnectionStateDelegate(delegate: self)
 
         if disableMultiDeviceForVersionLessThan5IsLoggedIn == nil {

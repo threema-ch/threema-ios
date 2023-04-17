@@ -22,70 +22,38 @@ import SwiftUI
 
 struct MultiDeviceWizardView: View {
     @Environment(\.dismiss) var dismiss
-    
+    @State var dismissView = false
     @ObservedObject var wizardVM: MultiDeviceWizardViewModel
     
-    @State var didAcceptTerms = false
-
     // MARK: - View
     
     var body: some View {
-
-        VStack {
-            // MARK: - Title
-            
-            Text(BundleUtil.localizedString(forKey: "md_wizard_header"))
-                .font(.title2)
-                .bold()
-                .padding()
-            
-            // MARK: - TabView
-
-            TabView(selection: $wizardVM.wizardState) {
-                MultiDeviceWizardTermsView(
-                    hasPFSEnabledContacts: wizardVM.hasPFSEnabledContacts,
-                    didAcceptTerms: $didAcceptTerms
-                )
-                .tag(WizardState.terms)
-                .wizardTabView()
-                
-                MultiDeviceWizardInformationView()
-                    .tag(WizardState.information)
-                    .wizardTabView()
-                
-                MultiDeviceWizardPreparationView()
-                    .tag(WizardState.preparation)
-                    .wizardTabView()
-                
-                MultiDeviceWizardIdentityView()
-                    .tag(WizardState.identity)
-                    .wizardTabView()
-                
-                MultiDeviceWizardCodeView(wizardVM: wizardVM)
-                    .tag(WizardState.code)
-                    .wizardTabView()
-                
-                MultiDeviceWizardSuccessView()
-                    .tag(WizardState.success)
-                    .wizardTabView()
-            }
-            .tabViewStyle(.page(indexDisplayMode: .never))
-
-            // MARK: - Buttons
-            
-            MultiDeviceWizardButtonsView(wizardVM: wizardVM, didAcceptTerms: $didAcceptTerms)
+        NavigationView {
+            MultiDeviceWizardTermsView(
+                wizardVM: wizardVM,
+                dismiss: $dismissView,
+                hasPFSEnabledContacts: wizardVM.hasPFSEnabledContacts
+            )
+            .padding(.horizontal)
+            .navigationBarTitleDisplayMode(.inline)
+            .navigationBarTitle(BundleUtil.localizedString(forKey: "md_wizard_header"))
         }
-        .padding()
         .onAppear {
             if UIDevice.current.userInterfaceIdiom == .phone {
                 // Forcing the rotation to portrait and lock it
                 UIDevice.current.setValue(UIInterfaceOrientation.portrait.rawValue, forKey: "orientation")
                 AppDelegate.shared().orientationLock = .portrait
             }
+            dismissView = false
         }
         .onDisappear(perform: {
             // Unlocking the rotation
             AppDelegate.shared().orientationLock = .all
+        })
+        .onChange(of: dismissView, perform: { _ in
+            if dismissView {
+                dismiss()
+            }
         })
         
         .alert(BundleUtil.localizedString(forKey: "md_wizard_error_title"), isPresented: $wizardVM.shouldDismiss) {
@@ -117,125 +85,6 @@ struct MultiDeviceWizardView: View {
         } message: {
             Text(BundleUtil.localizedString(forKey: "md_wizard_error_text"))
         }
-    }
-}
-
-// MARK: - Buttons
-
-struct MultiDeviceWizardButtonsView: View {
-    @ObservedObject var wizardVM: MultiDeviceWizardViewModel
-    @Binding var didAcceptTerms: Bool
-    
-    var body: some View {
-        switch wizardVM.wizardState {
-        case .preparation, .code:
-            MultiDeviceWizardCancelButtonView(wizardVM: wizardVM, didAcceptTerms: $didAcceptTerms)
-            
-        case .success:
-            MultiDeviceWizardNextButtonView(wizardVM: wizardVM, didAcceptTerms: $didAcceptTerms)
-            
-        default:
-            HStack {
-                MultiDeviceWizardCancelButtonView(wizardVM: wizardVM, didAcceptTerms: $didAcceptTerms)
-                Spacer()
-                MultiDeviceWizardNextButtonView(wizardVM: wizardVM, didAcceptTerms: $didAcceptTerms)
-            }
-        }
-    }
-}
-
-struct MultiDeviceWizardCancelButtonView: View {
-    @Environment(\.dismiss) var dismiss
-    
-    @ObservedObject var wizardVM: MultiDeviceWizardViewModel
-    @Binding var didAcceptTerms: Bool
-    
-    var body: some View {
-        Button {
-            switch wizardVM.wizardState {
-            case .code:
-                wizardVM.advanceState(.identity)
-            default:
-                wizardVM.cancelLinking()
-                didAcceptTerms = false
-                dismiss()
-            }
-            
-        } label: {
-            switch wizardVM.wizardState {
-            case .code:
-                Text(BundleUtil.localizedString(forKey: "md_wizard_back_identity"))
-
-            default:
-                Text(BundleUtil.localizedString(forKey: "md_wizard_cancel"))
-            }
-        }
-        .buttonStyle(.bordered)
-        .tint(Color(.primary))
-    }
-}
-
-struct MultiDeviceWizardNextButtonView: View {
-    @Environment(\.dismiss) var dismiss
-    
-    @ObservedObject var wizardVM: MultiDeviceWizardViewModel
-    @Binding var didAcceptTerms: Bool
-    
-    var body: some View {
-        Button {
-            withAnimation {
-                if wizardVM.wizardState == .success {
-                    dismiss()
-                    return
-                }
-                
-                wizardVM.advanceState()
-            }
-        } label: {
-            switch wizardVM.wizardState {
-            case .information:
-                Text(BundleUtil.localizedString(forKey: "md_wizard_start"))
-                    .bold()
-                
-            case .success:
-                Text(BundleUtil.localizedString(forKey: "md_wizard_close"))
-                    .bold()
-                
-            default:
-                Text(BundleUtil.localizedString(forKey: "md_wizard_next"))
-                    .bold()
-            }
-        }
-        .disabled(isNextDisabled())
-        .buttonStyle(.borderedProminent)
-    }
-    
-    // MARK: - Private Functions
-
-    private func isNextDisabled() -> Bool {
-        switch wizardVM.wizardState {
-        case .terms:
-            return !didAcceptTerms
-        default:
-            return false
-        }
-    }
-}
-
-// MARK: - Custom modifiers
-
-struct WizardTabViewModifier: ViewModifier {
-    func body(content: Content) -> some View {
-        content
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .contentShape(Rectangle())
-            .gesture(DragGesture())
-    }
-}
-
-private extension View {
-    func wizardTabView() -> some View {
-        modifier(WizardTabViewModifier())
     }
 }
 

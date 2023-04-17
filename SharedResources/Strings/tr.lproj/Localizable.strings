@@ -596,6 +596,9 @@
 "enter_license_password_placeholder" = "Şifre";
 "leave_group" = "Gruptan ayrıl";
 
+"work_data_fetch_failed_title" = "Threema Work verileri yüklenemedi";
+"work_data_fetch_failed_message" = "Threema Work verileri yüklenemedi, lütfen İnternet bağlantınızı kontrol edin ve tekrar deneyin.";
+
 /* License Key */
 "enter_license_title" = "Kimlik bilgilerini girin";
 /* MWPhotoBrowser */
@@ -1095,6 +1098,8 @@ Threema Safe'i kullanırken, cihazınıza erişiminizi kaybetmeniz durumunda Thr
 "settings_advanced_reregister_push_notifications_header_title" = "Anlık bildirimler";
 "settings_advanced_reregister_push_notifications_footer_title" = "Gelen mesajlar uygulama dışında bildirim olarak görünmüyorsa, bildirimler için yeniden kaydolabilirsiniz.";
 "settings_advanced_reregister_notifications_label" = "Anlık Bildirimleri Yeniden Kaydet";
+"settings_advanced_new_chat_view_label" = "Yeni Sohbet Görünümü";
+"settings_advanced_new_chat_view_label_footer" = "Not: Eski sohbet görünümü yeni sürümde kaldırılacaktır.";
 
 "settings_md_sync_alert_title" = "Senkronizasyon başarısız oldu";
 
@@ -1516,6 +1521,7 @@ Artık dosyaları çöp kutusuna taşıyın ve %@ içinde hiçbir (medya) dosyas
 "accessibility_poll_open" = "Açık";
 "accessibility_poll_closed" = "Kapalı";
 "accessibility_file_duration" = "Süre: %@.";
+"accessibility_voice_message_playing" = "Çalıyor.";
 
 // Message status types
 "accessibility_status_acknowledged_plus_time" = "Alındı, %@";
@@ -1543,9 +1549,9 @@ Artık dosyaları çöp kutusuna taşıyın ve %@ içinde hiçbir (medya) dosyas
 
 "md_wizard_terms_note_text" = "Bu teknik önizlemenin amacı, yaklaşan çoklu cihaz desteğini önceden test etmenize olanak tanımaktır. Lütfen özelliklerin sınırlı olduğunu ve bu alfa yazılımı olduğu için kusursuz değil ama iş görebileceğini unutmayın.";
 
-"md_wizard_terms_backup" = "Veri kaybı meydana gelebilir. Devam etmeden önce lütfen bir yedek oluşturun.\n[Yedekleme talimatları]\n(https://threema.ch/docs/threema/ios_backup_manual_en.pdf)";
+"md_wizard_terms_backup" = "Veri kaybı meydana gelebilir. Devam etmeden önce lütfen bir yedek oluşturun.\n[Yedekleme talimatları](https://threema.ch/docs/threema/ios_backup_manual_en.pdf)";
 "md_wizard_terms_support" = "Bu önizleme metin mesajlarını destekler. En son özellikleri ve iyileştirmeleri almak için iOS ve masaüstü uygulamalarını düzenli olarak güncelleyin.";
-"md_wizard_terms_issues" = "Bilinen sorunlar ve sınırlamalar [burada] bulunabilir (https://threema.ch/faq/md_limit).";
+"md_wizard_terms_issues" = "Bilinen sorunlar ve sınırlamalar [burada](https://threema.ch/faq/md_limit) bulunabilir.";
 "md_wizard_terms_bugs" = "Lütfen bu uygulamada karşılaştığınız sorunları \"Ayarlar > Beta Geri Bildirimi\" yoluyla bildirin.";
 
 "md_wizard_terms_accept" = "Yedek oluşturdum ve devam etmek istiyorum.";
@@ -1553,7 +1559,7 @@ Artık dosyaları çöp kutusuna taşıyın ve %@ içinde hiçbir (medya) dosyas
 "md_wizard_info_download_title" = "İndir";
 "md_wizard_info_download_text" = "Bilgisayarınızda Threema Tech Önizlemesi:";
 "md_wizard_info_linking_title" = "Bilgisayarınızı bu cihaza bağlayın";
-"md_wizard_info_linking_text" = "Bilgisayarınızı bağlarken, temel Threema verileriniz (kimliğiniz, kişileriniz ve gruplarınız) şifrelenir ve geçici olarak [şu anda kullandığınız Threema Safe sunucusunda] saklanır (https://threema.ch/en/faq/threema_safe_webdav).
+"md_wizard_info_linking_text" = "Bilgisayarınızı bağlarken, temel Threema verileriniz (kimliğiniz, kişileriniz ve gruplarınız) şifrelenir ve geçici olarak [şu anda kullandığınız Threema Safe sunucusunda](https://threema.ch/en/faq/threema_safe_webdav) saklanır.
 (Şimdiki ayar: %@).";
 
 "md_wizard_preparation_status" = "Hazırlanıyor...";

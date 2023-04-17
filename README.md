@@ -68,7 +68,7 @@ If you build the Threema OnPrem target, credentials from the [Threema OnPrem](ht
 
 ## <a name="building"></a>Building
 
-To get started you need a [Mac](https://www.apple.com/mac/), [Xcode](https://developer.apple.com/xcode/) (13.0) and a (free) [Apple Developer Account](https://developer.apple.com/programs/).
+To get started you need a [Mac](https://www.apple.com/mac/), [Xcode](https://developer.apple.com/xcode/) (14.2) and a (free) [Apple Developer Account](https://developer.apple.com/programs/).
 
 ### 1. Install Dependencies
 
@@ -148,7 +148,8 @@ _Note_: These setups are for running in the simulator.
 
 See "Building" for setting up a running environment. Before running the tests check if you can sucessfully build and run the app.
 
-- Choose `Threema` as scheme to run the app and framework tests.
+- Choose `Threema` as scheme to run the app tests.
+- Choose `ThreemaFramework` as scheme to run the framework tests.
 - Choose `ThreemaWork` as scheme to run Threema Work specific tests.
 
 
@@ -180,8 +181,8 @@ We accept GitHub pull requests. Please refer to <https://threema.ch/open-source/
 
 Threema for iOS is licensed under the GNU Affero General Public License v3.
 
-    Copyright (c) 2012-2022 Threema GmbH
-
+    Copyright (c) 2012-2023 Threema GmbH
+    
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU Affero General Public License, version 3,
     as published by the Free Software Foundation.

@@ -27,6 +27,7 @@
 #import "ProtocolDefines.h"
 #import "UserSettings.h"
 #import "LicenseStore.h"
+#import "NaClCrypto.h"
 #import <ThreemaFramework/ThreemaFramework-Swift.h>
 #import <ThreemaFramework/BaseMessage.h>
 #import <ThreemaFramework/BallotChoice.h>
@@ -216,6 +217,9 @@
         conversation.contact = contact;
         
         [self handleConversation:conversation data:conversationData];
+        
+        MessageFetcher *messageFetcher = [[MessageFetcher alloc] initFor:conversation with:_entityManager];
+        conversation.lastMessage = [messageFetcher lastMessage];
     }
 }
 
@@ -395,6 +399,8 @@
     message.caption = caption;
     
     message.json = [FileMessageEncoder jsonStringForFileMessageEntity:message];
+    
+    message.blobId = [[NaClCrypto sharedCrypto] randomBytes:kBlobIdLen];
         
     return message;
 }
@@ -435,6 +441,12 @@
     FileMessageEntity *message = [_entityManager.entityCreator fileMessageEntityForConversation:conversation];
     message.fileName = [self localizedStringForKey:@"content" in:messageData];
     message.fileSize = [NSNumber numberWithInt:2308565];
+    message.mimeType = [messageData objectForKey:@"mime-type"];
+    
+    // Add some random data
+    FileData *fileData = [_entityManager.entityCreator fileData];
+    fileData.data = [[NaClCrypto sharedCrypto] randomBytes:10];
+    [message setData:fileData];
 
     return message;
 }

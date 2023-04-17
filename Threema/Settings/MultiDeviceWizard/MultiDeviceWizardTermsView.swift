@@ -21,82 +21,125 @@
 import SwiftUI
 
 struct MultiDeviceWizardTermsView: View {
+    @Environment(\.openURL) var openURL
     
+    @ObservedObject var wizardVM: MultiDeviceWizardViewModel
+    @Binding var dismiss: Bool
     var hasPFSEnabledContacts: Bool
-    @Binding var didAcceptTerms: Bool
     
+    @State var didAcceptTerms = false
     @State var shouldShowAlert = false
     
     let bulletImageName = "info.circle.fill"
     let paddingSize: CGFloat = 8
     
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading) {
-                // MARK: - Banner
-                
-                HStack {
-                    VStack(alignment: .leading) {
-                        Text(BundleUtil.localizedString(forKey: "md_wizard_terms_note_text"))
+        
+        VStack {
+            ScrollView(showsIndicators: false) {
+                VStack(alignment: .leading) {
+                    // MARK: - Banner
+                    
+                    HStack {
+                        VStack(alignment: .leading) {
+                            Text(BundleUtil.localizedString(forKey: "md_wizard_terms_note_text"))
+                        }
+                        Spacer()
                     }
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color(uiColor: Colors.backgroundWizardBox))
+                    .clipShape(RoundedRectangle(cornerRadius: 15, style: .continuous))
+                    .padding(.bottom)
+                    
+                    // MARK: - Bullet Points
+                    
+                    VStack(alignment: .leading, spacing: 0) {
+                        
+                        MultiDeviceWizardBulletPointView(
+                            text: BundleUtil.localizedString(forKey: "md_wizard_terms_backup"),
+                            imageName: bulletImageName
+                        )
+                        .padding(.bottom, paddingSize)
+                        .accessibilityAction(named: Text(String.localizedStringWithFormat(
+                            BundleUtil.localizedString(forKey: "accessibility_action_open_link"),
+                            "https://threema.ch/docs/threema/ios_backup_manual_en.pdf"
+                        ))) {
+                            openURL(URL(string: "https://threema.ch/docs/threema/ios_backup_manual_en.pdf")!)
+                        }
+                        
+                        MultiDeviceWizardBulletPointView(
+                            text: BundleUtil.localizedString(forKey: "md_wizard_terms_support"),
+                            imageName: bulletImageName
+                        )
+                        .padding(.bottom, paddingSize)
+                        
+                        MultiDeviceWizardBulletPointView(
+                            text: BundleUtil.localizedString(forKey: "md_wizard_terms_issues"),
+                            imageName: bulletImageName
+                        )
+                        .padding(.bottom, paddingSize)
+                        .accessibilityAction(named: Text(String.localizedStringWithFormat(
+                            BundleUtil.localizedString(forKey: "accessibility_action_open_link"),
+                            "https://threema.ch/faq/md_limit"
+                        ))) {
+                            openURL(URL(string: "https://threema.ch/faq/md_limit")!)
+                        }
+                        
+                        MultiDeviceWizardBulletPointView(
+                            text: BundleUtil.localizedString(forKey: "md_wizard_terms_bugs"),
+                            imageName: bulletImageName
+                        )
+                        .padding(.bottom, paddingSize)
+                    }
+                    .padding(.vertical)
+                    
+                    // MARK: - Terms Toggle
+                    
+                    Toggle(isOn: $didAcceptTerms) {
+                        Text(BundleUtil.localizedString(forKey: "md_wizard_terms_accept"))
+                            .font(.headline)
+                    }
+                    .tint(Color(.primary))
+                    .padding(.trailing)
+                    
+                    .onChange(of: didAcceptTerms) { newValue in
+                        if hasPFSEnabledContacts {
+                            shouldShowAlert = newValue
+                        }
+                    }
+                    
                     Spacer()
                 }
-                .foregroundColor(.white)
-                .frame(maxWidth: .infinity)
-                .padding()
-                .background(Color(uiColor: Colors.backgroundWizardBox))
-                .clipShape(RoundedRectangle(cornerRadius: 15, style: .continuous))
-                .padding(.bottom)
+          
+                HStack {
+                    Button {
+                        didAcceptTerms = false
+                        dismiss = true
+                        wizardVM.cancelLinking()
+                    } label: {
+                        Text(BundleUtil.localizedString(forKey: "md_wizard_cancel"))
+                    }
+                    .buttonStyle(.bordered)
+                    .tint(Color(.primary))
                 
-                // MARK: - Bullet Points
-
-                VStack(alignment: .leading, spacing: 0) {
+                    Spacer()
+                
+                    NavigationLink {
+                        MultiDeviceWizardInformationView(wizardVM: wizardVM, dismiss: $dismiss)
                     
-                    MultiDeviceWizardBulletPointView(
-                        text: BundleUtil.localizedString(forKey: "md_wizard_terms_backup"),
-                        imageName: bulletImageName
-                    )
-                    .padding(.bottom, paddingSize)
-                    
-                    MultiDeviceWizardBulletPointView(
-                        text: BundleUtil.localizedString(forKey: "md_wizard_terms_support"),
-                        imageName: bulletImageName
-                    )
-                    .padding(.bottom, paddingSize)
-                    
-                    MultiDeviceWizardBulletPointView(
-                        text: BundleUtil.localizedString(forKey: "md_wizard_terms_issues"),
-                        imageName: bulletImageName
-                    )
-                    .highPriorityGesture(DragGesture())
-                    .padding(.bottom, paddingSize)
-                    
-                    MultiDeviceWizardBulletPointView(
-                        text: BundleUtil.localizedString(forKey: "md_wizard_terms_bugs"),
-                        imageName: bulletImageName
-                    )
-                    .padding(.bottom, paddingSize)
+                    } label: {
+                        Text(BundleUtil.localizedString(forKey: "md_wizard_next"))
+                            .bold()
+                    }
+                    .disabled(!didAcceptTerms)
+                    .buttonStyle(.borderedProminent)
                 }
                 .padding(.vertical)
-                
-                // MARK: - Terms Toggle
-                
-                Toggle(isOn: $didAcceptTerms) {
-                    Text(BundleUtil.localizedString(forKey: "md_wizard_terms_accept"))
-                        .font(.headline)
-                }
-                .tint(Color(.primary))
-                .padding(.trailing)
-                
-                .onChange(of: didAcceptTerms) { newValue in
-                    if hasPFSEnabledContacts {
-                        shouldShowAlert = newValue
-                    }
-                }
-                
-                Spacer()
             }
         }
+        
         .alert(BundleUtil.localizedString(forKey: "forward_security"), isPresented: $shouldShowAlert, actions: {
             Button(BundleUtil.localizedString(forKey: "md_wizard_disable_pfs_confirm"), role: .destructive) {
                 // Termination will be sent when linking completes
@@ -119,8 +162,7 @@ struct MultiDeviceWizardTermsView: View {
 struct MultiDeviceWizardIntroView_Previews: PreviewProvider {
     static var previews: some View {
         MultiDeviceWizardTermsView(
-            hasPFSEnabledContacts: true,
-            didAcceptTerms: .constant(true)
+            wizardVM: MultiDeviceWizardViewModel(), dismiss: .constant(false), hasPFSEnabledContacts: true
         )
     }
 }

@@ -1045,8 +1045,15 @@ extension ChatViewBaseTableViewCell {
             guard let message = messageAndNeighbors.message as? MessageAccessibility else {
                 return nil
             }
+            var status = ""
+            
+            // We add the status, if the voice message is playing.
+            if let voiceCell = self as? ChatViewVoiceMessageTableViewCell, voiceCell.isPlaying {
+                status = BundleUtil.localizedString(forKey: "accessibility_voice_message_playing")
+            }
+            
             let labelText =
-                "\(message.accessibilitySenderAndMessageTypeText) \(message.customAccessibilityLabel) \(message.accessibilityDateAndState)"
+                "\(message.accessibilitySenderAndMessageTypeText) \(status) \(message.customAccessibilityLabel) \(message.accessibilityDateAndState)"
             return labelText
         }
         

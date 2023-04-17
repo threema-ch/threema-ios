@@ -32,8 +32,8 @@ class MakeScreenshots: XCTestCase {
     }
     
     var language = ""
-    var theme = "light"
-    var version = "5.0"
+    var theme = ""
+    var version = "5.0.1"
     var orientation = ""
     var screenshotNameStart = ""
     var screenshotNameEnd = ""
@@ -55,6 +55,21 @@ class MakeScreenshots: XCTestCase {
             orientation = "portrait"
             XCUIDevice.shared.orientation = .portrait
         }
+        
+        if Bundle.main.bundleIdentifier == "ch.threema.ScreenshotsWithDataWork.xctrunner" {
+            threemaApp = .work
+            theme = "dark"
+        }
+        else if Bundle.main.bundleIdentifier == "ch.threema.ScreenshotsWithDataOnPrem.xctrunner" {
+            threemaApp = .onPrem
+            theme = "dark"
+        }
+        else {
+            theme = "light"
+        }
+        
+        let bundle = Bundle(for: type(of: self))
+        let version = bundle.infoDictionary?["CFBundleShortVersionString"] as! String
         continueAfterFailure = false
         
         app!.launch()
@@ -90,13 +105,6 @@ class MakeScreenshots: XCTestCase {
     
     func testMakeScreenshots() {
         app = XCUIApplication()
-                                
-        if Bundle.main.bundleIdentifier == "ch.threema.ScreenshotsWithDataWork.xctrunner" {
-            threemaApp = .work
-        }
-        else if Bundle.main.bundleIdentifier == "ch.threema.ScreenshotsWithDataOnPrem.xctrunner" {
-            threemaApp = .onPrem
-        }
               
         // MARK: Enter license key
         if threemaApp == .work || threemaApp == .onPrem,

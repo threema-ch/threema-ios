@@ -21,7 +21,8 @@
 import SwiftUI
 
 struct MultiDeviceWizardSuccessView: View {
-        
+    @Binding var dismiss: Bool
+
     var body: some View {
         VStack(spacing: 5) {
             Spacer()
@@ -31,6 +32,7 @@ struct MultiDeviceWizardSuccessView: View {
                 .scaledToFit()
                 .frame(width: 180, height: 180)
                 .padding(50)
+                .accessibilityHidden(true)
             
             Text(BundleUtil.localizedString(forKey: "md_wizard_success_title"))
                 .font(.title)
@@ -42,6 +44,17 @@ struct MultiDeviceWizardSuccessView: View {
 
             Spacer()
             Spacer()
+            
+            Button {
+                dismiss = true
+                
+            } label: {
+                Text(BundleUtil.localizedString(forKey: "md_wizard_close"))
+                    .bold()
+            }
+            .buttonStyle(.borderedProminent)
+            
+            .navigationBarBackButtonHidden()
         }
     }
 }
@@ -50,6 +63,6 @@ struct MultiDeviceWizardSuccessView: View {
 
 struct MultiDeviceWizardSuccessView_Previews: PreviewProvider {
     static var previews: some View {
-        MultiDeviceWizardSuccessView()
+        MultiDeviceWizardSuccessView(dismiss: .constant(false))
     }
 }

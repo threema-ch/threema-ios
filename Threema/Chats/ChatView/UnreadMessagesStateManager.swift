@@ -330,7 +330,7 @@ final class UnreadMessagesStateManager {
     @discardableResult
     private func maybeUpdate(to newState: UnreadMessagesState) -> Bool {
         DDLogVerbose("\(#function)")
-        if unreadMessagesState?.numberOfUnreadMessages != newState.numberOfUnreadMessages {
+        if unreadMessagesState != newState {
             unreadMessagesState = newState
             return true
         }

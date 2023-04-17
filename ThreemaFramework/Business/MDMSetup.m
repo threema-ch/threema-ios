@@ -562,8 +562,7 @@ static NSDictionary *_mdmCacheSetup;
     return [defaults dictionaryForKey:MDM_CONFIGURATION_KEY];
     
     /// fake company MDM parameters here
-    //    NSDictionary *companyMdm = [[NSDictionary alloc] initWithObjectsAndKeys:nil];
-    //    return companyMdm;
+    //return @{MDM_KEY_LICENSE_USERNAME: @"", MDM_KEY_LICENSE_PASSWORD: @""};
 }
 
 - (NSDictionary*)getThreemaMDM {

@@ -89,8 +89,7 @@ class MarkupParsingTextStorage: NSTextStorage {
         
         backingStore.replaceCharacters(in: currentReplacementRange, with: NSAttributedString(string: str))
         
-        // We use length from NSString everywhere for consistency
-        let adjustedStringLength = (str as NSString).length
+        let adjustedStringLength = str.utf16.count
         
         edited(
             .editedCharacters,
@@ -242,29 +241,40 @@ class MarkupParsingTextStorage: NSTextStorage {
         let searchToken = NSAttributedString.Key.contact
            
         if range.length == 0,
-           oldParsedText.attribute(searchToken, at: range.location, effectiveRange: &foundTokenRange) != nil,
+           oldParsedText.attribute(
+               searchToken,
+               at: range.location,
+               longestEffectiveRange: &foundTokenRange,
+               in: NSRange(location: 0, length: oldParsedText.length)
+           ) != nil,
            range.location != foundTokenRange.location {
             currentReplacementRange = NSUnionRange(currentReplacementRange, foundTokenRange)
         }
         else {
             // search the range for any instances of the desired text attribute
             oldParsedText.enumerateAttribute(
-                searchToken,
+                NSAttributedString.Key.tokenType,
                 in: range,
-                options: .longestEffectiveRangeNotRequired,
-                using: { _, attributedRange, _ in
+                using: { attribute, attributedRange, _ in
+                    
+                    guard let attribute = attribute as? MarkupParser.TokenType,
+                          attribute == MarkupParser.TokenType.mention else {
+                        return
+                    }
+                    
                     // get the attribute's full range and merge it with the original
                     if oldParsedText.attribute(
                         searchToken,
                         at: attributedRange.location,
-                        effectiveRange: &foundTokenRange
+                        longestEffectiveRange: &foundTokenRange,
+                        in: NSRange(location: 0, length: oldParsedText.length)
                     ) != nil {
                         currentReplacementRange = NSUnionRange(currentReplacementRange, foundTokenRange)
                     }
                 }
             )
         }
-           
+
         return currentReplacementRange
     }
 }

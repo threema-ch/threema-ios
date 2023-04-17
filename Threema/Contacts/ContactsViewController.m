@@ -1011,8 +1011,13 @@ typedef enum : NSUInteger {
             [_groupsDataSource setIgnoreFRCUpdates:YES];
             
             [_currentDataSource filterByWords: [self searchWordsForText:_searchController.searchBar.text]];
-            self.tableView.tableHeaderView = [UserSettings sharedUserSettings].companyDirectory == true ? _companyDirectoryCellView : nil;
-            [[_companyDirectoryCellView.widthAnchor constraintEqualToAnchor:self.tableView.widthAnchor] setActive:true];
+            if ([UserSettings sharedUserSettings].companyDirectory == true) {
+                self.tableView.tableHeaderView = _companyDirectoryCellView;
+                [[_companyDirectoryCellView.widthAnchor constraintEqualToAnchor:self.tableView.widthAnchor] setActive:true];
+            }
+            else {
+                self.tableView.tableHeaderView = nil;
+            }
             
             [self updateNoContactsView];
             break;

@@ -596,6 +596,9 @@
 "enter_license_password_placeholder" = "Пароль";
 "leave_group" = "Выйти из группы";
 
+"work_data_fetch_failed_title" = "Не удалось загрузить данные Threema Work";
+"work_data_fetch_failed_message" = "Не удалось загрузить данные Threema Work, проверьте соединение с Интернетом и повторите попытку.";
+
 /* License Key */
 "enter_license_title" = "Разблокировать Threema";
 /* MWPhotoBrowser */
@@ -1094,6 +1097,8 @@
 "settings_advanced_reregister_push_notifications_header_title" = "Push-уведомления";
 "settings_advanced_reregister_push_notifications_footer_title" = "Если входящие сообщения не отображаются за пределами приложения как уведомления, вы можете перерегистрировать уведомления.";
 "settings_advanced_reregister_notifications_label" = "Перерегистрировать Push-уведомления";
+"settings_advanced_new_chat_view_label" = "Новый вид чата";
+"settings_advanced_new_chat_view_label_footer" = "Примечание. Старый вид чата будет удален в предстоящем релизе.";
 
 "settings_md_sync_alert_title" = "Не удалось синхронизировать";
 
@@ -1515,6 +1520,7 @@
 "accessibility_poll_open" = "Открытый";
 "accessibility_poll_closed" = "Закрытый";
 "accessibility_file_duration" = "Продолжительность: %@.";
+"accessibility_voice_message_playing" = "Сейчас воспроизводится.";
 
 // Message status types
 "accessibility_status_acknowledged_plus_time" = "Подтверждено, %@";
@@ -1552,7 +1558,7 @@
 "md_wizard_info_download_title" = "Скачать";
 "md_wizard_info_download_text" = "Режим технического предпросмотра Threema на вашем компьютере:";
 "md_wizard_info_linking_title" = "Привяжите компьютер к этому устройству";
-"md_wizard_info_linking_text" = "Во время привязки компьютера ваши основные данные Threema (ваш ID, контакты и группы) будут зашифрованы и временно сохранены на [сервере Threema Safe, который мы в настоящее время используем] (https://threema.ch/en/faq/threema_safe_webdav). (Текущая настройка: %@).";
+"md_wizard_info_linking_text" = "Во время привязки компьютера ваши основные данные Threema (ваш ID, контакты и группы) будут зашифрованы и временно сохранены на [сервере Threema Safe, который мы в настоящее время используем](https://threema.ch/en/faq/threema_safe_webdav). (Текущая настройка: %@).";
 
 "md_wizard_preparation_status" = "Подготовка...";
 

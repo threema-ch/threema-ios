@@ -33,7 +33,10 @@ class ConversationExporter: NSObject, PasswordCallback {
     }
     
     private var password: String?
-    private var conversation: Conversation
+    private lazy var conversation: Conversation? = entityManager.entityFetcher
+        .existingObject(with: conversationObjectID) as? Conversation
+
+    private var conversationObjectID: NSManagedObjectID
     private var entityManager: EntityManager
     private var withMedia: Bool
     private var cancelled = false
@@ -42,55 +45,32 @@ class ConversationExporter: NSObject, PasswordCallback {
     private var timeString: String?
     private var zipFileContainer: ZipFileContainer?
     
+    private lazy var displayName: String = {
+        var displayName = ""
+        entityManager.performBlockAndWait {
+            displayName = self.conversation?.displayName ?? ""
+        }
+        return displayName
+    }()
+    
     private var log = ""
     
     private let displayNameMaxLength = 50
     
-    /// Initialize a ConversationExporter without a viewController for testing
-    /// - Parameters:
-    ///   - password: The password for encrypting the zip
-    ///   - entityManager: the entityManager used for querying the db
-    ///   - contact: The contact for which the chat is exported
-    ///   - withMedia: Whether media should be included or not
-    init(password: String, entityManager: EntityManager, contact: ContactEntity?, withMedia: Bool) {
-        self.password = password
-        self.conversation = entityManager.entityFetcher.conversation(for: contact)
-        self.entityManager = entityManager
-        self.withMedia = withMedia
-    }
-    
-    /// Initialize a ConversationExporter with a contact whose 1-to-1 conversation will be exported
-    /// - Parameters:
-    ///   - viewController: Will present progress indicators on this viewController
-    ///   - contact: Will export the conversation for this contact
-    ///   - entityManager: Will query the associated db
-    ///   - withMedia: Whether media should be exported
-    @objc init(
-        viewController: UIViewController,
-        contact: ContactEntity,
-        entityManager: EntityManager,
-        withMedia: Bool
-    ) {
-        self.viewController = viewController
-        self.conversation = entityManager.entityFetcher.conversation(for: contact)
-        self.entityManager = entityManager
-        self.withMedia = withMedia
-    }
-    
     /// Initialize a ConversationExporter with a group conversation which will be exported
     /// - Parameters:
     ///   - viewController: Will present progress indicators on this viewController
-    ///   - conversation: Will export this conversation.
+    ///   - conversationObjectID: Will export the conversation with this object ID
     ///   - entityManager: Will query the associated db
     ///   - withMedia: Whether media should be exported
-    @objc init(
+    init(
         viewController: UIViewController,
-        conversation: Conversation,
-        entityManager: EntityManager,
+        conversationObjectID: NSManagedObjectID,
+        entityManager: EntityManager = EntityManager(withChildContextForBackgroundProcess: true),
         withMedia: Bool
     ) {
         self.viewController = viewController
-        self.conversation = conversation
+        self.conversationObjectID = conversationObjectID
         self.entityManager = entityManager
         self.withMedia = withMedia
     }
@@ -111,10 +91,10 @@ class ConversationExporter: NSObject, PasswordCallback {
     }
     
     /// Exports a conversation
-    @objc func exportConversation() {
+    func exportConversation() {
         emailSubject = String.localizedStringWithFormat(
             BundleUtil.localizedString(forKey: "conversation_log_subject"),
-            conversation.displayName ?? ""
+            displayName
         )
         ZipFileContainer.cleanFiles()
         requestPassword()
@@ -125,12 +105,17 @@ extension ConversationExporter {
     /// Creates the name of the zip file containing the exported chat
     /// - Returns: String starting with Threema, the display name of the chat and the current date.
     private func filenamePrefix() -> String {
+        let defaultFileName = "Threema_" + DateFormatter.getNowDateString()
+        
         guard let regex = try? NSRegularExpression(pattern: "[^a-z0-9-_]", options: [.caseInsensitive]) else {
-            return "Threema_" + DateFormatter.getNowDateString()
+            return defaultFileName
         }
         
-        var displayName: String! = conversation.displayName
-        if displayName!.count > displayNameMaxLength {
+        guard !displayName.isEmpty else {
+            return defaultFileName
+        }
+        
+        if displayName.count > displayNameMaxLength {
             displayName = String(displayName.prefix(displayNameMaxLength - 1))
         }
         displayName = regex.stringByReplacingMatches(
@@ -316,9 +301,16 @@ extension ConversationExporter {
        
         let success = autoreleasepool { () -> Bool in
             for message in messages {
-                if !self.addMessage(message: message) {
+                var success = false
+                
+                entityManager.performBlockAndWait {
+                    success = self.addMessage(message: message)
+                }
+                
+                if !success {
                     return false
                 }
+                
                 self.incrementProgress()
             }
             return true
@@ -344,6 +336,10 @@ extension ConversationExporter {
     }
     
     private func exportChatToZipFile() -> Bool {
+        guard let conversation else {
+            return false
+        }
+        
         let messageFetcher = MessageFetcher(for: conversation, with: entityManager)
         messageFetcher.orderAscending = true
         
@@ -380,6 +376,10 @@ extension ConversationExporter {
     /// - Returns: A tuple (a,b) where b indicates the storage needed for the chat export if a is true. a is false if
     /// checking the necessary storage has failed.
     private func checkStorageNecessary() -> (Bool, Int64) {
+        guard let conversation else {
+            return (false, -1)
+        }
+        
         let messageFetcher = MessageFetcher(for: conversation, with: entityManager)
         messageFetcher.orderAscending = false
         

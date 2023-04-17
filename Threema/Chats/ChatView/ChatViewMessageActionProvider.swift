@@ -248,7 +248,7 @@ struct ChatViewMessageActionProvider {
                 owner: AppDelegate.shared().currentTopViewController(),
                 title: BundleUtil.localizedString(forKey: "messages_delete_selected_confirm"),
                 message: nil,
-                titleDestructive: BundleUtil.localizedString(forKey: "Delete")
+                titleDestructive: BundleUtil.localizedString(forKey: "delete")
             ) { _ in
                 
                 willDelete()

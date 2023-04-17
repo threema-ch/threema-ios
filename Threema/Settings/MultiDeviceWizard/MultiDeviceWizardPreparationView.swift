@@ -21,44 +21,74 @@
 import SwiftUI
 
 struct MultiDeviceWizardPreparationView: View {
+    @ObservedObject var wizardVM: MultiDeviceWizardViewModel
     
-    @State private var animate = false
+    @Binding var dismiss: Bool
 
+    @State private var animate = false
+    @State private var advance = false
     private var animation: Animation {
         Animation.linear(duration: 6.0)
             .repeatForever(autoreverses: false)
     }
     
     var body: some View {
-        ZStack(alignment: .top) {
-            
-            MultiDeviceWizardConnectionInfoView()
-            
-            VStack {
-                Spacer()
+        VStack {
+            ZStack(alignment: .top) {
                 
-                Image(systemName: "circle.dotted")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 130, height: 130)
-                    .foregroundColor(Color(.primary))
-                    .rotationEffect(Angle(degrees: animate ? 360 : 0.0))
-                    .animation(animation, value: animate)
+                MultiDeviceWizardConnectionInfoView()
                 
-                Text(BundleUtil.localizedString(forKey: "md_wizard_preparation_status"))
-                    .font(.title2)
-                    .bold()
-                    .padding()
-                
-                Spacer()
+                VStack {
+                    Spacer()
+                    
+                    Image(systemName: "circle.dotted")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 130, height: 130)
+                        .foregroundColor(Color(.primary))
+                        .rotationEffect(Angle(degrees: animate ? 360 : 0.0))
+                        .animation(animation, value: animate)
+                        .accessibilityHidden(true)
+                    
+                    Text(BundleUtil.localizedString(forKey: "md_wizard_preparation_status"))
+                        .font(.title2)
+                        .bold()
+                        .padding()
+                    
+                    Spacer()
+                }
             }
+            Button {
+                dismiss = true
+                wizardVM.cancelLinking()
+            } label: {
+                Text(BundleUtil.localizedString(forKey: "md_wizard_cancel"))
+            }
+            .buttonStyle(.bordered)
+            .tint(Color(.primary))
         }
+        .padding(.horizontal)
+        
+        .navigationBarTitle(BundleUtil.localizedString(forKey: "md_wizard_header"))
+        .navigationBarBackButtonHidden()
         
         .onAppear {
+            wizardVM.advanceState(.preparation)
             self.animate = true
         }
         .onDisappear {
             self.animate = false
+        }
+        .onChange(of: wizardVM.wizardState) { newValue in
+            if newValue == .identity {
+                advance = true
+            }
+        }
+        
+        NavigationLink(isActive: $advance) {
+            MultiDeviceWizardIdentityView(wizardVM: wizardVM, dismiss: $dismiss)
+        } label: {
+            EmptyView()
         }
     }
 }
@@ -67,6 +97,6 @@ struct MultiDeviceWizardPreparationView: View {
 
 struct MultiDeviceWizardTransmissionView_Previews: PreviewProvider {
     static var previews: some View {
-        MultiDeviceWizardPreparationView()
+        MultiDeviceWizardPreparationView(wizardVM: MultiDeviceWizardViewModel(), dismiss: .constant(false))
     }
 }

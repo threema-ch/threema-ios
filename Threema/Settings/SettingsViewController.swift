@@ -368,12 +368,22 @@ extension SettingsViewController {
         else if section == 2 {
             let numberOfRows = super.tableView(tableView, numberOfRowsInSection: section)
 
+            // This should always be in sync with `disableMultiDeviceForVersionLessThan5()`
+            
             switch ThreemaEnvironment.env() {
             case .appStore:
                 // Remove multi device cells
                 return numberOfRows - 1
-            case .testFlight, .xcode:
-                // Show MD only in beta
+            case .testFlight:
+                // Show multi device only in consumer, red and work red betas
+                if ThreemaApp.current == .threema || ThreemaApp.current == .red || ThreemaApp.current == .workRed {
+                    return numberOfRows
+                }
+                else {
+                    return numberOfRows - 1
+                }
+            case .xcode:
+                // Always show multi device for debug builds
                 return numberOfRows
             }
         }

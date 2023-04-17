@@ -598,6 +598,9 @@
 "enter_license_password_placeholder" = "パスワード";
 "leave_group" = "グループを退会";
 
+"work_data_fetch_failed_title" = "Threema Workのデータの読み込みに失敗しました";
+"work_data_fetch_failed_message" = "Threema Workのデータを読み込むことができませんでした。インターネット接続を確認して、もう一度やり直してください。";
+
 /* License Key */
 "enter_license_title" = "ライセンスキーを入力";
 /* MWPhotoBrowser */
@@ -854,7 +857,7 @@
 /* End Edit */
 
 "pushSetting_header" = "通知";
-"doNotDisturb_title" = "おやすみモード";
+"doNotDisturb_title" = "通知オフ";
 
 "doNotDisturb_turn_off_button" = "無効にする";
 "doNotDisturb_offHours_info" = "営業時間外が設定されています。";
@@ -1097,6 +1100,8 @@
 "settings_advanced_reregister_push_notifications_header_title" = "プッシュ通知";
 "settings_advanced_reregister_push_notifications_footer_title" = "受信したメッセージがアプリ外に通知として表示されない場合は、通知を再登録することができます。";
 "settings_advanced_reregister_notifications_label" = "プッシュ通知を再登録";
+"settings_advanced_new_chat_view_label" = "新しいチャットビュー";
+"settings_advanced_new_chat_view_label_footer" = "注：古いチャットビューは、今後のリリースで削除される予定です。";
 
 "settings_md_sync_alert_title" = "同期が失敗しました";
 
@@ -1518,6 +1523,7 @@ iTunesのバックアップを作成してから行ってください。";
 "accessibility_poll_open" = "開く";
 "accessibility_poll_closed" = "終了";
 "accessibility_file_duration" = "時間: %@";
+"accessibility_voice_message_playing" = "現在再生中。";
 
 // Message status types
 "accessibility_status_acknowledged_plus_time" = "了承済み、%@";
@@ -1545,9 +1551,9 @@ iTunesのバックアップを作成してから行ってください。";
 
 "md_wizard_terms_note_text" = "この技術プレビューは、今後予定されている複数端末の対応を一足先にお試しいただくためのものです。機能は限定的であり、またアルファ版ソフトウェアのため、荒削りな部分もありますが、ご了承ください。";
 
-"md_wizard_terms_backup" = "データの損失が発生する可能性があります。続行する前にバックアップを作成してください。\n［バックアップの手順］（https://threema.ch/docs/threema/ios_backup_manual_en.pdf）";
+"md_wizard_terms_backup" = "データの損失が発生する可能性があります。続行する前にバックアップを作成してください。\n［バックアップの手順]https://threema.ch/docs/threema/ios_backup_manual_en.pdf）";
 "md_wizard_terms_support" = "このプレビューでは、テキストメッセージに対応しています。最新の機能と修正が得られるよう、iOSとデスクトップ用のアプリを定期的にアップデートしてください。 ";
-"md_wizard_terms_issues" = "既知の問題点と制限については［こちら］（https://threema.ch/faq/md_limit）をご覧ください。";
+"md_wizard_terms_issues" = "既知の問題点と制限については［こちら]https://threema.ch/faq/md_limit）をご覧ください。";
 "md_wizard_terms_bugs" = "「設定」>「ベータフィードバック」からこのアプリで発生した問題を報告してください。";
 
 "md_wizard_terms_accept" = "バックアップを作成したので続行を希望します。";
@@ -1555,7 +1561,7 @@ iTunesのバックアップを作成してから行ってください。";
 "md_wizard_info_download_title" = "ダウンロード";
 "md_wizard_info_download_text" = "お使いのパソコンでThreema技術プレビュー：";
 "md_wizard_info_linking_title" = "お使いのパソコンをこの端末にリンクします";
-"md_wizard_info_linking_text" = "パソコンとリンクすると、あなたのThreemaの基本データ（ID、連絡先、グループ）が暗号化され、［現在利用しているThreema Safeサーバー］（https://threema.ch/en/faq/threema_safe_webdav）に一時的に保存されます。(現在の設定：%@）。";
+"md_wizard_info_linking_text" = "パソコンとリンクすると、あなたのThreemaの基本データ（ID、連絡先、グループ）が暗号化され、［現在利用しているThreema Safeサーバー]https://threema.ch/en/faq/threema_safe_webdav）に一時的に保存されます。(現在の設定：%@）。";
 
 "md_wizard_preparation_status" = "準備中…";
 

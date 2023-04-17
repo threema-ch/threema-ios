@@ -596,6 +596,9 @@
 "enter_license_password_placeholder" = "密码";
 "leave_group" = "退出群组";
 
+"work_data_fetch_failed_title" = "加载 Threema Work 的数据失败";
+"work_data_fetch_failed_message" = "无法加载 Threema Work 的数据，请检查您的互联网连接并重试。";
+
 /* License Key */
 "enter_license_title" = "输入凭证";
 /* MWPhotoBrowser */
@@ -1095,6 +1098,8 @@
 "settings_advanced_reregister_push_notifications_header_title" = "推送通知";
 "settings_advanced_reregister_push_notifications_footer_title" = "如果此应用关闭后，仍然没有收到新消息通知，您可以重新注册通知推送权限。";
 "settings_advanced_reregister_notifications_label" = "重新注册推送通知";
+"settings_advanced_new_chat_view_label" = "新的聊天界面";
+"settings_advanced_new_chat_view_label_footer" = "注意：旧的聊天界面将在下一个版本中删除。";
 
 "settings_md_sync_alert_title" = "同步失败";
 
@@ -1516,6 +1521,7 @@
 "accessibility_poll_open" = "投票已开放";
 "accessibility_poll_closed" = "投票已关闭";
 "accessibility_file_duration" = "时长：%@";
+"accessibility_voice_message_playing" = "正在播放";
 
 // Message status types
 "accessibility_status_acknowledged_plus_time" = "已确认, %@";

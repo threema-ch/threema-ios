@@ -562,8 +562,7 @@ extension GroupDetailsDataSource {
                 func exportMediaAction(includeMedia: Bool) -> ((UIAlertAction) -> Void) {{ _ in
                     let exporter = ConversationExporter(
                         viewController: strongGroupDetailsViewController,
-                        conversation: strongSelf.conversation,
-                        entityManager: strongSelf.entityManager,
+                        conversationObjectID: strongSelf.conversation.objectID,
                         withMedia: includeMedia
                     )
                     exporter.exportConversation()

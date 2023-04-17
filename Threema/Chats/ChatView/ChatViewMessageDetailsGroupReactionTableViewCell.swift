@@ -26,7 +26,7 @@ final class ChatViewMessageDetailsGroupReactionTableViewCell: ThemedCodeStackTab
     var groupDeliveryReceipt: GroupDeliveryReceipt? {
         didSet {
             if groupDeliveryReceipt?.identity == MyIdentityStore.shared().identity {
-                nameLabel.text = BundleUtil.localizedString(forKey: "Me")
+                nameLabel.text = BundleUtil.localizedString(forKey: "me")
             }
             else {
                 if let contact = entityManager.entityFetcher.contact(for: groupDeliveryReceipt?.identity) {

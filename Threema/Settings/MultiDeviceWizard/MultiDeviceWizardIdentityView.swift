@@ -21,42 +21,76 @@
 import SwiftUI
 
 struct MultiDeviceWizardIdentityView: View {
-    
+    @ObservedObject var wizardVM: MultiDeviceWizardViewModel
+    @Binding var dismiss: Bool
+
     var identity = MyIdentityStore.shared().identity!
     
     var body: some View {
-        ZStack(alignment: .top) {
-            
-            MultiDeviceWizardConnectionInfoView()
-            
-            VStack(spacing: 0) {
-                Spacer()
+        VStack {
+            ZStack(alignment: .top) {
                 
-                Text(BundleUtil.localizedString(forKey: "md_wizard_start_desktop"))
-                    .font(.title3)
-                    .multilineTextAlignment(.center)
-                    .padding(.bottom, 30)
-
-                Text(BundleUtil.localizedString(forKey: "md_wizard_identity_text"))
-                    .bold()
-                    .font(.title2)
-                    .padding(.bottom)
+                MultiDeviceWizardConnectionInfoView()
                 
-                Text(identity)
-                    .font(.system(.title, design: .monospaced))
-                    .bold()
-                    .foregroundColor(.white)
-                    .padding()
-                    .background(Color(uiColor: Colors.backgroundWizardBox))
-                    .cornerRadius(15)
-                    .onTapGesture {
-                        UIPasteboard.general.string = identity
-                        NotificationPresenterWrapper.shared.present(type: .copySuccess)
-                    }
-                    .highPriorityGesture(DragGesture())
-                
-                Spacer()
+                VStack(spacing: 0) {
+                    Spacer()
+                    
+                    Text(BundleUtil.localizedString(forKey: "md_wizard_start_desktop"))
+                        .font(.title3)
+                        .multilineTextAlignment(.center)
+                        .padding(.bottom, 30)
+                    
+                    Text(BundleUtil.localizedString(forKey: "md_wizard_identity_text"))
+                        .bold()
+                        .font(.title2)
+                        .padding(.bottom)
+                    
+                    Text(identity)
+                        .font(.system(.title, design: .monospaced))
+                        .bold()
+                        .foregroundColor(.white)
+                        .padding()
+                        .background(Color(uiColor: Colors.backgroundWizardBox))
+                        .cornerRadius(15)
+                        .onTapGesture {
+                            UIPasteboard.general.string = identity
+                            NotificationPresenterWrapper.shared.present(type: .copySuccess)
+                        }
+                        .speechSpellsOutCharacters()
+                    
+                    Spacer()
+                }
             }
+            
+            HStack {
+                Button {
+                    dismiss = true
+                    wizardVM.cancelLinking()
+                } label: {
+                    Text(BundleUtil.localizedString(forKey: "md_wizard_cancel"))
+                }
+                .buttonStyle(.bordered)
+                .tint(Color(.primary))
+                
+                Spacer()
+                
+                NavigationLink {
+                    MultiDeviceWizardCodeView(wizardVM: wizardVM, dismissModal: $dismiss)
+                    
+                } label: {
+                    Text(BundleUtil.localizedString(forKey: "md_wizard_next"))
+                        .bold()
+                }
+                .buttonStyle(.borderedProminent)
+            }
+        }
+        .padding(.horizontal)
+        
+        .navigationBarTitle(BundleUtil.localizedString(forKey: "md_wizard_header"))
+        .navigationBarBackButtonHidden()
+        
+        .onAppear {
+            wizardVM.advanceState(.identity)
         }
     }
 }
@@ -65,6 +99,6 @@ struct MultiDeviceWizardIdentityView: View {
 
 struct MultiDeviceWizardIdentityView_Previews: PreviewProvider {
     static var previews: some View {
-        MultiDeviceWizardIdentityView()
+        MultiDeviceWizardIdentityView(wizardVM: MultiDeviceWizardViewModel(), dismiss: .constant(false))
     }
 }

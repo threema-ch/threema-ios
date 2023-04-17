@@ -39,10 +39,12 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 #endif
 
 @interface AdvancedSettingsViewController ()
-
+@property NSInteger advancedNewChatViewSection;
+@property BOOL showAdvancedNewChatViewSection;
 @end
 
 @implementation AdvancedSettingsViewController
+
 
 - (void)viewDidLoad
 {
@@ -61,6 +63,12 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     self.orphanedFilesCleanupLabel.text = [BundleUtil localizedStringForKey:@"settings_advanced_orphaned_files_cleanup"];
     
     self.reregisterPushNotificationsLabel.text = [BundleUtil localizedStringForKey:@"settings_advanced_reregister_notifications_label"];
+    
+    self.advancedNewChatViewLabel.text = [BundleUtil localizedStringForKey:@"settings_advanced_new_chat_view_label"];
+    self.advancedNewChatViewSwitch.on = [UserSettings sharedUserSettings].newChatViewActive;
+    
+    self.advancedNewChatViewSection = 7;
+    self.showAdvancedNewChatViewSection = NO; // TODO: (IOS-3584) Reenable for 5.1: UIAccessibilityIsVoiceOverRunning();
     
     [self.tableView reloadData];
 }
@@ -119,6 +127,11 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     [self.tableView reloadData];
 }
 
+- (IBAction)newChatViewSwitchChanged:(id)sender {
+    [UserSettings sharedUserSettings].newChatViewActive = self.advancedNewChatViewSwitch.on;
+    [self.tableView reloadData];
+}
+
 #pragma mark - UITableView
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
@@ -128,6 +141,11 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
         return 0;
     }
 #endif
+    
+    // Hide option to deactivate new chat view if no accessibility settings are enabled
+    if (section == self.advancedNewChatViewSection && !self.showAdvancedNewChatViewSection) {
+        return 0;
+    }
     
     return [super tableView:tableView numberOfRowsInSection:section];
 }
@@ -140,6 +158,11 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     }
 #endif
     
+    // Hide option to deactivate new chat view if no accessibility settings are enabled
+    if (indexPath.section == self.advancedNewChatViewSection && !self.showAdvancedNewChatViewSection) {
+        return 0.0;
+    }
+    
     return [super tableView:tableView heightForRowAtIndexPath:indexPath];
 }
 
@@ -151,6 +174,11 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     }
 #endif
     
+    // Hide option to deactivate new chat view if no accessibility settings are enabled
+    if (section == self.advancedNewChatViewSection && !self.showAdvancedNewChatViewSection) {
+        return 0.0;
+    }
+    
     return [super tableView:tableView heightForHeaderInSection:section];
 }
 
@@ -161,6 +189,11 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
         return 0.0;
     }
 #endif
+    
+    // Hide option to deactivate new chat view if no accessibility settings are enabled
+    if (section == self.advancedNewChatViewSection && !self.showAdvancedNewChatViewSection) {
+        return 0.0;
+    }
     
     return [super tableView:tableView heightForFooterInSection:section];
 }
@@ -176,6 +209,10 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     
     if (section == 6) {
         return [BundleUtil localizedStringForKey:@"settings_advanced_reregister_push_notifications_footer_title"];
+    }
+    
+    if (section == self.advancedNewChatViewSection) {
+        return [BundleUtil localizedStringForKey:@"settings_advanced_new_chat_view_label_footer"];
     }
     
     return nil;

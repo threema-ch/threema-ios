@@ -377,7 +377,7 @@ static UserSettings *instance;
     voiceMessagesShowTimeRemaining = [defaults boolForKey:@"VoiceMessagesShowTimeRemaining"];
     
     // TODO: (IOS-2860) Remove
-    newChatViewActive = YES;
+    newChatViewActive = !UIAccessibilityIsVoiceOverRunning(); // TODO: (IOS-3584) use defaults setting again
     flippedTableView = [defaults boolForKey:@"flippedTableView"];
     
     featureFlagEnableNoMIMETypeFileMessagesFilter = [defaults boolForKey:@"featureFlagEnableNoMIMETypeFileMessagesFilter"];
@@ -840,6 +840,12 @@ static UserSettings *instance;
 - (void)setThreemaVideoCallQualitySetting:(enum ThreemaVideoCallQualitySetting)newThreemaVideoCallQualitySetting {
     threemaVideoCallQualitySetting = newThreemaVideoCallQualitySetting;
     [defaults setObject:[NSNumber numberWithInt:threemaVideoCallQualitySetting] forKey:@"ThreemaVideoCallQualitySetting"];
+    [defaults synchronize];
+}
+
+- (void)setNewChatViewActive:(BOOL)reallyNewChatViewActive {
+    newChatViewActive = reallyNewChatViewActive;
+    [defaults setBool:newChatViewActive forKey:@"NewChatViewActive"];
     [defaults synchronize];
 }
 

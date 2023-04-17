@@ -318,8 +318,9 @@ extension ThreemaWebViewController {
         let qrController = QRScannerViewController()
         qrController.delegate = self
         qrController.title = BundleUtil.localizedString(forKey: "scan_qr")
+        qrController.navigationItem.scrollEdgeAppearance = Colors.defaultNavigationBarAppearance()
+
         let nav = PortraitNavigationController(rootViewController: qrController)
-        nav.navigationBar.barStyle = .blackTranslucent
         nav.modalTransitionStyle = .crossDissolve
         present(nav, animated: true)
     }

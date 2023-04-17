@@ -1099,6 +1099,8 @@ Threema Safe erlaubt, Ihre Threema-ID, Kontakte und Gruppen wiederherzustellen, 
 "settings_advanced_reregister_push_notifications_header_title" = "Push-Benachrichtigungen";
 "settings_advanced_reregister_push_notifications_footer_title" = "Falls Sie ausserhalb der App keine Benachrichtigungen für eingehende Nachrichten erhalten, können Sie die Registration für Push-Benachrichtigungen hier erneuern.";
 "settings_advanced_reregister_notifications_label" = "Push-Benachrichtigungen Erneut Registrieren";
+"settings_advanced_new_chat_view_label" = "Neue Chat-Ansicht";
+"settings_advanced_new_chat_view_label_footer" = "Hinweis: Die alte Chat-Ansicht wird bald entfernt.";
 
 "settings_md_sync_alert_title" = "Synchronisieren fehlgeschlagen";
 
@@ -1520,6 +1522,7 @@ Sofern keine Medien und/oder Dateien in %@ fehlen, leeren Sie den Papierkorb, um
 "accessibility_poll_open" = "Offen";
 "accessibility_poll_closed" = "Geschlossen";
 "accessibility_file_duration" = "Dauer: %@.";
+"accessibility_voice_message_playing" = "Spielt ab.";
 
 // Message status types
 "accessibility_status_acknowledged_plus_time" = "Bestätigt, %@";
@@ -1547,9 +1550,9 @@ Sofern keine Medien und/oder Dateien in %@ fehlen, leeren Sie den Papierkorb, um
 
 "md_wizard_terms_note_text" = "Die Tech-Preview ermöglicht, die kommende Multi-Device-Funktionalität vorab zu testen. Bitte beachten Sie, dass Funktionen limitiert sind und sich die Alpha-Software noch in Entwicklung befindet.";
 
-"md_wizard_terms_backup" = "Datenverlust kann auftreten. Bitte erstellen Sie ein Backup, bevor Sie fortfahren. \n[Backup-Anleitung] (https://threema.ch/docs/threema/ios_backup_manual_de.pdf)";
-"md_wizard_terms_support" = "Diese Preview unterstützt Textnachrichten. Aktualisieren Sie die iOS- und Desktop-App regelmässig, um die neuesten Funktionen und Verbesserungen zu erhalten.";
-"md_wizard_terms_issues" = "Bekannte Probleme und Einschränkungen sind [hier] (auf Englisch) aufgelistet (https://threema.ch/faq/md_limit).";
+"md_wizard_terms_backup" = "Datenverlust kann auftreten. Bitte erstellen Sie ein Backup, bevor Sie fortfahren. \n [Backup-Anleitung](https://threema.ch/docs/threema/ios_backup_manual_de.pdf)";
+"md_wizard_terms_support" = "Aktualisieren Sie die iOS- und Desktop-App regelmässig, um die neuesten Funktionen und Verbesserungen zu erhalten.";
+"md_wizard_terms_issues" = "Bekannte Probleme und Einschränkungen sind [hier](https://threema.ch/faq/md_limit) (auf Englisch) aufgelistet.";
 "md_wizard_terms_bugs" = "Um Feedback zu geben, kontaktieren Sie uns direkt via Threema («Einstellungen > Beta Feedback»).";
 
 "md_wizard_terms_accept" = "Ich habe ein Backup erstellt und möchte fortfahren.";
@@ -1557,7 +1560,7 @@ Sofern keine Medien und/oder Dateien in %@ fehlen, leeren Sie den Papierkorb, um
 "md_wizard_info_download_title" = "Herunterladen";
 "md_wizard_info_download_text" = "Threema Tech Preview für Ihren Computer:";
 "md_wizard_info_linking_title" = "Verknüpfen Sie Ihren Computer mit diesem Gerät";
-"md_wizard_info_linking_text" = "Beim Verknüpfen Ihres Computers werden Ihre wichtigsten Threema-Daten (ID, Kontakte und Gruppen) verschlüsselt und vorübergehend auf dem [Threema-Server, den Sie zur Zeit nutzen], gespeichert (https://threema.ch/de/faq/threema_safe_webdav). (Aktuelle Einstellung: %@.)";
+"md_wizard_info_linking_text" = "Beim Verknüpfen Ihres Computers werden Ihre wichtigsten Threema-Daten (ID, Kontakte und Gruppen) verschlüsselt und vorübergehend auf dem [Threema-Server, den Sie zur Zeit nutzen](https://threema.ch/de/faq/threema_safe_webdav). (Aktuelle Einstellung: %@.), gespeichert.";
 
 "md_wizard_preparation_status" = "Wird vorbereitet...";
 

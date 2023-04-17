@@ -1168,6 +1168,11 @@ extension ChatViewController {
         }
     }
     
+    override func accessibilityPerformMagicTap() -> Bool {
+        chatViewTableViewVoiceMessageCellDelegate.stopPlayingAndDoCleanup(cancel: true)
+        return true
+    }
+    
     // TODO: IOS-3503 remove
     @objc private func accessibilityFocusElementChanged(_ notification: Notification) {
         

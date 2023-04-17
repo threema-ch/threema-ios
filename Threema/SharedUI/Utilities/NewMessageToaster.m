@@ -109,15 +109,19 @@
                 
                 if ([chatNavVc.topViewController isKindOfClass:[ChatViewController class]]) {
                     ChatViewController *curChatVc = (ChatViewController*)chatNavVc.topViewController;
-                    if (curChatVc.conversation.objectID == message.conversation.objectID)
+                    if (curChatVc.conversation.objectID == message.conversation.objectID) {
+                        if (UIAccessibilityIsVoiceOverRunning()) {
+                            NSString *accessibilityText = [NSString stringWithFormat:@"%@%@", [BundleUtil localizedStringForKey:@"new_message_accessibility"], [message previewText]];
+                            UIAccessibilityPostNotification(UIAccessibilityAnnouncementNotification, accessibilityText);
+                        }
                         return;
+                    }
                 }
 
                 [NotificationBannerHelper newBannerWithBaseMessage: message];
             }
         }];
     }
-
 }
 
 - (void)conversationOpened:(NSNotification*)notification {

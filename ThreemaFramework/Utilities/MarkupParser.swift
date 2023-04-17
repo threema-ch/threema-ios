@@ -34,7 +34,7 @@ public class MarkupParser {
     private static let BOUNDARY_PATTERN = "[\\s.,!?¡¿‽⸮;:&(){}\\[\\]⟨⟩‹›«»'\"‘’“”*~\\-_…⋯᠁]"
     private static let URL_BOUNDARY_PATTERN = "[\(MarkupParser.RTLO)a-zA-Z0-9\\-.äöü_~:/?#\\[\\]@!$&'()*+,;=%]"
     private static let URL_START_PATTERN = #"([a-zA-Z]+:\/\/)|([wW]{3}.)"#
-    private static let MENTION_PATTERN = "@\\[[a-zA-Z0-9@]{8}\\]"
+    private static let MENTION_PATTERN = "@\\[([A-Z0-9*]{1}[A-Z0-9]{7}|@{8})\\]"
     
     private static let MARKUP_CHAR_BOLD = "*"
     private static let MARKUP_CHAR_ITALIC = "_"
@@ -260,75 +260,100 @@ public extension MarkupParser {
     
     func parseMentionNamesToMarkup(parsed: NSAttributedString) -> NSAttributedString {
         let parsedWithMentionMarkups = NSMutableAttributedString(attributedString: parsed)
-        parsedWithMentionMarkups.enumerateAttributes(in: NSRange(
+        
+        parsedWithMentionMarkups.enumerateAttribute(NSAttributedString.Key.tokenType, in: NSRange(
             location: 0,
             length: parsedWithMentionMarkups.length
-        )) { attributes, range, _ in
-            // check is attribute markup and remove it from parsed string
-            if attributes[NSAttributedString.Key.tokenType] as? MarkupParser.TokenType == TokenType.mention {
-                if let mentionType = attributes[NSAttributedString.Key.contact] as? MentionType {
-                    switch mentionType {
-                    case .me:
-                        if let myIdentity = businessInjector.myIdentityStore.identity {
-                            parsedWithMentionMarkups.replaceCharacters(
-                                in: range,
-                                with: "@[\(myIdentity)]"
-                            )
-                        }
-                        else {
-                            DDLogError("Could not set own mention")
-                        }
-                    case .all:
-                        parsedWithMentionMarkups.replaceCharacters(in: range, with: "@[\(MarkupParser.MENTION_ALL)]")
-                    case let .contact(contact):
-                        parsedWithMentionMarkups.replaceCharacters(in: range, with: "@[\(contact.identity)]")
+        )) { attribute, range, _ in
+            guard let attribute = attribute as? MarkupParser.TokenType,
+                  attribute == TokenType.mention else {
+                return
+            }
+            var mutableRange = range
+            
+            let attributes = parsedWithMentionMarkups.attributes(
+                at: range.location,
+                longestEffectiveRange: &mutableRange,
+                in: NSRange(location: 0, length: parsedWithMentionMarkups.length)
+            )
+
+            if let mentionType = attributes[NSAttributedString.Key.contact] as? MentionType {
+                switch mentionType {
+                case .me:
+                    if let myIdentity = businessInjector.myIdentityStore.identity {
+                        parsedWithMentionMarkups.replaceCharacters(
+                            in: range,
+                            with: "@[\(myIdentity)]"
+                        )
                     }
+                    else {
+                        DDLogError("Could not set own mention")
+                    }
+                case .all:
+                    parsedWithMentionMarkups.replaceCharacters(in: range, with: "@[\(MarkupParser.MENTION_ALL)]")
+                case let .contact(contact):
+                    parsedWithMentionMarkups.replaceCharacters(in: range, with: "@[\(contact.identity)]")
                 }
             }
         }
+       
         return parsedWithMentionMarkups
     }
     
     func removeMarkupsFromParse(parsed: NSAttributedString) -> NSAttributedString {
         let parsedWithoutMarkups = NSMutableAttributedString(attributedString: parsed)
-        parsedWithoutMarkups.enumerateAttributes(in: NSRange(
+        parsedWithoutMarkups.enumerateAttribute(NSAttributedString.Key.tokenType, in: NSRange(
             location: 0,
             length: parsedWithoutMarkups.length
-        )) { attributes, range, _ in
+        )) { attribute, range, _ in
             // check is attribute markup and remove it from parsed string
-            if attributes[NSAttributedString.Key.tokenType] as? MarkupParser.TokenType == TokenType.markup {
-                parsedWithoutMarkups.deleteCharacters(in: range)
+            guard let attribute = attribute as? MarkupParser.TokenType,
+                  attribute == TokenType.markup else {
+                return
             }
+            parsedWithoutMarkups.deleteCharacters(in: range)
         }
         return parsedWithoutMarkups
     }
     
     func parseMentionNames(parsed: NSAttributedString) -> NSAttributedString {
+
         let parsedWithMentionNames = NSMutableAttributedString(attributedString: parsed)
-        parsedWithMentionNames.enumerateAttributes(in: NSRange(
+        
+        parsedWithMentionNames.enumerateAttribute(NSAttributedString.Key.tokenType, in: NSRange(
             location: 0,
             length: parsedWithMentionNames.length
-        )) { attributes, range, _ in
-            // check is attribute markup and remove it from parsed string
-            if attributes[NSAttributedString.Key.tokenType] as? MarkupParser.TokenType == TokenType.mention {
-                if let mentionType = attributes[NSAttributedString.Key.contact] as? MentionType {
-                    switch mentionType {
-                    case .me:
-                        parsedWithMentionNames.replaceCharacters(
-                            in: range,
-                            with: "@\(BundleUtil.localizedString(forKey: "me"))"
-                        )
-                    case .all:
-                        parsedWithMentionNames.replaceCharacters(
-                            in: range,
-                            with: "@\(BundleUtil.localizedString(forKey: "all"))"
-                        )
-                    case let .contact(contact):
-                        parsedWithMentionNames.replaceCharacters(in: range, with: "@\(contact.displayName)")
-                    }
+        )) { attribute, range, _ in
+            guard let attribute = attribute as? MarkupParser.TokenType,
+                  attribute == TokenType.mention else {
+                return
+            }
+            var mutableRange = range
+            
+            let attributes = parsedWithMentionNames.attributes(
+                at: range.location,
+                longestEffectiveRange: &mutableRange,
+                in: NSRange(location: 0, length: parsedWithMentionNames.length)
+            )
+
+            if let mentionType = attributes[NSAttributedString.Key.contact] as? MentionType {
+                switch mentionType {
+                case .me:
+                    parsedWithMentionNames.replaceCharacters(
+                        in: range,
+                        with: "@\(BundleUtil.localizedString(forKey: "me"))"
+                    )
+                case .all:
+                    parsedWithMentionNames.replaceCharacters(
+                        in: range,
+                        with: "@\(BundleUtil.localizedString(forKey: "all"))"
+                    )
+                case let .contact(contact):
+                    parsedWithMentionNames.replaceCharacters(in: range, with: "@\(contact.displayName)")
                 }
             }
         }
+       
         return parsedWithMentionNames
     }
     

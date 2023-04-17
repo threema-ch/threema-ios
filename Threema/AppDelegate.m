@@ -667,7 +667,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
             MDMSetup *mdmSetup = [[MDMSetup alloc] initWithSetup:NO];
             
             // Check if Threema Safe is forced and not activated yet
-            if (![safeManager isActivated] && [mdmSetup isSafeBackupForce] && [mdmSetup safePassword] == nil) {
+            if (![safeManager isActivated] && [mdmSetup isSafeBackupForce]) {
                 // Activate with the password of the MDM
                 dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
                     // Or if password is already set from MDM (automatically perform safe)

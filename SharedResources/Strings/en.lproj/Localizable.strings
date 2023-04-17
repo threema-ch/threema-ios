@@ -1098,6 +1098,8 @@ When using Threema Safe, your can restore your Threema ID, contacts ,and groups 
 "settings_advanced_reregister_push_notifications_header_title" = "Push Notifications";
 "settings_advanced_reregister_push_notifications_footer_title" = "If incoming messages do not show up outside of the app as notifications, you can reregister for notifications.";
 "settings_advanced_reregister_notifications_label" = "Reregister Push Notifications";
+"settings_advanced_new_chat_view_label" = "New Chat View";
+"settings_advanced_new_chat_view_label_footer" = "Note: The old chat view will be removed in an upcoming release.";
 
 "settings_md_sync_alert_title" = "Synchronization failed";
 
@@ -1519,6 +1521,7 @@ If there are no (media) files missing in %@, empty the trash bin to permanently 
 "accessibility_poll_open" = "Open";
 "accessibility_poll_closed" = "Closed";
 "accessibility_file_duration" = "Duration: %@.";
+"accessibility_voice_message_playing" = "Currently playing.";
 
 // Message status types
 "accessibility_status_acknowledged_plus_time" = "Acknowledged, %@";
@@ -1546,7 +1549,7 @@ If there are no (media) files missing in %@, empty the trash bin to permanently 
 
 "md_wizard_terms_note_text" = "This tech preview is intended to let you test the upcoming multi-device support ahead of time. Please note that the features are limited, and since this is alpha software, it can be rough around the edges.";
 
-"md_wizard_terms_backup" = "Data loss might occur. Please create a backup before you proceed.\n[Backup instructions](https://threema.ch/docs/threema/ios_backup_manual_en.pdf)";
+"md_wizard_terms_backup" = "Data loss might occur. Please create a backup before you proceed.\n [Backup instructions](https://threema.ch/docs/threema/ios_backup_manual_en.pdf)";
 "md_wizard_terms_support" = "This preview supports text messages. Regularly update the apps for iOS and desktop to get the latest features and improvements. ";
 "md_wizard_terms_issues" = "Known issues and limitations can be found [here](https://threema.ch/faq/md_limit).";
 "md_wizard_terms_bugs" = "Please report issues you encounter in this app via “Settings > Beta Feedback”.";

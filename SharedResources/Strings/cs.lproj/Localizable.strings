@@ -596,6 +596,9 @@
 "enter_license_password_placeholder" = "Heslo";
 "leave_group" = "Opustit skupinu";
 
+"work_data_fetch_failed_title" = "Načtení dat Threema Work se nezdařilo";
+"work_data_fetch_failed_message" = "Nelze načíst data Threema Work, zkontrolujte připojení k internetu a zkuste to znovu.";
+
 /* License Key */
 "enter_license_title" = "Zadejte přihlašovací údaje";
 /* MWPhotoBrowser */
@@ -1094,6 +1097,8 @@
 "settings_advanced_reregister_push_notifications_header_title" = "Nabízená oznámení";
 "settings_advanced_reregister_push_notifications_footer_title" = "Pokud se vám příchozí zprávy nezobrazují mimo aplikaci jako oznámení, můžete si je znovu aktivovat.";
 "settings_advanced_reregister_notifications_label" = "Znovu aktivovat nabízená oznámení";
+"settings_advanced_new_chat_view_label" = "Nové zobrazení chatu";
+"settings_advanced_new_chat_view_label_footer" = "Poznámka: Staré zobrazení chatu bude v chystané nové aktualizaci odstraněno.";
 
 "settings_md_sync_alert_title" = "Synchronizace se nezdařila";
 
@@ -1515,6 +1520,7 @@ Pokud vám v %@ nechybí žádné (mediální) soubory, vyprázdněte koš, abys
 "accessibility_poll_open" = "Otevřeno";
 "accessibility_poll_closed" = "Zavřeno";
 "accessibility_file_duration" = "Trvání: %@.";
+"accessibility_voice_message_playing" = "Aktuálně se přehrává.";
 
 // Message status types
 "accessibility_status_acknowledged_plus_time" = "Vzato na vědomí, %@";
@@ -1544,7 +1550,7 @@ Pokud vám v %@ nechybí žádné (mediální) soubory, vyprázdněte koš, abys
 
 "md_wizard_terms_backup" = "Může dojít ke ztrátě dat. Než budete pokračovat, vytvořte si zálohu.\n[Pokyny k zálohování](https://threema.ch/docs/threema/ios_backup_manual_en.pdf)";
 "md_wizard_terms_support" = "Tento náhled podporuje textové zprávy. Pravidelně aktualizujte aplikace pro iOS a počítač, abyste získali nejnovější funkce a vylepšení. ";
-"md_wizard_terms_issues" = "Známé problémy a omezení najdete [zde].(https://threema.ch/faq/md_limit).";
+"md_wizard_terms_issues" = "Známé problémy a omezení najdete [zde](https://threema.ch/faq/md_limit).";
 "md_wizard_terms_bugs" = "Problémy, se kterými se v této aplikaci setkáte, nahlaste prostřednictvím „Nastavení > Zpětná vazba k betaverzi“.";
 
 "md_wizard_terms_accept" = "Vytvořil/a jsem zálohu a chci pokračovat.";

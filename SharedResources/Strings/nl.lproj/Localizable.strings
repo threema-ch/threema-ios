@@ -596,6 +596,9 @@
 "enter_license_password_placeholder" = "Wachtwoord";
 "leave_group" = "Groep verlaten";
 
+"work_data_fetch_failed_title" = "Het laden van Threema Work-gegevens is mislukt";
+"work_data_fetch_failed_message" = "Threema Work-gegevens zijn niet geladen. Controleer uw internetverbinding en probeer het opnieuw.";
+
 /* License Key */
 "enter_license_title" = "Gegevens invoeren";
 /* MWPhotoBrowser */
@@ -1094,6 +1097,8 @@
 "settings_advanced_reregister_push_notifications_header_title" = "Pushberichten";
 "settings_advanced_reregister_push_notifications_footer_title" = "Indien inkomende berichten niet buiten de app als meldingen worden getoond, kunt u zich opnieuw voor meldingen registreren.";
 "settings_advanced_reregister_notifications_label" = "Pushmeldingen opnieuw registreren";
+"settings_advanced_new_chat_view_label" = "Nieuwe chatweergave";
+"settings_advanced_new_chat_view_label_footer" = "Let op: de oude chatweergave wordt verwijderd in een aankomende versie.";
 
 "settings_md_sync_alert_title" = "Synchronisatie is mislukt";
 
@@ -1515,6 +1520,7 @@ Als er geen (media)bestanden in %@ ontbreken, maak de prullenbak dan leeg om de 
 "accessibility_poll_open" = "Open";
 "accessibility_poll_closed" = "Gesloten";
 "accessibility_file_duration" = "Tijdsduur: %@.";
+"accessibility_voice_message_playing" = "Wordt nu afgespeeld.";
 
 // Message status types
 "accessibility_status_acknowledged_plus_time" = "Erkend, %@";
@@ -1544,7 +1550,7 @@ Als er geen (media)bestanden in %@ ontbreken, maak de prullenbak dan leeg om de 
 
 "md_wizard_terms_backup" = "Er kan gegevensverlies optreden. Zorg dat u een back-up maakt voordat u verdergaat.\n[Back-up instructies](https://threema.ch/docs/threema/ios_backup_manual_en.pdf)";
 "md_wizard_terms_support" = "Deze preview ondersteunt sms-berichten. Zorg dat u de iOS- en desktop-apps regelmatig bijwerkt om de laatste functies en verbeteringen te krijgen. ";
-"md_wizard_terms_issues" = "Bekende problemen en beperkingen kunnen [hier] worden gevonden (https://threema.ch/faq/md_limit).";
+"md_wizard_terms_issues" = "Bekende problemen en beperkingen kunnen [hier](https://threema.ch/faq/md_limit) worden gevonden.";
 "md_wizard_terms_bugs" = "Meld de problemen die u in deze app ervaart via \"Instellingen > Beta-feedback\".";
 
 "md_wizard_terms_accept" = "Ik heb een back-up gemaakt en wil verdergaan.";

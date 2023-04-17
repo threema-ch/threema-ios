@@ -34,6 +34,7 @@
 #import "MDMSetup.h"
 #import "WorkDataFetcher.h"
 #import "Threema-Swift.h"
+#import "SplashViewController.h"
 
 #ifdef DEBUG
   static const DDLogLevel ddLogLevel = DDLogLevelVerbose;
@@ -113,8 +114,9 @@
         [licenseStore performLicenseCheckWithCompletion:^(BOOL success) {
             if (success) {
                 if ([LicenseStore requiresLicenseKey] == true) {
-                    NSString *errorDescription = [BundleUtil localizedStringForKey:@"already_licensed"];
-                    [UIAlertTemplate showAlertWithOwner:[[AppDelegate sharedAppDelegate] currentTopViewController] title:errorDescription message:@"" actionOk:nil];
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        [UIAlertTemplate showAlertWithOwner:[[AppDelegate sharedAppDelegate] currentTopViewController] title:[BundleUtil localizedStringForKey:@"already_licensed"] message:@"" actionOk:nil];
+                    });
                 }
             } else {
                 NSString *username = [query objectForKey:@"username"][0];
@@ -137,15 +139,32 @@
                     if (ThreemaAppObjc.current == ThreemaAppOnPrem) {
                         [licenseStore setOnPremConfigUrl:server];
                     }
-                    
-                    [self performLicenseCheckWithLicenseStore:licenseStore];
+
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        if ([[AppDelegate sharedAppDelegate] isPresentingEnterLicense]) {
+                            UIViewController *currentVC = [AppDelegate sharedAppDelegate].window.rootViewController;
+                            if ([currentVC isKindOfClass:[SplashViewController class]] == NO) {
+                                // Check license, do Work API fetch and connect if is disconnected
+                                [self performLicenseCheckWithLicenseStore:licenseStore];
+                            }
+                            else {
+                                // Setup is running, just close enter license view
+                                // License check and Work API fetch will done in next setup view
+                                [currentVC dismissViewControllerAnimated:YES completion:nil];
+                            }
+                        }
+                        else {
+                            [self performLicenseCheckWithLicenseStore:licenseStore];
+                        }
+                    });
                 }
             }
         }];
     } else {
         if ([LicenseStore requiresLicenseKey] == true) {
-            NSString *errorDescription = [BundleUtil localizedStringForKey:@"already_licensed"];
-            [UIAlertTemplate showAlertWithOwner:[[AppDelegate sharedAppDelegate] currentTopViewController] title:errorDescription message:@"" actionOk:nil];
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [UIAlertTemplate showAlertWithOwner:[[AppDelegate sharedAppDelegate] currentTopViewController] title:[BundleUtil localizedStringForKey:@"already_licensed"] message:@"" actionOk:nil];
+            });
         }
     }
 }
@@ -159,7 +178,6 @@
                         if ([[AppDelegate sharedAppDelegate] isPresentingEnterLicense]) {
                             UIViewController *currentVC = [AppDelegate sharedAppDelegate].window.rootViewController;
                             [currentVC dismissViewControllerAnimated:YES completion:^{
-                                NSLog(@"Url handler");
                                 [AppDelegate setupConnection];
                             }];
                         }

@@ -597,6 +597,9 @@ Nahláste prosím tento incident na security@threema.ch a ak je to možné, posk
 "enter_license_password_placeholder" = "Heslo";
 "leave_group" = "Opustiť skupinu";
 
+"work_data_fetch_failed_title" = "Načítavanie pracovných údajov z aplikácie Threema bolo neúspešné";
+"work_data_fetch_failed_message" = "Nepodarilo sa načítať pracovné údaje aplikácie Threema. Skontrolujte si internetové pripojenie a skúste to znova.";
+
 /* License Key */
 "enter_license_title" = "Zadajte prihlasovacie údaje";
 /* MWPhotoBrowser */
@@ -1096,6 +1099,8 @@ V prípade, že stratíte prístup k vašemu zariadeniu, pomocou Trezoru Threema
 "settings_advanced_reregister_push_notifications_header_title" = "Automatické upozornenia";
 "settings_advanced_reregister_push_notifications_footer_title" = "Ak sa prichádzajúce správy nezobrazujú mimo aplikácie ako upozornenia, môžete sa znova registrovať na upozornenia.";
 "settings_advanced_reregister_notifications_label" = "Znova registrovať automatické upozornenia";
+"settings_advanced_new_chat_view_label" = "Nové zobrazenie četu";
+"settings_advanced_new_chat_view_label_footer" = "Poznámka: Staré zobrazenie četu bude v nadchádzajúcom vydaní odstránené.";
 
 "settings_md_sync_alert_title" = "Synchronizácia zlyhala";
 
@@ -1517,6 +1522,7 @@ Pokiaľ vám v %@ nechýbajú žiadne (mediálne) súbory, vyprázdnite kôš, a
 "accessibility_poll_open" = "Otvoriť";
 "accessibility_poll_closed" = "Uzavreté";
 "accessibility_file_duration" = "Trvanie: %@.";
+"accessibility_voice_message_playing" = "Momentálne sa prehráva.";
 
 // Message status types
 "accessibility_status_acknowledged_plus_time" = "Uznávané, %@";

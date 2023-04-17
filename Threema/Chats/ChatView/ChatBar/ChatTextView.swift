@@ -190,6 +190,9 @@ final class ChatTextView: UITextView {
     // MARK: - Configuration
     
     private func configureTextView() {
+        let menuItem = UIMenuItem(title: BundleUtil.localizedString(forKey: "scan_qr"), action: #selector(scanQRCode))
+        UIMenuController.shared.menuItems = [menuItem]
+
         font = UIFont.preferredFont(forTextStyle: Config.textStyle)
         adjustsFontForContentSizeCategory = true
         
@@ -543,6 +546,19 @@ final class ChatTextView: UITextView {
             mentionsTableViewDelegate?.shouldHideMentionsTableView(true)
         }
     }
+    
+    @objc private func scanQRCode() {
+        let qrController = QRScannerViewController()
+        
+        qrController.delegate = self
+        qrController.title = BundleUtil.localizedString(forKey: "scan_qr")
+        qrController.navigationItem.scrollEdgeAppearance = Colors.defaultNavigationBarAppearance()
+
+        let nav = PortraitNavigationController(rootViewController: qrController)
+
+        nav.modalTransitionStyle = .crossDissolve
+        window?.rootViewController?.present(nav, animated: true)
+    }
 }
 
 // MARK: - Accessibility
@@ -694,5 +710,25 @@ extension ChatTextView: UITextViewDelegate {
             }
         }
         return diff
+    }
+}
+
+// MARK: - QRScannerViewControllerDelegate
+
+extension ChatTextView: QRScannerViewControllerDelegate {
+    func qrScannerViewController(_ controller: QRScannerViewController, didScanResult result: String?) {
+        if let result = result {
+            insertText(result)
+        }
+        controller.dismiss(animated: true)
+    }
+    
+    func qrScannerViewController(
+        _ controller: QRScannerViewController,
+        didCancelAndWillDismissItself willDismissItself: Bool
+    ) {
+        if !willDismissItself {
+            controller.dismiss(animated: true)
+        }
     }
 }

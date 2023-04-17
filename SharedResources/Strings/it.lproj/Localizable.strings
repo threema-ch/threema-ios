@@ -596,6 +596,9 @@
 "enter_license_password_placeholder" = "Password";
 "leave_group" = "Abbandona Gruppo";
 
+"work_data_fetch_failed_title" = "Caricamento dati Threema Work non riuscito";
+"work_data_fetch_failed_message" = "Impossibile caricare i dati Threema Work. Verifica la connessione a Internet e riprova.";
+
 /* License Key */
 "enter_license_title" = "Sblocca Threema";
 /* MWPhotoBrowser */
@@ -1094,6 +1097,8 @@
 "settings_advanced_reregister_push_notifications_header_title" = "Notifiche push";
 "settings_advanced_reregister_push_notifications_footer_title" = "Se non ricevi le notifiche dei messaggi in entrata al di fuori dell'app puoi iscriverti di nuovo per ricevere le notifiche push.";
 "settings_advanced_reregister_notifications_label" = "Registrare ancora una volta le notifiche push";
+"settings_advanced_new_chat_view_label" = "Nuova visualizzazione chat";
+"settings_advanced_new_chat_view_label_footer" = "Avviso: la vecchia visualizzazione chat sarà eliminata a breve.";
 
 "settings_md_sync_alert_title" = "Sincronizzazione non riuscita";
 
@@ -1515,6 +1520,7 @@ Se non mancano media e/o file in %@, svuota il cestino per cancellare definitiva
 "accessibility_poll_open" = "Aperto";
 "accessibility_poll_closed" = "Chiuso";
 "accessibility_file_duration" = "Durata: %@.";
+"accessibility_voice_message_playing" = "Lettura in corso.";
 
 // Message status types
 "accessibility_status_acknowledged_plus_time" = "Confermato, %@";

@@ -596,6 +596,9 @@
 "enter_license_password_placeholder" = "密碼";
 "leave_group" = "離開群組";
 
+"work_data_fetch_failed_title" = "載入 Threema Work 的資料失敗";
+"work_data_fetch_failed_message" = "無法載入 Threema Work 的資料，請檢查您的網路連線並再試一次。";
+
 /* License Key */
 "enter_license_title" = "輸入憑證";
 /* MWPhotoBrowser */
@@ -1095,6 +1098,8 @@
 "settings_advanced_reregister_push_notifications_header_title" = "推播通知";
 "settings_advanced_reregister_push_notifications_footer_title" = "如果此應用程式關閉後，仍然沒有收到新訊息通知，您可以重新註冊通知推播權限。";
 "settings_advanced_reregister_notifications_label" = "重新註冊推播通知";
+"settings_advanced_new_chat_view_label" = "新的對話畫面";
+"settings_advanced_new_chat_view_label_footer" = "注意：舊的對話畫面將在下一個版本中刪除。";
 
 "settings_md_sync_alert_title" = "同步失敗";
 
@@ -1338,7 +1343,7 @@
 "multi_device_linked_devices_refresh" = "下拉更新";
 "multi_device_linked_devices_loading_failed" = "載入裝置失敗：%@";
 "multi_device_linked_devices_failed_to_load_title" = "載入裝置清單失敗";
-"multi_device_linked_devices_failed_to_load_message" = "無法載入已連結的裝置，請檢查您的網絡連線並再試一次。";
+"multi_device_linked_devices_failed_to_load_message" = "無法載入已連結的裝置，請檢查您的網路連線並再試一次。";
 "multi_device_linked_devices_this" = "此裝置";
 "multi_device_linked_devices_others" = "其他裝置";
 "multi_device_linked_devices_last_login" = "最近登入：%@";
@@ -1351,7 +1356,7 @@
 
 "multi_device_linked_devices_failed_remove_title" = "移除設置失敗";
 "multi_device_linked_devices_failed_remove_message" = "無法移除已連結的裝置，請再試一次。";
-"multi_device_linked_devices_failed_remove_message_2" = "無法移除已連結的裝置，請檢查您的網絡連線並再試一次。";
+"multi_device_linked_devices_failed_remove_message_2" = "無法移除已連結的裝置，請檢查您的網路連線並再試一次。";
 "multi_device_slot_state_mismatch_alert" = "此裝置已取消連結，這意味著您現時不能再傳送或接收新訊息。如果您沒有主動取消連結，這可能是由於技術預覽版的技術問題而發生錯誤。對此給您帶來的不便我們深感抱歉。如要重新連結，請檢視常見問題集：https://three.ma/faq";
 
 "myprofile_link_email_phone_footer" = "將您的電子郵件地址或電話號碼與您的ID連結，如果其他人的通訊錄中有儲存您的資料，他們將在 %@ 上自動找到您。";
@@ -1516,6 +1521,7 @@
 "accessibility_poll_open" = "投票已開放";
 "accessibility_poll_closed" = "投票已關閉";
 "accessibility_file_duration" = "長度：%@";
+"accessibility_voice_message_playing" = "正在播放";
 
 // Message status types
 "accessibility_status_acknowledged_plus_time" = "已確認, %@";

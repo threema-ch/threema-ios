@@ -85,8 +85,9 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(wallpaperChanged:) name:kNotificationWallpaperChanged object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(colorThemeChanged:) name:kNotificationColorThemeChanged object:nil];
-    // TODO: (IOS-2860) Remove
+    // TODO: (IOS-2860) Remove next two
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(chatFontSizeChanged:) name:UIContentSizeCategoryDidChangeNotification object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(voiceOverStatusDidChange) name:UIAccessibilityVoiceOverStatusDidChangeNotification object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(applicationDidReceiveMemoryWarning:) name:UIApplicationDidReceiveMemoryWarningNotification object:nil];
     
     [Colors updateWithTabBar:self.tabBar];
@@ -691,6 +692,10 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         
         [Colors updateWithNavigationBar:_conversationsNavigationController.navigationBar];
     }
+}
+
+- (void)voiceOverStatusDidChange {
+    [UserSettings resetSharedInstance];
 }
 
 // TODO: (IOS-2860) Remove

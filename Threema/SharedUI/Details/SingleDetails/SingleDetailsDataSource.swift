@@ -637,8 +637,7 @@ extension SingleDetailsDataSource {
                 func exportMediaAction(includeMedia: Bool) -> ((UIAlertAction) -> Void) {{ _ in
                     let exporter = ConversationExporter(
                         viewController: strongSingleDetailsViewController,
-                        conversation: conversation,
-                        entityManager: strongSelf.entityManager,
+                        conversationObjectID: conversation.objectID,
                         withMedia: includeMedia
                     )
                     exporter.exportConversation()

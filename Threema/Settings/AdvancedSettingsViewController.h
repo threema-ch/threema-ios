@@ -31,9 +31,13 @@
 @property (weak, nonatomic) IBOutlet UITableViewCell *flushMessageQueueCell;
 @property (weak, nonatomic) IBOutlet UILabel *orphanedFilesCleanupLabel;
 @property (weak, nonatomic) IBOutlet UILabel *reregisterPushNotificationsLabel;
+@property (weak, nonatomic) IBOutlet UILabel *advancedNewChatViewLabel;
+@property (weak, nonatomic) IBOutlet UISwitch *advancedNewChatViewSwitch;
+
 
 - (IBAction)enableIPv6Changed:(id)sender;
 - (IBAction)validationLoggingChanged:(id)sender;
 - (IBAction)proximityMonitoringChanged:(id)sender;
+- (IBAction)newChatViewSwitchChanged:(id)sender;
 
 @end

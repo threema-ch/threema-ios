@@ -21,40 +21,85 @@
 import SwiftUI
 
 struct MultiDeviceWizardInformationView: View {
-    
-    var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 30) {
-                
-                VStack(alignment: .leading, spacing: 0) {
-                    MultiDeviceWizardBulletPointView(
-                        text: BundleUtil.localizedString(forKey: "md_wizard_info_download_title"),
-                        imageName: "arrow.down.circle.fill"
-                    )
-                    .padding(.bottom, 2.0)
-                    
-                    Text(BundleUtil.localizedString(forKey: "md_wizard_info_download_text"))
-                    
-                    Link("three.ma/md", destination: URL(string: "https://three.ma/md")!)
-                        .foregroundColor(Color(.primary))
-                        .highPriorityGesture(DragGesture())
-                }
+    @Environment(\.openURL) var openURL
 
-                VStack(alignment: .leading, spacing: 0) {
-                    MultiDeviceWizardBulletPointView(
-                        text: BundleUtil.localizedString(forKey: "md_wizard_info_linking_title"),
-                        imageName: "link.circle.fill"
-                    )
-                    .padding(.bottom, 2.0)
+    @ObservedObject var wizardVM: MultiDeviceWizardViewModel
+    @Binding var dismiss: Bool
+
+    var body: some View {
+        VStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 30) {
                     
-                    Text(LocalizedStringKey(String.localizedStringWithFormat(
-                        BundleUtil.localizedString(forKey: "md_wizard_info_linking_text"),
-                        DeviceLinking(businessInjector: BusinessInjector()).threemaSafeServer
-                    )))
+                    VStack(alignment: .leading, spacing: 0) {
+                        MultiDeviceWizardBulletPointView(
+                            text: BundleUtil.localizedString(forKey: "md_wizard_info_download_title"),
+                            imageName: "arrow.down.circle.fill"
+                        )
+                        .padding(.bottom, 2.0)
+                        
+                        Text(BundleUtil.localizedString(forKey: "md_wizard_info_download_text"))
+                        
+                        Link("three.ma/md", destination: URL(string: "https://three.ma/md")!)
+                            .foregroundColor(Color(.primary))
+                            .highPriorityGesture(DragGesture())
+                    }
+                    .padding(.top)
+                    .accessibilityElement(children: .combine)
+                    
+                    VStack(alignment: .leading, spacing: 0) {
+                        MultiDeviceWizardBulletPointView(
+                            text: BundleUtil.localizedString(forKey: "md_wizard_info_linking_title"),
+                            imageName: "link.circle.fill"
+                        )
+                        .padding(.bottom, 2.0)
+                        
+                        Text(LocalizedStringKey(String.localizedStringWithFormat(
+                            BundleUtil.localizedString(forKey: "md_wizard_info_linking_text"),
+                            DeviceLinking(businessInjector: BusinessInjector()).threemaSafeServer
+                        )))
+                    }
+                    .accessibilityElement(children: .combine)
+                    .accessibilityAction(named: Text(String.localizedStringWithFormat(
+                        BundleUtil.localizedString(forKey: "accessibility_action_open_link"),
+                        "https://threema.ch/en/faq/threema_safe_webdav"
+                    ))) {
+                        openURL(URL(string: "https://threema.ch/en/faq/threema_safe_webdav")!)
+                    }
                 }
-                
-                Spacer()
             }
+            Spacer()
+                
+            HStack {
+                Button {
+                    dismiss = true
+                    wizardVM.cancelLinking()
+                } label: {
+                    Text(BundleUtil.localizedString(forKey: "md_wizard_cancel"))
+                }
+                .buttonStyle(.bordered)
+                .tint(Color(.primary))
+                    
+                Spacer()
+                    
+                NavigationLink {
+                    MultiDeviceWizardPreparationView(wizardVM: wizardVM, dismiss: $dismiss)
+                        
+                } label: {
+                    Text(BundleUtil.localizedString(forKey: "md_wizard_start"))
+                        .bold()
+                }
+                .buttonStyle(.borderedProminent)
+            }
+            .padding(.vertical)
+        }
+        .padding(.horizontal)
+        
+        .navigationBarTitle(BundleUtil.localizedString(forKey: "md_wizard_header"))
+        .navigationBarBackButtonHidden()
+        
+        .onAppear {
+            wizardVM.advanceState(.information)
         }
     }
 }
@@ -63,6 +108,6 @@ struct MultiDeviceWizardInformationView: View {
 
 struct MultiDeviceWizardProcessView_Previews: PreviewProvider {
     static var previews: some View {
-        MultiDeviceWizardInformationView()
+        MultiDeviceWizardInformationView(wizardVM: MultiDeviceWizardViewModel(), dismiss: .constant(false))
     }
 }

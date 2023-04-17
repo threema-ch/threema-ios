@@ -21,52 +21,83 @@
 import SwiftUI
 
 struct MultiDeviceWizardCodeView: View {
-    
-    @ObservedObject var wizardVM: MultiDeviceWizardViewModel
-    
-    @State var animate = false
+    @Environment(\.dismiss) var dismiss
 
+    @ObservedObject var wizardVM: MultiDeviceWizardViewModel
+    @Binding var dismissModal: Bool
+
+    @State var animate = false
+    @State var advance = false
+    
     var animation: Animation {
         Animation.linear(duration: 6.0)
             .repeatForever(autoreverses: false)
     }
     
     var body: some View {
-        ZStack(alignment: .top) {
+        VStack {
+            ZStack(alignment: .top) {
+                
+                MultiDeviceWizardConnectionInfoView()
+                
+                VStack(spacing: 0) {
+                    Spacer()
+                    Spacer()
+                    Spacer()
+                    
+                    Text(BundleUtil.localizedString(forKey: "md_wizard_code_text"))
+                        .bold()
+                        .font(.title2)
+                        .padding(.bottom)
+                    
+                    MultiDeviceWizardCodeBlockView(wizardVM: wizardVM)
+                        .highPriorityGesture(DragGesture())
+                    
+                    Spacer()
+                    
+                    Image(systemName: "circle.dotted")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 130, height: 130)
+                        .foregroundColor(Color(.primary))
+                        .rotationEffect(Angle(degrees: animate ? 360 : 0.0))
+                        .animation(animation, value: animate)
+                        .accessibilityHidden(true)
+                    
+                    Spacer()
+                }
+            }
             
-            MultiDeviceWizardConnectionInfoView()
+            Button {
+                dismiss()
+            } label: {
+                Text(BundleUtil.localizedString(forKey: "md_wizard_back_identity"))
+            }
+            .buttonStyle(.bordered)
+            .tint(Color(.primary))
             
-            VStack(spacing: 0) {
-                Spacer()
-                Spacer()
-                Spacer()
-
-                Text(BundleUtil.localizedString(forKey: "md_wizard_code_text"))
-                    .bold()
-                    .font(.title2)
-                    .padding(.bottom)
-                
-                MultiDeviceWizardCodeBlockView(wizardVM: wizardVM)
-                    .highPriorityGesture(DragGesture())
-
-                Spacer()
-                
-                Image(systemName: "circle.dotted")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 130, height: 130)
-                    .foregroundColor(Color(.primary))
-                    .rotationEffect(Angle(degrees: animate ? 360 : 0.0))
-                    .animation(animation, value: animate)
-                
-                Spacer()
+            NavigationLink(isActive: $advance) {
+                MultiDeviceWizardSuccessView(dismiss: $dismissModal)
+            } label: {
+                EmptyView()
             }
         }
+        .padding(.horizontal)
+        
+        .navigationBarTitle(BundleUtil.localizedString(forKey: "md_wizard_header"))
+        .navigationBarBackButtonHidden()
+        
         .onAppear {
             self.animate = true
+            wizardVM.advanceState(.code)
         }
         .onDisappear {
             self.animate = false
+        }
+        .onChange(of: wizardVM.wizardState) { newValue in
+            if newValue == .success {
+                advance = true
+            }
         }
     }
 }
@@ -79,8 +110,9 @@ private struct MultiDeviceWizardCodeBlockView: View {
     
     var body: some View {
         HStack {
-            ForEach(blocks, id: \.self) { block in
+            ForEach(wizardVM.linkingCode, id: \.self) { block in
                 Text(block)
+                    .speechSpellsOutCharacters()
                     .font(.system(.title3, design: .monospaced))
                     .bold()
                     .foregroundColor(.white)
@@ -92,9 +124,9 @@ private struct MultiDeviceWizardCodeBlockView: View {
             }
         }
         
-        .onAppear {
-            blocks = wizardVM.linkingCode
-        }
+        .onChange(of: wizardVM.linkingCode, perform: { newValue in
+            blocks = newValue
+        })
         .onTapGesture {
             UIPasteboard.general.string = blocks.joined(separator: "")
             NotificationPresenterWrapper.shared.present(type: .copySuccess)
@@ -104,6 +136,6 @@ private struct MultiDeviceWizardCodeBlockView: View {
 
 struct MultiDeviceWizardLinkView_Previews: PreviewProvider {
     static var previews: some View {
-        MultiDeviceWizardCodeView(wizardVM: MultiDeviceWizardViewModel())
+        MultiDeviceWizardCodeView(wizardVM: MultiDeviceWizardViewModel(), dismissModal: .constant(true))
     }
 }

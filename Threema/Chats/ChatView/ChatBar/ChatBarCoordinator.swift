@@ -462,7 +462,7 @@ extension ChatBarCoordinator: ChatBarViewDelegate {
         guard canSendText() else {
             return
         }
-        
+                
         var sendableRawText = rawText
         
         if let quoteMessage = quoteMessage {
@@ -483,7 +483,7 @@ extension ChatBarCoordinator: ChatBarViewDelegate {
             AudioServicesPlaySystemSound(sentMessageSoundID)
         }
     }
-    
+        
     func startRecording() {
         chatViewTableViewVoiceMessageCellDelegate?.pausePlaying()
         

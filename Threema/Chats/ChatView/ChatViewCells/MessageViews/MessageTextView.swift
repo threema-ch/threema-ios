@@ -151,7 +151,7 @@ final class MessageTextView: RTLAligningTextView {
         isScrollEnabled = false
         isEditable = false
         isSelectable = true
-        dataDetectorTypes = [.link, .phoneNumber]
+        dataDetectorTypes = [.phoneNumber]
         isUserInteractionEnabled = true
         backgroundColor = .clear
         textContainerInset = .zero

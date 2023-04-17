@@ -59,14 +59,12 @@ class UserNotificationCenterManager: UserNotificationCenterManagerProtocol {
                 fireDate = trigger!.nextTriggerDate()
             }
             
-            let dispatchGroup = DispatchGroup()
-            dispatchGroup.enter()
-            
             let notificationRequest = UNNotificationRequest(
                 identifier: getIdentifier(key, stage),
                 content: notification,
                 trigger: trigger
             )
+            
             UNUserNotificationCenter.current().add(notificationRequest) { error in
                 if let error = error {
                     seal.reject(
@@ -84,10 +82,7 @@ class UserNotificationCenterManager: UserNotificationCenterManagerProtocol {
                     
                     seal.fulfill(fireDate)
                 }
-                dispatchGroup.leave()
             }
-            
-            dispatchGroup.wait()
         }
     }
     

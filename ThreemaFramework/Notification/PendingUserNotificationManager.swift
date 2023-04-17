@@ -432,8 +432,8 @@ public class PendingUserNotificationManager: NSObject, PendingUserNotificationMa
 
     /// Loads the lists of pending and processed user notifications.
     public func loadAll() {
-        if FileManager.default.fileExists(atPath: PendingUserNotificationManager.pathProcessedUserNotifications) {
-            PendingUserNotificationManager.processedQueue.sync {
+        PendingUserNotificationManager.processedQueue.sync {
+            if FileManager.default.fileExists(atPath: PendingUserNotificationManager.pathProcessedUserNotifications) {
                 if var savedProcessedUserNotifications = NSKeyedUnarchiver
                     .unarchiveObject(
                         withFile: PendingUserNotificationManager
@@ -506,34 +506,42 @@ public class PendingUserNotificationManager: NSObject, PendingUserNotificationMa
     }
     
     fileprivate static func savePendingUserNotifications() {
-        do {
-            if FileManager.default.fileExists(atPath: pathPendingUserNotifications) {
-                try FileManager.default.removeItem(atPath: pathPendingUserNotifications)
-            }
-        }
-        catch {
-            DDLogError("[Push] Unable to delete \(pathPendingUserNotifications) file: \(error.localizedDescription)")
-        }
-        
-        if let pendingUserNotifications = PendingUserNotificationManager.pendingUserNotifications,
-           !pendingUserNotifications.isEmpty {
-            _ = NSKeyedArchiver.archiveRootObject(pendingUserNotifications, toFile: pathPendingUserNotifications)
+        if FileManager.default.fileExists(atPath: pathPendingUserNotifications) {
+            FileManager.default.removeItem(at: pathPendingUserNotifications, completion: { _, error in
+                if let error = error {
+                    DDLogError(
+                        "[Push] Unable to delete \(pathPendingUserNotifications) file: \(error.localizedDescription)"
+                    )
+                }
+                
+                if let pendingUserNotifications = PendingUserNotificationManager.pendingUserNotifications,
+                   !pendingUserNotifications.isEmpty {
+                    _ = NSKeyedArchiver.archiveRootObject(
+                        pendingUserNotifications,
+                        toFile: pathPendingUserNotifications
+                    )
+                }
+            })
         }
     }
     
     private static func saveProcessedUserNotifications() {
-        do {
-            if FileManager.default.fileExists(atPath: pathProcessedUserNotifications) {
-                try FileManager.default.removeItem(atPath: pathProcessedUserNotifications)
-            }
-        }
-        catch {
-            DDLogError("[Push] Unable to delete \(pathProcessedUserNotifications) file: \(error.localizedDescription)")
-        }
-        
-        if let processedUserNotifications = PendingUserNotificationManager.processedUserNotifications,
-           !processedUserNotifications.isEmpty {
-            NSKeyedArchiver.archiveRootObject(processedUserNotifications, toFile: pathProcessedUserNotifications)
+        if FileManager.default.fileExists(atPath: pathProcessedUserNotifications) {
+            FileManager.default.removeItem(at: pathProcessedUserNotifications, completion: { _, error in
+                if let error = error {
+                    DDLogError(
+                        "[Push] Unable to delete \(pathProcessedUserNotifications) file: \(error.localizedDescription)"
+                    )
+                }
+                
+                if let processedUserNotifications = PendingUserNotificationManager.processedUserNotifications,
+                   !processedUserNotifications.isEmpty {
+                    NSKeyedArchiver.archiveRootObject(
+                        processedUserNotifications,
+                        toFile: pathProcessedUserNotifications
+                    )
+                }
+            })
         }
     }
     
@@ -593,5 +601,24 @@ public class PendingUserNotificationManager: NSObject, PendingUserNotificationMa
         }
         
         return fromIdentity + messageID.hexString
+    }
+}
+
+public extension FileManager {
+    func removeItem(at path: String, completion: @escaping (Bool, Error?) -> Void) {
+        DispatchQueue.global(qos: .utility).async {
+            do {
+                try self.removeItem(atPath: path)
+                
+                DispatchQueue.main.async {
+                    completion(true, nil)
+                }
+            }
+            catch {
+                DispatchQueue.main.async {
+                    completion(false, error)
+                }
+            }
+        }
     }
 }

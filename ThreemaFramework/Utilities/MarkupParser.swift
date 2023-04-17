@@ -207,17 +207,23 @@ public extension MarkupParser {
         font: UIFont,
         parseURL: Bool = false,
         parseMention: Bool = true,
-        removeMarkups: Bool = false
+        removeMarkups: Bool = false,
+        forTests: Bool = false
     ) -> NSAttributedString {
-        let parsedMarkups = NSMutableAttributedString(attributedString: attributedString)
+        var parsedMarkups = NSMutableAttributedString(attributedString: attributedString)
         do {
+            
+            if !forTests {
+                parsedMarkups = parseURLWithDataDetectorForLinks(attributedString: parsedMarkups)
+            }
+            
             try parse(
                 allTokens: tokenize(text: parsedMarkups.string, parseURL: parseURL, parseMention: parseMention),
                 attributedString: parsedMarkups,
                 font: font
             )
             let parsedMarkupsAndMentions = parseMentionNames(parsed: parsedMarkups)
-
+            
             if removeMarkups {
                 return removeMarkupsFromParse(parsed: parsedMarkupsAndMentions)
             }
@@ -227,6 +233,29 @@ public extension MarkupParser {
         catch {
             DDLogVerbose(error.localizedDescription)
             return parsedMarkups
+        }
+    }
+    
+    /// Parse for URL's in the string
+    /// - Parameter attributedString: NSMutableAttributedString to parse
+    /// - Returns: NSMutableAttributedString with all URL attributes
+    func parseURLWithDataDetectorForLinks(attributedString: NSMutableAttributedString) -> NSMutableAttributedString {
+        do {
+            let dataDetector = try NSDataDetector(types: NSTextCheckingResult.CheckingType.link.rawValue)
+            
+            dataDetector.enumerateMatches(
+                in: attributedString.string,
+                range: NSRange(location: 0, length: attributedString.length)
+            ) { result, _, _ in
+                guard let result else {
+                    return
+                }
+                attributedString.addAttribute(.link, value: result.url ?? "", range: result.range)
+            }
+            return attributedString
+        }
+        catch {
+            return attributedString
         }
     }
     

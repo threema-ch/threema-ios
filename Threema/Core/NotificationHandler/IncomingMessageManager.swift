@@ -113,7 +113,7 @@ import ThreemaFramework
     
     /// Show notification for pending user notification is missing on notification center.
     @objc func showIsNotPending() {
-        businessInjector.entityManager.performBlockAndWait {
+        businessInjector.entityManager.performBlock {
             if let pendingUserNotificationsAreNotPending = self.pendingUserNotificationManager
                 .pendingUserNotificationsAreNotPending() {
                 for pendingUserNotification in pendingUserNotificationsAreNotPending {

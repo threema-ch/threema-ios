@@ -444,7 +444,8 @@ class MarkupParserTests: XCTestCase {
         return parser.markify(
             attributedString: NSAttributedString(string: text),
             font: UIFont.preferredFont(forTextStyle: .body),
-            parseURL: parseURL
+            parseURL: parseURL,
+            forTests: true
         )
     }
     

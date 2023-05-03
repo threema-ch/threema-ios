@@ -28,25 +28,33 @@ public class IntentCreator {
         case couldNotCreateIntent
         case createIntentFailed(message: String)
     }
-
-    private let userSettings: UserSettingsProtocol
+    
+    private let settingsStore: SettingsStoreProtocol
     private let entityManager: EntityManager
-
-    public init(userSettings: UserSettingsProtocol, entityManager: EntityManager) {
-        self.userSettings = userSettings
+    
+    public init(settingsStore: SettingsStoreProtocol, entityManager: EntityManager) {
+        self.settingsStore = settingsStore
         self.entityManager = entityManager
     }
     
     // MARK: - Functions
-
+    
     public func inSendMessageIntentInteraction(
         for contactID: String,
         direction: INInteractionDirection
     ) -> INInteraction? {
         
-        guard userSettings.donateInteractions else {
-            DDLogVerbose("Donations are disabled by the user")
+        if direction == .outgoing,
+           !settingsStore.allowOutgoingDonations {
+            DDLogVerbose("Donations for outgoing interactions are disabled by the user")
             return nil
+        }
+        
+        if direction == .incoming {
+            guard case NotificationType.complete = settingsStore.notificationType else {
+                DDLogVerbose("Donations for incoming interactions are disabled by the user")
+                return nil
+            }
         }
         
         var fetchedContact: ContactEntity?
@@ -78,7 +86,8 @@ public class IntentCreator {
             guard let fetchedContact = fetchedContact else {
                 return
             }
-            conversationIdentifier = fetchedContact.identity
+            
+            conversationIdentifier = fetchedContact.objectID.uriRepresentation().absoluteString
             contact = fetchedContact.inPerson
         }
         
@@ -107,6 +116,7 @@ public class IntentCreator {
         )
         
         let interaction = INInteraction(intent: intent, response: nil)
+        interaction.groupIdentifier = conversationIdentifier
         interaction.direction = direction
         return interaction
     }
@@ -118,9 +128,17 @@ public class IntentCreator {
         direction: INInteractionDirection
     ) -> INInteraction? {
         
-        guard userSettings.donateInteractions else {
-            DDLogVerbose("Donations are disabled by the user")
+        if direction == .outgoing,
+           !settingsStore.allowOutgoingDonations {
+            DDLogVerbose("Donations for outgoing interactions are disabled by the user")
             return nil
+        }
+        
+        if direction == .incoming {
+            guard case NotificationType.complete = settingsStore.notificationType else {
+                DDLogVerbose("Donations for incoming interactions are disabled by the user")
+                return nil
+            }
         }
         
         var fetchedContact: ContactEntity?
@@ -166,9 +184,7 @@ public class IntentCreator {
                 return
             }
             
-            if let base64GroupID = groupConversation.groupID?.base64EncodedString() {
-                conversationIdentifier = creatorID + ";" + base64GroupID
-            }
+            conversationIdentifier = groupConversation.objectID.uriRepresentation().absoluteString
             
             recipientCount = groupConversation.members.count
             
@@ -212,6 +228,7 @@ public class IntentCreator {
         }
         
         let interaction = INInteraction(intent: intent, response: nil)
+        interaction.groupIdentifier = conversationIdentifier
         interaction.direction = direction
         return interaction
     }

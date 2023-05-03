@@ -131,7 +131,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 
 #pragma mark - ModalNavigationControllerDelegate
 
-- (void)willDismissModalNavigationController {
+- (void)didDismissModalNavigationController {
     ;//nop
 }
 

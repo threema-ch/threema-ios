@@ -131,6 +131,15 @@ public extension Colors {
             return Asset.SharedColors.gray700.color.withAlphaComponent(0.45)
         }
     }
+    
+    @objc class var backgroundSegmentedControl: UIColor {
+        switch theme {
+        case .light, .undefined:
+            return Asset.SharedColors.white.color
+        case .dark:
+            return Asset.SharedColors.gray650.color
+        }
+    }
 
     class var backgroundWizardBox: UIColor {
         switch theme {

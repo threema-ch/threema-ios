@@ -165,7 +165,8 @@ class TaskQueue {
                         self.done(item: item)
                     }
                     .catch { error in
-                        if (error as NSError).code == kBadMessageErrorCode ||
+                        if (error as NSError).code == kBlockUnknownContactErrorCode ||
+                            (error as NSError).code == kBadMessageErrorCode ||
                             (error as NSError).code == kUnknownMessageTypeErrorCode ||
                             (error as NSError).code == kMessageAlreadyProcessedErrorCode {
                             if let task = item.taskDefinition as? TaskDefinitionReceiveMessage {

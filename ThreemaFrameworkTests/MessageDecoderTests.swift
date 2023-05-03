@@ -26,10 +26,6 @@ class MessageDecoderTests: XCTestCase {
     private var mainCnx: NSManagedObjectContext!
     var databaseCnx: DatabaseContext!
 
-    override func setUp() {
-        // Put setup code here. This method is called before the invocation of each test method in the class.
-    }
-    
     override func setUpWithError() throws {
         AppGroup.setGroupID("group.ch.threema")
         
@@ -410,7 +406,7 @@ class MessageDecoderTests: XCTestCase {
         XCTAssertEqual(result.poiAddress, "testAddress\nline2")
     }
     
-    func testDecodeBoxTextMessage() {
+    func testDecodeBoxTextMessage() throws {
         let msg = BoxTextMessage()
         msg.text = "Muttis diweiss"
         
@@ -418,8 +414,32 @@ class MessageDecoderTests: XCTestCase {
 
         XCTAssertNotNil(result)
         XCTAssertEqual(result?.text, "Muttis diweiss")
+        XCTAssertNil(result?.quotedMessageID)
+        XCTAssertEqual(
+            String(data: try XCTUnwrap(result?.quotedBody()), encoding: .utf8),
+            "Muttis diweiss"
+        )
     }
     
+    func testDecodeBoxTextMessageQuoted() throws {
+        let expectedQuotedMessageID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.messageIDLength)!
+        let expectedQuotedText = QuoteUtil.generateText("Muttis diweiss", with: expectedQuotedMessageID)
+
+        let msg = BoxTextMessage()
+        msg.text = expectedQuotedText
+        msg.quotedMessageID = expectedQuotedMessageID
+
+        let result = MessageDecoder.decode(MSGTYPE_TEXT, body: msg.body()) as? BoxTextMessage
+
+        XCTAssertNotNil(result)
+        XCTAssertEqual(result?.text, "Muttis diweiss")
+        XCTAssertEqual(result?.quotedMessageID, expectedQuotedMessageID)
+        XCTAssertEqual(
+            String(data: try XCTUnwrap((try XCTUnwrap(result) as QuotedMessageProtocol).quotedBody()), encoding: .utf8),
+            expectedQuotedText
+        )
+    }
+
     func testDecodeBoxVideoMessage() {
         let msg = BoxVideoMessage()
         msg.duration = 1
@@ -708,7 +728,7 @@ class MessageDecoderTests: XCTestCase {
         XCTAssertNotNil(result)
     }
     
-    func testDecodeGroupTextMessage() {
+    func testDecodeGroupTextMessage() throws {
         let msg = GroupTextMessage()
         msg.groupID = Data(BytesUtility.padding([], pad: 0x34, length: ThreemaProtocol.groupIDLength))
         msg.groupCreator = "TESTID12"
@@ -720,8 +740,35 @@ class MessageDecoderTests: XCTestCase {
         XCTAssertEqual(result?.groupID, msg.groupID)
         XCTAssertEqual(result?.groupCreator, msg.groupCreator)
         XCTAssertEqual(result?.text, msg.text)
+        XCTAssertNil(result?.quotedMessageID)
+        XCTAssertEqual(
+            String(data: try XCTUnwrap(result?.quotedBody()), encoding: .utf8),
+            "TESTID1244444444Test text"
+        )
     }
     
+    func testDecodeGroupTextMessageQuoted() throws {
+        let expectedQuotedMessageID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.messageIDLength)
+        let expectedQuotedText = QuoteUtil.generateText("Test text", with: expectedQuotedMessageID)!
+
+        let msg = GroupTextMessage()
+        msg.groupID = Data(BytesUtility.padding([], pad: 0x34, length: ThreemaProtocol.groupIDLength))
+        msg.groupCreator = "TESTID12"
+        msg.text = expectedQuotedText
+
+        let result = MessageDecoder.decode(MSGTYPE_GROUP_TEXT, body: msg.body()) as? GroupTextMessage
+
+        XCTAssertNotNil(result)
+        XCTAssertEqual(result?.groupID, msg.groupID)
+        XCTAssertEqual(result?.groupCreator, msg.groupCreator)
+        XCTAssertEqual(result?.text, "Test text")
+        XCTAssertEqual(result?.quotedMessageID, expectedQuotedMessageID)
+        XCTAssertEqual(
+            String(data: try XCTUnwrap((try XCTUnwrap(result) as QuotedMessageProtocol).quotedBody()), encoding: .utf8),
+            "TESTID1244444444\(expectedQuotedText)"
+        )
+    }
+
     func testDecodeGroupVideoMessage() {
         let msg = GroupVideoMessage()
         msg.groupCreator = "TESTID12"

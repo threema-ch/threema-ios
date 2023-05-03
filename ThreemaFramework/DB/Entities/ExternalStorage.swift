@@ -32,7 +32,7 @@ import Foundation
             return ExternalStorage.convertCfTypeToString(cfValue: data.perform(filenameSelector))
         }
         else {
-            // If selector 'filename' missing, than getting filename from object description (for iOS 14)
+            // If selector 'filename' missing, than getting filename from object description
             return ExternalStorage.getFilename(description: data.description)
         }
     }

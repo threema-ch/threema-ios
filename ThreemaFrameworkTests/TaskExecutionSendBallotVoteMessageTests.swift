@@ -33,8 +33,6 @@ class TaskExecutionSendBallotVoteMessageTests: XCTestCase {
 
     private var ddLoggerMock: DDLoggerMock!
 
-    private var deviceGroupKeys: DeviceGroupKeys!
-
     override func setUpWithError() throws {
         // Necessary for ValidationLogger
         AppGroup.setGroupID("group.ch.threema") // THREEMA_GROUP_IDENTIFIER @"group.ch.threema"
@@ -47,15 +45,6 @@ class TaskExecutionSendBallotVoteMessageTests: XCTestCase {
         ddLoggerMock = DDLoggerMock()
         DDTTYLogger.sharedInstance?.logFormatter = LogFormatterCustom()
         DDLog.add(ddLoggerMock)
-
-        deviceGroupKeys = DeviceGroupKeys(
-            dgpk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
-            dgrk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
-            dgdik: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
-            dgsddk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
-            dgtsk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
-            deviceGroupIDFirstByteHex: "a1"
-        )
     }
 
     override func tearDownWithError() throws {
@@ -68,8 +57,8 @@ class TaskExecutionSendBallotVoteMessageTests: XCTestCase {
 
         let serverConnectorMock = ServerConnectorMock(
             connectionState: .loggedIn,
-            deviceID: BytesUtility.generateRandomBytes(length: ThreemaProtocol.deviceIDLength)!,
-            deviceGroupKeys: deviceGroupKeys
+            deviceID: MockData.deviceID,
+            deviceGroupKeys: MockData.deviceGroupKeys
         )
         serverConnectorMock.reflectMessageClosure = { _ in
             if serverConnectorMock.connectionState == .loggedIn {
@@ -84,17 +73,8 @@ class TaskExecutionSendBallotVoteMessageTests: XCTestCase {
         let myIdentityStoreMock = MyIdentityStoreMock()
         let frameworkInjectorMock = BusinessInjectorMock(
             backgroundEntityManager: EntityManager(databaseContext: dbBackgroundCnx),
-            backgroundGroupManager: GroupManagerMock(),
-            backgroundUnreadMessages: UnreadMessagesMock(),
-            contactStore: ContactStoreMock(),
             entityManager: EntityManager(databaseContext: dbMainCnx),
-            groupManager: GroupManagerMock(),
-            licenseStore: LicenseStore.shared(),
-            messageSender: MessageSenderMock(),
-            multiDeviceManager: MultiDeviceManagerMock(),
             myIdentityStore: myIdentityStoreMock,
-            userSettings: UserSettingsMock(),
-            settingsStore: SettingsStoreMock(),
             serverConnector: serverConnectorMock,
             mediatorMessageProtocol: MediatorMessageProtocolMock(
                 deviceGroupKeys: serverConnectorMock.deviceGroupKeys!,
@@ -105,8 +85,7 @@ class TaskExecutionSendBallotVoteMessageTests: XCTestCase {
                             message: expectedReflectMessage
                         ),
                 ]
-            ),
-            messageProcessor: MessageProcessorMock()
+            )
         )
 
         var ballot: Ballot!
@@ -176,8 +155,8 @@ class TaskExecutionSendBallotVoteMessageTests: XCTestCase {
         
         let serverConnectorMock = ServerConnectorMock(
             connectionState: .loggedIn,
-            deviceID: BytesUtility.generateRandomBytes(length: ThreemaProtocol.deviceIDLength)!,
-            deviceGroupKeys: deviceGroupKeys
+            deviceID: MockData.deviceID,
+            deviceGroupKeys: MockData.deviceGroupKeys
         )
         serverConnectorMock.reflectMessageClosure = { _ in
             if serverConnectorMock.connectionState == .loggedIn {
@@ -193,17 +172,7 @@ class TaskExecutionSendBallotVoteMessageTests: XCTestCase {
         
         let frameworkInjectorMock = BusinessInjectorMock(
             backgroundEntityManager: EntityManager(databaseContext: dbBackgroundCnx),
-            backgroundGroupManager: GroupManagerMock(),
-            backgroundUnreadMessages: UnreadMessagesMock(),
-            contactStore: ContactStoreMock(),
             entityManager: EntityManager(databaseContext: dbMainCnx),
-            groupManager: GroupManagerMock(),
-            licenseStore: LicenseStore.shared(),
-            messageSender: MessageSenderMock(),
-            multiDeviceManager: MultiDeviceManagerMock(),
-            myIdentityStore: MyIdentityStoreMock(),
-            userSettings: UserSettingsMock(),
-            settingsStore: SettingsStoreMock(),
             serverConnector: serverConnectorMock,
             mediatorMessageProtocol: MediatorMessageProtocolMock(
                 deviceGroupKeys: serverConnectorMock.deviceGroupKeys!,
@@ -217,8 +186,7 @@ class TaskExecutionSendBallotVoteMessageTests: XCTestCase {
                         message: expectedMessageSentReflect
                     ),
                 ]
-            ),
-            messageProcessor: MessageProcessorMock()
+            )
         )
 
         var ballot: Ballot!
@@ -285,8 +253,8 @@ class TaskExecutionSendBallotVoteMessageTests: XCTestCase {
         let userSettingsMock = UserSettingsMock(blacklist: ["MEMBER02"])
         let serverConnectorMock = ServerConnectorMock(
             connectionState: .loggedIn,
-            deviceID: BytesUtility.generateRandomBytes(length: ThreemaProtocol.deviceIDLength)!,
-            deviceGroupKeys: deviceGroupKeys
+            deviceID: MockData.deviceID,
+            deviceGroupKeys: MockData.deviceGroupKeys
         )
         serverConnectorMock.reflectMessageClosure = { _ in
             if serverConnectorMock.connectionState == .loggedIn {
@@ -302,17 +270,9 @@ class TaskExecutionSendBallotVoteMessageTests: XCTestCase {
         let myIdentityStoreMock = MyIdentityStoreMock()
         let frameworkInjectorMock = BusinessInjectorMock(
             backgroundEntityManager: EntityManager(databaseContext: dbBackgroundCnx),
-            backgroundGroupManager: GroupManagerMock(),
-            backgroundUnreadMessages: UnreadMessagesMock(),
-            contactStore: ContactStoreMock(),
             entityManager: EntityManager(databaseContext: dbMainCnx),
-            groupManager: GroupManagerMock(),
-            licenseStore: LicenseStore.shared(),
-            messageSender: MessageSenderMock(),
-            multiDeviceManager: MultiDeviceManagerMock(),
             myIdentityStore: myIdentityStoreMock,
             userSettings: userSettingsMock,
-            settingsStore: SettingsStoreMock(),
             serverConnector: serverConnectorMock,
             mediatorMessageProtocol: MediatorMessageProtocolMock(
                 deviceGroupKeys: serverConnectorMock.deviceGroupKeys!,
@@ -326,8 +286,7 @@ class TaskExecutionSendBallotVoteMessageTests: XCTestCase {
                         message: expectedMessageSentReflect
                     ),
                 ]
-            ),
-            messageProcessor: MessageProcessorMock()
+            )
         )
 
         var ballot: Ballot!

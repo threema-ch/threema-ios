@@ -639,14 +639,14 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
             [[UserSettings sharedUserSettings] setShowGalleryPreview:NO];
         }
 
-        [self handlePresentingScreens];
+        [self handlePresentingScreensWithForce:NO];
         shouldLoadUIForEnterForeground = false;
     }
 }
 
-- (void)handlePresentingScreens {
+- (void)handlePresentingScreensWithForce:(BOOL)force {
     // ShouldLoadUIForEnterForeground == false: means UI was never loaded before
-    if (shouldLoadUIForEnterForeground == false) {
+    if (shouldLoadUIForEnterForeground == false || force) {
         if (![[VoIPHelper shared] isCallActiveInBackground] && [[VoIPCallStateManager shared] currentCallState] != CallStateIdle) {
             if ([lastViewController.presentedViewController isKindOfClass:[CallViewController class]] || SYSTEM_IS_IPAD) {
                 dispatch_async(dispatch_get_main_queue(), ^{
@@ -668,20 +668,8 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
             
             // Check if Threema Safe is forced and not activated yet
             if (![safeManager isActivated] && [mdmSetup isSafeBackupForce]) {
-                // Activate with the password of the MDM
-                dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-                    // Or if password is already set from MDM (automatically perform safe)
-                    NSString *customServer = nil;
-                    NSString *server = nil;
-                    if ([mdmSetup isSafeBackupServerPreset]) {
-                        // Server is given by MDM
-                        customServer = [mdmSetup safeServerUrl];
-                        server = [safeStore composeSafeServerAuthWithServer:[mdmSetup safeServerUrl] user:[mdmSetup safeServerUsername] password:[mdmSetup safeServerPassword]].absoluteString;
-                    }
-                    [safeManager activateWithIdentity:[MyIdentityStore sharedMyIdentityStore].identity password:[mdmSetup safePassword] customServer:customServer server:server maxBackupBytes:nil retentionDays:nil completion:^(NSError * _Nullable error) {
-                        DDLogError(@"Failed to activate Threema Safe: %@", error);
-                    }];
-                });
+                // Activate with the MDM Password
+                [self activateSafeWithMDMSetup:mdmSetup safeStore:safeStore safeManager:safeManager];
             }
             // If Threema Safe is disabled by MDM and Safe is activated, deactivate Safe
             else if ([safeManager isActivated] && [mdmSetup isSafeBackupDisable]) {
@@ -689,14 +677,41 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
             }
             // If Safe activated, check if server has been changed by MDM
             else if ([safeManager isActivated] && [mdmSetup isManaged]) {
-                if ([mdmSetup isSafeBackupServerPreset]) {
-                    [safeManager applyServerWithServer:[mdmSetup safeServerUrl] username:[mdmSetup safeServerUsername] password:[mdmSetup safeServerPassword]];
-                } else {
-                    [safeManager applyServerWithServer:nil username:nil password:nil];
-                }
+                [safeStore isSafeServerChangedWithMdmSetup:mdmSetup completion:^(BOOL changed) {
+                    
+                    if (!changed) {
+                        return;
+                    }
+                    
+                    [safeManager deactivate];
+                    [self activateSafeWithMDMSetup:mdmSetup safeStore:safeStore safeManager:safeManager];
+                }];
             }
         }
     }
+}
+
+/// Activate safe with the password of the MDM
+- (void)activateSafeWithMDMSetup:(MDMSetup *)mdmSetup safeStore:(SafeStore *)safeStore safeManager:(SafeManager *)safeManager {
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        // Or if password is already set from MDM (automatically perform safe)
+        NSString *customServer = nil;
+        NSString *server = nil;
+        if ([mdmSetup isSafeBackupServerPreset]) {
+            // Server is given by MDM
+            customServer = [mdmSetup safeServerUrl];
+            server = [safeStore composeSafeServerAuthWithServer:[mdmSetup safeServerUrl] user:[mdmSetup safeServerUsername] password:[mdmSetup safeServerPassword]].absoluteString;
+        }
+        [safeManager activateWithIdentity:[MyIdentityStore sharedMyIdentityStore].identity password:[mdmSetup safePassword] customServer:customServer server:server maxBackupBytes:nil retentionDays:nil completion:^(NSError * _Nullable error) {
+            if (error) {
+                if ([error code] == kSafePasswordEmptyErrorCode) {
+                    // password was empty
+                    [LaunchModalManager.shared showSafePassword];
+                }
+                DDLogError(@"Failed to activate Threema Safe: %@", error);
+            }
+        }];
+    });
 }
 
 - (UIViewController *)currentTopViewController {
@@ -797,16 +812,19 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     
     EnterLicenseViewController *viewController = [EnterLicenseViewController instantiate];
     dispatch_async(dispatch_get_main_queue(), ^{
-        if ([self.window.rootViewController isKindOfClass:[viewController class]] == NO) {
-            
-            if ([AppDelegate isAlertViewShown]) {
-                [self.window.rootViewController dismissViewControllerAnimated:NO completion:^{
-                    [self presentEnterLicenseViewController:viewController];
+        [self closeMainTabBarModalViewsWithCompletion:^{
+            [self closeRootViewControllerModalViewsWithCompletion:^{
+                [UIView animateWithDuration:0.0 animations:^{
+                    if ([AppDelegate isAlertViewShown]) {
+                        [self.window.rootViewController dismissViewControllerAnimated:NO completion:^{
+                            [self presentEnterLicenseViewController:viewController];
+                        }];
+                    } else {
+                        [self presentEnterLicenseViewController:viewController];
+                    }
                 }];
-            } else {
-                [self presentEnterLicenseViewController:viewController];
-            }
-        }
+            }];
+        }];
     });
 }
 
@@ -1120,9 +1138,8 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
         [[BackgroundTaskManager shared] newBackgroundTaskWithKey:key timeout:timeout completionHandler:nil];
     } else {
         // Disconnect from server - from now on we want push notifications for new messages
-        [[ServerConnector sharedServerConnector] disconnectWait:ConnectionInitiatorApp onCompletion:^(BOOL isDisconnected) {
-            [[WCSessionManager shared] saveSessionsToArchive];
-        }];
+        [[ServerConnector sharedServerConnector] disconnectWait:ConnectionInitiatorApp];
+        [[WCSessionManager shared] saveSessionsToArchive];
     }
 }
 
@@ -1174,6 +1191,10 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     if (shouldLoadUIForEnterForeground == true && shouldLoadUI == true) {
         [self performSelectorOnMainThread:@selector(presentApplicationUI) withObject:nil waitUntilDone:YES];
         [self performSelectorOnMainThread:@selector(updateAllContacts) withObject:nil waitUntilDone:NO];
+    }
+    else if ([LicenseStore requiresLicenseKey]) {
+        // check again for threema safe if a url have changed in mdm
+        [self handlePresentingScreensWithForce:YES];        
     }
 
     /* ensure we're connected when we enter into foreground */

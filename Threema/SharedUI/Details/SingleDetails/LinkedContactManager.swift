@@ -830,7 +830,7 @@ extension LinkedContactManger: CNContactViewControllerDelegate {
         viewController.dismiss(animated: true)
         // We need force relink the contact in order to import the changes from the address book again
         if let contact = contact {
-            ContactStore().link(self.contact, toCnContactID: contact.identifier)
+            ContactStore.shared().link(self.contact, toCnContactID: contact.identifier)
         }
     }
 }

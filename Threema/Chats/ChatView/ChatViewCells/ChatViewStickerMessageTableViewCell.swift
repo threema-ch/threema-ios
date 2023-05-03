@@ -138,7 +138,10 @@ extension ChatViewStickerMessageTableViewCell: ChatViewMessageAction {
         // In the new chat view we always copy the data, regardless if it has a caption because the text can be selected itself.
         let copyHandler = {
             guard !MDMSetup(setup: false).disableShareMedia() else {
-                fatalError()
+                DDLogWarn(
+                    "[ChatViewStickerMessageTableViewCell] Tried to copy media, even if MDM disabled it."
+                )
+                return
             }
             
             switch message.fileMessageType {
@@ -217,7 +220,7 @@ extension ChatViewStickerMessageTableViewCell: ChatViewMessageAction {
             let saveAction = Provider.saveAction {
                 guard !MDMSetup(setup: false).disableShareMedia() else {
                     DDLogWarn(
-                        "[ChatViewThumbnailDisplayMessageTableViewCell] Tried to save media, even if MDM disabled it."
+                        "[ChatViewStickerMessageTableViewCell] Tried to save media, even if MDM disabled it."
                     )
                     return
                 }

@@ -123,7 +123,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     });
 }
 
-- (void)fetchWorkIdentitiesInfoInBlockUnknownCheck:(NSArray *)identities onCompletion:(void(^)(NSArray *foundIdentities))onCompletion onError:(void(^)(NSError *error))onError {
+- (void)fetchWorkIdentitiesInfo:(NSArray *)identities onCompletion:(void(^)(NSArray *foundIdentities))onCompletion onError:(void(^)(NSError *error))onError {
     NSMutableArray *cachedIdentities = [NSMutableArray new];
     BOOL allIdentitiesAreCached = true;
     

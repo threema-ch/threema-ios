@@ -198,6 +198,7 @@ typealias TaskCompletionHandler = (TaskDefinitionProtocol, Error?) -> Void
                         TaskDefinitionDeleteContactSync.self,
                         TaskDefinitionProfileSync.self,
                         TaskDefinitionUpdateContactSync.self,
+                        TaskDefinitionGroupSync.self,
                         TaskDefinitionSettingsSync.self,
                     ],
                     frameworkInjector: self.frameworkInjector

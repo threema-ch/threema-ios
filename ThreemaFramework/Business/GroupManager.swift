@@ -1057,14 +1057,15 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
     /// - Parameters:
     ///   - groupID: ID 8 Bytes
     ///   - creator: Creator of group
-    @objc public func sendSyncRequest(groupID: Data, creator: String) {
+    ///   - force: If the minimum time interval should be ignored
+    @objc public func sendSyncRequest(groupID: Data, creator: String, force: Bool) {
         
         let lastSyncRequestSince = Date(timeIntervalSinceNow: TimeInterval(-kGroupSyncRequestInterval))
         guard entityManager.entityFetcher.lastGroupSyncRequest(
             for: groupID,
             groupCreator: creator,
             since: lastSyncRequestSince
-        ) == nil else {
+        ) == nil || force else {
             DDLogInfo(
                 "Sync for Group ID \(groupID.hexString) (creator \(creator)) already requested in the last \(kGroupSyncRequestInterval) s."
             )

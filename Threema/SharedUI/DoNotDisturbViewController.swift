@@ -35,6 +35,7 @@ final class DoNotDisturbViewController: ThemedCodeModernGroupedTableViewControll
         case activeDND
         case selectPeriod
         case notifyWhenMentionedSetting
+        case notificationPlaySoundSetting
     }
     
     private enum Row: Hashable {
@@ -43,6 +44,7 @@ final class DoNotDisturbViewController: ThemedCodeModernGroupedTableViewControll
         case periodButton(duration: PeriodOffTime)
         case foreverButton
         case notifyWhenMentionedSetting
+        case notificationPlaySoundSetting
     }
         
     // MARK: - Properties
@@ -98,8 +100,22 @@ final class DoNotDisturbViewController: ThemedCodeModernGroupedTableViewControll
                 }
             
                 return notifyWhenMentionedSettingCell
+                
+            case .notificationPlaySoundSetting:
+                let notificationPlaySoundSettingCell: NotifyWhenMentionedSettingCell = tableView
+                    .dequeueCell(for: indexPath)
+
+                notificationPlaySoundSettingCell.textLabel?.text = BundleUtil
+                    .localizedString(forKey: "notification_sound_title")
+
+                notificationPlaySoundSettingCell.isOn = !(self?.pushSetting.silent ?? false)
+                notificationPlaySoundSettingCell.valueDidChange = { [weak self] isOn in
+                    self?.pushSetting.silent = !isOn
+                    self?.pushSetting.save()
+                }
+
+                return notificationPlaySoundSettingCell
             }
-        
         },
         headerProvider: { [weak self] _, section -> String? in
             guard let strongSelf = self else {
@@ -130,6 +146,9 @@ final class DoNotDisturbViewController: ThemedCodeModernGroupedTableViewControll
                 else {
                     return BundleUtil.localizedString(forKey: "doNotDisturb_mention_footer_off")
                 }
+            case .notificationPlaySoundSetting:
+                return BundleUtil.localizedString(forKey: "doNotDisturb_notification_sound_footer")
+                
             default:
                 return nil
             }
@@ -256,6 +275,7 @@ extension DoNotDisturbViewController {
         tableView.registerCell(TurnOffDNDButtonCell.self)
         tableView.registerCell(PeriodButtonCell.self)
         tableView.registerCell(NotifyWhenMentionedSettingCell.self)
+        tableView.registerCell(NotificationPlaySoundSettingCell.self)
     }
 }
 
@@ -292,6 +312,9 @@ extension DoNotDisturbViewController {
             // Ensure that we always show the most up to date footer
             snapshot.reloadSections([.notifyWhenMentionedSetting])
         }
+        
+        snapshot.appendSections([.notificationPlaySoundSetting])
+        snapshot.appendItems([.notificationPlaySoundSetting])
         
         dataSource.apply(snapshot)
     }

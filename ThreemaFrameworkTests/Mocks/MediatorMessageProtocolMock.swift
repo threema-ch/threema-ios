@@ -41,14 +41,7 @@ class MediatorMessageProtocolMock: MediatorMessageProtocolProtocol {
 
     convenience init() {
         self.init(
-            deviceGroupKeys: DeviceGroupKeys(
-                dgpk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
-                dgrk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
-                dgdik: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
-                dgsddk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
-                dgtsk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
-                deviceGroupIDFirstByteHex: "a1"
-            ),
+            deviceGroupKeys: MockData.deviceGroupKeys,
             returnValues: []
         )
     }
@@ -192,6 +185,10 @@ class MediatorMessageProtocolMock: MediatorMessageProtocolProtocol {
     }
 
     func getEnvelopeForContactSyncDelete(identity: String) -> D2d_Envelope {
+        D2d_Envelope()
+    }
+
+    func getEnvelopeForGroupSync(group: Sync_Group, syncAction: D2d_GroupSync.OneOf_Action) -> D2d_Envelope {
         D2d_Envelope()
     }
 

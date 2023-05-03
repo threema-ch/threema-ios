@@ -56,10 +56,101 @@ struct CspE2e_MessageMetadata {
   init() {}
 }
 
+/// Announces and immediately starts a group call.
+///
+/// **Flags:**
+///   - `0x01`: Send push notification.
+///
+/// **Delivery receipts:** Automatic: No. Manual: No.
+///
+/// **User profile distribution:** Yes.
+///
+/// **Reflect:** Incoming: Yes. Outgoing: Yes.
+///
+/// When creating this message to start a call within the group:
+///
+/// 1. Run the _Group Call Refresh Steps_ and let `chosen-call` be the result.
+/// 2. If `chosen-call` is defined, abort these steps. (`chosen-call` will be
+///    joined instead.)
+/// 3. Create the message but don't send it yet:
+///    1. Generate a random GCK and set `gck` appropriately.
+///    2. Set `sfu_base_url` to the _SFU Base URL_ obtained from the Directory
+///       Server API.
+/// 4. Join the call matching the Call ID of the created message and wait until
+///    the SFU sent the initial `Hello` message via the associated data channel.
+///    Let `hello` be that message. An implementation may add an artificial wait
+///    period to enforce a minimum 2s execution time of this step to prevent a
+///    butter-fingered user from accidentally starting a group call. This is an
+///    asynchronous process.
+///
+///    If this step has been cancelled by the _Group Call Refresh Steps_
+///    determining another `chosen-call` in the meantime, cancel the call we have
+///    started to create and abort these steps. (`chosen-call` will be joined
+///    instead.)
+/// 5. If `hello.participants` is not an empty list, exceptionally abort the call
+///    and these steps.
+/// 6. Send the message to the group.
+/// 7. Add the created call to the list of group calls that are currently
+///    considered running.
+/// 8. Trigger the _Group Call Refresh Steps_ again (to start displaying the call
+///    in the UI and starting the refresh timer).
+///
+/// When receiving this message:
+///
+/// 1. Run the [_Common Group Receive Steps_](ref:e2e#receiving). If the received
+///    message has been discarded, abort these steps.
+/// 2. If the hostname of `sfu_base_url` does not use the scheme `https` or does
+///    not end with one of the set of _Allowed SFU Hostname Suffixes_, log a
+///    warning, discard the message and abort these steps.
+/// 3. Let `running` be the list of group calls that are currently considered
+///    running within the group.
+/// 4. If another call with the same GCK exists in `running`, log a warning,
+///    discard the message and abort these steps.
+/// 5. Add the received call to the list of group calls that are currently
+///    considered running (even if `protocol_version` is unsupported; this is to
+///    allow the user to join an ongoing call after an app update where support
+///    for `protocol_version` has been added).
+/// 6. Run the _Group Call Refresh Steps_ and let `chosen-call` be the result.
+///    (`chosen-call` will be joined if the user is currently participating in a
+///    group call of this group.)
+struct CspE2e_GroupCallStart {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  /// Protocol version used for group calls of this group. The current version
+  /// number is `1`.
+  ///
+  /// Note: This is a _major_ version and may only be increased in case of
+  /// breaking changes due to the significant UX impact this has when running the
+  /// _Common Group Receive Steps_ (i.e. only calls with supported protocol
+  /// versions can be _chosen_).
+  var protocolVersion: UInt32 = 0
+
+  /// The secret Group Call Key (`GCK`) used for this call.
+  var gck: Data = Data()
+
+  /// The base URL of the SFU, used to join or peek the call.
+  var sfuBaseURL: String = String()
+
+  var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  init() {}
+}
+
 /// Request joining a group.
 ///
 /// This message is sent to the administrator of a group. The required
 /// information is provided by a `GroupInvite` URL payload.
+///
+/// **Flags:**
+///   - `0x01`: Send push notification.
+///
+/// **Delivery receipts:** Automatic: No. Manual: No.
+///
+/// **User profile distribution:** Yes.
+///
+/// **Reflect:** Incoming: Yes. Outgoing: Yes.
 ///
 /// When receiving this message:
 ///
@@ -113,6 +204,14 @@ struct CspE2e_GroupJoinRequest {
 
 /// Response sent by the admin of a group towards a sender of a valid group join
 /// request.
+///
+/// **Flags:** None.
+///
+/// **Delivery receipts:** Automatic: No. Manual: No.
+///
+/// **User profile distribution:** Yes.
+///
+/// **Reflect:** Incoming: Yes. Outgoing: Yes.
 ///
 /// When receiving this message:
 ///
@@ -300,6 +399,50 @@ extension CspE2e_MessageMetadata: SwiftProtobuf.Message, SwiftProtobuf._MessageI
     if lhs.nickname != rhs.nickname {return false}
     if lhs.messageID != rhs.messageID {return false}
     if lhs.createdAt != rhs.createdAt {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension CspE2e_GroupCallStart: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = _protobuf_package + ".GroupCallStart"
+  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .standard(proto: "protocol_version"),
+    2: .same(proto: "gck"),
+    3: .standard(proto: "sfu_base_url"),
+  ]
+
+  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularUInt32Field(value: &self.protocolVersion) }()
+      case 2: try { try decoder.decodeSingularBytesField(value: &self.gck) }()
+      case 3: try { try decoder.decodeSingularStringField(value: &self.sfuBaseURL) }()
+      default: break
+      }
+    }
+  }
+
+  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if self.protocolVersion != 0 {
+      try visitor.visitSingularUInt32Field(value: self.protocolVersion, fieldNumber: 1)
+    }
+    if !self.gck.isEmpty {
+      try visitor.visitSingularBytesField(value: self.gck, fieldNumber: 2)
+    }
+    if !self.sfuBaseURL.isEmpty {
+      try visitor.visitSingularStringField(value: self.sfuBaseURL, fieldNumber: 3)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  static func ==(lhs: CspE2e_GroupCallStart, rhs: CspE2e_GroupCallStart) -> Bool {
+    if lhs.protocolVersion != rhs.protocolVersion {return false}
+    if lhs.gck != rhs.gck {return false}
+    if lhs.sfuBaseURL != rhs.sfuBaseURL {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

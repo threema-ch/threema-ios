@@ -437,7 +437,7 @@ extension SettingsViewController {
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         if indexPath.section == 1, indexPath.row == 6 {
-           
+            
             if KKPasscodeLock.shared().isPasscodeRequired() {
                 lockScreen.presentLockScreenView(
                     viewController: self,
@@ -484,6 +484,14 @@ extension SettingsViewController {
             let vc = UIHostingController(
                 rootView: PrivacySettingsView(settingsVM: BusinessInjector().settingsStore as! SettingsStore)
             )
+            vc.navigationItem.largeTitleDisplayMode = .never
+            navigationController?.pushViewController(vc, animated: true)
+        }
+        else if indexPath.section == 1, indexPath.row == 2 {
+            let vc = UIHostingController(rootView: NotificationSettingsView(
+                settingsVM: BusinessInjector()
+                    .settingsStore as! SettingsStore
+            ))
             vc.navigationItem.largeTitleDisplayMode = .never
             navigationController?.pushViewController(vc, animated: true)
         }

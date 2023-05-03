@@ -341,7 +341,7 @@ extension EntityManager {
             }
             return conversation
         }
-        else if createIfNotExisting {
+        else if createIfNotExisting, conversation == nil {
             DDLogError("Create conversation failed")
         }
 
@@ -643,7 +643,6 @@ extension EntityManager {
 
                     conversation.lastMessage = message
                     conversation.lastUpdate = .now
-                    conversation.conversationVisibility = .default
                 }
             }
         }

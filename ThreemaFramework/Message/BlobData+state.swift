@@ -73,6 +73,14 @@ public extension BlobData {
     // Similar to `outgoingDataState` as both are uploaded in the same go (`BlobMessageSender`)
     // delete state is not supported and there is no fatalError
     private var outgoingThumbnailState: OutgoingBlobState {
+        // If is blob ID set, than must be an reflected outgoing message
+        if blobGetThumbnailID() != nil {
+            // The blob for reflected outgoing file message must be downloaded
+            if blobGetThumbnail() == nil {
+                return .pendingDownload(error: nil)
+            }
+        }
+
         guard blobGetThumbnailID() == nil else {
             return .remote
         }
@@ -133,7 +141,7 @@ public extension BlobData {
             }
         }
         
-        if blobGetEncryptionKey() == nil {
+        if blobGetEncryptionKey() == nil, !(self is ImageMessageEntity) {
             return .fatalError(.noEncryptionKey)
         }
         
@@ -152,10 +160,22 @@ public extension BlobData {
     
     // So far this has no fatalError
     private var outgoingDataState: OutgoingBlobState {
+        // If is blob ID set, than must be an reflected outgoing message
+        if blobGetID() != nil {
+            // The blob for reflected outgoing file message must be downloaded
+            if blobGet() == nil, !blobGetError(), blobGetProgress() != nil {
+                return .downloading
+            }
+
+            guard blobGet() != nil else {
+                return .pendingDownload(error: blobGetError() ? .downloadFailed : nil)
+            }
+        }
+
         guard blobGetID() == nil else {
             return .remote
         }
-        
+
         // We have no blob ID...
                 
         // We expect the error to be reset whenever a new upload is initiated

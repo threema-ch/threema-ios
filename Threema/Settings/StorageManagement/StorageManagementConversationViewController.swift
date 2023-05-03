@@ -58,7 +58,7 @@ final class StorageManagementConversationViewController: ThemedCodeModernGrouped
 
         let contentConfiguration = DetailsHeaderProfileView.ContentConfiguration(
             avatarImageProvider: avatarImageProvider(completion:),
-            name: conversation.isGroup() ? conversation.groupName! : conversation.contact?.displayName ?? ""
+            name: conversation.isGroup() ? conversation.groupName ?? "" : conversation.contact?.displayName ?? ""
         )
         return DetailsHeaderView(with: contentConfiguration) {
             // do nothing

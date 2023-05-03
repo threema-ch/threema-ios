@@ -66,7 +66,11 @@ import ThreemaFramework
     
     // MARK: - keys and encryption
     
-    func createKey(identity: String, password: String) -> [UInt8]? {
+    func createKey(identity: String, password: String?) -> [UInt8]? {
+        guard let password = password,
+              !password.isEmpty else {
+            return nil
+        }
         let pPassword = UnsafeMutablePointer<Int8>(strdup(password))
         let pSalt = UnsafeMutablePointer<Int8>(strdup(identity))
         
@@ -172,6 +176,27 @@ import ThreemaFramework
     }
     
     // MARK: - safe server
+    
+    @objc func isSafeServerChanged(mdmSetup: MDMSetup, completion: @escaping (Bool) -> Void) {
+        if mdmSetup.isSafeBackupServerPreset() {
+            let serverURL = composeSafeServerAuth(
+                server: mdmSetup.safeServerURL(),
+                user: mdmSetup.safeServerUsername(),
+                password: mdmSetup.safeServerPassword()
+            )
+            return completion(serverURL?.absoluteString != safeConfigManager.getServer())
+        }
+        else {
+            getSafeDefaultServer(key: safeConfigManager.getKey()!) { result in
+                switch result {
+                case let .success(newServerURL):
+                    return completion(self.safeConfigManager.getServer() != newServerURL.absoluteString)
+                case let .failure:
+                    return completion(false)
+                }
+            }
+        }
+    }
     
     func getSafeServerToDisplay() -> String {
         if let server = safeConfigManager.getServer() {
@@ -384,7 +409,8 @@ import ThreemaFramework
                         identity: contact.identity,
                         verification: Int(truncating: contact.verificationLevel)
                     )
-                    jContact.publickey = contact.verificationLevel == 2 ? contact.publicKey.base64EncodedString() : nil
+                    let verifiedLevel2OrInvalid = contact.verificationLevel == 2 || !contact.isValid()
+                    jContact.publickey = verifiedLevel2OrInvalid ? contact.publicKey.base64EncodedString() : nil
                     jContact.workVerified = contact.workContact != 0
                     jContact.hidden = contact.isContactHidden
                     
@@ -905,7 +931,8 @@ import ThreemaFramework
                         else {
                             self.groupManager.sendSyncRequest(
                                 groupID: group.groupID,
-                                creator: group.groupCreatorIdentity
+                                creator: group.groupCreatorIdentity,
+                                force: true
                             )
                         }
                     }

@@ -2483,15 +2483,8 @@ class GroupManagerTests: XCTestCase {
     func testSyncNoteGroupWhenMultiDeviceIsActivated() throws {
         let serverConnectorMock = ServerConnectorMock(
             connectionState: .connected,
-            deviceID: BytesUtility.generateRandomBytes(length: ThreemaProtocol.deviceIDLength),
-            deviceGroupKeys: DeviceGroupKeys(
-                dgpk: BytesUtility.generateRandomBytes(length: Int(kNaClCryptoSecKeySize)),
-                dgrk: BytesUtility.generateRandomBytes(length: Int(kNaClCryptoSecKeySize)),
-                dgdik: BytesUtility.generateRandomBytes(length: Int(kNaClCryptoSecKeySize)),
-                dgsddk: BytesUtility.generateRandomBytes(length: Int(kNaClCryptoSecKeySize)),
-                dgtsk: BytesUtility.generateRandomBytes(length: Int(kNaClCryptoSecKeySize)),
-                deviceGroupIDFirstByteHex: "a1"
-            )
+            deviceID: MockData.deviceID,
+            deviceGroupKeys: MockData.deviceGroupKeys
         )
         let myIdentityStoreMock = MyIdentityStoreMock()
         let contactStoreMock = ContactStoreMock(callOnCompletion: true)

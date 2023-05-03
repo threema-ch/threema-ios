@@ -104,7 +104,7 @@
 "nickname" = "Публичный ник";
 "add_button" = "Добавить";
 "chatview_contextmenu_select" = "Выберите...";
-
+"learn_more" = "Подробнее...";
 "file_message_image" = "Изображение";
 "file_message_sticker" = "Стикер";
 "file_message_animated_image" = "GIF";
@@ -880,6 +880,8 @@
 "doNotDisturb_mention_footer_off" = "Вы не будете получать уведомлений, даже если вас упомянули.";
 "doNotDisturb_mention_footer_on" = "Вы будете получать уведомления, если вас упомянули.";
 
+"doNotDisturb_notification_sound_footer" = "Звук уведомления воспроизводится только тогда, когда параметр «Воспроизводить звук уведомления» включен, а «Не беспокоить» отключен.";
+
 "notification_sound_header" = "Звук уведомления";
 "notification_sound_title" = "Воспроизвести звук уведомления";
 
@@ -1097,8 +1099,6 @@
 "settings_advanced_reregister_push_notifications_header_title" = "Push-уведомления";
 "settings_advanced_reregister_push_notifications_footer_title" = "Если входящие сообщения не отображаются за пределами приложения как уведомления, вы можете перерегистрировать уведомления.";
 "settings_advanced_reregister_notifications_label" = "Перерегистрировать Push-уведомления";
-"settings_advanced_new_chat_view_label" = "Новый вид чата";
-"settings_advanced_new_chat_view_label_footer" = "Примечание. Старый вид чата будет удален в предстоящем релизе.";
 
 "settings_md_sync_alert_title" = "Не удалось синхронизировать";
 
@@ -1111,6 +1111,11 @@
 "settings_privacy_block_unknown" = "Блокировать неизвестных";
 "settings_privacy_block_unknown_footer_on"= "Только пользователи из вашего списка контактов могут отправить вам сообщение.";
 "settings_privacy_block_unknown_foooter_off" = "Отправить вам сообщение может кто угодно. Новые контакты будут добавлены автоматически после прихода первого сообщения от них.";
+
+"settings_privacy_os_header" = "Интеграция с iOS";
+"settings_privacy_os_donate" = "Делиться взаимодействием";
+"settings_privacy_os_reset" = "Восстановить взаимодействия";
+"settings_privacy_os_footer" = "Если этот параметр включен, то когда вы делитесь контентом в iOS, вам будут предлагаться контакты Threema. Это параметр дает системе iOS доступ к информации.";
 
 "settings_privacy_chat_header" = "Чат";
 "settings_privacy_read_receipts" = "Подтверждения прочтения";
@@ -1143,6 +1148,9 @@
 "settings_appearance_display_order" = "Отобpaжениe";
 "settings_appearance_show_gallery_preview" = "Предпросмотр галереи";
 
+// Chat Settings
+"settings_chat_send_message_feedback_label" = "Тактильный отклик при отправке";
+
 // Media
 "settings_media_autosave_private_footer" = "Мультимедийные файлы, полученные в личных сообщениях, не будут сохраняться автоматически.";
 
@@ -1162,14 +1170,13 @@
 
 // Notification settings
 "settings_notifications_inapp_section" = "В приложении";
-"settings_notifications_inapp_sounds" = "Звуки";
-"settings_notifications_inapp_vibrate" = "Вибрация";
-"settings_notifications_inapp_preview" = "Просмотр";
+"settings_notifications_inapp_sounds" = "Звуки в приложении";
+"settings_notifications_inapp_vibrate" = "Вибрация в приложении";
+"settings_notifications_inapp_preview" = "Предпросмотр сообщения";
 "settings_notifications_push_section" = "Push-уведомления";
 "settings_notifications_push_sound" = "Звук";
 "settings_notifications_push_groupsound" = "Звук группы";
-"settings_notifications_push_preview" = "Просмотр";
-"settings_notifications_push_showNickname" = "Показать псевдоним";
+"settings_notifications_push_preview" = "Предпросмотр сообщения";
 "settings_notifications_masterDnd_section_header" = "Правила для нерабочего времени";
 "settings_notifications_masterDnd" = "Не беспокоить в нерабочее время";
 "settings_notifications_masterDnd_section_footer" = "Отключить уведомления и отклонять звонки в нерабочее время.";
@@ -1177,7 +1184,24 @@
 "settings_notifications_masterDnd_startTime" = "Начало рабочего времени";
 "settings_notifications_masterDnd_endTime" = "Конец рабочего времени";
 "settings_notification_iOS_settings" = "Системные настройки";
-"settings_notification_open_iOS_settings" = "Открыть системные настройки";
+
+"settings_notification_type_preview_title" = "Push-уведомления";
+"settings_notification_type_preview_description" = "Выберите, какую информацию следует включать в push-уведомления о входящих сообщениях Threema:";
+
+"settings_notification_type_preview_restrictive_title" = "Показывать ник";
+"settings_notification_type_preview_restrictive_description" = "Отображается только ник контакта.";
+"settings_notification_type_preview_restrictive_sender_name" = "~Иван";
+
+"settings_notification_type_preview_balanced_title" = "Показывать ия";
+"settings_notification_type_preview_balanced_description" = "Отображается полное имя контакта (параметр по умолчанию).";
+"settings_notification_type_preview_balanced_sender_name" = "Иван Петров";
+
+"settings_notification_type_preview_complete_title" = "Показывать имя и аватар";
+"settings_notification_type_preview_complete_description" = "Отображается полное имя и аватар контакта. Определенная информация, связанная с взаимодействием, передается в операционную систему. [Подробнее…](%@)";
+"settings_notification_type_preview_complete_sender_name" = "Иван Петров";
+
+"settings_notification_type_preview_message_text" = "Пример сообщения...";
+"settings_notification_type_preview_no_button" = "Отключить push-уведомления";
 
 // Orphaned files delete
 "settings_orphaned_files_description" = "При удалении данных во время управления хранилищем данных в предыдущих версиях %@ иногда возникает ситуация, когда мультимедийные файлы удаляются не полностью, но исключаются из списков %@.
@@ -1385,6 +1409,7 @@
 
 "chat_text_view_placeholder" = "Новое сообщение";
 "compose_bar_camera_button_accessibility_label" = "Открыть камеру";
+"compose_bar_image_picker_button_accessibility_label" = "Открыть окно выбора изображений";
 "compose_bar_record_button_accessibility_label" = "Записать голосовое сообщение";
 "compose_bar_send_message_button_accessibility_label" = "Отправить сообщение";
 "compose_bar_attachment_button_accessibility_label" = "Добавить вложения";
@@ -1461,6 +1486,9 @@
 "notification_settings_sync_pending" = "Синхронизация...";
 "notification_settings_sync_succeeded" = "Настройки синхронизированы";
 
+"notification_interaction_delete_succeeded" = "Взаимодействие удалено";
+"notification_interaction_delete_failed" = "Не удалось удалить взаимодействие";
+
 // Forward security status messages
 "forward_security_message_without" = "Получено сообщение, не использующее протокол Perfect Forward Secrecy. Проверьте, что отправитель намеренно отключил Perfect Forward Secrecy.";
 "forward_security_session_established" = "Сообщения в этом чате теперь защищены протоколом Perfect Forward Secrecy.";
@@ -1523,7 +1551,7 @@
 "accessibility_voice_message_playing" = "Сейчас воспроизводится.";
 
 // Message status types
-"accessibility_status_acknowledged_plus_time" = "Подтверждено, %@";
+"accessibility_status_acknowledged_plus_time" = "Принято, %@";
 "accessibility_status_declined_plus_time" = "Отклонено, %@";
 "accessibility_status_sending_plus_time" = "Отправка, %@";
 "accessibility_status_sent_plus_time" = "Отправлено, %@";

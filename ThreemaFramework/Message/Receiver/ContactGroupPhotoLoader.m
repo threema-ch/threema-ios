@@ -100,7 +100,7 @@
                 DDLogVerbose(@"Request succeeded - received %lu bytes", (unsigned long)[receivedData length]);
                 [ActivityIndicatorProxy stopActivity];
                 
-                dispatch_async(dispatch_get_main_queue(), ^{
+                dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
                     [self downloadCompleted];
                 });
             }

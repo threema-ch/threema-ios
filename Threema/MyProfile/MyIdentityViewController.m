@@ -684,7 +684,7 @@
     }
 }
 
-- (void)willDismissModalNavigationController {
+- (void)didDismissModalNavigationController {
     [self updateView];
 }
 

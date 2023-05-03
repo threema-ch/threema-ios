@@ -81,6 +81,7 @@ struct LaunchModalSettingsView: View {
                 Button(role: .destructive) {
                     resetNotificationTypeSelection()
                     resetBetaFeedback()
+                    resetSafeIntroShown()
                 } label: {
                     Text("Reset All")
                 }

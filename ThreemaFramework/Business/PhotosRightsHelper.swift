@@ -19,9 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
-#if compiler(>=5.3)
-    import PhotosUI
-#endif
+import PhotosUI
 
 enum PhotosRights {
     case full
@@ -36,43 +34,24 @@ public protocol PhotosRightsHelperProtocol {
     func requestReadAccess() -> Bool
     func haveFullAccess() -> Bool
     func haveWriteAccess() -> Bool
-    func checknewPhotosApi() -> Bool
 }
 
 @objc public class PhotosRightsHelper: NSObject, PhotosRightsHelperProtocol {
     
     public func haveFullAccess() -> Bool {
-        #if compiler(>=5.3)
-            if #available(iOS 14, *) {
-                let authStatus = PHPhotoLibrary.authorizationStatus(for: .readWrite)
-                return authStatus == .authorized
-            }
-        #endif
-        // Fallback on earlier versions
-        let authStatus = PHPhotoLibrary.authorizationStatus()
+        let authStatus = PHPhotoLibrary.authorizationStatus(for: .readWrite)
         return authStatus == .authorized
     }
     
     func haveLimitedAccess() -> Bool {
-        #if compiler(>=5.3)
-            if #available(iOS 14, *) {
-                let authStatus = PHPhotoLibrary.authorizationStatus()
-                return authStatus == .limited
-            }
-        #endif
-        // Fallback on earlier versions
-        return false
+        let authStatus = PHPhotoLibrary.authorizationStatus()
+        return authStatus == .limited
     }
     
     static func checkAccessAllowed(rightsHelper: PhotosRightsHelperProtocol) -> PhotosRights {
         var accessAllowed = PhotosRights.none
         if !rightsHelper.accessLevelDetermined() {
-            if rightsHelper.checknewPhotosApi() {
-                accessAllowed = rightsHelper.requestWriteAccess() ? .write : .none
-            }
-            else {
-                accessAllowed = rightsHelper.requestReadAccess() ? .full : .potentialWrite
-            }
+            accessAllowed = rightsHelper.requestWriteAccess() ? .write : .none
         }
         else {
             if rightsHelper.haveFullAccess() {
@@ -85,56 +64,25 @@ public protocol PhotosRightsHelperProtocol {
         return accessAllowed
     }
     
-    public func checknewPhotosApi() -> Bool {
-        if #available(iOS 14, *) {
-            return true
-        }
-        return false
-    }
-    
     /// Check whether we have write access to the photos
-    /// There is no sepearte check for the write permission on iOS 13 and lower. True in that case.
-    /// - Returns: True if we have access or on iOS 13 and lower. False if access was not granted or not yet granted
+    /// - Returns: True if we have access
     public func haveWriteAccess() -> Bool {
-        #if compiler(>=5.3)
-            if #available(iOS 14, *) {
-                let authStatus = PHPhotoLibrary.authorizationStatus(for: .addOnly)
-                return authStatus == .authorized
-            }
-        #endif
-        // Fallback on earlier versions
-        return true
+        let authStatus = PHPhotoLibrary.authorizationStatus(for: .addOnly)
+        return authStatus == .authorized
     }
     
     public func requestReadAccess() -> Bool {
-        #if compiler(>=5.3)
-            if #available(iOS 14, *) {
-                return requestAccess(accessLevel: .readWrite)
-            }
-        #endif
-        // Fallback on earlier versions
-        return requestAccess()
+        requestAccess(accessLevel: .readWrite)
     }
     
     public func requestWriteAccess() -> Bool {
-        #if compiler(>=5.3)
-            if #available(iOS 14, *) {
-                return requestAccess(accessLevel: .addOnly)
-            }
-        #endif
-        // Fallback on earlier versions
-        return requestAccess()
+        requestAccess(accessLevel: .addOnly)
     }
     
     public func accessLevelDetermined() -> Bool {
-        #if compiler(>=5.3)
-            if #available(iOS 14, *) {
-                let ao = PHPhotoLibrary.authorizationStatus(for: .addOnly) != .notDetermined
-                let rw = PHPhotoLibrary.authorizationStatus(for: .readWrite) != .notDetermined
-                return ao && rw
-            }
-        #endif
-        return PHPhotoLibrary.authorizationStatus() != .notDetermined
+        let ao = PHPhotoLibrary.authorizationStatus(for: .addOnly) != .notDetermined
+        let rw = PHPhotoLibrary.authorizationStatus(for: .readWrite) != .notDetermined
+        return ao && rw
     }
     
     private func requestAccess() -> Bool {
@@ -151,21 +99,18 @@ public protocol PhotosRightsHelperProtocol {
         return status == .authorized
     }
     
-    #if compiler(>=5.3)
-        @available(iOS 14, *)
-        private func requestAccess(accessLevel: PHAccessLevel) -> Bool {
-        
-            var status = PHAuthorizationStatus.notDetermined
-            let sema = DispatchSemaphore(value: 0)
-        
-            DispatchQueue.global(qos: .userInitiated).sync {
-                PHPhotoLibrary.requestAuthorization(for: accessLevel, handler: { authStat in
-                    status = authStat
-                    sema.signal()
-                })
-            }
-            sema.wait()
-            return status == .authorized
+    private func requestAccess(accessLevel: PHAccessLevel) -> Bool {
+    
+        var status = PHAuthorizationStatus.notDetermined
+        let sema = DispatchSemaphore(value: 0)
+    
+        DispatchQueue.global(qos: .userInitiated).sync {
+            PHPhotoLibrary.requestAuthorization(for: accessLevel, handler: { authStat in
+                status = authStat
+                sema.signal()
+            })
         }
-    #endif
+        sema.wait()
+        return status == .authorized
+    }
 }

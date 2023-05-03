@@ -105,7 +105,7 @@ final class ScrollToBottomView: UIView {
         }
         
         unreadMessagesSnapshot.$unreadMessagesState
-            .throttle(for: .milliseconds(Config.dataUpdateThrottleInMs), scheduler: processingQueue, latest: true)
+            .debounce(for: .milliseconds(Config.dataUpdateDebounce), scheduler: processingQueue)
             .receive(on: DispatchQueue.main)
             .sink { [weak self] unreadMessagesState in
                 if let unreadMessagesState = unreadMessagesState, unreadMessagesState.numberOfUnreadMessages <= 0 {
@@ -119,7 +119,7 @@ final class ScrollToBottomView: UIView {
             .store(in: &cancellables)
         
         unreadMessagesSnapshot.$userIsAtBottomOfTableView
-            .throttle(for: .milliseconds(Config.dataUpdateThrottleInMs), scheduler: processingQueue, latest: true)
+            .debounce(for: .milliseconds(Config.dataUpdateDebounce), scheduler: processingQueue)
             .receive(on: DispatchQueue.main)
             .sink { [weak self] userIsAtBottomOfTableView in
                 if userIsAtBottomOfTableView {

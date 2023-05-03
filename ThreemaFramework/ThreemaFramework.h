@@ -115,6 +115,7 @@
 #import <ThreemaFramework/MyIdentityStore.h>
 #import <ThreemaFramework/ProtocolDefines.h>
 #import <ThreemaFramework/PushPayloadDecryptor.h>
+#import <ThreemaFramework/QuotedMessageProtocol.h>
 #import <ThreemaFramework/ServerAPIConnector.h>
 #import <ThreemaFramework/UnknownTypeMessage.h>
 #import <ThreemaFramework/UploadProgressDelegate.h>

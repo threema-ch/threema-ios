@@ -1882,19 +1882,6 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
         
         [self.activityViewController setCompletionWithItemsHandler:^(UIActivityType  _Nullable activityType, BOOL completed, NSArray * _Nullable returnedItems, NSError * _Nullable activityError) {
             
-            // Fix: iOS 13 close modal view after save image to photos
-            if (@available(iOS 13.0, *)) {
-                if (@available(iOS 14.3, *)) {
-                    // do nothing
-                } else {
-                    if (activityType == UIActivityTypeSaveToCameraRoll && completed) {
-                        // do nothing
-                    } else {
-                        [weakSelf dismissViewControllerAnimated:NO completion:nil];
-                    }
-                }
-            }
-            
             weakSelf.activityViewController = nil;
             [weakSelf hideControlsAfterDelay];
             [weakSelf hideProgressHUD:YES];
@@ -1903,20 +1890,8 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
             [defaults removeObjectForKey:@"UIActivityViewControllerOpenTime"];
         }];
         
-        // Fix: iOS 13 close modal view after save image to photos
         UIViewController *fakeVC=[[UIViewController alloc] init];
-        
-        if (@available(iOS 13.0, *)) {
-            if (@available(iOS 14.3, *)) {
-                [self presentViewController:self.activityViewController animated:YES completion:nil];
-            } else {
-                [self presentViewController:fakeVC animated:NO completion:^{
-                    [fakeVC presentViewController:self.activityViewController animated:YES completion:nil];
-                }];
-            }
-        } else {
-            [self presentViewController:self.activityViewController animated:YES completion:nil];
-        }
+        [self presentViewController:self.activityViewController animated:YES completion:nil];
     }
 }
 
@@ -2026,19 +2001,6 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
         
         [self.activityViewController setCompletionWithItemsHandler:^(UIActivityType  _Nullable activityType, BOOL completed, NSArray * _Nullable returnedItems, NSError * _Nullable activityError) {
             
-            // Fix: iOS 13 close modal view after save image to photos
-            if (@available(iOS 13.0, *)) {
-                if (@available(iOS 14.3, *)) {
-                    // do nothing
-                } else {
-                    if (activityType == UIActivityTypeSaveToCameraRoll && completed) {
-                        // do nothing
-                    } else {
-                        [weakSelf dismissViewControllerAnimated:NO completion:nil];
-                    }
-                }
-            }
-            
             weakSelf.activityViewController = nil;
             [weakSelf hideControlsAfterDelay];
             [weakSelf hideProgressHUD:YES];
@@ -2047,20 +2009,8 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
             [defaults removeObjectForKey:@"UIActivityViewControllerOpenTime"];
         }];
         
-        // Fix: iOS 13 close modal view after save image to photos
         UIViewController *fakeVC=[[UIViewController alloc] init];
-
-        if (@available(iOS 13.0, *)) {
-            if (@available(iOS 14.3, *)) {
-                [self presentViewController:self.activityViewController animated:YES completion:nil];
-            } else {
-                [self presentViewController:fakeVC animated:NO completion:^{
-                    [fakeVC presentViewController:self.activityViewController animated:YES completion:nil];
-                }];
-            }
-        } else {
-            [self presentViewController:self.activityViewController animated:YES completion:nil];
-        }
+        [self presentViewController:self.activityViewController animated:YES completion:nil];
     }
     
     ///***** END THREEMA MODIFICATION: use TTOpenInAppActivity, ForwardURLActivity, MDM share restriction *********/
@@ -2099,7 +2049,7 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
 
 #pragma mark - ModalNavigationControllerDelegate
 
-- (void)willDismissModalNavigationController {
+- (void)didDismissModalNavigationController {
     // No op
 }
 

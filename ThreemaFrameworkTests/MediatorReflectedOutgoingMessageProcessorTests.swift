@@ -370,16 +370,7 @@ class MediatorReflectedOutgoingMessageProcessorTests: XCTestCase {
     }
 
     private func getEnvelopeForOutgoingMessage(abstractMessage: AbstractMessage) -> D2d_Envelope {
-        let deviceGroupKeys = DeviceGroupKeys(
-            dgpk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
-            dgrk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
-            dgdik: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
-            dgsddk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
-            dgtsk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
-            deviceGroupIDFirstByteHex: "a1"
-        )
-
-        let mediatorMessageProtocol = MediatorMessageProtocol(deviceGroupKeys: deviceGroupKeys!)
+        let mediatorMessageProtocol = MediatorMessageProtocol(deviceGroupKeys: MockData.deviceGroupKeys)
         return mediatorMessageProtocol.getEnvelopeForOutgoingMessage(
             type: Int32(abstractMessage.type()),
             body: abstractMessage.body(),
@@ -402,24 +393,13 @@ class MediatorReflectedOutgoingMessageProcessorTests: XCTestCase {
                 backgroundUnreadMessages: UnreadMessages(
                     entityManager: EntityManager(databaseContext: dbBackgroundCnx)
                 ),
-                contactStore: ContactStoreMock(),
-                entityManager: EntityManager(databaseContext: dbMainCnx),
-                groupManager: GroupManagerMock(),
-                licenseStore: LicenseStore.shared(),
-                messageSender: MessageSenderMock(),
-                multiDeviceManager: MultiDeviceManagerMock(),
-                myIdentityStore: MyIdentityStoreMock(),
-                userSettings: UserSettingsMock(),
-                settingsStore: SettingsStoreMock(),
-                serverConnector: ServerConnectorMock(),
-                mediatorMessageProtocol: MediatorMessageProtocolMock(),
-                messageProcessor: MessageProcessorMock()
+                entityManager: EntityManager(databaseContext: dbMainCnx)
             )
         }
         else {
             frameworkInjectorMock = BusinessInjectorMock(
-                entityManager: EntityManager(databaseContext: dbMainCnx),
-                backgroundEntityManager: EntityManager(databaseContext: dbBackgroundCnx)
+                backgroundEntityManager: EntityManager(databaseContext: dbBackgroundCnx),
+                entityManager: EntityManager(databaseContext: dbMainCnx)
             )
         }
 

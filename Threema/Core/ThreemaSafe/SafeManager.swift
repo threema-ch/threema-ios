@@ -85,23 +85,31 @@ import Foundation
     
     @objc func activate(
         identity: String,
-        password: String,
+        password: String?,
         customServer: String?,
         server: String?,
         maxBackupBytes: NSNumber?,
         retentionDays: NSNumber?,
         completion: @escaping (Error?) -> Void
     ) {
-        if let key = safeStore.createKey(identity: identity, password: password) {
-            activate(
-                key: key,
-                customServer: customServer,
-                server: server,
-                maxBackupBytes: maxBackupBytes?.intValue,
-                retentionDays: retentionDays?.intValue,
-                completion: completion
+        guard let key = safeStore.createKey(identity: identity, password: password) else {
+            let error = NSError(
+                domain: "",
+                code: Int(kSafePasswordEmptyErrorCode),
+                userInfo: [NSLocalizedDescriptionKey: "Empty safe password"]
             )
+            completion(error)
+            return
         }
+        
+        activate(
+            key: key,
+            customServer: customServer,
+            server: server,
+            maxBackupBytes: maxBackupBytes?.intValue,
+            retentionDays: retentionDays?.intValue,
+            completion: completion
+        )
     }
     
     func activate(

@@ -22,11 +22,11 @@ import Foundation
 
 /// Returns the currently set background image view
 class ChatViewBackgroundImageProvider {
-    lazy var hasCustomBackground: Bool = UserSettings.shared().wallpaper != nil
+    lazy var hasCustomBackground: Bool = BusinessInjector().userSettings.wallpaper != nil
     
     lazy var backgroundImage: UIImage? = {
-        guard let customBackgroundImage = UserSettings.shared().wallpaper else {
-            guard !LicenseStore().getRequiresLicenseKey() else {
+        guard let customBackgroundImage = BusinessInjector().userSettings.wallpaper else {
+            guard !BusinessInjector().licenseStore.getRequiresLicenseKey() else {
                 return nil
             }
             return consumerDefaultBackgroundImage

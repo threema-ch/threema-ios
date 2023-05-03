@@ -129,6 +129,8 @@ static NSString *fieldVisibility = @"visibility";
         switch ([[self valueForKey:fieldVisibility] intValue]) {
             case ConversationVisibilityArchived:
                 return ConversationVisibilityArchived;
+            case ConversationVisibilityPinned:
+                return ConversationVisibilityPinned;
             default:
                 return ConversationVisibilityDefault;
         }

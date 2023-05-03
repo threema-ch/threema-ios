@@ -34,6 +34,9 @@ enum MediatorReflectedProcessorError: Error {
     case downloadFailed(message: String)
     case groupCreateFailed(groupID: String, groupCreatorIdentity: String)
     case groupNotFound(message: String)
+    case groupToCreateAlreadyExists(identity: GroupIdentity)
+    case groupToDeleteNotExists(identity: GroupIdentity)
+    case groupToUpdateNotExists(identity: GroupIdentity)
     case conversationNotFound(message: String)
     case messageDecodeFailed(message: String)
     case messageNotProcessed(message: String)
@@ -89,8 +92,11 @@ protocol MediatorReflectedProcessorProtocol {
         switch envelope.content {
         case .distributionListSync:
             return Promise()
-        case .groupSync:
-            return Promise()
+        case let .groupSync(groupSync):
+            let processor = MediatorReflectedGroupSyncProcessor(
+                frameworkInjector: frameworkInjector
+            )
+            return processor.process(groupSync: groupSync)
         case let .incomingMessageUpdate(incomingMessageUpdate):
             let processor = MediatorReflectedIncomingMessageUpdateProcessor(
                 frameworkInjector: frameworkInjector,

@@ -104,7 +104,7 @@
 "nickname" = "Nickname";
 "add_button" = "Hinzufügen";
 "chatview_contextmenu_select" = "Auswählen…";
-
+"learn_more" = "Weitere Infos…";
 "file_message_image" = "Bild";
 "file_message_sticker" = "Sticker";
 "file_message_animated_image" = "GIF";
@@ -881,6 +881,8 @@
 "doNotDisturb_mention_footer_off" = "Wenn «Nicht stören» aktiv ist erhalten keine Benachrichtigungen, auch nicht wenn Sie erwähnt werden.";
 "doNotDisturb_mention_footer_on" = "Wenn «Nicht stören» aktiv ist und Sie erwähnt werden, erhalten Sie trotzdem Benachrichtigungen.";
 
+"doNotDisturb_notification_sound_footer" = "Der Benachrichtigungston wird nur abgespielt, wenn «Ton abspielen» aktiviert und «Nicht stören» deaktiviert ist.";
+
 "notification_sound_header" = "Benachrichtigungston";
 "notification_sound_title" = "Ton abspielen";
 
@@ -1099,8 +1101,6 @@ Threema Safe erlaubt, Ihre Threema-ID, Kontakte und Gruppen wiederherzustellen, 
 "settings_advanced_reregister_push_notifications_header_title" = "Push-Benachrichtigungen";
 "settings_advanced_reregister_push_notifications_footer_title" = "Falls Sie ausserhalb der App keine Benachrichtigungen für eingehende Nachrichten erhalten, können Sie die Registration für Push-Benachrichtigungen hier erneuern.";
 "settings_advanced_reregister_notifications_label" = "Push-Benachrichtigungen Erneut Registrieren";
-"settings_advanced_new_chat_view_label" = "Neue Chat-Ansicht";
-"settings_advanced_new_chat_view_label_footer" = "Hinweis: Die alte Chat-Ansicht wird bald entfernt.";
 
 "settings_md_sync_alert_title" = "Synchronisieren fehlgeschlagen";
 
@@ -1113,6 +1113,11 @@ Threema Safe erlaubt, Ihre Threema-ID, Kontakte und Gruppen wiederherzustellen, 
 "settings_privacy_block_unknown" = "Unbekannte blockieren";
 "settings_privacy_block_unknown_footer_on"= "Nur Personen auf Ihrer Kontaktliste können Ihnen Nachrichten senden.";
 "settings_privacy_block_unknown_foooter_off" = "Jeder kann Ihnen Nachrichten senden. Neue Kontakte werden bei der ersten Nachricht automatisch hinzugefügt.";
+
+"settings_privacy_os_header" = "iOS-Integration";
+"settings_privacy_os_donate" = "Interaktionen teilen";
+"settings_privacy_os_reset" = "Interaktionen zurücksetzen";
+"settings_privacy_os_footer" = "Wenn aktiviert, werden Threema-Kontakte beim Teilen von Inhalten in iOS vorgeschlagen. Dadurch werden Informationen zu Interaktionen ans Betriebssystem weitergegeben.";
 
 "settings_privacy_chat_header" = "Chat";
 "settings_privacy_read_receipts" = "Lesebestätigungen";
@@ -1145,6 +1150,9 @@ Threema Safe erlaubt, Ihre Threema-ID, Kontakte und Gruppen wiederherzustellen, 
 "settings_appearance_display_order" = "Anzeigefolge";
 "settings_appearance_show_gallery_preview" = "Schnellauswahl von Medien";
 
+// Chat Settings
+"settings_chat_send_message_feedback_label" = "Vibration beim Versenden";
+
 // Media
 "settings_media_autosave_private_footer" = "Medien, welche in privaten Chats erhalten werden, werden nicht automatisch gespeichert.";
 
@@ -1164,14 +1172,13 @@ Threema Safe erlaubt, Ihre Threema-ID, Kontakte und Gruppen wiederherzustellen, 
 
 // Notification settings
 "settings_notifications_inapp_section" = "In App";
-"settings_notifications_inapp_sounds" = "Töne";
-"settings_notifications_inapp_vibrate" = "Vibrationen";
-"settings_notifications_inapp_preview" = "Vorschau";
+"settings_notifications_inapp_sounds" = "In App Töne";
+"settings_notifications_inapp_vibrate" = "In App Vibrationen";
+"settings_notifications_inapp_preview" = "Vorschau der Nachricht anzeigen";
 "settings_notifications_push_section" = "Push-Benachrichtigungen";
 "settings_notifications_push_sound" = "Ton";
 "settings_notifications_push_groupsound" = "Gruppen-Ton";
-"settings_notifications_push_preview" = "Vorschau";
-"settings_notifications_push_showNickname" = "Nickname anzeigen";
+"settings_notifications_push_preview" = "Vorschau anzeigen";
 "settings_notifications_masterDnd_section_header" = "Ruhezeit-Regelung";
 "settings_notifications_masterDnd" = "Nicht stören während Ruhezeit";
 "settings_notifications_masterDnd_section_footer" = "Ausserhalb der Arbeitszeit keine Benachrichtigungen anzeigen und Anrufe ablehnen.";
@@ -1179,7 +1186,24 @@ Threema Safe erlaubt, Ihre Threema-ID, Kontakte und Gruppen wiederherzustellen, 
 "settings_notifications_masterDnd_startTime" = "Arbeitsbeginn";
 "settings_notifications_masterDnd_endTime" = "Arbeitsende";
 "settings_notification_iOS_settings" = "Systemeinstellungen";
-"settings_notification_open_iOS_settings" = "Öffne die Systemeinstellungen";
+
+"settings_notification_type_preview_title" = "Push-Benachrichtigungen";
+"settings_notification_type_preview_description" = "Legen Sie fest, welche Informationen in Push-Benachrichtigungen für eingehende Threema-Nachrichten enthalten sein sollen.";
+
+"settings_notification_type_preview_restrictive_title" = "Nickname anzeigen";
+"settings_notification_type_preview_restrictive_description" = "Zeigt nur den Nickname des Kontakts an.";
+"settings_notification_type_preview_restrictive_sender_name" = "~Hans";
+
+"settings_notification_type_preview_balanced_title" = "Name anzeigen";
+"settings_notification_type_preview_balanced_description" = "Zeigt den vollständigen Namen des Kontakts an (Standard-Einstellung).";
+"settings_notification_type_preview_balanced_sender_name" = "Hans Muster";
+
+"settings_notification_type_preview_complete_title" = "Name und Profilbild anzeigen";
+"settings_notification_type_preview_complete_description" = "Zeigt den Namen und das Profilbild des Kontakts an. Einige Informationen zu Interaktionen werden ans Betriebssystem weitergegeben. [Weitere Infos…](%@)";
+"settings_notification_type_preview_complete_sender_name" = "Hans Muster";
+
+"settings_notification_type_preview_message_text" = "Beispielnachricht...";
+"settings_notification_type_preview_no_button" = "Push-Benachrichtigungen deaktivieren";
 
 // Orphaned files delete
 "settings_orphaned_files_description" = "In früheren %@-Versionen konnte es in seltenen Fällen vorkommen, dass beim Löschen von Daten über die Speicherverwaltung Medien und/oder Dateien aus %@ entfernt, jedoch nicht vollständig gelöscht wurden.
@@ -1387,6 +1411,7 @@ Sofern keine Medien und/oder Dateien in %@ fehlen, leeren Sie den Papierkorb, um
 
 "chat_text_view_placeholder" = "Neue Nachricht";
 "compose_bar_camera_button_accessibility_label" = "Kamera öffnen";
+"compose_bar_image_picker_button_accessibility_label" = "Bildauswahl öffnen";
 "compose_bar_record_button_accessibility_label" = "Sprachnachricht aufnehmen";
 "compose_bar_send_message_button_accessibility_label" = "Nachricht versenden";
 "compose_bar_attachment_button_accessibility_label" = "Medien auswählen";
@@ -1462,6 +1487,9 @@ Sofern keine Medien und/oder Dateien in %@ fehlen, leeren Sie den Papierkorb, um
 
 "notification_settings_sync_pending" = "Synchronisieren…";
 "notification_settings_sync_succeeded" = "Einstellungen synchronisiert";
+
+"notification_interaction_delete_succeeded" = "Interaktionen gelöscht";
+"notification_interaction_delete_failed" = "Löschen fehlgeschlagen";
 
 // Forward security status messages
 "forward_security_message_without" = "Eine Nachricht ohne Perfect Forward Secrecy wurde empfangen. Stellen Sie sicher, dass der Absender absichtlich Perfect Forward Secrecy deaktiviert hat.";
@@ -1602,10 +1630,10 @@ Sofern keine Medien und/oder Dateien in %@ fehlen, leeren Sie den Papierkorb, um
 "alert_no_access_title_location_precise" = "Kein Zugriff auf Genauer Standort";
 "alert_no_access_title_microphone" = "Kein Zugriff auf Mikrofon";
 
-"alert_no_access_message_camera" = "Wechseln Sie zu den iOS Einstellungen und erlauben den Kamera-Zugriff.";
-"alert_no_access_message_contacts" = "Wechseln Sie zu den iOS Einstellungen und erlauben den Kontakte-Zugriff.";
-"alert_no_access_message_location" = "Wechseln Sie zu den iOS Einstellungen und erlauben den Standort-Zugriff.";
-"alert_no_access_message_location_precise" = "Wechseln Sie zu den iOS Einstellungen und erlauben den Zugriff auf Genauer Standort in Standort.";
-"alert_no_access_message_microphone" = "Wechseln Sie zu den iOS Einstellungen und erlauben den Mikrofon-Zugriff.";
+"alert_no_access_message_camera" = "Wechseln Sie zu den iOS Einstellungen und erlauben Sie den Kamera-Zugriff.";
+"alert_no_access_message_contacts" = "Wechseln Sie zu den iOS Einstellungen und erlauben Sie den Kontakte-Zugriff.";
+"alert_no_access_message_location" = "Wechseln Sie zu den iOS Einstellungen und erlauben Sie den Standort-Zugriff.";
+"alert_no_access_message_location_precise" = "Wechseln Sie zu den iOS Einstellungen und erlauben Sie den Zugriff auf Genauer Standort in Standort.";
+"alert_no_access_message_microphone" = "Wechseln Sie zu den iOS Einstellungen und erlauben Sie den Mikrofon-Zugriff.";
 
 "alert_no_access_open_settings" = "Einstellungen öffnen";

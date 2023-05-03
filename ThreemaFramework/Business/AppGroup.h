@@ -40,6 +40,8 @@ typedef enum : int {
 
 + (AppGroupType)getCurrentType;
 
++ (NSString *)getCurrentTypeString;
+
 + (BOOL)amIActive;
 
 + (NSUserDefaults *)userDefaults;

@@ -678,13 +678,14 @@ public class WebAbstractMessage: NSObject {
     
     private func updateReadStateForMessage(requestMessage: WebReadRequest) {
         var conversation: Conversation?
-        let entityManager = EntityManager()
+        let businessInjector = BusinessInjector()
         
         if requestMessage.type == "contact" {
-            conversation = entityManager.entityFetcher.conversation(forIdentity: requestMessage.id)
+            conversation = businessInjector.entityManager.entityFetcher.conversation(forIdentity: requestMessage.id)
         }
         else {
-            conversation = entityManager.entityFetcher.legacyConversation(for: requestMessage.id.hexadecimal())
+            conversation = businessInjector.entityManager.entityFetcher
+                .legacyConversation(for: requestMessage.id.hexadecimal())
         }
         
         guard let conversation else {
@@ -692,7 +693,7 @@ public class WebAbstractMessage: NSObject {
             return
         }
         
-        let messageFetcher = MessageFetcher(for: conversation, with: entityManager)
+        let messageFetcher = MessageFetcher(for: conversation, with: businessInjector.entityManager)
         var foundMessageID = false
         
         var readReceiptQueue: [BaseMessage] = []
@@ -725,7 +726,7 @@ public class WebAbstractMessage: NSObject {
         
         if !readReceiptQueue.isEmpty {
             ServerConnectorHelper.connectAndWaitUntilConnected(initiator: .threemaWeb, timeout: 10) {
-                let conversationActions = ConversationActions(entityManager: entityManager)
+                let conversationActions = ConversationActions(businessInjector: businessInjector)
                 // set isAppInBackground to false, because it will send receipts only if app is in foreground
                 conversationActions.read(conversation, isAppInBackground: false)
             } onTimeout: {

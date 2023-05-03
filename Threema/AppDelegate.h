@@ -74,5 +74,6 @@
 - (void)eraseApplicationData:(JKLLockScreenViewController *)viewController;
 - (UIViewController *)currentTopViewController;
 - (void)eraseApplicationData;
+- (void)handlePresentingScreensWithForce:(BOOL)Force;
 
 @end

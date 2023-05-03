@@ -52,6 +52,7 @@ import ThreemaFramework
         self.init(
             pendingUserNotificationManager: PendingUserNotificationManager(
                 UserNotificationManager(
+                    businessInjector.settingsStore,
                     UserSettings.shared(),
                     ContactStore.shared(),
                     businessInjector.groupManager,
@@ -62,6 +63,7 @@ import ThreemaFramework
             ),
             backgroundPendingUserNotificationManager: PendingUserNotificationManager(
                 UserNotificationManager(
+                    businessInjector.settingsStore,
                     UserSettings.shared(),
                     ContactStore.shared(),
                     businessInjector.backgroundGroupManager,

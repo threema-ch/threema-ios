@@ -58,13 +58,11 @@ final class UnreadMessagesStateManager {
     
     // MARK: - Private Properties
 
-    private let entityManager: EntityManager
+    private let businessInjector: BusinessInjectorProtocol
     private let messageFetcher: MessageFetcher
     private let conversation: Conversation
     private let notificationManager: NotificationManagerProtocol
     private weak var delegate: UnreadMessagesStateManagerDelegate?
-    
-    private lazy var unreadMessages = UnreadMessages(entityManager: entityManager)
     
     private var firstRoundCompleted = false
     
@@ -72,8 +70,8 @@ final class UnreadMessagesStateManager {
         var unreadMessages = [BaseMessage]()
         var newestUnreadMessage: BaseMessage?
         
-        entityManager.performBlockAndWait {
-            let count = self.unreadMessages.count(for: self.conversation)
+        businessInjector.entityManager.performBlockAndWait {
+            let count = self.businessInjector.unreadMessages.count(for: self.conversation)
             if count > 0 {
                 unreadMessages = self.messageFetcher.unreadMessages(limit: count)
                 newestUnreadMessage = unreadMessages.last
@@ -121,12 +119,12 @@ final class UnreadMessagesStateManager {
 
     init(
         conversation: Conversation,
-        entityManager: EntityManager,
+        businessInjector: BusinessInjectorProtocol,
         notificationManager: NotificationManagerProtocol = NotificationManager(),
         unreadMessagesStateManagerDelegate: UnreadMessagesStateManagerDelegate
     ) {
-        self.messageFetcher = MessageFetcher(for: conversation, with: entityManager)
-        self.entityManager = entityManager
+        self.messageFetcher = MessageFetcher(for: conversation, with: businessInjector.entityManager)
+        self.businessInjector = businessInjector
         self.conversation = conversation
         self.notificationManager = notificationManager
         self.delegate = unreadMessagesStateManagerDelegate
@@ -300,27 +298,22 @@ final class UnreadMessagesStateManager {
         let dispatchGroup = DispatchGroup()
         dispatchGroup.enter()
         
-        _ = ConversationActions(
-            unreadMessages: UnreadMessages(entityManager: entityManager),
-            entityManager: entityManager,
-            notificationManager: notificationManager
-        )
-        .read(conversation.objectID, messages: unreadMessages)
-        .done { markedAsRead in
-            DDLogError(
-                "Requested mark as read for  \(unreadMessages.count) messages and marked \(markedAsRead) messages as read"
-            )
-            numberOfMessagesMarkedAsRead = markedAsRead
-        }
-        .ensure {
-            dispatchGroup.leave()
-        }
-        .catch { err in
-            let msg = "Could not mark messages as read due to an error \(err)"
-            DDLogError(msg)
-                
-            fatalError(msg)
-        }
+        _ = ConversationActions(businessInjector: businessInjector)
+            .read(conversation.objectID, messages: unreadMessages)
+            .done { markedAsRead in
+                DDLogNotice(
+                    "Requested mark as read for  \(unreadMessages.count) messages and marked \(markedAsRead) messages as read"
+                )
+                numberOfMessagesMarkedAsRead = markedAsRead
+            }
+            .ensure {
+                dispatchGroup.leave()
+            }
+            .catch { err in
+                let msg = "Could not mark messages as read due to an error \(err)"
+                DDLogError(msg)
+                fatalError(msg)
+            }
         
         dispatchGroup.wait()
         

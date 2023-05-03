@@ -134,19 +134,10 @@ class TaskExecutionProfileSyncTests: XCTestCase {
             let expectedReflectMessage = BytesUtility.generateRandomBytes(length: 16)!
             var expectedMediatorLockState: ([MediatorMessageProtocol.MediatorMessageType], [Data]?)?
 
-            let deviceGroupKeys = DeviceGroupKeys(
-                dgpk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
-                dgrk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
-                dgdik: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
-                dgsddk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
-                dgtsk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
-                deviceGroupIDFirstByteHex: "a1"
-            )
-            let deviceID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.deviceIDLength)!
             let serverConnectorMock = ServerConnectorMock(
                 connectionState: .loggedIn,
-                deviceID: deviceID,
-                deviceGroupKeys: deviceGroupKeys
+                deviceID: MockData.deviceID,
+                deviceGroupKeys: MockData.deviceGroupKeys
             )
             serverConnectorMock.reflectMessageClosure = { _ in
                 if serverConnectorMock.connectionState == .loggedIn {
@@ -189,20 +180,12 @@ class TaskExecutionProfileSyncTests: XCTestCase {
 
             let frameworkInjectorMock = BusinessInjectorMock(
                 backgroundEntityManager: EntityManager(databaseContext: databaseBackgroundCnx),
-                backgroundGroupManager: GroupManagerMock(),
-                backgroundUnreadMessages: UnreadMessagesMock(),
-                contactStore: ContactStoreMock(),
                 entityManager: EntityManager(databaseContext: databaseMainCnx),
-                groupManager: GroupManagerMock(),
-                licenseStore: LicenseStore.shared(),
-                messageSender: MessageSenderMock(),
-                multiDeviceManager: MultiDeviceManagerMock(),
                 myIdentityStore: test.initialConfig.identityStore,
                 userSettings: test.initialConfig.userSettings,
-                settingsStore: SettingsStoreMock(),
                 serverConnector: serverConnectorMock,
                 mediatorMessageProtocol: MediatorMessageProtocolMock(
-                    deviceGroupKeys: deviceGroupKeys!,
+                    deviceGroupKeys: MockData.deviceGroupKeys,
                     returnValues: [
                         MediatorMessageProtocolMock
                             .ReflectData(

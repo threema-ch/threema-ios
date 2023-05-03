@@ -192,7 +192,7 @@ class MessageStore: MessageStoreProtocol {
         for id in deliveryReceiptMessage.receiptMessageIDs {
             if let messageID = id as? Data {
                 var error: Error?
-                frameworkInjector.backgroundEntityManager.performBlock {
+                frameworkInjector.backgroundEntityManager.performBlockAndWait {
                     if let conversation = self.frameworkInjector.backgroundEntityManager.conversation(
                         forMessage: deliveryReceiptMessage
                     ),

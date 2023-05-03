@@ -287,17 +287,15 @@ class MWPhotoBrowserWrapper: NSObject, MWPhotoBrowserDelegate, MWVideoDelegate, 
     
     func openPhotoBrowser(currentMediaIndex: UInt?, showGrid: Bool = true, autoPlayOnAppear: Bool = false) {
         
-        if photoBrowser == nil {
-            photoBrowser = createPhotoBrowser()
-        }
-        photoBrowser?.autoPlayOnAppear = autoPlayOnAppear
+        photoBrowser = createPhotoBrowser()
         
         guard let photoBrowser = photoBrowser else {
             DDLogError("Could not create MWPhotoBrowser")
             return
         }
-        
         prepareMedia()
+        
+        photoBrowser.autoPlayOnAppear = autoPlayOnAppear
         photoBrowser.startOnGrid = showGrid
         
         // Set opening index
@@ -311,7 +309,10 @@ class MWPhotoBrowserWrapper: NSObject, MWPhotoBrowserDelegate, MWVideoDelegate, 
         // Open photo browser
         let navCon = ModalNavigationController(rootViewController: photoBrowser)
         navCon.modalDelegate = self
-        navCon.showFullScreenOnIPad = true
+        if UIDevice.current.userInterfaceIdiom == .pad {
+            navCon.modalPresentationStyle = .overFullScreen
+            navCon.showFullScreenOnIPad = true
+        }
         parentViewController?.present(navCon, animated: true)
     }
     
@@ -367,7 +368,7 @@ class MWPhotoBrowserWrapper: NSObject, MWPhotoBrowserDelegate, MWVideoDelegate, 
     
     // MARK: - ModalNavigationControllerDelegate
 
-    func willDismissModalNavigationController() {
+    func didDismissModalNavigationController() {
         photoBrowser = nil
     }
 }

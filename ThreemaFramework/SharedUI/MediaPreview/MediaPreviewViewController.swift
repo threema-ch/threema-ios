@@ -54,6 +54,8 @@ open class MediaPreviewViewController: UIViewController, UIGestureRecognizerDele
     var mediaData: [MediaPreviewItem] = []
     
     @objc public var backIsCancel = false
+    @objc var showKeyboard = false
+    
     var completion: (([Any], Bool, [String]) -> Void)?
     public var optionsEnabled = true
     public var sendIsChoose = false
@@ -137,6 +139,10 @@ open class MediaPreviewViewController: UIViewController, UIGestureRecognizerDele
             object: nil
         )
         themeChanged()
+        
+        if showKeyboard {
+            textField.becomeFirstResponder()
+        }
     }
     
     override open func viewDidDisappear(_ animated: Bool) {

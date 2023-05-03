@@ -23,7 +23,7 @@
 
 @protocol ModalNavigationControllerDelegate <NSObject>
 
-- (void)willDismissModalNavigationController;
+- (void)didDismissModalNavigationController;
 
 @end
 

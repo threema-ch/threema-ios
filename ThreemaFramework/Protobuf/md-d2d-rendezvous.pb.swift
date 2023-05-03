@@ -194,53 +194,10 @@ struct Rendezvous_RendezvousInit {
       /// Network cost
       var networkCost: Rendezvous_NetworkCost = .unknown
 
-      var ip: Rendezvous_RendezvousInit.DirectTcpServer.IpAddress.OneOf_Ip? = nil
-
-      /// 4 byte IPv4 address in little-endian encoding.
-      var ipv4: Data {
-        get {
-          if case .ipv4(let v)? = ip {return v}
-          return Data()
-        }
-        set {ip = .ipv4(newValue)}
-      }
-
-      /// 16 byte IPv6 address in little-endian encoding.
-      var ipv6: Data {
-        get {
-          if case .ipv6(let v)? = ip {return v}
-          return Data()
-        }
-        set {ip = .ipv6(newValue)}
-      }
+      /// IPv4 or IPv6 address
+      var ip: String = String()
 
       var unknownFields = SwiftProtobuf.UnknownStorage()
-
-      enum OneOf_Ip: Equatable {
-        /// 4 byte IPv4 address in little-endian encoding.
-        case ipv4(Data)
-        /// 16 byte IPv6 address in little-endian encoding.
-        case ipv6(Data)
-
-      #if !swift(>=4.1)
-        static func ==(lhs: Rendezvous_RendezvousInit.DirectTcpServer.IpAddress.OneOf_Ip, rhs: Rendezvous_RendezvousInit.DirectTcpServer.IpAddress.OneOf_Ip) -> Bool {
-          // The use of inline closures is to circumvent an issue where the compiler
-          // allocates stack space for every case branch when no optimizations are
-          // enabled. https://github.com/apple/swift-protobuf/issues/1034
-          switch (lhs, rhs) {
-          case (.ipv4, .ipv4): return {
-            guard case .ipv4(let l) = lhs, case .ipv4(let r) = rhs else { preconditionFailure() }
-            return l == r
-          }()
-          case (.ipv6, .ipv6): return {
-            guard case .ipv6(let l) = lhs, case .ipv6(let r) = rhs else { preconditionFailure() }
-            return l == r
-          }()
-          default: return false
-          }
-        }
-      #endif
-      }
 
       init() {}
     }
@@ -397,8 +354,7 @@ extension Rendezvous_RendezvousInit.DirectTcpServer.IpAddress: SwiftProtobuf.Mes
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "path_id"),
     2: .standard(proto: "network_cost"),
-    3: .same(proto: "ipv4"),
-    4: .same(proto: "ipv6"),
+    3: .same(proto: "ip"),
   ]
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -409,22 +365,7 @@ extension Rendezvous_RendezvousInit.DirectTcpServer.IpAddress: SwiftProtobuf.Mes
       switch fieldNumber {
       case 1: try { try decoder.decodeSingularFixed32Field(value: &self.pathID) }()
       case 2: try { try decoder.decodeSingularEnumField(value: &self.networkCost) }()
-      case 3: try {
-        var v: Data?
-        try decoder.decodeSingularBytesField(value: &v)
-        if let v = v {
-          if self.ip != nil {try decoder.handleConflictingOneOf()}
-          self.ip = .ipv4(v)
-        }
-      }()
-      case 4: try {
-        var v: Data?
-        try decoder.decodeSingularBytesField(value: &v)
-        if let v = v {
-          if self.ip != nil {try decoder.handleConflictingOneOf()}
-          self.ip = .ipv6(v)
-        }
-      }()
+      case 3: try { try decoder.decodeSingularStringField(value: &self.ip) }()
       default: break
       }
     }
@@ -437,19 +378,8 @@ extension Rendezvous_RendezvousInit.DirectTcpServer.IpAddress: SwiftProtobuf.Mes
     if self.networkCost != .unknown {
       try visitor.visitSingularEnumField(value: self.networkCost, fieldNumber: 2)
     }
-    // The use of inline closures is to circumvent an issue where the compiler
-    // allocates stack space for every case branch when no optimizations are
-    // enabled. https://github.com/apple/swift-protobuf/issues/1034
-    switch self.ip {
-    case .ipv4?: try {
-      guard case .ipv4(let v)? = self.ip else { preconditionFailure() }
-      try visitor.visitSingularBytesField(value: v, fieldNumber: 3)
-    }()
-    case .ipv6?: try {
-      guard case .ipv6(let v)? = self.ip else { preconditionFailure() }
-      try visitor.visitSingularBytesField(value: v, fieldNumber: 4)
-    }()
-    case nil: break
+    if !self.ip.isEmpty {
+      try visitor.visitSingularStringField(value: self.ip, fieldNumber: 3)
     }
     try unknownFields.traverse(visitor: &visitor)
   }

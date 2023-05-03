@@ -96,7 +96,7 @@
 
 #pragma mark - ModalNavigationControllerDelegate
 
-- (void)willDismissModalNavigationController {
+- (void)didDismissModalNavigationController {
     
 }
 

@@ -1630,12 +1630,12 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
                 }
                 
                 if (![message isKindOfClass:[SystemMessage class]]) {
-                    ConversationActions *utilities = [[ConversationActions alloc] initWithEntityManager: entityManager];
+                    ConversationActions *utilities = [[ConversationActions alloc] init];
                     [utilities unarchive:conversation];
                 } else {
                     SystemMessage *systemMessage = (SystemMessage *) message;
                     if ([systemMessage type].intValue == kSystemMessageGroupSelfAdded) {
-                        ConversationActions *utilities = [[ConversationActions alloc] initWithEntityManager: entityManager];
+                        ConversationActions *utilities = [[ConversationActions alloc] init];
                         [utilities unarchive:conversation];
                     }
                 }
@@ -1673,7 +1673,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 }
 
 - (void)readUnreadMessages {
-    ConversationActions *conversationActions = [[ConversationActions alloc] initWithEntityManager:entityManager];
+    ConversationActions *conversationActions = [[ConversationActions alloc] init];
     [conversationActions readObjc:conversation isAppInBackground:![AppDelegate sharedAppDelegate].active];
 }
 
@@ -3093,7 +3093,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 
 #pragma MARK - ModalNavigationControllerDelegate
 
-- (void)willDismissModalNavigationController {
+- (void)didDismissModalNavigationController {
     if (!conversation.isGroup && conversation.contact == nil) {
         [self.navigationController popViewControllerAnimated:true];
     }

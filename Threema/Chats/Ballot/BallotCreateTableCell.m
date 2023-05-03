@@ -68,12 +68,6 @@
     if (_allDaySwitch.on) {
         _choiceTextField.text = [NSString stringWithFormat:@"%@", [DateFormatter getDayMonthAndYear:_datePicker.date]];
     } else {
-        if (@available(iOS 14.0, *)) {
-            // do not round the time for iOS 14
-        } else {
-            NSTimeInterval seconds = ceil([_datePicker.date timeIntervalSinceReferenceDate]/300.0)*300.0;
-            _datePicker.date = [NSDate dateWithTimeIntervalSinceReferenceDate:seconds];
-        }
         _choiceTextField.text = [NSString stringWithFormat:@"%@", [DateFormatter getFullDateFor:_datePicker.date]];
     }
 
@@ -85,15 +79,11 @@
     CGFloat timeLabelHeight = 38.0;
     if (_allDaySwitch.on) {
         _datePicker.datePickerMode = UIDatePickerModeDate;
-        if (@available(iOS 14.0, *)) {
-            _datePicker.frame = CGRectMake(_datePicker.frame.origin.x, _datePicker.frame.origin.y, _datePicker.frame.size.width, _datePicker.frame.size.height - timeLabelHeight);
-        }
+        _datePicker.frame = CGRectMake(_datePicker.frame.origin.x, _datePicker.frame.origin.y, _datePicker.frame.size.width, _datePicker.frame.size.height - timeLabelHeight);
     } else {
         _datePicker.datePickerMode = UIDatePickerModeDateAndTime;
-        if (@available(iOS 14.0, *)) {
-            if (allDaySwitch != nil) {
-                _datePicker.frame = CGRectMake(_datePicker.frame.origin.x, _datePicker.frame.origin.y, _datePicker.frame.size.width, _datePicker.frame.size.height + timeLabelHeight);
-            }
+        if (allDaySwitch != nil) {
+            _datePicker.frame = CGRectMake(_datePicker.frame.origin.x, _datePicker.frame.origin.y, _datePicker.frame.size.width, _datePicker.frame.size.height + timeLabelHeight);
         }
     }
     if (_choiceTextField.text.length) {
@@ -120,27 +110,17 @@
 }
 
 - (void)addPicker {
-    if (@available(iOS 14.0, *)) {
-        self.datePicker = [[UIDatePicker alloc] initWithFrame:CGRectMake(0, _choiceTextField.frame.origin.y + _choiceTextField.frame.size.height + 8.0, self.contentView.frame.size.width, 355.0)];
-    } else {
-        self.datePicker = [[UIDatePicker alloc] initWithFrame:CGRectMake(0.0, _choiceTextField.frame.origin.y + _choiceTextField.frame.size.height, self.contentView.frame.size.width, 216.0)];
-    }
+    self.datePicker = [[UIDatePicker alloc] initWithFrame:CGRectMake(0, _choiceTextField.frame.origin.y + _choiceTextField.frame.size.height + 8.0, self.contentView.frame.size.width, 355.0)];
 
-    if (@available(iOS 14.0, *)) {
-        _datePicker.minuteInterval = 1;
-        _datePicker.preferredDatePickerStyle = UIDatePickerStyleInline;
-    } else {
-        _datePicker.minuteInterval = 5;
-    }
+    _datePicker.minuteInterval = 1;
+    _datePicker.preferredDatePickerStyle = UIDatePickerStyleInline;
+
     [_datePicker setValue:UIColor.primary forKey:@"textColor"];
     [_datePicker addTarget:self action:@selector(dateChanged) forControlEvents:UIControlEventValueChanged];
     _datePicker.alpha = 0.0;
     [self addSubview:_datePicker];
     
-    CGFloat space = 0.0;
-    if (@available(iOS 14.0, *)) {
-        space = 8.0;
-    }
+    CGFloat space = 8.0;
     
     _allDayLabel = [[UILabel alloc] initWithFrame:CGRectMake(_choiceTextField.frame.origin.x, _datePicker.frame.origin.y + _datePicker.frame.size.height + space, _choiceTextField.frame.size.width, 31.0)];
     _allDayLabel.text = [BundleUtil localizedStringForKey:@"ballot_allDay_switch"];

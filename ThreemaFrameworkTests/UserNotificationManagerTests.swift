@@ -49,6 +49,7 @@ class UserNotificationManagerTests: XCTestCase {
             ])
 
         let userNotificationManager = UserNotificationManager(
+            SettingsStoreMock(),
             userSettingsMock,
             ContactStoreMock(),
             GroupManagerMock(),
@@ -75,6 +76,7 @@ class UserNotificationManagerTests: XCTestCase {
             ])
 
         let userNotificationManager = UserNotificationManager(
+            SettingsStoreMock(),
             userSettingsMock,
             ContactStoreMock(),
             GroupManagerMock(),
@@ -99,6 +101,7 @@ class UserNotificationManagerTests: XCTestCase {
         pendingUserNotification.abstractMessage = TypingIndicatorMessage()
 
         let userNotificationManager = UserNotificationManager(
+            SettingsStoreMock(),
             UserSettingsMock(),
             ContactStoreMock(),
             GroupManagerMock(),
@@ -123,6 +126,7 @@ class UserNotificationManagerTests: XCTestCase {
         pendingUserNotification.abstractMessage = BoxTextMessage()
 
         let userNotificationManager = UserNotificationManager(
+            SettingsStoreMock(),
             UserSettingsMock(),
             ContactStoreMock(),
             GroupManagerMock(),
@@ -139,8 +143,8 @@ class UserNotificationManagerTests: XCTestCase {
         let testsData = [false, true]
 
         for testData in testsData {
-            let userSettingsMock = UserSettingsMock()
-            userSettingsMock.enableMasterDnd = false
+            let settingStoreMock = SettingsStoreMock()
+            settingStoreMock.blockUnknown = false
 
             let pendingUserNotification = PendingUserNotification(key: "ECHOECHO94c605d0e3150619")
             pendingUserNotification
@@ -153,7 +157,8 @@ class UserNotificationManagerTests: XCTestCase {
                 ])
 
             let userNotificationManager = UserNotificationManager(
-                userSettingsMock,
+                settingStoreMock,
+                UserSettingsMock(),
                 ContactStoreMock(),
                 GroupManagerMock(),
                 EntityManager(databaseContext: databaseCnx),
@@ -202,6 +207,7 @@ class UserNotificationManagerTests: XCTestCase {
                 ])
 
             let userNotificationManager = UserNotificationManager(
+                SettingsStoreMock(),
                 userSettingsMock,
                 ContactStoreMock(),
                 GroupManagerMock(),
@@ -224,8 +230,8 @@ class UserNotificationManagerTests: XCTestCase {
         let expectedMessageID = "94c605d0e3150619"
         let expectedSenderID = "0S9AE6CP"
         let expectedFromName = "red99"
-        let expectedTitle: String? = nil
-        let expectedBody = "Message from red99"
+        let expectedTitle: String? = "red99"
+        let expectedBody = "Message"
         let expectedAttachmentName: String? = nil
         let expectedAttachmentURL: URL? = nil
         let expectedCmd = "newmsg"
@@ -235,7 +241,10 @@ class UserNotificationManagerTests: XCTestCase {
 
         let userSettingsMock = UserSettingsMock()
         userSettingsMock.blockUnknown = true
-        userSettingsMock.pushShowNickname = true
+        
+        let settingsStoreMock = SettingsStoreMock()
+        settingsStoreMock.notificationType = .restrictive
+        settingsStoreMock.pushShowPreview = true
 
         // Create contact for mocking
         let entityManager = EntityManager(databaseContext: databaseCnx)
@@ -257,6 +266,7 @@ class UserNotificationManagerTests: XCTestCase {
         ])
 
         let userNotificationManager = UserNotificationManager(
+            settingsStoreMock,
             userSettingsMock,
             contactStoreMock,
             GroupManagerMock(),
@@ -330,6 +340,7 @@ class UserNotificationManagerTests: XCTestCase {
             pendingUserNotification.baseMessage = textMessage
 
             let userNotificationManager = UserNotificationManager(
+                SettingsStoreMock(),
                 UserSettingsMock(),
                 ContactStoreMock(),
                 GroupManagerMock(),
@@ -346,8 +357,8 @@ class UserNotificationManagerTests: XCTestCase {
         let expectedMessageID = "94c605d0e3150619"
         let expectedSenderID = "0S9AE6CP"
         let expectedFromName = "0S9AE6CP"
-        let expectedTitle: String? = nil
-        let expectedBody = "Message from 0S9AE6CP"
+        let expectedTitle: String? = "0S9AE6CP"
+        let expectedBody = "Message"
         let expectedAttachmentName: String? = nil
         let expectedAttachmentURL: URL? = nil
         let expectedCmd = "newmsg"
@@ -357,6 +368,11 @@ class UserNotificationManagerTests: XCTestCase {
 
         let userSettingsMock = UserSettingsMock()
         userSettingsMock.blockUnknown = false
+        
+        let settingsStoreMock = SettingsStoreMock()
+        settingsStoreMock.notificationType = .restrictive
+        settingsStoreMock.pushShowPreview = true
+
         userSettingsMock.pushSettingsList = [[
             "identity": expectedSenderID,
             "type": "\(PushSettingType.off.rawValue)",
@@ -375,6 +391,7 @@ class UserNotificationManagerTests: XCTestCase {
         ])
 
         let userNotificationManager = UserNotificationManager(
+            settingsStoreMock,
             userSettingsMock,
             ContactStoreMock(),
             GroupManagerMock(),
@@ -422,7 +439,6 @@ class UserNotificationManagerTests: XCTestCase {
 
         let userSettingsMock = UserSettingsMock()
         userSettingsMock.blockUnknown = false
-        userSettingsMock.pushShowNickname = true
         userSettingsMock.pushDecrypt = true
         userSettingsMock.pushSettingsList = [[
             "identity": groupID.hexString,
@@ -433,6 +449,10 @@ class UserNotificationManagerTests: XCTestCase {
             "mentions": false,
         ]]
 
+        let settingsStoreMock = SettingsStoreMock()
+        settingsStoreMock.pushShowPreview = true
+        settingsStoreMock.notificationType = .restrictive
+        
         // Create message for mocking
         var textMessage: TextMessage!
         databasePreparer.save {
@@ -473,6 +493,7 @@ class UserNotificationManagerTests: XCTestCase {
         pendingUserNotification.baseMessage = textMessage
 
         let userNotificationManager = UserNotificationManager(
+            settingsStoreMock,
             userSettingsMock,
             ContactStoreMock(),
             GroupManagerMock(),
@@ -507,8 +528,8 @@ class UserNotificationManagerTests: XCTestCase {
         let expectedMessageID = "94c605d0e3150619"
         let expectedSenderID = "0S9AE6CP"
         let expectedFromName = "0S9AE6CP"
-        let expectedTitle: String? = nil
-        let expectedBody = "Message from 0S9AE6CP"
+        let expectedTitle: String? = "0S9AE6CP"
+        let expectedBody = "Message"
         let expectedAttachmentName: String? = nil
         let expectedAttachmentURL: URL? = nil
         let expectedCmd = "newmsg"
@@ -528,6 +549,7 @@ class UserNotificationManagerTests: XCTestCase {
         ])
 
         let userNotificationManager = UserNotificationManager(
+            SettingsStoreMock(),
             userSettingsMock,
             ContactStoreMock(),
             GroupManagerMock(),
@@ -557,15 +579,15 @@ class UserNotificationManagerTests: XCTestCase {
                 "pushShowNickname": false,
                 "pushDecrypt": false,
                 "expectedFromName": "Hans Muster",
-                "expectedTitle": nil,
-                "expectedBody": "Message from Hans Muster",
+                "expectedTitle": "Hans Muster",
+                "expectedBody": "Message",
             ],
             [
                 "pushShowNickname": true,
                 "pushDecrypt": false,
                 "expectedFromName": "red99",
-                "expectedTitle": nil,
-                "expectedBody": "Message from red99",
+                "expectedTitle": "red99",
+                "expectedBody": "Message",
             ],
             [
                 "pushShowNickname": false,
@@ -605,10 +627,19 @@ class UserNotificationManagerTests: XCTestCase {
                 contact.firstName = "Hans"
                 contact.lastName = "Muster"
             }
+            
+            let settingsStoreMock = SettingsStoreMock()
+            if testData["pushShowNickname"] as! Bool {
+                settingsStoreMock.notificationType = .restrictive
+                settingsStoreMock.pushShowPreview = testData["pushDecrypt"] as! Bool
+            }
+            else {
+                settingsStoreMock.notificationType = .balanced
+                settingsStoreMock.pushShowPreview = testData["pushDecrypt"] as! Bool
+            }
 
             let userSettingsMock = UserSettingsMock()
             userSettingsMock.blockUnknown = false
-            userSettingsMock.pushShowNickname = testData["pushShowNickname"] as! Bool
             userSettingsMock.pushDecrypt = testData["pushDecrypt"] as! Bool
 
             let contactStoreMock = ContactStoreMock(callOnCompletion: false, contact)
@@ -630,6 +661,7 @@ class UserNotificationManagerTests: XCTestCase {
             pendingUserNotification.abstractMessage = message
 
             let userNotificationManager = UserNotificationManager(
+                settingsStoreMock,
                 userSettingsMock,
                 contactStoreMock,
                 GroupManagerMock(),
@@ -663,15 +695,15 @@ class UserNotificationManagerTests: XCTestCase {
                 "pushShowNickname": false,
                 "pushDecrypt": false,
                 "expectedFromName": "Hans Muster",
-                "expectedTitle": nil,
-                "expectedBody": "Group message from Hans Muster",
+                "expectedTitle": "Hans Muster",
+                "expectedBody": "Group message",
             ],
             [
                 "pushShowNickname": true,
                 "pushDecrypt": false,
                 "expectedFromName": "red99",
-                "expectedTitle": nil,
-                "expectedBody": "Group message from red99",
+                "expectedTitle": "red99",
+                "expectedBody": "Group message",
             ],
             [
                 "pushShowNickname": false,
@@ -704,8 +736,18 @@ class UserNotificationManagerTests: XCTestCase {
             let myIdentityStoreMock = MyIdentityStoreMock()
             let userSettingsMock = UserSettingsMock()
             userSettingsMock.blockUnknown = false
-            userSettingsMock.pushShowNickname = testData["pushShowNickname"] as! Bool
             userSettingsMock.pushDecrypt = testData["pushDecrypt"] as! Bool
+
+            let settingsStoreMock = SettingsStoreMock()
+            if testData["pushShowNickname"] as! Bool {
+                settingsStoreMock.notificationType = .restrictive
+                settingsStoreMock.pushShowPreview = testData["pushDecrypt"] as! Bool
+            }
+            else {
+                settingsStoreMock.notificationType = .balanced
+                settingsStoreMock.pushShowPreview = testData["pushDecrypt"] as! Bool
+            }
+
             let groupManagerMock = GroupManagerMock()
 
             var contact: ContactEntity!
@@ -771,6 +813,7 @@ class UserNotificationManagerTests: XCTestCase {
             pendingUserNotification.abstractMessage = message
 
             let userNotificationManager = UserNotificationManager(
+                settingsStoreMock,
                 userSettingsMock,
                 contactStoreMock,
                 groupManagerMock,
@@ -808,7 +851,6 @@ class UserNotificationManagerTests: XCTestCase {
         let myIdentityStoreMock = MyIdentityStoreMock()
         let userSettingsMock = UserSettingsMock()
         userSettingsMock.blockUnknown = false
-        userSettingsMock.pushShowNickname = false
         userSettingsMock.pushDecrypt = false
         let groupManagerMock = GroupManagerMock()
 
@@ -876,6 +918,7 @@ class UserNotificationManagerTests: XCTestCase {
         pendingUserNotification.abstractMessage = message
 
         let userNotificationManager = UserNotificationManager(
+            SettingsStoreMock(),
             userSettingsMock,
             contactStoreMock,
             groupManagerMock,
@@ -894,15 +937,15 @@ class UserNotificationManagerTests: XCTestCase {
                 "pushShowNickname": false,
                 "pushDecrypt": false,
                 "expectedFromName": "Hans Muster",
-                "expectedTitle": nil,
-                "expectedBody": "Message from Hans Muster",
+                "expectedTitle": "Hans Muster",
+                "expectedBody": "Message",
             ],
             [
                 "pushShowNickname": true,
                 "pushDecrypt": false,
                 "expectedFromName": "red99",
-                "expectedTitle": nil,
-                "expectedBody": "Message from red99",
+                "expectedTitle": "red99",
+                "expectedBody": "Message",
             ],
             [
                 "pushShowNickname": false,
@@ -964,9 +1007,18 @@ class UserNotificationManagerTests: XCTestCase {
 
             let userSettingsMock = UserSettingsMock()
             userSettingsMock.blockUnknown = false
-            userSettingsMock.pushShowNickname = testData["pushShowNickname"] as! Bool
             userSettingsMock.pushDecrypt = testData["pushDecrypt"] as! Bool
 
+            let settingsStoreMock = SettingsStoreMock()
+            if testData["pushShowNickname"] as! Bool {
+                settingsStoreMock.notificationType = .restrictive
+                settingsStoreMock.pushShowPreview = testData["pushDecrypt"] as! Bool
+            }
+            else {
+                settingsStoreMock.notificationType = .balanced
+                settingsStoreMock.pushShowPreview = testData["pushDecrypt"] as! Bool
+            }
+            
             let contactStoreMock = ContactStoreMock(callOnCompletion: false, contact)
 
             let pendingUserNotification = PendingUserNotification(key: "\(expectedSenderID)\(expectedMessageID)")
@@ -981,6 +1033,7 @@ class UserNotificationManagerTests: XCTestCase {
             pendingUserNotification.baseMessage = message
 
             let userNotificationManager = UserNotificationManager(
+                settingsStoreMock,
                 userSettingsMock,
                 contactStoreMock,
                 GroupManagerMock(),
@@ -1014,16 +1067,16 @@ class UserNotificationManagerTests: XCTestCase {
                 "pushShowNickname": false,
                 "pushDecrypt": false,
                 "expectedFromName": "Hans Muster",
-                "expectedTitle": nil,
-                "expectedBody": "Group message from Hans Muster",
+                "expectedTitle": "Hans Muster",
+                "expectedBody": "Group message",
                 "expectedGroupId": nil,
             ],
             [
                 "pushShowNickname": true,
                 "pushDecrypt": false,
                 "expectedFromName": "red99",
-                "expectedTitle": nil,
-                "expectedBody": "Group message from red99",
+                "expectedTitle": "red99",
+                "expectedBody": "Group message",
                 "expectedGroupId": nil,
             ],
             [
@@ -1089,9 +1142,18 @@ class UserNotificationManagerTests: XCTestCase {
 
             let userSettingsMock = UserSettingsMock()
             userSettingsMock.blockUnknown = false
-            userSettingsMock.pushShowNickname = testData["pushShowNickname"] as! Bool
             userSettingsMock.pushDecrypt = testData["pushDecrypt"] as! Bool
-
+            
+            let settingsStoreMock = SettingsStoreMock()
+            if testData["pushShowNickname"] as! Bool {
+                settingsStoreMock.notificationType = .restrictive
+                settingsStoreMock.pushShowPreview = testData["pushDecrypt"] as! Bool
+            }
+            else {
+                settingsStoreMock.notificationType = .balanced
+                settingsStoreMock.pushShowPreview = testData["pushDecrypt"] as! Bool
+            }
+            
             let contactStoreMock = ContactStoreMock(callOnCompletion: false, contact)
 
             let pendingUserNotification = PendingUserNotification(key: "\(expectedSenderID)\(expectedMessageID)")
@@ -1106,6 +1168,7 @@ class UserNotificationManagerTests: XCTestCase {
             pendingUserNotification.baseMessage = message
 
             let userNotificationManager = UserNotificationManager(
+                settingsStoreMock,
                 userSettingsMock,
                 contactStoreMock,
                 GroupManagerMock(),
@@ -1268,7 +1331,11 @@ class UserNotificationManagerTests: XCTestCase {
             userSettingsMock.pushDecrypt = testData["pushDecrypt"] as! Bool
             userSettingsMock.pushGroupSound = testData["pushGroupSound"] as? String
             userSettingsMock.pushSound = testData["pushSound"] as? String
-
+            
+            let settingsStoreMock = SettingsStoreMock()
+            settingsStoreMock.notificationType = .restrictive
+            settingsStoreMock.pushShowPreview = testData["pushDecrypt"] as! Bool
+            
             let pendingUserNotification = PendingUserNotification(key: "ECHOECHO94c605d0e3150619")
             pendingUserNotification.threemaPushNotification = try ThreemaPushNotification(from: [
                 "from": "ECHOECHO",
@@ -1283,6 +1350,7 @@ class UserNotificationManagerTests: XCTestCase {
             userNotificationContent.groupCreator = testData["expectedGroupCreator"] as? String
 
             let userNotificationManager = UserNotificationManager(
+                settingsStoreMock,
                 userSettingsMock,
                 ContactStoreMock(),
                 GroupManagerMock(),

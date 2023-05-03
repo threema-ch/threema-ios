@@ -591,8 +591,7 @@ public final class MessageProvider: NSObject {
         }
         
         if conversationObjectIDOfMessageDeletion == conversationObjectID {
-            numberOfMessages = messageFetcher.count()
-            if currentOffset > numberOfMessages {
+            if currentOffset > 0 {
                 configureLoadingMessagesAtBottom()
             }
             fetch()
@@ -618,34 +617,7 @@ extension MessageProvider: NSFetchedResultsControllerDelegate {
     ) {
         DDLogNotice("New snapshot...")
         let newSnapshot = snapshot as NSDiffableDataSourceSnapshot<String, NSManagedObjectID>
-        
-        let convertedSnapshot: NSDiffableDataSourceSnapshot<String, NSManagedObjectID>
-        if UserSettings().featureFlagEnableNoMIMETypeFileMessagesFilter {
-            convertedSnapshot = convert(newSnapshot)
-        }
-        else {
-            var snapshotWithNeighbors = newSnapshot
-            
-            // Identify the cells neighboring the reloaded cells. Neighbours must be reloaded as well as they may be grouped together.
-            for reloadedItemIdentifier in newSnapshot.reloadedItemIdentifiers {
-                guard let index = newSnapshot.indexOfItem(reloadedItemIdentifier) else {
-                    continue
-                }
-                /// We may not insert the same identifier twice in the same call to reloadItems otherwise we get a crash. This is most likely not relevant for performance but it might still be fun to optimize this.
-                /// We use reconfigure to get the exact same cell back from the cell provider, this avoids flickering cells.
-                ///
-                snapshotWithNeighbors.reconfigureItems([
-                    newSnapshot.itemIdentifiers[max(0, index - 1)],
-                ])
-                snapshotWithNeighbors.reconfigureItems([
-                    newSnapshot.itemIdentifiers[index],
-                ])
-                snapshotWithNeighbors.reconfigureItems([
-                    newSnapshot.itemIdentifiers[min(newSnapshot.itemIdentifiers.count - 1, index + 1)],
-                ])
-            }
-            convertedSnapshot = convertSnapshot(snapshot: snapshotWithNeighbors)
-        }
+        let convertedSnapshot = convert(newSnapshot)
         
         // Publish new snapshot
         currentMessages = MessagesSnapshot(
@@ -659,32 +631,10 @@ extension MessageProvider: NSFetchedResultsControllerDelegate {
         previouslyNewestMessagesLoaded = newestMessagesLoaded
     }
     
-    /// We never want to reload cells because otherwise we might reuse a cell with different content when just updating the delivery state of our message causing weird flickering
-    /// Reconfigure always deques the *exact* same cell which means no weird flickering 🥳
-    /// - Parameter snapshot: Snapshot to convert
-    /// - Returns: snapshot with reloadItems moved into reconfigure
-    private func convertSnapshot(snapshot: NSDiffableDataSourceSnapshot<String, NSManagedObjectID>)
-        -> NSDiffableDataSourceSnapshot<String, NSManagedObjectID> {
-        
-        var newSnapshot = NSDiffableDataSourceSnapshot<String, NSManagedObjectID>()
-        newSnapshot.appendSections(snapshot.sectionIdentifiers)
-        
-        for sectionIdentifier in snapshot.sectionIdentifiers {
-            for objectID in snapshot.itemIdentifiers(inSection: sectionIdentifier) {
-                newSnapshot.appendItems([objectID], toSection: sectionIdentifier)
-            }
-        }
-        
-        newSnapshot.reconfigureItems(snapshot.reloadedItemIdentifiers)
-        newSnapshot.reconfigureItems(snapshot.reconfiguredItemIdentifiers)
-
-        return newSnapshot
-    }
-    
     /// Convert and filter the snapshot
     ///
     /// We never want to reload cells because otherwise we might reuse a cell with different content when just updating the delivery state of our message causing
-    /// weird flickering. Reconfigure always deques the *exact* same cell which means no weird flickering 🥳
+    /// weird flickering. Reconfigure always dequeues the *exact* same cell which means no weird flickering 🥳
     private func convert(
         _ snapshot: NSDiffableDataSourceSnapshot<String, NSManagedObjectID>
     ) -> NSDiffableDataSourceSnapshot<String, NSManagedObjectID> {
@@ -719,7 +669,7 @@ extension MessageProvider: NSFetchedResultsControllerDelegate {
             }
         }
         
-        // Identify the cells neighboring the reloaded cells. Neighbours must be reloaded as well as they may be grouped
+        // Identify the cells neighboring the reloaded cells. Neighbors must be reloaded as well as they may be grouped
         // together.
         for reloadedItemIdentifier in snapshot.reloadedItemIdentifiers {
             guard let index = newSnapshot.indexOfItem(reloadedItemIdentifier) else {

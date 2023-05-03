@@ -76,7 +76,11 @@ public enum IncomingBlobState: CustomStringConvertible, Equatable {
 /// State of an outgoing blob
 public enum OutgoingBlobState: CustomStringConvertible, Equatable {
     // TODO: Maybe add processing states (pendingProcessing & processing) in the future
-    
+
+    /// Blob is waiting for download (for reflected outgoing file message). If download failed an `error` should be reported.
+    case pendingDownload(error: BlobStateError?)
+    /// Blob is downloading (for reflected outgoing file message).
+    case downloading
     /// Blob is waiting for upload. If upload failed an `error` should be reported.
     case pendingUpload(error: BlobStateError?)
     /// Blob is uploading
@@ -90,6 +94,10 @@ public enum OutgoingBlobState: CustomStringConvertible, Equatable {
         
     public var description: String {
         switch self {
+        case .pendingDownload:
+            return "pendingDownload"
+        case .downloading:
+            return "downloading"
         case let .pendingUpload(error: error):
             return "pendingUpload \(String(describing: error))"
         case .uploading:

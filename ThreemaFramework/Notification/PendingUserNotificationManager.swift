@@ -212,8 +212,11 @@ public class PendingUserNotificationManager: NSObject, PendingUserNotificationMa
                         pendingUserNotification.baseMessage
                     )
                     
+                    let businessInjector = BusinessInjector()
+                    let notificationType = businessInjector.settingsStore.notificationType
+                    
                     // Add communication notification if enabled
-                    if UserSettings.shared().donateInteractions,
+                    if case .complete = notificationType,
                        let interaction = pendingUserNotification.interaction {
 
                         // Donating

@@ -33,6 +33,8 @@ class BusinessInjectorMock: BusinessInjectorProtocol {
 
     var contactStore: ContactStoreProtocol
 
+    var conversationStore: ConversationStoreProtocol
+
     var entityManager: EntityManager
 
     var groupManager: GroupManagerProtocol
@@ -45,6 +47,8 @@ class BusinessInjectorMock: BusinessInjectorProtocol {
 
     var myIdentityStore: MyIdentityStoreProtocol
 
+    var unreadMessages: UnreadMessagesProtocol
+
     var userSettings: UserSettingsProtocol
 
     var settingsStore: SettingsStoreProtocol
@@ -53,47 +57,35 @@ class BusinessInjectorMock: BusinessInjectorProtocol {
         
     init(
         backgroundEntityManager: EntityManager,
-        backgroundGroupManager: GroupManagerProtocol,
-        backgroundUnreadMessages: UnreadMessagesProtocol,
-        contactStore: ContactStoreProtocol,
+        backgroundGroupManager: GroupManagerProtocol = GroupManagerMock(),
+        backgroundUnreadMessages: UnreadMessagesProtocol = UnreadMessagesMock(),
+        contactStore: ContactStoreProtocol = ContactStoreMock(),
+        conversationStore: ConversationStoreProtocol = ConversationStoreMock(),
         entityManager: EntityManager,
-        groupManager: GroupManagerProtocol,
-        licenseStore: LicenseStore,
-        messageSender: MessageSenderProtocol,
-        multiDeviceManager: MultiDeviceManagerProtocol,
-        myIdentityStore: MyIdentityStoreProtocol,
-        userSettings: UserSettingsProtocol,
-        settingsStore: SettingsStoreProtocol,
-        serverConnector: ServerConnectorProtocol
+        groupManager: GroupManagerProtocol = GroupManagerMock(),
+        licenseStore: LicenseStore = LicenseStore.shared(),
+        messageSender: MessageSenderProtocol = MessageSenderMock(),
+        multiDeviceManager: MultiDeviceManagerProtocol = MultiDeviceManagerMock(),
+        myIdentityStore: MyIdentityStoreProtocol = MyIdentityStoreMock(),
+        unreadMessages: UnreadMessagesProtocol = UnreadMessagesMock(),
+        userSettings: UserSettingsProtocol = UserSettingsMock(),
+        settingsStore: SettingsStoreProtocol = SettingsStoreMock(),
+        serverConnector: ServerConnectorProtocol = ServerConnectorMock()
     ) {
         self.backgroundEntityManager = backgroundEntityManager
         self.backgroundGroupManager = backgroundGroupManager
         self.backgroundUnreadMessages = backgroundUnreadMessages
         self.contactStore = contactStore
+        self.conversationStore = conversationStore
         self.entityManager = entityManager
         self.groupManager = groupManager
         self.licenseStore = licenseStore
         self.messageSender = messageSender
         self.multiDeviceManager = multiDeviceManager
         self.myIdentityStore = myIdentityStore
+        self.unreadMessages = unreadMessages
         self.userSettings = userSettings
         self.settingsStore = settingsStore
         self.serverConnector = serverConnector
-    }
-
-    init(entityManager: EntityManager, backgroundEntityManager: EntityManager) {
-        self.backgroundEntityManager = backgroundEntityManager
-        self.backgroundGroupManager = GroupManagerMock()
-        self.backgroundUnreadMessages = UnreadMessagesMock()
-        self.contactStore = ContactStoreMock()
-        self.entityManager = entityManager
-        self.groupManager = GroupManagerMock()
-        self.licenseStore = LicenseStore.shared()
-        self.messageSender = MessageSenderMock()
-        self.multiDeviceManager = MultiDeviceManagerMock()
-        self.myIdentityStore = MyIdentityStoreMock()
-        self.userSettings = UserSettingsMock()
-        self.serverConnector = ServerConnectorMock()
-        self.settingsStore = SettingsStoreMock()
     }
 }

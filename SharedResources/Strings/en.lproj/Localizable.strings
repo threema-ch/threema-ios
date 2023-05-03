@@ -104,7 +104,7 @@
 "nickname" = "Nickname";
 "add_button" = "Add";
 "chatview_contextmenu_select" = "Select…";
-
+"learn_more" = "Learn more…";
 "file_message_image" = "Image";
 "file_message_sticker" = "Sticker";
 "file_message_animated_image" = "GIF";
@@ -880,6 +880,8 @@
 "doNotDisturb_mention_footer_off" = "If do not disturb is on, you will receive no notifications at all, not even when you are mentioned.";
 "doNotDisturb_mention_footer_on" = "If do not disturb is on, you will still receive notifications when you are mentioned.";
 
+"doNotDisturb_notification_sound_footer" = "The notification sound is only played if ”Play Notification Sound” is enabled and ”Do Not Disturb” is deactivated.";
+
 "notification_sound_header" = "Notification sound";
 "notification_sound_title" = "Play Notification Sound";
 
@@ -1098,8 +1100,6 @@ When using Threema Safe, your can restore your Threema ID, contacts ,and groups 
 "settings_advanced_reregister_push_notifications_header_title" = "Push Notifications";
 "settings_advanced_reregister_push_notifications_footer_title" = "If incoming messages do not show up outside of the app as notifications, you can reregister for notifications.";
 "settings_advanced_reregister_notifications_label" = "Reregister Push Notifications";
-"settings_advanced_new_chat_view_label" = "New Chat View";
-"settings_advanced_new_chat_view_label_footer" = "Note: The old chat view will be removed in an upcoming release.";
 
 "settings_md_sync_alert_title" = "Synchronization failed";
 
@@ -1112,6 +1112,11 @@ When using Threema Safe, your can restore your Threema ID, contacts ,and groups 
 "settings_privacy_block_unknown" = "Block Unknown";
 "settings_privacy_block_unknown_footer_on"= "Only people on your contact list can send you a message.";
 "settings_privacy_block_unknown_foooter_off" = "Anybody can send you a message. New contacts will be added automatically when their first message arrives.";
+
+"settings_privacy_os_header" = "iOS Integration";
+"settings_privacy_os_donate" = "Share Interactions";
+"settings_privacy_os_reset" = "Reset Interactions";
+"settings_privacy_os_footer" = "If turned on, Threema contacts will be suggested when sharing content in iOS. Sharing interactions exposes information to iOS.";
 
 "settings_privacy_chat_header" = "Chat";
 "settings_privacy_read_receipts" = "Read Receipts";
@@ -1144,6 +1149,9 @@ When using Threema Safe, your can restore your Threema ID, contacts ,and groups 
 "settings_appearance_display_order" = "Display Order";
 "settings_appearance_show_gallery_preview" = "Show Gallery Preview";
 
+// Chat Settings
+"settings_chat_send_message_feedback_label" = "Haptic Feedback on Send";
+
 // Media
 "settings_media_autosave_private_footer" = "Media received in private chats will not be automatically autosaved.";
 
@@ -1163,14 +1171,13 @@ When using Threema Safe, your can restore your Threema ID, contacts ,and groups 
 
 // Notification settings
 "settings_notifications_inapp_section" = "In App";
-"settings_notifications_inapp_sounds" = "Sounds";
-"settings_notifications_inapp_vibrate" = "Vibrate";
-"settings_notifications_inapp_preview" = "Preview";
+"settings_notifications_inapp_sounds" = "In App Sounds";
+"settings_notifications_inapp_vibrate" = "In App Vibrate";
+"settings_notifications_inapp_preview" = "Show Message Preview";
 "settings_notifications_push_section" = "Push Notifications";
 "settings_notifications_push_sound" = "Sound";
 "settings_notifications_push_groupsound" = "Group Sound";
-"settings_notifications_push_preview" = "Preview";
-"settings_notifications_push_showNickname" = "Show Nickname";
+"settings_notifications_push_preview" = "Show Message Preview";
 "settings_notifications_masterDnd_section_header" = "Off-Hours Policy";
 "settings_notifications_masterDnd" = "Do Not Disturb During Off-Hours";
 "settings_notifications_masterDnd_section_footer" = "Disable notifications and reject calls outside of working hours.";
@@ -1178,7 +1185,24 @@ When using Threema Safe, your can restore your Threema ID, contacts ,and groups 
 "settings_notifications_masterDnd_startTime" = "Start of Working Hours";
 "settings_notifications_masterDnd_endTime" = "End of Working Hours";
 "settings_notification_iOS_settings" = "System Settings";
-"settings_notification_open_iOS_settings" = "Open System Settings";
+
+"settings_notification_type_preview_title" = "Push Notifications";
+"settings_notification_type_preview_description" = "Choose which information should be included in push notifications for incoming Threema messages.";
+
+"settings_notification_type_preview_restrictive_title" = "Display Nickname";
+"settings_notification_type_preview_restrictive_description" = "Only displays the contact’s nickname.";
+"settings_notification_type_preview_restrictive_sender_name" = "~John";
+
+"settings_notification_type_preview_balanced_title" = "Display Name";
+"settings_notification_type_preview_balanced_description" = "Displays the contact’s full name (default setting).";
+"settings_notification_type_preview_balanced_sender_name" = "John Smith";
+
+"settings_notification_type_preview_complete_title" = "Display Name and Profile Picture";
+"settings_notification_type_preview_complete_description" = "Displays the contact’s full name and profile picture. Some information concerning interactions is shared with the operating system. [Learn more…](%@)";
+"settings_notification_type_preview_complete_sender_name" = "John Smith";
+
+"settings_notification_type_preview_message_text" = "Example message...";
+"settings_notification_type_preview_no_button" = "Disable Push Notifications";
 
 // Orphaned files delete
 "settings_orphaned_files_description" = "When deleting data in the Storage Management in previous %@ versions, it could happen in rare cases that (media) files were not deleted correctly but removed in %@.
@@ -1386,6 +1410,7 @@ If there are no (media) files missing in %@, empty the trash bin to permanently 
 
 "chat_text_view_placeholder" = "New Message";
 "compose_bar_camera_button_accessibility_label" = "Open Camera";
+"compose_bar_image_picker_button_accessibility_label" = "Open Image Picker";
 "compose_bar_record_button_accessibility_label" = "Record Voice Message";
 "compose_bar_send_message_button_accessibility_label" = "Send Message";
 "compose_bar_attachment_button_accessibility_label" = "Add Attachments";
@@ -1462,6 +1487,9 @@ If there are no (media) files missing in %@, empty the trash bin to permanently 
 "notification_settings_sync_pending" = "Syncing…";
 "notification_settings_sync_succeeded" = "Settings synchronized";
 
+"notification_interaction_delete_succeeded" = "Interactions Deleted";
+"notification_interaction_delete_failed" = "Deleting Interactions Failed";
+
 // Forward security status messages
 "forward_security_message_without" = "A message without Perfect Forward Secrecy has been received. Verify that the sender has intentionally disabled Perfect Forward Secrecy.";
 "forward_security_session_established" = "Messages in this chat are now protected by Perfect Forward Secrecy.";
@@ -1524,7 +1552,7 @@ If there are no (media) files missing in %@, empty the trash bin to permanently 
 "accessibility_voice_message_playing" = "Currently playing.";
 
 // Message status types
-"accessibility_status_acknowledged_plus_time" = "Acknowledged, %@";
+"accessibility_status_acknowledged_plus_time" = "Agreed, %@";
 "accessibility_status_declined_plus_time" = "Declined, %@";
 "accessibility_status_sending_plus_time" = "Sending, %@";
 "accessibility_status_sent_plus_time" = "Sent, %@";

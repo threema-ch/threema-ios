@@ -58,18 +58,8 @@ class AppMigrationTests: XCTestCase {
 
         let businessInjectorMock = BusinessInjectorMock(
             backgroundEntityManager: EntityManager(databaseContext: dbBackgroundCnx),
-            backgroundGroupManager: GroupManagerMock(),
-            backgroundUnreadMessages: UnreadMessagesMock(),
-            contactStore: ContactStoreMock(),
             entityManager: EntityManager(databaseContext: dbMainCnx),
-            groupManager: GroupManagerMock(),
-            licenseStore: LicenseStore.shared(),
-            messageSender: MessageSenderMock(),
-            multiDeviceManager: MultiDeviceManagerMock(),
-            myIdentityStore: MyIdentityStoreMock(),
-            userSettings: userSettingsMock,
-            settingsStore: SettingsStoreMock(),
-            serverConnector: ServerConnectorMock()
+            userSettings: userSettingsMock
         )
 
         let appMigration = AppMigration(

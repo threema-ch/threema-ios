@@ -165,6 +165,8 @@ final class ChatViewSystemMessageTableViewCell: ThemedCodeTableViewCell, Measura
         else {
             bottomSpacingConstraint.constant = -ChatViewConfiguration.SystemMessage.defaultTopBottomInset
         }
+        
+        updateColors()
     }
     
     // MARK: - Overrides

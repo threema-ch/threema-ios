@@ -46,8 +46,9 @@ final class IntentCreatorTests: XCTestCase {
     func testAllowedDonateInteractionForIncomingMessage() throws {
         let entityManager = EntityManager(databaseContext: dbMainCnx)
         
-        let userSettingsMock = UserSettingsMock()
-        userSettingsMock.donateInteractions = true
+        let settingsStoreMock = SettingsStoreMock()
+        settingsStoreMock.notificationType = .complete
+        settingsStoreMock.pushShowPreview = true
         
         let groupID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!
         let dp = DatabasePreparer(context: mainCnx)
@@ -85,7 +86,7 @@ final class IntentCreatorTests: XCTestCase {
             )
         }
         
-        let intentCreator = IntentCreator(userSettings: userSettingsMock, entityManager: entityManager)
+        let intentCreator = IntentCreator(settingsStore: settingsStoreMock, entityManager: entityManager)
         let interaction = intentCreator.inSendMessageIntentInteraction(for: "TESTER01", direction: .incoming)
         let groupInteraction = intentCreator.inSendMessageIntentInteraction(
             for: groupID,
@@ -103,8 +104,9 @@ final class IntentCreatorTests: XCTestCase {
     func testNotAllowedDonateInteractionForIncomingMessage() throws {
         let entityManager = EntityManager(databaseContext: dbMainCnx)
         
-        let userSettingsMock = UserSettingsMock()
-        userSettingsMock.donateInteractions = false
+        let settingsStoreMock = SettingsStoreMock()
+        settingsStoreMock.notificationType = .balanced
+        settingsStoreMock.pushShowPreview = true
         
         let groupID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!
         let dp = DatabasePreparer(context: mainCnx)
@@ -142,7 +144,7 @@ final class IntentCreatorTests: XCTestCase {
             )
         }
         
-        let intentCreator = IntentCreator(userSettings: userSettingsMock, entityManager: entityManager)
+        let intentCreator = IntentCreator(settingsStore: settingsStoreMock, entityManager: entityManager)
         let interaction = intentCreator.inSendMessageIntentInteraction(for: "TESTER01", direction: .incoming)
         let groupInteraction = intentCreator.inSendMessageIntentInteraction(
             for: groupID,
@@ -155,15 +157,16 @@ final class IntentCreatorTests: XCTestCase {
         
         XCTAssertNil(interaction)
         XCTAssertNil(groupInteraction)
-        XCTAssertTrue(ddLoggerMock.exists(message: "Donations are disabled by the user"))
+        XCTAssertTrue(ddLoggerMock.exists(message: "Donations for incoming interactions are disabled by the user"))
     }
     
     func testDoNotDonateForPrivateChats1() throws {
         let entityManager = EntityManager(databaseContext: dbMainCnx)
         
-        let userSettingsMock = UserSettingsMock()
-        userSettingsMock.donateInteractions = true
-        
+        let settingsStoreMock = SettingsStoreMock()
+        settingsStoreMock.notificationType = .balanced
+        settingsStoreMock.pushShowPreview = true
+
         let groupID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!
         let dp = DatabasePreparer(context: mainCnx)
         dp.save {
@@ -203,7 +206,7 @@ final class IntentCreatorTests: XCTestCase {
             )
         }
         
-        let intentCreator = IntentCreator(userSettings: userSettingsMock, entityManager: entityManager)
+        let intentCreator = IntentCreator(settingsStore: settingsStoreMock, entityManager: entityManager)
         let interaction = intentCreator.inSendMessageIntentInteraction(for: "TESTER01", direction: .incoming)
         let groupInteraction = intentCreator.inSendMessageIntentInteraction(
             for: groupID,
@@ -221,8 +224,9 @@ final class IntentCreatorTests: XCTestCase {
     func testDoNotDonateForPrivateChats2() throws {
         let entityManager = EntityManager(databaseContext: dbMainCnx)
         
-        let userSettingsMock = UserSettingsMock()
-        userSettingsMock.donateInteractions = true
+        let settingsStoreMock = SettingsStoreMock()
+        settingsStoreMock.notificationType = .complete
+        settingsStoreMock.pushShowPreview = true
         
         let groupID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!
         let dp = DatabasePreparer(context: mainCnx)
@@ -264,7 +268,7 @@ final class IntentCreatorTests: XCTestCase {
             )
         }
 
-        let intentCreator = IntentCreator(userSettings: userSettingsMock, entityManager: entityManager)
+        let intentCreator = IntentCreator(settingsStore: settingsStoreMock, entityManager: entityManager)
         let interaction = intentCreator.inSendMessageIntentInteraction(for: "TESTER01", direction: .incoming)
         let groupInteraction = intentCreator.inSendMessageIntentInteraction(
             for: groupID,

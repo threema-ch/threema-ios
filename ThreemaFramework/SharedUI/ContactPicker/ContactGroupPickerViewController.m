@@ -155,8 +155,12 @@ typedef enum : NSUInteger {
 
 - (void)updateColors {
     self.view.backgroundColor = Colors.backgroundViewController;
+    self.tableView.backgroundColor = Colors.backgroundNavigationController;
     self.navigationController.navigationBar.backgroundColor = Colors.backgroundNavigationController;
-
+    
+    _segmentedControl.backgroundColor = Colors.backgroundNavigationController;
+    _segmentedControl.selectedSegmentTintColor = Colors.backgroundSegmentedControl;
+    
     _controlView.backgroundColor = Colors.backgroundView;
     _buttonView.backgroundColor = Colors.backgroundView;
     [_sendButton setTintColor:Colors.textLink];
@@ -259,13 +263,13 @@ typedef enum : NSUInteger {
     [self.segmentedControl setTitle:nil forSegmentAtIndex:ModeContact];
     [self.segmentedControl setTitle:nil forSegmentAtIndex:ModeGroup];
     [self.segmentedControl setTitle:nil forSegmentAtIndex:ModeRecent];
-    [self.segmentedControl setImage:[BundleUtil imageNamed:@"Contact"] forSegmentAtIndex:ModeContact];
-    [self.segmentedControl setImage:[BundleUtil imageNamed:@"Group"] forSegmentAtIndex:ModeGroup];
-    [self.segmentedControl setImage:[BundleUtil imageNamed:@"Recent"] forSegmentAtIndex:ModeRecent];
+    [self.segmentedControl setImage:[[BundleUtil imageNamed:@"Contact"] imageWithTintColor:Colors.text renderingMode:UIImageRenderingModeAlwaysOriginal] forSegmentAtIndex:ModeContact];
+    [self.segmentedControl setImage:[[BundleUtil imageNamed:@"Group"] imageWithTintColor:Colors.text renderingMode:UIImageRenderingModeAlwaysOriginal] forSegmentAtIndex:ModeGroup];
+    [self.segmentedControl setImage:[[BundleUtil imageNamed:@"Recent"] imageWithTintColor:Colors.text renderingMode:UIImageRenderingModeAlwaysOriginal] forSegmentAtIndex:ModeRecent];
     
     if ([LicenseStore requiresLicenseKey] && self.segmentedControl.numberOfSegments == 4) {
         [self.segmentedControl setTitle:nil forSegmentAtIndex:ModeWorkContact];
-        [self.segmentedControl setImage:[BundleUtil imageNamed:@"Case"] forSegmentAtIndex:ModeWorkContact];
+        [self.segmentedControl setImage:[[BundleUtil imageNamed:@"Case"] imageWithTintColor:Colors.text renderingMode:UIImageRenderingModeAlwaysOriginal] forSegmentAtIndex:ModeWorkContact];
     }
     
     [_addTextButton setTitle:[BundleUtil localizedStringForKey:@"addText"] forState:UIControlStateNormal];
@@ -386,6 +390,8 @@ typedef enum : NSUInteger {
     
     if ([cell isKindOfClass:[GroupCell class]]) {
         GroupCell *groupCell = (GroupCell *)cell;
+        
+        groupCell.backgroundColor = [UIColor clearColor];
 
         EntityManager *entityManager = [EntityManager new];
         MessagePermission *messagePermission = [[MessagePermission alloc] initWithMyIdentityStore:[MyIdentityStore sharedMyIdentityStore] userSettings:[UserSettings sharedUserSettings] groupManager:[[GroupManager alloc] initWithEntityManager:entityManager] entityManager:entityManager];

@@ -104,6 +104,100 @@ class SQLDHSessionStoreTests: XCTestCase {
         XCTAssertEqual(retrievedSession2!, mySession)
     }
     
+    func testVerifyCannotResetCountersDHSessionRatchets() throws {
+        let mySession = makeRandomDHSession(
+            myIdentity: SQLDHSessionStoreTests.aliceIdentity,
+            peerIdentity: SQLDHSessionStoreTests.bobIdentity,
+            fourDh: true
+        )
+        
+        try store!.storeDHSession(session: mySession)
+        
+        let secondSession = copy(session: mySession)
+        
+        for _ in 0..<10 {
+            mySession.myRatchet4DH!.turn()
+        }
+        
+        try store!.updateDHSessionRatchets(session: mySession, peer: false)
+        
+        try store!.updateDHSessionRatchets(session: secondSession, peer: false)
+        
+        // Retrieve session again from DB and compare
+        let retrievedSession = try store!.exactDHSession(
+            myIdentity: mySession.myIdentity,
+            peerIdentity: mySession.peerIdentity,
+            sessionID: mySession.id
+        )
+        XCTAssertEqual(retrievedSession!, mySession)
+        
+        XCTAssertEqual(mySession.myRatchet4DH, retrievedSession?.myRatchet4DH)
+        XCTAssertNotEqual(secondSession.myRatchet4DH, retrievedSession?.myRatchet4DH)
+        
+        // Do the same for the peer ratchet
+        
+        for _ in 0..<10 {
+            mySession.peerRatchet4DH!.turn()
+        }
+        try store!.updateDHSessionRatchets(session: mySession, peer: true)
+        
+        try store!.updateDHSessionRatchets(session: secondSession, peer: true)
+        
+        let retrievedSession2 = try store!.exactDHSession(
+            myIdentity: mySession.myIdentity,
+            peerIdentity: mySession.peerIdentity,
+            sessionID: mySession.id
+        )
+        XCTAssertEqual(retrievedSession2!, mySession)
+        
+        XCTAssertEqual(mySession.peerRatchet4DH, retrievedSession2?.peerRatchet4DH)
+        XCTAssertNotEqual(secondSession.peerRatchet4DH, retrievedSession2?.peerRatchet4DH)
+    }
+    
+    private func copy(session: DHSession) -> DHSession {
+        let myRatchet2DH: KDFRatchet?
+        let myRatchet4DH: KDFRatchet?
+        let peerRatchet2DH: KDFRatchet?
+        let peerRatchet4DH: KDFRatchet?
+        
+        if let ratchet = session.myRatchet2DH {
+            myRatchet2DH = KDFRatchet(counter: ratchet.counter, initialChainKey: ratchet.currentChainKey)
+        }
+        else {
+            myRatchet2DH = nil
+        }
+        if let ratchet = session.myRatchet4DH {
+            myRatchet4DH = KDFRatchet(counter: ratchet.counter, initialChainKey: ratchet.currentChainKey)
+        }
+        else {
+            myRatchet4DH = nil
+        }
+        if let ratchet = session.peerRatchet2DH {
+            peerRatchet2DH = KDFRatchet(counter: ratchet.counter, initialChainKey: ratchet.currentChainKey)
+        }
+        else {
+            peerRatchet2DH = nil
+        }
+        if let ratchet = session.peerRatchet4DH {
+            peerRatchet4DH = KDFRatchet(counter: ratchet.counter, initialChainKey: ratchet.currentChainKey)
+        }
+        else {
+            peerRatchet4DH = nil
+        }
+        
+        return DHSession(
+            id: session.id,
+            myIdentity: SQLDHSessionStoreTests.aliceIdentity,
+            peerIdentity: SQLDHSessionStoreTests.bobIdentity,
+            myEphemeralPrivateKey: session.myEphemeralPrivateKey,
+            myEphemeralPublicKey: session.myEphemeralPublicKey,
+            myRatchet2DH: myRatchet2DH,
+            myRatchet4DH: myRatchet4DH,
+            peerRatchet2DH: peerRatchet2DH,
+            peerRatchet4DH: peerRatchet4DH
+        )
+    }
+    
     func testBestDHSession4DH() throws {
         for _ in 1...SQLDHSessionStoreTests.numRandomRuns {
             // Make two different sessions between the same participants

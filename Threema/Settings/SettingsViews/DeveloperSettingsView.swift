@@ -27,14 +27,9 @@ struct DeveloperSettingsView: View {
     // New ChatView
     @State var newChatViewActive = UserSettings.shared().newChatViewActive
     @State var flippedTableView = UserSettings.shared().flippedTableView
-    @State var featureFlagEnableNoMIMETypeFileMessagesFilter = UserSettings.shared()
-        .featureFlagEnableNoMIMETypeFileMessagesFilter
 
     // Multi-Device
     @State var allowSeveralDevices = UserSettings.shared().allowSeveralLinkedDevices
-    
-    // Feature Flags
-    @State var donateInteractions = UserSettings.shared().donateInteractions
     
     var body: some View {
         List {
@@ -54,13 +49,6 @@ struct DeveloperSettingsView: View {
                 }
                 .onChange(of: flippedTableView) { newValue in
                     UserSettings.shared().flippedTableView = newValue
-                }
-                
-                Toggle(isOn: $featureFlagEnableNoMIMETypeFileMessagesFilter) {
-                    Text("Filter Non MIME Type Messages")
-                }
-                .onChange(of: featureFlagEnableNoMIMETypeFileMessagesFilter) { newValue in
-                    UserSettings.shared().featureFlagEnableNoMIMETypeFileMessagesFilter = newValue
                 }
             }
             
@@ -100,32 +88,13 @@ struct DeveloperSettingsView: View {
             }
             
             Section("Feature Flags") {
-                Toggle(isOn: $donateInteractions) {
-                    Text("Donate Interactions")
-                }
-                .onChange(of: donateInteractions) { newValue in
-                    toggleDonations(newValue: newValue)
-                }
+                Text("GroupCalls soon? ☎️👀")
+                    .foregroundColor(.secondary)
+                    .italic()
             }
         }
         .navigationBarTitle("Developer Settings", displayMode: .inline)
         .tint(UIColor.primary.color)
-    }
-    
-    // MARK: - Functions
-
-    private func toggleDonations(newValue: Bool) {
-        UserSettings.shared().donateInteractions = newValue
-        
-        if !newValue {
-            Task { @MainActor in
-                INInteraction.deleteAll { error in
-                    if error != nil {
-                        DDLogError("[PrivacySettingsViewController] Could not delete INInteractions.")
-                    }
-                }
-            }
-        }
     }
 }
 

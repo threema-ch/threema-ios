@@ -31,10 +31,11 @@
 #import "ThreemaFramework/ThreemaFramework-Swift.h"
 
 #ifdef DEBUG
-  static const DDLogLevel ddLogLevel = DDLogLevelVerbose;
+  static const DDLogLevel ddLogLevel = DDLogLevelAll;
 #else
   static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 #endif
+
 #define WORK_APP_ID @"ch.threema.work." // Prefix for ch.threema.work.iapp and ch.threema.work.red.iapp
 #define ONPREM_APP_ID @"ch.threema.onprem."
 #define PERSISTENCE_KEY_LICENSE_USER @"Threema license username"
@@ -51,6 +52,7 @@ static LicenseStore *singleton;
 
 @property BOOL didCheckLicense;
 @property dispatch_semaphore_t sema;
+@property BOOL updateWorkInfoRunning;
 
 @end
 
@@ -76,6 +78,7 @@ static LicenseStore *singleton;
     self = [super init];
     if (self) {
         _didCheckLicense = NO;
+        _updateWorkInfoRunning = NO;
         
         _sema = dispatch_semaphore_create(1);
         [self loadLicense];
@@ -188,19 +191,23 @@ static LicenseStore *singleton;
 - (void)performUpdateWorkInfoForce:(BOOL)force {
     // Only send the update work info when there is a valid license username and a valid threema id
     AppSetupState *appSetupState = [[AppSetupState alloc] initWithMyIdentityStore:[MyIdentityStore sharedMyIdentityStore]];
-    if (![LicenseStore requiresLicenseKey] || _licenseUsername.length < 1 || (!appSetupState.isAppSetupCompleted && ![MyIdentityStore sharedMyIdentityStore].pendingCreateID))
+    if (![LicenseStore requiresLicenseKey] || _licenseUsername.length < 1 || (!appSetupState.isAppSetupCompleted && ![MyIdentityStore sharedMyIdentityStore].pendingCreateID) || _updateWorkInfoRunning)
         return;
+    
+    _updateWorkInfoRunning = YES;
     
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         ServerAPIConnector *connector = [[ServerAPIConnector alloc] init];
         [connector updateWorkInfoForStore:[MyIdentityStore sharedMyIdentityStore] licenseUsername:_licenseUsername password:_licensePassword force:force onCompletion:^(BOOL sent) {
+            _updateWorkInfoRunning = NO;
             if (sent) {
-                DDLogNotice(@"Work info update completed (sent)");
+                DDLogNotice(@"Work info update completed (sent, %@)", [AppGroup getCurrentTypeString]);
             } else {
-                DDLogNotice(@"Work info update completed without changes (not sent)");
+                DDLogNotice(@"Work info update completed without changes (not sent, %@)", [AppGroup getCurrentTypeString]);
             }
         } onError:^(NSError *error) {
-            DDLogError(@"Work info update failed: %@", error);
+            _updateWorkInfoRunning = NO;
+            DDLogError(@"Work info update failed (%@): %@", [AppGroup getCurrentTypeString], error);
         }];
     });
 }

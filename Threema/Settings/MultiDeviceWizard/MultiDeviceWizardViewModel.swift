@@ -57,20 +57,10 @@ class MultiDeviceWizardViewModel: ObservableObject {
     // MARK: - Public Functions
 
     @MainActor
-    public func advanceState(_ state: WizardState? = nil) {
-        
-        if let state = state {
+    public func advanceState(_ state: WizardState) {
+        if wizardState != state {
             wizardState = state
-            return
         }
-        
-        guard wizardState.rawValue < WizardState.success.rawValue else {
-            wizardState = .terms
-            resetLinking()
-            return
-        }
-        
-        wizardState = WizardState(rawValue: wizardState.rawValue + 1) ?? .terms
     }
     
     public func cancelLinking() {
@@ -124,10 +114,13 @@ class MultiDeviceWizardViewModel: ObservableObject {
                 // Set values and reset Task
                 await setLinkingCode(createdCode.components(withLength: 4))
 
-                await self.advanceState()
+                await self.advanceState(.identity)
             }
             catch {
-                resetLinking()
+                Task { @MainActor in
+                    self.cancelLinking()
+                    shouldDismiss = true
+                }
             }
         }
     }
@@ -164,7 +157,10 @@ class MultiDeviceWizardViewModel: ObservableObject {
                         didDisconnect = true
                     }
                     else {
+                        prepareLinkingTask = nil
                         linkingTask = nil
+
+                        shouldDismiss = true
                     }
                 }
             }

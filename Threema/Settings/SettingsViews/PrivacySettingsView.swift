@@ -34,6 +34,7 @@ struct PrivacySettingsView: View {
     @State private var typingIndicators: SettingValueOption = .doSend
     
     let mdmSetup = MDMSetup(setup: false)
+    let interactionFAQURLString = BundleUtil.object(forInfoDictionaryKey: "ThreemaInteractionInfo") as! String
 
     // MARK: - View
 
@@ -65,6 +66,30 @@ struct PrivacySettingsView: View {
             }
             .onChange(of: settingsVM.blockUnknown) { _ in
                 updateContactsFooter()
+            }
+            
+            // MARK: OS Integration
+            
+            Section {
+                Toggle(isOn: $settingsVM.allowOutgoingDonations) {
+                    Text(BundleUtil.localizedString(forKey: "settings_privacy_os_donate"))
+                }
+                if settingsVM.allowOutgoingDonations {
+                    Button(BundleUtil.localizedString(forKey: "settings_privacy_os_reset"), role: .destructive) {
+                        settingsVM.removeINInteractions(showNotification: true)
+                    }
+                }
+            } header: {
+                Text(BundleUtil.localizedString(forKey: "settings_privacy_os_header"))
+            } footer: {
+                VStack(alignment: .leading, spacing: 0) {
+                    Text(BundleUtil.localizedString(forKey: "settings_privacy_os_footer"))
+                    Link(
+                        BundleUtil.localizedString(forKey: "learn_more"),
+                        destination: URL(string: interactionFAQURLString)!
+                    )
+                    .font(.footnote)
+                }
             }
             
             // MARK: Chats

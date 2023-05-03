@@ -215,17 +215,17 @@ class EntityObserverTests: XCTestCase {
             creator: groupCreatorIdentity
         )!
 
-        var isGroupDeleted = false
-        var deletedManagedObject: NSManagedObject?
+        var expectedDeletedManagedObject: NSManagedObject?
+        var expectedReason: EntityObserver.EntityChangedReason?
 
         let expect = expectation(description: "conversation delete")
 
         let subscriptionToken = EntityObserver.shared.subscribe(
             managedObject: conversation,
             for: [.deleted]
-        ) { managedObject, _ in
-            isGroupDeleted = true
-            deletedManagedObject = managedObject
+        ) { managedObject, reason in
+            expectedDeletedManagedObject = managedObject
+            expectedReason = reason
 
             expect.fulfill()
         }
@@ -236,8 +236,8 @@ class EntityObserverTests: XCTestCase {
 
         wait(for: [expect], timeout: 3)
 
-        XCTAssertTrue(isGroupDeleted)
-        XCTAssertNil(deletedManagedObject)
+        XCTAssertEqual(expectedDeletedManagedObject?.objectID, conversation.objectID)
+        XCTAssertEqual(expectedReason, .deleted)
     }
 
     func testBusinessAbstractionDeleteManagedObjectOnPrivateContext() throws {
@@ -267,24 +267,20 @@ class EntityObserverTests: XCTestCase {
             creator: groupCreatorIdentity
         )!
 
-        var isGroupDeleted = false
-        var deletedManagedObject: NSManagedObject?
+        var expectedDeletedManagedObject: NSManagedObject?
+        var expectedReason: EntityObserver.EntityChangedReason?
 
         let expect = expectation(description: "conversation delete")
-        var isExpectFullfilled = false
+        expect.assertForOverFulfill = false
 
         let subscriptionToken = EntityObserver.shared.subscribe(
             managedObject: conversation,
             for: [.deleted]
-        ) { managedObject, _ in
-            isGroupDeleted = true
-            deletedManagedObject = managedObject
+        ) { managedObject, reason in
+            expectedDeletedManagedObject = managedObject
+            expectedReason = reason
 
-            // Full fill only once (closure will be called twice on child and main context)
-            if !isExpectFullfilled {
-                isExpectFullfilled = true
-                expect.fulfill()
-            }
+            expect.fulfill()
         }
 
         entityManager.performSyncBlockAndSafe {
@@ -293,8 +289,8 @@ class EntityObserverTests: XCTestCase {
 
         wait(for: [expect], timeout: 3)
 
-        XCTAssertTrue(isGroupDeleted)
-        XCTAssertNil(deletedManagedObject)
+        XCTAssertEqual(expectedDeletedManagedObject?.objectID, conversation.objectID)
+        XCTAssertEqual(expectedReason, .deleted)
     }
 
     func testBusinessAbstractionChangeManagedObjectOnDifferentContext() throws {

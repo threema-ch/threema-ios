@@ -79,7 +79,6 @@ static const int MAX_BYTES_TO_DECRYPT_NOTIFICATION_EXTENSION = 500000;
     int reconnectAttempts;
 
     NSMutableArray *connectionInitiators;
-    dispatch_queue_t connectionInitiatorsQueue;
 
     ServerConnectorConnectionState *serverConnectorConnectionState;
 
@@ -202,7 +201,6 @@ struct pktExtension {
         isRemovedVoIPPushToken = NO;
         
         connectionInitiators = [[NSMutableArray alloc] init];
-        connectionInitiatorsQueue = dispatch_queue_create("ch.threema.ServerConnector.connectionInitiatorsQueue", NULL);
 
         socketQueue = dispatch_queue_create("ch.threema.ServerConnector.socketQueue", NULL);
         sendMessageQueue = dispatch_queue_create("ch.threema.ServerConnector.sendMessageQueue", NULL);
@@ -321,10 +319,16 @@ struct pktExtension {
     doUnblockIncomingMessages = YES;
 
     dispatch_async(socketQueue, ^{
+        // TODO: Remove comment IOS-3558
+        DDLogNotice(@"Entered socket queue in connect.");
         [self connectBy:initiator];
+        // TODO: Remove comment IOS-3558
+        DDLogNotice(@"ConnectBy finished.");
 
         lastErrorDisplay = nil;
         [self _connect];
+        // TODO: Remove comment IOS-3558
+        DDLogNotice(@"Left socket queue in connect.");
     });
 }
 
@@ -337,10 +341,16 @@ struct pktExtension {
     doUnblockIncomingMessages = YES;
 
     dispatch_sync(socketQueue, ^{
+        // TODO: Remove comment IOS-3558
+        DDLogNotice(@"Entered socket queue in connectWait.");
         [self connectBy:initiator];
+        // TODO: Remove comment IOS-3558
+        DDLogNotice(@"ConnectBy finished.");
 
         lastErrorDisplay = nil;
         [self _connect];
+        // TODO: Remove comment IOS-3558
+        DDLogNotice(@"Left socket queue in connectWait.");
     });
 }
 
@@ -356,6 +366,8 @@ struct pktExtension {
 }
 
 - (void)_connect {
+    // TODO: Remove comment IOS-3558
+    DDLogNotice(@"Connect began.");
     if (ProcessInfoHelper.isRunningForScreenshots)  {
         return;
     }
@@ -366,33 +378,55 @@ struct pktExtension {
     }
     
     if (self.connectionState == ConnectionStateDisconnecting) {
-        // The socketDidDisconnect callback has not been called yet; ensure that we reconnect
-        // as soon as the previous disconnect has finished.
-        reconnectAttempts = 1;
-        autoReconnect = YES;
-        return;
-    } else if (self.connectionState != ConnectionStateDisconnected) {
-        if (self.connectionState == ConnectionStateLoggedIn) {
+        // TODO: Remove comment IOS-3558
+        DDLogNotice(@"Connect: State was disconnecting.");
+        if ([AppGroup getCurrentType] != AppGroupTypeNotificationExtension) {
+            // The socketDidDisconnect callback has not been called yet; ensure that we reconnect
+            // as soon as the previous disconnect has finished.
+            reconnectAttempts = 1;
+            autoReconnect = YES;
             return;
         }
+    } else if (self.connectionState != ConnectionStateDisconnected) {
+        if (self.connectionState == ConnectionStateConnecting
+            || self.connectionState == ConnectionStateConnected
+            || self.connectionState == ConnectionStateLoggedIn)
+        {
+            // TODO: Remove comment IOS-3558
+            DDLogNotice(@"Connect: State was connecting, connected or logged in.");
+            return;
+        }
+
         DDLogNotice(@"Cannot connect - invalid connection state (actual state: %@)", [self nameForConnectionState:self.connectionState]);
-        autoReconnect = YES;
-        [self reconnectAfterDelay];
-        return;
+        if ([AppGroup getCurrentType] != AppGroupTypeNotificationExtension) {
+            autoReconnect = YES;
+            [self reconnectAfterDelay];
+            return;
+        }
     }
     
     if ([AppGroup amIActive] == NO) {
-        DDLogNotice(@"Not active -> don't connect now, retry later");
-        // keep delay at constant rate to avoid too long waits when becoming active again
-        reconnectAttempts = 1;
-        autoReconnect = YES;
-        [self reconnectAfterDelay];
+        if ([AppGroup getCurrentType] != AppGroupTypeNotificationExtension) {
+            DDLogNotice(@"Not active -> don't connect now, retry later");
+            // keep delay at constant rate to avoid too long waits when becoming active again
+            reconnectAttempts = 1;
+            autoReconnect = YES;
+            [self reconnectAfterDelay];
+        }
+        else {
+            DDLogNotice(@"Not active -> disconnect now");
+            [self _disconnect];
+        }
         return;
     }
 
     LicenseStore *licenseStore = [LicenseStore sharedLicenseStore];
     if ([licenseStore isValid] == NO) {
+        // TODO: Remove comment IOS-3558
+        DDLogNotice(@"LicenseStore was invalid.");
         [licenseStore performLicenseCheckWithCompletion:^(BOOL success) {
+            // TODO: Remove comment IOS-3558
+            DDLogNotice(@"LicenseStore perform check.");
             if (success) {
                 [self _connect];
             } else {
@@ -403,6 +437,8 @@ struct pktExtension {
                     [[NSNotificationCenter defaultCenter] postNotificationName:kNotificationLicenseMissing object:nil];
                 } else {
                     // License check failed due to connection error – try again later
+                    // TODO: Remove comment IOS-3558
+                    DDLogNotice(@"LicenseStore failed, reconnecting after delay.");
                     autoReconnect = YES;
                     [self reconnectAfterDelay];
                 }
@@ -437,13 +473,19 @@ struct pktExtension {
     DeviceGroupKeyManager *deviceGroupKeyManager = [[DeviceGroupKeyManager alloc] initWithMyIdentityStore:[MyIdentityStore sharedMyIdentityStore]];
     NSData *dgk = deviceGroupKeyManager.dgk;
     if (!dgk) {
+        DDLogNotice(@"Connect direct.");
+        // TODO: Remove comment IOS-3558
         [self _connectDirect];
     } else {
+        DDLogNotice(@"Connect mediator.");
+        // TODO: Remove comment IOS-3558
         [self _connectViaMediator:dgk];
     }
 }
 
 - (void)_connectDirect {
+    // TODO: Remove comment IOS-3558
+    DDLogNotice(@"Connect direct started.");
     // Multi device is not activated, reset device group keys and device ID
     @synchronized (deviceGroupKeys) {
         deviceGroupKeys = nil;
@@ -452,7 +494,11 @@ struct pktExtension {
 
     // Obtain chat server host/ports/keys from ServerInfoProvider
     [[ServerInfoProviderFactory makeServerInfoProvider] chatServerWithIpv6:[UserSettings sharedUserSettings].enableIPv6 completionHandler:^(ChatServerInfo * _Nullable chatServerInfo, NSError *error) {
+        // TODO: Remove comment IOS-3558
+        DDLogNotice(@"ChatServerWithIpv6 started.");
         dispatch_async(socketQueue, ^{
+            // TODO: Remove comment IOS-3558
+            DDLogNotice(@"Connect direct socket queue entered.");
             if (chatServerInfo == nil) {
                 // Could not get the info at the moment; try again later
                 [serverConnectorConnectionState disconnected];
@@ -476,10 +522,14 @@ struct pktExtension {
             socket = [[ChatTcpSocket alloc] initWithServer:serverHost ports:chatServerInfo.serverPorts preferIPv6:settings.enableIPv6 delegate:self queue:socketQueue error:&socketError];
             
             if (socketError != nil || ![socket connect]) {
+                // TODO: Remove comment IOS-3558
+                DDLogNotice(@"Connect direct error.");
                 [serverConnectorConnectionState disconnected];
                 [self reconnectAfterDelay];
                 return;
             }
+            // TODO: Remove comment IOS-3558
+            DDLogNotice(@"Connect direct socket queue left.");
         });
     }];
 }
@@ -559,30 +609,28 @@ struct pktExtension {
 }
 
 - (void)disconnect:(ConnectionInitiator)initiator {
-    [self isOthersConnectedDisconnectBy:initiator onCompletion:^(BOOL isOthersConnected) {
-        if (isOthersConnected == NO) {
-            dispatch_async(socketQueue, ^{
-                [self _disconnect];
-            });
+    dispatch_async(socketQueue, ^{
+        if ([self isOthersConnectedDisconnectBy:initiator] == NO) {
+            [self _disconnect];
         }
-    }];
+    });
 }
 
-- (void)disconnectWait:(ConnectionInitiator)initiator onCompletion:(void(^ _Nonnull)(BOOL))onCompletion {
-    [self isOthersConnectedDisconnectBy:initiator onCompletion:^(BOOL isOthersConnected) {
-        if (isOthersConnected == NO) {
-            dispatch_sync(socketQueue, ^{
-                [self _disconnect];
-            });
+- (BOOL)disconnectWait:(ConnectionInitiator)initiator {
+    __block BOOL isDisconnected = NO;
 
-            [serverConnectorConnectionState waitForStateDisconnected];
+    dispatch_sync(socketQueue, ^{
+        if ([self isOthersConnectedDisconnectBy:initiator] == NO) {
+            [self _disconnect];
+            isDisconnected = YES;
+        }
+    });
 
-            onCompletion(YES);
-        }
-        else {
-            onCompletion(NO);
-        }
-    }];
+    if (isDisconnected) {
+        [serverConnectorConnectionState waitForStateDisconnected];
+    }
+
+    return isDisconnected;
 }
 
 - (void)reconnect {
@@ -606,35 +654,33 @@ struct pktExtension {
 #pragma mark - Chat (Mediator) Server connection initiator handling
 
 - (void)connectBy:(ConnectionInitiator)initiator {
-    dispatch_async(connectionInitiatorsQueue, ^{
-        DDLogNotice(@"Connect initiated by (%@)", [self nameForConnectionInitiator:initiator]);
-        if (![connectionInitiators containsObject:[NSNumber numberWithInteger:initiator]]) {
-            [connectionInitiators addObject:[NSNumber numberWithInteger:initiator]];
-        }
-    });
+    DDLogNotice(@"Connect initiated by (%@)", [self nameForConnectionInitiator:initiator]);
+    if (![connectionInitiators containsObject:[NSNumber numberWithInteger:initiator]]) {
+        // TODO: Remove comment IOS-3558
+        DDLogNotice(@"Add initiator to connectInitiators.");
+        [connectionInitiators addObject:[NSNumber numberWithInteger:initiator]];
+    }
 }
 
-- (void)isOthersConnectedDisconnectBy:(ConnectionInitiator)initiator onCompletion:(void(^ _Nonnull)(BOOL))onCompletion {
-    dispatch_async(connectionInitiatorsQueue, ^{
-        DDLogNotice(@"Disconnect initiated by (%@)", [self nameForConnectionInitiator:initiator]);
-        [connectionInitiators removeObject:[NSNumber numberWithInteger:initiator]];
-        if ([connectionInitiators count] != 0) {
-            NSMutableString *initiators = [NSMutableString new];
+- (BOOL)isOthersConnectedDisconnectBy:(ConnectionInitiator)initiator {
+    DDLogNotice(@"Disconnect initiated by (%@)", [self nameForConnectionInitiator:initiator]);
+    [connectionInitiators removeObject:[NSNumber numberWithInteger:initiator]];
+    if ([connectionInitiators count] != 0) {
+        NSMutableString *initiators = [NSMutableString new];
 
-            for (int i = 0; i < [connectionInitiators count]; i++) {
-                ConnectionInitiator initiatorItem = (ConnectionInitiator)[(NSNumber *)[connectionInitiators objectAtIndex:i] intValue];
-                if ([initiators length] > 0) {
-                    [initiators appendString:@", "];
-                }
-                [initiators appendString:[self nameForConnectionInitiator:initiatorItem]];
+        for (int i = 0; i < [connectionInitiators count]; i++) {
+            ConnectionInitiator initiatorItem = (ConnectionInitiator)[(NSNumber *)[connectionInitiators objectAtIndex:i] intValue];
+            if ([initiators length] > 0) {
+                [initiators appendString:@", "];
             }
-            DDLogNotice(@"Do not disconnect because maybe others are still connected (%@)", initiators);
-            onCompletion(YES);
+            [initiators appendString:[self nameForConnectionInitiator:initiatorItem]];
         }
-        else {
-            onCompletion(NO);
-        }
-    });
+        DDLogNotice(@"Do not disconnect because maybe others are still connected (%@)", initiators);
+        return YES;
+    }
+    else {
+        return NO;
+    }
 }
 
 - (NSString *)nameForConnectionInitiator:(ConnectionInitiator)initiator {
@@ -748,7 +794,7 @@ struct pktExtension {
                 break;
             }
             
-            if ([AppGroup amIActive] && [AppGroup getActiveType] != AppGroupTypeShareExtension) {
+            if ([AppGroup amIActive] && [AppGroup getCurrentType] != AppGroupTypeShareExtension) {
                 struct plMessage *plmsg = (struct plMessage*)pl->data;
                 int minlen = (sizeof(struct plMessage) + kNonceLen + plmsg->metadata_len + kNaClBoxOverhead + 1);
                 if (datalen <= minlen || (plmsg->metadata_len > 0 && plmsg->metadata_len <= kNaClBoxOverhead)) {
@@ -773,10 +819,10 @@ struct pktExtension {
                 boxmsg.nonce = [NSData dataWithBytes:&plmsg->metadata_nonce_box[plmsg->metadata_len] length:kNonceLen];
                 boxmsg.box = [NSData dataWithBytes:&plmsg->metadata_nonce_box[plmsg->metadata_len + kNonceLen] length:(datalen - sizeof(struct plMessage) - kNonceLen - plmsg->metadata_len)];
 
-                // Set time out for downloading thumbnail to 5s, if tha app in background or notification extension is running
-                int timeoutDownloadThumbnail = isAppInBackground || [AppGroup getActiveType] == AppGroupTypeNotificationExtension ? 5 : 0;
+                // Set time out for downloading thumbnail to 5s, if the app in background or notification extension is running
+                int timeoutDownloadThumbnail = isAppInBackground || [AppGroup getCurrentType] == AppGroupTypeNotificationExtension ? 5 : 0;
 
-                TaskDefinitionReceiveMessage *task = [[TaskDefinitionReceiveMessage alloc] initWithMessage:boxmsg receivedAfterInitialQueueSend:!chatServerInInitialQueueSend maxBytesToDecrypt:[AppGroup getActiveType] != AppGroupTypeNotificationExtension ? MAX_BYTES_TO_DECRYPT_NO_LIMIT : MAX_BYTES_TO_DECRYPT_NOTIFICATION_EXTENSION timeoutDownloadThumbnail:timeoutDownloadThumbnail];
+                TaskDefinitionReceiveMessage *task = [[TaskDefinitionReceiveMessage alloc] initWithMessage:boxmsg receivedAfterInitialQueueSend:!chatServerInInitialQueueSend maxBytesToDecrypt:[AppGroup getCurrentType] != AppGroupTypeNotificationExtension ? MAX_BYTES_TO_DECRYPT_NO_LIMIT : MAX_BYTES_TO_DECRYPT_NOTIFICATION_EXTENSION timeoutDownloadThumbnail:timeoutDownloadThumbnail];
 
                 // Use `[self businessInjectorForMessageProcessing]` if is not nil (properly setted from Notification Extension), otherwise create new instance for in App processing
                 TaskManager *tm = [[TaskManager alloc] initWithFrameworkInjectorObjc:[self businessInjectorForMessageProcessing] != nil ? [self businessInjectorForMessageProcessing] : [BusinessInjector new]];
@@ -1226,7 +1272,7 @@ struct pktExtension {
     }
     
     if (internetStatus != lastInternetStatus) {
-        if ([AppGroup getActiveType] != AppGroupTypeNotificationExtension) {
+        if ([AppGroup getCurrentType] != AppGroupTypeNotificationExtension) {
             DDLogNotice(@"Internet status changed - forcing reconnect");
             [self reconnect];
         }
@@ -1476,14 +1522,14 @@ struct pktExtension {
         }
             
         case TAG_PAYLOAD_MEDIATOR_TRIGGERED: {
-            int timeoutDownloadThumbnail = isAppInBackground || [AppGroup getActiveType] == AppGroupTypeNotificationExtension ? 20 : 0;
+            int timeoutDownloadThumbnail = isAppInBackground || [AppGroup getCurrentType] == AppGroupTypeNotificationExtension ? 20 : 0;
 
             TaskManager *taskManager = [[TaskManager alloc] init];
 
             MediatorMessageProcessor *processor = [[MediatorMessageProcessor alloc]
                                                    initWithDeviceGroupKeys:deviceGroupKeys
                                                    deviceID:deviceID
-                                                   maxBytesToDecrypt:[AppGroup getActiveType] != AppGroupTypeNotificationExtension ? MAX_BYTES_TO_DECRYPT_NO_LIMIT : MAX_BYTES_TO_DECRYPT_NOTIFICATION_EXTENSION
+                                                   maxBytesToDecrypt:[AppGroup getCurrentType] != AppGroupTypeNotificationExtension ? MAX_BYTES_TO_DECRYPT_NO_LIMIT : MAX_BYTES_TO_DECRYPT_NOTIFICATION_EXTENSION
                                                    timeoutDownloadThumbnail:timeoutDownloadThumbnail
                                                    mediatorMessageProtocol:[[MediatorMessageProtocol alloc] initWithDeviceGroupKeys:deviceGroupKeys]
                                                    userSettings:[UserSettings sharedUserSettings]
@@ -1671,8 +1717,10 @@ struct pktExtension {
 
 - (void)identityCreated:(NSNotification*)notification {
     /* when the identity is created, we should connect */
-    [self connectBy:ConnectionInitiatorApp];
-    [self _connect];
+    dispatch_async(socketQueue, ^{
+        [self connectBy:ConnectionInitiatorApp];
+        [self _connect];
+    });
 }
 
 - (void)identityDestroyed:(NSNotification*)notification {

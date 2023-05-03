@@ -73,16 +73,15 @@ final class ChatBarCoordinator {
     private weak var chatViewController: ChatViewController?
     private weak var chatViewTableViewVoiceMessageCellDelegate: ChatViewTableViewVoiceMessageCellDelegate?
     private weak var chatBarCoordinatorDelegate: ChatBarCoordinatorDelegate?
-    
-    private let groupManager: GroupManagerProtocol
-    private let entityManager: EntityManager
+
+    private let businessInjector: BusinessInjectorProtocol
     private var quotedMessageDeletionObserver: NSKeyValueObservation?
     
     private lazy var messagePermission = MessagePermission(
         myIdentityStore: MyIdentityStore.shared(),
         userSettings: UserSettings.shared(),
-        groupManager: groupManager,
-        entityManager: entityManager
+        groupManager: businessInjector.groupManager,
+        entityManager: businessInjector.entityManager
     )
     
     private lazy var sentMessageSoundID: SystemSoundID? = {
@@ -119,8 +118,7 @@ final class ChatBarCoordinator {
         self.chatViewController = chatViewController
         self.chatBarCoordinatorDelegate = chatBarCoordinatorDelegate
         self.chatViewTableViewVoiceMessageCellDelegate = chatViewTableViewVoiceMessageCellDelegate
-        self.entityManager = EntityManager()
-        self.groupManager = GroupManager(entityManager: entityManager)
+        self.businessInjector = BusinessInjector()
                     
         // If we received an notification, we check if it has text or an image in it,
         // else we check for draft texts.
@@ -147,11 +145,12 @@ final class ChatBarCoordinator {
     }
     
     func saveDraft(andDeleteText: Bool = false) {
-        guard let currentOrEmptyText = chatBar.getCurrentText(andRemove: andDeleteText)?
-            .trimmingCharacters(in: .whitespacesAndNewlines) else {
+        guard let currentText = chatBar.getCurrentText(andRemove: andDeleteText) else {
             MessageDraftStore.deleteDraft(for: conversation)
             return
         }
+        
+        let currentOrEmptyText = ThreemaUtility.trimCharacters(in: currentText)
         
         MessageDraftStore.saveDraft(currentOrEmptyText, for: conversation)
     }
@@ -206,7 +205,7 @@ extension ChatBarCoordinator {
         for member in conversation.members {
             mentionableMembers.append(MentionableIdentity(
                 identity: member.identity,
-                entityFetcher: entityManager.entityFetcher
+                entityFetcher: businessInjector.entityManager.entityFetcher
             ))
         }
         
@@ -295,7 +294,11 @@ extension ChatBarCoordinator: MentionsTableViewDelegate {
 // MARK: - ChatBarViewDelegate
 
 extension ChatBarCoordinator: ChatBarViewDelegate {
-
+    
+    func checkIfPastedStringIsMedia() -> Bool {
+        sendOrPreviewPastedItem()
+    }
+    
     func setIsResettingKeyboard(_ setReset: Bool) {
         chatViewController?.isResettingKeyboard = setReset
     }
@@ -309,14 +312,24 @@ extension ChatBarCoordinator: ChatBarViewDelegate {
         }
         
         chatViewActionsHelper.currentLegacyAction = action
+        action.mediaPickerType = MediaPickerTakePhoto
         
-        if UIImagePickerController.isSourceTypeAvailable(.camera) {
-            action.mediaPickerType = MediaPickerTakePhoto
+        resignFirstResponder()
+        
+        action.execute()
+    }
+    
+    func showImagePicker() {
+        guard let action = SendMediaAction(for: chatViewActionsHelper) else {
+            let message = "Could not create SendMediaAction in \(#function)"
+            DDLogError(message)
+            assertionFailure(message)
+            return
         }
-        else {
-            // Either access to the photo library is granted or we can use the PHPicker
-            action.mediaPickerType = MediaPickerChooseExisting
-        }
+        
+        chatViewActionsHelper.currentLegacyAction = action
+        
+        action.mediaPickerType = MediaPickerChooseExisting
         
         resignFirstResponder()
         
@@ -337,9 +350,10 @@ extension ChatBarCoordinator: ChatBarViewDelegate {
         chatViewController.present(assetActionController, animated: true, completion: nil)
     }
     
-    func sendOrPreviewPastedItem() {
+    @discardableResult
+    func sendOrPreviewPastedItem() -> Bool {
         guard canSendText() else {
-            return
+            return false
         }
         
         let stickerTypes = ["com.apple.png-sticker"]
@@ -349,12 +363,12 @@ extension ChatBarCoordinator: ChatBarViewDelegate {
         if containsMemoji {
             guard let image = UIPasteboard.general.image?.pngData() else {
                 showPasteError()
-                return
+                return false
             }
             
             guard let uti = ImageURLSenderItemCreator.getUTI(for: image) as? String else {
                 showPasteError()
-                return
+                return false
             }
             
             let imageSender = ImageURLSenderItemCreator()
@@ -371,7 +385,7 @@ extension ChatBarCoordinator: ChatBarViewDelegate {
                     }
                 }
             }
-            
+            return true
             chatBar.resetKeyboard(andType: true)
         }
         else {
@@ -384,9 +398,10 @@ extension ChatBarCoordinator: ChatBarViewDelegate {
             
             if let loadedItems = itemLoader.syncLoadContentItems(), !loadedItems.isEmpty {
                 showPastedItemsPreview(loadedItems)
+                return true
             }
             else {
-                showPasteError()
+                return false
             }
         }
     }
@@ -447,7 +462,7 @@ extension ChatBarCoordinator: ChatBarViewDelegate {
     }
     
     func canSendText() -> (isAllowed: Bool, reason: String?) {
-        if let group = groupManager.getGroup(conversation: conversation) {
+        if let group = businessInjector.groupManager.getGroup(conversation: conversation) {
             return messagePermission.canSend(groudID: group.groupID, groupCreatorIdentity: group.groupCreatorIdentity)
         }
         else {
@@ -473,7 +488,7 @@ extension ChatBarCoordinator: ChatBarViewDelegate {
         
         MessageDraftStore.deleteDraft(for: conversation)
         
-        ConversationActions(entityManager: entityManager).unarchive(conversation)
+        ConversationActions(businessInjector: businessInjector).unarchive(conversation)
         
         if quoteMessage != nil {
             removeQuoteView()
@@ -582,7 +597,7 @@ extension ChatBarCoordinator: PPAssetsActionHelperDelegate {
         chatViewController.dismiss(animated: true, completion: nil)
         
         if !assets.isEmpty {
-            action.showPreview(forAssets: assets)
+            action.showPreview(forAssets: assets, showKeyboard: true)
         }
         else {
             action.mediaPickerType = MediaPickerChooseExisting

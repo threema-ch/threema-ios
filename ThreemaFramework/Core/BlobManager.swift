@@ -204,11 +204,15 @@ public actor BlobManager: BlobManagerProtocol {
         
         // We check if the message is of the right type, and if it is incoming since we do not want to automatically send failed messages again
         let em = entityManager
+        var messageID: String?
+        
         em.performSyncBlockAndSafe {
-            guard let message = em.entityFetcher.existingObject(with: objectID) as? FileMessage,
-                  !message.isOwnMessage else {
+            guard let message = em.entityFetcher.existingObject(with: objectID) as? FileMessageProvider,
+                  !message.blobIsOutgoing() else {
                 return
             }
+            messageID = message.blobGetID()?.hexString
+            
             switch message.fileMessageType {
             case .image, .sticker, .animatedImage, .animatedSticker, .voice:
                 shouldSync = true
@@ -226,7 +230,7 @@ public actor BlobManager: BlobManagerProtocol {
             try await syncBlobsThrows(for: objectID)
         }
         catch {
-            DDLogNotice("[BlobManager] Auto sync failed, reason: \(error)")
+            DDLogNotice("[BlobManager] Auto sync for message with id \(messageID ?? "nil") failed, reason: \(error)")
         }
     }
     
@@ -238,13 +242,23 @@ public actor BlobManager: BlobManagerProtocol {
             try await syncBlobsThrows(for: objectID)
         }
         catch {
-            DDLogNotice("[BlobManager] Sync failed, reason: \(error)")
+            let em = entityManager
+            var messageID: String?
+            
+            em.performSyncBlockAndSafe {
+                guard let message = em.entityFetcher.existingObject(with: objectID) as? FileMessage else {
+                    return
+                }
+                messageID = message.id.hexString
+            }
+            
+            DDLogNotice("[BlobManager] Auto sync for message with id \(messageID ?? "nil") failed, reason: \(error)")
         }
     }
     
     /// Same as `syncBlobs(for:)` but throws an error if there was any
     ///
-    /// Mostly used for testing
+    /// Used in `syncBlobs(for:)` but exposed for testing
     ///
     /// - Parameter objectID: Object to sync blobs for
     public func syncBlobsThrows(for objectID: NSManagedObjectID) async throws {
@@ -259,6 +273,45 @@ public actor BlobManager: BlobManagerProtocol {
             DDLogNotice("[BlobManager] Tried to sync while not connected.")
             return
         }
+        
+        // We filter out legacy image entities here
+        let em = entityManager
+        var imageMessageEntity: ImageMessageEntity?
+        em.performSyncBlockAndSafe {
+            if let message = em.entityFetcher.existingObject(with: objectID) as? ImageMessageEntity {
+                message.blobSetError(false)
+                message.blobUpdateProgress(0)
+                imageMessageEntity = message
+            }
+        }
+        
+        if let imageMessageEntity,
+           let identityStore = MyIdentityStore.shared(),
+           imageMessageEntity.blobGetEncryptionKey() == nil,
+           let contact = imageMessageEntity.conversation.contact,
+           let blobID = imageMessageEntity.blobGetID() {
+            
+            let processor = ImageMessageProcessor(
+                blobDownloader: blobDownloader,
+                serverConnector: serverConnector,
+                myIdentityStore: identityStore,
+                userSettings: userSettings,
+                entityManager: em
+            )
+            _ = processor.downloadImage(
+                imageMessageID: imageMessageEntity.id,
+                in: imageMessageEntity.conversation.objectID,
+                imageBlobID: blobID,
+                origin: imageMessageEntity.blobGetOrigin(),
+                imageBlobEncryptionKey: imageMessageEntity.encryptionKey,
+                imageBlobNonce: imageMessageEntity.imageNonce,
+                senderPublicKey: contact.publicKey,
+                maxBytesToDecrypt: Int.max
+            )
+            return
+        }
+        
+        // Was not legacy image message
         
         try await BlobManager.state.addActiveObjectID(objectID)
         BlobManager.activeState.hasActiveSyncs = true
@@ -349,7 +402,7 @@ public actor BlobManager: BlobManagerProtocol {
             // We don't do this in parallel for now to make everything testable
             try await syncOutgoingThumbnail(of: objectID, with: outgoingThumbnailState)
             try await syncOutgoingData(of: objectID, with: outgoingDataState)
-            
+
             // Upload succeeded, we reset the progress
             em = entityManager
             em.performSyncBlockAndSafe {
@@ -641,8 +694,9 @@ public actor BlobManager: BlobManagerProtocol {
         guard state != .remote, state != .noData(.noThumbnail) else {
             return
         }
-        
+
         var blobData: BlobData?
+        var thumbnailID: Data?
         var thumbnailData: Data?
         var encryptionKey: Data?
         var origin: BlobOrigin?
@@ -657,6 +711,7 @@ public actor BlobManager: BlobManagerProtocol {
             }
             
             blobData = bd
+            thumbnailID = bd.blobGetThumbnailID()
             thumbnailData = bd.blobGetThumbnail()
             encryptionKey = bd.blobGetEncryptionKey()
             origin = bd.blobGetOrigin()
@@ -672,19 +727,50 @@ public actor BlobManager: BlobManagerProtocol {
             throw BlobManagerError.noEncryptionKey
         }
         
-        guard let thumbnailData = thumbnailData else {
-            DDLogNotice("[BlobManager] Thumbnail has no data.")
-            // We return here to still upload data
-            return
-        }
-        
         guard let origin = origin else {
             DDLogNotice("[BlobManager] There is no origin available for given blob.")
             throw BlobManagerError.noOrigin
         }
                        
         switch state {
+        case .pendingDownload:
+            guard let thumbnailID else {
+                throw BlobManagerError.noID
+            }
+
+            em.performSyncBlockAndSafe {
+                // Note: This will also reset the error of the belonging incomingDataState
+                blobData.blobSetError(false)
+                if blobData.blobGetProgress() == nil {
+                    // If not already done, we set the progress to 0.0 to indicate work has started
+                    blobData.blobUpdateProgress(0.0)
+                }
+            }
+
+            let thumbnail = try await downloadBlob(
+                for: thumbnailID,
+                origin: origin,
+                objectID: objectID,
+                encryptionKey: encryptionKey,
+                nonce: ThreemaProtocol.nonce02,
+                trackProgress: false
+            )
+
+            // This is save. Delegate calls will not result in another update of the progress as the
+            // objectID is no-more in `activeObjectIDs`.
+            em.performSyncBlockAndSafe {
+                blobData.blobSetThumbnail?(thumbnail)
+            }
+
+            try await markDownloadDone(for: thumbnailID, objectID: objectID, origin: origin)
+
         case .pendingUpload:
+            guard let thumbnailData = thumbnailData else {
+                DDLogNotice("[BlobManager] Thumbnail has no data.")
+                // We return here to still upload data
+                return
+            }
+
             em.performSyncBlockAndSafe {
                 // Note: This will also reset the error of the belonging outgoingDataState
                 blobData.blobSetError(false)
@@ -735,6 +821,7 @@ public actor BlobManager: BlobManagerProtocol {
             return
         }
         
+        var blobID: Data?
         var blobData: BlobData?
         var data: Data?
         var encryptionKey: Data?
@@ -749,6 +836,7 @@ public actor BlobManager: BlobManagerProtocol {
                 return
             }
 
+            blobID = bd.blobGetID()
             blobData = bd
             data = bd.blobGet()
             encryptionKey = bd.blobGetEncryptionKey()
@@ -764,20 +852,53 @@ public actor BlobManager: BlobManagerProtocol {
             DDLogNotice("[BlobManager] Encryption Key not found.")
             throw BlobManagerError.noEncryptionKey
         }
-        
-        guard let data = data else {
-            DDLogNotice("[BlobManager] Data has no data.")
-            throw BlobManagerError.noData
-        }
-        
+
         guard let origin = origin else {
             DDLogNotice("[BlobManager] There is no origin available for given blob.")
             throw BlobManagerError.noOrigin
         }
                
         switch state {
+        case .pendingDownload:
+            guard let blobID else {
+                throw BlobManagerError.noID
+            }
+
+            em.performSyncBlockAndSafe {
+                blobData.blobSetError(false)
+                if blobData.blobGetProgress() == nil {
+                    // If not already done, we set the progress to 0.0 to indicate work has started
+                    blobData.blobUpdateProgress(0.0)
+                }
+            }
+
+            let data = try await downloadBlob(
+                for: blobID,
+                origin: origin,
+                objectID: objectID,
+                encryptionKey: encryptionKey,
+                nonce: ThreemaProtocol.nonce01,
+                trackProgress: true
+            )
+
+            // This is save. Delegate calls will not result in another update of the progress as the
+            // objectID is no-more in `activeObjectIDs`.
+            em.performSyncBlockAndSafe {
+                blobData.blobSetData(data)
+            }
+
+            try await markDownloadDone(for: blobID, objectID: objectID, origin: origin)
+
+            // Download succeeded, we reset the progress
+            em.performSyncBlockAndSafe {
+                blobData.blobUpdateProgress(nil)
+            }
         case .pendingUpload:
-            
+            guard let data = data else {
+                DDLogNotice("[BlobManager] Data has no data.")
+                throw BlobManagerError.noData
+            }
+
             // There might have been an issue where the app was terminated while uploading and we need to clean up
             await BlobManager.state.removeProgress(for: objectID)
             
@@ -807,7 +928,8 @@ public actor BlobManager: BlobManagerProtocol {
             em.performSyncBlockAndSafe {
                 blobData.blobSetDataID(dataID)
             }
-            
+        case .noData:
+            throw BlobManagerError.noData
         default:
             DDLogNotice("[BlobManager] Blob does not need any action, state is \(state.description).")
         }

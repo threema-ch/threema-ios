@@ -32,7 +32,7 @@ class EntityObserver: NSObject {
         case deleted
     }
     
-    private let queue = DispatchQueue(label: "ch.threema.subscriberQueue")
+    private let queue = DispatchQueue(label: "ch.threema.EntityObserver.queue")
 
     private struct Subscriber: Hashable {
         static func == (lhs: EntityObserver.Subscriber, rhs: EntityObserver.Subscriber) -> Bool {
@@ -45,7 +45,7 @@ class EntityObserver: NSObject {
 
         let uuid: UUID
         var managedObjectFetchPermanentID: NSFetchedResultsController<NSManagedObject>?
-        let managedObjectID: NSManagedObjectID
+        let managedObjectID: NSManagedObjectID? // Is nullable because maybe Core Data set it to null
         let entityChangedReason: [EntityChangedReason]
         let entityChangedAction: EntityChangedAction
     }
@@ -69,6 +69,8 @@ class EntityObserver: NSObject {
         for entityChangedReason: [EntityChangedReason] = [.deleted, .updated],
         do entityChangedAction: @escaping EntityChangedAction
     ) -> SubscriptionToken {
+        assert(isEntityTypeAllowed(managedObject))
+
         let subscriber = Subscriber(
             uuid: UUID(),
             managedObjectFetchPermanentID: managedObject.objectID
@@ -109,45 +111,48 @@ class EntityObserver: NSObject {
     /// Called when managed object has changed.
     /// - Parameter notification: Notification with changed managed objects
     @objc private func managedObjectContextObjectsDidChange(notification: NSNotification) {
-        if let deletedObjects = notification.userInfo?[NSDeletedObjectsKey] as? Set<NSManagedObject>,
-           !deletedObjects.isEmpty {
-
-            let deletedObjectIDs = Set<NSManagedObjectID>(deletedObjects.map(\.objectID))
-            informSubscribers(
-                updatedObjectIDs: deletedObjectIDs,
-                updatedObjects: nil,
-                subscribers: subscribersForDelete,
-                reason: .deleted
-            )
+        if let allDeletedObjects = notification.userInfo?[NSDeletedObjectsKey] as? Set<NSManagedObject> {
+            let allowedDeletedObjects = allDeletedObjects.filter { isEntityTypeAllowed($0) }
+            if !allowedDeletedObjects.isEmpty {
+                let deletedObjectIDs = Set<NSManagedObjectID>(allowedDeletedObjects.map(\.objectID))
+                informSubscribers(
+                    updatedObjectIDs: deletedObjectIDs,
+                    updatedObjects: allowedDeletedObjects,
+                    subscribers: subscribersForDelete,
+                    reason: .deleted
+                )
+            }
         }
 
-        if let updatedObjects = notification.userInfo?[NSUpdatedObjectsKey] as? Set<NSManagedObject>,
-           !updatedObjects.isEmpty {
+        if let allUpdatedObjects = notification.userInfo?[NSUpdatedObjectsKey] as? Set<NSManagedObject> {
+            let allowedUpdatedObjects = allUpdatedObjects.filter { isEntityTypeAllowed($0) }
 
-            let updatedObjectIDs = Set<NSManagedObjectID>(updatedObjects.map(\.objectID))
-            informSubscribers(
-                updatedObjectIDs: updatedObjectIDs,
-                updatedObjects: updatedObjects,
-                subscribers: subscribersForUpdate,
-                reason: .updated
-            )
+            if !allowedUpdatedObjects.isEmpty {
+                let updatedObjectIDs = Set<NSManagedObjectID>(allowedUpdatedObjects.map(\.objectID))
+                informSubscribers(
+                    updatedObjectIDs: updatedObjectIDs,
+                    updatedObjects: allowedUpdatedObjects,
+                    subscribers: subscribersForUpdate,
+                    reason: .updated
+                )
+            }
         }
     }
 
     private func informSubscribers(
-        updatedObjectIDs: Set<NSManagedObjectID>,
+        updatedObjectIDs: Set<NSManagedObjectID?>,
         updatedObjects: Set<NSManagedObject>?,
         subscribers: Set<Subscriber>,
         reason: EntityChangedReason
     ) {
-        let subscribersForObjectIDs = Set<NSManagedObjectID>(
+        let subscribersForObjectIDs = Set<NSManagedObjectID?>(
             subscribers
-                .compactMap { subscriber in
+                .map { subscriber in
                     subscriber.managedObjectID
                 }
         )
 
-        let intersection = Set<NSManagedObjectID>(updatedObjectIDs.intersection(subscribersForObjectIDs))
+        let intersection = Set<NSManagedObjectID?>(updatedObjectIDs.intersection(subscribersForObjectIDs))
 
         for subscriber in subscribers.filter({ intersection.contains($0.managedObjectID) }) {
             subscriber.entityChangedAction(
@@ -156,6 +161,10 @@ class EntityObserver: NSObject {
                 reason
             )
         }
+    }
+
+    private func isEntityTypeAllowed(_ managedObject: NSManagedObject) -> Bool {
+        managedObject is ContactEntity || managedObject is Conversation || managedObject is GroupEntity
     }
 
     // MARK: Subscription token
@@ -245,13 +254,13 @@ extension EntityObserver: NSFetchedResultsControllerDelegate {
             }
 
             if temporaryIDs.count == permanentIDs.count {
-                for index in 0..<temporaryIDs.count {
-                    queue.sync {
-                        if let subscriber = subscribersForUpdate.first(where: { subscriber in
+                queue.async {
+                    for index in 0..<temporaryIDs.count {
+                        if let subscriber = self.subscribersForUpdate.first(where: { subscriber in
                             subscriber.managedObjectID == temporaryIDs[index].objectID
                         }) {
                             // Replace subscription with temporary objectID, with subscription with permanent objectID
-                            subscribersForUpdate.insert(
+                            self.subscribersForUpdate.insert(
                                 Subscriber(
                                     uuid: UUID(),
                                     managedObjectFetchPermanentID: nil,
@@ -260,7 +269,7 @@ extension EntityObserver: NSFetchedResultsControllerDelegate {
                                     entityChangedAction: subscriber.entityChangedAction
                                 )
                             )
-                            subscribersForUpdate.remove(subscriber)
+                            self.subscribersForUpdate.remove(subscriber)
                         }
                     }
                 }

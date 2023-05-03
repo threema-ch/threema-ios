@@ -34,12 +34,12 @@ class ConversationsViewControllerHelper {
     /// - Parameters:
     ///   - indexPaths: indexPaths of the selected Conversations
     ///   - fetchedResultsController: the FetchedResultsController handling the Conversations
-    ///   - entityManager: the EntityManager handling the Conversations
+    ///   - businessInjector: the BusinessInjector handling the Conversations
     ///   - completion: Closure that is executed after completion
     static func archiveConversations(
         at indexPaths: [IndexPath]?,
         fetchedResultsController: NSFetchedResultsController<NSFetchRequestResult>,
-        entityManager: EntityManager,
+        businessInjector: BusinessInjectorProtocol,
         completion: @escaping () -> Void
     ) {
         
@@ -51,7 +51,7 @@ class ConversationsViewControllerHelper {
             guard let conversation = fetchedResultsController.object(at: indexPath) as? Conversation else {
                 return
             }
-            let utilities = ConversationActions(entityManager: entityManager)
+            let utilities = ConversationActions(businessInjector: businessInjector)
             utilities.archive(conversation)
         }
         completion()
@@ -61,12 +61,12 @@ class ConversationsViewControllerHelper {
     /// - Parameters:
     ///   - indexPaths: indexPaths of the selected Conversations
     ///   - fetchedResultsController: the FetchedResultsController handling the Conversations
-    ///   - entityManager: the EntityManager handling the Conversations
+    ///   - businessInjector: the BusinessInjector handling the Conversations
     ///   - completion: Closure that is executed after completion
     static func unarchiveConversations(
         at indexPaths: [IndexPath]?,
         fetchedResultsController: NSFetchedResultsController<NSFetchRequestResult>,
-        entityManager: EntityManager,
+        businessInjector: BusinessInjectorProtocol,
         completion: @escaping () -> Void
     ) {
         
@@ -78,7 +78,7 @@ class ConversationsViewControllerHelper {
             guard let conversation = fetchedResultsController.object(at: indexPath) as? Conversation else {
                 return
             }
-            let utilities = ConversationActions(entityManager: entityManager)
+            let utilities = ConversationActions(businessInjector: businessInjector)
             utilities.unarchive(conversation)
         }
         completion()
@@ -88,12 +88,12 @@ class ConversationsViewControllerHelper {
     /// - Parameters:
     ///   - indexPaths: indexPaths of the selected Conversations
     ///   - fetchedResultsController: the FetchedResultsController handling the Conversations
-    ///   - entityManager: the EntityManager handling the Conversations
+    ///   - businessInjector: the BusinessInjector handling the Conversations
     ///   - completion: Closure that is executed after completion
     static func readConversations(
         at indexPaths: [IndexPath]?,
         fetchedResultsController: NSFetchedResultsController<NSFetchRequestResult>,
-        entityManager: EntityManager,
+        businessInjector: BusinessInjectorProtocol,
         completion: @escaping () -> Void
     ) {
         
@@ -105,7 +105,7 @@ class ConversationsViewControllerHelper {
             guard let conversation = fetchedResultsController.object(at: indexPath) as? Conversation else {
                 return
             }
-            let utilities = ConversationActions(entityManager: entityManager)
+            let utilities = ConversationActions(businessInjector: businessInjector)
             utilities.read(conversation)
         }
         completion()
@@ -115,12 +115,12 @@ class ConversationsViewControllerHelper {
     /// - Parameters:
     ///   - indexPaths: indexPaths of the selected Conversations
     ///   - fetchedResultsController: the FetchedResultsController handling the Conversations
-    ///   - entityManager: the EntityManager handling the Conversations
+    ///   - businessInjector: the BusinessInjector handling the Conversations
     ///   - completion: Closure that is executed after completion
     static func unreadConversations(
         at indexPaths: [IndexPath]?,
         fetchedResultsController: NSFetchedResultsController<NSFetchRequestResult>,
-        entityManager: EntityManager,
+        businessInjector: BusinessInjectorProtocol,
         completion: @escaping () -> Void
     ) {
         
@@ -132,7 +132,7 @@ class ConversationsViewControllerHelper {
             guard let conversation = fetchedResultsController.object(at: indexPath) as? Conversation else {
                 return
             }
-            let utilities = ConversationActions(entityManager: entityManager)
+            let utilities = ConversationActions(businessInjector: businessInjector)
             utilities.unread(conversation)
         }
         completion()
@@ -154,6 +154,8 @@ class ConversationsViewControllerHelper {
             guard group.state != .active, group.state != .requestedSync else {
                 return
             }
+            
+            SettingsStore.removeINInteractions(for: conversation.objectID)
         }
 
         MessageDraftStore.deleteDraft(for: conversation)
@@ -530,13 +532,13 @@ class ConversationsViewControllerHelper {
     ///   - viewController: ViewController
     ///   - conversation: Conversation to be changed
     ///   - lockScreenWrapper: LockScreenWrapper Managing Passcode
-    ///   - entityManager: EntityManager handling changes of the Conversation
+    ///   - businessInjector: BusinessInjector handling changes of the Conversation
     /// - Returns: UIContextualAction for Swipe-Menu
     static func createPrivateAction(
         viewController: UIViewController,
         conversation: Conversation,
         lockScreenWrapper: LockScreen,
-        entityManager: EntityManager
+        businessInjector: BusinessInjectorProtocol
     ) -> UIContextualAction {
         
         let isPrivate = conversation.conversationCategory == .private
@@ -555,8 +557,7 @@ class ConversationsViewControllerHelper {
                 lockScreenWrapper.presentLockScreenView(
                     viewController: viewController,
                     enteredCorrectly: {
-                        let utilities = ConversationActions(entityManager: entityManager)
-                        utilities.makeNotPrivate(conversation)
+                        businessInjector.conversationStore.makeNotPrivate(conversation)
                     }
                 )
             }
@@ -564,7 +565,7 @@ class ConversationsViewControllerHelper {
                 ConversationsViewControllerHelper.showPrivateChatInfoAlert(
                     viewController: viewController,
                     conversation: conversation,
-                    entityManager: entityManager
+                    businessInjector: businessInjector
                 )
             }
             handler(true)
@@ -612,11 +613,11 @@ class ConversationsViewControllerHelper {
     /// - Parameters:
     ///   - viewController: Controller where Alert is presented
     ///   - conversation: Conversation to be marked Private
-    ///   - entityManager: EntityManager handling changes of the Conversation
+    ///   - businessInjector: BusinessInjector handling changes of the Conversation
     private static func showPrivateChatInfoAlert(
         viewController: UIViewController,
         conversation: Conversation,
-        entityManager: EntityManager
+        businessInjector: BusinessInjectorProtocol
     ) {
         UIAlertTemplate.showAlert(
             owner: viewController,
@@ -624,8 +625,7 @@ class ConversationsViewControllerHelper {
             message: BundleUtil.localizedString(forKey: "privateChat_set_alert_message"),
             titleOk: BundleUtil.localizedString(forKey: "make_private"),
             actionOk: { _ in
-                let utilities = ConversationActions(entityManager: entityManager)
-                utilities.makePrivate(conversation)
+                businessInjector.conversationStore.makePrivate(conversation)
             }
         )
     }

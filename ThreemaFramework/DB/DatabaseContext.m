@@ -60,7 +60,11 @@ static dispatch_queue_t directContextsQueue;
 {
     self = [self initWithPersistentCoordinator:persistentCoordinator];
     if (self) {
+        // Listen to DB changes to merge changed objects in main context to private context
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(managedObjectContextDidSave:) name:NSManagedObjectContextDidSaveNotification object:nil];
+
         privateContext = [[TMAManagedObjectContext alloc] initWithConcurrencyType:childContextforBackgroundProcess ? NSPrivateQueueConcurrencyType : NSMainQueueConcurrencyType];
+        [privateContext setMergePolicy:NSMergeByPropertyStoreTrumpMergePolicy];
         [privateContext setParentContext:mainContext];
     }
     return self;
@@ -75,7 +79,11 @@ static dispatch_queue_t directContextsQueue;
         mainContext = mainCnx;
 
         if (backgroundCnx) {
+            // Listen to DB changes to merge changed objects in main context to private context
+            [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(managedObjectContextDidSave:) name:NSManagedObjectContextDidSaveNotification object:nil];
+
             privateContext = backgroundCnx;
+            [privateContext setMergePolicy:NSMergeByPropertyStoreTrumpMergePolicy];
             [privateContext setParentContext:mainContext];
         }
     }
@@ -137,6 +145,16 @@ static dispatch_queue_t directContextsQueue;
             mainContext = nil;
         }
     });
+}
+
+- (void)managedObjectContextDidSave:(NSNotification *)notification {
+    // Merge changes from context to private context
+    NSManagedObjectContext *currentContext = notification.object;
+    if (currentContext == mainContext && privateContext != nil) {
+        [privateContext performBlock:^{
+            [privateContext mergeChangesFromContextDidSaveNotification:notification];
+        }];
+    }
 }
 
 @end

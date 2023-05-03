@@ -231,7 +231,9 @@ final class ChatViewTableViewVoiceMessageCellDelegate: NSObject, ChatViewTableVi
             audioPlayer.currentTime = audioPlayer.duration * progress
         }
         
-        UIDevice.current.isProximityMonitoringEnabled = true
+        if !UserSettings.shared().disableProximityMonitoring {
+            UIDevice.current.isProximityMonitoringEnabled = true
+        }
         audioPlayer.play()
         audioPlayer.rate = Float(rate)
         

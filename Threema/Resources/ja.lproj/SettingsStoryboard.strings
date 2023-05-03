@@ -90,7 +90,7 @@
 "TyO-Dl-3LV.text" = "ギャラリープレビューを表示";
 
 /* Class = "UINavigationItem"; title = "Media"; ObjectID = "U7Q-cL-ZiA"; */
-"U7Q-cL-ZiA.title" = "メディア";
+"U7Q-cL-ZiA.title" = "写真・動画";
 
 /* Class = "UINavigationItem"; title = "Advanced"; ObjectID = "UsC-dS-qae"; */
 "UsC-dS-qae.title" = "上級者向け";

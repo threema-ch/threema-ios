@@ -71,14 +71,13 @@
     }
 }
 
-- (void)viewWillDisappear:(BOOL)animated {
+- (void)viewDidDisappear:(BOOL)animated {
     [self cleanup];
     
     if (_modalDelegate) {
-        [_modalDelegate willDismissModalNavigationController];
+        [_modalDelegate didDismissModalNavigationController];
     }
-    
-    [super viewWillDisappear:animated];
+    [super viewDidDisappear:animated];
 }
 
 - (UIModalPresentationStyle)modalPresentationStyle {

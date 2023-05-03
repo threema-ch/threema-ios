@@ -87,7 +87,6 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(colorThemeChanged:) name:kNotificationColorThemeChanged object:nil];
     // TODO: (IOS-2860) Remove next two
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(chatFontSizeChanged:) name:UIContentSizeCategoryDidChangeNotification object:nil];
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(voiceOverStatusDidChange) name:UIAccessibilityVoiceOverStatusDidChangeNotification object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(applicationDidReceiveMemoryWarning:) name:UIApplicationDidReceiveMemoryWarningNotification object:nil];
     
     [Colors updateWithTabBar:self.tabBar];
@@ -101,11 +100,6 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
 
-    // Checks is device linking not finished yet
-    if ([[UserSettings sharedUserSettings] blockCommunication]) {
-        [self showMultiDeviceWizard];
-    }
-    
     if (_isFirstAppearance) {
         self.selectedIndex = kDefaultInitialTabIndex;
         _isFirstAppearance = NO;
@@ -234,7 +228,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         if (conversation == nil) {
             conv = _conversationsViewController.selectedConversation ? _conversationsViewController.selectedConversation : [_conversationsViewController getFirstConversation];
         }
-
+        
         if (conv) {
             ShowConversationInformation* info = [ShowConversationInformation createInfoFor:notification];
             chatViewController = [[ChatViewController alloc]initWithConversation: conv showConversationInformation: info];
@@ -374,13 +368,6 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     _conversationsNavigationController = nil;
 }
 
-- (void)showMultiDeviceWizard {
-    dispatch_async(dispatch_get_main_queue(), ^{
-        [[MultiDeviceWizardManager shared] continueWizard];
-        [self presentViewController:[[MultiDeviceWizardManager shared] wizardViewController] animated:true completion:nil];
-    });
-}
-
 #pragma mark - notifications
 
 - (void)selectedGroup:(NSNotification*)notification {
@@ -452,7 +439,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 }
 
 -(void)showNotificationSettings {
-    UIViewController *notificationViewController = [self loadSettingsControllerNamed:@"GlobalNotificationSettingsViewController"];
+    UIViewController *notificationViewController = [SwiftUIAdapter createNotificationSettingsView];
     
     if(SYSTEM_IS_IPAD) {
         UIViewController *settings = [self loadSettingsControllerNamed:@"settingsViewController"];
@@ -525,7 +512,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
                 }
                 
                 [_conversationsNavigationController popToRootViewControllerAnimated:NO];
-                _conversationsViewController = (ConversationsViewController *)_conversationsNavigationController.topViewController;
+                _conversationsViewController = (ConversationsViewController *)_conversationsNavigationController.viewControllers.firstObject;
                 [_conversationsViewController displayChatWithChatViewController: chatViewController animated:YES];
                 [self setSelectedViewController:_conversationsNavigationController];
             }
@@ -560,7 +547,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
             }
             
             [_conversationsNavigationController popToRootViewControllerAnimated:NO];
-            _conversationsViewController = (ConversationsViewController *)_conversationsNavigationController.topViewController;
+            _conversationsViewController = (ConversationsViewController *)_conversationsNavigationController.viewControllers.firstObject;
             [_conversationsViewController displayOldChatWithOldChatViewController: _old_ChatViewController animated:YES];
             [self setSelectedViewController:_conversationsNavigationController];
         }
@@ -694,10 +681,6 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     }
 }
 
-- (void)voiceOverStatusDidChange {
-    [UserSettings resetSharedInstance];
-}
-
 // TODO: (IOS-2860) Remove
 - (void)chatFontSizeChanged:(NSNotification*)notification {
     if ([[UserSettings sharedUserSettings] newChatViewActive]) {
@@ -736,7 +719,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 
 #pragma mark - ModalNavigationControllerDelegate
 
-- (void)willDismissModalNavigationController {
+- (void)didDismissModalNavigationController {
     //fool the tab bar to switch the selected tab
     NSUInteger index = [self.viewControllers indexOfObject:self.selectedViewController];
     [self setSelectedIndex:index];

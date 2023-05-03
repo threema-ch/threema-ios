@@ -171,7 +171,7 @@ class GroupManagerMock: NSObject, GroupManagerProtocol {
         AnyPromise()
     }
     
-    func sendSyncRequest(groupID: Data, creator: String) {
+    func sendSyncRequest(groupID: Data, creator: String, force: Bool) {
         sendSyncRequestCalls[groupID] = creator
     }
     

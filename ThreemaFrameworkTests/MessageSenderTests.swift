@@ -45,22 +45,19 @@ class MessageSenderTests: XCTestCase {
     
     func testNotAllwedDonateInteractionForOutgoingMessage() throws {
         
-        let userSettingsMock = UserSettingsMock()
-        userSettingsMock.donateInteractions = false
+        let settingsStoreMock = SettingsStoreMock()
+        settingsStoreMock.allowOutgoingDonations = false
         
         let businessInjectorMock = BusinessInjectorMock(
             backgroundEntityManager: EntityManager(databaseContext: dbBackgroundCnx),
-            backgroundGroupManager: GroupManagerMock(),
-            backgroundUnreadMessages: UnreadMessagesMock(),
-            contactStore: ContactStoreMock(),
             entityManager: EntityManager(databaseContext: dbMainCnx),
             groupManager: GroupManagerMock(),
             licenseStore: LicenseStore.shared(),
             messageSender: MessageSenderMock(),
             multiDeviceManager: MultiDeviceManagerMock(),
             myIdentityStore: MyIdentityStoreMock(),
-            userSettings: userSettingsMock,
-            settingsStore: SettingsStoreMock(),
+            userSettings: UserSettingsMock(),
+            settingsStore: settingsStoreMock,
             serverConnector: ServerConnectorMock(),
             mediatorMessageProtocol: MediatorMessageProtocolMock(),
             messageProcessor: MessageProcessorMock()
@@ -89,22 +86,19 @@ class MessageSenderTests: XCTestCase {
     }
     
     func testDoNotDonateInteractionForOutgoingMessageIfConversationIsPrivate() throws {
-        let userSettingsMock = UserSettingsMock()
-        userSettingsMock.donateInteractions = true
+        let settingsStoreMock = SettingsStoreMock()
+        settingsStoreMock.allowOutgoingDonations = true
         
         let businessInjectorMock = BusinessInjectorMock(
             backgroundEntityManager: EntityManager(databaseContext: dbBackgroundCnx),
-            backgroundGroupManager: GroupManagerMock(),
-            backgroundUnreadMessages: UnreadMessagesMock(),
-            contactStore: ContactStoreMock(),
             entityManager: EntityManager(databaseContext: dbMainCnx),
             groupManager: GroupManagerMock(),
             licenseStore: LicenseStore.shared(),
             messageSender: MessageSenderMock(),
             multiDeviceManager: MultiDeviceManagerMock(),
             myIdentityStore: MyIdentityStoreMock(),
-            userSettings: userSettingsMock,
-            settingsStore: SettingsStoreMock(),
+            userSettings: UserSettingsMock(),
+            settingsStore: settingsStoreMock,
             serverConnector: ServerConnectorMock(),
             mediatorMessageProtocol: MediatorMessageProtocolMock(),
             messageProcessor: MessageProcessorMock()
@@ -135,22 +129,19 @@ class MessageSenderTests: XCTestCase {
     
     func testAllowedDonateInteractionForOutgoingMessage() throws {
         
-        let userSettingsMock = UserSettingsMock()
-        userSettingsMock.donateInteractions = true
+        let settingsStoreMock = SettingsStoreMock()
+        settingsStoreMock.allowOutgoingDonations = true
         
         let businessInjectorMock = BusinessInjectorMock(
             backgroundEntityManager: EntityManager(databaseContext: dbBackgroundCnx),
-            backgroundGroupManager: GroupManagerMock(),
-            backgroundUnreadMessages: UnreadMessagesMock(),
-            contactStore: ContactStoreMock(),
             entityManager: EntityManager(databaseContext: dbMainCnx),
             groupManager: GroupManagerMock(),
             licenseStore: LicenseStore.shared(),
             messageSender: MessageSenderMock(),
             multiDeviceManager: MultiDeviceManagerMock(),
             myIdentityStore: MyIdentityStoreMock(),
-            userSettings: userSettingsMock,
-            settingsStore: SettingsStoreMock(),
+            userSettings: UserSettingsMock(),
+            settingsStore: settingsStoreMock,
             serverConnector: ServerConnectorMock(),
             mediatorMessageProtocol: MediatorMessageProtocolMock(),
             messageProcessor: MessageProcessorMock()

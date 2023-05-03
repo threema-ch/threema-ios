@@ -188,7 +188,7 @@ class TaskExecutionUpdateContactSync: TaskExecutionBlobTransaction {
                 return
             }
 
-            let conversation = contact.conversations?.first as? Conversation
+            let conversation = self.frameworkInjector.backgroundEntityManager.entityFetcher.conversation(for: contact)
 
             let samePublicKey = (sContact.hasPublicKey && sContact.publicKey == contact.publicKey) || !sContact
                 .hasPublicKey
@@ -213,7 +213,7 @@ class TaskExecutionUpdateContactSync: TaskExecutionBlobTransaction {
             let sameNickname = (sContact.hasNickname && sContact.nickname == contact.publicNickname ?? "") || !sContact
                 .hasNickname
 
-            let sameProfilePictrue = (
+            let sameProfilePicture = (
                 ((
                     delta.profilePicture == .updated
                         || delta.profilePicture == .unchanged
@@ -280,7 +280,7 @@ class TaskExecutionUpdateContactSync: TaskExecutionBlobTransaction {
                 sameFirstname &&
                 sameLastname &&
                 sameNickname &&
-                sameProfilePictrue &&
+                sameProfilePicture &&
                 sameImage &&
                 sameContactProfilePicture &&
                 sameContactImage &&

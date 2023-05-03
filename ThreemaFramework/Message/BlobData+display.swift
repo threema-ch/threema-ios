@@ -181,6 +181,10 @@ public extension BlobData {
         and outgoingDataState: OutgoingBlobState
     ) -> BlobDisplayState {
         switch outgoingDataState {
+        case .pendingDownload:
+            return .pending
+        case .downloading:
+            return .downloading(progress: blobGetProgress()?.floatValue ?? 0)
         case .pendingUpload:
             switch outgoingThumbnailState {
             case .pendingUpload, .remote, .noData(.noThumbnail):
@@ -200,6 +204,8 @@ public extension BlobData {
             }
         case .remote:
             switch outgoingThumbnailState {
+            case .pendingDownload:
+                return .pending
             case .pendingUpload, .remote, .noData(.noThumbnail):
                 if blobGetError() {
                     return .sendingError

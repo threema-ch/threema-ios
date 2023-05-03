@@ -138,12 +138,9 @@ struct D2m_ClientUrlInfo {
   /// 32 byte device group id (`DGPK.public`)
   var deviceGroupID: Data = Data()
 
-  /// DEPRECATED: Use `server_group_string` instead.
-  var serverGroup: UInt32 = 0
-
   /// Server group, as assigned by the server when the Threema identity has been
   /// created. Must consist of only digits or ASCII letters (`^[0-9a-zA-Z]+$`).
-  var serverGroupString: String = String()
+  var serverGroup: String = String()
 
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
@@ -193,9 +190,7 @@ struct D2m_ClientHello {
   ///   Box(DGPK.secret, ESK.public)
   ///    .encrypt(data=<challenge>, nonce=<random>)
   ///
-  /// The nonce is then prepended to the encrypted challenge.
-  ///
-  ///   nonce (24 bytes) || encrypted-box (16 + 32 bytes)
+  /// The nonce is then prefixed to the encrypted challenge.
   var response: Data = Data()
 
   /// Unique device id
@@ -588,8 +583,7 @@ extension D2m_ClientUrlInfo: SwiftProtobuf.Message, SwiftProtobuf._MessageImplem
   static let protoMessageName: String = _protobuf_package + ".ClientUrlInfo"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "device_group_id"),
-    2: .standard(proto: "server_group"),
-    3: .standard(proto: "server_group_string"),
+    3: .standard(proto: "server_group"),
   ]
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -599,8 +593,7 @@ extension D2m_ClientUrlInfo: SwiftProtobuf.Message, SwiftProtobuf._MessageImplem
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
       case 1: try { try decoder.decodeSingularBytesField(value: &self.deviceGroupID) }()
-      case 2: try { try decoder.decodeSingularUInt32Field(value: &self.serverGroup) }()
-      case 3: try { try decoder.decodeSingularStringField(value: &self.serverGroupString) }()
+      case 3: try { try decoder.decodeSingularStringField(value: &self.serverGroup) }()
       default: break
       }
     }
@@ -610,11 +603,8 @@ extension D2m_ClientUrlInfo: SwiftProtobuf.Message, SwiftProtobuf._MessageImplem
     if !self.deviceGroupID.isEmpty {
       try visitor.visitSingularBytesField(value: self.deviceGroupID, fieldNumber: 1)
     }
-    if self.serverGroup != 0 {
-      try visitor.visitSingularUInt32Field(value: self.serverGroup, fieldNumber: 2)
-    }
-    if !self.serverGroupString.isEmpty {
-      try visitor.visitSingularStringField(value: self.serverGroupString, fieldNumber: 3)
+    if !self.serverGroup.isEmpty {
+      try visitor.visitSingularStringField(value: self.serverGroup, fieldNumber: 3)
     }
     try unknownFields.traverse(visitor: &visitor)
   }
@@ -622,7 +612,6 @@ extension D2m_ClientUrlInfo: SwiftProtobuf.Message, SwiftProtobuf._MessageImplem
   static func ==(lhs: D2m_ClientUrlInfo, rhs: D2m_ClientUrlInfo) -> Bool {
     if lhs.deviceGroupID != rhs.deviceGroupID {return false}
     if lhs.serverGroup != rhs.serverGroup {return false}
-    if lhs.serverGroupString != rhs.serverGroupString {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

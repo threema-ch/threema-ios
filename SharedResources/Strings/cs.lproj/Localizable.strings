@@ -104,7 +104,7 @@
 "nickname" = "Přezdívka";
 "add_button" = "Přidat";
 "chatview_contextmenu_select" = "Vybrat…";
-
+"learn_more" = "Zjistěte více…";
 "file_message_image" = "Obrázek";
 "file_message_sticker" = "Nálepka";
 "file_message_animated_image" = "GIF";
@@ -880,6 +880,8 @@
 "doNotDisturb_mention_footer_off" = "Nebudete dostávat žádná oznámení, a to ani v případech, kdy vás někdo zmíní.";
 "doNotDisturb_mention_footer_on" = "Budete dostávat oznámení, pokud vás někdo zmíní.";
 
+"doNotDisturb_notification_sound_footer" = "Zvuk oznámení se přehraje pouze v případě, je-li povolena funkce „Přehrát zvuk oznámení“ a je deaktivována funkce „Nerušit“.";
+
 "notification_sound_header" = "Zvuk oznámení";
 "notification_sound_title" = "Přehrát zvuk oznámení";
 
@@ -1097,8 +1099,6 @@
 "settings_advanced_reregister_push_notifications_header_title" = "Nabízená oznámení";
 "settings_advanced_reregister_push_notifications_footer_title" = "Pokud se vám příchozí zprávy nezobrazují mimo aplikaci jako oznámení, můžete si je znovu aktivovat.";
 "settings_advanced_reregister_notifications_label" = "Znovu aktivovat nabízená oznámení";
-"settings_advanced_new_chat_view_label" = "Nové zobrazení chatu";
-"settings_advanced_new_chat_view_label_footer" = "Poznámka: Staré zobrazení chatu bude v chystané nové aktualizaci odstraněno.";
 
 "settings_md_sync_alert_title" = "Synchronizace se nezdařila";
 
@@ -1111,6 +1111,11 @@
 "settings_privacy_block_unknown" = "Blokovat neznámé";
 "settings_privacy_block_unknown_footer_on"= "Zprávy vám mohou posílat pouze lidé z vašeho seznamu kontaktů.";
 "settings_privacy_block_unknown_foooter_off" = "Zprávy vám může posílat kdokoliv. Nové kontakty budou přidávány automaticky poté, co od nich obdržíte první zprávu.";
+
+"settings_privacy_os_header" = "Integrace do iOS";
+"settings_privacy_os_donate" = "Sdílet interakce";
+"settings_privacy_os_reset" = "Resetovat interakce";
+"settings_privacy_os_footer" = "Pokud je tato funkce zapnuta, budou se při sdílení obsahu v iOS nabízet kontakty Threema. Sdílení interakcí odhalí informace systému iOS.";
 
 "settings_privacy_chat_header" = "Chat";
 "settings_privacy_read_receipts" = "Potvrzení o přečtení";
@@ -1143,6 +1148,9 @@
 "settings_appearance_display_order" = "Pořadí zobrazení";
 "settings_appearance_show_gallery_preview" = "Zobrazovat náhled galerie";
 
+// Chat Settings
+"settings_chat_send_message_feedback_label" = "Haptická odezva při odeslání";
+
 // Media
 "settings_media_autosave_private_footer" = "U médií obdržených v rámci soukromých chatů nedojde k automatickému uložení.";
 
@@ -1162,14 +1170,13 @@
 
 // Notification settings
 "settings_notifications_inapp_section" = "V aplikaci";
-"settings_notifications_inapp_sounds" = "Zvuky";
-"settings_notifications_inapp_vibrate" = "Vibrovat";
-"settings_notifications_inapp_preview" = "Náhled";
+"settings_notifications_inapp_sounds" = "Zvuky v aplikaci";
+"settings_notifications_inapp_vibrate" = "Vibrace v aplikaci";
+"settings_notifications_inapp_preview" = "Zobrazit náhled zprávy";
 "settings_notifications_push_section" = "Nabízená oznámení";
 "settings_notifications_push_sound" = "Zvuk";
 "settings_notifications_push_groupsound" = "Zvuk skupiny";
-"settings_notifications_push_preview" = "Náhled";
-"settings_notifications_push_showNickname" = "Zobrazovat přezdívku";
+"settings_notifications_push_preview" = "Zobrazit náhled zprávy";
 "settings_notifications_masterDnd_section_header" = "Volba po pracovní době";
 "settings_notifications_masterDnd" = "Nerušit mimo pracovní dobu";
 "settings_notifications_masterDnd_section_footer" = "Deaktivovat oznámení a odmítat hovory mimo pracovní dobu.";
@@ -1177,7 +1184,24 @@
 "settings_notifications_masterDnd_startTime" = "Začátek pracovní doby";
 "settings_notifications_masterDnd_endTime" = "Konec pracovní doby";
 "settings_notification_iOS_settings" = "Nastavení systému";
-"settings_notification_open_iOS_settings" = "Otevřít nastavení systému";
+
+"settings_notification_type_preview_title" = "Nabízená oznámení";
+"settings_notification_type_preview_description" = "Vyberte, které informace mají být zahrnuty do nabízených oznámení k příchozím zprávám Threema.";
+
+"settings_notification_type_preview_restrictive_title" = "Zobrazovat přezdívku";
+"settings_notification_type_preview_restrictive_description" = "Zobrazuje pouze přezdívku kontaktu.";
+"settings_notification_type_preview_restrictive_sender_name" = "~Jan";
+
+"settings_notification_type_preview_balanced_title" = "Zobrazovat jméno";
+"settings_notification_type_preview_balanced_description" = "Zobrazuje celé jméno kontaktu (výchozí nastavení).";
+"settings_notification_type_preview_balanced_sender_name" = "Jan Novák";
+
+"settings_notification_type_preview_complete_title" = "Zobrazovat jméno a profilový obrázek";
+"settings_notification_type_preview_complete_description" = "Zobrazuje celé jméno kontaktu a profilový obrázek. Některé informace související s interakcí jsou sdíleny s operačním systémem. [Zjistěte více…](%@)";
+"settings_notification_type_preview_complete_sender_name" = "Jan Novák";
+
+"settings_notification_type_preview_message_text" = "Ukázka zprávy...";
+"settings_notification_type_preview_no_button" = "Deaktivovat nabízená oznámení";
 
 // Orphaned files delete
 "settings_orphaned_files_description" = "Při mazání dat ve správě úložiště v předchozích verzích %@ se ve výjimečných případech mohlo stát, že (mediální) soubory nebyly odstraněny úplně, ale odebrány v %@.
@@ -1385,6 +1409,7 @@ Pokud vám v %@ nechybí žádné (mediální) soubory, vyprázdněte koš, abys
 
 "chat_text_view_placeholder" = "Nová zpráva";
 "compose_bar_camera_button_accessibility_label" = "Otevřít kameru";
+"compose_bar_image_picker_button_accessibility_label" = "Otevřít výběr obrázku";
 "compose_bar_record_button_accessibility_label" = "Nahrát hlasovou zprávu";
 "compose_bar_send_message_button_accessibility_label" = "Poslat zprávu";
 "compose_bar_attachment_button_accessibility_label" = "Přidat přílohy";
@@ -1461,6 +1486,9 @@ Pokud vám v %@ nechybí žádné (mediální) soubory, vyprázdněte koš, abys
 "notification_settings_sync_pending" = "Synchronizace…";
 "notification_settings_sync_succeeded" = "Nastavení bylo synchronizováno";
 
+"notification_interaction_delete_succeeded" = "Interakce smazány";
+"notification_interaction_delete_failed" = "Smazání interakcí se nezdařilo";
+
 // Forward security status messages
 "forward_security_message_without" = "Byla přijata zpráva bez dopředné bezpečnosti. Ověřte, zda odesílatel záměrně vypnul funkci PFS.";
 "forward_security_session_established" = "Zprávy v tomto chatu jsou nyní chráněny technologií dopředné bezpečnosti.";
@@ -1523,7 +1551,7 @@ Pokud vám v %@ nechybí žádné (mediální) soubory, vyprázdněte koš, abys
 "accessibility_voice_message_playing" = "Aktuálně se přehrává.";
 
 // Message status types
-"accessibility_status_acknowledged_plus_time" = "Vzato na vědomí, %@";
+"accessibility_status_acknowledged_plus_time" = "Souhlas, %@";
 "accessibility_status_declined_plus_time" = "Odmítnuto, %@";
 "accessibility_status_sending_plus_time" = "Odesílání, %@";
 "accessibility_status_sent_plus_time" = "Odesláno, %@";

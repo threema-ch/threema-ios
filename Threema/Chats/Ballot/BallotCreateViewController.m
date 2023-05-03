@@ -439,11 +439,7 @@
 
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
     if (_indexPathForPicker && indexPath.section == _indexPathForPicker.section && indexPath.row == _indexPathForPicker.row) {
-        if (@available(iOS 14.0, *)) {
-            return 450.0;
-        } else {
-            return 300.0;
-        }
+        return 450.0;
     }
 
     return UITableViewAutomaticDimension;
@@ -542,10 +538,8 @@
 - (void)keyboardDidShow:(NSNotification *)aNotification {
     if (_indexPathForPicker) {
         BallotCreateTableCell *lastCell = [_choiceTableView cellForRowAtIndexPath:_indexPathForPicker];
-        if (@available(iOS 14.0, *)) {
-            if (!lastCell.choiceTextField.isFirstResponder) {
-                [_choiceTableView scrollToRowAtIndexPath:_indexPathForPicker atScrollPosition:UITableViewScrollPositionBottom animated:true];
-            }
+        if (!lastCell.choiceTextField.isFirstResponder) {
+            [_choiceTableView scrollToRowAtIndexPath:_indexPathForPicker atScrollPosition:UITableViewScrollPositionBottom animated:true];
         }
         [lastCell showDatePicker:nil];
     }

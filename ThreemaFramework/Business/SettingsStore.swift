@@ -20,6 +20,7 @@
 
 import CocoaLumberjackSwift
 import Foundation
+import Intents
 import PromiseKit
 
 public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol, ObservableObject {
@@ -38,9 +39,9 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
 
     public convenience init() {
         self.init(
-            serverConnector: ServerConnector(),
-            myIdentityStore: MyIdentityStore(),
-            contactStore: ContactStore(),
+            serverConnector: ServerConnector.shared(),
+            myIdentityStore: MyIdentityStore.shared(),
+            contactStore: ContactStore.shared(),
             userSettings: UserSettings.shared(),
             taskManager: nil
         )
@@ -64,11 +65,25 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
         self.blacklist = Set<String>(userSettings.blacklist.array as? [String] ?? [])
         self.syncExclusionList = userSettings.syncExclusionList as? [String] ?? []
         self.blockUnknown = userSettings.blockUnknown
+        self.allowOutgoingDonations = userSettings.allowOutgoingDonations
         self.sendReadReceipts = userSettings.sendReadReceipts
         self.sendTypingIndicator = userSettings.sendTypingIndicator
         self.choosePOI = userSettings.enablePoi
         self.hidePrivateChats = userSettings.hidePrivateChats
         
+        // Notifications
+        self.inAppSounds = userSettings.inAppSounds
+        self.inAppVibrate = userSettings.inAppVibrate
+        self.inAppPreview = userSettings.inAppPreview
+        self.notificationType = NotificationType.type(for: userSettings.notificationType)
+        self.pushShowPreview = userSettings.pushDecrypt
+        self.pushSound = userSettings.pushSound
+        self.pushGroupSound = userSettings.pushGroupSound
+        self.enableMasterDnd = userSettings.enableMasterDnd
+        self.masterDndWorkingDays = Set<Int>(userSettings.masterDndWorkingDays.array as? [Int] ?? [])
+        self.masterDndStartTime = userSettings.masterDndStartTime
+        self.masterDndEndTime = userSettings.masterDndEndTime
+
         // Chat
         self.wallpaper = userSettings.wallpaper
         
@@ -80,6 +95,13 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
             self,
             selector: #selector(incomingUpdate),
             name: NSNotification.Name(rawValue: kNotificationIncomingSettingsSynchronization),
+            object: nil
+        )
+        
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(updateLocalValues),
+            name: NSNotification.Name(rawValue: kNotificationSettingStoreSynchronization),
             object: nil
         )
     }
@@ -97,7 +119,7 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
 
     @Published public var syncContacts: Bool {
         didSet {
-            if userSettings.syncContacts == syncContacts {
+            guard userSettings.syncContacts != syncContacts else {
                 return
             }
             syncAndSave()
@@ -106,7 +128,7 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
     
     @Published public var blacklist: Set<String> {
         didSet {
-            if userSettings.blacklist == NSOrderedSet(array: Array(blacklist)) {
+            guard Set<String>(userSettings.blacklist.array as? [String] ?? []) != blacklist else {
                 return
             }
             syncAndSave()
@@ -115,7 +137,7 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
     
     @Published public var syncExclusionList: [String] {
         didSet {
-            if userSettings.syncExclusionList as? [String] == syncExclusionList {
+            guard userSettings.syncExclusionList as? [String] != syncExclusionList else {
                 return
             }
             syncAndSave()
@@ -124,16 +146,27 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
     
     @Published public var blockUnknown: Bool {
         didSet {
-            if userSettings.blockUnknown == blockUnknown {
+            guard userSettings.blockUnknown != blockUnknown else {
                 return
             }
             syncAndSave()
         }
     }
     
+    @Published public var allowOutgoingDonations: Bool {
+        didSet {
+            userSettings.allowOutgoingDonations = allowOutgoingDonations
+            
+            // Remove donated INInteractions when being disabled
+            if !allowOutgoingDonations {
+                removeINInteractions()
+            }
+        }
+    }
+    
     @Published public var sendReadReceipts: Bool {
         didSet {
-            if userSettings.sendReadReceipts == sendReadReceipts {
+            guard userSettings.sendReadReceipts != sendReadReceipts else {
                 return
             }
             syncAndSave()
@@ -142,7 +175,7 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
     
     @Published public var sendTypingIndicator: Bool {
         didSet {
-            if userSettings.sendTypingIndicator == sendTypingIndicator {
+            guard userSettings.sendTypingIndicator != sendTypingIndicator else {
                 return
             }
             syncAndSave()
@@ -151,16 +184,20 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
     
     @Published public var choosePOI: Bool {
         didSet {
-            // This setting is not synced across devices
-            userSettings.enablePoi = choosePOI
+            guard userSettings.enablePoi != choosePOI else {
+                return
+            }
+            updateUserSettings()
         }
     }
     
     @Published public var hidePrivateChats: Bool {
         didSet {
-            // This setting is not synced across devices
-            userSettings.hidePrivateChats = hidePrivateChats
-            
+            guard userSettings.hidePrivateChats != hidePrivateChats else {
+                return
+            }
+            updateUserSettings()
+
             NotificationCenter.default.post(
                 name: Notification.Name(kNotificationChangedHidePrivateChat),
                 object: nil,
@@ -169,11 +206,125 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
         }
     }
     
+    // MARK: Notifications
+
+    @Published public var inAppSounds: Bool {
+        didSet {
+            guard userSettings.inAppSounds != inAppSounds else {
+                return
+            }
+            updateUserSettings()
+        }
+    }
+    
+    @Published public var inAppVibrate: Bool {
+        didSet {
+            guard userSettings.inAppVibrate != inAppVibrate else {
+                return
+            }
+            updateUserSettings()
+        }
+    }
+    
+    @Published public var inAppPreview: Bool {
+        didSet {
+            guard userSettings.inAppPreview != inAppPreview else {
+                return
+            }
+            updateUserSettings()
+        }
+    }
+    
+    @Published public var notificationType: NotificationType {
+        didSet {
+            guard userSettings.notificationType != NSNumber(integerLiteral: notificationType.userSettingsValue) else {
+                return
+            }
+            updateUserSettings()
+
+            // We only remove the donated Interactions, if the outgoing are disabled.
+            switch notificationType {
+            case .restrictive, .balanced:
+                if !allowOutgoingDonations {
+                    removeINInteractions()
+                }
+            case .complete:
+                return
+            }
+        }
+    }
+    
+    @Published public var pushShowPreview: Bool {
+        didSet {
+            guard userSettings.pushDecrypt != pushShowPreview else {
+                return
+            }
+            updateUserSettings()
+        }
+    }
+    
+    @Published public var pushSound: String {
+        didSet {
+            guard userSettings.pushSound != pushSound else {
+                return
+            }
+            updateUserSettings()
+        }
+    }
+    
+    @Published public var pushGroupSound: String {
+        didSet {
+            guard userSettings.pushGroupSound != pushGroupSound else {
+                return
+            }
+            updateUserSettings()
+        }
+    }
+    
+    @Published public var enableMasterDnd: Bool {
+        didSet {
+            guard userSettings.enableMasterDnd != enableMasterDnd else {
+                return
+            }
+            updateUserSettings()
+        }
+    }
+    
+    @Published public var masterDndWorkingDays: Set<Int> {
+        didSet {
+            guard Set<Int>(userSettings.masterDndWorkingDays.array as? [Int] ?? []) != masterDndWorkingDays else {
+                return
+            }
+            updateUserSettings()
+        }
+    }
+    
+    @Published public var masterDndStartTime: String? {
+        didSet {
+            guard userSettings.masterDndStartTime != masterDndStartTime else {
+                return
+            }
+            updateUserSettings()
+        }
+    }
+    
+    @Published public var masterDndEndTime: String? {
+        didSet {
+            guard userSettings.masterDndEndTime != masterDndEndTime else {
+                return
+            }
+            updateUserSettings()
+        }
+    }
+    
     // MARK: Chats
     
     @Published public var wallpaper: UIImage? {
         didSet {
-            userSettings.wallpaper = wallpaper
+            guard userSettings.wallpaper != wallpaper else {
+                return
+            }
+            updateUserSettings()
         }
     }
 
@@ -181,7 +332,7 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
     
     @Published public var enableThreemaCall: Bool {
         didSet {
-            if userSettings.enableThreemaCall == enableThreemaCall {
+            guard userSettings.enableThreemaCall != enableThreemaCall else {
                 return
             }
             syncAndSave()
@@ -190,7 +341,7 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
     
     @Published public var alwaysRelayCalls: Bool {
         didSet {
-            if userSettings.alwaysRelayCalls == alwaysRelayCalls {
+            guard userSettings.alwaysRelayCalls != alwaysRelayCalls else {
                 return
             }
             syncAndSave()
@@ -274,7 +425,7 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
         
         guard let taskManager else {
             DDLogError("[SettingsStore] TaskManager not set, reverting changes.")
-            updateLocalValues()
+            discardUnsyncedChanges()
             return
         }
             
@@ -339,17 +490,56 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
             guard error == nil else {
                 NotificationPresenterWrapper.shared.dismissAllPresentedNotifications()
                 self.isSyncing(false, failed: true)
+                self.discardUnsyncedChanges()
                 return
             }
                 
             self.isSyncing(false, failed: false)
             NotificationPresenterWrapper().present(type: .settingsSyncSuccess)
+            
+            // Inform other SettingsStores
+            NotificationCenter.default.post(
+                name: NSNotification.Name(rawValue: kNotificationIncomingSettingsSynchronization),
+                object: nil
+            )
         }
     }
     
     public func discardUnsyncedChanges() {
         // Since the changes have not been saved yet, we simply load the user settings again
         updateLocalValues()
+    }
+    
+    /// Removes all INInteractions donated to the OS
+    /// - Parameter showNotification: Show a success or error notification pill
+    public func removeINInteractions(showNotification: Bool = false) {
+        INInteraction.deleteAll { error in
+            guard error == nil else {
+                DDLogError("[PrivacySettingsViewController] Could not delete INInteractions.")
+                
+                if showNotification {
+                    NotificationPresenterWrapper.shared.present(type: .interactionDeleteError)
+                }
+                return
+            }
+            
+            if showNotification {
+                NotificationPresenterWrapper.shared.present(type: .interactionDeleteSuccess)
+            }
+        }
+    }
+    
+    /// Removes all INInteractions donated to the OS
+    /// - Parameter showNotification: Show a success or error notification pill
+    public static func removeINInteractions(for managedObjectID: NSManagedObjectID) {
+        Task {
+            do {
+                try await INInteraction.delete(with: managedObjectID.uriRepresentation().absoluteString)
+            }
+            catch {
+                DDLogError("Donations for group identifier could not be deleted.")
+            }
+        }
     }
     
     // MARK: - Private Functions
@@ -367,26 +557,91 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
     }
     
     private func updateUserSettings() {
-        userSettings.syncContacts = syncContacts
-        userSettings.blockUnknown = blockUnknown
-        userSettings.blacklist = NSOrderedSet(array: Array(blacklist))
-        userSettings.syncExclusionList = syncExclusionList
-        userSettings.sendReadReceipts = sendReadReceipts
-        userSettings.sendTypingIndicator = sendTypingIndicator
+       
+        // Privacy Settings
+        compareAndAssign(&userSettings.syncContacts, syncContacts)
+
+        if Set<String>(userSettings.blacklist.array as? [String] ?? []) != blacklist {
+            compareAndAssign(&userSettings.blacklist, NSOrderedSet(array: Array(blacklist)))
+        }
+
+        compareAndAssign(&userSettings.blockUnknown, blockUnknown)
         
-        userSettings.enableThreemaCall = enableThreemaCall
-        userSettings.alwaysRelayCalls = alwaysRelayCalls
+        if userSettings.syncExclusionList as? [String] ?? [] != syncExclusionList {
+            userSettings.syncExclusionList = syncExclusionList
+        }
+        
+        compareAndAssign(&userSettings.sendReadReceipts, sendReadReceipts)
+        compareAndAssign(&userSettings.sendTypingIndicator, sendTypingIndicator)
+        compareAndAssign(&userSettings.enablePoi, choosePOI)
+        compareAndAssign(&userSettings.hidePrivateChats, hidePrivateChats)
+        
+        // Notifications
+        compareAndAssign(&userSettings.inAppSounds, inAppSounds)
+        compareAndAssign(&userSettings.inAppVibrate, inAppVibrate)
+        compareAndAssign(&userSettings.inAppPreview, inAppPreview)
+        compareAndAssign(&userSettings.notificationType, NSNumber(integerLiteral: notificationType.userSettingsValue))
+        compareAndAssign(&userSettings.pushDecrypt, pushShowPreview)
+        compareAndAssign(&userSettings.pushSound, pushSound)
+        compareAndAssign(&userSettings.pushGroupSound, pushGroupSound)
+        compareAndAssign(&userSettings.enableMasterDnd, enableMasterDnd)
+
+        if Set<Int>(userSettings.masterDndWorkingDays.array as? [Int] ?? []) != masterDndWorkingDays {
+            userSettings.masterDndWorkingDays = NSOrderedSet(set: masterDndWorkingDays)
+        }
+        
+        compareAndAssign(&userSettings.masterDndStartTime, masterDndStartTime)
+        compareAndAssign(&userSettings.masterDndEndTime, masterDndEndTime)
+
+        // Chat
+        compareAndAssign(&userSettings.wallpaper, wallpaper)
+
+        // Threema Calls
+        compareAndAssign(&userSettings.enableThreemaCall, enableThreemaCall)
+        compareAndAssign(&userSettings.alwaysRelayCalls, alwaysRelayCalls)
+        
+        // Inform other SettingsStores
+        NotificationCenter.default.post(
+            name: NSNotification.Name(rawValue: kNotificationSettingStoreSynchronization),
+            object: nil
+        )
     }
     
-    private func updateLocalValues() {
-        syncContacts = userSettings.syncContacts
-        blockUnknown = userSettings.blockUnknown
-        blacklist = Set<String>(userSettings.blacklist.array as? [String] ?? [])
-        syncExclusionList = userSettings.syncExclusionList as? [String] ?? []
-        sendReadReceipts = userSettings.sendReadReceipts
-        sendTypingIndicator = userSettings.sendTypingIndicator
+    @objc private func updateLocalValues() {
+        // Privacy Settings
+        compareAndAssign(&syncContacts, userSettings.syncContacts)
+        compareAndAssign(&blacklist, Set<String>(userSettings.blacklist.array as? [String] ?? []))
+        compareAndAssign(&blockUnknown, userSettings.blockUnknown)
+        compareAndAssign(&syncExclusionList, userSettings.syncExclusionList as? [String] ?? [])
+        compareAndAssign(&sendReadReceipts, userSettings.sendReadReceipts)
+        compareAndAssign(&sendTypingIndicator, userSettings.sendTypingIndicator)
+        compareAndAssign(&choosePOI, userSettings.enablePoi)
+        compareAndAssign(&hidePrivateChats, userSettings.hidePrivateChats)
+
+        // Notifications
+        compareAndAssign(&inAppSounds, userSettings.inAppSounds)
+        compareAndAssign(&inAppVibrate, userSettings.inAppVibrate)
+        compareAndAssign(&inAppPreview, userSettings.inAppPreview)
+        compareAndAssign(&notificationType, NotificationType.type(for: userSettings.notificationType))
+        compareAndAssign(&pushShowPreview, userSettings.pushDecrypt)
+        compareAndAssign(&pushSound, userSettings.pushSound)
+        compareAndAssign(&pushGroupSound, userSettings.pushGroupSound)
+        compareAndAssign(&enableMasterDnd, userSettings.enableMasterDnd)
+        compareAndAssign(&masterDndWorkingDays, Set<Int>(userSettings.masterDndWorkingDays.array as? [Int] ?? []))
+        compareAndAssign(&masterDndStartTime, userSettings.masterDndStartTime)
+        compareAndAssign(&masterDndEndTime, userSettings.masterDndEndTime)
         
-        enableThreemaCall = userSettings.enableThreemaCall
-        alwaysRelayCalls = userSettings.alwaysRelayCalls
+        // Chat
+        compareAndAssign(&wallpaper, userSettings.wallpaper)
+
+        // Threema Calls
+        compareAndAssign(&enableThreemaCall, userSettings.enableThreemaCall)
+        compareAndAssign(&alwaysRelayCalls, userSettings.alwaysRelayCalls)
+    }
+    
+    private func compareAndAssign<T: Equatable>(_ valueToUpdate: inout T, _ comparing: T) {
+        if valueToUpdate != comparing {
+            valueToUpdate = comparing
+        }
     }
 }

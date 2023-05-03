@@ -261,6 +261,12 @@ final class ChatViewTableViewCellDelegate: NSObject, ChatViewTableViewCellDelega
     }
     
     func sendAck(for message: BaseMessage, ack: Bool) {
+        
+        guard !UIAccessibility.isVoiceOverRunning else {
+            ChatViewTableViewCellDelegate.sendAck(message: message, ack: ack)
+            return
+        }
+        
         let block = {
             ChatViewTableViewCellDelegate.sendAck(message: message, ack: ack)
         }

@@ -30,7 +30,6 @@ class NotificationService: UNNotificationServiceExtension {
     private static var didJustReportCall = false
 
     var contentHandler: ((UNNotificationContent) -> Void)?
-    var bestAttemptContent: UNMutableNotificationContent?
     
     private lazy var businessInjector = BusinessInjector()
     private var pendingUserNotificationManager: PendingUserNotificationManagerProtocol?
@@ -47,6 +46,8 @@ class NotificationService: UNNotificationServiceExtension {
     
     private let threemaPayloadKey = "threema"
     private let aliveCheckKey = "alive-check"
+    
+    private var observer: Any?
 
     /// Push received, every code path must call `contentHandler` (see `applyContent(...)`) at the end!
     /// - Parameters:
@@ -69,7 +70,6 @@ class NotificationService: UNNotificationServiceExtension {
 
         // Initialize content handler to show any notification
         self.contentHandler = contentHandler
-        bestAttemptContent = (request.content.mutableCopy() as? UNMutableNotificationContent)
 
         guard !NotificationService.didJustReportCall else {
             businessInjector.serverConnector.disconnect(initiator: .notificationExtension)
@@ -86,7 +86,7 @@ class NotificationService: UNNotificationServiceExtension {
 
         guard !NotificationService.isRunning else {
             DDLogNotice("[Push] Suppressing push because Notification Extension is still running")
-            applyContent()
+            applyContent(recalculateBadgeCount: false, resetIsRunning: false)
             return
         }
         NotificationService.isRunning = true
@@ -104,148 +104,155 @@ class NotificationService: UNNotificationServiceExtension {
         // Drop shared instance in order to adapt to user's configuration changes
         UserSettings.resetSharedInstance()
 
-        if extensionIsReady() {
-            if let bestAttemptContent = bestAttemptContent,
-               let threemaDictEntcrypted = bestAttemptContent.userInfo[threemaPayloadKey],
-               let threemaDict = PushPayloadDecryptor.decryptPushPayload(threemaDictEntcrypted as? [AnyHashable: Any]) {
+        guard extensionIsReady() else {
+            // Content apply is called in `extensionIsReady()` if it returns `false`
+            return
+        }
+        
+        guard let bestAttemptContent = (request.content.mutableCopy() as? UNMutableNotificationContent) else {
+            applyContent(recalculateBadgeCount: false)
+            return
+        }
+        
+        if let threemaDictEntcrypted = bestAttemptContent.userInfo[threemaPayloadKey],
+           let threemaDict = PushPayloadDecryptor.decryptPushPayload(threemaDictEntcrypted as? [AnyHashable: Any]) {
+            
+            DDLogInfo("[Push] Request threema push: \(threemaDict)")
+            
+            let isAliveCheck: Bool = ((threemaDict[aliveCheckKey] as? Int) != nil)
+            let threemaPushNotification = try? ThreemaPushNotification(from: threemaDict as! [String: Any])
+            
+            if threemaPushNotification != nil || isAliveCheck {
                 
-                DDLogInfo("[Push] Request threema push: \(threemaDict)")
-
-                let isAliveCheck: Bool = ((threemaDict[aliveCheckKey] as? Int) != nil)
-                let threemaPushNotification = try? ThreemaPushNotification(from: threemaDict as! [String: Any])
-                
-                if threemaPushNotification != nil || isAliveCheck {
-
-                    // Exit if connected already
-                    if businessInjector.serverConnector.connectionState == .connecting ||
-                        businessInjector.serverConnector.connectionState == .connected ||
-                        businessInjector.serverConnector.connectionState == .loggedIn {
-                        DDLogWarn("[Push] Suppressing push because already connected")
-                        applyContent()
-                        return
-                    }
-
-                    businessInjector.serverConnector.businessInjectorForMessageProcessing = businessInjector
-
-                    // Caution: DB main context reset when start Notification Extension,
-                    // because the context can become corrupt and don't save any data anymore.
-                    DatabaseContext.reset()
-                    
-                    // Refresh all DB objects before access it
-                    DatabaseManager.db()?.refreshAllObjects()
-                    businessInjector.backgroundEntityManager.refreshAll()
-
-                    businessInjector.contactStore.resetEntityManager()
-
-                    pendingUserNotificationManager = PendingUserNotificationManager(
-                        UserNotificationManager(
-                            businessInjector.userSettings,
-                            businessInjector.contactStore,
-                            businessInjector.backgroundGroupManager,
-                            businessInjector.backgroundEntityManager,
-                            businessInjector.licenseStore.getRequiresLicenseKey()
-                        ),
-                        businessInjector.backgroundEntityManager
-                    )
-                    
-                    // Create pendingUserNotification only for message notifications, not for keep alive checks
-                    // Keep alive check will connect to the server, because if the last connection was too long ago, the server sets the identity as inactive
-                    if let threemaPushNotification = threemaPushNotification {
-                        if threemaPushNotification.voip == false {
-                            if let pendingUserNotification = pendingUserNotificationManager?
-                                .pendingUserNotification(
-                                    for: threemaPushNotification,
-                                    stage: .initial
-                                ) {
-                                _ = pendingUserNotificationManager?
-                                    .startTimedUserNotification(pendingUserNotification: pendingUserNotification)
-                            }
-                        }
-                    }
-                    else {
-                        DDLogInfo("[Push] Alive check")
-                    }
-
-                    // Start processing incoming messages and wait (max. 25s)
-                    DDLogNotice("[Push] Enter the stopProcessingGroup")
-                    NotificationService.stopProcessingGroup = DispatchGroup()
-                    NotificationService.stopProcessingGroup?.enter()
-
-                    // We observe for invalid license
-                    NotificationCenter.default.addObserver(
-                        forName: NSNotification.Name(rawValue: kNotificationLicenseMissing),
-                        object: nil,
-                        queue: nil
-                    ) { [weak self] _ in
-                        self?.addInvalidLicenseKeyNotification(removingInitialPushFor: threemaPushNotification)
-                    }
-
-                    DispatchQueue.global().async {
-                        // Initialize conversation changed for calc unread messages badge count
-                        self.conversationsChangedQueue.async {
-                            self.conversationsChanged = Set<NSManagedObjectID>()
-                        }
-
-                        // Register message processor delegate and connect to server
-                        self.businessInjector.serverConnector.registerMessageProcessorDelegate(delegate: self)
-                        self.businessInjector.serverConnector.registerConnectionStateDelegate(delegate: self)
-
-                        self.businessInjector.serverConnector.connect(initiator: .notificationExtension)
-                    }
-
-                    let result = NotificationService.stopProcessingGroup?.wait(timeout: .now() + 25)
-                    if result != .success {
-                        DDLogWarn("[Push] Stopping processing incoming messages, because time is up!")
-
-                        if NotificationService.didJustReportCall {
-                            DDLogError("[Push] Stopped processing incoming messages, but we were reporting a call!")
-                            NotificationService.didJustReportCall = false
-                        }
-                    }
-
-                    businessInjector.serverConnector.unregisterMessageProcessorDelegate(delegate: self)
-                    businessInjector.serverConnector.unregisterConnectionStateDelegate(delegate: self)
-                    businessInjector.serverConnector.disconnect(initiator: .notificationExtension)
+                // Exit if connected already
+                if businessInjector.serverConnector.connectionState == .connecting ||
+                    businessInjector.serverConnector.connectionState == .connected ||
+                    businessInjector.serverConnector.connectionState == .loggedIn {
+                    DDLogWarn("[Push] Suppressing push because already connected")
+                    applyContent()
+                    return
                 }
-
-                applyContent()
+                
+                businessInjector.serverConnector.businessInjectorForMessageProcessing = businessInjector
+                
+                // Caution: DB main context reset when start Notification Extension,
+                // because the context can become corrupt and don't save any data anymore.
+                DatabaseContext.reset()
+                
+                // Refresh all DB objects before access it
+                DatabaseManager.db()?.refreshAllObjects()
+                businessInjector.backgroundEntityManager.refreshAll()
+                
+                businessInjector.contactStore.resetEntityManager()
+                
+                pendingUserNotificationManager = PendingUserNotificationManager(
+                    UserNotificationManager(
+                        businessInjector.settingsStore,
+                        businessInjector.userSettings,
+                        businessInjector.contactStore,
+                        businessInjector.backgroundGroupManager,
+                        businessInjector.backgroundEntityManager,
+                        businessInjector.licenseStore.getRequiresLicenseKey()
+                    ),
+                    businessInjector.backgroundEntityManager
+                )
+                
+                // Create pendingUserNotification only for message notifications, not for keep alive checks
+                // Keep alive check will connect to the server, because if the last connection was too long ago, the server sets the identity as inactive
+                if let threemaPushNotification = threemaPushNotification {
+                    if threemaPushNotification.voip == false {
+                        if let pendingUserNotification = pendingUserNotificationManager?
+                            .pendingUserNotification(
+                                for: threemaPushNotification,
+                                stage: .initial
+                            ) {
+                            _ = pendingUserNotificationManager?
+                                .startTimedUserNotification(pendingUserNotification: pendingUserNotification)
+                        }
+                    }
+                }
+                else {
+                    DDLogInfo("[Push] Alive check")
+                }
+                
+                // Start processing incoming messages and wait (max. 25s)
+                DDLogNotice("[Push] Enter the stopProcessingGroup")
+                NotificationService.stopProcessingGroup = DispatchGroup()
+                NotificationService.stopProcessingGroup?.enter()
+                
+                // We observe for invalid license
+                observer = NotificationCenter.default.addObserver(
+                    forName: Notification.Name(rawValue: kNotificationLicenseMissing),
+                    object: nil,
+                    queue: nil
+                ) { [weak self] _ in
+                    self?.addInvalidLicenseKeyNotification(removingInitialPushFor: threemaPushNotification)
+                }
+                
+                DispatchQueue.global().async {
+                    // Initialize conversation changed for calc unread messages badge count
+                    self.conversationsChangedQueue.async {
+                        self.conversationsChanged = Set<NSManagedObjectID>()
+                    }
+                    
+                    // Register message processor delegate and connect to server
+                    self.businessInjector.serverConnector.registerMessageProcessorDelegate(delegate: self)
+                    self.businessInjector.serverConnector.registerConnectionStateDelegate(delegate: self)
+                    
+                    self.businessInjector.serverConnector.connect(initiator: .notificationExtension)
+                }
+                
+                let result = NotificationService.stopProcessingGroup?.wait(timeout: .now() + 25)
+                if result != .success {
+                    DDLogWarn("[Push] Stopping processing incoming messages, because time is up!")
+                    
+                    if NotificationService.didJustReportCall {
+                        DDLogError("[Push] Stopped processing incoming messages, but we were reporting a call!")
+                        NotificationService.didJustReportCall = false
+                    }
+                }
+                
+                businessInjector.serverConnector.unregisterMessageProcessorDelegate(delegate: self)
+                businessInjector.serverConnector.unregisterConnectionStateDelegate(delegate: self)
+                businessInjector.serverConnector.disconnectWait(initiator: .notificationExtension)
+            }
+            
+            applyContent()
+        }
+        else {
+            DDLogWarn("[Push] Message ID is missing")
+            
+            // Show test notification (necessary for customer support)
+            pendingUserNotificationManager = PendingUserNotificationManager(
+                UserNotificationManager(
+                    businessInjector.settingsStore,
+                    businessInjector.userSettings,
+                    businessInjector.contactStore,
+                    businessInjector.backgroundGroupManager,
+                    businessInjector.backgroundEntityManager,
+                    businessInjector.licenseStore.getRequiresLicenseKey()
+                ),
+                businessInjector.backgroundEntityManager
+            )
+            
+            if bestAttemptContent.userInfo["3mw"] is [AnyHashable: Any] {
+                DDLogInfo("[Push] Configure Threema Web notification")
+                // Use applyContent to set the badge with the count of unread messages
+                let content = pendingUserNotificationManager?
+                    .editThreemaWebNotification(payload: bestAttemptContent.userInfo)
+                applyContent(content)
             }
             else {
-                DDLogWarn("[Push] Message ID is missing")
-
-                if let bestAttemptContent = bestAttemptContent {
-                    // Show test notification (necessary for customer support)
-                    pendingUserNotificationManager = PendingUserNotificationManager(
-                        UserNotificationManager(
-                            businessInjector.userSettings,
-                            businessInjector.contactStore,
-                            businessInjector.backgroundGroupManager,
-                            businessInjector.backgroundEntityManager,
-                            businessInjector.licenseStore.getRequiresLicenseKey()
-                        ),
-                        businessInjector.backgroundEntityManager
-                    )
-                    
-                    if bestAttemptContent.userInfo["3mw"] is [AnyHashable: Any] {
-                        DDLogInfo("[Push] Configure Threema Web notification")
-                        // Use applyContent to set the badge with the count of unread messages
-                        let content = pendingUserNotificationManager?
-                            .editThreemaWebNotification(payload: bestAttemptContent.userInfo)
-                        applyContent(content)
+                pendingUserNotificationManager?.startTestUserNotification(
+                    payload: bestAttemptContent.userInfo,
+                    completion: {
+                        DDLogInfo("[Push] Test notification showed!")
+                        
+                        let emptyContent = UNMutableNotificationContent()
+                        bestAttemptContent.badge = 999
+                        self.applyContent(emptyContent)
                     }
-                    else {
-                        pendingUserNotificationManager?.startTestUserNotification(
-                            payload: bestAttemptContent.userInfo,
-                            completion: {
-                                DDLogInfo("[Push] Test notification showed!")
-
-                                let emptyContent = UNMutableNotificationContent()
-                                bestAttemptContent.badge = 999
-                                self.applyContent(emptyContent)
-                            }
-                        )
-                    }
-                }
+                )
             }
         }
     }
@@ -264,9 +271,12 @@ class NotificationService: UNNotificationServiceExtension {
     ///
     /// - Parameters:
     ///   - bestAttemptContent: Best content for notification, is nil no notification will be showed
+    ///   - recalculateBadgeCount: If `true` count of unread messages will calculated for changed conversations (`NotificationService.conversationsChanged`)
+    ///   - resetIsRunning: If `true` than `NotificationService.isRunning` will set to `false`
     private func applyContent(
         _ bestAttemptContent: UNMutableNotificationContent? = nil,
-        recalculateBadgeCount: Bool = true
+        recalculateBadgeCount: Bool = true,
+        resetIsRunning: Bool = true
     ) {
 
         var badge = 0
@@ -291,8 +301,16 @@ class NotificationService: UNNotificationServiceExtension {
         }
         
         logMemoryUsage()
-        AppGroup.setActive(false, for: AppGroupTypeNotificationExtension)
-        NotificationService.isRunning = false
+        
+        // Remove observer if there is any
+        if let observer {
+            NotificationCenter.default.removeObserver(observer)
+        }
+        
+        if resetIsRunning {
+            AppGroup.setActive(false, for: AppGroupTypeNotificationExtension)
+            NotificationService.isRunning = false
+        }
 
         if let bestAttemptContent = bestAttemptContent {
             DDLogInfo("[Push] Notification showed!")
@@ -351,7 +369,7 @@ class NotificationService: UNNotificationServiceExtension {
 
             let content = UNMutableNotificationContent()
             content.body = BundleUtil.localizedString(forKey: "new_message_db_requires_migration")
-            applyContent(content)
+            applyContent(content, recalculateBadgeCount: false)
 
             return false
         }
@@ -361,7 +379,7 @@ class NotificationService: UNNotificationServiceExtension {
 
             let content = UNMutableNotificationContent()
             content.body = "Communication is blocked"
-            applyContent(content)
+            applyContent(content, recalculateBadgeCount: false)
 
             return false
         }
@@ -376,7 +394,9 @@ class NotificationService: UNNotificationServiceExtension {
     }
 
     /// Exit Notification Extension if all tasks processed.
-    /// - Parameter force: Means last incoming task is processed, exit anyway
+    /// - Parameters:
+    ///   - force: Means last incoming task is processed, exit anyway
+    ///   - reportedCall: Exit due to Threema Call was reported to the App, `NotificationService.didJustReportCall` will be set to `true` for 5s
     private func exitIfAllTasksProcessed(force: Bool = false, reportedCall: Bool = false) {
         let isMultiDeviceActivated = ServerConnector.shared().isMultiDeviceActivated
         if force ||
@@ -431,7 +451,7 @@ class NotificationService: UNNotificationServiceExtension {
         }
     }
 
-    @objc private func addInvalidLicenseKeyNotification(
+    private func addInvalidLicenseKeyNotification(
         removingInitialPushFor threemaPushNotification: ThreemaPushNotification?
     ) {
         DDLogWarn("[Push] Show invalid license key notification")
@@ -455,7 +475,6 @@ class NotificationService: UNNotificationServiceExtension {
         applyContent(content)
     }
     
-    @available(iOSApplicationExtension 15, *)
     /// Reports incoming call to iOS, if originating identity is not blocked.
     /// - Parameters:
     ///   - payload: Payload to be reported
@@ -667,28 +686,28 @@ extension NotificationService: MessageProcessorDelegate {
         switch message {
         case is VoIPCallOfferMessage:
             let offerMessage = message as! VoIPCallOfferMessage
+            
             guard let identity = identity else {
                 DDLogError("No contact for processing VoIP call offer.")
                 onCompletion?(self)
                 return
             }
-            if #available(iOSApplicationExtension 15, *) {
-                guard businessInjector.userSettings.enableThreemaCall else {
-                    offerMessage.contactIdentity = identity
-                    rejectCall(offer: offerMessage)
-                    onCompletion?(self)
-                    return
-                }
-                
-                let displayName = businessInjector.entityManager.entityFetcher.displayName(for: identity)!
-                
-                reportVoIPCall(
-                    for: ["NotificationExtensionOffer": identity, "NotificationExtensionCallerName": displayName],
-                    message: message as! VoIPCallOfferMessage,
-                    from: identity,
-                    onCompletion: onCompletion
-                )
+            guard businessInjector.userSettings.enableThreemaCall else {
+                offerMessage.contactIdentity = identity
+                rejectCall(offer: offerMessage)
+                onCompletion?(self)
+                return
             }
+            
+            let displayName = businessInjector.entityManager.entityFetcher.displayName(for: identity)!
+            
+            reportVoIPCall(
+                for: ["NotificationExtensionOffer": identity, "NotificationExtensionCallerName": displayName],
+                message: message as! VoIPCallOfferMessage,
+                from: identity,
+                onCompletion: onCompletion
+            )
+            
         case let message as VoIPCallHangupMessage:
             CallSystemMessageHelper
                 .maybeAddMissedCallNotificationToConversation(
@@ -755,12 +774,10 @@ extension NotificationService: MessageProcessorDelegate {
         }
         
         let contact = businessInjector.entityManager.entityFetcher.contact(for: contactIdentity)
+        let notificationType = businessInjector.settingsStore.notificationType
         let content = UNMutableNotificationContent()
-        if !UserSettings.shared().pushShowNickname,
-           let displayName = contact?.displayName {
-            content.title = displayName
-        }
-        else {
+        
+        if case .restrictive = notificationType {
             if let publicNickname = contact?.publicNickname,
                !publicNickname.isEmpty {
                 content.title = publicNickname
@@ -769,6 +786,12 @@ extension NotificationService: MessageProcessorDelegate {
                 content.title = contactIdentity
             }
         }
+        else {
+            if let displayName = contact?.displayName {
+                content.title = displayName
+            }
+        }
+        
         content.body = BundleUtil.localizedString(forKey: "call_missed")
         
         // Group notifications together with others from the same contact

@@ -36,12 +36,18 @@ public enum LaunchModalType {
     func viewController(delegate: LaunchModalManagerDelegate) -> UIViewController {
         switch self {
         case .cancelledMultiDeviceWizard:
+            MultiDeviceWizardManager.shared.continueWizard()
             return MultiDeviceWizardManager.shared.wizardViewController()
             
         case .safeForcePassword:
             let storyBoard = AppDelegate.getMyIdentityStoryboard()
             let safeSetupNavigationController = storyBoard?
                 .instantiateViewController(withIdentifier: "SafeIntroNavigationController") as! UINavigationController
+            if let mdmSetup = MDMSetup(setup: false),
+               mdmSetup.isSafeBackupForce() {
+                safeSetupNavigationController.isModalInPresentation = true
+            }
+            
             let safeSetupPasswordViewController = safeSetupNavigationController
                 .topViewController as! SafeSetupPasswordViewController
             safeSetupPasswordViewController.launchModalDelegate = delegate

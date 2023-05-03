@@ -165,13 +165,7 @@ import Foundation
                     }
                 }
 
-                if #available(iOSApplicationExtension 10.3, *) {
-                    changes[NSDeletedObjectIDsKey] = confirmedDeletedIDs
-                }
-                else {
-                    // Fallback on earlier versions
-                    changes[NSDeletedObjectsKey] = confirmedDeletedIDs
-                }
+                changes[NSDeletedObjectIDsKey] = confirmedDeletedIDs
 
                 // Update blobIDs to nil (to prevent downloading blob again)
                 if !updateMessageIDs.isEmpty {

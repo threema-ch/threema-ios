@@ -23,15 +23,6 @@ import XCTest
 
 class MediatorMessageProtocolTests: XCTestCase {
     
-    private let deviceGroupKeys = DeviceGroupKeys(
-        dgpk: Data(BytesUtility.padding([UInt8](), pad: 0x01, length: Int(kDeviceGroupKeyLen))),
-        dgrk: Data(BytesUtility.padding([UInt8](), pad: 0x02, length: Int(kDeviceGroupKeyLen))),
-        dgdik: Data(BytesUtility.padding([UInt8](), pad: 0x03, length: Int(kDeviceGroupKeyLen))),
-        dgsddk: Data(BytesUtility.padding([UInt8](), pad: 0x04, length: Int(kDeviceGroupKeyLen))),
-        dgtsk: Data(BytesUtility.padding([UInt8](), pad: 0x05, length: Int(kDeviceGroupKeyLen))),
-        deviceGroupIDFirstByteHex: "a1"
-    )
-
     func testIsMediatorMessage() {
         let messages = [
             [Data([0x00]), false],
@@ -63,7 +54,7 @@ class MediatorMessageProtocolTests: XCTestCase {
         let message = Data([1])
         let createdAt = Date()
 
-        let mediatorMessageProtocol = MediatorMessageProtocol(deviceGroupKeys: deviceGroupKeys!)
+        let mediatorMessageProtocol = MediatorMessageProtocol(deviceGroupKeys: MockData.deviceGroupKeys)
         let envelopeIncomigMessage = mediatorMessageProtocol.getEnvelopeForIncomingMessage(
             type: 0x01,
             body: message,
@@ -93,7 +84,7 @@ class MediatorMessageProtocolTests: XCTestCase {
         let message = Data([1])
         let createdAt = Date()
         
-        let mediatorMessageProtocol = MediatorMessageProtocol(deviceGroupKeys: deviceGroupKeys!)
+        let mediatorMessageProtocol = MediatorMessageProtocol(deviceGroupKeys: MockData.deviceGroupKeys)
         let envelopeOutgoinigMessage = mediatorMessageProtocol.getEnvelopeForOutgoingMessage(
             type: 0x01,
             body: message,

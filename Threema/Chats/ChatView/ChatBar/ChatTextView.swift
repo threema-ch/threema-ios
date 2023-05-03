@@ -31,9 +31,10 @@ protocol ChatTextViewDelegate: AnyObject {
     func sendText()
     func canStartEditing() -> Bool
     func didEndEditing()
+    func checkIfPastedStringIsMedia() -> Bool
 }
 
-final class ChatTextView: UITextView {
+final class ChatTextView: CustomResponderTextView {
     
     // MARK: - Public properties
     
@@ -165,6 +166,7 @@ final class ChatTextView: UITextView {
         
         super.init(frame: .zero, textContainer: container)
         
+        self.pasteImageHandler = self
         self.customTextStorage = textStorage
         
         configureTextView()
@@ -464,7 +466,7 @@ final class ChatTextView: UITextView {
     }
     
     var isEmpty: Bool {
-        text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        ThreemaUtility.trimCharacters(in: text).isEmpty
     }
     
     /// Stops editing, removes the current text from the text view and replaces it with an empty string.
@@ -610,8 +612,8 @@ extension ChatTextView: UITextViewDelegate {
     ) -> Bool {
         guard range.length != 0 ||
             (
-                !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
-                    (!isEmpty && text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                !ThreemaUtility.trimCharacters(in: text).isEmpty ||
+                    (!isEmpty && ThreemaUtility.trimCharacters(in: text).isEmpty)
             )
         else {
             return false
@@ -715,20 +717,28 @@ extension ChatTextView: UITextViewDelegate {
 
 // MARK: - QRScannerViewControllerDelegate
 
-extension ChatTextView: QRScannerViewControllerDelegate {
-    func qrScannerViewController(_ controller: QRScannerViewController, didScanResult result: String?) {
+extension ChatTextView {
+    override func qrScannerViewController(_ controller: QRScannerViewController, didScanResult result: String?) {
         if let result = result {
             insertText(result)
         }
         controller.dismiss(animated: true)
     }
     
-    func qrScannerViewController(
+    override func qrScannerViewController(
         _ controller: QRScannerViewController,
         didCancelAndWillDismissItself willDismissItself: Bool
     ) {
         if !willDismissItself {
             controller.dismiss(animated: true)
         }
+    }
+}
+
+// MARK: - PasteImageHandler
+
+extension ChatTextView: PasteImageHandler {
+    func handlePasteItem() {
+        chatTextViewDelegate?.checkIfPastedStringIsMedia()
     }
 }

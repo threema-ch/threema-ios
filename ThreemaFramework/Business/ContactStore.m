@@ -665,7 +665,7 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
         return;
     }
     
-    // Migration of verfication level kVerificationLevelWorkVerified and kVerificationLevelWorkFullyVerified to flag workContact
+    // Migration of verification level kVerificationLevelWorkVerified and kVerificationLevelWorkFullyVerified to flag workContact
     [entityManager performSyncBlockAndSafe:^{
         for (ContactEntity *contact in allContacts) {
             if (contact.workContact == nil || contact.verificationLevel.intValue == kVerificationLevelWorkVerified || contact.verificationLevel.intValue == kVerificationLevelWorkFullyVerified) {
@@ -700,28 +700,38 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
     CNContactStore *cnAddressBook = [CNContactStore new];
     [cnAddressBook requestAccessForEntityType:CNEntityTypeContacts completionHandler:^(BOOL granted, NSError * _Nullable error) {
         if (granted == YES) {
-            [entityManager performSyncBlockAndSafe:^{
-                /* go through all contacts and resync with address book; only create
-                 address book ref when encountering the first contact that is linked */
-                int nupdated = 0;
+            // Go through all contacts and resync with address book; only create
+            // address book ref when encountering the first contact that is linked
+            __block int nupdated = 0;
                 
-                for (ContactEntity *contact in linkedContacts) {
-                    NSPredicate *predicate = [CNContact predicateForContactsWithIdentifiers:@[contact.cnContactId]];
+            for (ContactEntity *contact in linkedContacts) {
+                if (contact.cnContactId == nil) {
+                    DDLogNotice(@"CNContactID of linked contact was nil.");
+                    continue;
+                };
+                
+                [entityManager performSyncBlockAndSafe:^{
+                    ContactEntity *fetchedContact = [entityManager.entityFetcher contactForId:contact.identity];
+                    if (fetchedContact == nil) {
+                        return;
+                    }
+
+                    NSPredicate *predicate = [CNContact predicateForContactsWithIdentifiers:@[fetchedContact.cnContactId]];
                     NSError *error;
                     NSArray *cnContacts = [cnAddressBook unifiedContactsMatchingPredicate:predicate keysToFetch:kCNContactKeys error:&error];
                     if (error) {
-                        NSLog(@"error fetching contacts %@", error);
+                        NSLog(@"Error fetching contacts %@", error);
                     } else {
                         if (cnContacts != nil && cnContacts.count > 0) {
                             CNContact *foundContact = cnContacts.firstObject;
-                            [self _updateContact:contact withCnContact:foundContact forceImport:NO contactSyncer:mediatorSyncableContacts];
+                            [self _updateContact:fetchedContact withCnContact:foundContact forceImport:NO contactSyncer:mediatorSyncableContacts];
                             nupdated++;
                         }
                     }
-                }
-                
-                DDLogInfo(@"Updated %d contacts", nupdated);
-            }];
+                }];
+            }
+            DDLogInfo(@"Updated %d contacts", nupdated);
+    
             
             [self updateStatusForAllContactsIgnoreInterval:NO contactSyncer:mediatorSyncableContacts onCompletion:^{
                 [mediatorSyncableContacts syncObjc]
@@ -885,100 +895,127 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
         if (contact.publicKey) {
             onCompletion(contact.publicKey);
         } else {
-            // not found - request from server
-            if (userSettings.blockUnknown) {
-                if ([LicenseStore requiresLicenseKey]) {
-                    [self fetchWorkIdentitiesInBlockUnknownCheck:@[identity] onCompletion:^(NSArray *foundIdentities) {
-                        dispatch_async(dispatch_get_main_queue(), ^{
-                            // First, check in local DB again, as it may have already been saved in the meantime (in case of parallel requests)
-                            ContactEntity *tmpContact = [em.entityFetcher contactForId:identity];
-                            if (tmpContact.publicKey) {
-                                dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
-                                    onCompletion(tmpContact.publicKey);
-                                });
-                                return;
-                            }
-                            
-                            if (foundIdentities.count == 0) {
-                                DDLogVerbose(@"Block unknown contacts is on - discarding message");
-                                onError([ThreemaError threemaError:@"Message received from unknown contact and block contacts is on" withCode:kBlockUnknownContactErrorCode]);
-                                return;
-                            }
-
-                            for (NSDictionary *foundIdentity in foundIdentities) {
-                                if ([foundIdentity[@"id"] isEqualToString:identity]) {
-                                    // Save new contact. Do it on main queue to ensure that it's done by the time we signal completion.
-                                    NSData *publicKey = [[NSData alloc] initWithBase64EncodedString:foundIdentity[@"pk"] options:0];
-                                    if (!publicKey) {
-                                        continue;
-                                    }
-                                    NSString *firstName = nil;
-                                    NSString *lastName = nil;
-                                    if (![foundIdentity[@"first"] isEqual:[NSNull null]]) {
-                                        firstName = foundIdentity[@"first"];
-                                    }
-                                    if (![foundIdentity[@"last"] isEqual:[NSNull null]]) {
-                                        lastName = foundIdentity[@"last"];
-                                    }
-
-                                    [self addWorkContactAndUpdateFeatureMaskWithIdentity:identity publicKey:publicKey firstname:firstName lastname:lastName acquaintanceLevel:acquaintanceLevel]
-                                        .thenInBackground(^{
-                                            onCompletion(publicKey);
-                                        })
-                                        .catch(^(NSError *error){
-                                            DDLogError(@"Add work contact failed: %@", error.localizedDescription);
-                                            onError(error);
-                                        });
-                                    return;
-                                }
-                            }
-
-                            DDLogVerbose(@"Block unknown contacts is on and work contact not found - discarding message");
-                            onError([ThreemaError threemaError:@"Message received from unknown contact and block contacts is on" withCode:kBlockUnknownContactErrorCode]);
-                        });
-                    } onError:^(NSError *error) {
-                        onError(error);
-                    }];
-                } else {
+            
+            if ([LicenseStore requiresLicenseKey]) {
+                [self fetchWorkPublicKeyForIdentity:identity acquaintanceLevel:acquaintanceLevel entityManager:em onCompletion:onCompletion onError:onError];
+            } else {
+                // Block message if user is not in our subscription
+                if (userSettings.blockUnknown) {
                     DDLogVerbose(@"Block unknown contacts is on - discarding message");
                     onError([ThreemaError threemaError:@"Message received from unknown contact and block contacts is on" withCode:kBlockUnknownContactErrorCode]);
+                } else {
+                    [self fetchAddContactAndSyncWithIdentity:identity acquaintanceLevel:acquaintanceLevel entityManager:em onCompletion:onCompletion onError:onError];
                 }
-            } else {
-                [[IdentityInfoFetcher sharedIdentityInfoFetcher] fetchIdentityInfoFor:identity onCompletion:^(NSData *publicKey, NSNumber *state, NSNumber *type, NSNumber *featureMask) {
-                        // First, check in local DB again, as it may have already been saved in the meantime (in case of parallel requests)
-                        ContactEntity *contact = [em.entityFetcher contactForId:identity];
-                        if (contact.publicKey) {
-                            dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
-                                onCompletion(contact.publicKey);
-                            });
-                            return;
-                        }
-
-                        MediatorSyncableContacts *mediatorSyncableContacts = [[MediatorSyncableContacts alloc] init];
-
-                        // Save new contact. Do it on main queue to ensure that it's done by the time we signal completion.
-                    dispatch_async(dispatch_get_main_queue(), ^{
-                        __weak typeof(self) weakSelf = self;
-                        [self addContactWithIdentity:identity publicKey:publicKey cnContactId:nil verificationLevel:kVerificationLevelUnverified state:state type:type featureMask:featureMask acquaintanceLevel:acquaintanceLevel alerts:NO contactSyncer:mediatorSyncableContacts onCompletion:^(ContactEntity * __unused contact){
-                            [mediatorSyncableContacts syncObjc]
-                                .then(^{
-                                    [weakSelf synchronizeAddressBookForceFullSync:YES onCompletion:nil onError:nil];
-                                    [WorkDataFetcher checkUpdateWorkDataForce:YES onCompletion:nil onError:nil];
-
-                                    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
-                                        onCompletion(publicKey);
-                                    });
-                                })
-                                .catch(^(NSError *error) {
-                                    onError(error);
-                                });
-                        }];
-                    });
-                } onError:^(NSError * _Nonnull error) {
-                    onError(error);
-                }];
             }
         }
+    }];
+}
+
+/// Fetch public key for identity in the work subscription to know if this identity should be blocked or not.
+/// If identity was not found and block unknown is disabled, contact will be fetched and added in fetchAddContactAndSyncWithIdentity.
+/// The completion handler will be executed in background thread
+/// @param identity Contact identity
+/// @param acquaintanceLevel If contact new and acquaintance level is `ContactAcquaintanceLevelGroup`, than the created contact is marked as hidden
+/// @param entityManagerObject Must be type of `EntityManager`, is needed to run DB on main or background context
+/// @param onCompletion Executed on background thread
+/// @param onError Executed on arbitrary thread
+- (void)fetchWorkPublicKeyForIdentity:(nonnull NSString*)identity acquaintanceLevel:(ContactAcquaintanceLevel)acquaintanceLevel entityManager:(nonnull NSObject*)entityManagerObject onCompletion:(void(^)(NSData *publicKey))onCompletion onError:(void(^)(NSError *error))onError {
+    EntityManager *em = (EntityManager *)entityManagerObject;
+    
+    [self fetchWorkIdentities:@[identity] onCompletion:^(NSArray *foundIdentities) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            // First, check in local DB again, as it may have already been saved in the meantime (in case of parallel requests)
+            ContactEntity *tmpContact = [em.entityFetcher contactForId:identity];
+            if (tmpContact.publicKey) {
+                dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
+                    onCompletion(tmpContact.publicKey);
+                });
+                return;
+            }
+            
+            if (foundIdentities.count > 0) {
+                for (NSDictionary *foundIdentity in foundIdentities) {
+                    if ([foundIdentity[@"id"] isEqualToString:identity]) {
+                        // Save new contact. Do it on main queue to ensure that it's done by the time we signal completion.
+                        NSData *publicKey = [[NSData alloc] initWithBase64EncodedString:foundIdentity[@"pk"] options:0];
+                        if (!publicKey) {
+                            continue;
+                        }
+                        NSString *firstName = nil;
+                        NSString *lastName = nil;
+                        if (![foundIdentity[@"first"] isEqual:[NSNull null]]) {
+                            firstName = foundIdentity[@"first"];
+                        }
+                        if (![foundIdentity[@"last"] isEqual:[NSNull null]]) {
+                            lastName = foundIdentity[@"last"];
+                        }
+                        
+                        [self addWorkContactAndUpdateFeatureMaskWithIdentity:identity publicKey:publicKey firstname:firstName lastname:lastName acquaintanceLevel:acquaintanceLevel]
+                            .thenInBackground(^{
+                                onCompletion(publicKey);
+                            })
+                            .catch(^(NSError *error){
+                                DDLogError(@"Add work contact failed: %@", error.localizedDescription);
+                                onError(error);
+                            });
+                        return;
+                    }
+                }
+            }
+
+            // Block message if user is not in our subscription
+            if (userSettings.blockUnknown) {
+                DDLogVerbose(@"Block unknown contacts is on and contact not found in work list - discarding message");
+                onError([ThreemaError threemaError:@"Message received from unknown contact and block contacts is on" withCode:kBlockUnknownContactErrorCode]);
+            } else {
+                [self fetchAddContactAndSyncWithIdentity:identity acquaintanceLevel:acquaintanceLevel entityManager:em onCompletion:onCompletion onError:onError];
+            }
+        });
+    } onError:^(NSError *error) {
+        onError(error);
+    }];
+}
+
+/// Fetch public key for identity and add it to the contactlist. The completion handler will be executed in background thread.
+/// @param identity Contact identity
+/// @param acquaintanceLevel If contact new and acquaintance level is `ContactAcquaintanceLevelGroup`, than the created contact is marked as hidden
+/// @param entityManagerObject Must be type of `EntityManager`, is needed to run DB on main or background context
+/// @param onCompletion Executed on background thread
+/// @param onError Executed on arbitrary thread
+- (void)fetchAddContactAndSyncWithIdentity:(nonnull NSString*)identity acquaintanceLevel:(ContactAcquaintanceLevel)acquaintanceLevel entityManager:(nonnull NSObject*)entityManagerObject onCompletion:(void(^)(NSData *publicKey))onCompletion onError:(void(^)(NSError *error))onError {
+    
+    EntityManager *em = (EntityManager *)entityManagerObject;
+    MediatorSyncableContacts *mediatorSyncableContacts = [[MediatorSyncableContacts alloc] init];
+
+    [[IdentityInfoFetcher sharedIdentityInfoFetcher] fetchIdentityInfoFor:identity onCompletion:^(NSData *publicKey, NSNumber *state, NSNumber *type, NSNumber *featureMask) {
+        // First, check in local DB again, as it may have already been saved in the meantime (in case of parallel requests)
+        ContactEntity *contact = [em.entityFetcher contactForId:identity];
+        if (contact.publicKey) {
+            dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
+                onCompletion(contact.publicKey);
+            });
+            return;
+        }
+        
+        // Save new contact. Do it on main queue to ensure that it's done by the time we signal completion.
+        dispatch_async(dispatch_get_main_queue(), ^{
+            __weak typeof(self) weakSelf = self;
+            [self addContactWithIdentity:identity publicKey:publicKey cnContactId:nil verificationLevel:kVerificationLevelUnverified state:state type:type featureMask:featureMask acquaintanceLevel:acquaintanceLevel alerts:NO contactSyncer:mediatorSyncableContacts onCompletion:^(ContactEntity * __unused contact){
+                [mediatorSyncableContacts syncObjc]
+                    .then(^{
+                        [weakSelf synchronizeAddressBookForceFullSync:YES onCompletion:nil onError:nil];
+                        
+                        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
+                            onCompletion(publicKey);
+                        });
+                    })
+                    .catch(^(NSError *error) {
+                        onError(error);
+                    });
+            }];
+        });
+    } onError:^(NSError * _Nonnull error) {
+        onError(error);
     }];
 }
 
@@ -1001,8 +1038,8 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
     [[IdentityInfoFetcher sharedIdentityInfoFetcher] prefetchIdentityInfo:identitiesToFetch onCompletion:onCompletion onError:onError];
 }
 
-- (void)fetchWorkIdentitiesInBlockUnknownCheck:(NSArray *)identities onCompletion:(void(^)(NSArray *foundIdentities))onCompletion onError:(void(^)(NSError *error))onError {
-    [[IdentityInfoFetcher sharedIdentityInfoFetcher] fetchWorkIdentitiesInfoInBlockUnknownCheck:identities onCompletion:onCompletion onError:onError];
+- (void)fetchWorkIdentities:(NSArray *)identities onCompletion:(void(^)(NSArray *foundIdentities))onCompletion onError:(void(^)(NSError *error))onError {
+    [[IdentityInfoFetcher sharedIdentityInfoFetcher] fetchWorkIdentitiesInfo:identities onCompletion:onCompletion onError:onError];
 }
 
 - (void)upgradeContact:(ContactEntity*)contact toVerificationLevel:(int32_t)verificationLevel {

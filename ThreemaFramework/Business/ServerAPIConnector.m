@@ -627,12 +627,14 @@
         request[@"category"] = identityStore.category;
 
     if ((force == NO && [request isEqualToDictionary:identityStore.lastWorkUpdateRequest] && ![identityStore sendUpdateWorkInfoStatus])
-        || [AppGroup getActiveType] != AppGroupTypeApp) {
+        || [AppGroup getCurrentType] != AppGroupTypeApp) {
         // request hasn't changed since last update and it's the same date
         // or it's a extension
         onCompletion(false);
         return;
     }
+    
+    DDLogInfo(@"Send update work info with\nfirstName: %@\nlastName: %@\ncsi: %@\ncategory: %@", identityStore.firstName, identityStore.lastName, identityStore.csi, identityStore.category);
     
     [self sendSignedRequest:request toApiPath:@"identity/update_work_info" forStore:identityStore onCompletion:^(id jsonObject) {
         if ([jsonObject[@"success"] boolValue]) {

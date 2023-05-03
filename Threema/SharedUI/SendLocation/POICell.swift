@@ -178,10 +178,8 @@ class POICell: ThemedCodeTableViewCell, Reusable {
             return ""
         }
         
-        if #available(iOS 14.0, *) {
-            if CLLocationManager().accuracyAuthorization == .reducedAccuracy {
-                return ""
-            }
+        if CLLocationManager().accuracyAuthorization == .reducedAccuracy {
+            return ""
         }
         
         switch meters {

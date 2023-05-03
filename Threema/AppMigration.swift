@@ -114,6 +114,10 @@ import ThreemaFramework
                 try migrateTo4_8()
                 migratedTo = .v4_8
             }
+            if migratedTo < .v5_1 {
+                try migrateTo5_1()
+                migratedTo = .v5_1
+            }
             // Add here a check if migration is necessary for a particular version...
         }
         catch {
@@ -219,5 +223,21 @@ import ThreemaFramework
         
         os_signpost(.end, log: osPOILog, name: "4.8 migration")
         DDLogNotice("[AppMigration] App migration to version 4.8 successfully finished")
+    }
+    
+    /// Migrate to version 5.1:
+    /// - Check pushShowNickname and set the correct notification type
+    private func migrateTo5_1() throws {
+        DDLogNotice("[AppMigration] App migration to version 5.1 started")
+        os_signpost(.begin, log: osPOILog, name: "5.1 migration")
+
+        let pushShowNickname = AppGroup.userDefaults().bool(forKey: "PushShowNickname")
+        
+        if pushShowNickname == true {
+            UserSettings.shared().notificationType = NSNumber(0)
+        }
+        
+        os_signpost(.end, log: osPOILog, name: "5.1 migration")
+        DDLogNotice("[AppMigration] App migration to version 5.1 successfully finished")
     }
 }

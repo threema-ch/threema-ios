@@ -21,9 +21,7 @@
 import CocoaLumberjackSwift
 import Foundation
 import MBProgressHUD
-#if compiler(>=5.3)
-    import PhotosUI
-#endif
+import PhotosUI
 
 let tmpDirectory = "tmpImages/"
 
@@ -39,24 +37,22 @@ let tmpDirectory = "tmpImages/"
     }
     
     @objc func showPicker(viewController: UIViewController, limit: Int) {
-        #if compiler(>=5.3)
-            if #available(iOS 14, *), !PhotosRightsHelper().haveFullAccess() {
-                parentViewController = viewController
-                let photoLibrary = PHPhotoLibrary.shared()
-                var config = PHPickerConfiguration(photoLibrary: photoLibrary)
-                config.selectionLimit = limit
-                config.preferredAssetRepresentationMode = .current
-                config.selection = .ordered
+        if !PhotosRightsHelper().haveFullAccess() {
+            parentViewController = viewController
+            let photoLibrary = PHPhotoLibrary.shared()
+            var config = PHPickerConfiguration(photoLibrary: photoLibrary)
+            config.selectionLimit = limit
+            config.preferredAssetRepresentationMode = .current
+            config.selection = .ordered
                 
-                let picker = PHPickerViewController(configuration: config)
-                picker.delegate = self
-                viewController.present(picker, animated: true)
+            let picker = PHPickerViewController(configuration: config)
+            picker.delegate = self
+            viewController.present(picker, animated: true)
             
-                return
-            }
-        #endif
+            return
+        }
         
-        // Show our custom picker if we have full access or if we are < iOS 14
+        // Show our custom picker if we have full access
         PHPhotoLibrary.requestAuthorization { _ in
             let assetCollectionView = UITableView.appearance(whenContainedInInstancesOf: [DKImagePickerController.self])
             assetCollectionView.backgroundColor = Colors.backgroundGroupedViewController
@@ -150,132 +146,130 @@ let tmpDirectory = "tmpImages/"
     }
 }
 
-#if compiler(>=5.3)
-    @available(iOS 14, *)
-    extension PhotosAccessHelper: PHPickerViewControllerDelegate {
-        func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
-            var hud: MBProgressHUD?
-            if let view = parentViewController?.view {
-                hud = MBProgressHUD(view: view)
-                hud?.graceTime = 0.25
-                hud?.mode = .indeterminate
-                hud?.label.text = BundleUtil.localizedString(forKey: "loading_files_takes_time_title")
-                DispatchQueue.main.async {
-                    view.addSubview(hud!)
-                    hud?.show(animated: true)
-                    picker.dismiss(animated: true)
-                }
+// MARK: - PHPickerViewControllerDelegate
+
+extension PhotosAccessHelper: PHPickerViewControllerDelegate {
+    func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
+        var hud: MBProgressHUD?
+        if let view = parentViewController?.view {
+            hud = MBProgressHUD(view: view)
+            hud?.graceTime = 0.25
+            hud?.mode = .indeterminate
+            hud?.label.text = BundleUtil.localizedString(forKey: "loading_files_takes_time_title")
+            DispatchQueue.main.async {
+                view.addSubview(hud!)
+                hud?.show(animated: true)
+                picker.dismiss(animated: true)
             }
+        }
         
-            DispatchQueue.global(qos: .userInitiated).async {
-                var photos: [Any] = []
+        DispatchQueue.global(qos: .userInitiated).async {
+            var photos: [Any] = []
             
-                let sema = DispatchSemaphore(value: 0)
+            let sema = DispatchSemaphore(value: 0)
             
-                for result in results {
-                    // Looping live photos have three type identifiers, but in iOS 15.5. only the movie identifier can be loaded.
-                    if result.itemProvider.hasItemConformingToTypeIdentifier(UTType.movie.identifier) {
-                        DispatchQueue.main.async {
-                            hud?.detailsLabel.text = BundleUtil
-                                .localizedString(forKey: "loading_files_takes_time_description")
+            for result in results {
+                // Looping live photos have three type identifiers, but in iOS 15.5. only the movie identifier can be loaded.
+                if result.itemProvider.hasItemConformingToTypeIdentifier(UTType.movie.identifier) {
+                    DispatchQueue.main.async {
+                        hud?.detailsLabel.text = BundleUtil
+                            .localizedString(forKey: "loading_files_takes_time_description")
+                    }
+                    // Unfortunately the progress object returned here immediately shows 100% progress
+                    result.itemProvider
+                        .loadFileRepresentation(forTypeIdentifier: UTType.movie.identifier) { url, error in
+                            defer { sema.signal() }
+                            photos.append(self.loadVideo(from: url))
+                            if error != nil {
+                                DDLogError("Could not load item \(error!)")
+                            }
                         }
-                        // Unfortunately the progress object returned here immediately shows 100% progress
-                        result.itemProvider
-                            .loadFileRepresentation(forTypeIdentifier: UTType.movie.identifier) { url, error in
-                                defer { sema.signal() }
-                                photos.append(self.loadVideo(from: url))
-                                if error != nil {
-                                    DDLogError("Could not load item \(error!)")
-                                }
-                            }
-                    }
-                    else if result.itemProvider.hasItemConformingToTypeIdentifier(UTType.image.identifier) {
-                        // Unfortunately the progress object returned here immediately shows 100% progress
-                        result.itemProvider.loadFileRepresentation(
-                            forTypeIdentifier: UTType.image.identifier,
-                            completionHandler: { url, error in
-                                defer { sema.signal() }
-                                photos.append(self.loadImage(from: url))
-                                if error != nil {
-                                    DDLogError("Could not load item \(error!)")
-                                }
-                            }
-                        )
-                    }
-                    else if result.itemProvider.hasItemConformingToTypeIdentifier(UTType.rawImage.identifier) {
-                        // Unfortunately the progress object returned here immediately shows 100% progress
-                        result.itemProvider.loadFileRepresentation(
-                            forTypeIdentifier: UTType.rawImage.identifier,
-                            completionHandler: { url, error in
-                                defer { sema.signal() }
-                                photos.append(self.loadImage(from: url))
-                                if error != nil {
-                                    DDLogError("Could not load item \(error!)")
-                                }
-                            }
-                        )
-                    }
-                    else {
-                        DDLogError(
-                            "Tried to load item but item had invalid registeredTypeIdentifiers: \(result.itemProvider.registeredTypeIdentifiers)"
-                        )
-                    }
                 }
-                for _ in results {
-                    sema.wait()
+                else if result.itemProvider.hasItemConformingToTypeIdentifier(UTType.image.identifier) {
+                    // Unfortunately the progress object returned here immediately shows 100% progress
+                    result.itemProvider.loadFileRepresentation(
+                        forTypeIdentifier: UTType.image.identifier,
+                        completionHandler: { url, error in
+                            defer { sema.signal() }
+                            photos.append(self.loadImage(from: url))
+                            if error != nil {
+                                DDLogError("Could not load item \(error!)")
+                            }
+                        }
+                    )
                 }
-                DispatchQueue.main.async {
-                    hud?.hide(animated: true)
-                    self.completion(photos, nil)
+                else if result.itemProvider.hasItemConformingToTypeIdentifier(UTType.rawImage.identifier) {
+                    // Unfortunately the progress object returned here immediately shows 100% progress
+                    result.itemProvider.loadFileRepresentation(
+                        forTypeIdentifier: UTType.rawImage.identifier,
+                        completionHandler: { url, error in
+                            defer { sema.signal() }
+                            photos.append(self.loadImage(from: url))
+                            if error != nil {
+                                DDLogError("Could not load item \(error!)")
+                            }
+                        }
+                    )
                 }
+                else {
+                    DDLogError(
+                        "Tried to load item but item had invalid registeredTypeIdentifiers: \(result.itemProvider.registeredTypeIdentifiers)"
+                    )
+                }
+            }
+            for _ in results {
+                sema.wait()
+            }
+            DispatchQueue.main.async {
+                hud?.hide(animated: true)
+                self.completion(photos, nil)
             }
         }
+    }
     
-        func loadVideo(from url: URL?) -> Any {
-            guard let url = url else {
-                return PhotosPickerError.fileNotFound
-            }
-        
-            let tmpDirURL = PhotosAccessHelper.getTempDir()
-            let fileManager = FileManager.default
-            let filename = FileUtility.getTemporarySendableFileName(
-                base: "video",
-                directoryURL: tmpDirURL,
-                pathExtension: url.pathExtension
-            )
-        
-            let newURL = tmpDirURL.appendingPathComponent(filename).appendingPathExtension(url.pathExtension)
-        
-            if !MediaConverter.isVideoDurationValid(at: url) {
-                return PhotosPickerError.fileTooLargeForSending
-            }
-            else {
-                do { try fileManager.copyItem(at: url, to: newURL) } catch {
-                    return PhotosPickerError.fileNotFound
-                }
-                return newURL
-            }
+    func loadVideo(from url: URL?) -> Any {
+        guard let url = url else {
+            return PhotosPickerError.fileNotFound
         }
-    
-        func loadImage(from url: URL?) -> Any {
-            guard let url = url else {
-                return PhotosPickerError.fileNotFound
-            }
-            let tmpDirURL = PhotosAccessHelper.getTempDir()
-            let fileManager = FileManager.default
-            let filename = FileUtility.getTemporarySendableFileName(
-                base: "image",
-                directoryURL: tmpDirURL,
-                pathExtension: url.pathExtension
-            )
         
-            let newURL = tmpDirURL.appendingPathComponent(filename).appendingPathExtension(url.pathExtension)
+        let tmpDirURL = PhotosAccessHelper.getTempDir()
+        let fileManager = FileManager.default
+        let filename = FileUtility.getTemporarySendableFileName(
+            base: "video",
+            directoryURL: tmpDirURL,
+            pathExtension: url.pathExtension
+        )
+        
+        let newURL = tmpDirURL.appendingPathComponent(filename).appendingPathExtension(url.pathExtension)
+        
+        if !MediaConverter.isVideoDurationValid(at: url) {
+            return PhotosPickerError.fileTooLargeForSending
+        }
+        else {
             do { try fileManager.copyItem(at: url, to: newURL) } catch {
-                DDLogError("Could not load image \(error)")
                 return PhotosPickerError.fileNotFound
             }
             return newURL
         }
     }
-
-#endif
+    
+    func loadImage(from url: URL?) -> Any {
+        guard let url = url else {
+            return PhotosPickerError.fileNotFound
+        }
+        let tmpDirURL = PhotosAccessHelper.getTempDir()
+        let fileManager = FileManager.default
+        let filename = FileUtility.getTemporarySendableFileName(
+            base: "image",
+            directoryURL: tmpDirURL,
+            pathExtension: url.pathExtension
+        )
+        
+        let newURL = tmpDirURL.appendingPathComponent(filename).appendingPathExtension(url.pathExtension)
+        do { try fileManager.copyItem(at: url, to: newURL) } catch {
+            DDLogError("Could not load image \(error)")
+            return PhotosPickerError.fileNotFound
+        }
+        return newURL
+    }
+}

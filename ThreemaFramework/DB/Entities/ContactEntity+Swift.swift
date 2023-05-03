@@ -44,16 +44,14 @@ public extension ContactEntity {
             DDLogError("Could not create avatar for contact")
             avatar = nil
         }
-        
-        let inPersonName = BusinessInjector().userSettings.pushShowNickname ? (publicNickname ?? identity) : displayName
-        
+                
         return INPerson(
             personHandle: mainHandle.handle,
             nameComponents: nil,
-            displayName: inPersonName,
+            displayName: displayName,
             image: avatar,
             contactIdentifier: cnContactID,
-            customIdentifier: "3ma-\(identity)",
+            customIdentifier: nil,
             aliases: handles.map(\.handle),
             suggestionType: mainHandle.suggestionType
         )
@@ -61,17 +59,6 @@ public extension ContactEntity {
     
     private var handles: [(handle: INPersonHandle, suggestionType: INPersonSuggestionType)] {
         var h = [(INPersonHandle, INPersonSuggestionType)]()
-        
-        if let verifiedMobileNo = verifiedMobileNo, !verifiedMobileNo.isEmpty {
-            let handle = INPersonHandle(value: verifiedMobileNo, type: .phoneNumber)
-            let suggestionType: INPersonSuggestionType = .none
-            h.append((handle, suggestionType))
-        }
-        if let verifiedEmail = verifiedEmail, !verifiedEmail.isEmpty {
-            let handle = INPersonHandle(value: verifiedEmail, type: .emailAddress)
-            let suggestionType: INPersonSuggestionType = .none
-            h.append((handle, suggestionType))
-        }
         
         let handle = INPersonHandle(value: identity, type: .unknown)
         let suggestionType: INPersonSuggestionType = .instantMessageAddress

@@ -65,6 +65,14 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)connectWaitDoNotUnblockIncomingMessages:(ConnectionInitiator)initiator NS_SWIFT_NAME(connectWaitDoNotUnblockIncomingMessages(initiator:));
 - (void)disconnect:(ConnectionInitiator)initiator NS_SWIFT_NAME(disconnect(initiator:));
 
+/**
+ Wait (max. 3s) for connection state disconnected.
+
+ @param initiator: Calling initiator of disconnect
+ @return BOOL is YES if disconnected
+ */
+- (BOOL)disconnectWait:(ConnectionInitiator)initiator NS_SWIFT_NAME(disconnectWait(initiator:));
+ 
 - (NSString*)nameForConnectionState:(ConnectionState)connectionState;
 
 - (void)deactivateMultiDevice;
@@ -104,14 +112,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, readonly) BOOL isProxyConnection;
 
 + (ServerConnector*)sharedServerConnector;
-
-/**
- Wait (max. 3s) for connection state disconnected.
-
- @param initiator: Calling initiator of disconnect
- @param onCompletion: BOOL is YES if disconnected
- */
-- (void)disconnectWait:(ConnectionInitiator)initiator onCompletion:(void(^ _Nonnull)(BOOL))onCompletion NS_SWIFT_NAME(disconnectWait(initiator:onCompletion:));
+- (instancetype) __unavailable init;
 
 - (void)reconnect;
 

@@ -104,7 +104,6 @@
 "nickname" = "Ezizen publikoa";
 "add_button" = "Gehitu";
 "chatview_contextmenu_select" = "Hautatu...";
-
 "file_message_image" = "Irudia";
 "file_message_sticker" = "Sticker";
 "file_message_animated_image" = "GIF";
@@ -1097,8 +1096,6 @@
 "settings_advanced_reregister_push_notifications_header_title" = "Push jakinarazpenak";
 "settings_advanced_reregister_push_notifications_footer_title" = "Sartzen diren mezuak ez badira aplikaziotik kanpo agertzen jakinarazpen gisa, berriro erregistra zaitezke jakinarazpenak jasotzeko.";
 "settings_advanced_reregister_notifications_label" = "Berriro erregistratu push jakinarazpenak";
-"settings_advanced_new_chat_view_label" = "Txataren ikuspegi berria";
-"settings_advanced_new_chat_view_label_footer" = "Oharra: Aurreko txat ikuspegia hurrengo eguneratze batean ezabatuko da.";
 
 "settings_md_sync_alert_title" = "Sinkronizazio-errorea";
 
@@ -1169,7 +1166,6 @@
 "settings_notifications_push_sound" = "Tonua";
 "settings_notifications_push_groupsound" = "Talde tonua";
 "settings_notifications_push_preview" = "Aurrebista";
-"settings_notifications_push_showNickname" = "Bistaratu ezizena";
 "settings_notifications_masterDnd_section_header" = "Ordutegitik kanpoko politika";
 "settings_notifications_masterDnd" = "Ez molestatu ordu libretan";
 "settings_notifications_masterDnd_section_footer" = "Jakinarazpenak desgaitu eta lanorduetatik kanpoko deiak errefusatzen ditu.";
@@ -1177,7 +1173,6 @@
 "settings_notifications_masterDnd_startTime" = "Lanorduen hasiera";
 "settings_notifications_masterDnd_endTime" = "Lanorduen amaiera";
 "settings_notification_iOS_settings" = "Sistemaren ezarpenak";
-"settings_notification_open_iOS_settings" = "Sistemaren ezarpenak ireki";
 
 // Orphaned files delete
 "settings_orphaned_files_description" = "Threemaren aurreko bertsioen biltegiratze-kudeaketan datuak ezabatzean, gerta daiteke fitxategi batzuk (multimedia) ondo ez ezabatzea, baina %@ bai ezabatuko dira.
@@ -1486,6 +1481,7 @@ Fitxategi bakartiak zakarrontzira mugitu, eta %@ fitxategirik (multimedia) ez fa
 
 // Message senders
 "accessibility_senderDescription_ownMessage" = "Zure %@";
+"accessibility_senderDescription_otherMessage_group" = "%@ %@-etik";
 "accessibility_senderDescription_systemMessage" = "Informazioa: %@";
 
 // Message types
@@ -1502,3 +1498,42 @@ Fitxategi bakartiak zakarrontzira mugitu, eta %@ fitxategirik (multimedia) ez fa
 
 // Message hints
 "accessibility_audioMessage_hint" = "Ahots-mezua erreproduzitu.";
+"accessibility_locationMessage_hint" = "Kokalekua ireki.";
+"accessibility_systemCallMessage_hint" = "Hasi deia";
+"accessibility_imageMessage_hint" = "Irudia ireki.";
+"accessibility_videoMessage_hint" = "Bideoa erreproduzitu.";
+"accessibility_fileMessage_hint" = "Ireki artxiboaren aurretiko bista.";
+"accessibility_animatedImageMessage_hint" = "Aldatu GIF animazioa";
+"accessibility_animatedStickerMessage_hint" = "Aldatu animazioa stickerrean.";
+"accessibility_ballotMessage_hint_open" = "Ireki zundaketa bozkatzeko.";
+"accessibility_ballotMessage_hint_closed" = "Erakutsi galdeketaren emaitzak.";
+"accessibility_voiceMessage_speed_hint" = "Aldatu erreprodukzio-abiadura.";
+
+// Other
+"accessibility_caption" = "Azpititulua: %@";
+"accessibility_poll_content_open" = "%@. Izenburua: %@, %@";
+"accessibility_poll_open" = "Ireki";
+"accessibility_poll_closed" = "Itxita";
+"accessibility_file_duration" = "Iraupena: %@.";
+// Message status types
+"accessibility_status_acknowledged_plus_time" = "Onartuta, %@";
+"accessibility_status_declined_plus_time" = "Ezeztatuta, %@";
+"accessibility_status_sending_plus_time" = "Bidaltzen, %@";
+"accessibility_status_sent_plus_time" = "Bidalita, %@";
+"accessibility_status_delivered_plus_time" = "Entregatuta, %@";
+"accessibility_status_read_plus_time" = "Irakurrita, %@";
+"accessibility_status_failed_plus_time" = "Akatsekin, %@";
+
+// UIAccessibilityCustomActions
+"accessibility_action_open_link" = "Ireki %@";
+"accessibility_action_call_phone" = "%@-eri deitu";
+// Multi-Device Wizard
+"md_wizard_header" = "Gailu anitzeko aurretiko ikuspegia";
+"md_wizard_cancel" = "Ezeztatu";
+"md_wizard_next" = "Hurrengoa";
+"md_wizard_close" = "Itxi";
+"md_wizard_back_identity" = "Threemaren ID erakutsi";
+
+"md_wizard_info_download_title" = "Deskargatu";
+"md_wizard_preparation_status" = "Prestatzen...";
+

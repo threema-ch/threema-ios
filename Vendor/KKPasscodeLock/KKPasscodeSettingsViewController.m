@@ -46,9 +46,7 @@
     _touchIdSwitch = [[UISwitch alloc] init];
     [_touchIdSwitch addTarget:self action:@selector(touchIdSwitchChanged:) forControlEvents:UIControlEventValueChanged];
     
-    if (@available(iOS 11.0, *)) {
-        self.navigationItem.largeTitleDisplayMode = UINavigationItemLargeTitleDisplayModeNever;
-    }
+    self.navigationItem.largeTitleDisplayMode = UINavigationItemLargeTitleDisplayModeNever;
 }
 
 - (void)viewDidUnload
@@ -144,10 +142,8 @@
     LAContext *context = [LAContext new];
     if ([context canEvaluatePolicy:LAPolicyDeviceOwnerAuthenticationWithBiometrics error:nil]) {
         BOOL haveFaceId = NO;
-        if (@available(iOS 11.0, *)) {
-            if (context.biometryType == LABiometryTypeFaceID) {
-                haveFaceId = YES;
-            }
+        if (context.biometryType == LABiometryTypeFaceID) {
+            haveFaceId = YES;
         }
         
         if (haveFaceId) {

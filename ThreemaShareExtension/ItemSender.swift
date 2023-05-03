@@ -201,7 +201,7 @@ class ItemSender: NSObject {
                 forItem: self.progressItemKey(item: message, conversation: toConversation)!
             )
             
-            let trimmedMessage = message.trimmingCharacters(in: .whitespacesAndNewlines)
+            let trimmedMessage = ThreemaUtility.trimCharacters(in: message)
             if !(trimmedMessage == "" || trimmedMessage == "\u{fffc}") {
                 let messages = ThreemaUtilityObjC.getTrimmedMessages(trimmedMessage)
                 

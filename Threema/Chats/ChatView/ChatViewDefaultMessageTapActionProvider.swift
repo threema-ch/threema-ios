@@ -75,6 +75,11 @@ class ChatViewDefaultMessageTapActionProvider: NSObject {
                 syncBlobsAction(objectID: message.objectID)
                 
             case .processed, .pending, .uploading, .uploaded, .sendingError:
+                if case .outgoing(.pendingDownload) = fileMessageProvider.dataState {
+                    syncBlobsAction(objectID: message.objectID)
+                    return
+                }
+
                 switch fileMessageProvider.fileMessageType {
                 case let .file(fileMessage):
                     guard let fileMessageEntity = fileMessage as? FileMessageEntity else {

@@ -563,10 +563,12 @@ class ForwardSecurityMessageProcessorTests: XCTestCase {
     ) throws -> [AbstractMessage] {
         var decapsulatedMessages: [AbstractMessage] = []
         while let message = senderContext.dummySender.popMessage() {
-            if let decap = try recipientContext.fsmp.processEnvelopeMessage(
+            let (decap, _) = try recipientContext.fsmp.processEnvelopeMessage(
                 sender: recipientContext.peerContact,
                 envelopeMessage: message as! ForwardSecurityEnvelopeMessage
-            ) {
+            )
+            
+            if let decap {
                 decapsulatedMessages.append(decap)
             }
         }

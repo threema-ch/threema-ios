@@ -48,4 +48,9 @@
         
         return .appStore
     }
+    
+    /// Feature Flag for late PFS session saving
+    public static var lateSessionSave: Bool {
+        true
+    }
 }

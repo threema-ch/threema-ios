@@ -123,7 +123,7 @@ extension MessageSender {
     
     public static func sanitizeAndSendText(_ rawText: String, in conversation: Conversation) {
         DispatchQueue.global(qos: .userInitiated).async {
-            let trimmedText = rawText.trimmingCharacters(in: .whitespacesAndNewlines)
+            let trimmedText = ThreemaUtility.trimCharacters(in: rawText)
             let splitMessages = ThreemaUtilityObjC.getTrimmedMessages(trimmedText)
             
             if let splitMessages = splitMessages as? [String] {
@@ -179,7 +179,7 @@ extension MessageSender {
         with businessInjector: BusinessInjectorProtocol
     ) -> Guarantee<Bool> {
         firstly {
-            Guarantee { $0(businessInjector.userSettings.donateInteractions) }
+            Guarantee { $0(businessInjector.settingsStore.allowOutgoingDonations) }
         }
         .then { doDonateInteractions -> Guarantee<Bool> in
             Guarantee<Bool> { seal in
@@ -209,7 +209,7 @@ extension MessageSender {
                     if conversation.isGroup(),
                        let group = businessInjector.backgroundGroupManager.getGroup(conversation: conversation) {
                         _ = IntentCreator(
-                            userSettings: businessInjector.userSettings,
+                            settingsStore: businessInjector.settingsStore,
                             entityManager: businessInjector.backgroundEntityManager
                         )
                         .donateInteraction(for: group).done {
@@ -224,7 +224,7 @@ extension MessageSender {
                             return
                         }
                         _ = IntentCreator(
-                            userSettings: businessInjector.userSettings,
+                            settingsStore: businessInjector.settingsStore,
                             entityManager: businessInjector.backgroundEntityManager
                         )
                         .donateInteraction(for: contact).done {

@@ -129,20 +129,10 @@ class TaskExecutionTransactionTests: XCTestCase {
             
             let expec = XCTestExpectation(description: "")
             
-            let deviceGroupKeys = DeviceGroupKeys(
-                dgpk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
-                dgrk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
-                dgdik: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
-                dgsddk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
-                dgtsk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
-                deviceGroupIDFirstByteHex: "a1"
-            )
-
-            let deviceID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.deviceIDLength)!
             let serverConnectorMock = ServerConnectorMock(
                 connectionState: .loggedIn,
-                deviceID: deviceID,
-                deviceGroupKeys: deviceGroupKeys
+                deviceID: MockData.deviceID,
+                deviceGroupKeys: MockData.deviceGroupKeys
             )
             serverConnectorMock.reflectMessageClosure = { _ in
                 if serverConnectorMock.connectionState == .loggedIn {
@@ -169,20 +159,8 @@ class TaskExecutionTransactionTests: XCTestCase {
             }
             let frameworkInjectorMock = BusinessInjectorMock(
                 backgroundEntityManager: EntityManager(databaseContext: databaseBackgroundCnx),
-                backgroundGroupManager: GroupManagerMock(),
-                backgroundUnreadMessages: UnreadMessagesMock(),
-                contactStore: ContactStoreMock(),
                 entityManager: EntityManager(databaseContext: databaseMainCnx),
-                groupManager: GroupManagerMock(),
-                licenseStore: LicenseStore.shared(),
-                messageSender: MessageSenderMock(),
-                multiDeviceManager: MultiDeviceManagerMock(),
-                myIdentityStore: MyIdentityStoreMock(),
-                userSettings: UserSettingsMock(),
-                settingsStore: SettingsStoreMock(),
-                serverConnector: serverConnectorMock,
-                mediatorMessageProtocol: MediatorMessageProtocolMock(),
-                messageProcessor: MessageProcessorMock()
+                serverConnector: serverConnectorMock
             )
 
             if let expectedServerTransactionErrorResponse = test.expectedServerTransactionErrorResponses {
@@ -276,12 +254,14 @@ class TaskExecutionTransactionTests: XCTestCase {
             backgroundGroupManager: GroupManagerMock(),
             backgroundUnreadMessages: UnreadMessagesMock(),
             contactStore: ContactStoreMock(),
+            conversationStore: ConversationStoreMock(),
             entityManager: EntityManager(databaseContext: databaseMainCnx),
             groupManager: GroupManagerMock(),
             licenseStore: LicenseStore.shared(),
             messageSender: MessageSenderMock(),
             multiDeviceManager: MultiDeviceManagerMock(),
             myIdentityStore: MyIdentityStoreMock(),
+            unreadMessages: UnreadMessagesMock(),
             userSettings: UserSettingsMock(),
             settingsStore: SettingsStoreMock(),
             serverConnector: serverConnectorMock,

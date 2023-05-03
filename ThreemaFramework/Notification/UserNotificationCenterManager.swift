@@ -67,12 +67,33 @@ class UserNotificationCenterManager: UserNotificationCenterManagerProtocol {
             
             UNUserNotificationCenter.current().add(notificationRequest) { error in
                 if let error = error {
-                    seal.reject(
-                        UserNotificationCenterManagerError
-                            .failedToAdd(
-                                message: "[Push] Adding notification for message \(key) was not successful. Error: \(error.localizedDescription)"
+                    if let error = error as? UNError, error.code == .attachmentInvalidURL {
+                        // As of iOS 16.4 there is an issue where we can't always add notifications with attachments.
+                        // In that case we just remove the attachment and post the notification without it.
+                        // This is not great but still gives us quicker notifications (rather than waiting for the 30s timeout)
+                        // and keeps rich communication notifications donations.
+                        guard !notification.attachments.isEmpty else {
+                            seal.reject(
+                                UserNotificationCenterManagerError
+                                    .failedToAdd(
+                                        message: "[Push] Adding notification for message \(key) was not successful. Error: \(error.localizedDescription)"
+                                    )
                             )
-                    )
+                            return
+                        }
+                        let mutCopy = notification.mutableCopy() as! UNMutableNotificationContent
+                        mutCopy.attachments = []
+                        
+                        self.add(key: key, stage: stage, notification: mutCopy).pipe(to: { seal.resolve($0) })
+                    }
+                    else {
+                        seal.reject(
+                            UserNotificationCenterManagerError
+                                .failedToAdd(
+                                    message: "[Push] Adding notification for message \(key) was not successful. Error: \(error.localizedDescription)"
+                                )
+                        )
+                    }
                 }
                 else {
                     DDLogNotice(

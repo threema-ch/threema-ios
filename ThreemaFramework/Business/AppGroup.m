@@ -124,6 +124,19 @@ static CFStringRef appSyncNotificationKey;
     }
 }
 
++ (NSString *)getCurrentTypeString {
+    NSBundle *mainBundle = [NSBundle mainBundle];
+    
+    if ([mainBundle.bundleIdentifier hasSuffix:THREEMA_NOTIFICATION_EXTENSION_SUFFIX]) {
+        return @"NotificationExtension";
+    }
+    if ([mainBundle.bundleIdentifier hasSuffix:THREEMA_SHARE_EXTENSION_SUFFIX]) {
+        return @"AppGroupTypeShareExtension";
+    } else {
+        return @"AppGroupTypeApp";
+    }
+}
+
 + (BOOL)amIActive {
    return [AppGroup getCurrentType] == [AppGroup getActiveType];
 }

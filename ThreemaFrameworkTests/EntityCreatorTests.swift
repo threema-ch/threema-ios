@@ -53,8 +53,8 @@ class EntityCreatorTests: XCTestCase {
         entityManager = EntityManager(databaseContext: databaseContext)
         
         businessInjector = BusinessInjectorMock(
-            entityManager: entityManager,
-            backgroundEntityManager: entityManager
+            backgroundEntityManager: entityManager,
+            entityManager: entityManager
         )
     }
 

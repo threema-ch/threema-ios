@@ -117,7 +117,21 @@ public class SQLDHSessionStore: DHSessionStoreProtocol {
                     filterForSession(
                         myIdentity: session.myIdentity,
                         peerIdentity: session.peerIdentity,
-                        sessionID: session.id
+                        sessionID: session.id,
+                        // To avoid accidentally returning the ratchet counters to an earlier state we check
+                        // for session with only counters that are lower than what we have in the session we want to update to.
+                        //
+                        // We only update the session if the ratchets are further along than what is currently stored in the DB.
+                        //
+                        // This resolves an issue where we would go back to a previous session state if we process a message in the app and
+                        // before we are able to send the read receipt (which we wait for in TaskExecutionReceiveMessage) we would close the app
+                        // disconnect from the server and thus won't be able to send the read receipt keeping the task alive. (All other tasks will be removed from the queue.)
+                        // This then causes the server to send out a push as we haven't acked the message, which launches the notification extension which then processes
+                        // the message. If n additional messages are received before we open the app again, the ratchets are further along than what we have in the session in the
+                        // task in the app. Launching the app will then cause the read receipt to be sent, and the session to be "updated" to the previous state.
+                        // The next received message will cause an error message to appear claiming that n messages were lost since receiving the last message when in fact no messages were lost.
+                        peerCounter2DH: uInt64ToInt64(value: session.peerRatchet2DH?.counter),
+                        peerCounter4DH: uInt64ToInt64(value: session.peerRatchet4DH?.counter)
                     )
                     .update(
                         peerCurrentChainKey2DHColumn <- try self.keyWrapper
@@ -134,7 +148,11 @@ public class SQLDHSessionStore: DHSessionStoreProtocol {
                     filterForSession(
                         myIdentity: session.myIdentity,
                         peerIdentity: session.peerIdentity,
-                        sessionID: session.id
+                        sessionID: session.id,
+                        // To avoid accidentally returning the ratchet counters to an earlier state we check
+                        // for session with only counters that are lower than what we have in the session we want to update to.
+                        myCounter2DH: uInt64ToInt64(value: session.myRatchet2DH?.counter),
+                        myCounter4DH: uInt64ToInt64(value: session.myRatchet4DH?.counter)
                     )
                     .update(
                         myCurrentChainKey2DHColumn <- try self.keyWrapper
@@ -209,14 +227,36 @@ public class SQLDHSessionStore: DHSessionStoreProtocol {
         })
     }
     
-    private func filterForSession(myIdentity: String, peerIdentity: String, sessionID: DHSessionID?) -> QueryType {
+    private func filterForSession(
+        myIdentity: String,
+        peerIdentity: String,
+        sessionID: DHSessionID?,
+        myCounter2DH: Int64? = nil,
+        myCounter4DH: Int64? = nil,
+        peerCounter2DH: Int64? = nil,
+        peerCounter4DH: Int64? = nil
+    ) -> QueryType {
         switch sessionID {
         case let .some(dhSessionID):
-            return sessionTable
+            var queryType = sessionTable
                 .filter(
                     myIdentityColumn == myIdentity && peerIdentityColumn == peerIdentity && sessionIDColumn ==
                         dhSessionID.data()
                 )
+            if let myCounter2DH {
+                queryType = queryType.filter(myCounter2DHColumn <= myCounter2DH)
+            }
+            if let myCounter4DH {
+                queryType = queryType.filter(myCounter4DHColumn <= myCounter4DH)
+            }
+            if let peerCounter2DH {
+                queryType = queryType.filter(peerCounter2DHColumn <= peerCounter2DH)
+            }
+            if let peerCounter4DH {
+                queryType = queryType.filter(peerCounter4DHColumn <= peerCounter4DH)
+            }
+            
+            return queryType
         case .none:
             return sessionTable.filter(myIdentityColumn == myIdentity && peerIdentityColumn == peerIdentity)
         }

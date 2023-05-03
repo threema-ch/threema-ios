@@ -28,19 +28,26 @@ class ConversationActionsTest: XCTestCase {
     
     private var mainCnx: NSManagedObjectContext!
     private var actions: ConversationActions!
-    private var entityManager: EntityManager!
+    private var businessInjectorMock: BusinessInjectorMock!
     private var notificationManagerMock: NotificationManagerMock!
-    override func setUpWithError() throws {
 
+    override func setUpWithError() throws {
         AppGroup.setGroupID("group.ch.threema")
         
         (_, mainCnx, _) = DatabasePersistentContext.devNullContext()
-        let context = DatabaseContext(mainContext: mainCnx, backgroundContext: nil)
-        entityManager = EntityManager(databaseContext: context)
+        let databaseMainCnx = DatabaseContext(mainContext: mainCnx, backgroundContext: nil)
+
+        let entityManager = EntityManager(databaseContext: databaseMainCnx)
+
+        businessInjectorMock = BusinessInjectorMock(
+            backgroundEntityManager: EntityManager(databaseContext: databaseMainCnx),
+            conversationStore: ConversationStore(entityManager: entityManager),
+            entityManager: entityManager
+        )
+
         notificationManagerMock = NotificationManagerMock()
         actions = ConversationActions(
-            unreadMessages: UnreadMessagesMock(),
-            entityManager: entityManager,
+            businessInjector: businessInjectorMock,
             notificationManager: notificationManagerMock
         )
     }
@@ -74,98 +81,25 @@ class ConversationActionsTest: XCTestCase {
     
     // MARK: - Tests
 
-    // MARK: Pinning Conversation
-
-    func testUnpinConversationPinned() throws {
-        let conversation = createConversation(
-            marked: true,
-            unreadMessageCount: 0,
-            category: .default,
-            visibility: .default
-        )
-        
-        actions.unpin(conversation)
-        
-        let loadedConversation = try XCTUnwrap(
-            entityManager
-                .conversation(forContact: conversation.contact!, createIfNotExisting: false)
-        )
-        
-        XCTAssertFalse(loadedConversation.marked.boolValue, "Conversation should be unpinned.")
-    }
-    
-    func testUnpinConversationUnpinned() throws {
-        let conversation = createConversation(
-            marked: false,
-            unreadMessageCount: 0,
-            category: .default,
-            visibility: .default
-        )
-        
-        actions.unpin(conversation)
-
-        let loadedConversation = try XCTUnwrap(
-            entityManager
-                .conversation(forContact: conversation.contact!, createIfNotExisting: false)
-        )
-        
-        XCTAssertFalse(loadedConversation.marked.boolValue, "Conversation should be unpinned.")
-    }
-    
-    func testPinConversationPinned() throws {
-        let conversation = createConversation(
-            marked: true,
-            unreadMessageCount: 0,
-            category: .default,
-            visibility: .default
-        )
-        
-        actions.pin(conversation)
-
-        let loadedConversation = try XCTUnwrap(
-            entityManager
-                .conversation(forContact: conversation.contact!, createIfNotExisting: false)
-        )
-        
-        XCTAssertTrue(loadedConversation.marked.boolValue, "Conversation should be pinned.")
-    }
-    
-    func testPinConversationUnpinned() throws {
-        let conversation = createConversation(
-            marked: false,
-            unreadMessageCount: 0,
-            category: .default,
-            visibility: .default
-        )
-        
-        actions.pin(conversation)
-
-        let loadedConversation = try XCTUnwrap(
-            entityManager
-                .conversation(forContact: conversation.contact!, createIfNotExisting: false)
-        )
-        
-        XCTAssertTrue(loadedConversation.marked.boolValue, "Conversation should be pinned.")
-    }
-
     // MARK: Archiving
     
     func testArchiveConversationUnarchived() throws {
         let conversation = createConversation(
-            marked: false,
+            marked: true,
             unreadMessageCount: 19,
             category: .default,
             visibility: .default
         )
         
-        actions.archive(conversation, isAppInBackground: false)
+        actions.archive(conversation)
         
         let loadedConversation = try XCTUnwrap(
-            entityManager
+            businessInjectorMock.entityManager
                 .conversation(forContact: conversation.contact!, createIfNotExisting: false)
         )
         
         XCTAssertEqual(loadedConversation.conversationVisibility, .archived, "Conversation should be archived.")
+        XCTAssertFalse(loadedConversation.marked.boolValue, "Conversation should be unpinned.")
     }
     
     func testArchiveConversationArchived() throws {
@@ -176,21 +110,21 @@ class ConversationActionsTest: XCTestCase {
             visibility: .archived
         )
         
-        actions.archive(conversation, isAppInBackground: false)
+        actions.archive(conversation)
         
         let loadedConversation = try XCTUnwrap(
-            entityManager
+            businessInjectorMock.entityManager
                 .conversation(forContact: conversation.contact!, createIfNotExisting: false)
         )
         
         XCTAssertEqual(loadedConversation.conversationVisibility, .archived, "Conversation should be archived.")
-        XCTAssertFalse(loadedConversation.marked.boolValue, "Conversation should be unpinned.")
+        XCTAssertTrue(loadedConversation.marked.boolValue, "Conversation should be pinned.")
         XCTAssertEqual(loadedConversation.unreadMessageCount, 10, "Conversation should not be marked unread.")
     }
    
     func testUnarchiveConversationUnarchived() throws {
         let conversation = createConversation(
-            marked: false,
+            marked: true,
             unreadMessageCount: 0,
             category: .default,
             visibility: .default
@@ -199,16 +133,17 @@ class ConversationActionsTest: XCTestCase {
         actions.unarchive(conversation)
         
         let loadedConversation = try XCTUnwrap(
-            entityManager
+            businessInjectorMock.entityManager
                 .conversation(forContact: conversation.contact!, createIfNotExisting: false)
         )
         
         XCTAssertEqual(loadedConversation.conversationVisibility, .default, "Conversation should be unarchived.")
+        XCTAssertTrue(loadedConversation.marked.boolValue, "Conversation should be pinned.")
     }
     
     func testUnarchiveConversationArchived() throws {
         let conversation = createConversation(
-            marked: false,
+            marked: true,
             unreadMessageCount: 0,
             category: .default,
             visibility: .archived
@@ -217,11 +152,12 @@ class ConversationActionsTest: XCTestCase {
         actions.unarchive(conversation)
         
         let loadedConversation = try XCTUnwrap(
-            entityManager
+            businessInjectorMock.entityManager
                 .conversation(forContact: conversation.contact!, createIfNotExisting: false)
         )
         
         XCTAssertEqual(loadedConversation.conversationVisibility, .default, "Conversation should be unarchived.")
+        XCTAssertFalse(loadedConversation.marked.boolValue, "Conversation should be unpinned.")
     }
     
     // MARK: Read
@@ -245,7 +181,7 @@ class ConversationActionsTest: XCTestCase {
         wait(for: [expect], timeout: 3)
 
         let loadedConversation = try XCTUnwrap(
-            entityManager
+            businessInjectorMock.entityManager
                 .conversation(forContact: conversation.contact!, createIfNotExisting: false)
         )
         
@@ -264,84 +200,10 @@ class ConversationActionsTest: XCTestCase {
         actions.unread(conversation)
 
         let loadedConversation = try XCTUnwrap(
-            entityManager
+            businessInjectorMock.entityManager
                 .conversation(forContact: conversation.contact!, createIfNotExisting: false)
         )
 
         XCTAssertEqual(loadedConversation.unreadMessageCount, -1, "Conversation should be marked unread.")
-    }
-
-    // MARK: Private
-
-    func testMakePrivateConversationPrivate() throws {
-        let conversation = createConversation(
-            marked: false,
-            unreadMessageCount: 0,
-            category: .private,
-            visibility: .default
-        )
-
-        actions.makePrivate(conversation)
-        
-        let loadedConversation = try XCTUnwrap(
-            entityManager
-                .conversation(forContact: conversation.contact!, createIfNotExisting: false)
-        )
-
-        XCTAssertEqual(loadedConversation.conversationCategory, .private, "Conversation should not be private.")
-    }
-    
-    func testMakePrivateConversationNotPrivate() throws {
-        let conversation = createConversation(
-            marked: false,
-            unreadMessageCount: 0,
-            category: .private,
-            visibility: .default
-        )
-
-        actions.makeNotPrivate(conversation)
-        
-        let loadedConversation = try XCTUnwrap(
-            entityManager
-                .conversation(forContact: conversation.contact!, createIfNotExisting: false)
-        )
-
-        XCTAssertEqual(loadedConversation.conversationCategory, .default, "Conversation should not be private.")
-    }
-    
-    func testMakeNotPrivateConversationNotPrivate() throws {
-        let conversation = createConversation(
-            marked: false,
-            unreadMessageCount: 0,
-            category: .default,
-            visibility: .default
-        )
-
-        actions.makeNotPrivate(conversation)
-        
-        let loadedConversation = try XCTUnwrap(
-            entityManager
-                .conversation(forContact: conversation.contact!, createIfNotExisting: false)
-        )
-
-        XCTAssertEqual(loadedConversation.conversationCategory, .default, "Conversation should not be private.")
-    }
-    
-    func testMakeNotPrivateConversationPrivate() throws {
-        let conversation = createConversation(
-            marked: false,
-            unreadMessageCount: 0,
-            category: .default,
-            visibility: .default
-        )
-
-        actions.makePrivate(conversation)
-        
-        let loadedConversation = try XCTUnwrap(
-            entityManager
-                .conversation(forContact: conversation.contact!, createIfNotExisting: false)
-        )
-
-        XCTAssertEqual(loadedConversation.conversationCategory, .private, "Conversation should not be private.")
     }
 }

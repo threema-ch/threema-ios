@@ -68,7 +68,7 @@ import Foundation
         AppGroup.userDefaults().bool(forKey: "PushReminderDoNotShowAgain")
     }
     
-    private static func isPushEnabled() async -> Bool {
+    public static func isPushEnabled() async -> Bool {
         await withCheckedContinuation { continuation in
             UNUserNotificationCenter.current().getNotificationSettings { notificationSettings in
                 switch notificationSettings.authorizationStatus {

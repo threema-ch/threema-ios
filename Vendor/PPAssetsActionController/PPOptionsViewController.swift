@@ -81,13 +81,9 @@ class PPOptionsViewController: UITableViewController {
         tableView.separatorColor = Colors.hairLine
         /***** END THREEMA MODIFICATION: separatorColor *********/
         
-        /***** BEGIN THREEMA MODIFICATION: Fix section header padding in iOS 15 *********/
-        if #available(iOS 15.0, *) {
-            tableView.sectionHeaderTopPadding = 0.0
-        } else {
-            // Fallback on earlier versions
-        }
-        /***** END THREEMA MODIFICATION: Fix section header padding in iOS 15 *********/
+        /***** BEGIN THREEMA MODIFICATION: Fix section header padding *********/
+        tableView.sectionHeaderTopPadding = 0.0
+        /***** END THREEMA MODIFICATION: Fix section header padding *********/
     }
     
     override func updateViewConstraints() {

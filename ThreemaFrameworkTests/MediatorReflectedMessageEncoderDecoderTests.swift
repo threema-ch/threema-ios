@@ -32,19 +32,11 @@ class MediatorReflectedMessageEncoderDecoderTests: XCTestCase {
         AppGroup.setGroupID("group.ch.threema") // THREEMA_GROUP_IDENTIFIER @"group.ch.threema"
 
         frameworkInjectorMock = BusinessInjectorMock(
-            entityManager: EntityManager(),
-            backgroundEntityManager: EntityManager()
+            backgroundEntityManager: EntityManager(),
+            entityManager: EntityManager()
         )
 
-        let deviceGroupKeys = DeviceGroupKeys(
-            dgpk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
-            dgrk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
-            dgdik: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
-            dgsddk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
-            dgtsk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
-            deviceGroupIDFirstByteHex: "a1"
-        )
-        mediatorMessageProtocol = MediatorMessageProtocol(deviceGroupKeys: deviceGroupKeys!)
+        mediatorMessageProtocol = MediatorMessageProtocol(deviceGroupKeys: MockData.deviceGroupKeys)
     }
 
     func testEncodeDecodeIncomingMessageAbstractText() throws {

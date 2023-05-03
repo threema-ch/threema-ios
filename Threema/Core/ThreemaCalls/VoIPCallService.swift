@@ -1081,7 +1081,7 @@ extension VoIPCallService {
                     on: businessInjector
                 ) { conversation, systemMessage in
                     if let conversation = conversation, systemMessage != nil {
-                        ConversationActions(entityManager: businessInjector.entityManager).unarchive(conversation)
+                        ConversationActions(businessInjector: businessInjector).unarchive(conversation)
                         NotificationManager(businessInjector: businessInjector).updateUnreadMessagesCount()
                     }
                 }
@@ -1154,9 +1154,8 @@ extension VoIPCallService {
                 /// Make sure that the connection is not prematurely disconnected when the app is put into the background
                 ServerConnector.shared().connect(initiator: .threemaCall)
                 self.state = .sendAnswer
-                if #available(iOS 14.0, *) {
-                    self.presentCallViewController()
-                }
+                self.presentCallViewController()
+                
                 self.peerConnectionClient?.answer(completion: { sdp in
                     if self.threemaVideoCallAvailable, UserSettings.shared().enableVideoCall {
                         self.threemaVideoCallAvailable = true
@@ -2076,6 +2075,8 @@ extension VoIPCallService {
             
             let businessInjector = BusinessInjector()
             let entityManager = businessInjector.entityManager
+            let settingsStore = businessInjector.settingsStore
+            let notificationType = settingsStore.notificationType
             var contact: ContactEntity?
             
             entityManager.performSyncBlockAndSafe {
@@ -2086,10 +2087,7 @@ extension VoIPCallService {
             }
             notification.userInfo = ["threema": ["cmd": "missedcall", "from": identity]]
             
-            if !UserSettings.shared().pushShowNickname {
-                notification.title = contact.displayName
-            }
-            else {
+            if case .restrictive = notificationType {
                 if let publicNickname = contact.publicNickname,
                    !publicNickname.isEmpty {
                     notification.title = publicNickname
@@ -2098,15 +2096,18 @@ extension VoIPCallService {
                     notification.title = identity
                 }
             }
+            else {
+                notification.title = contact.displayName
+            }
             
             notification.body = BundleUtil.localizedString(forKey: "call_missed")
             
             // Group notification together with others from the same contact
             notification.threadIdentifier = "SINGLE-\(identity)"
             
-            if UserSettings.shared().donateInteractions,
+            if case .complete = notificationType,
                let interaction = IntentCreator(
-                   userSettings: businessInjector.userSettings,
+                   settingsStore: businessInjector.settingsStore,
                    entityManager: entityManager
                ).inSendMessageIntentInteraction(
                    for: identity,
@@ -2119,7 +2120,6 @@ extension VoIPCallService {
                 )
             }
             else {
-                
                 self.showRegularMissedCallNotification(with: identity, content: notification)
             }
         }
@@ -2167,8 +2167,9 @@ extension VoIPCallService {
     /// Add call message to conversation
     private func addCallMessageToConversation(oldCallState: CallState) {
         
-        let entityManager = BusinessInjector().entityManager
-        let utilities = ConversationActions(entityManager: entityManager)
+        let businessInjector = BusinessInjector()
+        let entityManager = businessInjector.entityManager
+        let utilities = ConversationActions(businessInjector: businessInjector)
         
         switch state {
         case .idle:

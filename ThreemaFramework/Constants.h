@@ -74,6 +74,7 @@
 #define kNotificationShowProfilePictureChanged @"ShowProfilePictureChanged"
 #define kNotificationIncomingProfileSynchronization @"IncomingProfileSynchronization"
 #define kNotificationIncomingSettingsSynchronization @"IncomingSettingsSynchronization"
+#define kNotificationSettingStoreSynchronization @"NotificationSettingStoreSynchronization"
 #define kNotificationNavigationBarColorShouldChange @"NavigationBarColorShouldChange"
 #define kNotificationNavigationItemPromptShouldChange @"NavigationItemPromptShouldChange"
 #define kNotificationMultiDeviceWizardDidUpdate @"MultiDeviceWizardDidUpdate"

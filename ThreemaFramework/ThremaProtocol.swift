@@ -29,6 +29,8 @@ public enum ThreemaProtocol {
     public static let groupIDLength = Int(kGroupIdLen)
     public static let ballotIDLength = Int(kBallotIdLen)
     public static let deviceIDLength = Int(kDeviceIdLen)
+    public static let publicKeyLength = Int(kNaClCryptoPubKeySize)
+    public static let reflectIDLength = MediatorMessageProtocol.MEDIATOR_REFLECT_ID_LENGTH
     
     /// kNonce_1[]
     static let nonce01 = Data([

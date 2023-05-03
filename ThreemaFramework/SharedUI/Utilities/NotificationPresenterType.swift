@@ -166,7 +166,6 @@ public struct NotificationPresenterType {
         notificationText: BundleUtil.localizedString(forKey: "notification_settings_sync_pending"),
         notificationStyle: .none
     )
-    
     public static let settingsSyncSuccess = NotificationPresenterType(
         notificationText: BundleUtil.localizedString(forKey: "notification_settings_sync_succeeded"),
         notificationStyle: .success
@@ -179,5 +178,14 @@ public struct NotificationPresenterType {
     public static let groupSyncError = NotificationPresenterType(
         notificationText: BundleUtil.localizedString(forKey: "notification_group_sync_failed"),
         notificationStyle: .success
+    )
+    
+    public static let interactionDeleteSuccess = NotificationPresenterType(
+        notificationText: BundleUtil.localizedString(forKey: "notification_interaction_delete_succeeded"),
+        notificationStyle: .success
+    )
+    public static let interactionDeleteError = NotificationPresenterType(
+        notificationText: BundleUtil.localizedString(forKey: "notification_interaction_delete_failed"),
+        notificationStyle: .error
     )
 }

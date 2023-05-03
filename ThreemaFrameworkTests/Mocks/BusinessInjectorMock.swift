@@ -32,6 +32,8 @@ class BusinessInjectorMock: FrameworkInjectorProtocol {
 
     var contactStore: ContactStoreProtocol
 
+    var conversationStore: ConversationStoreProtocol
+
     var entityManager: EntityManager
 
     var groupManager: GroupManagerProtocol
@@ -43,6 +45,8 @@ class BusinessInjectorMock: FrameworkInjectorProtocol {
     var multiDeviceManager: MultiDeviceManagerProtocol
 
     var myIdentityStore: MyIdentityStoreProtocol
+
+    var unreadMessages: UnreadMessagesProtocol
 
     var userSettings: UserSettingsProtocol
 
@@ -60,35 +64,41 @@ class BusinessInjectorMock: FrameworkInjectorProtocol {
     
     var dhSessionStore: DHSessionStoreProtocol
     
+    var conversationStoreInternal: ThreemaFramework.ConversationStoreInternalProtocol
+
     var settingsStoreInternal: SettingsStoreInternalProtocol
 
     init(
         backgroundEntityManager: EntityManager,
-        backgroundGroupManager: GroupManagerProtocol,
-        backgroundUnreadMessages: UnreadMessagesProtocol,
-        contactStore: ContactStoreProtocol,
+        backgroundGroupManager: GroupManagerProtocol = GroupManagerMock(),
+        backgroundUnreadMessages: UnreadMessagesProtocol = UnreadMessagesMock(),
+        contactStore: ContactStoreProtocol = ContactStoreMock(),
+        conversationStore: ConversationStoreProtocol & ConversationStoreInternalProtocol = ConversationStoreMock(),
         entityManager: EntityManager,
-        groupManager: GroupManagerProtocol,
-        licenseStore: LicenseStore,
-        messageSender: MessageSenderProtocol,
-        multiDeviceManager: MultiDeviceManagerProtocol,
-        myIdentityStore: MyIdentityStoreProtocol,
-        userSettings: UserSettingsProtocol,
-        settingsStore: SettingsStoreInternalProtocol & SettingsStoreProtocol,
-        serverConnector: ServerConnectorProtocol,
-        mediatorMessageProtocol: MediatorMessageProtocolProtocol,
-        messageProcessor: MessageProcessorProtocol
+        groupManager: GroupManagerProtocol = GroupManagerMock(),
+        licenseStore: LicenseStore = LicenseStore.shared(),
+        messageSender: MessageSenderProtocol = MessageSenderMock(),
+        multiDeviceManager: MultiDeviceManagerProtocol = MultiDeviceManagerMock(),
+        myIdentityStore: MyIdentityStoreProtocol = MyIdentityStoreMock(),
+        unreadMessages: UnreadMessagesProtocol = UnreadMessagesMock(),
+        userSettings: UserSettingsProtocol = UserSettingsMock(),
+        settingsStore: SettingsStoreInternalProtocol & SettingsStoreProtocol = SettingsStoreMock(),
+        serverConnector: ServerConnectorProtocol = ServerConnectorMock(),
+        mediatorMessageProtocol: MediatorMessageProtocolProtocol = MediatorMessageProtocolMock(),
+        messageProcessor: MessageProcessorProtocol = MessageProcessorMock()
     ) {
         self.backgroundEntityManager = backgroundEntityManager
         self.backgroundGroupManager = backgroundGroupManager
         self.backgroundUnreadMessages = backgroundUnreadMessages
         self.contactStore = contactStore
+        self.conversationStore = conversationStore
         self.entityManager = entityManager
         self.groupManager = groupManager
         self.licenseStore = licenseStore
         self.messageSender = messageSender
         self.multiDeviceManager = multiDeviceManager
         self.myIdentityStore = myIdentityStore
+        self.unreadMessages = unreadMessages
         self.userSettings = userSettings
         self.serverConnector = serverConnector
         self.mediatorMessageProtocol = mediatorMessageProtocol
@@ -100,34 +110,10 @@ class BusinessInjectorMock: FrameworkInjectorProtocol {
             messageSender: DummySender()
         )
         self.settingsStore = settingsStore
+        self.conversationStoreInternal = conversationStore
         self.settingsStoreInternal = settingsStore
     }
 
-    init(entityManager: EntityManager, backgroundEntityManager: EntityManager) {
-        self.backgroundEntityManager = backgroundEntityManager
-        self.backgroundGroupManager = GroupManagerMock()
-        self.backgroundUnreadMessages = UnreadMessagesMock()
-        self.contactStore = ContactStoreMock()
-        self.entityManager = entityManager
-        self.groupManager = GroupManagerMock()
-        self.licenseStore = LicenseStore.shared()
-        self.messageSender = MessageSenderMock()
-        self.multiDeviceManager = MultiDeviceManagerMock()
-        self.myIdentityStore = MyIdentityStoreMock()
-        self.userSettings = UserSettingsMock()
-        self.serverConnector = ServerConnectorMock()
-        self.mediatorMessageProtocol = MediatorMessageProtocolMock()
-        self.messageProcessor = MessageProcessorMock()
-        self.dhSessionStore = InMemoryDHSessionStore()
-        self.fsmp = ForwardSecurityMessageProcessor(
-            dhSessionStore: dhSessionStore,
-            identityStore: myIdentityStore,
-            messageSender: DummySender()
-        )
-        self.settingsStore = SettingsStoreMock()
-        self.settingsStoreInternal = SettingsStoreMock()
-    }
-    
     class DummySender: ForwardSecurityMessageSenderProtocol {
         func send(message: AbstractMessage) {
             // do nothing

@@ -22,7 +22,7 @@ import CocoaLumberjackSwift
 import Foundation
 
 public class BusinessInjector: NSObject, FrameworkInjectorProtocol {
-        
+
     // MARK: BusinessInjectorProtocol
 
     @objc public lazy var backgroundEntityManager = EntityManager(withChildContextForBackgroundProcess: true)
@@ -37,7 +37,19 @@ public class BusinessInjector: NSObject, FrameworkInjectorProtocol {
         GroupPhotoSender()
     )
     
+    public lazy var backgroundUnreadMessages: UnreadMessagesProtocol = UnreadMessages(
+        entityManager: backgroundEntityManager
+    )
+
     public lazy var contactStore: ContactStoreProtocol = ContactStore.shared()
+
+    public lazy var conversationStore: any ConversationStoreProtocol = ConversationStore(
+        serverConnector: serverConnector,
+        userSettings: userSettings,
+        groupManager: groupManager,
+        entityManager: entityManager,
+        taskManager: TaskManager(frameworkInjector: self)
+    )
     
     public lazy var entityManager = EntityManager()
 
@@ -60,6 +72,10 @@ public class BusinessInjector: NSObject, FrameworkInjectorProtocol {
 
     public lazy var myIdentityStore: MyIdentityStoreProtocol = MyIdentityStore.shared()
 
+    public lazy var unreadMessages: UnreadMessagesProtocol = UnreadMessages(
+        entityManager: entityManager
+    )
+
     @objc public lazy var userSettings: UserSettingsProtocol = UserSettings.shared()
 
     public lazy var settingsStore: any SettingsStoreProtocol = SettingsStore(
@@ -80,10 +96,6 @@ public class BusinessInjector: NSObject, FrameworkInjectorProtocol {
     private var fsStatusSender: ForwardSecurityStatusSender?
     
     private static var dhSessionStoreInstance: DHSessionStoreProtocol = try! SQLDHSessionStore()
-
-    public lazy var backgroundUnreadMessages: UnreadMessagesProtocol = UnreadMessages(
-        entityManager: backgroundEntityManager
-    )
 
     lazy var mediatorMessageProtocol: MediatorMessageProtocolProtocol = MediatorMessageProtocol(
         deviceGroupKeys: self
@@ -119,6 +131,9 @@ public class BusinessInjector: NSObject, FrameworkInjectorProtocol {
         BusinessInjector.dhSessionStoreInstance
     }
     
+    lazy var conversationStoreInternal: ConversationStoreInternalProtocol =
+        conversationStore as! ConversationStoreInternalProtocol
+
     lazy var settingsStoreInternal: SettingsStoreInternalProtocol = settingsStore as! SettingsStoreInternalProtocol
     
     class MessageSenderAdapter: ForwardSecurityMessageSenderProtocol {

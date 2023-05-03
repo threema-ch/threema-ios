@@ -165,7 +165,7 @@
 
         // do that only if it's not from notification extension file
         DDLogInfo(@"%@ is not member of group %@, add to pending messages and request group sync", _message.fromIdentity, [NSString stringWithHexData:_message.groupId]);
-        [groupManager sendSyncRequestWithGroupID:_message.groupId creator:_message.groupCreator];
+        [groupManager sendSyncRequestWithGroupID:_message.groupId creator:_message.groupCreator force:false];
         _addToPendingMessages = YES;
     }
 }

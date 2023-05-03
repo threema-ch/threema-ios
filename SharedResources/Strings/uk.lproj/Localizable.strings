@@ -104,7 +104,7 @@
 "nickname" = "Прізвисько";
 "add_button" = "Додати";
 "chatview_contextmenu_select" = "Вибрати…";
-
+"learn_more" = "Докладніше…";
 "file_message_image" = "Зображення";
 "file_message_sticker" = "Наліпка";
 "file_message_animated_image" = "GIF";
@@ -880,6 +880,8 @@
 "doNotDisturb_mention_footer_off" = "Якщо увімкнено не турбувати, ви не отримуватимете жодних сповіщень, навіть коли вас хтось згадує.";
 "doNotDisturb_mention_footer_on" = "Якщо увімкнено не турбувати, ви все одно отримуватимете сповіщення про згадування.";
 
+"doNotDisturb_notification_sound_footer" = "Звук сповіщення вмикається лише тоді, коли ввімкнено опцію «Програти звук сповіщення», а опцію «Не турбувати» вимкнено.";
+
 "notification_sound_header" = "Звук сповіщення";
 "notification_sound_title" = "Програти звук сповіщення";
 
@@ -1099,8 +1101,6 @@
 "settings_advanced_reregister_push_notifications_header_title" = "Push-сповіщення";
 "settings_advanced_reregister_push_notifications_footer_title" = "Якщо вхідні повідомлення не з’являються за межами застосунку як сповіщення, ви можете зареєструватися для отримання сповіщень.";
 "settings_advanced_reregister_notifications_label" = "Повторно зареєструватися для отримання push-сповіщень";
-"settings_advanced_new_chat_view_label" = "Новий вигляд діалогів";
-"settings_advanced_new_chat_view_label_footer" = "Примітка: старе вікно діалогів буде вилучено в новій версії.";
 
 "settings_md_sync_alert_title" = "Помилка синхронізації";
 
@@ -1113,6 +1113,11 @@
 "settings_privacy_block_unknown" = "Блокувати невідомих";
 "settings_privacy_block_unknown_footer_on"= "Лише люди з вашого списку контактів можуть надсилати вам повідомлення.";
 "settings_privacy_block_unknown_foooter_off" = "Будь-хто може надіслати вам повідомлення. Нові контакти будуть додані автоматично, коли надійде перше повідомлення.";
+
+"settings_privacy_os_header" = "Інтеграція iOS";
+"settings_privacy_os_donate" = "Поділитися взаємодіями";
+"settings_privacy_os_reset" = "Скинути взаємодії";
+"settings_privacy_os_footer" = "Якщо цю опцію буде ввімкнено, контакти Threema будуть пропонуватися, коли ви поширюватимете контент в iOS. Ця дія робить інформацію доступною для iOS.";
 
 "settings_privacy_chat_header" = "Чат";
 "settings_privacy_read_receipts" = "Звіти про прочитання";
@@ -1145,6 +1150,9 @@
 "settings_appearance_display_order" = "Порядок показування";
 "settings_appearance_show_gallery_preview" = "Попередній перегляд галереї";
 
+// Chat Settings
+"settings_chat_send_message_feedback_label" = "Тактильний зворотний зв’язок після надсилання";
+
 // Media
 "settings_media_autosave_private_footer" = "Медіафайли отримані в приватних чатах не будуть зберігатися автоматично.";
 
@@ -1164,14 +1172,13 @@
 
 // Notification settings
 "settings_notifications_inapp_section" = "У застосунку";
-"settings_notifications_inapp_sounds" = "Звуки";
-"settings_notifications_inapp_vibrate" = "Вібрація";
-"settings_notifications_inapp_preview" = "Попередній перегляд";
+"settings_notifications_inapp_sounds" = "Звуки в застосунку";
+"settings_notifications_inapp_vibrate" = "Вібрація в застосунку";
+"settings_notifications_inapp_preview" = "Попередній перегляд повідомлення";
 "settings_notifications_push_section" = "Push-сповіщення";
 "settings_notifications_push_sound" = "Звук";
 "settings_notifications_push_groupsound" = "Звук групи";
-"settings_notifications_push_preview" = "Попередній перегляд";
-"settings_notifications_push_showNickname" = "Показати прізвисько";
+"settings_notifications_push_preview" = "Попередній перегляд повідомлення";
 "settings_notifications_masterDnd_section_header" = "Політика годин тиші";
 "settings_notifications_masterDnd" = "Не турбувати під час годин тиші";
 "settings_notifications_masterDnd_section_footer" = "Заблокувати сповіщення та відхиляти дзвінки не у робочий час.";
@@ -1179,7 +1186,24 @@
 "settings_notifications_masterDnd_startTime" = "Початок робочого дня";
 "settings_notifications_masterDnd_endTime" = "Кінец робочого дня";
 "settings_notification_iOS_settings" = "Системні налаштування";
-"settings_notification_open_iOS_settings" = "Відкрити системні налаштування";
+
+"settings_notification_type_preview_title" = "Push-сповіщення";
+"settings_notification_type_preview_description" = "Укажіть, яку інформацію потрібно включати в push-сповіщення для вхідних повідомлень Threema.";
+
+"settings_notification_type_preview_restrictive_title" = "Показувати прізвисько";
+"settings_notification_type_preview_restrictive_description" = "Показується лише прізвисько контакта.";
+"settings_notification_type_preview_restrictive_sender_name" = "~Джон";
+
+"settings_notification_type_preview_balanced_title" = "Показувати ім’я";
+"settings_notification_type_preview_balanced_description" = "Показується повне ім’я контакта (параметр за замовчуванням).";
+"settings_notification_type_preview_balanced_sender_name" = "Джон Сміт";
+
+"settings_notification_type_preview_complete_title" = "Показувати ім’я і зображення профілю";
+"settings_notification_type_preview_complete_description" = "Показується повне ім’я і зображення профілю контакта. Операційній системі надається певна інформація, що стосується взаємодії. [Докладніше…](%@)";
+"settings_notification_type_preview_complete_sender_name" = "Джон Сміт";
+
+"settings_notification_type_preview_message_text" = "Приклад повідомлення…";
+"settings_notification_type_preview_no_button" = "Вимкнути push-сповіщення";
 
 // Orphaned files delete
 "settings_orphaned_files_description" = "Під час видалення даних через Керування сховищем у попередніх версіях %@, траплялись рідкі випадки того, що файли не видалялись, а переміщувались до %@.
@@ -1387,6 +1411,7 @@
 
 "chat_text_view_placeholder" = "Нове повідомлення";
 "compose_bar_camera_button_accessibility_label" = "Відкрити камеру";
+"compose_bar_image_picker_button_accessibility_label" = "Вибрати зображення";
 "compose_bar_record_button_accessibility_label" = "Записати голосове повідомлення";
 "compose_bar_send_message_button_accessibility_label" = "Надіслати повідомлення";
 "compose_bar_attachment_button_accessibility_label" = "Додати вкладення";
@@ -1463,6 +1488,9 @@
 "notification_settings_sync_pending" = "Синхронізація...";
 "notification_settings_sync_succeeded" = "Налаштування синхронізовані";
 
+"notification_interaction_delete_succeeded" = "Взаємодії видалено";
+"notification_interaction_delete_failed" = "Не вдалося видалити взаємодії";
+
 // Forward security status messages
 "forward_security_message_without" = "Отримано повідомлення без функції «Цілковита пряма секретність» (PFS). Перевірте, чи одержувач навмисно вимкнув PFS.";
 "forward_security_session_established" = "Повідомлення в цьому діалозі захищено функцією «Цілковита пряма секретність» (PFS)";
@@ -1525,7 +1553,7 @@
 "accessibility_voice_message_playing" = "Відтворюється зараз";
 
 // Message status types
-"accessibility_status_acknowledged_plus_time" = "Підтверджено, %@";
+"accessibility_status_acknowledged_plus_time" = "Прийнято, %@";
 "accessibility_status_declined_plus_time" = "Відхилено, %@";
 "accessibility_status_sending_plus_time" = "Надсилання, %@";
 "accessibility_status_sent_plus_time" = "Надіслано, %@";
@@ -1550,7 +1578,7 @@
 
 "md_wizard_terms_note_text" = "Ця технологія дає вам змогу заздалегідь перевірити підтримку різних пристроїв. Зауважте, що ці функції обмежені. Оскільки це альфа-версія, вона може працювати недосконало.";
 
-"md_wizard_terms_backup" = "Може відбутися втрата даних. Створіть резервну копію, перш ніж продовжити. [Інструкції зі створення резервної копії](https://threema.ch/docs/threema/ios_backup_manual_en.pdf)";
+"md_wizard_terms_backup" = "Дані може бути втрачено. Створіть резервну копію, перш ніж продовжити.\n[Інструкції зі створення резервної копії] https://threema.ch/docs/threema/ios_backup_manual_en.pdf)";
 "md_wizard_terms_support" = "Цей попередній перегляд підтримує текстові повідомлення. Регулярно оновлюйте застосунки для iOS і програми для настільного комп’ютера, щоб отримувати найновіші функції та оновлення.";
 "md_wizard_terms_issues" = "Інформацію про відомі проблеми й обмеження можна знайти [тут](https://threema.ch/faq/md_limit).";
 "md_wizard_terms_bugs" = "Повідомляйте про виявлені помилки в розділі «Налаштування > Відгук про бета-версію».";

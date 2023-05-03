@@ -47,6 +47,7 @@ struct BetaFeedbackView: View {
             Spacer()
 
             Button {
+                AppGroup.userDefaults().set(true, forKey: Constants.showedTestFlightFeedbackViewKey)
                 dismiss()
             } label: {
                 Text(BundleUtil.localizedString(forKey: "continue"))
@@ -57,10 +58,8 @@ struct BetaFeedbackView: View {
             .padding(.bottom, 20)
         }
         .padding()
-        
+        .interactiveDismissDisabled()
         .onDisappear {
-            AppGroup.userDefaults().set(true, forKey: Constants.showedTestFlightFeedbackViewKey)
-            
             // TODO: (IOS-3251) Remove
             LaunchModalManager.shared.checkLaunchModals()
         }

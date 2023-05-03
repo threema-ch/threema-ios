@@ -685,7 +685,7 @@ extension GroupDetailsDataSource {
                 let pushSetting = PushSetting(for: strongSelf.conversation)
                 return !pushSetting.silent
             }
-        ) { [weak self] isSet in
+        ) { [weak self, weak groupDetailsViewController] isSet in
             guard let strongSelf = self else {
                 return
             }
@@ -693,6 +693,7 @@ extension GroupDetailsDataSource {
             let pushSetting = PushSetting(for: strongSelf.conversation)
             pushSetting.silent = !isSet
             pushSetting.save()
+            groupDetailsViewController?.reloadHeader()
         }
         rows.append(.booleanAction(playSoundBooleanAction))
         

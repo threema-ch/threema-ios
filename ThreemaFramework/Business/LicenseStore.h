@@ -30,6 +30,7 @@
 @property (nullable) NSString *onPremConfigUrl NS_SWIFT_NAME(onPremConfigURL);
 
 + (nonnull instancetype)sharedLicenseStore;
+- (nonnull instancetype) __unavailable init;
 
 + (BOOL)requiresLicenseKey;
 

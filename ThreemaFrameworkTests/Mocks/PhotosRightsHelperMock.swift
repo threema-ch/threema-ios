@@ -28,7 +28,6 @@ class PhotosRightsHelperMock: PhotosRightsHelperProtocol {
     private var readAccess: Bool
     private var fullAccess: Bool
     private var writeAccess: Bool
-    private var newPhotosApi: Bool
     
     init(
         accessLevelDetermined: Bool,
@@ -36,8 +35,7 @@ class PhotosRightsHelperMock: PhotosRightsHelperProtocol {
         requestReadAccess: Bool,
         readAccess: Bool,
         fullAccess: Bool,
-        writeAccess: Bool,
-        newPhotosApi: Bool
+        writeAccess: Bool
     ) {
         self.accessLevelDeterminedResult = accessLevelDetermined
         self.writeAccess = writeAccess
@@ -45,7 +43,6 @@ class PhotosRightsHelperMock: PhotosRightsHelperProtocol {
         self.fullAccess = fullAccess
         self.requestWriteAccessResult = requestWriteAccess
         self.requestReadAccessResult = requestReadAccess
-        self.newPhotosApi = newPhotosApi
     }
     
     func accessLevelDetermined() -> Bool {
@@ -66,9 +63,5 @@ class PhotosRightsHelperMock: PhotosRightsHelperProtocol {
 
     func haveWriteAccess() -> Bool {
         writeAccess
-    }
-    
-    func checknewPhotosApi() -> Bool {
-        newPhotosApi
     }
 }

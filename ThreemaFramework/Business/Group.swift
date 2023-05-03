@@ -22,9 +22,18 @@ import CocoaLumberjackSwift
 import Foundation
 import Intents
 
-public struct GroupIdentity {
+public struct GroupIdentity: Equatable {
     public let id: Data
     public let creator: String
+
+    init(id: Data, creator: String) {
+        self.id = id
+        self.creator = creator
+    }
+
+    init(identity: Common_GroupIdentity) {
+        self.init(id: NSData.convertBytes(identity.groupID), creator: identity.creatorIdentity)
+    }
 }
 
 /// Business representation of a Threema group
@@ -138,15 +147,35 @@ public class Group: NSObject {
             EntityObserver.shared.subscribe(
                 managedObject: groupEntity
             ) { [weak self] managedObject, reason in
+                guard let groupEntity = managedObject as? GroupEntity else {
+                    DDLogError("Wrong type, should be GroupEntity")
+                    return
+                }
+                guard self?.groupIdentity == GroupIdentity(
+                    id: groupEntity.groupID,
+                    creator: groupEntity.groupCreator ?? myIdentityStore.identity
+                ) else {
+                    DDLogError("Group identity mismatch")
+                    return
+                }
+
                 switch reason {
                 case .deleted:
-                    self?.willBeDeleted = true
-                case .updated:
-                    guard let groupEntity = managedObject as? GroupEntity else {
-                        return
+                    if let deleted = self?.willBeDeleted, !deleted {
+                        self?.willBeDeleted = true
                     }
-                    self?.state = GroupState(rawValue: groupEntity.state.intValue)!
-                    self?.lastPeriodicSync = groupEntity.lastPeriodicSync
+                case .updated:
+                    if let newState = GroupState(rawValue: groupEntity.state.intValue) {
+                        if self?.state != newState {
+                            self?.state = newState
+                        }
+                    }
+                    else {
+                        DDLogError("Unknown group state")
+                    }
+                    if self?.lastPeriodicSync != groupEntity.lastPeriodicSync {
+                        self?.lastPeriodicSync = groupEntity.lastPeriodicSync
+                    }
                 }
             }
         )
@@ -156,27 +185,53 @@ public class Group: NSObject {
             EntityObserver.shared.subscribe(
                 managedObject: conversation
             ) { [weak self] managedObject, reason in
+                guard let conversation = managedObject as? Conversation else {
+                    DDLogError("Wrong type, should be Conversation")
+                    return
+                }
+                guard conversation.isGroup(), self?.groupID == conversation.groupID else {
+                    DDLogError("Group ID mismatch")
+                    return
+                }
+
                 switch reason {
                 case .deleted:
-                    self?.willBeDeleted = true
+                    if let deleted = self?.willBeDeleted, !deleted {
+                        self?.willBeDeleted = true
+                    }
                 case .updated:
-                    guard let conversation = managedObject as? Conversation else {
-                        return
+                    if self?.conversationGroupMyIdentity != conversation.groupMyIdentity {
+                        self?.conversationGroupMyIdentity = conversation.groupMyIdentity
                     }
-                    self?.conversationGroupMyIdentity = conversation.groupMyIdentity
                     if let contactEntity = conversation.contact {
-                        self?.conversationContact = Contact(contactEntity: contactEntity)
+                        let newConversationContact = Contact(contactEntity: contactEntity)
+                        if self?.conversationContact != newConversationContact {
+                            self?.conversationContact = newConversationContact
+                        }
                     }
-                    self?.name = conversation.groupName
-                    self?.photo = conversation.groupImage
-                    self?.lastMessageDate = conversation.lastMessage?.date
-                    self?.conversationCategory = conversation.conversationCategory
-                    self?.conversationVisibility = conversation.conversationVisibility
+                    else if self?.conversationContact != nil {
+                        self?.conversationContact = nil
+                    }
+                    if self?.name != conversation.groupName {
+                        self?.name = conversation.groupName
+                    }
+                    if self?.photo?.data != conversation.groupImage?.data {
+                        self?.photo = conversation.groupImage
+                    }
+                    if self?.lastMessageDate != conversation.lastMessage?.date {
+                        self?.lastMessageDate = conversation.lastMessage?.date
+                    }
+                    if self?.conversationCategory != conversation.conversationCategory {
+                        self?.conversationCategory = conversation.conversationCategory
+                    }
+                    if self?.conversationVisibility != conversation.conversationVisibility {
+                        self?.conversationVisibility = conversation.conversationVisibility
+                    }
 
                     // Check has members composition changed
                     let newMembers = Set(conversation.members.map { Contact(contactEntity: $0) })
 
-                    if self?.members != newMembers {
+                    if let members = self?.members, !members.contactsEqual(to: newMembers) {
                         self?.members = newMembers
                         self?.sortedMembers = self?.allSortedMembers() ?? [Member]()
                         self?.membersList = self?.sortedMembers.map(\.shortDisplayName)
@@ -195,7 +250,7 @@ public class Group: NSObject {
     /// This will be set to `true` when a group is in the process to be deleted.
     ///
     /// This can be used to detect deletion in KVO-observers
-    public private(set) dynamic var willBeDeleted = false
+    @objc public private(set) dynamic var willBeDeleted = false
 
     public let groupIdentity: GroupIdentity
     @objc public private(set) dynamic var state: GroupState
@@ -315,7 +370,7 @@ public class Group: NSObject {
         guard let lastMessageDate = lastMessageDate else {
             return ""
         }
-            
+
         return DateFormatter.relativeMediumDate(for: lastMessageDate)
     }
     
@@ -383,5 +438,26 @@ public class Group: NSObject {
         )
 
         return allSortedMembers
+    }
+
+    // MARK: Comparing function
+
+    public func isEqual(to object: Any?) -> Bool {
+        guard let object = object as? Group else {
+            return false
+        }
+
+        return willBeDeleted == object.willBeDeleted &&
+            groupIdentity == object.groupIdentity &&
+            state == object.state &&
+            lastPeriodicSync == object.lastPeriodicSync &&
+            conversationGroupMyIdentity == object.conversationGroupMyIdentity &&
+            conversationContact == object.conversationContact &&
+            name == object.name &&
+            photo?.data == object.photo?.data &&
+            lastMessageDate == object.lastMessageDate &&
+            conversationCategory == object.conversationCategory &&
+            conversationVisibility == object.conversationVisibility &&
+            members.contactsEqual(to: object.members)
     }
 }

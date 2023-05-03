@@ -548,18 +548,6 @@ extension CspE2eFs_ForwardSecurityEnvelope.Message.DHType: CaseIterable {
 
 #endif  // swift(>=4.2)
 
-#if swift(>=5.5) && canImport(_Concurrency)
-extension CspE2eFs_ForwardSecurityEnvelope: @unchecked Sendable {}
-extension CspE2eFs_ForwardSecurityEnvelope.OneOf_Content: @unchecked Sendable {}
-extension CspE2eFs_ForwardSecurityEnvelope.Init: @unchecked Sendable {}
-extension CspE2eFs_ForwardSecurityEnvelope.Accept: @unchecked Sendable {}
-extension CspE2eFs_ForwardSecurityEnvelope.Reject: @unchecked Sendable {}
-extension CspE2eFs_ForwardSecurityEnvelope.Reject.Cause: @unchecked Sendable {}
-extension CspE2eFs_ForwardSecurityEnvelope.Terminate: @unchecked Sendable {}
-extension CspE2eFs_ForwardSecurityEnvelope.Message: @unchecked Sendable {}
-extension CspE2eFs_ForwardSecurityEnvelope.Message.DHType: @unchecked Sendable {}
-#endif  // swift(>=5.5) && canImport(_Concurrency)
-
 // MARK: - Code below here is support for the SwiftProtobuf runtime.
 
 fileprivate let _protobuf_package = "csp_e2e_fs"
@@ -653,13 +641,12 @@ extension CspE2eFs_ForwardSecurityEnvelope: SwiftProtobuf.Message, SwiftProtobuf
   }
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    // The use of inline closures is to circumvent an issue where the compiler
-    // allocates stack space for every if/case branch local when no optimizations
-    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
-    // https://github.com/apple/swift-protobuf/issues/1182
     if !self.sessionID.isEmpty {
       try visitor.visitSingularBytesField(value: self.sessionID, fieldNumber: 1)
     }
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every case branch when no optimizations are
+    // enabled. https://github.com/apple/swift-protobuf/issues/1034
     switch self.content {
     case .init_p?: try {
       guard case .init_p(let v)? = self.content else { preconditionFailure() }

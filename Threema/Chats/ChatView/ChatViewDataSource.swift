@@ -30,7 +30,8 @@ protocol ChatViewDataSourceDelegate: AnyObject {
     /// This is always called on the main queue. This might be called multiple times before the corresponding `didApplySnapshot()` is called.
     ///
     /// - Parameter currentDoesIncludeNewestMessage: Should the current snapshot include the newest message? (`false` if this is the first snapshot)
-    func willApplySnapshot(currentDoesIncludeNewestMessage: Bool)
+    /// - Returns: A block which should be executed together with `apply` in a single UIView.animate block.
+    func willApplySnapshot(currentDoesIncludeNewestMessage: Bool) -> (() -> Void)?
     
     /// Called after a new snapshot was applied
     ///
@@ -207,8 +208,6 @@ class ChatViewDataSource: UITableViewDiffableDataSource<String, ChatViewDataSour
     private var afterFirstSnapshotApply: (() -> Void)?
     
     private var cancellables = Set<AnyCancellable>()
-    
-    private var lastSnapApply: NSDiffableDataSourceSnapshot<String, CellType>?
     
     private lazy var selectedObjectIDs = Set<NSManagedObjectID>()
     
@@ -399,9 +398,12 @@ class ChatViewDataSource: UITableViewDiffableDataSource<String, ChatViewDataSour
         let snapshotWillApplyDoneDispatchGroup = DispatchGroup()
         snapshotWillApplyDoneDispatchGroup.enter()
         
+        // Block which will be executed together with `apply` in a single animation
+        var snapshotApplyAnimateBlockBlock: (() -> Void)?
+        
         DispatchQueue.main.async {
             DDLogVerbose("willApplySnapshot")
-            self.delegate?.willApplySnapshot(
+            snapshotApplyAnimateBlockBlock = self.delegate?.willApplySnapshot(
                 currentDoesIncludeNewestMessage: snapshotInfo.previouslyNewestMessagesLoaded
             )
             
@@ -444,19 +446,65 @@ class ChatViewDataSource: UITableViewDiffableDataSource<String, ChatViewDataSour
         
         // Update the default Row animation based on snapshot info
         defaultRowAnimation = snapshotInfo.rowAnimation
+        
+        // A fun observation on shouldAnimate. If we set `shouldAnimate` to false and add lots of messages at the top,
+        // then the UITableView will not detect the new contentOffset, which should increase by a lot because there are now many cells on top,
+        // and keeps it approximately at the current value.
+        // This causes our load at top detection to trigger again which in turn then makes the chat view jump to an unrelated scroll position
+        // further up.
         let shouldAnimate = snapshotInfo.rowAnimation != .none
         
-        apply(snapshotInfo.snapshot, animatingDifferences: shouldAnimate) {
-            DDLogVerbose("Did apply new snapshot")
-            assert(Thread.isMainThread)
-            
-            self.previouslyNewestMessagesLoaded = snapshotInfo.previouslyNewestMessagesLoaded
-            
-            self.snapshotApplyLock.unlock()
-            
-            self.delegate?.didApplySnapshot {
-                DDLogVerbose("Leaving DispatchGroup")
-                snapshotApplyDoneDispatchGroup?.leave()
+        // Block calling the apply function of the data source
+        // This must only be used directly below and must be called exactly *once*.
+        let applyBlock = {
+            self.apply(snapshotInfo.snapshot, animatingDifferences: shouldAnimate) {
+                DDLogVerbose("Did apply new snapshot")
+                assert(Thread.isMainThread)
+                
+                self.previouslyNewestMessagesLoaded = snapshotInfo.previouslyNewestMessagesLoaded
+                
+                self.snapshotApplyLock.unlock()
+                
+                self.delegate?.didApplySnapshot {
+                    DDLogVerbose("Leaving DispatchGroup")
+                    snapshotApplyDoneDispatchGroup?.leave()
+                }
+            }
+        }
+        
+        // Choreograph snapshot apply and subsequent scroll to bottom
+        // Resolves points four and five in IOS-3613
+        //
+        // In non-flipped mode when sending two messages in quick succession we would observe the scroll
+        // position to be incorrectly set when the first message would hide its date and state view.
+        // Instead of keeping at the very bottom we would scroll up by about the height of the date and state view.
+        // It is unclear why this would happen, but we believe that this is coming from UITableView trying to keep a "good"
+        // scroll position but failing in this case since we want to be at the very bottom.
+        //
+        // Simply adding an additional scroll to bottom call in didApplySnapshot of ChatViewController did result in a visible
+        // scroll up and then down animation. To avoid this we move the previous implementaiton of snapshot apply and a call to
+        // scrollToBottom (`snapshotApplyAnimateBlockBlock`) into a single UIView.animate animation block.
+        if flippedTableView {
+            applyBlock()
+        }
+        else {
+            DispatchQueue.main.async {
+                let previousSnapshot = self.snapshot()
+                if let snapshotApplyAnimateBlockBlock,
+                   previousSnapshot.numberOfItems == snapshotInfo.snapshot.numberOfItems ||
+                   ChatViewDataSource.nextRemovesUnreadMessageLine(
+                       current: previousSnapshot,
+                       next: snapshotInfo.snapshot
+                   ) {
+                    UIView.animate(withDuration: Config.animationDuration, animations: {
+                        applyBlock()
+                        
+                        snapshotApplyAnimateBlockBlock()
+                    })
+                }
+                else {
+                    applyBlock()
+                }
             }
         }
         
@@ -553,6 +601,31 @@ class ChatViewDataSource: UITableViewDiffableDataSource<String, ChatViewDataSour
         }
         
         return ChatViewDataSource.MessageNeighbors(previousMessage: previousMessage, nextMessage: nextMessage)
+    }
+    
+    static func nextRemovesUnreadMessageLine(
+        current: NSDiffableDataSourceSnapshot<String, ChatViewDataSource.CellType>,
+        next: NSDiffableDataSourceSnapshot<String, ChatViewDataSource.CellType>
+    ) -> Bool {
+        let currentHasUnreadMessageLine = current.itemIdentifiers.contains(where: { cellType in
+            if case .unreadLine(state: _) = cellType {
+                return true
+            }
+            else {
+                return false
+            }
+        })
+        
+        let nextHasUnreadMessageLine = next.itemIdentifiers.contains(where: { cellType in
+            if case .unreadLine(state: _) = cellType {
+                return true
+            }
+            else {
+                return false
+            }
+        })
+        
+        return currentHasUnreadMessageLine && !nextHasUnreadMessageLine
     }
 
     // MARK: - Multi-Select

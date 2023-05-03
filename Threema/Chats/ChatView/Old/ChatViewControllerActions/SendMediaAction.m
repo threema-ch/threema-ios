@@ -267,10 +267,20 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 }
 
 - (void)showPreviewForAssets:(NSArray *)assets {
+    [self showPreviewForAssets:assets showKeyboard:false];
+}
+
+/// Show the media preview with the selected images
+/// - Parameters:
+///   - assets: Array of selected asses
+///   - showKeyboard: If yes, it will focus the textfield and show the keyboard
+- (void)showPreviewForAssets:(NSArray *)assets showKeyboard:(BOOL)showKeyboard {
     NSBundle *sbBundle = [NSBundle bundleForClass:[MediaPreviewViewController class]];
     UIStoryboard *storyboard = [UIStoryboard storyboardWithName:@"MediaShareStoryboard" bundle:sbBundle];
     ThemedNavigationController *navController = [storyboard instantiateInitialViewController];
     MediaPreviewViewController *selectionViewController = (MediaPreviewViewController *)[navController topViewController];
+    
+    selectionViewController.showKeyboard = showKeyboard;
     
     selectionViewController.backIsCancel = true;
     if (![assets.firstObject isKindOfClass:PHAsset.class]) {

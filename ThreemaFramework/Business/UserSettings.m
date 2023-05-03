@@ -57,7 +57,7 @@ typedef NS_ENUM(NSInteger, ThreemaAudioMessagePlaySpeed) {
 @synthesize sendTypingIndicator;
 @synthesize blockUnknown;
 @synthesize enablePoi;
-@synthesize donateInteractions;
+@synthesize allowOutgoingDonations;
 @synthesize hideStaleContacts;
 
 @synthesize inAppSounds;
@@ -66,14 +66,15 @@ typedef NS_ENUM(NSInteger, ThreemaAudioMessagePlaySpeed) {
 @synthesize pushSound;
 @synthesize pushGroupGenerated;
 @synthesize pushGroupSound;
+@synthesize notificationType;
 @synthesize pushDecrypt;
-@synthesize pushShowNickname;
 
 @synthesize imageSize;
 @synthesize videoQuality;
 @synthesize autoSaveMedia;
 
 @synthesize disableBigEmojis;
+@synthesize sendMessageFeedback;
 @synthesize wallpaper;
 @synthesize darkTheme;
 @synthesize useSystemTheme;
@@ -135,13 +136,16 @@ typedef NS_ENUM(NSInteger, ThreemaAudioMessagePlaySpeed) {
 
 @synthesize newChatViewActive;
 @synthesize flippedTableView;
-@synthesize featureFlagEnableNoMIMETypeFileMessagesFilter;
 
 @synthesize unknownGroupAlertList;
 
 @synthesize hidePrivateChats;
 @synthesize blockCommunication;
 @synthesize voiceMessagesShowTimeRemaining;
+
+/// Deprecated Keys, please add keys if they are removed:
+/// featureFlagEnableNoMIMETypeFileMessagesFilter
+/// PushShowNickname
 
 static UserSettings *instance;
 
@@ -202,12 +206,12 @@ static UserSettings *instance;
                                         [NSNumber numberWithBool:YES], @"InAppPreview",
                                         [NSNumber numberWithBool:NO],  @"BlockUnknown",
                                         [NSNumber numberWithBool:YES],  @"EnablePOI",
-                                        [NSNumber numberWithBool:NO],  @"DonateInteractions",
                                         [NSNumber numberWithBool:NO],  @"HideStaleContacts",
                                         @"large", @"ImageSize",
                                         @"high", @"VideoQuality",
                                         [NSNumber numberWithBool:NO],  @"AutoSaveMedia",
                                         [NSNumber numberWithBool:NO], @"DisableBigEmojis",
+                                        [NSNumber numberWithBool:YES], @"SendMessageFeedback",
                                         [NSNumber numberWithBool:defaultDarkTheme], @"DarkTheme",
                                         [NSNumber numberWithBool:defaultUseSystemTheme], @"UseSystemTheme",
                                         [NSNumber numberWithBool:YES], @"ShowProfilePictures",
@@ -216,8 +220,8 @@ static UserSettings *instance;
                                         @"default", @"PushSound",
                                         [NSNumber numberWithBool:NO], @"PushGroupGenerated",
                                         @"default", @"PushGroupSound",
-                                        [NSNumber numberWithBool:NO], @"PushDecrypt",
-                                        [NSNumber numberWithBool:NO], @"PushShowNickname",
+                                        [NSNumber numberWithBool:YES], @"PushDecrypt",
+                                        [NSNumber numberWithInt:1], @"NotificationType",
                                         [NSNumber numberWithBool:NO], @"ValidationLogging",
                                         [NSNumber numberWithBool:YES], @"EnableIPv6",
                                         [NSNumber numberWithBool:NO], @"CompanyDirectory",
@@ -249,8 +253,7 @@ static UserSettings *instance;
                                         @"17:00", @"MasterDNDEndTime",
                                         [NSNumber numberWithBool:YES], @"EnableVideoCall",
                                         [NSNumber numberWithBool:YES], @"NewChatViewActive",
-                                        [NSNumber numberWithBool:YES], @"flippedTableView",
-                                        [NSNumber numberWithBool:YES], @"featureFlagEnableNoMIMETypeFileMessagesFilter",
+                                        [NSNumber numberWithBool:NO], @"flippedTableView",
                                         [NSNumber numberWithInt:ThreemaVideoCallQualitySettingAuto], @"ThreemaVideoCallQualitySetting",
                                         @"", @"SentryAppDevice",
                                         [NSMutableArray array], @"UnknownGroupAlertList",
@@ -274,11 +277,11 @@ static UserSettings *instance;
     syncContacts = [defaults boolForKey:@"SyncContacts"];
     syncExclusionList = [defaults arrayForKey:@"SyncExclusionList"];
     blacklist = [NSOrderedSet orderedSetWithArray:[defaults arrayForKey:@"Blacklist"]];
+    allowOutgoingDonations = [defaults boolForKey:@"AllowOutgoingDonations"];
     workIdentities = [NSOrderedSet orderedSetWithArray:[defaults arrayForKey:@"WorkIdentities"]];
     pushSettingsList = [NSOrderedSet orderedSetWithArray:[defaults arrayForKey:@"PushSettingsList"]];
     sendTypingIndicator = [defaults boolForKey:@"SendTypingIndicator"];
     blockUnknown = [defaults boolForKey:@"BlockUnknown"];
-    donateInteractions = [defaults boolForKey:@"DonateInteractions"];
     enablePoi = [defaults boolForKey:@"EnablePOI"];
     hideStaleContacts = [defaults boolForKey:@"HideStaleContacts"];
     
@@ -289,13 +292,14 @@ static UserSettings *instance;
     pushGroupGenerated = [defaults boolForKey:@"PushGroupGenerated"];
     pushGroupSound = [defaults stringForKey:@"PushGroupSound"];
     pushDecrypt = [defaults boolForKey:@"PushDecrypt"];
-    pushShowNickname = [defaults boolForKey:@"PushShowNickname"];
+    notificationType = [defaults objectForKey: @"NotificationType"];
     
     imageSize = [defaults stringForKey:@"ImageSize"];
     videoQuality = [defaults stringForKey:@"VideoQuality"];
     autoSaveMedia = [defaults boolForKey:@"AutoSaveMedia"];
     
     disableBigEmojis = [defaults boolForKey:@"DisableBigEmojis"];
+    sendMessageFeedback = [defaults boolForKey:@"SendMessageFeedback"];
     darkTheme = [defaults boolForKey:@"DarkTheme"];
     useSystemTheme = [defaults boolForKey:@"UseSystemTheme"];
     showProfilePictures = [defaults boolForKey:@"ShowProfilePictures"];
@@ -377,10 +381,8 @@ static UserSettings *instance;
     voiceMessagesShowTimeRemaining = [defaults boolForKey:@"VoiceMessagesShowTimeRemaining"];
     
     // TODO: (IOS-2860) Remove
-    newChatViewActive = !UIAccessibilityIsVoiceOverRunning(); // TODO: (IOS-3584) use defaults setting again
+    newChatViewActive = YES;
     flippedTableView = [defaults boolForKey:@"flippedTableView"];
-    
-    featureFlagEnableNoMIMETypeFileMessagesFilter = [defaults boolForKey:@"featureFlagEnableNoMIMETypeFileMessagesFilter"];
 }
 
 - (void)pushSettingsMigration:(NSOrderedSet *)tmpNoPushIdentities {
@@ -453,9 +455,15 @@ static UserSettings *instance;
     [defaults synchronize];
 }
 
-- (void)setDonateInteractions:(BOOL)newDonateInteractions {
-    donateInteractions = newDonateInteractions;
-    [defaults setBool:donateInteractions forKey:@"DonateInteractions"];
+- (void)setAllowOutgoingDonations:(BOOL)newAllowOutgoingDonations {
+    allowOutgoingDonations = newAllowOutgoingDonations;
+    [defaults setBool:allowOutgoingDonations forKey:@"AllowOutgoingDonations"];
+    [defaults synchronize];
+}
+
+- (void)setNotificationType:(NSNumber *)newNotificationType {
+    notificationType = newNotificationType;
+    [defaults setObject:notificationType forKey:@"NotificationType"];
     [defaults synchronize];
 }
 
@@ -504,12 +512,6 @@ static UserSettings *instance;
 - (void)setPushDecrypt:(BOOL)newPushDecrypt {
     pushDecrypt = newPushDecrypt;
     [defaults setBool:pushDecrypt forKey:@"PushDecrypt"];
-    [defaults synchronize];
-}
-
-- (void)setPushShowNickname:(BOOL)newPushShowNickname {
-    pushShowNickname = newPushShowNickname;
-    [defaults setBool:pushShowNickname forKey:@"PushShowNickname"];
     [defaults synchronize];
 }
 
@@ -649,6 +651,12 @@ static UserSettings *instance;
 - (void)setDisableBigEmojis:(BOOL)newDisableBigEmojis {
     disableBigEmojis = newDisableBigEmojis;
     [defaults setBool:disableBigEmojis forKey:@"DisableBigEmojis"];
+    [defaults synchronize];
+}
+
+- (void)setSendMessageFeedback:(BOOL)newSendMessageFeedback {
+    sendMessageFeedback = newSendMessageFeedback;
+    [defaults setBool:sendMessageFeedback forKey:@"SendMessageFeedback"];
     [defaults synchronize];
 }
 
@@ -843,21 +851,9 @@ static UserSettings *instance;
     [defaults synchronize];
 }
 
-- (void)setNewChatViewActive:(BOOL)reallyNewChatViewActive {
-    newChatViewActive = reallyNewChatViewActive;
-    [defaults setBool:newChatViewActive forKey:@"NewChatViewActive"];
-    [defaults synchronize];
-}
-
 - (void)setFlippedTableView:(BOOL)newFlippedTableView {
     flippedTableView = newFlippedTableView;
     [defaults setBool:flippedTableView forKey:@"flippedTableView"];
-    [defaults synchronize];
-}
-
-- (void)setFeatureFlagEnableNoMIMETypeFileMessagesFilter:(BOOL)newFeatureFlagEnableNoMIMETypeFileMessagesFilter {
-    featureFlagEnableNoMIMETypeFileMessagesFilter = newFeatureFlagEnableNoMIMETypeFileMessagesFilter;
-    [defaults setBool:featureFlagEnableNoMIMETypeFileMessagesFilter forKey:@"featureFlagEnableNoMIMETypeFileMessagesFilter"];
     [defaults synchronize];
 }
 

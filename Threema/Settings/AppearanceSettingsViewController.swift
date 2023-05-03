@@ -126,6 +126,13 @@ class AppearanceSettingsViewController: ThemedTableViewController {
         displayOrderValue.text = UserSettings.shared().displayOrderFirstName ? BundleUtil
             .localizedString(forKey: "SortOrder_Firstname") : BundleUtil.localizedString(forKey: "SortOrder_Lastname")
         
+        if let mdmSetup = MDMSetup(setup: false) {
+            hideStaleContactsSwitch.isEnabled = !mdmSetup.disableHideStaleContacts()
+        }
+        else {
+            hideStaleContactsSwitch.isEnabled = true
+        }
+        
         hideStaleContactsSwitch.isOn = UserSettings.shared().hideStaleContacts
         
         previewLimitSlider.value = UserSettings.shared().previewLimit

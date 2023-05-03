@@ -20,7 +20,7 @@
 
 import Foundation
 import PromiseKit
-import ThreemaFramework
+@testable import ThreemaFramework
 
 class MessageProcessorMock: NSObject, MessageProcessorProtocol {
     var processIncomingMessageCalls = [BoxedMessage]()
@@ -37,7 +37,7 @@ class MessageProcessorMock: NSObject, MessageProcessorProtocol {
         processIncomingMessageCalls.append(boxmsg)
 
         if let abstractMessage = abstractMessage {
-            return AnyPromise(Promise { $0.fulfill(abstractMessage) })
+            return AnyPromise(Promise { $0.fulfill(AbstractMessageAndPFSSession(message: abstractMessage)) })
         }
         else if let error = error {
             return AnyPromise(Promise<AbstractMessage>(error: error))

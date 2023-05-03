@@ -55,6 +55,8 @@ typedef enum : NSUInteger {
 
 - (__kindof NSManagedObject *)existingObjectWithID:(NSManagedObjectID *)objectID;
 
+- (__kindof NSManagedObject *)existingObjectWithIDString:(NSString *)objectIDString;
+
 - (nullable BaseMessage *)ownMessageWithId:(NSData *)messageId NS_SWIFT_NAME(ownMessage(with:));
 
 - (nullable BaseMessage *)messageWithId:(nonnull NSData *)messageId conversation:(nonnull Conversation *)conversation NS_SWIFT_NAME(message(with:conversation:));

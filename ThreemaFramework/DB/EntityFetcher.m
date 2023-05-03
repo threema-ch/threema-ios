@@ -72,6 +72,21 @@
     return managedObject;
 }
 
+- (__kindof NSManagedObject *)existingObjectWithIDString:(NSString *)objectIDString {
+    NSError *error;
+    
+    NSURL *url = [NSURL URLWithString:objectIDString];
+    NSManagedObjectID *objectID = [[_managedObjectContext persistentStoreCoordinator] managedObjectIDForURIRepresentation:url];
+    NSManagedObject *managedObject = [_managedObjectContext existingObjectWithID:objectID error:&error];
+    
+    if (error != nil) {
+        DDLogError(@"Unable to load existing object: %@", error.localizedDescription);
+        return nil;
+    }
+    
+    return managedObject;
+}
+
 - (BaseMessage *)ownMessageWithId:(NSData *)messageId {
     return [self singleEntityNamed:@"Message" withPredicate: @"id == %@ AND isOwn == YES", messageId];
 }

@@ -288,6 +288,8 @@ class ChatTextViewPerformanceTest: XCTestCase {
 // MARK: - ChatTextViewDelegate
 
 extension ChatTextViewPerformanceTest: ChatTextViewDelegate {
+    func checkIfPastedStringIsMedia() -> Bool { false }
+    
     func didEndEditing() { }
     
     func canStartEditing() -> Bool { true }

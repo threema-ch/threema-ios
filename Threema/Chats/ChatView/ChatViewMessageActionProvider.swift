@@ -18,6 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import CocoaLumberjackSwift
 import Foundation
 import ThreemaFramework
 import UIKit
@@ -191,8 +192,15 @@ struct ChatViewMessageActionProvider {
             image: UIImage(systemName: "square.and.arrow.up")
         ) {
             
-            guard !MDMSetup(setup: false).disableShareMedia() else {
-                fatalError()
+            for item in shareItems {
+                if (item as? BlobData) != nil {
+                    guard !MDMSetup(setup: false).disableShareMedia() else {
+                        DDLogWarn(
+                            "[ChatViewMessageActionProvider] Tried to share media, even if MDM disabled it."
+                        )
+                        return
+                    }
+                }
             }
             
             let activityVC = UIActivityViewController(activityItems: shareItems, applicationActivities: nil)

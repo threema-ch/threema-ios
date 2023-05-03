@@ -41,6 +41,8 @@ final class ChatViewSnapshotProvider {
     
     struct SnapshotInfo {
         let snapshot: ChatViewDiffableDataSourceSnapshot
+        // Changing this has various implications on the whole snapshot apply and UITableView state after applying the snapshot
+        // if you change this, make sure to test extensively and check the comment in `ChatViewDataSource` line 448
         let rowAnimation: UITableView.RowAnimation
         let mustWaitForApply: Bool
         let snapshotChanged: NSManagedObjectID?
@@ -228,7 +230,8 @@ final class ChatViewSnapshotProvider {
                 previousSnapshot: strongSelf.previousSnapshotInfo,
                 nextSnap: snapshot
             )
-            let defaultAnimation: UITableView.RowAnimation = strongSelf.flippedTableView ? .top : .bottom
+            // If you change this, you should first read the fun observation on `shouldAnimate` in ChatViewDataSource line 448
+            let defaultAnimation: UITableView.RowAnimation = strongSelf.flippedTableView ? .top : .fade
             
             let newSnapshotInfo = SnapshotInfo(
                 snapshot: snapshot,
@@ -717,7 +720,7 @@ extension ChatViewSnapshotProvider {
             DDLogError(
                 "Animations were both not none (a:\(snapshotA.rowAnimation), b: \(snapshotB.rowAnimation), This must not occur. Will use .fade as fallback."
             )
-            rowAnimation = .fade
+            rowAnimation = .none
         }
         
         let newSnapshotInfo = SnapshotInfo(

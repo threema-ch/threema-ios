@@ -1080,7 +1080,6 @@ Endatescha p.pl. tias datas d’access. Contactescha tes administratur, sche ti 
 "settings_notifications_push_sound" = "Tun";
 "settings_notifications_push_groupsound" = "Tun da las gruppas";
 "settings_notifications_push_preview" = "Prevista";
-"settings_notifications_push_showNickname" = "Mussar il surnum";
 "settings_notifications_masterDnd_section_header" = "Regulaziun dal temp da paus";
 "settings_notifications_masterDnd" = "Betg disturbar durant il temp da paus";
 "settings_notifications_masterDnd_section_footer" = "Na mussar nagins messadis e refusar telefonats ordaifer il temp da lavur.";
@@ -1088,7 +1087,6 @@ Endatescha p.pl. tias datas d’access. Contactescha tes administratur, sche ti 
 "settings_notifications_masterDnd_startTime" = "Cumenzament da la lavur";
 "settings_notifications_masterDnd_endTime" = "Fin da la lavur";
 "settings_notification_iOS_settings" = "Configuraziuns dal sistem";
-"settings_notification_open_iOS_settings" = "Avrir las configuraziuns dal sistem";
 
 // Orphaned files delete
 "settings_orphaned_files_description" = "En versiuns da %@ precedentas pudevi darar capitar che medias e/u datas che vegnivan stizzadas en l’administraziun da la memoria, vegnivan allontanadas da %@, ma betg stizzadas cumplettamain.

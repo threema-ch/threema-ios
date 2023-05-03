@@ -275,4 +275,21 @@ public final class ThreemaUtility: NSObject {
             userInfo: nil
         )
     }
+    
+    // MARK: - String Conversions
+    
+    /// Trims whiteSpaces and newlines as well as (U+FFFC) from string
+    /// - Parameter string: String to trim
+    /// - Returns: Trimmed string
+    public static func trimCharacters(in string: String) -> String {
+        // Remove text attachments from the string we want to send.
+        // If we do not remove this we'll be able to send "empty" messages.
+        // This character usually gets inserted when showing the microphone icon in the text field when using dictation from iOS.
+        // https://stackoverflow.com/questions/41564176/remove-u-0000fffc-unicode-scalar-from-string/45058555#45058555
+        // https://www.fileformat.info/info/unicode/char/fffc/index.htm
+        let sanitized = string.trimmingCharacters(in: ["\u{fffc}"])
+        
+        // Trim general whitespace
+        return sanitized.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
 }

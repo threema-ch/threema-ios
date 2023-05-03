@@ -222,9 +222,7 @@ public extension Colors {
             tabBar.barStyle = .black
         }
         
-        if #available(iOS 15.0, *) {
-            tabBar.scrollEdgeAppearance = tabBar.standardAppearance
-        }
+        tabBar.scrollEdgeAppearance = tabBar.standardAppearance
     }
     
     @objc class func update(toolBar: UIToolbar) {

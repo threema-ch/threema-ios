@@ -88,9 +88,16 @@ public enum AppIcon: CaseIterable {
         
         switch self {
         case .default:
-            image = UIImage(named: "icon_2019_full")
+            switch ThreemaApp.current {
+            case .threema:
+                image = UIImage(named: "icon_2019_consumer_full")
+            case .work:
+                image = UIImage(named: "icon_2019_work_full")
+            case .red, .workRed, .onPrem:
+                image = UIImage(named: "icon_2019_onprem_full")
+            }
         case .icon2019:
-            image = UIImage(named: "icon_2019_full")
+            image = UIImage(named: "icon_2019_consumer_full")
         case .icon20131:
             image = UIImage(named: "icon_2013_march_full")
         case .icon20132:

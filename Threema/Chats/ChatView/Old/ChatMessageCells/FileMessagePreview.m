@@ -224,7 +224,7 @@
     fileView.frame = [RectUtil rect:fileView.frame centerIn:view.frame round:YES];
 }
 
-- (void)willDismissModalNavigationController {
+- (void)didDismissModalNavigationController {
     if (_tmpFileUrl) {
         [[NSFileManager defaultManager] removeItemAtURL:_tmpFileUrl error:nil];
         _tmpFileUrl = nil;

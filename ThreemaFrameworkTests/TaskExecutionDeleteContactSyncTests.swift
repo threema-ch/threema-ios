@@ -26,8 +26,6 @@ class TaskExecutionDeleteContactSyncTests: XCTestCase {
     private var databaseMainCnx: DatabaseContext!
     private var databaseBackgroundCnx: DatabaseContext!
 
-    private var deviceGroupKeys: DeviceGroupKeys!
-    
     private let timeout: Double = 30
     
     override func setUpWithError() throws {
@@ -37,44 +35,22 @@ class TaskExecutionDeleteContactSyncTests: XCTestCase {
         let (_, mainCnx, backgroundCnx) = DatabasePersistentContext.devNullContext()
         databaseMainCnx = DatabaseContext(mainContext: mainCnx, backgroundContext: nil)
         databaseBackgroundCnx = DatabaseContext(mainContext: mainCnx, backgroundContext: backgroundCnx)
-
-        deviceGroupKeys = DeviceGroupKeys(
-            dgpk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
-            dgrk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
-            dgdik: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
-            dgsddk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
-            dgtsk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
-            deviceGroupIDFirstByteHex: "a1"
-        )
     }
     
     func testShouldSkip() throws {
-        let deviceID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.deviceIDLength)!
-        
         let contact = ContactEntity(context: databaseMainCnx.main)
         contact.identity = "ECHOECHO"
         contact.publicNickname = "ECHOECHO"
 
         let frameworkInjectorMock = BusinessInjectorMock(
             backgroundEntityManager: EntityManager(databaseContext: databaseBackgroundCnx),
-            backgroundGroupManager: GroupManagerMock(),
-            backgroundUnreadMessages: UnreadMessagesMock(),
             contactStore: ContactStoreMock(callOnCompletion: false, contact),
             entityManager: EntityManager(databaseContext: databaseMainCnx),
-            groupManager: GroupManagerMock(),
-            licenseStore: LicenseStore.shared(),
-            messageSender: MessageSenderMock(),
-            multiDeviceManager: MultiDeviceManagerMock(),
-            myIdentityStore: MyIdentityStoreMock(),
-            userSettings: UserSettingsMock(),
-            settingsStore: SettingsStoreMock(),
             serverConnector: ServerConnectorMock(
                 connectionState: .loggedIn,
-                deviceID: deviceID,
-                deviceGroupKeys: deviceGroupKeys
-            ),
-            mediatorMessageProtocol: MediatorMessageProtocolMock(),
-            messageProcessor: MessageProcessorMock()
+                deviceID: MockData.deviceID,
+                deviceGroupKeys: MockData.deviceGroupKeys
+            )
         )
 
         let taskDefinition = TaskDefinitionDeleteContactSync(contacts: [contact.identity])
@@ -86,32 +62,18 @@ class TaskExecutionDeleteContactSyncTests: XCTestCase {
     }
     
     func testSuccessPrecondition() throws {
-        let deviceID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.deviceIDLength)!
-
         let contact = ContactEntity(context: databaseMainCnx.main)
         contact.identity = "ECHOECHO"
         contact.publicNickname = "ECHOECHO"
 
         let frameworkInjectorMock = BusinessInjectorMock(
             backgroundEntityManager: EntityManager(databaseContext: databaseBackgroundCnx),
-            backgroundGroupManager: GroupManagerMock(),
-            backgroundUnreadMessages: UnreadMessagesMock(),
-            contactStore: ContactStoreMock(),
             entityManager: EntityManager(databaseContext: databaseMainCnx),
-            groupManager: GroupManagerMock(),
-            licenseStore: LicenseStore.shared(),
-            messageSender: MessageSenderMock(),
-            multiDeviceManager: MultiDeviceManagerMock(),
-            myIdentityStore: MyIdentityStoreMock(),
-            userSettings: UserSettingsMock(),
-            settingsStore: SettingsStoreMock(),
             serverConnector: ServerConnectorMock(
                 connectionState: .loggedIn,
-                deviceID: deviceID,
-                deviceGroupKeys: deviceGroupKeys
-            ),
-            mediatorMessageProtocol: MediatorMessageProtocolMock(),
-            messageProcessor: MessageProcessorMock()
+                deviceID: MockData.deviceID,
+                deviceGroupKeys: MockData.deviceGroupKeys
+            )
         )
         
         let taskDefinition = TaskDefinitionDeleteContactSync(contacts: [contact.identity])
@@ -122,28 +84,14 @@ class TaskExecutionDeleteContactSyncTests: XCTestCase {
     }
     
     func testReflectTransactionMessages() throws {
-        let deviceID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.deviceIDLength)!
-
         let frameworkInjectorMock = BusinessInjectorMock(
             backgroundEntityManager: EntityManager(databaseContext: databaseBackgroundCnx),
-            backgroundGroupManager: GroupManagerMock(),
-            backgroundUnreadMessages: UnreadMessagesMock(),
-            contactStore: ContactStoreMock(),
             entityManager: EntityManager(databaseContext: databaseMainCnx),
-            groupManager: GroupManagerMock(),
-            licenseStore: LicenseStore.shared(),
-            messageSender: MessageSenderMock(),
-            multiDeviceManager: MultiDeviceManagerMock(),
-            myIdentityStore: MyIdentityStoreMock(),
-            userSettings: UserSettingsMock(),
-            settingsStore: SettingsStoreMock(),
             serverConnector: ServerConnectorMock(
                 connectionState: .loggedIn,
-                deviceID: deviceID,
-                deviceGroupKeys: deviceGroupKeys
-            ),
-            mediatorMessageProtocol: MediatorMessageProtocolMock(),
-            messageProcessor: MessageProcessorMock()
+                deviceID: MockData.deviceID,
+                deviceGroupKeys: MockData.deviceGroupKeys
+            )
         )
         
         for c in [0, 1, 2, 100, 500, 50 * 1000] {

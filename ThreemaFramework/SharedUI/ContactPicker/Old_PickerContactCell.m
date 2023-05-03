@@ -77,6 +77,7 @@
 - (void)updateColors {
     _nameLabel.textColor = Colors.text;
     _identityLabel.textColor = Colors.textLight;
+    self.backgroundColor = [UIColor clearColor];
 }
 
 @end

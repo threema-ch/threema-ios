@@ -29,7 +29,7 @@ enum MediatorMessageProtocolError: Error {
 
     private static let MEDIATOR_COMMON_HEADER_LENGTH = 4
     private static let MEDIATOR_PAYLOAD_HEADER_LENGTH = 4
-    private static let MEDIATOR_REFLECT_ID_LENGTH = 4
+    static let MEDIATOR_REFLECT_ID_LENGTH = 4
     private static let MEDIATOR_NONCE_LENGTH = 24
     private static let CHAT_TYPE_LENGTH = 2
     
@@ -223,7 +223,7 @@ enum MediatorMessageProtocolError: Error {
         // swiftformat:disable:next acronyms
         var clientURLInfo = D2m_ClientUrlInfo()
         clientURLInfo.deviceGroupID = dgpkPublicKey
-        clientURLInfo.serverGroupString = serverGroup
+        clientURLInfo.serverGroup = serverGroup
 
         if let clientURLInfoData = try? clientURLInfo.serializedData() {
             return clientURLInfoData.hexString.lowercased()
@@ -451,6 +451,28 @@ enum MediatorMessageProtocolError: Error {
 
         var envelope = D2d_Envelope()
         envelope.contactSync = sContactSync
+
+        return envelope
+    }
+
+    /// Create Envelope for group sync.
+    /// - Parameters:
+    ///    - group: Group to sync
+    ///    - syncAction: Action to sync
+    /// - Returns: Envelope with group sync
+    func getEnvelopeForGroupSync(group: Sync_Group, syncAction: D2d_GroupSync.OneOf_Action) -> D2d_Envelope {
+        var groupSync = D2d_GroupSync()
+        switch syncAction {
+        case let .create(sync):
+            groupSync.create.group = sync.group
+        case let .update(sync):
+            groupSync.update.group = sync.group
+        case let .delete(sync):
+            groupSync.delete.groupIdentity = sync.groupIdentity
+        }
+
+        var envelope = D2d_Envelope()
+        envelope.groupSync = groupSync
 
         return envelope
     }

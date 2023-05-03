@@ -51,8 +51,8 @@ class TaskExecutionReceiveMessageTests: XCTestCase {
         expectedBoxedMessage.messageID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.messageIDLength)!
 
         let frameworkInjectorMock = BusinessInjectorMock(
-            entityManager: EntityManager(databaseContext: databaseMainCnx),
-            backgroundEntityManager: EntityManager(databaseContext: databaseBackgroundCnx)
+            backgroundEntityManager: EntityManager(databaseContext: databaseBackgroundCnx),
+            entityManager: EntityManager(databaseContext: databaseMainCnx)
         )
 
         let expec = expectation(description: "TaskDefinitionReceiveMessage")
@@ -111,20 +111,8 @@ class TaskExecutionReceiveMessageTests: XCTestCase {
         let serverConnectorMock = ServerConnectorMock(connectionState: .loggedIn)
         let frameworkInjectorMock = BusinessInjectorMock(
             backgroundEntityManager: EntityManager(databaseContext: databaseBackgroundCnx),
-            backgroundGroupManager: GroupManagerMock(),
-            backgroundUnreadMessages: UnreadMessagesMock(),
-            contactStore: ContactStoreMock(),
             entityManager: EntityManager(databaseContext: databaseMainCnx),
-            groupManager: GroupManagerMock(),
-            licenseStore: LicenseStore.shared(),
-            messageSender: MessageSenderMock(),
-            multiDeviceManager: MultiDeviceManagerMock(),
-            myIdentityStore: MyIdentityStoreMock(),
-            userSettings: UserSettingsMock(),
-            settingsStore: SettingsStoreMock(),
-            serverConnector: serverConnectorMock,
-            mediatorMessageProtocol: MediatorMessageProtocolMock(),
-            messageProcessor: MessageProcessorMock()
+            serverConnector: serverConnectorMock
         )
 
         let expec = expectation(description: "TaskDefinitionReceiveMessage")
@@ -193,25 +181,17 @@ class TaskExecutionReceiveMessageTests: XCTestCase {
             conversation: conversation,
             lastSyncRequest: nil
         )
-        let mediatorMessageProtocolMock = MediatorMessageProtocolMock()
         let messageProcessorMock = MessageProcessorMock()
         let messageSenderMock = MessageSenderMock()
         let serverConnectorMock = ServerConnectorMock(connectionState: .loggedIn)
         let frameworkInjectorMock = BusinessInjectorMock(
             backgroundEntityManager: EntityManager(databaseContext: databaseBackgroundCnx),
             backgroundGroupManager: groupManagerMock,
-            backgroundUnreadMessages: UnreadMessagesMock(),
-            contactStore: ContactStoreMock(),
             entityManager: EntityManager(databaseContext: databaseMainCnx),
-            groupManager: GroupManagerMock(),
-            licenseStore: LicenseStore.shared(),
             messageSender: messageSenderMock,
-            multiDeviceManager: MultiDeviceManagerMock(),
             myIdentityStore: myIdentityStoreMock,
             userSettings: userSettingsMock,
-            settingsStore: SettingsStoreMock(),
             serverConnector: serverConnectorMock,
-            mediatorMessageProtocol: mediatorMessageProtocolMock,
             messageProcessor: messageProcessorMock
         )
 
@@ -287,23 +267,13 @@ class TaskExecutionReceiveMessageTests: XCTestCase {
     }
 
     func testReceivedTextMessageMultiDeviceActivated() throws {
-        let deviceID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.deviceIDLength)!
-        let deviceGroupKeys = DeviceGroupKeys(
-            dgpk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
-            dgrk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
-            dgdik: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
-            dgsddk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
-            dgtsk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
-            deviceGroupIDFirstByteHex: "a1"
-        )
-
         let expectedReflectID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.messageIDLength)!
 
         let messageSenderMock = MessageSenderMock()
         let serverConnectorMock = ServerConnectorMock(
             connectionState: .loggedIn,
-            deviceID: deviceID,
-            deviceGroupKeys: deviceGroupKeys
+            deviceID: MockData.deviceID,
+            deviceGroupKeys: MockData.deviceGroupKeys
         )
         serverConnectorMock.reflectMessageClosure = { _ -> Bool in
             if serverConnectorMock.connectionState == .loggedIn {
@@ -317,7 +287,7 @@ class TaskExecutionReceiveMessageTests: XCTestCase {
         }
         let messageProcessorMock = MessageProcessorMock()
         let mediatorMessageProtocolMock = MediatorMessageProtocolMock(
-            deviceGroupKeys: deviceGroupKeys!,
+            deviceGroupKeys: MockData.deviceGroupKeys,
             returnValues: [
                 MediatorMessageProtocolMock.ReflectData(
                     id: expectedReflectID,
@@ -327,17 +297,8 @@ class TaskExecutionReceiveMessageTests: XCTestCase {
         )
         let frameworkInjectorMock = BusinessInjectorMock(
             backgroundEntityManager: EntityManager(databaseContext: databaseBackgroundCnx),
-            backgroundGroupManager: GroupManagerMock(),
-            backgroundUnreadMessages: UnreadMessagesMock(),
-            contactStore: ContactStoreMock(),
             entityManager: EntityManager(databaseContext: databaseMainCnx),
-            groupManager: GroupManagerMock(),
-            licenseStore: LicenseStore.shared(),
             messageSender: messageSenderMock,
-            multiDeviceManager: MultiDeviceManagerMock(),
-            myIdentityStore: MyIdentityStoreMock(),
-            userSettings: UserSettingsMock(),
-            settingsStore: SettingsStoreMock(),
             serverConnector: serverConnectorMock,
             mediatorMessageProtocol: mediatorMessageProtocolMock,
             messageProcessor: messageProcessorMock

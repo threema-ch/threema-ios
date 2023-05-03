@@ -40,7 +40,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)prefetchIdentityInfo:(NSSet<NSString *> *)identities onCompletion:(void(^)(void))onCompletion onError:(void(^)(NSError *error))onError;
 
-- (void)fetchWorkIdentitiesInBlockUnknownCheck:(NSArray *)identities onCompletion:(void(^)(NSArray *foundIdentities))onCompletion onError:(void(^)(NSError *error))onError;
+- (void)fetchWorkIdentities:(NSArray *)identities onCompletion:(void(^)(NSArray *foundIdentities))onCompletion onError:(void(^)(NSError *error))onError;
 
 - (void)fetchPublicKeyForIdentity:(NSString*)identity acquaintanceLevel:(ContactAcquaintanceLevel)acquaintanceLevel onCompletion:(void(^)(NSData *publicKey))onCompletion onError:(void(^)(NSError *error))onError
     NS_SWIFT_NAME(fetchPublicKey(for:acquaintanceLevel:onCompletion:onError:));
@@ -93,6 +93,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface ContactStore : NSObject <ContactStoreProtocol>
 
 + (ContactStore *)sharedContactStore;
+- (instancetype) __unavailable init;
 
 #if DEBUG
 - (instancetype)initWithUserSettings:(id<UserSettingsProtocol>)userSettingsProtocol entityManager:(NSObject *)entityManagerObject;

@@ -42,8 +42,8 @@ class TaskQueueTests: XCTestCase {
         DDLog.add(ddLoggerMock)
 
         frameworkInjectorMock = BusinessInjectorMock(
-            entityManager: EntityManager(databaseContext: databaseMainCnx),
-            backgroundEntityManager: EntityManager(databaseContext: databaseBackgroundCnx)
+            backgroundEntityManager: EntityManager(databaseContext: databaseBackgroundCnx),
+            entityManager: EntityManager(databaseContext: databaseMainCnx)
         )
     }
     
@@ -105,20 +105,9 @@ class TaskQueueTests: XCTestCase {
         let myIdentityStoreMock = MyIdentityStoreMock()
         let frameworkInjectorMock = BusinessInjectorMock(
             backgroundEntityManager: EntityManager(databaseContext: databaseBackgroundCnx),
-            backgroundGroupManager: GroupManagerMock(),
-            backgroundUnreadMessages: UnreadMessagesMock(),
-            contactStore: ContactStoreMock(),
             entityManager: EntityManager(databaseContext: databaseMainCnx),
-            groupManager: GroupManagerMock(),
-            licenseStore: LicenseStore.shared(),
-            messageSender: MessageSenderMock(),
-            multiDeviceManager: MultiDeviceManagerMock(),
             myIdentityStore: myIdentityStoreMock,
-            userSettings: UserSettingsMock(),
-            settingsStore: SettingsStoreMock(),
-            serverConnector: serverConnectorMock,
-            mediatorMessageProtocol: MediatorMessageProtocolMock(),
-            messageProcessor: MessageProcessorMock()
+            serverConnector: serverConnectorMock
         )
 
         let tq = TaskQueue(
@@ -171,19 +160,8 @@ class TaskQueueTests: XCTestCase {
         messageProcessorMock.error = expectedError
         let frameworkInjectorMock = BusinessInjectorMock(
             backgroundEntityManager: EntityManager(databaseContext: databaseBackgroundCnx),
-            backgroundGroupManager: GroupManagerMock(),
-            backgroundUnreadMessages: UnreadMessagesMock(),
-            contactStore: ContactStoreMock(),
             entityManager: EntityManager(databaseContext: databaseMainCnx),
-            groupManager: GroupManagerMock(),
-            licenseStore: LicenseStore.shared(),
-            messageSender: MessageSenderMock(),
-            multiDeviceManager: MultiDeviceManagerMock(),
-            myIdentityStore: MyIdentityStoreMock(),
-            userSettings: UserSettingsMock(),
-            settingsStore: SettingsStoreMock(),
             serverConnector: serverConnectorMock,
-            mediatorMessageProtocol: MediatorMessageProtocolMock(),
             messageProcessor: messageProcessorMock
         )
 
@@ -262,20 +240,8 @@ class TaskQueueTests: XCTestCase {
         let serverConnectorMock = ServerConnectorMock(connectionState: .loggedIn)
         let frameworkInjectorMock = BusinessInjectorMock(
             backgroundEntityManager: EntityManager(databaseContext: databaseBackgroundCnx),
-            backgroundGroupManager: GroupManagerMock(),
-            backgroundUnreadMessages: UnreadMessagesMock(),
-            contactStore: ContactStoreMock(),
             entityManager: EntityManager(databaseContext: databaseMainCnx),
-            groupManager: GroupManagerMock(),
-            licenseStore: LicenseStore.shared(),
-            messageSender: MessageSenderMock(),
-            multiDeviceManager: MultiDeviceManagerMock(),
-            myIdentityStore: MyIdentityStoreMock(),
-            userSettings: UserSettingsMock(),
-            settingsStore: SettingsStoreMock(),
-            serverConnector: serverConnectorMock,
-            mediatorMessageProtocol: MediatorMessageProtocolMock(),
-            messageProcessor: MessageProcessorMock()
+            serverConnector: serverConnectorMock
         )
 
         // 2 tests with: retry / sendMessageCalls / retryCount
@@ -344,20 +310,8 @@ class TaskQueueTests: XCTestCase {
         let serverConnectorMock = ServerConnectorMock(connectionState: .loggedIn)
         let frameworkInjectorMock = BusinessInjectorMock(
             backgroundEntityManager: EntityManager(databaseContext: databaseBackgroundCnx),
-            backgroundGroupManager: GroupManagerMock(),
-            backgroundUnreadMessages: UnreadMessagesMock(),
-            contactStore: ContactStoreMock(),
             entityManager: EntityManager(databaseContext: databaseMainCnx),
-            groupManager: GroupManagerMock(),
-            licenseStore: LicenseStore.shared(),
-            messageSender: MessageSenderMock(),
-            multiDeviceManager: MultiDeviceManagerMock(),
-            myIdentityStore: MyIdentityStoreMock(),
-            userSettings: UserSettingsMock(),
-            settingsStore: SettingsStoreMock(),
-            serverConnector: serverConnectorMock,
-            mediatorMessageProtocol: MediatorMessageProtocolMock(),
-            messageProcessor: MessageProcessorMock()
+            serverConnector: serverConnectorMock
         )
 
         let tq = TaskQueue(
@@ -392,37 +346,15 @@ class TaskQueueTests: XCTestCase {
     }
 
     func testSpoolTaskDefinitionDeleteContactSyncReflectFailedWithRetry() {
-        let deviceID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.deviceIDLength)!
-        let deviceGroupKeys = DeviceGroupKeys(
-            dgpk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
-            dgrk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
-            dgdik: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
-            dgsddk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
-            dgtsk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
-            deviceGroupIDFirstByteHex: "a1"
-        )
-
         let serverConnectorMock = ServerConnectorMock(
             connectionState: .loggedIn,
-            deviceID: deviceID,
-            deviceGroupKeys: deviceGroupKeys
+            deviceID: MockData.deviceID,
+            deviceGroupKeys: MockData.deviceGroupKeys
         )
         let frameworkInjectorMock = BusinessInjectorMock(
             backgroundEntityManager: EntityManager(databaseContext: databaseBackgroundCnx),
-            backgroundGroupManager: GroupManagerMock(),
-            backgroundUnreadMessages: UnreadMessagesMock(),
-            contactStore: ContactStoreMock(),
             entityManager: EntityManager(databaseContext: databaseMainCnx),
-            groupManager: GroupManagerMock(),
-            licenseStore: LicenseStore.shared(),
-            messageSender: MessageSenderMock(),
-            multiDeviceManager: MultiDeviceManagerMock(),
-            myIdentityStore: MyIdentityStoreMock(),
-            userSettings: UserSettingsMock(),
-            settingsStore: SettingsStoreMock(),
-            serverConnector: serverConnectorMock,
-            mediatorMessageProtocol: MediatorMessageProtocolMock(),
-            messageProcessor: MessageProcessorMock()
+            serverConnector: serverConnectorMock
         )
 
         // 2 tests with: retry / reflectMessageCalls / retryCount

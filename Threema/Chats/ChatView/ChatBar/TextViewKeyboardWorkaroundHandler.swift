@@ -64,14 +64,7 @@ final class TextViewKeyboardWorkaroundHandler {
             let rangeModifier = 1
             let newRange = NSRange(location: adjustedRange.location - rangeModifier, length: rangeModifier)
             
-            if #available(iOS 15.0, *) {
-                actualText = "."
-            }
-            else {
-                /// We could alternatively adjust the range modifier
-                /// Tested on iOS 14 and iOS 13
-                actualText = ". "
-            }
+            actualText = "."
             
             newChange = (newRange, oldParsedText, actualText)
         }

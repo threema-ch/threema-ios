@@ -47,22 +47,40 @@ public class Contact: NSObject {
         self.subscriptionToken = EntityObserver.shared.subscribe(
             managedObject: contactEntity
         ) { [weak self] managedObject, reason in
+            guard let contactEntity = managedObject as? ContactEntity else {
+                DDLogError("Wrong type, should be ContactEntity")
+                return
+            }
+            guard self?.identity == contactEntity.identity, self?.publicKey == contactEntity.publicKey else {
+                DDLogError("Identity or public key mismatch")
+                return
+            }
+
             switch reason {
             case .deleted:
-                self?.willBeDeleted = true
-            case .updated:
-                guard let contactEntity = managedObject as? ContactEntity else {
-                    DDLogError("Wrong type, should be ContactEntity")
-                    return
+                if let deleted = self?.willBeDeleted, !deleted {
+                    self?.willBeDeleted = true
                 }
-                self?.identity = contactEntity.identity
-                self?.publicKey = contactEntity.publicKey
-                self?.publicNickname = contactEntity.publicNickname
-                self?.firstName = contactEntity.firstName
-                self?.lastName = contactEntity.lastName
-                self?.verificationLevel = contactEntity.verificationLevel.intValue
-                self?.state = contactEntity.state?.intValue ?? kStateInactive
-                self?.isWorkContact = contactEntity.isWorkContact()
+            case .updated:
+                if self?.publicNickname != contactEntity.publicNickname {
+                    self?.publicNickname = contactEntity.publicNickname
+                }
+                if self?.firstName != contactEntity.firstName {
+                    self?.firstName = contactEntity.firstName
+                }
+                if self?.lastName != contactEntity.lastName {
+                    self?.lastName = contactEntity.lastName
+                }
+                if self?.verificationLevel != contactEntity.verificationLevel.intValue {
+                    self?.verificationLevel = contactEntity.verificationLevel.intValue
+                }
+                let newState = contactEntity.state?.intValue ?? kStateInactive
+                if self?.state != newState {
+                    self?.state = newState
+                }
+                if self?.isWorkContact != contactEntity.isWorkContact() {
+                    self?.isWorkContact = contactEntity.isWorkContact()
+                }
             }
         }
     }
@@ -195,5 +213,40 @@ public class Contact: NSObject {
     /// Localized string of verification level usable for accessibility
     var verificationLevelAccessibilityLabel: String {
         BundleUtil.localizedString(forKey: "level\(workAdjustedVerificationLevel)_title")
+    }
+
+    // MARK: Comparing function
+
+    public func isEqual(to object: Any?) -> Bool {
+        guard let object = object as? Contact else {
+            return false
+        }
+
+        return willBeDeleted == object.willBeDeleted &&
+            identity == object.identity &&
+            publicKey == object.publicKey &&
+            firstName == object.firstName &&
+            lastName == object.lastName &&
+            publicNickname == object.publicNickname &&
+            verificationLevel == object.verificationLevel &&
+            state == object.state &&
+            isWorkContact == object.isWorkContact
+    }
+}
+
+extension Set<Contact> {
+    // Comparing contacts independent of the oder
+    func contactsEqual(to other: Set<Contact>) -> Bool {
+        count == other.count &&
+            contains(where: { le in
+                var equal = false
+                for re in other {
+                    if le.isEqual(to: re) {
+                        equal = true
+                        break
+                    }
+                }
+                return equal
+            })
     }
 }

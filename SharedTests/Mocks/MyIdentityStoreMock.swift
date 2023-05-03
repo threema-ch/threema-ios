@@ -79,4 +79,6 @@ class MyIdentityStoreMock: NSObject, MyIdentityStoreProtocol {
     func isProvisioned() -> Bool {
         false
     }
+
+    var licenseSupportURL = ""
 }

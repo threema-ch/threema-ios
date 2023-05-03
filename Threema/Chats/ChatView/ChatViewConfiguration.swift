@@ -651,9 +651,9 @@ enum ChatViewConfiguration {
             static let delay = 0.25
         }
         
-        /// Combine throttle in Ms
+        /// Combine debounce in ms
         /// Applied before new changes are checked
-        static let dataUpdateThrottleInMs = 250
+        static let dataUpdateDebounce = 500
     }
     
     enum DataSource {
@@ -662,6 +662,10 @@ enum ChatViewConfiguration {
         /// Delay before the current messages snapshot is processed by the snapshot provider
         /// This can be increased to multiple hundreds of ms if we actually do snapshot batching
         static let currentMessageSnapshotDelay = 500
+        
+        /// Duration in s of the custom animation block applied when only the state but not the number of messages changes
+        /// and we are staying at the bottom of the chat view.
+        static let animationDuration: TimeInterval = 0.25
     }
     
     enum SearchResults {

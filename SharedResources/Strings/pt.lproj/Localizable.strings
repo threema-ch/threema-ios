@@ -104,7 +104,7 @@
 "nickname" = "Apelido público";
 "add_button" = "Adicionar";
 "chatview_contextmenu_select" = "Selecione...";
-
+"learn_more" = "Saiba mais...";
 "file_message_image" = "Imagem";
 "file_message_sticker" = "Sticker";
 "file_message_animated_image" = "GIF";
@@ -880,6 +880,8 @@
 "doNotDisturb_mention_footer_off" = "Você não receberá nenhuma notificação - nem mesmo quando for mencionado.";
 "doNotDisturb_mention_footer_on" = "Você receberá notificações se for mencionado.";
 
+"doNotDisturb_notification_sound_footer" = "O som de notificação só tocará se ”Tocar som de notificação” estiver ativado e ”Não perturbe\" estiver desativado.";
+
 "notification_sound_header" = "Som de notificação";
 "notification_sound_title" = "Reproduzir som de notificação";
 
@@ -1097,8 +1099,6 @@
 "settings_advanced_reregister_push_notifications_header_title" = "Notificações push";
 "settings_advanced_reregister_push_notifications_footer_title" = "Se as mensagens recebidas não aparecerem fora do aplicativo como notificações, você poderá se registrar novamente para receber notificações.";
 "settings_advanced_reregister_notifications_label" = "Registrar novamente as notificações push";
-"settings_advanced_new_chat_view_label" = "Nova exibição de bate-papo";
-"settings_advanced_new_chat_view_label_footer" = "Obs.: A exibição de bate-papo antiga será removida em um lançamento futuro.";
 
 "settings_md_sync_alert_title" = "Falha na sincronização";
 
@@ -1111,6 +1111,11 @@
 "settings_privacy_block_unknown" = "Bloquear desconhecidos";
 "settings_privacy_block_unknown_footer_on"= "Somente as pessoas na sua lista de contatos podem lhe enviar mensagens.";
 "settings_privacy_block_unknown_foooter_off" = "Qualquer pessoa pode lhe enviar mensagens. Novos contatos serão adicionados automaticamente quando a primeira mensagem deles chegar.";
+
+"settings_privacy_os_header" = "Integração com iOS";
+"settings_privacy_os_donate" = "Compartilhar interações";
+"settings_privacy_os_reset" = "Redefinir interações";
+"settings_privacy_os_footer" = "Quando ativado, contatos do Threema serão sugeridos ao compartilhar conteúdos no iOS. As interações de compartilhamento expõem informações ao iOS.";
 
 "settings_privacy_chat_header" = "Conversa";
 "settings_privacy_read_receipts" = "Confirmações de leitura";
@@ -1143,6 +1148,9 @@
 "settings_appearance_display_order" = "Exibir por";
 "settings_appearance_show_gallery_preview" = "Exibir pré-visualização da galeria";
 
+// Chat Settings
+"settings_chat_send_message_feedback_label" = "Feedback háptico ao enviar";
+
 // Media
 "settings_media_autosave_private_footer" = "Mídia recebida em conversas privadas não serão salvas automaticamente.";
 
@@ -1162,14 +1170,13 @@
 
 // Notification settings
 "settings_notifications_inapp_section" = "No aplicativo";
-"settings_notifications_inapp_sounds" = "Sons";
-"settings_notifications_inapp_vibrate" = "Vibrar";
-"settings_notifications_inapp_preview" = "Pré-visualização";
+"settings_notifications_inapp_sounds" = "Sons do app";
+"settings_notifications_inapp_vibrate" = "Vibração no app";
+"settings_notifications_inapp_preview" = "Mostrar pré-visualização de mensagem";
 "settings_notifications_push_section" = "Notificações push";
 "settings_notifications_push_sound" = "Som";
 "settings_notifications_push_groupsound" = "Agrupar som";
-"settings_notifications_push_preview" = "Pré-visualização";
-"settings_notifications_push_showNickname" = "Exibir apelido";
+"settings_notifications_push_preview" = "Mostrar pré-visualização de mensagem";
 "settings_notifications_masterDnd_section_header" = "Política de folga";
 "settings_notifications_masterDnd" = "Não perturbar durante as folgas";
 "settings_notifications_masterDnd_section_footer" = "Desativar notificações e rejeitar chamadas fora do horário de trabalho.";
@@ -1177,7 +1184,24 @@
 "settings_notifications_masterDnd_startTime" = "Início do horário de trabalho";
 "settings_notifications_masterDnd_endTime" = "Fim do horário de trabalho";
 "settings_notification_iOS_settings" = "Configurações do Sistema";
-"settings_notification_open_iOS_settings" = "Abrir Configurações do Sistema";
+
+"settings_notification_type_preview_title" = "Notificações push";
+"settings_notification_type_preview_description" = "Escolha quais informações devem ser inclusas nas notificações de mensagens do Threema.";
+
+"settings_notification_type_preview_restrictive_title" = "Exibir apelido";
+"settings_notification_type_preview_restrictive_description" = "Exibe apenas o apelido do contato";
+"settings_notification_type_preview_restrictive_sender_name" = "~João";
+
+"settings_notification_type_preview_balanced_title" = "Nome de exibição";
+"settings_notification_type_preview_balanced_description" = "Exibe o nome completo do contato (configuração padrão).";
+"settings_notification_type_preview_balanced_sender_name" = "João da Silva";
+
+"settings_notification_type_preview_complete_title" = "Nome de exibição e foto de perfil";
+"settings_notification_type_preview_complete_description" = "Exibe o nome completo e a foto de perfil do contato. Algumas informações relacionadas a interações são compartilhadas com o sistema operacional. [Saiba mais...](%@)";
+"settings_notification_type_preview_complete_sender_name" = "João da Silva";
+
+"settings_notification_type_preview_message_text" = "Mensagem de exemplo...";
+"settings_notification_type_preview_no_button" = "Desativar notificações push";
 
 // Orphaned files delete
 "settings_orphaned_files_description" = "Em raras ocasiões, ao excluir dados no Gerenciamento de Armazenamento em versões mais antigas do %@, pode ser que arquivos (de mídia) não sejam excluídos corretamente, mas tenham sido removidos no %@.
@@ -1385,6 +1409,7 @@ Caso não haja nenhum arquivo (de mídia) faltando no %@, esvazie a lixeira para
 
 "chat_text_view_placeholder" = "Nova mensagem";
 "compose_bar_camera_button_accessibility_label" = "Abrir câmera";
+"compose_bar_image_picker_button_accessibility_label" = "Abrir seletor de imagem";
 "compose_bar_record_button_accessibility_label" = "Gravar mensagem de voz";
 "compose_bar_send_message_button_accessibility_label" = "Enviar mensagem";
 "compose_bar_attachment_button_accessibility_label" = "Adicionar anexos";
@@ -1461,6 +1486,9 @@ Caso não haja nenhum arquivo (de mídia) faltando no %@, esvazie a lixeira para
 "notification_settings_sync_pending" = "Sincronizando...";
 "notification_settings_sync_succeeded" = "Configurações sincronizadas";
 
+"notification_interaction_delete_succeeded" = "Interações excluídas";
+"notification_interaction_delete_failed" = "Falha ao excluir interações";
+
 // Forward security status messages
 "forward_security_message_without" = "Uma mensagem sem Perfect Forward Secrecy foi recebida. Verifique se quem a enviou desativou o Perfect Forward Secrecy intencionalmente.";
 "forward_security_session_established" = "Mensagens nesta conversa estão protegidas pelo Perfect Forward Secrecy.";
@@ -1523,7 +1551,7 @@ Caso não haja nenhum arquivo (de mídia) faltando no %@, esvazie a lixeira para
 "accessibility_voice_message_playing" = "Reproduzindo.";
 
 // Message status types
-"accessibility_status_acknowledged_plus_time" = "Reconhecido, %@";
+"accessibility_status_acknowledged_plus_time" = "Concordo, %@";
 "accessibility_status_declined_plus_time" = "Recusado, %@";
 "accessibility_status_sending_plus_time" = "Enviando, %@";
 "accessibility_status_sent_plus_time" = "Enviado, %@";

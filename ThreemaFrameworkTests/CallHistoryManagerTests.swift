@@ -45,19 +45,8 @@ class CallHistoryManagerTests: XCTestCase {
 
         let businessInjectorMock = BusinessInjectorMock(
             backgroundEntityManager: EntityManager(databaseContext: databaseBackgroundCnx),
-            backgroundGroupManager: GroupManagerMock(),
-            backgroundUnreadMessages: UnreadMessagesMock(),
-            contactStore: ContactStoreMock(),
             entityManager: EntityManager(databaseContext: databaseMainCnx),
-            groupManager: GroupManagerMock(),
-            licenseStore: LicenseStore.shared(),
-            messageSender: MessageSenderMock(),
-            multiDeviceManager: MultiDeviceManagerMock(),
-            myIdentityStore: MyIdentityStoreMock(),
-            userSettings: userSettingsMock,
-            settingsStore: SettingsStoreMock(),
-            serverConnector: ServerConnectorMock(), mediatorMessageProtocol: MediatorMessageProtocolMock(),
-            messageProcessor: MessageProcessorMock()
+            userSettings: userSettingsMock
         )
         
         businessInjectorMock.entityManager.performSyncBlockAndSafe {
@@ -69,7 +58,7 @@ class CallHistoryManagerTests: XCTestCase {
         
         var callIDs = [UInt32]()
         
-        for i in 0..<10 {
+        for _ in 0..<10 {
             let callID = UInt32.random(in: UInt32.min..<UInt32.max)
             let date = Date()
             callIDs.append(callID)
@@ -82,7 +71,7 @@ class CallHistoryManagerTests: XCTestCase {
             XCTAssertFalse(isMissedCall)
         }
         
-        for i in 0..<10 {
+        for _ in 0..<10 {
             let callID = UInt32.random(in: UInt32.min..<UInt32.max)
             let isMissedCall = await manager.isMissedCall(from: "ECHOECHO", callID: callID)
             XCTAssertEqual(!callIDs.contains(callID), isMissedCall)
@@ -96,19 +85,8 @@ class CallHistoryManagerTests: XCTestCase {
 
         let businessInjectorMock = BusinessInjectorMock(
             backgroundEntityManager: EntityManager(databaseContext: databaseMainCnx),
-            backgroundGroupManager: GroupManagerMock(),
-            backgroundUnreadMessages: UnreadMessagesMock(),
-            contactStore: ContactStoreMock(),
             entityManager: EntityManager(databaseContext: databaseMainCnx),
-            groupManager: GroupManagerMock(),
-            licenseStore: LicenseStore.shared(),
-            messageSender: MessageSenderMock(),
-            multiDeviceManager: MultiDeviceManagerMock(),
-            myIdentityStore: MyIdentityStoreMock(),
-            userSettings: userSettingsMock,
-            settingsStore: SettingsStoreMock(),
-            serverConnector: ServerConnectorMock(), mediatorMessageProtocol: MediatorMessageProtocolMock(),
-            messageProcessor: MessageProcessorMock()
+            userSettings: userSettingsMock
         )
         
         businessInjectorMock.entityManager.performSyncBlockAndSafe {

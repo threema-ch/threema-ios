@@ -41,6 +41,8 @@ class UserSettingsMock: NSObject, UserSettingsProtocol {
         
     var disableBigEmojis = true
     
+    var sendMessageFeedback = true
+    
     var chatFontSize: Float = 0.0
     
     var unknownGroupAlertList: NSMutableArray! = NSMutableArray()
@@ -52,6 +54,8 @@ class UserSettingsMock: NSObject, UserSettingsProtocol {
     var blockUnknown = false
     
     var enablePoi = true
+    
+    var allowOutgoingDonations = false
     
     var sendReadReceipts = true
     
@@ -73,13 +77,20 @@ class UserSettingsMock: NSObject, UserSettingsProtocol {
 
     var autoSaveMedia = false
     
+    var inAppSounds = true
+    
+    var inAppVibrate = true
+    
+    var inAppPreview = true
+    
+    var notificationType: NSNumber! = 0
+    
     var imageSize: String?
     var videoQuality: String?
     var voIPSound: String?
     var pushSound: String?
     var pushGroupSound: String?
     var pushDecrypt = false
-    var pushShowNickname = false
     var pushSettingsList: NSOrderedSet! = []
     
     var enableMasterDnd = false
@@ -99,6 +110,4 @@ class UserSettingsMock: NSObject, UserSettingsProtocol {
     var voiceMessagesShowTimeRemaining = false
     
     var flippedTableView = true
-    
-    var featureFlagEnableNoMIMETypeFileMessagesFilter = true
 }

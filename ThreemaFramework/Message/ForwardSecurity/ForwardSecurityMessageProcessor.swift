@@ -49,7 +49,7 @@ protocol ForwardSecurityMessageSenderProtocol {
     func processEnvelopeMessage(
         sender: ForwardSecurityContact,
         envelopeMessage: ForwardSecurityEnvelopeMessage
-    ) throws -> AbstractMessage? {
+    ) throws -> (AbstractMessage?, DHSession?) {
         switch envelopeMessage.data {
         case let initT as ForwardSecurityDataInit:
             try processInit(sender: sender, initT: initT)
@@ -64,17 +64,20 @@ protocol ForwardSecurityMessageSenderProtocol {
         default:
             assertionFailure("Unknown forward security message type")
         }
-        return nil
+        return (nil, nil)
     }
     
     /// Wrapper for ObjC
     @objc func processEnvelopeMessageObjc(
         sender: ForwardSecurityContact,
         envelopeMessage: ForwardSecurityEnvelopeMessage,
+        sessionP: UnsafeMutablePointer<AnyObject?>,
         errorP: NSErrorPointer
     ) -> AbstractMessage? {
         do {
-            return try processEnvelopeMessage(sender: sender, envelopeMessage: envelopeMessage)
+            let (message, session) = try processEnvelopeMessage(sender: sender, envelopeMessage: envelopeMessage)
+            sessionP.pointee = session as AnyObject
+            return message
         }
         catch {
             errorP?.pointee = error as NSError
@@ -198,9 +201,14 @@ protocol ForwardSecurityMessageSenderProtocol {
                 )
             }
         }
-
         // Symmetrically encrypt message (type byte + body)
-        let plaintext = Data([innerMessage.type()]) + innerMessage.body()
+        var plaintext = Data([innerMessage.type()])
+        if let quoted = innerMessage as? QuotedMessageProtocol, let quotedBody = quoted.quotedBody() {
+            plaintext += quotedBody
+        }
+        else {
+            plaintext += innerMessage.body()
+        }
         
         // A new key is used for each message, so the nonce can be zero
         let nonce = Data(count: Int(kNaClCryptoNonceSize))
@@ -383,7 +391,7 @@ protocol ForwardSecurityMessageSenderProtocol {
     private func processMessage(
         sender: ForwardSecurityContact,
         envelopeMessage: ForwardSecurityEnvelopeMessage
-    ) throws -> AbstractMessage? {
+    ) throws -> (AbstractMessage?, DHSession?) {
         let message = envelopeMessage.data as! ForwardSecurityDataMessage
         
         guard let session = try dhSessionStore.exactDHSession(
@@ -403,7 +411,7 @@ protocol ForwardSecurityMessageSenderProtocol {
             sendMessageToContact(contact: sender, message: reject)
             
             notifyListeners { listener in listener.sessionNotFound(sessionID: message.sessionID, contact: sender) }
-            return nil
+            return (nil, nil)
         }
 
         // Obtain appropriate ratchet and turn to match the message's counter value
@@ -426,7 +434,7 @@ protocol ForwardSecurityMessageSenderProtocol {
             )
             sendMessageToContact(contact: sender, message: reject)
             notifyListeners { listener in listener.sessionBadDhState(sessionID: message.sessionID, contact: sender) }
-            return nil
+            return (nil, nil)
         }
 
         // We should already be at the correct ratchet count since we increment it after
@@ -473,7 +481,7 @@ protocol ForwardSecurityMessageSenderProtocol {
                 contact: sender,
                 failedMessageID: envelopeMessage.messageID
             ) }
-            return nil
+            return (nil, nil)
         }
         
         DDLogVerbose(
@@ -516,12 +524,30 @@ protocol ForwardSecurityMessageSenderProtocol {
         // Update ratchets in store (don't use storeDHSession(), as otherwise we
         // might overwrite the "my" ratchets if an outgoing message is being processed
         // for the same session at the same time)
-        try dhSessionStore.updateDHSessionRatchets(session: session, peer: true)
-
+        // TODO: Remove
+        if !ThreemaEnvironment.lateSessionSave {
+            try dhSessionStore.updateDHSessionRatchets(session: session, peer: true)
+        }
+        
         // Decode inner message and pass it to processor
         let innerMsg = MessageDecoder.decodeEncapsulated(plaintext, outer: envelopeMessage)
         innerMsg?.forwardSecurityMode = mode
-        return innerMsg
+        return (innerMsg, session)
+    }
+    
+    /// This is the counterpart to `processEnvelopeMessage(sender:envelopeMessage)` storing the changes made to the ratchet after the message was processed
+    /// This needs to be called after the message was stored in the DB as it cannot be decrypted anymore after that.
+    /// This needs to be called before the next message starts processing because we only keep track of one partially processed session.
+    /// - Parameters:
+    ///   - sender: The sender of `envelopeMessage` and the sender of the last message that was processed
+    ///   - envelopeMessage: The last `envelopeMessage` that was processed
+    func updateRatchetCounters(
+        session: DHSession
+    ) throws {
+        // Update ratchets in store (don't use storeDHSession(), as otherwise we
+        // might overwrite the "my" ratchets if an outgoing message is being processed
+        // for the same session at the same time)
+        try dhSessionStore.updateDHSessionRatchets(session: session, peer: true)
     }
     
     private func processTerminate(sender: ForwardSecurityContact, terminate: ForwardSecurityDataTerminate) throws {

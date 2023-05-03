@@ -22,29 +22,28 @@ import CocoaLumberjackSwift
 import Foundation
 
 class ConversationActions: NSObject {
-    
-    let unreadMessages: UnreadMessagesProtocol
-    let entityManager: EntityManager
-    let notificationManager: NotificationManagerProtocol
-    
+    private let businessInjector: BusinessInjectorProtocol
+    private let notificationManager: NotificationManagerProtocol
+
     init(
-        unreadMessages: UnreadMessagesProtocol,
-        entityManager: EntityManager,
+        businessInjector: BusinessInjectorProtocol,
         notificationManager: NotificationManagerProtocol
     ) {
-        self.unreadMessages = unreadMessages
-        self.entityManager = entityManager
+        self.businessInjector = businessInjector
         self.notificationManager = notificationManager
     }
-    
-    @objc convenience init(entityManager: EntityManager) {
+
+    convenience init(businessInjector: BusinessInjectorProtocol) {
         self.init(
-            unreadMessages: UnreadMessages(entityManager: entityManager),
-            entityManager: entityManager,
+            businessInjector: businessInjector,
             notificationManager: NotificationManager(
-                businessInjector: BusinessInjector()
+                businessInjector: businessInjector
             )
         )
+    }
+    
+    @objc override convenience init() {
+        self.init(businessInjector: BusinessInjector())
     }
     
     // MARK: - Reading
@@ -59,11 +58,11 @@ class ConversationActions: NSObject {
         isAppInBackground: Bool = AppDelegate.shared().isAppInBackground()
     ) -> Guarantee<Void> {
         Guarantee { seal in
-            entityManager.performBlock {
-                self.unreadMessages.read(for: conversation, isAppInBackground: isAppInBackground)
+            businessInjector.entityManager.performBlock {
+                _ = self.businessInjector.unreadMessages.read(for: conversation, isAppInBackground: isAppInBackground)
 
                 if conversation.unreadMessageCount == -1 {
-                    self.entityManager.performSyncBlockAndSafe {
+                    self.businessInjector.entityManager.performSyncBlockAndSafe {
                         conversation.unreadMessageCount = 0
                     }
                 }
@@ -86,8 +85,8 @@ class ConversationActions: NSObject {
         messages: [BaseMessage]
     ) -> Guarantee<Int> {
         Guarantee { seal in
-            entityManager.performBlock {
-                let conversation = self.entityManager.entityFetcher
+            businessInjector.entityManager.performBlock {
+                let conversation = self.businessInjector.entityManager.entityFetcher
                     .getManagedObject(by: conversationObjectID) as! Conversation
                 self.read(conversation, messages: messages)
                     .done { markedAsRead in
@@ -103,16 +102,16 @@ class ConversationActions: NSObject {
         isAppInBackground: Bool = AppDelegate.shared().isAppInBackground()
     ) -> Guarantee<Int> {
         Guarantee { seal in
-            entityManager.performBlock {
-                let markedAsRead = self.unreadMessages.read(
+            businessInjector.entityManager.performBlock {
+                let markedAsRead = self.businessInjector.unreadMessages.read(
                     for: messages,
                     in: conversation,
                     isAppInBackground: isAppInBackground
                 )
 
-                self.entityManager.performBlockAndWait {
+                self.businessInjector.entityManager.performBlockAndWait {
                     if conversation.unreadMessageCount == -1 {
-                        self.entityManager.performSyncBlockAndSafe {
+                        self.businessInjector.entityManager.performSyncBlockAndSafe {
                             conversation.unreadMessageCount = 0
                         }
                     }
@@ -136,71 +135,38 @@ class ConversationActions: NSObject {
 
     func unread(_ conversation: Conversation) {
 
-        let unreadMessagesCount = unreadMessages.count(for: conversation)
+        let unreadMessagesCount = businessInjector.unreadMessages.count(for: conversation)
         guard unreadMessagesCount == 0 else {
             return
         }
         
-        entityManager.performSyncBlockAndSafe {
+        businessInjector.entityManager.performSyncBlockAndSafe {
             conversation.unreadMessageCount = -1
         }
 
         notificationManager.updateUnreadMessagesCount()
     }
     
-    // MARK: - Pinning
-    
-    func pin(_ conversation: Conversation) {
-        
-        entityManager.performSyncBlockAndSafe {
-            conversation.marked = NSNumber(booleanLiteral: true)
-        }
-    }
-    
-    func unpin(_ conversation: Conversation) {
-        
-        entityManager.performSyncBlockAndSafe {
-            conversation.marked = NSNumber(booleanLiteral: false)
-        }
-    }
-    
     // MARK: - Archiving
     
-    func archive(_ conversation: Conversation, isAppInBackground: Bool = AppDelegate.shared().isAppInBackground()) {
-        
-        entityManager.performSyncBlockAndSafe {
-            conversation.conversationVisibility = .archived
-            conversation.marked = NSNumber(booleanLiteral: false)
-        }
+    func archive(_ conversation: Conversation) {
+        businessInjector.conversationStore.archive(conversation)
         notificationManager.updateUnreadMessagesCount()
     }
     
     @objc func unarchive(_ conversation: Conversation) {
         var doUpdateUnreadMessagesCount = false
 
-        entityManager.performSyncBlockAndSafe {
+        businessInjector.entityManager.performBlockAndWait {
             if conversation.conversationVisibility != .default {
-                conversation.conversationVisibility = .default
                 doUpdateUnreadMessagesCount = true
             }
         }
 
+        businessInjector.conversationStore.unarchive(conversation)
+
         if doUpdateUnreadMessagesCount {
             notificationManager.updateUnreadMessagesCount()
-        }
-    }
-    
-    // MARK: - Private
-    
-    func makePrivate(_ conversation: Conversation) {
-        entityManager.performSyncBlockAndSafe {
-            conversation.conversationCategory = .private
-        }
-    }
-    
-    func makeNotPrivate(_ conversation: Conversation) {
-        entityManager.performSyncBlockAndSafe {
-            conversation.conversationCategory = .default
         }
     }
 }

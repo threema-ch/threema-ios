@@ -20,6 +20,7 @@
 
 #import "BoxTextMessage.h"
 #import "ProtocolDefines.h"
+#import "QuoteUtil.h"
 
 @implementation BoxTextMessage
 
@@ -52,6 +53,11 @@
 
 - (BOOL)supportsForwardSecurity {
     return YES;
+}
+
+- (NSData *)quotedBody {
+    NSString *quotedText = self.quotedMessageId != nil ? [QuoteUtil generateText:self.text quotedId:self.quotedMessageId] : self.text;
+    return [quotedText dataUsingEncoding:NSUTF8StringEncoding];
 }
 
 #pragma mark - NSCoding

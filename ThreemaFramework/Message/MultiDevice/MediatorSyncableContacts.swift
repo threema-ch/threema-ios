@@ -299,6 +299,40 @@ class MediatorSyncableContacts: NSObject {
         apply(delta: delta)
     }
 
+    func updateConversationCategory(identity: String, value: ConversationCategory?) {
+        guard serverConnector.isMultiDeviceActivated else {
+            return
+        }
+
+        var delta = getDelta(identity: identity)
+        if let value = value {
+            if let conversationCategory = Sync_ConversationCategory(rawValue: value.rawValue) {
+                delta.syncContact.conversationCategory = conversationCategory
+            }
+        }
+        else {
+            delta.syncContact.clearConversationCategory()
+        }
+        apply(delta: delta)
+    }
+
+    func updateConversationVisibility(identity: String, value: ConversationVisibility?) {
+        guard serverConnector.isMultiDeviceActivated else {
+            return
+        }
+
+        var delta = getDelta(identity: identity)
+        if let value = value {
+            if let conversationVisibility = Sync_ConversationVisibility(rawValue: value.rawValue) {
+                delta.syncContact.conversationVisibility = conversationVisibility
+            }
+        }
+        else {
+            delta.syncContact.clearConversationVisibility()
+        }
+        apply(delta: delta)
+    }
+
     @objc func updateFeatureMask(identity: String, value: NSNumber?) {
         guard serverConnector.isMultiDeviceActivated else {
             return

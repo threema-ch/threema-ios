@@ -477,10 +477,8 @@ extension SendLocationViewController: UITableViewDelegate {
             }
             
             // If precise location is disabled, show alert
-            if #available(iOS 14.0, *) {
-                if CLLocationManager().accuracyAuthorization == .reducedAccuracy {
-                    showAccuracyAlert()
-                }
+            if CLLocationManager().accuracyAuthorization == .reducedAccuracy {
+                showAccuracyAlert()
             }
             return
         }

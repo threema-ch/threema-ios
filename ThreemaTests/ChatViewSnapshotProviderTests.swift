@@ -75,7 +75,10 @@ class ChatViewSnapshotProviderTests: XCTestCase {
             messageProvider: messageProvider,
             unreadMessagesSnapshot: UnreadMessagesStateManager(
                 conversation: conversation,
-                entityManager: entityManager,
+                businessInjector: BusinessInjectorMock(
+                    backgroundEntityManager: entityManager,
+                    entityManager: entityManager
+                ),
                 notificationManager: NotificationManagerMock(),
                 unreadMessagesStateManagerDelegate: UnreadMessagesStateManagerDelegateMock()
             ),
@@ -139,7 +142,10 @@ class ChatViewSnapshotProviderTests: XCTestCase {
             messageProvider: messageProvider,
             unreadMessagesSnapshot: UnreadMessagesStateManager(
                 conversation: conversation,
-                entityManager: entityManager,
+                businessInjector: BusinessInjectorMock(
+                    backgroundEntityManager: entityManager,
+                    entityManager: entityManager
+                ),
                 notificationManager: NotificationManagerMock(),
                 unreadMessagesStateManagerDelegate: UnreadMessagesStateManagerDelegateMock()
             ),
@@ -244,7 +250,10 @@ class ChatViewSnapshotProviderTests: XCTestCase {
             messageProvider: messageProvider,
             unreadMessagesSnapshot: UnreadMessagesStateManager(
                 conversation: conversation,
-                entityManager: entityManager,
+                businessInjector: BusinessInjectorMock(
+                    backgroundEntityManager: entityManager,
+                    entityManager: entityManager
+                ),
                 notificationManager: NotificationManagerMock(),
                 unreadMessagesStateManagerDelegate: UnreadMessagesStateManagerDelegateMock()
             ),
@@ -378,7 +387,10 @@ class ChatViewSnapshotProviderTests: XCTestCase {
             messageProvider: messageProvider,
             unreadMessagesSnapshot: UnreadMessagesStateManager(
                 conversation: conversation,
-                entityManager: entityManager,
+                businessInjector: BusinessInjectorMock(
+                    backgroundEntityManager: entityManager,
+                    entityManager: entityManager
+                ),
                 notificationManager: NotificationManagerMock(),
                 unreadMessagesStateManagerDelegate: UnreadMessagesStateManagerDelegateMock()
             ),

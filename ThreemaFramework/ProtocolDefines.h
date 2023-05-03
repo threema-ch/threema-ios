@@ -182,6 +182,7 @@ static Float32 const kWebClientMediaQuality = 0.6;
 #define kMessageProcessingErrorCode     669
 #define kPendingGroupMessageErrorCode   670
 #define kMessageAlreadyProcessedErrorCode 671
+#define kSafePasswordEmptyErrorCode 672
 
 #define kJPEGCompressionQualityLow 0.8
 #define kJPEGCompressionQualityHigh 0.99

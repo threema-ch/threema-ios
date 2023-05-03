@@ -309,7 +309,7 @@ import Foundation
         return result
     }
 
-    /// Log list directories and files and write log file to application documents folder.
+    /// Log list directories and files into debug_log.txt and write to application documents folder.
     ///
     /// - Parameters:
     ///    - path: Root directory to list objects
@@ -318,7 +318,7 @@ import Foundation
         let fileManager = FileManager.default
         
         do {
-            DDLogInfo("Log files form \(path.path) into \(logFileName ?? "debug_log.txt")")
+            DDLogNotice("Log files form \(path.path) into \(logFileName ?? "debug_log.txt")")
             
             let resourceKeys: [URLResourceKey] = [.creationDateKey, .isDirectoryKey, .fileSizeKey]
             
@@ -329,12 +329,12 @@ import Foundation
                     let resourceValues = try url.resourceValues(forKeys: Set(resourceKeys))
                     let logFile =
                         "\(url.path) \(ByteCountFormatter.string(fromByteCount: Int64(resourceValues.fileSize ?? 0), countStyle: ByteCountFormatter.CountStyle.file)) \(resourceValues.creationDate!) \(resourceValues.isDirectory!)"
-                    DDLogVerbose(logFile)
+                    DDLogNotice(logFile)
                     logFiles += "\(logFile)\n"
                 }
             }
             
-            if let logFileName = logFileName,
+            if let logFileName,
                let appDocuments = appDocumentsDirectory {
                 let documentsPath = URL(fileURLWithPath: appDocuments.path)
                 let filePath = documentsPath.appendingPathComponent(logFileName)

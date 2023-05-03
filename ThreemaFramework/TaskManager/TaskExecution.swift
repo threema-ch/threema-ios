@@ -74,9 +74,17 @@ class TaskExecution: NSObject {
     func reflectMessage(message: AbstractMessage, ltReflect: LoggingTag, ltAck: LoggingTag) throws {
         assert(ltReflect != .none && ltAck != .none)
 
-        var envelope: D2d_Envelope!
+        var envelope: D2d_Envelope
 
-        // Get envelope and its Reflect ID. It's sender me, than must be an outcoming message!
+        var body: Data?
+        if let quotedMessage = message as? QuotedMessageProtocol {
+            body = quotedMessage.quotedBody()
+        }
+        else {
+            body = message.body()
+        }
+
+        // Get envelope and its Reflect ID. It's sender me, than must be an outgoing message!
         if message.fromIdentity == frameworkInjector.myIdentityStore.identity {
             if message.flagGroupMessage() {
                 guard let groupID = (message as? AbstractGroupMessage)?.groupID,
@@ -86,7 +94,7 @@ class TaskExecution: NSObject {
                 
                 envelope = frameworkInjector.mediatorMessageProtocol.getEnvelopeForOutgoingMessage(
                     type: Int32(message.type()),
-                    body: message.body(),
+                    body: body,
                     messageID: message.messageID.convert(),
                     groupID: groupID.convert(),
                     groupCreatorIdentity: groupCreator,
@@ -96,7 +104,7 @@ class TaskExecution: NSObject {
             else {
                 envelope = frameworkInjector.mediatorMessageProtocol.getEnvelopeForOutgoingMessage(
                     type: Int32(message.type()),
-                    body: message.body(),
+                    body: body,
                     messageID: message.messageID.convert(),
                     receiverIdentity: message.toIdentity,
                     createdAt: message.date
@@ -106,7 +114,7 @@ class TaskExecution: NSObject {
         else {
             envelope = frameworkInjector.mediatorMessageProtocol.getEnvelopeForIncomingMessage(
                 type: Int32(message.type()),
-                body: message.body(),
+                body: body,
                 messageID: message.messageID.convert(),
                 senderIdentity: message.fromIdentity,
                 createdAt: message.date
@@ -501,22 +509,18 @@ class TaskExecution: NSObject {
                 msg.toIdentity = toIdentity
                 msg.messageID = message.id
                 msg.date = message.date
-                                
+
                 if task.isGroupMessage,
                    let msg = msg as? GroupTextMessage {
                     
-                    msg.text = message.quotedMessageID != nil ? QuoteUtil.generateText(
-                        message.text,
-                        with: message.quotedMessageID
-                    ) : message.text
+                    msg.text = message.text
+                    msg.quotedMessageID = message.quotedMessageID
                     msg.groupID = task.groupID
                     msg.groupCreator = task.groupCreatorIdentity
                 }
                 else if let msg = msg as? BoxTextMessage {
-                    msg.text = message.quotedMessageID != nil ? QuoteUtil.generateText(
-                        message.text,
-                        with: message.quotedMessageID
-                    ) : message.text
+                    msg.text = message.text
+                    msg.quotedMessageID = message.quotedMessageID
                 }
                 return msg
             }

@@ -61,10 +61,6 @@ final class SingleDetailsDataSource: UITableViewDiffableDataSource<SingleDetails
         }
         return nil
     }()
-        
-    lazy var sortedGroupMembershipConversations = contact.groupConversations?
-        .compactMap { $0 as? Conversation }
-        .sortedDescendingByLastUpdatedDate()
     
     private let configuration = Configuration()
     
@@ -235,6 +231,12 @@ final class SingleDetailsDataSource: UITableViewDiffableDataSource<SingleDetails
         snapshot.appendItems(contactActions)
     }
     
+    func sortedGroupMembershipConversations() -> [Conversation]? {
+        contact.groupConversations?
+            .compactMap { $0 as? Conversation }
+            .sortedDescendingByLastUpdatedDate()
+    }
+    
     // MARK: - Update content
     
     /// Reload the passed sections
@@ -400,7 +402,7 @@ extension SingleDetailsDataSource {
             
             let dndViewController = DoNotDisturbViewController(for: strongSelf.contact) { _ in
                 quickAction.reload()
-                strongSelf.reload(sections: [.notifications])
+                strongSelf.refresh(sections: [.notifications])
             }
             let dndNavigationController = ThemedNavigationController(rootViewController: dndViewController)
             dndNavigationController.modalPresentationStyle = .formSheet
@@ -744,6 +746,7 @@ extension SingleDetailsDataSource {
     }
     
     private var groupRows: [SingleDetails.Row] {
+        var sortedGroupMembershipConversations = sortedGroupMembershipConversations()
         if sortedGroupMembershipConversations == nil {
             sortedGroupMembershipConversations = [Conversation]()
         }
@@ -795,7 +798,7 @@ extension SingleDetailsDataSource {
                 let pushSetting = PushSetting(for: strongSelf.contact)
                 return !pushSetting.silent
             }
-        ) { [weak self] isSet in
+        ) { [weak self, weak singleDetailsViewController] isSet in
             guard let strongSelf = self else {
                 return
             }
@@ -803,6 +806,7 @@ extension SingleDetailsDataSource {
             let pushSetting = PushSetting(for: strongSelf.contact)
             pushSetting.silent = !isSet
             pushSetting.save()
+            singleDetailsViewController?.reloadHeader()
         }
         rows.append(.booleanAction(playSoundBooleanAction))
         
@@ -1153,14 +1157,14 @@ extension SingleDetailsDataSource {
 
 extension SingleDetailsDataSource {
     var numberOfGroups: Int {
-        guard let conversations = sortedGroupMembershipConversations else {
+        guard let conversations = sortedGroupMembershipConversations() else {
             return 0
         }
         return conversations.count
     }
     
     var hasMoreGroupsToShow: Bool {
-        guard let conversations = sortedGroupMembershipConversations else {
+        guard let conversations = sortedGroupMembershipConversations() else {
             return false
         }
         return conversations.count > configuration.maxNumberOfGroupsShownInline
@@ -1168,7 +1172,7 @@ extension SingleDetailsDataSource {
     
     func showAllGroups(in viewController: UIViewController) {
         
-        var groups = sortedGroupMembershipConversations?
+        var groups = sortedGroupMembershipConversations()?
             .compactMap(groupManager.getGroup(conversation:))
         
         if groups == nil {

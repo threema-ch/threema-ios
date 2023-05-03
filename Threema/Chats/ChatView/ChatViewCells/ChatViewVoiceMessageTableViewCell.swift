@@ -291,9 +291,18 @@ final class ChatViewVoiceMessageTableViewCell: ChatViewBaseTableViewCell, Measur
         )
         view.translatesAutoresizingMaskIntoConstraints = false
         
+        // If VoiceOver is running, we hide all internal components and rely on a gesture recognizer to play and pause and for speed change, and we add a custom a11y action below
+        if UIAccessibility.isVoiceOverRunning {
+            let tapGestureRecognizer = UILongPressGestureRecognizer(target: self, action: #selector(handleTap(_:)))
+            tapGestureRecognizer.minimumPressDuration = 0.0
+            tapGestureRecognizer.delegate = self
+            view.addGestureRecognizer(tapGestureRecognizer)
+            view.accessibilityElementsHidden = true
+        }
+        
         return view
     }()
-    
+
     private lazy var contentStackViewConstraints: [NSLayoutConstraint] = {
         [
             contentStack.topAnchor.constraint(equalTo: containerView.topAnchor),
@@ -560,7 +569,7 @@ extension ChatViewVoiceMessageTableViewCell: MessageTextViewDelegate {
 // MARK: - Playback State Handling
 
 extension ChatViewVoiceMessageTableViewCell {
-    func stateButtonAction(_ button: ThemedCodeButton) {
+    func stateButtonAction(_ button: ThemedCodeButton?) {
         guard let voiceMessage = voiceMessageAndNeighbors?.message else {
             let msg = "Cannot take any button action without a message"
             assertionFailure(msg)
@@ -679,8 +688,8 @@ extension ChatViewVoiceMessageTableViewCell {
            .neighbors.nextMessage,
            let nextFileMessageProvider = nextMessage as? FileMessageProvider {
             if case .voice = nextFileMessageProvider.fileMessageType {
-                if (currentMessage.sender == nil && nextMessage.sender == nil) ||
-                    (currentMessage.sender != nil && nextMessage.sender != nil) {
+                if !currentMessage.isOwnMessage,
+                   !nextMessage.isOwnMessage {
                     // It needs to be in the predefined interval
                     guard abs(
                         nextMessage.sectionDate.timeIntervalSinceReferenceDate - currentMessage.sectionDate
@@ -792,9 +801,32 @@ extension ChatViewVoiceMessageTableViewCell: ChatViewMessageAction {
         return menuItems
     }
     
+    // MARK: - Accessibility
+
+    @objc func handleTap(_ sender: UITapGestureRecognizer) {
+        if sender.state == .ended {
+            stateButtonAction(nil)
+        }
+    }
+    
     override var accessibilityCustomActions: [UIAccessibilityCustomAction]? {
         get {
-            buildAccessibilityCustomActions()
+            let builtActions = buildAccessibilityCustomActions() ?? [UIAccessibilityCustomAction]()
+            let customActionArray =
+                [UIAccessibilityCustomAction(
+                    name: BundleUtil
+                        .localizedString(forKey: "accessibility_voiceMessage_speed_hint")
+                ) { _ in
+                    let newSpeedSetting = UserSettings.shared().threemaAudioMessagePlaySpeedSwitchToNextValue()
+                    UIAccessibility.post(
+                        notification: UIAccessibility.Notification.announcement,
+                        argument: "\(newSpeedSetting)"
+                    )
+                    self.voiceMessageCellDelegate?.updatePlaybackSpeed(newSpeedSetting)
+                    return true
+                }]
+            
+            return customActionArray + builtActions
         }
         set {
             // No-op

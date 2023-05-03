@@ -104,7 +104,7 @@
 "nickname" = "Prezývka";
 "add_button" = "Pridať";
 "chatview_contextmenu_select" = "Vybrať...";
-
+"learn_more" = "Viac informácií…";
 "file_message_image" = "Obrázok";
 "file_message_sticker" = "Nálepka";
 "file_message_animated_image" = "GIF";
@@ -881,6 +881,8 @@ Nahláste prosím tento incident na security@threema.ch a ak je to možné, posk
 "doNotDisturb_mention_footer_off" = "Ak je zapnutý režim Nerušiť, nedostanete vôbec žiadne hlásenia, dokonca ani keď vás niekto zmieni.";
 "doNotDisturb_mention_footer_on" = "Ak je zapnutý režim Nerušiť, budete dostávať hlásenia, ak vás niekto zmieni.";
 
+"doNotDisturb_notification_sound_footer" = "Zvuk upozornenia sa prehrá, iba ak je zapnuté nastavenie Prehrať zvuk upozornenia a nastavenie Nerušiť je deaktivované.";
+
 "notification_sound_header" = "Zvuk hlásenia";
 "notification_sound_title" = "Prehrať zvuk hlásenia";
 
@@ -1099,8 +1101,6 @@ V prípade, že stratíte prístup k vašemu zariadeniu, pomocou Trezoru Threema
 "settings_advanced_reregister_push_notifications_header_title" = "Automatické upozornenia";
 "settings_advanced_reregister_push_notifications_footer_title" = "Ak sa prichádzajúce správy nezobrazujú mimo aplikácie ako upozornenia, môžete sa znova registrovať na upozornenia.";
 "settings_advanced_reregister_notifications_label" = "Znova registrovať automatické upozornenia";
-"settings_advanced_new_chat_view_label" = "Nové zobrazenie četu";
-"settings_advanced_new_chat_view_label_footer" = "Poznámka: Staré zobrazenie četu bude v nadchádzajúcom vydaní odstránené.";
 
 "settings_md_sync_alert_title" = "Synchronizácia zlyhala";
 
@@ -1113,6 +1113,11 @@ V prípade, že stratíte prístup k vašemu zariadeniu, pomocou Trezoru Threema
 "settings_privacy_block_unknown" = "Blokovať neznáme";
 "settings_privacy_block_unknown_footer_on"= "Správu vám môžu poslať iba ľudia z vášho zoznamu kontaktov.";
 "settings_privacy_block_unknown_foooter_off" = "Ktokoľvek vám môže poslať správu. Nové kontakty sa pridajú automaticky, keď príde ich prvá správa.";
+
+"settings_privacy_os_header" = "Integrácia pre iOS";
+"settings_privacy_os_donate" = "Zdieľať interakcie";
+"settings_privacy_os_reset" = "Resetovať interakcie";
+"settings_privacy_os_footer" = "Ak je táto možnosť zapnutá, pri zdieľaní obsahu v systéme iOS budú navrhované kontakty z aplikácie Threema. Interakcie zdieľania odhaľujú informácie systému iOS.";
 
 "settings_privacy_chat_header" = "Konverzácia";
 "settings_privacy_read_receipts" = "Potvrdenie o prečítaní";
@@ -1145,6 +1150,9 @@ V prípade, že stratíte prístup k vašemu zariadeniu, pomocou Trezoru Threema
 "settings_appearance_display_order" = "Poradie zobrazenia";
 "settings_appearance_show_gallery_preview" = "Zobrazovať náhľad galérie";
 
+// Chat Settings
+"settings_chat_send_message_feedback_label" = "Hmatová spätná väzba pri odoslaní";
+
 // Media
 "settings_media_autosave_private_footer" = "Média prijaté v súkromných konverzáciach sa neuložia automaticky.";
 
@@ -1164,14 +1172,13 @@ V prípade, že stratíte prístup k vašemu zariadeniu, pomocou Trezoru Threema
 
 // Notification settings
 "settings_notifications_inapp_section" = "V aplikácii";
-"settings_notifications_inapp_sounds" = "Zvuky";
-"settings_notifications_inapp_vibrate" = "Vibrovať";
-"settings_notifications_inapp_preview" = "Náhľad";
+"settings_notifications_inapp_sounds" = "Zvuky v aplikácii";
+"settings_notifications_inapp_vibrate" = "Vibrácie v aplikácii";
+"settings_notifications_inapp_preview" = "Zobraziť ukážku správy";
 "settings_notifications_push_section" = "Push hlásenia";
 "settings_notifications_push_sound" = "Zvuk";
 "settings_notifications_push_groupsound" = "Zvuk skupiny";
-"settings_notifications_push_preview" = "Náhľad";
-"settings_notifications_push_showNickname" = "Zobraziť prezývku";
+"settings_notifications_push_preview" = "Zobraziť ukážku správy";
 "settings_notifications_masterDnd_section_header" = "Voľba po pracovnej dobe";
 "settings_notifications_masterDnd" = "Nevyrušovať po pracovnej dobe";
 "settings_notifications_masterDnd_section_footer" = "Vypnúť hlásenia a odmietať hovory mimo pracovnej doby";
@@ -1179,7 +1186,24 @@ V prípade, že stratíte prístup k vašemu zariadeniu, pomocou Trezoru Threema
 "settings_notifications_masterDnd_startTime" = "Začiatok pracovnej doby";
 "settings_notifications_masterDnd_endTime" = "Koniec pracovnej doby";
 "settings_notification_iOS_settings" = "Systémové nastavenia";
-"settings_notification_open_iOS_settings" = "Otvoriť systémové nastavenia";
+
+"settings_notification_type_preview_title" = "Push upozornenia";
+"settings_notification_type_preview_description" = "Vyberte, ktoré informácie majú byť zahrnuté v push upozorneniach na prichádzajúce správy v aplikácii Threema.";
+
+"settings_notification_type_preview_restrictive_title" = "Zobraziť prezývku";
+"settings_notification_type_preview_restrictive_description" = "Zobrazuje iba prezývka kontaktu.";
+"settings_notification_type_preview_restrictive_sender_name" = "~Ján";
+
+"settings_notification_type_preview_balanced_title" = "Zobrazené meno";
+"settings_notification_type_preview_balanced_description" = "Zobrazuje celé meno kontaktu (predvolené nastavenie).";
+"settings_notification_type_preview_balanced_sender_name" = "Ján Kováč";
+
+"settings_notification_type_preview_complete_title" = "Zobrazené meno a profilová fotka";
+"settings_notification_type_preview_complete_description" = "Zobrazuje celé meno a profilovú fotku kontaktu. Niektoré informácie týkajúce sa interakcií sa zdieľajú s operačným systémom. [Viac informácií…](%@)";
+"settings_notification_type_preview_complete_sender_name" = "Ján Kováč";
+
+"settings_notification_type_preview_message_text" = "Vzorová správa...";
+"settings_notification_type_preview_no_button" = "Deaktivovať push upozornenia";
 
 // Orphaned files delete
 "settings_orphaned_files_description" = "Pri mazaní údajov v správe úložiska sa v predchádzajúcich verziách %@ mohlo vo výnimočných prípadoch stať, že súbory (média) neboli úplne odstránené.
@@ -1387,6 +1411,7 @@ Pokiaľ vám v %@ nechýbajú žiadne (mediálne) súbory, vyprázdnite kôš, a
 
 "chat_text_view_placeholder" = "Nová správa";
 "compose_bar_camera_button_accessibility_label" = "Otvoriť fotoaparát";
+"compose_bar_image_picker_button_accessibility_label" = "Otvoriť výber obrázkov";
 "compose_bar_record_button_accessibility_label" = "Nahrať hlasovú správu";
 "compose_bar_send_message_button_accessibility_label" = "Odoslať správu";
 "compose_bar_attachment_button_accessibility_label" = "Pridať prílohy";
@@ -1463,6 +1488,9 @@ Pokiaľ vám v %@ nechýbajú žiadne (mediálne) súbory, vyprázdnite kôš, a
 "notification_settings_sync_pending" = "Prebieha synchronizácia...";
 "notification_settings_sync_succeeded" = "Nastavenia synchronizované";
 
+"notification_interaction_delete_succeeded" = "Interakcie odstránené";
+"notification_interaction_delete_failed" = "Odstraňovanie interakcií zlyhalo";
+
 // Forward security status messages
 "forward_security_message_without" = "Bola prijatá správa bez ochrany Perfect Forward Secrecy. Overte, či odosielateľ úmyselne zakázal funkciu Perfect Forward Secrecy.";
 "forward_security_session_established" = "Správy v tomto rozhovore sú teraz chránené systémom Perfect Forward Secrecy.";
@@ -1522,10 +1550,10 @@ Pokiaľ vám v %@ nechýbajú žiadne (mediálne) súbory, vyprázdnite kôš, a
 "accessibility_poll_open" = "Otvoriť";
 "accessibility_poll_closed" = "Uzavreté";
 "accessibility_file_duration" = "Trvanie: %@.";
-"accessibility_voice_message_playing" = "Momentálne sa prehráva.";
+"accessibility_voice_message_playing" = "Prehráva sa.";
 
 // Message status types
-"accessibility_status_acknowledged_plus_time" = "Uznávané, %@";
+"accessibility_status_acknowledged_plus_time" = "Odsúhlasené, %@";
 "accessibility_status_declined_plus_time" = "Odmietnuté, %@";
 "accessibility_status_sending_plus_time" = "Odosiela sa, %@";
 "accessibility_status_sent_plus_time" = "Odoslané, %@";

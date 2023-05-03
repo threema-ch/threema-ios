@@ -89,8 +89,8 @@ class ChatViewTableView: DebugTableView {
         /// We use this to determine whether chat view controller is actually visible and if not, delay jumping to the unread message line until we are visible i.e. have a non-nil window again.
         /// Additionally we do not mark messages as read when passcode lock is hiding the chat view.
         
-        chatViewDelegate?.willMoveToNonNilWindow = true
-        
+        chatViewDelegate?.willMoveToNonNilWindow = newWindow != nil
+            
         chatViewDelegate?.willMove(toWindow: window)
     }
 }

@@ -28,9 +28,12 @@ protocol ChatBarViewDelegate: AnyObject {
     func canSendText() -> Bool
     func sendText(rawText: String)
     func sendTypingIndicator(startTyping: Bool)
-    func sendOrPreviewPastedItem()
+    @discardableResult
+    func sendOrPreviewPastedItem() -> Bool
     func showAssetsSelector()
     func showCamera()
+    func showImagePicker()
+    func checkIfPastedStringIsMedia() -> Bool
     
     // Voice Messages
     func startRecording()
@@ -122,10 +125,12 @@ final class ChatBarView: UIView {
     private lazy var rightButtonsStackView: UIStackView = {
         let stack = UIStackView(arrangedSubviews: [
             cameraButton,
+            imagePickerButton,
             recordButton,
         ])
         
         cameraButton.setContentHuggingPriority(.defaultHigh, for: .horizontal)
+        imagePickerButton.setContentHuggingPriority(.defaultHigh, for: .horizontal)
         recordButton.setContentHuggingPriority(.defaultHigh, for: .horizontal)
         
         stack.axis = .horizontal
@@ -197,7 +202,45 @@ final class ChatBarView: UIView {
         }
         
         if strongSelf.chatBarViewDelegate?.canSendText() ?? false {
-            strongSelf.chatBarViewDelegate?.showCamera()
+            let avCaptureDeviceStatus = AVCaptureDevice.authorizationStatus(for: .video)
+            guard UIImagePickerController.isSourceTypeAvailable(.camera),
+                  avCaptureDeviceStatus != .denied else {
+                // switch camera to image picker icon
+                strongSelf.configureLayout()
+                
+                return
+            }
+            
+            if avCaptureDeviceStatus == .authorized {
+                strongSelf.chatBarViewDelegate?.showCamera()
+            }
+            else {
+                AVCaptureDevice.requestAccess(for: .video, completionHandler: { (granted: Bool) in
+                    DispatchQueue.main.async {
+                        if granted {
+                            strongSelf.chatBarViewDelegate?.showCamera()
+                        }
+                        else {
+                            // switch camera to image picker icon
+                            strongSelf.configureLayout()
+                        }
+                    }
+                })
+            }
+        }
+    }
+    
+    private lazy var imagePickerButton = ChatBarButton(
+        sfSymbolName: "photo.fill",
+        accessibilityLabel: BundleUtil.localizedString(forKey: "compose_bar_image_picker_button_accessibility_label"),
+        defaultColor: { Colors.backgroundChatBarButton }
+    ) { [weak self] _ in
+        guard let strongSelf = self else {
+            return
+        }
+        
+        if strongSelf.chatBarViewDelegate?.canSendText() ?? false {
+            strongSelf.chatBarViewDelegate?.showImagePicker()
         }
     }
     
@@ -232,6 +275,12 @@ final class ChatBarView: UIView {
     
     private func configureLayout() {
         translatesAutoresizingMaskIntoConstraints = false
+        
+        // show picker if camera is not available or we have no access
+        cameraButton.isHidden = !UIImagePickerController.isSourceTypeAvailable(.camera) || AVCaptureDevice
+            .authorizationStatus(for: .video) == .denied
+        imagePickerButton.isHidden = !cameraButton.isHidden
+        
         // Hairlines
         
         // We add one at the bottom for iPads
@@ -402,14 +451,25 @@ final class ChatBarView: UIView {
         let preFadeDelay = Config.ShowHideSendButtonAnimation.preFadeDelay
         
         recordButton.isHidden = hide
-        cameraButton.isHidden = hide
         sendButton.isHidden = !hide
+
+        // show camera if camera is available and access is not denied
+        if UIImagePickerController.isSourceTypeAvailable(.camera),
+           AVCaptureDevice.authorizationStatus(for: .video) != .denied {
+            imagePickerButton.isHidden = true
+            cameraButton.isHidden = hide
+        }
+        else {
+            cameraButton.isHidden = true
+            imagePickerButton.isHidden = hide
+        }
         
         cameraMicButtonConstraint?.isActive = !hide
         sendButtonConstraint?.isActive = hide
         
         let newRecordButtonAlpha: CGFloat = hide ? 0.0 : 1.0
         let newCameraButtonAlpha: CGFloat = newRecordButtonAlpha
+        let newImagePickerButtonAlpha: CGFloat = newRecordButtonAlpha
         let newSendButtonAlpha: CGFloat = !hide ? 0.0 : 1.0
         
         UIView.animate(
@@ -428,6 +488,7 @@ final class ChatBarView: UIView {
             animations: { [weak self] in
                 self?.recordButton.alpha = newRecordButtonAlpha
                 self?.cameraButton.alpha = newCameraButtonAlpha
+                self?.imagePickerButton.alpha = newImagePickerButtonAlpha
                 self?.sendButton.alpha = newSendButtonAlpha
             }
         )
@@ -524,8 +585,10 @@ extension ChatBarView: ChatTextViewDelegate {
         
         chatBarViewDelegate.sendText(rawText: text)
         
-        feedbackGenerator.prepare()
-        feedbackGenerator.notificationOccurred(.success)
+        if UserSettings.shared().sendMessageFeedback {
+            feedbackGenerator.prepare()
+            feedbackGenerator.notificationOccurred(.success)
+        }
     }
     
     func canStartEditing() -> Bool {
@@ -578,6 +641,10 @@ extension ChatBarView: ChatTextViewDelegate {
             isTyping = false
             chatBarViewDelegate?.sendTypingIndicator(startTyping: isTyping)
         }
+    }
+    
+    func checkIfPastedStringIsMedia() -> Bool {
+        chatBarViewDelegate?.checkIfPastedStringIsMedia() ?? false
     }
     
     // MARK: ChatTextViewDelegate Helpers

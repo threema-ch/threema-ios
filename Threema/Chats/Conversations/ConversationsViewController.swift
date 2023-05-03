@@ -71,9 +71,9 @@ class ConversationsViewController: ThemedTableViewController {
         action: #selector(selectAllRows)
     )
     
-    private let entityManager = EntityManager()
     private lazy var fetchedResultsController: NSFetchedResultsController<NSFetchRequestResult> = {
-        let fetchedResultsController: NSFetchedResultsController<NSFetchRequestResult> = entityManager.entityFetcher
+        let fetchedResultsController: NSFetchedResultsController<NSFetchRequestResult> = businessInjector.entityManager
+            .entityFetcher
             .fetchedResultsControllerForConversations(withSections: false)
         
         fetchedResultsController.delegate = self
@@ -81,8 +81,12 @@ class ConversationsViewController: ThemedTableViewController {
         return fetchedResultsController
     }()
     
-    private lazy var utilities = ConversationActions(entityManager: entityManager)
-    
+    private lazy var businessInjector = BusinessInjector()
+    private lazy var utilities = ConversationActions(
+        businessInjector: businessInjector,
+        notificationManager: NotificationManager(businessInjector: businessInjector)
+    )
+
     private lazy var searchController: UISearchController = {
         
         var searchController = UISearchController()
@@ -331,7 +335,7 @@ extension ConversationsViewController {
             viewController: self,
             conversation: conversation,
             lockScreenWrapper: lockScreen,
-            entityManager: entityManager
+            businessInjector: businessInjector
         )
         
         let configuration = UISwipeActionsConfiguration(actions: [readAction, pinAction, privateAction])
@@ -373,7 +377,7 @@ extension ConversationsViewController {
                 of: conversation,
                 owner: self,
                 cell: cell,
-                entityManager: self.entityManager,
+                entityManager: self.businessInjector.entityManager,
                 handler: handler
             )
         }
@@ -405,10 +409,10 @@ extension ConversationsViewController {
         let pinAction = UIContextualAction(style: .normal, title: nil) { _, _, handler in
             
             if isPinned {
-                self.utilities.unpin(conversation)
+                self.businessInjector.conversationStore.unpin(conversation)
             }
             else {
-                self.utilities.pin(conversation)
+                self.businessInjector.conversationStore.pin(conversation)
             }
             
             handler(true)
@@ -487,6 +491,10 @@ extension ConversationsViewController {
             return nil
         }
         
+        guard conversation.conversationCategory != .private else {
+            DDLogError("No context menu is shown if conversation is private")
+            return nil
+        }
         selectedConversation = conversation
         
         return UIContextMenuConfiguration(identifier: nil) {
@@ -557,7 +565,7 @@ extension ConversationsViewController {
         ConversationsViewControllerHelper.readConversations(
             at: tableView.indexPathsForSelectedRows,
             fetchedResultsController: fetchedResultsController,
-            entityManager: entityManager
+            businessInjector: businessInjector
         ) {
             self.hideToolbar()
         }
@@ -568,7 +576,7 @@ extension ConversationsViewController {
         ConversationsViewControllerHelper.unreadConversations(
             at: tableView.indexPathsForSelectedRows,
             fetchedResultsController: fetchedResultsController,
-            entityManager: entityManager
+            businessInjector: businessInjector
         ) {
             self.hideToolbar()
         }
@@ -579,7 +587,7 @@ extension ConversationsViewController {
         ConversationsViewControllerHelper.archiveConversations(
             at: tableView.indexPathsForSelectedRows,
             fetchedResultsController: fetchedResultsController,
-            entityManager: entityManager
+            businessInjector: businessInjector
         ) {
             self.hideToolbar()
         }
@@ -921,7 +929,7 @@ extension ConversationsViewController {
     private func updateArchivedButton() {
         
         // Disable button if no archived chats, hide it if there are not conversations at all
-        let count = entityManager.entityFetcher.countArchivedConversations()
+        let count = businessInjector.entityManager.entityFetcher.countArchivedConversations()
         if count > 0 {
             archivedChatsButton.isHidden = false
             archivedChatsButton.setTitle(BundleUtil.localizedString(forKey: "archived_chats") + " ", for: .normal)
@@ -1062,7 +1070,7 @@ extension ConversationsViewController {
     /// Updates the Predicates to the default and refreshes the TableView
     @objc private func updatePredicates() {
         
-        let archivedPredicate = NSPredicate(format: "visibility == %d", ConversationVisibility.default.rawValue)
+        let archivedPredicate = NSPredicate(format: "visibility != %d", ConversationVisibility.archived.rawValue)
         let privatePredicate = NSPredicate(format: "category != %d", ConversationCategory.private.rawValue)
         
         if UserSettings.shared().hidePrivateChats {

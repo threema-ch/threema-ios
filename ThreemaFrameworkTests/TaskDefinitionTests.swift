@@ -35,14 +35,14 @@ class TaskDefinitionTests: XCTestCase {
         dbPreparer = DatabasePreparer(context: mainCnx)
         
         frameworkInjectorMock = BusinessInjectorMock(
-            entityManager: EntityManager(databaseContext: dbMainCnx),
             backgroundEntityManager: EntityManager(
                 databaseContext:
                 DatabaseContext(
                     mainContext: mainCnx,
                     backgroundContext: backgroundCnx
                 )
-            )
+            ),
+            entityManager: EntityManager(databaseContext: dbMainCnx)
         )
     }
 

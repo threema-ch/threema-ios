@@ -91,5 +91,9 @@
 	<string>names/</string>
 	<key>ThreemaBackupInfo</key>
 	<string>https://threema.ch/faq/backup-options</string>
+	<key>ThreemaNotificationInfo</key>
+	<string>https://threema.ch/faq/ios-notification-types</string>
+	<key>ThreemaInteractionInfo</key>
+	<string>https://threema.ch/faq/ios-interactions</string>
 </dict>
 </plist>

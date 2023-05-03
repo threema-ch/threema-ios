@@ -141,7 +141,11 @@ public protocol ThumbnailDisplayMessage: BaseMessage & FileMessageProvider & Com
 
 public extension ThumbnailDisplayMessage {
     var readableFileName: String {
-        "\(ThreemaApp.currentName.replacingOccurrences(of: " ", with: "_"))_\(DateFormatter.getDateForExport(date))"
+        
+        let mimeType = UTIConverter.mimeType(fromUTI: blobGetUTI())
+        let ext = UTIConverter.preferredFileExtension(forMimeType: mimeType)
+        
+        return "\(ThreemaApp.currentName.replacingOccurrences(of: " ", with: "_"))_\(DateFormatter.getDateForExport(date)).\(ext ?? "")"
     }
     
     func createSaveMediaItem() -> AlbumManager.SaveMediaItem? {

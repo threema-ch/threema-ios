@@ -69,12 +69,24 @@ class InMemoryDHSessionStore: DHSessionStoreProtocol {
         }
         
         if peer {
-            localSession.peerRatchet2DH = session.peerRatchet2DH
-            localSession.peerRatchet4DH = session.peerRatchet4DH
+            if let localRatchet = localSession.peerRatchet2DH, let ratchet = session.peerRatchet2DH,
+               localRatchet.counter <= ratchet.counter {
+                localSession.peerRatchet2DH = session.peerRatchet2DH
+            }
+            if let localRatchet = localSession.peerRatchet4DH, let ratchet = session.peerRatchet4DH,
+               localRatchet.counter <= ratchet.counter {
+                localSession.peerRatchet4DH = session.peerRatchet4DH
+            }
         }
         else {
-            localSession.myRatchet2DH = session.myRatchet2DH
-            localSession.myRatchet4DH = session.myRatchet4DH
+            if let localRatchet = localSession.myRatchet2DH, let ratchet = session.myRatchet2DH,
+               localRatchet.counter <= ratchet.counter {
+                localSession.myRatchet2DH = session.myRatchet2DH
+            }
+            if let localRatchet = localSession.myRatchet4DH, let ratchet = session.peerRatchet4DH,
+               localRatchet.counter <= ratchet.counter {
+                localSession.myRatchet4DH = session.myRatchet4DH
+            }
         }
     }
     

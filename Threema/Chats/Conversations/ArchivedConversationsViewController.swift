@@ -51,9 +51,10 @@ class ArchivedConversationsViewController: ThemedTableViewController {
         action: #selector(unarchiveSelected)
     )
     
-    private let entityManager = EntityManager()
+    private let businessInjector = BusinessInjector()
     private lazy var fetchedResultsController: NSFetchedResultsController<NSFetchRequestResult> = {
-        let fetchedResultsController: NSFetchedResultsController<NSFetchRequestResult> = entityManager.entityFetcher
+        let fetchedResultsController: NSFetchedResultsController<NSFetchRequestResult> = businessInjector.entityManager
+            .entityFetcher
             .fetchedResultsControllerForArchivedConversations()
             
         fetchedResultsController.delegate = self
@@ -61,7 +62,7 @@ class ArchivedConversationsViewController: ThemedTableViewController {
         return fetchedResultsController
     }()
     
-    private lazy var utilities = ConversationActions(entityManager: self.entityManager)
+    private lazy var utilities = ConversationActions(businessInjector: businessInjector)
     
     private lazy var searchController: UISearchController = {
                
@@ -253,7 +254,7 @@ extension ArchivedConversationsViewController {
             viewController: self,
             conversation: conversation,
             lockScreenWrapper: lockScreen,
-            entityManager: entityManager
+            businessInjector: businessInjector
         )
         
         let configuration = UISwipeActionsConfiguration(actions: [privateAction])
@@ -293,7 +294,7 @@ extension ArchivedConversationsViewController {
                 of: conversation,
                 owner: self,
                 cell: cell,
-                entityManager: self.entityManager,
+                entityManager: self.businessInjector.entityManager,
                 handler: handler
             )
         }
@@ -398,7 +399,7 @@ extension ArchivedConversationsViewController {
         ConversationsViewControllerHelper.unarchiveConversations(
             at: tableView.indexPathsForSelectedRows,
             fetchedResultsController: fetchedResultsController,
-            entityManager: entityManager
+            businessInjector: businessInjector
         ) {
             self.hideToolbar()
         }

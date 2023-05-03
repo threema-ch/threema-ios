@@ -31,6 +31,7 @@ typedef NS_ENUM(NSInteger, ConversationCategory) {
 typedef NS_ENUM(NSInteger, ConversationVisibility) {
     ConversationVisibilityDefault = 0,
     ConversationVisibilityArchived = 1,
+    ConversationVisibilityPinned = 2,
 };
 
 @class Ballot, BaseMessage, ContactEntity, ImageData, Tag;

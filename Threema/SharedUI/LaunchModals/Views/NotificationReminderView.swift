@@ -64,6 +64,7 @@ struct NotificationReminderView: View {
             .padding()
             
             Button {
+                AppGroup.userDefaults().set(true, forKey: "PushReminderDoNotShowAgain")
                 dismiss()
             } label: {
                 Text(BundleUtil.localizedString(forKey: "push_reminder_not_now"))
@@ -73,10 +74,8 @@ struct NotificationReminderView: View {
             .padding(.bottom, 15)
         }
         .padding()
-        
+        .interactiveDismissDisabled()
         .onDisappear {
-            AppGroup.userDefaults().set(true, forKey: "PushReminderDoNotShowAgain")
-            
             // TODO: (IOS-3251) Remove
             LaunchModalManager.shared.checkLaunchModals()
         }
@@ -85,20 +84,15 @@ struct NotificationReminderView: View {
     // MARK: - Private Functions
 
     private func setReminder() {
-        #if compiler(>=5.7)
-            var settingsURL: URL
-            if #available(iOS 16.0, *) {
-                settingsURL = URL(string: UIApplication.openNotificationSettingsURLString)!
-            }
-            else {
-                // Fallback on earlier versions
-                settingsURL = URL(string: UIApplication.openSettingsURLString)!
-            }
-            UIApplication.shared.open(settingsURL)
-        #else
-            let settingsURL = URL(string: UIApplication.openSettingsURLString)!
-            UIApplication.shared.open(settingsURL)
-        #endif
+        var settingsURL: URL
+        if #available(iOS 16.0, *) {
+            settingsURL = URL(string: UIApplication.openNotificationSettingsURLString)!
+        }
+        else {
+            // Fallback on earlier versions
+            settingsURL = URL(string: UIApplication.openSettingsURLString)!
+        }
+        UIApplication.shared.open(settingsURL)
     }
 }
 

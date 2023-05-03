@@ -104,7 +104,7 @@
 "nickname" = "Takma isim";
 "add_button" = "Ekle";
 "chatview_contextmenu_select" = "Seç…";
-
+"learn_more" = "Daha fazla bilgi edinin...";
 "file_message_image" = "Resim";
 "file_message_sticker" = "Çıkartma";
 "file_message_animated_image" = "GIF";
@@ -880,6 +880,8 @@
 "doNotDisturb_mention_footer_off" = "Rahatsız etmeyin açıksa, sizden bahsedilse bile hiçbir bildirim almazsınız.";
 "doNotDisturb_mention_footer_on" = "Rahatsız etmeyin açıksa, sizden bahsedildiğinde bildirim almaya devam edersiniz.";
 
+"doNotDisturb_notification_sound_footer" = "Bildirim sesi yalnızca ”Bildirim Sesi Çal” etkinleştirildiğinde ve “Rahatsız Etmeyin” devre dışı bırakıldığında çalar.";
+
 "notification_sound_header" = "Bildirim tonu";
 "notification_sound_title" = "Bildirim tonu";
 
@@ -1098,8 +1100,6 @@ Threema Safe'i kullanırken, cihazınıza erişiminizi kaybetmeniz durumunda Thr
 "settings_advanced_reregister_push_notifications_header_title" = "Anlık bildirimler";
 "settings_advanced_reregister_push_notifications_footer_title" = "Gelen mesajlar uygulama dışında bildirim olarak görünmüyorsa, bildirimler için yeniden kaydolabilirsiniz.";
 "settings_advanced_reregister_notifications_label" = "Anlık Bildirimleri Yeniden Kaydet";
-"settings_advanced_new_chat_view_label" = "Yeni Sohbet Görünümü";
-"settings_advanced_new_chat_view_label_footer" = "Not: Eski sohbet görünümü yeni sürümde kaldırılacaktır.";
 
 "settings_md_sync_alert_title" = "Senkronizasyon başarısız oldu";
 
@@ -1112,6 +1112,11 @@ Threema Safe'i kullanırken, cihazınıza erişiminizi kaybetmeniz durumunda Thr
 "settings_privacy_block_unknown" = "Bilinmeyeni Engelle";
 "settings_privacy_block_unknown_footer_on"= "Yalnızca adres defterinizdeki kişiler size mesaj gönderebilir.";
 "settings_privacy_block_unknown_foooter_off" = "Herkes size mesaj gönderebilir. İlk mesajları geldiğinde yeni kişiler otomatik olarak eklenecektir.";
+
+"settings_privacy_os_header" = "iOS Entegrasyonu";
+"settings_privacy_os_donate" = "Etkileşimleri Paylaş";
+"settings_privacy_os_reset" = "Etkileşimleri Sıfırla";
+"settings_privacy_os_footer" = "Açıksa, iOS'ta içerik paylaşılırken Threema kişileri önerilecektir.  Etkileşimleri paylaşmak, bilgileri iOS'a gösterir.";
 
 "settings_privacy_chat_header" = "Sohbet";
 "settings_privacy_read_receipts" = "Okundu Bilgisi";
@@ -1144,6 +1149,9 @@ Threema Safe'i kullanırken, cihazınıza erişiminizi kaybetmeniz durumunda Thr
 "settings_appearance_display_order" = "Görüntüleme sırası";
 "settings_appearance_show_gallery_preview" = "Galeri önizlemesini göster";
 
+// Chat Settings
+"settings_chat_send_message_feedback_label" = "Göndermede Dokunsal Geri Bildirim";
+
 // Media
 "settings_media_autosave_private_footer" = "Özel sohbetlerde alınan medya otomatik olarak kaydedilmez.";
 
@@ -1163,14 +1171,13 @@ Threema Safe'i kullanırken, cihazınıza erişiminizi kaybetmeniz durumunda Thr
 
 // Notification settings
 "settings_notifications_inapp_section" = "Uygulama içi";
-"settings_notifications_inapp_sounds" = "Sesler";
-"settings_notifications_inapp_vibrate" = "Titreşim";
-"settings_notifications_inapp_preview" = "Ön izleme";
+"settings_notifications_inapp_sounds" = "Uygulama İçi Sesler";
+"settings_notifications_inapp_vibrate" = "Uygulama İçi Titreşim";
+"settings_notifications_inapp_preview" = "Mesaj Önizlemesini Göster";
 "settings_notifications_push_section" = "Anlık bildirimler";
 "settings_notifications_push_sound" = "Ses";
 "settings_notifications_push_groupsound" = "Grup sesi";
-"settings_notifications_push_preview" = "Ön izleme";
-"settings_notifications_push_showNickname" = "Takma ismi göster";
+"settings_notifications_push_preview" = "Mesaj Önizlemesini Göster";
 "settings_notifications_masterDnd_section_header" = "Mesai dışı saatleri politikası";
 "settings_notifications_masterDnd" = "Mesai saatleri dışında rahatsız etmeyin";
 "settings_notifications_masterDnd_section_footer" = "Bildirimleri devre dışı bırak ve mesai saatleri dışındaki aramaları reddet.";
@@ -1178,7 +1185,24 @@ Threema Safe'i kullanırken, cihazınıza erişiminizi kaybetmeniz durumunda Thr
 "settings_notifications_masterDnd_startTime" = "Çalışma saatlerinin başlangıcı";
 "settings_notifications_masterDnd_endTime" = "Çalışma saatlerinin sonu";
 "settings_notification_iOS_settings" = "Sistem ayarları";
-"settings_notification_open_iOS_settings" = "Sistem ayarlarını aç";
+
+"settings_notification_type_preview_title" = "Anlık Bildirimler";
+"settings_notification_type_preview_description" = "Gelen Threema mesajları için anlık bildirimlere hangi bilgilerin dahil edileceğini seçin.";
+
+"settings_notification_type_preview_restrictive_title" = "Takma Adı Görüntüle";
+"settings_notification_type_preview_restrictive_description" = "Yalnızca kişinin takma adını görüntüler.";
+"settings_notification_type_preview_restrictive_sender_name" = "~John";
+
+"settings_notification_type_preview_balanced_title" = "Görünen Ad";
+"settings_notification_type_preview_balanced_description" = "Kişinin tam adını görüntüler (varsayılan ayar).";
+"settings_notification_type_preview_balanced_sender_name" = "John Smith";
+
+"settings_notification_type_preview_complete_title" = "Görünen Ad ve Profil Resmi";
+"settings_notification_type_preview_complete_description" = "Kişinin tam adını ve profil resmini görüntüler. Etkileşimlerle ilgili bazı bilgiler işletim sistemiyle paylaşılır. [Daha fazla bilgi edinin…](%@)";
+"settings_notification_type_preview_complete_sender_name" = "John Smith";
+
+"settings_notification_type_preview_message_text" = "Örnek mesaj...";
+"settings_notification_type_preview_no_button" = "Anlık Bildirimleri Devre Dışı Bırak";
 
 // Orphaned files delete
 "settings_orphaned_files_description" = "Önceki %@ sürümlerinde Depolama yönetimindeki verileri silerken, (medya) dosyalarının doğru şekilde silinmediği, ancak %@ sürümünde kaldırıldığı nadir durumlarda olabilir.
@@ -1386,6 +1410,7 @@ Artık dosyaları çöp kutusuna taşıyın ve %@ içinde hiçbir (medya) dosyas
 
 "chat_text_view_placeholder" = "Yeni mesaj";
 "compose_bar_camera_button_accessibility_label" = "Kamerayı aç";
+"compose_bar_image_picker_button_accessibility_label" = "Resim Seçiciyi Aç";
 "compose_bar_record_button_accessibility_label" = "Sesli mesaj kaydet";
 "compose_bar_send_message_button_accessibility_label" = "Mesaj gönder";
 "compose_bar_attachment_button_accessibility_label" = "Ek ekle";
@@ -1462,6 +1487,9 @@ Artık dosyaları çöp kutusuna taşıyın ve %@ içinde hiçbir (medya) dosyas
 "notification_settings_sync_pending" = "Senkronize ediliyor…";
 "notification_settings_sync_succeeded" = "Ayarlar senkronize edildi";
 
+"notification_interaction_delete_succeeded" = "Etkileşimler Silindi";
+"notification_interaction_delete_failed" = "Etkileşimleri Silme Başarısız";
+
 // Forward security status messages
 "forward_security_message_without" = "Kusursuz İletme Gizliliği olmayan bir mesaj alındı.  Gönderenin Kusursuz İletme Gizliliğini kasıtlı olarak devre dışı bıraktığını doğrulayın.";
 "forward_security_session_established" = "Bu sohbetteki mesajlar artık Mükemmel İletme Gizliliği ile korunmaktadır.";
@@ -1524,7 +1552,7 @@ Artık dosyaları çöp kutusuna taşıyın ve %@ içinde hiçbir (medya) dosyas
 "accessibility_voice_message_playing" = "Çalıyor.";
 
 // Message status types
-"accessibility_status_acknowledged_plus_time" = "Alındı, %@";
+"accessibility_status_acknowledged_plus_time" = "Kabul, %@";
 "accessibility_status_declined_plus_time" = "Reddedildi, %@";
 "accessibility_status_sending_plus_time" = "Gönderiliyor, %@";
 "accessibility_status_sent_plus_time" = "Gönderildi, %@";
@@ -1549,7 +1577,7 @@ Artık dosyaları çöp kutusuna taşıyın ve %@ içinde hiçbir (medya) dosyas
 
 "md_wizard_terms_note_text" = "Bu teknik önizlemenin amacı, yaklaşan çoklu cihaz desteğini önceden test etmenize olanak tanımaktır. Lütfen özelliklerin sınırlı olduğunu ve bu alfa yazılımı olduğu için kusursuz değil ama iş görebileceğini unutmayın.";
 
-"md_wizard_terms_backup" = "Veri kaybı meydana gelebilir. Devam etmeden önce lütfen bir yedek oluşturun.\n[Yedekleme talimatları](https://threema.ch/docs/threema/ios_backup_manual_en.pdf)";
+"md_wizard_terms_backup" = "Veri kaybı meydana gelebilir. Devam etmeden önce lütfen bir yedek oluşturun. [Backup instructions] (https://threema.ch/docs/threema/ios_backup_manual_en.pdf)";
 "md_wizard_terms_support" = "Bu önizleme metin mesajlarını destekler. En son özellikleri ve iyileştirmeleri almak için iOS ve masaüstü uygulamalarını düzenli olarak güncelleyin.";
 "md_wizard_terms_issues" = "Bilinen sorunlar ve sınırlamalar [burada](https://threema.ch/faq/md_limit) bulunabilir.";
 "md_wizard_terms_bugs" = "Lütfen bu uygulamada karşılaştığınız sorunları \"Ayarlar > Beta Geri Bildirimi\" yoluyla bildirin.";

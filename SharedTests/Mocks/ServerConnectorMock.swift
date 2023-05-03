@@ -88,6 +88,10 @@ class ServerConnectorMock: NSObject, ServerConnectorProtocol {
         // no-op
     }
 
+    func disconnectWait(initiator: ConnectionInitiator) -> Bool {
+        true
+    }
+
     func deactivateMultiDevice() {
         // no-op
     }

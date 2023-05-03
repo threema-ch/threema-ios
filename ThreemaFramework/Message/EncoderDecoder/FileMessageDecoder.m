@@ -251,7 +251,7 @@ typedef void (^ErrorBlock)(NSError *err);
     __block FileMessageEntity *fileMessageEntity = (FileMessageEntity *)[entityManager getOrCreateMessageFor:_boxMessage sender:_sender conversation:_conversation thumbnail:nil];
 
     [entityManager performSyncBlockAndSafe:^{
-        BOOL isOutgoingMessage = _boxMessage.fromIdentity == [[MyIdentityStore sharedMyIdentityStore] identity];
+        BOOL isOutgoingMessage = [_boxMessage.fromIdentity isEqualToString:[[MyIdentityStore sharedMyIdentityStore] identity]];
         fileMessageEntity.isOwn = [NSNumber numberWithBool:isOutgoingMessage];
         
         GroupManager *groupManager = [[GroupManager alloc] initWithEntityManager:entityManager];

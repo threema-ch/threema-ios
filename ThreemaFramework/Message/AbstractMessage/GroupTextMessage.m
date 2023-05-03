@@ -20,6 +20,7 @@
 
 #import "GroupTextMessage.h"
 #import "ProtocolDefines.h"
+#import "QuoteUtil.h"
 
 @implementation GroupTextMessage
 
@@ -53,6 +54,15 @@
 
 - (BOOL)allowSendingProfile {
     return YES;
+}
+
+- (NSData *)quotedBody {
+    NSString *quotedText = self.quotedMessageId != nil ? [QuoteUtil generateText:self.text quotedId:self.quotedMessageId] : self.text;
+
+    NSMutableData *body = [NSMutableData dataWithData:[self.groupCreator dataUsingEncoding:NSASCIIStringEncoding]];
+    [body appendData:self.groupId];
+    [body appendData:[quotedText dataUsingEncoding:NSUTF8StringEncoding]];
+    return body;
 }
 
 #pragma mark - NSCoding

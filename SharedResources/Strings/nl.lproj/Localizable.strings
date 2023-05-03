@@ -104,7 +104,7 @@
 "nickname" = "Nickname";
 "add_button" = "Toevoegen";
 "chatview_contextmenu_select" = "Selecteren...";
-
+"learn_more" = "Meer informatie...";
 "file_message_image" = "Afbeelding";
 "file_message_sticker" = "Sticker";
 "file_message_animated_image" = "GIF";
@@ -880,6 +880,8 @@
 "doNotDisturb_mention_footer_off" = "U ontvangt geen meldingen, zelfs niet als u wordt genoemd.";
 "doNotDisturb_mention_footer_on" = "U ontvangt een melding wanneer u wordt genoemd.";
 
+"doNotDisturb_notification_sound_footer" = "Het meldingsgeluid wordt alleen afgespeeld wanneer \"Meldingsgeluid afspelen\" is ingeschakeld en \"Niet storen\" is uitgeschakeld.";
+
 "notification_sound_header" = "Meldingsgeluid";
 "notification_sound_title" = "Meldingsgeluid afspelen";
 
@@ -1097,8 +1099,6 @@
 "settings_advanced_reregister_push_notifications_header_title" = "Pushberichten";
 "settings_advanced_reregister_push_notifications_footer_title" = "Indien inkomende berichten niet buiten de app als meldingen worden getoond, kunt u zich opnieuw voor meldingen registreren.";
 "settings_advanced_reregister_notifications_label" = "Pushmeldingen opnieuw registreren";
-"settings_advanced_new_chat_view_label" = "Nieuwe chatweergave";
-"settings_advanced_new_chat_view_label_footer" = "Let op: de oude chatweergave wordt verwijderd in een aankomende versie.";
 
 "settings_md_sync_alert_title" = "Synchronisatie is mislukt";
 
@@ -1111,6 +1111,11 @@
 "settings_privacy_block_unknown" = "Onbekenden blokkeren";
 "settings_privacy_block_unknown_footer_on"= "Alleen mensen op uw contactlijst kunnen u een bericht sturen.";
 "settings_privacy_block_unknown_foooter_off" = "Iedereen kan u een bericht sturen. Nieuwe contacten worden automatisch toegevoegd wanneer hun eerste bericht aankomt.";
+
+"settings_privacy_os_header" = "iOS-integratie";
+"settings_privacy_os_donate" = "Interacties delen";
+"settings_privacy_os_reset" = "Interacties herstellen";
+"settings_privacy_os_footer" = "Indien ingeschakeld, worden er contactpersonen van Threema voorgesteld wanneer er in iOS inhoud wordt gedeeld. Het delen van interacties onthult informatie aan iOS.";
 
 "settings_privacy_chat_header" = "Chatten";
 "settings_privacy_read_receipts" = "Ontvangstbevestigingen";
@@ -1143,6 +1148,9 @@
 "settings_appearance_display_order" = "Geef weer";
 "settings_appearance_show_gallery_preview" = "Albumvoorbeelden weergeven";
 
+// Chat Settings
+"settings_chat_send_message_feedback_label" = "Haptische feedback bij verzenden";
+
 // Media
 "settings_media_autosave_private_footer" = "Media ontvangen in privéchats worden niet automatisch opgeslagen.";
 
@@ -1162,14 +1170,13 @@
 
 // Notification settings
 "settings_notifications_inapp_section" = "In app";
-"settings_notifications_inapp_sounds" = "Geluiden";
-"settings_notifications_inapp_vibrate" = "Trillen";
-"settings_notifications_inapp_preview" = "Voorbeeld";
+"settings_notifications_inapp_sounds" = "Geluiden in de app";
+"settings_notifications_inapp_vibrate" = "Trillen in de app";
+"settings_notifications_inapp_preview" = "Voorbeeldweergave van bericht";
 "settings_notifications_push_section" = "Pushberichten";
 "settings_notifications_push_sound" = "Geluid";
 "settings_notifications_push_groupsound" = "Geluid groep";
-"settings_notifications_push_preview" = "Voorbeeld";
-"settings_notifications_push_showNickname" = "Nickname tonen";
+"settings_notifications_push_preview" = "Voorbeeldweergave van bericht";
 "settings_notifications_masterDnd_section_header" = "Buiten bedrijfstijden";
 "settings_notifications_masterDnd" = "Niet storen buiten werktijden";
 "settings_notifications_masterDnd_section_footer" = "Meldingen uitschakelen en oproepen buiten kantooruren afwijzen.";
@@ -1177,7 +1184,24 @@
 "settings_notifications_masterDnd_startTime" = "Start van kantooruren";
 "settings_notifications_masterDnd_endTime" = "Einde van kantooruren";
 "settings_notification_iOS_settings" = "Systeeminstellingen";
-"settings_notification_open_iOS_settings" = "Systeeminstellingen openen";
+
+"settings_notification_type_preview_title" = "Pushmeldingen";
+"settings_notification_type_preview_description" = "Kies welke informatie er moet worden opgenomen in pushmeldingen voor inkomende Threema-berichten.";
+
+"settings_notification_type_preview_restrictive_title" = "Bijnaam tonen";
+"settings_notification_type_preview_restrictive_description" = "Toont alleen de bijnaam van de contactpersoon.";
+"settings_notification_type_preview_restrictive_sender_name" = "~Jan";
+
+"settings_notification_type_preview_balanced_title" = "Naam tonen";
+"settings_notification_type_preview_balanced_description" = "Toont de volledige naam van de contactpersoon (standaard instelling).";
+"settings_notification_type_preview_balanced_sender_name" = "Jan de Vries";
+
+"settings_notification_type_preview_complete_title" = "Naam en profielfoto tonen";
+"settings_notification_type_preview_complete_description" = "Toont de volledige naam en de profielfoto van de contactpersoon. Enkele gegevens over de interacties worden met het besturingssysteem gedeeld. [Meer informatie...](%@)";
+"settings_notification_type_preview_complete_sender_name" = "Jan de Vries";
+
+"settings_notification_type_preview_message_text" = "Voorbeeldbericht...";
+"settings_notification_type_preview_no_button" = "Pushmeldingen uitschakelen";
 
 // Orphaned files delete
 "settings_orphaned_files_description" = "Wanneer in eerdere versies van %@ gegevens uit het Opslagbeheer werden verwijderd, kon het in zeldzame gevallen gebeuren dat de (media)bestanden niet correct werden verwijderd maar wel in %@ werden verwijderd.
@@ -1385,6 +1409,7 @@ Als er geen (media)bestanden in %@ ontbreken, maak de prullenbak dan leeg om de 
 
 "chat_text_view_placeholder" = "Nieuw bericht";
 "compose_bar_camera_button_accessibility_label" = "Camera openen";
+"compose_bar_image_picker_button_accessibility_label" = "Beeldkiezer openen";
 "compose_bar_record_button_accessibility_label" = "Ingesproken bericht opnemen";
 "compose_bar_send_message_button_accessibility_label" = "Bericht versturen";
 "compose_bar_attachment_button_accessibility_label" = "Bijlagen toevoegen";
@@ -1461,6 +1486,9 @@ Als er geen (media)bestanden in %@ ontbreken, maak de prullenbak dan leeg om de 
 "notification_settings_sync_pending" = "Wordt gesynchroniseerd...";
 "notification_settings_sync_succeeded" = "Instellingen zijn gesynchroniseerd";
 
+"notification_interaction_delete_succeeded" = "Interacties verwijderd";
+"notification_interaction_delete_failed" = "Het verwijderen van interacties is mislukt";
+
 // Forward security status messages
 "forward_security_message_without" = "Er is een bericht zonder Perfect forward secrecy ontvangen. Controleer of de afzender Perfect forward secrecy opzettelijk heeft uitgeschakeld.";
 "forward_security_session_established" = "De berichten in deze chat zijn nu beschermd met Perfect forward secrecy.";
@@ -1523,7 +1551,7 @@ Als er geen (media)bestanden in %@ ontbreken, maak de prullenbak dan leeg om de 
 "accessibility_voice_message_playing" = "Wordt nu afgespeeld.";
 
 // Message status types
-"accessibility_status_acknowledged_plus_time" = "Erkend, %@";
+"accessibility_status_acknowledged_plus_time" = "Akkoord, %@";
 "accessibility_status_declined_plus_time" = "Afgewezen, %@";
 "accessibility_status_sending_plus_time" = "Aan het verzenden, %@";
 "accessibility_status_sent_plus_time" = "Verzonden, %@";

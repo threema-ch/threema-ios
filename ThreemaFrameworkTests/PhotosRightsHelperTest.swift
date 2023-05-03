@@ -25,16 +25,9 @@ class PhotosRightsHelperTest: XCTestCase {
 
     func testPhotosRights() throws {
         let table: [([Bool], PhotosRights)] = [
-            ([true, true, true, true, true, true, false], .full),
-            ([true, true, true, true, true, true, true], .full),
-            ([false, true, true, true, true, true, false], .full),
-            ([false, true, true, true, true, true, true], .write),
-            ([false, true, true, true, true, true, false], .full),
-            ([false, true, true, true, true, true, true], .write),
-            ([false, false, false, true, true, true, false], .potentialWrite),
-            ([false, false, false, true, true, true, true], .none),
-            ([true, true, true, true, false, true, false], .write),
-            ([true, true, true, true, false, false, false], .potentialWrite),
+            ([true, true, true, true, true, true], .full),
+            ([false, true, true, true, true, true], .write),
+            ([false, false, false, true, true, true], .none),
         ]
         
         var mock: PhotosRightsHelperMock
@@ -46,8 +39,7 @@ class PhotosRightsHelperTest: XCTestCase {
                 requestReadAccess: item.0[2],
                 readAccess: item.0[3],
                 fullAccess: item.0[4],
-                writeAccess: item.0[5],
-                newPhotosApi: item.0[6]
+                writeAccess: item.0[5]
             )
             let result = PhotosRightsHelper.checkAccessAllowed(rightsHelper: mock)
             XCTAssert(result == item.1, "Result is \(result), but should be \(item.1). For input \(item)")

@@ -281,12 +281,14 @@ extension Sync_ConversationCategory: CaseIterable {
 ///
 /// More detailed parameter information is available here:
 /// https://work.threema.ch/en/docs/mdm_configuration
+///
+/// [//]: # TODO(SE-223): Subject to change.
 struct Sync_MdmParameters {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  /// Username required for activation of the app
+  /// Username required for activation of the app.
   /// References: `th_license_username`
   var licenseUsername: String {
     get {return _storage._licenseUsername ?? String()}

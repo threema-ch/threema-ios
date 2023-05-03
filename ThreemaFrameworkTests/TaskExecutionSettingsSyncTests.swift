@@ -27,8 +27,6 @@ class TaskExecutionSettingsSyncTests: XCTestCase {
     private var databaseMainCnx: DatabaseContext!
     private var databaseBackgroundCnx: DatabaseContext!
 
-    private var deviceGroupKeys: DeviceGroupKeys!
-
     private let timeout: Double = 30
     
     override func setUpWithError() throws {
@@ -38,34 +36,12 @@ class TaskExecutionSettingsSyncTests: XCTestCase {
         let (_, mainCnx, backgroundCnx) = DatabasePersistentContext.devNullContext()
         databaseMainCnx = DatabaseContext(mainContext: mainCnx, backgroundContext: nil)
         databaseBackgroundCnx = DatabaseContext(mainContext: mainCnx, backgroundContext: backgroundCnx)
-
-        deviceGroupKeys = DeviceGroupKeys(
-            dgpk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
-            dgrk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
-            dgdik: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
-            dgsddk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
-            dgtsk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
-            deviceGroupIDFirstByteHex: "a1"
-        )
     }
     
     func testNoDeviceGroupPathKey() {
         let frameworkInjectorMock = BusinessInjectorMock(
             backgroundEntityManager: EntityManager(databaseContext: databaseBackgroundCnx),
-            backgroundGroupManager: GroupManagerMock(),
-            backgroundUnreadMessages: UnreadMessagesMock(),
-            contactStore: ContactStoreMock(),
-            entityManager: EntityManager(databaseContext: databaseMainCnx),
-            groupManager: GroupManagerMock(),
-            licenseStore: LicenseStore.shared(),
-            messageSender: MessageSenderMock(),
-            multiDeviceManager: MultiDeviceManagerMock(),
-            myIdentityStore: MyIdentityStoreMock(),
-            userSettings: UserSettingsMock(),
-            settingsStore: SettingsStoreMock(),
-            serverConnector: ServerConnectorMock(),
-            mediatorMessageProtocol: MediatorMessageProtocolMock(),
-            messageProcessor: MessageProcessorMock()
+            entityManager: EntityManager(databaseContext: databaseMainCnx)
         )
 
         let task = TaskDefinitionSettingsSync(syncSettings: Sync_Settings())
@@ -96,25 +72,13 @@ class TaskExecutionSettingsSyncTests: XCTestCase {
     func testConnectionStateDisconnected() {
         let serverConnectorMock = ServerConnectorMock(
             connectionState: .disconnected,
-            deviceID: BytesUtility.generateRandomBytes(length: ThreemaProtocol.deviceIDLength)!,
-            deviceGroupKeys: deviceGroupKeys
+            deviceID: MockData.deviceID,
+            deviceGroupKeys: MockData.deviceGroupKeys
         )
         let frameworkInjectorMock = BusinessInjectorMock(
             backgroundEntityManager: EntityManager(databaseContext: databaseBackgroundCnx),
-            backgroundGroupManager: GroupManagerMock(),
-            backgroundUnreadMessages: UnreadMessagesMock(),
-            contactStore: ContactStoreMock(),
             entityManager: EntityManager(databaseContext: databaseMainCnx),
-            groupManager: GroupManagerMock(),
-            licenseStore: LicenseStore.shared(),
-            messageSender: MessageSenderMock(),
-            multiDeviceManager: MultiDeviceManagerMock(),
-            myIdentityStore: MyIdentityStoreMock(),
-            userSettings: UserSettingsMock(),
-            settingsStore: SettingsStoreMock(),
-            serverConnector: serverConnectorMock,
-            mediatorMessageProtocol: MediatorMessageProtocolMock(),
-            messageProcessor: MessageProcessorMock()
+            serverConnector: serverConnectorMock
         )
 
         // Change one value otherwise error will be shouldSkip
@@ -235,11 +199,10 @@ class TaskExecutionSettingsSyncTests: XCTestCase {
             let expectedReflectMessage = BytesUtility.generateRandomBytes(length: 16)!
             var expectedMediatorLockState: ([MediatorMessageProtocol.MediatorMessageType], [Data]?)?
 
-            let deviceID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.deviceIDLength)!
             let serverConnectorMock = ServerConnectorMock(
                 connectionState: .loggedIn,
-                deviceID: deviceID,
-                deviceGroupKeys: deviceGroupKeys
+                deviceID: MockData.deviceID,
+                deviceGroupKeys: MockData.deviceGroupKeys
             )
             serverConnectorMock.reflectMessageClosure = { _ in
                 if serverConnectorMock.connectionState == .loggedIn {
@@ -273,20 +236,12 @@ class TaskExecutionSettingsSyncTests: XCTestCase {
             let deviceGroupKeys = try XCTUnwrap(serverConnectorMock.deviceGroupKeys, "Device group keys missing")
             let framworkInjectorMock = BusinessInjectorMock(
                 backgroundEntityManager: EntityManager(databaseContext: databaseBackgroundCnx),
-                backgroundGroupManager: GroupManagerMock(),
-                backgroundUnreadMessages: UnreadMessagesMock(),
-                contactStore: ContactStoreMock(),
                 entityManager: EntityManager(databaseContext: databaseMainCnx),
-                groupManager: GroupManagerMock(),
-                licenseStore: LicenseStore.shared(),
-                messageSender: MessageSenderMock(),
-                multiDeviceManager: MultiDeviceManagerMock(),
                 myIdentityStore: test.initialConfig.identityStore,
                 userSettings: test.initialConfig.userSettings,
-                settingsStore: SettingsStoreMock(),
                 serverConnector: serverConnectorMock,
                 mediatorMessageProtocol: MediatorMessageProtocolMock(
-                    deviceGroupKeys: deviceGroupKeys,
+                    deviceGroupKeys: MockData.deviceGroupKeys,
                     returnValues: [
                         MediatorMessageProtocolMock
                             .ReflectData(
@@ -294,8 +249,7 @@ class TaskExecutionSettingsSyncTests: XCTestCase {
                                 message: expectedReflectMessage
                             ),
                     ]
-                ),
-                messageProcessor: MessageProcessorMock()
+                )
             )
 
             if let expectedServerTransactionErrorResponse = test.expectedServerTransactionErrorResponses {

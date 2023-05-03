@@ -43,6 +43,8 @@
 
 - (BOOL)isProvisioned;
 
+@property (strong, nonatomic, readwrite) NSString *licenseSupportUrl NS_SWIFT_NAME(licenseSupportURL);
+
 @end
 
 @interface MyIdentityStore : NSObject <MyIdentityStoreProtocol>
@@ -70,7 +72,6 @@
 @property (strong, nonatomic, readwrite) NSDate *licenseLastCheck;
 @property (strong, nonatomic, readwrite) NSString *licenseLogoLightUrl NS_SWIFT_NAME(licenseLogoLightURL);
 @property (strong, nonatomic, readwrite) NSString *licenseLogoDarkUrl NS_SWIFT_NAME(licenseLogoDarkURL);
-@property (strong, nonatomic, readwrite) NSString *licenseSupportUrl NS_SWIFT_NAME(licenseSupportURL);
 
 /*!
  * @field pendingCreateID
@@ -98,6 +99,8 @@
 @property (strong, nonatomic, readwrite) NSString *lastWorkInfoMdmDescription;
 
 + (MyIdentityStore*)sharedMyIdentityStore;
+- (instancetype) __unavailable init;
+
 + (void)resetSharedInstance;
 
 - (BOOL)isProvisioned;

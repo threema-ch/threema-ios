@@ -107,11 +107,11 @@ public extension GroupManagerProtocol {
     @discardableResult func setPhotoObjc(groupID: Data, creator: String, imageData: Data, sentDate: Date, send: Bool)
         -> AnyPromise
     func syncObjc(group: Group, to identities: Set<String>?, withoutCreateMessage: Bool) -> AnyPromise
-    func sendSyncRequest(groupID: Data, creator: String)
+    func sendSyncRequest(groupID: Data, creator: String, force: Bool)
     func periodicSyncIfNeeded(for group: Group)
 }
 
-// Define "default" arguments for certains protocol methods
+// Define "default" arguments for certain protocol methods
 public extension GroupManagerProtocolObjc {
     func createOrUpdateObjc(
         groupID: Data,
@@ -136,5 +136,9 @@ public extension GroupManagerProtocolObjc {
 
     func dissolve(groupID: Data, to identities: Set<String>?) {
         dissolve(groupID: groupID, to: identities)
+    }
+    
+    func sendSyncRequest(groupID: Data, creator: String) {
+        sendSyncRequest(groupID: groupID, creator: creator, force: false)
     }
 }

@@ -34,6 +34,7 @@ public protocol UserNotificationManagerProtocol {
 }
 
 public class UserNotificationManager: UserNotificationManagerProtocol {
+    private let settingsStore: SettingsStoreProtocol
     private let userSettings: UserSettingsProtocol
     private let contactStore: ContactStoreProtocol
     private let groupManager: GroupManagerProtocol
@@ -41,12 +42,14 @@ public class UserNotificationManager: UserNotificationManagerProtocol {
     private let isWorkApp: Bool
     
     public init(
+        _ settingsStore: SettingsStoreProtocol,
         _ userSettings: UserSettingsProtocol,
         _ contactStore: ContactStoreProtocol,
         _ groupManager: GroupManagerProtocol,
         _ entityManager: EntityManager,
         _ isWorkApp: Bool
     ) {
+        self.settingsStore = settingsStore
         self.userSettings = userSettings
         self.contactStore = contactStore
         self.groupManager = groupManager
@@ -95,7 +98,7 @@ public class UserNotificationManager: UserNotificationManagerProtocol {
             return nil
         }
 
-        // If is group message check is there a group i'm not left otherwise don't show a notification
+        // If the notification is for a group, we check if it is for a group I did not leave. If so we don't show a notification.
         if pendingUserNotification.isGroupMessage ?? false,
            let groupMessage = pendingUserNotification.abstractMessage as? AbstractGroupMessage {
             guard let group = groupManager.getGroup(groupMessage.groupID, creator: groupMessage.groupCreator),
@@ -120,12 +123,18 @@ public class UserNotificationManager: UserNotificationManagerProtocol {
                 .groupEntity(for: baseMessage.conversation)?.groupCreator ?? MyIdentityStore.shared().identity
             userNotificationContent.pushSetting = pushSettingManager.find(forConversation: baseMessage.conversation)
         }
+            
+        let notificationType = settingsStore.notificationType
         
-        // Apply from name
-        if let identity = pendingUserNotification.senderIdentity,
-           let sender = entityManager.entityFetcher.contact(for: identity) {
-            userNotificationContent.fromName = userSettings.pushShowNickname ?
-                sender.publicNickname ?? identity : sender.displayName
+        // Name
+        // We only show nickname for restrictive notifications, otherwise we always use the display name.
+        if let sender = entityManager.entityFetcher.contact(for: senderIdentity) {
+            switch notificationType {
+            case .restrictive:
+                userNotificationContent.fromName = sender.publicNickname ?? senderIdentity
+            case .balanced, .complete:
+                userNotificationContent.fromName = sender.displayName
+            }
         }
         else {
             guard !userSettings.blockUnknown else {
@@ -134,16 +143,10 @@ public class UserNotificationManager: UserNotificationManagerProtocol {
             
             userNotificationContent.fromName = nickname(for: pendingUserNotification)
         }
-
-        // Apply content from Threema push
-        userNotificationContent.body = String.localizedStringWithFormat(
-            BundleUtil.localizedString(
-                forKey: pendingUserNotification.isGroupMessage! ? "new_group_message_from_x" : "new_message_from_x"
-            ),
-            userNotificationContent.fromName ?? pendingUserNotification.senderIdentity ?? "unknown"
-        )
         
-        if userSettings.pushDecrypt {
+        // Body
+        // We only hide the text if showPreview, is disabled
+        if settingsStore.pushShowPreview {
             if let baseMessage = pendingUserNotification.baseMessage {
                 // Apply content from base message
                 if userNotificationContent.isGroupMessage {
@@ -158,11 +161,12 @@ public class UserNotificationManager: UserNotificationManagerProtocol {
                 }
                 else {
                     userNotificationContent.title = userNotificationContent.fromName
-                    userNotificationContent.body = TextStyleUtils.makeMentionsString(forText: baseMessage.previewText())
+                    userNotificationContent.body = TextStyleUtils
+                        .makeMentionsString(forText: baseMessage.previewText())
                 }
-                
+                    
                 if pendingUserNotification.stage == .final {
-                    // Add thumbnail attachement if file, image or video message
+                    // Add thumbnail attachment if file, image or video message
                     var image: ImageData? = (baseMessage as? FileMessageEntity)?.thumbnail
                     if image == nil {
                         image = (baseMessage as? VideoMessageEntity)?.thumbnail
@@ -170,10 +174,14 @@ public class UserNotificationManager: UserNotificationManagerProtocol {
                     if image == nil {
                         image = (baseMessage as? ImageMessageEntity)?.image
                     }
-                    
-                    if let image = image,
-                       let attachment = saveAttachment(image, baseMessage.id.hexString, pendingUserNotification.stage) {
                         
+                    if let image = image,
+                       let attachment = saveAttachment(
+                           image,
+                           baseMessage.id.hexString,
+                           pendingUserNotification.stage
+                       ) {
+                            
                         userNotificationContent.attachmentName = attachment.name
                         userNotificationContent.attachmentURL = attachment.url
                     }
@@ -191,12 +199,27 @@ public class UserNotificationManager: UserNotificationManagerProtocol {
                     userNotificationContent.body = abstractMessage.pushNotificationBody()
                 }
             }
+            
+            else {
+                let name = userNotificationContent.fromName ?? pendingUserNotification.senderIdentity ?? "unknown"
+                userNotificationContent.title = name
+                
+                let key = pendingUserNotification.isGroupMessage ?? false ? "new_group_message" : "new_message"
+                userNotificationContent.body = BundleUtil.localizedString(forKey: key)
+            }
+        }
+        else {
+            let name = userNotificationContent.fromName ?? pendingUserNotification.senderIdentity ?? "unknown"
+            userNotificationContent.title = name
+                
+            let key = pendingUserNotification.isGroupMessage ?? false ? "new_group_message" : "new_message"
+            userNotificationContent.body = BundleUtil.localizedString(forKey: key)
         }
         
         return userNotificationContent
     }
     
-    /// Get content for test noctification.
+    /// Get content for test notification.
     /// - Parameter payload: Information about test push
     /// - Returns: User notification for user notification center
     public func testNotificationContent(payload: [AnyHashable: Any]) -> UNMutableNotificationContent {
@@ -219,7 +242,7 @@ public class UserNotificationManager: UserNotificationManagerProtocol {
         return notificationContent
     }
     
-    /// Get content for threema web noctification.
+    /// Get content for threema web notification.
     /// - Parameter payload: Information about threema web push
     /// - Returns: User notification for user notification center
     public func threemaWebNotificationContent(payload: [AnyHashable: Any]) -> UNMutableNotificationContent {
@@ -335,15 +358,16 @@ public class UserNotificationManager: UserNotificationManagerProtocol {
         to.badge = NSNumber(integerLiteral: badge)
         
         to.userInfo = from.userInfo
-        
+
         if from.categoryIdentifier.elementsEqual("SINGLE") || from.categoryIdentifier.elementsEqual("GROUP") {
             to.categoryIdentifier = userSettings.pushDecrypt ? from.categoryIdentifier : ""
         }
         else {
             to.categoryIdentifier = from.categoryIdentifier
+            to.categoryIdentifier = from.categoryIdentifier
         }
         
-        // Group notifictions
+        // Group notifications
         if from.categoryIdentifier.elementsEqual("SINGLE") {
             to.threadIdentifier = "SINGLE-\(from.senderID!)"
         }

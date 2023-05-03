@@ -104,7 +104,7 @@
 "nickname" = "昵称";
 "add_button" = "添加";
 "chatview_contextmenu_select" = "选择…";
-
+"learn_more" = "了解更多…";
 "file_message_image" = "图片";
 "file_message_sticker" = "表情包";
 "file_message_animated_image" = "GIF";
@@ -880,6 +880,8 @@
 "doNotDisturb_mention_footer_off" = "如果您打开了 “请勿打扰” ，您不会收到任何通知。即使是在有人提及您时，也不会收到通知。";
 "doNotDisturb_mention_footer_on" = "即使您打开了 “请勿打扰” ，当有人提及您时，你仍然会收到通知。";
 
+"doNotDisturb_notification_sound_footer" = "只有当 “播放通知声音” 已启用，并且 “请勿打扰” 已禁用时，才会播放通知声音。";
+
 "notification_sound_header" = "通知声音";
 "notification_sound_title" = "播放通知声音";
 
@@ -1098,8 +1100,6 @@
 "settings_advanced_reregister_push_notifications_header_title" = "推送通知";
 "settings_advanced_reregister_push_notifications_footer_title" = "如果此应用关闭后，仍然没有收到新消息通知，您可以重新注册通知推送权限。";
 "settings_advanced_reregister_notifications_label" = "重新注册推送通知";
-"settings_advanced_new_chat_view_label" = "新的聊天界面";
-"settings_advanced_new_chat_view_label_footer" = "注意：旧的聊天界面将在下一个版本中删除。";
 
 "settings_md_sync_alert_title" = "同步失败";
 
@@ -1112,6 +1112,11 @@
 "settings_privacy_block_unknown" = "屏蔽未知者";
 "settings_privacy_block_unknown_footer_on"= "只有在通讯录的联系人才能向您发送消息。";
 "settings_privacy_block_unknown_foooter_off" = "任何人都可以向您发送消息。当他向您发送第一条消息时，会自动添加到新的联系人。";
+
+"settings_privacy_os_header" = "与iOS系统的整合";
+"settings_privacy_os_donate" = "打开分享互动";
+"settings_privacy_os_reset" = "重置分享互动";
+"settings_privacy_os_footer" = "如果打开分享互动，在iOS中分享内容时会建议 Threema 联系人列表。 分享互动可能会将信息暴露给iOS系统。";
 
 "settings_privacy_chat_header" = "会话";
 "settings_privacy_read_receipts" = "已读回执";
@@ -1144,6 +1149,9 @@
 "settings_appearance_display_order" = "显示顺序";
 "settings_appearance_show_gallery_preview" = "显示图库预览";
 
+// Chat Settings
+"settings_chat_send_message_feedback_label" = "发送消息时启用触感反馈";
+
 // Media
 "settings_media_autosave_private_footer" = "私密会话中收到的媒体不会自动保存。";
 
@@ -1163,14 +1171,13 @@
 
 // Notification settings
 "settings_notifications_inapp_section" = "应用内";
-"settings_notifications_inapp_sounds" = "声音";
-"settings_notifications_inapp_vibrate" = "振动";
-"settings_notifications_inapp_preview" = "预览";
+"settings_notifications_inapp_sounds" = "应用内的声音";
+"settings_notifications_inapp_vibrate" = "应用内的振动";
+"settings_notifications_inapp_preview" = "显示消息预览";
 "settings_notifications_push_section" = "推送通知";
 "settings_notifications_push_sound" = "声音";
 "settings_notifications_push_groupsound" = "群组声音";
-"settings_notifications_push_preview" = "预览";
-"settings_notifications_push_showNickname" = "显示昵称";
+"settings_notifications_push_preview" = "显示消息预览";
 "settings_notifications_masterDnd_section_header" = "非工作时间政策";
 "settings_notifications_masterDnd" = "非工作时间期间请勿打扰";
 "settings_notifications_masterDnd_section_footer" = "在工作时间以外禁用通知并拒绝通话。";
@@ -1178,7 +1185,24 @@
 "settings_notifications_masterDnd_startTime" = "上班时间";
 "settings_notifications_masterDnd_endTime" = "下班时间";
 "settings_notification_iOS_settings" = "系统设置";
-"settings_notification_open_iOS_settings" = "打开系统设置";
+
+"settings_notification_type_preview_title" = "推送通知";
+"settings_notification_type_preview_description" = "选择哪些信息应包含在 Threema 新信息的推送通知中。";
+
+"settings_notification_type_preview_restrictive_title" = "显示昵称";
+"settings_notification_type_preview_restrictive_description" = "仅显示联系人的昵称";
+"settings_notification_type_preview_restrictive_sender_name" = "~老三";
+
+"settings_notification_type_preview_balanced_title" = "显示名称";
+"settings_notification_type_preview_balanced_description" = "显示联系人的全名（默认设置）";
+"settings_notification_type_preview_balanced_sender_name" = "张三";
+
+"settings_notification_type_preview_complete_title" = "显示名称和头像";
+"settings_notification_type_preview_complete_description" = "显示联系人的全名和头像。分享互动的信息会与iOS系统分享。[了解更多...](%@)";
+"settings_notification_type_preview_complete_sender_name" = "张三";
+
+"settings_notification_type_preview_message_text" = "示例消息...";
+"settings_notification_type_preview_no_button" = "禁用推送通知";
 
 // Orphaned files delete
 "settings_orphaned_files_description" = "在以前的 %@ 版本中，在存储管理中删除数据时，在极少数情况下，可能会发生以下情况：（媒体）文件未正确删除，而是在 %@ 中删除了。
@@ -1386,6 +1410,7 @@
 
 "chat_text_view_placeholder" = "新消息";
 "compose_bar_camera_button_accessibility_label" = "打开摄像头";
+"compose_bar_image_picker_button_accessibility_label" = "打开图像选取器";
 "compose_bar_record_button_accessibility_label" = "录制语音消息";
 "compose_bar_send_message_button_accessibility_label" = "发送消息";
 "compose_bar_attachment_button_accessibility_label" = "添加附件";
@@ -1462,6 +1487,9 @@
 "notification_settings_sync_pending" = "同步中…";
 "notification_settings_sync_succeeded" = "设置已同步";
 
+"notification_interaction_delete_succeeded" = "分享互动已删除";
+"notification_interaction_delete_failed" = "删除分享互动失败";
+
 // Forward security status messages
 "forward_security_message_without" = "您收到一条没有完全正向保密的消息，您可以验证发件人是否主动禁用完全正向保密。";
 "forward_security_session_established" = "此会话中的消息现正受完全正向保密的保护。";
@@ -1524,7 +1552,7 @@
 "accessibility_voice_message_playing" = "正在播放";
 
 // Message status types
-"accessibility_status_acknowledged_plus_time" = "已确认, %@";
+"accessibility_status_acknowledged_plus_time" = "已同意, %@";
 "accessibility_status_declined_plus_time" = "已拒绝, %@";
 "accessibility_status_sending_plus_time" = "发送中, %@";
 "accessibility_status_sent_plus_time" = "已发送, %@";
@@ -1549,7 +1577,7 @@
 
 "md_wizard_terms_note_text" = "这次技术预览版是为测试人员提前测试即将到来的 “多设备支持” 功能而设。请注意，这些功能是限时提供的。由于这是测试版，因此有时可能会出现小错误。";
 
-"md_wizard_terms_backup" = "使用技术预览版可能会发生数据丢失的问题，请在加入测试之前创建备份。\n[创建备份步骤](https://threema.ch/docs/threema/ios_backup_manual_en.pdf)";
+"md_wizard_terms_backup" = "使用技术预览版可能会发生数据丢失的问题，请在加入测试之前创建备份。\n[创建备份步骤（只提供英文版）](https://threema.ch/docs/threema/ios_backup_manual_en.pdf)";
 "md_wizard_terms_support" = "这次技术预览版支持文本信息。请定期更新 iOS 上和电脑版的应用程序，以获得最新的功能和改进。 ";
 "md_wizard_terms_issues" = "已知的问题和限制可以在[这里](https://threema.ch/faq/md_limit)找到。";
 "md_wizard_terms_bugs" = "请通过 “设置” > “测试版反馈” 报告使用此应用程序时遇到的问题。";

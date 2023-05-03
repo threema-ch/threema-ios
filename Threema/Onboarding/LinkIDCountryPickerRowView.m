@@ -30,11 +30,8 @@
         CGFloat codeWidth = frame.size.width - nameWidth;
         
         CGFloat height = frame.size.height;
-        CGFloat x = 0.0;
-        // Name label needs the leading space for iOS 14
-        if (@available(iOS 14.0, *)) {
-            x = 16.0;
-        }
+        CGFloat x = 16.0;
+        
         _nameLabel = [[UILabel alloc] initWithFrame:CGRectMake(x, 0.0, nameWidth, height)];
         _nameLabel.textColor = [UIColor whiteColor];
         _nameLabel.font = [UIFont fontWithName:@"HelveticaNeue-Light" size:16.0];

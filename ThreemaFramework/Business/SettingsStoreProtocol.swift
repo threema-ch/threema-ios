@@ -27,10 +27,19 @@ public protocol SettingsStoreProtocol {
     var blacklist: Set<String> { get set }
     var syncExclusionList: [String] { get set }
     var blockUnknown: Bool { get set }
+    var allowOutgoingDonations: Bool { get set }
     var sendReadReceipts: Bool { get set }
     var sendTypingIndicator: Bool { get set }
     var choosePOI: Bool { get set }
     var hidePrivateChats: Bool { get set }
+    
+    // Notifications
+    var enableMasterDnd: Bool { get set }
+    var masterDndWorkingDays: Set<Int> { get set }
+    var masterDndStartTime: String? { get set }
+    var masterDndEndTime: String? { get set }
+    var notificationType: NotificationType { get set }
+    var pushShowPreview: Bool { get set }
     
     // Chat
     var wallpaper: UIImage? { get set }

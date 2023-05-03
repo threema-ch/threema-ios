@@ -207,12 +207,10 @@ extension SendLocationMapDataSource: CLLocationManagerDelegate {
         case .authorizedAlways, .authorizedWhenInUse:
             
             // Only request location once if imprecise location is enabled
-            if #available(iOS 14.0, *) {
-                if CLLocationManager().accuracyAuthorization == .reducedAccuracy {
-                    locationManager.startUpdatingLocation()
-                    locationManager.stopUpdatingLocation()
-                    return
-                }
+            if CLLocationManager().accuracyAuthorization == .reducedAccuracy {
+                locationManager.startUpdatingLocation()
+                locationManager.stopUpdatingLocation()
+                return
             }
             
             locationManager.startUpdatingLocation()
@@ -233,11 +231,9 @@ extension SendLocationMapDataSource: CLLocationManagerDelegate {
         }
         
         // Center map on user if imprecise location is enabled
-        if #available(iOS 14.0, *) {
-            if CLLocationManager().accuracyAuthorization == .reducedAccuracy {
-                sendLocationVC.centerMap(on: location.coordinate, zoom: .veryFar, animated: true)
-                return
-            }
+        if CLLocationManager().accuracyAuthorization == .reducedAccuracy {
+            sendLocationVC.centerMap(on: location.coordinate, zoom: .veryFar, animated: true)
+            return
         }
         
         // Update CurrentLocationPOI

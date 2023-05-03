@@ -26,6 +26,7 @@
 #import "FileMessageDecoder.h"
 #import "BundleUtil.h"
 #import "QuoteUtil.h"
+#import "QuotedMessageProtocol.h"
 #import "TextStyleUtils.h"
 #import "ThreemaFramework/ThreemaFramework-Swift.h"
 #import "NSString+Hex.h"
@@ -51,9 +52,16 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 }
 
 - (BoxedMessage*)makeBox:(ContactEntity *  _Nonnull)toContact myIdentityStore:(id<MyIdentityStoreProtocol> _Nonnull)myIdentityStore {
+
     /* prepare data for box */
     uint8_t type = self.type;
-    NSData *_body = self.body;
+    NSData *_body;
+    if ([self conformsToProtocol:@protocol(QuotedMessageProtocol)] == NO) {
+        _body = self.body;
+    }
+    else {
+        _body = [((id<QuotedMessageProtocol>)self) quotedBody];
+    }
     NSMutableData *boxData = [NSMutableData dataWithCapacity:_body.length + 1];
     [boxData appendBytes:&type length:1];
     [boxData appendData:_body];

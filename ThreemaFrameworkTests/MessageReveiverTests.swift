@@ -29,16 +29,8 @@ class MessageReveiverTests: XCTestCase {
     var mediatorMessageProtocol: MediatorMessageProtocolProtocol!
 
     override func setUpWithError() throws {
-        deviceGroupKeys = DeviceGroupKeys(
-            dgpk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
-            dgrk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
-            dgdik: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
-            dgsddk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
-            dgtsk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
-            deviceGroupIDFirstByteHex: "a1"
-        )
-
-        deviceID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.deviceIDLength)!
+        deviceGroupKeys = MockData.deviceGroupKeys
+        deviceID = MockData.deviceID
 
         mediatorMessageProtocol = MediatorMessageProtocol(deviceGroupKeys: deviceGroupKeys)
     }

@@ -79,7 +79,7 @@ protocol SafeConfigManagerProtocol {
         setConfig(config)
     }
     
-    public func getServer() -> String? {
+    @objc public func getServer() -> String? {
         getConfig().server
     }
 

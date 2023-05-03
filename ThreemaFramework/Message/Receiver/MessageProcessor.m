@@ -194,9 +194,10 @@ static NSMutableOrderedSet *pendingGroupMessages;
 
                 amsg.receivedAfterInitialQueueSend = receivedAfterInitialQueueSend;
 
-                [self processIncomingAbstractMessage:amsg onCompletion:^(AbstractMessage *processedMsg) {
+                [self processIncomingAbstractMessage:amsg onCompletion:^(AbstractMessage *processedMsg, NSObject *pfsSession) {
                     // Message successfully processed
-                    adapter(processedMsg, nil);
+                    AbstractMessageAndPFSSession *combi = [[AbstractMessageAndPFSSession alloc] initWithSession:pfsSession message:processedMsg];
+                    adapter(combi, nil);
                 } onError:^(NSError *error) {
                     // Failed to process message, try it later
                     adapter(nil, error);
@@ -210,33 +211,41 @@ static NSMutableOrderedSet *pendingGroupMessages;
     }];
 }
 
-- (void)processIncomingAbstractMessage:(AbstractMessage*)amsg onCompletion:(void(^)(AbstractMessage *processedMsg))onCompletion onError:(void(^)(NSError *err))onError {
+- (void)processIncomingAbstractMessage:(AbstractMessage*)amsg onCompletion:(void(^)(AbstractMessage *processedMsg, NSObject *pfsSession))onCompletion onError:(void(^)(NSError *err))onError {
     
     if ([amsg isContentValid] == NO) {
         DDLogInfo(@"Ignore invalid content, message ID %@ from %@", amsg.messageId, amsg.fromIdentity);
-        onCompletion(nil);
+        onCompletion(nil, nil);
         return;
     }
     
     if ([nonceGuard isProcessedWithMessage:amsg isReflected:NO]) {
         DDLogInfo(@"Message nonce for %@ already in database", amsg.messageId);
-        onCompletion(nil);
+        onCompletion(nil, nil);
         return;
     }
     
     /* Find contact for message */
-    
-    ContactEntity *contact = [entityManager.entityFetcher contactForId: amsg.fromIdentity];
-    if (contact == nil) {
-        /* This should never happen, as without an entry in the contacts database, we wouldn't have
-         been able to decrypt this message in the first place (no sender public key) */
-        DDLogWarn(@"Identity %@ not in local contacts database - cannot process message", amsg.fromIdentity);
-        NSError *error = [ThreemaError threemaError:[NSString stringWithFormat:@"Identity %@ not in local contacts database - cannot process message", amsg.fromIdentity]];
-        onError(error);
+    __block NSData *senderPublicKey;
+    __block NSError *fetchContactError;
+    [entityManager performBlockAndWait:^{
+        ContactEntity *contact = [entityManager.entityFetcher contactForId: amsg.fromIdentity];
+        if (contact) {
+            senderPublicKey = contact.publicKey;
+        }
+        else {
+            /* This should never happen, as without an entry in the contacts database, we wouldn't have
+             been able to decrypt this message in the first place (no sender public key) */
+            DDLogWarn(@"Identity %@ not in local contacts database - cannot process message", amsg.fromIdentity);
+            fetchContactError = [ThreemaError threemaError:[NSString stringWithFormat:@"Identity %@ not in local contacts database - cannot process message", amsg.fromIdentity]];
+        }
+    }];
+
+    if (fetchContactError) {
+        onError(fetchContactError);
         return;
     }
-    NSData *senderPublicKey = contact.publicKey;
-    
+
     /* Update public nickname in contact, if necessary */
     [[ContactStore sharedContactStore] updateNickname:amsg.fromIdentity nickname:amsg.pushFromName shouldReflect:YES];
 
@@ -244,19 +253,15 @@ static NSMutableOrderedSet *pendingGroupMessages;
     
     [messageProcessorDelegate incomingMessageStarted:amsg];
     
-    void(^processAbstractMessageBlock)(AbstractMessage *) = ^void(AbstractMessage *amsg) {        
+    void(^processAbstractMessageBlock)(AbstractMessage *, NSObject *) = ^void(AbstractMessage *amsg, NSObject *pfsSession) {
         [self processIncomingMessage:(AbstractMessage *)amsg onCompletion:^(id<MessageProcessorDelegate> _Nullable delegate) {
-            if (!amsg.flagDontQueue) {
-                [nonceGuard processedWithMessage:amsg isReflected:NO error:nil];
-            }
-
             if (delegate) {
                 [delegate incomingMessageFinished:amsg isPendingGroup:false];
             }
             else {
                 [messageProcessorDelegate incomingMessageFinished:amsg isPendingGroup:false];
             }
-            onCompletion(amsg);
+            onCompletion(amsg, pfsSession);
         } onError:^(NSError *error) {
             [messageProcessorDelegate incomingMessageFinished:amsg isPendingGroup:false];
             onError(error);
@@ -266,9 +271,11 @@ static NSMutableOrderedSet *pendingGroupMessages;
     @try {
         if ([amsg isKindOfClass:[ForwardSecurityEnvelopeMessage class]]) {
             if ([ThreemaUtility supportsForwardSecurity]) {
-                [self processIncomingForwardSecurityMessage:(ForwardSecurityEnvelopeMessage*)amsg senderPublicKey:senderPublicKey onCompletion:^(AbstractMessage *unwrappedMessage) {
-                    if (unwrappedMessage != nil) {
-                        processAbstractMessageBlock(unwrappedMessage);
+                [self processIncomingForwardSecurityMessage:(ForwardSecurityEnvelopeMessage*)amsg senderPublicKey:senderPublicKey onCompletion:^(AbstractMessage *unwrappedMessage, NSObject *pfsSession) {
+
+                    // Don't allow double encapsulated forward security messages
+                    if (unwrappedMessage != nil && ![unwrappedMessage isKindOfClass:[ForwardSecurityEnvelopeMessage class]]) {
+                        processAbstractMessageBlock(unwrappedMessage, pfsSession);
                     } else {
                         [messageProcessorDelegate incomingAbstractMessageFailed:amsg]; // Remove notification
                         onError(nil); // drop message
@@ -291,15 +298,14 @@ static NSMutableOrderedSet *pendingGroupMessages;
             }
         } else if ([amsg isKindOfClass:[AbstractGroupMessage class]]) {
             [self processIncomingGroupMessage:(AbstractGroupMessage *)amsg onCompletion:^{
-                [nonceGuard processedWithMessage:amsg isReflected:NO error:nil];
                 [messageProcessorDelegate incomingMessageFinished:amsg isPendingGroup:false];
-                onCompletion(amsg);
+                onCompletion(amsg, nil);
             } onError:^(NSError *error) {
                 [messageProcessorDelegate incomingMessageFinished:amsg isPendingGroup:[pendingGroupMessages containsObject:amsg] == true];
                 onError(error);
             }];
         } else  {
-            processAbstractMessageBlock(amsg);
+            processAbstractMessageBlock(amsg, nil);
         }
     } @catch (NSException *exception) {
         NSError *error = [ThreemaError threemaError:exception.description withCode:kMessageProcessingErrorCode];
@@ -407,7 +413,7 @@ Process incoming message.
             // Do not download blob when message will processed via Notification Extension,
             // to keep notifications fast and because option automatically save to photos gallery
             // doesn't work from Notification Extension
-            if ([AppGroup getActiveType] != AppGroupTypeNotificationExtension) {
+            if ([AppGroup getCurrentType] != AppGroupTypeNotificationExtension) {
                 [self conditionallyStartLoadingFileFromMessage:(FileMessageEntity *)message];
             }
             [self finalizeMessage:message inConversation:conversation fromBoxMessage:amsg onCompletion:^{
@@ -574,16 +580,17 @@ Process incoming message.
     }];
 }
 
-- (void)processIncomingForwardSecurityMessage:(ForwardSecurityEnvelopeMessage * _Nonnull)amsg senderPublicKey:(NSData*)senderPublicKey onCompletion:(void(^ _Nonnull)(AbstractMessage *unwrappedMessage))onCompletion onError:(void(^ _Nonnull)(NSError * error))onError {
+- (void)processIncomingForwardSecurityMessage:(ForwardSecurityEnvelopeMessage * _Nonnull)amsg senderPublicKey:(NSData*)senderPublicKey onCompletion:(void(^ _Nonnull)(AbstractMessage *unwrappedMessage, NSObject *pfsSession))onCompletion onError:(void(^ _Nonnull)(NSError * error))onError {
     NSError *error = nil;
+    NSObject *pfsSession;
     ForwardSecurityContact *fsContact = [[ForwardSecurityContact alloc] initWithIdentity:amsg.fromIdentity publicKey:senderPublicKey];
-    AbstractMessage *unwrappedMessage = [fsmp processEnvelopeMessageObjcWithSender:fsContact envelopeMessage:amsg errorP:&error];
+    AbstractMessage *unwrappedMessage = [fsmp processEnvelopeMessageObjcWithSender:fsContact envelopeMessage:amsg sessionP:&pfsSession errorP:&error];
     if (error != nil) {
         DDLogError(@"Processing forward security message failed: %@", error);
         onError(error);
         return;
     }
-    onCompletion(unwrappedMessage);
+    onCompletion(unwrappedMessage, pfsSession);
 }
 
 - (void)finalizeMessage:(BaseMessage*)message inConversation:(Conversation*)conversation fromBoxMessage:(AbstractMessage*)boxMessage onCompletion:(void(^_Nonnull)(void))onCompletion {
@@ -914,7 +921,7 @@ Process incoming message.
             if ([msg.groupId isEqualToData:groupCreateMessage.groupId] && [msg.groupCreator isEqualToString:groupCreateMessage.groupCreator]) {
                 if ([[groupCreateMessage groupMembers] containsObject:[[MyIdentityStore sharedMyIdentityStore] identity]]) {
                     DDLogInfo(@"[Push] Pending group message process %@ %@", msg.messageId, msg.description);
-                    [self processIncomingAbstractMessage:msg onCompletion:^(AbstractMessage *amsg) {
+                    [self processIncomingAbstractMessage:msg onCompletion:^(AbstractMessage *amsg, NSObject *pfsSession) {
                         if (amsg != nil) {
                             // Successfully processed ack message
                             [[ServerConnector sharedServerConnector] completedProcessingAbstractMessage:amsg];

@@ -49,7 +49,7 @@ class ContactStoreMock: NSObject, ContactStoreProtocol {
     }
     
     func fetchWorkIdentities(
-        inBlockUnknownCheck identities: [Any],
+        _ identities: [Any],
         onCompletion: @escaping ([Any]) -> Void,
         onError: @escaping (Error) -> Void
     ) {

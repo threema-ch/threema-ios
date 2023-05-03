@@ -34,23 +34,20 @@ extension AppDelegate {
         }
         
         if let selectedIdentity = intent.conversationIdentifier as String? {
-            if let singleConversation = EntityManager().entityFetcher.conversation(forIdentity: selectedIdentity) {
-                NotificationCenter.default.post(
-                    name: NSNotification.Name(rawValue: kNotificationShowConversation),
-                    object: nil,
-                    userInfo: [
-                        kKeyConversation: singleConversation,
-                        kKeyForceCompose: true,
-                    ]
-                )
-                return true
-            }
-            else {
-                let groupComponents = selectedIdentity.components(separatedBy: ";")
-                let (creatorID, groupID) = (groupComponents[0], groupComponents[1])
-                
-                if let groupID = Data(base64Encoded: groupID),
-                   let group = EntityManager().entityFetcher.conversation(for: groupID, creator: creatorID) {
+            if let managedObject = EntityManager().entityFetcher.existingObject(withIDString: selectedIdentity) {
+                if let contact = managedObject as? ContactEntity,
+                   let conversation = EntityManager().entityFetcher.conversation(for: contact) {
+                    NotificationCenter.default.post(
+                        name: NSNotification.Name(rawValue: kNotificationShowConversation),
+                        object: nil,
+                        userInfo: [
+                            kKeyConversation: conversation,
+                            kKeyForceCompose: true,
+                        ]
+                    )
+                    return true
+                }
+                else if let group = managedObject as? Conversation {
                     NotificationCenter.default.post(
                         name: NSNotification.Name(rawValue: kNotificationShowConversation),
                         object: nil,

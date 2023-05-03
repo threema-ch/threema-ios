@@ -164,17 +164,10 @@ final class GroupDetailsViewController: ThemedCodeModernGroupedTableViewControll
             self?.updateHeader(animated: false)
         }
         
-        observeGroup(\.conversation.willBeDeleted) { [weak self] in
-            if self?.group.willBeDeleted == true {
-                // Invalidate and remove all observers
-                self?.removeObservers()
-
-                // Hide myself
-                self?.dismiss(animated: true)
-                self?.navigationController?.popViewController(animated: true)
-            }
+        observeGroup(\.willBeDeleted) {
+            // will be handled in group object
         }
-
+                
         observeGroup(\.photo) { [weak self] in
             self?.updateHeader(animated: false)
         }
@@ -186,8 +179,13 @@ final class GroupDetailsViewController: ThemedCodeModernGroupedTableViewControll
         }
 
         observeGroup(\.state) { [weak self] in
-            self?.dataSource.reload(sections: [.members, .creator, .destructiveGroupActions])
-            self?.updateHeader(animated: false)
+            guard let strongSelf = self else {
+                return
+            }
+            if !strongSelf.group.willBeDeleted {
+                strongSelf.dataSource.reload(sections: [.members, .creator, .destructiveGroupActions])
+                strongSelf.updateHeader(animated: false)
+            }
         }
     }
     
@@ -224,6 +222,7 @@ final class GroupDetailsViewController: ThemedCodeModernGroupedTableViewControll
                 strongSelf.removeObservers()
 
                 // Hide myself
+                strongSelf.dismiss(animated: true)
                 strongSelf.navigationController?.popViewController(animated: true)
 
                 return

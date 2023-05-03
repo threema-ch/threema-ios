@@ -19,10 +19,10 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import "AbstractGroupMessage.h"
+#import "QuotedMessageProtocol.h"
 
-@interface GroupTextMessage : AbstractGroupMessage <NSCoding>
+@interface GroupTextMessage : AbstractGroupMessage <NSCoding, QuotedMessageProtocol>
 
 @property (nonatomic, strong) NSString *text;
-@property (nonatomic, strong) NSData *quotedMessageId NS_SWIFT_NAME(quotedMessageID);
 
 @end

@@ -28,6 +28,9 @@ class ChatSettingsViewController: ThemedTableViewController {
     @IBOutlet var biggerEmojiLabel: UILabel!
     @IBOutlet var biggerEmojiSwitch: UISwitch!
     
+    @IBOutlet var sendMessageFeedbackLabel: UILabel!
+    @IBOutlet var sendMessageFeedbackSwitch: UISwitch!
+    
     private let businessInjector = BusinessInjector()
     
     // MARK: - Lifecycle
@@ -51,6 +54,7 @@ class ChatSettingsViewController: ThemedTableViewController {
         resetWallpaper.text = BundleUtil.localizedString(forKey: "reset_wallpaper")
         resetWallpaper.textColor = .primary
         biggerEmojiLabel.text = BundleUtil.localizedString(forKey: "bigger_single_emojis")
+        sendMessageFeedbackLabel.text = BundleUtil.localizedString(forKey: "settings_chat_send_message_feedback_label")
         
         let deviceRatio = UIScreen.main.bounds.width / UIScreen.main.bounds.height
         wallpaperImageView.widthAnchor.constraint(equalTo: wallpaperImageView.heightAnchor, multiplier: deviceRatio)
@@ -63,6 +67,7 @@ class ChatSettingsViewController: ThemedTableViewController {
         wallpaperImageView.layer.cornerCurve = .continuous
         
         biggerEmojiSwitch.isOn = !businessInjector.userSettings.disableBigEmojis
+        sendMessageFeedbackSwitch.isOn = businessInjector.userSettings.sendMessageFeedback
     }
     
     // MARK: - Update
@@ -88,6 +93,10 @@ class ChatSettingsViewController: ThemedTableViewController {
     
     @IBAction func biggerEmojiChanged(_ sender: Any) {
         businessInjector.userSettings.disableBigEmojis = !biggerEmojiSwitch.isOn
+    }
+    
+    @IBAction func sendMessageFeedbackChanged(_ sender: Any) {
+        businessInjector.userSettings.sendMessageFeedback = sendMessageFeedbackSwitch.isOn
     }
 }
 

@@ -267,7 +267,10 @@ extension ChatViewThumbnailDisplayMessageTableViewCell: ChatViewMessageAction {
         // In the new chat view we always copy the data, regardless if it has a caption because the text can be selected itself.
         let copyHandler = {
             guard !MDMSetup(setup: false).disableShareMedia() else {
-                fatalError()
+                DDLogWarn(
+                    "[ChatViewThumbnailDisplayMessageTableViewCell] Tried to copy media, even if MDM disabled it."
+                )
+                return
             }
             
             guard let data = message.blobGet() else {

@@ -27,8 +27,6 @@ class MediatorSyncableContactsTests: XCTestCase {
     private var databasePreparer: DatabasePreparer!
     private var databaseBackgroundCnx: DatabaseContext!
 
-    private var deviceGroupKeys: DeviceGroupKeys!
-
     private var blobDict = [Data: Data]()
     
     override func setUpWithError() throws {
@@ -38,15 +36,6 @@ class MediatorSyncableContactsTests: XCTestCase {
         let (_, mainCnx, backgroundCnx) = DatabasePersistentContext.devNullContext()
         databasePreparer = DatabasePreparer(context: mainCnx)
         databaseBackgroundCnx = DatabaseContext(mainContext: mainCnx, backgroundContext: backgroundCnx)
-
-        deviceGroupKeys = DeviceGroupKeys(
-            dgpk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
-            dgrk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
-            dgdik: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
-            dgsddk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
-            dgtsk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
-            deviceGroupIDFirstByteHex: "a1"
-        )
     }
 
     func testUpdateAllSyncChunkCount() {
@@ -56,8 +45,8 @@ class MediatorSyncableContactsTests: XCTestCase {
             UserSettingsMock(),
             ServerConnectorMock(
                 connectionState: .loggedIn,
-                deviceID: BytesUtility.generateRandomBytes(length: Int(8))!,
-                deviceGroupKeys: deviceGroupKeys
+                deviceID: MockData.deviceID,
+                deviceGroupKeys: MockData.deviceGroupKeys
             ),
             taskManagerMock,
             EntityManager(databaseContext: databaseBackgroundCnx, myIdentityStore: MyIdentityStoreMock())
@@ -88,7 +77,7 @@ class MediatorSyncableContactsTests: XCTestCase {
     func testUpdateAllSync() {
         for contactCount in [1, 2, 5, 50, 100, 1000] {
             let serverConnectorMock = ServerConnectorMock()
-            serverConnectorMock.deviceGroupKeys = deviceGroupKeys
+            serverConnectorMock.deviceGroupKeys = MockData.deviceGroupKeys
 
             let taskManagerMock = TaskManagerMock()
             
@@ -130,7 +119,7 @@ class MediatorSyncableContactsTests: XCTestCase {
     
     func testDeleteContact() {
         let serverConnectorMock = ServerConnectorMock()
-        serverConnectorMock.deviceGroupKeys = deviceGroupKeys
+        serverConnectorMock.deviceGroupKeys = MockData.deviceGroupKeys
 
         let taskManagerMock = TaskManagerMock()
         
@@ -216,7 +205,7 @@ class MediatorSyncableContactsTests: XCTestCase {
         table.append(test4)
         
         let serverConnectorMock = ServerConnectorMock()
-        serverConnectorMock.deviceGroupKeys = deviceGroupKeys
+        serverConnectorMock.deviceGroupKeys = MockData.deviceGroupKeys
         
         for test in table {
             let taskManagerMock = TaskManagerMock()

@@ -245,18 +245,23 @@ class MediatorReflectedContactSyncProcessor {
                         if syncContact.hasVerificationLevel {
                             contact.verificationLevel = NSNumber(integerLiteral: syncContact.verificationLevel.rawValue)
                         }
+
                         if syncContact.hasFeatureMask {
                             contact.featureMask = NSNumber(value: syncContact.featureMask)
                         }
+
                         if syncContact.hasNickname {
                             contact.publicNickname = syncContact.nicknameNullable
                         }
+
                         if syncContact.hasFirstName {
                             contact.firstName = syncContact.firstNameNullable
                         }
+
                         if syncContact.hasLastName {
                             contact.lastName = syncContact.lastNameNullable
                         }
+
                         if syncContact.hasIdentityType {
                             switch syncContact.identityType {
                             case .regular:
@@ -268,6 +273,7 @@ class MediatorReflectedContactSyncProcessor {
                                 break
                             }
                         }
+
                         if syncContact.hasWorkVerificationLevel {
                             switch syncContact.workVerificationLevel {
                             case .none:
@@ -278,15 +284,21 @@ class MediatorReflectedContactSyncProcessor {
                                 break
                             }
                         }
+
                         if syncContact.hasSyncState {
                             contact.importedStatus = ImportedStatus(rawValue: syncContact.syncState.rawValue)!
                         }
+
                         if syncContact.hasCreatedAt {
                             contact.createdAt = syncContact.createdAtNullable?.date
                         }
+
                         if syncContact.hasAcquaintanceLevel {
                             contact.isContactHidden = syncContact.acquaintanceLevel == .group
                         }
+
+                        // Save on main thread (main DB context), otherwise observer of `Conversation` will not be called
+                        self.frameworkInjector.conversationStoreInternal.updateConversation(withContact: syncContact)
                     }
 
                     seal.fulfill_()

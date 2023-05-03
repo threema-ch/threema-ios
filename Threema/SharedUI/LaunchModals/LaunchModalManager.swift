@@ -57,6 +57,23 @@ import Foundation
         }
     }
     
+    @objc func showSafePassword() {
+        // Display view
+        Task { @MainActor in
+            // Get root view and view to show
+            guard let firstScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+                  let rootView = firstScene.windows.first?.rootViewController else {
+                return
+            }
+            
+            if let presentedViewController = rootView.presentedViewController {
+                presentedViewController.dismiss(animated: false)
+            }
+            
+            rootView.present(LaunchModalType.safeForcePassword.viewController(delegate: self), animated: true)
+        }
+    }
+    
     private func resolveModalType() async -> LaunchModalType? {
         
         guard !ProcessInfoHelper.isRunningForScreenshots else {
@@ -72,14 +89,15 @@ import Foundation
         else if await UserReminder.checkPushReminder() {
             return .notificationReminder
         }
-        // else if !AppGroup.userDefaults().bool(forKey: Constants.showedNotificationTypeSelectionView) {
-        else if false { // TODO: (IOS-3014) Re-enable check above
+        else if await UserReminder.isPushEnabled(),
+                !AppGroup.userDefaults().bool(forKey: Constants.showedNotificationTypeSelectionView) {
             return .notificationTypeSelection
         }
         else if checkSafeInto() {
             return .safeSetupInfo
         }
-        else if !AppGroup.userDefaults().bool(forKey: Constants.showedTestFlightFeedbackViewKey),
+        else if ThreemaApp.current != .onPrem,
+                !AppGroup.userDefaults().bool(forKey: Constants.showedTestFlightFeedbackViewKey),
                 ThreemaEnvironment.env() != .appStore {
             return .betaFeedback
         }

@@ -50,9 +50,9 @@ class BlobDataDisplayTests: XCTestCase {
         databasePreparer.save {
             fileMessageEntity = databasePreparer.createFileMessageEntity(
                 conversation: conversation,
-                encryptionKey: BytesUtility.generateRandomBytes(length: Int(kBlobKeyLen))!,
-                blobID: BytesUtility.generateRandomBytes(length: ThreemaProtocol.blobIDLength)!,
-                blobThumbnailID: BytesUtility.generateRandomBytes(length: ThreemaProtocol.blobIDLength)!
+                encryptionKey: MockData.generateBlobEncryptionKey(),
+                blobID: MockData.generateBlobID(),
+                blobThumbnailID: MockData.generateBlobID()
             )
         }
 
@@ -66,9 +66,9 @@ class BlobDataDisplayTests: XCTestCase {
         databasePreparer.save {
             fileMessageEntity = databasePreparer.createFileMessageEntity(
                 conversation: conversation,
-                encryptionKey: BytesUtility.generateRandomBytes(length: Int(kBlobKeyLen))!,
-                blobID: BytesUtility.generateRandomBytes(length: ThreemaProtocol.blobIDLength)!,
-                blobThumbnailID: BytesUtility.generateRandomBytes(length: ThreemaProtocol.blobIDLength)!,
+                encryptionKey: MockData.generateBlobEncryptionKey(),
+                blobID: MockData.generateBlobID(),
+                blobThumbnailID: MockData.generateBlobID(),
                 progress: NSNumber(floatLiteral: Double(progress))
             )
         }
@@ -84,9 +84,9 @@ class BlobDataDisplayTests: XCTestCase {
 
             fileMessageEntity = databasePreparer.createFileMessageEntity(
                 conversation: conversation,
-                encryptionKey: BytesUtility.generateRandomBytes(length: Int(kBlobKeyLen))!,
-                blobID: BytesUtility.generateRandomBytes(length: ThreemaProtocol.blobIDLength)!,
-                blobThumbnailID: BytesUtility.generateRandomBytes(length: ThreemaProtocol.blobIDLength)!,
+                encryptionKey: MockData.generateBlobEncryptionKey(),
+                blobID: MockData.generateBlobID(),
+                blobThumbnailID: MockData.generateBlobID(),
                 data: fileData
             )
         }
@@ -102,7 +102,7 @@ class BlobDataDisplayTests: XCTestCase {
 
             fileMessageEntity = databasePreparer.createFileMessageEntity(
                 conversation: conversation,
-                encryptionKey: BytesUtility.generateRandomBytes(length: Int(kBlobKeyLen))!,
+                encryptionKey: MockData.generateBlobEncryptionKey(),
                 data: fileData,
                 isOwn: true
             )
@@ -119,9 +119,10 @@ class BlobDataDisplayTests: XCTestCase {
 
             fileMessageEntity = databasePreparer.createFileMessageEntity(
                 conversation: conversation,
-                encryptionKey: BytesUtility.generateRandomBytes(length: Int(kBlobKeyLen))!,
-                blobThumbnailID: BytesUtility.generateRandomBytes(length: ThreemaProtocol.blobIDLength)!,
+                encryptionKey: MockData.generateBlobEncryptionKey(),
+                blobThumbnailID: MockData.generateBlobID(),
                 data: fileData,
+                thumbnail: databasePreparer.createImageData(data: Data(count: 1), height: 1, width: 1),
                 isOwn: true
             )
         }
@@ -138,8 +139,7 @@ class BlobDataDisplayTests: XCTestCase {
 
             fileMessageEntity = databasePreparer.createFileMessageEntity(
                 conversation: conversation,
-                encryptionKey: BytesUtility.generateRandomBytes(length: Int(kBlobKeyLen))!,
-                blobThumbnailID: BytesUtility.generateRandomBytes(length: ThreemaProtocol.blobIDLength)!,
+                encryptionKey: MockData.generateBlobEncryptionKey(),
                 progress: NSNumber(floatLiteral: Double(progress)),
                 data: fileData,
                 isOwn: true
@@ -170,8 +170,8 @@ class BlobDataDisplayTests: XCTestCase {
 
             fileMessageEntity = databasePreparer.createFileMessageEntity(
                 conversation: conversation,
-                encryptionKey: BytesUtility.generateRandomBytes(length: Int(kBlobKeyLen))!,
-                blobID: BytesUtility.generateRandomBytes(length: ThreemaProtocol.blobIDLength)!,
+                encryptionKey: MockData.generateBlobEncryptionKey(),
+                blobID: MockData.generateBlobID(),
                 progress: NSNumber(floatLiteral: Double(progress)),
                 data: fileData,
                 thumbnail: thumbnailTestImageData(),
@@ -191,10 +191,11 @@ class BlobDataDisplayTests: XCTestCase {
 
             fileMessageEntity = databasePreparer.createFileMessageEntity(
                 conversation: conversation,
-                encryptionKey: BytesUtility.generateRandomBytes(length: Int(kBlobKeyLen))!,
-                blobThumbnailID: BytesUtility.generateRandomBytes(length: ThreemaProtocol.blobIDLength)!,
+                encryptionKey: MockData.generateBlobEncryptionKey(),
+                blobThumbnailID: MockData.generateBlobID(),
                 progress: NSNumber(floatLiteral: Double(progress)),
                 data: fileData,
+                thumbnail: databasePreparer.createImageData(data: Data(count: 1), height: 1, width: 1),
                 isOwn: true
             )
         }
@@ -210,10 +211,11 @@ class BlobDataDisplayTests: XCTestCase {
 
             fileMessageEntity = databasePreparer.createFileMessageEntity(
                 conversation: conversation,
-                encryptionKey: BytesUtility.generateRandomBytes(length: Int(kBlobKeyLen))!,
-                blobID: BytesUtility.generateRandomBytes(length: ThreemaProtocol.blobIDLength)!,
-                blobThumbnailID: BytesUtility.generateRandomBytes(length: ThreemaProtocol.blobIDLength)!,
+                encryptionKey: MockData.generateBlobEncryptionKey(),
+                blobID: MockData.generateBlobID(),
+                blobThumbnailID: MockData.generateBlobID(),
                 data: fileData,
+                thumbnail: databasePreparer.createImageData(data: Data(count: 1), height: 1, width: 1),
                 isOwn: true
             )
         }
@@ -227,7 +229,7 @@ class BlobDataDisplayTests: XCTestCase {
         databasePreparer.save {
             fileMessageEntity = databasePreparer.createFileMessageEntity(
                 conversation: conversation,
-                encryptionKey: BytesUtility.generateRandomBytes(length: Int(kBlobKeyLen))!
+                encryptionKey: MockData.generateBlobEncryptionKey()
             )
         }
 
@@ -240,7 +242,7 @@ class BlobDataDisplayTests: XCTestCase {
         databasePreparer.save {
             fileMessageEntity = databasePreparer.createFileMessageEntity(
                 conversation: conversation,
-                encryptionKey: BytesUtility.generateRandomBytes(length: Int(kBlobKeyLen))!,
+                encryptionKey: MockData.generateBlobEncryptionKey(),
                 isOwn: true
             )
         }
@@ -258,5 +260,36 @@ class BlobDataDisplayTests: XCTestCase {
         }
 
         XCTAssertEqual(.fileNotFound, fileMessageEntity.blobDisplayState)
+    }
+
+    func testFileMessageDisplayStatePendingDownloadThumbnail() {
+        var fileMessageEntity: FileMessageEntity!
+
+        databasePreparer.save {
+            fileMessageEntity = databasePreparer.createFileMessageEntity(
+                conversation: conversation,
+                encryptionKey: MockData.generateBlobEncryptionKey(),
+                blobID: MockData.generateBlobID(),
+                blobThumbnailID: MockData.generateBlobID(),
+                isOwn: true
+            )
+        }
+
+        XCTAssertEqual(.pending, fileMessageEntity.blobDisplayState)
+    }
+
+    func testFileMessageDisplayStatePendingDownloadData() {
+        var fileMessageEntity: FileMessageEntity!
+
+        databasePreparer.save {
+            fileMessageEntity = databasePreparer.createFileMessageEntity(
+                conversation: conversation,
+                encryptionKey: MockData.generateBlobEncryptionKey(),
+                blobID: MockData.generateBlobID(),
+                isOwn: true
+            )
+        }
+
+        XCTAssertEqual(.pending, fileMessageEntity.blobDisplayState)
     }
 }

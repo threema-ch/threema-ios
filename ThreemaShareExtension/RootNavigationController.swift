@@ -68,22 +68,19 @@ class RootNavigationController: UINavigationController {
     func setContactsFromIntent() {
         if let intent = extensionContext?.intent as? INSendMessageIntent,
            let selectedIdentity = intent.conversationIdentifier as String? {
-            if let singleConversation = EntityManager().entityFetcher.conversation(forIdentity: selectedIdentity) {
-                self.selectedIdentity = singleConversation
-                if var recipientConversations = recipientConversations {
-                    recipientConversations.insert(singleConversation)
+            if let managedObject = EntityManager().entityFetcher.existingObject(withIDString: selectedIdentity) {
+                if let contact = managedObject as? ContactEntity,
+                   let conversation = EntityManager().entityFetcher.conversation(for: contact) {
+                    self.selectedIdentity = conversation
+                    if var recipientConversations = recipientConversations {
+                        recipientConversations.insert(conversation)
+                    }
+                    else {
+                        recipientConversations = Set<Conversation>()
+                        recipientConversations?.insert(conversation)
+                    }
                 }
-                else {
-                    recipientConversations = Set<Conversation>()
-                    recipientConversations?.insert(singleConversation)
-                }
-            }
-            else {
-                let groupComponents = selectedIdentity.components(separatedBy: ";")
-                let (creatorID, groupID) = (groupComponents[0], groupComponents[1])
-                
-                if let groupID = Data(base64Encoded: groupID),
-                   let group = EntityManager().entityFetcher.conversation(for: groupID, creator: creatorID) {
+                else if let group = managedObject as? Conversation {
                     self.selectedIdentity = group
                     if var recipientConversations = recipientConversations {
                         recipientConversations.insert(group)
@@ -653,9 +650,8 @@ class RootNavigationController: UINavigationController {
             ServerConnector.shared().disconnect(initiator: .shareExtension)
         }
         else {
-            ServerConnector.shared().disconnectWait(initiator: .shareExtension) { _ in
-                self.commonCompletionHandler()
-            }
+            ServerConnector.shared().disconnectWait(initiator: .shareExtension)
+            commonCompletionHandler()
         }
     }
     
@@ -785,7 +781,7 @@ extension RootNavigationController: ProgressViewDelegate {
 // MARK: - ModalNavigationControllerDelegate
 
 extension RootNavigationController: ModalNavigationControllerDelegate {
-    func willDismissModalNavigationController() {
+    func didDismissModalNavigationController() {
         finishAndClose(success: false)
     }
 }

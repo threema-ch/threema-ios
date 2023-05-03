@@ -31,6 +31,8 @@ class SettingsStoreMock: SettingsStoreProtocol, SettingsStoreInternalProtocol {
     
     var blockUnknown = true
     
+    var allowOutgoingDonations = false
+
     var sendReadReceipts = true
     
     var sendTypingIndicator = true
@@ -38,6 +40,18 @@ class SettingsStoreMock: SettingsStoreProtocol, SettingsStoreInternalProtocol {
     var choosePOI = true
     
     var hidePrivateChats = true
+    
+    var enableMasterDnd = false
+    
+    var masterDndWorkingDays: Set<Int> = []
+    
+    var masterDndStartTime: String?
+    
+    var masterDndEndTime: String?
+    
+    var notificationType: ThreemaFramework.NotificationType = .restrictive
+
+    var pushShowPreview = false
     
     var wallpaper: UIImage?
     

@@ -29,30 +29,36 @@ class TaskExecutionReceiveMessage: TaskExecution, TaskExecutionProtocol {
         guard let task = taskDefinition as? TaskDefinitionReceiveMessage, task.message != nil else {
             return Promise(error: TaskExecutionError.wrongTaskDefinitionType)
         }
-
+        
         DDLogNotice(
             "\(LoggingTag.receiveIncomingMessageFromChat.hexString) \(LoggingTag.receiveIncomingMessageFromChat) \(task.message.loggingDescription)"
         )
-
+        
         return frameworkInjector.messageProcessor.processIncomingMessage(
             task.message,
             receivedAfterInitialQueueSend: task.receivedAfterInitialQueueSend,
             maxBytesToDecrypt: task.maxBytesToDecrypt,
             timeoutDownloadThumbnail: task.timeoutDownloadThumbnail
         )
-        .then { (processedMsg: Any?) -> Promise<(AbstractMessage?, TaskDefinitionSendAbstractMessage?)> in
-            guard let processedMsg = processedMsg as? AbstractMessage else {
+        .then { (abstractMessageAndPFSSession: Any?)
+            -> Promise<(AbstractMessageAndPFSSession?, TaskDefinitionSendAbstractMessage?)> in
+            guard let abstractMessageAndPFSSession = abstractMessageAndPFSSession as? AbstractMessageAndPFSSession,
+                  let processedMsg = abstractMessageAndPFSSession.message else {
+                
+                DDLogError("Could not cast message to expected format")
+                
                 // Won't processing this message, because is invalid
                 return Promise { $0.fulfill((nil, nil)) }
             }
+            
             guard processedMsg.toIdentity == self.frameworkInjector.myIdentityStore.identity else {
                 throw TaskExecutionError
                     .reflectMessageFailed(message: "Wrong receiver identity \(processedMsg.toIdentity ?? "-")")
             }
-
+            
             return Promise { $0.fulfill(
                 (
-                    processedMsg,
+                    abstractMessageAndPFSSession,
                     TaskDefinitionSendAbstractMessage(
                         message: processedMsg,
                         doOnlyReflect: true,
@@ -61,15 +67,21 @@ class TaskExecutionReceiveMessage: TaskExecution, TaskExecutionProtocol {
                 )
             ) }
         }
-        .then { (processedMsg: AbstractMessage?, task: TaskDefinitionSendAbstractMessage?) -> Promise<AbstractMessage?> in
-            guard let processedMsg = processedMsg else {
+        .then { (
+            abstractMessageAndPFSSession: AbstractMessageAndPFSSession?,
+            task: TaskDefinitionSendAbstractMessage?
+        ) -> Promise<AbstractMessageAndPFSSession?> in
+            guard let abstractMessageAndPFSSession = abstractMessageAndPFSSession,
+                  abstractMessageAndPFSSession.message != nil else {
                 // Message would not be processed (skip reflecting message)
-                return Promise { $0.fulfill(processedMsg) }
+                return Promise { $0.fulfill(abstractMessageAndPFSSession) }
             }
+            
             guard let task = task else {
-                throw TaskExecutionError.processIncomingMessageFailed(message: processedMsg.messageID.hexString)
+                throw TaskExecutionError
+                    .processIncomingMessageFailed(message: abstractMessageAndPFSSession.message?.messageID.hexString)
             }
-
+            
             // Reflect processed incoming chat message
             // Notice: This message will be reflected immediately, before the next task will be executed!
             return task.create(frameworkInjector: self.frameworkInjector, taskContext: TaskContext(
@@ -79,16 +91,16 @@ class TaskExecutionReceiveMessage: TaskExecution, TaskExecutionProtocol {
                 logReceiveMessageAckFromChat: .none
             )).execute()
                 .then {
-                    Promise { $0.fulfill(processedMsg) }
+                    Promise { $0.fulfill(abstractMessageAndPFSSession) }
                 }
         }
-        .then { (processedMsg: AbstractMessage?) -> Promise<AbstractMessage?> in
-            guard let processedMsg = processedMsg else {
+        .then { (abstractMessageAndPFSSession: AbstractMessageAndPFSSession?) -> Promise<AbstractMessageAndPFSSession?> in
+            guard let processedMsg = abstractMessageAndPFSSession?.message else {
                 // Message would not be processed (skip sending delivery receipt)
-                return Promise { $0.fulfill(processedMsg) }
+                return Promise { $0.fulfill(abstractMessageAndPFSSession) }
             }
-
-            // Send and update devlivery receipt
+            
+            // Send and update delivery receipt
             if let delivered = processedMsg.delivered,
                let deliveryDate = processedMsg.deliveryDate {
                 self.update(
@@ -96,21 +108,20 @@ class TaskExecutionReceiveMessage: TaskExecution, TaskExecutionProtocol {
                     delivered: delivered.boolValue,
                     deliveryDate: deliveryDate
                 )
-                return Promise { $0.fulfill(processedMsg) }
+                return Promise { $0.fulfill(abstractMessageAndPFSSession) }
             }
             else {
                 return self.frameworkInjector.messageSender.sendDeliveryReceipt(for: processedMsg)
-                    .then { _ -> Promise<AbstractMessage?> in
+                    .then { _ -> Promise<AbstractMessageAndPFSSession?> in
                         self.update(message: processedMsg, delivered: true, deliveryDate: Date())
-                        return Promise { $0.fulfill(processedMsg) }
+                        return Promise { $0.fulfill(abstractMessageAndPFSSession) }
                     }
             }
         }
-        .then { (processedMsg: AbstractMessage?) -> Promise<Void> in
-            
+        .then { (abstractMessageAndPFSSession: AbstractMessageAndPFSSession?) -> Promise<Void> in
             if AppGroup.getActiveType() == AppGroupTypeNotificationExtension,
-               processedMsg?.flagImmediateDeliveryRequired() == true,
-               let identity = processedMsg?.fromIdentity,
+               abstractMessageAndPFSSession?.message?.flagIsVoIP() == true,
+               let identity = abstractMessageAndPFSSession?.message?.fromIdentity,
                !UserSettings.shared().blacklist.contains(identity) {
                 // Do not ack message if it's a VoIP message in the notification extension
             }
@@ -118,23 +129,40 @@ class TaskExecutionReceiveMessage: TaskExecution, TaskExecutionProtocol {
                 // Ack message
                 if !self.frameworkInjector.serverConnector.completedProcessingMessage(task.message) {
                     throw TaskExecutionError.processIncomingMessageFailed(
-                        message: processedMsg?.loggingDescription ?? task.message.loggingDescription
+                        message: abstractMessageAndPFSSession?.message?.loggingDescription ?? task.message
+                            .loggingDescription
                     )
                 }
-
+                
                 DDLogNotice(
-                    "\(LoggingTag.sendIncomingMessageAckToChat.hexString) \(LoggingTag.sendIncomingMessageAckToChat) \(processedMsg?.loggingDescription ?? task.message.loggingDescription)"
+                    "\(LoggingTag.sendIncomingMessageAckToChat.hexString) \(LoggingTag.sendIncomingMessageAckToChat) \(abstractMessageAndPFSSession?.message?.loggingDescription ?? task.message.loggingDescription)"
                 )
-
-                if let processedMsg {
+                
+                if ThreemaEnvironment.lateSessionSave {
+                    if let session = abstractMessageAndPFSSession?.session as? DHSession {
+                        try BusinessInjector().fsmp.updateRatchetCounters(session: session)
+                    }
+                }
+                
+                if let processedMsg = abstractMessageAndPFSSession?.message,
+                   !processedMsg.flagDontQueue() {
                     let nonceGuard = NonceGuard(entityManager: self.frameworkInjector.backgroundEntityManager)
                     try nonceGuard.processed(message: processedMsg, isReflected: false)
+                }
+
+                // Unarchive conversation if is archived
+                self.frameworkInjector.entityManager.performBlockAndWait {
+                    if let processedMsg = abstractMessageAndPFSSession?.message,
+                       let conversation = self.frameworkInjector.entityManager.conversation(forMessage: processedMsg),
+                       conversation.conversationVisibility == .archived {
+                        self.frameworkInjector.conversationStore.unarchive(conversation)
+                    }
                 }
             }
             
             self.frameworkInjector.backgroundEntityManager.performBlockAndWait {
                 // Attempt periodic group sync
-                if let processedMsg = processedMsg as? AbstractGroupMessage,
+                if let processedMsg = abstractMessageAndPFSSession?.message as? AbstractGroupMessage,
                    let group = self.frameworkInjector.backgroundGroupManager.getGroup(
                        processedMsg.groupID,
                        creator: processedMsg.groupCreator
@@ -142,7 +170,7 @@ class TaskExecutionReceiveMessage: TaskExecution, TaskExecutionProtocol {
                     self.frameworkInjector.backgroundGroupManager.periodicSyncIfNeeded(for: group)
                 }
             }
-
+            
             return Promise()
         }
     }

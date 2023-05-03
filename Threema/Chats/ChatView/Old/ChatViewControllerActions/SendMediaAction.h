@@ -31,6 +31,7 @@ typedef enum : NSUInteger {
 @property MediaPickerType mediaPickerType;
 
 - (void)showPreviewForAssets:(NSArray *)assets;
+- (void)showPreviewForAssets:(NSArray *)assets showKeyboard:(BOOL)showKeyboard;
 - (void)sendAssets:(NSArray *)assets asFile:(bool)sendAsFile withCaptions:(NSArray *)captions;
 
 @end

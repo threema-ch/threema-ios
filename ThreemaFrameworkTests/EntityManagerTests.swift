@@ -37,7 +37,7 @@ final class EntityManagerTests: XCTestCase {
 
     func testExistingConversationSenderReceiverAndGetOrCreateMessageIfExists() {
         let abstractMessage = BoxTextMessage()
-        abstractMessage.messageID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.messageIDLength)!
+        abstractMessage.messageID = MockData.generateMessageID()
         abstractMessage.fromIdentity = "ECHOECHO"
         abstractMessage.text = "test"
 
@@ -47,7 +47,7 @@ final class EntityManagerTests: XCTestCase {
 
         let databasePreparer = DatabasePreparer(context: mainCnx)
         databasePreparer.save {
-            let publicKey2 = BytesUtility.generateRandomBytes(length: Int(kNaClCryptoPubKeySize))!
+            let publicKey2 = MockData.generatePublicKey()
             let identity2 = "ECHOECHO"
             sender = databasePreparer.createContact(
                 publicKey: publicKey2,
@@ -77,6 +77,8 @@ final class EntityManagerTests: XCTestCase {
 
         let expec = expectation(description: "Expec")
 
+        var resultMessage: BaseMessage?
+
         DispatchQueue.global().async {
             let entityManager =
                 EntityManager(databaseContext: DatabaseContext(
@@ -88,25 +90,26 @@ final class EntityManagerTests: XCTestCase {
             XCTAssertEqual(result.sender?.identity, "ECHOECHO")
             XCTAssertEqual(result.conversation?.objectID, conversation?.objectID)
 
-            let resultMessage = entityManager.getOrCreateMessage(
+            resultMessage = entityManager.getOrCreateMessage(
                 for: abstractMessage,
                 sender: sender,
                 conversation: result.conversation!,
                 thumbnail: nil
             )
-            XCTAssertNotNil(resultMessage)
-            XCTAssertEqual(resultMessage?.objectID, message?.objectID)
-            XCTAssertEqual((resultMessage as? TextMessage)?.text, "test 123")
 
             expec.fulfill()
         }
 
-        wait(for: [expec], timeout: 30)
+        wait(for: [expec], timeout: 6)
+
+        XCTAssertNotNil(resultMessage)
+        XCTAssertEqual(resultMessage?.objectID, message?.objectID)
+        XCTAssertEqual((resultMessage as? TextMessage)?.text, "test 123")
     }
 
     func testExistingConversationSenderReceiverAndGetOrCreateMessageIfNotExists() {
         let abstractMessage = BoxTextMessage()
-        abstractMessage.messageID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.messageIDLength)!
+        abstractMessage.messageID = MockData.generateMessageID()
         abstractMessage.fromIdentity = "ECHOECHO"
         abstractMessage.text = "test"
 
@@ -115,7 +118,7 @@ final class EntityManagerTests: XCTestCase {
 
         let databasePreparer = DatabasePreparer(context: mainCnx)
         databasePreparer.save {
-            let publicKey2 = BytesUtility.generateRandomBytes(length: Int(kNaClCryptoPubKeySize))!
+            let publicKey2 = MockData.generatePublicKey()
             let identity2 = "ECHOECHO"
             sender = databasePreparer.createContact(
                 publicKey: publicKey2,
@@ -131,6 +134,8 @@ final class EntityManagerTests: XCTestCase {
 
         let expec = expectation(description: "Expec")
 
+        var resultMessage: BaseMessage?
+
         DispatchQueue.global().async {
             let entityManager =
                 EntityManager(databaseContext: DatabaseContext(
@@ -142,23 +147,24 @@ final class EntityManagerTests: XCTestCase {
             XCTAssertEqual(result.sender?.identity, "ECHOECHO")
             XCTAssertEqual(result.conversation?.objectID, conversation?.objectID)
 
-            let resultMessage = entityManager.getOrCreateMessage(
+            resultMessage = entityManager.getOrCreateMessage(
                 for: abstractMessage,
                 sender: sender,
                 conversation: result.conversation!,
                 thumbnail: nil
             )
-            XCTAssertNotNil(resultMessage)
 
             expec.fulfill()
         }
 
-        wait(for: [expec], timeout: 30)
+        wait(for: [expec], timeout: 6)
+
+        XCTAssertNotNil(resultMessage)
     }
     
     func testNotExistingConversationSenderReceiverAndGetOrCreateMessageIfNotExists() {
         let abstractMessage = BoxTextMessage()
-        abstractMessage.messageID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.messageIDLength)!
+        abstractMessage.messageID = MockData.generateMessageID()
         abstractMessage.fromIdentity = "ECHOECHO"
         abstractMessage.text = "test"
 
@@ -166,7 +172,7 @@ final class EntityManagerTests: XCTestCase {
 
         let databasePreparer = DatabasePreparer(context: mainCnx)
         databasePreparer.save {
-            let publicKey2 = BytesUtility.generateRandomBytes(length: Int(kNaClCryptoPubKeySize))!
+            let publicKey2 = MockData.generatePublicKey()
             let identity2 = "ECHOECHO"
             sender = databasePreparer.createContact(
                 publicKey: publicKey2,
@@ -177,20 +183,22 @@ final class EntityManagerTests: XCTestCase {
 
         let expec = expectation(description: "Expec")
 
+        var result: (conversation: Conversation?, sender: ContactEntity?, receiver: ContactEntity?)
+
         DispatchQueue.global().async {
             let entityManager =
                 EntityManager(databaseContext: DatabaseContext(
                     mainContext: self.mainCnx,
                     backgroundContext: self.childCnx
                 ))
-            let result = entityManager.existingConversationSenderReceiver(for: abstractMessage)
-
-            XCTAssertEqual(result.sender?.identity, sender?.identity)
-            XCTAssertNil(result.conversation)
+            result = entityManager.existingConversationSenderReceiver(for: abstractMessage)
 
             expec.fulfill()
         }
 
-        wait(for: [expec], timeout: 30)
+        wait(for: [expec], timeout: 6)
+
+        XCTAssertEqual(result.sender?.identity, sender?.identity)
+        XCTAssertNil(result.conversation)
     }
 }

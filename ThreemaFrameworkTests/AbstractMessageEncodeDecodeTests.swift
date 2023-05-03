@@ -36,14 +36,6 @@ class AbstractMessageEncodeDecodeTests: XCTestCase {
     private let expectedFlags = 1
     private let expectedReceivedAfterInitialQueueSend = false
     
-    override func setUpWithError() throws {
-        // Put setup code here. This method is called before the invocation of each test method in the class.
-    }
-
-    override func tearDownWithError() throws {
-        // Put teardown code here. This method is called after the invocation of each test method in the class.
-    }
-
     private func abstractMessage<T: AbstractMessage>(
         _ fromIdentity: String,
         _ toIdentity: String,
@@ -130,6 +122,7 @@ class AbstractMessageEncodeDecodeTests: XCTestCase {
         XCTAssertTrue(expectedNonce.elementsEqual((result?.nonce)!))
         XCTAssertEqual(NSNumber(integerLiteral: expectedFlags), (result?.flags)!)
         XCTAssertFalse((result?.receivedAfterInitialQueueSend)!)
+        XCTAssertNil(try XCTUnwrap(result) as? QuotedMessageProtocol)
     }
     
     func testBoxBallotCreateMessage() throws {
@@ -172,6 +165,7 @@ class AbstractMessageEncodeDecodeTests: XCTestCase {
         XCTAssertTrue(expectedNonce.elementsEqual((result?.nonce)!))
         XCTAssertEqual(NSNumber(integerLiteral: expectedFlags), (result?.flags)!)
         XCTAssertFalse((result?.receivedAfterInitialQueueSend)!)
+        XCTAssertNil(try XCTUnwrap(result) as? QuotedMessageProtocol)
     }
     
     func testBoxBallotVoteMessage() throws {
@@ -217,6 +211,7 @@ class AbstractMessageEncodeDecodeTests: XCTestCase {
         XCTAssertTrue(expectedNonce.elementsEqual((result?.nonce)!))
         XCTAssertEqual(NSNumber(integerLiteral: expectedFlags), (result?.flags)!)
         XCTAssertFalse((result?.receivedAfterInitialQueueSend)!)
+        XCTAssertNil(try XCTUnwrap(result) as? QuotedMessageProtocol)
     }
     
     func testBoxFileMessage() throws {
@@ -256,6 +251,7 @@ class AbstractMessageEncodeDecodeTests: XCTestCase {
         XCTAssertTrue(expectedNonce.elementsEqual((result?.nonce)!))
         XCTAssertEqual(NSNumber(integerLiteral: expectedFlags), (result?.flags)!)
         XCTAssertFalse((result?.receivedAfterInitialQueueSend)!)
+        XCTAssertNil(try XCTUnwrap(result) as? QuotedMessageProtocol)
     }
 
     func testBoxImageMessage() throws {
@@ -301,6 +297,7 @@ class AbstractMessageEncodeDecodeTests: XCTestCase {
         XCTAssertTrue(expectedNonce.elementsEqual((result?.nonce)!))
         XCTAssertEqual(NSNumber(integerLiteral: expectedFlags), (result?.flags)!)
         XCTAssertFalse((result?.receivedAfterInitialQueueSend)!)
+        XCTAssertNil(try XCTUnwrap(result) as? QuotedMessageProtocol)
     }
     
     func testBoxLocationMessage() throws {
@@ -352,6 +349,7 @@ class AbstractMessageEncodeDecodeTests: XCTestCase {
         XCTAssertTrue(expectedNonce.elementsEqual((result?.nonce)!))
         XCTAssertEqual(NSNumber(integerLiteral: expectedFlags), (result?.flags)!)
         XCTAssertFalse((result?.receivedAfterInitialQueueSend)!)
+        XCTAssertNil(try XCTUnwrap(result) as? QuotedMessageProtocol)
     }
     
     func testBoxTextMessage() throws {
@@ -394,6 +392,7 @@ class AbstractMessageEncodeDecodeTests: XCTestCase {
         XCTAssertTrue(expectedNonce.elementsEqual((result?.nonce)!))
         XCTAssertEqual(NSNumber(integerLiteral: expectedFlags), (result?.flags)!)
         XCTAssertFalse((result?.receivedAfterInitialQueueSend)!)
+        XCTAssertNotNil(try XCTUnwrap(result) as QuotedMessageProtocol)
     }
     
     func testBoxVideoMessage() throws {
@@ -448,6 +447,7 @@ class AbstractMessageEncodeDecodeTests: XCTestCase {
         XCTAssertTrue(expectedNonce.elementsEqual((result?.nonce)!))
         XCTAssertEqual(NSNumber(integerLiteral: expectedFlags), (result?.flags)!)
         XCTAssertFalse((result?.receivedAfterInitialQueueSend)!)
+        XCTAssertNil(try XCTUnwrap(result) as? QuotedMessageProtocol)
     }
     
     func testContactDeletePhotoMessage() throws {
@@ -481,6 +481,7 @@ class AbstractMessageEncodeDecodeTests: XCTestCase {
         XCTAssertTrue(expectedNonce.elementsEqual((result?.nonce)!))
         XCTAssertEqual(NSNumber(integerLiteral: expectedFlags), (result?.flags)!)
         XCTAssertFalse((result?.receivedAfterInitialQueueSend)!)
+        XCTAssertNil(try XCTUnwrap(result) as? QuotedMessageProtocol)
     }
     
     func testContactSetPhotoMessage() throws {
@@ -526,6 +527,7 @@ class AbstractMessageEncodeDecodeTests: XCTestCase {
         XCTAssertTrue(expectedNonce.elementsEqual((result?.nonce)!))
         XCTAssertEqual(NSNumber(integerLiteral: expectedFlags), (result?.flags)!)
         XCTAssertFalse((result?.receivedAfterInitialQueueSend)!)
+        XCTAssertNil(try XCTUnwrap(result) as? QuotedMessageProtocol)
     }
     
     func testDeliveryReceiptMessage() throws {
@@ -573,6 +575,7 @@ class AbstractMessageEncodeDecodeTests: XCTestCase {
         XCTAssertTrue(expectedNonce.elementsEqual((result?.nonce)!))
         XCTAssertEqual(NSNumber(integerLiteral: expectedFlags), (result?.flags)!)
         XCTAssertFalse((result?.receivedAfterInitialQueueSend)!)
+        XCTAssertNil(try XCTUnwrap(result) as? QuotedMessageProtocol)
     }
     
     func testGroupAudioMessage() throws {
@@ -627,6 +630,7 @@ class AbstractMessageEncodeDecodeTests: XCTestCase {
         XCTAssertTrue(expectedNonce.elementsEqual((result?.nonce)!))
         XCTAssertEqual(NSNumber(integerLiteral: expectedFlags), (result?.flags)!)
         XCTAssertFalse((result?.receivedAfterInitialQueueSend)!)
+        XCTAssertNil(try XCTUnwrap(result) as? QuotedMessageProtocol)
     }
     
     func testGroupBallotCreateMessage() throws {
@@ -675,6 +679,7 @@ class AbstractMessageEncodeDecodeTests: XCTestCase {
         XCTAssertTrue(expectedNonce.elementsEqual((result?.nonce)!))
         XCTAssertEqual(NSNumber(integerLiteral: expectedFlags), (result?.flags)!)
         XCTAssertFalse((result?.receivedAfterInitialQueueSend)!)
+        XCTAssertNil(try XCTUnwrap(result) as? QuotedMessageProtocol)
     }
     
     func testGroupBallotVoteMessage() throws {
@@ -726,6 +731,7 @@ class AbstractMessageEncodeDecodeTests: XCTestCase {
         XCTAssertTrue(expectedNonce.elementsEqual((result?.nonce)!))
         XCTAssertEqual(NSNumber(integerLiteral: expectedFlags), (result?.flags)!)
         XCTAssertFalse((result?.receivedAfterInitialQueueSend)!)
+        XCTAssertNil(try XCTUnwrap(result) as? QuotedMessageProtocol)
     }
     
     func testGroupCreateMessage() throws {
@@ -771,6 +777,7 @@ class AbstractMessageEncodeDecodeTests: XCTestCase {
         XCTAssertTrue(expectedNonce.elementsEqual((result?.nonce)!))
         XCTAssertEqual(NSNumber(integerLiteral: expectedFlags), (result?.flags)!)
         XCTAssertFalse((result?.receivedAfterInitialQueueSend)!)
+        XCTAssertNil(try XCTUnwrap(result) as? QuotedMessageProtocol)
     }
     
     func testGroupFileMessage() throws {
@@ -816,6 +823,7 @@ class AbstractMessageEncodeDecodeTests: XCTestCase {
         XCTAssertTrue(expectedNonce.elementsEqual((result?.nonce)!))
         XCTAssertEqual(NSNumber(integerLiteral: expectedFlags), (result?.flags)!)
         XCTAssertFalse((result?.receivedAfterInitialQueueSend)!)
+        XCTAssertNil(try XCTUnwrap(result) as? QuotedMessageProtocol)
     }
 
     func testGroupImageMessage() throws {
@@ -867,6 +875,7 @@ class AbstractMessageEncodeDecodeTests: XCTestCase {
         XCTAssertTrue(expectedNonce.elementsEqual((result?.nonce)!))
         XCTAssertEqual(NSNumber(integerLiteral: expectedFlags), (result?.flags)!)
         XCTAssertFalse((result?.receivedAfterInitialQueueSend)!)
+        XCTAssertNil(try XCTUnwrap(result) as? QuotedMessageProtocol)
     }
     
     func testGroupRenameMessage() throws {
@@ -912,6 +921,7 @@ class AbstractMessageEncodeDecodeTests: XCTestCase {
         XCTAssertTrue(expectedNonce.elementsEqual((result?.nonce)!))
         XCTAssertEqual(NSNumber(integerLiteral: expectedFlags), (result?.flags)!)
         XCTAssertFalse((result?.receivedAfterInitialQueueSend)!)
+        XCTAssertNil(try XCTUnwrap(result) as? QuotedMessageProtocol)
     }
     
     func testGroupLocationMessage() throws {
@@ -969,6 +979,7 @@ class AbstractMessageEncodeDecodeTests: XCTestCase {
         XCTAssertTrue(expectedNonce.elementsEqual((result?.nonce)!))
         XCTAssertEqual(NSNumber(integerLiteral: expectedFlags), (result?.flags)!)
         XCTAssertFalse((result?.receivedAfterInitialQueueSend)!)
+        XCTAssertNil(try XCTUnwrap(result) as? QuotedMessageProtocol)
     }
     
     func testGroupSetPhotoMessage() throws {
@@ -1020,6 +1031,7 @@ class AbstractMessageEncodeDecodeTests: XCTestCase {
         XCTAssertTrue(expectedNonce.elementsEqual((result?.nonce)!))
         XCTAssertEqual(NSNumber(integerLiteral: expectedFlags), (result?.flags)!)
         XCTAssertFalse((result?.receivedAfterInitialQueueSend)!)
+        XCTAssertNil(try XCTUnwrap(result) as? QuotedMessageProtocol)
     }
     
     func testGroupTextMessage() {
@@ -1068,6 +1080,7 @@ class AbstractMessageEncodeDecodeTests: XCTestCase {
         XCTAssertTrue(expectedNonce.elementsEqual((result?.nonce)!))
         XCTAssertEqual(NSNumber(integerLiteral: expectedFlags), (result?.flags)!)
         XCTAssertFalse((result?.receivedAfterInitialQueueSend)!)
+        XCTAssertNotNil(try XCTUnwrap(result) as QuotedMessageProtocol)
     }
     
     func testGroupVideoMessage() throws {
@@ -1128,6 +1141,7 @@ class AbstractMessageEncodeDecodeTests: XCTestCase {
         XCTAssertTrue(expectedNonce.elementsEqual((result?.nonce)!))
         XCTAssertEqual(NSNumber(integerLiteral: expectedFlags), (result?.flags)!)
         XCTAssertFalse((result?.receivedAfterInitialQueueSend)!)
+        XCTAssertNil(try XCTUnwrap(result) as? QuotedMessageProtocol)
     }
     
     func testGroupDeliveryReceiptMessage() throws {
@@ -1181,5 +1195,6 @@ class AbstractMessageEncodeDecodeTests: XCTestCase {
         XCTAssertTrue(expectedNonce.elementsEqual((result?.nonce)!))
         XCTAssertEqual(NSNumber(integerLiteral: expectedFlags), (result?.flags)!)
         XCTAssertFalse((result?.receivedAfterInitialQueueSend)!)
+        XCTAssertNil(try XCTUnwrap(result) as? QuotedMessageProtocol)
     }
 }

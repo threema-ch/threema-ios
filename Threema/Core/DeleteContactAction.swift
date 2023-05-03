@@ -287,10 +287,16 @@ extension DeleteContactAction {
             }
         }
         
+        // Remove INInteractions
+        SettingsStore.removeINInteractions(for: contact.objectID)
+        
         // Delete any PFS sessions
         do {
             try BusinessInjector().dhSessionStore
-                .deleteAllDHSessions(myIdentity: MyIdentityStore().identity, peerIdentity: contact.identity)
+                .deleteAllDHSessions(
+                    myIdentity: BusinessInjector().myIdentityStore.identity,
+                    peerIdentity: contact.identity
+                )
         }
         catch {
             DDLogWarn("Cannot delete PFS sessions: \(error)")

@@ -261,7 +261,7 @@ final class ChatProfileView: UIStackView {
     // MARK: - Configuration
     
     private func configureView() {
-        if conversation.contact?.showOtherThreemaTypeIcon ?? false {
+        if !conversation.isGroup(), conversation.contact?.showOtherThreemaTypeIcon ?? false {
             // Only add other Threema type icon if we actually want to show it
             avatarImageView.addSubview(otherThreemaTypeImageView)
             otherThreemaTypeImageView.translatesAutoresizingMaskIntoConstraints = false

@@ -376,7 +376,11 @@ public class PendingUserNotificationManager: NSObject, PendingUserNotificationMa
     public func isProcessed(pendingUserNotification: PendingUserNotification) -> Bool {
         var isProcessed = isProcessed(key: pendingUserNotification.key)
         if !isProcessed,
-           (pendingUserNotification.stage == .final && pendingUserNotification.fireDate == nil)
+           (
+               pendingUserNotification.stage == .final && pendingUserNotification
+                   .fireDate == nil &&
+                   !(pendingUserNotification.abstractMessage?.receivedAfterInitialQueueSend ?? false)
+           )
            || (pendingUserNotification.fireDate != nil && pendingUserNotification.fireDate! < Date()) {
 
             addAsProcessed(pendingUserNotification: pendingUserNotification)

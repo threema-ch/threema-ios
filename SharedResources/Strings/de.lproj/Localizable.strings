@@ -1516,7 +1516,7 @@ Sofern keine Medien und/oder Dateien in %@ fehlen, leeren Sie den Papierkorb, um
 
 // Message senders
 "accessibility_senderDescription_ownMessage" = "%@ von dir";
-"accessibility_senderDescription_otherMessage_group" = "%@ from %@";
+"accessibility_senderDescription_otherMessage_group" = "%@ von %@";
 "accessibility_senderDescription_systemMessage" = "Info: %@";
 
 // Message types

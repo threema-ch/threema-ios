@@ -1052,8 +1052,15 @@ extension ChatViewBaseTableViewCell {
                 status = BundleUtil.localizedString(forKey: "accessibility_voice_message_playing")
             }
             
+            var quote = ""
+            if let quotedMessage = message as? QuoteMessageProvider,
+               let quoteMessage = quotedMessage.quoteMessage {
+                quote =
+                    "\(BundleUtil.localizedString(forKey: "in_reply_to")) \(quoteMessage.accessibilitySenderAndMessageTypeText) \(quoteMessage.previewText() ?? "")."
+            }
+            
             let labelText =
-                "\(message.accessibilitySenderAndMessageTypeText) \(status) \(message.customAccessibilityLabel) \(message.accessibilityDateAndState)"
+                "\(message.accessibilitySenderAndMessageTypeText) \(status) \(message.customAccessibilityLabel) \(quote) \(message.accessibilityDateAndState)"
             return labelText
         }
         

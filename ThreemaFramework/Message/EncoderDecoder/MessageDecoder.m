@@ -186,6 +186,8 @@
         msg.sendUserAck = outer.sendUserAck;
         msg.nonce = outer.nonce;
         msg.flags = outer.flags;
+        msg.receivedAfterInitialQueueSend = outer.receivedAfterInitialQueueSend;
+        msg.pushFromName = outer.pushFromName;
     }
     
     return msg;

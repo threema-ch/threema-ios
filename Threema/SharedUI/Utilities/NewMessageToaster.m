@@ -68,58 +68,57 @@
         EntityManager *entityManager = [EntityManager new];
         [entityManager performBlock:^{
             BaseMessage *message = [[entityManager entityFetcher] existingObjectWithID:messageObjectID];
-            if (![message.read boolValue]) {
-                ContactEntity *contact = message.sender;
-                if (contact == nil) {
-                    contact = message.conversation.contact;
-                }
-
-                // don't show toast for suppressed group ids
-                if (contact != nil) {
-                    PushSetting *pushSetting = [PushSetting pushSettingForContact:contact];
-                    if (![pushSetting canSendPushForBaseMessage:message]) {
-                        return;
-                    }
-                }
-
-                /* No toast if disabled, a system message or passcode showing */
-                if (![UserSettings sharedUserSettings].inAppPreview ||
-                    [message isKindOfClass:[SystemMessage class]] || [AppDelegate sharedAppDelegate].isAppLocked)
-                    return;
-
-                /* Are we currently in the foreground? */
-                if (![AppDelegate sharedAppDelegate].active) {
-                    [queue addObject:notification];
-                    return;
-                }
-
-                /* Is this for the currently visible conversation? */
-                UITabBarController *mainTabBar = [AppDelegate getMainTabBarController];
-                if ([mainTabBar viewControllers].count <= kChatTabBarIndex) {
-                    return;
-                }
-                UINavigationController *chatNavVc = [[mainTabBar viewControllers] objectAtIndex:kChatTabBarIndex];
-
-                DDLogVerbose(@"curNavController: %@", chatNavVc);
-                if ([chatNavVc.topViewController isKindOfClass:[Old_ChatViewController class]]) {
-                    Old_ChatViewController *curChatVc = (Old_ChatViewController*)chatNavVc.topViewController;
-                    if (curChatVc.conversation.objectID == message.conversation.objectID)
-                        return;
-                }
-                
-                if ([chatNavVc.topViewController isKindOfClass:[ChatViewController class]]) {
-                    ChatViewController *curChatVc = (ChatViewController*)chatNavVc.topViewController;
-                    if (curChatVc.conversation.objectID == message.conversation.objectID) {
-                        if (UIAccessibilityIsVoiceOverRunning()) {
-                            NSString *accessibilityText = [NSString stringWithFormat:@"%@%@", [BundleUtil localizedStringForKey:@"new_message_accessibility"], [message previewText]];
-                            UIAccessibilityPostNotification(UIAccessibilityAnnouncementNotification, accessibilityText);
-                        }
-                        return;
-                    }
-                }
-
-                [NotificationBannerHelper newBannerWithBaseMessage: message];
+            ContactEntity *contact = message.sender;
+            if (contact == nil) {
+                contact = message.conversation.contact;
             }
+            
+            // don't show toast for suppressed group ids
+            if (contact != nil) {
+                PushSetting *pushSetting = [PushSetting pushSettingForContact:contact];
+                if (![pushSetting canSendPushForBaseMessage:message]) {
+                    return;
+                }
+            }
+            
+            /* No toast if disabled, a system message or passcode showing */
+            if (![UserSettings sharedUserSettings].inAppPreview ||
+                [message isKindOfClass:[SystemMessage class]] || [AppDelegate sharedAppDelegate].isAppLocked)
+                return;
+            
+            /* Are we currently in the foreground? */
+            if (![AppDelegate sharedAppDelegate].active) {
+                [queue addObject:notification];
+                return;
+            }
+            
+            /* Is this for the currently visible conversation? */
+            UITabBarController *mainTabBar = [AppDelegate getMainTabBarController];
+            if ([mainTabBar viewControllers].count <= kChatTabBarIndex) {
+                return;
+            }
+            UINavigationController *chatNavVc = [[mainTabBar viewControllers] objectAtIndex:kChatTabBarIndex];
+            
+            DDLogVerbose(@"curNavController: %@", chatNavVc);
+            if ([chatNavVc.topViewController isKindOfClass:[Old_ChatViewController class]]) {
+                Old_ChatViewController *curChatVc = (Old_ChatViewController*)chatNavVc.topViewController;
+                if (curChatVc.conversation.objectID == message.conversation.objectID)
+                    return;
+            }
+            
+            if ([chatNavVc.topViewController isKindOfClass:[ChatViewController class]]) {
+                ChatViewController *curChatVc = (ChatViewController*)chatNavVc.topViewController;
+                if (curChatVc.conversation.objectID == message.conversation.objectID) {
+                    if (UIAccessibilityIsVoiceOverRunning()) {
+                        NSString *accessibilityText = [NSString stringWithFormat:@"%@%@", [BundleUtil localizedStringForKey:@"new_message_accessibility"], [message previewText]];
+                        UIAccessibilityPostNotification(UIAccessibilityAnnouncementNotification, accessibilityText);
+                    }
+                    return;
+                }
+            }
+            
+            
+            [NotificationBannerHelper newBannerWithBaseMessage: message];
         }];
     }
 }

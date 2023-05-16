@@ -152,10 +152,20 @@ public class UserNotificationManager: UserNotificationManagerProtocol {
                 if userNotificationContent.isGroupMessage {
                     userNotificationContent.title = baseMessage.conversation?.groupName ?? userNotificationContent
                         .fromName
-                    userNotificationContent.body = TextStyleUtils
-                        .makeMentionsString(
-                            forText: "\(userNotificationContent.fromName!): \(baseMessage.previewText()!)"
-                        )
+                    // If we have create a communication notification, we don't add the name
+                    if notificationType == .complete {
+                        userNotificationContent.body = TextStyleUtils
+                            .makeMentionsString(
+                                forText: baseMessage.previewText()!
+                            )
+                    }
+                    else {
+                        userNotificationContent.body = TextStyleUtils
+                            .makeMentionsString(
+                                forText: "\(userNotificationContent.fromName!): \(baseMessage.previewText()!)"
+                            )
+                    }
+                    
                     userNotificationContent.groupID = baseMessage.conversation.groupID!
                         .base64EncodedString(options: NSData.Base64EncodingOptions(rawValue: 0))
                 }

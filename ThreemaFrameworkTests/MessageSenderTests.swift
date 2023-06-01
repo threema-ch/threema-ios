@@ -64,7 +64,7 @@ class MessageSenderTests: XCTestCase {
         )
         
         var objectID: NSManagedObjectID!
-        dbPreparer.createConversation(marked: false, typing: false, unreadMessageCount: 100) { conversation in
+        dbPreparer.createConversation(typing: false, unreadMessageCount: 100, visibility: .default) { conversation in
             conversation.groupID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!
             objectID = conversation.objectID
         }
@@ -105,7 +105,7 @@ class MessageSenderTests: XCTestCase {
         )
         
         var objectID: NSManagedObjectID!
-        dbPreparer.createConversation(marked: false, typing: false, unreadMessageCount: 100) { conversation in
+        dbPreparer.createConversation(typing: false, unreadMessageCount: 100, visibility: .default) { conversation in
             conversation.groupID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!
             conversation.conversationCategory = .private
             objectID = conversation.objectID
@@ -148,7 +148,7 @@ class MessageSenderTests: XCTestCase {
         )
         
         var objectID: NSManagedObjectID!
-        dbPreparer.createConversation(marked: false, typing: false, unreadMessageCount: 100) { conversation in
+        dbPreparer.createConversation(typing: false, unreadMessageCount: 100, visibility: .default) { conversation in
             conversation.groupID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!
             objectID = conversation.objectID
         }

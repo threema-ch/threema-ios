@@ -73,7 +73,7 @@ class MediatorReflectedIncomingMessageUpdateProcessor {
 
     private func saveMessageRead(
         messageID: UInt64,
-        senderIdentity: String?,
+        senderIdentity: ThreemaIdentity?,
         senderGroupIdentity: GroupIdentity?,
         readDate: Date
     ) throws {
@@ -110,13 +110,23 @@ class MediatorReflectedIncomingMessageUpdateProcessor {
                    conversation: conversation
                ) {
                 
-                // Is not a message from myself update as read and refresh unread badge
+                // If it is not a message from myself then update as read and refresh unread badge
                 if !message.isOwnMessage {
                     self.frameworkInjector.backgroundEntityManager.performSyncBlockAndSafe {
                         message.read = true
                         message.readDate = readDate
                     }
                     readMessageConversations.insert(message.conversation)
+                }
+
+                // If it is a read receipt of a reflected incoming message, then remove all notifications of this message
+                let identity: ThreemaIdentity? = message.sender?.identity ?? message.conversation.contact?.identity
+                if let key = PendingUserNotificationKey.key(identity: identity, messageID: message.id) {
+                    self.frameworkInjector.userNotificationCenterManager.remove(
+                        key: key,
+                        exceptStage: nil,
+                        justPending: false
+                    )
                 }
             }
         }

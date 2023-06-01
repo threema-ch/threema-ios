@@ -388,12 +388,28 @@ import Foundation
     
     /// Remove all items in a directory
     /// - Parameter directoryURL: URL of the directory
-    @objc public static func removeItemsInDirectory(directoryURL: URL) {
+    public static func removeItemsInDirectory(directoryURL: URL) {
         if let items = FileUtility.dir(pathURL: directoryURL) {
             for item in items {
                 let itemURL = URL(fileURLWithPath: "\(directoryURL.path)/\(item)")
                 FileUtility.delete(at: itemURL)
             }
         }
+    }
+    
+    public static func removeItemsInAllDirectories() {
+        if let docDir = FileUtility.appDocumentsDirectory {
+            FileUtility.removeItemsInDirectory(directoryURL: docDir)
+        }
+        if let dataDir = FileUtility.appDataDirectory {
+            FileUtility.removeItemsInDirectory(directoryURL: dataDir)
+        }
+        if let cacheDir = FileUtility.appCachesDirectory {
+            FileUtility.removeItemsInDirectory(directoryURL: cacheDir)
+        }
+        if let tempDir = FileUtility.appTemporaryDirectory {
+            FileUtility.removeItemsInDirectory(directoryURL: tempDir)
+        }
+        DDLogNotice("Deleted items in all directories.")
     }
 }

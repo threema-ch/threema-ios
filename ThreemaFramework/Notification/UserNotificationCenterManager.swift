@@ -24,12 +24,12 @@ import PromiseKit
 
 protocol UserNotificationCenterManagerProtocol {
     func add(
-        key: String,
+        key: PendingUserNotificationKey,
         stage: UserNotificationStage,
         notification: UNNotificationContent
     ) -> Promise<Date?>
-    func isPending(key: String, stage: UserNotificationStage) -> Bool
-    func remove(key: String, exceptStage: UserNotificationStage?)
+    func isPending(key: PendingUserNotificationKey, stage: UserNotificationStage) -> Bool
+    func remove(key: PendingUserNotificationKey, exceptStage: UserNotificationStage?, justPending: Bool)
 }
 
 enum UserNotificationCenterManagerError: Error {
@@ -46,7 +46,7 @@ class UserNotificationCenterManager: UserNotificationCenterManagerProtocol {
     ///    - notification: Notification for adding/replacing
     /// - Returns: Date when notification will be showed
     func add(
-        key: String,
+        key: PendingUserNotificationKey,
         stage: UserNotificationStage,
         notification: UNNotificationContent
     ) -> Promise<Date?> {
@@ -99,7 +99,7 @@ class UserNotificationCenterManager: UserNotificationCenterManagerProtocol {
                     DDLogNotice(
                         "[Push] Added message \(key) to notification center with trigger \(trigger?.timeInterval ?? 0)s and identifier \(notificationRequest.identifier)"
                     )
-                    self.remove(key: key, exceptStage: stage)
+                    self.remove(key: key, exceptStage: stage, justPending: true)
                     
                     seal.fulfill(fireDate)
                 }
@@ -113,7 +113,7 @@ class UserNotificationCenterManager: UserNotificationCenterManagerProtocol {
     ///     - key: Key of notification
     ///     - stage: Stage of incoming message
     /// - Returns: True notification is pending in notification center
-    func isPending(key: String, stage: UserNotificationStage) -> Bool {
+    func isPending(key: PendingUserNotificationKey, stage: UserNotificationStage) -> Bool {
         var isPending = false
 
         let dispatchGroup = DispatchGroup()
@@ -135,21 +135,27 @@ class UserNotificationCenterManager: UserNotificationCenterManagerProtocol {
     /// Remove notifications with key from notification center.
     ///
     /// - Parameters:
-    ///     - key: Key of notification to remove
-    ///     - exceptStage: Remove all notifications with key except this stages
-    func remove(key: String, exceptStage: UserNotificationStage?) {
+    ///   - key: Key of notification to remove
+    ///   - exceptStage: Removes all notifications with key except this stages
+    ///   - justPending: Removes pending notifications only
+    func remove(key: PendingUserNotificationKey, exceptStage: UserNotificationStage?, justPending: Bool) {
         var removeKeyStages = [String]()
         for stage in UserNotificationStage.allCases.filter({ stage -> Bool in
             exceptStage == nil ? true : stage != exceptStage
         }) {
             removeKeyStages.append(getIdentifier(key, stage))
         }
-        
-        DDLogNotice("[Push] Remove notifications with keys: \(removeKeyStages)")
+
+        DDLogNotice("[Push] Remove pending notifications with keys: \(removeKeyStages)")
         UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: removeKeyStages)
+
+        if !justPending {
+            DDLogNotice("[Push] Remove delivered notifications with keys: \(removeKeyStages)")
+            UNUserNotificationCenter.current().removeDeliveredNotifications(withIdentifiers: removeKeyStages)
+        }
     }
-    
-    private func getIdentifier(_ key: String, _ stage: UserNotificationStage) -> String {
+
+    private func getIdentifier(_ key: PendingUserNotificationKey, _ stage: UserNotificationStage) -> String {
         "\(key)-\(stage)"
     }
 }

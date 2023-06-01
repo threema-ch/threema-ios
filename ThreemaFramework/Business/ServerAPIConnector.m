@@ -552,6 +552,26 @@
     } onError:onError];
 }
 
+- (void)revokeID:(MyIdentityStore*)identityStore onCompletion:(void(^)(void))onCompletion onError:(void(^)(NSError *error))onError {
+    
+    if (identityStore.identity == nil) {
+        onError([ThreemaError threemaError:@"store has no valid identity"]);
+        return;
+    }
+    
+    NSDictionary *request = @{
+                              @"identity": identityStore.identity,
+                              @"lang": [self preferredLanguage],
+                              };
+    
+    [self sendSignedRequest:request toApiPath:@"identity/revoke" forStore:identityStore onCompletion:^(id jsonObject) {
+        if ([jsonObject[@"success"] boolValue])
+            onCompletion();
+        else
+            onError([ThreemaError threemaError:jsonObject[@"error"]]);
+    } onError:onError];
+}
+
 - (void)checkStatusOfIdentities:(NSArray*)identities onCompletion:(void(^)(NSArray* states, NSArray* types, NSArray* featureMasks, int checkInterval))onCompletion onError:(void(^)(NSError *error))onError {
     NSDictionary *req = [NSDictionary dictionaryWithObjectsAndKeys:identities, @"identities", nil];
     
@@ -608,12 +628,12 @@
         onError([ThreemaError threemaError:@"store has no valid identity"]);
         return;
     }
-    
+        
     NSMutableDictionary *request = [@{
                               @"identity": identityStore.identity,
                               @"licenseUsername": licenseUsername,
                               @"licensePassword": licensePassword,
-                              @"publicNickname": (identityStore.pushFromName != nil ? identityStore.pushFromName : identityStore.identity),
+                              @"publicNickname": (identityStore.pushFromName != nil  && identityStore.pushFromName.length > 0 ? identityStore.pushFromName : identityStore.identity),
                               @"version": ThreemaUtility.clientVersionWithMDM
                               } mutableCopy];
     
@@ -634,7 +654,7 @@
         return;
     }
     
-    DDLogInfo(@"Send update work info with\nfirstName: %@\nlastName: %@\ncsi: %@\ncategory: %@", identityStore.firstName, identityStore.lastName, identityStore.csi, identityStore.category);
+    DDLogWarn(@"Send update work info with\nfirstName: %@\nlastName: %@\ncsi: %@\ncategory: %@", identityStore.firstName, identityStore.lastName, identityStore.csi, identityStore.category);
     
     [self sendSignedRequest:request toApiPath:@"identity/update_work_info" forStore:identityStore onCompletion:^(id jsonObject) {
         if ([jsonObject[@"success"] boolValue]) {

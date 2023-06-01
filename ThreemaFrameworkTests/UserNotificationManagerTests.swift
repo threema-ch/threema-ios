@@ -309,7 +309,7 @@ class UserNotificationManagerTests: XCTestCase {
                     nickname: "red99"
                 )
                 databasePreparer
-                    .createConversation(marked: false, typing: false, unreadMessageCount: 0) { conversation in
+                    .createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
                         textMessage = self.databasePreparer.createTextMessage(
                             conversation: conversation,
                             text: "This is a test message to test flags!",
@@ -463,24 +463,25 @@ class UserNotificationManagerTests: XCTestCase {
                 nickname: expectedFromName
             )
             let group = databasePreparer.createGroupEntity(groupID: groupID, groupCreator: groupCreator)
-            databasePreparer.createConversation(marked: false, typing: false, unreadMessageCount: 0) { conversation in
-                conversation.groupID = group.groupID
-                conversation.groupName = expectedTitle
+            databasePreparer
+                .createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
+                    conversation.groupID = group.groupID
+                    conversation.groupName = expectedTitle
 
-                textMessage = self.databasePreparer.createTextMessage(
-                    conversation: conversation,
-                    text: "This is a group message",
-                    date: Date(),
-                    delivered: true,
-                    id: Data(BytesUtility.toBytes(hexString: expectedMessageID)!),
-                    isOwn: false,
-                    read: false,
-                    sent: true,
-                    userack: false,
-                    sender: contact,
-                    remoteSentDate: Date(timeIntervalSinceNow: -100)
-                )
-            }
+                    textMessage = self.databasePreparer.createTextMessage(
+                        conversation: conversation,
+                        text: "This is a group message",
+                        date: Date(),
+                        delivered: true,
+                        id: Data(BytesUtility.toBytes(hexString: expectedMessageID)!),
+                        isOwn: false,
+                        read: false,
+                        sent: true,
+                        userack: false,
+                        sender: contact,
+                        remoteSentDate: Date(timeIntervalSinceNow: -100)
+                    )
+                }
         }
 
         let pendingUserNotification = PendingUserNotification(key: "\(expectedSenderID)\(expectedMessageID)")
@@ -773,9 +774,9 @@ class UserNotificationManagerTests: XCTestCase {
 
                 groupEntity = databasePreparer.createGroupEntity(groupID: groupID, groupCreator: groupCreator)
                 conversation = databasePreparer.createConversation(
-                    marked: false,
                     typing: false,
                     unreadMessageCount: 0,
+                    visibility: .default,
                     complete: { conversation in
                         conversation.groupID = groupID
                         conversation.contact = creatorContact
@@ -879,9 +880,9 @@ class UserNotificationManagerTests: XCTestCase {
             groupEntity.state = NSNumber(value: GroupState.left.rawValue)
 
             conversation = databasePreparer.createConversation(
-                marked: false,
                 typing: false,
                 unreadMessageCount: 0,
+                visibility: .default,
                 complete: { conversation in
                     conversation.groupID = groupID
                     conversation.contact = creatorContact
@@ -986,7 +987,7 @@ class UserNotificationManagerTests: XCTestCase {
                 contact.firstName = "Hans"
                 contact.lastName = "Muster"
                 databasePreparer
-                    .createConversation(marked: false, typing: false, unreadMessageCount: 0) { conversation in
+                    .createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
                         conversation.contact = contact
 
                         message = self.databasePreparer.createTextMessage(
@@ -1120,7 +1121,7 @@ class UserNotificationManagerTests: XCTestCase {
                 contact.lastName = "Muster"
                 let group = databasePreparer.createGroupEntity(groupID: groupID, groupCreator: groupCreator)
                 databasePreparer
-                    .createConversation(marked: false, typing: false, unreadMessageCount: 0) { conversation in
+                    .createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
                         conversation.groupID = group.groupID
                         conversation.groupName = "This is a group test"
 

@@ -49,6 +49,10 @@
     return YES;
 }
 
+- (BOOL)canShowUserNotification {
+    return NO;
+}
+
 #pragma mark - NSCoding
 
 - (id)initWithCoder:(NSCoder *)decoder {

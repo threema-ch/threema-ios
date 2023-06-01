@@ -45,7 +45,7 @@ class UnreadMessagesTests: XCTestCase {
                 verificationLevel: 0
             )
             self.testDataConversation1 = dp
-                .createConversation(marked: false, typing: false, unreadMessageCount: 2) { conversation in
+                .createConversation(typing: false, unreadMessageCount: 2, visibility: .default) { conversation in
                     dp.createTextMessage(
                         conversation: conversation,
                         text: "msg1",
@@ -67,7 +67,7 @@ class UnreadMessagesTests: XCTestCase {
                 verificationLevel: 0
             )
             self.testDataConversation2 = dp
-                .createConversation(marked: false, typing: false, unreadMessageCount: 3) { conversation in
+                .createConversation(typing: false, unreadMessageCount: 3, visibility: .default) { conversation in
                     dp.createTextMessage(
                         conversation: conversation,
                         text: "msg1",
@@ -115,7 +115,7 @@ class UnreadMessagesTests: XCTestCase {
                 verificationLevel: 0
             )
             self.testDataConversation3 = dp
-                .createConversation(marked: false, typing: false, unreadMessageCount: -1) { conversation in
+                .createConversation(typing: false, unreadMessageCount: -1, visibility: .default) { conversation in
                     dp.createTextMessage(
                         conversation: conversation,
                         text: "msg1",

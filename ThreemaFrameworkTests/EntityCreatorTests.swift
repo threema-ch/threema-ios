@@ -39,9 +39,9 @@ class EntityCreatorTests: XCTestCase {
         
         databasePreparer.save {
             conversation = databasePreparer.createConversation(
-                marked: false,
                 typing: false,
                 unreadMessageCount: 0,
+                visibility: .default,
                 complete: nil
             )
         }

@@ -1049,7 +1049,9 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
         if ((contact.verificationLevel.intValue < verificationLevel && contact.verificationLevel.intValue != kVerificationLevelFullyVerified) || verificationLevel == kVerificationLevelFullyVerified) {
 
             contact.verificationLevel = [NSNumber numberWithInt:verificationLevel];
+            contact.isContactHidden = NO;
             [mediatorSyncableContacts updateVerificationLevelWithIdentity:contact.identity value:contact.verificationLevel];
+            [mediatorSyncableContacts updateAcquaintanceLevelWithIdentity:contact.identity value:[NSNumber numberWithInteger:ContactAcquaintanceLevelDirect]];
         }
     }];
 

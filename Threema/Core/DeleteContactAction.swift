@@ -284,6 +284,7 @@ extension DeleteContactAction {
                     continue
                 }
                 MessageDraftStore.deleteDraft(for: conversation)
+                WallpaperStore.shared.deleteWallpaper(for: conversation.objectID)
             }
         }
         

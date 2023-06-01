@@ -36,9 +36,9 @@ class RootNavigationController: UINavigationController {
     let itemLoader = ItemLoader()
     var itemSender = ItemSender()
     
-    unowned var previewViewController: MediaPreviewViewController?
-    unowned var picker: ContactGroupPickerViewController?
-    unowned var progressViewController: ProgressViewController?
+    weak var previewViewController: MediaPreviewViewController?
+    weak var picker: ContactGroupPickerViewController?
+    weak var progressViewController: ProgressViewController?
     var textPreview: TextPreviewViewController?
     
     override func viewDidLoad() {

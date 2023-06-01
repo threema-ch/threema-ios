@@ -19,7 +19,6 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import <XCTest/XCTest.h>
-#import <Expecta/Expecta.h>
 #import "PhoneNumberNormalizer.h"
 
 @interface PhoneNumberNormalizerTests : XCTestCase
@@ -35,7 +34,7 @@
     NSString *number = @"+4916012345678";
     NSString *result = [normalizer phoneNumberToE164:number withDefaultRegion:[PhoneNumberNormalizer userRegion] prettyFormat:&number];
     
-    expect(result).to.equal(@"4916012345678");
+    XCTAssert([result isEqualToString:@"4916012345678"]);
 }
 
 /// Handle CH numbers
@@ -45,7 +44,7 @@
     NSString *number = @"+41791234567";
     NSString *result = [normalizer phoneNumberToE164:number withDefaultRegion:[PhoneNumberNormalizer userRegion] prettyFormat:&number];
     
-    expect(result).to.equal(@"41791234567");
+    XCTAssert([result isEqualToString:@"41791234567"]);
 }
 
 @end

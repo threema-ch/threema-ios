@@ -50,7 +50,7 @@ class EntityObserverTests: XCTestCase {
                 verificationLevel: 0
             )
             let groupEntity = dbPreparer.createGroupEntity(groupID: groupID, groupCreator: groupCreatorIdentity)
-            dbPreparer.createConversation(marked: false, typing: false, unreadMessageCount: 0) { conversation in
+            dbPreparer.createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
                 conversation.groupID = groupEntity.groupID
                 conversation.groupMyIdentity = self.myIdentityStoreMock.identity
                 conversation.contact = contact
@@ -131,7 +131,7 @@ class EntityObserverTests: XCTestCase {
                 verificationLevel: 0
             )
             let groupEntity = dbPreparer.createGroupEntity(groupID: groupID, groupCreator: groupCreatorIdentity)
-            dbPreparer.createConversation(marked: false, typing: false, unreadMessageCount: 0) { conversation in
+            dbPreparer.createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
                 conversation.groupID = groupEntity.groupID
                 conversation.groupMyIdentity = self.myIdentityStoreMock.identity
                 conversation.contact = contact
@@ -200,7 +200,7 @@ class EntityObserverTests: XCTestCase {
                 verificationLevel: 0
             )
             let groupEntity = dbPreparer.createGroupEntity(groupID: groupID, groupCreator: groupCreatorIdentity)
-            dbPreparer.createConversation(marked: false, typing: false, unreadMessageCount: 0) { conversation in
+            dbPreparer.createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
                 conversation.groupID = groupEntity.groupID
                 conversation.groupMyIdentity = self.myIdentityStoreMock.identity
                 conversation.contact = contact
@@ -252,7 +252,7 @@ class EntityObserverTests: XCTestCase {
                 verificationLevel: 0
             )
             let groupEntity = dbPreparer.createGroupEntity(groupID: groupID, groupCreator: groupCreatorIdentity)
-            dbPreparer.createConversation(marked: false, typing: false, unreadMessageCount: 0) { conversation in
+            dbPreparer.createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
                 conversation.groupID = groupEntity.groupID
                 conversation.groupMyIdentity = self.myIdentityStoreMock.identity
                 conversation.contact = contact
@@ -305,7 +305,7 @@ class EntityObserverTests: XCTestCase {
                 verificationLevel: 0
             )
             let groupEntity = dbPreparer.createGroupEntity(groupID: groupID, groupCreator: groupCreatorIdentity)
-            dbPreparer.createConversation(marked: false, typing: false, unreadMessageCount: 0) { conversation in
+            dbPreparer.createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
                 conversation.groupID = groupEntity.groupID
                 conversation.groupMyIdentity = self.myIdentityStoreMock.identity
                 conversation.contact = contact
@@ -367,7 +367,7 @@ class EntityObserverTests: XCTestCase {
                 verificationLevel: 0
             )
             let groupEntity = dbPreparer.createGroupEntity(groupID: groupID, groupCreator: groupCreatorIdentity)
-            dbPreparer.createConversation(marked: false, typing: false, unreadMessageCount: 0) { conversation in
+            dbPreparer.createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
                 conversation.groupID = groupEntity.groupID
                 conversation.groupMyIdentity = self.myIdentityStoreMock.identity
                 conversation.contact = contact

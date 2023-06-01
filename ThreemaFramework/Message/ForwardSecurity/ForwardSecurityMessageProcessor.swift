@@ -25,7 +25,7 @@ protocol ForwardSecurityMessageSenderProtocol {
     func send(message: AbstractMessage)
 }
 
-@objc public class ForwardSecurityMessageProcessor: NSObject {
+@objc class ForwardSecurityMessageProcessor: NSObject {
     private let dhSessionStore: DHSessionStoreProtocol
     private let identityStore: MyIdentityStoreProtocol
     private let messageSender: ForwardSecurityMessageSenderProtocol

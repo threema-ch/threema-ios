@@ -114,9 +114,9 @@ static NSString *fieldOrigin = @"origin";
         return [NSString stringWithFormat:@"%@", [BundleUtil localizedStringForKey:@"video"]];
     } else if ([UTIConverter isAudioMimeType:self.mimeType]) {
         if (self.duration != nil) {
-            return [NSString stringWithFormat:@"%@ (%@)", [BundleUtil localizedStringForKey:@"audio"], [ThreemaUtilityObjC timeStringForSeconds:self.duration.integerValue]];
+            return [NSString stringWithFormat:@"%@ (%@)", [BundleUtil localizedStringForKey:@"file_message_voice"], [ThreemaUtilityObjC timeStringForSeconds:self.duration.integerValue]];
         } else {
-            return [NSString stringWithFormat:@"%@", [BundleUtil localizedStringForKey:@"audio"]];
+            return [NSString stringWithFormat:@"%@", [BundleUtil localizedStringForKey:@"file_message_voice"]];
         }
     }
     return nil;

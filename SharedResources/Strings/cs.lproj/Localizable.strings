@@ -48,13 +48,9 @@
 "cannot_connect_title" = "Není spojení";
 "cannot_connect_message" = "Nefunkční připojení k Internetu, proveďte nápravu, prosím.";
 
-"delete_identity_warning" = "Smažete-li svoje ID, dojde k odstranění vašeho páru klíčů i dat aplikace. Pokud jste si nevytvořili zálohu, nebudete už moci prostřednictvím tohoto ID posílat ani přijímat zprávy.\n\nJestliže už nechcete toto ID používat, je vhodné od něj nejprve odpojit případnou e-mailovou adresu nebo telefonní číslo a teprve poté jej smazat.";
-"delete_identity_warning2" = "Poslední upozornění: Opravdu chcete smazat svoje data a ID?";
+// JKLockScreenViewController
 "delete_identity_passcode_title" = "Přístupový kód je aktivní";
 "delete_identity_passcode_message" = "Před smazáním svého ID prosím deaktivuje přístupový kód.";
-"delete_identity_title" = "Data aplikace byla smazána";
-"delete_identity_description" = "Veškerá data aplikace byla smazána. Restartujte aplikaci kvůli nastavení %@.";
-"delete_identity_app_close" = "Zavřít aplikaci";
 
 /* JKLockScreenViewController */
 "cancel" = "Zrušit";
@@ -64,7 +60,6 @@
 "yes" = "Ano";
 "delete" = "Smazat";
 "try_again" = "Další pokus";
-"delete_identity" = "Smazat data a ID";
 "copy" = "Zkopírovat";
 "save" = "Uložit";
 "download" = "Stáhnout";
@@ -79,7 +74,6 @@
 "sticker" = "Nálepka";
 "gif" = "GIF";
 "video" = "Video";
-"audio" = "Zvuk";
 "file" = "Soubor";
 "location" = "Poloha";
 "locating" = "Zaměřování…";
@@ -183,8 +177,6 @@
 "sound_threema_goody" = "Remix";
 "sound_threema_alphorn" = "Alpský roh";
 
-"reset_wallpaper" = "Resetovat tapetu";
-"bigger_single_emojis" = "Větší jednoduchá emoji";
 "identity_none" = "žádná";
 "message" = "Zpráva"; /* Short version for "Send Message" */
 "scan_identity" = "Naskenovat ID";
@@ -1091,6 +1083,7 @@
 "settings_license" = "Licence";
 "settings_advanced" = "Pokročilé";
 "settings_threema_work" = "Threema Work";
+"settings_threema_work_subtitle" = "Zabezpečené komunikační řešení pro firmy";
 "settings_feedback" = "Zpětná vazba beta verze";
 "tos_cell_title" = "Smluvní podmínky";
 
@@ -1131,7 +1124,6 @@
 "settings_privacy_hide_private_chats" = "Skrýt soukromé chaty";
 "settings_privacy_hide_private_chats_footer" = "Skryje všechny soukromé chaty v přehledu chatů. Pro aktivaci tohoto nastavení je třeba nastavit přístupový kód.";
 
-
 // Appearance
 "settings_appearance_theme_section" = "Vizuální motiv";
 "settings_appearance_light_theme" = "Světlý";
@@ -1149,7 +1141,15 @@
 "settings_appearance_show_gallery_preview" = "Zobrazovat náhled galerie";
 
 // Chat Settings
-"settings_chat_send_message_feedback_label" = "Haptická odezva při odeslání";
+"settings_chat_wallpaper_title" = "Tapeta";
+"settings_chat_wallpaper_reset" = "Resetovat všechny tapety";
+"settings_chat_wallpaper_empty" = "Nic";
+"settings_chat_wallpaper_custom" = "Vlastní";
+"settings_chat_wallpaper_default" = "Výchozí";
+"settings_chat_wallpaper_reset_all_alert" = "Resetuje všechny tapety, které byly pro konverzaci přímo nastaveny výše uvedenou možností. Tato akce je nevratná.";
+
+"settings_chat_bigger_emojis" = "Větší emoji";
+"settings_chat_send_message_feedback" = "Haptická odezva při odeslání";
 
 // Media
 "settings_media_autosave_private_footer" = "U médií obdržených v rámci soukromých chatů nedojde k automatickému uložení.";
@@ -1161,8 +1161,48 @@
 "sentry_crash_send_no" = "Neposílat";
 "sentry_crash_comment_placeholder" = "Chybová zpráva";
 
+
+
 // My profile
 "profile_share_id_text" = "Moje Threema ID";
+"my_profile_delete_cell_title" = "Smazat ID a data";
+
+// Delete & Revoke
+"my_profile_delete_bullet_id" = "Threema ID";
+"my_profile_delete_bullet_chats" = "Konverzace";
+"my_profile_delete_bullet_picture" = "Profilový obrázek";
+"my_profile_delete_bullet_safe" = "Záloha Trezoru Threema";
+"my_profile_delete_bullet_linked" = "Propojená telefonní čísla a/nebo e-maily";
+
+"my_profile_delete_info_title" = "Smazat ID a data";
+"my_profile_delete_info_keep" = "Následující data budou dál využitelná a nebudou smazána:";
+"my_profile_delete_info_delete" = "Následující data budou z tohoto zařízení odstraněna:";
+"my_profile_delete_info_toggle" = "Smazat vše";
+
+"my_profile_delete_info_button_data" = "Smazat data";
+"my_profile_delete_info_button_revoke" = "Smazat ID a data";
+
+"my_profile_delete_identity_title" = "Smazat konverzace a profil?";
+"my_profile_delete_identity_keep" = "Ponecháte si:";
+"my_profile_delete_identity_remove" = "Chystáte se z tohoto zařízení odstranit:";
+"my_profile_delete_identity_delete" = "Smazat konverzace a profil";
+
+"my_profile_delete_identity_view_alert_title" = "Tato akce je nevratná.\nOpravdu chcete pokračovat?";
+"my_profile_delete_identity_view_alert_confirm" = "Smazat data";
+
+"my_profile_revoke_identity_view_title" = "Smazat vše?";
+"my_profile_revoke_info_delete" = "Trvale smažete své:";
+"my_profile_revoke_identity_view_info" = "Upozornění: Tato akce je nevratná!";
+"my_profile_revoke_identity_view_enter_id" = "Zadejte své Threema ID „%@“ a potvrďte, že chcete smazat vše:";
+"my_profile_revoke_identity_view_placeholder" = "Vaše Threema ID";
+"my_profile_revoke_identity_view_button_revoke" = "Smazat vše";
+
+"my_profile_delete_identity_summary_view_delete_title" = "Konverzace a profil byly smazány";
+"my_profile_delete_identity_summary_view_revoke_title" = "Vše bylo smazáno";
+"my_profile_delete_identity_summary_view_delete_success" = "Úspěšně jste z tohoto zařízení odstranili:";
+"my_profile_delete_identity_summary_view_revoke_success" = "Úspěšně jste odstranili své:";
+"my_profile_delete_identity_summary_view_restart" = "Restartujte aplikaci a pokračujte v jejím používání.";
+"my_profile_delete_identity_summary_view_close" = "Zavřít aplikaci";
 
 // File message
 "optional_caption" = "Volitelný popisek";
@@ -1349,7 +1389,6 @@ Pokud vám v %@ nechybí žádné (mediální) soubory, vyprázdněte koš, abys
 "privacySetting_header" = "Soukromí";
 "send_readReceipts" = "Potvrzení o přečtení";
 "dont_send" = "Neposílat";
-"send_readReceipt" = "Potvrzení o přečtení";
 "send_typingIndicators" = "Ukazatele psaní";
 "send_typingIndicator" = "Ukazatel psaní";
 
@@ -1357,8 +1396,7 @@ Pokud vám v %@ nechybí žádné (mediální) soubory, vyprázdněte koš, abys
 "use_default_send" = "Výchozí (%@)";
 "default_setting" = "Výchozí nastavení";
 
-"readReceipt_sheetMessage" = "Přepsat výchozí nastavení tohoto kontaktu.";
-"typingIndicator_sheetMessage" = "Přepsat výchozí nastavení tohoto kontaktu.";
+"contactoverride_sheetMessage" = "Tímto se přepíše výchozí nastavení tohoto konkrétního kontaktu.";
 
 /* Multi Decvice */
 "multi_device_linked_devices_title" = "Náhled pro více zařízení";
@@ -1489,6 +1527,12 @@ Pokud vám v %@ nechybí žádné (mediální) soubory, vyprázdněte koš, abys
 "notification_interaction_delete_succeeded" = "Interakce smazány";
 "notification_interaction_delete_failed" = "Smazání interakcí se nezdařilo";
 
+"notification_revocation_failed" = "Zrušení se nezdařilo";
+
+"notification_caption_too_long" = "Titulek je příliš dlouhý";
+
+"notification_updateworkdata_failed" = "Synchronizace s poskytujícím serverem se nezdařila";
+
 // Forward security status messages
 "forward_security_message_without" = "Byla přijata zpráva bez dopředné bezpečnosti. Ověřte, zda odesílatel záměrně vypnul funkci PFS.";
 "forward_security_session_established" = "Zprávy v tomto chatu jsou nyní chráněny technologií dopředné bezpečnosti.";
@@ -1541,6 +1585,8 @@ Pokud vám v %@ nechybí žádné (mediální) soubory, vyprázdněte koš, abys
 "accessibility_ballotMessage_hint_open" = "Otevřít anketu pro hlasování.";
 "accessibility_ballotMessage_hint_closed" = "Zobrazit výsledky ankety.";
 "accessibility_voiceMessage_speed_hint" = "Změnit rychlosti přehrávání.";
+"accessibility_voiceMessage_forward_hint" = "10 sekund dopředu.";
+"accessibility_voiceMessage_rewind_hint" = "10 sekund zpět.";
 
 // Other
 "accessibility_caption" = "Titulek: %@";

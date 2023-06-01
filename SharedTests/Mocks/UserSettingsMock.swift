@@ -22,7 +22,7 @@ import Foundation
 import ThreemaFramework
 
 class UserSettingsMock: NSObject, UserSettingsProtocol {
-
+    
     override init() {
         // no-op
     }
@@ -33,12 +33,8 @@ class UserSettingsMock: NSObject, UserSettingsProtocol {
 
     var appMigratedToVersion = 0
 
-    func checkWallpaper() {
-        // no-op
-    }
+    var wallpaper: Data!
     
-    var wallpaper: UIImage!
-        
     var disableBigEmojis = true
     
     var sendMessageFeedback = true

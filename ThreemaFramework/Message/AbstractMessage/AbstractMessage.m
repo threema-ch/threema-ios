@@ -186,6 +186,10 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     return NO;
 }
 
+- (BOOL)canShowUserNotification {
+    return YES;
+}
+
 - (BOOL)supportsForwardSecurity {
     return NO;
 }
@@ -228,7 +232,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
             body = [BundleUtil localizedStringForKey:@"new_location_message"];
     }
     else if ([self isKindOfClass:[BoxAudioMessage class]]) {
-        body = [NSString stringWithFormat:@"%@ (%@)", [BundleUtil localizedStringForKey:@"new_audio_message"], [ThreemaUtilityObjC timeStringForSeconds:((BoxAudioMessage *)self).duration]];
+        body = [NSString stringWithFormat:@"%@ (%@)", [BundleUtil localizedStringForKey:@"file_message_voice"], [ThreemaUtilityObjC timeStringForSeconds:((BoxAudioMessage *)self).duration]];
     }
     else if ([self isKindOfClass:[BoxBallotCreateMessage class]]) {
         BOOL closed = [BallotMessageDecoder decodeNotificationCreateBallotStateFromBox:(BoxBallotCreateMessage *)self].integerValue == kBallotStateClosed;

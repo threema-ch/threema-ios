@@ -94,27 +94,20 @@ To get started you need a [Mac](https://www.apple.com/mac/), [Xcode](https://dev
 
    This checks out and builds Carthage dependencies, and downloads the WebRTC.xcframework if it is missing. (If you want to build WebRTC yourself see [BUILD_WEBRTC.md](BUILD_WEBRTC.md).)
 
-4. Install [Rustup](https://rustup.rs) and the build targets required for building SaltyRTC, which happens during the first compilation of the project
-	1. Install Rust toolchain & initialize
+4. Install & intialize [Rustup](https://rustup.rs) for building SaltyRTC. The build happens during the first compilation of the project which also installs the specific toolchain and targets needed.
+   ```sh
+   brew install rustup
+   rustup-init
+   ```
 
-		```sh
-		brew install rustup
-   		rustup-init
-   		```
-   		(You might want to add $HOME/.cargo/bin to your PATH.)   
-   		(If you don't have [homebrew](https://brew.sh) see their [official install instructions](https://rustup.rs).)   
+   (You might want to add $HOME/.cargo/bin to your PATH.)   
+   (If you don't have [homebrew](https://brew.sh) see their [official install instructions](https://rustup.rs).)
 
-   	2. Add targets
+5. Ensure that submodules are checked out
 
-   		```sh
-   		rustup target add aarch64-apple-darwin aarch64-apple-ios aarch64-apple-ios-sim x86_64-apple-ios
-  		```
-
-  	3. Ensure that submodules are checked out
-
-		```sh
-		git submodule update --init
-  		```
+   ```sh
+   git submodule update --init
+   ```
 
 ### 2. Setup Project
 

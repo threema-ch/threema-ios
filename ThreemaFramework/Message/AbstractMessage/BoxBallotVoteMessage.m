@@ -51,6 +51,10 @@
     return YES;
 }
 
+- (BOOL)canShowUserNotification {
+    return NO;
+}
+
 - (BOOL)supportsForwardSecurity {
     return YES;
 }

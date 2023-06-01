@@ -306,7 +306,7 @@ static UserSettings *instance;
 
     NSString *wallpaperPath = [self wallpaperPath];
     if ([[NSFileManager defaultManager] fileExistsAtPath:wallpaperPath]) {
-        wallpaper = [UIImage imageWithContentsOfFile:wallpaperPath];
+        wallpaper = [NSData dataWithContentsOfFile:wallpaperPath];
     }
     
     sortOrderFirstName = [defaults boolForKey:@"SortOrderFirstName"];
@@ -565,28 +565,19 @@ static UserSettings *instance;
     [[NSNotificationCenter defaultCenter] postNotificationName:kNotificationShowProfilePictureChanged object:nil];
 }
 
-- (void)setWallpaper:(UIImage *)_wallpaper {
+- (void)setWallpaper:(NSData *)_wallpaper {
     wallpaper = _wallpaper;
     
-    if (_wallpaper != nil) {
-        NSData *wallpaperData = [MediaConverter PNGRepresentationFor: wallpaper];
-        [wallpaperData writeToFile:[self wallpaperPath] atomically:NO];
+    if (wallpaper != nil) {
+        [wallpaper writeToFile:[self wallpaperPath] atomically:NO];
         [[ValidationLogger sharedValidationLogger] logString:@"Wallpaper: Set wallpaper"];
-    } else {
+    }
+    else {
         [[NSFileManager defaultManager] removeItemAtPath:[self wallpaperPath] error:nil];
         [[ValidationLogger sharedValidationLogger] logString:@"Wallpaper: Removed wallpaper"];
     }
-    
+   
     [[NSNotificationCenter defaultCenter] postNotificationName:kNotificationWallpaperChanged object:nil];
-}
-
-- (void)checkWallpaper {
-    if (wallpaper == nil) {
-        NSString *wallpaperPath = [self wallpaperPath];
-        if ([[NSFileManager defaultManager] fileExistsAtPath:wallpaperPath]) {
-            wallpaper = [UIImage imageWithContentsOfFile:wallpaperPath];
-        }
-    }
 }
 
 - (void)setSortOrderFirstName:(BOOL)newSortOrderFirstName displayOrderFirstName:(BOOL)newDisplayOrderFirstName {

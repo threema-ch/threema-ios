@@ -77,7 +77,6 @@
 "new_image_message" = "Изображение";
 "new_video_message" = "Видео";
 "new_location_message" = "Расположение";
-"new_audio_message" = "Аудио";
 "new_ballot_create_message" = "Опрос: %@";
 "new_ballot_closed_message" = "Опрос: Результаты доступны";
 "new_file_message" = "Файл: %@";

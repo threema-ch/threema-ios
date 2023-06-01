@@ -420,9 +420,9 @@ class TaskQueueTests: XCTestCase {
                 verificationLevel: 0
             )
             expectedConversation = databasePreparer.createConversation(
-                marked: false,
                 typing: false,
-                unreadMessageCount: 0
+                unreadMessageCount: 0,
+                visibility: .default
             ) { conversation in
                 conversation.contact = expectedContact
             }
@@ -468,9 +468,9 @@ class TaskQueueTests: XCTestCase {
                 groupCreator: expectedGroupDissolveGroupCreator
             )
             conversation = databasePreparer.createConversation(
-                marked: false,
                 typing: false,
                 unreadMessageCount: 0,
+                visibility: .default,
                 complete: nil
             )
             conversation.contact = databasePreparer.createContact(
@@ -755,7 +755,7 @@ class TaskQueueTests: XCTestCase {
         syncSettings.unknownContactPolicy = .blockUnknown
         syncSettings.typingIndicatorPolicy = .sendTypingIndicator
         syncSettings.callPolicy = .allowCall
-        syncSettings.callConnectionPolity = .requireRelay
+        syncSettings.callConnectionPolicy = .requireRelay
         syncSettings.blockedIdentities.identities = ["ECHOECHO"]
         syncSettings.excludeFromSyncIdentities.identities = ["ECHOECHO"]
 
@@ -813,7 +813,7 @@ class TaskQueueTests: XCTestCase {
             XCTAssertEqual(task.syncSettings.unknownContactPolicy, .blockUnknown)
             XCTAssertEqual(task.syncSettings.typingIndicatorPolicy, .sendTypingIndicator)
             XCTAssertEqual(task.syncSettings.callPolicy, .allowCall)
-            XCTAssertEqual(task.syncSettings.callConnectionPolity, .requireRelay)
+            XCTAssertEqual(task.syncSettings.callConnectionPolicy, .requireRelay)
             XCTAssertEqual(task.syncSettings.blockedIdentities.identities, ["ECHOECHO"])
             XCTAssertEqual(task.syncSettings.excludeFromSyncIdentities.identities, ["ECHOECHO"])
             XCTAssertFalse(task.retry)

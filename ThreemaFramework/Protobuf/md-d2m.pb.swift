@@ -29,6 +29,45 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
   typealias Version = _2
 }
 
+/// D2M protocol versions (32 bit).
+enum D2m_ProtocolVersion: SwiftProtobuf.Enum {
+  typealias RawValue = Int
+
+  /// Initial D2M protocol version (alpha, may break).
+  case initial // = 0
+  case UNRECOGNIZED(Int)
+
+  init() {
+    self = .initial
+  }
+
+  init?(rawValue: Int) {
+    switch rawValue {
+    case 0: self = .initial
+    default: self = .UNRECOGNIZED(rawValue)
+    }
+  }
+
+  var rawValue: Int {
+    switch self {
+    case .initial: return 0
+    case .UNRECOGNIZED(let i): return i
+    }
+  }
+
+}
+
+#if swift(>=4.2)
+
+extension D2m_ProtocolVersion: CaseIterable {
+  // The compiler won't synthesize support with the UNRECOGNIZED case.
+  static var allCases: [D2m_ProtocolVersion] = [
+    .initial,
+  ]
+}
+
+#endif  // swift(>=4.2)
+
 /// Policy determining the device slot's lifetime.
 enum D2m_DeviceSlotExpirationPolicy: SwiftProtobuf.Enum {
   typealias RawValue = Int
@@ -156,7 +195,7 @@ struct D2m_ServerHello {
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  /// Highest protocol version the server supports
+  /// Highest protocol version (`ProtocolVersion`) the server supports.
   var version: UInt32 = 0
 
   /// 32 byte ephemeral server key (`ESK.public`)
@@ -180,7 +219,7 @@ struct D2m_ClientHello {
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  /// Protocol version which the client has selected
+  /// Protocol version (`ProtocolVersion`) which the client has selected.
   var version: UInt32 = 0
 
   /// Challenge response (72 bytes) for authentication.
@@ -561,9 +600,40 @@ struct D2m_TransactionEnded {
   init() {}
 }
 
+#if swift(>=5.5) && canImport(_Concurrency)
+extension D2m_ProtocolVersion: @unchecked Sendable {}
+extension D2m_DeviceSlotExpirationPolicy: @unchecked Sendable {}
+extension D2m_DeviceSlotState: @unchecked Sendable {}
+extension D2m_ClientUrlInfo: @unchecked Sendable {}
+extension D2m_ServerHello: @unchecked Sendable {}
+extension D2m_ClientHello: @unchecked Sendable {}
+extension D2m_ClientHello.DeviceSlotsExhaustedPolicy: @unchecked Sendable {}
+extension D2m_ServerInfo: @unchecked Sendable {}
+extension D2m_ReflectionQueueDry: @unchecked Sendable {}
+extension D2m_RolePromotedToLeader: @unchecked Sendable {}
+extension D2m_GetDevicesInfo: @unchecked Sendable {}
+extension D2m_DevicesInfo: @unchecked Sendable {}
+extension D2m_DevicesInfo.AugmentedDeviceInfo: @unchecked Sendable {}
+extension D2m_DropDevice: @unchecked Sendable {}
+extension D2m_DropDeviceAck: @unchecked Sendable {}
+extension D2m_SetSharedDeviceData: @unchecked Sendable {}
+extension D2m_BeginTransaction: @unchecked Sendable {}
+extension D2m_BeginTransactionAck: @unchecked Sendable {}
+extension D2m_CommitTransaction: @unchecked Sendable {}
+extension D2m_CommitTransactionAck: @unchecked Sendable {}
+extension D2m_TransactionRejected: @unchecked Sendable {}
+extension D2m_TransactionEnded: @unchecked Sendable {}
+#endif  // swift(>=5.5) && canImport(_Concurrency)
+
 // MARK: - Code below here is support for the SwiftProtobuf runtime.
 
 fileprivate let _protobuf_package = "d2m"
+
+extension D2m_ProtocolVersion: SwiftProtobuf._ProtoNameProviding {
+  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    0: .same(proto: "INITIAL"),
+  ]
+}
 
 extension D2m_DeviceSlotExpirationPolicy: SwiftProtobuf._ProtoNameProviding {
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
@@ -692,6 +762,10 @@ extension D2m_ClientHello: SwiftProtobuf.Message, SwiftProtobuf._MessageImplemen
   }
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
     if self.version != 0 {
       try visitor.visitSingularUInt32Field(value: self.version, fieldNumber: 1)
     }
@@ -710,9 +784,9 @@ extension D2m_ClientHello: SwiftProtobuf.Message, SwiftProtobuf._MessageImplemen
     if !self.encryptedDeviceInfo.isEmpty {
       try visitor.visitSingularBytesField(value: self.encryptedDeviceInfo, fieldNumber: 6)
     }
-    if let v = self._expectedDeviceSlotState {
+    try { if let v = self._expectedDeviceSlotState {
       try visitor.visitSingularEnumField(value: v, fieldNumber: 7)
-    }
+    } }()
     try unknownFields.traverse(visitor: &visitor)
   }
 

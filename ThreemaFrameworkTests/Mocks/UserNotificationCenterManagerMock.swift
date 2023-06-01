@@ -25,21 +25,29 @@ import PromiseKit
 class UserNotificationCenterManagerMock: UserNotificationCenterManagerProtocol {
     
     private var returnFireDate: Date?
+
+    var removeCalls = [PendingUserNotificationKey]()
     
     convenience init(returnFireDate: Date) {
         self.init()
         self.returnFireDate = returnFireDate
     }
     
-    func add(key: String, stage: UserNotificationStage, notification: UNNotificationContent) -> Promise<Date?> {
+    func add(
+        key: PendingUserNotificationKey,
+        stage: UserNotificationStage,
+        notification: UNNotificationContent
+    ) -> Promise<Date?> {
         Promise { seal in
             seal.fulfill(returnFireDate)
         }
     }
     
-    func isPending(key: String, stage: UserNotificationStage) -> Bool {
+    func isPending(key: PendingUserNotificationKey, stage: UserNotificationStage) -> Bool {
         false
     }
     
-    func remove(key: String, exceptStage: UserNotificationStage?) { }
+    func remove(key: PendingUserNotificationKey, exceptStage: UserNotificationStage?, justPending: Bool) {
+        removeCalls.append(key)
+    }
 }

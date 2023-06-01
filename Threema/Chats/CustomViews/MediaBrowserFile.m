@@ -130,7 +130,10 @@
             [_delegate showFile: _fileMessageEntity];
         }
     } else {
-        [self loadUnderlyingImageAndNotify];
+        BlobManagerObjcWrapper *manager = [[BlobManagerObjcWrapper alloc] init];
+        [manager syncBlobsFor:_fileMessageEntity.objectID onCompletion:^{
+            [[NSNotificationCenter defaultCenter] postNotificationName:MWPHOTO_LOADING_DID_END_NOTIFICATION object:self];
+        }];
     }
 }
 
@@ -198,17 +201,9 @@
 }
 
 - (void)performLoadUnderlyingImageAndNotify {
-    BlobMessageLoader *loader;
-    if ([UTIConverter isGifMimeType:_fileMessageEntity.mimeType]) {
-        loader = [[AnimGifMessageLoader alloc] init];
-    } else {
-        loader = [[BlobMessageLoader alloc] init];
-    }
-    
-    [loader startWithMessage:_fileMessageEntity onCompletion:^(BaseMessage *message) {
-        [self postCompleteNotification];
-    } onError:^(NSError *error) {
-        [self postCompleteNotification];
+    BlobManagerObjcWrapper *manager = [[BlobManagerObjcWrapper alloc] init];
+    [manager syncBlobsFor:_fileMessageEntity.objectID onCompletion:^{
+        [[NSNotificationCenter defaultCenter] postNotificationName:MWPHOTO_LOADING_DID_END_NOTIFICATION object:self];
     }];
 }
 

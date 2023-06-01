@@ -312,8 +312,8 @@ struct D2d_DeviceInfo {
   /// App version, e.g. "4.52" (Android) or "4.6.12b2653" (iOS)
   var appVersion: String = String()
 
-  /// User defined device label (e.g. "PC at Work"), may be empty if not set,
-  /// max 255 characters
+  /// User defined device label (e.g. "PC at Work"), may be empty if not set.
+  /// Recommended to not not exceed 64 grapheme clusters.
   var label: String = String()
 
   var unknownFields = SwiftProtobuf.UnknownStorage()
@@ -616,7 +616,8 @@ struct D2d_ConversationId {
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  /// A contact's Threema ID, distribution list ID or group identity to identify the conversation.
+  /// A contact's Threema ID, distribution list ID or group identity to identify
+  /// the conversation.
   var id: D2d_ConversationId.OneOf_ID? = nil
 
   var contact: String {
@@ -645,7 +646,8 @@ struct D2d_ConversationId {
 
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  /// A contact's Threema ID, distribution list ID or group identity to identify the conversation.
+  /// A contact's Threema ID, distribution list ID or group identity to identify
+  /// the conversation.
   enum OneOf_ID: Equatable {
     case contact(String)
     case distributionList(UInt64)
@@ -679,6 +681,22 @@ struct D2d_ConversationId {
 }
 
 /// An outgoing message, reflected to other devices.
+///
+/// When sending this message:
+///
+/// 1. [...]
+/// 2. Set `nonces` to the nonces of the associated CSP
+///    `e2e.message-with-metadata` (or `e2e.legacy-message`) messages that
+///    contained the `body` in encrypted form.¹
+///
+/// When receiving this message:
+///
+/// 1. [...]
+/// 2. Add all `nonces` to the CSP nonce storage, preventing messages from being
+///    replayed.
+///
+/// ¹: For contacts and distribution lists, there will be exactly one nonce. For
+/// groups, there will be as many nonces as there are group members minus one.
 struct D2d_OutgoingMessage {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
@@ -687,8 +705,8 @@ struct D2d_OutgoingMessage {
   /// Conversation ID of the enclosed message.
   ///
   /// Note: If the conversation is of type group, group and group creator id of
-  ///       the enclosed CSP E2E message must match the values of the supplied
-  ///       group identity. Otherwise, the message must be considered invalid.
+  /// the enclosed CSP E2E message must match the values of the supplied group
+  /// identity. Otherwise, the message must be considered invalid.
   var conversation: D2d_ConversationId {
     get {return _conversation ?? D2d_ConversationId()}
     set {_conversation = newValue}
@@ -716,8 +734,8 @@ struct D2d_OutgoingMessage {
   /// created
   ///
   /// Note: Take this value from the
-  ///       `csp.payload.legacy-message`/`csp.payload.message-with-metadata-box`
-  ///       that enclosed the message.
+  /// `csp.payload.legacy-message`/`csp.payload.message-with-metadata-box` that
+  /// enclosed the message.
   var createdAt: UInt64 = 0
 
   /// Enclosed message's type, mapped from `csp.e2e.container.type`
@@ -725,6 +743,12 @@ struct D2d_OutgoingMessage {
 
   /// The message's body, i.e. the unpadded `csp.e2e.container.padded-data`
   var body: Data = Data()
+
+  /// Nonces the message was encrypted with towards each receiver (the shared
+  /// secret derived from the long-term keys).
+  ///
+  /// Optional for now, always required in a future version.
+  var nonces: [Data] = []
 
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
@@ -747,13 +771,12 @@ struct D2d_OutgoingMessageUpdate {
 
   /// Mark the referred message as sent (acknowledged by the chat server).
   ///
-  /// Note 1: The timestamp of the `reflect-ack`/`reflected` message determines the
-  ///         timestamp for when the referred message has been sent.
+  /// Note 1: The timestamp of the `reflect-ack`/`reflected` message determines
+  /// the timestamp for when the referred message has been sent.
   ///
   /// Note 2: This indicates that the referred message has been successfully
-  ///         stored in the message queue of the server. It does NOT indicate
-  ///         that the referred message has been delivered to the intended
-  ///         receiver.
+  /// stored in the message queue of the server. It does NOT indicate that the
+  /// referred message has been delivered to the intended receiver.
   struct Sent {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
@@ -825,6 +848,19 @@ struct D2d_OutgoingMessageUpdate {
 }
 
 /// An incoming message, reflected to other devices.
+///
+///
+/// When sending this message:
+///
+/// 1. [...]
+/// 2. Set `nonce` to the nonce of `e2e.message-with-metadata` (or
+///    `e2e.legacy-message`) that contained the `body` in encrypted form.
+///
+/// When receiving this message:
+///
+/// 1. [...]
+/// 2. Add `nonce` to the CSP nonce storage, preventing messages from being
+///    replayed.
 struct D2d_IncomingMessage {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
@@ -840,8 +876,8 @@ struct D2d_IncomingMessage {
   /// created.
   ///
   /// Note: Take this value from the
-  ///       `csp.payload.legacy-message`/`csp.payload.message-with-metadata-box`
-  ///       that enclosed the message.
+  /// `csp.payload.legacy-message`/`csp.payload.message-with-metadata-box` that
+  /// enclosed the message.
   var createdAt: UInt64 = 0
 
   /// Enclosed message's type, mapped from `csp.e2e.container.type`
@@ -849,6 +885,12 @@ struct D2d_IncomingMessage {
 
   /// The message's body, i.e. the unpadded `csp.e2e.container.padded-data`
   var body: Data = Data()
+
+  /// Nonce the message was encrypted with by the sender (the shared secret
+  /// derived from the long-term keys).
+  ///
+  /// Optional for now, always required in a future version.
+  var nonce: Data = Data()
 
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
@@ -869,8 +911,7 @@ struct D2d_IncomingMessageUpdate {
   /// Mark the referred message as read.
   ///
   /// Note: This may only be used when _read receipts_ have been turned off, i.e.
-  ///       as a replacement for reflecting `delivery-receipt` type _read_
-  ///       (`0x02`).
+  /// as a replacement for reflecting `delivery-receipt` type _read_ (`0x02`).
   struct Read {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
@@ -1475,6 +1516,50 @@ struct D2d_SettingsSync {
   init() {}
 }
 
+#if swift(>=5.5) && canImport(_Concurrency)
+extension D2d_MessageType: @unchecked Sendable {}
+extension D2d_SharedDeviceData: @unchecked Sendable {}
+extension D2d_DeviceInfo: @unchecked Sendable {}
+extension D2d_DeviceInfo.Platform: @unchecked Sendable {}
+extension D2d_TransactionScope: @unchecked Sendable {}
+extension D2d_TransactionScope.Scope: @unchecked Sendable {}
+extension D2d_Envelope: @unchecked Sendable {}
+extension D2d_Envelope.OneOf_Content: @unchecked Sendable {}
+extension D2d_ConversationId: @unchecked Sendable {}
+extension D2d_ConversationId.OneOf_ID: @unchecked Sendable {}
+extension D2d_OutgoingMessage: @unchecked Sendable {}
+extension D2d_OutgoingMessageUpdate: @unchecked Sendable {}
+extension D2d_OutgoingMessageUpdate.Sent: @unchecked Sendable {}
+extension D2d_OutgoingMessageUpdate.Update: @unchecked Sendable {}
+extension D2d_OutgoingMessageUpdate.Update.OneOf_Update: @unchecked Sendable {}
+extension D2d_IncomingMessage: @unchecked Sendable {}
+extension D2d_IncomingMessageUpdate: @unchecked Sendable {}
+extension D2d_IncomingMessageUpdate.Read: @unchecked Sendable {}
+extension D2d_IncomingMessageUpdate.Update: @unchecked Sendable {}
+extension D2d_IncomingMessageUpdate.Update.OneOf_Update: @unchecked Sendable {}
+extension D2d_UserProfileSync: @unchecked Sendable {}
+extension D2d_UserProfileSync.OneOf_Action: @unchecked Sendable {}
+extension D2d_UserProfileSync.Update: @unchecked Sendable {}
+extension D2d_ContactSync: @unchecked Sendable {}
+extension D2d_ContactSync.OneOf_Action: @unchecked Sendable {}
+extension D2d_ContactSync.Create: @unchecked Sendable {}
+extension D2d_ContactSync.Update: @unchecked Sendable {}
+extension D2d_ContactSync.Delete: @unchecked Sendable {}
+extension D2d_GroupSync: @unchecked Sendable {}
+extension D2d_GroupSync.OneOf_Action: @unchecked Sendable {}
+extension D2d_GroupSync.Create: @unchecked Sendable {}
+extension D2d_GroupSync.Update: @unchecked Sendable {}
+extension D2d_GroupSync.Delete: @unchecked Sendable {}
+extension D2d_DistributionListSync: @unchecked Sendable {}
+extension D2d_DistributionListSync.OneOf_Action: @unchecked Sendable {}
+extension D2d_DistributionListSync.Create: @unchecked Sendable {}
+extension D2d_DistributionListSync.Update: @unchecked Sendable {}
+extension D2d_DistributionListSync.Delete: @unchecked Sendable {}
+extension D2d_SettingsSync: @unchecked Sendable {}
+extension D2d_SettingsSync.OneOf_Action: @unchecked Sendable {}
+extension D2d_SettingsSync.Update: @unchecked Sendable {}
+#endif  // swift(>=5.5) && canImport(_Concurrency)
+
 // MARK: - Code below here is support for the SwiftProtobuf runtime.
 
 fileprivate let _protobuf_package = "d2d"
@@ -1541,15 +1626,19 @@ extension D2d_SharedDeviceData: SwiftProtobuf.Message, SwiftProtobuf._MessageImp
   }
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
     if !self.padding.isEmpty {
       try visitor.visitSingularBytesField(value: self.padding, fieldNumber: 1)
     }
     if self.version != 0 {
       try visitor.visitSingularUInt32Field(value: self.version, fieldNumber: 2)
     }
-    if let v = self._mdmParameters {
+    try { if let v = self._mdmParameters {
       try visitor.visitSingularMessageField(value: v, fieldNumber: 3)
-    }
+    } }()
     try unknownFields.traverse(visitor: &visitor)
   }
 
@@ -1841,12 +1930,13 @@ extension D2d_Envelope: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementat
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     try withExtendedLifetime(_storage) { (_storage: _StorageClass) in
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every if/case branch local when no optimizations
+      // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+      // https://github.com/apple/swift-protobuf/issues/1182
       if !_storage._padding.isEmpty {
         try visitor.visitSingularBytesField(value: _storage._padding, fieldNumber: 1)
       }
-      // The use of inline closures is to circumvent an issue where the compiler
-      // allocates stack space for every case branch when no optimizations are
-      // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch _storage._content {
       case .outgoingMessage?: try {
         guard case .outgoingMessage(let v)? = _storage._content else { preconditionFailure() }
@@ -1956,8 +2046,9 @@ extension D2d_ConversationId: SwiftProtobuf.Message, SwiftProtobuf._MessageImple
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
-    // allocates stack space for every case branch when no optimizations are
-    // enabled. https://github.com/apple/swift-protobuf/issues/1034
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
     switch self.id {
     case .contact?: try {
       guard case .contact(let v)? = self.id else { preconditionFailure() }
@@ -1992,6 +2083,7 @@ extension D2d_OutgoingMessage: SwiftProtobuf.Message, SwiftProtobuf._MessageImpl
     3: .standard(proto: "created_at"),
     4: .same(proto: "type"),
     5: .same(proto: "body"),
+    7: .same(proto: "nonces"),
   ]
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -2006,15 +2098,20 @@ extension D2d_OutgoingMessage: SwiftProtobuf.Message, SwiftProtobuf._MessageImpl
       case 4: try { try decoder.decodeSingularEnumField(value: &self.type) }()
       case 5: try { try decoder.decodeSingularBytesField(value: &self.body) }()
       case 6: try { try decoder.decodeSingularFixed64Field(value: &self._threadMessageID) }()
+      case 7: try { try decoder.decodeRepeatedBytesField(value: &self.nonces) }()
       default: break
       }
     }
   }
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    if let v = self._conversation {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
+    try { if let v = self._conversation {
       try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
-    }
+    } }()
     if self.messageID != 0 {
       try visitor.visitSingularFixed64Field(value: self.messageID, fieldNumber: 2)
     }
@@ -2027,8 +2124,11 @@ extension D2d_OutgoingMessage: SwiftProtobuf.Message, SwiftProtobuf._MessageImpl
     if !self.body.isEmpty {
       try visitor.visitSingularBytesField(value: self.body, fieldNumber: 5)
     }
-    if let v = self._threadMessageID {
+    try { if let v = self._threadMessageID {
       try visitor.visitSingularFixed64Field(value: v, fieldNumber: 6)
+    } }()
+    if !self.nonces.isEmpty {
+      try visitor.visitRepeatedBytesField(value: self.nonces, fieldNumber: 7)
     }
     try unknownFields.traverse(visitor: &visitor)
   }
@@ -2040,6 +2140,7 @@ extension D2d_OutgoingMessage: SwiftProtobuf.Message, SwiftProtobuf._MessageImpl
     if lhs.createdAt != rhs.createdAt {return false}
     if lhs.type != rhs.type {return false}
     if lhs.body != rhs.body {return false}
+    if lhs.nonces != rhs.nonces {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
@@ -2131,15 +2232,19 @@ extension D2d_OutgoingMessageUpdate.Update: SwiftProtobuf.Message, SwiftProtobuf
   }
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    if let v = self._conversation {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
+    try { if let v = self._conversation {
       try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
-    }
+    } }()
     if self.messageID != 0 {
       try visitor.visitSingularFixed64Field(value: self.messageID, fieldNumber: 2)
     }
-    if case .sent(let v)? = self.update {
+    try { if case .sent(let v)? = self.update {
       try visitor.visitSingularMessageField(value: v, fieldNumber: 3)
-    }
+    } }()
     try unknownFields.traverse(visitor: &visitor)
   }
 
@@ -2160,6 +2265,7 @@ extension D2d_IncomingMessage: SwiftProtobuf.Message, SwiftProtobuf._MessageImpl
     3: .standard(proto: "created_at"),
     5: .same(proto: "type"),
     6: .same(proto: "body"),
+    7: .same(proto: "nonce"),
   ]
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -2173,6 +2279,7 @@ extension D2d_IncomingMessage: SwiftProtobuf.Message, SwiftProtobuf._MessageImpl
       case 3: try { try decoder.decodeSingularUInt64Field(value: &self.createdAt) }()
       case 5: try { try decoder.decodeSingularEnumField(value: &self.type) }()
       case 6: try { try decoder.decodeSingularBytesField(value: &self.body) }()
+      case 7: try { try decoder.decodeSingularBytesField(value: &self.nonce) }()
       default: break
       }
     }
@@ -2194,6 +2301,9 @@ extension D2d_IncomingMessage: SwiftProtobuf.Message, SwiftProtobuf._MessageImpl
     if !self.body.isEmpty {
       try visitor.visitSingularBytesField(value: self.body, fieldNumber: 6)
     }
+    if !self.nonce.isEmpty {
+      try visitor.visitSingularBytesField(value: self.nonce, fieldNumber: 7)
+    }
     try unknownFields.traverse(visitor: &visitor)
   }
 
@@ -2203,6 +2313,7 @@ extension D2d_IncomingMessage: SwiftProtobuf.Message, SwiftProtobuf._MessageImpl
     if lhs.createdAt != rhs.createdAt {return false}
     if lhs.type != rhs.type {return false}
     if lhs.body != rhs.body {return false}
+    if lhs.nonce != rhs.nonce {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
@@ -2307,15 +2418,19 @@ extension D2d_IncomingMessageUpdate.Update: SwiftProtobuf.Message, SwiftProtobuf
   }
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    if let v = self._conversation {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
+    try { if let v = self._conversation {
       try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
-    }
+    } }()
     if self.messageID != 0 {
       try visitor.visitSingularFixed64Field(value: self.messageID, fieldNumber: 2)
     }
-    if case .read(let v)? = self.update {
+    try { if case .read(let v)? = self.update {
       try visitor.visitSingularMessageField(value: v, fieldNumber: 3)
-    }
+    } }()
     try unknownFields.traverse(visitor: &visitor)
   }
 
@@ -2359,9 +2474,13 @@ extension D2d_UserProfileSync: SwiftProtobuf.Message, SwiftProtobuf._MessageImpl
   }
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    if case .update(let v)? = self.action {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
+    try { if case .update(let v)? = self.action {
       try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
-    }
+    } }()
     try unknownFields.traverse(visitor: &visitor)
   }
 
@@ -2391,9 +2510,13 @@ extension D2d_UserProfileSync.Update: SwiftProtobuf.Message, SwiftProtobuf._Mess
   }
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    if let v = self._userProfile {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
+    try { if let v = self._userProfile {
       try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
-    }
+    } }()
     try unknownFields.traverse(visitor: &visitor)
   }
 
@@ -2464,8 +2587,9 @@ extension D2d_ContactSync: SwiftProtobuf.Message, SwiftProtobuf._MessageImplemen
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
-    // allocates stack space for every case branch when no optimizations are
-    // enabled. https://github.com/apple/swift-protobuf/issues/1034
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
     switch self.action {
     case .create?: try {
       guard case .create(let v)? = self.action else { preconditionFailure() }
@@ -2510,9 +2634,13 @@ extension D2d_ContactSync.Create: SwiftProtobuf.Message, SwiftProtobuf._MessageI
   }
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    if let v = self._contact {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
+    try { if let v = self._contact {
       try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
-    }
+    } }()
     try unknownFields.traverse(visitor: &visitor)
   }
 
@@ -2542,9 +2670,13 @@ extension D2d_ContactSync.Update: SwiftProtobuf.Message, SwiftProtobuf._MessageI
   }
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    if let v = self._contact {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
+    try { if let v = self._contact {
       try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
-    }
+    } }()
     try unknownFields.traverse(visitor: &visitor)
   }
 
@@ -2647,8 +2779,9 @@ extension D2d_GroupSync: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementa
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
-    // allocates stack space for every case branch when no optimizations are
-    // enabled. https://github.com/apple/swift-protobuf/issues/1034
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
     switch self.action {
     case .create?: try {
       guard case .create(let v)? = self.action else { preconditionFailure() }
@@ -2693,9 +2826,13 @@ extension D2d_GroupSync.Create: SwiftProtobuf.Message, SwiftProtobuf._MessageImp
   }
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    if let v = self._group {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
+    try { if let v = self._group {
       try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
-    }
+    } }()
     try unknownFields.traverse(visitor: &visitor)
   }
 
@@ -2725,9 +2862,13 @@ extension D2d_GroupSync.Update: SwiftProtobuf.Message, SwiftProtobuf._MessageImp
   }
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    if let v = self._group {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
+    try { if let v = self._group {
       try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
-    }
+    } }()
     try unknownFields.traverse(visitor: &visitor)
   }
 
@@ -2757,9 +2898,13 @@ extension D2d_GroupSync.Delete: SwiftProtobuf.Message, SwiftProtobuf._MessageImp
   }
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    if let v = self._groupIdentity {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
+    try { if let v = self._groupIdentity {
       try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
-    }
+    } }()
     try unknownFields.traverse(visitor: &visitor)
   }
 
@@ -2830,8 +2975,9 @@ extension D2d_DistributionListSync: SwiftProtobuf.Message, SwiftProtobuf._Messag
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
-    // allocates stack space for every case branch when no optimizations are
-    // enabled. https://github.com/apple/swift-protobuf/issues/1034
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
     switch self.action {
     case .create?: try {
       guard case .create(let v)? = self.action else { preconditionFailure() }
@@ -2876,9 +3022,13 @@ extension D2d_DistributionListSync.Create: SwiftProtobuf.Message, SwiftProtobuf.
   }
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    if let v = self._distributionList {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
+    try { if let v = self._distributionList {
       try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
-    }
+    } }()
     try unknownFields.traverse(visitor: &visitor)
   }
 
@@ -2908,9 +3058,13 @@ extension D2d_DistributionListSync.Update: SwiftProtobuf.Message, SwiftProtobuf.
   }
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    if let v = self._distributionList {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
+    try { if let v = self._distributionList {
       try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
-    }
+    } }()
     try unknownFields.traverse(visitor: &visitor)
   }
 
@@ -2984,9 +3138,13 @@ extension D2d_SettingsSync: SwiftProtobuf.Message, SwiftProtobuf._MessageImpleme
   }
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    if case .update(let v)? = self.action {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
+    try { if case .update(let v)? = self.action {
       try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
-    }
+    } }()
     try unknownFields.traverse(visitor: &visitor)
   }
 
@@ -3016,9 +3174,13 @@ extension D2d_SettingsSync.Update: SwiftProtobuf.Message, SwiftProtobuf._Message
   }
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    if let v = self._settings {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
+    try { if let v = self._settings {
       try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
-    }
+    } }()
     try unknownFields.traverse(visitor: &visitor)
   }
 

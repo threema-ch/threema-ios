@@ -77,16 +77,16 @@ class BlobManagerTests: XCTestCase {
         
         databasePreparer.save {
             conversation = databasePreparer.createConversation(
-                marked: false,
                 typing: false,
                 unreadMessageCount: 0,
+                visibility: .default,
                 complete: nil
             )
             
             groupConversation = databasePreparer.createConversation(
-                marked: false,
                 typing: false,
                 unreadMessageCount: 0,
+                visibility: .default,
                 complete: { conversation in
                     conversation.groupID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!
                 }

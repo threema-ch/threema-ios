@@ -387,11 +387,14 @@ static NSDictionary *_mdmCacheSetup;
     if ([self existsMdmKey:MDM_KEY_FIRST_NAME]) {
         NSString *firstName = [self getMdmConfigurationValueForKey:MDM_KEY_FIRST_NAME];
         if ([firstName isKindOfClass:[NSString class]]) {
+            DDLogNotice(@"[MDMSetup] loadIDCreationValues firstname is %@", firstName);
             identityStore.firstName = firstName;
         } else {
+            DDLogNotice(@"[MDMSetup] loadIDCreationValues firstname is not a string");
             identityStore.firstName = nil;
         }
     } else {
+        DDLogNotice(@"[MDMSetup] loadIDCreationValues firstname is missing in MDM");
         identityStore.firstName = nil;
     }
     
@@ -400,11 +403,14 @@ static NSDictionary *_mdmCacheSetup;
     if ([self existsMdmKey:MDM_KEY_LAST_NAME]) {
         NSString *lastName = [self getMdmConfigurationValueForKey:MDM_KEY_LAST_NAME];
         if ([lastName isKindOfClass:[NSString class]]) {
+            DDLogNotice(@"[MDMSetup] loadIDCreationValues lastName is %@", lastName);
             identityStore.lastName = lastName;
         } else {
+            DDLogNotice(@"[MDMSetup] loadIDCreationValues lastName is not a string");
             identityStore.lastName = nil;
         }
     } else {
+        DDLogNotice(@"[MDMSetup] loadIDCreationValues lastName is missing in MDM");
         identityStore.lastName = nil;
     }
     
@@ -413,11 +419,14 @@ static NSDictionary *_mdmCacheSetup;
     if ([self existsMdmKey:MDM_KEY_CSI]) {
         NSString *csi = [self getMdmConfigurationValueForKey:MDM_KEY_CSI];
         if ([csi isKindOfClass:[NSString class]]) {
+            DDLogNotice(@"[MDMSetup] loadIDCreationValues csi is %@", csi);
             identityStore.csi = csi;
         } else {
+            DDLogNotice(@"[MDMSetup] loadIDCreationValues csi is not a string");
             identityStore.csi = nil;
         }
     } else {
+        DDLogNotice(@"[MDMSetup] loadIDCreationValues csi is missing in MDM");
         identityStore.csi = nil;
     }
     
@@ -426,11 +435,14 @@ static NSDictionary *_mdmCacheSetup;
     if ([self existsMdmKey:MDM_KEY_CATEGORY]) {
         NSString *category = [self getMdmConfigurationValueForKey:MDM_KEY_CATEGORY];
         if ([category isKindOfClass:[NSString class]]) {
+            DDLogNotice(@"[MDMSetup] loadIDCreationValues category is %@", category);
             identityStore.category = category;
         } else {
+            DDLogNotice(@"[MDMSetup] loadIDCreationValues category is not a string");
             identityStore.category = nil;
         }
     } else {
+        DDLogNotice(@"[MDMSetup] loadIDCreationValues category is missing in MDM");
         identityStore.category = nil;
     }
 }
@@ -501,6 +513,12 @@ static NSDictionary *_mdmCacheSetup;
     return [[mdm allKeys] containsObject:mdmKey];
 }
 
+- (void)applyCompanyMDMWithCachedThreemaMDMSendForce:(BOOL)sendForce {
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    NSDictionary *threemaMdm = [defaults dictionaryForKey:MDM_THREEMA_CONFIGURATION_KEY];
+    [self applyThreemaMdm:threemaMdm sendForce:sendForce];
+}
+
 - (void)applyThreemaMdm:(NSDictionary *)workData sendForce:(BOOL)sendForce {
     if (!isLicenseRequired) {
         return;
@@ -515,10 +533,7 @@ static NSDictionary *_mdmCacheSetup;
             NSDictionary *newThreemaMdm = workData[MDM_KEY_THREEMA_CONFIGURATION];
             NSMutableDictionary *currentThreemaMdm = [[NSMutableDictionary alloc] initWithDictionary:threemaMdm];
             
-            if (currentThreemaMdm == nil || [currentThreemaMdm count] == 0) {
-                // use new Threema MDM
-                threemaMdm = newThreemaMdm;
-            } else if([currentThreemaMdm isEqualToDictionary:newThreemaMdm] == NO) {
+            if([currentThreemaMdm isEqualToDictionary:newThreemaMdm] == NO) {
                 // remove missing Threema MDM parameters
                 NSMutableArray *missingMdmKeys = [[NSMutableArray alloc] init];
                 NSMutableDictionary *currentThreemaMdmParameters = [[NSMutableDictionary alloc] initWithDictionary:currentThreemaMdm[MDM_KEY_THREEMA_PARAMS]];
@@ -598,18 +613,18 @@ static NSDictionary *_mdmCacheSetup;
             // merge company and Threema MDM
             BOOL override = ((NSNumber *)threemaMdm[MDM_KEY_THREEMA_OVERRIDE]).boolValue;
             NSDictionary *newMdm = [self applyMdmParameters:companyMdm source:threemaMdm[MDM_KEY_THREEMA_PARAMS] override:override];
-            DDLogNotice(@"\nCompany MDM");
+            DDLogNotice(@"\n[MDMSetup] Company MDM");
             [self printMDMIntoDebugLog:companyMdm];
             
-            DDLogNotice(@"\nThreema MDM");
+            DDLogNotice(@"\n[MDMSetup] Threema MDM");
             [self printMDMIntoDebugLog:threemaMdm];
             
-            DDLogNotice(@"\nMerged Company and Threema MDM");
+            DDLogNotice(@"\n[MDMSetup] Merged Company and Threema MDM");
             [self printMDMIntoDebugLog:newMdm];
             return newMdm;
         } else {
             // use Company MDM
-            DDLogNotice(@"\nCompany MDM");
+            DDLogNotice(@"\n[MDMSetup] Company MDM");
             [self printMDMIntoDebugLog:companyMdm];
             return companyMdm;
         }
@@ -619,7 +634,7 @@ static NSDictionary *_mdmCacheSetup;
         BOOL override = ((NSNumber *)threemaMdm[MDM_KEY_THREEMA_OVERRIDE]).boolValue;
         NSDictionary *newMdm = [self applyMdmParameters:destinationMdm source:threemaMdm[MDM_KEY_THREEMA_PARAMS] override:override];
         
-        DDLogNotice(@"Threema MDM");
+        DDLogNotice(@"[MDMSetup] Threema MDM");
         [self printMDMIntoDebugLog:newMdm];
         
         return newMdm;
@@ -627,7 +642,7 @@ static NSDictionary *_mdmCacheSetup;
     }
     
      // print empty mdm
-    DDLogNotice(@"Company and Threema MDM is empty");
+    DDLogNotice(@"[MDMSetup] Company and Threema MDM is empty");
     return [[NSDictionary alloc] init];
 }
 
@@ -636,6 +651,9 @@ static NSDictionary *_mdmCacheSetup;
     
     // apply parameter if is override and renweable or missing
     [[source allKeys] enumerateObjectsUsingBlock:^(NSString *key, NSUInteger idx, BOOL * _Nonnull stop) {
+        if ([self shouldDiscardInThreemaMDM:key]) {
+            return;
+        }
         if (override == YES && [self isRenewable:key]) {
             if ([[mdmParameters allKeys] containsObject:key]) {
                 [mdmParameters setValue:source[key] forKey:key];
@@ -669,6 +687,11 @@ static NSDictionary *_mdmCacheSetup;
     return [renewableKeys containsObject:mdmKey];
 }
 
+- (BOOL)shouldDiscardInThreemaMDM:(NSString *)mdmKey{
+    NSArray *notAvailableInThreemaMDM = @[MDM_KEY_ID_BACKUP, MDM_KEY_ID_BACKUP_PASSWORD, MDM_KEY_SAFE_PASSWORD, MDM_KEY_LICENSE_USERNAME, MDM_KEY_LICENSE_PASSWORD];
+    return [notAvailableInThreemaMDM containsObject:mdmKey];
+}
+
 - (NSNumber*)getMdmConfigurationBoolForKey:(NSString*)key {
     // Some MDMs cannot send real booleans, so we support "true"/"1" and "false"/"0" as strings also
     id mdmVal = [self getMdmConfigurationValueForKey:key];
@@ -692,7 +715,7 @@ static NSDictionary *_mdmCacheSetup;
 - (void)printMDMIntoDebugLog:(NSDictionary *)mdm {
     if ([[mdm allKeys] containsObject:MDM_KEY_THREEMA_PARAMS]) {
         BOOL override = ((NSNumber *)mdm[MDM_KEY_THREEMA_OVERRIDE]).boolValue;
-        DDLogNotice(@"%@: %@", MDM_KEY_THREEMA_OVERRIDE, override ? @"true" : @"false");
+        DDLogNotice(@"[MDMSetup] %@: %@", MDM_KEY_THREEMA_OVERRIDE, override ? @"true" : @"false");
         
         for(NSString *key in mdm[MDM_KEY_THREEMA_PARAMS]) {
             [self checkIsPasswordAndLog:key value:[mdm[MDM_KEY_THREEMA_PARAMS] objectForKey:key]];
@@ -706,9 +729,9 @@ static NSDictionary *_mdmCacheSetup;
 
 - (void)checkIsPasswordAndLog:(NSString *)key value:(NSString *)value {
     if (![key containsString:@"pass"] || [key isEqualToString:MDM_KEY_SAFE_PASSWORD_PATTERN] || [key isEqualToString:MDM_KEY_SAFE_PASSWORD_MESSAGE] || value == nil) {
-        DDLogNotice(@"%@: %@", key, value);
+        DDLogNotice(@"[MDMSetup] %@: %@", key, value);
     } else {
-        DDLogNotice(@"%@: ***", key);
+        DDLogNotice(@"[MDMSetup] %@: ***", key);
     }
 }
 

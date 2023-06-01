@@ -213,6 +213,20 @@ class MessageStore: MessageStoreProtocol {
 
                                 messageReadConversations.insert(msg.conversation)
                             }
+
+                            // If it is a read receipt of a reflected incoming message, then remove all notifications of this message
+                            if isOutgoing {
+                                if let key = PendingUserNotificationKey.key(
+                                    identity: deliveryReceiptMessage.toIdentity,
+                                    messageID: messageID
+                                ) {
+                                    self.frameworkInjector.userNotificationCenterManager.remove(
+                                        key: key,
+                                        exceptStage: nil,
+                                        justPending: false
+                                    )
+                                }
+                            }
                         }
                         else if deliveryReceiptMessage.receiptType == DELIVERYRECEIPT_MSGUSERACK {
                             self.frameworkInjector.backgroundEntityManager.performSyncBlockAndSafe {

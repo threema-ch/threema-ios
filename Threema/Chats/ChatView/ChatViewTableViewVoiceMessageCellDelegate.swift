@@ -39,13 +39,16 @@ protocol ChatViewTableViewVoiceMessageCellDelegateProtocol: NSObject {
     
     func getProgress(for voiceMessage: VoiceMessage) -> CGFloat
     
-    func isMessageCurrentlyPlaying(_ message: BaseMessage) -> Bool
+    func isMessageCurrentlyPlaying(_ message: BaseMessage?) -> Bool
     func reregisterCallbacks(
         message: VoiceMessage,
         progressCallback: @escaping (TimeInterval, CGFloat) -> Void,
         pauseCallback: @escaping () -> Void,
         finishedCallback: @escaping (Bool) -> Void
     )
+    
+    func currentTimeForward(for voiceMessage: VoiceMessage)
+    func currentTimeRewind(for voiceMessage: VoiceMessage)
 }
 
 /// Handles the interaction between voice message cells and the AVAudioPlayer handling the playback
@@ -258,6 +261,18 @@ final class ChatViewTableViewVoiceMessageCellDelegate: NSObject, ChatViewTableVi
         self.pauseCallback = pauseCallback
     }
     
+    func currentTimeForward(for voiceMessage: VoiceMessage) {
+        if let audioPlayer = audioPlayer, let currentlyPlaying = currentlyPlaying, voiceMessage == currentlyPlaying {
+            audioPlayer.currentTime += 10
+        }
+    }
+    
+    func currentTimeRewind(for voiceMessage: VoiceMessage) {
+        if let audioPlayer = audioPlayer, let currentlyPlaying = currentlyPlaying, voiceMessage == currentlyPlaying {
+            audioPlayer.currentTime -= 10
+        }
+    }
+    
     func pausePlaying() {
         playTimer?.invalidate()
         
@@ -309,13 +324,20 @@ final class ChatViewTableViewVoiceMessageCellDelegate: NSObject, ChatViewTableVi
         }
     }
     
-    func isMessageCurrentlyPlaying(_ message: BaseMessage) -> Bool {
+    /// Check is message current playing. If the parameter is nil, it will check if there some audio message is playing
+    /// - Parameter message: Message to check (optional)
+    /// - Returns: Is the parameter message (or some message) currently playing
+    func isMessageCurrentlyPlaying(_ message: BaseMessage?) -> Bool {
         guard let currentlyPlaying = currentlyPlaying else {
             return false
         }
         
         guard let audioPlayer, audioPlayer.isPlaying else {
             return false
+        }
+        
+        guard let message = message else {
+            return true
         }
         
         return currentlyPlaying.objectID == message.objectID

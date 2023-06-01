@@ -50,7 +50,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, retain, nullable) NSDate * lastTypingStart;
 @property (nonatomic, retain) NSNumber * typing;
 @property (nonatomic, retain) NSNumber * unreadMessageCount;
-@property (nonatomic, retain) NSNumber *marked;
+@property (nonatomic, retain) NSNumber *marked; DEPRECATED_MSG_ATTRIBUTE("Use conversationVisibility instead of marked");
 @property (nonatomic) ConversationVisibility conversationVisibility;
 @property (nonatomic, retain, nullable) NSDate * lastUpdate;
 

@@ -308,9 +308,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     os_signpost_interval_begin(PointsOfInterestSignpost.log, signpost_id, "viewDidLoad");
     
     [super viewDidLoad];
-    
-    [[UserSettings sharedUserSettings] checkWallpaper];
-    
+        
     self.navigationController.interactivePopGestureRecognizer.enabled  = YES;
     self.navigationController.interactivePopGestureRecognizer.delegate = nil;
     

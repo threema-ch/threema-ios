@@ -16,12 +16,21 @@ FFI_TARGET=$2
 # build configuration
 CONFIGURATION=$3
 
+TOOLCHAIN_VERSION=1.63
+
 RELFLAG=
 if [[ "$CONFIGURATION" != *"Debug"* ]]; then
     RELFLAG=--release
 fi
 
 set -euvx
+
+# Install toochlain & targets
+
+$HOME/.cargo/bin/rustup install $TOOLCHAIN_VERSION
+$HOME/.cargo/bin/rustup target add --toolchain $TOOLCHAIN_VERSION aarch64-apple-darwin aarch64-apple-ios aarch64-apple-ios-sim x86_64-apple-ios
+
+# Build dependency
 
 if [[ -n "${DEVELOPER_SDK_DIR:-}" ]]; then
   # Assume we're in Xcode, which means we're probably cross-compiling.
@@ -50,16 +59,16 @@ for arch in $ARCHS; do
 
       # Intel iOS simulator
       export CFLAGS_x86_64_apple_ios="-target x86_64-apple-ios"
-      $HOME/.cargo/bin/cargo +stable-x86_64-apple-darwin build -p $FFI_TARGET --lib $RELFLAG --target x86_64-apple-ios
+      $HOME/.cargo/bin/cargo +$TOOLCHAIN_VERSION-x86_64-apple-darwin build -p $FFI_TARGET --lib $RELFLAG --target x86_64-apple-ios
       ;;
 
     arm64)
       if [ $IS_SIMULATOR -eq 0 ]; then
         # Hardware iOS targets
-        $HOME/.cargo/bin/cargo build --locked -p $FFI_TARGET --lib $RELFLAG --target aarch64-apple-ios
+        $HOME/.cargo/bin/cargo +$TOOLCHAIN_VERSION-aarch64-apple-darwin build --locked -p $FFI_TARGET --lib $RELFLAG --target aarch64-apple-ios
       else
         # M1 iOS simulator
-        $HOME/.cargo/bin/cargo build --locked -p $FFI_TARGET --lib $RELFLAG --target aarch64-apple-ios-sim
+        $HOME/.cargo/bin/cargo +$TOOLCHAIN_VERSION-aarch64-apple-darwin build --locked -p $FFI_TARGET --lib $RELFLAG --target aarch64-apple-ios-sim
       fi
   esac
 done

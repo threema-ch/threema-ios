@@ -33,7 +33,6 @@
                     @"threema.ch" : @{
                             kTSKIncludeSubdomains: @YES,
                             kTSKPublicKeyHashes : @[
-                                    @"8SLubAXo6MrrGziVya6HjCS/Cuc7eqtzw1v6AfIW57c=",
                                     @"8kTK9HP1KHIP0sn6T2AFH3Bq+qq3wn2i/OJSMjewpFw=",
                                     @"KKBJHJn1PQSdNTmoAfhxqWTO61r8O8bPi/JeGtP/6gg=",
                                     @"h2gHawxPZyMCiZSkJN0dQ4RsDxowVuTmuiNQyjeU+Sk=",

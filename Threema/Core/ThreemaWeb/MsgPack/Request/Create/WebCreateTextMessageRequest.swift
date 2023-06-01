@@ -136,7 +136,9 @@ public class WebCreateTextMessageRequest: WebAbstractMessage {
                 completion: { message in
                     self.baseMessage = message
                     completion()
-                    conversation.conversationVisibility = .default
+                    if conversation.conversationVisibility == .archived {
+                        conversation.conversationVisibility = .default
+                    }
                 }
             )
         } onTimeout: {

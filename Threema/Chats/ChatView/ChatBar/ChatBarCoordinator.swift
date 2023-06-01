@@ -50,6 +50,8 @@ final class ChatBarCoordinator {
         return chatBarView
     }()
     
+    private(set) var isRecording = false
+    
     // MARK: - Private properties
     
     private var conversation: Conversation
@@ -243,7 +245,6 @@ extension ChatBarCoordinator {
         
         if mentionsVisible {
             chatBarContainerView.removeMentionsTableView()
-            mentionsTableViewController = nil
             mentionsVisible = false
         }
     }
@@ -520,6 +521,7 @@ extension ChatBarCoordinator: ChatBarViewDelegate {
             audioRecorder.startRecording(for: self.conversation)
             
             self.chatBar.isUserInteractionEnabled = false
+            self.isRecording = true
         }
     }
     
@@ -553,6 +555,30 @@ extension ChatBarCoordinator: ChatBarViewDelegate {
             },
             completion: nil
         )
+    }
+    
+    func showContact(identity: String) {
+        if let contact = BusinessInjector().entityManager.entityFetcher.contact(for: identity) {
+            let detailsViewController = SingleDetailsViewController(for: contact)
+            let navigationController = ThemedNavigationController(rootViewController: detailsViewController)
+            navigationController.modalPresentationStyle = .formSheet
+            
+            chatViewController?.present(navigationController, animated: true)
+        }
+        else if identity == BusinessInjector().myIdentityStore.identity {
+            // TODO: IOS-2927 Refactor `MeContactDetailsViewController` to allow removing `MainStoryboard`
+            let storyboard = UIStoryboard(name: "MainStoryboard", bundle: nil)
+            let vc = storyboard.instantiateViewController(withIdentifier: "meContactDetailsViewController")
+            
+            let navigationController = ModalNavigationController(rootViewController: vc)
+            navigationController.modalPresentationStyle = .formSheet
+            navigationController.showDoneButton = true
+            
+            chatViewController?.present(navigationController, animated: true)
+        }
+        else {
+            DDLogError("Can't find contact for tapped mention")
+        }
     }
 }
 
@@ -680,6 +706,7 @@ extension ChatBarCoordinator: PPAssetsActionHelperDelegate {
 extension ChatBarCoordinator: PlayRecordAudioDelegate {
     func audioPlayerDidHide() {
         chatBar.isUserInteractionEnabled = true
+        isRecording = false
         UIAccessibility.post(notification: UIAccessibility.Notification.screenChanged, argument: nil)
     }
 }

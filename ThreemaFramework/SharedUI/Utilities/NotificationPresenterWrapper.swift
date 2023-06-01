@@ -28,7 +28,7 @@ import SwiftUI
 @objc public class NotificationPresenterWrapper: NSObject {
     
     /// Shared wrapper to be used
-    @objc public static let shared = NotificationPresenterWrapper()
+    @objc public static var shared = NotificationPresenterWrapper()
     
     private static let presenter = NotificationPresenter.shared()
     private static let hapticGenerator = UINotificationFeedbackGenerator()
@@ -128,6 +128,11 @@ import SwiftUI
         present(type: type)
     }
     
+    @available(*, deprecated, message: "Do not use from Obj-C anymore")
+    @objc public func presentUpdateWorkDataError() {
+        present(type: .updateWorkDataFailed)
+    }
+    
     // MARK: - Styles
     
     private func initializeStyles() {
@@ -160,6 +165,10 @@ import SwiftUI
 
                 return style
             }
+    }
+    
+    @objc public func colorChanged() {
+        NotificationPresenterWrapper.shared = NotificationPresenterWrapper()
     }
     
     // MARK: - Default parameter functions

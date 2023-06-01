@@ -77,7 +77,7 @@
             body = [BundleUtil localizedStringForKey:@"new_location_message"];
     }
     else if ([self isKindOfClass:[GroupAudioMessage class]]) {
-        body = [NSString stringWithFormat:@"%@ (%@)", [BundleUtil localizedStringForKey:@"new_audio_message"], [ThreemaUtilityObjC timeStringForSeconds:((GroupAudioMessage *)self).duration]];
+        body = [NSString stringWithFormat:@"%@ (%@)", [BundleUtil localizedStringForKey:@"file_message_voice"], [ThreemaUtilityObjC timeStringForSeconds:((GroupAudioMessage *)self).duration]];
     }
     else if ([self isKindOfClass:[GroupBallotCreateMessage class]]) {
         BOOL closed = [BallotMessageDecoder decodeNotificationCreateBallotStateFromBox:(BoxBallotCreateMessage *)self].integerValue == kBallotStateClosed;

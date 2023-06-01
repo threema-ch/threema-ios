@@ -1274,11 +1274,13 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
                     }
                     
                     var userInfo: [String: String]?
-                    if let contact = self.contactStore.contact(for: creator) {
-                        userInfo = [kKeyContact: contact.displayName]
-                    }
-                    else {
-                        userInfo = [kKeyContact: creator]
+                    self.entityManager.performBlockAndWait {
+                        if let contact = self.entityManager.entityFetcher.contact(for: creator) {
+                            userInfo = [kKeyContact: contact.displayName]
+                        }
+                        else {
+                            userInfo = [kKeyContact: creator]
+                        }
                     }
                     
                     let unknownGroupAlertList = self.userSettings.unknownGroupAlertList!

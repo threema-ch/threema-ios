@@ -383,7 +383,7 @@ class TaskExecutionSettingsSyncTests: XCTestCase {
         }
 
         if initialConfig.alwaysRelayCalls != secondConfig.alwaysRelayCalls {
-            syncSettings.callConnectionPolity = secondConfig.alwaysRelayCalls ? .requireRelay : .allowDirect
+            syncSettings.callConnectionPolicy = secondConfig.alwaysRelayCalls ? .requireRelay : .allowDirect
         }
 
         if initialConfig.blacklist != secondConfig.blacklist {

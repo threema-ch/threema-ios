@@ -269,7 +269,10 @@ public class WebCreateFileMessageRequest: WebAbstractMessage {
         ServerConnectorHelper.connectAndWaitUntilConnected(initiator: .threemaWeb, timeout: 10) {
             sender.send(item, in: conversation, requestID: self.requestID)
             completion()
-            conversation?.conversationVisibility = .default
+            if let conversation = conversation,
+               conversation.conversationVisibility == .archived {
+                conversation.conversationVisibility = .default
+            }
         } onTimeout: {
             DDLogError("Sending file message timed out")
             completion()

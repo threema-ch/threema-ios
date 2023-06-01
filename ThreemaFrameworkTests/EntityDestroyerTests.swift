@@ -211,7 +211,7 @@ class EntityDestroyerTests: XCTestCase {
         entityManager.performSyncBlockAndSafe {
             for i in 0..<100 {
                 _ = DatabasePreparer(context: self.databaseMainCnx.main)
-                    .createConversation(marked: false, typing: false, unreadMessageCount: 0) { conversation in
+                    .createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
                         conversation.groupID = BytesUtility.generateRandomBytes(length: 32)!
                         conversation.groupMyIdentity = deletableContactAndConversation.contact.identity
                         conversation.groupName = "TestGroup \(i)"
@@ -298,7 +298,7 @@ class EntityDestroyerTests: XCTestCase {
         entityManager.performSyncBlockAndSafe {
             for i in 0..<10 {
                 _ = DatabasePreparer(context: self.databaseMainCnx.main)
-                    .createConversation(marked: false, typing: false, unreadMessageCount: 0) { conversation in
+                    .createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
                         conversation.groupID = BytesUtility.generateRandomBytes(length: 32)!
                         conversation.groupMyIdentity = deletableContactAndConversation.contact.identity
                         conversation.groupName = "TestGroup \(i)"
@@ -378,9 +378,9 @@ class EntityDestroyerTests: XCTestCase {
         let dp = DatabasePreparer(context: objCnx)
         dp.save {
             conversation = dp.createConversation(
-                marked: false,
                 typing: false,
                 unreadMessageCount: 0,
+                visibility: .default,
                 complete: nil
             )
 
@@ -537,9 +537,9 @@ extension EntityDestroyerTests {
         let testEntityManager = DatabasePreparer(context: objCnx)
         testEntityManager.save {
             let conversation = testEntityManager.createConversation(
-                marked: false,
                 typing: false,
                 unreadMessageCount: 0,
+                visibility: .default,
                 complete: nil
             )
             let thumbnail = testEntityManager.createImageData(data: Data([22]), height: 22, width: 22)

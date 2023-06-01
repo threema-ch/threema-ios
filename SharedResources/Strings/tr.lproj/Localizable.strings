@@ -48,13 +48,9 @@
 "cannot_connect_title" = "Bağlantı yok";
 "cannot_connect_message" = "Bağlanamıyor, lütfen internet bağlantınızı kontrol edin.";
 
-"delete_identity_warning" = "Kimliğinizi silerseniz hem anahtar çiftiniz hem de uygulama verileriniz silinir. Yedek oluşturmadıysanız, bu kimliği kullanarak tekrar mesaj gönderemez veya alamazsınız.\n\nBu kimliği artık kullanmak istemiyorsanız, kimliği silmeden önce herhangi bir e-posta adresinin veya telefon numarasının bağlantısını kaldırmanız önerilir.";
-"delete_identity_warning2" = "Son uyarı: Verilerinizi ve kimliğinizi gerçekten silmek istiyor musunuz?";
+// JKLockScreenViewController
 "delete_identity_passcode_title" = "Şifre etkin";
 "delete_identity_passcode_message" = "Lütfen kimliğinizi silmeden önce şifreyi devre dışı bırakın.";
-"delete_identity_title" = "Uygulama verileri silindi";
-"delete_identity_description" = "Tüm uygulama verileri silindi. %@ ayarlamak için lütfen uygulamayı yeniden başlatın.";
-"delete_identity_app_close" = "Uygulamayı kapat";
 
 /* JKLockScreenViewController */
 "cancel" = "İptal et";
@@ -64,7 +60,6 @@
 "yes" = "Evet";
 "delete" = "Sil";
 "try_again" = "Tekrar deneyin";
-"delete_identity" = "Verileri ve kimliği sil";
 "copy" = "Kopyala";
 "save" = "Kaydet";
 "download" = "İndir";
@@ -79,7 +74,6 @@
 "sticker" = "Çıkartma";
 "gif" = "GIF";
 "video" = "Video";
-"audio" = "Ses";
 "file" = "Dosya";
 "location" = "Konum";
 "locating" = "Konum belirleniyor…";
@@ -183,8 +177,6 @@
 "sound_threema_goody" = "Miks";
 "sound_threema_alphorn" = "Avcı borusu";
 
-"reset_wallpaper" = "Duvar kağıdını sıfırla";
-"bigger_single_emojis" = "Daha büyük tek emojiler";
 "identity_none" = "hiçbiri";
 "message" = "Mesaj"; /* Short version for "Send Message" */
 "scan_identity" = "Kimlik tara";
@@ -1092,6 +1084,7 @@ Threema Safe'i kullanırken, cihazınıza erişiminizi kaybetmeniz durumunda Thr
 "settings_license" = "Lisans";
 "settings_advanced" = "Gelişmiş";
 "settings_threema_work" = "Threema İş";
+"settings_threema_work_subtitle" = "Şirketler için güvenli iletişim çözümü";
 "settings_feedback" = "Beta geri bildirimi";
 "tos_cell_title" = "Kullanım şartları";
 
@@ -1132,7 +1125,6 @@ Threema Safe'i kullanırken, cihazınıza erişiminizi kaybetmeniz durumunda Thr
 "settings_privacy_hide_private_chats" = "Özel Sohbetleri Gizle";
 "settings_privacy_hide_private_chats_footer" = "Sohbetlere genel bakışta tüm özel sohbetleri gizler. Bu ayarı etkinleştirmek için bir şifre belirlemeniz gerekir.";
 
-
 // Appearance
 "settings_appearance_theme_section" = "Tasarım teması";
 "settings_appearance_light_theme" = "Açık";
@@ -1150,7 +1142,15 @@ Threema Safe'i kullanırken, cihazınıza erişiminizi kaybetmeniz durumunda Thr
 "settings_appearance_show_gallery_preview" = "Galeri önizlemesini göster";
 
 // Chat Settings
-"settings_chat_send_message_feedback_label" = "Göndermede Dokunsal Geri Bildirim";
+"settings_chat_wallpaper_title" = "Duvar kağıdı";
+"settings_chat_wallpaper_reset" = "Tüm duvar kağıtlarını sıfırla";
+"settings_chat_wallpaper_empty" = "Hiçbiri";
+"settings_chat_wallpaper_custom" = "Özel";
+"settings_chat_wallpaper_default" = "Varsayılan";
+"settings_chat_wallpaper_reset_all_alert" = "Özel bir sohbet için ayarlanmış tüm duvar kağıtlarını yukarıda seçilen seçeneğe sıfırlar. Geri alınamaz.";
+
+"settings_chat_bigger_emojis" = "Daha Büyük Emojiler";
+"settings_chat_send_message_feedback" = "Göndermede Dokunsal Geribesleme";
 
 // Media
 "settings_media_autosave_private_footer" = "Özel sohbetlerde alınan medya otomatik olarak kaydedilmez.";
@@ -1162,8 +1162,48 @@ Threema Safe'i kullanırken, cihazınıza erişiminizi kaybetmeniz durumunda Thr
 "sentry_crash_send_no" = "Gönderme";
 "sentry_crash_comment_placeholder" = "Çökme raporu";
 
+
+
 // My profile
 "profile_share_id_text" = "Threema kimliğim";
+"my_profile_delete_cell_title" = "Kimliği ve Verileri Sil";
+
+// Delete & Revoke
+"my_profile_delete_bullet_id" = "Threema Kimliği";
+"my_profile_delete_bullet_chats" = "Sohbetler";
+"my_profile_delete_bullet_picture" = "Profil fotoğrafı";
+"my_profile_delete_bullet_safe" = "Threema Safe yedeği";
+"my_profile_delete_bullet_linked" = "Telefon numarası ve/veya e-posta bağlantıları";
+
+"my_profile_delete_info_title" = "Kimliği ve Verileri Sil";
+"my_profile_delete_info_keep" = "Aşağıdaki veriler kullanılabilir kalır ve silinmez:";
+"my_profile_delete_info_delete" = "Aşağıdaki veriler bu cihazdan kaldırılacak:";
+"my_profile_delete_info_toggle" = "Hepsini sil";
+
+"my_profile_delete_info_button_data" = "Verileri Sil";
+"my_profile_delete_info_button_revoke" = "Kimliği ve Verileri Sil";
+
+"my_profile_delete_identity_title" = "Sohbetler ve Profil Silinsin mi?";
+"my_profile_delete_identity_keep" = "Tutacaksınız:";
+"my_profile_delete_identity_remove" = "Bu cihazdan kaldırmak üzeresiniz:";
+"my_profile_delete_identity_delete" = "Sohbetleri ve Profili Sil";
+
+"my_profile_delete_identity_view_alert_title" = "Bu işlemi geri alamazsınız.\nDevam etmek istediğine emin misiniz?";
+"my_profile_delete_identity_view_alert_confirm" = "Verileri Sil";
+
+"my_profile_revoke_identity_view_title" = "Hepsi Silinsin mi?";
+"my_profile_revoke_info_delete" = "Kalıcı olarak sileceksiniz:";
+"my_profile_revoke_identity_view_info" = "Uyarı: Bu işlemi geri alamazsınız!";
+"my_profile_revoke_identity_view_enter_id" = "Her şeyi kesinlikle silmek için lütfen Threema kimliğinizi “%@“ girin:";
+"my_profile_revoke_identity_view_placeholder" = "Threema Kimliğiniz";
+"my_profile_revoke_identity_view_button_revoke" = "Hepsini Sil";
+
+"my_profile_delete_identity_summary_view_delete_title" = "Sohbetler ve Profil Silindi";
+"my_profile_delete_identity_summary_view_revoke_title" = "Herşey Silindi";
+"my_profile_delete_identity_summary_view_delete_success" = "Bu cihazdan başarıyla kaldırdınız:";
+"my_profile_delete_identity_summary_view_revoke_success" = "Başarıyla sildiniz:";
+"my_profile_delete_identity_summary_view_restart" = "Kullanmaya devam etmek için uygulamayı yeniden başlatın.";
+"my_profile_delete_identity_summary_view_close" = "Uygulamayı Kapat";
 
 // File message
 "optional_caption" = "İsteğe bağlı altyazı";
@@ -1350,7 +1390,6 @@ Artık dosyaları çöp kutusuna taşıyın ve %@ içinde hiçbir (medya) dosyas
 "privacySetting_header" = "Gizlilik";
 "send_readReceipts" = "Okundu bilgileri";
 "dont_send" = "Gönderme";
-"send_readReceipt" = "Okundu bilgisi";
 "send_typingIndicators" = "Yazma göstergeleri";
 "send_typingIndicator" = "Yazma göstergesi";
 
@@ -1358,8 +1397,7 @@ Artık dosyaları çöp kutusuna taşıyın ve %@ içinde hiçbir (medya) dosyas
 "use_default_send" = "Varsayılan (%@)";
 "default_setting" = "Varsayılan ayarlar";
 
-"readReceipt_sheetMessage" = "Bu kişi için varsayılan ayarı geçersiz kıl.";
-"typingIndicator_sheetMessage" = "Bu kişi için varsayılan ayarı geçersiz kıl.";
+"contactoverride_sheetMessage" = "Bu, söz konusu ilgili kişi için varsayılan ayarı geçersiz kılar.";
 
 /* Multi Decvice */
 "multi_device_linked_devices_title" = "Çoklu Cihaz Önizlemesi";
@@ -1490,6 +1528,12 @@ Artık dosyaları çöp kutusuna taşıyın ve %@ içinde hiçbir (medya) dosyas
 "notification_interaction_delete_succeeded" = "Etkileşimler Silindi";
 "notification_interaction_delete_failed" = "Etkileşimleri Silme Başarısız";
 
+"notification_revocation_failed" = "İptal Başarısız";
+
+"notification_caption_too_long" = "Altyazı çok uzun";
+
+"notification_updateworkdata_failed" = "Konfigurasyon sunucusuyla eşitleme başarısız oldu";
+
 // Forward security status messages
 "forward_security_message_without" = "Kusursuz İletme Gizliliği olmayan bir mesaj alındı.  Gönderenin Kusursuz İletme Gizliliğini kasıtlı olarak devre dışı bıraktığını doğrulayın.";
 "forward_security_session_established" = "Bu sohbetteki mesajlar artık Mükemmel İletme Gizliliği ile korunmaktadır.";
@@ -1542,6 +1586,8 @@ Artık dosyaları çöp kutusuna taşıyın ve %@ içinde hiçbir (medya) dosyas
 "accessibility_ballotMessage_hint_open" = "Oy vermek için anketi aç.";
 "accessibility_ballotMessage_hint_closed" = "Anket sonuçlarını göster.";
 "accessibility_voiceMessage_speed_hint" = "Oynatma hızını değiştir.";
+"accessibility_voiceMessage_forward_hint" = "10 saniye ileri sarma.";
+"accessibility_voiceMessage_rewind_hint" = "10 saniye geri sarma.";
 
 // Other
 "accessibility_caption" = "Altyazı: %@";

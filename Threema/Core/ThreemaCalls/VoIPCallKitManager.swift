@@ -219,7 +219,7 @@ extension VoIPCallKitManager {
             try audioSession.setCategory(
                 .playAndRecord,
                 mode: .spokenAudio,
-                options: [.allowBluetooth, .allowBluetoothA2DP]
+                options: [.duckOthers, .allowBluetooth, .allowBluetoothA2DP]
             )
             try audioSession.setActive(true)
         }

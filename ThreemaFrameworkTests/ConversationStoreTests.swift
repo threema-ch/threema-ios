@@ -36,7 +36,6 @@ final class ConversationStoreTests: XCTestCase {
 
     func testUnpinConversationPinned() throws {
         let conversation = createConversation(
-            marked: true,
             unreadMessageCount: 0,
             category: .default,
             visibility: .pinned
@@ -55,7 +54,6 @@ final class ConversationStoreTests: XCTestCase {
 
     func testUnpinConversationUnpinned() throws {
         let conversation = createConversation(
-            marked: false,
             unreadMessageCount: 0,
             category: .default,
             visibility: .default
@@ -74,10 +72,9 @@ final class ConversationStoreTests: XCTestCase {
 
     func testPinConversationPinned() throws {
         let conversation = createConversation(
-            marked: true,
             unreadMessageCount: 0,
             category: .default,
-            visibility: .default
+            visibility: .pinned
         )
 
         let conversationStore = ConversationStore(entityManager: entityManager)
@@ -88,12 +85,11 @@ final class ConversationStoreTests: XCTestCase {
                 .conversation(forContact: conversation.contact!, createIfNotExisting: false)
         )
 
-        XCTAssertTrue(loadedConversation.marked.boolValue, "Conversation should be pinned.")
+        XCTAssertEqual(loadedConversation.conversationVisibility, .pinned, "Conversation should be pinned.")
     }
 
     func testPinConversationUnpinned() throws {
         let conversation = createConversation(
-            marked: false,
             unreadMessageCount: 0,
             category: .default,
             visibility: .default
@@ -107,12 +103,11 @@ final class ConversationStoreTests: XCTestCase {
                 .conversation(forContact: conversation.contact!, createIfNotExisting: false)
         )
 
-        XCTAssertTrue(loadedConversation.marked.boolValue, "Conversation should be pinned.")
+        XCTAssertEqual(loadedConversation.conversationVisibility, .pinned, "Conversation should be pinned.")
     }
 
     func testMakePrivateConversationPrivate() throws {
         let conversation = createConversation(
-            marked: false,
             unreadMessageCount: 0,
             category: .private,
             visibility: .default
@@ -131,7 +126,6 @@ final class ConversationStoreTests: XCTestCase {
 
     func testMakePrivateConversationNotPrivate() throws {
         let conversation = createConversation(
-            marked: false,
             unreadMessageCount: 0,
             category: .private,
             visibility: .default
@@ -150,7 +144,6 @@ final class ConversationStoreTests: XCTestCase {
 
     func testMakeNotPrivateConversationNotPrivate() throws {
         let conversation = createConversation(
-            marked: false,
             unreadMessageCount: 0,
             category: .default,
             visibility: .default
@@ -169,7 +162,6 @@ final class ConversationStoreTests: XCTestCase {
 
     func testMakeNotPrivateConversationPrivate() throws {
         let conversation = createConversation(
-            marked: false,
             unreadMessageCount: 0,
             category: .default,
             visibility: .default
@@ -188,13 +180,11 @@ final class ConversationStoreTests: XCTestCase {
 
     func testUnmarkAllPrivateConversations() throws {
         createConversation(
-            marked: false,
             unreadMessageCount: 0,
             category: .private,
             visibility: .default
         )
         createConversation(
-            marked: false,
             unreadMessageCount: 0,
             category: .private,
             visibility: .default,
@@ -248,7 +238,6 @@ final class ConversationStoreTests: XCTestCase {
 
     @discardableResult
     private func createConversation(
-        marked: Bool,
         unreadMessageCount: Int,
         category: ConversationCategory,
         visibility: ConversationVisibility,
@@ -265,7 +254,6 @@ final class ConversationStoreTests: XCTestCase {
             )
 
             conversation = databasePreparer.createConversation(
-                marked: marked,
                 typing: false,
                 unreadMessageCount: unreadMessageCount,
                 category: category,

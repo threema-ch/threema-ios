@@ -32,6 +32,7 @@ enum GroupDetails {
         case notifications
         case groupActions
         case destructiveGroupActions
+        case wallpaper
     }
     
     enum Row: Hashable {
@@ -55,5 +56,8 @@ enum GroupDetails {
         // Notifications
         case doNotDisturb(action: Details.Action, group: Group)
         case booleanAction(_ action: Details.BooleanAction)
+        
+        // Wallpaper
+        case wallpaper(action: Details.Action, isDefault: Bool)
     }
 }

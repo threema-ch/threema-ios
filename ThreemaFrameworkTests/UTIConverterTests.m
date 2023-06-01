@@ -19,7 +19,6 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import <XCTest/XCTest.h>
-#import <Expecta/Expecta.h>
 #import "UTIConverter.h"
 
 @interface UTIConverterTests : XCTestCase
@@ -32,19 +31,20 @@
 - (void)testVCard {
     NSString *result = [UTIConverter mimeTypeFromUTI:UTTYPE_VCARD];
     
-    expect(result).to.equal(@"text/vcard");
+    XCTAssert([result isEqualToString:@"text/vcard"]);
 }
 
 /// Should get stream mime type from contacts UTI
 - (void)testStream {
     NSString *result = [UTIConverter mimeTypeFromUTI:@"xyz.unknonw"];
     
-    expect(result).to.equal(@"application/octet-stream");
+    XCTAssert([result isEqualToString:@"application/octet-stream"]);
 }
 
 /// Should get contacts UTI from vCard mime type
 - (void)testUTIContact {
     NSString *result = [UTIConverter utiFromMimeType:@"text/vcard"];
-    expect(result).to.equal(UTTYPE_VCARD);
+    
+    XCTAssert([result isEqualToString:UTTYPE_VCARD]);
 }
 @end

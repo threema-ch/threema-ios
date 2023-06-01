@@ -48,13 +48,9 @@
 "cannot_connect_title" = "No connection";
 "cannot_connect_message" = "Cannot connect, please check your internet connection.";
 
-"delete_identity_warning" = "If you delete your ID, both your key pair and your app data will be deleted. If you didn’t create a backup, you won’t be able to send or receive messages using this ID again.\n\nIf you don’t want to use this ID anymore, it’s advisable to unlink any email address or phone number before deleting the ID.";
-"delete_identity_warning2" = "Last warning: do you really want to delete your data and ID?";
+// JKLockScreenViewController
 "delete_identity_passcode_title" = "Passcode Enabled";
 "delete_identity_passcode_message" = "Please disable the passcode before deleting your ID.";
-"delete_identity_title" = "App Data Deleted";
-"delete_identity_description" = "All app data has been deleted. Please restart the app to set up %@.";
-"delete_identity_app_close" = "Close app";
 
 /* JKLockScreenViewController */
 "cancel" = "Cancel";
@@ -64,7 +60,6 @@
 "yes" = "Yes";
 "delete" = "Delete";
 "try_again" = "Try Again";
-"delete_identity" = "Delete Data and ID";
 "copy" = "Copy";
 "save" = "Save";
 "download" = "Download";
@@ -79,7 +74,6 @@
 "sticker" = "Sticker";
 "gif" = "GIF";
 "video" = "Video";
-"audio" = "Audio";
 "file" = "File";
 "location" = "Location";
 "locating" = "Locating…";
@@ -183,8 +177,6 @@
 "sound_threema_goody" = "Remix";
 "sound_threema_alphorn" = "Alphorn";
 
-"reset_wallpaper" = "Reset Wallpaper";
-"bigger_single_emojis" = "Bigger Single Emojis";
 "identity_none" = "none";
 "message" = "Message"; /* Short version for "Send Message" */
 "scan_identity" = "Scan ID";
@@ -1092,6 +1084,7 @@ When using Threema Safe, your can restore your Threema ID, contacts ,and groups 
 "settings_license" = "License";
 "settings_advanced" = "Advanced";
 "settings_threema_work" = "Threema Work";
+"settings_threema_work_subtitle" = "The secure communication solution for companies";
 "settings_feedback" = "Beta Feedback";
 "tos_cell_title" = "Terms of Service";
 
@@ -1132,7 +1125,6 @@ When using Threema Safe, your can restore your Threema ID, contacts ,and groups 
 "settings_privacy_hide_private_chats" = "Hide Private Chats";
 "settings_privacy_hide_private_chats_footer" = "Hides all private chats in the chats overview. You need to set a passcode in order to activate this setting.";
 
-
 // Appearance
 "settings_appearance_theme_section" = "Design theme";
 "settings_appearance_light_theme" = "Light";
@@ -1150,7 +1142,15 @@ When using Threema Safe, your can restore your Threema ID, contacts ,and groups 
 "settings_appearance_show_gallery_preview" = "Show Gallery Preview";
 
 // Chat Settings
-"settings_chat_send_message_feedback_label" = "Haptic Feedback on Send";
+"settings_chat_wallpaper_title" = "Wallpaper";
+"settings_chat_wallpaper_reset" = "Reset all wallpapers";
+"settings_chat_wallpaper_empty" = "None";
+"settings_chat_wallpaper_custom" = "Custom";
+"settings_chat_wallpaper_default" = "Default";
+"settings_chat_wallpaper_reset_all_alert" = "Resets all wallpapers that were set specifically for a chat to the above selected option. Can't be undone.";
+
+"settings_chat_bigger_emojis" = "Bigger Emojis";
+"settings_chat_send_message_feedback" = "Haptic Feedback on Send";
 
 // Media
 "settings_media_autosave_private_footer" = "Media received in private chats will not be automatically autosaved.";
@@ -1162,8 +1162,48 @@ When using Threema Safe, your can restore your Threema ID, contacts ,and groups 
 "sentry_crash_send_no" = "Don’t Send";
 "sentry_crash_comment_placeholder" = "Crash Report";
 
+
+
 // My profile
 "profile_share_id_text" = "My Threema ID";
+"my_profile_delete_cell_title" = "Delete ID and Data";
+
+// Delete & Revoke
+"my_profile_delete_bullet_id" = "Threema ID";
+"my_profile_delete_bullet_chats" = "Chats";
+"my_profile_delete_bullet_picture" = "Profile picture";
+"my_profile_delete_bullet_safe" = "Threema Safe backup";
+"my_profile_delete_bullet_linked" = "Phone number and/or email links";
+
+"my_profile_delete_info_title" = "Delete ID and Data";
+"my_profile_delete_info_keep" = "The following data remains usable and will not be deleted:";
+"my_profile_delete_info_delete" = "The following data will be removed from this device:";
+"my_profile_delete_info_toggle" = "Delete everything";
+
+"my_profile_delete_info_button_data" = "Delete Data";
+"my_profile_delete_info_button_revoke" = "Delete ID and Data";
+
+"my_profile_delete_identity_title" = "Delete Chats and Profile?";
+"my_profile_delete_identity_keep" = "You will keep:";
+"my_profile_delete_identity_remove" = "You are about to remove from this device:";
+"my_profile_delete_identity_delete" = "Delete Chats and Profile";
+
+"my_profile_delete_identity_view_alert_title" = "You cannot undo this action.\nAre you sure you want to continue?";
+"my_profile_delete_identity_view_alert_confirm" = "Delete Data";
+
+"my_profile_revoke_identity_view_title" = "Delete Everything?";
+"my_profile_revoke_info_delete" = "You will permanently delete your:";
+"my_profile_revoke_identity_view_info" = "Warning: You cannot undo this action!";
+"my_profile_revoke_identity_view_enter_id" = "Please enter your Threema ID “%@“ to definitely delete everything:";
+"my_profile_revoke_identity_view_placeholder" = "Your Threema ID";
+"my_profile_revoke_identity_view_button_revoke" = "Delete Everything";
+
+"my_profile_delete_identity_summary_view_delete_title" = "Chats and Profile Deleted";
+"my_profile_delete_identity_summary_view_revoke_title" = "Everything Has Been Deleted";
+"my_profile_delete_identity_summary_view_delete_success" = "You have successfully removed from this device:";
+"my_profile_delete_identity_summary_view_revoke_success" = "You have successfully deleted your:";
+"my_profile_delete_identity_summary_view_restart" = "Restart the app to continue using it.";
+"my_profile_delete_identity_summary_view_close" = "Close App";
 
 // File message
 "optional_caption" = "Optional caption";
@@ -1350,7 +1390,6 @@ If there are no (media) files missing in %@, empty the trash bin to permanently 
 "privacySetting_header" = "Privacy";
 "send_readReceipts" = "Read Receipts";
 "dont_send" = "Don't Send";
-"send_readReceipt" = "Read Receipt";
 "send_typingIndicators" = "Typing Indicators";
 "send_typingIndicator" = "Typing Indicator";
 
@@ -1358,8 +1397,7 @@ If there are no (media) files missing in %@, empty the trash bin to permanently 
 "use_default_send" = "Default (%@)";
 "default_setting" = "Default Setting";
 
-"readReceipt_sheetMessage" = "Override default setting for this contact.";
-"typingIndicator_sheetMessage" = "Override default setting for this contact.";
+"contactoverride_sheetMessage" = "This overrides the default setting for this specific contact.";
 
 /* Multi Decvice */
 "multi_device_linked_devices_title" = "Multi-Device Preview";
@@ -1490,6 +1528,12 @@ If there are no (media) files missing in %@, empty the trash bin to permanently 
 "notification_interaction_delete_succeeded" = "Interactions Deleted";
 "notification_interaction_delete_failed" = "Deleting Interactions Failed";
 
+"notification_revocation_failed" = "Revocation Failed";
+
+"notification_caption_too_long" = "Caption is too long";
+
+"notification_updateworkdata_failed" = "Synchronization with the provisioning server failed";
+
 // Forward security status messages
 "forward_security_message_without" = "A message without Perfect Forward Secrecy has been received. Verify that the sender has intentionally disabled Perfect Forward Secrecy.";
 "forward_security_session_established" = "Messages in this chat are now protected by Perfect Forward Secrecy.";
@@ -1542,6 +1586,8 @@ If there are no (media) files missing in %@, empty the trash bin to permanently 
 "accessibility_ballotMessage_hint_open" = "Open poll to vote.";
 "accessibility_ballotMessage_hint_closed" = "Show poll results.";
 "accessibility_voiceMessage_speed_hint" = "Change playback speed.";
+"accessibility_voiceMessage_forward_hint" = "10 seconds forward.";
+"accessibility_voiceMessage_rewind_hint" = "10 seconds rewind.";
 
 // Other
 "accessibility_caption" = "Caption: %@";

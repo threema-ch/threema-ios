@@ -34,6 +34,7 @@ protocol ChatBarViewDelegate: AnyObject {
     func showCamera()
     func showImagePicker()
     func checkIfPastedStringIsMedia() -> Bool
+    func showContact(identity: String)
     
     // Voice Messages
     func startRecording()
@@ -593,6 +594,10 @@ extension ChatBarView: ChatTextViewDelegate {
     
     func canStartEditing() -> Bool {
         chatBarViewDelegate?.canSendText() ?? false
+    }
+    
+    func showContact(identity: String) {
+        chatBarViewDelegate?.showContact(identity: identity)
     }
 
     /// This flips the isTyping indicator and sends a message updating the status for the contact

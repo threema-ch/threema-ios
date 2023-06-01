@@ -152,13 +152,13 @@ extension History_MediaType: CaseIterable {
 
 /// Root message envelope for messages from the destination device (DD) to the
 /// source device (SD).
-struct History_FromDestinationDeviceEnvelope {
+struct History_DdToSd {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   /// The enveloped message
-  var content: History_FromDestinationDeviceEnvelope.OneOf_Content? = nil
+  var content: History_DdToSd.OneOf_Content? = nil
 
   var getSummary: History_GetSummary {
     get {
@@ -184,7 +184,7 @@ struct History_FromDestinationDeviceEnvelope {
     case beginTransfer(History_BeginTransfer)
 
   #if !swift(>=4.1)
-    static func ==(lhs: History_FromDestinationDeviceEnvelope.OneOf_Content, rhs: History_FromDestinationDeviceEnvelope.OneOf_Content) -> Bool {
+    static func ==(lhs: History_DdToSd.OneOf_Content, rhs: History_DdToSd.OneOf_Content) -> Bool {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
@@ -208,13 +208,13 @@ struct History_FromDestinationDeviceEnvelope {
 
 /// Root message envelope for messages from the source device (SD) to the
 /// destination device (DD).
-struct History_FromSourceDeviceEnvelope {
+struct History_SdToDd {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   /// The enveloped message
-  var content: History_FromSourceDeviceEnvelope.OneOf_Content? = nil
+  var content: History_SdToDd.OneOf_Content? = nil
 
   var summary: History_Summary {
     get {
@@ -249,7 +249,7 @@ struct History_FromSourceDeviceEnvelope {
     case data(History_Data)
 
   #if !swift(>=4.1)
-    static func ==(lhs: History_FromSourceDeviceEnvelope.OneOf_Content, rhs: History_FromSourceDeviceEnvelope.OneOf_Content) -> Bool {
+    static func ==(lhs: History_SdToDd.OneOf_Content, rhs: History_SdToDd.OneOf_Content) -> Bool {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
@@ -634,6 +634,24 @@ struct History_PastIncomingMessage {
   fileprivate var _lastReactionAt: History_Reaction? = nil
 }
 
+#if swift(>=5.5) && canImport(_Concurrency)
+extension History_MediaType: @unchecked Sendable {}
+extension History_DdToSd: @unchecked Sendable {}
+extension History_DdToSd.OneOf_Content: @unchecked Sendable {}
+extension History_SdToDd: @unchecked Sendable {}
+extension History_SdToDd.OneOf_Content: @unchecked Sendable {}
+extension History_GetSummary: @unchecked Sendable {}
+extension History_Summary: @unchecked Sendable {}
+extension History_BeginTransfer: @unchecked Sendable {}
+extension History_Data: @unchecked Sendable {}
+extension History_PastMessage: @unchecked Sendable {}
+extension History_PastMessage.OneOf_Message: @unchecked Sendable {}
+extension History_Reaction: @unchecked Sendable {}
+extension History_Reaction.TypeEnum: @unchecked Sendable {}
+extension History_PastOutgoingMessage: @unchecked Sendable {}
+extension History_PastIncomingMessage: @unchecked Sendable {}
+#endif  // swift(>=5.5) && canImport(_Concurrency)
+
 // MARK: - Code below here is support for the SwiftProtobuf runtime.
 
 fileprivate let _protobuf_package = "history"
@@ -644,8 +662,8 @@ extension History_MediaType: SwiftProtobuf._ProtoNameProviding {
   ]
 }
 
-extension History_FromDestinationDeviceEnvelope: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  static let protoMessageName: String = _protobuf_package + ".FromDestinationDeviceEnvelope"
+extension History_DdToSd: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = _protobuf_package + ".DdToSd"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "get_summary"),
     2: .standard(proto: "begin_transfer"),
@@ -690,8 +708,9 @@ extension History_FromDestinationDeviceEnvelope: SwiftProtobuf.Message, SwiftPro
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
-    // allocates stack space for every case branch when no optimizations are
-    // enabled. https://github.com/apple/swift-protobuf/issues/1034
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
     switch self.content {
     case .getSummary?: try {
       guard case .getSummary(let v)? = self.content else { preconditionFailure() }
@@ -706,15 +725,15 @@ extension History_FromDestinationDeviceEnvelope: SwiftProtobuf.Message, SwiftPro
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  static func ==(lhs: History_FromDestinationDeviceEnvelope, rhs: History_FromDestinationDeviceEnvelope) -> Bool {
+  static func ==(lhs: History_DdToSd, rhs: History_DdToSd) -> Bool {
     if lhs.content != rhs.content {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
 }
 
-extension History_FromSourceDeviceEnvelope: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  static let protoMessageName: String = _protobuf_package + ".FromSourceDeviceEnvelope"
+extension History_SdToDd: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = _protobuf_package + ".SdToDd"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "summary"),
     2: .standard(proto: "blob_data"),
@@ -773,8 +792,9 @@ extension History_FromSourceDeviceEnvelope: SwiftProtobuf.Message, SwiftProtobuf
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
-    // allocates stack space for every case branch when no optimizations are
-    // enabled. https://github.com/apple/swift-protobuf/issues/1034
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
     switch self.content {
     case .summary?: try {
       guard case .summary(let v)? = self.content else { preconditionFailure() }
@@ -793,7 +813,7 @@ extension History_FromSourceDeviceEnvelope: SwiftProtobuf.Message, SwiftProtobuf
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  static func ==(lhs: History_FromSourceDeviceEnvelope, rhs: History_FromSourceDeviceEnvelope) -> Bool {
+  static func ==(lhs: History_SdToDd, rhs: History_SdToDd) -> Bool {
     if lhs.content != rhs.content {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
@@ -823,12 +843,16 @@ extension History_GetSummary: SwiftProtobuf.Message, SwiftProtobuf._MessageImple
   }
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
     if self.id != 0 {
       try visitor.visitSingularUInt32Field(value: self.id, fieldNumber: 1)
     }
-    if let v = self._timespan {
+    try { if let v = self._timespan {
       try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
-    }
+    } }()
     if !self.media.isEmpty {
       try visitor.visitPackedEnumField(value: self.media, fieldNumber: 3)
     }
@@ -1004,8 +1028,9 @@ extension History_PastMessage: SwiftProtobuf.Message, SwiftProtobuf._MessageImpl
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
-    // allocates stack space for every case branch when no optimizations are
-    // enabled. https://github.com/apple/swift-protobuf/issues/1034
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
     switch self.message {
     case .incoming?: try {
       guard case .incoming(let v)? = self.message else { preconditionFailure() }
@@ -1097,18 +1122,22 @@ extension History_PastOutgoingMessage: SwiftProtobuf.Message, SwiftProtobuf._Mes
   }
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    if let v = self._message {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
+    try { if let v = self._message {
       try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
-    }
+    } }()
     if self.sentAt != 0 {
       try visitor.visitSingularUInt64Field(value: self.sentAt, fieldNumber: 2)
     }
-    if let v = self._readAt {
+    try { if let v = self._readAt {
       try visitor.visitSingularUInt64Field(value: v, fieldNumber: 3)
-    }
-    if let v = self._lastReactionAt {
+    } }()
+    try { if let v = self._lastReactionAt {
       try visitor.visitSingularMessageField(value: v, fieldNumber: 4)
-    }
+    } }()
     try unknownFields.traverse(visitor: &visitor)
   }
 
@@ -1147,18 +1176,22 @@ extension History_PastIncomingMessage: SwiftProtobuf.Message, SwiftProtobuf._Mes
   }
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    if let v = self._message {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
+    try { if let v = self._message {
       try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
-    }
+    } }()
     if self.receivedAt != 0 {
       try visitor.visitSingularUInt64Field(value: self.receivedAt, fieldNumber: 2)
     }
-    if let v = self._readAt {
+    try { if let v = self._readAt {
       try visitor.visitSingularUInt64Field(value: v, fieldNumber: 3)
-    }
-    if let v = self._lastReactionAt {
+    } }()
+    try { if let v = self._lastReactionAt {
       try visitor.visitSingularMessageField(value: v, fieldNumber: 4)
-    }
+    } }()
     try unknownFields.traverse(visitor: &visitor)
   }
 

@@ -96,7 +96,7 @@ class TaskExecutionSendBallotVoteMessageTests: XCTestCase {
                 groupID: BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!,
                 groupCreator: nil
             )
-            dbPreparer.createConversation(marked: false, typing: false, unreadMessageCount: 0) { conversation in
+            dbPreparer.createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
                 conversation.groupID = groupEntity.groupID
                 conversation.groupMyIdentity = myIdentityStoreMock.identity
                 
@@ -197,7 +197,7 @@ class TaskExecutionSendBallotVoteMessageTests: XCTestCase {
                 identity: "ECHOECHO",
                 verificationLevel: 0
             )
-            dbPreparer.createConversation(marked: false, typing: false, unreadMessageCount: 0) { conversation in
+            dbPreparer.createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
                 conversation.contact = contact
                 
                 ballot = frameworkInjectorMock.entityManager.entityCreator.ballot()
@@ -306,7 +306,7 @@ class TaskExecutionSendBallotVoteMessageTests: XCTestCase {
                 groupID: BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!,
                 groupCreator: "MEMBER01"
             )
-            dbPreparer.createConversation(marked: false, typing: false, unreadMessageCount: 0) { conversation in
+            dbPreparer.createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
                 conversation.groupID = groupEntity.groupID
                 conversation.contact = members.first(where: { $0.identity == "MEMBER01" })
                 conversation.addMembers(members)

@@ -19,7 +19,6 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import <XCTest/XCTest.h>
-#import <Expecta/Expecta.h>
 #import "ThreemaUtilityObjC.h"
 
 @interface UtilsTests : XCTestCase
@@ -29,15 +28,15 @@
 @implementation UtilsTests
 
 - (void)testEmailValidation {
-    expect([ThreemaUtilityObjC isValidEmail:nil]).to.equal(NO);
-    expect([ThreemaUtilityObjC isValidEmail:@""]).to.equal(NO);
-    expect([ThreemaUtilityObjC isValidEmail:@"asfasf"]).to.equal(NO);
-    expect([ThreemaUtilityObjC isValidEmail:@"a@a"]).to.equal(NO);
-    expect([ThreemaUtilityObjC isValidEmail:@"@"]).to.equal(NO);
-    expect([ThreemaUtilityObjC isValidEmail:@"a@a@a"]).to.equal(NO);
+    XCTAssertFalse([ThreemaUtilityObjC isValidEmail:nil]);
+    XCTAssertFalse([ThreemaUtilityObjC isValidEmail:@""]);
+    XCTAssertFalse([ThreemaUtilityObjC isValidEmail:@"asfasf"]);
+    XCTAssertFalse([ThreemaUtilityObjC isValidEmail:@"a@a"]);
+    XCTAssertFalse([ThreemaUtilityObjC isValidEmail:@"@"]);
+    XCTAssertFalse([ThreemaUtilityObjC isValidEmail:@"a@a@a"]);
 
-    expect([ThreemaUtilityObjC isValidEmail:@"test@gaga.com"]).to.equal(YES);
-    expect([ThreemaUtilityObjC isValidEmail:@"a.b@xx.com"]).to.equal(YES);
+    XCTAssertTrue([ThreemaUtilityObjC isValidEmail:@"test@gaga.com"]);
+    XCTAssertTrue([ThreemaUtilityObjC isValidEmail:@"a.b@xx.com"]);
 }
 
 

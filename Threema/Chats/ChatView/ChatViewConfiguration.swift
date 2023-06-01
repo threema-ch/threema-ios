@@ -563,9 +563,13 @@ enum ChatViewConfiguration {
         /// Vertical distance between border of ChatBar and text view
         static let verticalChatBarTextViewDistance: CGFloat = 7
         /// The maximum number of lines before the textInputView start to scroll
-        static let maxNumberOfLines = 7
+        static let maxNumberOfLinesPortrait = 7
+        /// The maximum number of lines before the textInputView start to scroll
+        static let maxNumberOfLinesLandscape = 3
         /// The default value for the height of a single line
         static let defaultSingleLineHeight: CGFloat = 33.5
+        /// The minimum spacing betwenn the ChatBar and the top of the tableView
+        static let tableViewChatBarMinSpacing: CGFloat = 60.0
         /// Animation configuration for hiding / showing the send button
         enum ShowHideSendButtonAnimation {
             static let totalDuration: CGFloat = 0.25

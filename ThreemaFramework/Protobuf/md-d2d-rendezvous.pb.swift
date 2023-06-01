@@ -7,11 +7,167 @@
 // For information on using the generated types, please see the documentation:
 //   https://github.com/apple/swift-protobuf/
 
-// ## Connection Rendezvous Protocol (Supplementary)
+// ## Connection Rendezvous Protocol
 //
-// This is a supplementary section to the corresponding structbuf section
-// with complementary protobuf messages. All defined messages here follow the
-// same logic.
+// Some mechanisms may request a 1:1 connection between two devices in order to
+// transmit data as direct as possible. Establishing such a connection should
+// always require user interaction.
+//
+// The protocol runs an authentication **handshake** on multiple paths
+// simultaneously and applies a heuristic to determine the best available path.
+// One of the devices is eligible to **nominate** a path after which arbitrary
+// encrypted payloads may be exchanged.
+//
+// ### Terminology
+//
+// - `RID`: Rendezvous Initiator Device
+// - `RRD`: Rendezvous Responder Device
+// - `AK`: Authentication Key
+// - `ETK`: Ephemeral Transport Key
+// - `STK`: Shared Transport Key
+// - `PID`: Path ID
+// - `RIDAK`: RID's Authentication Key
+// - `RRDAK`: RRD's Authentication Key
+// - `RIDTK`: RID's Transport Key
+// - `RRDTK`: RRD's Transport Key
+// - `RIDSN`: RID's Sequence Number
+// - `RRDSN`: RRD's Sequence Number
+//
+// ### Key Derivation
+//
+//     RIDAK = BLAKE2b(key=AK.secret, salt='rida', personal='3ma-rendezvous')
+//     RRDAK = BLAKE2b(key=AK.secret, salt='rrda', personal='3ma-rendezvous')
+//
+//     STK = BLAKE2b(
+//       key=
+//           AK.secret
+//        || X25519HSalsa20(<local.ETK>.secret, <remote.ETK>.secret)
+//       salt='st',
+//       personal='3ma-rendezvous'
+//     )
+//
+//     RIDTK = BLAKE2b(key=STK.secret, salt='ridt', personal='3ma-rendezvous')
+//     RRDTK = BLAKE2b(key=STK.secret, salt='rrdt', personal='3ma-rendezvous')
+//
+// ### General Information
+//
+// Sequence number: The sequence number starts with `1` and is counted
+// separately for each direction (i.e. there is one sequence number counter for
+// the client and one for the server). We will use `RIDSN+` and `RRDSN+` in this
+// document to denote that the counter should be increased **after** the value
+// has been inserted (i.e. semantically equivalent to `x++` in many languages).
+//
+// Framing: An `extra.transport.frame` is being used to frame all transmitted
+// data even if the transport supports datagrams. This intentionally allows to
+// fragment a frame across multiple datagrams (e.g. useful for limited APIs that
+// cannot deliver data in a streamed fashion).
+//
+// ### Encryption Schemes
+//
+// RID's encryption scheme is defined in the following way:
+//
+//         ChaCha20-Poly1305(
+//           key=<RID*K.secret>,
+//           nonce=u32-le(PID) || u32-le(RIDSN+) || <4 zero bytes>,
+//         )
+//
+// RRD's encryption scheme is defined in the following way:
+//
+//         ChaCha20-Poly1305(
+//           key=<RRD*K.secret>,
+//           nonce=u32-le(PID) || u32-le(RRDSN+) || <4 zero bytes>,
+//         )
+//
+// ### Rendezvous Path Hash Derivation
+//
+// A Rendezvous Path Hash (RPH) can be used to ensure that both parties are
+// connected to each other and not to some other party who was able to intercept
+// AK:
+//
+//     RPH = BLAKE2b(
+//       out-length=32,
+//       salt='ph',
+//       personal='3ma-rendezvous',
+//       input=STK.secret,
+//     )
+//
+// ### Path Matrix
+//
+// | Name              | Multiple Paths |
+// |-------------------|----------------|
+// | Direct TCP Server | Yes            |
+// | Relayed WebSocket | No             |
+//
+// ### Protocol Flow
+//
+// Connection paths are formed by transmitting a `rendezvous.RendezvousInit`
+// from RID to RRD as defined in the description of that message.
+//
+// The connections are then simultaneously established in the background and
+// each path must go through the handshake flow with its authentication
+// challenges. While doing so, the peers measure the RTT between challenge and
+// response in order to determine a good path candidate for nomination.
+//
+// One of the peers, defined by the upper-level protocol, nominates one of the
+// established paths. Once nominated, both peers silently close all other paths.
+//
+// Once a path has been nominated, that path will be handed to the upper-level
+// protocol for arbitrary data transmission. That data must be protected by
+// continuing the respective encryption scheme of the associated role.
+//
+// ### Handshake Flow
+//
+// RRD and RID authenticate one another by the following flow:
+//
+//     RRD ---- Handshake.RrdToRid.Hello ---> RID
+//     RRD <- Handshake.RidToRrd.AuthHello -- RID
+//     RRD ---- Handshake.RrdToRid.Auth ----> RID
+//
+// Before the path can be used by the upper-layer protocol, the chosen path must
+// be `Nominate`d by either side. The upper-layer protocol must define which
+// side may `Nominate`.
+//
+//     R*D ------- Handshake.Nominate ------> R*D
+//
+// ### Path Nomination
+//
+// The following algorithm should be used to determine which path is to be
+// nominated. The upper-layer protocol must clearly define whether RRD or RID
+// does nomination.
+//
+// 1. Let `established` be the list of established connection paths.
+// 2. Asynchronously, with each connection becoming established, update
+//    `established` with the RTT that was measured during the handshake.
+// 3. Wait for the first connection path to become established.
+// 4. After a brief timeout (or on a specific user interaction), nominate the
+//    connection path in the following way, highest priority first:
+//    1. Path with the lowest RTT on a mutually unmetered, fast network
+//    2. Path with the lowest RTT on a mutually unmetered, slow network
+//    3. Path with the lowest RTT on any other network
+//
+// Note: It is recommended to warn the user if a metered connection path has
+// been nominated in case large amounts of data are to be transmitted.
+//
+// ### Security
+//
+// To prevent phishing attacks, the CORS `Access-Control-Allow-Origin` of any
+// WebSocket rendezvous relay server should be set to the bare minimum required
+// by the use case.
+//
+// ### Threat Model
+//
+// The security of the protocol relies on the security of the secure channel
+// where the `RendezvousInit` is being exchanged.
+//
+// Arbitrary WebSocket URLs and arbitrary IPv4/IPv6 addresses can be provided by
+// RID where RRD would connect to. It is therefore required that RRD can trust
+// RID to not be malicious.
+//
+// AK must be exchanged over a sufficiently secure channel. Concretely, AK must
+// be sufficiently protected to at least resist a brute-force attack for the
+// time between AK being exchanged and the handshake being fulfilled.
+//
+// A PID must be unique and not be re-used for a specific AK.
 
 import Foundation
 import SwiftProtobuf
@@ -26,57 +182,6 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
   typealias Version = _2
 }
 
-/// Network cost
-enum Rendezvous_NetworkCost: SwiftProtobuf.Enum {
-  typealias RawValue = Int
-
-  /// It is unknown whether the interface is metered or unmetered
-  case unknown // = 0
-
-  /// The interface is unmetered
-  case unmetered // = 1
-
-  /// The interface is metered
-  case metered // = 2
-  case UNRECOGNIZED(Int)
-
-  init() {
-    self = .unknown
-  }
-
-  init?(rawValue: Int) {
-    switch rawValue {
-    case 0: self = .unknown
-    case 1: self = .unmetered
-    case 2: self = .metered
-    default: self = .UNRECOGNIZED(rawValue)
-    }
-  }
-
-  var rawValue: Int {
-    switch self {
-    case .unknown: return 0
-    case .unmetered: return 1
-    case .metered: return 2
-    case .UNRECOGNIZED(let i): return i
-    }
-  }
-
-}
-
-#if swift(>=4.2)
-
-extension Rendezvous_NetworkCost: CaseIterable {
-  // The compiler won't synthesize support with the UNRECOGNIZED case.
-  static var allCases: [Rendezvous_NetworkCost] = [
-    .unknown,
-    .unmetered,
-    .metered,
-  ]
-}
-
-#endif  // swift(>=4.2)
-
 /// Contains the data necessary to initialise a 1:1 connection between two
 /// devices.
 ///
@@ -86,8 +191,8 @@ extension Rendezvous_NetworkCost: CaseIterable {
 /// 1. If the device is able to create a TCP server socket:
 ///    1. Bind to _any_ IP address with a random port number. Silently ignore
 ///       failures.
-///    2. If successful, let `addresses` be the list of available IP addresses
-///       on network interfaces the server has been bound to.
+///    2. If successful, let `addresses` be the list of available IP addresses on
+///       network interfaces the server has been bound to.
 ///    3. Drop any loopback and duplicate IP addresses from `addresses`.
 ///    4. Drop link-local IPv6 addresses associated to interfaces that only
 ///       provide link-local IPv6 addresses.
@@ -102,30 +207,33 @@ extension Rendezvous_NetworkCost: CaseIterable {
 ///    1. Generate a random 32 byte hex-encoded rendezvous path.
 ///    2. Connect to the WebSocket relay server URL as provided by the context
 ///       with the generated hex-encoded rendezvous path.
-///    3. Once connected, complete the subroutine and provide the necessary
-///       data in the `relayed_web_socket` field.
+///    3. Once connected, complete the subroutine and provide the necessary data
+///       in the `relayed_web_socket` field.
 ///
 /// When receiving this message:
 ///
-/// 1. If any `path_id` is contained more than once, abort these steps.
-/// 2. If the device is able to create a TCP client connection:
+/// 1. If `version` is unsupported, abort these steps.
+/// 2. If any `path_id` is not unique, abort these steps.
+/// 3. If the device is able to create a TCP client connection:
 ///    1. Let `addresses` be the IP addresses of `direct_tcp_server`.
-///    2. Filter `addresses` by discarding IPs with unsupported families (e.g.
-///       if the device has no IPv6 address, drop any IPv6 addresses).
+///    2. Filter `addresses` by discarding IPs with unsupported families (e.g. if
+///       the device has no IPv6 address, drop any IPv6 addresses).
 ///    3. For each IP address in `addresses`:
 ///       1. Connect to the given IP address in the background.
 ///       2. Wait 100ms.
-/// 3. Connect to the provided relayed WebSocket server in the background.
-/// 4. On each successful direct or relayed connection made in the background,
-///    forward an event to the upper-level protocol in order for it to select
-///    one of the paths for nomination.
+/// 4. Connect to the provided relayed WebSocket server in the background.
+/// 5. On each successful direct or relayed connection made in the background,
+///    forward an event to the upper-level protocol in order for it to select one
+///    of the paths for nomination.
 struct Rendezvous_RendezvousInit {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  /// 32 byte secret key (RK)
-  var key: Data = Data()
+  var version: Rendezvous_RendezvousInit.Version = .v10
+
+  /// 32 byte ephemeral secret Authentication Key (AK).
+  var ak: Data = Data()
 
   var relayedWebSocket: Rendezvous_RendezvousInit.RelayedWebSocket {
     get {return _relayedWebSocket ?? Rendezvous_RendezvousInit.RelayedWebSocket()}
@@ -147,17 +255,82 @@ struct Rendezvous_RendezvousInit {
 
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
+  enum Version: SwiftProtobuf.Enum {
+    typealias RawValue = Int
+
+    /// Initial version.
+    case v10 // = 0
+    case UNRECOGNIZED(Int)
+
+    init() {
+      self = .v10
+    }
+
+    init?(rawValue: Int) {
+      switch rawValue {
+      case 0: self = .v10
+      default: self = .UNRECOGNIZED(rawValue)
+      }
+    }
+
+    var rawValue: Int {
+      switch self {
+      case .v10: return 0
+      case .UNRECOGNIZED(let i): return i
+      }
+    }
+
+  }
+
+  /// Network cost of an interface
+  enum NetworkCost: SwiftProtobuf.Enum {
+    typealias RawValue = Int
+
+    /// It is unknown whether the interface is metered or unmetered
+    case unknown // = 0
+
+    /// The interface is unmetered
+    case unmetered // = 1
+
+    /// The interface is metered
+    case metered // = 2
+    case UNRECOGNIZED(Int)
+
+    init() {
+      self = .unknown
+    }
+
+    init?(rawValue: Int) {
+      switch rawValue {
+      case 0: self = .unknown
+      case 1: self = .unmetered
+      case 2: self = .metered
+      default: self = .UNRECOGNIZED(rawValue)
+      }
+    }
+
+    var rawValue: Int {
+      switch self {
+      case .unknown: return 0
+      case .unmetered: return 1
+      case .metered: return 2
+      case .UNRECOGNIZED(let i): return i
+      }
+    }
+
+  }
+
   /// Relayed WebSocket path
   struct RelayedWebSocket {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
-    /// Unique path id
+    /// Unique Path ID (PID) of the path
     var pathID: UInt32 = 0
 
     /// Network cost
-    var networkCost: Rendezvous_NetworkCost = .unknown
+    var networkCost: Rendezvous_RendezvousInit.NetworkCost = .unknown
 
     /// Full URL to the WebSocket server with a random 32 byte hex-encoded
     /// rendezvous path. Must begin with `wss://``.
@@ -188,11 +361,11 @@ struct Rendezvous_RendezvousInit {
       // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
       // methods supported on all messages.
 
-      /// Unique path id
+      /// Unique Path ID (PID) of the path
       var pathID: UInt32 = 0
 
       /// Network cost
-      var networkCost: Rendezvous_NetworkCost = .unknown
+      var networkCost: Rendezvous_RendezvousInit.NetworkCost = .unknown
 
       /// IPv4 or IPv6 address
       var ip: String = String()
@@ -211,24 +384,170 @@ struct Rendezvous_RendezvousInit {
   fileprivate var _directTcpServer: Rendezvous_RendezvousInit.DirectTcpServer? = nil
 }
 
+#if swift(>=4.2)
+
+extension Rendezvous_RendezvousInit.Version: CaseIterable {
+  // The compiler won't synthesize support with the UNRECOGNIZED case.
+  static var allCases: [Rendezvous_RendezvousInit.Version] = [
+    .v10,
+  ]
+}
+
+extension Rendezvous_RendezvousInit.NetworkCost: CaseIterable {
+  // The compiler won't synthesize support with the UNRECOGNIZED case.
+  static var allCases: [Rendezvous_RendezvousInit.NetworkCost] = [
+    .unknown,
+    .unmetered,
+    .metered,
+  ]
+}
+
+#endif  // swift(>=4.2)
+
+/// Messages required for the initial lock-step handshake between RRD and RID.
+struct Rendezvous_Handshake {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  /// Handshake messages from RRD to RID.
+  struct RrdToRid {
+    // SwiftProtobuf.Message conformance is added in an extension below. See the
+    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+    // methods supported on all messages.
+
+    var unknownFields = SwiftProtobuf.UnknownStorage()
+
+    /// Initial message from RRD containing its authentication challenge,
+    /// encrypted by RRD's encryption scheme with RRDAK.
+    struct Hello {
+      // SwiftProtobuf.Message conformance is added in an extension below. See the
+      // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+      // methods supported on all messages.
+
+      /// 16 byte random authentication challenge for RID.
+      var challenge: Data = Data()
+
+      /// 32 byte ephemeral public key (`ETK.public`).
+      var etk: Data = Data()
+
+      var unknownFields = SwiftProtobuf.UnknownStorage()
+
+      init() {}
+    }
+
+    /// Final message from RRD responding to RID's authentication challenge,
+    /// encrypted by RRD's encryption scheme with RRDAK.
+    ///
+    /// When receiving this message:
+    ///
+    /// 1. If the challenge `response` from RRD does not match the challenge sent
+    ///    by RID, abort the connection and these steps.
+    struct Auth {
+      // SwiftProtobuf.Message conformance is added in an extension below. See the
+      // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+      // methods supported on all messages.
+
+      /// 16 byte repeated authentication challenge from RRD.
+      var response: Data = Data()
+
+      var unknownFields = SwiftProtobuf.UnknownStorage()
+
+      init() {}
+    }
+
+    init() {}
+  }
+
+  /// Handshake messages from RID to RRD.
+  struct RidToRrd {
+    // SwiftProtobuf.Message conformance is added in an extension below. See the
+    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+    // methods supported on all messages.
+
+    var unknownFields = SwiftProtobuf.UnknownStorage()
+
+    /// Initial message from RID responding to RRD's authentication challenge and
+    /// containing RID's authentication challenge, encrypted by RID's encryption
+    /// scheme with RIDAK.
+    ///
+    /// When receiving this message:
+    ///
+    /// 1. If the challenge `response` from RID does not match the challenge sent
+    ///    by RRD, abort the connection and these steps.
+    struct AuthHello {
+      // SwiftProtobuf.Message conformance is added in an extension below. See the
+      // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+      // methods supported on all messages.
+
+      /// 16 byte repeated authentication challenge from RRD.
+      var response: Data = Data()
+
+      /// 16 byte random authentication challenge for RRD.
+      var challenge: Data = Data()
+
+      /// 32 byte ephemeral public key (`ETK.public`).
+      var etk: Data = Data()
+
+      var unknownFields = SwiftProtobuf.UnknownStorage()
+
+      init() {}
+    }
+
+    init() {}
+  }
+
+  init() {}
+}
+
+/// Nominates the path. The upper-layer protocol defines whether RID or RRD may
+/// nominate and is encrypted by the respective encryption scheme with RIDTK or
+/// RRDTK.
+///
+/// When sending or receiving this message:
+///
+/// 1. If the sender was not eligible to `Nominate`, abort the connection and
+///    these steps.
+/// 2. Silently close all other pending or established connection paths.
+struct Rendezvous_Nominate {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  init() {}
+}
+
+#if swift(>=5.5) && canImport(_Concurrency)
+extension Rendezvous_RendezvousInit: @unchecked Sendable {}
+extension Rendezvous_RendezvousInit.Version: @unchecked Sendable {}
+extension Rendezvous_RendezvousInit.NetworkCost: @unchecked Sendable {}
+extension Rendezvous_RendezvousInit.RelayedWebSocket: @unchecked Sendable {}
+extension Rendezvous_RendezvousInit.DirectTcpServer: @unchecked Sendable {}
+extension Rendezvous_RendezvousInit.DirectTcpServer.IpAddress: @unchecked Sendable {}
+extension Rendezvous_Handshake: @unchecked Sendable {}
+extension Rendezvous_Handshake.RrdToRid: @unchecked Sendable {}
+extension Rendezvous_Handshake.RrdToRid.Hello: @unchecked Sendable {}
+extension Rendezvous_Handshake.RrdToRid.Auth: @unchecked Sendable {}
+extension Rendezvous_Handshake.RidToRrd: @unchecked Sendable {}
+extension Rendezvous_Handshake.RidToRrd.AuthHello: @unchecked Sendable {}
+extension Rendezvous_Nominate: @unchecked Sendable {}
+#endif  // swift(>=5.5) && canImport(_Concurrency)
+
 // MARK: - Code below here is support for the SwiftProtobuf runtime.
 
 fileprivate let _protobuf_package = "rendezvous"
 
-extension Rendezvous_NetworkCost: SwiftProtobuf._ProtoNameProviding {
-  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "UNKNOWN"),
-    1: .same(proto: "UNMETERED"),
-    2: .same(proto: "METERED"),
-  ]
-}
-
 extension Rendezvous_RendezvousInit: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".RendezvousInit"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "key"),
-    2: .standard(proto: "relayed_web_socket"),
-    3: .standard(proto: "direct_tcp_server"),
+    1: .same(proto: "version"),
+    2: .same(proto: "ak"),
+    3: .standard(proto: "relayed_web_socket"),
+    4: .standard(proto: "direct_tcp_server"),
   ]
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -237,34 +556,57 @@ extension Rendezvous_RendezvousInit: SwiftProtobuf.Message, SwiftProtobuf._Messa
       // allocates stack space for every case branch when no optimizations are
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
-      case 1: try { try decoder.decodeSingularBytesField(value: &self.key) }()
-      case 2: try { try decoder.decodeSingularMessageField(value: &self._relayedWebSocket) }()
-      case 3: try { try decoder.decodeSingularMessageField(value: &self._directTcpServer) }()
+      case 1: try { try decoder.decodeSingularEnumField(value: &self.version) }()
+      case 2: try { try decoder.decodeSingularBytesField(value: &self.ak) }()
+      case 3: try { try decoder.decodeSingularMessageField(value: &self._relayedWebSocket) }()
+      case 4: try { try decoder.decodeSingularMessageField(value: &self._directTcpServer) }()
       default: break
       }
     }
   }
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    if !self.key.isEmpty {
-      try visitor.visitSingularBytesField(value: self.key, fieldNumber: 1)
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
+    if self.version != .v10 {
+      try visitor.visitSingularEnumField(value: self.version, fieldNumber: 1)
     }
-    if let v = self._relayedWebSocket {
-      try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
+    if !self.ak.isEmpty {
+      try visitor.visitSingularBytesField(value: self.ak, fieldNumber: 2)
     }
-    if let v = self._directTcpServer {
+    try { if let v = self._relayedWebSocket {
       try visitor.visitSingularMessageField(value: v, fieldNumber: 3)
-    }
+    } }()
+    try { if let v = self._directTcpServer {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 4)
+    } }()
     try unknownFields.traverse(visitor: &visitor)
   }
 
   static func ==(lhs: Rendezvous_RendezvousInit, rhs: Rendezvous_RendezvousInit) -> Bool {
-    if lhs.key != rhs.key {return false}
+    if lhs.version != rhs.version {return false}
+    if lhs.ak != rhs.ak {return false}
     if lhs._relayedWebSocket != rhs._relayedWebSocket {return false}
     if lhs._directTcpServer != rhs._directTcpServer {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
+}
+
+extension Rendezvous_RendezvousInit.Version: SwiftProtobuf._ProtoNameProviding {
+  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    0: .same(proto: "V1_0"),
+  ]
+}
+
+extension Rendezvous_RendezvousInit.NetworkCost: SwiftProtobuf._ProtoNameProviding {
+  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    0: .same(proto: "UNKNOWN"),
+    1: .same(proto: "UNMETERED"),
+    2: .same(proto: "METERED"),
+  ]
 }
 
 extension Rendezvous_RendezvousInit.RelayedWebSocket: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
@@ -363,7 +705,7 @@ extension Rendezvous_RendezvousInit.DirectTcpServer.IpAddress: SwiftProtobuf.Mes
       // allocates stack space for every case branch when no optimizations are
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
-      case 1: try { try decoder.decodeSingularFixed32Field(value: &self.pathID) }()
+      case 1: try { try decoder.decodeSingularUInt32Field(value: &self.pathID) }()
       case 2: try { try decoder.decodeSingularEnumField(value: &self.networkCost) }()
       case 3: try { try decoder.decodeSingularStringField(value: &self.ip) }()
       default: break
@@ -373,7 +715,7 @@ extension Rendezvous_RendezvousInit.DirectTcpServer.IpAddress: SwiftProtobuf.Mes
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     if self.pathID != 0 {
-      try visitor.visitSingularFixed32Field(value: self.pathID, fieldNumber: 1)
+      try visitor.visitSingularUInt32Field(value: self.pathID, fieldNumber: 1)
     }
     if self.networkCost != .unknown {
       try visitor.visitSingularEnumField(value: self.networkCost, fieldNumber: 2)
@@ -388,6 +730,196 @@ extension Rendezvous_RendezvousInit.DirectTcpServer.IpAddress: SwiftProtobuf.Mes
     if lhs.pathID != rhs.pathID {return false}
     if lhs.networkCost != rhs.networkCost {return false}
     if lhs.ip != rhs.ip {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension Rendezvous_Handshake: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = _protobuf_package + ".Handshake"
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap()
+
+  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let _ = try decoder.nextFieldNumber() {
+    }
+  }
+
+  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  static func ==(lhs: Rendezvous_Handshake, rhs: Rendezvous_Handshake) -> Bool {
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension Rendezvous_Handshake.RrdToRid: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = Rendezvous_Handshake.protoMessageName + ".RrdToRid"
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap()
+
+  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let _ = try decoder.nextFieldNumber() {
+    }
+  }
+
+  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  static func ==(lhs: Rendezvous_Handshake.RrdToRid, rhs: Rendezvous_Handshake.RrdToRid) -> Bool {
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension Rendezvous_Handshake.RrdToRid.Hello: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = Rendezvous_Handshake.RrdToRid.protoMessageName + ".Hello"
+  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .same(proto: "challenge"),
+    2: .same(proto: "etk"),
+  ]
+
+  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularBytesField(value: &self.challenge) }()
+      case 2: try { try decoder.decodeSingularBytesField(value: &self.etk) }()
+      default: break
+      }
+    }
+  }
+
+  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if !self.challenge.isEmpty {
+      try visitor.visitSingularBytesField(value: self.challenge, fieldNumber: 1)
+    }
+    if !self.etk.isEmpty {
+      try visitor.visitSingularBytesField(value: self.etk, fieldNumber: 2)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  static func ==(lhs: Rendezvous_Handshake.RrdToRid.Hello, rhs: Rendezvous_Handshake.RrdToRid.Hello) -> Bool {
+    if lhs.challenge != rhs.challenge {return false}
+    if lhs.etk != rhs.etk {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension Rendezvous_Handshake.RrdToRid.Auth: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = Rendezvous_Handshake.RrdToRid.protoMessageName + ".Auth"
+  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .same(proto: "response"),
+  ]
+
+  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularBytesField(value: &self.response) }()
+      default: break
+      }
+    }
+  }
+
+  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if !self.response.isEmpty {
+      try visitor.visitSingularBytesField(value: self.response, fieldNumber: 1)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  static func ==(lhs: Rendezvous_Handshake.RrdToRid.Auth, rhs: Rendezvous_Handshake.RrdToRid.Auth) -> Bool {
+    if lhs.response != rhs.response {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension Rendezvous_Handshake.RidToRrd: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = Rendezvous_Handshake.protoMessageName + ".RidToRrd"
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap()
+
+  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let _ = try decoder.nextFieldNumber() {
+    }
+  }
+
+  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  static func ==(lhs: Rendezvous_Handshake.RidToRrd, rhs: Rendezvous_Handshake.RidToRrd) -> Bool {
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension Rendezvous_Handshake.RidToRrd.AuthHello: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = Rendezvous_Handshake.RidToRrd.protoMessageName + ".AuthHello"
+  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .same(proto: "response"),
+    2: .same(proto: "challenge"),
+    3: .same(proto: "etk"),
+  ]
+
+  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularBytesField(value: &self.response) }()
+      case 2: try { try decoder.decodeSingularBytesField(value: &self.challenge) }()
+      case 3: try { try decoder.decodeSingularBytesField(value: &self.etk) }()
+      default: break
+      }
+    }
+  }
+
+  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if !self.response.isEmpty {
+      try visitor.visitSingularBytesField(value: self.response, fieldNumber: 1)
+    }
+    if !self.challenge.isEmpty {
+      try visitor.visitSingularBytesField(value: self.challenge, fieldNumber: 2)
+    }
+    if !self.etk.isEmpty {
+      try visitor.visitSingularBytesField(value: self.etk, fieldNumber: 3)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  static func ==(lhs: Rendezvous_Handshake.RidToRrd.AuthHello, rhs: Rendezvous_Handshake.RidToRrd.AuthHello) -> Bool {
+    if lhs.response != rhs.response {return false}
+    if lhs.challenge != rhs.challenge {return false}
+    if lhs.etk != rhs.etk {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension Rendezvous_Nominate: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = _protobuf_package + ".Nominate"
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap()
+
+  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let _ = try decoder.nextFieldNumber() {
+    }
+  }
+
+  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  static func ==(lhs: Rendezvous_Nominate, rhs: Rendezvous_Nominate) -> Bool {
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

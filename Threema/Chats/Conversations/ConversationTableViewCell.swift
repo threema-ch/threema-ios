@@ -483,13 +483,14 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
             return
         }
         
-        if let draft = MessageDraftStore.loadDraft(for: conversation) {
+        if let draft = MessageDraftStore.previewForDraft(
+            for: conversation,
+            textStyle: Configuration.dateDraftTextStyle,
+            tint: Colors.textLight
+        ) {
             updateColorsForDateDraftLabel(isDraft: true)
             dateDraftLabel.text = BundleUtil.localizedString(forKey: "draft").uppercased()
-            let parsedDraft = MarkupParser().previewString(for: draft)
-            let index = parsedDraft.index(parsedDraft.startIndex, offsetBy: min(parsedDraft.count, 100))
-            let trimmedDraft = parsedDraft[..<index]
-            previewLabel.attributedText = NSAttributedString(string: String(trimmedDraft))
+            previewLabel.attributedText = draft
         }
         else {
             updateColorsForDateDraftLabel(isDraft: false)
@@ -506,8 +507,6 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
                     .previewAttributedText(for: PreviewableMessageConfiguration.conversationCell)
             }
         }
-        
-        previewLabel.font = UIFont.preferredFont(forTextStyle: Configuration.previewTextStyle)
     }
     
     // MARK: - Updates
@@ -779,7 +778,7 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
     
     private func updatePinImage() {
         guard let conversation = conversation,
-              conversation.marked.boolValue else {
+              conversation.conversationVisibility == .pinned else {
             pinImageView.isHidden = true
             updateIconStackView()
             return
@@ -856,7 +855,7 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
             accessibilityText += "\(preview). "
         }
         
-        if conversation.marked.boolValue {
+        if conversation.conversationVisibility == .pinned {
             accessibilityText += "\(BundleUtil.localizedString(forKey: "pinned_conversation"))."
         }
         accessibilityLabel = accessibilityText
@@ -982,7 +981,7 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
             self.updateTypingIndicator()
         }
         
-        observeConversation(\.marked, callOnCreation: false) {
+        observeConversation(\.conversationVisibility, callOnCreation: false) {
             self.updatePinImage()
         }
                 

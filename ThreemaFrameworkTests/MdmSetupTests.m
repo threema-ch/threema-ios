@@ -286,8 +286,9 @@
     MDMSetup *mdmSetup = [[MDMSetup alloc] initWithSetup:NO];
     [mdmSetup applyThreemaMdm:workData sendForce:NO];
     
-    [verify(_mockLicenseStore) setLicenseUsername:@"new-tester"];
-    [verify(_mockLicenseStore) setLicensePassword:@"new-test1234"];
+    // Threema MDM can't set the license username and password
+    [verify(_mockLicenseStore) setLicenseUsername:@"tester"];
+    [verify(_mockLicenseStore) setLicensePassword:@"test1234"];
     
     [verifyCount(_mockMyIdentityStore, times(1)) setPushFromName:@"New-Eieri"];
     [verifyCount(_mockMyIdentityStore, times(1)) setFirstName:@"New-Heiri"];
@@ -349,8 +350,9 @@
     MDMSetup *mdmSetup = [[MDMSetup alloc] initWithSetup:NO];
     [mdmSetup applyThreemaMdm:workData sendForce:NO];
     
-    [verify(_mockLicenseStore) setLicenseUsername:@"new-tester"];
-    [verify(_mockLicenseStore) setLicensePassword:@"new-test1234"];
+    // Threema MDM can't set the license username and password
+    [verify(_mockLicenseStore) setLicenseUsername:@"tester"];
+    [verify(_mockLicenseStore) setLicensePassword:@"test1234"];
     
     [verifyCount(_mockMyIdentityStore, times(1)) setPushFromName:@"New-Eieri"];
     [verifyCount(_mockMyIdentityStore, times(1)) setFirstName:@"New-Heiri"];
@@ -409,8 +411,9 @@
     MDMSetup *mdmSetup = [[MDMSetup alloc] initWithSetup:NO];
     [mdmSetup applyThreemaMdm:workData sendForce:NO];
     
-    [verify(_mockLicenseStore) setLicenseUsername:@"new-tester"];
-    [verify(_mockLicenseStore) setLicensePassword:@"new-test1234"];
+    // Threema MDM can't set the license username and password
+    [verifyCount(_mockLicenseStore, times(0)) setLicenseUsername:anything()];
+    [verifyCount(_mockLicenseStore, times(0)) setLicenseUsername:anything()];
     
     [verifyCount(_mockMyIdentityStore, times(0)) setPushFromName:@"New-Heiri"];
     [verifyCount(_mockMyIdentityStore, times(1)) setFirstName:@"New-Heiri"];
@@ -453,6 +456,9 @@
     XCTAssertEqual(@"new-^[0-9]{1,15}$", [mdmSetup safePasswordPattern]);
     XCTAssertEqual(@"New-Wrong-password-pattern", [mdmSetup safePasswordMessage]);
     XCTAssertEqual(@"new.threema.ch", [mdmSetup webHosts]);
+    
+    XCTAssertNil([_mockLicenseStore licenseUsername]);
+    XCTAssertNil([_mockLicenseStore licensePassword]);
 }
 
 /// Bestehende Threema MDM-Parameter weden entfernt
@@ -474,17 +480,21 @@
     MDMSetup *mdmSetup = [[MDMSetup alloc] initWithSetup:NO];
     [mdmSetup applyThreemaMdm:workData sendForce:NO];
     
-    [verify(_mockLicenseStore) setLicenseUsername:@"new-tester"];
-    [verify(_mockLicenseStore) setLicensePassword:@"new-test1234"];
-    
+    // Threema MDM can't set the license username and password
+    [verifyCount(_mockLicenseStore, times(0)) setLicenseUsername:anything()];
+    [verifyCount(_mockLicenseStore, times(0)) setLicenseUsername:anything()];
+
     [verifyCount(_mockMyIdentityStore, times(0)) setPushFromName:anything()];
     [verifyCount(_mockMyIdentityStore, times(0)) setCreateIDEmail:anything()]; // not renewable
     [verifyCount(_mockMyIdentityStore, times(0)) setCreateIDPhone:anything()]; // not renewable
     
-    [verifyCount(_mockMyIdentityStore, times(1)) setFirstName:anything()];
-    [verifyCount(_mockMyIdentityStore, times(1)) setLastName:anything()];
-    [verifyCount(_mockMyIdentityStore, times(1)) setCsi:anything()];
-    [verifyCount(_mockMyIdentityStore, times(1)) setCategory:anything()];
+    [verifyCount(_mockMyIdentityStore, times(0)) setFirstName:anything()];
+    [verifyCount(_mockMyIdentityStore, times(0)) setLastName:anything()];
+    [verifyCount(_mockMyIdentityStore, times(0)) setCsi:anything()];
+    [verifyCount(_mockMyIdentityStore, times(0)) setCategory:anything()];
+    
+    XCTAssertNil([_mockLicenseStore licenseUsername]);
+    XCTAssertNil([_mockLicenseStore licensePassword]);
     
     XCTAssertFalse([mdmSetup readonlyProfile]);
     [verifyCount(_mockUserSettings, times(0)) setBlockUnknown:anything()];
@@ -1061,6 +1071,88 @@
     MDMSetup *mdmSetup = [[MDMSetup alloc] initWithSetup:NO];
     
     XCTAssertNil([mdmSetup supportDescriptionString]);
+}
+
+- (void)testApplyDiscardInThreemaMdmWithCompanyMdm {
+    [given([_mockLicenseStore getRequiresLicenseKey]) willReturnBool:YES];
+    
+    // Company-MDM and NO "old" Threema-MDM
+    id keysCompanyMdm[] = { MDM_KEY_ID_BACKUP, MDM_KEY_SAFE_PASSWORD, MDM_KEY_ID_BACKUP_PASSWORD};
+    id objectsCompanyMdm[] = { @"XXXX-XXXX-...", @"12345678", @"12345678"};
+    NSUInteger countCompanyMdm = sizeof(objectsCompanyMdm) / sizeof(id);
+    NSDictionary *companyMdm = [NSDictionary dictionaryWithObjects:objectsCompanyMdm forKeys:keysCompanyMdm count:countCompanyMdm];
+    [self setMdm:companyMdm threemaMdm:nil];
+    
+    // "new" Threema-MDM (override)
+    id keysMdm[] = {MDM_KEY_ID_BACKUP, MDM_KEY_ID_BACKUP_PASSWORD, MDM_KEY_SAFE_PASSWORD};
+    id objectsMdm[] = { @"YYYY-YYYY-...", @"87654321", @"87654321"};
+    NSUInteger countMdm = sizeof(objectsMdm) / sizeof(id);
+    NSDictionary *mdm = [NSDictionary dictionaryWithObjects:objectsMdm forKeys:keysMdm count:countMdm];
+
+    NSDictionary *workData = @{MDM_KEY_THREEMA_CONFIGURATION: @{MDM_KEY_THREEMA_OVERRIDE:@true,MDM_KEY_THREEMA_PARAMS:mdm}};
+   
+    MDMSetup *mdmSetup = [[MDMSetup alloc] initWithSetup:YES];
+    [mdmSetup applyThreemaMdm:workData sendForce:NO];
+    
+    XCTAssertTrue([mdmSetup hasIDBackup]);
+    
+    XCTAssertEqual(@"XXXX-XXXX-...", [mdmSetup idBackup]);
+    XCTAssertEqual(@"12345678", [mdmSetup safePassword]);
+    XCTAssertEqual(@"12345678", [mdmSetup idBackupPassword]);
+}
+
+- (void)testDiscardInThreemaMdmWithCompanyMdm {
+    [given([_mockLicenseStore getRequiresLicenseKey]) willReturnBool:YES];
+    
+    // Company-MDM and NO "old" Threema-MDM
+    id keysCompanyMdm[] = { MDM_KEY_ID_BACKUP, MDM_KEY_SAFE_PASSWORD, MDM_KEY_ID_BACKUP_PASSWORD, MDM_KEY_LICENSE_USERNAME, MDM_KEY_LICENSE_PASSWORD};
+    id objectsCompanyMdm[] = { @"XXXX-XXXX-...", @"12345678", @"12345678", @"new-tester", @"new-test1234"};
+    NSUInteger countCompanyMdm = sizeof(objectsCompanyMdm) / sizeof(id);
+    NSDictionary *companyMdm = [NSDictionary dictionaryWithObjects:objectsCompanyMdm forKeys:keysCompanyMdm count:countCompanyMdm];
+    [self setMdm:companyMdm threemaMdm:nil];
+    
+    // "new" Threema-MDM (override)
+    id keysMdm[] = { };
+    id objectsMdm[] = { };
+    NSUInteger countMdm = sizeof(objectsMdm) / sizeof(id);
+    NSDictionary *mdm = [NSDictionary dictionaryWithObjects:objectsMdm forKeys:keysMdm count:countMdm];
+
+    NSDictionary *workData = @{MDM_KEY_THREEMA_CONFIGURATION: @{MDM_KEY_THREEMA_OVERRIDE:@true,MDM_KEY_THREEMA_PARAMS:mdm}};
+   
+    MDMSetup *mdmSetup = [[MDMSetup alloc] initWithSetup:YES];
+    [mdmSetup applyThreemaMdm:workData sendForce:NO];
+    
+    [verify(_mockLicenseStore) setLicenseUsername:@"new-tester"];
+    [verify(_mockLicenseStore) setLicensePassword:@"new-test1234"];
+    
+    XCTAssertTrue([mdmSetup hasIDBackup]);
+    
+    XCTAssertEqual(@"XXXX-XXXX-...", [mdmSetup idBackup]);
+    XCTAssertEqual(@"12345678", [mdmSetup safePassword]);
+    XCTAssertEqual(@"12345678", [mdmSetup idBackupPassword]);
+}
+
+- (void)testApplyDiscardInThreemaMdmWithoutCompanyMdm {
+    [given([_mockLicenseStore getRequiresLicenseKey]) willReturnBool:YES];
+        
+    // "new" Threema-MDM (override)
+    id keysMdm[] = {MDM_KEY_ID_BACKUP, MDM_KEY_ID_BACKUP_PASSWORD, MDM_KEY_SAFE_PASSWORD, MDM_KEY_LICENSE_USERNAME, MDM_KEY_LICENSE_PASSWORD};
+    id objectsMdm[] = { @"YYYY-YYYY-...", @"87654321", @"87654321", @"mdm@mdm.ch", @"87654321"};
+    NSUInteger countMdm = sizeof(objectsMdm) / sizeof(id);
+    NSDictionary *mdm = [NSDictionary dictionaryWithObjects:objectsMdm forKeys:keysMdm count:countMdm];
+
+    NSDictionary *workData = @{MDM_KEY_THREEMA_CONFIGURATION: @{MDM_KEY_THREEMA_OVERRIDE:@true,MDM_KEY_THREEMA_PARAMS:mdm}};
+   
+    MDMSetup *mdmSetup = [[MDMSetup alloc] initWithSetup:YES];
+    [mdmSetup applyThreemaMdm:workData sendForce:NO];
+    
+    XCTAssertFalse([mdmSetup hasIDBackup]);
+    
+    XCTAssertNil([mdmSetup idBackup]);
+    XCTAssertNil([mdmSetup safePassword]);
+    XCTAssertNil([mdmSetup idBackupPassword]);
+    XCTAssertNil([_mockLicenseStore licenseUsername]);
+    XCTAssertNil([_mockLicenseStore licensePassword]);
 }
 
 

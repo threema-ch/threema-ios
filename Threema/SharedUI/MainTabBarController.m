@@ -82,8 +82,6 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(deletedConversation:) name:kNotificationDeletedConversation object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(deletedContact:) name:kNotificationDeletedContact object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(showSafeSetup:) name:kSafeSetupUI object:nil];
-    
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(wallpaperChanged:) name:kNotificationWallpaperChanged object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(colorThemeChanged:) name:kNotificationColorThemeChanged object:nil];
     // TODO: (IOS-2860) Remove next two
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(chatFontSizeChanged:) name:UIContentSizeCategoryDidChangeNotification object:nil];

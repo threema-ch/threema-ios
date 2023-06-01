@@ -121,6 +121,7 @@ final class SingleDetailsDataSource: UITableViewDiffableDataSource<SingleDetails
         tableView?.registerCell(LinkedContactDetailsTableViewCell.self)
         tableView?.registerCell(PublicKeyDetailsTableViewCell.self)
         tableView?.registerCell(DoNotDisturbDetailsTableViewCell.self)
+        tableView?.registerCell(WallpaperTableViewCell.self)
         tableView?.registerCell(SwitchDetailsTableViewCell.self)
         tableView?.registerCell(GroupCell.self)
         tableView?.registerCell(PrivacySettingsTableViewCell.self)
@@ -129,7 +130,7 @@ final class SingleDetailsDataSource: UITableViewDiffableDataSource<SingleDetails
     private let cellProvider: SingleDetailsDataSource.CellProvider = { tableView, indexPath, row in
         
         switch row {
-        
+            
         case let .action(action):
             let actionCell: ActionDetailsTableViewCell = tableView.dequeueCell(for: indexPath)
             actionCell.action = action
@@ -159,7 +160,7 @@ final class SingleDetailsDataSource: UITableViewDiffableDataSource<SingleDetails
             let linkedContactCell: LinkedContactDetailsTableViewCell = tableView.dequeueCell(for: indexPath)
             linkedContactCell.linkedContactManger = linkedContactManger
             return linkedContactCell
-                        
+            
         case let .group(group):
             let groupCell: GroupCell = tableView.dequeueCell(for: indexPath)
             groupCell.size = .medium
@@ -178,6 +179,12 @@ final class SingleDetailsDataSource: UITableViewDiffableDataSource<SingleDetails
             privacySettingsCell.contact = contact
             privacySettingsCell.action = action
             return privacySettingsCell
+            
+        case let .wallpaper(action, isDefault):
+            let wallpaperCell: WallpaperTableViewCell = tableView.dequeueCell(for: indexPath)
+            wallpaperCell.action = action
+            wallpaperCell.isDefault = isDefault
+            return wallpaperCell
         }
     }
     
@@ -221,6 +228,12 @@ final class SingleDetailsDataSource: UITableViewDiffableDataSource<SingleDetails
         snapshot.appendItems(notificationRows)
         snapshot.appendSections([.privacySettings])
         snapshot.appendItems(privacySettingsActions)
+        
+        if case .conversationDetails(contact: _, conversation: _) = state {
+            snapshot.appendSections([.wallpaper])
+            snapshot.appendItems(wallpaperActions)
+        }
+        
         if ThreemaUtility.supportsForwardSecurity {
             snapshot.appendSections([.fsActions])
             snapshot.appendItems(fsActions)
@@ -280,6 +293,8 @@ final class SingleDetailsDataSource: UITableViewDiffableDataSource<SingleDetails
                 localSnapshot.appendItems(contactActions, toSection: .contactActions)
             case .privacySettings:
                 localSnapshot.appendItems(privacySettingsActions, toSection: .privacySettings)
+            case .wallpaper:
+                localSnapshot.appendItems(wallpaperActions, toSection: .wallpaper)
             case .fsActions:
                 localSnapshot.appendItems(fsActions, toSection: .fsActions)
             default:
@@ -794,7 +809,7 @@ extension SingleDetailsDataSource {
                 guard let strongSelf = self else {
                     return true
                 }
-            
+                
                 let pushSetting = PushSetting(for: strongSelf.contact)
                 return !pushSetting.silent
             }
@@ -866,7 +881,7 @@ extension SingleDetailsDataSource {
                 owner: strongSingleDetailsViewController,
                 popOverSource: view,
                 title: BundleUtil.localizedString(forKey: "send_readReceipts"),
-                message: BundleUtil.localizedString(forKey: "readReceipt_sheetMessage"),
+                message: BundleUtil.localizedString(forKey: "contactoverride_sheetMessage"),
                 actions: [action3, action1, action2],
                 cancelTitle: BundleUtil.localizedString(forKey: "cancel"),
                 cancelAction: nil
@@ -924,7 +939,7 @@ extension SingleDetailsDataSource {
                 owner: strongSingleDetailsViewController,
                 popOverSource: view,
                 title: BundleUtil.localizedString(forKey: "send_typingIndicator"),
-                message: BundleUtil.localizedString(forKey: "typingIndicator_sheetMessage"),
+                message: BundleUtil.localizedString(forKey: "contactoverride_sheetMessage"),
                 actions: [action3, action1, action2],
                 cancelTitle: BundleUtil.localizedString(forKey: "cancel"),
                 cancelAction: nil
@@ -982,6 +997,40 @@ extension SingleDetailsDataSource {
         return rows
     }
     
+    private var wallpaperActions: [SingleDetails.Row] {
+        var row = [SingleDetails.Row]()
+        
+        let wallpaperAction = Details.Action(
+            title: BundleUtil.localizedString(forKey: "settings_chat_wallpaper_title")
+        ) { [weak self] _ in
+            guard let strongSelf = self else {
+                return
+            }
+            
+            guard case let .conversationDetails(contact: _, conversation: conversation) = strongSelf.state else {
+                return
+            }
+            
+            let navigationController =
+                ThemedNavigationController(
+                    rootViewController: CustomWallpaperSelectionViewController()
+                        .customWallpaperSelectionView(conversationID: conversation.objectID) {
+                            strongSelf.reload(sections: [.wallpaper])
+                        }
+                )
+            navigationController.modalPresentationStyle = .formSheet
+            strongSelf.singleDetailsViewController?.present(navigationController, animated: true)
+        }
+        
+        if case let .conversationDetails(contact: _, conversation: conversation) = state {
+            row.append(.wallpaper(
+                action: wallpaperAction,
+                isDefault: !settingsStore.wallpaperStore.hasCustomWallpaper(for: conversation.objectID)
+            ))
+        }
+        return row
+    }
+
     private var shareRows: [SingleDetails.Row] {
         let shareAction = Details.Action(
             title: BundleUtil.localizedString(forKey: "share_contact_id_button")

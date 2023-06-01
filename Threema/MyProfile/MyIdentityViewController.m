@@ -468,7 +468,7 @@
     self.idRecoveryCell.textLabel.enabled = ![mdmSetup readonlyProfile];
     self.deleteIdCell.userInteractionEnabled = ![mdmSetup readonlyProfile];
     self.deleteIdCell.textLabel.enabled = ![mdmSetup readonlyProfile];
-    self.deleteIdCell.textLabel.text = [BundleUtil localizedStringForKey:@"delete_identity"];
+    self.deleteIdCell.textLabel.text = [BundleUtil localizedStringForKey:@"my_profile_delete_cell_title"];
     
     // disableBackups
     self.backupCell.userInteractionEnabled = !(mdmSetup.disableBackups || mdmSetup.disableIdExport);
@@ -611,28 +611,11 @@
         [UIAlertTemplate showAlertWithOwner:self title:[BundleUtil localizedStringForKey:@"delete_identity_passcode_title"]  message:[BundleUtil localizedStringForKey:@"delete_identity_passcode_message"]  actionOk:nil];
         return;
     }
-    
-    deleteActionSheet = [UIAlertController alertControllerWithTitle:[BundleUtil localizedStringForKey:@"delete_identity_warning"]  message:nil preferredStyle:UIAlertControllerStyleActionSheet];
-    [deleteActionSheet addAction:[UIAlertAction actionWithTitle:[BundleUtil localizedStringForKey:@"delete_identity"]  style:UIAlertActionStyleDestructive handler:^(__unused UIAlertAction * action) {
-        UIAlertController *alert = [UIAlertController alertControllerWithTitle:[BundleUtil localizedStringForKey:@"delete_identity"]  message:[BundleUtil localizedStringForKey:@"delete_identity_warning2"] preferredStyle:UIAlertControllerStyleAlert];
-        [alert addAction:[UIAlertAction actionWithTitle:[BundleUtil localizedStringForKey:@"cancel"]  style:UIAlertActionStyleCancel handler:^(__unused UIAlertAction * action) {
-        }]];
-        [alert addAction:[UIAlertAction actionWithTitle:[BundleUtil localizedStringForKey:@"delete_identity"]  style:UIAlertActionStyleDestructive handler:^(__unused UIAlertAction * action) {
-            /* they wanted it that way... */
-            [[AppDelegate sharedAppDelegate] eraseApplicationData];
-        }]];
-        [self presentViewController:alert animated:YES completion:nil];
-    }]];
-    [deleteActionSheet addAction:[UIAlertAction actionWithTitle:[BundleUtil localizedStringForKey:@"cancel"]  style:UIAlertActionStyleCancel handler:^(__unused UIAlertAction * action) {
-    }]];
-    
-    if ([sender isKindOfClass:[UIView class]]) {
-        UIView *senderView = (UIView *)sender;
-        deleteActionSheet.popoverPresentationController.sourceRect = senderView.frame;
-        deleteActionSheet.popoverPresentationController.sourceView = self.view;
-    }
-    
-    [self presentViewController:deleteActionSheet animated:YES completion:nil];
+
+    UIViewController* vc = [SwiftUIAdapter createDeleteRevokeIdentityView];
+    vc.hidesBottomBarWhenPushed = YES;
+    vc.modalPresentationStyle = UIModalPresentationFullScreen;
+    [self.navigationController presentViewController:vc animated:YES completion:nil];
 }
 
 - (IBAction)scanIdentity:(id)sender {

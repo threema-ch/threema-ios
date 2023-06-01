@@ -910,6 +910,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
                 [Colors setTheme:ThemeLight];
             }
         }
+        [[NotificationPresenterWrapper shared] colorChanged];
     }
 }
 
@@ -1608,13 +1609,15 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 #pragma mark - Erase Data
 
 - (void)eraseApplicationData {
-    DDLogWarn(@"Erase all application data");
+    // Hide all views
     [self closeMainTabBarModalViewsWithCompletion:^{
         [self closeRootViewControllerModalViewsWithCompletion:^{
             [UIView animateWithDuration:0.0 animations:^{
                 [self removeAllControllersFromRoot];
             } completion:^(BOOL finished) {
-                [self deleteAllData];
+                // Delete all data then show summary
+                [DeleteRevokeIdentityManager deleteLocalData];
+                self.window.rootViewController = [SwiftUIAdapter createDeleteSummaryView];
             }];
         }];
     }];
@@ -1636,57 +1639,6 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     } else {
         completion();
     }
-}
-
-- (void)deleteAllData {
-    /* Remove Core Data stuff */
-    [[MyIdentityStore sharedMyIdentityStore] destroy];
-    [UserReminder markIdentityAsDeleted];
-    
-    SafeConfigManager *safeConfigManager = [[SafeConfigManager alloc] init];
-    [safeConfigManager destroy];
-    
-    SafeStore *safeStore = [[SafeStore alloc] initWithSafeConfigManagerAsObject:safeConfigManager serverApiConnector:[[ServerAPIConnector alloc] init] groupManager:[[GroupManager alloc] init]];
-    SafeManager *safeManager = [[SafeManager alloc] initWithSafeConfigManagerAsObject:safeConfigManager safeStore:safeStore safeApiService:[[SafeApiService alloc] init]];
-    [safeManager setBackupReminder];
-    
-    [[DatabaseManager dbManager] eraseDB];
-    
-    /* Remove files */
-    [FileUtility removeItemsInDirectoryWithDirectoryURL:FileUtility.appDocumentsDirectory];
-    [FileUtility removeItemsInDirectoryWithDirectoryURL:FileUtility.appDataDirectory];
-    [FileUtility removeItemsInDirectoryWithDirectoryURL:FileUtility.appCachesDirectory];
-    [FileUtility removeItemsInDirectoryWithDirectoryURL:FileUtility.appTemporaryDirectory];
-    
-    /* Reset defaults and turn off passcode */
-    [NSUserDefaults resetStandardUserDefaults];
-    [AppGroup resetUserDefaults];
-    
-    dispatch_async(dispatch_get_main_queue(), ^{
-        // Unregister APNS Push Token
-        [[UIApplication sharedApplication] unregisterForRemoteNotifications];
-
-        // Set icon badge for unread message count to 0
-        [[UIApplication sharedApplication] setApplicationIconBadgeNumber:0];
-    });
-    
-    [[KKPasscodeLock sharedLock] disablePasscode];
-    
-    if ([LicenseStore requiresLicenseKey]) {
-        // Delete the license when we delete the ID, to give the user a chance to use a new license.
-        // The license may have been supplied by MDM, so we load it again.
-        [[LicenseStore sharedLicenseStore] deleteLicense];
-        MDMSetup *mdmSetup = [[MDMSetup alloc] initWithSetup:NO];
-        [mdmSetup loadLicenseInfo];
-        if ([LicenseStore sharedLicenseStore].licenseUsername == nil || [LicenseStore sharedLicenseStore].licensePassword == nil)
-            [[NSNotificationCenter defaultCenter] postNotificationName:kNotificationLicenseMissing object:nil];
-        
-        [mdmSetup deleteThreemaMdm];
-    }
-
-    UIStoryboard *storyboard = [AppDelegate getMyIdentityStoryboard];
-    UIViewController *deleteIdViewControiller = [storyboard instantiateViewControllerWithIdentifier:@"DeleteIdViewController"];
-    self.window.rootViewController = deleteIdViewControiller;
 }
 
 - (void)removeAllControllersFromRoot {

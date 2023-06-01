@@ -34,26 +34,36 @@ class WebConversationUpdate: WebAbstractMessage {
         self.mode = objectMode.rawValue
         
         let entityManager = EntityManager()
-        let allConversations = entityManager.entityFetcher.allConversationsSorted() as? [Conversation]
-        
         var index = 0
-        var found = false
-        for conver in allConversations! {
-            if conver.groupID != nil || conversation.groupID != nil {
-                if conver.groupID == conversation.groupID {
-                    found = true
-                }
+        
+        if let allConversations = entityManager.entityFetcher.allConversationsSorted() as? [Conversation] {
+            let unarchivedConversations = allConversations
+                .filter { $0.conversationVisibility == .default || $0.conversationVisibility == .pinned }
+
+            let unarchivedResult = WebConversationUpdate.indexForConversation(
+                conversation: conversation,
+                in: unarchivedConversations
+            )
+            if unarchivedResult.found {
+                index = unarchivedResult.index
             }
-            else if let converContact = conver.contact, let conversationContact = conversation.contact {
-                if converContact.identity == conversationContact.identity {
-                    found = true
+            else {
+                let archivedConversations = allConversations.filter { $0.conversationVisibility == .archived }
+                let archivedResult = WebConversationUpdate.indexForConversation(
+                    conversation: conversation,
+                    in: archivedConversations
+                )
+                if archivedResult.found {
+                    if !unarchivedConversations.isEmpty {
+                        index = unarchivedConversations.count + archivedResult.index
+                    }
+                    else {
+                        index = archivedResult.index
+                    }
                 }
-            }
-            
-            if found == false {
-                index = index + 1
             }
         }
+                
         let webConversation = WebConversation(
             conversation: conversation,
             index: index,
@@ -106,5 +116,31 @@ class WebConversationUpdate: WebAbstractMessage {
             args: tmpArgs,
             data: tmpData
         )
+    }
+
+    private static func indexForConversation(
+        conversation: Conversation,
+        in conversations: [Conversation]
+    ) -> (found: Bool, index: Int) {
+        var index = 0
+        var found = false
+
+        for conver in conversations {
+            if conver.groupID != nil || conversation.groupID != nil {
+                if conver.groupID == conversation.groupID {
+                    found = true
+                }
+            }
+            else if let converContact = conver.contact, let conversationContact = conversation.contact {
+                if converContact.identity == conversationContact.identity {
+                    found = true
+                }
+            }
+            
+            if found == false {
+                index = index + 1
+            }
+        }
+        return (found, index)
     }
 }

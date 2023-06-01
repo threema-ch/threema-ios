@@ -48,13 +48,9 @@
 "cannot_connect_title" = "Nessuna connessione";
 "cannot_connect_message" = "Impossibile connettersi, controlla la tua connessione a Internet.";
 
-"delete_identity_warning" = "Se elimini il tuo ID, il tuo paio di chiavi e i dati della tua app verranno eliminati. Se non hai creato un backup, non potrai inviare né ricevere messaggi utilizzando ancora questo ID.\n\nSe non vuoi più utilizzare questo ID, si consiglia di scollegare gli indirizzi e-mail o i numeri di telefono prima di eliminare l’ID.";
-"delete_identity_warning2" = "Ultimo avviso: vuoi davvero cancellare i tuoi dati e il tuo ID?";
+// JKLockScreenViewController
 "delete_identity_passcode_title" = "Blocco codice attivato";
 "delete_identity_passcode_message" = "Disattivare il blocco codice prima di cancellare l’ID.";
-"delete_identity_title" = "Dati app eliminati";
-"delete_identity_description" = "Tutti i dati dell’app sono stati eliminati. Riavvia l’app per configurare %@.";
-"delete_identity_app_close" = "Chiudi l’app";
 
 /* JKLockScreenViewController */
 "cancel" = "Interrompi";
@@ -64,7 +60,6 @@
 "yes" = "Sì";
 "delete" = "Elimina";
 "try_again" = "Riprova";
-"delete_identity" = "Cancella dati e ID";
 "copy" = "Copia";
 "save" = "Salva";
 "download" = "Scarica";
@@ -79,7 +74,6 @@
 "sticker" = "Sticker";
 "gif" = "GIF";
 "video" = "Video";
-"audio" = "Audio";
 "file" = "File";
 "location" = "Posizione";
 "locating" = "Localizza...";
@@ -183,8 +177,6 @@
 "sound_threema_goody" = "Remix";
 "sound_threema_alphorn" = "Alphorn";
 
-"reset_wallpaper" = "Cancella immagine di sfondo";
-"bigger_single_emojis" = "Emoji singole più grandi";
 "identity_none" = "nessuna";
 "message" = "Invia messaggio"; /* Short version for "Send Message" */
 "scan_identity" = "Scansiona ID";
@@ -1091,6 +1083,7 @@
 "settings_license" = "Licenza";
 "settings_advanced" = "Avanzate";
 "settings_threema_work" = "Threema Work";
+"settings_threema_work_subtitle" = "La soluzione di comunicazione sicura per le imprese";
 "settings_feedback" = "Feedback beta";
 "tos_cell_title" = "Condizioni d'uso";
 
@@ -1131,7 +1124,6 @@
 "settings_privacy_hide_private_chats" = "Nascondi chat private";
 "settings_privacy_hide_private_chats_footer" = "Le chat private non vengono elencate nella lista delle chat. Per attivare questa impostazione occorre attivare il blocco codice.";
 
-
 // Appearance
 "settings_appearance_theme_section" = "Tema";
 "settings_appearance_light_theme" = "Chiaro";
@@ -1149,7 +1141,15 @@
 "settings_appearance_show_gallery_preview" = "Mostra anteprima gallery";
 
 // Chat Settings
-"settings_chat_send_message_feedback_label" = "Vibrazione per invio";
+"settings_chat_wallpaper_title" = "Immagine di sfondo";
+"settings_chat_wallpaper_reset" = "Resetta tutte le immagini di sfondo";
+"settings_chat_wallpaper_empty" = "Nessuna";
+"settings_chat_wallpaper_custom" = "Tua";
+"settings_chat_wallpaper_default" = "Standard";
+"settings_chat_wallpaper_reset_all_alert" = "Riporta tutte le immagini di sfondo impostate per chat specifiche all'opzione selezionata in alto. Questa operazione non può essere annullata.";
+
+"settings_chat_bigger_emojis" = "Emoji più grandi";
+"settings_chat_send_message_feedback" = "Vibrazione per invio";
 
 // Media
 "settings_media_autosave_private_footer" = "I media ricevuti nelle chat private non verranno salvati automaticamente.";
@@ -1161,8 +1161,48 @@
 "sentry_crash_send_no" = "Non inviare";
 "sentry_crash_comment_placeholder" = "Rapporto arresto";
 
+
+
 // My profile
 "profile_share_id_text" = "Il mio Threema ID";
+"my_profile_delete_cell_title" = "Cancella ID e dati";
+
+// Delete & Revoke
+"my_profile_delete_bullet_id" = "Threema ID";
+"my_profile_delete_bullet_chats" = "Chat";
+"my_profile_delete_bullet_picture" = "Immagine di profilo";
+"my_profile_delete_bullet_safe" = "Backup Threema Safe";
+"my_profile_delete_bullet_linked" = "Collegamento numero di telefono e/o e-mail";
+
+"my_profile_delete_info_title" = "Cancella ID e dati";
+"my_profile_delete_info_keep" = "I seguenti dati possono ancora essere utilizzati e non vengono cancellati:";
+"my_profile_delete_info_delete" = "I seguenti dati vengono rimossi da questo dispositivo:";
+"my_profile_delete_info_toggle" = "Cancella tutto";
+
+"my_profile_delete_info_button_data" = "Cancella dati";
+"my_profile_delete_info_button_revoke" = "Cancella ID e dati";
+
+"my_profile_delete_identity_title" = "Vuoi cancellare chat e profilo?";
+"my_profile_delete_identity_keep" = "Cosa rimane:";
+"my_profile_delete_identity_remove" = "Cosa viene rimosso da questo dispositivo:";
+"my_profile_delete_identity_delete" = "Cancella chat e profilo";
+
+"my_profile_delete_identity_view_alert_title" = "Questa operazione non può essere annullata. Vuoi procedere?";
+"my_profile_delete_identity_view_alert_confirm" = "Cancella dati";
+
+"my_profile_revoke_identity_view_title" = "Cancella ID e dati";
+"my_profile_revoke_info_delete" = "I seguenti dati saranno cancellati irrevocabilmente:";
+"my_profile_revoke_identity_view_info" = "Attenzione: questa operazione non può essere annullata!";
+"my_profile_revoke_identity_view_enter_id" = "Inserisci il tuo Threema ID «%@» per cancellare tutto in modo definitivo:";
+"my_profile_revoke_identity_view_placeholder" = "Il tuo Threema ID";
+"my_profile_revoke_identity_view_button_revoke" = "Cancella tutto";
+
+"my_profile_delete_identity_summary_view_delete_title" = "Chat e profilo cancellati";
+"my_profile_delete_identity_summary_view_revoke_title" = "Cancellato tutto";
+"my_profile_delete_identity_summary_view_delete_success" = "Hai rimosso con successo i seguenti dati da questo dispositivo:";
+"my_profile_delete_identity_summary_view_revoke_success" = "Hai rimosso con successo i seguenti dati:";
+"my_profile_delete_identity_summary_view_restart" = "Riavvia l'app per continuare a utilizzarla";
+"my_profile_delete_identity_summary_view_close" = "Chiudi l'app";
 
 // File message
 "optional_caption" = "Testo opzionale";
@@ -1349,7 +1389,6 @@ Se non mancano media e/o file in %@, svuota il cestino per cancellare definitiva
 "privacySetting_header" = "Sfera privata";
 "send_readReceipts" = "Conferme di lettura";
 "dont_send" = "Non inviare";
-"send_readReceipt" = "Conferma di lettura";
 "send_typingIndicators" = "Indicatore di digitazione";
 "send_typingIndicator" = "Indicatore di digitazione";
 
@@ -1357,8 +1396,7 @@ Se non mancano media e/o file in %@, svuota il cestino per cancellare definitiva
 "use_default_send" = "Predefinito (%@)";
 "default_setting" = "Impostazione predefinita";
 
-"readReceipt_sheetMessage" = "L'impostazione predefinita di questo contatto verrà sovrascritta.";
-"typingIndicator_sheetMessage" = "L'impostazione predefinita di questo contatto verrà sovrascritta.";
+"contactoverride_sheetMessage" = "L'impostazione predefinita di questo contatto verrà sovrascritta.";
 
 /* Multi Decvice */
 "multi_device_linked_devices_title" = "Anteprima multi-dispositivo";
@@ -1489,6 +1527,12 @@ Se non mancano media e/o file in %@, svuota il cestino per cancellare definitiva
 "notification_interaction_delete_succeeded" = "Interazioni cancellate";
 "notification_interaction_delete_failed" = "Cancellazione non riuscita";
 
+"notification_revocation_failed" = "Revoca non riuscita";
+
+"notification_caption_too_long" = "Il testo è troppo lungo";
+
+"notification_updateworkdata_failed" = "La sincronizzazione con il server di configurazione non è riuscita";
+
 // Forward security status messages
 "forward_security_message_without" = "Hai ricevuto un messaggio senza Perfect Forward Secrecy. Assicurati che il mittente abbia volutamente disattivato il Perfect Forward Secrecy.";
 "forward_security_session_established" = "I messaggi in questa chat sono d'ora in poi protetti da Perfect Forward Secrecy.";
@@ -1541,6 +1585,8 @@ Se non mancano media e/o file in %@, svuota il cestino per cancellare definitiva
 "accessibility_ballotMessage_hint_open" = "Apri sondaggio.";
 "accessibility_ballotMessage_hint_closed" = "Visualizza risultati sondaggio.";
 "accessibility_voiceMessage_speed_hint" = "Modifica velocità di riproduzione.";
+"accessibility_voiceMessage_forward_hint" = "10 secondi in avanti.";
+"accessibility_voiceMessage_rewind_hint" = "10 secondi indietro.";
 
 // Other
 "accessibility_caption" = "Testo: %@";

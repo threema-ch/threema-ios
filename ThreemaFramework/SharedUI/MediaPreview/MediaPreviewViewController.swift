@@ -822,6 +822,21 @@ extension MediaPreviewViewController: UITextFieldDelegate {
     public func textFieldShouldReturn(_ textField: UITextField) -> Bool {
         textField.resignFirstResponder()
     }
+    
+    public func textField(
+        _ textField: UITextField,
+        shouldChangeCharactersIn range: NSRange,
+        replacementString string: String
+    ) -> Bool {
+        if let oldString = textField.text {
+            let newString = oldString.replacingCharacters(in: Range(range, in: oldString)!, with: string)
+            if newString.lengthOfBytes(using: .utf8) <= kMaxCaptionLen {
+                return true
+            }
+        }
+        NotificationPresenterWrapper.shared.present(type: .captionTooLong)
+        return false
+    }
 }
 
 extension MediaPreviewViewController {

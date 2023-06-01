@@ -22,6 +22,7 @@
 #import "BallotKeys.h"
 #import "EntityCreator.h"
 #import "ThreemaFramework/ThreemaFramework-Swift.h"
+#import "NSString+Hex.h"
 
 #ifdef DEBUG
 static const DDLogLevel ddLogLevel = DDLogLevelVerbose;
@@ -62,7 +63,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     NSError *error;
     NSDictionary *json = (NSDictionary *)[NSJSONSerialization JSONObjectWithData:boxMessage.jsonData options:0 error:&error];
     if (json == nil) {
-        DDLogError(@"Error parsing ballot json data %@, %@", error, [error userInfo]);
+        DDLogError(@"[Ballot] Error parsing ballot json data %@, %@", error, [error userInfo]);
         return nil;
     }
     
@@ -76,7 +77,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     } else if ([boxMessage isKindOfClass:[GroupBallotCreateMessage class]]) {
         jsonData = ((GroupBallotCreateMessage *)boxMessage).jsonData;
     } else {
-        DDLogError(@"Ballot decode: invalid message type");
+        DDLogError(@"[Ballot] Ballot decode: invalid message type");
         return nil;
     }
     
@@ -96,14 +97,14 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         ballotId = ((GroupBallotCreateMessage *)boxMessage).ballotId;
         jsonData = ((GroupBallotCreateMessage *)boxMessage).jsonData;
     } else {
-        DDLogError(@"Ballot decode: invalid message type");
+        DDLogError(@"[Ballot] Ballot decode: invalid message type");
         return nil;
     }
     
     /* Create Message in DB */
     __block BallotMessage *message = (BallotMessage *)[_entityManager getOrCreateMessageFor:boxMessage sender:sender conversation:conversation thumbnail:nil];
     if (message == nil) {
-        DDLogError(@"Could not find/create ballot message");
+        DDLogError(@"[Ballot] Could not find/create ballot message");
         return message;
     }
 
@@ -118,7 +119,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         // error parsing data
         if (ballot == nil) {
             if (message) {
-                DDLogError(@"Parsing of ballot failed, message will be deleted");
+                DDLogError(@"[Ballot] Parsing of ballot failed, message will be deleted");
                 [[_entityManager entityDestroyer] deleteObjectWithObject:message];
             }
             message = nil;
@@ -147,12 +148,12 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     Ballot *ballot = [_entityManager.entityFetcher ballotForBallotId:ballotId];
     
     if (ballot == nil) {
-        DDLogError(@"no ballot found for vote");
+        DDLogError(@"[Ballot] No ballot found for vote");
         return NO;
     }
     
     if (ballot.isClosed) {
-        DDLogError(@"ballot already closed");
+        DDLogError(@"[Ballot] [%@] Ballot already closed, ignore vote from %@", [NSString stringWithHexData:ballot.id], contactId);
         return NO;
     }
     
@@ -163,6 +164,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 }
 
 - (void)updateExistingBallot:(Ballot *)ballot jsonData:(NSData *)jsonData {
+    DDLogInfo(@"[Ballot] [%@] Update existing ballot", [NSString stringWithHexData:ballot.id]);
     if ([self parseJsonCreateData:jsonData forBallot:ballot update:true]) {
         ballot.modifyDate = [NSDate date];
         [ballot incrementUnreadUpdateCount];
@@ -176,6 +178,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     ballot.createDate = [NSDate date];
     
     if ([self parseJsonCreateData:jsonData forBallot:ballot update:false]) {
+        DDLogInfo(@"[Ballot] [%@] Created new ballot", [NSString stringWithHexData:ballot.id]);
         return ballot;
     }
     
@@ -188,7 +191,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     NSError *error;
     NSArray *choiceArray = (NSArray *)[NSJSONSerialization JSONObjectWithData:jsonData options:0 error:&error];
     if (choiceArray == nil) {
-        DDLogError(@"Error parsing ballot vote data %@, %@", error, [error userInfo]);
+        DDLogError(@"[Ballot] [%@] Error parsing ballot vote data %@, %@", [NSString stringWithHexData:ballot.id], error, [error userInfo]);
         return NO;
     }
     
@@ -207,10 +210,12 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     
     // We add votes system messages for ballots that are intermediate, or for those that the local identity created.
     if (ballot.isIntermediate == YES) {
+        DDLogInfo(@"[Ballot] [%@] New vote [%@] received", [NSString stringWithHexData:ballot.id], contactId);
         [_ballotManager addVoteSystemMessageWithBallotTitle:ballot.title conversation:ballot.conversation contactID:contactId showIntermediateResults:ballot.isIntermediate updatedVote:updatedVote];
     }
     else if (ballot.creatorId == MyIdentityStore.sharedMyIdentityStore.identity && !updatedVote) {
         // Do not show updated votes if ballot is not intermediate
+        DDLogInfo(@"[Ballot] [%@] New vote [%@] received", [NSString stringWithHexData:ballot.id], contactId);
         [_ballotManager addVoteSystemMessageWithBallotTitle:ballot.title conversation:ballot.conversation contactID:contactId showIntermediateResults:ballot.isIntermediate updatedVote:updatedVote];
     }
     
@@ -221,7 +226,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     NSError *error;
     NSDictionary *json = (NSDictionary *)[NSJSONSerialization JSONObjectWithData:jsonData options:0 error:&error];
     if (json == nil) {
-        DDLogError(@"Error parsing ballot json data %@, %@", error, [error userInfo]);
+        DDLogError(@"[Ballot] [%@] Error parsing ballot json data %@, %@", [NSString stringWithHexData:ballot.id], error, [error userInfo]);
         return NO;
     }
     
@@ -232,7 +237,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         // only update the state of the ballot
         
         if ([ballot.state isEqualToNumber:@1]) {
-            DDLogError(@"Error can't update ballot, because ballot is already closed");
+            DDLogError(@"[Ballot] [%@] Error can't update ballot, because ballot is already closed", [NSString stringWithHexData:ballot.id]);
             return NO;
         }
         if ([state isEqualToNumber:@1]) {
@@ -241,7 +246,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         
     } else {
         if ([state isEqualToNumber:@1]) {
-            DDLogError(@"Error ballot not found and state is closed");
+            DDLogError(@"[Ballot] [%@] Error ballot not found and state is closed", [NSString stringWithHexData:ballot.id]);
             return NO;
         }
         ballot.title = [json objectForKey: JSON_KEY_TITLE];
@@ -288,7 +293,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
             choice = [_entityManager.entityCreator ballotChoice];
             choice.id = [choiceData objectForKeyedSubscript: JSON_CHOICE_KEY_ID];
         } else {
-            DDLogError(@"Invalid choice for create message: choice result array count does not match participant array count");
+            DDLogError(@"[Ballot] [%@] Invalid choice for create message: choice result array count does not match participant array count", [NSString stringWithHexData:ballot.id]);
             return choice;
         }
     }
@@ -307,10 +312,14 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     }
     
     if ([choiceResult count] != [participantIds count]) {
-        DDLogError(@"Invalid ballot create message: choice result array count does not match participant array count");
+        DDLogError(@"[Ballot] [%@] Invalid ballot create message: choice result array count does not match participant array count", [NSString stringWithHexData:ballot.id]);
         return choice;
     }
     
+    if ([choiceResult count] != [_ballotManager choiceResultCount:ballot choiceID:choice.id]) {
+        [_ballotManager removeInvalidChoiceResults:ballot choiceID:choice.id participantIDs:participantIds];
+    }
+        
     NSInteger i=0;
     for (NSNumber *value in choiceResult) {
         NSString *contactId = [participantIds objectAtIndex: i];

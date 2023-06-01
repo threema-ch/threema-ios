@@ -1,3 +1,7 @@
 {
-  "recommendations": ["esbenp.prettier-vscode", "stkb.rewrap"]
+  "recommendations": [
+    "esbenp.prettier-vscode",
+    "stkb.rewrap",
+    "zxh404.vscode-proto3"
+  ]
 }

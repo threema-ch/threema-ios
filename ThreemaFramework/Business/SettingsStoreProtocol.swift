@@ -42,8 +42,10 @@ public protocol SettingsStoreProtocol {
     var pushShowPreview: Bool { get set }
     
     // Chat
-    var wallpaper: UIImage? { get set }
-    
+    var wallpaperStore: WallpaperStore { get }
+    var useBigEmojis: Bool { get set }
+    var sendMessageFeedback: Bool { get set }
+
     // Calls
     var enableThreemaCall: Bool { get set }
     var alwaysRelayCalls: Bool { get set }

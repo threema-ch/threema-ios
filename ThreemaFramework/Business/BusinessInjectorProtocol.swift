@@ -45,6 +45,7 @@ protocol BusinessInternalInjectorProtocol {
     var fsmp: ForwardSecurityMessageProcessor { get }
     var conversationStoreInternal: ConversationStoreInternalProtocol { get }
     var settingsStoreInternal: SettingsStoreInternalProtocol { get }
+    var userNotificationCenterManager: UserNotificationCenterManagerProtocol { get }
 }
 
 typealias FrameworkInjectorProtocol = BusinessInjectorProtocol & BusinessInternalInjectorProtocol

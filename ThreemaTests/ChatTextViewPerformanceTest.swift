@@ -299,4 +299,6 @@ extension ChatTextViewPerformanceTest: ChatTextViewDelegate {
     func chatTextView(_ textView: ChatTextView, shouldChangeTextIn range: NSRange, replacementText text: String) { }
     
     func chatTextViewDidChange(_ textView: ChatTextView) { }
+    
+    func showContact(identity: String) { }
 }

@@ -59,6 +59,7 @@ enum IdentityState {
 
 - (void)checkRevocationPasswordForStore:(MyIdentityStore*)identityStore onCompletion:(void(^)(BOOL revocationPasswordSet, NSDate *lastChanged))onCompletion onError:(void(^)(NSError *error))onError;
 - (void)setRevocationPassword:(NSString*)revocationPassword forStore:(MyIdentityStore*)identityStore onCompletion:(void(^)(void))onCompletion onError:(void(^)(NSError *error))onError;
+- (void)revokeID:(MyIdentityStore*)identityStore onCompletion:(void(^)(void))onCompletion onError:(void(^)(NSError *error))onError;
 - (void)checkStatusOfIdentities:(NSArray*)identities onCompletion:(void(^)(NSArray* states, NSArray *types, NSArray *featureMasks, int checkInterval))onCompletion onError:(void(^)(NSError *error))onError;
 - (void)revokeIdForStore:(MyIdentityStore*)identityStore onCompletion:(void(^)(void))onCompletion onError:(void(^)(NSError *error))onError;
 

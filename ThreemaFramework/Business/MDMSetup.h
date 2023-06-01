@@ -184,6 +184,10 @@ typedef enum : int {
 /// @param sendForce: If YES send update work info any way
 - (void)applyThreemaMdm:(nullable NSDictionary *)workData sendForce:(BOOL)sendForce;
 
+/// Apply company MDM with cached Threema MDM parameters
+/// @param sendForce: If YES send update work info any way
+- (void)applyCompanyMDMWithCachedThreemaMDMSendForce:(BOOL)sendForce;
+
 - (void)deleteThreemaMdm;
 
 @end

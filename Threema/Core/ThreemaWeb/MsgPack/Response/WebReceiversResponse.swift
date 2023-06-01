@@ -93,8 +93,7 @@ struct WebContact {
         if let conversation = EntityManager().entityFetcher.conversation(for: contact) {
             self.locked = conversation.conversationCategory == .private
             self
-                .visible = !(UserSettings.shared().hidePrivateChats && conversation.conversationCategory == .private) &&
-                conversation.conversationVisibility != .archived
+                .visible = !(UserSettings.shared().hidePrivateChats && conversation.conversationCategory == .private)
         }
         else {
             self.locked = false
@@ -224,8 +223,7 @@ struct WebGroup {
             self.administrator = group.groupCreatorIdentity
         }
         self.locked = group.conversationCategory == .private
-        self.visible = !(UserSettings.shared().hidePrivateChats && group.conversationCategory == .private) && group
-            .conversationVisibility != .archived
+        self.visible = !(UserSettings.shared().hidePrivateChats && group.conversationCategory == .private)
         self.access = GroupAccess(
             canDelete: true,
             canChangeAvatar: group.isOwnGroup,

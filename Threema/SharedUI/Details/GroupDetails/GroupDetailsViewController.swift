@@ -524,6 +524,13 @@ extension GroupDetailsViewController: UITableViewDelegate {
             let singleDetailsViewController = SingleDetailsViewController(for: contact)
             show(singleDetailsViewController, sender: self)
             
+        case let .wallpaper(action: action, isDefault: _):
+            guard let cell = tableView.cellForRow(at: indexPath) else {
+                fatalError("We should have a cell that was tapped for an action.")
+            }
+            
+            action.run(cell)
+            
         default:
             // No action possible
             break

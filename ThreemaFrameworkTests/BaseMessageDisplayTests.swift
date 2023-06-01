@@ -34,9 +34,9 @@ class BaseMessageDisplayTests: XCTestCase {
         databasePreparer = DatabasePreparer(context: managedObjectContext)
         databasePreparer.save {
             conversation = databasePreparer.createConversation(
-                marked: false,
                 typing: false,
                 unreadMessageCount: 0,
+                visibility: .default,
                 complete: nil
             )
         }
@@ -135,9 +135,9 @@ class BaseMessageDisplayTests: XCTestCase {
         
         databasePreparer.save {
             let groupConversation = databasePreparer.createConversation(
-                marked: false,
                 typing: false,
                 unreadMessageCount: 0,
+                visibility: .default,
                 complete: { conversation in
                     conversation.groupID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!
                 }
@@ -187,9 +187,9 @@ class BaseMessageDisplayTests: XCTestCase {
         
         databasePreparer.save {
             let groupConversation = databasePreparer.createConversation(
-                marked: false,
                 typing: false,
                 unreadMessageCount: 0,
+                visibility: .default,
                 complete: { conversation in
                     conversation.groupID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!
                 }
@@ -364,9 +364,9 @@ class BaseMessageDisplayTests: XCTestCase {
 
         databasePreparer.save {
             let groupConversation = databasePreparer.createConversation(
-                marked: false,
                 typing: false,
                 unreadMessageCount: 0,
+                visibility: .default,
                 complete: { conversation in
                     conversation.groupID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!
                 }
@@ -480,9 +480,9 @@ class BaseMessageDisplayTests: XCTestCase {
 
         databasePreparer.save {
             let groupConversation = databasePreparer.createConversation(
-                marked: false,
                 typing: false,
                 unreadMessageCount: 0,
+                visibility: .default,
                 complete: { conversation in
                     conversation.groupID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!
                 }

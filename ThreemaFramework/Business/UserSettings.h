@@ -41,6 +41,7 @@ enum SendProfilePicture {
 @property (nonatomic, readwrite) BOOL alwaysRelayCalls;
 @property (nonatomic, strong) NSOrderedSet *blacklist;
 @property (nonatomic, strong) NSArray *syncExclusionList;
+@property (nonatomic, strong) NSData *wallpaper;
 @property (nonatomic, readwrite) BOOL autoSaveMedia;
 @property (nonatomic, readwrite) BOOL allowOutgoingDonations;
 
@@ -69,9 +70,7 @@ enum SendProfilePicture {
 @property (nonatomic, strong) NSString *masterDndStartTime;
 @property (nonatomic, strong) NSString *masterDndEndTime;
 
-- (void)checkWallpaper;
 @property (nonatomic, readwrite) BOOL sendMessageFeedback;
-@property (nonatomic, strong) UIImage *wallpaper;
 @property (nonatomic, readwrite) BOOL disableBigEmojis;
 
 @property (nonatomic, readwrite) BOOL enableMultiDevice;
@@ -111,12 +110,9 @@ enum ThreemaVideoCallQualitySetting {
 @property (nonatomic, strong) NSString *videoQuality;
 
 @property (nonatomic, readwrite) float chatFontSize;
-@property (nonatomic, readwrite) BOOL disableBigEmojis;
 @property (nonatomic, readwrite) BOOL darkTheme;
 @property (nonatomic, readwrite) BOOL useSystemTheme;
 @property (nonatomic, readwrite) BOOL showProfilePictures;
-
-@property (nonatomic, strong) UIImage *wallpaper;
 
 @property (nonatomic, readwrite) BOOL sortOrderFirstName;
 @property (nonatomic, readwrite) BOOL displayOrderFirstName;

@@ -141,6 +141,10 @@ import ThreemaFramework
         controller?.refreshView()
     }
     
+    public func photoBrowser(_ photoBrowser: MWPhotoBrowser!, objectIDAt index: UInt) -> NSManagedObjectID? {
+        nil
+    }
+    
     public func mediaSelectionCount() -> UInt {
         if controller != nil {
             return UInt(controller!.selectedAssets.count)

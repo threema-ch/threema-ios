@@ -19,7 +19,6 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import <XCTest/XCTest.h>
-#import <Expecta/Expecta.h>
 #import <ThreemaFramework/AppGroup.h>
 #import "ThreemaFrameworkTests-Swift.h"
 
@@ -75,12 +74,12 @@ NSInteger count = 10000;
     CFTimeInterval startTime = CACurrentMediaTime();
     [em.entityFetcher textMessagesContaining:@"gibts nicht" inConversation:conversation fetchLimit:0];
     CFTimeInterval duration = CACurrentMediaTime() - startTime;
-    expect(duration).to.beLessThan(0.1);
+    XCTAssert(duration < 0.1);
 
     startTime = CACurrentMediaTime();
     [em.entityFetcher textMessagesContaining:@"yz" inConversation:conversation fetchLimit:0];
     duration = CACurrentMediaTime() - startTime;
-    expect(duration).to.beLessThan(0.1);
+    XCTAssert(duration < 0.1);
 }
 
 @end

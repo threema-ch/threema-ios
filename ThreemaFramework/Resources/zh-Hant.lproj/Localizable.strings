@@ -77,7 +77,6 @@
 "new_image_message" = "圖片";
 "new_video_message" = "影片";
 "new_location_message" = "位置";
-"new_audio_message" = "音訊";
 "new_ballot_create_message" = "投票：%@";
 "new_ballot_closed_message" = "投票：結果已公佈";
 "new_file_message" = "檔案：%@";

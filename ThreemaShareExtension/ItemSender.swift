@@ -189,7 +189,9 @@ class ItemSender: NSObject {
         sender = Old_FileMessageSender()
         sender!.uploadProgressDelegate = self
         sender!.send(senderItem, in: toConversation, requestID: nil, correlationID: correlationID)
-        toConversation.conversationVisibility = .default
+        if toConversation.conversationVisibility == .archived {
+            toConversation.conversationVisibility = .default
+        }
         uploadSema.wait()
         sender = nil
     }
@@ -233,7 +235,9 @@ class ItemSender: NSObject {
         if let message = baseMessage as? TextMessage {
             delegate?.finishedItem(item: [progressItemKey(item: message.text!, conversation: message.conversation)])
             
-            message.conversation.conversationVisibility = .default
+            if message.conversation.conversationVisibility == .archived {
+                message.conversation.conversationVisibility = .default
+            }
             
             DatabaseManager.db()?.addDirtyObject(message.conversation)
             DatabaseManager.db()?.addDirtyObject(message.conversation.lastMessage)

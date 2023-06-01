@@ -130,12 +130,14 @@ public class BusinessInjector: NSObject, FrameworkInjectorProtocol {
     public var dhSessionStore: DHSessionStoreProtocol {
         BusinessInjector.dhSessionStoreInstance
     }
-    
+
     lazy var conversationStoreInternal: ConversationStoreInternalProtocol =
         conversationStore as! ConversationStoreInternalProtocol
 
     lazy var settingsStoreInternal: SettingsStoreInternalProtocol = settingsStore as! SettingsStoreInternalProtocol
-    
+
+    lazy var userNotificationCenterManager: UserNotificationCenterManagerProtocol = UserNotificationCenterManager()
+
     class MessageSenderAdapter: ForwardSecurityMessageSenderProtocol {
         func send(message: AbstractMessage) {
             MessageSender.send(message, isPersistent: true)

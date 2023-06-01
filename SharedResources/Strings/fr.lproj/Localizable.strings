@@ -48,13 +48,9 @@
 "cannot_connect_title" = "Aucune connexion";
 "cannot_connect_message" = "Connexion impossible, veuillez vérifier votre connexion Internet.";
 
-"delete_identity_warning" = "Si vous supprimez votre ID, votre paire de clés et vos données d’application seront supprimées. Si vous n’avez pas créé de sauvegarde, vous ne pourrez plus envoyer ou recevoir de messages en utilisant cet ID.\n\nSi vous ne voulez plus utiliser cet ID, nous vous conseillons de dissocier toute adresse e-mail ou numéro de téléphone avant de supprimer l’ID.";
-"delete_identity_warning2" = "Dernier avertissement : voulez-vous vraiment supprimer vos données et votre ID ?";
+// JKLockScreenViewController
 "delete_identity_passcode_title" = "Code activé";
 "delete_identity_passcode_message" = "Veuillez désactiver le code avant de supprimer votre ID.";
-"delete_identity_title" = "Données de l’application supprimées";
-"delete_identity_description" = "Toutes les données de l’application ont été supprimées. Veuillez redémarrer l’application pour configurer %@.";
-"delete_identity_app_close" = "Fermer l’application";
 
 /* JKLockScreenViewController */
 "cancel" = "Annuler";
@@ -64,7 +60,6 @@
 "yes" = "Oui";
 "delete" = "Supprimer";
 "try_again" = "Réessayer";
-"delete_identity" = "Supprimer les données et l’ID";
 "copy" = "Copier";
 "save" = "Enregistrer";
 "download" = "Télécharger";
@@ -79,7 +74,6 @@
 "sticker" = "Autocollant";
 "gif" = "GIF";
 "video" = "Vidéo";
-"audio" = "Audio";
 "file" = "Fichier";
 "location" = "Emplacement";
 "locating" = "Localisation en cours…";
@@ -183,8 +177,6 @@
 "sound_threema_goody" = "Remix";
 "sound_threema_alphorn" = "Alphorn";
 
-"reset_wallpaper" = "Réinitialiser le fond d’écran";
-"bigger_single_emojis" = "Émoticônes uniques plus grosses";
 "identity_none" = "aucune";
 "message" = "Message"; /* Short version for "Send Message" */
 "scan_identity" = "Scanner l’ID";
@@ -1091,6 +1083,7 @@
 "settings_license" = "Licence";
 "settings_advanced" = "Avancé";
 "settings_threema_work" = "Threema Work";
+"settings_threema_work_subtitle" = "La solution de communication sécurisée pour les entreprises";
 "settings_feedback" = "Commentaires bêta";
 "tos_cell_title" = "Conditions d'utilisation";
 
@@ -1131,7 +1124,6 @@
 "settings_privacy_hide_private_chats" = "Masquer les discussions privées";
 "settings_privacy_hide_private_chats_footer" = "Masquez toutes les discussions privées dans l'aperçu des discussions. Vous devez définir un code afin d'activer ce paramètre.";
 
-
 // Appearance
 "settings_appearance_theme_section" = "Apparence";
 "settings_appearance_light_theme" = "Clair";
@@ -1149,7 +1141,15 @@
 "settings_appearance_show_gallery_preview" = "Afficher l’aperçu de la galerie";
 
 // Chat Settings
-"settings_chat_send_message_feedback_label" = "Retour haptique à l'envoi";
+"settings_chat_wallpaper_title" = "Fond d'écran";
+"settings_chat_wallpaper_reset" = "Réinitialiser tous les fonds d'écran";
+"settings_chat_wallpaper_empty" = "Aucun";
+"settings_chat_wallpaper_custom" = "Personnalisé";
+"settings_chat_wallpaper_default" = "Par défaut";
+"settings_chat_wallpaper_reset_all_alert" = "Réinitialise tous les fonds d'écran ayant été définis spécifiquement pour une discussion à l'option sélectionnée ci-dessus. Cette action est irréversible.";
+
+"settings_chat_bigger_emojis" = "Des émoticônes plus grandes";
+"settings_chat_send_message_feedback" = "Retour haptique à l'envoi";
 
 // Media
 "settings_media_autosave_private_footer" = "Les médias reçus dans les discussions privées ne seront pas sauvegardés automatiquement.";
@@ -1161,8 +1161,48 @@
 "sentry_crash_send_no" = "Ne pas envoyer";
 "sentry_crash_comment_placeholder" = "Rapport de plantage";
 
+
+
 // My profile
 "profile_share_id_text" = "Mon ID Threema";
+"my_profile_delete_cell_title" = "Supprimer l'ID et les données";
+
+// Delete & Revoke
+"my_profile_delete_bullet_id" = "ID Threema";
+"my_profile_delete_bullet_chats" = "Discussions";
+"my_profile_delete_bullet_picture" = "Image de profil";
+"my_profile_delete_bullet_safe" = "Sauvegarde Threema Safe";
+"my_profile_delete_bullet_linked" = "Liens de numéro de téléphone ou d'e-mail";
+
+"my_profile_delete_info_title" = "Supprimer l'ID et les données";
+"my_profile_delete_info_keep" = "Les données suivantes restent exploitables et ne seront pas supprimées :";
+"my_profile_delete_info_delete" = "Les données suivantes seront retirées de cet appareil :";
+"my_profile_delete_info_toggle" = "Tout supprimer";
+
+"my_profile_delete_info_button_data" = "Supprimer les données";
+"my_profile_delete_info_button_revoke" = "Supprimer l'ID et les données";
+
+"my_profile_delete_identity_title" = "Supprimer les discussions et le profil ?";
+"my_profile_delete_identity_keep" = "Vous garderez :";
+"my_profile_delete_identity_remove" = "Vous êtes sur le point de retirer de cet appareil :";
+"my_profile_delete_identity_delete" = "Supprimer les discussions et le profil";
+
+"my_profile_delete_identity_view_alert_title" = "Cette action est irréversible.\nVoulez-vous vraiment continuer ?";
+"my_profile_delete_identity_view_alert_confirm" = "Supprimer les données";
+
+"my_profile_revoke_identity_view_title" = "Tout supprimer ?";
+"my_profile_revoke_info_delete" = "Vous supprimerez définitivement vos :";
+"my_profile_revoke_identity_view_info" = "Attention : cette action est irréversible !";
+"my_profile_revoke_identity_view_enter_id" = "Veuillez saisir votre ID Threema « %@ » pour tout supprimer définitivement :";
+"my_profile_revoke_identity_view_placeholder" = "Votre ID Threema";
+"my_profile_revoke_identity_view_button_revoke" = "Tout supprimer";
+
+"my_profile_delete_identity_summary_view_delete_title" = "Discussions et profil supprimés";
+"my_profile_delete_identity_summary_view_revoke_title" = "Tout a été supprimé";
+"my_profile_delete_identity_summary_view_delete_success" = "Vous avez bien retiré de cet appareil :";
+"my_profile_delete_identity_summary_view_revoke_success" = "Vous avez bien supprimé vos :";
+"my_profile_delete_identity_summary_view_restart" = "Redémarrez l'application pour continuer à l'utiliser.";
+"my_profile_delete_identity_summary_view_close" = "Fermer l'application";
 
 // File message
 "optional_caption" = "Légende facultative";
@@ -1349,7 +1389,6 @@ S’il ne manque aucun fichier (média) dans %@, videz la corbeille pour supprim
 "privacySetting_header" = "Confidentialité";
 "send_readReceipts" = "Confirmations de lecture";
 "dont_send" = "Ne pas envoyer";
-"send_readReceipt" = "Confirmation de lecture";
 "send_typingIndicators" = "Indicateurs de frappe";
 "send_typingIndicator" = "Indicateur de frappe";
 
@@ -1357,8 +1396,7 @@ S’il ne manque aucun fichier (média) dans %@, videz la corbeille pour supprim
 "use_default_send" = "Par défaut (%@)";
 "default_setting" = "Paramètre par défaut";
 
-"readReceipt_sheetMessage" = "Contourner le paramètre par défaut pour ce contact.";
-"typingIndicator_sheetMessage" = "Contourner le paramètre par défaut pour ce contact.";
+"contactoverride_sheetMessage" = "Cela contourne le paramètre par défaut pour ce contact spécifique.";
 
 /* Multi Decvice */
 "multi_device_linked_devices_title" = "Aperçu multi-appareils";
@@ -1489,6 +1527,12 @@ S’il ne manque aucun fichier (média) dans %@, videz la corbeille pour supprim
 "notification_interaction_delete_succeeded" = "Interactions supprimées";
 "notification_interaction_delete_failed" = "Échec de suppression des interactions";
 
+"notification_revocation_failed" = "Échec de révocation";
+
+"notification_caption_too_long" = "La légende est trop longue";
+
+"notification_updateworkdata_failed" = "La synchronisation avec le serveur de provisionnement a échoué";
+
 // Forward security status messages
 "forward_security_message_without" = "Un message sans Confidentialité de transmission parfaite a été reçu. Vérifiez que l'expéditeur a intentionnellement désactivé l’option de Confidentialité de transmission parfaite.";
 "forward_security_session_established" = "Les messages de cette conversation sont maintenant protégés par la Confidentialité de transmission parfaite.";
@@ -1541,6 +1585,8 @@ S’il ne manque aucun fichier (média) dans %@, videz la corbeille pour supprim
 "accessibility_ballotMessage_hint_open" = "Ouvrir le sondage pour voter.";
 "accessibility_ballotMessage_hint_closed" = "Afficher les résultats du sondage.";
 "accessibility_voiceMessage_speed_hint" = "Changer la vitesse de lecture.";
+"accessibility_voiceMessage_forward_hint" = "Avance de 10 secondes.";
+"accessibility_voiceMessage_rewind_hint" = "Retour de 10 secondes.";
 
 // Other
 "accessibility_caption" = "Légende : %@";

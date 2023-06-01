@@ -812,8 +812,28 @@ extension ChatViewVoiceMessageTableViewCell: ChatViewMessageAction {
     override var accessibilityCustomActions: [UIAccessibilityCustomAction]? {
         get {
             let builtActions = buildAccessibilityCustomActions() ?? [UIAccessibilityCustomAction]()
-            let customActionArray =
-                [UIAccessibilityCustomAction(
+            let customActionArray = [
+                UIAccessibilityCustomAction(
+                    name: BundleUtil
+                        .localizedString(forKey: "accessibility_voiceMessage_forward_hint")
+                ) { _ in
+                    if let voiceMessage = self.voiceMessageAndNeighbors?.message {
+                        self.waveformView.delegate?.currentTimeForward(for: voiceMessage)
+                        return true
+                    }
+                    return false
+                },
+                UIAccessibilityCustomAction(
+                    name: BundleUtil
+                        .localizedString(forKey: "accessibility_voiceMessage_rewind_hint")
+                ) { _ in
+                    if let voiceMessage = self.voiceMessageAndNeighbors?.message {
+                        self.waveformView.delegate?.currentTimeRewind(for: voiceMessage)
+                        return true
+                    }
+                    return false
+                },
+                UIAccessibilityCustomAction(
                     name: BundleUtil
                         .localizedString(forKey: "accessibility_voiceMessage_speed_hint")
                 ) { _ in
@@ -824,8 +844,9 @@ extension ChatViewVoiceMessageTableViewCell: ChatViewMessageAction {
                     )
                     self.voiceMessageCellDelegate?.updatePlaybackSpeed(newSpeedSetting)
                     return true
-                }]
-            
+                },
+            ]
+                
             return customActionArray + builtActions
         }
         set {

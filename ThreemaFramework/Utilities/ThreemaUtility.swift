@@ -122,7 +122,7 @@ public final class ThreemaUtility: NSObject {
     
     // MARK: - Other threema type
     
-    private static let isWorkFlavor = ThreemaApp.current == .work ||
+    public static let isWorkFlavor = ThreemaApp.current == .work ||
         ThreemaApp.current == .workRed ||
         ThreemaApp.current == .onPrem
     

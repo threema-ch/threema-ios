@@ -52,7 +52,8 @@
 #define kBlobLoadTimeout 180
 #define kBlobUploadTimeout 120
 
-#define kMaxMessageLen 3500 // text message size limit (bytes, not characters!); must comfortably fit in maximum packet length (including 360 bytes overhead and padding)
+#define kMaxMessageLen 7000 // text message size limit (bytes, not characters!); must comfortably fit in maximum packet length (including 360 bytes overhead and padding)
+#define kMaxCaptionLen 1000
 #define kMaxPktLen 8192
 #define kMinMessagePaddedLen 32
 

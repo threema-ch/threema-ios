@@ -1889,18 +1889,12 @@ struct Sync_Contact {
   /// Clears the value of `activityState`. Subsequent reads from it will return its default value.
   mutating func clearActivityState() {_uniqueStorage()._activityState = nil}
 
-  /// Features available for the contact (32 bit mask).
-  ///
-  /// - `0x00_00_00_01`: Can handle audio messages.
-  /// - `0x00_00_00_02`: Can handle groups.
-  /// - `0x00_00_00_04`: Can handle polls.
-  /// - `0x00_00_00_08`: Can handle file messages.
-  /// - `0x00_00_00_10`: Can handle audio calls.
-  /// - `0x00_00_00_20`: Can handle video calls.
+  /// Features available for the contact (64 bit mask,
+  /// `common.CspFeatureMaskFlag` logically or-ed).
   ///
   /// Required towards a new device and for a new contact. Optional for an
   /// existing contact.
-  var featureMask: UInt32 {
+  var featureMask: UInt64 {
     get {return _storage._featureMask ?? 0}
     set {_uniqueStorage()._featureMask = newValue}
   }
@@ -2014,10 +2008,9 @@ struct Sync_Contact {
   /// existing contact.
   ///
   /// Note: When applying logic depending on the verification level, a
-  ///       `WorkVerificationLevel` of `WORK_SUBSCRIPTION_VERIFIED` virtually
-  ///       raises the verification level to `SERVER_VERIFIED`. However, the
-  ///       contact verification level takes precedence if it is
-  ///       `FULLY_VERIFIED`.
+  /// `WorkVerificationLevel` of `WORK_SUBSCRIPTION_VERIFIED` virtually raises
+  /// the verification level to `SERVER_VERIFIED`. However, the contact
+  /// verification level takes precedence if it is `FULLY_VERIFIED`.
   enum VerificationLevel: SwiftProtobuf.Enum {
     typealias RawValue = Int
 
@@ -2062,7 +2055,7 @@ struct Sync_Contact {
   /// existing contact.
   ///
   /// Note: When not using a Threema Work client, the Threema Work verification
-  ///       level must always be `NONE`.
+  /// level must always be `NONE`.
   enum WorkVerificationLevel: SwiftProtobuf.Enum {
     typealias RawValue = Int
 
@@ -3187,14 +3180,14 @@ struct Sync_Settings {
   /// Clears the value of `callPolicy`. Subsequent reads from it will return its default value.
   mutating func clearCallPolicy() {self._callPolicy = nil}
 
-  var callConnectionPolity: Sync_Settings.CallConnectionPolicy {
-    get {return _callConnectionPolity ?? .allowDirect}
-    set {_callConnectionPolity = newValue}
+  var callConnectionPolicy: Sync_Settings.CallConnectionPolicy {
+    get {return _callConnectionPolicy ?? .allowDirect}
+    set {_callConnectionPolicy = newValue}
   }
-  /// Returns true if `callConnectionPolity` has been explicitly set.
-  var hasCallConnectionPolity: Bool {return self._callConnectionPolity != nil}
-  /// Clears the value of `callConnectionPolity`. Subsequent reads from it will return its default value.
-  mutating func clearCallConnectionPolity() {self._callConnectionPolity = nil}
+  /// Returns true if `callConnectionPolicy` has been explicitly set.
+  var hasCallConnectionPolicy: Bool {return self._callConnectionPolicy != nil}
+  /// Clears the value of `callConnectionPolicy`. Subsequent reads from it will return its default value.
+  mutating func clearCallConnectionPolicy() {self._callConnectionPolicy = nil}
 
   var screenshotPolicy: Sync_Settings.ScreenshotPolicy {
     get {return _screenshotPolicy ?? .allowScreenshot}
@@ -3461,7 +3454,7 @@ struct Sync_Settings {
   fileprivate var _readReceiptPolicy: Sync_ReadReceiptPolicy? = nil
   fileprivate var _typingIndicatorPolicy: Sync_TypingIndicatorPolicy? = nil
   fileprivate var _callPolicy: Sync_Settings.CallPolicy? = nil
-  fileprivate var _callConnectionPolity: Sync_Settings.CallConnectionPolicy? = nil
+  fileprivate var _callConnectionPolicy: Sync_Settings.CallConnectionPolicy? = nil
   fileprivate var _screenshotPolicy: Sync_Settings.ScreenshotPolicy? = nil
   fileprivate var _keyboardDataCollectionPolicy: Sync_Settings.KeyboardDataCollectionPolicy? = nil
   fileprivate var _blockedIdentities: Common_Identities? = nil
@@ -3519,6 +3512,74 @@ extension Sync_Settings.KeyboardDataCollectionPolicy: CaseIterable {
 }
 
 #endif  // swift(>=4.2)
+
+#if swift(>=5.5) && canImport(_Concurrency)
+extension Sync_ReadReceiptPolicy: @unchecked Sendable {}
+extension Sync_TypingIndicatorPolicy: @unchecked Sendable {}
+extension Sync_NotificationSoundPolicy: @unchecked Sendable {}
+extension Sync_ConversationVisibility: @unchecked Sendable {}
+extension Sync_ConversationCategory: @unchecked Sendable {}
+extension Sync_MdmParameters: @unchecked Sendable {}
+extension Sync_MdmParameters.ThreemaSafePolicy: @unchecked Sendable {}
+extension Sync_MdmParameters.ThreemaSafeRestorePolicy: @unchecked Sendable {}
+extension Sync_MdmParameters.OverridePolicy: @unchecked Sendable {}
+extension Sync_MdmParameters.ContactSyncPolicy: @unchecked Sendable {}
+extension Sync_MdmParameters.InactiveIdentityDisplayPolicy: @unchecked Sendable {}
+extension Sync_MdmParameters.UnknownContactPolicy: @unchecked Sendable {}
+extension Sync_MdmParameters.AutoSaveMediaPolicy: @unchecked Sendable {}
+extension Sync_MdmParameters.ScreenshotPolicy: @unchecked Sendable {}
+extension Sync_MdmParameters.AddContactPolicy: @unchecked Sendable {}
+extension Sync_MdmParameters.ChatExportPolicy: @unchecked Sendable {}
+extension Sync_MdmParameters.BackupPolicy: @unchecked Sendable {}
+extension Sync_MdmParameters.IdentityExportPolicy: @unchecked Sendable {}
+extension Sync_MdmParameters.DataBackupPolicy: @unchecked Sendable {}
+extension Sync_MdmParameters.SystemBackupPolicy: @unchecked Sendable {}
+extension Sync_MdmParameters.MessagePreviewPolicy: @unchecked Sendable {}
+extension Sync_MdmParameters.ProfilePictureSharePolicy: @unchecked Sendable {}
+extension Sync_MdmParameters.CallPolicy: @unchecked Sendable {}
+extension Sync_MdmParameters.SetupWizardPolicy: @unchecked Sendable {}
+extension Sync_MdmParameters.CreateGroupPolicy: @unchecked Sendable {}
+extension Sync_MdmParameters.ShareMediaPolicy: @unchecked Sendable {}
+extension Sync_UserProfile: @unchecked Sendable {}
+extension Sync_UserProfile.ProfilePictureShareWith: @unchecked Sendable {}
+extension Sync_UserProfile.ProfilePictureShareWith.OneOf_Policy: @unchecked Sendable {}
+extension Sync_UserProfile.IdentityLinks: @unchecked Sendable {}
+extension Sync_UserProfile.IdentityLinks.IdentityLink: @unchecked Sendable {}
+extension Sync_UserProfile.IdentityLinks.IdentityLink.OneOf_Type: @unchecked Sendable {}
+extension Sync_Contact: @unchecked Sendable {}
+extension Sync_Contact.VerificationLevel: @unchecked Sendable {}
+extension Sync_Contact.WorkVerificationLevel: @unchecked Sendable {}
+extension Sync_Contact.IdentityType: @unchecked Sendable {}
+extension Sync_Contact.AcquaintanceLevel: @unchecked Sendable {}
+extension Sync_Contact.ActivityState: @unchecked Sendable {}
+extension Sync_Contact.SyncState: @unchecked Sendable {}
+extension Sync_Contact.ReadReceiptPolicyOverride: @unchecked Sendable {}
+extension Sync_Contact.ReadReceiptPolicyOverride.OneOf_Override: @unchecked Sendable {}
+extension Sync_Contact.TypingIndicatorPolicyOverride: @unchecked Sendable {}
+extension Sync_Contact.TypingIndicatorPolicyOverride.OneOf_Override: @unchecked Sendable {}
+extension Sync_Contact.NotificationTriggerPolicyOverride: @unchecked Sendable {}
+extension Sync_Contact.NotificationTriggerPolicyOverride.OneOf_Override: @unchecked Sendable {}
+extension Sync_Contact.NotificationTriggerPolicyOverride.Policy: @unchecked Sendable {}
+extension Sync_Contact.NotificationTriggerPolicyOverride.Policy.NotificationTriggerPolicy: @unchecked Sendable {}
+extension Sync_Contact.NotificationSoundPolicyOverride: @unchecked Sendable {}
+extension Sync_Contact.NotificationSoundPolicyOverride.OneOf_Override: @unchecked Sendable {}
+extension Sync_Group: @unchecked Sendable {}
+extension Sync_Group.UserState: @unchecked Sendable {}
+extension Sync_Group.NotificationTriggerPolicyOverride: @unchecked Sendable {}
+extension Sync_Group.NotificationTriggerPolicyOverride.OneOf_Override: @unchecked Sendable {}
+extension Sync_Group.NotificationTriggerPolicyOverride.Policy: @unchecked Sendable {}
+extension Sync_Group.NotificationTriggerPolicyOverride.Policy.NotificationTriggerPolicy: @unchecked Sendable {}
+extension Sync_Group.NotificationSoundPolicyOverride: @unchecked Sendable {}
+extension Sync_Group.NotificationSoundPolicyOverride.OneOf_Override: @unchecked Sendable {}
+extension Sync_DistributionList: @unchecked Sendable {}
+extension Sync_Settings: @unchecked Sendable {}
+extension Sync_Settings.ContactSyncPolicy: @unchecked Sendable {}
+extension Sync_Settings.UnknownContactPolicy: @unchecked Sendable {}
+extension Sync_Settings.CallPolicy: @unchecked Sendable {}
+extension Sync_Settings.CallConnectionPolicy: @unchecked Sendable {}
+extension Sync_Settings.ScreenshotPolicy: @unchecked Sendable {}
+extension Sync_Settings.KeyboardDataCollectionPolicy: @unchecked Sendable {}
+#endif  // swift(>=5.5) && canImport(_Concurrency)
 
 // MARK: - Code below here is support for the SwiftProtobuf runtime.
 
@@ -3749,120 +3810,124 @@ extension Sync_MdmParameters: SwiftProtobuf.Message, SwiftProtobuf._MessageImple
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     try withExtendedLifetime(_storage) { (_storage: _StorageClass) in
-      if let v = _storage._licenseUsername {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every if/case branch local when no optimizations
+      // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+      // https://github.com/apple/swift-protobuf/issues/1182
+      try { if let v = _storage._licenseUsername {
         try visitor.visitSingularStringField(value: v, fieldNumber: 1)
-      }
-      if let v = _storage._licensePassword {
+      } }()
+      try { if let v = _storage._licensePassword {
         try visitor.visitSingularStringField(value: v, fieldNumber: 2)
-      }
-      if let v = _storage._nickname {
+      } }()
+      try { if let v = _storage._nickname {
         try visitor.visitSingularStringField(value: v, fieldNumber: 3)
-      }
-      if let v = _storage._firstName {
+      } }()
+      try { if let v = _storage._firstName {
         try visitor.visitSingularStringField(value: v, fieldNumber: 4)
-      }
-      if let v = _storage._lastName {
+      } }()
+      try { if let v = _storage._lastName {
         try visitor.visitSingularStringField(value: v, fieldNumber: 5)
-      }
-      if let v = _storage._customerSpecificID {
+      } }()
+      try { if let v = _storage._customerSpecificID {
         try visitor.visitSingularStringField(value: v, fieldNumber: 6)
-      }
-      if let v = _storage._category {
+      } }()
+      try { if let v = _storage._category {
         try visitor.visitSingularStringField(value: v, fieldNumber: 7)
-      }
-      if let v = _storage._linkedEmail {
+      } }()
+      try { if let v = _storage._linkedEmail {
         try visitor.visitSingularStringField(value: v, fieldNumber: 8)
-      }
-      if let v = _storage._linkedPhone {
+      } }()
+      try { if let v = _storage._linkedPhone {
         try visitor.visitSingularStringField(value: v, fieldNumber: 9)
-      }
-      if let v = _storage._identityRestore {
+      } }()
+      try { if let v = _storage._identityRestore {
         try visitor.visitSingularStringField(value: v, fieldNumber: 10)
-      }
-      if let v = _storage._identityRestorePassword {
+      } }()
+      try { if let v = _storage._identityRestorePassword {
         try visitor.visitSingularStringField(value: v, fieldNumber: 11)
-      }
-      if let v = _storage._threemaSafePolicy {
+      } }()
+      try { if let v = _storage._threemaSafePolicy {
         try visitor.visitSingularEnumField(value: v, fieldNumber: 12)
-      }
-      if let v = _storage._threemaSafePassword {
+      } }()
+      try { if let v = _storage._threemaSafePassword {
         try visitor.visitSingularStringField(value: v, fieldNumber: 13)
-      }
-      if let v = _storage._threemaSafePasswordPattern {
+      } }()
+      try { if let v = _storage._threemaSafePasswordPattern {
         try visitor.visitSingularStringField(value: v, fieldNumber: 14)
-      }
-      if let v = _storage._threemaSafePasswordPatternErrorMessage {
+      } }()
+      try { if let v = _storage._threemaSafePasswordPatternErrorMessage {
         try visitor.visitSingularStringField(value: v, fieldNumber: 15)
-      }
-      if let v = _storage._threemaSafeServerURL {
+      } }()
+      try { if let v = _storage._threemaSafeServerURL {
         try visitor.visitSingularStringField(value: v, fieldNumber: 16)
-      }
-      if let v = _storage._threemaSafeServerUsername {
+      } }()
+      try { if let v = _storage._threemaSafeServerUsername {
         try visitor.visitSingularStringField(value: v, fieldNumber: 17)
-      }
-      if let v = _storage._threemaSafeServerPassword {
+      } }()
+      try { if let v = _storage._threemaSafeServerPassword {
         try visitor.visitSingularStringField(value: v, fieldNumber: 18)
-      }
-      if let v = _storage._threemaSafeRestorePolicy {
+      } }()
+      try { if let v = _storage._threemaSafeRestorePolicy {
         try visitor.visitSingularEnumField(value: v, fieldNumber: 19)
-      }
-      if let v = _storage._threemaSafeRestoreIdentity {
+      } }()
+      try { if let v = _storage._threemaSafeRestoreIdentity {
         try visitor.visitSingularStringField(value: v, fieldNumber: 20)
-      }
-      if let v = _storage._overridePolicy {
+      } }()
+      try { if let v = _storage._overridePolicy {
         try visitor.visitSingularEnumField(value: v, fieldNumber: 21)
-      }
-      if let v = _storage._contactSyncPolicy {
+      } }()
+      try { if let v = _storage._contactSyncPolicy {
         try visitor.visitSingularEnumField(value: v, fieldNumber: 22)
-      }
-      if let v = _storage._inactiveIdentityDisplayPolicy {
+      } }()
+      try { if let v = _storage._inactiveIdentityDisplayPolicy {
         try visitor.visitSingularEnumField(value: v, fieldNumber: 23)
-      }
-      if let v = _storage._unknownContactPolicy {
+      } }()
+      try { if let v = _storage._unknownContactPolicy {
         try visitor.visitSingularEnumField(value: v, fieldNumber: 24)
-      }
-      if let v = _storage._autoSaveMediaPolicy {
+      } }()
+      try { if let v = _storage._autoSaveMediaPolicy {
         try visitor.visitSingularEnumField(value: v, fieldNumber: 25)
-      }
-      if let v = _storage._screenshotPolicy {
+      } }()
+      try { if let v = _storage._screenshotPolicy {
         try visitor.visitSingularEnumField(value: v, fieldNumber: 26)
-      }
-      if let v = _storage._addContactPolicy {
+      } }()
+      try { if let v = _storage._addContactPolicy {
         try visitor.visitSingularEnumField(value: v, fieldNumber: 27)
-      }
-      if let v = _storage._chatExportPolicy {
+      } }()
+      try { if let v = _storage._chatExportPolicy {
         try visitor.visitSingularEnumField(value: v, fieldNumber: 28)
-      }
-      if let v = _storage._backupPolicy {
+      } }()
+      try { if let v = _storage._backupPolicy {
         try visitor.visitSingularEnumField(value: v, fieldNumber: 29)
-      }
-      if let v = _storage._identityExportPolicy {
+      } }()
+      try { if let v = _storage._identityExportPolicy {
         try visitor.visitSingularEnumField(value: v, fieldNumber: 30)
-      }
-      if let v = _storage._dataBackupPolicy {
+      } }()
+      try { if let v = _storage._dataBackupPolicy {
         try visitor.visitSingularEnumField(value: v, fieldNumber: 31)
-      }
-      if let v = _storage._systemBackupPolicy {
+      } }()
+      try { if let v = _storage._systemBackupPolicy {
         try visitor.visitSingularEnumField(value: v, fieldNumber: 32)
-      }
-      if let v = _storage._messagePreviewPolicy {
+      } }()
+      try { if let v = _storage._messagePreviewPolicy {
         try visitor.visitSingularEnumField(value: v, fieldNumber: 33)
-      }
-      if let v = _storage._profilePictureSharePolicy {
+      } }()
+      try { if let v = _storage._profilePictureSharePolicy {
         try visitor.visitSingularEnumField(value: v, fieldNumber: 34)
-      }
-      if let v = _storage._callPolicy {
+      } }()
+      try { if let v = _storage._callPolicy {
         try visitor.visitSingularEnumField(value: v, fieldNumber: 35)
-      }
-      if let v = _storage._setupWizardPolicy {
+      } }()
+      try { if let v = _storage._setupWizardPolicy {
         try visitor.visitSingularEnumField(value: v, fieldNumber: 36)
-      }
-      if let v = _storage._createGroupPolicy {
+      } }()
+      try { if let v = _storage._createGroupPolicy {
         try visitor.visitSingularEnumField(value: v, fieldNumber: 37)
-      }
-      if let v = _storage._shareMediaPolicy {
+      } }()
+      try { if let v = _storage._shareMediaPolicy {
         try visitor.visitSingularEnumField(value: v, fieldNumber: 38)
-      }
+      } }()
     }
     try unknownFields.traverse(visitor: &visitor)
   }
@@ -4086,18 +4151,22 @@ extension Sync_UserProfile: SwiftProtobuf.Message, SwiftProtobuf._MessageImpleme
   }
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    if let v = self._nickname {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
+    try { if let v = self._nickname {
       try visitor.visitSingularStringField(value: v, fieldNumber: 1)
-    }
-    if let v = self._profilePicture {
+    } }()
+    try { if let v = self._profilePicture {
       try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
-    }
-    if let v = self._profilePictureShareWith {
+    } }()
+    try { if let v = self._profilePictureShareWith {
       try visitor.visitSingularMessageField(value: v, fieldNumber: 3)
-    }
-    if let v = self._identityLinks {
+    } }()
+    try { if let v = self._identityLinks {
       try visitor.visitSingularMessageField(value: v, fieldNumber: 4)
-    }
+    } }()
     try unknownFields.traverse(visitor: &visitor)
   }
 
@@ -4171,8 +4240,9 @@ extension Sync_UserProfile.ProfilePictureShareWith: SwiftProtobuf.Message, Swift
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
-    // allocates stack space for every case branch when no optimizations are
-    // enabled. https://github.com/apple/swift-protobuf/issues/1034
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
     switch self.policy {
     case .nobody?: try {
       guard case .nobody(let v)? = self.policy else { preconditionFailure() }
@@ -4268,8 +4338,9 @@ extension Sync_UserProfile.IdentityLinks.IdentityLink: SwiftProtobuf.Message, Sw
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
-    // allocates stack space for every case branch when no optimizations are
-    // enabled. https://github.com/apple/swift-protobuf/issues/1034
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
     switch self.type {
     case .phoneNumber?: try {
       guard case .phoneNumber(let v)? = self.type else { preconditionFailure() }
@@ -4333,7 +4404,7 @@ extension Sync_Contact: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementat
     var _identityType: Sync_Contact.IdentityType? = nil
     var _acquaintanceLevel: Sync_Contact.AcquaintanceLevel? = nil
     var _activityState: Sync_Contact.ActivityState? = nil
-    var _featureMask: UInt32? = nil
+    var _featureMask: UInt64? = nil
     var _syncState: Sync_Contact.SyncState? = nil
     var _readReceiptPolicyOverride: Sync_Contact.ReadReceiptPolicyOverride? = nil
     var _typingIndicatorPolicyOverride: Sync_Contact.TypingIndicatorPolicyOverride? = nil
@@ -4405,7 +4476,7 @@ extension Sync_Contact: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementat
         case 15: try { try decoder.decodeSingularMessageField(value: &_storage._userDefinedProfilePicture) }()
         case 16: try { try decoder.decodeSingularMessageField(value: &_storage._readReceiptPolicyOverride) }()
         case 17: try { try decoder.decodeSingularMessageField(value: &_storage._typingIndicatorPolicyOverride) }()
-        case 18: try { try decoder.decodeSingularUInt32Field(value: &_storage._featureMask) }()
+        case 18: try { try decoder.decodeSingularUInt64Field(value: &_storage._featureMask) }()
         case 19: try { try decoder.decodeSingularMessageField(value: &_storage._notificationTriggerPolicyOverride) }()
         case 20: try { try decoder.decodeSingularMessageField(value: &_storage._notificationSoundPolicyOverride) }()
         case 21: try { try decoder.decodeSingularEnumField(value: &_storage._workVerificationLevel) }()
@@ -4417,69 +4488,73 @@ extension Sync_Contact: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementat
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     try withExtendedLifetime(_storage) { (_storage: _StorageClass) in
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every if/case branch local when no optimizations
+      // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+      // https://github.com/apple/swift-protobuf/issues/1182
       if !_storage._identity.isEmpty {
         try visitor.visitSingularStringField(value: _storage._identity, fieldNumber: 1)
       }
-      if let v = _storage._publicKey {
+      try { if let v = _storage._publicKey {
         try visitor.visitSingularBytesField(value: v, fieldNumber: 2)
-      }
-      if let v = _storage._createdAt {
+      } }()
+      try { if let v = _storage._createdAt {
         try visitor.visitSingularUInt64Field(value: v, fieldNumber: 3)
-      }
-      if let v = _storage._firstName {
+      } }()
+      try { if let v = _storage._firstName {
         try visitor.visitSingularStringField(value: v, fieldNumber: 4)
-      }
-      if let v = _storage._lastName {
+      } }()
+      try { if let v = _storage._lastName {
         try visitor.visitSingularStringField(value: v, fieldNumber: 5)
-      }
-      if let v = _storage._nickname {
+      } }()
+      try { if let v = _storage._nickname {
         try visitor.visitSingularStringField(value: v, fieldNumber: 6)
-      }
-      if let v = _storage._verificationLevel {
+      } }()
+      try { if let v = _storage._verificationLevel {
         try visitor.visitSingularEnumField(value: v, fieldNumber: 7)
-      }
-      if let v = _storage._identityType {
+      } }()
+      try { if let v = _storage._identityType {
         try visitor.visitSingularEnumField(value: v, fieldNumber: 8)
-      }
-      if let v = _storage._acquaintanceLevel {
+      } }()
+      try { if let v = _storage._acquaintanceLevel {
         try visitor.visitSingularEnumField(value: v, fieldNumber: 9)
-      }
-      if let v = _storage._activityState {
+      } }()
+      try { if let v = _storage._activityState {
         try visitor.visitSingularEnumField(value: v, fieldNumber: 10)
-      }
-      if let v = _storage._conversationCategory {
+      } }()
+      try { if let v = _storage._conversationCategory {
         try visitor.visitSingularEnumField(value: v, fieldNumber: 11)
-      }
-      if let v = _storage._conversationVisibility {
+      } }()
+      try { if let v = _storage._conversationVisibility {
         try visitor.visitSingularEnumField(value: v, fieldNumber: 12)
-      }
-      if let v = _storage._syncState {
+      } }()
+      try { if let v = _storage._syncState {
         try visitor.visitSingularEnumField(value: v, fieldNumber: 13)
-      }
-      if let v = _storage._contactDefinedProfilePicture {
+      } }()
+      try { if let v = _storage._contactDefinedProfilePicture {
         try visitor.visitSingularMessageField(value: v, fieldNumber: 14)
-      }
-      if let v = _storage._userDefinedProfilePicture {
+      } }()
+      try { if let v = _storage._userDefinedProfilePicture {
         try visitor.visitSingularMessageField(value: v, fieldNumber: 15)
-      }
-      if let v = _storage._readReceiptPolicyOverride {
+      } }()
+      try { if let v = _storage._readReceiptPolicyOverride {
         try visitor.visitSingularMessageField(value: v, fieldNumber: 16)
-      }
-      if let v = _storage._typingIndicatorPolicyOverride {
+      } }()
+      try { if let v = _storage._typingIndicatorPolicyOverride {
         try visitor.visitSingularMessageField(value: v, fieldNumber: 17)
-      }
-      if let v = _storage._featureMask {
-        try visitor.visitSingularUInt32Field(value: v, fieldNumber: 18)
-      }
-      if let v = _storage._notificationTriggerPolicyOverride {
+      } }()
+      try { if let v = _storage._featureMask {
+        try visitor.visitSingularUInt64Field(value: v, fieldNumber: 18)
+      } }()
+      try { if let v = _storage._notificationTriggerPolicyOverride {
         try visitor.visitSingularMessageField(value: v, fieldNumber: 19)
-      }
-      if let v = _storage._notificationSoundPolicyOverride {
+      } }()
+      try { if let v = _storage._notificationSoundPolicyOverride {
         try visitor.visitSingularMessageField(value: v, fieldNumber: 20)
-      }
-      if let v = _storage._workVerificationLevel {
+      } }()
+      try { if let v = _storage._workVerificationLevel {
         try visitor.visitSingularEnumField(value: v, fieldNumber: 21)
-      }
+      } }()
     }
     try unknownFields.traverse(visitor: &visitor)
   }
@@ -4605,8 +4680,9 @@ extension Sync_Contact.ReadReceiptPolicyOverride: SwiftProtobuf.Message, SwiftPr
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
-    // allocates stack space for every case branch when no optimizations are
-    // enabled. https://github.com/apple/swift-protobuf/issues/1034
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
     switch self.override {
     case .default?: try {
       guard case .default(let v)? = self.override else { preconditionFailure() }
@@ -4669,8 +4745,9 @@ extension Sync_Contact.TypingIndicatorPolicyOverride: SwiftProtobuf.Message, Swi
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
-    // allocates stack space for every case branch when no optimizations are
-    // enabled. https://github.com/apple/swift-protobuf/issues/1034
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
     switch self.override {
     case .default?: try {
       guard case .default(let v)? = self.override else { preconditionFailure() }
@@ -4738,8 +4815,9 @@ extension Sync_Contact.NotificationTriggerPolicyOverride: SwiftProtobuf.Message,
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
-    // allocates stack space for every case branch when no optimizations are
-    // enabled. https://github.com/apple/swift-protobuf/issues/1034
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
     switch self.override {
     case .default?: try {
       guard case .default(let v)? = self.override else { preconditionFailure() }
@@ -4782,12 +4860,16 @@ extension Sync_Contact.NotificationTriggerPolicyOverride.Policy: SwiftProtobuf.M
   }
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
     if self.policy != .never {
       try visitor.visitSingularEnumField(value: self.policy, fieldNumber: 1)
     }
-    if let v = self._expiresAt {
+    try { if let v = self._expiresAt {
       try visitor.visitSingularUInt64Field(value: v, fieldNumber: 2)
-    }
+    } }()
     try unknownFields.traverse(visitor: &visitor)
   }
 
@@ -4846,8 +4928,9 @@ extension Sync_Contact.NotificationSoundPolicyOverride: SwiftProtobuf.Message, S
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
-    // allocates stack space for every case branch when no optimizations are
-    // enabled. https://github.com/apple/swift-protobuf/issues/1034
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
     switch self.override {
     case .default?: try {
       guard case .default(let v)? = self.override else { preconditionFailure() }
@@ -4906,36 +4989,40 @@ extension Sync_Group: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementatio
   }
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    if let v = self._groupIdentity {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
+    try { if let v = self._groupIdentity {
       try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
-    }
-    if let v = self._name {
+    } }()
+    try { if let v = self._name {
       try visitor.visitSingularStringField(value: v, fieldNumber: 2)
-    }
-    if let v = self._createdAt {
+    } }()
+    try { if let v = self._createdAt {
       try visitor.visitSingularUInt64Field(value: v, fieldNumber: 3)
-    }
-    if let v = self._conversationCategory {
+    } }()
+    try { if let v = self._conversationCategory {
       try visitor.visitSingularEnumField(value: v, fieldNumber: 4)
-    }
-    if let v = self._conversationVisibility {
+    } }()
+    try { if let v = self._conversationVisibility {
       try visitor.visitSingularEnumField(value: v, fieldNumber: 5)
-    }
-    if let v = self._userState {
+    } }()
+    try { if let v = self._userState {
       try visitor.visitSingularEnumField(value: v, fieldNumber: 6)
-    }
-    if let v = self._profilePicture {
+    } }()
+    try { if let v = self._profilePicture {
       try visitor.visitSingularMessageField(value: v, fieldNumber: 7)
-    }
-    if let v = self._memberIdentities {
+    } }()
+    try { if let v = self._memberIdentities {
       try visitor.visitSingularMessageField(value: v, fieldNumber: 8)
-    }
-    if let v = self._notificationTriggerPolicyOverride {
+    } }()
+    try { if let v = self._notificationTriggerPolicyOverride {
       try visitor.visitSingularMessageField(value: v, fieldNumber: 9)
-    }
-    if let v = self._notificationSoundPolicyOverride {
+    } }()
+    try { if let v = self._notificationSoundPolicyOverride {
       try visitor.visitSingularMessageField(value: v, fieldNumber: 10)
-    }
+    } }()
     try unknownFields.traverse(visitor: &visitor)
   }
 
@@ -5009,8 +5096,9 @@ extension Sync_Group.NotificationTriggerPolicyOverride: SwiftProtobuf.Message, S
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
-    // allocates stack space for every case branch when no optimizations are
-    // enabled. https://github.com/apple/swift-protobuf/issues/1034
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
     switch self.override {
     case .default?: try {
       guard case .default(let v)? = self.override else { preconditionFailure() }
@@ -5053,12 +5141,16 @@ extension Sync_Group.NotificationTriggerPolicyOverride.Policy: SwiftProtobuf.Mes
   }
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
     if self.policy != .mentioned {
       try visitor.visitSingularEnumField(value: self.policy, fieldNumber: 1)
     }
-    if let v = self._expiresAt {
+    try { if let v = self._expiresAt {
       try visitor.visitSingularUInt64Field(value: v, fieldNumber: 2)
-    }
+    } }()
     try unknownFields.traverse(visitor: &visitor)
   }
 
@@ -5118,8 +5210,9 @@ extension Sync_Group.NotificationSoundPolicyOverride: SwiftProtobuf.Message, Swi
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
-    // allocates stack space for every case branch when no optimizations are
-    // enabled. https://github.com/apple/swift-protobuf/issues/1034
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
     switch self.override {
     case .default?: try {
       guard case .default(let v)? = self.override else { preconditionFailure() }
@@ -5170,24 +5263,28 @@ extension Sync_DistributionList: SwiftProtobuf.Message, SwiftProtobuf._MessageIm
   }
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
     if self.distributionListID != 0 {
       try visitor.visitSingularFixed64Field(value: self.distributionListID, fieldNumber: 1)
     }
-    if let v = self._name {
+    try { if let v = self._name {
       try visitor.visitSingularStringField(value: v, fieldNumber: 2)
-    }
-    if let v = self._createdAt {
+    } }()
+    try { if let v = self._createdAt {
       try visitor.visitSingularUInt64Field(value: v, fieldNumber: 3)
-    }
-    if let v = self._conversationCategory {
+    } }()
+    try { if let v = self._conversationCategory {
       try visitor.visitSingularEnumField(value: v, fieldNumber: 4)
-    }
-    if let v = self._conversationVisibility {
+    } }()
+    try { if let v = self._conversationVisibility {
       try visitor.visitSingularEnumField(value: v, fieldNumber: 5)
-    }
-    if let v = self._memberIdentities {
+    } }()
+    try { if let v = self._memberIdentities {
       try visitor.visitSingularMessageField(value: v, fieldNumber: 6)
-    }
+    } }()
     try unknownFields.traverse(visitor: &visitor)
   }
 
@@ -5211,7 +5308,7 @@ extension Sync_Settings: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementa
     3: .standard(proto: "read_receipt_policy"),
     4: .standard(proto: "typing_indicator_policy"),
     5: .standard(proto: "call_policy"),
-    6: .standard(proto: "call_connection_polity"),
+    6: .standard(proto: "call_connection_policy"),
     7: .standard(proto: "screenshot_policy"),
     8: .standard(proto: "keyboard_data_collection_policy"),
     9: .standard(proto: "blocked_identities"),
@@ -5229,7 +5326,7 @@ extension Sync_Settings: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementa
       case 3: try { try decoder.decodeSingularEnumField(value: &self._readReceiptPolicy) }()
       case 4: try { try decoder.decodeSingularEnumField(value: &self._typingIndicatorPolicy) }()
       case 5: try { try decoder.decodeSingularEnumField(value: &self._callPolicy) }()
-      case 6: try { try decoder.decodeSingularEnumField(value: &self._callConnectionPolity) }()
+      case 6: try { try decoder.decodeSingularEnumField(value: &self._callConnectionPolicy) }()
       case 7: try { try decoder.decodeSingularEnumField(value: &self._screenshotPolicy) }()
       case 8: try { try decoder.decodeSingularEnumField(value: &self._keyboardDataCollectionPolicy) }()
       case 9: try { try decoder.decodeSingularMessageField(value: &self._blockedIdentities) }()
@@ -5240,36 +5337,40 @@ extension Sync_Settings: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementa
   }
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    if let v = self._contactSyncPolicy {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
+    try { if let v = self._contactSyncPolicy {
       try visitor.visitSingularEnumField(value: v, fieldNumber: 1)
-    }
-    if let v = self._unknownContactPolicy {
+    } }()
+    try { if let v = self._unknownContactPolicy {
       try visitor.visitSingularEnumField(value: v, fieldNumber: 2)
-    }
-    if let v = self._readReceiptPolicy {
+    } }()
+    try { if let v = self._readReceiptPolicy {
       try visitor.visitSingularEnumField(value: v, fieldNumber: 3)
-    }
-    if let v = self._typingIndicatorPolicy {
+    } }()
+    try { if let v = self._typingIndicatorPolicy {
       try visitor.visitSingularEnumField(value: v, fieldNumber: 4)
-    }
-    if let v = self._callPolicy {
+    } }()
+    try { if let v = self._callPolicy {
       try visitor.visitSingularEnumField(value: v, fieldNumber: 5)
-    }
-    if let v = self._callConnectionPolity {
+    } }()
+    try { if let v = self._callConnectionPolicy {
       try visitor.visitSingularEnumField(value: v, fieldNumber: 6)
-    }
-    if let v = self._screenshotPolicy {
+    } }()
+    try { if let v = self._screenshotPolicy {
       try visitor.visitSingularEnumField(value: v, fieldNumber: 7)
-    }
-    if let v = self._keyboardDataCollectionPolicy {
+    } }()
+    try { if let v = self._keyboardDataCollectionPolicy {
       try visitor.visitSingularEnumField(value: v, fieldNumber: 8)
-    }
-    if let v = self._blockedIdentities {
+    } }()
+    try { if let v = self._blockedIdentities {
       try visitor.visitSingularMessageField(value: v, fieldNumber: 9)
-    }
-    if let v = self._excludeFromSyncIdentities {
+    } }()
+    try { if let v = self._excludeFromSyncIdentities {
       try visitor.visitSingularMessageField(value: v, fieldNumber: 10)
-    }
+    } }()
     try unknownFields.traverse(visitor: &visitor)
   }
 
@@ -5279,7 +5380,7 @@ extension Sync_Settings: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementa
     if lhs._readReceiptPolicy != rhs._readReceiptPolicy {return false}
     if lhs._typingIndicatorPolicy != rhs._typingIndicatorPolicy {return false}
     if lhs._callPolicy != rhs._callPolicy {return false}
-    if lhs._callConnectionPolity != rhs._callConnectionPolity {return false}
+    if lhs._callConnectionPolicy != rhs._callConnectionPolicy {return false}
     if lhs._screenshotPolicy != rhs._screenshotPolicy {return false}
     if lhs._keyboardDataCollectionPolicy != rhs._keyboardDataCollectionPolicy {return false}
     if lhs._blockedIdentities != rhs._blockedIdentities {return false}

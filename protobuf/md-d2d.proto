@@ -54,8 +54,8 @@ message DeviceInfo {
   // App version, e.g. "4.52" (Android) or "4.6.12b2653" (iOS)
   string app_version = 4;
 
-  // User defined device label (e.g. "PC at Work"), may be empty if not set,
-  // max 255 characters
+  // User defined device label (e.g. "PC at Work"), may be empty if not set.
+  // Recommended to not not exceed 64 grapheme clusters.
   string label = 5;
 }
 
@@ -173,7 +173,8 @@ enum MessageType {
 
 // Unique conversation identifier.
 message ConversationId {
-  // A contact's Threema ID, distribution list ID or group identity to identify the conversation.
+  // A contact's Threema ID, distribution list ID or group identity to identify
+  // the conversation.
   oneof id {
     string contact = 1;
     fixed64 distribution_list = 2;
@@ -182,12 +183,28 @@ message ConversationId {
 }
 
 // An outgoing message, reflected to other devices.
+//
+// When sending this message:
+//
+// 1. [...]
+// 2. Set `nonces` to the nonces of the associated CSP
+//    `e2e.message-with-metadata` (or `e2e.legacy-message`) messages that
+//    contained the `body` in encrypted form.¹
+//
+// When receiving this message:
+//
+// 1. [...]
+// 2. Add all `nonces` to the CSP nonce storage, preventing messages from being
+//    replayed.
+//
+// ¹: For contacts and distribution lists, there will be exactly one nonce. For
+// groups, there will be as many nonces as there are group members minus one.
 message OutgoingMessage {
   // Conversation ID of the enclosed message.
   //
   // Note: If the conversation is of type group, group and group creator id of
-  //       the enclosed CSP E2E message must match the values of the supplied
-  //       group identity. Otherwise, the message must be considered invalid.
+  // the enclosed CSP E2E message must match the values of the supplied group
+  // identity. Otherwise, the message must be considered invalid.
   ConversationId conversation = 1;
 
   // Unique ID of the enclosed message
@@ -201,8 +218,8 @@ message OutgoingMessage {
   // created
   //
   // Note: Take this value from the
-  //       `csp.payload.legacy-message`/`csp.payload.message-with-metadata-box`
-  //       that enclosed the message.
+  // `csp.payload.legacy-message`/`csp.payload.message-with-metadata-box` that
+  // enclosed the message.
   uint64 created_at = 3;
 
   // Enclosed message's type, mapped from `csp.e2e.container.type`
@@ -210,19 +227,24 @@ message OutgoingMessage {
 
   // The message's body, i.e. the unpadded `csp.e2e.container.padded-data`
   bytes body = 5;
+
+  // Nonces the message was encrypted with towards each receiver (the shared
+  // secret derived from the long-term keys).
+  //
+  // Optional for now, always required in a future version.
+  repeated bytes nonces = 7;
 }
 
 // Update one or more existing outgoing messages.
 message OutgoingMessageUpdate {
   // Mark the referred message as sent (acknowledged by the chat server).
   //
-  // Note 1: The timestamp of the `reflect-ack`/`reflected` message determines the
-  //         timestamp for when the referred message has been sent.
+  // Note 1: The timestamp of the `reflect-ack`/`reflected` message determines
+  // the timestamp for when the referred message has been sent.
   //
   // Note 2: This indicates that the referred message has been successfully
-  //         stored in the message queue of the server. It does NOT indicate
-  //         that the referred message has been delivered to the intended
-  //         receiver.
+  // stored in the message queue of the server. It does NOT indicate that the
+  // referred message has been delivered to the intended receiver.
   message Sent {}
 
   message Update {
@@ -244,7 +266,22 @@ message OutgoingMessageUpdate {
 }
 
 // An incoming message, reflected to other devices.
+//
+//
+// When sending this message:
+//
+// 1. [...]
+// 2. Set `nonce` to the nonce of `e2e.message-with-metadata` (or
+//    `e2e.legacy-message`) that contained the `body` in encrypted form.
+//
+// When receiving this message:
+//
+// 1. [...]
+// 2. Add `nonce` to the CSP nonce storage, preventing messages from being
+//    replayed.
 message IncomingMessage {
+  reserved 4;
+
   // Sender's Threema ID
   string sender_identity = 1;
 
@@ -255,8 +292,8 @@ message IncomingMessage {
   // created.
   //
   // Note: Take this value from the
-  //       `csp.payload.legacy-message`/`csp.payload.message-with-metadata-box`
-  //       that enclosed the message.
+  // `csp.payload.legacy-message`/`csp.payload.message-with-metadata-box` that
+  // enclosed the message.
   uint64 created_at = 3;
 
   // Enclosed message's type, mapped from `csp.e2e.container.type`
@@ -264,6 +301,12 @@ message IncomingMessage {
 
   // The message's body, i.e. the unpadded `csp.e2e.container.padded-data`
   bytes body = 6;
+
+  // Nonce the message was encrypted with by the sender (the shared secret
+  // derived from the long-term keys).
+  //
+  // Optional for now, always required in a future version.
+  bytes nonce = 7;
 }
 
 // Update one or more existing incoming messages.
@@ -271,8 +314,7 @@ message IncomingMessageUpdate {
   // Mark the referred message as read.
   //
   // Note: This may only be used when _read receipts_ have been turned off, i.e.
-  //       as a replacement for reflecting `delivery-receipt` type _read_
-  //       (`0x02`).
+  // as a replacement for reflecting `delivery-receipt` type _read_ (`0x02`).
   message Read {
     // Unix-ish timestamp in milliseconds for when the referred message has been
     // read.

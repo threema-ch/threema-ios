@@ -53,9 +53,9 @@ class ChatProfileViewTests: XCTestCase {
             contact = databasePreparer.createContact(publicKey: Data([1]), identity: "ECHOECHO", verificationLevel: 0)
             
             conversation = databasePreparer.createConversation(
-                marked: false,
                 typing: false,
-                unreadMessageCount: 0
+                unreadMessageCount: 0,
+                visibility: .default
             ) { conversation in
                 conversation.contact = contact
             }
@@ -129,9 +129,9 @@ class ChatProfileViewTests: XCTestCase {
         
         databasePreparer.save {
             conversation = databasePreparer.createConversation(
-                marked: false,
                 typing: false,
-                unreadMessageCount: 0
+                unreadMessageCount: 0,
+                visibility: .default
             ) { conversation in
                 // Needed such that `conversation.isGroup()` returns true
                 conversation.groupID = groupID

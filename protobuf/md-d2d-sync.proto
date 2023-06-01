@@ -478,10 +478,9 @@ message Contact {
   // existing contact.
   //
   // Note: When applying logic depending on the verification level, a
-  //       `WorkVerificationLevel` of `WORK_SUBSCRIPTION_VERIFIED` virtually
-  //       raises the verification level to `SERVER_VERIFIED`. However, the
-  //       contact verification level takes precedence if it is
-  //       `FULLY_VERIFIED`.
+  // `WorkVerificationLevel` of `WORK_SUBSCRIPTION_VERIFIED` virtually raises
+  // the verification level to `SERVER_VERIFIED`. However, the contact
+  // verification level takes precedence if it is `FULLY_VERIFIED`.
   enum VerificationLevel {
     // Unverified, public key has been obtained from the server
     UNVERIFIED = 0;
@@ -499,7 +498,7 @@ message Contact {
   // existing contact.
   //
   // Note: When not using a Threema Work client, the Threema Work verification
-  //       level must always be `NONE`.
+  // level must always be `NONE`.
   enum WorkVerificationLevel {
     // The user does not use Threema Work or the contact is not in the same
     // Threema Work subscription.
@@ -558,18 +557,12 @@ message Contact {
   }
   optional ActivityState activity_state = 10;
 
-  // Features available for the contact (32 bit mask).
-  //
-  // - `0x00_00_00_01`: Can handle audio messages.
-  // - `0x00_00_00_02`: Can handle groups.
-  // - `0x00_00_00_04`: Can handle polls.
-  // - `0x00_00_00_08`: Can handle file messages.
-  // - `0x00_00_00_10`: Can handle audio calls.
-  // - `0x00_00_00_20`: Can handle video calls.
+  // Features available for the contact (64 bit mask,
+  // `common.CspFeatureMaskFlag` logically or-ed).
   //
   // Required towards a new device and for a new contact. Optional for an
   // existing contact.
-  optional uint32 feature_mask = 18;
+  optional uint64 feature_mask = 18;
 
   // Contact synchronisation state
   //
@@ -911,7 +904,7 @@ message Settings {
     // Require relayed connections for Threema Calls
     REQUIRE_RELAY = 1;
   }
-  optional CallConnectionPolicy call_connection_polity = 6;
+  optional CallConnectionPolicy call_connection_policy = 6;
 
   // Screenshot policy
   //

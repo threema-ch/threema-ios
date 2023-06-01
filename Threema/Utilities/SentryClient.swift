@@ -47,6 +47,12 @@ import Sentry
             options.enableNetworkTracking = false
 
             options.beforeSend = { event in
+                // TODO: IOS-3786
+                guard !Thread.isMainThread else {
+                    DDLogError("IOS-3786: Do not process crash on main thread because we would deadlock otherwise.")
+                    return nil
+                }
+                
                 if let appDevice = event.context?["app"]?["device_app_hash"] as? String {
                     // Save anonymous app device, it will be displayed under Settings - Advanced
                     UserSettings.shared()?.sentryAppDevice = appDevice

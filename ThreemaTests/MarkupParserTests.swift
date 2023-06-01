@@ -398,9 +398,9 @@ class MarkupParserTests: XCTestCase {
         let testString = "Hello @[@@@@@@@@]. How *are* _you_?"
         let expectedString = "Hello @\(BundleUtil.localizedString(forKey: "mentions_all")). How are you?"
         
-        let parsedString = MarkupParser().previewString(for: testString)
+        let parsedString = MarkupParser().previewString(for: testString, font: .preferredFont(forTextStyle: .body))
         
-        XCTAssertEqual(parsedString, expectedString)
+        XCTAssertEqual(parsedString.string, expectedString)
     }
     
     private func expectAttributedCount(parsed: NSAttributedString, expectedCount: Int) {

@@ -396,7 +396,7 @@ extension ConversationsViewController {
     /// - Returns: ContextualAction for SwipeMenu of Cell
     private func createPinAction(conversation: Conversation) -> UIContextualAction {
         
-        let isPinned = conversation.marked.boolValue
+        let isPinned = conversation.conversationVisibility == .pinned
         let pinTitle: String
         
         if isPinned {

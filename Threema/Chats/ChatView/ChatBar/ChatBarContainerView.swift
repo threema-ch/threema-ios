@@ -100,17 +100,19 @@ final class ChatBarContainerView: UIView {
         ])
         
         if UIDevice.current.userInterfaceIdiom != .pad {
-            // This removes a small gap that would open up between the chat bar and the keyboard accessory view if an iPad is used with an external keyboard
             // See the definition of `blurEffectView` for more information.
+            let window = UIApplication.shared.windows.first
+            let bottomPadding = window?.safeAreaInsets.bottom ?? 0
+            
             NSLayoutConstraint.activate([
-                blurEffectView.bottomAnchor.constraint(equalTo: bottomAnchor),
+                blurEffectView.bottomAnchor.constraint(equalTo: bottomAnchor, constant: bottomPadding),
             ])
         }
     }
     
     // MARK: Updates
     
-    /// Updates the ChatBarContainerview instance with this chatBarView
+    /// Updates the ChatBarContainerView instance with this chatBarView
     /// - Parameter chatBarView:
     func add(_ chatBarView: ChatBarView) {
         guard chatBarView != self.chatBarView else {

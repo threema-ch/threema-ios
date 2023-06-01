@@ -67,7 +67,7 @@ class WebUpdateConversationRequest: WebAbstractMessage {
                 }
                 
                 entityManager.performSyncBlockAndSafe {
-                    conversation!.marked = NSNumber(value: self.isStarred!)
+                    conversation!.conversationVisibility = self.isStarred! ? .pinned : .default
                 }
                 
                 self.ack!.success = true
@@ -87,7 +87,7 @@ class WebUpdateConversationRequest: WebAbstractMessage {
                 }
                 
                 entityManager.performSyncBlockAndSafe {
-                    conversation!.marked = NSNumber(value: self.isStarred!)
+                    conversation!.conversationVisibility = self.isStarred! ? .pinned : .default
                 }
                 
                 self.ack!.success = true

@@ -65,7 +65,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
                 identity: "ECHOECHO",
                 verificationLevel: 0
             )
-            dbPreparer.createConversation(marked: false, typing: false, unreadMessageCount: 0) { conversation in
+            dbPreparer.createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
                 conversation.contact = contact
 
                 textMessage = self.dbPreparer.createTextMessage(
@@ -140,7 +140,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
                 identity: "ECHOECHO",
                 verificationLevel: 0
             )
-            dbPreparer.createConversation(marked: false, typing: false, unreadMessageCount: 0) { conversation in
+            dbPreparer.createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
                 conversation.contact = contact
 
                 textMessage = self.dbPreparer.createTextMessage(
@@ -210,7 +210,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
             )
             contact.state = NSNumber(integerLiteral: kStateInvalid)
 
-            dbPreparer.createConversation(marked: false, typing: false, unreadMessageCount: 0) { conversation in
+            dbPreparer.createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
                 conversation.contact = contact
 
                 textMessage = self.dbPreparer.createTextMessage(
@@ -318,7 +318,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
                 identity: "ECHOECHO",
                 verificationLevel: 0
             )
-            dbPreparer.createConversation(marked: false, typing: false, unreadMessageCount: 0) { conversation in
+            dbPreparer.createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
                 conversation.contact = contact
                 
                 textMessage = self.dbPreparer.createTextMessage(
@@ -444,7 +444,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
                 groupID: MockData.generateGroupID(),
                 groupCreator: "MEMBER01"
             )
-            dbPreparer.createConversation(marked: false, typing: false, unreadMessageCount: 0) { conversation in
+            dbPreparer.createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
                 conversation.groupID = groupEntity.groupID
                 conversation.contact = members.first(where: { $0.identity == "MEMBER01" })
                 conversation.addMembers(members)
@@ -590,7 +590,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
                 groupID: MockData.generateGroupID(),
                 groupCreator: "MEMBER01"
             )
-            dbPreparer.createConversation(marked: false, typing: false, unreadMessageCount: 0) { conversation in
+            dbPreparer.createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
                 conversation.groupID = groupEntity.groupID
                 conversation.contact = members.first(where: { $0.identity == "MEMBER01" })
                 conversation.addMembers(members)
@@ -737,7 +737,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
                 groupID: MockData.generateGroupID(),
                 groupCreator: "MEMBER01"
             )
-            dbPreparer.createConversation(marked: false, typing: false, unreadMessageCount: 0) { conversation in
+            dbPreparer.createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
                 conversation.groupID = groupEntity.groupID
                 conversation.contact = members.first(where: { $0.identity == "MEMBER01" })
                 conversation.addMembers(members)
@@ -862,7 +862,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
                 /// See `GroupManager` line 227 for why this has to be nil
                 groupCreator: nil
             )
-            dbPreparer.createConversation(marked: false, typing: false, unreadMessageCount: 0) { conversation in
+            dbPreparer.createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
                 conversation.groupID = groupEntity.groupID
                 conversation.groupMyIdentity = myIdentityStoreMock.identity
                 /// See `GroupManager` line 227 for why this has to be nil
@@ -1004,7 +1004,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
                     groupCreator: "*ADMIN01"
                 )
                 dbPreparer
-                    .createConversation(marked: false, typing: false, unreadMessageCount: 0) { conversation in
+                    .createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
                         conversation.groupID = groupEntity.groupID
                         conversation.groupName = broadcastGroupTest[0] as? String
                         conversation.contact = members.first(where: { $0.identity == "*ADMIN01" })
@@ -1122,7 +1122,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
                 identity: "ECHOECHO",
                 verificationLevel: 0
             )
-            dbPreparer.createConversation(marked: false, typing: false, unreadMessageCount: 0) { conversation in
+            dbPreparer.createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
                 conversation.contact = contact
                 
                 textMessage = self.dbPreparer.createTextMessage(

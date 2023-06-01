@@ -77,9 +77,11 @@ class TaskExecutionReceiveMessage: TaskExecution, TaskExecutionProtocol {
                 return Promise { $0.fulfill(abstractMessageAndPFSSession) }
             }
             
-            guard let task = task else {
+            guard let task else {
                 throw TaskExecutionError
-                    .processIncomingMessageFailed(message: abstractMessageAndPFSSession.message?.messageID.hexString)
+                    .processIncomingMessageFailed(
+                        message: "No task for reflecting message ID \(abstractMessageAndPFSSession.message?.messageID?.hexString ?? "nil")"
+                    )
             }
             
             // Reflect processed incoming chat message
@@ -95,11 +97,13 @@ class TaskExecutionReceiveMessage: TaskExecution, TaskExecutionProtocol {
                 }
         }
         .then { (abstractMessageAndPFSSession: AbstractMessageAndPFSSession?) -> Promise<AbstractMessageAndPFSSession?> in
-            guard let processedMsg = abstractMessageAndPFSSession?.message else {
-                // Message would not be processed (skip sending delivery receipt)
+            guard let processedMsg = abstractMessageAndPFSSession?.message,
+                  !processedMsg.flagDontQueue(),
+                  !((processedMsg as? AbstractGroupMessage)?.isGroupControlMessage() ?? false) else {
+                // Skip sending / updating delivery receipt (for typing indicator or group control messages)
                 return Promise { $0.fulfill(abstractMessageAndPFSSession) }
             }
-            
+
             // Send and update delivery receipt
             if let delivered = processedMsg.delivered,
                let deliveryDate = processedMsg.deliveryDate {
@@ -204,7 +208,9 @@ class TaskExecutionReceiveMessage: TaskExecution, TaskExecutionProtocol {
                 with: message.messageID,
                 conversation: conversation
             ) else {
-                DDLogError("Could not update message because we could not find the message")
+                DDLogWarn(
+                    "Could not update message because we could not find the message ID \(message.messageID?.hexString ?? "nil")"
+                )
                 return
             }
             

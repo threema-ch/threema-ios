@@ -68,6 +68,8 @@ class BusinessInjectorMock: FrameworkInjectorProtocol {
 
     var settingsStoreInternal: SettingsStoreInternalProtocol
 
+    var userNotificationCenterManager: UserNotificationCenterManagerProtocol
+
     init(
         backgroundEntityManager: EntityManager,
         backgroundGroupManager: GroupManagerProtocol = GroupManagerMock(),
@@ -85,7 +87,8 @@ class BusinessInjectorMock: FrameworkInjectorProtocol {
         settingsStore: SettingsStoreInternalProtocol & SettingsStoreProtocol = SettingsStoreMock(),
         serverConnector: ServerConnectorProtocol = ServerConnectorMock(),
         mediatorMessageProtocol: MediatorMessageProtocolProtocol = MediatorMessageProtocolMock(),
-        messageProcessor: MessageProcessorProtocol = MessageProcessorMock()
+        messageProcessor: MessageProcessorProtocol = MessageProcessorMock(),
+        userNotificationCenterManager: UserNotificationCenterManagerProtocol = UserNotificationCenterManagerMock()
     ) {
         self.backgroundEntityManager = backgroundEntityManager
         self.backgroundGroupManager = backgroundGroupManager
@@ -112,6 +115,7 @@ class BusinessInjectorMock: FrameworkInjectorProtocol {
         self.settingsStore = settingsStore
         self.conversationStoreInternal = conversationStore
         self.settingsStoreInternal = settingsStore
+        self.userNotificationCenterManager = userNotificationCenterManager
     }
 
     class DummySender: ForwardSecurityMessageSenderProtocol {

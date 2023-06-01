@@ -22,6 +22,97 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
   typealias Version = _2
 }
 
+/// CSP features supported by a device or available for a contact (64 bit mask).
+///
+/// IMPORTANT: The flags determine what a device/contact is capable of, not
+/// whether the settings allow for it. For example, group calls may be supported
+/// but ignored if disabled in the settings.
+enum Common_CspFeatureMaskFlag: SwiftProtobuf.Enum {
+  typealias RawValue = Int
+
+  /// No features available
+  case none // = 0
+
+  /// Can handle voice messages.
+  case voiceMessageSupport // = 1
+
+  /// Can handle groups.
+  case groupSupport // = 2
+
+  /// Can handle polls.
+  case pollSupport // = 4
+
+  /// Can handle file messages.
+  case fileMessageSupport // = 8
+
+  /// Can handle 1:1 audio calls.
+  case o2OAudioCallSupport // = 16
+
+  /// Can handle 1:1 video calls.
+  case o2OVideoCallSupport // = 32
+
+  /// Can handle forward security.
+  case forwardSecuritySupport // = 64
+
+  /// Can handle group calls.
+  case groupCallSupport // = 128
+  case UNRECOGNIZED(Int)
+
+  init() {
+    self = .none
+  }
+
+  init?(rawValue: Int) {
+    switch rawValue {
+    case 0: self = .none
+    case 1: self = .voiceMessageSupport
+    case 2: self = .groupSupport
+    case 4: self = .pollSupport
+    case 8: self = .fileMessageSupport
+    case 16: self = .o2OAudioCallSupport
+    case 32: self = .o2OVideoCallSupport
+    case 64: self = .forwardSecuritySupport
+    case 128: self = .groupCallSupport
+    default: self = .UNRECOGNIZED(rawValue)
+    }
+  }
+
+  var rawValue: Int {
+    switch self {
+    case .none: return 0
+    case .voiceMessageSupport: return 1
+    case .groupSupport: return 2
+    case .pollSupport: return 4
+    case .fileMessageSupport: return 8
+    case .o2OAudioCallSupport: return 16
+    case .o2OVideoCallSupport: return 32
+    case .forwardSecuritySupport: return 64
+    case .groupCallSupport: return 128
+    case .UNRECOGNIZED(let i): return i
+    }
+  }
+
+}
+
+#if swift(>=4.2)
+
+extension Common_CspFeatureMaskFlag: CaseIterable {
+  // The compiler won't synthesize support with the UNRECOGNIZED case.
+  static var allCases: [Common_CspFeatureMaskFlag] = [
+    .none,
+    .voiceMessageSupport,
+    .groupSupport,
+    .pollSupport,
+    .fileMessageSupport,
+    .o2OAudioCallSupport,
+    .o2OVideoCallSupport,
+    .forwardSecuritySupport,
+    .groupCallSupport,
+  ]
+}
+
+#endif  // swift(>=4.2)
+
 /// A unit that may be used in a `oneof` option without any values.
 /// Note: We're using this to simulate tagged unions.
 struct Common_Unit {
@@ -263,9 +354,38 @@ struct Common_Resolution {
   init() {}
 }
 
+#if swift(>=5.5) && canImport(_Concurrency)
+extension Common_CspFeatureMaskFlag: @unchecked Sendable {}
+extension Common_Unit: @unchecked Sendable {}
+extension Common_Blob: @unchecked Sendable {}
+extension Common_BlobData: @unchecked Sendable {}
+extension Common_Image: @unchecked Sendable {}
+extension Common_Image.TypeEnum: @unchecked Sendable {}
+extension Common_GroupIdentity: @unchecked Sendable {}
+extension Common_DeltaImage: @unchecked Sendable {}
+extension Common_DeltaImage.OneOf_Image: @unchecked Sendable {}
+extension Common_Timespan: @unchecked Sendable {}
+extension Common_Identities: @unchecked Sendable {}
+extension Common_Resolution: @unchecked Sendable {}
+#endif  // swift(>=5.5) && canImport(_Concurrency)
+
 // MARK: - Code below here is support for the SwiftProtobuf runtime.
 
 fileprivate let _protobuf_package = "common"
+
+extension Common_CspFeatureMaskFlag: SwiftProtobuf._ProtoNameProviding {
+  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    0: .same(proto: "NONE"),
+    1: .same(proto: "VOICE_MESSAGE_SUPPORT"),
+    2: .same(proto: "GROUP_SUPPORT"),
+    4: .same(proto: "POLL_SUPPORT"),
+    8: .same(proto: "FILE_MESSAGE_SUPPORT"),
+    16: .same(proto: "O2O_AUDIO_CALL_SUPPORT"),
+    32: .same(proto: "O2O_VIDEO_CALL_SUPPORT"),
+    64: .same(proto: "FORWARD_SECURITY_SUPPORT"),
+    128: .same(proto: "GROUP_CALL_SUPPORT"),
+  ]
+}
 
 extension Common_Unit: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".Unit"
@@ -395,12 +515,16 @@ extension Common_Image: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementat
   }
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
     if self.type != .jpeg {
       try visitor.visitSingularEnumField(value: self.type, fieldNumber: 1)
     }
-    if let v = self._blob {
+    try { if let v = self._blob {
       try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
-    }
+    } }()
     try unknownFields.traverse(visitor: &visitor)
   }
 
@@ -502,8 +626,9 @@ extension Common_DeltaImage: SwiftProtobuf.Message, SwiftProtobuf._MessageImplem
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
-    // allocates stack space for every case branch when no optimizations are
-    // enabled. https://github.com/apple/swift-protobuf/issues/1034
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
     switch self.image {
     case .removed?: try {
       guard case .removed(let v)? = self.image else { preconditionFailure() }

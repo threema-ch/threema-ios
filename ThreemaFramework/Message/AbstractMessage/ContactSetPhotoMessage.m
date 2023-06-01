@@ -63,6 +63,10 @@
     return NO;
 }
 
+- (BOOL)canShowUserNotification {
+    return NO;
+}
+
 - (BOOL)noDeliveryReceiptFlagSet {
     return YES;
 }

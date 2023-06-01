@@ -167,15 +167,27 @@ import Foundation
 
                 changes[NSDeletedObjectIDsKey] = confirmedDeletedIDs
 
-                // Update blobIDs to nil (to prevent downloading blob again)
                 if !updateMessageIDs.isEmpty {
                     var updatedIDs: [NSManagedObjectID] = []
                     
                     for updateID in updateMessageIDs {
                         if let updateMessage = try objCnx.existingObject(with: updateID) as? T {
-                            if updateMessage.value(forKey: mediaMetaInfo.blobIDField) != nil {
-                                objCnx.performAndWait {
+                            objCnx.performAndWait {
+                                var updated = false
+                                
+                                // Update data reference to nil (if it failed to to be deleted when the object was deleted)
+                                if updateMessage.value(forKey: mediaMetaInfo.relationship) != nil {
+                                    updateMessage.setValue(nil, forKey: mediaMetaInfo.relationship)
+                                    updated = true
+                                }
+                                
+                                // Update blobIDs to nil (to prevent downloading blob again)
+                                if updateMessage.value(forKey: mediaMetaInfo.blobIDField) != nil {
                                     updateMessage.setValue(nil, forKey: mediaMetaInfo.blobIDField)
+                                    updated = true
+                                }
+                                
+                                if updated {
                                     do {
                                         try self.objCnx.save()
                                         

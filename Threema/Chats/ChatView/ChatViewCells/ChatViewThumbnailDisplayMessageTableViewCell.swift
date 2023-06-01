@@ -59,51 +59,7 @@ final class ChatViewThumbnailDisplayMessageTableViewCell: ChatViewBaseTableViewC
             }
         }
     }
-    
-    override var shouldShowDateAndState: Bool {
-        didSet {
-            guard !(thumbnailDisplayMessageAndNeighbors?.message.showDateAndStateInline ?? false) else {
-                return
-            }
-            
-            // Both of these animations are typically covered within a bigger animation block
-            // or a block that doesn't animate at all. Both cases look good.
-            if shouldShowDateAndState {
-                // When adding the date and state view, this is an animation that doesn't look half bad since the view will
-                // animate in from the bottom.
-                UIView.animate(
-                    withDuration: ChatViewConfiguration.ChatBubble.bubbleSizeChangeAnimationDurationInSeconds,
-                    delay: ChatViewConfiguration.ChatBubble.bubbleSizeChangeAnimationDurationInSeconds,
-                    options: .curveEaseInOut
-                ) {
-                    self.messageDateAndStateView.alpha = 1
-                }
-            }
-            else {
-                // We don't use the same animation when hiding the date and state view because it'll animate out to the top
-                // and will cover the text which is still showing in the cell.
-                UIView.performWithoutAnimation {
-                    self.messageDateAndStateView.alpha = 0
-                }
-            }
-            
-            messageDateAndStateView.isHidden = !shouldShowDateAndState
-            
-            guard oldValue != shouldShowDateAndState else {
-                return
-            }
-            
-            // The length of the rendered text in the message might be shorter than `messageDateAndStateView`.
-            // Thus we fully remove it to avoid having it set the width of the message bubble.
-            if messageDateAndStateView.isHidden {
-                captionStack.removeArrangedSubview(messageDateAndStateView)
-            }
-            else {
-                captionStack.addArrangedSubview(messageDateAndStateView)
-            }
-        }
-    }
-    
+
     // MARK: - Views & constraints
     
     private lazy var thumbnailTapView = MessageThumbnailTapView { [weak self] in

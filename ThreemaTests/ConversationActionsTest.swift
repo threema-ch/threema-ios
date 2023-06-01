@@ -53,7 +53,6 @@ class ConversationActionsTest: XCTestCase {
     }
     
     private func createConversation(
-        marked: Bool,
         unreadMessageCount: Int,
         category: ConversationCategory,
         visibility: ConversationVisibility
@@ -66,7 +65,6 @@ class ConversationActionsTest: XCTestCase {
             contact = databasePreparer.createContact(publicKey: Data([1]), identity: "ECHOECHO", verificationLevel: 0)
 
             conversation = databasePreparer.createConversation(
-                marked: marked,
                 typing: false,
                 unreadMessageCount: unreadMessageCount,
                 category: category,
@@ -85,10 +83,9 @@ class ConversationActionsTest: XCTestCase {
     
     func testArchiveConversationUnarchived() throws {
         let conversation = createConversation(
-            marked: true,
             unreadMessageCount: 19,
             category: .default,
-            visibility: .default
+            visibility: .pinned
         )
         
         actions.archive(conversation)
@@ -99,12 +96,10 @@ class ConversationActionsTest: XCTestCase {
         )
         
         XCTAssertEqual(loadedConversation.conversationVisibility, .archived, "Conversation should be archived.")
-        XCTAssertFalse(loadedConversation.marked.boolValue, "Conversation should be unpinned.")
     }
     
     func testArchiveConversationArchived() throws {
         let conversation = createConversation(
-            marked: true,
             unreadMessageCount: 10,
             category: .default,
             visibility: .archived
@@ -118,16 +113,14 @@ class ConversationActionsTest: XCTestCase {
         )
         
         XCTAssertEqual(loadedConversation.conversationVisibility, .archived, "Conversation should be archived.")
-        XCTAssertTrue(loadedConversation.marked.boolValue, "Conversation should be pinned.")
         XCTAssertEqual(loadedConversation.unreadMessageCount, 10, "Conversation should not be marked unread.")
     }
    
     func testUnarchiveConversationUnarchived() throws {
         let conversation = createConversation(
-            marked: true,
             unreadMessageCount: 0,
             category: .default,
-            visibility: .default
+            visibility: .pinned
         )
         
         actions.unarchive(conversation)
@@ -137,13 +130,12 @@ class ConversationActionsTest: XCTestCase {
                 .conversation(forContact: conversation.contact!, createIfNotExisting: false)
         )
         
-        XCTAssertEqual(loadedConversation.conversationVisibility, .default, "Conversation should be unarchived.")
-        XCTAssertTrue(loadedConversation.marked.boolValue, "Conversation should be pinned.")
+        XCTAssertNotEqual(loadedConversation.conversationVisibility, .archived, "Conversation should be unarchived.")
+        XCTAssertEqual(loadedConversation.conversationVisibility, .pinned, "Conversation should be pinned.")
     }
     
     func testUnarchiveConversationArchived() throws {
         let conversation = createConversation(
-            marked: true,
             unreadMessageCount: 0,
             category: .default,
             visibility: .archived
@@ -157,7 +149,7 @@ class ConversationActionsTest: XCTestCase {
         )
         
         XCTAssertEqual(loadedConversation.conversationVisibility, .default, "Conversation should be unarchived.")
-        XCTAssertFalse(loadedConversation.marked.boolValue, "Conversation should be unpinned.")
+        XCTAssertNotEqual(loadedConversation.conversationVisibility, .pinned, "Conversation should be unpinned.")
     }
     
     // MARK: Read
@@ -165,7 +157,6 @@ class ConversationActionsTest: XCTestCase {
     func testReadConversationIsMarkedUnread() throws {
         
         let conversation = createConversation(
-            marked: false,
             unreadMessageCount: -1,
             category: .default,
             visibility: .default
@@ -191,7 +182,6 @@ class ConversationActionsTest: XCTestCase {
     func testUnreadConversationIsMarkedRead() throws {
 
         let conversation = createConversation(
-            marked: false,
             unreadMessageCount: 0,
             category: .default,
             visibility: .default

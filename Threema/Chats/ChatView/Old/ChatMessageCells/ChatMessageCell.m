@@ -96,7 +96,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 - (id)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier transparent:(BOOL)_transparent
 {
     self = [super initWithStyle:style reuseIdentifier:reuseIdentifier];
-    if (self) {        
+    if (self) {
         transparent = _transparent;
         
         self.backgroundColor = transparent ? [UIColor clearColor] : Colors.backgroundGroupedViewController; // clearColor slows performance
@@ -438,7 +438,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 
 - (void)updateDateLabel {
     NSDate *date = [message displayDate];
-
+    
     if (date != nil) {
         if (![ThreemaUtilityObjC isSameDayWithDate1:date date2:message.date]) {
             dateLabel.text = [DateFormatter shortStyleDateTime:date];
@@ -601,9 +601,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 }
 
 - (UIImage *)getStatusImageNamed:(NSString *)imageName withCustomColor:(UIColor *)color {
-    if (color == nil && [UserSettings sharedUserSettings].wallpaper == nil) {
-        color = Colors.textLight;
-    }
+    color = Colors.textLight;
     
     if (color) {
         return [[UIImage imageNamed:imageName inColor:color] imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal];

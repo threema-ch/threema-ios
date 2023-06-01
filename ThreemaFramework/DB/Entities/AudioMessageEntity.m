@@ -38,11 +38,11 @@
     int seconds = self.duration.intValue;
     int minutes = seconds / 60;
     seconds -= minutes * 60;
-    return [NSString stringWithFormat:@"%@ (%02d:%02d, %@)", [BundleUtil localizedStringForKey:@"audio"], minutes, seconds, [self blobGetFilename]];
+    return [NSString stringWithFormat:@"%@ (%02d:%02d, %@)", [BundleUtil localizedStringForKey:@"file_message_voice"], minutes, seconds, [self blobGetFilename]];
 }
 
 - (NSString*)previewText {
-    return [NSString stringWithFormat:@"%@ (%@)", [BundleUtil localizedStringForKey:@"audio"], [ThreemaUtilityObjC timeStringForSeconds:self.duration.integerValue]];
+    return [NSString stringWithFormat:@"%@ (%@)", [BundleUtil localizedStringForKey:@"file_message_voice"], [ThreemaUtilityObjC timeStringForSeconds:self.duration.integerValue]];
 }
 
 #pragma mark - BlobData

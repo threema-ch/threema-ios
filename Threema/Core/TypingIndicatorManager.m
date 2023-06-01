@@ -70,13 +70,6 @@
 - (void)resetTypingIndicators {
     DDLogVerbose(@"Resetting typing indicators");
     dispatch_async(dispatch_get_main_queue(), ^{
-        // Suspend the timer if Threema ID is already deleted
-        if ([[[AppDelegate sharedAppDelegate] window].rootViewController isKindOfClass:[DeleteIdentityViewController class]]) {
-            dispatch_suspend(resetTimer);
-            return;
-        }
-        
-        
         /* Fetch all Conversations that are currently typing, and reset the typing
          indicator if it was received too long ago */
         EntityManager *entityManager = [[EntityManager alloc] init];

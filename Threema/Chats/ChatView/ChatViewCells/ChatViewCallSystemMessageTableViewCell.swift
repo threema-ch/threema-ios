@@ -141,13 +141,8 @@ final class ChatViewCallSystemMessageTableViewCell: ChatViewBaseTableViewCell, M
             metaDataLabel.removeFromSuperview()
         }
         
-        // Fixes a bug where the call icon could be miss-aligned in iOS 15
-        if #available(iOS 16.0, *) {
-            // Do nothing
-        }
-        else {
-            iconMessageContentView.layoutIfNeeded()
-        }
+        // Fixes an issue where the call icon could be miss-aligned
+        iconMessageContentView.layoutIfNeeded()
         
         updateAccessibility()
     }

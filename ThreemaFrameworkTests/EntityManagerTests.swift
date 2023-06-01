@@ -56,7 +56,7 @@ final class EntityManagerTests: XCTestCase {
             )
 
             conversation = databasePreparer
-                .createConversation(marked: false, typing: false, unreadMessageCount: 0) { conversation in
+                .createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
                     conversation.contact = sender
                 }
 
@@ -127,7 +127,7 @@ final class EntityManagerTests: XCTestCase {
             )
 
             conversation = databasePreparer
-                .createConversation(marked: false, typing: false, unreadMessageCount: 0) { conversation in
+                .createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
                     conversation.contact = sender
                 }
         }

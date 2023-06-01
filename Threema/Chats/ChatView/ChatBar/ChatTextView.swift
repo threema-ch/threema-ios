@@ -26,6 +26,7 @@ import UIKit
 protocol ChatTextViewDelegate: AnyObject {
     // ChatTextView Changes
     func chatTextViewDidChange(_ textView: ChatTextView)
+    func showContact(identity: String)
     
     // Sending text
     func sendText()
@@ -114,7 +115,10 @@ final class ChatTextView: CustomResponderTextView {
     }
     
     private var maxHeight: CGFloat {
-        minHeight * CGFloat(ChatViewConfiguration.ChatBar.maxNumberOfLines)
+        if UIDevice.current.orientation.isLandscape, UIDevice.current.userInterfaceIdiom != .pad {
+            return minHeight * CGFloat(ChatViewConfiguration.ChatBar.maxNumberOfLinesLandscape)
+        }
+        return minHeight * CGFloat(ChatViewConfiguration.ChatBar.maxNumberOfLinesPortrait)
     }
     
     private var prevSingleLineHeight: CGFloat = 0.0
@@ -213,6 +217,7 @@ final class ChatTextView: CustomResponderTextView {
         // Set precomposed text
         if let precomposedText = precomposedText {
             customTextStorage?.replaceAndParse(precomposedText)
+            sizeToFit()
         }
         
         // Design
@@ -270,10 +275,12 @@ final class ChatTextView: CustomResponderTextView {
         let maxSize = CGSize(width: bounds.size.width, height: .greatestFiniteMagnitude)
         var height = max(sizeThatFits(maxSize).height, minHeight)
         
-        isScrollEnabled = height > maxHeight
+        isScrollEnabled = height > maxHeight || height > frame.size.height
         
         // Constrain maximum height
         height = min(height, maxHeight)
+        
+        contentSize.height = ceil(sizeThatFits(frame.size).height)
         
         // Update to new height and layout all sub and relevant superviews
         if height != heightConstraint.constant {
@@ -681,6 +688,40 @@ extension ChatTextView: UITextViewDelegate {
         if !isEditing {
             isEditing = true
         }
+    }
+    
+    func textView(
+        _ textView: UITextView,
+        shouldInteractWith URL: URL,
+        in characterRange: NSRange,
+        interaction: UITextItemInteraction
+    ) -> Bool {
+        guard IDNSafetyHelper.isLegalURL(url: URL, viewController: AppDelegate.shared().currentTopViewController())
+        else {
+            return false
+        }
+        if URL.absoluteString.starts(with: "ThreemaId:") {
+            if interaction == .invokeDefaultAction {
+                let threemaID = String(URL.absoluteString.suffix(8))
+                
+                guard let chatTextViewDelegate = chatTextViewDelegate else {
+                    let msg = "chatTextViewDelegate is unexpectedly nil"
+                    assertionFailure(msg)
+                    DDLogError(msg)
+                    return false
+                }
+                
+                chatTextViewDelegate.showContact(identity: threemaID)
+            }
+            return false
+        }
+        else if URL.scheme == "http" || URL.scheme == "https",
+                URL.host?.lowercased() == "threema.id",
+                interaction == .invokeDefaultAction {
+            URLHandler.handleThreemaDotIDURL(URL, hideAppChooser: false)
+            return false
+        }
+        return true
     }
     
     internal func textViewDidEndEditing(_ textView: UITextView) {

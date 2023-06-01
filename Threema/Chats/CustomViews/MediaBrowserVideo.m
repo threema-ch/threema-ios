@@ -25,6 +25,7 @@
 #import "VideoMessageLoader.h"
 #import "NSString+Hex.h"
 #import "BundleUtil.h"
+#import "ThreemaFramework.h"
 
 @interface MediaBrowserVideo ()
 
@@ -75,7 +76,10 @@
     if (_message.video != nil) {
         [self play];
     } else {
-        [self loadUnderlyingImageAndNotify];
+        BlobManagerObjcWrapper *manager = [[BlobManagerObjcWrapper alloc] init];
+        [manager syncBlobsFor:_message.objectID onCompletion:^{
+            [self postCompleteNotification];
+        }];
     }
 }
 
@@ -130,10 +134,8 @@
 }
 
 - (void)performLoadUnderlyingImageAndNotify {
-    VideoMessageLoader *loader = [[VideoMessageLoader alloc] init];
-    [loader startWithMessage:_message onCompletion:^(BaseMessage *message) {
-        [self postCompleteNotification];
-    } onError:^(NSError *error) {
+    BlobManagerObjcWrapper *manager = [[BlobManagerObjcWrapper alloc] init];
+    [manager syncBlobsFor:_message.objectID onCompletion:^{
         [self postCompleteNotification];
     }];
 }

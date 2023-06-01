@@ -159,6 +159,7 @@ class ConversationsViewControllerHelper {
         }
 
         MessageDraftStore.deleteDraft(for: conversation)
+        WallpaperStore.shared.deleteWallpaper(for: conversation.objectID)
         ChatScrollPosition.shared.removeSavedPosition(for: conversation)
 
         var hiddenContacts = [String]()

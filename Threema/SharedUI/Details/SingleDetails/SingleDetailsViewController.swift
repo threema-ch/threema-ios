@@ -68,7 +68,7 @@ final class SingleDetailsViewController: ThemedCodeModernGroupedTableViewControl
             mediaAndPollsQuickActions: mediaAndPollsActions
         )
     }()
-        
+    
     private lazy var dataSource = SingleDetailsDataSource(
         state: state,
         singleDetailsViewController: self,
@@ -227,7 +227,7 @@ final class SingleDetailsViewController: ThemedCodeModernGroupedTableViewControl
             self?.navigationBarTitle = self?.contact.displayName
             self?.updateHeader(animated: false)
         }
-
+        
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(showProfilePictureDidChange),
@@ -307,7 +307,7 @@ final class SingleDetailsViewController: ThemedCodeModernGroupedTableViewControl
             // Because `changeHandler` updates UI elements we need to ensure that it runs on the main queue
             DispatchQueue.main.async(execute: changeHandler)
         }
-
+        
         observers.append(observer)
     }
     
@@ -323,7 +323,7 @@ final class SingleDetailsViewController: ThemedCodeModernGroupedTableViewControl
         headerView.profileContentConfiguration = contact.contentConfiguration
         updateHeaderLayout(animated: animated)
     }
-
+    
     // MARK: - Actions
     
     @objc private func editButtonTapped() {
@@ -376,7 +376,7 @@ extension SingleDetailsViewController {
         transparentNavigationBarWhenOnTop = true
         
         tableView.cellLayoutMarginsFollowReadableWidth = true
-
+        
         dataSource.registerHeaderAndCells()
         dataSource.defaultRowAnimation = .fade
     }
@@ -581,10 +581,10 @@ extension SingleDetailsViewController: UITableViewDelegate {
             
         case .notifications:
             title = BundleUtil.localizedString(forKey: "pushSetting_header")
-        
+            
         case .privacySettings:
             title = BundleUtil.localizedString(forKey: "privacySetting_header")
-        
+            
         default:
             title = nil
         }
@@ -633,8 +633,15 @@ extension SingleDetailsViewController: UITableViewDelegate {
         case let .group(group):
             let groupDetailsViewController = GroupDetailsViewController(for: group, displayMode: .default)
             show(groupDetailsViewController, sender: self)
-        
+            
         case let .privacySettings(action: action, contact: _):
+            guard let cell = tableView.cellForRow(at: indexPath) else {
+                fatalError("We should have a cell that was tapped for an action.")
+            }
+            
+            action.run(cell)
+            
+        case let .wallpaper(action: action, isDefault: _):
             guard let cell = tableView.cellForRow(at: indexPath) else {
                 fatalError("We should have a cell that was tapped for an action.")
             }

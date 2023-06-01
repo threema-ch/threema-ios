@@ -74,7 +74,7 @@ class NonceGuard: NSObject {
     func processed(message: AbstractMessage, isReflected: Bool) throws -> AnyPromise {
         if isReflected, message.nonce == nil {
             DDLogWarn("If message nonce is nil for reflected message will not throw an error")
-            return AnyPromise()
+            return AnyPromise(Promise(resolver: { $0.fulfill_() }))
         }
 
         guard let nonce = message.nonce else {
@@ -82,7 +82,7 @@ class NonceGuard: NSObject {
         }
 
         guard !isProcessed(message: message, isReflected: isReflected) else {
-            return AnyPromise()
+            return AnyPromise(Promise(resolver: { $0.fulfill_() }))
         }
 
         return AnyPromise(processed(nonce: nonce))
@@ -101,7 +101,7 @@ class NonceGuard: NSObject {
         }
 
         guard !entityManager.isMessageNonceAlreadyInDB(nonce: nonce) else {
-            return AnyPromise()
+            return AnyPromise(Promise(resolver: { $0.fulfill_() }))
         }
 
         return AnyPromise(processed(nonce: nonce))

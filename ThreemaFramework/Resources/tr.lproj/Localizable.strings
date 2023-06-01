@@ -77,7 +77,6 @@
 "new_image_message" = "Resim";
 "new_video_message" = "Video";
 "new_location_message" = "Konum";
-"new_audio_message" = "Ses";
 "new_ballot_create_message" = "Anket: %@";
 "new_ballot_closed_message" = "Anket: Sonuçlar mevcut";
 "new_file_message" = "Dosya: %@";

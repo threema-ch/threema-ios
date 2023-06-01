@@ -140,7 +140,7 @@ class MediatorSyncableContacts: NSObject {
                 DDLogError("Contact state has an unknown value")
             }
 
-            delta.syncContact.featureMask = contact.featureMask.uint32Value
+            delta.syncContact.featureMask = contact.featureMask.uint64Value
 
             switch contact.importedStatus {
             case .initial:
@@ -155,14 +155,14 @@ class MediatorSyncableContacts: NSObject {
                 switch visibility {
                 case .archived:
                     delta.syncContact.conversationVisibility = .archived
+                case .pinned:
+                    delta.syncContact.conversationVisibility = .pinned
                 default:
-                    delta.syncContact.conversationVisibility = conversation?.marked
-                        .boolValue ?? false ? .pinned : .normal
+                    delta.syncContact.conversationVisibility = .normal
                 }
             }
             else {
-                delta.syncContact.conversationVisibility = conversation?.marked
-                    .boolValue ?? false ? .pinned : .normal
+                delta.syncContact.conversationVisibility = .normal
             }
 
             if let category = conversation?.conversationCategory {
@@ -340,7 +340,7 @@ class MediatorSyncableContacts: NSObject {
 
         var delta = getDelta(identity: identity)
         if let value = value {
-            delta.syncContact.featureMask = value.uint32Value
+            delta.syncContact.featureMask = value.uint64Value
         }
         else {
             delta.syncContact.clearFeatureMask()

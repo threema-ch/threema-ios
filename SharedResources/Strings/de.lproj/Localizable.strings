@@ -48,13 +48,9 @@
 "cannot_connect_title" = "Keine Verbindung";
 "cannot_connect_message" = "Prüfen Sie bitte Ihre Internetverbindung.";
 
-"delete_identity_warning" = "Wenn Sie Ihre ID löschen, werden sowohl Ihr Schlüsselpaar als auch Ihre App-Daten gelöscht. Sofern Sie kein Backup erstellt haben, besteht danach keine Möglichkeit mehr, mit dieser ID Nachrichten zu versenden oder empfangen.\n\nFalls Sie diese ID nicht mehr verwenden möchten, empfiehlt es sich, vor dem Löschen etwaige Verknüpfungen mit einer E-Mail-Adresse oder Rufnummer aufzuheben.";
-"delete_identity_warning2" = "Letzte Warnung: wollen Sie Ihre Daten und ID wirklich löschen?";
+// JKLockScreenViewController
 "delete_identity_passcode_title" = "Code-Sperre eingeschaltet";
 "delete_identity_passcode_message" = "Bitte schalten Sie die Code-Sperre aus, bevor Sie Ihre ID löschen.";
-"delete_identity_title" = "App-Daten gelöscht";
-"delete_identity_description" = "Alle App-Daten wurden gelöscht. Bitte starten Sie die App neu, um %@ einzurichten.";
-"delete_identity_app_close" = "App schliessen";
 
 /* JKLockScreenViewController */
 "cancel" = "Abbrechen";
@@ -64,7 +60,6 @@
 "yes" = "Ja";
 "delete" = "Löschen";
 "try_again" = "Erneut versuchen";
-"delete_identity" = "Daten und ID löschen";
 "copy" = "Kopieren";
 "save" = "Speichern";
 "download" = "Herunterladen";
@@ -79,7 +74,6 @@
 "sticker" = "Sticker";
 "gif" = "GIF";
 "video" = "Video";
-"audio" = "Audio";
 "file" = "Datei";
 "location" = "Standort";
 "locating" = "Standort bestimmen...";
@@ -183,8 +177,6 @@
 "sound_threema_goody" = "Remix";
 "sound_threema_alphorn" = "Alphorn";
 
-"reset_wallpaper" = "Hintergrundbild löschen";
-"bigger_single_emojis" = "Einzelne Emojis vergrössern";
 "identity_none" = "keine";
 "message" = "Nachricht senden"; /* Short version for "Send Message" */
 "scan_identity" = "ID scannen";
@@ -1093,6 +1085,7 @@ Threema Safe erlaubt, Ihre Threema-ID, Kontakte und Gruppen wiederherzustellen, 
 "settings_license" = "Lizenz";
 "settings_advanced" = "Erweitert";
 "settings_threema_work" = "Threema Work";
+"settings_threema_work_subtitle" = "Die sichere Kommunikationslösung für Unternehmen";
 "settings_feedback" = "Beta Feedback";
 "tos_cell_title" = "Nutzungsbedingungen";
 
@@ -1133,7 +1126,6 @@ Threema Safe erlaubt, Ihre Threema-ID, Kontakte und Gruppen wiederherzustellen, 
 "settings_privacy_hide_private_chats" = "Private Chats verbergen";
 "settings_privacy_hide_private_chats_footer" = "Alle privaten Chats werden in der Chat-Übersicht ausgeblendet. Die Code-Sperre muss aktiviert sein, um diese Einstellung zu aktivieren.";
 
-
 // Appearance
 "settings_appearance_theme_section" = "Designstil";
 "settings_appearance_light_theme" = "Hell";
@@ -1151,7 +1143,15 @@ Threema Safe erlaubt, Ihre Threema-ID, Kontakte und Gruppen wiederherzustellen, 
 "settings_appearance_show_gallery_preview" = "Schnellauswahl von Medien";
 
 // Chat Settings
-"settings_chat_send_message_feedback_label" = "Vibration beim Versenden";
+"settings_chat_wallpaper_title" = "Hintergrundbild";
+"settings_chat_wallpaper_reset" = "Alle Hintergrundbilder zurücksetzen";
+"settings_chat_wallpaper_empty" = "Keines";
+"settings_chat_wallpaper_custom" = "Eigenes";
+"settings_chat_wallpaper_default" = "Standard";
+"settings_chat_wallpaper_reset_all_alert" = "Setzt alle für spezifische Chats gesetzte Hintergrundbilder auf die oben ausgewählte Option zurück. Kann nicht rückgängig gemacht werden.";
+
+"settings_chat_bigger_emojis" = "Grössere Emojis";
+"settings_chat_send_message_feedback" = "Vibration beim Versenden";
 
 // Media
 "settings_media_autosave_private_footer" = "Medien, welche in privaten Chats erhalten werden, werden nicht automatisch gespeichert.";
@@ -1163,8 +1163,48 @@ Threema Safe erlaubt, Ihre Threema-ID, Kontakte und Gruppen wiederherzustellen, 
 "sentry_crash_send_no" = "Nicht senden";
 "sentry_crash_comment_placeholder" = "Absturzbericht";
 
+
+
 // My profile
 "profile_share_id_text" = "Meine Threema-ID";
+"my_profile_delete_cell_title" = "ID und Daten löschen";
+
+// Delete & Revoke
+"my_profile_delete_bullet_id" = "Threema-ID";
+"my_profile_delete_bullet_chats" = "Chats";
+"my_profile_delete_bullet_picture" = "Profilbild";
+"my_profile_delete_bullet_safe" = "Threema Safe-Backup";
+"my_profile_delete_bullet_linked" = "Rufnummer- und/oder E-Mail-Verknüpfung";
+
+"my_profile_delete_info_title" = "ID und Daten löschen";
+"my_profile_delete_info_keep" = "Folgende Daten sind weiterhin verwendbar und werden nicht gelöscht:";
+"my_profile_delete_info_delete" = "Folgende Daten werden von diesem Gerät entfernt:";
+"my_profile_delete_info_toggle" = "Alles löschen";
+
+"my_profile_delete_info_button_data" = "Daten löschen";
+"my_profile_delete_info_button_revoke" = "ID und Daten löschen";
+
+"my_profile_delete_identity_title" = "Chats und Profil löschen?";
+"my_profile_delete_identity_keep" = "Sie behalten:";
+"my_profile_delete_identity_remove" = "Sie entfernen von diesem Gerät:";
+"my_profile_delete_identity_delete" = "Chats und Profil löschen";
+
+"my_profile_delete_identity_view_alert_title" = "Dieser Schritt kann nicht rückgängig gemacht werden.\nWollen Sie wirklich fortfahren?";
+"my_profile_delete_identity_view_alert_confirm" = "Daten löschen";
+
+"my_profile_revoke_identity_view_title" = "ID und Daten löschen";
+"my_profile_revoke_info_delete" = "Folgende Daten werden unwiderruflich gelöscht:";
+"my_profile_revoke_identity_view_info" = "Achtung: Sie können diesen Schritt nicht rückgängig machen!";
+"my_profile_revoke_identity_view_enter_id" = "Bitte geben Sie Ihre Threema-ID «%@» ein, um definitiv alles zu löschen:";
+"my_profile_revoke_identity_view_placeholder" = "Ihre Threema-ID";
+"my_profile_revoke_identity_view_button_revoke" = "Alles löschen";
+
+"my_profile_delete_identity_summary_view_delete_title" = "Chats und Profil gelöscht";
+"my_profile_delete_identity_summary_view_revoke_title" = "Alles gelöscht";
+"my_profile_delete_identity_summary_view_delete_success" = "Sie haben erfolgreich folgende Daten von diesem Gerät entfernt:";
+"my_profile_delete_identity_summary_view_revoke_success" = "Sie haben erfolgreich folgende Daten gelöscht:";
+"my_profile_delete_identity_summary_view_restart" = "Starten Sie die App neu, um sie weiterzuverwenden";
+"my_profile_delete_identity_summary_view_close" = "App schliessen";
 
 // File message
 "optional_caption" = "Optionaler Text";
@@ -1351,7 +1391,6 @@ Sofern keine Medien und/oder Dateien in %@ fehlen, leeren Sie den Papierkorb, um
 "privacySetting_header" = "Privatsphäre";
 "send_readReceipts" = "Lesebestätigungen";
 "dont_send" = "Nicht senden";
-"send_readReceipt" = "Lesebestätigung";
 "send_typingIndicators" = "Melden, wenn ich tippe";
 "send_typingIndicator" = "Melden wenn ich tippe";
 
@@ -1359,8 +1398,7 @@ Sofern keine Medien und/oder Dateien in %@ fehlen, leeren Sie den Papierkorb, um
 "use_default_send" = "Standard (%@)";
 "default_setting" = "Standardeinstellung";
 
-"readReceipt_sheetMessage" = "Die Standardeinstellung für diesen Kontakt wird überschrieben.";
-"typingIndicator_sheetMessage" = "Die Standardeinstellung für diesen Kontakt wird überschrieben.";
+"contactoverride_sheetMessage" = "Die Standardeinstellung für diesen Kontakt wird überschrieben.";
 
 /* Multi Decvice */
 "multi_device_linked_devices_title" = "Multi-Device Preview";
@@ -1491,6 +1529,12 @@ Sofern keine Medien und/oder Dateien in %@ fehlen, leeren Sie den Papierkorb, um
 "notification_interaction_delete_succeeded" = "Interaktionen gelöscht";
 "notification_interaction_delete_failed" = "Löschen fehlgeschlagen";
 
+"notification_revocation_failed" = "Widerrufen fehlgeschlagen";
+
+"notification_caption_too_long" = "Text ist zu lang";
+
+"notification_updateworkdata_failed" = "Der Abgleich mit dem Bereitstellungsserver ist fehlgeschlagen";
+
 // Forward security status messages
 "forward_security_message_without" = "Eine Nachricht ohne Perfect Forward Secrecy wurde empfangen. Stellen Sie sicher, dass der Absender absichtlich Perfect Forward Secrecy deaktiviert hat.";
 "forward_security_session_established" = "Nachrichten in diesem Chat sind nun durch Perfect Forward Secrecy geschützt.";
@@ -1543,6 +1587,8 @@ Sofern keine Medien und/oder Dateien in %@ fehlen, leeren Sie den Papierkorb, um
 "accessibility_ballotMessage_hint_open" = "Umfrage öffnen.";
 "accessibility_ballotMessage_hint_closed" = "Umfrage Ergebnisse anzeigen.";
 "accessibility_voiceMessage_speed_hint" = "Wiedergabegeschwindigkeit ändern.";
+"accessibility_voiceMessage_forward_hint" = "10 Sekunden vorwärts.";
+"accessibility_voiceMessage_rewind_hint" = "10 Sekunden zurück.";
 
 // Other
 "accessibility_caption" = "Text: %@";

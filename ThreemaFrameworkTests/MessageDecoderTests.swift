@@ -326,7 +326,7 @@ class MessageDecoderTests: XCTestCase {
             contact = databasePreparer.createContact(publicKey: Data([1]), identity: "ECHOECHO", verificationLevel: 0)
             
             conversation = databasePreparer
-                .createConversation(marked: false, typing: false, unreadMessageCount: 0) { conversation in
+                .createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
                     conversation.contact = contact
                 }
         }

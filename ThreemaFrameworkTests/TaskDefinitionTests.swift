@@ -72,7 +72,7 @@ class TaskDefinitionTests: XCTestCase {
                 verificationLevel: 0
             )
             let conversation = dbPreparer
-                .createConversation(marked: false, typing: false, unreadMessageCount: 0) { conversation in
+                .createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
                     conversation.contact = contact
                 }
             let groupEntity = dbPreparer.createGroupEntity(groupID: expectedGroupID, groupCreator: expectedGroupCreator)
@@ -151,7 +151,7 @@ class TaskDefinitionTests: XCTestCase {
                 verificationLevel: 0
             )
             let conversation = dbPreparer
-                .createConversation(marked: false, typing: false, unreadMessageCount: 0) { conversation in
+                .createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
                     conversation.contact = contact
                 }
             ballot = dbPreparer.createBallotMessage(conversation: conversation, ballotID: expectedBallotID)
@@ -183,7 +183,7 @@ class TaskDefinitionTests: XCTestCase {
                 verificationLevel: 0
             )
             let conversation = dbPreparer
-                .createConversation(marked: false, typing: false, unreadMessageCount: 0) { conversation in
+                .createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
                     conversation.contact = contact
                 }
             ballot = dbPreparer.createBallotMessage(conversation: conversation, ballotID: expectedBallotID)
@@ -218,7 +218,7 @@ class TaskDefinitionTests: XCTestCase {
                 verificationLevel: 0
             )
             let conversation = dbPreparer
-                .createConversation(marked: false, typing: false, unreadMessageCount: 0) { conversation in
+                .createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
                     conversation.contact = contact
                 }
             let groupEntity = dbPreparer.createGroupEntity(groupID: expectedGroupID, groupCreator: expectedGroupCreator)
@@ -281,7 +281,7 @@ class TaskDefinitionTests: XCTestCase {
                 verificationLevel: 0
             )
             let conversation = dbPreparer
-                .createConversation(marked: false, typing: false, unreadMessageCount: 0) { conversation in
+                .createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
                     conversation.contact = contact
                 }
             let groupEntity = dbPreparer.createGroupEntity(groupID: expectedGroupID, groupCreator: expectedGroupCreator)
@@ -344,7 +344,7 @@ class TaskDefinitionTests: XCTestCase {
                 verificationLevel: 0
             )
             let conversation = dbPreparer
-                .createConversation(marked: false, typing: false, unreadMessageCount: 0) { conversation in
+                .createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
                     conversation.contact = contact
                 }
             let groupEntity = dbPreparer.createGroupEntity(groupID: expectedGroupID, groupCreator: expectedGroupCreator)
@@ -405,7 +405,7 @@ class TaskDefinitionTests: XCTestCase {
                 verificationLevel: 0
             )
             let conversation = dbPreparer
-                .createConversation(marked: false, typing: false, unreadMessageCount: 0) { conversation in
+                .createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
                     conversation.contact = contact
                 }
             let groupEntity = dbPreparer.createGroupEntity(groupID: expectedGroupID, groupCreator: expectedGroupCreator)

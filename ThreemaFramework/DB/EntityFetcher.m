@@ -384,7 +384,7 @@
 }
 
 - (NSArray *)allConversationsSortedUnarchivedOnly:(BOOL)unarchivedOnly {
-    NSArray *sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"marked" ascending:NO], [NSSortDescriptor sortDescriptorWithKey:@"lastUpdate" ascending:NO],
+    NSArray *sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"visibility" ascending:NO], [NSSortDescriptor sortDescriptorWithKey:@"lastUpdate" ascending:NO],
                                  [NSSortDescriptor sortDescriptorWithKey:@"lastMessage.date" ascending:NO]];
     
     
@@ -715,11 +715,11 @@
     }
     // create AND predicate
     [fetchRequest setPredicate:[NSCompoundPredicate andPredicateWithSubpredicates:predicates]];
-    NSArray *sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"marked" ascending:NO], [NSSortDescriptor sortDescriptorWithKey:@"lastUpdate" ascending:NO],
+    NSArray *sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"visibility" ascending:NO], [NSSortDescriptor sortDescriptorWithKey:@"lastUpdate" ascending:NO],
                                  [NSSortDescriptor sortDescriptorWithKey:@"lastMessage.date" ascending:NO]];
     [fetchRequest setSortDescriptors:sortDescriptors];
     
-    NSString *sectionString = sections ? @"marked" : nil;
+    NSString *sectionString = sections ? @"visibility" : nil;
     
     NSFetchedResultsController *fetchedResultsController = [[NSFetchedResultsController alloc] initWithFetchRequest:fetchRequest managedObjectContext:_managedObjectContext sectionNameKeyPath:sectionString cacheName:nil];
 
@@ -745,7 +745,7 @@
     
     // create AND predicate
     [fetchRequest setPredicate:[NSCompoundPredicate andPredicateWithSubpredicates:predicates]];
-    NSArray *sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"marked" ascending:NO], [NSSortDescriptor sortDescriptorWithKey:@"lastUpdate" ascending:NO],
+    NSArray *sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"visibility" ascending:NO], [NSSortDescriptor sortDescriptorWithKey:@"lastUpdate" ascending:NO],
                                  [NSSortDescriptor sortDescriptorWithKey:@"lastMessage.date" ascending:NO]];
     [fetchRequest setSortDescriptors:sortDescriptors];
     

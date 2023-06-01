@@ -69,9 +69,9 @@ class MessageFetcherTests: XCTestCase {
         databasePreparer = DatabasePreparer(context: mainCnx)
         databasePreparer.save {
             conversation = databasePreparer.createConversation(
-                marked: false,
                 typing: false,
                 unreadMessageCount: 0,
+                visibility: .default,
                 complete: nil
             )
             
@@ -120,9 +120,9 @@ class MessageFetcherTests: XCTestCase {
         var emptyConversation: Conversation!
         databasePreparer.save {
             emptyConversation = databasePreparer.createConversation(
-                marked: false,
                 typing: false,
                 unreadMessageCount: 0,
+                visibility: .default,
                 complete: nil
             )
         }

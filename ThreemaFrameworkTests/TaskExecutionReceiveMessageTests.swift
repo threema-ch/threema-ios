@@ -266,6 +266,110 @@ class TaskExecutionReceiveMessageTests: XCTestCase {
         )
     }
 
+    func testReceivedGroupRenameMessage() throws {
+        let myIdentityStoreMock = MyIdentityStoreMock()
+
+        let groupEntity = GroupEntity(context: databaseMainCnx.current)
+        groupEntity.groupID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!
+        groupEntity.groupCreator = nil
+
+        let conversation = Conversation(context: databaseMainCnx.current)
+        conversation.contact = nil
+        conversation.groupMyIdentity = myIdentityStoreMock.identity
+
+        let userSettingsMock = UserSettingsMock()
+        let groupManagerMock = GroupManagerMock()
+        groupManagerMock.getGroupReturns = Group(
+            myIdentityStore: MyIdentityStoreMock(),
+            userSettings: userSettingsMock,
+            groupEntity: groupEntity,
+            conversation: conversation,
+            lastSyncRequest: nil
+        )
+        let messageProcessorMock = MessageProcessorMock()
+        let messageSenderMock = MessageSenderMock()
+        let serverConnectorMock = ServerConnectorMock(connectionState: .loggedIn)
+        let frameworkInjectorMock = BusinessInjectorMock(
+            backgroundEntityManager: EntityManager(databaseContext: databaseBackgroundCnx),
+            backgroundGroupManager: groupManagerMock,
+            entityManager: EntityManager(databaseContext: databaseMainCnx),
+            messageSender: messageSenderMock,
+            myIdentityStore: myIdentityStoreMock,
+            userSettings: userSettingsMock,
+            serverConnector: serverConnectorMock,
+            messageProcessor: messageProcessorMock
+        )
+
+        let expectedGroupRenameMessage = GroupRenameMessage()
+        expectedGroupRenameMessage.groupID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!
+        expectedGroupRenameMessage.groupCreator = frameworkInjectorMock.myIdentityStore.identity
+        expectedGroupRenameMessage.nonce = BytesUtility.generateRandomBytes(length: Int(kNonceLen))!
+        expectedGroupRenameMessage.fromIdentity = "ECHOECHO"
+        expectedGroupRenameMessage.toIdentity = frameworkInjectorMock.myIdentityStore.identity
+        expectedGroupRenameMessage.name = "New group name"
+
+        messageProcessorMock.abstractMessage = expectedGroupRenameMessage
+
+        let expectedBoxedMessage = BoxedMessage()
+        expectedBoxedMessage.messageID = expectedGroupRenameMessage
+            .messageID
+
+        conversation.groupMyIdentity = frameworkInjectorMock.myIdentityStore.identity
+
+        let expec = expectation(description: "TaskDefinitionReceiveMessage")
+        var expecError: Error?
+
+        let task = TaskDefinitionReceiveMessage(
+            message: expectedBoxedMessage,
+            receivedAfterInitialQueueSend: true,
+            maxBytesToDecrypt: 0,
+            timeoutDownloadThumbnail: 0
+        )
+        task.create(frameworkInjector: frameworkInjectorMock).execute()
+            .done {
+                expec.fulfill()
+            }
+            .catch { error in
+                expecError = error
+                expec.fulfill()
+            }
+
+        wait(for: [expec], timeout: 6)
+
+        XCTAssertNil(expecError)
+        XCTAssertTrue(messageSenderMock.sendDeliveryReceiptCalls.isEmpty)
+        XCTAssertEqual(0, serverConnectorMock.sendMessageCalls.count)
+        XCTAssertEqual(0, serverConnectorMock.reflectMessageCalls.count)
+        XCTAssertEqual(1, serverConnectorMock.completedProcessingMessageCalls.count)
+        XCTAssertEqual(
+            1,
+            serverConnectorMock.completedProcessingMessageCalls
+                .filter { $0.messageID.elementsEqual(expectedBoxedMessage.messageID) }.count
+        )
+        let backgroundGroupManagerMock = try XCTUnwrap(
+            frameworkInjectorMock
+                .backgroundGroupManager as? GroupManagerMock
+        )
+        XCTAssertEqual(1, backgroundGroupManagerMock.periodicSyncIfNeededCalls.count)
+        XCTAssertTrue(
+            ddLoggerMock
+                .exists(
+                    message: "[0x15] receiveIncomingMessageFromChat (type: BoxedMessage; id: \(expectedBoxedMessage.messageID.hexString))"
+                )
+        )
+
+        XCTAssertTrue(
+            ddLoggerMock
+                .exists(
+                    message: "[0x33] sendIncomingMessageAckToChat (type: groupName; id: \(expectedBoxedMessage.messageID.hexString); groupCreator: \(expectedGroupRenameMessage.groupCreator!) - groupId: \(expectedGroupRenameMessage.groupID.hexString))"
+                )
+        )
+
+        ddLoggerMock.logMessages.forEach { m in
+            print(m.message)
+        }
+    }
+
     func testReceivedTextMessageMultiDeviceActivated() throws {
         let expectedReflectID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.messageIDLength)!
 

@@ -118,6 +118,10 @@ import ThreemaFramework
                 try migrateTo5_1()
                 migratedTo = .v5_1
             }
+            if migratedTo < .v5_2 {
+                try migrateTo5_2()
+                migratedTo = .v5_2
+            }
             // Add here a check if migration is necessary for a particular version...
         }
         catch {
@@ -239,5 +243,43 @@ import ThreemaFramework
         
         os_signpost(.end, log: osPOILog, name: "5.1 migration")
         DDLogNotice("[AppMigration] App migration to version 5.1 successfully finished")
+    }
+    
+    /// Migrate to version 5.2:
+    /// - Replace the conversation.marked property with the conversation.visibility property
+    private func migrateTo5_2() throws {
+        DDLogNotice("[AppMigration] App migration to version 5.2 started")
+        os_signpost(.begin, log: osPOILog, name: "5.2 migration")
+        entityManager.performSyncBlockAndSafe {
+            
+            let batch = NSBatchUpdateRequest(entityName: "Conversation")
+            batch.resultType = .statusOnlyResultType
+            batch
+                .predicate =
+                NSPredicate(
+                    format: "marked == \(NSNumber(booleanLiteral: true))"
+                )
+            
+            batch.propertiesToUpdate = [
+                "marked": NSNumber(booleanLiteral: false),
+                "visibility": ConversationVisibility.pinned.rawValue,
+            ]
+            // if there was a error, the execute function will return nil or a result with the result 0
+            if let result = self.entityManager.entityFetcher.execute(batch) {
+                if let success = result.result as? Int,
+                   success == 0 {
+                    DDLogError(
+                        "[AppMigration] Failed to set visibility for conversations"
+                    )
+                }
+            }
+            else {
+                DDLogError(
+                    "[AppMigration] Failed to set visibility for conversations"
+                )
+            }
+        }
+        os_signpost(.end, log: osPOILog, name: "5.2 migration")
+        DDLogNotice("[AppMigration] App migration to version 5.2 successfully finished")
     }
 }

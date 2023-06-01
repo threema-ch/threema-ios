@@ -24,9 +24,9 @@ public extension Colors {
     class var pillBackground: UIColor {
         switch theme {
         case .light, .undefined:
-            return .secondarySystemGroupedBackground
+            return Asset.SharedColors.white.color
         case .dark:
-            return .tertiarySystemBackground
+            return Asset.SharedColors.gray900.color
         }
     }
     

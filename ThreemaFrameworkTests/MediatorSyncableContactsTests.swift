@@ -404,7 +404,7 @@ class MediatorSyncableContactsTests: XCTestCase {
             delta.syncContact.clearActivityState()
         }
 
-        delta.syncContact.featureMask = contact.featureMask.uint32Value
+        delta.syncContact.featureMask = contact.featureMask.uint64Value
 
         switch contact.importedStatus {
         case .initial:
@@ -493,9 +493,9 @@ class MediatorSyncableContactsTests: XCTestCase {
             contact.importedStatus = .initial
             // Optional
             databasePreparer.createConversation(
-                marked: false,
                 typing: false,
                 unreadMessageCount: 0,
+                visibility: .default,
                 complete: { conversation in
                     _ = contact.conversations!.insert(conversation)
                     conversation.conversationVisibility = .default

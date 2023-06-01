@@ -21,6 +21,8 @@
 import CocoaLumberjackSwift
 import Foundation
 
+public typealias ThreemaIdentity = String
+
 /// Business representation of a Threema Contact
 public class Contact: NSObject {
 
@@ -90,7 +92,7 @@ public class Contact: NSObject {
     /// This can be used to detect deletion in KVO-observers
     public private(set) dynamic var willBeDeleted = false
 
-    @objc public private(set) dynamic var identity: String
+    @objc public private(set) dynamic var identity: ThreemaIdentity
     public private(set) var publicKey: Data
     @objc public private(set) dynamic var firstName: String?
     @objc public private(set) dynamic var lastName: String?
@@ -248,5 +250,11 @@ extension Set<Contact> {
                 }
                 return equal
             })
+    }
+}
+
+extension ThreemaIdentity {
+    var isValid: Bool {
+        count == ThreemaProtocol.identityLength
     }
 }

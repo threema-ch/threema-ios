@@ -31,9 +31,9 @@ class ChatScrollPositionTests: XCTestCase {
         let databasePreparer = DatabasePreparer(context: managedObjectContext)
         databasePreparer.save {
             conversation = databasePreparer.createConversation(
-                marked: false,
                 typing: false,
                 unreadMessageCount: 0,
+                visibility: .default,
                 complete: nil
             )
         }
@@ -47,9 +47,9 @@ class ChatScrollPositionTests: XCTestCase {
         let databasePreparer = DatabasePreparer(context: managedObjectContext)
         databasePreparer.save {
             conversation = databasePreparer.createConversation(
-                marked: false,
                 typing: false,
                 unreadMessageCount: 0,
+                visibility: .default,
                 complete: nil
             )
         }

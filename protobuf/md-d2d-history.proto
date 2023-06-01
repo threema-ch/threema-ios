@@ -100,7 +100,7 @@ import "md-d2d.proto";
 
 // Root message envelope for messages from the destination device (DD) to the
 // source device (SD).
-message FromDestinationDeviceEnvelope {
+message DdToSd {
   // The enveloped message
   oneof content {
     GetSummary get_summary = 1;
@@ -110,7 +110,7 @@ message FromDestinationDeviceEnvelope {
 
 // Root message envelope for messages from the source device (SD) to the
 // destination device (DD).
-message FromSourceDeviceEnvelope {
+message SdToDd {
   // The enveloped message
   oneof content {
     Summary summary = 1;

@@ -113,12 +113,12 @@
 //
 // ### Scoped to Group
 //
-// For group calls scoped to groups, the organiser of the call sends a
-// `GroupCallStart` to the desired group.
+// #### Periodic Refresh
 //
 // The following steps are defined as the _Group Call Refresh Steps_ and will be
 // applied to update the group calls that are currently considered running
-// within a group and determining which one of them is the chosen call:
+// within a group, determining which one of them is the chosen call and
+// potentially join the chosen call:
 //
 // 1. Let `running` be the list of group calls that are currently considered
 //    running within the group.
@@ -129,9 +129,9 @@
 //    concurrently and wait for them to return:
 //    1. If the user is currently participating in `call`, abort the _peek-call_
 //       sub-steps.
-//    2. _Peek_ the `call` via `SfuHttpRequest.Peek`. If this does not result in
-//       a response within 5s, remove `call` from `calls` and abort the
-//       _peek-call_ sub-steps.
+//    2. _Peek_ the `call` via a `SfuHttpRequest.Peek` request. If this does not
+//       result in a response within 5s, remove `call` from `calls` and abort
+//       the _peek-call_ sub-steps.
 //    3. If the received status code for `call` is `401` and `call` is not
 //       marked with _token-refreshed_:
 //       1. Refresh the _SFU Token_. If the _SFU Token_ refresh fails or does
@@ -160,16 +160,16 @@
 // 5. Let `chosen-call` be any call of `calls` with the highest `started_at`
 //    value (i.e. the most recently created call) as provided by the _peek_
 //    result.
-// 6. If `chosen-call` is not defined, display that no group call is currently
+// 6. If `chosen-call` is not defined, signal that no group call is currently
 //    running within the group, abort these steps and return `chosen-call`.
-// 7. Display `chosen-call` as the currently running group call within the
-//    group.
-// 8. If the user is currently in the process of starting a new group call
-//    within the group, prior to sending a `GroupCallStart` message (see the
-//    associated creation steps), cancel that process and join `chosen-call`
-//    instead.
-// 9. If the user is currently participating in a group call of this group which
-//    does not match `chosen-call`, exit the call immediately and join
+// 7. Signal `chosen-call` as the currently running group call within the group.
+// 8. If the _Group Call Join Steps_ are currently running with a different (or
+//    new) group call than `chosen-call`, cancel and restart the _Group Call
+//    Join Steps_ asynchronously with the same `intent` but with the
+//    `chosen-call`.
+// 9. If the user is currently participating in a group call of this group that
+//    is different to `chosen-call`, exit the running group call and run the
+//    _Group Call Join Steps_ asynchronously with the `intent` to _only join_
 //    `chosen-call`.
 // 10. Return `chosen-call`.
 //
@@ -179,17 +179,75 @@
 // When the Threema app is active, run the _Group Call Refresh Steps_ for each
 // group. This will start a timer to refresh any group call status.
 //
-// When the user leaves a group call, run the _Group Call Refresh Steps_.
+// When the user leaves a group call, run the _Group Call Refresh Steps_ for the
+// respective group.
 //
 // The above described timer may be cancelled when the Threema app is inactive.
 // The timer interval may be increased to 30s in case the group conversation is
 // currently not visible to the user.
 //
-// ### Common
+// #### Create or Join
 //
-// Any participant may join the call by connecting to the SFU with the Call ID
-// (and the _SFU Token_ for authentication). When a participant joins the call,
-// the following protocol flows happen in parallel.
+// The following steps are to be run when a user wants to join a group call of a
+// group where a group call is currently considered running (e.g. the user hits
+// _join_ in the UI) or when the user intents to create a group call for a group
+// where no group call is currently considered running (e.g. the user hits the
+// _call_ button in the UI):
+//
+// 1. Let `intent` be the user's intent, i.e. to either _only join_ or _create
+//    or join_ a group call.
+// 2. Refresh the _SFU Token_ if necessary. If the _SFU Token_ refresh fails
+//    within 10s, abort these steps and notify the user.
+// 3. Run the _Group Call Refresh Steps_ for the respective group and let `call`
+//    be the result.
+// 4. If `call` is undefined and `intent` is to _only join_, abort these steps
+//    and notify the user that no group call is running / the group call is no
+//    longer running.
+// 5. If `call` is undefined, create (but don't send) a `GroupCallStart`
+//    message, apply it to `call` and mark `call` as _new_.
+// 6. Run the _Group Call Join Steps_ with the `intent` and `call`.
+//
+// The following steps are defined as the _Group Call Join Steps_ (also applied
+// for creating a group call).:
+//
+// 1. Let `intent` be either _only join_ or _create or join_. Let `call` be the
+//    given group call to be joined (or created).
+// 2.  _Join_ (or implicitly create) the group call via a `SfuHttpRequest.Join`
+//    request. If this does not result in a response within 10s, abort these
+//    steps and notify the user.
+// 3. If the received status code is `503`, notify the user that the group call
+//    is full and abort these steps.
+// 4. If the server could not be reached or the received status code is not
+//    `200` or if the _Join_ response could not be decoded, abort these steps
+//    and notify the user.
+// 5. Establish a WebRTC connection to the SFU with the information provided in
+//    the _Join_ response. Wait until the SFU sent the initial
+//    `SfuToParticipant.Hello` message via the associated data channel. Let
+//    `hello` be that message.
+// 6. If the `hello.participants` contains less than 4 items, set the initial
+//    capture state of the microphone to _on_.
+// 7. If `call` is marked as _new_:
+//    1. Optionally add an artificial wait period of 2s minus the time elapsed
+//       since step 1.[^1]
+//    2. Announce (the previously created but not yet sent) `call` in the
+//       associated group by sending it as a `GroupCallStart` message.
+//    3. Add the created `call` to the list of group calls that are currently
+//       considered running.
+//    4. Asynchronously run the _Group Call Refresh Steps_.[^2]
+// 8. The group call is now considered established and should asynchronously
+//    invoke the SFU to Participant and Participant to Participant flows.
+//
+// [^1]: This prevents butter-fingered user from accidentally starting a group
+// call.
+//
+// [^2]: This will initiate the refresh timer for a newly created call and
+// signal it to the UI.
+//
+// Note: Implementations need to ensure that only one group call can be active
+// at the same time in the application. This means that only one invocation of
+// the _Create or Join_ flow and only one invocation of the _Group Call Join
+// Steps_ can be active. Be aware that these steps can be cancelled by the user
+// and by the _Group Call Refresh Steps_.
 //
 // ### SFU to Participant Flow
 //
@@ -278,7 +336,7 @@
 //    other participant for each device (camera, microphone, ...) that is
 //    currently activated (`Mode` is `ON`).
 //
-// #### Join/Leave
+// #### Join/Leave of Other Participants
 //
 // When a new participant joins, all other participants run the following steps:
 //
@@ -2421,6 +2479,76 @@ extension Groupcall_ParticipantToParticipant.Admin.ForceCaptureStateOff.Device: 
 
 #endif  // swift(>=4.2)
 
+#if swift(>=5.5) && canImport(_Concurrency)
+extension Groupcall_CallState: @unchecked Sendable {}
+extension Groupcall_CallState.Participant: @unchecked Sendable {}
+extension Groupcall_CallState.Participant.OneOf_Participant: @unchecked Sendable {}
+extension Groupcall_CallState.Participant.Normal: @unchecked Sendable {}
+extension Groupcall_CallState.Participant.Guest: @unchecked Sendable {}
+extension Groupcall_SfuHttpRequest: @unchecked Sendable {}
+extension Groupcall_SfuHttpRequest.Peek: @unchecked Sendable {}
+extension Groupcall_SfuHttpRequest.Join: @unchecked Sendable {}
+extension Groupcall_SfuHttpResponse: @unchecked Sendable {}
+extension Groupcall_SfuHttpResponse.Peek: @unchecked Sendable {}
+extension Groupcall_SfuHttpResponse.Join: @unchecked Sendable {}
+extension Groupcall_SfuHttpResponse.Join.Address: @unchecked Sendable {}
+extension Groupcall_SfuHttpResponse.Join.Address.ProtocolEnum: @unchecked Sendable {}
+extension Groupcall_SfuToParticipant: @unchecked Sendable {}
+extension Groupcall_SfuToParticipant.Envelope: @unchecked Sendable {}
+extension Groupcall_SfuToParticipant.Envelope.OneOf_Content: @unchecked Sendable {}
+extension Groupcall_SfuToParticipant.Hello: @unchecked Sendable {}
+extension Groupcall_SfuToParticipant.ParticipantJoined: @unchecked Sendable {}
+extension Groupcall_SfuToParticipant.ParticipantLeft: @unchecked Sendable {}
+extension Groupcall_ParticipantToSfu: @unchecked Sendable {}
+extension Groupcall_ParticipantToSfu.Envelope: @unchecked Sendable {}
+extension Groupcall_ParticipantToSfu.Envelope.OneOf_Content: @unchecked Sendable {}
+extension Groupcall_ParticipantToSfu.UpdateCallState: @unchecked Sendable {}
+extension Groupcall_ParticipantToSfu.ParticipantMicrophone: @unchecked Sendable {}
+extension Groupcall_ParticipantToSfu.ParticipantMicrophone.OneOf_Action: @unchecked Sendable {}
+extension Groupcall_ParticipantToSfu.ParticipantMicrophone.Subscribe: @unchecked Sendable {}
+extension Groupcall_ParticipantToSfu.ParticipantMicrophone.Unsubscribe: @unchecked Sendable {}
+extension Groupcall_ParticipantToSfu.ParticipantCamera: @unchecked Sendable {}
+extension Groupcall_ParticipantToSfu.ParticipantCamera.OneOf_Action: @unchecked Sendable {}
+extension Groupcall_ParticipantToSfu.ParticipantCamera.Subscribe: @unchecked Sendable {}
+extension Groupcall_ParticipantToSfu.ParticipantCamera.Unsubscribe: @unchecked Sendable {}
+extension Groupcall_ParticipantToSfu.ParticipantScreen: @unchecked Sendable {}
+extension Groupcall_ParticipantToSfu.ParticipantScreen.OneOf_Action: @unchecked Sendable {}
+extension Groupcall_ParticipantToSfu.ParticipantScreen.Subscribe: @unchecked Sendable {}
+extension Groupcall_ParticipantToSfu.ParticipantScreen.Unsubscribe: @unchecked Sendable {}
+extension Groupcall_ParticipantToParticipant: @unchecked Sendable {}
+extension Groupcall_ParticipantToParticipant.OuterEnvelope: @unchecked Sendable {}
+extension Groupcall_ParticipantToParticipant.Handshake: @unchecked Sendable {}
+extension Groupcall_ParticipantToParticipant.Handshake.HelloEnvelope: @unchecked Sendable {}
+extension Groupcall_ParticipantToParticipant.Handshake.HelloEnvelope.OneOf_Content: @unchecked Sendable {}
+extension Groupcall_ParticipantToParticipant.Handshake.AuthEnvelope: @unchecked Sendable {}
+extension Groupcall_ParticipantToParticipant.Handshake.AuthEnvelope.OneOf_Content: @unchecked Sendable {}
+extension Groupcall_ParticipantToParticipant.Handshake.Hello: @unchecked Sendable {}
+extension Groupcall_ParticipantToParticipant.Handshake.Auth: @unchecked Sendable {}
+extension Groupcall_ParticipantToParticipant.Handshake.GuestHello: @unchecked Sendable {}
+extension Groupcall_ParticipantToParticipant.Handshake.GuestAuth: @unchecked Sendable {}
+extension Groupcall_ParticipantToParticipant.Envelope: @unchecked Sendable {}
+extension Groupcall_ParticipantToParticipant.Envelope.OneOf_Content: @unchecked Sendable {}
+extension Groupcall_ParticipantToParticipant.Admin: @unchecked Sendable {}
+extension Groupcall_ParticipantToParticipant.Admin.Envelope: @unchecked Sendable {}
+extension Groupcall_ParticipantToParticipant.Admin.Envelope.OneOf_Content: @unchecked Sendable {}
+extension Groupcall_ParticipantToParticipant.Admin.ReportAsAdmin: @unchecked Sendable {}
+extension Groupcall_ParticipantToParticipant.Admin.PromoteToAdmin: @unchecked Sendable {}
+extension Groupcall_ParticipantToParticipant.Admin.ForceLeave: @unchecked Sendable {}
+extension Groupcall_ParticipantToParticipant.Admin.ForceCaptureStateOff: @unchecked Sendable {}
+extension Groupcall_ParticipantToParticipant.Admin.ForceCaptureStateOff.Device: @unchecked Sendable {}
+extension Groupcall_ParticipantToParticipant.Admin.ForceFocus: @unchecked Sendable {}
+extension Groupcall_ParticipantToParticipant.MediaKey: @unchecked Sendable {}
+extension Groupcall_ParticipantToParticipant.CaptureState: @unchecked Sendable {}
+extension Groupcall_ParticipantToParticipant.CaptureState.OneOf_State: @unchecked Sendable {}
+extension Groupcall_ParticipantToParticipant.CaptureState.Microphone: @unchecked Sendable {}
+extension Groupcall_ParticipantToParticipant.CaptureState.Microphone.OneOf_State: @unchecked Sendable {}
+extension Groupcall_ParticipantToParticipant.CaptureState.Camera: @unchecked Sendable {}
+extension Groupcall_ParticipantToParticipant.CaptureState.Camera.OneOf_State: @unchecked Sendable {}
+extension Groupcall_ParticipantToParticipant.CaptureState.Screen: @unchecked Sendable {}
+extension Groupcall_ParticipantToParticipant.CaptureState.Screen.OneOf_State: @unchecked Sendable {}
+extension Groupcall_ParticipantToParticipant.HoldState: @unchecked Sendable {}
+#endif  // swift(>=5.5) && canImport(_Concurrency)
+
 // MARK: - Code below here is support for the SwiftProtobuf runtime.
 
 fileprivate let _protobuf_package = "groupcall"
@@ -2522,12 +2650,13 @@ extension Groupcall_CallState.Participant: SwiftProtobuf.Message, SwiftProtobuf.
   }
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
     if self.participantID != 0 {
       try visitor.visitSingularUInt32Field(value: self.participantID, fieldNumber: 1)
     }
-    // The use of inline closures is to circumvent an issue where the compiler
-    // allocates stack space for every case branch when no optimizations are
-    // enabled. https://github.com/apple/swift-protobuf/issues/1034
     switch self.participant {
     case .threema?: try {
       guard case .threema(let v)? = self.participant else { preconditionFailure() }
@@ -2757,15 +2886,19 @@ extension Groupcall_SfuHttpResponse.Peek: SwiftProtobuf.Message, SwiftProtobuf._
   }
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
     if self.startedAt != 0 {
       try visitor.visitSingularUInt64Field(value: self.startedAt, fieldNumber: 1)
     }
     if self.maxParticipants != 0 {
       try visitor.visitSingularUInt32Field(value: self.maxParticipants, fieldNumber: 2)
     }
-    if let v = self._encryptedCallState {
+    try { if let v = self._encryptedCallState {
       try visitor.visitSingularBytesField(value: v, fieldNumber: 3)
-    }
+    } }()
     try unknownFields.traverse(visitor: &visitor)
   }
 
@@ -2990,12 +3123,13 @@ extension Groupcall_SfuToParticipant.Envelope: SwiftProtobuf.Message, SwiftProto
   }
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
     if !self.padding.isEmpty {
       try visitor.visitSingularBytesField(value: self.padding, fieldNumber: 1)
     }
-    // The use of inline closures is to circumvent an issue where the compiler
-    // allocates stack space for every case branch when no optimizations are
-    // enabled. https://github.com/apple/swift-protobuf/issues/1034
     switch self.content {
     case .relay?: try {
       guard case .relay(let v)? = self.content else { preconditionFailure() }
@@ -3230,12 +3364,13 @@ extension Groupcall_ParticipantToSfu.Envelope: SwiftProtobuf.Message, SwiftProto
   }
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
     if !self.padding.isEmpty {
       try visitor.visitSingularBytesField(value: self.padding, fieldNumber: 1)
     }
-    // The use of inline closures is to circumvent an issue where the compiler
-    // allocates stack space for every case branch when no optimizations are
-    // enabled. https://github.com/apple/swift-protobuf/issues/1034
     switch self.content {
     case .relay?: try {
       guard case .relay(let v)? = self.content else { preconditionFailure() }
@@ -3349,12 +3484,13 @@ extension Groupcall_ParticipantToSfu.ParticipantMicrophone: SwiftProtobuf.Messag
   }
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
     if self.participantID != 0 {
       try visitor.visitSingularUInt32Field(value: self.participantID, fieldNumber: 1)
     }
-    // The use of inline closures is to circumvent an issue where the compiler
-    // allocates stack space for every case branch when no optimizations are
-    // enabled. https://github.com/apple/swift-protobuf/issues/1034
     switch self.action {
     case .subscribe?: try {
       guard case .subscribe(let v)? = self.action else { preconditionFailure() }
@@ -3462,12 +3598,13 @@ extension Groupcall_ParticipantToSfu.ParticipantCamera: SwiftProtobuf.Message, S
   }
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
     if self.participantID != 0 {
       try visitor.visitSingularUInt32Field(value: self.participantID, fieldNumber: 1)
     }
-    // The use of inline closures is to circumvent an issue where the compiler
-    // allocates stack space for every case branch when no optimizations are
-    // enabled. https://github.com/apple/swift-protobuf/issues/1034
     switch self.action {
     case .subscribe?: try {
       guard case .subscribe(let v)? = self.action else { preconditionFailure() }
@@ -3511,9 +3648,13 @@ extension Groupcall_ParticipantToSfu.ParticipantCamera.Subscribe: SwiftProtobuf.
   }
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    if let v = self._desiredResolution {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
+    try { if let v = self._desiredResolution {
       try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
-    }
+    } }()
     if self.desiredFps != 0 {
       try visitor.visitSingularUInt32Field(value: self.desiredFps, fieldNumber: 2)
     }
@@ -3594,12 +3735,13 @@ extension Groupcall_ParticipantToSfu.ParticipantScreen: SwiftProtobuf.Message, S
   }
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
     if self.participantID != 0 {
       try visitor.visitSingularUInt32Field(value: self.participantID, fieldNumber: 1)
     }
-    // The use of inline closures is to circumvent an issue where the compiler
-    // allocates stack space for every case branch when no optimizations are
-    // enabled. https://github.com/apple/swift-protobuf/issues/1034
     switch self.action {
     case .subscribe?: try {
       guard case .subscribe(let v)? = self.action else { preconditionFailure() }
@@ -3789,12 +3931,13 @@ extension Groupcall_ParticipantToParticipant.Handshake.HelloEnvelope: SwiftProto
   }
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
     if !self.padding.isEmpty {
       try visitor.visitSingularBytesField(value: self.padding, fieldNumber: 1)
     }
-    // The use of inline closures is to circumvent an issue where the compiler
-    // allocates stack space for every case branch when no optimizations are
-    // enabled. https://github.com/apple/swift-protobuf/issues/1034
     switch self.content {
     case .hello?: try {
       guard case .hello(let v)? = self.content else { preconditionFailure() }
@@ -3864,12 +4007,13 @@ extension Groupcall_ParticipantToParticipant.Handshake.AuthEnvelope: SwiftProtob
   }
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
     if !self.padding.isEmpty {
       try visitor.visitSingularBytesField(value: self.padding, fieldNumber: 1)
     }
-    // The use of inline closures is to circumvent an issue where the compiler
-    // allocates stack space for every case branch when no optimizations are
-    // enabled. https://github.com/apple/swift-protobuf/issues/1034
     switch self.content {
     case .auth?: try {
       guard case .auth(let v)? = self.content else { preconditionFailure() }
@@ -4144,12 +4288,13 @@ extension Groupcall_ParticipantToParticipant.Envelope: SwiftProtobuf.Message, Sw
   }
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
     if !self.padding.isEmpty {
       try visitor.visitSingularBytesField(value: self.padding, fieldNumber: 1)
     }
-    // The use of inline closures is to circumvent an issue where the compiler
-    // allocates stack space for every case branch when no optimizations are
-    // enabled. https://github.com/apple/swift-protobuf/issues/1034
     switch self.content {
     case .encryptedAdminEnvelope?: try {
       guard case .encryptedAdminEnvelope(let v)? = self.content else { preconditionFailure() }
@@ -4287,8 +4432,9 @@ extension Groupcall_ParticipantToParticipant.Admin.Envelope: SwiftProtobuf.Messa
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
-    // allocates stack space for every case branch when no optimizations are
-    // enabled. https://github.com/apple/swift-protobuf/issues/1034
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
     switch self.content {
     case .reportAsAdmin?: try {
       guard case .reportAsAdmin(let v)? = self.content else { preconditionFailure() }
@@ -4555,8 +4701,9 @@ extension Groupcall_ParticipantToParticipant.CaptureState: SwiftProtobuf.Message
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
-    // allocates stack space for every case branch when no optimizations are
-    // enabled. https://github.com/apple/swift-protobuf/issues/1034
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
     switch self.state {
     case .microphone?: try {
       guard case .microphone(let v)? = self.state else { preconditionFailure() }
@@ -4624,8 +4771,9 @@ extension Groupcall_ParticipantToParticipant.CaptureState.Microphone: SwiftProto
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
-    // allocates stack space for every case branch when no optimizations are
-    // enabled. https://github.com/apple/swift-protobuf/issues/1034
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
     switch self.state {
     case .on?: try {
       guard case .on(let v)? = self.state else { preconditionFailure() }
@@ -4693,8 +4841,9 @@ extension Groupcall_ParticipantToParticipant.CaptureState.Camera: SwiftProtobuf.
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
-    // allocates stack space for every case branch when no optimizations are
-    // enabled. https://github.com/apple/swift-protobuf/issues/1034
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
     switch self.state {
     case .on?: try {
       guard case .on(let v)? = self.state else { preconditionFailure() }
@@ -4762,8 +4911,9 @@ extension Groupcall_ParticipantToParticipant.CaptureState.Screen: SwiftProtobuf.
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
-    // allocates stack space for every case branch when no optimizations are
-    // enabled. https://github.com/apple/swift-protobuf/issues/1034
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
     switch self.state {
     case .on?: try {
       guard case .on(let v)? = self.state else { preconditionFailure() }

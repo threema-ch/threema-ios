@@ -11,7 +11,7 @@
 
 /* Tabbar and title for list with all conversations */
 "chats_title" = "トーク";
-"chats_pinned" = "ピンした";
+"chats_pinned" = "ピン留め";
 
 "SortOrder_Firstname" = "名/姓";
 "SortOrder_Lastname" = "姓/名";
@@ -43,18 +43,14 @@
 "status_connecting" = "接続する";
 "status_connected" = "接続中";    /* note: this is intentional; don't want to bother user with protocol details */
 "status_loggedIn" = "接続済み";
-"status_disconnecting" = "接続解除";
+"status_disconnecting" = "接続なし";
 
 "cannot_connect_title" = "接続されていません";
 "cannot_connect_message" = "インターネットに接続されているか確認してください。";
 
-"delete_identity_warning" = "IDを削除すると、キーペアもアプリのデータも削除されます。バックアップを取らない限り、このIDを使ってメッセージを送受信することはできません。\nこのIDを使用しない場合は、メールアドレスや電話番号との紐付けを解除してから、削除することをお勧めします。";
-"delete_identity_warning2" = "最終警告: あなたは本当に自分のデータとIDを削除しますか？";
-"delete_identity_passcode_title" = "パスコードロックは有効になりました";
+// JKLockScreenViewController
+"delete_identity_passcode_title" = "パスコードロックが有効です";
 "delete_identity_passcode_message" = "IDを削除する際は、パスコードロックを解除してから行ってください。";
-"delete_identity_title" = "アプリのデータは削除されました";
-"delete_identity_description" = "すべてのデータは削除されました。アプリを再起動して%@を設定してください。";
-"delete_identity_app_close" = "アプリを閉じる";
 
 /* JKLockScreenViewController */
 "cancel" = "キャンセル";
@@ -64,7 +60,6 @@
 "yes" = "はい";
 "delete" = "削除";
 "try_again" = "もう一度試す";
-"delete_identity" = "データとIDを消去する";
 "copy" = "コピー";
 "save" = "保存";
 "download" = "ダウンロード";
@@ -79,7 +74,6 @@
 "sticker" = "ステッカー";
 "gif" = "GIF画像";
 "video" = "動画";
-"audio" = "音声";
 "file" = "ファイル";
 "location" = "位置情報";
 "locating" = "位置情報を選択…";
@@ -183,8 +177,6 @@
 "sound_threema_goody" = "リミックス";
 "sound_threema_alphorn" = "アルプホルン";
 
-"reset_wallpaper" = "壁紙を初期化";
-"bigger_single_emojis" = "絵文字のみのメッセージを大きくする";
 "identity_none" = "選択しない";
 "message" = "メッセージ"; /* Short version for "Send Message" */
 "scan_identity" = "IDをスキャン";
@@ -1092,6 +1084,7 @@
 "settings_license" = "ライセンス";
 "settings_advanced" = "上級者向け";
 "settings_threema_work" = "Threema Work";
+"settings_threema_work_subtitle" = "企業向けの安全なコミュニケーションソリューション";
 "settings_feedback" = "ベータ•フィードバック";
 "tos_cell_title" = "利用規約";
 
@@ -1132,7 +1125,6 @@
 "settings_privacy_hide_private_chats" = "プライベートトークを隠す";
 "settings_privacy_hide_private_chats_footer" = "トークの概要ですべてのプライベートトークを非表示にします。この設定を有効にするには、パスコードを設定する必要があります。";
 
-
 // Appearance
 "settings_appearance_theme_section" = "デザインテーマ";
 "settings_appearance_light_theme" = "ライト";
@@ -1150,7 +1142,15 @@
 "settings_appearance_show_gallery_preview" = "ショーギャラリープレビュー";
 
 // Chat Settings
-"settings_chat_send_message_feedback_label" = "送信時の触覚フィードバック";
+"settings_chat_wallpaper_title" = "壁紙";
+"settings_chat_wallpaper_reset" = "壁紙をすべてリセット";
+"settings_chat_wallpaper_empty" = "なし";
+"settings_chat_wallpaper_custom" = "カスタム";
+"settings_chat_wallpaper_default" = "デフォルト";
+"settings_chat_wallpaper_reset_all_alert" = "チャットに個別で設定した壁紙をすべて上で選択したものに変更します。元に戻すことはできません。";
+
+"settings_chat_bigger_emojis" = "絵文字を大きく表示";
+"settings_chat_send_message_feedback" = "送信時の触覚フィードバック";
 
 // Media
 "settings_media_autosave_private_footer" = "プライベートチャットで受信したメディアは、自動保存されません。";
@@ -1162,8 +1162,48 @@
 "sentry_crash_send_no" = "送信しない";
 "sentry_crash_comment_placeholder" = "クラッシュレポート";
 
+
+
 // My profile
 "profile_share_id_text" = "自分のThreema ID";
+"my_profile_delete_cell_title" = "IDとデータを消去する";
+
+// Delete & Revoke
+"my_profile_delete_bullet_id" = "Threema ID";
+"my_profile_delete_bullet_chats" = "トーク";
+"my_profile_delete_bullet_picture" = "プロフィール画像";
+"my_profile_delete_bullet_safe" = "Threema Safeのバックアップ";
+"my_profile_delete_bullet_linked" = "電話番号とメールアドレスの紐付け";
+
+"my_profile_delete_info_title" = "IDとデータを消去する";
+"my_profile_delete_info_keep" = "以下のデータは削除されません。";
+"my_profile_delete_info_delete" = "以下のデータは削除されます。";
+"my_profile_delete_info_toggle" = "すべて削除";
+
+"my_profile_delete_info_button_data" = "データを削除";
+"my_profile_delete_info_button_revoke" = "IDとデータを削除";
+
+"my_profile_delete_identity_title" = "トーク履歴とプロフィールを削除しますか？";
+"my_profile_delete_identity_keep" = "次のデータは残ります。";
+"my_profile_delete_identity_remove" = "このデバイスから消去しようとしています：";
+"my_profile_delete_identity_delete" = "トーク履歴とプロフィールを削除";
+
+"my_profile_delete_identity_view_alert_title" = "この操作を元に戻すことはできません。\n続行してもよろしいですか？";
+"my_profile_delete_identity_view_alert_confirm" = "データを削除";
+
+"my_profile_revoke_identity_view_title" = "すべて削除しますか？";
+"my_profile_revoke_info_delete" = "永久に削除します：";
+"my_profile_revoke_identity_view_info" = "警告：この操作を元に戻すことはできません。";
+"my_profile_revoke_identity_view_enter_id" = "すべて確実に削除するために、Threema ID「%@」を入力してください：";
+"my_profile_revoke_identity_view_placeholder" = "あなたのThreema ID";
+"my_profile_revoke_identity_view_button_revoke" = "すべて削除";
+
+"my_profile_delete_identity_summary_view_delete_title" = "トーク履歴とプロフィールを削除しました";
+"my_profile_delete_identity_summary_view_revoke_title" = "すべて削除されました";
+"my_profile_delete_identity_summary_view_delete_success" = "このデバイスから正常に消去しました：";
+"my_profile_delete_identity_summary_view_revoke_success" = "正常に削除しました：";
+"my_profile_delete_identity_summary_view_restart" = "引き続き使用するには、アプリを再起動してください。";
+"my_profile_delete_identity_summary_view_close" = "アプリを閉じる";
 
 // File message
 "optional_caption" = "キャプションの追加（任意）";
@@ -1350,7 +1390,6 @@ iTunesのバックアップを作成してから行ってください。";
 "privacySetting_header" = "プライバシー";
 "send_readReceipts" = "既読";
 "dont_send" = "送信しない";
-"send_readReceipt" = "既読レシート";
 "send_typingIndicators" = "入力中アイコン";
 "send_typingIndicator" = "入力中アイコン";
 
@@ -1358,8 +1397,7 @@ iTunesのバックアップを作成してから行ってください。";
 "use_default_send" = "デフォルト（%@）";
 "default_setting" = "デフォルトの設定";
 
-"readReceipt_sheetMessage" = "この連絡先のデフォルト設定を上書きします。";
-"typingIndicator_sheetMessage" = "この連絡先のデフォルト設定を上書きします。";
+"contactoverride_sheetMessage" = "これにより、この特定の連絡先のデフォルト設定が上書きされます。";
 
 /* Multi Decvice */
 "multi_device_linked_devices_title" = "複数端末プレビュー";
@@ -1490,6 +1528,12 @@ iTunesのバックアップを作成してから行ってください。";
 "notification_interaction_delete_succeeded" = "インタラクションを削除しました";
 "notification_interaction_delete_failed" = "インタラクションを削除できませんでした";
 
+"notification_revocation_failed" = "取り消し失敗";
+
+"notification_caption_too_long" = "キャプションが長すぎます";
+
+"notification_updateworkdata_failed" = "プロビジョニングサーバーとの同期に失敗しました";
+
 // Forward security status messages
 "forward_security_message_without" = "Perfect Forward Secrecyのないメッセージを受信しました。送信者がPerfect Forward Secrecyを意図的に無効にしていることを確認してください。";
 "forward_security_session_established" = "このトークのメッセージは、Perfect Forward Secrecyによって保護されるようになりました。";
@@ -1542,6 +1586,8 @@ iTunesのバックアップを作成してから行ってください。";
 "accessibility_ballotMessage_hint_open" = "投票を開きます。";
 "accessibility_ballotMessage_hint_closed" = "投票結果を表示します。";
 "accessibility_voiceMessage_speed_hint" = "再生スピードを変更します。";
+"accessibility_voiceMessage_forward_hint" = "10秒早送りします。";
+"accessibility_voiceMessage_rewind_hint" = "10秒巻き戻します。";
 
 // Other
 "accessibility_caption" = "キャプション：%@";

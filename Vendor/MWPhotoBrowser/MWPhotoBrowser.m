@@ -1394,7 +1394,18 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
                 if (url) {
                     [weakSelf _playVideo:url atPhotoIndex:index];
                 } else {
-                    [weakSelf setVideoLoadingIndicatorVisible:NO atPageIndex:index];
+                    if ([_delegate respondsToSelector:@selector(photoBrowser:objectIDAtIndex:)]) {
+                       NSManagedObjectID * objectID = [_delegate photoBrowser:self objectIDAtIndex:index];
+                        BlobManagerObjcWrapper *manager = [[BlobManagerObjcWrapper alloc] init];
+                        [manager syncBlobsFor:objectID onCompletion:^{
+                            dispatch_async(dispatch_get_main_queue(), ^{
+                                [weakSelf setVideoLoadingIndicatorVisible:NO atPageIndex:index];
+                                [weakSelf playVideoAtIndex:index];
+                            });
+                        }];
+                    } else  {
+                        [weakSelf setVideoLoadingIndicatorVisible:NO atPageIndex:index];
+                    }
                 }
             });
         }];

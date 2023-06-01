@@ -172,6 +172,7 @@ static NSString * const kThreemaVideoCallsQualitySettingChanged = @"ThreemaVideo
 #pragma mark - UserDefault Keys
 #define kLastPushOverrideSendDate @"LastPushOverrideSendDate"
 #define kShowedTestFlightFeedbackView @"ShowedTestFlightFeedbackView"
+#define kWallpaperKey @"Wallpapers"
 #define kShowed10YearsAnniversaryView @"Showed10YearsAnniversaryView"
 #define kShowedNotificationTypeSelectionView @"showedNotificationTypeSelectionView"
 

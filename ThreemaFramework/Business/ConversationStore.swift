@@ -200,15 +200,7 @@ public final class ConversationStore: NSObject, ConversationStoreInternalProtoco
                 conversation.conversationCategory = conversationCategory
             }
             else if let conversationVisibility = attribute as? ConversationVisibility {
-               
                 conversation.conversationVisibility = conversationVisibility
-                
-                if conversationVisibility == .archived || conversationVisibility != .pinned {
-                    conversation.marked = NSNumber(booleanLiteral: false)
-                }
-                else if conversationVisibility == .pinned {
-                    conversation.marked = NSNumber(booleanLiteral: true)
-                }
             }
 
             // Get identity of conversation

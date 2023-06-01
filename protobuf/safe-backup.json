@@ -98,7 +98,9 @@
           },
           "createdAt": {
             "type": "integer",
-            "description": "When this contact was added, unix-ish timestamp in milliseconds",
+            "description": "When this contact was added, unix-ish timestamp in milliseconds.",
+            "minimum": 0,
+            "maximum": 18446744073709551615,
             "examples": [1524489122916]
           },
           "verification": {
@@ -138,6 +140,8 @@
             "type": ["integer", "null"],
             "description": "When the conversation with this contact was last updated, unix-ish timestamp in milliseconds (or null)",
             "default": null,
+            "minimum": 0,
+            "maximum": 18446744073709551615,
             "examples": [1524489122916, null]
           },
           "private": {
@@ -185,6 +189,8 @@
           "createdAt": {
             "type": "integer",
             "description": "When the group has been created locally, unix-ish timestamp in milliseconds",
+            "minimum": 0,
+            "maximum": 18446744073709551615,
             "examples": [1459269133488]
           },
           "members": {
@@ -207,6 +213,8 @@
             "type": ["integer", "null"],
             "description": "When the conversation with this group was last updated, unix-ish timestamp in milliseconds (or null)",
             "default": null,
+            "minimum": 0,
+            "maximum": 18446744073709551615,
             "examples": [1524489122916, null]
           },
           "private": {
@@ -236,6 +244,8 @@
           "createdAt": {
             "type": "integer",
             "description": "When the distribution list has been created locally, unix-ish timestamp in milliseconds",
+            "minimum": 0,
+            "maximum": 18446744073709551615,
             "examples": [1459269133488]
           },
           "members": {
@@ -254,6 +264,8 @@
             "type": ["integer", "null"],
             "description": "When the conversation with this distribution list was last updated, unix-ish timestamp in milliseconds (or null)",
             "default": null,
+            "minimum": 0,
+            "maximum": 18446744073709551615,
             "examples": [1524489122916, null]
           },
           "private": {
@@ -335,142 +347,6 @@
         }
       },
       "required": ["syncContacts"]
-    },
-    "groupInvites": {
-      "type": "object",
-      "properties": {
-        "links": {
-          "type": "array",
-          "description": "List of group invite links (including expired or deactivated links)",
-          "items": {
-            "type": "object",
-            "properties": {
-              "token": {
-                "type": "string",
-                "description": "The group invite token (16 bytes represented as a lowercase hex string)",
-                "examples": [
-                  "251cd63385e963bd6a58af8f7513efcc",
-                  "4f232e5cc3775140d80298aab19c93bf"
-                ]
-              },
-              "description": {
-                "type": "string",
-                "description": "Optional (local only) description of the group invite link"
-              },
-              "groupId": {
-                "type": "string",
-                "description": "Group identity associated with this invite link (8 bytes represented as a lowercase hex string)",
-                "examples": ["0123456789abcdef"]
-              },
-              "groupName": {
-                "type": "string",
-                "description": "Group name at the time when this link was created"
-              },
-              "linkType": {
-                "type": "string",
-                "enum": ["default", "userCreated"],
-                "description": "Whether this link is a _default_ link of a group, or whether this link was created by the user",
-                "examples": ["userCreated"]
-              },
-              "confirmationMode": {
-                "type": "string",
-                "enum": ["automatic", "manual"],
-                "default": "automatic",
-                "description": "The confirmation mode for responding to group join requests, either manual or automatic.",
-                "example": ["manual"]
-              },
-              "status": {
-                "type": "string",
-                "enum": ["active", "deactivated"],
-                "default": "active",
-                "description": "Whether this link is still active (unless expired), or was explicitly deactivated by the user",
-                "examples": ["active"]
-              },
-              "expiresAt": {
-                "type": "integer",
-                "description": "When this group invite link will expire, unix-ish timestamp in milliseconds",
-                "examples": [1459269133488]
-              }
-            },
-            "required": ["token", "groupId", "groupName", "linkType"]
-          }
-        },
-        "incomingJoinRequests": {
-          "type": "array",
-          "description": "Unprocessed incoming group join requests",
-          "items": {
-            "type": "object",
-            "properties": {
-              "token": {
-                "type": "string",
-                "description": "The group invite token (16 bytes represented as a lowercase hex string)",
-                "examples": [
-                  "251cd63385e963bd6a58af8f7513efcc",
-                  "4f232e5cc3775140d80298aab19c93bf"
-                ]
-              },
-              "requester": {
-                "type": "string",
-                "description": "The Threema ID requesting to join",
-                "minLength": 8,
-                "maxLength": 8,
-                "pattern": "[0-9A-Z\\*][0-9A-Z]{7}",
-                "examples": ["ECHOECHO"]
-              },
-              "requestedAt": {
-                "type": "integer",
-                "description": "When this group join request was received from the chat server, unix-ish timestamp in milliseconds",
-                "examples": [1459269133488]
-              },
-              "message": {
-                "type": "string",
-                "description": "Optional message sent along with this join request"
-              }
-            },
-            "required": ["token", "requester", "requestedAt"]
-          }
-        },
-        "outgoingJoinRequests": {
-          "type": "array",
-          "description": "Unprocessed outgoing group join requests",
-          "items": {
-            "type": "object",
-            "properties": {
-              "token": {
-                "type": "string",
-                "description": "The group invite token (16 bytes represented as a lowercase hex string)",
-                "examples": [
-                  "251cd63385e963bd6a58af8f7513efcc",
-                  "4f232e5cc3775140d80298aab19c93bf"
-                ]
-              },
-              "admin": {
-                "type": "string",
-                "description": "The Threema ID of the group admin",
-                "minLength": 8,
-                "maxLength": 8,
-                "pattern": "[0-9A-Z\\*][0-9A-Z]{7}",
-                "examples": ["ECHOECHO"]
-              },
-              "groupName": {
-                "type": "string",
-                "description": "The group name associated with this invite link"
-              },
-              "requestedAt": {
-                "type": "integer",
-                "description": "When this group join request was created, unix-ish timestamp in milliseconds",
-                "examples": [1459269133488]
-              },
-              "message": {
-                "type": "string",
-                "description": "Optional message sent along with this join request"
-              }
-            },
-            "required": ["token", "admin", "requestedAt"]
-          }
-        }
-      },
-      "required": ["links", "incomingJoinRequests", "outgoingJoinRequests"]
     }
   },
   "required": ["info", "user", "settings"]

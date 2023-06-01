@@ -52,9 +52,10 @@ class MessagePermissionTests: XCTestCase {
                 identity: toIdentity,
                 verificationLevel: 0
             )
-            dbPreparer.createConversation(marked: false, typing: false, unreadMessageCount: 0) { dbConversation in
-                dbConversation.contact = dbContatct
-            }
+            dbPreparer
+                .createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { dbConversation in
+                    dbConversation.contact = dbContatct
+                }
         }
 
         let mp = MessagePermission(
@@ -79,9 +80,10 @@ class MessagePermissionTests: XCTestCase {
                 identity: toIdentity,
                 verificationLevel: 0
             )
-            dbPreparer.createConversation(marked: false, typing: false, unreadMessageCount: 0) { dbConversation in
-                dbConversation.contact = dbContatct
-            }
+            dbPreparer
+                .createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { dbConversation in
+                    dbConversation.contact = dbContatct
+                }
         }
 
         let userSettingsMock = UserSettingsMock()
@@ -109,9 +111,10 @@ class MessagePermissionTests: XCTestCase {
                 identity: toIdentity,
                 verificationLevel: 0
             )
-            dbPreparer.createConversation(marked: false, typing: false, unreadMessageCount: 0) { dbConversation in
-                dbConversation.contact = dbContatct
-            }
+            dbPreparer
+                .createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { dbConversation in
+                    dbConversation.contact = dbContatct
+                }
         }
 
         let mp = MessagePermission(
@@ -143,9 +146,10 @@ class MessagePermissionTests: XCTestCase {
                 identity: toIdentity,
                 verificationLevel: 0
             )
-            dbPreparer.createConversation(marked: false, typing: false, unreadMessageCount: 0) { dbConversation in
-                dbConversation.contact = dbContact
-            }
+            dbPreparer
+                .createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { dbConversation in
+                    dbConversation.contact = dbContact
+                }
         }
 
         let userSettingsMock = UserSettingsMock()
@@ -181,9 +185,10 @@ class MessagePermissionTests: XCTestCase {
                 verificationLevel: 0
             )
             dbContact.state = NSNumber(integerLiteral: kStateInvalid)
-            dbPreparer.createConversation(marked: false, typing: false, unreadMessageCount: 0) { dbConversation in
-                dbConversation.contact = dbContact
-            }
+            dbPreparer
+                .createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { dbConversation in
+                    dbConversation.contact = dbContact
+                }
         }
 
         let mp = MessagePermission(
@@ -211,7 +216,7 @@ class MessagePermissionTests: XCTestCase {
                 groupCreator: nil
             )
             let dbConversation = dbPreparer
-                .createConversation(marked: false, typing: false, unreadMessageCount: 0) { dbConversation in
+                .createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { dbConversation in
                     dbConversation.groupID = dbGroup.groupID
                     dbConversation.groupMyIdentity = oldGroupMyIdentity
                 }
@@ -261,7 +266,7 @@ class MessagePermissionTests: XCTestCase {
                 groupCreator: groupCreatorIdentity
             )
             let dbConversation = dbPreparer
-                .createConversation(marked: false, typing: false, unreadMessageCount: 0) { dbConversation in
+                .createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { dbConversation in
                     dbConversation.contact = dbContactGroupCreator
                     dbConversation.groupMyIdentity = self.myIdentityStoreMock.identity
                     dbConversation.groupID = dbGroup.groupID
@@ -304,7 +309,7 @@ class MessagePermissionTests: XCTestCase {
                 groupCreator: nil
             )
             let dbConversation = dbPreparer
-                .createConversation(marked: false, typing: false, unreadMessageCount: 0) { dbConversation in
+                .createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { dbConversation in
                     dbConversation.contact = nil
                     dbConversation.groupMyIdentity = self.myIdentityStoreMock.identity
                     dbConversation.groupID = dbGroup.groupID
@@ -363,13 +368,14 @@ class MessagePermissionTests: XCTestCase {
                     NSNumber(integerLiteral: 2), // kGroupStateLeft
                     forKey: "state"
                 )
-            dbPreparer.createConversation(marked: false, typing: false, unreadMessageCount: 0) { dbConversation in
-                dbConversation.contact = dbContactGroupCreator
-                dbConversation.groupID = dbGroup.groupID
-                dbConversation.members = Set<ContactEntity>([dbContactGroupMember])
+            dbPreparer
+                .createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { dbConversation in
+                    dbConversation.contact = dbContactGroupCreator
+                    dbConversation.groupID = dbGroup.groupID
+                    dbConversation.members = Set<ContactEntity>([dbContactGroupMember])
 
-                conversation = dbConversation
-            }
+                    conversation = dbConversation
+                }
 
             group = Group(
                 myIdentityStore: MyIdentityStoreMock(),

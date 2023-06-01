@@ -482,7 +482,7 @@ class ChatViewDataSource: UITableViewDiffableDataSource<String, ChatViewDataSour
         // scroll position but failing in this case since we want to be at the very bottom.
         //
         // Simply adding an additional scroll to bottom call in didApplySnapshot of ChatViewController did result in a visible
-        // scroll up and then down animation. To avoid this we move the previous implementaiton of snapshot apply and a call to
+        // scroll up and then down animation. To avoid this we move the previous implementation of snapshot apply and a call to
         // scrollToBottom (`snapshotApplyAnimateBlockBlock`) into a single UIView.animate animation block.
         if flippedTableView {
             applyBlock()
@@ -492,10 +492,11 @@ class ChatViewDataSource: UITableViewDiffableDataSource<String, ChatViewDataSour
                 let previousSnapshot = self.snapshot()
                 if let snapshotApplyAnimateBlockBlock,
                    previousSnapshot.numberOfItems == snapshotInfo.snapshot.numberOfItems ||
-                   ChatViewDataSource.nextRemovesUnreadMessageLine(
+                   ChatViewDataSource.nextRemovesOrAddsUnreadMessageLine(
                        current: previousSnapshot,
                        next: snapshotInfo.snapshot
-                   ) {
+                   ) || ChatViewDataSource
+                   .nextRemovesTypingIndicator(current: previousSnapshot, next: snapshotInfo.snapshot) {
                     UIView.animate(withDuration: Config.animationDuration, animations: {
                         applyBlock()
                         
@@ -603,11 +604,11 @@ class ChatViewDataSource: UITableViewDiffableDataSource<String, ChatViewDataSour
         return ChatViewDataSource.MessageNeighbors(previousMessage: previousMessage, nextMessage: nextMessage)
     }
     
-    static func nextRemovesUnreadMessageLine(
+    static func nextRemovesOrAddsUnreadMessageLine(
         current: NSDiffableDataSourceSnapshot<String, ChatViewDataSource.CellType>,
         next: NSDiffableDataSourceSnapshot<String, ChatViewDataSource.CellType>
     ) -> Bool {
-        let currentHasUnreadMessageLine = current.itemIdentifiers.contains(where: { cellType in
+        let currentHasUnreadMessageLine = current.itemIdentifiers.reversed().contains(where: { cellType in
             if case .unreadLine(state: _) = cellType {
                 return true
             }
@@ -616,7 +617,7 @@ class ChatViewDataSource: UITableViewDiffableDataSource<String, ChatViewDataSour
             }
         })
         
-        let nextHasUnreadMessageLine = next.itemIdentifiers.contains(where: { cellType in
+        let nextHasUnreadMessageLine = next.itemIdentifiers.reversed().contains(where: { cellType in
             if case .unreadLine(state: _) = cellType {
                 return true
             }
@@ -625,7 +626,34 @@ class ChatViewDataSource: UITableViewDiffableDataSource<String, ChatViewDataSour
             }
         })
         
-        return currentHasUnreadMessageLine && !nextHasUnreadMessageLine
+        return currentHasUnreadMessageLine && !nextHasUnreadMessageLine || !currentHasUnreadMessageLine &&
+            nextHasUnreadMessageLine
+    }
+    
+    static func nextRemovesTypingIndicator(
+        current: NSDiffableDataSourceSnapshot<String, ChatViewDataSource.CellType>,
+        next: NSDiffableDataSourceSnapshot<String, ChatViewDataSource.CellType>
+    ) -> Bool {
+        let currentHasUnreadMessageLine = current.itemIdentifiers.reversed().contains(where: { cellType in
+            if cellType == .typingIndicator {
+                return true
+            }
+            else {
+                return false
+            }
+        })
+        
+        let nextHasUnreadMessageLine = next.itemIdentifiers.reversed().contains(where: { cellType in
+            if cellType == .typingIndicator {
+                return true
+            }
+            else {
+                return false
+            }
+        })
+        
+        return currentHasUnreadMessageLine && !nextHasUnreadMessageLine &&
+            abs(current.numberOfItems - next.numberOfItems) == 1
     }
 
     // MARK: - Multi-Select

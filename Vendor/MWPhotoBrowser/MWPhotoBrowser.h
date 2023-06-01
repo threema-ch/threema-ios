@@ -32,6 +32,7 @@
 
 - (NSUInteger)numberOfPhotosInPhotoBrowser:(MWPhotoBrowser *)photoBrowser;
 - (id <MWPhoto>)photoBrowser:(MWPhotoBrowser *)photoBrowser photoAtIndex:(NSUInteger)index;
+- (NSManagedObjectID *)photoBrowser:(MWPhotoBrowser *)photoBrowser objectIDAtIndex:(NSUInteger)index;
 
 @optional
 

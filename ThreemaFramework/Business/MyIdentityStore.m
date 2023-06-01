@@ -251,7 +251,7 @@ static MyIdentityStore *instance;
         }
     }
     [[AppGroup userDefaults] removeObjectForKey:@"ProfilePicture"];
-    
+    [[AppGroup userDefaults] removeObjectForKey:kWallpaperKey];
     [[AppGroup userDefaults] removeObjectForKey:@"LinkedEmail"];
     [[AppGroup userDefaults] removeObjectForKey:@"LinkEmailPending"];
     [[AppGroup userDefaults] removeObjectForKey:@"LinkedMobileNo"];
@@ -464,37 +464,49 @@ static MyIdentityStore *instance;
 }
 
 - (NSString *)firstName {
-    return [[AppGroup userDefaults] stringForKey:@"FirstName"];
+    NSString *value = [[AppGroup userDefaults] stringForKey:@"FirstName"];
+    DDLogWarn(@"[MyIdentityStore] get firstName %@", value);
+    return value;
 }
 
 - (void)setFirstName:(NSString *)firstName {
+    DDLogWarn(@"[MyIdentityStore] set new firstName %@, old was %@", firstName,  [[AppGroup userDefaults] stringForKey:@"FirstName"]);
     [[AppGroup userDefaults] setObject:firstName forKey:@"FirstName"];
     [[AppGroup userDefaults] synchronize];
 }
 
 - (NSString *)lastName {
-    return [[AppGroup userDefaults] stringForKey:@"LastName"];
+    NSString *value = [[AppGroup userDefaults] stringForKey:@"LastName"];
+    DDLogWarn(@"[MyIdentityStore] get lastName %@", value);
+    return value;
 }
 
 - (void)setLastName:(NSString *)lastName {
+    DDLogWarn(@"[MyIdentityStore] set new lastName %@, old was %@", lastName, [[AppGroup userDefaults] stringForKey:@"LastName"]);
     [[AppGroup userDefaults] setObject:lastName forKey:@"LastName"];
     [[AppGroup userDefaults] synchronize];
 }
 
 - (NSString *)csi {
-    return [[AppGroup userDefaults] stringForKey:@"CSI"];
+    NSString *value = [[AppGroup userDefaults] stringForKey:@"CSI"];
+    DDLogWarn(@"[MyIdentityStore] get csi %@", value);
+    return value;
 }
 
 - (void)setCsi:(NSString *)csi {
+    DDLogWarn(@"[MyIdentityStore] set new csi %@, old was %@", csi, [[AppGroup userDefaults] stringForKey:@"CSI"]);
     [[AppGroup userDefaults] setObject:csi forKey:@"CSI"];
     [[AppGroup userDefaults] synchronize];
 }
 
 - (NSString *)category {
-    return [[AppGroup userDefaults] stringForKey:@"Category"];
+    NSString *value = [[AppGroup userDefaults] stringForKey:@"Category"];
+    DDLogWarn(@"[MyIdentityStore] get category %@", value);
+    return value;
 }
 
 - (void)setCategory:(NSString *)category {
+    DDLogWarn(@"[MyIdentityStore] set new category %@, old was %@", category,  [[AppGroup userDefaults] stringForKey:@"Category"]);
     [[AppGroup userDefaults] setObject:category forKey:@"Category"];
     [[AppGroup userDefaults] synchronize];
 }

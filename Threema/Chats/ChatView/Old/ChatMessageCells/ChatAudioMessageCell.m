@@ -103,7 +103,7 @@
 - (NSString *)accessibilityLabelForContent {
     NSString *duration = [ThreemaUtilityObjC accessibilityTimeStringForSeconds:((AudioMessageEntity*)self.message).duration.intValue];
 
-    return [NSString stringWithFormat:@"%@, %@", [BundleUtil localizedStringForKey:@"audio"], duration];
+    return [NSString stringWithFormat:@"%@, %@", [BundleUtil localizedStringForKey:@"file_message_voice"], duration];
 }
 
 - (void)setMessage:(BaseMessage *)newMessage {    

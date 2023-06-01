@@ -22,7 +22,7 @@ import Foundation
 @testable import ThreemaFramework
 
 class SettingsStoreMock: SettingsStoreProtocol, SettingsStoreInternalProtocol {
-    
+
     var syncContacts = true
     
     var blacklist = Set<String>()
@@ -53,7 +53,11 @@ class SettingsStoreMock: SettingsStoreProtocol, SettingsStoreInternalProtocol {
 
     var pushShowPreview = false
     
-    var wallpaper: UIImage?
+    var wallpaperStore = WallpaperStore.shared
+    
+    var useBigEmojis = false
+    
+    var sendMessageFeedback = false
     
     var enableThreemaCall = true
     

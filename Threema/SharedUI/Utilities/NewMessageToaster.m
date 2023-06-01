@@ -102,21 +102,21 @@
             DDLogVerbose(@"curNavController: %@", chatNavVc);
             if ([chatNavVc.topViewController isKindOfClass:[Old_ChatViewController class]]) {
                 Old_ChatViewController *curChatVc = (Old_ChatViewController*)chatNavVc.topViewController;
-                if (curChatVc.conversation.objectID == message.conversation.objectID)
+                if (curChatVc.conversation.objectID == message.conversation.objectID ||
+                    [message.read boolValue])
                     return;
             }
             
             if ([chatNavVc.topViewController isKindOfClass:[ChatViewController class]]) {
                 ChatViewController *curChatVc = (ChatViewController*)chatNavVc.topViewController;
                 if (curChatVc.conversation.objectID == message.conversation.objectID) {
-                    if (UIAccessibilityIsVoiceOverRunning()) {
+                    if (UIAccessibilityIsVoiceOverRunning() && (![curChatVc isRecording] && ![curChatVc isPlayingAudioMessage])) {
                         NSString *accessibilityText = [NSString stringWithFormat:@"%@%@", [BundleUtil localizedStringForKey:@"new_message_accessibility"], [message previewText]];
                         UIAccessibilityPostNotification(UIAccessibilityAnnouncementNotification, accessibilityText);
                     }
                     return;
                 }
             }
-            
             
             [NotificationBannerHelper newBannerWithBaseMessage: message];
         }];

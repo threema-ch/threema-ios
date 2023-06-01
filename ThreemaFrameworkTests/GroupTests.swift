@@ -77,7 +77,7 @@ class GroupTests: XCTestCase {
                 groupCreator: nil
             )
             conversation = dbPreparer
-                .createConversation(marked: false, typing: false, unreadMessageCount: 0) { conversation in
+                .createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
                     conversation.groupID = expectedGroupID
                     conversation.groupMyIdentity = myIdentityStoreMock.identity
                     conversation.addMembers([member01, member02])
@@ -148,7 +148,7 @@ class GroupTests: XCTestCase {
                 groupCreator: nil
             )
             conversation = dbPreparer
-                .createConversation(marked: false, typing: false, unreadMessageCount: 0) { conversation in
+                .createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
                     conversation.groupID = expectedGroupID
                     conversation.groupMyIdentity = myIdentityStoreMock.identity
                 }
@@ -257,9 +257,9 @@ class GroupTests: XCTestCase {
             
             groupEntity = dbPreparer.createGroupEntity(groupID: groupID, groupCreator: "MEMBER03")
             conversation = dbPreparer.createConversation(
-                marked: false,
                 typing: false,
                 unreadMessageCount: 0,
+                visibility: .default,
                 complete: { conversation in
                     conversation.contact = member03
                     conversation
@@ -386,9 +386,9 @@ class GroupTests: XCTestCase {
             
             groupEntity = dbPreparer.createGroupEntity(groupID: groupID, groupCreator: "MEMBER03")
             conversation = dbPreparer.createConversation(
-                marked: false,
                 typing: false,
                 unreadMessageCount: 0,
+                visibility: .default,
                 complete: { conversation in
                     conversation.contact = member03
                     conversation.addMembers([member01, member02, member03, member04])
@@ -802,7 +802,7 @@ class GroupTests: XCTestCase {
             let groupID = groupID
             groupEntity = dbPreparer.createGroupEntity(groupID: groupID, groupCreator: nil)
             conversation = dbPreparer
-                .createConversation(marked: false, typing: false, unreadMessageCount: 0) { conversation in
+                .createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
                     conversation.groupID = groupID
                     conversation.groupMyIdentity = myIdentity
                     conversation.addMembers(members)

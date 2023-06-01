@@ -48,13 +48,9 @@
 "cannot_connect_title" = "Geen verbinding";
 "cannot_connect_message" = "Geen verbinding, controleer je internetverbinding.";
 
-"delete_identity_warning" = "Als u uw ID verwijdert, worden zowel uw sleutelpaar als uw appgegevens verwijderd. Als u geen back-up hebt gemaakt, kunt u in de toekomst met dit ID geen berichten meer versturen of ontvangen.\n\nAls u dit ID niet meer wilt gebruiken, bevelen we aan om het van alle gekoppelde e-mailadressen/telefoonnummers te ontkoppelen voordat u het verwijdert.";
-"delete_identity_warning2" = "Laatste waarschuwing: weet u zeker dat u uw gegevens en ID wilt verwijderen?";
+// JKLockScreenViewController
 "delete_identity_passcode_title" = "Beveiligingscode ingeschakeld";
 "delete_identity_passcode_message" = "Schakel de beveiligingscode uit voordat je je ID verwijdert.";
-"delete_identity_title" = "Appgegevens verwijderd";
-"delete_identity_description" = "Alle appgegevens zijn verwijderd. Herstart de app om %@ te configureren.";
-"delete_identity_app_close" = "App sluiten";
 
 /* JKLockScreenViewController */
 "cancel" = "Annuleren";
@@ -64,7 +60,6 @@
 "yes" = "Ja";
 "delete" = "Verwijderen";
 "try_again" = "Opnieuw";
-"delete_identity" = "Gegevens en ID verwijderen";
 "copy" = "Kopiëren";
 "save" = "Opslaan";
 "download" = "Downloaden";
@@ -79,7 +74,6 @@
 "sticker" = "Sticker";
 "gif" = "GIF";
 "video" = "Video";
-"audio" = "Audio";
 "file" = "Bestand";
 "location" = "Locatie";
 "locating" = "Bezig met zoeken...";
@@ -183,8 +177,6 @@
 "sound_threema_goody" = "Remix";
 "sound_threema_alphorn" = "Alphorn";
 
-"reset_wallpaper" = "Achtergrond herstellen";
-"bigger_single_emojis" = "Grotere losse emojis";
 "identity_none" = "geen";
 "message" = "Bericht"; /* Short version for "Send Message" */
 "scan_identity" = "ID scannen";
@@ -1091,6 +1083,7 @@
 "settings_license" = "Licentie";
 "settings_advanced" = "Geavanceerd";
 "settings_threema_work" = "Threema Work";
+"settings_threema_work_subtitle" = "De veilige communicatie-oplossing voor bedrijven";
 "settings_feedback" = "Beta-feedback";
 "tos_cell_title" = "Gebruiksvoorwaarden";
 
@@ -1131,7 +1124,6 @@
 "settings_privacy_hide_private_chats" = "Privéchats verbergen";
 "settings_privacy_hide_private_chats_footer" = "Dit verbergt alle privéchats in het chatoverzicht. Je moet een beveiligingscode instellen om deze optie te activeren.";
 
-
 // Appearance
 "settings_appearance_theme_section" = "Thema ontwerpen";
 "settings_appearance_light_theme" = "Licht";
@@ -1149,7 +1141,15 @@
 "settings_appearance_show_gallery_preview" = "Albumvoorbeelden weergeven";
 
 // Chat Settings
-"settings_chat_send_message_feedback_label" = "Haptische feedback bij verzenden";
+"settings_chat_wallpaper_title" = "Achtergrond";
+"settings_chat_wallpaper_reset" = "Alle achtergronden herstellen";
+"settings_chat_wallpaper_empty" = "Geen";
+"settings_chat_wallpaper_custom" = "Aangepast";
+"settings_chat_wallpaper_default" = "Standaard";
+"settings_chat_wallpaper_reset_all_alert" = "Dit herstelt alle achtergronden die specifiek voor een chat zijn ingesteld naar de hierboven geselecteerde optie. Dit kan niet ongedaan worden gemaakt.";
+
+"settings_chat_bigger_emojis" = "Grotere emojis";
+"settings_chat_send_message_feedback" = "Haptische feedback bij verzenden";
 
 // Media
 "settings_media_autosave_private_footer" = "Media ontvangen in privéchats worden niet automatisch opgeslagen.";
@@ -1161,8 +1161,48 @@
 "sentry_crash_send_no" = "Niet verzenden";
 "sentry_crash_comment_placeholder" = "Crashrapport";
 
+
+
 // My profile
 "profile_share_id_text" = "Mijn Threema ID";
+"my_profile_delete_cell_title" = "ID en gegevens verwijderen";
+
+// Delete & Revoke
+"my_profile_delete_bullet_id" = "Threema-ID";
+"my_profile_delete_bullet_chats" = "Chats";
+"my_profile_delete_bullet_picture" = "Profielafbeelding";
+"my_profile_delete_bullet_safe" = "Threema Safe back-up";
+"my_profile_delete_bullet_linked" = "Links voor telefoonnummer en/of e-mail";
+
+"my_profile_delete_info_title" = "ID en gegevens verwijderen";
+"my_profile_delete_info_keep" = "De volgende gegevens blijven bruikbaar en worden niet verwijderd:";
+"my_profile_delete_info_delete" = "De volgende gegevens worden verwijderd van dit apparaat:";
+"my_profile_delete_info_toggle" = "Alles verwijderen";
+
+"my_profile_delete_info_button_data" = "Gegevens verwijderen";
+"my_profile_delete_info_button_revoke" = "ID en gegevens verwijderen";
+
+"my_profile_delete_identity_title" = "Chats en profiel verwijderen?";
+"my_profile_delete_identity_keep" = "U behoudt:";
+"my_profile_delete_identity_remove" = "U staat op het punt om het volgende van uw apparaat te verwijderen:";
+"my_profile_delete_identity_delete" = "Chats en profiel verwijderen";
+
+"my_profile_delete_identity_view_alert_title" = "U kunt deze actie niet ongedaan maken.\nWeet u zeker dat u wilt doorgaan?";
+"my_profile_delete_identity_view_alert_confirm" = "Gegevens verwijderen";
+
+"my_profile_revoke_identity_view_title" = "Alles verwijderen?";
+"my_profile_revoke_info_delete" = "U verwijdert voorgoed uw:";
+"my_profile_revoke_identity_view_info" = "Waarschuwing: dit kan niet ongedaan worden gemaakt!";
+"my_profile_revoke_identity_view_enter_id" = "Voer uw Threema-ID in \"%@\" om alles definitief te verwijderen:";
+"my_profile_revoke_identity_view_placeholder" = "Uw Threema-ID";
+"my_profile_revoke_identity_view_button_revoke" = "Alles verwijderen";
+
+"my_profile_delete_identity_summary_view_delete_title" = "Chats en profiel verwijderd";
+"my_profile_delete_identity_summary_view_revoke_title" = "Alles is verwijderd";
+"my_profile_delete_identity_summary_view_delete_success" = "U hebt het volgende van dit apparaat verwijderd:";
+"my_profile_delete_identity_summary_view_revoke_success" = "U hebt het volgende verwijderd:";
+"my_profile_delete_identity_summary_view_restart" = "Herstart de app om hem verder te gebruiken.";
+"my_profile_delete_identity_summary_view_close" = "App sluiten";
 
 // File message
 "optional_caption" = "Optioneel onderschrift";
@@ -1349,7 +1389,6 @@ Als er geen (media)bestanden in %@ ontbreken, maak de prullenbak dan leeg om de 
 "privacySetting_header" = "Privacy";
 "send_readReceipts" = "Leesbevestigingen";
 "dont_send" = "Niet versturen";
-"send_readReceipt" = "Leesbevestiging";
 "send_typingIndicators" = "Invoerindicators";
 "send_typingIndicator" = "Invoerindicator";
 
@@ -1357,8 +1396,7 @@ Als er geen (media)bestanden in %@ ontbreken, maak de prullenbak dan leeg om de 
 "use_default_send" = "Standaard (%@)";
 "default_setting" = "Standaardinstelling";
 
-"readReceipt_sheetMessage" = "Standaardinstelling voor deze contactpersoon overschrijven.";
-"typingIndicator_sheetMessage" = "Standaardinstelling voor deze contactpersoon overschrijven.";
+"contactoverride_sheetMessage" = "Dit overschrijft de standaardinstelling voor deze specifieke contactpersoon.";
 
 /* Multi Decvice */
 "multi_device_linked_devices_title" = "Multi-device preview";
@@ -1489,6 +1527,12 @@ Als er geen (media)bestanden in %@ ontbreken, maak de prullenbak dan leeg om de 
 "notification_interaction_delete_succeeded" = "Interacties verwijderd";
 "notification_interaction_delete_failed" = "Het verwijderen van interacties is mislukt";
 
+"notification_revocation_failed" = "Intrekken is mislukt";
+
+"notification_caption_too_long" = "Het onderschrift is te lang";
+
+"notification_updateworkdata_failed" = "Synchronisatie met de provisioning-server is mislukt";
+
 // Forward security status messages
 "forward_security_message_without" = "Er is een bericht zonder Perfect forward secrecy ontvangen. Controleer of de afzender Perfect forward secrecy opzettelijk heeft uitgeschakeld.";
 "forward_security_session_established" = "De berichten in deze chat zijn nu beschermd met Perfect forward secrecy.";
@@ -1541,6 +1585,8 @@ Als er geen (media)bestanden in %@ ontbreken, maak de prullenbak dan leeg om de 
 "accessibility_ballotMessage_hint_open" = "Open de poll om te stemmen.";
 "accessibility_ballotMessage_hint_closed" = "Poll-resultaten tonen.";
 "accessibility_voiceMessage_speed_hint" = "Afspeelsnelheid wijzigen.";
+"accessibility_voiceMessage_forward_hint" = "10 seconden vooruitspoelen.";
+"accessibility_voiceMessage_rewind_hint" = "10 seconden terugspoelen.";
 
 // Other
 "accessibility_caption" = "Onderschrift: %@";

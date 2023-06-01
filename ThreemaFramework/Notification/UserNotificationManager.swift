@@ -352,14 +352,7 @@ public class UserNotificationManager: UserNotificationManagerProtocol {
         }
 
         let unreadMessages = UnreadMessages(entityManager: entityManager)
-        var badge = 0
-
-        if let conversation = baseMessage?.conversation {
-            badge = unreadMessages.totalCount(doCalcUnreadMessagesCountOf: [conversation])
-        }
-        else {
-            badge = unreadMessages.totalCount()
-        }
+        var badge = unreadMessages.totalCount()
 
         // Update app badge, +1 if message is not saved in core data
         if from.stage == .initial || from.stage == .abstract {

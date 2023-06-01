@@ -314,7 +314,7 @@ extension ChatFileAudioMessageCell {
     override open func accessibilityLabelForContent() -> String! {
         let fileMessageEntity = message as! FileMessageEntity
         let duration = ThreemaUtilityObjC.accessibilityTimeString(forSeconds: fileMessageEntity.duration?.intValue ?? 0)
-        let durationText = "\(BundleUtil.localizedString(forKey: "audio")), \(duration!)"
+        let durationText = "\(BundleUtil.localizedString(forKey: "file_message_voice")), \(duration!)"
         if _captionLabel?.text != nil {
             return "\(durationText). \(_captionLabel!.text!)"
         }

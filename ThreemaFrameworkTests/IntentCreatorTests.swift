@@ -58,7 +58,7 @@ final class IntentCreatorTests: XCTestCase {
                 identity: "TESTER01",
                 verificationLevel: 0
             )
-            dp.createConversation(marked: false, typing: false, unreadMessageCount: 2) { conversation in
+            dp.createConversation(typing: false, unreadMessageCount: 2, visibility: .default) { conversation in
                 dp.createTextMessage(
                     conversation: conversation,
                     text: "msg1",
@@ -75,9 +75,9 @@ final class IntentCreatorTests: XCTestCase {
             }
             
             dp.createConversation(
-                marked: false,
                 typing: false,
                 unreadMessageCount: 0,
+                visibility: .default,
                 complete: { conversation in
                     conversation.groupID = groupID
                     conversation.contact = contact1
@@ -116,7 +116,7 @@ final class IntentCreatorTests: XCTestCase {
                 identity: "TESTER01",
                 verificationLevel: 0
             )
-            dp.createConversation(marked: false, typing: false, unreadMessageCount: 2) { conversation in
+            dp.createConversation(typing: false, unreadMessageCount: 2, visibility: .default) { conversation in
                 dp.createTextMessage(
                     conversation: conversation,
                     text: "msg1",
@@ -133,9 +133,9 @@ final class IntentCreatorTests: XCTestCase {
             }
             
             dp.createConversation(
-                marked: false,
                 typing: false,
                 unreadMessageCount: 0,
+                visibility: .default,
                 complete: { conversation in
                     conversation.groupID = groupID
                     conversation.contact = contact1
@@ -175,7 +175,7 @@ final class IntentCreatorTests: XCTestCase {
                 identity: "TESTER01",
                 verificationLevel: 0
             )
-            dp.createConversation(marked: false, typing: false, unreadMessageCount: 2) { conversation in
+            dp.createConversation(typing: false, unreadMessageCount: 2, visibility: .default) { conversation in
                 conversation.conversationCategory = .private
                 _ = contact1.conversations!.insert(conversation)
                 
@@ -195,9 +195,9 @@ final class IntentCreatorTests: XCTestCase {
             }
             
             dp.createConversation(
-                marked: false,
                 typing: false,
                 unreadMessageCount: 0,
+                visibility: .default,
                 complete: { conversation in
                     conversation.groupID = groupID
                     conversation.contact = contact1
@@ -236,7 +236,7 @@ final class IntentCreatorTests: XCTestCase {
                 identity: "TESTER01",
                 verificationLevel: 0
             )
-            dp.createConversation(marked: false, typing: false, unreadMessageCount: 2) { conversation in
+            dp.createConversation(typing: false, unreadMessageCount: 2, visibility: .default) { conversation in
                 _ = contact1.conversations!.insert(conversation)
                 
                 dp.createTextMessage(
@@ -255,9 +255,9 @@ final class IntentCreatorTests: XCTestCase {
             }
             
             dp.createConversation(
-                marked: false,
                 typing: false,
                 unreadMessageCount: 0,
+                visibility: .default,
                 complete: { conversation in
                     conversation.groupID = groupID
                     conversation.contact = contact1

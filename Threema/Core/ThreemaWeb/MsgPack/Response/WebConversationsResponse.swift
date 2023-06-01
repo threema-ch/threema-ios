@@ -28,10 +28,31 @@ class WebConversationsResponse: WebAbstractMessage {
         var conversationArray = [[AnyHashable: Any]]()
 
         let entityManager = BusinessInjector().entityManager
-        let allConversations = entityManager.entityFetcher.allUnarchivedConversationsSorted() as? [Conversation]
-
+        let allConversations = entityManager.entityFetcher.allConversationsSorted() as? [Conversation]
+        
+        let unarchivedConversations = allConversations?
+            .filter { $0.conversationVisibility == .default || $0.conversationVisibility == .pinned }
+        let archivedConversations = allConversations?.filter { $0.conversationVisibility == .archived }
+        
         var index = 1
-        for conver in allConversations! {
+        for conver in unarchivedConversations! {
+            if !conver.isGroup(), conver.contact == nil {
+                // empty contact in a single conversation, do not send to web
+            }
+            else {
+                let webConversation = WebConversation(
+                    conversation: conver,
+                    index: index,
+                    request: conversationRequest,
+                    addAvatar: index < 16 ? true : false,
+                    groupManager: GroupManager(entityManager: entityManager),
+                    session: session
+                )
+                conversationArray.append(webConversation.objectDict())
+                index = index + 1
+            }
+        }
+        for conver in archivedConversations! {
             if !conver.isGroup(), conver.contact == nil {
                 // empty contact in a single conversation, do not send to web
             }
@@ -138,7 +159,7 @@ struct WebConversation {
         let pushSetting = PushSetting(for: conversation)
         self.notifications = WebNotificationSettings(pushSetting: pushSetting)
         
-        self.isStarred = conversation.marked.boolValue
+        self.isStarred = conversation.conversationVisibility == .pinned
         self.isUnread = conversation.unreadMessageCount == -1
     }
 

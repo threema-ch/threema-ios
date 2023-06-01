@@ -76,16 +76,16 @@ public extension PreviewableMessage {
             .replacingOccurrences(of: "\n ", with: "\n")
             .replacingOccurrences(of: "\n", with: " ")
         
-        let parsedString = MarkupParser().previewString(for: noNewLinesString)
+        let parsedString = MarkupParser().previewString(for: noNewLinesString, font: configuration.font)
         
-        let configurationAttributes = [
-            NSAttributedString.Key.foregroundColor: configuration.tintColor(),
-            NSAttributedString.Key.font: configuration.font,
-        ]
-        
-        let configuredAttributedText = NSMutableAttributedString(
-            string: parsedString,
-            attributes: configurationAttributes
+        let configuredAttributedText = NSMutableAttributedString(attributedString: parsedString)
+        configuredAttributedText.removeAttribute(
+            NSAttributedString.Key.link,
+            range: NSRange(location: 0, length: configuredAttributedText.length)
+        )
+        configuredAttributedText.addAttributes(
+            [NSAttributedString.Key.foregroundColor: configuration.tintColor()],
+            range: NSRange(location: 0, length: configuredAttributedText.length)
         )
                 
         // If no symbol was found, we return the text without one

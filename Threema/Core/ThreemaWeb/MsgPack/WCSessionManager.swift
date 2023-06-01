@@ -971,7 +971,7 @@ extension WCSessionManager {
             }
             
             if (
-                changedValues.keys.contains("lastMessage") || changedValues.keys.contains("marked") || changedValues
+                changedValues.keys.contains("lastMessage") || changedValues.keys.contains("visibility") || changedValues
                     .keys.contains("unreadMessageCount") || changedValues.keys.contains("lastUpdate")
                     || dirtyObjects
             ) && currentConversation.lastMessage != nil {

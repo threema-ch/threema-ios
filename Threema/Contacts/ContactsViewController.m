@@ -1111,8 +1111,13 @@ typedef enum : NSUInteger {
         [self endRefreshingAndScrollUp:rfSender];
     } onError:^(NSError *error) {
         [self endRefreshingAndScrollUp:rfSender];
-        
-        [UIAlertTemplate showAlertWithOwner:self title:error.localizedDescription message:error.localizedFailureReason actionOk:nil];
+        if (error.code == 401 || error.code == 409) {
+            [[NotificationPresenterWrapper shared] presentUpdateWorkDataError];
+        }
+        else {
+            [UIAlertTemplate showAlertWithOwner:self title:error.localizedDescription message:error.localizedFailureReason actionOk:nil];
+        }
+        DDLogError(@"[UpdateWorkData] Update work data failed: %@)", error.localizedDescription);
     }];
 }
 

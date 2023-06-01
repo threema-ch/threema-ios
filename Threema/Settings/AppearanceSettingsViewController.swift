@@ -303,6 +303,7 @@ extension AppearanceSettingsViewController {
                 Colors.theme = .light
             }
         }
+        NotificationPresenterWrapper.shared.colorChanged()
     }
     
     @IBAction func lightThemeSelected(sender: UIButton) {
@@ -317,6 +318,7 @@ extension AppearanceSettingsViewController {
         updateButtonShadowForCurrentTheme()
         
         AppDelegate.shared()?.window.overrideUserInterfaceStyle = .light
+        NotificationPresenterWrapper.shared.colorChanged()
     }
     
     @IBAction func darkThemeSelected(sender: UIButton) {
@@ -330,6 +332,7 @@ extension AppearanceSettingsViewController {
         updateButtonShadowForCurrentTheme()
         
         AppDelegate.shared()?.window.overrideUserInterfaceStyle = .dark
+        NotificationPresenterWrapper.shared.colorChanged()
     }
     
     @IBAction func showProfilePicturesChanged(sender: UISwitch) {

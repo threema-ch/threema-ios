@@ -113,13 +113,14 @@ class AppMigrationTests: XCTestCase {
                     identity: sender,
                     verificationLevel: 0
                 )
-                dbPreparer.createConversation(marked: false, typing: false, unreadMessageCount: 1) { conversation in
-                    conversation.contact = contact
+                dbPreparer
+                    .createConversation(typing: false, unreadMessageCount: 1, visibility: .default) { conversation in
+                        conversation.contact = contact
 
-                    addTextMessage(conversation, "text from \(sender)", false)
-                    addTextMessage(conversation, "text from \(sender)", true)
-                    addTextMessage(conversation, "text from \(sender)", false)
-                }
+                        addTextMessage(conversation, "text from \(sender)", false)
+                        addTextMessage(conversation, "text from \(sender)", true)
+                        addTextMessage(conversation, "text from \(sender)", false)
+                    }
             }
         }
     }

@@ -9,91 +9,105 @@
 
 // ## Device Join Protocol
 //
-// This protocol specifies how to add a new device to an existing device
-// family.
+// This protocol specifies how to add a new device to an existing device group.
 //
 // ### Terminology
 //
 // - `ED`: Existing device
 // - `ND`: New device to be added
-// - `PSK`: Key derived from the passphrase chosen by the user
+// - `PSK`: Key derived from the passphrase
 //
 // ### Key Derivation
 //
-//     PSK = scrypt(
+//     PSK = Argon2id(
+//       out-length=32,
+//       parameters=<see DeviceGroupJoinRequestOrOffer.Argon2idParameters>,
 //       password=<passphrase>,
-//       salt=<random-32-byte-salt>,
-//       key-length=32,
-//       parameters={r=8, N=65536, p=1}
 //     )
 //
 // ### Blobs
 //
-// For binary data, the usual Blob scheme is being used by ED. However,
-// instead of transferring Blob data via the Blob server, the data is
-// transmitted in form of a `common.BlobData` message ahead of a message
-// referencing that Blob by the associated Blob ID.
+// For binary data, the usual Blob scheme is being used by ED. However, instead
+// of transferring Blob data via the Blob server, the data is transmitted in
+// form of a `common.BlobData` message ahead of a message referencing that Blob
+// by the associated Blob ID.
 //
-// ND is supposed to cache received `common.BlobData` until it can associate
-// the data to a Blob referencing its ID. Once the rendezvous connection has
-// been closed, any remaining cached `common.BlobData` can be discarded.
+// ND is supposed to cache received `common.BlobData` until it can associate the
+// data to a Blob referencing its ID. Once the rendezvous connection has been
+// closed, any remaining cached `common.BlobData` can be discarded.
 //
 // ### Protocol Kickoff Flow
 //
 // ND or ED may choose to start the protocol. If ND starts the protocol it is
-// _requesting to join the device family_. If ED starts the protocol it is
-// _offering to join the device family_.
+// _requesting to join the device group_. If ED starts the protocol it is
+// _offering to join the device group_.
 //
-// Either way, the user must first be asked for a passphrase to encrypt the data
-// to prevent the user from unintentionally adding a device to the device
-// family. The passphrase must not be empty. From that passphrase, derive the
-// Passphrase Key (PSK).
+// Whichever role is chosen, the one that starts the protocol must generate and
+// display or request an ephemeral passphrase from the user to encrypt the data
+// with.
+//
+// From that passphrase, derive the Passphrase Key (PSK) using a 16 byte random
+// salt and Argon2id parameters that target a ~2s key derivation performance
+// impact on the weaker device. For the time being, the following Argon2id
+// parameters are to be used:
+//
+// - Version: 1.3
+// - Memory: 128 MiB
+// - Iterations: 3
+// - Parallelism: 1
 //
 // If ED started the protocol:
 //
-// - `purpose` must be set to _offer to join the device family_.
+// - `variant` must be set to _offer to join the device group_.
 // - ED takes the role of RID
 // - ND takes the role of RRD
 //
 // If ND started the protocol:
 //
-// - `purpose` must be set to _request to join the device family_.
+// - `variant` must be set to _request to join the device group_.
 // - ND takes the role of RID
 // - ED takes the role of RRD
 //
 // #### Connection Setup
 //
-// RID creates an `rendezvous.RendezvousInit` by following the Connection
-// Rendezvous Protocol. It encrypts the created `rendezvous.RendezvousInit`
-// with `PSK`, wraps it in a `url.DeviceFamilyJoinRequestOrOffer` and offers
-// it in form of a URL or a QR code.
+// RID creates a `rendezvous.RendezvousInit` by following the Connection
+// Rendezvous Protocol. It encrypts the created `rendezvous.RendezvousInit` with
+// PSK, wraps it in a `url.DeviceGroupJoinRequestOrOffer` and offers it in form
+// of a URL or a QR code.
 //
-// RRD scans the QR code and parses the `url.DeviceFamilyJoinRequestOrOffer`.
-// It will then ask the user for the passphrase to decrypt the contained
-// `rendezvous.RendezvousInit`. Once decrypted, the enclosed
+// RRD scans the QR code or decodes the URL and then parses the
+// `url.DeviceGroupJoinRequestOrOffer`. It will then use PSK to decrypt the
+// contained `rendezvous.RendezvousInit`. Once decrypted, the enclosed
 // `rendezvous.RendezvousInit` must be handled according to the Connection
 // Rendezvous Protocol.
 //
 // Once the Connection Rendezvous Protocol has established at least one
-// connection path, ND waits another 3s or until all connection paths have
-// been established. Nomination is then done by ND following the Connection
+// connection path, ED waits another 3s or until all connection paths have been
+// established. Nomination is then done by ED following the Connection
 // Rendezvous Protocol.
 //
 // Note that all messages on the nominated connection path must be end-to-end
 // encrypted as defined by the Connection Rendezvous Protocol. All transmitted
 // messages are to be wrapped in:
 //
-// - `FromNewDeviceEnvelope` when sending from ND to ED, and
-// - `FromExistingDeviceEnvelope` when sending from ED to ND.
+// - `NdToEd` when sending from ND to ED, and
+// - `EdToNd` when sending from ED to ND.
 //
 // #### Device Join Flow
 //
-// As soon as one of the connection paths has been nominated, ND sends a
-// `Begin` message to start the device join process.
+// As soon as one of the connection paths has been nominated by ED, both devices
+// must calculate the Rendezvous Path Hash (RPH) as defined by the Rendezvous
+// Protocol and display it to the user.
 //
-//     ED <------ Begin ------- ND   [1]
+// ED must ask the user for confirmation that RPH is visually equal on both
+// devices. If the user does not confirm, the process must be aborted.
 //
-// ED will now send all `EssentialData` (with `common.BlobData` ahead).
+// After confirmation, ED must stop displaying RPH and send a `Begin` message to
+// start the device join process.
+//
+//     ED ------- Begin ------> ND   [1]
+//
+// ND can now stop displaying RPH.
 //
 //     ED -- common.BlobData -> ND   [0..N]
 //     ED --- EssentialData --> ND   [1]
@@ -103,9 +117,9 @@
 //
 //     ED <---- Registered ---- ND   [1]
 //
-// ND may now either close the connection or leave it open to transition to
-// the History Exchange Protocol. Any further messages ED receives from ND
-// will transition into the History Exchange Protocol.
+// ND may now either close the connection or leave it open to transition to the
+// History Exchange Protocol. Any further messages ED receives from ND will
+// transition into the History Exchange Protocol.
 
 import Foundation
 import SwiftProtobuf
@@ -122,21 +136,13 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
 
 /// Root message envelope for messages from the new device (ND) to the existing
 /// device (ED).
-struct Join_FromNewDeviceEnvelope {
+struct Join_NdToEd {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   /// The enveloped message
-  var content: Join_FromNewDeviceEnvelope.OneOf_Content? = nil
-
-  var begin: Join_Begin {
-    get {
-      if case .begin(let v)? = content {return v}
-      return Join_Begin()
-    }
-    set {content = .begin(newValue)}
-  }
+  var content: Join_NdToEd.OneOf_Content? = nil
 
   var registered: Join_Registered {
     get {
@@ -150,24 +156,18 @@ struct Join_FromNewDeviceEnvelope {
 
   /// The enveloped message
   enum OneOf_Content: Equatable {
-    case begin(Join_Begin)
     case registered(Join_Registered)
 
   #if !swift(>=4.1)
-    static func ==(lhs: Join_FromNewDeviceEnvelope.OneOf_Content, rhs: Join_FromNewDeviceEnvelope.OneOf_Content) -> Bool {
+    static func ==(lhs: Join_NdToEd.OneOf_Content, rhs: Join_NdToEd.OneOf_Content) -> Bool {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch (lhs, rhs) {
-      case (.begin, .begin): return {
-        guard case .begin(let l) = lhs, case .begin(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
       case (.registered, .registered): return {
         guard case .registered(let l) = lhs, case .registered(let r) = rhs else { preconditionFailure() }
         return l == r
       }()
-      default: return false
       }
     }
   #endif
@@ -178,14 +178,30 @@ struct Join_FromNewDeviceEnvelope {
 
 /// Root message envelope for messages from the existing device (ED) to the new
 /// device (ND).
-struct Join_FromExistingDeviceEnvelope {
+struct Join_EdToNd {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   /// The enveloped message
-  var content: Join_FromExistingDeviceEnvelope.OneOf_Content? = nil
+  var content: Join_EdToNd.OneOf_Content? = nil
 
+  var begin: Join_Begin {
+    get {
+      if case .begin(let v)? = content {return v}
+      return Join_Begin()
+    }
+    set {content = .begin(newValue)}
+  }
+
+  /// A Blob that is referenced as part of `EssentialData`.
+  ///
+  /// When receiving this variant:
+  ///
+  /// 1. If `EssentialData` has been received before, close the connection and
+  ///    abort these steps.
+  /// 2. Store the Blob data temporarily or permanently and store its
+  ///    associated Blob ID in the device's database.
   var blobData: Common_BlobData {
     get {
       if case .blobData(let v)? = content {return v}
@@ -206,15 +222,28 @@ struct Join_FromExistingDeviceEnvelope {
 
   /// The enveloped message
   enum OneOf_Content: Equatable {
+    case begin(Join_Begin)
+    /// A Blob that is referenced as part of `EssentialData`.
+    ///
+    /// When receiving this variant:
+    ///
+    /// 1. If `EssentialData` has been received before, close the connection and
+    ///    abort these steps.
+    /// 2. Store the Blob data temporarily or permanently and store its
+    ///    associated Blob ID in the device's database.
     case blobData(Common_BlobData)
     case essentialData(Join_EssentialData)
 
   #if !swift(>=4.1)
-    static func ==(lhs: Join_FromExistingDeviceEnvelope.OneOf_Content, rhs: Join_FromExistingDeviceEnvelope.OneOf_Content) -> Bool {
+    static func ==(lhs: Join_EdToNd.OneOf_Content, rhs: Join_EdToNd.OneOf_Content) -> Bool {
       // The use of inline closures is to circumvent an issue where the compiler
       // allocates stack space for every case branch when no optimizations are
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch (lhs, rhs) {
+      case (.begin, .begin): return {
+        guard case .begin(let l) = lhs, case .begin(let r) = rhs else { preconditionFailure() }
+        return l == r
+      }()
       case (.blobData, .blobData): return {
         guard case .blobData(let l) = lhs, case .blobData(let r) = rhs else { preconditionFailure() }
         return l == r
@@ -232,22 +261,29 @@ struct Join_FromExistingDeviceEnvelope {
   init() {}
 }
 
-/// Initial message sent by ND after a connection has been established.
+/// Initial message sent by ED after nomination and user confirmation that RPH is
+/// identical on both devices.
+///
+/// When creating this message, after confirmation by the user:
+///
+/// 1. Stop displaying RPH and notify the user that the device join process is in
+///    progress.
+/// 2. Begin a transaction (scope `NEW_DEVICE_SYNC`, precondition: none) on the
+///    D2M connection. This transaction is to be held until the connection to ND
+///    drops or until a `Registered` message was received. While the transaction
+///    is being held, no `Reflected` and no end-to-end encrypted message coming
+///    from the chat server is allowed to be processed! If the D2M connection is
+///    lost, the established connection must also be closed, aborting any running
+///    steps of this protocol.
+/// 3. Send the `Begin` message and continue with the steps for creating
+///    `EssentialData`.
 ///
 /// When receiving this message:
 ///
-/// 1. If `Begin` has been received before, close the connection and abort
-///    these steps.
-/// 2. Begin a transaction with scope `NEW_DEVICE_SYNC` on the D2M connection.
-///    This transaction is to be held until the connection to ND drops or until
-///    a `Registered` message was received. While the transaction is being
-///    held, no `Reflected` and no end-to-end encrypted message coming from the
-///    chat server is allowed to be processed! If the D2M connection is lost,
-///    the established connection must also be closed, aborting any running
+/// 1. If `Begin` has been received before, close the connection and abort these
 ///    steps.
-/// 3. Gather all data necessary to create `EssentialData`. Any Blobs must now
-///    be sent in form of `common.BlobData` messages.
-/// 4. Send the gathered `EssentialData` to ND.
+/// 2. Stop displaying RPH and notify the user that the device join process is in
+///    progress.
 struct Join_Begin {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
@@ -258,7 +294,17 @@ struct Join_Begin {
   init() {}
 }
 
-/// Essential data ND needs to be able to participate in the device family.
+/// Essential data ND needs to be able to participate in the device group.
+///
+/// Note: The transmitted used nonces are hashed with HMAC-SHA256 using the
+/// identity as _key_.
+///
+/// When creating this message:
+///
+/// 1. Gather all blobs referenced for the user's profile picture, contact
+///    profile pictures, etc. and send them as `common.BlobData` before this
+///    message.
+/// 2. Send the gathered `EssentialData`.
 ///
 /// When receiving this message:
 ///
@@ -267,14 +313,13 @@ struct Join_Begin {
 /// 2. If any Blob ID is missing from the previously received set of
 ///    `common.BlobData`, close the connection and abort these steps.
 /// 3. Store the data in the device's database.
-/// 4. Generate a random Mediator Device ID and a random CSP Device ID and
-///    store both in the device's database.
-/// 5. Establish a D2M connection by connecting to the provided mediator
-///    server.
+/// 4. Generate a random D2M Device ID and a random CSP Device ID and store both
+///    in the device's database.
+/// 5. Establish a D2M connection by connecting to the provided mediator server.
 /// 6. Wait until the `ServerInfo` has been received on the D2M connection.
 ///    Validate that the provided `DeviceSlotState` is `NEW`. Otherwise, close
-///    both the D2M connection (normally) and the connection to ED and
-///    abort these steps.
+///    both the D2M connection (normally) and the connection to ED and abort
+///    these steps.
 /// 7. Send a `Registered` message to ED.
 /// 8. Ask the user whether conversation history data should be requested from
 ///    ND:
@@ -282,8 +327,8 @@ struct Join_Begin {
 ///       the connection running and start the History Exchange Protocol. Abort
 ///       these steps.
 ///    2. If the user does not want to request conversation history data, wait
-///       until all buffered data on the connection has been written. Then,
-///       close the connection.
+///       until all buffered data on the connection has been written. Then, close
+///       the connection.
 struct Join_EssentialData {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
@@ -298,13 +343,25 @@ struct Join_EssentialData {
   /// Clears the value of `mediatorServer`. Subsequent reads from it will return its default value.
   mutating func clearMediatorServer() {_uniqueStorage()._mediatorServer = nil}
 
-  /// The secret client key associated with the Threema ID
-  var clientKey: Data {
-    get {return _storage._clientKey}
-    set {_uniqueStorage()._clientKey = newValue}
+  var identityData: Join_EssentialData.IdentityData {
+    get {return _storage._identityData ?? Join_EssentialData.IdentityData()}
+    set {_uniqueStorage()._identityData = newValue}
   }
+  /// Returns true if `identityData` has been explicitly set.
+  var hasIdentityData: Bool {return _storage._identityData != nil}
+  /// Clears the value of `identityData`. Subsequent reads from it will return its default value.
+  mutating func clearIdentityData() {_uniqueStorage()._identityData = nil}
 
-  /// The user's profile
+  var deviceGroupData: Join_EssentialData.DeviceGroupData {
+    get {return _storage._deviceGroupData ?? Join_EssentialData.DeviceGroupData()}
+    set {_uniqueStorage()._deviceGroupData = newValue}
+  }
+  /// Returns true if `deviceGroupData` has been explicitly set.
+  var hasDeviceGroupData: Bool {return _storage._deviceGroupData != nil}
+  /// Clears the value of `deviceGroupData`. Subsequent reads from it will return its default value.
+  mutating func clearDeviceGroupData() {_uniqueStorage()._deviceGroupData = nil}
+
+  /// User's profile
   var userProfile: Sync_UserProfile {
     get {return _storage._userProfile ?? Sync_UserProfile()}
     set {_uniqueStorage()._userProfile = newValue}
@@ -324,22 +381,31 @@ struct Join_EssentialData {
   /// Clears the value of `settings`. Subsequent reads from it will return its default value.
   mutating func clearSettings() {_uniqueStorage()._settings = nil}
 
-  /// Contacts
-  var contacts: [Sync_Contact] {
+  var contacts: [Join_EssentialData.AugmentedContact] {
     get {return _storage._contacts}
     set {_uniqueStorage()._contacts = newValue}
   }
 
-  /// Groups
-  var groups: [Sync_Group] {
+  var groups: [Join_EssentialData.AugmentedGroup] {
     get {return _storage._groups}
     set {_uniqueStorage()._groups = newValue}
   }
 
-  /// Distribution lists
-  var distributionLists: [Sync_DistributionList] {
+  var distributionLists: [Join_EssentialData.AugmentedDistributionList] {
     get {return _storage._distributionLists}
     set {_uniqueStorage()._distributionLists = newValue}
+  }
+
+  /// Hashed nonces that were used for CSP messages.
+  var cspHashedNonces: [Data] {
+    get {return _storage._cspHashedNonces}
+    set {_uniqueStorage()._cspHashedNonces = newValue}
+  }
+
+  /// Hashed nonces thate were used for D2D messages.
+  var d2DHashedNonces: [Data] {
+    get {return _storage._d2DHashedNonces}
+    set {_uniqueStorage()._d2DHashedNonces = newValue}
   }
 
   var unknownFields = SwiftProtobuf.UnknownStorage()
@@ -390,6 +456,127 @@ struct Join_EssentialData {
     init() {}
   }
 
+  /// User's identity data
+  struct IdentityData {
+    // SwiftProtobuf.Message conformance is added in an extension below. See the
+    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+    // methods supported on all messages.
+
+    /// The user's Threema ID
+    var identity: String = String()
+
+    /// The permanent client key associated to the Threema ID (32 bytes)
+    var ck: Data = Data()
+
+    /// The device cookie used by the device group for the Threema ID (16 bytes)
+    var cspDeviceCookie: Data = Data()
+
+    /// The CSP server group associated to the Threema ID (1 byte)
+    var cspServerGroup: String = String()
+
+    var unknownFields = SwiftProtobuf.UnknownStorage()
+
+    init() {}
+  }
+
+  /// Device group data
+  struct DeviceGroupData {
+    // SwiftProtobuf.Message conformance is added in an extension below. See the
+    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+    // methods supported on all messages.
+
+    /// The device group key (32 bytes)
+    var dgk: Data = Data()
+
+    var unknownFields = SwiftProtobuf.UnknownStorage()
+
+    init() {}
+  }
+
+  /// Contacts
+  struct AugmentedContact {
+    // SwiftProtobuf.Message conformance is added in an extension below. See the
+    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+    // methods supported on all messages.
+
+    /// The contact's data.
+    var contact: Sync_Contact {
+      get {return _contact ?? Sync_Contact()}
+      set {_contact = newValue}
+    }
+    /// Returns true if `contact` has been explicitly set.
+    var hasContact: Bool {return self._contact != nil}
+    /// Clears the value of `contact`. Subsequent reads from it will return its default value.
+    mutating func clearContact() {self._contact = nil}
+
+    /// Unix-ish timestamp in milliseconds when the conversation with this
+    /// contact was last updated.
+    var lastUpdateAt: UInt64 = 0
+
+    var unknownFields = SwiftProtobuf.UnknownStorage()
+
+    init() {}
+
+    fileprivate var _contact: Sync_Contact? = nil
+  }
+
+  /// Groups
+  struct AugmentedGroup {
+    // SwiftProtobuf.Message conformance is added in an extension below. See the
+    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+    // methods supported on all messages.
+
+    /// The group's data.
+    var group: Sync_Group {
+      get {return _storage._group ?? Sync_Group()}
+      set {_uniqueStorage()._group = newValue}
+    }
+    /// Returns true if `group` has been explicitly set.
+    var hasGroup: Bool {return _storage._group != nil}
+    /// Clears the value of `group`. Subsequent reads from it will return its default value.
+    mutating func clearGroup() {_uniqueStorage()._group = nil}
+
+    /// Unix-ish timestamp in milliseconds when the conversation with this
+    /// group was last updated.
+    var lastUpdateAt: UInt64 {
+      get {return _storage._lastUpdateAt}
+      set {_uniqueStorage()._lastUpdateAt = newValue}
+    }
+
+    var unknownFields = SwiftProtobuf.UnknownStorage()
+
+    init() {}
+
+    fileprivate var _storage = _StorageClass.defaultInstance
+  }
+
+  /// Distribution lists
+  struct AugmentedDistributionList {
+    // SwiftProtobuf.Message conformance is added in an extension below. See the
+    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+    // methods supported on all messages.
+
+    /// The distribution list's data.
+    var distributionList: Sync_DistributionList {
+      get {return _distributionList ?? Sync_DistributionList()}
+      set {_distributionList = newValue}
+    }
+    /// Returns true if `distributionList` has been explicitly set.
+    var hasDistributionList: Bool {return self._distributionList != nil}
+    /// Clears the value of `distributionList`. Subsequent reads from it will return its default value.
+    mutating func clearDistributionList() {self._distributionList = nil}
+
+    /// Unix-ish timestamp in milliseconds when the conversation of this
+    /// distribution list was last updated.
+    var lastUpdateAt: UInt64 = 0
+
+    var unknownFields = SwiftProtobuf.UnknownStorage()
+
+    init() {}
+
+    fileprivate var _distributionList: Sync_DistributionList? = nil
+  }
+
   init() {}
 
   fileprivate var _storage = _StorageClass.defaultInstance
@@ -400,7 +587,7 @@ struct Join_EssentialData {
 ///
 /// When receiving this message:
 ///
-/// 1. Release the transaction on the D2M connection. From this point on,
+/// 1. Commit the transaction on the D2M connection. From this point on,
 ///    processing `Reflected` and end-to-end encrypted message coming from the
 ///    chat server is allowed again.
 /// 2. Wait for ND to either close the connection or for ND to request
@@ -416,15 +603,81 @@ struct Join_Registered {
   init() {}
 }
 
+#if swift(>=5.5) && canImport(_Concurrency)
+extension Join_NdToEd: @unchecked Sendable {}
+extension Join_NdToEd.OneOf_Content: @unchecked Sendable {}
+extension Join_EdToNd: @unchecked Sendable {}
+extension Join_EdToNd.OneOf_Content: @unchecked Sendable {}
+extension Join_Begin: @unchecked Sendable {}
+extension Join_EssentialData: @unchecked Sendable {}
+extension Join_EssentialData.MediatorServer: @unchecked Sendable {}
+extension Join_EssentialData.MediatorServer.OneOf_Address: @unchecked Sendable {}
+extension Join_EssentialData.IdentityData: @unchecked Sendable {}
+extension Join_EssentialData.DeviceGroupData: @unchecked Sendable {}
+extension Join_EssentialData.AugmentedContact: @unchecked Sendable {}
+extension Join_EssentialData.AugmentedGroup: @unchecked Sendable {}
+extension Join_EssentialData.AugmentedDistributionList: @unchecked Sendable {}
+extension Join_Registered: @unchecked Sendable {}
+#endif  // swift(>=5.5) && canImport(_Concurrency)
+
 // MARK: - Code below here is support for the SwiftProtobuf runtime.
 
 fileprivate let _protobuf_package = "join"
 
-extension Join_FromNewDeviceEnvelope: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  static let protoMessageName: String = _protobuf_package + ".FromNewDeviceEnvelope"
+extension Join_NdToEd: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = _protobuf_package + ".NdToEd"
+  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .same(proto: "registered"),
+  ]
+
+  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try {
+        var v: Join_Registered?
+        var hadOneofValue = false
+        if let current = self.content {
+          hadOneofValue = true
+          if case .registered(let m) = current {v = m}
+        }
+        try decoder.decodeSingularMessageField(value: &v)
+        if let v = v {
+          if hadOneofValue {try decoder.handleConflictingOneOf()}
+          self.content = .registered(v)
+        }
+      }()
+      default: break
+      }
+    }
+  }
+
+  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
+    try { if case .registered(let v)? = self.content {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
+    } }()
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  static func ==(lhs: Join_NdToEd, rhs: Join_NdToEd) -> Bool {
+    if lhs.content != rhs.content {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension Join_EdToNd: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = _protobuf_package + ".EdToNd"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "begin"),
-    2: .same(proto: "registered"),
+    2: .standard(proto: "blob_data"),
+    3: .standard(proto: "essential_data"),
   ]
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -447,62 +700,6 @@ extension Join_FromNewDeviceEnvelope: SwiftProtobuf.Message, SwiftProtobuf._Mess
         }
       }()
       case 2: try {
-        var v: Join_Registered?
-        var hadOneofValue = false
-        if let current = self.content {
-          hadOneofValue = true
-          if case .registered(let m) = current {v = m}
-        }
-        try decoder.decodeSingularMessageField(value: &v)
-        if let v = v {
-          if hadOneofValue {try decoder.handleConflictingOneOf()}
-          self.content = .registered(v)
-        }
-      }()
-      default: break
-      }
-    }
-  }
-
-  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    // The use of inline closures is to circumvent an issue where the compiler
-    // allocates stack space for every case branch when no optimizations are
-    // enabled. https://github.com/apple/swift-protobuf/issues/1034
-    switch self.content {
-    case .begin?: try {
-      guard case .begin(let v)? = self.content else { preconditionFailure() }
-      try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
-    }()
-    case .registered?: try {
-      guard case .registered(let v)? = self.content else { preconditionFailure() }
-      try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
-    }()
-    case nil: break
-    }
-    try unknownFields.traverse(visitor: &visitor)
-  }
-
-  static func ==(lhs: Join_FromNewDeviceEnvelope, rhs: Join_FromNewDeviceEnvelope) -> Bool {
-    if lhs.content != rhs.content {return false}
-    if lhs.unknownFields != rhs.unknownFields {return false}
-    return true
-  }
-}
-
-extension Join_FromExistingDeviceEnvelope: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  static let protoMessageName: String = _protobuf_package + ".FromExistingDeviceEnvelope"
-  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "blob_data"),
-    2: .standard(proto: "essential_data"),
-  ]
-
-  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
-    while let fieldNumber = try decoder.nextFieldNumber() {
-      // The use of inline closures is to circumvent an issue where the compiler
-      // allocates stack space for every case branch when no optimizations are
-      // enabled. https://github.com/apple/swift-protobuf/issues/1034
-      switch fieldNumber {
-      case 1: try {
         var v: Common_BlobData?
         var hadOneofValue = false
         if let current = self.content {
@@ -515,7 +712,7 @@ extension Join_FromExistingDeviceEnvelope: SwiftProtobuf.Message, SwiftProtobuf.
           self.content = .blobData(v)
         }
       }()
-      case 2: try {
+      case 3: try {
         var v: Join_EssentialData?
         var hadOneofValue = false
         if let current = self.content {
@@ -535,23 +732,28 @@ extension Join_FromExistingDeviceEnvelope: SwiftProtobuf.Message, SwiftProtobuf.
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
-    // allocates stack space for every case branch when no optimizations are
-    // enabled. https://github.com/apple/swift-protobuf/issues/1034
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
     switch self.content {
+    case .begin?: try {
+      guard case .begin(let v)? = self.content else { preconditionFailure() }
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
+    }()
     case .blobData?: try {
       guard case .blobData(let v)? = self.content else { preconditionFailure() }
-      try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
     }()
     case .essentialData?: try {
       guard case .essentialData(let v)? = self.content else { preconditionFailure() }
-      try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 3)
     }()
     case nil: break
     }
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  static func ==(lhs: Join_FromExistingDeviceEnvelope, rhs: Join_FromExistingDeviceEnvelope) -> Bool {
+  static func ==(lhs: Join_EdToNd, rhs: Join_EdToNd) -> Bool {
     if lhs.content != rhs.content {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
@@ -581,22 +783,28 @@ extension Join_EssentialData: SwiftProtobuf.Message, SwiftProtobuf._MessageImple
   static let protoMessageName: String = _protobuf_package + ".EssentialData"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "mediator_server"),
-    2: .standard(proto: "client_key"),
-    3: .standard(proto: "user_profile"),
-    4: .same(proto: "settings"),
-    5: .same(proto: "contacts"),
-    6: .same(proto: "groups"),
-    7: .standard(proto: "distribution_lists"),
+    2: .standard(proto: "identity_data"),
+    3: .standard(proto: "device_group_data"),
+    4: .standard(proto: "user_profile"),
+    5: .same(proto: "settings"),
+    6: .same(proto: "contacts"),
+    7: .same(proto: "groups"),
+    8: .standard(proto: "distribution_lists"),
+    9: .standard(proto: "csp_hashed_nonces"),
+    10: .standard(proto: "d2d_hashed_nonces"),
   ]
 
   fileprivate class _StorageClass {
     var _mediatorServer: Join_EssentialData.MediatorServer? = nil
-    var _clientKey: Data = Data()
+    var _identityData: Join_EssentialData.IdentityData? = nil
+    var _deviceGroupData: Join_EssentialData.DeviceGroupData? = nil
     var _userProfile: Sync_UserProfile? = nil
     var _settings: Sync_Settings? = nil
-    var _contacts: [Sync_Contact] = []
-    var _groups: [Sync_Group] = []
-    var _distributionLists: [Sync_DistributionList] = []
+    var _contacts: [Join_EssentialData.AugmentedContact] = []
+    var _groups: [Join_EssentialData.AugmentedGroup] = []
+    var _distributionLists: [Join_EssentialData.AugmentedDistributionList] = []
+    var _cspHashedNonces: [Data] = []
+    var _d2DHashedNonces: [Data] = []
 
     static let defaultInstance = _StorageClass()
 
@@ -604,12 +812,15 @@ extension Join_EssentialData: SwiftProtobuf.Message, SwiftProtobuf._MessageImple
 
     init(copying source: _StorageClass) {
       _mediatorServer = source._mediatorServer
-      _clientKey = source._clientKey
+      _identityData = source._identityData
+      _deviceGroupData = source._deviceGroupData
       _userProfile = source._userProfile
       _settings = source._settings
       _contacts = source._contacts
       _groups = source._groups
       _distributionLists = source._distributionLists
+      _cspHashedNonces = source._cspHashedNonces
+      _d2DHashedNonces = source._d2DHashedNonces
     }
   }
 
@@ -629,12 +840,15 @@ extension Join_EssentialData: SwiftProtobuf.Message, SwiftProtobuf._MessageImple
         // enabled. https://github.com/apple/swift-protobuf/issues/1034
         switch fieldNumber {
         case 1: try { try decoder.decodeSingularMessageField(value: &_storage._mediatorServer) }()
-        case 2: try { try decoder.decodeSingularBytesField(value: &_storage._clientKey) }()
-        case 3: try { try decoder.decodeSingularMessageField(value: &_storage._userProfile) }()
-        case 4: try { try decoder.decodeSingularMessageField(value: &_storage._settings) }()
-        case 5: try { try decoder.decodeRepeatedMessageField(value: &_storage._contacts) }()
-        case 6: try { try decoder.decodeRepeatedMessageField(value: &_storage._groups) }()
-        case 7: try { try decoder.decodeRepeatedMessageField(value: &_storage._distributionLists) }()
+        case 2: try { try decoder.decodeSingularMessageField(value: &_storage._identityData) }()
+        case 3: try { try decoder.decodeSingularMessageField(value: &_storage._deviceGroupData) }()
+        case 4: try { try decoder.decodeSingularMessageField(value: &_storage._userProfile) }()
+        case 5: try { try decoder.decodeSingularMessageField(value: &_storage._settings) }()
+        case 6: try { try decoder.decodeRepeatedMessageField(value: &_storage._contacts) }()
+        case 7: try { try decoder.decodeRepeatedMessageField(value: &_storage._groups) }()
+        case 8: try { try decoder.decodeRepeatedMessageField(value: &_storage._distributionLists) }()
+        case 9: try { try decoder.decodeRepeatedBytesField(value: &_storage._cspHashedNonces) }()
+        case 10: try { try decoder.decodeRepeatedBytesField(value: &_storage._d2DHashedNonces) }()
         default: break
         }
       }
@@ -643,26 +857,39 @@ extension Join_EssentialData: SwiftProtobuf.Message, SwiftProtobuf._MessageImple
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     try withExtendedLifetime(_storage) { (_storage: _StorageClass) in
-      if let v = _storage._mediatorServer {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every if/case branch local when no optimizations
+      // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+      // https://github.com/apple/swift-protobuf/issues/1182
+      try { if let v = _storage._mediatorServer {
         try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
-      }
-      if !_storage._clientKey.isEmpty {
-        try visitor.visitSingularBytesField(value: _storage._clientKey, fieldNumber: 2)
-      }
-      if let v = _storage._userProfile {
+      } }()
+      try { if let v = _storage._identityData {
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
+      } }()
+      try { if let v = _storage._deviceGroupData {
         try visitor.visitSingularMessageField(value: v, fieldNumber: 3)
-      }
-      if let v = _storage._settings {
+      } }()
+      try { if let v = _storage._userProfile {
         try visitor.visitSingularMessageField(value: v, fieldNumber: 4)
-      }
+      } }()
+      try { if let v = _storage._settings {
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 5)
+      } }()
       if !_storage._contacts.isEmpty {
-        try visitor.visitRepeatedMessageField(value: _storage._contacts, fieldNumber: 5)
+        try visitor.visitRepeatedMessageField(value: _storage._contacts, fieldNumber: 6)
       }
       if !_storage._groups.isEmpty {
-        try visitor.visitRepeatedMessageField(value: _storage._groups, fieldNumber: 6)
+        try visitor.visitRepeatedMessageField(value: _storage._groups, fieldNumber: 7)
       }
       if !_storage._distributionLists.isEmpty {
-        try visitor.visitRepeatedMessageField(value: _storage._distributionLists, fieldNumber: 7)
+        try visitor.visitRepeatedMessageField(value: _storage._distributionLists, fieldNumber: 8)
+      }
+      if !_storage._cspHashedNonces.isEmpty {
+        try visitor.visitRepeatedBytesField(value: _storage._cspHashedNonces, fieldNumber: 9)
+      }
+      if !_storage._d2DHashedNonces.isEmpty {
+        try visitor.visitRepeatedBytesField(value: _storage._d2DHashedNonces, fieldNumber: 10)
       }
     }
     try unknownFields.traverse(visitor: &visitor)
@@ -674,12 +901,15 @@ extension Join_EssentialData: SwiftProtobuf.Message, SwiftProtobuf._MessageImple
         let _storage = _args.0
         let rhs_storage = _args.1
         if _storage._mediatorServer != rhs_storage._mediatorServer {return false}
-        if _storage._clientKey != rhs_storage._clientKey {return false}
+        if _storage._identityData != rhs_storage._identityData {return false}
+        if _storage._deviceGroupData != rhs_storage._deviceGroupData {return false}
         if _storage._userProfile != rhs_storage._userProfile {return false}
         if _storage._settings != rhs_storage._settings {return false}
         if _storage._contacts != rhs_storage._contacts {return false}
         if _storage._groups != rhs_storage._groups {return false}
         if _storage._distributionLists != rhs_storage._distributionLists {return false}
+        if _storage._cspHashedNonces != rhs_storage._cspHashedNonces {return false}
+        if _storage._d2DHashedNonces != rhs_storage._d2DHashedNonces {return false}
         return true
       }
       if !storagesAreEqual {return false}
@@ -717,18 +947,264 @@ extension Join_EssentialData.MediatorServer: SwiftProtobuf.Message, SwiftProtobu
   }
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
     if !self.publicKey.isEmpty {
       try visitor.visitSingularBytesField(value: self.publicKey, fieldNumber: 1)
     }
-    if case .webSocketHostname(let v)? = self.address {
+    try { if case .webSocketHostname(let v)? = self.address {
       try visitor.visitSingularStringField(value: v, fieldNumber: 2)
-    }
+    } }()
     try unknownFields.traverse(visitor: &visitor)
   }
 
   static func ==(lhs: Join_EssentialData.MediatorServer, rhs: Join_EssentialData.MediatorServer) -> Bool {
     if lhs.publicKey != rhs.publicKey {return false}
     if lhs.address != rhs.address {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension Join_EssentialData.IdentityData: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = Join_EssentialData.protoMessageName + ".IdentityData"
+  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .same(proto: "identity"),
+    2: .same(proto: "ck"),
+    3: .standard(proto: "csp_device_cookie"),
+    4: .standard(proto: "csp_server_group"),
+  ]
+
+  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularStringField(value: &self.identity) }()
+      case 2: try { try decoder.decodeSingularBytesField(value: &self.ck) }()
+      case 3: try { try decoder.decodeSingularBytesField(value: &self.cspDeviceCookie) }()
+      case 4: try { try decoder.decodeSingularStringField(value: &self.cspServerGroup) }()
+      default: break
+      }
+    }
+  }
+
+  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if !self.identity.isEmpty {
+      try visitor.visitSingularStringField(value: self.identity, fieldNumber: 1)
+    }
+    if !self.ck.isEmpty {
+      try visitor.visitSingularBytesField(value: self.ck, fieldNumber: 2)
+    }
+    if !self.cspDeviceCookie.isEmpty {
+      try visitor.visitSingularBytesField(value: self.cspDeviceCookie, fieldNumber: 3)
+    }
+    if !self.cspServerGroup.isEmpty {
+      try visitor.visitSingularStringField(value: self.cspServerGroup, fieldNumber: 4)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  static func ==(lhs: Join_EssentialData.IdentityData, rhs: Join_EssentialData.IdentityData) -> Bool {
+    if lhs.identity != rhs.identity {return false}
+    if lhs.ck != rhs.ck {return false}
+    if lhs.cspDeviceCookie != rhs.cspDeviceCookie {return false}
+    if lhs.cspServerGroup != rhs.cspServerGroup {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension Join_EssentialData.DeviceGroupData: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = Join_EssentialData.protoMessageName + ".DeviceGroupData"
+  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .same(proto: "dgk"),
+  ]
+
+  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularBytesField(value: &self.dgk) }()
+      default: break
+      }
+    }
+  }
+
+  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if !self.dgk.isEmpty {
+      try visitor.visitSingularBytesField(value: self.dgk, fieldNumber: 1)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  static func ==(lhs: Join_EssentialData.DeviceGroupData, rhs: Join_EssentialData.DeviceGroupData) -> Bool {
+    if lhs.dgk != rhs.dgk {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension Join_EssentialData.AugmentedContact: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = Join_EssentialData.protoMessageName + ".AugmentedContact"
+  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .same(proto: "contact"),
+    2: .standard(proto: "last_update_at"),
+  ]
+
+  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularMessageField(value: &self._contact) }()
+      case 2: try { try decoder.decodeSingularUInt64Field(value: &self.lastUpdateAt) }()
+      default: break
+      }
+    }
+  }
+
+  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
+    try { if let v = self._contact {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
+    } }()
+    if self.lastUpdateAt != 0 {
+      try visitor.visitSingularUInt64Field(value: self.lastUpdateAt, fieldNumber: 2)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  static func ==(lhs: Join_EssentialData.AugmentedContact, rhs: Join_EssentialData.AugmentedContact) -> Bool {
+    if lhs._contact != rhs._contact {return false}
+    if lhs.lastUpdateAt != rhs.lastUpdateAt {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension Join_EssentialData.AugmentedGroup: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = Join_EssentialData.protoMessageName + ".AugmentedGroup"
+  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .same(proto: "group"),
+    2: .standard(proto: "last_update_at"),
+  ]
+
+  fileprivate class _StorageClass {
+    var _group: Sync_Group? = nil
+    var _lastUpdateAt: UInt64 = 0
+
+    static let defaultInstance = _StorageClass()
+
+    private init() {}
+
+    init(copying source: _StorageClass) {
+      _group = source._group
+      _lastUpdateAt = source._lastUpdateAt
+    }
+  }
+
+  fileprivate mutating func _uniqueStorage() -> _StorageClass {
+    if !isKnownUniquelyReferenced(&_storage) {
+      _storage = _StorageClass(copying: _storage)
+    }
+    return _storage
+  }
+
+  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    _ = _uniqueStorage()
+    try withExtendedLifetime(_storage) { (_storage: _StorageClass) in
+      while let fieldNumber = try decoder.nextFieldNumber() {
+        // The use of inline closures is to circumvent an issue where the compiler
+        // allocates stack space for every case branch when no optimizations are
+        // enabled. https://github.com/apple/swift-protobuf/issues/1034
+        switch fieldNumber {
+        case 1: try { try decoder.decodeSingularMessageField(value: &_storage._group) }()
+        case 2: try { try decoder.decodeSingularUInt64Field(value: &_storage._lastUpdateAt) }()
+        default: break
+        }
+      }
+    }
+  }
+
+  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    try withExtendedLifetime(_storage) { (_storage: _StorageClass) in
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every if/case branch local when no optimizations
+      // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+      // https://github.com/apple/swift-protobuf/issues/1182
+      try { if let v = _storage._group {
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
+      } }()
+      if _storage._lastUpdateAt != 0 {
+        try visitor.visitSingularUInt64Field(value: _storage._lastUpdateAt, fieldNumber: 2)
+      }
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  static func ==(lhs: Join_EssentialData.AugmentedGroup, rhs: Join_EssentialData.AugmentedGroup) -> Bool {
+    if lhs._storage !== rhs._storage {
+      let storagesAreEqual: Bool = withExtendedLifetime((lhs._storage, rhs._storage)) { (_args: (_StorageClass, _StorageClass)) in
+        let _storage = _args.0
+        let rhs_storage = _args.1
+        if _storage._group != rhs_storage._group {return false}
+        if _storage._lastUpdateAt != rhs_storage._lastUpdateAt {return false}
+        return true
+      }
+      if !storagesAreEqual {return false}
+    }
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension Join_EssentialData.AugmentedDistributionList: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = Join_EssentialData.protoMessageName + ".AugmentedDistributionList"
+  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .standard(proto: "distribution_list"),
+    2: .standard(proto: "last_update_at"),
+  ]
+
+  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularMessageField(value: &self._distributionList) }()
+      case 2: try { try decoder.decodeSingularUInt64Field(value: &self.lastUpdateAt) }()
+      default: break
+      }
+    }
+  }
+
+  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
+    try { if let v = self._distributionList {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
+    } }()
+    if self.lastUpdateAt != 0 {
+      try visitor.visitSingularUInt64Field(value: self.lastUpdateAt, fieldNumber: 2)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  static func ==(lhs: Join_EssentialData.AugmentedDistributionList, rhs: Join_EssentialData.AugmentedDistributionList) -> Bool {
+    if lhs._distributionList != rhs._distributionList {return false}
+    if lhs.lastUpdateAt != rhs.lastUpdateAt {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

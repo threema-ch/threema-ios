@@ -86,7 +86,6 @@ class NotificationService: UNNotificationServiceExtension {
 
         guard !NotificationService.isRunning else {
             DDLogNotice("[Push] Suppressing push because Notification Extension is still running")
-            applyContent(recalculateBadgeCount: false, resetIsRunning: false)
             return
         }
         NotificationService.isRunning = true
@@ -272,11 +271,9 @@ class NotificationService: UNNotificationServiceExtension {
     /// - Parameters:
     ///   - bestAttemptContent: Best content for notification, is nil no notification will be showed
     ///   - recalculateBadgeCount: If `true` count of unread messages will calculated for changed conversations (`NotificationService.conversationsChanged`)
-    ///   - resetIsRunning: If `true` than `NotificationService.isRunning` will set to `false`
     private func applyContent(
         _ bestAttemptContent: UNMutableNotificationContent? = nil,
-        recalculateBadgeCount: Bool = true,
-        resetIsRunning: Bool = true
+        recalculateBadgeCount: Bool = true
     ) {
 
         var badge = 0
@@ -307,10 +304,8 @@ class NotificationService: UNNotificationServiceExtension {
             NotificationCenter.default.removeObserver(observer)
         }
         
-        if resetIsRunning {
-            AppGroup.setActive(false, for: AppGroupTypeNotificationExtension)
-            NotificationService.isRunning = false
-        }
+        AppGroup.setActive(false, for: AppGroupTypeNotificationExtension)
+        NotificationService.isRunning = false
 
         if let bestAttemptContent = bestAttemptContent {
             DDLogInfo("[Push] Notification showed!")
@@ -572,6 +567,9 @@ extension NotificationService: MessageProcessorDelegate {
                     if let contact = conversation.contact {
                         databaseManager.addDirtyObject(contact)
                     }
+
+                    self.businessInjector.backgroundUnreadMessages
+                        .totalCount(doCalcUnreadMessagesCountOf: [conversation])
 
                     // Add conversation as change to recalculate unread messages
                     self.conversationsChangedQueue.async {

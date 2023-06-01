@@ -22,9 +22,12 @@ import CocoaLumberjackSwift
 import Foundation
 import Intents
 
+// Consist of sender identity (`ThreemaIdentity`) and the ID of the message
+typealias PendingUserNotificationKey = String
+
 public class PendingUserNotification: NSObject, NSCoding {
     
-    let key: String
+    let key: PendingUserNotificationKey
     var threemaPushNotification: ThreemaPushNotification?
     public internal(set) var abstractMessage: AbstractMessage?
     public internal(set) var baseMessage: BaseMessage? {
@@ -157,5 +160,27 @@ extension PendingUserNotification {
         else {
             return intentCreator.inSendMessageIntentInteraction(for: senderIdentity, direction: .incoming)
         }
+    }
+}
+
+extension PendingUserNotificationKey {
+    static func key(for threemaPush: ThreemaPushNotification) -> PendingUserNotificationKey? {
+        threemaPush.from + threemaPush.messageID
+    }
+
+    static func key(for abstractMessage: AbstractMessage) -> PendingUserNotificationKey? {
+        key(identity: abstractMessage.fromIdentity, messageID: abstractMessage.messageID)
+    }
+
+    static func key(for boxedMessage: BoxedMessage) -> PendingUserNotificationKey? {
+        key(identity: boxedMessage.fromIdentity, messageID: boxedMessage.messageID)
+    }
+
+    static func key(identity: ThreemaIdentity?, messageID: Data?) -> PendingUserNotificationKey? {
+        guard let identity, identity.isValid, let messageID else {
+            return nil
+        }
+
+        return identity + messageID.hexString
     }
 }

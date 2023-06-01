@@ -76,15 +76,16 @@ class DatabasePreparer {
     }
     
     @discardableResult func createConversation(
-        marked: Bool,
         typing: Bool,
         unreadMessageCount: Int,
+        visibility: ConversationVisibility,
         complete: ((Conversation) -> Void)?
     ) -> Conversation {
         let conversation = createEntity(objectType: Conversation.self)
-        conversation.marked = NSNumber(booleanLiteral: marked)
         conversation.typing = NSNumber(booleanLiteral: typing)
         conversation.unreadMessageCount = NSNumber(integerLiteral: unreadMessageCount)
+        conversation.conversationVisibility = visibility
+
         if let complete = complete {
             complete(conversation)
         }
@@ -92,7 +93,6 @@ class DatabasePreparer {
     }
     
     @discardableResult func createConversation(
-        marked: Bool,
         typing: Bool,
         unreadMessageCount: Int,
         category: ConversationCategory,
@@ -100,7 +100,6 @@ class DatabasePreparer {
         complete: ((Conversation) -> Void)?
     ) -> Conversation {
         let conversation = createEntity(objectType: Conversation.self)
-        conversation.marked = NSNumber(booleanLiteral: marked)
         conversation.typing = NSNumber(booleanLiteral: typing)
         conversation.unreadMessageCount = NSNumber(integerLiteral: unreadMessageCount)
         conversation.conversationCategory = category

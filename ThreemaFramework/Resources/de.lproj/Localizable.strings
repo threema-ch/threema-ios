@@ -77,7 +77,6 @@
 "new_image_message" = "Bild";
 "new_video_message" = "Video";
 "new_location_message" = "Standort";
-"new_audio_message" = "Audio";
 "new_ballot_create_message" = "Umfrage: %@";
 "new_ballot_closed_message" = "Umfrage: Resultate verfügbar";
 "new_file_message" = "Datei: %@";

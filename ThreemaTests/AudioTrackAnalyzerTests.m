@@ -19,7 +19,6 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import <XCTest/XCTest.h>
-#import <Expecta/Expecta.h>
 #import "AudioTrackAnalyzer.h"
 
 #define TEST_FILE @"audioAnalyzerTest"
@@ -39,10 +38,10 @@
     AudioTrackAnalyzer *analyzer = [AudioTrackAnalyzer audioTrackAnalyzerFor: file];
     
     NSTimeInterval duration = [analyzer getDuration];
-    expect(duration).to.equal(0.0);
+    XCTAssert(duration == 0.0);
     
     NSArray *result = [analyzer reduceAudioToDecibelLevels: 20];
-    expect([result count]).to.equal(0);
+    XCTAssert([result count] == 0);
 }
 
 /// Should handle test file
@@ -53,11 +52,13 @@
     AudioTrackAnalyzer *analyzer = [AudioTrackAnalyzer audioTrackAnalyzerFor: file];
     
     NSTimeInterval duration = [analyzer getDuration];
-    expect(duration).to.beCloseToWithin(3.85, 0.01);
+    XCTAssert(duration < 3.85 + 0.01);
+    XCTAssert(duration > 3.85 - 0.01);
 
     NSArray *result = [analyzer reduceAudioToDecibelLevels: 100];
     // for some odd reason we do are not able to get all audio data from the given audio file
-    expect([result count]).to.beCloseToWithin(100, 3);
+    XCTAssert([result count] <  100 + 3);
+    XCTAssert([result count] > 100 - 3);
 }
 
 @end

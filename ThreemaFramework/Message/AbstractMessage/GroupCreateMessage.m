@@ -56,6 +56,10 @@
     return YES;
 }
 
+- (BOOL)canShowUserNotification {
+    return NO;
+}
+
 - (BOOL)isGroupControlMessage {
     return true;
 }

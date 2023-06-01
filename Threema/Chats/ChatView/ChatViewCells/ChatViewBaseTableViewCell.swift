@@ -233,8 +233,8 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
         sfSymbolName: "play.fill",
         accessibilityLabel: "",
         configuration: .retryAndCancel
-    ) { _ in
-        self.retryOrCancel()
+    ) { [weak self] _ in
+        self?.retryOrCancel()
     }
     
     private lazy var nameLabel: UILabel = {

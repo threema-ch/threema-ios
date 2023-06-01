@@ -125,4 +125,51 @@ class PendingUserNotificationManagerTests: XCTestCase {
             }
         }
     }
+
+    func testPendingUserNotificationAbstractMessageStartTimedNotificationControlMessage() throws {
+        let expectedMessageID: Data = BytesUtility.generateRandomBytes(length: ThreemaProtocol.messageIDLength)!
+        let expectedFromIdentity = "SENDER01"
+        let expectedFireDateGreaterThan = Date()
+
+        let abstractMsg = ContactRequestPhotoMessage()
+        abstractMsg.messageID = expectedMessageID
+        abstractMsg.fromIdentity = expectedFromIdentity
+
+        let expectedPendingUserNotification = PendingUserNotification(key: "1")
+        expectedPendingUserNotification.abstractMessage = abstractMsg
+
+        let expectedUserNotificationContent = UserNotificationContent(expectedPendingUserNotification)
+
+        let userNotificationCenterManagerMock = UserNotificationCenterManagerMock(returnFireDate: Date())
+
+        let pendingManager = PendingUserNotificationManager(
+            UserNotificationManagerMock(returnUserNotificationContent: expectedUserNotificationContent),
+            userNotificationCenterManagerMock,
+            EntityManager()
+        )
+        let pendingNotification = pendingManager.pendingUserNotification(
+            for: abstractMsg,
+            stage: .abstract,
+            isPendingGroup: false
+        )
+
+        let expect = expectation(description: "startTimedUserNotification")
+
+        var result = false
+
+        pendingManager.startTimedUserNotification(pendingUserNotification: pendingNotification!)
+            .done { processed in
+                result = processed
+                expect.fulfill()
+            }
+
+        wait(for: [expect], timeout: 3)
+
+        XCTAssertTrue(result)
+        XCTAssertTrue(userNotificationCenterManagerMock.removeCalls.contains(try XCTUnwrap(pendingNotification?.key)))
+        XCTAssertEqual("\(expectedFromIdentity)\(expectedMessageID.hexString)", pendingNotification?.key)
+        XCTAssertNotNil(pendingNotification?.abstractMessage)
+        XCTAssertEqual(UserNotificationStage.abstract, pendingNotification?.stage)
+        XCTAssertNil(pendingNotification?.fireDate)
+    }
 }

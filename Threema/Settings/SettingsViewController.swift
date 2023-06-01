@@ -203,7 +203,8 @@ extension SettingsViewController {
         threemaChannelCell.imageView?.image = BundleUtil.imageNamed("ThreemaChannel\(suffix)")
         
         threemaWorkCell.textLabel?.text = BundleUtil.localizedString(forKey: "settings_threema_work")
-        threemaWorkCell.imageView?.image = BundleUtil.imageNamed("ThreemaWorkSettings\(suffix)")
+        threemaWorkCell.detailTextLabel?.text = BundleUtil.localizedString(forKey: "settings_threema_work_subtitle")
+        threemaWorkCell.imageView?.image = BundleUtil.imageNamed("ThreemaWorkSettings")
         
         supportCell.textLabel?.text = BundleUtil.localizedString(forKey: "settings_support")
         supportCell.imageView?.image = BundleUtil.imageNamed("Support\(suffix)")
@@ -317,6 +318,9 @@ extension SettingsViewController {
             if section == 4 {
                 return 0.0
             }
+            if section == 5 {
+                return 0.0
+            }
         }
         
         return UITableView.automaticDimension
@@ -336,6 +340,9 @@ extension SettingsViewController {
         
         if LicenseStore.requiresLicenseKey() {
             if section == 4 {
+                return 0.0
+            }
+            if section == 5 {
                 return 0.0
             }
         }
@@ -396,6 +403,9 @@ extension SettingsViewController {
             if section == 4 {
                 return 0
             }
+            if section == 5 {
+                return 0
+            }
         }
         else {
             if section == 3 {
@@ -409,6 +419,9 @@ extension SettingsViewController {
     override func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         if LicenseStore.requiresLicenseKey() {
             if indexPath.section == 4 {
+                return 0.0
+            }
+            if indexPath.section == 5 {
                 return 0.0
             }
         }
@@ -495,6 +508,14 @@ extension SettingsViewController {
             vc.navigationItem.largeTitleDisplayMode = .never
             navigationController?.pushViewController(vc, animated: true)
         }
+        else if indexPath.section == 1, indexPath.row == 3 {
+            let vc = UIHostingController(rootView: ChatSettingsView(
+                settingsVM: BusinessInjector()
+                    .settingsStore as! SettingsStore
+            ))
+            vc.navigationItem.largeTitleDisplayMode = .never
+            navigationController?.pushViewController(vc, animated: true)
+        }
         else if indexPath.section == 1, indexPath.row == 6 {
             let vc = KKPasscodeSettingsViewController(style: .grouped)
             vc.delegate = self
@@ -504,7 +525,7 @@ extension SettingsViewController {
             let vc = StorageManagementViewController()
             navigationController?.pushViewController(vc, animated: true)
         }
-        else if indexPath.section == 4, indexPath.row == 0 {
+        else if indexPath.section == 5, indexPath.row == 0 {
             inviteController = InviteController()
             inviteController!.parentViewController = self
             inviteController!.shareViewController = self
@@ -512,7 +533,7 @@ extension SettingsViewController {
             inviteController!.rect = tableView.rectForRow(at: indexPath)
             inviteController!.invite()
         }
-        else if indexPath.section == 4, indexPath.row == 1 {
+        else if indexPath.section == 5, indexPath.row == 1 {
             AddThreemaChannelAction.run(in: self)
         }
 

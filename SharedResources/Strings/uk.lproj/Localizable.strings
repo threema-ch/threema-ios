@@ -48,13 +48,9 @@
 "cannot_connect_title" = "Немає підключення";
 "cannot_connect_message" = "Не вдається підключитися, будь ласка, перевірте інтернет-з’єднання.";
 
-"delete_identity_warning" = "Якщо ви видалите свій ID, то ваші ключі й дані застосунку буде видалено. Якщо ви не створювали резервну копію, ви не зможете знову надсилати чи отримувати повідомлення з цього ID.\nЯкщо ви більше не хочете користуватися цим ID, радимо перед видаленням від’єднати від нього електронні адреси чи номери телефонів.";
-"delete_identity_warning2" = "Останнє попередження: ви дійсно хочете видалити свої дані й ID?";
+// JKLockScreenViewController
 "delete_identity_passcode_title" = "Код доступу активовано";
 "delete_identity_passcode_message" = "Перед видаленням свого ID вимкніть код доступу, будь ласка.";
-"delete_identity_title" = "Дані застосунку видалено";
-"delete_identity_description" = "Усі дані застосунку видалено. Будь ласка, перезапустіть застосунок, щоб налаштувати %@.";
-"delete_identity_app_close" = "Закрити застосунок";
 
 /* JKLockScreenViewController */
 "cancel" = "Скасувати";
@@ -64,7 +60,6 @@
 "yes" = "Так";
 "delete" = "Видалити";
 "try_again" = "Спробувати ще раз";
-"delete_identity" = "Видалити дані й ID";
 "copy" = "Скопіювати";
 "save" = "Зберегти";
 "download" = "Завантажити";
@@ -79,7 +74,6 @@
 "sticker" = "Наліпка";
 "gif" = "GIF";
 "video" = "Відео";
-"audio" = "Аудіо";
 "file" = "Файл";
 "location" = "Місцеперебування";
 "locating" = "Пошук розташування...";
@@ -183,8 +177,6 @@
 "sound_threema_goody" = "Ремікс";
 "sound_threema_alphorn" = "Альфорн";
 
-"reset_wallpaper" = "Скинути фон";
-"bigger_single_emojis" = "Великі окремі емодзі";
 "identity_none" = "немає";
 "message" = "Надіслати"; /* Short version for "Send Message" */
 "scan_identity" = "Сканувати ID";
@@ -1093,6 +1085,7 @@
 "settings_license" = "Ліцензія";
 "settings_advanced" = "Розширені";
 "settings_threema_work" = "Threema Робота";
+"settings_threema_work_subtitle" = "Надійне рішення для забезпечення комунікації в компанії";
 "settings_feedback" = "Відгук про бета-версію";
 "tos_cell_title" = "Умови використання";
 
@@ -1133,7 +1126,6 @@
 "settings_privacy_hide_private_chats" = "Приховати приватні чати";
 "settings_privacy_hide_private_chats_footer" = "Приховує всі приватні чати в огляді чатів. Вам потрібно встановити пароль, щоб активувати це налаштування.";
 
-
 // Appearance
 "settings_appearance_theme_section" = "Тема";
 "settings_appearance_light_theme" = "Світла";
@@ -1151,7 +1143,15 @@
 "settings_appearance_show_gallery_preview" = "Попередній перегляд галереї";
 
 // Chat Settings
-"settings_chat_send_message_feedback_label" = "Тактильний зворотний зв’язок після надсилання";
+"settings_chat_wallpaper_title" = "Шпалери";
+"settings_chat_wallpaper_reset" = "Скинути всі шпалери";
+"settings_chat_wallpaper_empty" = "Немає";
+"settings_chat_wallpaper_custom" = "Користувацькі";
+"settings_chat_wallpaper_default" = "За замовчуванням";
+"settings_chat_wallpaper_reset_all_alert" = "Скидає всі шпалери, які було встановлено для діалогу, до вищезазначеного параметра. Цю дію скасувати не можна.";
+
+"settings_chat_bigger_emojis" = "Великі емодзі";
+"settings_chat_send_message_feedback" = "Тактильний зворотний зв’язок після надсилання";
 
 // Media
 "settings_media_autosave_private_footer" = "Медіафайли отримані в приватних чатах не будуть зберігатися автоматично.";
@@ -1163,8 +1163,48 @@
 "sentry_crash_send_no" = "Не надсилати";
 "sentry_crash_comment_placeholder" = "Звіт про аварійне завершення роботи";
 
+
+
 // My profile
 "profile_share_id_text" = "Мій Threema ID";
+"my_profile_delete_cell_title" = "Видалити ID і дані";
+
+// Delete & Revoke
+"my_profile_delete_bullet_id" = "Threema ID";
+"my_profile_delete_bullet_chats" = "Діалоги";
+"my_profile_delete_bullet_picture" = "Зображення профілю";
+"my_profile_delete_bullet_safe" = "Резервна копія Threema Safe";
+"my_profile_delete_bullet_linked" = "Прив’язані номер телефону та / або електронна пошта";
+
+"my_profile_delete_info_title" = "Видалити ID і дані";
+"my_profile_delete_info_keep" = "Нижчезазначені дані придатні для використання, і не будуть видалені:";
+"my_profile_delete_info_delete" = "Нижчезазначені дані буде видалено із цього пристрою:";
+"my_profile_delete_info_toggle" = "Видалити все";
+
+"my_profile_delete_info_button_data" = "Видалити дані";
+"my_profile_delete_info_button_revoke" = "Видалити ID і дані";
+
+"my_profile_delete_identity_title" = "Видалити діалоги й профіль?";
+"my_profile_delete_identity_keep" = "Ви збережете:";
+"my_profile_delete_identity_remove" = "Це видалить із цього пристрою таке:";
+"my_profile_delete_identity_delete" = "Видалити діалоги й профіль";
+
+"my_profile_delete_identity_view_alert_title" = "Цю дію неможливо скасувати. Справді продовжити?";
+"my_profile_delete_identity_view_alert_confirm" = "Видалити дані";
+
+"my_profile_revoke_identity_view_title" = "Видалити все?";
+"my_profile_revoke_info_delete" = "Ви назавжди видалите таке:";
+"my_profile_revoke_identity_view_info" = "Попередження! Цю дію не можна скасувати!";
+"my_profile_revoke_identity_view_enter_id" = "Введіть свій Threema ID \"%@\", щоб підтвердити видалення всього:";
+"my_profile_revoke_identity_view_placeholder" = "Ваш Threema ID";
+"my_profile_revoke_identity_view_button_revoke" = "Видалити все";
+
+"my_profile_delete_identity_summary_view_delete_title" = "Діалоги й профіль видалено";
+"my_profile_delete_identity_summary_view_revoke_title" = "Усе видалено";
+"my_profile_delete_identity_summary_view_delete_success" = "Ви видалили таке із цього пристрою:";
+"my_profile_delete_identity_summary_view_revoke_success" = "Ви видалили таке:";
+"my_profile_delete_identity_summary_view_restart" = "Перезапустіть застосунок, щоб продовжити використовувати його.";
+"my_profile_delete_identity_summary_view_close" = "Закрити застосунок";
 
 // File message
 "optional_caption" = "Підпис за бажанням";
@@ -1351,7 +1391,6 @@
 "privacySetting_header" = "Приватність";
 "send_readReceipts" = "Звіти про прочитання";
 "dont_send" = "Не надсилати";
-"send_readReceipt" = "Звіт про прочитання";
 "send_typingIndicators" = "Сповіщення про набір тексту";
 "send_typingIndicator" = "Сповіщення про набір тексту";
 
@@ -1359,8 +1398,7 @@
 "use_default_send" = "За замовчуванням (%@)";
 "default_setting" = "Налаштування за замовчуванням";
 
-"readReceipt_sheetMessage" = "Перезаписати налаштування за замовчуванням для цього контакту.";
-"typingIndicator_sheetMessage" = "Перезаписати налаштування за замовчуванням для цього контакту.";
+"contactoverride_sheetMessage" = "Це перезапише налаштування за замовчуванням для цього контакту.";
 
 /* Multi Decvice */
 "multi_device_linked_devices_title" = "Попередній перегляд на кількох пристроях";
@@ -1491,6 +1529,12 @@
 "notification_interaction_delete_succeeded" = "Взаємодії видалено";
 "notification_interaction_delete_failed" = "Не вдалося видалити взаємодії";
 
+"notification_revocation_failed" = "Не вдалося відкликати";
+
+"notification_caption_too_long" = "Підпис задовгий";
+
+"notification_updateworkdata_failed" = "Не вдалося синхроніхуватись із сервером";
+
 // Forward security status messages
 "forward_security_message_without" = "Отримано повідомлення без функції «Цілковита пряма секретність» (PFS). Перевірте, чи одержувач навмисно вимкнув PFS.";
 "forward_security_session_established" = "Повідомлення в цьому діалозі захищено функцією «Цілковита пряма секретність» (PFS)";
@@ -1543,6 +1587,8 @@
 "accessibility_ballotMessage_hint_open" = "Відкрити опитування, щоб проголосувати.";
 "accessibility_ballotMessage_hint_closed" = "Показати результати опитування.";
 "accessibility_voiceMessage_speed_hint" = "Змінити швидкість відтворення.";
+"accessibility_voiceMessage_forward_hint" = "10 секунд уперед.";
+"accessibility_voiceMessage_rewind_hint" = "10 секунд назад.";
 
 // Other
 "accessibility_caption" = "Підпис: %@";

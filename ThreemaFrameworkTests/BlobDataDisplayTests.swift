@@ -34,9 +34,9 @@ class BlobDataDisplayTests: XCTestCase {
         databasePreparer = DatabasePreparer(context: managedObjectContext)
         databasePreparer.save {
             conversation = databasePreparer.createConversation(
-                marked: false,
                 typing: false,
                 unreadMessageCount: 0,
+                visibility: .default,
                 complete: nil
             )
         }

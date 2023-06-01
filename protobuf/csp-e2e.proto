@@ -21,7 +21,7 @@ message MessageMetadata {
   bytes padding = 1;
 
   // The nickname associated to the sender's Threema ID. Recommended to not
-  // exceed 32 graphemes.
+  // exceed 32 grapheme clusters.
   string nickname = 2;
 
   // Unique message ID. Must match the message ID of the outer struct
@@ -48,31 +48,9 @@ message MessageMetadata {
 //
 // When creating this message to start a call within the group:
 //
-// 1. Run the _Group Call Refresh Steps_ and let `chosen-call` be the result.
-// 2. If `chosen-call` is defined, abort these steps. (`chosen-call` will be
-//    joined instead.)
-// 3. Create the message but don't send it yet:
-//    1. Generate a random GCK and set `gck` appropriately.
-//    2. Set `sfu_base_url` to the _SFU Base URL_ obtained from the Directory
-//       Server API.
-// 4. Join the call matching the Call ID of the created message and wait until
-//    the SFU sent the initial `Hello` message via the associated data channel.
-//    Let `hello` be that message. An implementation may add an artificial wait
-//    period to enforce a minimum 2s execution time of this step to prevent a
-//    butter-fingered user from accidentally starting a group call. This is an
-//    asynchronous process.
-//
-//    If this step has been cancelled by the _Group Call Refresh Steps_
-//    determining another `chosen-call` in the meantime, cancel the call we have
-//    started to create and abort these steps. (`chosen-call` will be joined
-//    instead.)
-// 5. If `hello.participants` is not an empty list, exceptionally abort the call
-//    and these steps.
-// 6. Send the message to the group.
-// 7. Add the created call to the list of group calls that are currently
-//    considered running.
-// 8. Trigger the _Group Call Refresh Steps_ again (to start displaying the call
-//    in the UI and starting the refresh timer).
+// 1. Generate a random GCK and set `gck` appropriately.
+// 2. Set `sfu_base_url` to the _SFU Base URL_ obtained from the Directory
+//    Server API.
 //
 // When receiving this message:
 //
@@ -89,9 +67,10 @@ message MessageMetadata {
 //    considered running (even if `protocol_version` is unsupported; this is to
 //    allow the user to join an ongoing call after an app update where support
 //    for `protocol_version` has been added).
-// 6. Run the _Group Call Refresh Steps_ and let `chosen-call` be the result.
-//    (`chosen-call` will be joined if the user is currently participating in a
-//    group call of this group.)
+// 6. Run the _Group Call Refresh Steps_.[^1]
+//
+// [^1]: This ensures that the user automatically switches to the chosen call if
+// it is currently participating in a group call of this group.
 message GroupCallStart {
   // Protocol version used for group calls of this group. The current version
   // number is `1`.

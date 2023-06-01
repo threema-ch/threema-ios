@@ -25,8 +25,10 @@ import PromiseKit
 
 public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol, ObservableObject {
     
-    static let shared = SettingsStore()
+    // MARK: Private Attributes
     
+    public var wallpaperStore = WallpaperStore.shared
+
     // MARK: Private Attributes
 
     private let serverConnector: ServerConnectorProtocol
@@ -85,8 +87,9 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
         self.masterDndEndTime = userSettings.masterDndEndTime
 
         // Chat
-        self.wallpaper = userSettings.wallpaper
-        
+        self.useBigEmojis = !userSettings.disableBigEmojis
+        self.sendMessageFeedback = userSettings.sendMessageFeedback
+
         // Threema Calls
         self.enableThreemaCall = userSettings.enableThreemaCall
         self.alwaysRelayCalls = userSettings.alwaysRelayCalls
@@ -286,6 +289,12 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
             guard userSettings.enableMasterDnd != enableMasterDnd else {
                 return
             }
+            
+            // We automatically selects first 5 days if no selection was set
+            if enableMasterDnd, masterDndWorkingDays.isEmpty {
+                masterDndWorkingDays = preFillWorkingDays()
+            }
+            
             updateUserSettings()
         }
     }
@@ -319,9 +328,18 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
     
     // MARK: Chats
     
-    @Published public var wallpaper: UIImage? {
+    @Published public var useBigEmojis: Bool {
         didSet {
-            guard userSettings.wallpaper != wallpaper else {
+            guard userSettings.disableBigEmojis == useBigEmojis else {
+                return
+            }
+            updateUserSettings()
+        }
+    }
+    
+    @Published public var sendMessageFeedback: Bool {
+        didSet {
+            guard userSettings.sendMessageFeedback != sendMessageFeedback else {
                 return
             }
             updateUserSettings()
@@ -363,8 +381,8 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
             blacklist = Set(syncSettings.blockedIdentities.identities)
         }
 
-        if syncSettings.hasCallConnectionPolity {
-            let newValue = syncSettings.callConnectionPolity == .requireRelay
+        if syncSettings.hasCallConnectionPolicy {
+            let newValue = syncSettings.callConnectionPolicy == .requireRelay
             userSettings.alwaysRelayCalls = newValue
             alwaysRelayCalls = newValue
         }
@@ -443,7 +461,7 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
         }
 
         if userSettings.alwaysRelayCalls != alwaysRelayCalls {
-            syncSettings.callConnectionPolity = alwaysRelayCalls ? .requireRelay : .allowDirect
+            syncSettings.callConnectionPolicy = alwaysRelayCalls ? .requireRelay : .allowDirect
             hasChanges = true
         }
 
@@ -594,7 +612,8 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
         compareAndAssign(&userSettings.masterDndEndTime, masterDndEndTime)
 
         // Chat
-        compareAndAssign(&userSettings.wallpaper, wallpaper)
+        compareAndAssign(&userSettings.disableBigEmojis, !useBigEmojis)
+        compareAndAssign(&userSettings.sendMessageFeedback, sendMessageFeedback)
 
         // Threema Calls
         compareAndAssign(&userSettings.enableThreemaCall, enableThreemaCall)
@@ -632,7 +651,8 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
         compareAndAssign(&masterDndEndTime, userSettings.masterDndEndTime)
         
         // Chat
-        compareAndAssign(&wallpaper, userSettings.wallpaper)
+        compareAndAssign(&useBigEmojis, !userSettings.disableBigEmojis)
+        compareAndAssign(&sendMessageFeedback, userSettings.sendMessageFeedback)
 
         // Threema Calls
         compareAndAssign(&enableThreemaCall, userSettings.enableThreemaCall)
@@ -643,5 +663,16 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
         if valueToUpdate != comparing {
             valueToUpdate = comparing
         }
+    }
+    
+    private func preFillWorkingDays() -> Set<Int> {
+        let first = Calendar.current.firstWeekday
+        var days = Set<Int>()
+        
+        for index in 2...6 {
+            days.insert(index)
+        }
+        
+        return days
     }
 }

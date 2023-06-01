@@ -57,6 +57,23 @@ import Foundation
         }
     }
     
+    /// Start up- or download of blobs in passed object
+    /// - Parameter messageID: NSManagedObjectID of message to be synced
+    @objc public func syncBlobs(for messageID: NSManagedObjectID?, onCompletion: @escaping () -> Void) {
+        Task {
+     
+            guard let messageID else {
+                DDLogError("ObjectID of conversation to create blob message for was nil.")
+                return
+            }
+            
+            await BlobManager.shared.syncBlobs(for: messageID)
+            Task { @MainActor in
+                onCompletion()
+            }
+        }
+    }
+    
     /// Start up- or download of blobs in passed object, use to start automatic downloads
     /// - Parameter messageID: NSManagedObjectID of message to be synced
     @objc public func autoSyncBlobs(for messageID: NSManagedObjectID?) {

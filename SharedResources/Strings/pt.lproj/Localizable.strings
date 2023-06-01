@@ -48,13 +48,9 @@
 "cannot_connect_title" = "Sem conexão";
 "cannot_connect_message" = "Não é possível conectar, verifique a sua conexão com a internet.";
 
-"delete_identity_warning" = "Se você excluir a sua ID, tanto o seu par de chaves quanto os seus dados do aplicativo serão excluídos. Se você fez um backup, você não conseguirá enviar ou receber mensagens usando essa ID novamente.\n\nSe não deseja mais usar essa ID, é aconselhável desvincular qualquer endereço de e-mail ou número de telefone antes de excluir a ID.";
-"delete_identity_warning2" = "Último aviso: você realmente deseja excluir seus dados e sua ID?";
+// JKLockScreenViewController
 "delete_identity_passcode_title" = "Senha ativada";
 "delete_identity_passcode_message" = "Desative a senha antes de apagar sua ID.";
-"delete_identity_title" = "Dados do Aplicativo Excluídos";
-"delete_identity_description" = "Todos os dados do aplicativo foram excluídos. Reinicie o aplicativo para configurar o %@.";
-"delete_identity_app_close" = "Fechar aplicativo";
 
 /* JKLockScreenViewController */
 "cancel" = "Cancelar";
@@ -64,7 +60,6 @@
 "yes" = "Sim";
 "delete" = "excluir";
 "try_again" = "Tente outra vez";
-"delete_identity" = "Excluir dados e ID";
 "copy" = "Copiar";
 "save" = "Salvar";
 "download" = "Baixar";
@@ -79,7 +74,6 @@
 "sticker" = "Sticker";
 "gif" = "GIF";
 "video" = "Vídeo";
-"audio" = "Áudio";
 "file" = "Arquivo";
 "location" = "Localização";
 "locating" = "Localizando...";
@@ -183,8 +177,6 @@
 "sound_threema_goody" = "Remix";
 "sound_threema_alphorn" = "Alphorn";
 
-"reset_wallpaper" = "Redefinir papel de parede";
-"bigger_single_emojis" = "Emojis Maiores";
 "identity_none" = "nenhuma";
 "message" = "Mensagem"; /* Short version for "Send Message" */
 "scan_identity" = "Ler ID";
@@ -1091,6 +1083,7 @@
 "settings_license" = "Licença";
 "settings_advanced" = "Avançado";
 "settings_threema_work" = "Threema Work";
+"settings_threema_work_subtitle" = "A solução de comunicação segura para empresas";
 "settings_feedback" = "Feedback do Beta";
 "tos_cell_title" = "Termos de Serviço";
 
@@ -1131,7 +1124,6 @@
 "settings_privacy_hide_private_chats" = "Ocultar conversas privadas";
 "settings_privacy_hide_private_chats_footer" = "Oculta todas as conversas privadas no painel de conversas. Você precisa definir uma senha para ativar esta opção.";
 
-
 // Appearance
 "settings_appearance_theme_section" = "Tema de design";
 "settings_appearance_light_theme" = "Claro";
@@ -1149,7 +1141,15 @@
 "settings_appearance_show_gallery_preview" = "Exibir pré-visualização da galeria";
 
 // Chat Settings
-"settings_chat_send_message_feedback_label" = "Feedback háptico ao enviar";
+"settings_chat_wallpaper_title" = "Papel de parede";
+"settings_chat_wallpaper_reset" = "Redefinir todos os papéis de parede";
+"settings_chat_wallpaper_empty" = "Nenhum";
+"settings_chat_wallpaper_custom" = "Personalizado";
+"settings_chat_wallpaper_default" = "Padrão";
+"settings_chat_wallpaper_reset_all_alert" = "Redefine todos os papéis de parede que foram definidos especificadamente para uma conversa com a opção selecionada acima. Não pode ser desfeito.";
+
+"settings_chat_bigger_emojis" = "Emojis maiores";
+"settings_chat_send_message_feedback" = "Feedback háptico ao enviar";
 
 // Media
 "settings_media_autosave_private_footer" = "Mídia recebida em conversas privadas não serão salvas automaticamente.";
@@ -1161,8 +1161,48 @@
 "sentry_crash_send_no" = "Não enviar";
 "sentry_crash_comment_placeholder" = "Relatório de travamento";
 
+
+
 // My profile
 "profile_share_id_text" = "Minha ID do Threema";
+"my_profile_delete_cell_title" = "Excluir ID e dados";
+
+// Delete & Revoke
+"my_profile_delete_bullet_id" = "ID do Threema";
+"my_profile_delete_bullet_chats" = "Conversas";
+"my_profile_delete_bullet_picture" = "Foto de perfil";
+"my_profile_delete_bullet_safe" = "Backup do Threema Safe";
+"my_profile_delete_bullet_linked" = "Número de telefone e/ou links de e-mail";
+
+"my_profile_delete_info_title" = "Excluir ID e dados";
+"my_profile_delete_info_keep" = "Os dados a seguir permanecem utilizáveis e não serão excluídos:";
+"my_profile_delete_info_delete" = "Os dados a seguir serão removidos deste dispositivo:";
+"my_profile_delete_info_toggle" = "Excluir tudo";
+
+"my_profile_delete_info_button_data" = "Excluir dados";
+"my_profile_delete_info_button_revoke" = "Excluir ID e dados";
+
+"my_profile_delete_identity_title" = "Excluir conversas e perfil?";
+"my_profile_delete_identity_keep" = "Você manterá:";
+"my_profile_delete_identity_remove" = "Você está prestes a remover deste dispositivo:";
+"my_profile_delete_identity_delete" = "Excluir conversas e perfil";
+
+"my_profile_delete_identity_view_alert_title" = "Você não pode desfazer esta ação.\nTem certeza de que deseja continuar?";
+"my_profile_delete_identity_view_alert_confirm" = "Excluir dados";
+
+"my_profile_revoke_identity_view_title" = "Excluir tudo?";
+"my_profile_revoke_info_delete" = "Você excluirá permanentemente:";
+"my_profile_revoke_identity_view_info" = "Aviso: você não pode desfazer esta ação!";
+"my_profile_revoke_identity_view_enter_id" = "Digite sua ID do Threema “%@“ para excluir tudo definitivamente:";
+"my_profile_revoke_identity_view_placeholder" = "Sua ID do Threema";
+"my_profile_revoke_identity_view_button_revoke" = "Excluir tudo";
+
+"my_profile_delete_identity_summary_view_delete_title" = "Conversas e perfil excluídos";
+"my_profile_delete_identity_summary_view_revoke_title" = "Tudo foi excluído";
+"my_profile_delete_identity_summary_view_delete_success" = "Você removeu com sucesso deste dispositivo:";
+"my_profile_delete_identity_summary_view_revoke_success" = "Você excluiu com sucesso:";
+"my_profile_delete_identity_summary_view_restart" = "Reinicie o app para continuar usando.";
+"my_profile_delete_identity_summary_view_close" = "Fechar app";
 
 // File message
 "optional_caption" = "Legenda opcional";
@@ -1349,7 +1389,6 @@ Caso não haja nenhum arquivo (de mídia) faltando no %@, esvazie a lixeira para
 "privacySetting_header" = "Privacidade";
 "send_readReceipts" = "Confirmações de leitura";
 "dont_send" = "Não enviar";
-"send_readReceipt" = "Confirmação de leitura";
 "send_typingIndicators" = "Indicadores de digitação";
 "send_typingIndicator" = "Indicador de digitação";
 
@@ -1357,8 +1396,7 @@ Caso não haja nenhum arquivo (de mídia) faltando no %@, esvazie a lixeira para
 "use_default_send" = "Padrão (%@)";
 "default_setting" = "Configuração padrão";
 
-"readReceipt_sheetMessage" = "Substituir configuração padrão para este contato.";
-"typingIndicator_sheetMessage" = "Substituir configuração padrão para este contato.";
+"contactoverride_sheetMessage" = "Isso substitui a configuração padrão para esse contato específico.";
 
 /* Multi Decvice */
 "multi_device_linked_devices_title" = "Prévia de multidispositivos";
@@ -1489,6 +1527,12 @@ Caso não haja nenhum arquivo (de mídia) faltando no %@, esvazie a lixeira para
 "notification_interaction_delete_succeeded" = "Interações excluídas";
 "notification_interaction_delete_failed" = "Falha ao excluir interações";
 
+"notification_revocation_failed" = "Falha na revogação";
+
+"notification_caption_too_long" = "A legenda é muito longa";
+
+"notification_updateworkdata_failed" = "Falha na sincronização com o servidor de provisionamento";
+
 // Forward security status messages
 "forward_security_message_without" = "Uma mensagem sem Perfect Forward Secrecy foi recebida. Verifique se quem a enviou desativou o Perfect Forward Secrecy intencionalmente.";
 "forward_security_session_established" = "Mensagens nesta conversa estão protegidas pelo Perfect Forward Secrecy.";
@@ -1541,6 +1585,8 @@ Caso não haja nenhum arquivo (de mídia) faltando no %@, esvazie a lixeira para
 "accessibility_ballotMessage_hint_open" = "Abrir enquete para votos.";
 "accessibility_ballotMessage_hint_closed" = "Mostrar resultados da enquete.";
 "accessibility_voiceMessage_speed_hint" = "Mudar velocidade de reprodução.";
+"accessibility_voiceMessage_forward_hint" = "10 segundos para frente.";
+"accessibility_voiceMessage_rewind_hint" = "10 segundos para trás.";
 
 // Other
 "accessibility_caption" = "Legenda: %@";

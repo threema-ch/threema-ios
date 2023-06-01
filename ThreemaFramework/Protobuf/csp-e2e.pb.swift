@@ -38,7 +38,7 @@ struct CspE2e_MessageMetadata {
   var padding: Data = Data()
 
   /// The nickname associated to the sender's Threema ID. Recommended to not
-  /// exceed 32 graphemes.
+  /// exceed 32 grapheme clusters.
   var nickname: String = String()
 
   /// Unique message ID. Must match the message ID of the outer struct
@@ -69,31 +69,9 @@ struct CspE2e_MessageMetadata {
 ///
 /// When creating this message to start a call within the group:
 ///
-/// 1. Run the _Group Call Refresh Steps_ and let `chosen-call` be the result.
-/// 2. If `chosen-call` is defined, abort these steps. (`chosen-call` will be
-///    joined instead.)
-/// 3. Create the message but don't send it yet:
-///    1. Generate a random GCK and set `gck` appropriately.
-///    2. Set `sfu_base_url` to the _SFU Base URL_ obtained from the Directory
-///       Server API.
-/// 4. Join the call matching the Call ID of the created message and wait until
-///    the SFU sent the initial `Hello` message via the associated data channel.
-///    Let `hello` be that message. An implementation may add an artificial wait
-///    period to enforce a minimum 2s execution time of this step to prevent a
-///    butter-fingered user from accidentally starting a group call. This is an
-///    asynchronous process.
-///
-///    If this step has been cancelled by the _Group Call Refresh Steps_
-///    determining another `chosen-call` in the meantime, cancel the call we have
-///    started to create and abort these steps. (`chosen-call` will be joined
-///    instead.)
-/// 5. If `hello.participants` is not an empty list, exceptionally abort the call
-///    and these steps.
-/// 6. Send the message to the group.
-/// 7. Add the created call to the list of group calls that are currently
-///    considered running.
-/// 8. Trigger the _Group Call Refresh Steps_ again (to start displaying the call
-///    in the UI and starting the refresh timer).
+/// 1. Generate a random GCK and set `gck` appropriately.
+/// 2. Set `sfu_base_url` to the _SFU Base URL_ obtained from the Directory
+///    Server API.
 ///
 /// When receiving this message:
 ///
@@ -110,9 +88,10 @@ struct CspE2e_MessageMetadata {
 ///    considered running (even if `protocol_version` is unsupported; this is to
 ///    allow the user to join an ongoing call after an app update where support
 ///    for `protocol_version` has been added).
-/// 6. Run the _Group Call Refresh Steps_ and let `chosen-call` be the result.
-///    (`chosen-call` will be joined if the user is currently participating in a
-///    group call of this group.)
+/// 6. Run the _Group Call Refresh Steps_.[^1]
+///
+/// [^1]: This ensures that the user automatically switches to the chosen call if
+/// it is currently participating in a group call of this group.
 struct CspE2e_GroupCallStart {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
@@ -350,6 +329,16 @@ struct CspE2e_GroupJoinResponse {
   fileprivate var _response: CspE2e_GroupJoinResponse.Response? = nil
 }
 
+#if swift(>=5.5) && canImport(_Concurrency)
+extension CspE2e_MessageMetadata: @unchecked Sendable {}
+extension CspE2e_GroupCallStart: @unchecked Sendable {}
+extension CspE2e_GroupJoinRequest: @unchecked Sendable {}
+extension CspE2e_GroupJoinResponse: @unchecked Sendable {}
+extension CspE2e_GroupJoinResponse.Response: @unchecked Sendable {}
+extension CspE2e_GroupJoinResponse.Response.OneOf_Response: @unchecked Sendable {}
+extension CspE2e_GroupJoinResponse.Response.Accept: @unchecked Sendable {}
+#endif  // swift(>=5.5) && canImport(_Concurrency)
+
 // MARK: - Code below here is support for the SwiftProtobuf runtime.
 
 fileprivate let _protobuf_package = "csp_e2e"
@@ -513,12 +502,16 @@ extension CspE2e_GroupJoinResponse: SwiftProtobuf.Message, SwiftProtobuf._Messag
   }
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
     if !self.token.isEmpty {
       try visitor.visitSingularBytesField(value: self.token, fieldNumber: 1)
     }
-    if let v = self._response {
+    try { if let v = self._response {
       try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
-    }
+    } }()
     try unknownFields.traverse(visitor: &visitor)
   }
 
@@ -604,8 +597,9 @@ extension CspE2e_GroupJoinResponse.Response: SwiftProtobuf.Message, SwiftProtobu
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     // The use of inline closures is to circumvent an issue where the compiler
-    // allocates stack space for every case branch when no optimizations are
-    // enabled. https://github.com/apple/swift-protobuf/issues/1034
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
     switch self.response {
     case .accept?: try {
       guard case .accept(let v)? = self.response else { preconditionFailure() }

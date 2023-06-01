@@ -298,7 +298,7 @@ class MediatorReflectedOutgoingMessageProcessorTests: XCTestCase {
                 verificationLevel: 0
             )
             let conversation = dbPreparer
-                .createConversation(marked: false, typing: false, unreadMessageCount: 0) { conversation in
+                .createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
                     conversation.groupID = groupID
                     conversation.contact = groupCreator
                 }

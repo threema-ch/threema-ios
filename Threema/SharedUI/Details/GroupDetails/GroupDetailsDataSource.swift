@@ -95,12 +95,13 @@ final class GroupDetailsDataSource: UITableViewDiffableDataSource<GroupDetails.S
     
     func registerHeaderAndCells() {
         tableView?.registerHeaderFooter(DetailsSectionHeaderView.self)
-                
+        
         tableView?.registerCell(ContactCell.self)
         tableView?.registerCell(MembersActionDetailsTableViewCell.self)
         tableView?.registerCell(ActionDetailsTableViewCell.self)
         tableView?.registerCell(DoNotDisturbDetailsTableViewCell.self)
         tableView?.registerCell(SwitchDetailsTableViewCell.self)
+        tableView?.registerCell(WallpaperTableViewCell.self)
     }
     
     private let cellProvider: GroupDetailsDataSource.CellProvider = { tableView, indexPath, row in
@@ -108,7 +109,7 @@ final class GroupDetailsDataSource: UITableViewDiffableDataSource<GroupDetails.S
         var cell: UITableViewCell
         
         switch row {
-        
+            
         case .meContact:
             let contactCell: ContactCell = tableView.dequeueCell(for: indexPath)
             contactCell.size = .medium
@@ -153,7 +154,7 @@ final class GroupDetailsDataSource: UITableViewDiffableDataSource<GroupDetails.S
             contactCell.content = .unknownContact
             // No alpha change as an unknown contact is always shown dimmed
             cell = contactCell
-        
+            
         case let .action(action):
             let actionCell: ActionDetailsTableViewCell = tableView.dequeueCell(for: indexPath)
             actionCell.action = action
@@ -169,6 +170,12 @@ final class GroupDetailsDataSource: UITableViewDiffableDataSource<GroupDetails.S
             dndCell.action = action
             dndCell.type = .group(group)
             cell = dndCell
+            
+        case let .wallpaper(action, isDefault):
+            let wallpaperCell: WallpaperTableViewCell = tableView.dequeueCell(for: indexPath)
+            wallpaperCell.action = action
+            wallpaperCell.isDefault = isDefault
+            return wallpaperCell
         }
         
         return cell
@@ -193,6 +200,8 @@ final class GroupDetailsDataSource: UITableViewDiffableDataSource<GroupDetails.S
         snapshot.appendItems(groupMembers())
         snapshot.appendSections([.creator])
         snapshot.appendItems([creatorRow()])
+        snapshot.appendSections([.wallpaper])
+        snapshot.appendItems(wallpaperActions)
         
         if displayMode == .conversation {
             appendSectionIfNonEmptyItems(section: .contentActions, with: contentActions)
@@ -246,6 +255,8 @@ final class GroupDetailsDataSource: UITableViewDiffableDataSource<GroupDetails.S
                 update(section: .groupActions, with: groupActions)
             case .destructiveGroupActions:
                 update(section: .destructiveGroupActions, with: destructiveGroupActions)
+            case .wallpaper:
+                localSnapshot.appendItems(wallpaperActions, toSection: .wallpaper)
             default:
                 fatalError("Unable to update section: \(section)")
             }
@@ -326,7 +337,7 @@ extension GroupDetailsDataSource {
             let pushSetting = PushSetting(for: strongSelf.conversation)
             return pushSetting.sfSymbolNameForPushSetting
         }
-                
+        
         return QuickAction(
             imageNameProvider: dndImageNameProvider,
             title: BundleUtil.localizedString(forKey: "doNotDisturb_title"),
@@ -458,7 +469,7 @@ extension GroupDetailsDataSource {
     func groupMembers(limited: Bool = true) -> [GroupDetails.Row] {
         var rows = [GroupDetails.Row]()
         let numberOfInlineMembers = configuration.maxNumberOfMembersShownInline
-
+        
         // Add members
         var sortedMembers = ArraySlice(group.sortedMembers)
 
@@ -658,7 +669,7 @@ extension GroupDetailsDataSource {
                 else {
                     return
                 }
-            
+                
                 let dndViewController = DoNotDisturbViewController(
                     for: strongSelf.group,
                     willDismiss: { [weak self, weak groupDetailsViewController] _ in
@@ -666,10 +677,10 @@ extension GroupDetailsDataSource {
                         groupDetailsViewController?.reloadHeader()
                     }
                 )
-            
+                
                 let dndNavigationController = ThemedNavigationController(rootViewController: dndViewController)
                 dndNavigationController.modalPresentationStyle = .formSheet
-            
+                
                 strongGroupDetailsViewController.present(dndNavigationController, animated: true)
             }
         rows.append(.doNotDisturb(action: doNotDisturbAction, group: group))
@@ -874,6 +885,34 @@ extension GroupDetailsDataSource {
         rows.append(.action(deleteAction))
         
         return rows
+    }
+    
+    private var wallpaperActions: [GroupDetails.Row] {
+        var row = [GroupDetails.Row]()
+        
+        let wallpaperAction = Details.Action(
+            title: BundleUtil.localizedString(forKey: "settings_chat_wallpaper_title")
+        ) { [weak self] _ in
+            guard let strongSelf = self else {
+                return
+            }
+            
+            let navigationController =
+                ThemedNavigationController(
+                    rootViewController: CustomWallpaperSelectionViewController()
+                        .customWallpaperSelectionView(conversationID: strongSelf.conversation.objectID) {
+                            strongSelf.reload(sections: [.wallpaper])
+                        }
+                )
+            navigationController.modalPresentationStyle = .formSheet
+            strongSelf.groupDetailsViewController?.present(navigationController, animated: true)
+        }
+        
+        row.append(.wallpaper(
+            action: wallpaperAction,
+            isDefault: !SettingsStore().wallpaperStore.hasCustomWallpaper(for: conversation.objectID)
+        ))
+        return row
     }
 }
 

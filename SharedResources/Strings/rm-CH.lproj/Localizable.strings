@@ -11,6 +11,8 @@
 
 /* Tabbar and title for list with all conversations */
 "chats_title" = "Messadis";
+"chats_pinned" = "Fixà";
+
 "SortOrder_Firstname" = "Prenum, num";
 "SortOrder_Lastname" = "Num, prenum";
 
@@ -46,13 +48,9 @@
 "cannot_connect_title" = "Nagina colliaziun";
 "cannot_connect_message" = "P.pl. controllar tia colliaziun d’internet.";
 
-"delete_identity_warning" = "Sche ti stizzas tia ID, vegnan tias clavs destruidas. Sche ti n'has betg fatg in backup, na vegns ti mai pli a pudair trametter u retschaiver messadis cun questa ID.\n\nSche ti na vuls betg pli duvrar questa ID, duessas ti allontanar la colliaziun (e-mail/numer) avant che stizzar ella.";
-"delete_identity_warning2" = "Ultim avertiment: Vuls ti propi stizzar tia ID?";
+// JKLockScreenViewController
 "delete_identity_passcode_title" = "Activà la bloccada da code";
 "delete_identity_passcode_message" = "Deactivescha p.pl. la bloccada da code avant che stizzas tia ID.";
-"delete_identity_title" = "Stizzà las datas da l'app";
-"delete_identity_description" = "Tut las datas da l’app èn stizzadas. P.pl. reaviar l’app per endrizzar %@.";
-"delete_identity_app_close" = "Serrar l'app";
 
 /* JKLockScreenViewController */
 "cancel" = "Interrumper";
@@ -62,9 +60,9 @@
 "yes" = "Gea";
 "delete" = "Stizzar";
 "try_again" = "Empruvar anc ina giada";
-"delete_identity" = "Stizzar l’ID";
 "copy" = "Copiar";
 "save" = "Memorisar";
+"download" = "Telechargiar";
 "share" = "Parter";
 "details" = "Detagls";
 "acknowledge" = "Confermar";
@@ -76,7 +74,6 @@
 "sticker" = "Stickers";
 "gif" = "GIF";
 "video" = "Video";
-"audio" = "Audio";
 "file" = "Datoteca";
 "location" = "Lieu";
 "locating" = "Definir il lieu ...";
@@ -100,6 +97,15 @@
 "threema_id" = "ID da Threema";
 "nickname" = "Surnum";
 "add_button" = "Agiuntar";
+"chatview_contextmenu_select" = "Selecziunar ...";
+"learn_more" = "Ulteriuras infos ...";
+"file_message_image" = "Maletg";
+"file_message_sticker" = "Stickers";
+"file_message_animated_image" = "GIF";
+"file_message_video" = "Video";
+"file_message_voice" = "Messadi discurrì";
+"file_message_file" = "Datoteca";
+
 "chat_back_button_accessibility" = "Betg legì %d";
 
 "show_in_google_maps" = "Mussar en Google Maps";
@@ -141,6 +147,8 @@
 "high" = "aut";
 "max_1_minute" = "max. 1 minuta";
 "max_x_minutes" = "max. %d minutas";
+"still_compressed_note" = "Per pudair tramtter videos fitg gronds vegnan els cumprimids independentamain da questa configuraziun.";
+
 /* Sound names */
 "push_sound_title" = "Tun da push";
 "push_group_sound_title" = "Tun da push da las gruppas";
@@ -169,8 +177,6 @@
 "sound_threema_goody" = "Remix";
 "sound_threema_alphorn" = "Tiba";
 
-"reset_wallpaper" = "Stizzar il maletg dal fund davos";
-"bigger_single_emojis" = "Engrondir singuls emojis";
 "identity_none" = "nagina";
 "message" = "Trametter messadi"; /* Short version for "Send Message" */
 "scan_identity" = "Scannar l'ID";
@@ -387,6 +393,10 @@
 "add_note_group_info" = "*Mo ti es qua*\nDovra quest chat sco cudesch da notizias segir per texts, medias e documents.";
 "end_note_group_info" = "*Ti n’es betg pli suletta/sulet en quest chat*\nNovs messadis vegnan tramess a tut ils commembers da la gruppa.";
 
+"chat_search_searching" = "Tschertgar ...";
+"chat_search_no_matches" = "Nagins resultats";
+"chat_search_matches" = "%d da %d resultats";
+
 "choose_recipient" = "Tscherner il destinatur";
 
 "msg_unknown_group_request_sync_x_title" = "Survegnì in messadi en ina gruppa nunenconuschenta";
@@ -399,6 +409,8 @@
 "tap_to_change" = "Tippar per modifitgar";
 "next" = "Enavant";
 "unread_messages" = "Messadis betg legids";
+"unread_messages_line_with_count" = "Messadis betg legids (%d)";
+
 /* Verification level popovers in chat view */
 "verification_level_title" = "Stgalim da segirezza";
 /* Verification level popovers in chat view */
@@ -438,6 +450,7 @@
 "backgrounding_off" = "L'app interrumpa immediat la colliaziun davosvart.";
 "proximity_monitoring_off" = "Display activà, cura ch’il sensur è cuvert.";
 "proximity_monitoring_on" = "Display deactivà, cura ch’il sensur è cuvert.";
+"debug_log_clear" = "Stizzar il protocol";
 "log_empty_message" = "Il protocol da validaziun è per il mument vid.";
 "cannot_send_mail_message" = "Nagin conto dad e-mail è configurà sin quest apparat.";
 
@@ -499,6 +512,12 @@
 "exclude_deleted_id_message" = "Ti pos administrar las IDs exclusas en las configuraziuns da la sfera privata.";
 "exclude_deleted_id_exclude_button" = "Excluder";
 
+"forward_security" = "Perfect Forward Secrecy";
+"forward_security_none" = "nagina";
+"forward_security_2dh" = "unilateral";
+"forward_security_4dh" = "cumplet";
+"forward_security_clear_sessions" = "Stizzar tut las sesidas";
+"forward_security_explainer_footer" = "Perfect Forward Secrecy (PFS) protegia ina communicaziun registrada d'ina decodaziun posteriura, era sche la codaziun a lunga durada è enconuschenta.\nL'opziun pon ins activar, sche l'app sustegna PFS da tuttas duas varts.";
 /* create id */
 "lets_get_started" = "Dai!";
 "setup_threema" = "Endrizzar Threema";
@@ -1064,9 +1083,10 @@ Endatescha p.pl. tias datas d’access. Contactescha tes administratur, sche ti 
 "sentry_crash_send_no" = "Betg trametter";
 "sentry_crash_comment_placeholder" = "Rapport da collaps";
 
+
+
 // My profile
 "profile_share_id_text" = "Mia ID da Threema";
-
 // File message
 "optional_caption" = "Text opziunal";
 "send_as_file" = "Trametter sco datoteca";
@@ -1230,16 +1250,12 @@ Svida il chanaster da palpiri, sche naginas medias e/u datotecas na mancan per s
 "privacySetting_header" = "Sfera privata";
 "send_readReceipts" = "Conferma da lectura";
 "dont_send" = "Betg trametter";
-"send_readReceipt" = "Conferma da lectura";
 "send_typingIndicators" = "Mussar che jau scriv";
 "send_typingIndicator" = "Mussar che jau scriv";
 
 "default_send" = "%@ (standard)";
 "use_default_send" = "Standard (%@)";
 "default_setting" = "Configuraziun da standard";
-
-"readReceipt_sheetMessage" = "La configuraziun da standard per quest contact vegn recuverta.";
-"typingIndicator_sheetMessage" = "La configuraziun da standard per quest contact vegn recuverta.";
 
 /* Multi Decvice */
 "multi_device_linked_devices_title" = "Apparats colliads";

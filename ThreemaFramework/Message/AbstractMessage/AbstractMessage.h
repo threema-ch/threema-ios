@@ -66,6 +66,7 @@
 - (NSData *)body;
 - (BOOL)canCreateConversation;
 - (BOOL)needsConversation;
+- (BOOL)canShowUserNotification;
 - (BOOL)supportsForwardSecurity;
 
 - (BOOL)isContentValid;

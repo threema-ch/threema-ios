@@ -48,13 +48,9 @@
 "cannot_connect_title" = "Нет подключения";
 "cannot_connect_message" = "Не удалось подключиться, проверьте соединение с Интернетом.";
 
-"delete_identity_warning" = "Если удалить свой ID, ваши ключи и данные приложения будут удалены. Если вы не сделали резервную копию, вы не сможете отправлять или получать сообщения с использованием этого ID.\n\nЕсли вы не планируете когда-либо использовать этот ID, прежде чем удалить его, рекомендуем отвязать от него адреса электронной почты/номера телефонов.";
-"delete_identity_warning2" = "Последнее предупреждение: вы действительно хотите удалить свои данные и ID?";
+// JKLockScreenViewController
 "delete_identity_passcode_title" = "Код доступа включен";
 "delete_identity_passcode_message" = "Прежде чем удалить свой ID, отключите код доступа.";
-"delete_identity_title" = "Данные приложения удалены";
-"delete_identity_description" = "Все данные приложения удалены. Перезапустите приложение, чтобы настроить %@.";
-"delete_identity_app_close" = "Закрыть приложение";
 
 /* JKLockScreenViewController */
 "cancel" = "Отмена";
@@ -64,7 +60,6 @@
 "yes" = "Да";
 "delete" = "Удалить";
 "try_again" = "Попробовать снова";
-"delete_identity" = "Удалить данные и ID";
 "copy" = "Скопировать";
 "save" = "Сохранить";
 "download" = "Скачать";
@@ -79,7 +74,6 @@
 "sticker" = "Стикер";
 "gif" = "GIF";
 "video" = "Видео";
-"audio" = "Аудио";
 "file" = "Файл";
 "location" = "Расположение";
 "locating" = "Определение местоположения…";
@@ -183,8 +177,6 @@
 "sound_threema_goody" = "Remix";
 "sound_threema_alphorn" = "Alphorn";
 
-"reset_wallpaper" = "Сбросить обои";
-"bigger_single_emojis" = "Большие эмодзи";
 "identity_none" = "нет";
 "message" = "Сообщение"; /* Short version for "Send Message" */
 "scan_identity" = "Сканировать ID";
@@ -1091,6 +1083,7 @@
 "settings_license" = "Лицензия";
 "settings_advanced" = "Расширенный";
 "settings_threema_work" = "Threema Work";
+"settings_threema_work_subtitle" = "Корпоративное решение для безопасного обмена данными";
 "settings_feedback" = "Отзыв на бета-версию";
 "tos_cell_title" = "Условия обслуживания";
 
@@ -1131,7 +1124,6 @@
 "settings_privacy_hide_private_chats" = "Скрыть частные чаты";
 "settings_privacy_hide_private_chats_footer" = "Скрывает все частные чаты в обзоре чатов. Чтобы активировать эту настройку, необходимо задать пароль.";
 
-
 // Appearance
 "settings_appearance_theme_section" = "Тема интерфейса";
 "settings_appearance_light_theme" = "Светлая";
@@ -1149,7 +1141,15 @@
 "settings_appearance_show_gallery_preview" = "Предпросмотр галереи";
 
 // Chat Settings
-"settings_chat_send_message_feedback_label" = "Тактильный отклик при отправке";
+"settings_chat_wallpaper_title" = "Обои";
+"settings_chat_wallpaper_reset" = "Сбросить все обои";
+"settings_chat_wallpaper_empty" = "Нет";
+"settings_chat_wallpaper_custom" = "Свое";
+"settings_chat_wallpaper_default" = "По умолчанию";
+"settings_chat_wallpaper_reset_all_alert" = "Сброс всех обоев, специально установленных в чате, до выбранного выше варианта. Это действие нельзя отменить.";
+
+"settings_chat_bigger_emojis" = "Большие эмодзи";
+"settings_chat_send_message_feedback" = "Тактильный отклик при отправке";
 
 // Media
 "settings_media_autosave_private_footer" = "Мультимедийные файлы, полученные в личных сообщениях, не будут сохраняться автоматически.";
@@ -1161,8 +1161,48 @@
 "sentry_crash_send_no" = "Не отправлять";
 "sentry_crash_comment_placeholder" = "Отчет о сбое";
 
+
+
 // My profile
 "profile_share_id_text" = "Мой Threema ID";
+"my_profile_delete_cell_title" = "Удалить данные и ID";
+
+// Delete & Revoke
+"my_profile_delete_bullet_id" = "Threema ID";
+"my_profile_delete_bullet_chats" = "Чаты";
+"my_profile_delete_bullet_picture" = "Аватар";
+"my_profile_delete_bullet_safe" = "Резервная копия Threema Safe";
+"my_profile_delete_bullet_linked" = "Привязки номера телефона и/или эл. адреса";
+
+"my_profile_delete_info_title" = "Удалить данные и ID";
+"my_profile_delete_info_keep" = "Следующие данные остаются доступными и не будут удалены:";
+"my_profile_delete_info_delete" = "Следующие данные будут удалены с этого устройства:";
+"my_profile_delete_info_toggle" = "Удалить все";
+
+"my_profile_delete_info_button_data" = "Удалить данные";
+"my_profile_delete_info_button_revoke" = "Удалить ID и данные";
+
+"my_profile_delete_identity_title" = "Удалить чаты и профиль?";
+"my_profile_delete_identity_keep" = "У вас сохранятся:";
+"my_profile_delete_identity_remove" = "Вы собираетесь удалить с этого устройства:";
+"my_profile_delete_identity_delete" = "Удалить чаты и профиль";
+
+"my_profile_delete_identity_view_alert_title" = "Это действие нельзя отменить.\nДействительно продолжить?";
+"my_profile_delete_identity_view_alert_confirm" = "Удалить данные";
+
+"my_profile_revoke_identity_view_title" = "Удалить все?";
+"my_profile_revoke_info_delete" = "Вы удалите без возможности восстановления:";
+"my_profile_revoke_identity_view_info" = "Внимание: это действие нельзя отменить!";
+"my_profile_revoke_identity_view_enter_id" = "Введите свой Threema ID «%@», чтобы удалить сразу все:";
+"my_profile_revoke_identity_view_placeholder" = "Ваш Threema ID";
+"my_profile_revoke_identity_view_button_revoke" = "Удалить все";
+
+"my_profile_delete_identity_summary_view_delete_title" = "Чаты и профиль удалены";
+"my_profile_delete_identity_summary_view_revoke_title" = "Все удалено";
+"my_profile_delete_identity_summary_view_delete_success" = "Вы успешно удалили с этого устройства:";
+"my_profile_delete_identity_summary_view_revoke_success" = "Вы успешно удалили:";
+"my_profile_delete_identity_summary_view_restart" = "Перезапустите приложение, чтобы продолжить его использование.";
+"my_profile_delete_identity_summary_view_close" = "Закрыть приложение";
 
 // File message
 "optional_caption" = "Необязательный заголовок";
@@ -1349,7 +1389,6 @@
 "privacySetting_header" = "Приватность";
 "send_readReceipts" = "Подтверждения прочтения";
 "dont_send" = "Не отправлять";
-"send_readReceipt" = "Подтверждение прочтения";
 "send_typingIndicators" = "Показ набора текста";
 "send_typingIndicator" = "Показ набора текста";
 
@@ -1357,8 +1396,7 @@
 "use_default_send" = "По умолчанию (%@)";
 "default_setting" = "Настройка по умолчанию";
 
-"readReceipt_sheetMessage" = "Перезаписать настройку для этого контакта.";
-"typingIndicator_sheetMessage" = "Перезаписать настройку по умолчанию для этого контакта.";
+"contactoverride_sheetMessage" = "Будет перезаписана настройка для этого конкретного контакта.";
 
 /* Multi Decvice */
 "multi_device_linked_devices_title" = "Предварительный просмотр на нескольких устройствах";
@@ -1489,6 +1527,12 @@
 "notification_interaction_delete_succeeded" = "Взаимодействие удалено";
 "notification_interaction_delete_failed" = "Не удалось удалить взаимодействие";
 
+"notification_revocation_failed" = "Не удалось отозвать";
+
+"notification_caption_too_long" = "Подпись слишком длинная";
+
+"notification_updateworkdata_failed" = "Сбой синхронизации с сервером подготовки";
+
 // Forward security status messages
 "forward_security_message_without" = "Получено сообщение, не использующее протокол Perfect Forward Secrecy. Проверьте, что отправитель намеренно отключил Perfect Forward Secrecy.";
 "forward_security_session_established" = "Сообщения в этом чате теперь защищены протоколом Perfect Forward Secrecy.";
@@ -1541,6 +1585,8 @@
 "accessibility_ballotMessage_hint_open" = "Открыть опрос для голосования";
 "accessibility_ballotMessage_hint_closed" = "Показать результаты опроса";
 "accessibility_voiceMessage_speed_hint" = "Изменить скорость воспроизведения";
+"accessibility_voiceMessage_forward_hint" = "На 10 секунд вперед.";
+"accessibility_voiceMessage_rewind_hint" = "На 10 секунд назад.";
 
 // Other
 "accessibility_caption" = "Подпись: %@";

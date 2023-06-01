@@ -33,6 +33,7 @@ enum SingleDetails {
         case shareAction
         case contactActions
         case privacySettings
+        case wallpaper
         case fsActions
     }
     
@@ -57,5 +58,8 @@ enum SingleDetails {
         
         // Privacy Settings
         case privacySettings(action: Details.Action, contact: ContactEntity)
+        
+        // Wallpaper
+        case wallpaper(action: Details.Action, isDefault: Bool)
     }
 }

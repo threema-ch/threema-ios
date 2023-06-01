@@ -172,8 +172,6 @@ final class ChatViewController: ThemedViewController {
         userInterfaceMode == .default
     }
     
-    private lazy var chatViewBackgroundImageProvider = ChatViewBackgroundImageProvider()
-    
     /// Provides the background image for the chat view
     private lazy var backgroundView: UIImageView = {
         let backgroundView = UIImageView(frame: .infinite)
@@ -237,9 +235,7 @@ final class ChatViewController: ThemedViewController {
         let tableView = ChatViewTableView(frame: .infinite, style: .plain)
         
         tableView.backgroundColor = .clear
-
-        // TODO: (IOS-3048) This should be interactive. But then we need additional changes to the ChatBarView plus implement proper keyboard layout guide support.
-        tableView.keyboardDismissMode = .none
+        tableView.keyboardDismissMode = .interactive
         
         // Remove any section header padding
         tableView.sectionHeaderTopPadding = 0
@@ -404,8 +400,13 @@ final class ChatViewController: ThemedViewController {
         }
     }
     
-    private lazy var bottomComposeConstraint = chatBarCoordinator.chatBarContainerView.bottomAnchor
-        .constraint(equalTo: view.bottomAnchor)
+    private lazy var bottomComposeConstraint = view.keyboardLayoutGuide.topAnchor
+        .constraint(equalTo: chatBarCoordinator.chatBarContainerView.bottomAnchor)
+    
+    private lazy var topComposeConstraint = chatBarCoordinator.chatBarContainerView.topAnchor.constraint(
+        greaterThanOrEqualTo: tableView.topAnchor,
+        constant: ChatViewConfiguration.ChatBar.tableViewChatBarMinSpacing
+    )
     
     private lazy var defaultScrollToBottomButtonConstraints: [NSLayoutConstraint] = {
         [
@@ -692,22 +693,15 @@ final class ChatViewController: ThemedViewController {
         
         NotificationCenter.default.addObserver(
             self,
-            selector: #selector(updateLayoutForKeyboard),
+            selector: #selector(updateContentInsetsForce),
             name: UIResponder.keyboardWillShowNotification,
             object: nil
         )
         
         NotificationCenter.default.addObserver(
             self,
-            selector: #selector(updateLayoutForKeyboard),
+            selector: #selector(updateContentInsetsForce),
             name: UIResponder.keyboardWillHideNotification,
-            object: nil
-        )
-        
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(updateLayoutForKeyboard),
-            name: UIResponder.keyboardWillChangeFrameNotification,
             object: nil
         )
         
@@ -715,6 +709,13 @@ final class ChatViewController: ThemedViewController {
             self,
             selector: #selector(preferredContentSizeCategoryDidChange),
             name: UIContentSizeCategory.didChangeNotification,
+            object: nil
+        )
+
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(wallpaperChanged),
+            name: NSNotification.Name(rawValue: kNotificationWallpaperChanged),
             object: nil
         )
     }
@@ -753,6 +754,7 @@ final class ChatViewController: ThemedViewController {
         backgroundView.translatesAutoresizingMaskIntoConstraints = false
         tableView.translatesAutoresizingMaskIntoConstraints = false
         chatBarCoordinator.chatBarContainerView.translatesAutoresizingMaskIntoConstraints = false
+        chatBarCoordinator.chatBarContainerView.keyboardLayoutGuide.followsUndockedKeyboard = false
         scrollToBottomButton.translatesAutoresizingMaskIntoConstraints = false
         
         NSLayoutConstraint.activate([
@@ -769,8 +771,9 @@ final class ChatViewController: ThemedViewController {
             chatBarCoordinator.chatBarContainerView.leadingAnchor.constraint(equalTo: tableView.leadingAnchor),
             chatBarCoordinator.chatBarContainerView.trailingAnchor.constraint(equalTo: tableView.trailingAnchor),
             bottomComposeConstraint,
+            topComposeConstraint,
         ])
-        
+                
         if UIDevice.current.userInterfaceIdiom == .pad {
             // This removes a small gap that would open up between the chat bar and the keyboard accessory view if an iPad is used with an external keyboard
             NSLayoutConstraint.activate([
@@ -791,6 +794,18 @@ final class ChatViewController: ThemedViewController {
                 scrollToTopHelperView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             ])
         }
+        
+        wallpaperChanged()
+    }
+    
+    // MARK: - Public functions
+    
+    @objc func isRecording() -> Bool {
+        chatBarCoordinator.isRecording
+    }
+    
+    @objc func isPlayingAudioMessage() -> Bool {
+        chatViewTableViewVoiceMessageCellDelegate.isMessageCurrentlyPlaying(nil)
     }
     
     // MARK: - Overrides
@@ -855,9 +870,6 @@ final class ChatViewController: ThemedViewController {
             }
         }
         
-        backgroundView.image = chatViewBackgroundImageProvider.backgroundImage
-        view.backgroundColor = Colors.backgroundChat
-        
         chatBarCoordinator.updateColors()
         
         scrollToBottomButton.updateColors()
@@ -916,25 +928,20 @@ final class ChatViewController: ThemedViewController {
     @objc func preferredContentSizeCategoryDidChange() {
         cellHeightCache.clear()
     }
-    
-    @objc func updateLayoutForKeyboard(notification: NSNotification) {
-        
-        KeyboardConstraintHelper.updateLayoutForKeyboard(
-            view: view,
-            constraint: bottomComposeConstraint,
-            notification: notification,
-            action: {
-                DDLogVerbose("\(#function) will updateLayoutForKeyboard")
-                self.updateContentInsets(force: true)
-                self.view.layoutIfNeeded()
-                
-                // It is unclear why this is needed but if we do not relayout the chat bar here, its height will not be updated.
-                self.chatBarCoordinator.chatBarContainerView.setNeedsLayout()
-                self.chatBarCoordinator.chatBarContainerView.layoutIfNeeded()
-                DDLogVerbose("\(#function) did updateLayoutForKeyboard")
-            },
-            completion: nil
-        )
+
+    @objc func wallpaperChanged() {
+        let wallpaperStore = businessInjector.settingsStore.wallpaperStore
+        // If we use the default item, we have to create the pattern and apply it as color
+        if !wallpaperStore.hasCustomWallpaper(for: conversation.objectID),
+           wallpaperStore.defaultIsThreemaWallpaper() {
+            backgroundView.image = nil
+            backgroundView
+                .backgroundColor = UIColor(patternImage: businessInjector.settingsStore.wallpaperStore.defaultWallPaper)
+        }
+        else {
+            backgroundView.backgroundColor = nil
+            backgroundView.image = wallpaperStore.wallpaper(for: conversation.objectID)
+        }
     }
 }
 
@@ -2648,6 +2655,10 @@ extension ChatViewController: UIScrollViewDelegate {
         DispatchQueue.main.async {
             self.updateContentInsets(force: true)
         }
+    }
+
+    @objc func updateContentInsetsForce() {
+        updateContentInsets(force: true)
     }
     
     func updateContentInsets(force: Bool = false, retry: Bool = true) {

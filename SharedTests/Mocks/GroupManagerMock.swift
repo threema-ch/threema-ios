@@ -107,7 +107,7 @@ class GroupManagerMock: NSObject, GroupManagerProtocol {
     }
 
     func deletePhotoObjc(groupID: Data, creator: String, sentDate: Date, send: Bool) -> AnyPromise {
-        AnyPromise()
+        AnyPromise(Promise(resolver: { $0.fulfill_() }))
     }
     
     func getConversation(for groupIdentity: GroupIdentity) -> Conversation? {
@@ -145,7 +145,7 @@ class GroupManagerMock: NSObject, GroupManagerProtocol {
         systemMessageDate: Date,
         send: Bool
     ) -> AnyPromise {
-        AnyPromise()
+        AnyPromise(Promise(resolver: { $0.fulfill_() }))
     }
 
     @discardableResult func setNameObjc(
@@ -154,7 +154,7 @@ class GroupManagerMock: NSObject, GroupManagerProtocol {
         systemMessageDate: Date,
         send: Bool
     ) -> AnyPromise {
-        AnyPromise()
+        AnyPromise(Promise(resolver: { $0.fulfill_() }))
     }
 
     @discardableResult func setPhotoObjc(
@@ -164,11 +164,11 @@ class GroupManagerMock: NSObject, GroupManagerProtocol {
         sentDate: Date,
         send: Bool
     ) -> AnyPromise {
-        AnyPromise()
+        AnyPromise(Promise(resolver: { $0.fulfill_() }))
     }
     
     func syncObjc(group: Group, to members: Set<String>?, withoutCreateMessage: Bool) -> AnyPromise {
-        AnyPromise()
+        AnyPromise(Promise(resolver: { $0.fulfill_() }))
     }
     
     func sendSyncRequest(groupID: Data, creator: String, force: Bool) {

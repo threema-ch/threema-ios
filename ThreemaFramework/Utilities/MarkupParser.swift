@@ -266,25 +266,25 @@ public extension MarkupParser {
     ///
     /// - Parameter string: String to parse
     /// - Returns: Preview string with all internal markup stripped
-    func previewString(for string: String) -> String {
+    func previewString(for string: String, font: UIFont) -> NSAttributedString {
         let parsedMarkups = NSMutableAttributedString(string: string)
         
         do {
             try parse(
                 allTokens: tokenize(text: parsedMarkups.string, parseURL: false, parseMention: true),
                 attributedString: parsedMarkups,
-                font: .preferredFont(forTextStyle: .body)
+                font: font
             )
         }
         catch {
             DDLogVerbose(error.localizedDescription)
-            return string
+            return parsedMarkups
         }
         
         let parsedMarkupsAndMentions = parseMentionNames(parsed: parsedMarkups)
         let parsedAndRemovedMarkup = removeMarkupsFromParse(parsed: parsedMarkupsAndMentions)
         
-        return parsedAndRemovedMarkup.string
+        return parsedAndRemovedMarkup
     }
     
     func parseMentionNamesToMarkup(parsed: NSAttributedString) -> NSAttributedString {
@@ -629,8 +629,16 @@ public extension MarkupParser {
                 self.setupIsURLBoundaryCache(text: text, textCount: textCount)
                 sema.signal()
             }
-            sema.wait()
-            sema.wait()
+            
+            let firstResult = sema.wait(timeout: .now() + .seconds(2))
+            let secondResult = sema.wait(timeout: .now() + .seconds(2))
+            
+            if firstResult == .timedOut {
+                DDLogError("[MarkupParser] firstResultTimedOut")
+            }
+            if secondResult == .timedOut {
+                DDLogError("[MarkupParser] secondResultTimedOut")
+            }
         }
         else {
             setupisURLCache(text: text, textCount: textCount)

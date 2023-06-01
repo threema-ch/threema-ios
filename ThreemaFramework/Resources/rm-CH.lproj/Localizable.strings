@@ -74,7 +74,6 @@
 "new_image_message" = "Maletg";
 "new_video_message" = "Video";
 "new_location_message" = "Lieu";
-"new_audio_message" = "Audio";
 "new_ballot_create_message" = "Enquista: %@";
 "new_ballot_closed_message" = "Enquista: Resultats a disposiziun";
 "new_file_message" = "Datoteca: %@";

@@ -13,6 +13,12 @@ package d2m;
 
 option java_package = "ch.threema.protobuf.d2m";
 
+// D2M protocol versions (32 bit).
+enum ProtocolVersion {
+  // Initial D2M protocol version (alpha, may break).
+  INITIAL = 0;
+}
+
 // Send along client information when connecting to the mediator server.
 //
 // This message is serialized, hex-encoded (lowercase) and then used as the
@@ -36,7 +42,7 @@ message ClientUrlInfo {
 // Type: 0x10
 // Direction: Client <-- Server
 message ServerHello {
-  // Highest protocol version the server supports
+  // Highest protocol version (`ProtocolVersion`) the server supports.
   uint32 version = 1;
 
   // 32 byte ephemeral server key (`ESK.public`)
@@ -72,7 +78,7 @@ enum DeviceSlotState {
 // Type: 0x11
 // Direction: Client --> Server
 message ClientHello {
-  // Protocol version which the client has selected
+  // Protocol version (`ProtocolVersion`) which the client has selected.
   uint32 version = 1;
 
   // Challenge response (72 bytes) for authentication.

@@ -24,8 +24,6 @@ import ThreemaFramework
 import UIKit
 
 protocol ChatViewTableViewCellDelegateProtocol: AnyObject {
-    var chatViewHasCustomBackground: Bool { get }
-    
     func swipeMessageTableViewCell(
         swipeMessageTableViewCell: ChatViewBaseTableViewCell,
         recognizer: UIPanGestureRecognizer
@@ -54,6 +52,8 @@ protocol ChatViewTableViewCellDelegateProtocol: AnyObject {
     var currentSearchText: String? { get }
     
     var cellInteractionEnabled: Bool { get }
+    
+    var chatViewHasCustomBackground: Bool { get }
 }
 
 extension ChatViewTableViewCellDelegateProtocol {
@@ -81,20 +81,22 @@ final class ChatViewTableViewCellDelegate: NSObject, ChatViewTableViewCellDelega
         entityManager: entityManager
     )
     
-    private lazy var chatViewBackgroundImageProvider = ChatViewBackgroundImageProvider()
-    
-    // MARK: Internal Properties
-    
-    var chatViewHasCustomBackground: Bool {
-        chatViewBackgroundImageProvider.hasCustomBackground
-    }
-    
     // MARK: - Lifecycle
     
     init(chatViewController: ChatViewController, tableView: UITableView, entityManager: EntityManager) {
         self.chatViewController = chatViewController
         self.tableView = tableView
         self.entityManager = entityManager
+    }
+    
+    // MARK: - Wallpaper
+
+    var chatViewHasCustomBackground: Bool {
+        guard let objectID = chatViewController?.conversation.objectID else {
+            return false
+        }
+        
+        return WallpaperStore.shared.hasCustomWallpaper(for: objectID)
     }
     
     // MARK: - Swipe Interactions

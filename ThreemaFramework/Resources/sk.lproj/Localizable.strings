@@ -77,7 +77,6 @@
 "new_image_message" = "Obrázok";
 "new_video_message" = "Video";
 "new_location_message" = "Poloha";
-"new_audio_message" = "Zvuk";
 "new_ballot_create_message" = "Anketa: %@";
 "new_ballot_closed_message" = "Anketa: dostupné výsledky";
 "new_file_message" = "Súbor: %@";

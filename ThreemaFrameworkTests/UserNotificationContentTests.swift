@@ -105,23 +105,24 @@ class UserNotificationContentTests: XCTestCase {
                 identity: expectedIdendity,
                 verificationLevel: 0
             )
-            databasePreparer.createConversation(marked: false, typing: false, unreadMessageCount: 0) { conversation in
-                conversation.contact = contact
+            databasePreparer
+                .createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
+                    conversation.contact = contact
                 
-                textMessage = self.databasePreparer.createTextMessage(
-                    conversation: conversation,
-                    text: "Hello world!",
-                    date: Date(),
-                    delivered: false,
-                    id: expectedMessageID,
-                    isOwn: true,
-                    read: false,
-                    sent: false,
-                    userack: false,
-                    sender: contact,
-                    remoteSentDate: nil
-                )
-            }
+                    textMessage = self.databasePreparer.createTextMessage(
+                        conversation: conversation,
+                        text: "Hello world!",
+                        date: Date(),
+                        delivered: false,
+                        id: expectedMessageID,
+                        isOwn: true,
+                        read: false,
+                        sent: false,
+                        userack: false,
+                        sender: contact,
+                        remoteSentDate: nil
+                    )
+                }
         }
         
         let pendingUserNotification = PendingUserNotification(key: "1")
@@ -147,24 +148,25 @@ class UserNotificationContentTests: XCTestCase {
                 groupID: BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!,
                 groupCreator: expectedIdendity
             )
-            databasePreparer.createConversation(marked: false, typing: false, unreadMessageCount: 0) { conversation in
-                conversation.groupID = group.groupID
-                conversation.contact = contact
+            databasePreparer
+                .createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
+                    conversation.groupID = group.groupID
+                    conversation.contact = contact
                 
-                textMessage = self.databasePreparer.createTextMessage(
-                    conversation: conversation,
-                    text: "Hello world!",
-                    date: Date(),
-                    delivered: false,
-                    id: expectedMessageID,
-                    isOwn: true,
-                    read: false,
-                    sent: false,
-                    userack: false,
-                    sender: nil,
-                    remoteSentDate: nil
-                )
-            }
+                    textMessage = self.databasePreparer.createTextMessage(
+                        conversation: conversation,
+                        text: "Hello world!",
+                        date: Date(),
+                        delivered: false,
+                        id: expectedMessageID,
+                        isOwn: true,
+                        read: false,
+                        sent: false,
+                        userack: false,
+                        sender: nil,
+                        remoteSentDate: nil
+                    )
+                }
         }
 
         let pendingUserNotification = PendingUserNotification(key: "1")

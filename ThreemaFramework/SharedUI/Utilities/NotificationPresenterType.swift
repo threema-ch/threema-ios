@@ -188,4 +188,16 @@ public struct NotificationPresenterType {
         notificationText: BundleUtil.localizedString(forKey: "notification_interaction_delete_failed"),
         notificationStyle: .error
     )
+    public static let revocationFailed = NotificationPresenterType(
+        notificationText: BundleUtil.localizedString(forKey: "notification_revocation_failed"),
+        notificationStyle: .error
+    )
+    public static let captionTooLong = NotificationPresenterType(
+        notificationText: BundleUtil.localizedString(forKey: "notification_caption_too_long"),
+        notificationStyle: .error
+    )
+    public static let updateWorkDataFailed = NotificationPresenterType(
+        notificationText: BundleUtil.localizedString(forKey: "notification_updateworkdata_failed"),
+        notificationStyle: .error
+    )
 }

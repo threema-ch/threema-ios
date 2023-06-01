@@ -91,3 +91,29 @@ message Resolution {
   uint32 width = 1;
   uint32 height = 2;
 }
+
+// CSP features supported by a device or available for a contact (64 bit mask).
+//
+// IMPORTANT: The flags determine what a device/contact is capable of, not
+// whether the settings allow for it. For example, group calls may be supported
+// but ignored if disabled in the settings.
+enum CspFeatureMaskFlag {
+  // No features available
+  NONE = 0x00;
+  // Can handle voice messages.
+  VOICE_MESSAGE_SUPPORT = 0x01;
+  // Can handle groups.
+  GROUP_SUPPORT = 0x02;
+  // Can handle polls.
+  POLL_SUPPORT = 0x04;
+  // Can handle file messages.
+  FILE_MESSAGE_SUPPORT = 0x08;
+  // Can handle 1:1 audio calls.
+  O2O_AUDIO_CALL_SUPPORT = 0x10;
+  // Can handle 1:1 video calls.
+  O2O_VIDEO_CALL_SUPPORT = 0x20;
+  // Can handle forward security.
+  FORWARD_SECURITY_SUPPORT = 0x40;
+  // Can handle group calls.
+  GROUP_CALL_SUPPORT = 0x80;
+}

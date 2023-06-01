@@ -276,7 +276,7 @@ extension VoIPCallPeerConnectionClient {
             do {
                 try self.rtcAudioSession.setCategory(
                     AVAudioSession.Category.playAndRecord.rawValue,
-                    with: [.allowBluetooth, .allowBluetoothA2DP]
+                    with: [.duckOthers, .allowBluetooth, .allowBluetoothA2DP]
                 )
                 try self.rtcAudioSession.setMode(AVAudioSession.Mode.voiceChat.rawValue)
                 try self.rtcAudioSession.overrideOutputAudioPort(.none)
@@ -302,7 +302,7 @@ extension VoIPCallPeerConnectionClient {
             do {
                 try self.rtcAudioSession.setCategory(
                     AVAudioSession.Category.playAndRecord.rawValue,
-                    with: [.allowBluetooth, .allowBluetoothA2DP]
+                    with: [.duckOthers, .allowBluetooth, .allowBluetoothA2DP]
                 )
                 try self.rtcAudioSession.setMode(AVAudioSession.Mode.videoChat.rawValue)
                 try self.rtcAudioSession.overrideOutputAudioPort(.speaker)

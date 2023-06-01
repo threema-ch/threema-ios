@@ -189,7 +189,10 @@ final class ChatSearchResultsTableViewCell: ThemedCodeStackTableViewCell {
         // For now we only search text messages, ballot titles and file names (see `-[EntityFetcher messagesContaining:inConversation:]`)
         switch message {
         case let textMessage as TextMessage:
-            messagePreviewTextLabel.text = markupParser.previewString(for: textMessage.text)
+            messagePreviewTextLabel.attributedText = markupParser.previewString(
+                for: textMessage.text,
+                font: .preferredFont(forTextStyle: .body)
+            )
         case let ballotMessage as BallotMessage:
             messagePreviewTextLabel.text = ballotMessage.ballot.title
             

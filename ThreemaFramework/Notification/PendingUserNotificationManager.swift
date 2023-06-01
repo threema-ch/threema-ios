@@ -96,7 +96,7 @@ public class PendingUserNotificationManager: NSObject, PendingUserNotificationMa
         stage: UserNotificationStage
     ) -> PendingUserNotification? {
         var pendingUserNotification: PendingUserNotification?
-        if let key = key(threemaPush: threemaPushNotification) {
+        if let key = PendingUserNotificationKey.key(for: threemaPushNotification) {
             PendingUserNotificationManager.pendingQueue.sync {
                 pendingUserNotification = getPendingUserNotification(key: key)
                 pendingUserNotification?.threemaPushNotification = threemaPushNotification
@@ -119,7 +119,7 @@ public class PendingUserNotificationManager: NSObject, PendingUserNotificationMa
         isPendingGroup: Bool
     ) -> PendingUserNotification? {
         var pendingUserNotification: PendingUserNotification?
-        if let key = key(abstractMessage: abstractMessage) {
+        if let key = PendingUserNotificationKey.key(for: abstractMessage) {
             PendingUserNotificationManager.pendingQueue.sync {
                 pendingUserNotification = getPendingUserNotification(key: key)
                 pendingUserNotification?.abstractMessage = abstractMessage
@@ -142,7 +142,7 @@ public class PendingUserNotificationManager: NSObject, PendingUserNotificationMa
         stage: UserNotificationStage
     ) -> PendingUserNotification? {
         var pendingUserNotification: PendingUserNotification?
-        if let key = key(fromIdentity, baseMessage.id) {
+        if let key = PendingUserNotificationKey.key(identity: fromIdentity, messageID: baseMessage.id) {
             PendingUserNotificationManager.pendingQueue.sync {
                 pendingUserNotification = getPendingUserNotification(key: key)
                 pendingUserNotification?.baseMessage = baseMessage
@@ -159,7 +159,7 @@ public class PendingUserNotificationManager: NSObject, PendingUserNotificationMa
         stage: UserNotificationStage
     ) -> PendingUserNotification? {
         var pendingUserNotification: PendingUserNotification?
-        if let key = key(boxedMessage.fromIdentity, boxedMessage.messageID) {
+        if let key = PendingUserNotificationKey.key(for: boxedMessage) {
             PendingUserNotificationManager.pendingQueue.sync {
                 pendingUserNotification = getPendingUserNotification(key: key)
                 pendingUserNotification?.stage = stage
@@ -182,13 +182,28 @@ public class PendingUserNotificationManager: NSObject, PendingUserNotificationMa
                 return
             }
             
-            guard !pendingUserNotification.isPendingGroup,
-                  !isProcessed(pendingUserNotification: pendingUserNotification) else {
-                userNotificationCenterManager.remove(key: pendingUserNotification.key, exceptStage: nil)
+            guard pendingUserNotification.abstractMessage?.canShowUserNotification() ?? true else {
+                userNotificationCenterManager.remove(
+                    key: pendingUserNotification.key,
+                    exceptStage: nil,
+                    justPending: false
+                )
+                addAsProcessed(pendingUserNotification: pendingUserNotification)
                 seal(true)
                 return
             }
-            
+
+            guard !pendingUserNotification.isPendingGroup,
+                  !isProcessed(pendingUserNotification: pendingUserNotification) else {
+                userNotificationCenterManager.remove(
+                    key: pendingUserNotification.key,
+                    exceptStage: nil,
+                    justPending: true
+                )
+                seal(true)
+                return
+            }
+
             // Get notification content
             if let userNotificationContent = userNotificationManager.userNotificationContent(pendingUserNotification) {
                 // Add notification or suppress it
@@ -282,12 +297,20 @@ public class PendingUserNotificationManager: NSObject, PendingUserNotificationMa
                     }
                 }
                 else {
-                    userNotificationCenterManager.remove(key: pendingUserNotification.key, exceptStage: nil)
+                    userNotificationCenterManager.remove(
+                        key: pendingUserNotification.key,
+                        exceptStage: nil,
+                        justPending: true
+                    )
                     seal(false)
                 }
             }
             else {
-                userNotificationCenterManager.remove(key: pendingUserNotification.key, exceptStage: nil)
+                userNotificationCenterManager.remove(
+                    key: pendingUserNotification.key,
+                    exceptStage: nil,
+                    justPending: true
+                )
                 seal(false)
             }
         }
@@ -351,7 +374,7 @@ public class PendingUserNotificationManager: NSObject, PendingUserNotificationMa
     /// Remove all timed user notifications from notification center for pending user notification.
     /// - Parameter pendingUserNotification: Remove all timed notifications for this pending user notification
     public func removeAllTimedUserNotifications(pendingUserNotification: PendingUserNotification) {
-        userNotificationCenterManager.remove(key: pendingUserNotification.key, exceptStage: nil)
+        userNotificationCenterManager.remove(key: pendingUserNotification.key, exceptStage: nil, justPending: true)
     }
     
     /// Add pending user notification as processed.
@@ -587,27 +610,6 @@ public class PendingUserNotificationManager: NSObject, PendingUserNotificationMa
         }
         
         return pendingUserNotification
-    }
-
-    private func key(threemaPush: ThreemaPushNotification) -> String? {
-        threemaPush.from + threemaPush.messageID
-    }
-    
-    private func key(abstractMessage: AbstractMessage) -> String? {
-        key(abstractMessage.fromIdentity, abstractMessage.messageID)
-    }
-
-    // TODO: sender is nil, when MessageProcessorDelegate.finished is called?!?
-//    private func key(baseMessage: BaseMessage) -> String? {
-//        return key(baseMessage.sender.identity, baseMessage.id)
-//    }
-    
-    private func key(_ fromIdentity: String?, _ messageID: Data?) -> String? {
-        guard let fromIdentity = fromIdentity, let messageID = messageID else {
-            return nil
-        }
-        
-        return fromIdentity + messageID.hexString
     }
 }
 

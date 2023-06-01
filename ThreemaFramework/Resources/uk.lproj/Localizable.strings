@@ -77,7 +77,6 @@
 "new_image_message" = "Зображення";
 "new_video_message" = "Відео";
 "new_location_message" = "Місцеперебування";
-"new_audio_message" = "Аудіо";
 "new_ballot_create_message" = "Опитування: %@";
 "new_ballot_closed_message" = "Опитування: доступний результат";
 "new_file_message" = "Файл: %@";

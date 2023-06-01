@@ -48,13 +48,9 @@
 "cannot_connect_title" = "沒有連線";
 "cannot_connect_message" = "無法連線，請檢查您的網路連線。";
 
-"delete_identity_warning" = "如果您刪除您的ID，您的金鑰和應用程式資料都會被刪除。如果您沒有建立備份，您將無法再次使用此ID傳送或接收訊息。\n\n如果您不想再使用此ID，建議先取消電子郵件地址或電話號碼與ID的連結，然後再刪除ID。";
-"delete_identity_warning2" = "最後警告：您確定要刪除您的資料和ID嗎？";
+// JKLockScreenViewController
 "delete_identity_passcode_title" = "密碼鎖已開啟";
 "delete_identity_passcode_message" = "請在刪除您的ID之前停用密碼鎖。";
-"delete_identity_title" = "應用程式資料已刪除";
-"delete_identity_description" = "所有應用程式資料已被刪除。請重新啟動應用程式以設定 %@。";
-"delete_identity_app_close" = "關閉應用程式";
 
 /* JKLockScreenViewController */
 "cancel" = "取消";
@@ -64,7 +60,6 @@
 "yes" = "是";
 "delete" = "刪除";
 "try_again" = "再試一次";
-"delete_identity" = "刪除資料和ID";
 "copy" = "複製";
 "save" = "儲存";
 "download" = "下載";
@@ -79,7 +74,6 @@
 "sticker" = "貼圖";
 "gif" = "GIF";
 "video" = "影片";
-"audio" = "音訊";
 "file" = "檔案";
 "location" = "位置";
 "locating" = "定位中...";
@@ -183,8 +177,6 @@
 "sound_threema_goody" = "混音";
 "sound_threema_alphorn" = "長號";
 
-"reset_wallpaper" = "重設背景圖片";
-"bigger_single_emojis" = "更大的單個表情符號";
 "identity_none" = "無";
 "message" = "傳送訊息"; /* Short version for "Send Message" */
 "scan_identity" = "掃描ID";
@@ -1092,6 +1084,7 @@
 "settings_license" = "授權條款";
 "settings_advanced" = "進階";
 "settings_threema_work" = "Threema Work";
+"settings_threema_work_subtitle" = "企業的安全通訊解決方案";
 "settings_feedback" = "測試版意見回饋";
 "tos_cell_title" = "服務條款";
 
@@ -1132,7 +1125,6 @@
 "settings_privacy_hide_private_chats" = "隱藏私密對話";
 "settings_privacy_hide_private_chats_footer" = "在對話畫面中隱藏所有私密對話，您需要設定密碼鎖才能啟用此設定。";
 
-
 // Appearance
 "settings_appearance_theme_section" = "設計主題";
 "settings_appearance_light_theme" = "淺色";
@@ -1150,7 +1142,15 @@
 "settings_appearance_show_gallery_preview" = "顯示圖片庫預覽";
 
 // Chat Settings
-"settings_chat_send_message_feedback_label" = "傳送訊息時啟用觸覺回饋";
+"settings_chat_wallpaper_title" = "背景圖片";
+"settings_chat_wallpaper_reset" = "重設所有背景圖片";
+"settings_chat_wallpaper_empty" = "無";
+"settings_chat_wallpaper_custom" = "自訂";
+"settings_chat_wallpaper_default" = "預設";
+"settings_chat_wallpaper_reset_all_alert" = "將特定對話所設定的背景圖片全部重設為上面選擇的選項，一經選擇後將無法復原。";
+
+"settings_chat_bigger_emojis" = "更大的表情符號";
+"settings_chat_send_message_feedback" = "傳送訊息時啟用觸覺回饋";
 
 // Media
 "settings_media_autosave_private_footer" = "不自動儲存在私密對話中接收的媒體。";
@@ -1162,8 +1162,48 @@
 "sentry_crash_send_no" = "請勿傳送";
 "sentry_crash_comment_placeholder" = "崩潰報告";
 
+
+
 // My profile
 "profile_share_id_text" = "我的 Threema ID";
+"my_profile_delete_cell_title" = "刪除ID和資料";
+
+// Delete & Revoke
+"my_profile_delete_bullet_id" = "Threema ID";
+"my_profile_delete_bullet_chats" = "對話";
+"my_profile_delete_bullet_picture" = "大頭貼";
+"my_profile_delete_bullet_safe" = "Threema Safe 備份";
+"my_profile_delete_bullet_linked" = "電話號碼和/或電子郵件連結";
+
+"my_profile_delete_info_title" = "刪除ID和資料";
+"my_profile_delete_info_keep" = "以下資料仍然保留，不會刪除：";
+"my_profile_delete_info_delete" = "以下資料將從此裝置中刪除：";
+"my_profile_delete_info_toggle" = "刪除所有內容";
+
+"my_profile_delete_info_button_data" = "刪除資料";
+"my_profile_delete_info_button_revoke" = "刪除ID和資料";
+
+"my_profile_delete_identity_title" = "刪除對話和個人檔案？";
+"my_profile_delete_identity_keep" = "以下資料仍然保留：";
+"my_profile_delete_identity_remove" = "您即將從此裝置中刪除：";
+"my_profile_delete_identity_delete" = "刪除對話和個人檔案";
+
+"my_profile_delete_identity_view_alert_title" = "您無法復原此動作。\n您確定要繼續嗎？";
+"my_profile_delete_identity_view_alert_confirm" = "刪除資料";
+
+"my_profile_revoke_identity_view_title" = "刪除所有內容？";
+"my_profile_revoke_info_delete" = "您將永久刪除您的：";
+"my_profile_revoke_identity_view_info" = "警告：您無法復原此動作！";
+"my_profile_revoke_identity_view_enter_id" = "請輸入您的 Threema ID 「%@」，以完全刪除所有內容：";
+"my_profile_revoke_identity_view_placeholder" = "您的 Threema ID";
+"my_profile_revoke_identity_view_button_revoke" = "刪除所有內容";
+
+"my_profile_delete_identity_summary_view_delete_title" = "對話和個人檔案已刪除";
+"my_profile_delete_identity_summary_view_revoke_title" = "所有內容都已刪除";
+"my_profile_delete_identity_summary_view_delete_success" = "您已成功從此裝置中刪除：";
+"my_profile_delete_identity_summary_view_revoke_success" = "您已成功刪除您的：";
+"my_profile_delete_identity_summary_view_restart" = "請重新啟動此應用程式以套用變更。";
+"my_profile_delete_identity_summary_view_close" = "關閉應用程式";
 
 // File message
 "optional_caption" = "選定描述";
@@ -1306,7 +1346,7 @@
 "ballot_multiple_choice" = "多重選擇題";
 "ballot_clone" = "複製現有的投票";
 "ballot_clone_warning_title" = "注意";
-"ballot_clone_warning_message" = "所有已輸入的內容將被覆蓋。";
+"ballot_clone_warning_message" = "所有已輸入的內容將被覆寫。";
 "ballot_feature_level_warning_title" = "請注意";
 "ballot_feature_level_warning_message" = "部分參與者的應用程式版本還不支援「投票」功能：%@";
 "ballot_feature_level_error_message" = "所有參與者的應用程式版本都無法支援「投票」功能：%@";
@@ -1350,7 +1390,6 @@
 "privacySetting_header" = "隱私權";
 "send_readReceipts" = "已讀標記";
 "dont_send" = "不要傳送";
-"send_readReceipt" = "已讀標記";
 "send_typingIndicators" = "打字狀態";
 "send_typingIndicator" = "打字狀態";
 
@@ -1358,8 +1397,7 @@
 "use_default_send" = "預設（%@）";
 "default_setting" = "預設設定";
 
-"readReceipt_sheetMessage" = "覆蓋此聯絡人的預設設定。";
-"typingIndicator_sheetMessage" = "覆蓋此聯絡人的預設設定。";
+"contactoverride_sheetMessage" = "這將覆寫此特定聯絡人的預設設定。";
 
 /* Multi Decvice */
 "multi_device_linked_devices_title" = "多裝置預覽";
@@ -1490,6 +1528,12 @@
 "notification_interaction_delete_succeeded" = "分享互動已刪除";
 "notification_interaction_delete_failed" = "刪除分享互動失敗";
 
+"notification_revocation_failed" = "撤銷失敗";
+
+"notification_caption_too_long" = "描述太長";
+
+"notification_updateworkdata_failed" = "與佈建伺服器同步失敗";
+
 // Forward security status messages
 "forward_security_message_without" = "您收到一則沒有完全正向保密的訊息，您可以驗證寄件者是否主動停用完全正向保密。";
 "forward_security_session_established" = "此對話中的訊息現正受完全正向保密的保護。";
@@ -1542,6 +1586,8 @@
 "accessibility_ballotMessage_hint_open" = "開放所有人投票";
 "accessibility_ballotMessage_hint_closed" = "顯示投票結果";
 "accessibility_voiceMessage_speed_hint" = "變更播放速度";
+"accessibility_voiceMessage_forward_hint" = "前進 10 秒。";
+"accessibility_voiceMessage_rewind_hint" = "倒轉 10 秒。";
 
 // Other
 "accessibility_caption" = "描述：%@";

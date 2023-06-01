@@ -272,6 +272,16 @@ extension Callsignaling_CaptureState.CaptureDevice: CaseIterable {
 
 #endif  // swift(>=4.2)
 
+#if swift(>=5.5) && canImport(_Concurrency)
+extension Callsignaling_Envelope: @unchecked Sendable {}
+extension Callsignaling_Envelope.OneOf_Content: @unchecked Sendable {}
+extension Callsignaling_VideoQualityProfile: @unchecked Sendable {}
+extension Callsignaling_VideoQualityProfile.QualityProfile: @unchecked Sendable {}
+extension Callsignaling_CaptureState: @unchecked Sendable {}
+extension Callsignaling_CaptureState.Mode: @unchecked Sendable {}
+extension Callsignaling_CaptureState.CaptureDevice: @unchecked Sendable {}
+#endif  // swift(>=5.5) && canImport(_Concurrency)
+
 // MARK: - Code below here is support for the SwiftProtobuf runtime.
 
 fileprivate let _protobuf_package = "callsignaling"
@@ -323,12 +333,13 @@ extension Callsignaling_Envelope: SwiftProtobuf.Message, SwiftProtobuf._MessageI
   }
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
     if !self.padding.isEmpty {
       try visitor.visitSingularBytesField(value: self.padding, fieldNumber: 1)
     }
-    // The use of inline closures is to circumvent an issue where the compiler
-    // allocates stack space for every case branch when no optimizations are
-    // enabled. https://github.com/apple/swift-protobuf/issues/1034
     switch self.content {
     case .videoQualityProfile?: try {
       guard case .videoQualityProfile(let v)? = self.content else { preconditionFailure() }
@@ -376,15 +387,19 @@ extension Callsignaling_VideoQualityProfile: SwiftProtobuf.Message, SwiftProtobu
   }
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
     if self.profile != .max {
       try visitor.visitSingularEnumField(value: self.profile, fieldNumber: 1)
     }
     if self.maxBitrateKbps != 0 {
       try visitor.visitSingularUInt32Field(value: self.maxBitrateKbps, fieldNumber: 2)
     }
-    if let v = self._maxResolution {
+    try { if let v = self._maxResolution {
       try visitor.visitSingularMessageField(value: v, fieldNumber: 3)
-    }
+    } }()
     if self.maxFps != 0 {
       try visitor.visitSingularUInt32Field(value: self.maxFps, fieldNumber: 4)
     }

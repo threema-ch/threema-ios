@@ -28,6 +28,38 @@ public class BallotManager: NSObject {
         self.entityManager = entityManager
     }
     
+    @objc public func choiceResultCount(
+        _ ballot: Ballot,
+        choiceID: NSNumber
+    ) -> Int {
+        guard let choice = entityManager.entityFetcher.ballotChoice(for: ballot.id, with: choiceID) else {
+            DDLogError("[Ballot] [\(ballot.id.hexString)] Could not fetch choice for ballot.")
+            return 0
+        }
+        
+        return choice.result.count
+    }
+    
+    @objc public func removeInvalidChoiceResults(
+        _ ballot: Ballot,
+        choiceID: NSNumber,
+        participantIDs: [String]
+    ) {
+        guard let choice = entityManager.entityFetcher.ballotChoice(for: ballot.id, with: choiceID) else {
+            DDLogError("[Ballot] [\(ballot.id.hexString)] Could not fetch choice for ballot.")
+            return
+        }
+        
+        for ballotResult in choice.result as! Set<BallotResult> {
+            if !participantIDs.contains(ballotResult.participantID) {
+                DDLogWarn(
+                    "[Ballot] [\(ballot.id.hexString)] Removed vote (\(ballotResult.participantID ?? "nil") from ballot"
+                )
+                choice.removeResult(forContact: ballotResult.participantID)
+            }
+        }
+    }
+    
     @objc public func updateBallot(
         _ ballot: Ballot,
         choiceID: NSNumber,
@@ -35,7 +67,7 @@ public class BallotManager: NSObject {
         for contactID: String
     ) {
         guard let choice = entityManager.entityFetcher.ballotChoice(for: ballot.id, with: choiceID) else {
-            DDLogError("Could not fetch choice for ballot.")
+            DDLogError("[Ballot] [\(ballot.id.hexString)] Could not fetch choice for ballot.")
             return
         }
         

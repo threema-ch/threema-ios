@@ -34,6 +34,7 @@ import ThreemaFramework
     private let backgroundPendingUserNotificationManager: PendingUserNotificationManagerProtocol
 
     private let businessInjector: BusinessInjectorProtocol
+    private let notificationManager: NotificationManager
 
     private var completionHandler: (() -> Void)?
 
@@ -45,6 +46,7 @@ import ThreemaFramework
         self.pendingUserNotificationManager = pendingUserNotificationManager
         self.backgroundPendingUserNotificationManager = backgroundPendingUserNotificationManager
         self.businessInjector = businessInjector
+        self.notificationManager = NotificationManager(businessInjector: businessInjector)
     }
     
     @objc override convenience init() {
@@ -146,10 +148,7 @@ import ThreemaFramework
                     .startTimedUserNotification(pendingUserNotification: pendingUserNotification)
                     .done { started in
                         if !started {
-                            self.updateUnreadMessagesCount(
-                                abstractMessage: pendingUserNotification.abstractMessage,
-                                baseMessage: pendingUserNotification.baseMessage
-                            )
+                            self.notificationManager.updateUnreadMessagesCount()
                         }
                         seal(started)
                     }
@@ -191,8 +190,7 @@ import ThreemaFramework
                                 }
 
                                 if !pushSetting.silent {
-                                    let notificationManager = NotificationManager()
-                                    notificationManager.playReceivedMessageSound()
+                                    self.notificationManager.playReceivedMessageSound()
                                 }
                             }
                         }
@@ -201,10 +199,7 @@ import ThreemaFramework
                     manager
                         .removeAllTimedUserNotifications(pendingUserNotification: pendingUserNotification)
 
-                    self.updateUnreadMessagesCount(
-                        abstractMessage: pendingUserNotification.abstractMessage,
-                        baseMessage: pendingUserNotification.baseMessage
-                    )
+                    notificationManager.updateUnreadMessagesCount()
                     seal(true)
                     return
                 }
@@ -214,22 +209,11 @@ import ThreemaFramework
                     .startTimedUserNotification(pendingUserNotification: pendingUserNotification)
                     .done { _ in
                         PendingUserNotificationManager.pendingQueue.sync {
-                            self.updateUnreadMessagesCount(
-                                abstractMessage: pendingUserNotification.abstractMessage,
-                                baseMessage: pendingUserNotification.baseMessage
-                            )
+                            self.notificationManager.updateUnreadMessagesCount()
                             seal(false)
                         }
                     }
             }
-        }
-    }
-
-    private func updateUnreadMessagesCount(abstractMessage: AbstractMessage?, baseMessage: BaseMessage?) {
-        // Check should push flag to reduces unnecessary counting of unread messages
-        if abstractMessage?.flagShouldPush() ?? true {
-            let notificationManager = NotificationManager()
-            notificationManager.updateUnreadMessagesCount(baseMessage: baseMessage)
         }
     }
 }
@@ -279,6 +263,11 @@ extension IncomingMessageManager: MessageProcessorDelegate {
                             databaseManager.addDirtyObject(contact)
                         }
                     }
+                }
+
+                if let conversation = msg.conversation {
+                    self.businessInjector.backgroundUnreadMessages
+                        .totalCount(doCalcUnreadMessagesCountOf: [conversation])
                 }
 
                 if let pendingUserNotification = self.pendingUserNotificationManager.pendingUserNotification(
@@ -340,8 +329,7 @@ extension IncomingMessageManager: MessageProcessorDelegate {
         }
 
         DispatchQueue.main.async {
-            let notificationManager = NotificationManager()
-            notificationManager.updateUnreadMessagesCount()
+            self.notificationManager.updateUnreadMessagesCount()
         }
     }
 
@@ -407,8 +395,7 @@ extension IncomingMessageManager: MessageProcessorDelegate {
                 .removeAllTimedUserNotifications(pendingUserNotification: pendingUserNotification)
 
             DispatchQueue.main.async {
-                let notificationManager = NotificationManager()
-                notificationManager.updateUnreadMessagesCount(baseMessage: nil)
+                self.notificationManager.updateUnreadMessagesCount()
             }
         }
     }

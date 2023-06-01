@@ -102,6 +102,10 @@ class MWPhotoBrowserWrapper: NSObject, MWPhotoBrowserDelegate, MWVideoDelegate, 
         photoAtIndex(at: Int(index), thumbnail: false)
     }
     
+    func photoBrowser(_ photoBrowser: MWPhotoBrowser!, objectIDAt index: UInt) -> NSManagedObjectID! {
+        objectIDAtIndex(at: Int(index), thumbnail: false)
+    }
+    
     func photoBrowser(_ photoBrowser: MWPhotoBrowser!, thumbPhotoAt index: UInt) -> MWPhotoProtocol! {
         let media = photoAtIndex(at: Int(index), thumbnail: true)
         media?.loadUnderlyingImageAndNotify()
@@ -283,6 +287,16 @@ class MWPhotoBrowserWrapper: NSObject, MWPhotoBrowserDelegate, MWVideoDelegate, 
         default:
             return nil
         }
+    }
+    
+    private func objectIDAtIndex(at index: Int, thumbnail: Bool) -> NSManagedObjectID? {
+       
+        guard index < mediaMessages.count else {
+            return nil
+        }
+        
+        let message: BaseMessage = mediaMessages[index]
+        return message.objectID
     }
     
     func openPhotoBrowser(currentMediaIndex: UInt?, showGrid: Bool = true, autoPlayOnAppear: Bool = false) {

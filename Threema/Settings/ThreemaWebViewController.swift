@@ -452,7 +452,7 @@ extension ThreemaWebViewController: QRScannerViewControllerDelegate {
             }
             if let overrideSaltyRtcPort = overrideSaltyRtcPort {
                 DDLogNotice(
-                    "[Threema Web] override altyRtcPort from \(session["saltyRTCPort"] ?? "?") to \(overrideSaltyRtcPort)"
+                    "[Threema Web] override SaltyRtcPort from \(session["saltyRTCPort"] ?? "?") to \(overrideSaltyRtcPort)"
                 )
                 session.updateValue(overrideSaltyRtcPort, forKey: "saltyRTCPort")
             }

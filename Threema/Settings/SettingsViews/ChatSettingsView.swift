@@ -128,7 +128,7 @@ struct WallpaperSectionView: View {
             Alert(
                 title: Text(BundleUtil.localizedString(forKey: "settings_chat_wallpaper_reset")),
                 message: Text(BundleUtil.localizedString(forKey: "settings_chat_wallpaper_reset_all_alert")),
-                primaryButton: .default(Text(
+                primaryButton: .destructive(Text(
                     BundleUtil
                         .localizedString(forKey: "settings_privacy_TIRR_reset_alert_action")
                 )) {

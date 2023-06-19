@@ -923,16 +923,22 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
     EntityManager *em = (EntityManager *)entityManagerObject;
     
     [self fetchWorkIdentities:@[identity] onCompletion:^(NSArray *foundIdentities) {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            // First, check in local DB again, as it may have already been saved in the meantime (in case of parallel requests)
-            ContactEntity *tmpContact = [em.entityFetcher contactForId:identity];
-            if (tmpContact.publicKey) {
+        // First, check in local DB again, as it may have already been saved in the meantime (in case of parallel requests)
+        if ([em existingContactWith:identity]) {
+            __block NSData *publicKey;
+            [em performBlockAndWait:^{
+                publicKey = [em.entityFetcher contactForId:identity].publicKey;
+            }];
+            
+            if (publicKey != nil) {
                 dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
-                    onCompletion(tmpContact.publicKey);
+                    onCompletion(publicKey);
                 });
                 return;
             }
-            
+        }
+        
+        dispatch_async(dispatch_get_main_queue(), ^{
             if (foundIdentities.count > 0) {
                 for (NSDictionary *foundIdentity in foundIdentities) {
                     if ([foundIdentity[@"id"] isEqualToString:identity]) {
@@ -962,7 +968,7 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
                     }
                 }
             }
-
+            
             // Block message if user is not in our subscription
             if (userSettings.blockUnknown) {
                 DDLogVerbose(@"Block unknown contacts is on and contact not found in work list - discarding message");

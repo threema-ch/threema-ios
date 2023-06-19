@@ -463,6 +463,34 @@ extension EntityManager {
 
         return result
     }
+    
+    @objc func existingContact(with identity: String) -> Bool {
+        var objectID: NSManagedObjectID?
+        dbContext.current.performAndWait {
+            guard let contact = entityFetcher.contact(for: identity) else {
+                return
+            }
+            objectID = contact.objectID
+        }
+
+        guard objectID == nil else {
+            return true
+        }
+        
+        dbContext.main.performAndWait {
+            guard let contact = EntityFetcher(dbContext.main, myIdentityStore: myIdentityStore).contact(for: identity)
+            else {
+                return
+            }
+            objectID = contact.objectID
+        }
+        
+        if let objectID {
+            dbContext.current.object(with: objectID)
+        }
+        
+        return objectID != nil
+    }
 
     @available(*, deprecated, message: "Just for Objective-C calls")
     @objc func existingConversationSenderReceiver(

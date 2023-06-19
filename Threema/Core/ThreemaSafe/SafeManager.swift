@@ -175,13 +175,16 @@ import Foundation
                     let safeServerAuth = self.safeStore.extractSafeServerAuth(server: safeServer)
                     let safeBackupURL = safeServerAuth.server
                         .appendingPathComponent("backups/\(BytesUtility.toHexString(bytes: backupID))")
-                    if let errorMessage = self.safeApiService.delete(
+                    self.safeApiService.delete(
                         server: safeBackupURL,
                         user: safeServerAuth.user,
-                        password: safeServerAuth.password
-                    ) {
-                        self.logger.logString("Safe backup could not be deleted: \(errorMessage)")
-                    }
+                        password: safeServerAuth.password,
+                        completion: { errorMessage in
+                            if let errorMessage {
+                                self.logger.logString("Safe backup could not be deleted: \(errorMessage)")
+                            }
+                        }
+                    )
                 case .failure: break
                 }
             }
@@ -517,13 +520,16 @@ import Foundation
                     let safeServerAuth = self.safeStore.extractSafeServerAuth(server: safeServer)
                     let safeBackupURL = safeServerAuth.server
                         .appendingPathComponent("backups/\(BytesUtility.toHexString(bytes: backupID))")
-                    if let errorMessage = self.safeApiService.delete(
+                    self.safeApiService.delete(
                         server: safeBackupURL,
                         user: safeServerAuth.user,
-                        password: safeServerAuth.password
-                    ) {
-                        self.logger.logString("Safe backup could not be deleted: \(errorMessage)")
-                    }
+                        password: safeServerAuth.password,
+                        completion: { errorMessage in
+                            if let errorMessage {
+                                self.logger.logString("Safe backup could not be deleted: \(errorMessage)")
+                            }
+                        }
+                    )
                 case .failure: break
                 }
             }

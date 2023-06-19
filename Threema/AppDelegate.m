@@ -666,6 +666,11 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
             SafeManager *safeManager = [[SafeManager alloc] initWithSafeConfigManagerAsObject:safeConfigManager safeStore:safeStore safeApiService:[[SafeApiService alloc] init]];
             MDMSetup *mdmSetup = [[MDMSetup alloc] initWithSetup:NO];
             
+            // We abort if we are currently creating a backup, e.g. from app setup
+            if ([safeConfigManager getIsTriggered]) {
+                return;
+            }
+            
             // Check if Threema Safe is forced and not activated yet
             if (![safeManager isActivated] && [mdmSetup isSafeBackupForce]) {
                 // Activate with the MDM Password
@@ -682,7 +687,6 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
                     if (!changed) {
                         return;
                     }
-                    
                     [safeManager deactivate];
                     [self activateSafeWithMDMSetup:mdmSetup safeStore:safeStore safeManager:safeManager];
                 }];

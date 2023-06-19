@@ -1413,7 +1413,7 @@
                                                 <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="abL-qW-o92">
                                                     <rect key="frame" x="152" y="10" width="22" height="22"/>
                                                     <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
-                                                    <state key="normal" image="Info"/>
+                                                    <state key="normal" image="InfoFilled"/>
                                                     <connections>
                                                         <action selector="touchDownExplainButton:forEvent:" destination="kum-xn-2YU" eventType="touchDown" id="jnx-R3-fRN"/>
                                                     </connections>
@@ -1843,6 +1843,7 @@
     <resources>
         <image name="Edit" width="22" height="22"/>
         <image name="Info" width="22" height="22"/>
+        <image name="InfoFilled" width="22" height="22"/>
         <image name="Phone" width="25" height="25"/>
         <image name="QRCode" width="50" height="50"/>
         <image name="QRCodeBackground" width="70" height="70"/>

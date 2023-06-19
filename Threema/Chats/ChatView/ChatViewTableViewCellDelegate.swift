@@ -95,8 +95,10 @@ final class ChatViewTableViewCellDelegate: NSObject, ChatViewTableViewCellDelega
         guard let objectID = chatViewController?.conversation.objectID else {
             return false
         }
-        
-        return WallpaperStore.shared.hasCustomWallpaper(for: objectID)
+        return !(
+            WallpaperStore.shared.defaultIsEmptyWallpaper() || WallpaperStore.shared.defaultIsThreemaWallpaper()
+        ) ||
+            WallpaperStore.shared.hasCustomWallpaper(for: objectID)
     }
     
     // MARK: - Swipe Interactions

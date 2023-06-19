@@ -169,7 +169,7 @@ protocol SafeConfigManagerProtocol {
         setConfig(config)
     }
     
-    public func getIsTriggered() -> Bool {
+    @objc public func getIsTriggered() -> Bool {
         getConfig().isTriggered != 0
     }
 

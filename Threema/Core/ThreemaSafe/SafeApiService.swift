@@ -62,12 +62,9 @@ import Foundation
         return (serverConfig, errorMessage)
     }
     
-    func delete(server: URL, user: String?, password: String?) -> String? {
+    func delete(server: URL, user: String?, password: String?, completion: @escaping (String?) -> Void) {
         var errorMessage: String?
-        
-        let dispatch = DispatchGroup()
-        dispatch.enter()
-        
+                
         DispatchQueue.global(qos: .background).async {
             self.getHttpClient(user: user, password: password) { client in
                 client.delete(url: server) { data, response, error in
@@ -76,14 +73,10 @@ import Foundation
                     if let responseErrorMessage = result.errorMessage {
                         errorMessage = responseErrorMessage
                     }
-                    dispatch.leave()
+                    completion(errorMessage)
                 }
             }
         }
-        
-        dispatch.wait()
-
-        return errorMessage
     }
     
     func upload(

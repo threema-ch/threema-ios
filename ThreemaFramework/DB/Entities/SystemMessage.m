@@ -149,6 +149,8 @@
             return [BundleUtil localizedStringForKey:@"forward_security_contact_has_downgraded_to_an_incompatible_version"];
         case kSystemMessageUnsupportedType:
             return [BundleUtil localizedStringForKey:@"systemMessage_unsupported_type"];
+        case kSystemMessageGroupAvatarChanged:
+            return [BundleUtil localizedStringForKey:@"system_message_group_avatar_changed"];
     }
     
     return nil;

@@ -515,8 +515,12 @@ static NSDictionary *_mdmCacheSetup;
 
 - (void)applyCompanyMDMWithCachedThreemaMDMSendForce:(BOOL)sendForce {
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-    NSDictionary *threemaMdm = [defaults dictionaryForKey:MDM_THREEMA_CONFIGURATION_KEY];
-    [self applyThreemaMdm:threemaMdm sendForce:sendForce];
+    NSMutableDictionary *workData = [NSMutableDictionary new];
+    NSDictionary *threemaMdm = [self getThreemaMDM];
+    if (threemaMdm != nil) {
+        [workData setObject:threemaMdm forKey:MDM_KEY_THREEMA_CONFIGURATION];
+    }
+    [self applyThreemaMdm:workData sendForce:sendForce];
 }
 
 - (void)applyThreemaMdm:(NSDictionary *)workData sendForce:(BOOL)sendForce {

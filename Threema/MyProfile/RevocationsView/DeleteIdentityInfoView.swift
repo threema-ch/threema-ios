@@ -106,6 +106,7 @@ struct DeleteIdentityInfoView: View {
                     BundleUtil.localizedString(forKey: "my_profile_delete_identity_view_alert_confirm"),
                     role: .destructive
                 ) {
+                    DeleteRevokeIdentityManager.deleteLocalData()
                     deleteConfirmed = true
                 }
                 Button(BundleUtil.localizedString(forKey: "cancel"), role: .cancel) {

@@ -40,7 +40,8 @@ final class MessageMetadataBlurBackgroundView: UIVisualEffectView {
     ///
     /// - Parameters:
     ///   - rootView: (Container) view to display on top of the background with `UIVibrancyEffect`
-    ///   - nonVibrantRootView: (Container) view to display on top of the background and `rootView` without `UIVibrancyEffect`
+    ///   - nonVibrantRootView: (Container) view to display on top of the background and `rootView` without
+    /// `UIVibrancyEffect`
     init(
         rootView: UIView,
         nonVibrantRootView: UIView? = nil
@@ -96,7 +97,7 @@ final class MessageMetadataBlurBackgroundView: UIVisualEffectView {
 
         // Add `nonVibrantRootView` not affected by the default vibrancy effects (such as change to monochrome)
         // made by `UIVibrancyEffect`
-        if let nonVibrantRootView = nonVibrantRootView {
+        if let nonVibrantRootView {
             let nonVibrantRootStack = UIStackView(arrangedSubviews: [nonVibrantRootView])
             nonVibrantRootStack.alignment = .center
             

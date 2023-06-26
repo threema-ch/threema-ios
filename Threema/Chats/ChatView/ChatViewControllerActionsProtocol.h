@@ -26,7 +26,6 @@
 @property Conversation *conversation;
 @property UINavigationController *navigationController;
 @property UIView *view;
-@property Old_ChatBar *chatBar;
 @property UIViewController *presentedViewController;
 @property UIStoryboard *storyboard;
 

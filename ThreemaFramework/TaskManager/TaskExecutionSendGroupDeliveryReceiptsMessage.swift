@@ -22,7 +22,7 @@ import CocoaLumberjackSwift
 import Foundation
 import PromiseKit
 
-/// Reflect group DeliveryReceipts to mediator server is multi device enbaled
+/// Reflect group DeliveryReceipts to mediator server is multi device enabled
 /// and send it to group members (CSP).
 class TaskExecutionSendGroupDeliveryReceiptsMessage: TaskExecution, TaskExecutionProtocol {
     func execute() -> Promise<Void> {
@@ -37,29 +37,59 @@ class TaskExecutionSendGroupDeliveryReceiptsMessage: TaskExecution, TaskExecutio
         return firstly {
             isMultiDeviceActivated()
         }
-        .then { doReflect -> Promise<Void> in
+        .then { doReflect -> Promise<Bool> in
             // Reflect group delivery receipts message if is necessary
             guard doReflect else {
+                return Promise { seal in seal.fulfill(true) }
+            }
+
+            if task.receiptType == UInt8(DELIVERYRECEIPT_MSGUSERACK) || task
+                .receiptType == UInt8(DELIVERYRECEIPT_MSGUSERDECLINE) {
+                let msg = self.getGroupDeliveryReceiptMessage(
+                    groupID,
+                    groupCreatorIdentity,
+                    task.fromMember,
+                    self.frameworkInjector.myIdentityStore.identity,
+                    task.receiptType,
+                    task.receiptMessageIDs
+                )
+                try self.reflectMessage(
+                    message: msg,
+                    ltReflect: self.taskContext.logReflectMessageToMediator,
+                    ltAck: self.taskContext.logReceiveMessageAckFromMediator
+                )
+                return Promise { seal in seal.fulfill(true) }
+            }
+            else if task.receiptType == UInt8(DELIVERYRECEIPT_MSGREAD) {
+                // Reflect read receipt for incoming message
+                // swiftformat:disable:next all
+                var conversationID = D2d_ConversationId()
+                var groupIdentity = Common_GroupIdentity()
+                groupIdentity.groupID = groupID.convert()
+                groupIdentity.creatorIdentity = groupCreatorIdentity
+                conversationID.group = groupIdentity
+
+                let envelope = self.frameworkInjector.mediatorMessageProtocol
+                    .getEnvelopeForIncomingMessageUpdate(
+                        messageIDs: task.receiptMessageIDs,
+                        messageReadDates: task.receiptReadDates,
+                        conversationID: conversationID
+                    )
+
+                try self.reflectMessage(
+                    envelope: envelope,
+                    ltReflect: .reflectOutgoingMessageUpdateToMediator,
+                    ltAck: .receiveOutgoingMessageUpdateAckFromMediator
+                )
+                return Promise { seal in seal.fulfill(false) }
+            }
+            return Promise { seal in seal.fulfill(true) }
+        }
+        .then { doSend -> Promise<Void> in
+            guard doSend else {
                 return Promise()
             }
 
-            let msg = self.getGroupDeliveryReceiptMessage(
-                groupID,
-                groupCreatorIdentity,
-                task.fromMember,
-                self.frameworkInjector.myIdentityStore.identity,
-                task.receiptType,
-                task.receiptMessageIDs
-            )
-            try self.reflectMessage(
-                message: msg,
-                ltReflect: self.taskContext.logReflectMessageToMediator,
-                ltAck: self.taskContext.logReceiveMessageAckFromMediator
-            )
-
-            return Promise()
-        }
-        .then { _ -> Promise<Void> in
             // Send group delivery receipts messages
             var sendMessages = [Promise<AbstractMessage?>]()
             for toMember in task.toMembers {

@@ -20,8 +20,8 @@
 
 import Foundation
 
-public extension Colors {
-    @objc class var preferredStatusBarStyle: UIStatusBarStyle {
+extension Colors {
+    @objc public class var preferredStatusBarStyle: UIStatusBarStyle {
         switch Colors.theme {
         case .light, .undefined:
             return .default
@@ -30,32 +30,12 @@ public extension Colors {
         }
     }
     
-    // TODO: (IOS-2860) Remove when old chat view code is removed
-    class var activityIndicatorViewStyle: UIActivityIndicatorView.Style {
+    public class var activityIndicatorViewStyle: UIActivityIndicatorView.Style {
         switch Colors.theme {
         case .light, .undefined:
             return .gray
         case .dark:
             return .white
         }
-    }
-    
-    class var blurEffectStyle: UIBlurEffect.Style {
-        switch Colors.theme {
-        case .light, .undefined:
-            return .extraLight
-        case .dark:
-            return .dark
-        }
-    }
-    
-    // Use Int instead of enum for Objective-C classes
-    @objc class var objcActivityIndicatorViewStyle: Int {
-        activityIndicatorViewStyle.rawValue
-    }
-    
-    // Use Int instead of enum for Objective-C classes
-    @objc class var objcBlurEffectStyle: Int {
-        blurEffectStyle.rawValue
     }
 }

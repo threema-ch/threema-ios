@@ -11,7 +11,7 @@
 //
 // ### General Information
 //
-// Encryption format: 24 byte nonce prepended, followed by an NaCl box.
+// Encryption cipher: XSalsa20-Poly1305, unless otherwise specified.
 //
 // All strings are UTF-8 encoded.
 
@@ -28,243 +28,6 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
   typealias Version = _2
 }
 
-/// Message type as defined by the Chat Server Protocol.
-enum D2d_MessageType: SwiftProtobuf.Enum {
-  typealias RawValue = Int
-
-  /// Invalid message type
-  case invalid // = 0
-
-  /// Text message
-  case text // = 1
-
-  /// Deprecated image message
-  case deprecatedImage // = 2
-
-  /// Location message
-  case location // = 16
-
-  /// Deprecated audio message
-  case deprecatedAudio // = 20
-
-  /// Deprecated video message
-  case deprecatedVideo // = 19
-
-  /// File message
-  case file // = 23
-
-  /// Create or finalise a poll
-  case pollSetup // = 21
-
-  /// Cast a vote on a poll
-  case pollVote // = 22
-
-  /// Call offer
-  case callOffer // = 96
-
-  /// Call answer
-  case callAnswer // = 97
-
-  /// Call ICE Candidate
-  case callIceCandidate // = 98
-
-  /// Call hangup
-  case callHangup // = 99
-
-  /// Call ringing
-  case callRinging // = 100
-
-  /// Delivery receipt
-  case deliveryReceipt // = 128
-
-  /// Typing indicator
-  case typingIndicator // = 144
-
-  /// Set profile picture of a contact
-  case contactSetProfilePicture // = 24
-
-  /// Delete profile picture of a contact
-  case contactDeleteProfilePicture // = 25
-
-  /// Request profile picture of a contact
-  case contactRequestProfilePicture // = 26
-
-  /// Announce a group's setup
-  case groupSetup // = 74
-
-  /// (Re)name a group
-  case groupName // = 75
-
-  /// Leave a group
-  case groupLeave // = 76
-
-  /// Set a group's profile picture
-  case groupSetProfilePicture // = 80
-
-  /// Delete a group's profile picture
-  case groupDeleteProfilePicture // = 84
-
-  /// Request group synchronisation
-  case groupRequestSync // = 81
-
-  /// Group text message
-  case groupText // = 65
-
-  /// Group location message
-  case groupLocation // = 66
-
-  /// Group image message
-  case groupImage // = 67
-
-  /// Group audio message
-  case groupAudio // = 69
-
-  /// Group video message
-  case groupVideo // = 68
-
-  /// Group file message
-  case groupFile // = 70
-
-  /// Create or finalise a group poll
-  case groupPollSetup // = 82
-
-  /// Cast a vote on a group poll
-  case groupPollVote // = 83
-
-  /// Group delivery receipt
-  case groupDeliveryReceipt // = 129
-  case UNRECOGNIZED(Int)
-
-  init() {
-    self = .invalid
-  }
-
-  init?(rawValue: Int) {
-    switch rawValue {
-    case 0: self = .invalid
-    case 1: self = .text
-    case 2: self = .deprecatedImage
-    case 16: self = .location
-    case 19: self = .deprecatedVideo
-    case 20: self = .deprecatedAudio
-    case 21: self = .pollSetup
-    case 22: self = .pollVote
-    case 23: self = .file
-    case 24: self = .contactSetProfilePicture
-    case 25: self = .contactDeleteProfilePicture
-    case 26: self = .contactRequestProfilePicture
-    case 65: self = .groupText
-    case 66: self = .groupLocation
-    case 67: self = .groupImage
-    case 68: self = .groupVideo
-    case 69: self = .groupAudio
-    case 70: self = .groupFile
-    case 74: self = .groupSetup
-    case 75: self = .groupName
-    case 76: self = .groupLeave
-    case 80: self = .groupSetProfilePicture
-    case 81: self = .groupRequestSync
-    case 82: self = .groupPollSetup
-    case 83: self = .groupPollVote
-    case 84: self = .groupDeleteProfilePicture
-    case 96: self = .callOffer
-    case 97: self = .callAnswer
-    case 98: self = .callIceCandidate
-    case 99: self = .callHangup
-    case 100: self = .callRinging
-    case 128: self = .deliveryReceipt
-    case 129: self = .groupDeliveryReceipt
-    case 144: self = .typingIndicator
-    default: self = .UNRECOGNIZED(rawValue)
-    }
-  }
-
-  var rawValue: Int {
-    switch self {
-    case .invalid: return 0
-    case .text: return 1
-    case .deprecatedImage: return 2
-    case .location: return 16
-    case .deprecatedVideo: return 19
-    case .deprecatedAudio: return 20
-    case .pollSetup: return 21
-    case .pollVote: return 22
-    case .file: return 23
-    case .contactSetProfilePicture: return 24
-    case .contactDeleteProfilePicture: return 25
-    case .contactRequestProfilePicture: return 26
-    case .groupText: return 65
-    case .groupLocation: return 66
-    case .groupImage: return 67
-    case .groupVideo: return 68
-    case .groupAudio: return 69
-    case .groupFile: return 70
-    case .groupSetup: return 74
-    case .groupName: return 75
-    case .groupLeave: return 76
-    case .groupSetProfilePicture: return 80
-    case .groupRequestSync: return 81
-    case .groupPollSetup: return 82
-    case .groupPollVote: return 83
-    case .groupDeleteProfilePicture: return 84
-    case .callOffer: return 96
-    case .callAnswer: return 97
-    case .callIceCandidate: return 98
-    case .callHangup: return 99
-    case .callRinging: return 100
-    case .deliveryReceipt: return 128
-    case .groupDeliveryReceipt: return 129
-    case .typingIndicator: return 144
-    case .UNRECOGNIZED(let i): return i
-    }
-  }
-
-}
-
-#if swift(>=4.2)
-
-extension D2d_MessageType: CaseIterable {
-  // The compiler won't synthesize support with the UNRECOGNIZED case.
-  static var allCases: [D2d_MessageType] = [
-    .invalid,
-    .text,
-    .deprecatedImage,
-    .location,
-    .deprecatedAudio,
-    .deprecatedVideo,
-    .file,
-    .pollSetup,
-    .pollVote,
-    .callOffer,
-    .callAnswer,
-    .callIceCandidate,
-    .callHangup,
-    .callRinging,
-    .deliveryReceipt,
-    .typingIndicator,
-    .contactSetProfilePicture,
-    .contactDeleteProfilePicture,
-    .contactRequestProfilePicture,
-    .groupSetup,
-    .groupName,
-    .groupLeave,
-    .groupSetProfilePicture,
-    .groupDeleteProfilePicture,
-    .groupRequestSync,
-    .groupText,
-    .groupLocation,
-    .groupImage,
-    .groupAudio,
-    .groupVideo,
-    .groupFile,
-    .groupPollSetup,
-    .groupPollVote,
-    .groupDeliveryReceipt,
-  ]
-}
-
-#endif  // swift(>=4.2)
-
 /// Data shared across all devices and transmitted during the handshake.
 struct D2d_SharedDeviceData {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
@@ -277,21 +40,9 @@ struct D2d_SharedDeviceData {
   /// Current lowest protocol version that must be supported by all devices
   var version: UInt32 = 0
 
-  /// MDM parameters to be applied on all devices
-  var mdmParameters: Sync_MdmParameters {
-    get {return _mdmParameters ?? Sync_MdmParameters()}
-    set {_mdmParameters = newValue}
-  }
-  /// Returns true if `mdmParameters` has been explicitly set.
-  var hasMdmParameters: Bool {return self._mdmParameters != nil}
-  /// Clears the value of `mdmParameters`. Subsequent reads from it will return its default value.
-  mutating func clearMdmParameters() {self._mdmParameters = nil}
-
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
   init() {}
-
-  fileprivate var _mdmParameters: Sync_MdmParameters? = nil
 }
 
 /// Metadata about a device, determined by the device itself.
@@ -401,7 +152,8 @@ struct D2d_TransactionScope {
     case groupSync // = 2
     case distributionListSync // = 3
     case settingsSync // = 4
-    case newDeviceSync // = 5
+    case mdmParameterSync // = 5
+    case newDeviceSync // = 6
     case UNRECOGNIZED(Int)
 
     init() {
@@ -415,7 +167,8 @@ struct D2d_TransactionScope {
       case 2: self = .groupSync
       case 3: self = .distributionListSync
       case 4: self = .settingsSync
-      case 5: self = .newDeviceSync
+      case 5: self = .mdmParameterSync
+      case 6: self = .newDeviceSync
       default: self = .UNRECOGNIZED(rawValue)
       }
     }
@@ -427,7 +180,8 @@ struct D2d_TransactionScope {
       case .groupSync: return 2
       case .distributionListSync: return 3
       case .settingsSync: return 4
-      case .newDeviceSync: return 5
+      case .mdmParameterSync: return 5
+      case .newDeviceSync: return 6
       case .UNRECOGNIZED(let i): return i
       }
     }
@@ -447,6 +201,7 @@ extension D2d_TransactionScope.Scope: CaseIterable {
     .groupSync,
     .distributionListSync,
     .settingsSync,
+    .mdmParameterSync,
     .newDeviceSync,
   ]
 }
@@ -543,6 +298,14 @@ struct D2d_Envelope {
     set {_uniqueStorage()._content = .settingsSync(newValue)}
   }
 
+  var mdmParameterSync: D2d_MdmParameterSync {
+    get {
+      if case .mdmParameterSync(let v)? = _storage._content {return v}
+      return D2d_MdmParameterSync()
+    }
+    set {_uniqueStorage()._content = .mdmParameterSync(newValue)}
+  }
+
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
   /// The enveloped reflected message
@@ -556,6 +319,7 @@ struct D2d_Envelope {
     case groupSync(D2d_GroupSync)
     case distributionListSync(D2d_DistributionListSync)
     case settingsSync(D2d_SettingsSync)
+    case mdmParameterSync(D2d_MdmParameterSync)
 
   #if !swift(>=4.1)
     static func ==(lhs: D2d_Envelope.OneOf_Content, rhs: D2d_Envelope.OneOf_Content) -> Bool {
@@ -597,6 +361,10 @@ struct D2d_Envelope {
       }()
       case (.settingsSync, .settingsSync): return {
         guard case .settingsSync(let l) = lhs, case .settingsSync(let r) = rhs else { preconditionFailure() }
+        return l == r
+      }()
+      case (.mdmParameterSync, .mdmParameterSync): return {
+        guard case .mdmParameterSync(let l) = lhs, case .mdmParameterSync(let r) = rhs else { preconditionFailure() }
         return l == r
       }()
       default: return false
@@ -738,8 +506,8 @@ struct D2d_OutgoingMessage {
   /// enclosed the message.
   var createdAt: UInt64 = 0
 
-  /// Enclosed message's type, mapped from `csp.e2e.container.type`
-  var type: D2d_MessageType = .invalid
+  /// Enclosed message's type
+  var type: Common_CspE2eMessageType = .___
 
   /// The message's body, i.e. the unpadded `csp.e2e.container.padded-data`
   var body: Data = Data()
@@ -880,8 +648,8 @@ struct D2d_IncomingMessage {
   /// enclosed the message.
   var createdAt: UInt64 = 0
 
-  /// Enclosed message's type, mapped from `csp.e2e.container.type`
-  var type: D2d_MessageType = .invalid
+  /// Enclosed message's type.
+  var type: Common_CspE2eMessageType = .___
 
   /// The message's body, i.e. the unpadded `csp.e2e.container.padded-data`
   var body: Data = Data()
@@ -1516,8 +1284,72 @@ struct D2d_SettingsSync {
   init() {}
 }
 
+/// MDM parameter synchronisation message.
+struct D2d_MdmParameterSync {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  /// Synchronisation type
+  var action: D2d_MdmParameterSync.OneOf_Action? = nil
+
+  var update: D2d_MdmParameterSync.Update {
+    get {
+      if case .update(let v)? = action {return v}
+      return D2d_MdmParameterSync.Update()
+    }
+    set {action = .update(newValue)}
+  }
+
+  var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  /// Synchronisation type
+  enum OneOf_Action: Equatable {
+    case update(D2d_MdmParameterSync.Update)
+
+  #if !swift(>=4.1)
+    static func ==(lhs: D2d_MdmParameterSync.OneOf_Action, rhs: D2d_MdmParameterSync.OneOf_Action) -> Bool {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch (lhs, rhs) {
+      case (.update, .update): return {
+        guard case .update(let l) = lhs, case .update(let r) = rhs else { preconditionFailure() }
+        return l == r
+      }()
+      }
+    }
+  #endif
+  }
+
+  /// Update MDM parameters.
+  ///
+  /// When receiving this variant, run the _MDM Merge And Apply Steps_.
+  struct Update {
+    // SwiftProtobuf.Message conformance is added in an extension below. See the
+    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+    // methods supported on all messages.
+
+    var parameters: Sync_MdmParameters {
+      get {return _parameters ?? Sync_MdmParameters()}
+      set {_parameters = newValue}
+    }
+    /// Returns true if `parameters` has been explicitly set.
+    var hasParameters: Bool {return self._parameters != nil}
+    /// Clears the value of `parameters`. Subsequent reads from it will return its default value.
+    mutating func clearParameters() {self._parameters = nil}
+
+    var unknownFields = SwiftProtobuf.UnknownStorage()
+
+    init() {}
+
+    fileprivate var _parameters: Sync_MdmParameters? = nil
+  }
+
+  init() {}
+}
+
 #if swift(>=5.5) && canImport(_Concurrency)
-extension D2d_MessageType: @unchecked Sendable {}
 extension D2d_SharedDeviceData: @unchecked Sendable {}
 extension D2d_DeviceInfo: @unchecked Sendable {}
 extension D2d_DeviceInfo.Platform: @unchecked Sendable {}
@@ -1558,57 +1390,20 @@ extension D2d_DistributionListSync.Delete: @unchecked Sendable {}
 extension D2d_SettingsSync: @unchecked Sendable {}
 extension D2d_SettingsSync.OneOf_Action: @unchecked Sendable {}
 extension D2d_SettingsSync.Update: @unchecked Sendable {}
+extension D2d_MdmParameterSync: @unchecked Sendable {}
+extension D2d_MdmParameterSync.OneOf_Action: @unchecked Sendable {}
+extension D2d_MdmParameterSync.Update: @unchecked Sendable {}
 #endif  // swift(>=5.5) && canImport(_Concurrency)
 
 // MARK: - Code below here is support for the SwiftProtobuf runtime.
 
 fileprivate let _protobuf_package = "d2d"
 
-extension D2d_MessageType: SwiftProtobuf._ProtoNameProviding {
-  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "INVALID"),
-    1: .same(proto: "TEXT"),
-    2: .same(proto: "DEPRECATED_IMAGE"),
-    16: .same(proto: "LOCATION"),
-    19: .same(proto: "DEPRECATED_VIDEO"),
-    20: .same(proto: "DEPRECATED_AUDIO"),
-    21: .same(proto: "POLL_SETUP"),
-    22: .same(proto: "POLL_VOTE"),
-    23: .same(proto: "FILE"),
-    24: .same(proto: "CONTACT_SET_PROFILE_PICTURE"),
-    25: .same(proto: "CONTACT_DELETE_PROFILE_PICTURE"),
-    26: .same(proto: "CONTACT_REQUEST_PROFILE_PICTURE"),
-    65: .same(proto: "GROUP_TEXT"),
-    66: .same(proto: "GROUP_LOCATION"),
-    67: .same(proto: "GROUP_IMAGE"),
-    68: .same(proto: "GROUP_VIDEO"),
-    69: .same(proto: "GROUP_AUDIO"),
-    70: .same(proto: "GROUP_FILE"),
-    74: .same(proto: "GROUP_SETUP"),
-    75: .same(proto: "GROUP_NAME"),
-    76: .same(proto: "GROUP_LEAVE"),
-    80: .same(proto: "GROUP_SET_PROFILE_PICTURE"),
-    81: .same(proto: "GROUP_REQUEST_SYNC"),
-    82: .same(proto: "GROUP_POLL_SETUP"),
-    83: .same(proto: "GROUP_POLL_VOTE"),
-    84: .same(proto: "GROUP_DELETE_PROFILE_PICTURE"),
-    96: .same(proto: "CALL_OFFER"),
-    97: .same(proto: "CALL_ANSWER"),
-    98: .same(proto: "CALL_ICE_CANDIDATE"),
-    99: .same(proto: "CALL_HANGUP"),
-    100: .same(proto: "CALL_RINGING"),
-    128: .same(proto: "DELIVERY_RECEIPT"),
-    129: .same(proto: "GROUP_DELIVERY_RECEIPT"),
-    144: .same(proto: "TYPING_INDICATOR"),
-  ]
-}
-
 extension D2d_SharedDeviceData: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".SharedDeviceData"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "padding"),
     2: .same(proto: "version"),
-    3: .standard(proto: "mdm_parameters"),
   ]
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -1619,33 +1414,24 @@ extension D2d_SharedDeviceData: SwiftProtobuf.Message, SwiftProtobuf._MessageImp
       switch fieldNumber {
       case 1: try { try decoder.decodeSingularBytesField(value: &self.padding) }()
       case 2: try { try decoder.decodeSingularUInt32Field(value: &self.version) }()
-      case 3: try { try decoder.decodeSingularMessageField(value: &self._mdmParameters) }()
       default: break
       }
     }
   }
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    // The use of inline closures is to circumvent an issue where the compiler
-    // allocates stack space for every if/case branch local when no optimizations
-    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
-    // https://github.com/apple/swift-protobuf/issues/1182
     if !self.padding.isEmpty {
       try visitor.visitSingularBytesField(value: self.padding, fieldNumber: 1)
     }
     if self.version != 0 {
       try visitor.visitSingularUInt32Field(value: self.version, fieldNumber: 2)
     }
-    try { if let v = self._mdmParameters {
-      try visitor.visitSingularMessageField(value: v, fieldNumber: 3)
-    } }()
     try unknownFields.traverse(visitor: &visitor)
   }
 
   static func ==(lhs: D2d_SharedDeviceData, rhs: D2d_SharedDeviceData) -> Bool {
     if lhs.padding != rhs.padding {return false}
     if lhs.version != rhs.version {return false}
-    if lhs._mdmParameters != rhs._mdmParameters {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
@@ -1756,7 +1542,8 @@ extension D2d_TransactionScope.Scope: SwiftProtobuf._ProtoNameProviding {
     2: .same(proto: "GROUP_SYNC"),
     3: .same(proto: "DISTRIBUTION_LIST_SYNC"),
     4: .same(proto: "SETTINGS_SYNC"),
-    5: .same(proto: "NEW_DEVICE_SYNC"),
+    5: .same(proto: "MDM_PARAMETER_SYNC"),
+    6: .same(proto: "NEW_DEVICE_SYNC"),
   ]
 }
 
@@ -1773,6 +1560,7 @@ extension D2d_Envelope: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementat
     7: .standard(proto: "group_sync"),
     8: .standard(proto: "distribution_list_sync"),
     9: .standard(proto: "settings_sync"),
+    12: .standard(proto: "mdm_parameter_sync"),
   ]
 
   fileprivate class _StorageClass {
@@ -1922,6 +1710,19 @@ extension D2d_Envelope: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementat
             _storage._content = .incomingMessageUpdate(v)
           }
         }()
+        case 12: try {
+          var v: D2d_MdmParameterSync?
+          var hadOneofValue = false
+          if let current = _storage._content {
+            hadOneofValue = true
+            if case .mdmParameterSync(let m) = current {v = m}
+          }
+          try decoder.decodeSingularMessageField(value: &v)
+          if let v = v {
+            if hadOneofValue {try decoder.handleConflictingOneOf()}
+            _storage._content = .mdmParameterSync(v)
+          }
+        }()
         default: break
         }
       }
@@ -1973,6 +1774,10 @@ extension D2d_Envelope: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementat
       case .incomingMessageUpdate?: try {
         guard case .incomingMessageUpdate(let v)? = _storage._content else { preconditionFailure() }
         try visitor.visitSingularMessageField(value: v, fieldNumber: 11)
+      }()
+      case .mdmParameterSync?: try {
+        guard case .mdmParameterSync(let v)? = _storage._content else { preconditionFailure() }
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 12)
       }()
       case nil: break
       }
@@ -2118,7 +1923,7 @@ extension D2d_OutgoingMessage: SwiftProtobuf.Message, SwiftProtobuf._MessageImpl
     if self.createdAt != 0 {
       try visitor.visitSingularUInt64Field(value: self.createdAt, fieldNumber: 3)
     }
-    if self.type != .invalid {
+    if self.type != .___ {
       try visitor.visitSingularEnumField(value: self.type, fieldNumber: 4)
     }
     if !self.body.isEmpty {
@@ -2295,7 +2100,7 @@ extension D2d_IncomingMessage: SwiftProtobuf.Message, SwiftProtobuf._MessageImpl
     if self.createdAt != 0 {
       try visitor.visitSingularUInt64Field(value: self.createdAt, fieldNumber: 3)
     }
-    if self.type != .invalid {
+    if self.type != .___ {
       try visitor.visitSingularEnumField(value: self.type, fieldNumber: 5)
     }
     if !self.body.isEmpty {
@@ -3186,6 +2991,90 @@ extension D2d_SettingsSync.Update: SwiftProtobuf.Message, SwiftProtobuf._Message
 
   static func ==(lhs: D2d_SettingsSync.Update, rhs: D2d_SettingsSync.Update) -> Bool {
     if lhs._settings != rhs._settings {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension D2d_MdmParameterSync: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = _protobuf_package + ".MdmParameterSync"
+  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .same(proto: "update"),
+  ]
+
+  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try {
+        var v: D2d_MdmParameterSync.Update?
+        var hadOneofValue = false
+        if let current = self.action {
+          hadOneofValue = true
+          if case .update(let m) = current {v = m}
+        }
+        try decoder.decodeSingularMessageField(value: &v)
+        if let v = v {
+          if hadOneofValue {try decoder.handleConflictingOneOf()}
+          self.action = .update(v)
+        }
+      }()
+      default: break
+      }
+    }
+  }
+
+  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
+    try { if case .update(let v)? = self.action {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
+    } }()
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  static func ==(lhs: D2d_MdmParameterSync, rhs: D2d_MdmParameterSync) -> Bool {
+    if lhs.action != rhs.action {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension D2d_MdmParameterSync.Update: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = D2d_MdmParameterSync.protoMessageName + ".Update"
+  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .same(proto: "parameters"),
+  ]
+
+  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularMessageField(value: &self._parameters) }()
+      default: break
+      }
+    }
+  }
+
+  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
+    try { if let v = self._parameters {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
+    } }()
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  static func ==(lhs: D2d_MdmParameterSync.Update, rhs: D2d_MdmParameterSync.Update) -> Bool {
+    if lhs._parameters != rhs._parameters {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

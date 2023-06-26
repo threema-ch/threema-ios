@@ -126,8 +126,8 @@ final class ThreemaArgon2Tests: XCTestCase {
         XCTAssertEqual(expectedHex, actualRawHex)
     }
     
-    private func XCTAssertThrowsExpectedError<T, E: Error & Equatable>(
-        _ expression: @autoclosure () throws -> T,
+    private func XCTAssertThrowsExpectedError<E: Error & Equatable>(
+        _ expression: @autoclosure () throws -> some Any,
         _ expectedError: E,
         _ message: String = "",
         file: StaticString = #file,

@@ -204,7 +204,7 @@ class MediatorSyncableContacts: NSObject {
         }
 
         var delta = getDelta(identity: identity)
-        if let value = value {
+        if let value {
             delta.syncContact.firstName = value
         }
         else {
@@ -219,7 +219,7 @@ class MediatorSyncableContacts: NSObject {
         }
 
         var delta = getDelta(identity: identity)
-        if let value = value {
+        if let value {
             delta.syncContact.lastName = value
         }
         else {
@@ -234,7 +234,7 @@ class MediatorSyncableContacts: NSObject {
         }
 
         var delta = getDelta(identity: identity)
-        if let value = value {
+        if let value {
             delta.syncContact.nickname = value
         }
         else {
@@ -259,7 +259,7 @@ class MediatorSyncableContacts: NSObject {
         }
 
         var delta = getDelta(identity: identity)
-        if let value = value {
+        if let value {
             assert(value.intValue >= 0 && value.intValue <= 2)
 
             if let state = Sync_Contact.ActivityState(rawValue: value.intValue) {
@@ -286,7 +286,7 @@ class MediatorSyncableContacts: NSObject {
         }
 
         var delta = getDelta(identity: identity)
-        if let value = value {
+        if let value {
             assert(value.intValue >= 0 && value.intValue <= 1)
 
             if let acquaintanceLevel = Sync_Contact.AcquaintanceLevel(rawValue: value.intValue) {
@@ -305,7 +305,7 @@ class MediatorSyncableContacts: NSObject {
         }
 
         var delta = getDelta(identity: identity)
-        if let value = value {
+        if let value {
             if let conversationCategory = Sync_ConversationCategory(rawValue: value.rawValue) {
                 delta.syncContact.conversationCategory = conversationCategory
             }
@@ -322,7 +322,7 @@ class MediatorSyncableContacts: NSObject {
         }
 
         var delta = getDelta(identity: identity)
-        if let value = value {
+        if let value {
             if let conversationVisibility = Sync_ConversationVisibility(rawValue: value.rawValue) {
                 delta.syncContact.conversationVisibility = conversationVisibility
             }
@@ -339,7 +339,7 @@ class MediatorSyncableContacts: NSObject {
         }
 
         var delta = getDelta(identity: identity)
-        if let value = value {
+        if let value {
             delta.syncContact.featureMask = value.uint64Value
         }
         else {
@@ -357,8 +357,10 @@ class MediatorSyncableContacts: NSObject {
     ///     kVerificationLevelUnverified = 0,
     ///     kVerificationLevelServerVerified,
     ///     kVerificationLevelFullyVerified,
-    ///     kVerificationLevelWorkVerified,         // Legacy value, do not use anymore except for migration. Use workContact instead
-    ///     kVerificationLevelWorkFullyVerified     // Legacy value, do not use anymore except for migration. Use workContact instead
+    ///     // Legacy value, do not use anymore except for migration. Use workContact instead
+    ///     kVerificationLevelWorkVerified,
+    ///     // Legacy value, do not use anymore except for migration. Use workContact instead
+    ///     kVerificationLevelWorkFullyVerified
     /// };
     @objc func updateVerificationLevel(identity: String, value: NSNumber?) {
         guard serverConnector.isMultiDeviceActivated else {
@@ -366,7 +368,7 @@ class MediatorSyncableContacts: NSObject {
         }
 
         var delta = getDelta(identity: identity)
-        if let value = value {
+        if let value {
             delta.syncContact.verificationLevel = Sync_Contact
                 .VerificationLevel(rawValue: value.intValue) ?? .unverified
         }
@@ -386,7 +388,7 @@ class MediatorSyncableContacts: NSObject {
         }
 
         var delta = getDelta(identity: identity)
-        if let value = value {
+        if let value {
             assert(value.intValue >= 0 && value.intValue <= 1)
 
             if let identityType = Sync_Contact.IdentityType(rawValue: value.intValue) {
@@ -402,14 +404,15 @@ class MediatorSyncableContacts: NSObject {
     /// Update work verification level.
     /// - Parameters:
     ///    - identity: Threema-ID of the work contact
-    ///    - value: True work contact is in the same work subscription (package) as myself, changes on `Contact.isWork()` -> `Contact.workContact`
+    ///    - value: True work contact is in the same work subscription (package) as myself, changes on
+    ///             `Contact.isWork()` -> `Contact.workContact`
     @objc func updateWorkVerificationLevel(identity: String, value: NSNumber?) {
         guard serverConnector.isMultiDeviceActivated else {
             return
         }
 
         var delta = getDelta(identity: identity)
-        if let value = value {
+        if let value {
             delta.syncContact.workVerificationLevel = value.boolValue ? .workSubscriptionVerified : .none
         }
         else {
@@ -528,7 +531,7 @@ class MediatorSyncableContacts: NSObject {
 
             let task = TaskDefinitionDeleteContactSync(contacts: [identity])
             taskManager.add(taskDefinition: task) { _, error in
-                if let error = error {
+                if let error {
                     seal.reject(error)
                 }
                 else {
@@ -614,7 +617,7 @@ class MediatorSyncableContacts: NSObject {
 
         let taskResult = Promise<Void> { seal in
             completionHandler = { (_: TaskDefinitionProtocol, error: Error?) in
-                if let error = error {
+                if let error {
                     DDLogError("Task \(taskDefinition) not completed successfully because of an error. Error: \(error)")
                     seal.reject(error)
                 }

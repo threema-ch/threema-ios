@@ -24,7 +24,6 @@
 #import "BallotResult.h"
 #import "MyIdentityStore.h"
 #import "Ballot.h"
-#import "MessageSender.h"
 #import "RectUtil.h"
 #import "BallotHeaderView.h"
 #import "BallotCreateViewController.h"
@@ -281,8 +280,9 @@
     [_ballot setClosed];
     
     [_entityManager performSyncBlockAndSafe:nil];
-    
-    [MessageSender sendCreateMessageForBallot:_ballot];
+
+    MessageSender *messageSender = [[MessageSender alloc] initWithEntityManager:_entityManager];
+    [messageSender sendBallotMessageFor:_ballot];
     
     [self.navigationController dismissViewControllerAnimated:YES completion:nil];
 }
@@ -295,7 +295,8 @@
     _ballot.modifyDate = [NSDate date];
     [_entityManager performSyncBlockAndSafe:nil];
     
-    [MessageSender sendBallotVoteMessage:_ballot];
+    MessageSender *messageSender = [[MessageSender alloc] initWithEntityManager:_entityManager];
+    [messageSender sendBallotVoteMessageFor:_ballot];
     
     [self.navigationController dismissViewControllerAnimated:YES completion:nil];
 }

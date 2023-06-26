@@ -24,7 +24,7 @@ extension TextMessage: MessageAccessibility {
         
     public var customAccessibilityLabel: String {
         // We add an additional dot to improve the read text.
-        guard let text = text else {
+        guard let text else {
             return ""
         }
         return "\(text)."

@@ -83,7 +83,8 @@ final class UIComponentsViewController: ThemedViewController {
     
     // MARK: - Setup wizard components
     
-    /// Imitate setup wizard screen: Background color of parent view for SetupButton and SetupTextField has to be dark gray
+    /// Imitate setup wizard screen: Background color of parent view for SetupButton and SetupTextField has to be dark
+    /// gray
     private lazy var setupContainer: UIView = {
         let view = UIView()
         view.backgroundColor = .darkGray

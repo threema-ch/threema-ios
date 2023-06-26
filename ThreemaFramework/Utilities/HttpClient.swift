@@ -75,7 +75,7 @@ public class HTTPClient: NSObject {
     /// - parameter user: Username for Basic Authentication
     /// - parameter password: Password for Basic Authentication
     public init(user: String?, password: String?, sessionManager: URLSessionManager = .shared) {
-        if let user = user, let password = password {
+        if let user, let password {
             self.authenticationMethod = NSURLAuthenticationMethodHTTPBasic
             self.user = user
             self.password = password
@@ -250,7 +250,7 @@ public class HTTPClient: NSObject {
         request.httpMethod = httpMethod.rawValue
         request.setValue("Threema", forHTTPHeaderField: HTTPHeaderField.userAgent.rawValue)
         
-        if let authorization = authorization {
+        if let authorization {
             request.setValue(authorization, forHTTPHeaderField: HTTPHeaderField.authorization.rawValue)
         }
         
@@ -287,7 +287,7 @@ extension HTTPClient: URLSessionTaskDelegate {
         switch challenge.protectionSpace.authenticationMethod {
         case NSURLAuthenticationMethodHTTPBasic,
              NSURLAuthenticationMethodHTTPDigest:
-            if challenge.previousFailureCount < 7, let user = user, let password = password {
+            if challenge.previousFailureCount < 7, let user, let password {
                 let credential = URLCredential(user: user, password: password, persistence: .forSession)
                 completionHandler(.useCredential, credential)
             }

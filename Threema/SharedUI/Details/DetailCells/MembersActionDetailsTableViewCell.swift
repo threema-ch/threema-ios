@@ -27,7 +27,7 @@ class MembersActionDetailsTableViewCell: ThemedCodeTableViewCell {
     
     var action: Details.Action? {
         didSet {
-            guard let action = action else {
+            guard let action else {
                 return
             }
             

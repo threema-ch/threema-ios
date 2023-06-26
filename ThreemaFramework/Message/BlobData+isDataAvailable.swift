@@ -20,10 +20,10 @@
 
 import Foundation
 
-public extension BlobData {
+extension BlobData {
     
     /// Can the media be forwarded, shared, saved etc.
-    var isDataAvailable: Bool {
+    public var isDataAvailable: Bool {
         switch blobDisplayState {
         case .processed, .pending, .uploading, .uploaded, .sendingError:
             return true

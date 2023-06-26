@@ -43,7 +43,7 @@ class DocumentPreviewItem: MediaPreviewItem {
     }
     
     var fileSizeDescription: String? {
-        guard let itemURL = itemURL else {
+        guard let itemURL else {
             return nil
         }
         return FileUtility.getFileSizeDescription(for: itemURL)
@@ -100,7 +100,7 @@ class DocumentPreviewItem: MediaPreviewItem {
                 
                 gen.generateBestRepresentation(for: request) { thumbnail, error in
                     
-                    guard let thumbnail = thumbnail else {
+                    guard let thumbnail else {
                         seal.reject(error ?? MediaPreviewItem.LoadError.unknown)
                         return
                     }

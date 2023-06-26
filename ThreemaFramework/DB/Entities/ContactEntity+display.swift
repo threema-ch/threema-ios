@@ -20,23 +20,23 @@
 
 import Foundation
 
-public extension ContactEntity {
+extension ContactEntity {
     
     /// ID Color for this contact
     ///
     /// The color looks similar on all devices for the same ID.
-    var idColor: UIColor {
+    public var idColor: UIColor {
         IDColor.forData(Data(identity.utf8))
     }
     
     /// Shorter version of `displayName` if available
-    var shortDisplayName: String {
+    public var shortDisplayName: String {
         // This is an "op-in" feature
         guard ThreemaApp.current == .threema || ThreemaApp.current == .red else {
             return displayName
         }
         
-        if let firstName = firstName, !firstName.isEmpty {
+        if let firstName, !firstName.isEmpty {
             return firstName
         }
         
@@ -46,7 +46,7 @@ public extension ContactEntity {
     /// Could an other-Threema-type-icon be shown next to this contact?
     ///
     /// Most of the time it's most appropriate to show or hide an `OtherThreemaTypeImageView`.
-    var showOtherThreemaTypeIcon: Bool {
+    public var showOtherThreemaTypeIcon: Bool {
         if isEchoEcho() || isGatewayID() || ThreemaApp.current == .onPrem {
             return false
         }

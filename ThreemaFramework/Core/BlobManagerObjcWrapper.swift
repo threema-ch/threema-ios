@@ -30,11 +30,13 @@ import Foundation
     ///   - conversation: Conversation where message is sent
     ///   - correlationID: Optional String
     ///   - webRequestID: Optional String
+    ///   - completion: Called when the create and sync completed (there is no guarantee no error occurred)
     @objc public func createMessageAndSyncBlobs(
         for item: URLSenderItem,
         in conversation: Conversation?,
         correlationID: String?,
-        webRequestID: String?
+        webRequestID: String?,
+        completion: (() -> Void)?
     ) {
         Task {
             do {
@@ -54,6 +56,7 @@ import Foundation
             catch {
                 DDLogError("Could not create message and sync blobs due to: \(error)")
             }
+            completion?()
         }
     }
     
@@ -88,7 +91,8 @@ import Foundation
         }
     }
  
-    /// Checks the non isolated state tracker if there are any active blob syncs. Might not return the correct value since it is not handled in actor isolation.
+    /// Checks the non isolated state tracker if there are any active blob syncs. Might not return the correct value
+    /// since it is not handled in actor isolation.
     /// - Returns: `True` if there are probably some active syncs.
     @objc public func hasActiveSyncs() -> Bool {
         BlobManager.shared.hasActiveSyncs()

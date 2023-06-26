@@ -120,8 +120,8 @@ import Foundation
         retentionDays: Int?,
         completion: @escaping (Error?) -> Void
     ) {
-        if let customServer = customServer,
-           let server = server {
+        if let customServer,
+           let server {
             
             safeConfigManager.setKey(key)
             safeConfigManager.setCustomServer(customServer)
@@ -363,7 +363,7 @@ import Foundation
                 trigger: trigger
             )
             UNUserNotificationCenter.current().add(notificationRequest) { error in
-                if let error = error {
+                if let error {
                     DDLogError(
                         "Threema Safe: Error adding reminder to fire at \(DateFormatter.getFullDate(for: fireDate)): \(error.localizedDescription)"
                     )
@@ -404,7 +404,7 @@ import Foundation
     @objc func applyServer(server: String?, username: String?, password: String?) {
         if isActivated {
             let doApply: (URL?) -> Void = { newServerURL in
-                if let newServerURL = newServerURL {
+                if let newServerURL {
                     if self.safeConfigManager.getServer() != newServerURL.absoluteString {
                         // Save Threema Safe server config and reset result and control config
                         self.safeConfigManager.setCustomServer(server)
@@ -487,7 +487,7 @@ import Foundation
                             password: safeServerAuth.password,
                             encryptedData: encryptedData
                         ) { _, error in
-                            if let error = error {
+                            if let error {
                                 continuation.resume(throwing: SafeError.backupFailed(
                                     message: error.contains("Payload Too Large") ? BundleUtil
                                         .localizedString(forKey: "safe_upload_size_exceeded") :
@@ -637,7 +637,7 @@ import Foundation
                         password: safeServerAuth.password,
                         encryptedData: encryptedData
                     ) { _, errorMessage in
-                        if let errorMessage = errorMessage {
+                        if let errorMessage {
                             self.logger.logString(errorMessage)
                             
                             self.safeConfigManager
@@ -690,7 +690,7 @@ import Foundation
         if let key = safeStore.createKey(identity: identity, password: password),
            let backupID = safeStore.getBackupID(key: key) {
             
-            if let server = server,
+            if let server,
                !server.isEmpty {
                 
                 let safeServerURL = URL(string: server)!
@@ -765,7 +765,7 @@ import Foundation
                     data: decryptedData!,
                     onlyIdentity: restoreIdentityOnly,
                     completionHandler: { error in
-                        if let error = error {
+                        if let error {
                             switch error {
                             case let .restoreError(message):
                                 completionHandler(SafeError.restoreError(message: message))
@@ -836,7 +836,7 @@ import Foundation
         catch let SafeStore.SafeError.restoreFailed(message) {
             completionHandler(SafeError.restoreFailed(message: message))
             
-            if let decryptedData = decryptedData {
+            if let decryptedData {
                 // Save decrypted backup data into application documents folder, for analyzing failures
                 _ = FileUtility.write(
                     fileURL: FileUtility.appDocumentsDirectory?
@@ -882,7 +882,8 @@ import Foundation
                                 }
                                 self.backupForce = interval == 0
                             
-                                // async is necessary if the call is already within an operation queue (like after setup completion)
+                                // async is necessary if the call is already within an operation queue (like after setup
+                                // completion)
                                 SafeManager.backupDelay = Timer.scheduledTimer(
                                     timeInterval: TimeInterval(interval),
                                     target: self,
@@ -938,7 +939,8 @@ import Foundation
 
         DispatchQueue(label: "backupProcess").async {
 
-            // if forced, try to start backup immediately, otherwise when backup process is already running or last backup not older then a day then just mark as triggered
+            // if forced, try to start backup immediately, otherwise when backup process is already running or last
+            // backup not older then a day then just mark as triggered
             SafeManager.backupProcessLock.sync {
                 SafeManager.backupProcessStart = false
 

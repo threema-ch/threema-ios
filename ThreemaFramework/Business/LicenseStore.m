@@ -179,6 +179,13 @@ static LicenseStore *singleton;
         } onError:^(NSError *error) {
             _errorMessage = error.localizedDescription;
             _error = error;
+            
+            if ([_error.domain hasPrefix:@"NSURL"] == NO && _error.code != 256) {
+                // Remove licenceLastCheck. If notification extension will be startet, it will not process the messages
+                [MyIdentityStore sharedMyIdentityStore].licenseLastCheck = nil;
+                _didCheckLicense = NO;
+            }
+            
             onCompletion(NO);
 
             dispatch_semaphore_signal(_sema);

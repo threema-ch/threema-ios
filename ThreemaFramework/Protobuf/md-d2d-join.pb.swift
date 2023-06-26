@@ -15,15 +15,6 @@
 //
 // - `ED`: Existing device
 // - `ND`: New device to be added
-// - `PSK`: Key derived from the passphrase
-//
-// ### Key Derivation
-//
-//     PSK = Argon2id(
-//       out-length=32,
-//       parameters=<see DeviceGroupJoinRequestOrOffer.Argon2idParameters>,
-//       password=<passphrase>,
-//     )
 //
 // ### Blobs
 //
@@ -42,20 +33,6 @@
 // _requesting to join the device group_. If ED starts the protocol it is
 // _offering to join the device group_.
 //
-// Whichever role is chosen, the one that starts the protocol must generate and
-// display or request an ephemeral passphrase from the user to encrypt the data
-// with.
-//
-// From that passphrase, derive the Passphrase Key (PSK) using a 16 byte random
-// salt and Argon2id parameters that target a ~2s key derivation performance
-// impact on the weaker device. For the time being, the following Argon2id
-// parameters are to be used:
-//
-// - Version: 1.3
-// - Memory: 128 MiB
-// - Iterations: 3
-// - Parallelism: 1
-//
 // If ED started the protocol:
 //
 // - `variant` must be set to _offer to join the device group_.
@@ -71,13 +48,12 @@
 // #### Connection Setup
 //
 // RID creates a `rendezvous.RendezvousInit` by following the Connection
-// Rendezvous Protocol. It encrypts the created `rendezvous.RendezvousInit` with
-// PSK, wraps it in a `url.DeviceGroupJoinRequestOrOffer` and offers it in form
-// of a URL or a QR code.
+// Rendezvous Protocol. It wraps it in a `url.DeviceGroupJoinRequestOrOffer` and
+// offers it in form of a URL or a QR code.
 //
 // RRD scans the QR code or decodes the URL and then parses the
-// `url.DeviceGroupJoinRequestOrOffer`. It will then use PSK to decrypt the
-// contained `rendezvous.RendezvousInit`. Once decrypted, the enclosed
+// `url.DeviceGroupJoinRequestOrOffer`. It will then receive the data over a
+// sufficiently secure channel (e.g. a QR code). Once decoded, the enclosed
 // `rendezvous.RendezvousInit` must be handled according to the Connection
 // Rendezvous Protocol.
 //
@@ -99,8 +75,9 @@
 // must calculate the Rendezvous Path Hash (RPH) as defined by the Rendezvous
 // Protocol and display it to the user.
 //
-// ED must ask the user for confirmation that RPH is visually equal on both
-// devices. If the user does not confirm, the process must be aborted.
+// ED must ask the user for confirmation that RPH is equal on both devices. The
+// exact comparison mechanism is an implementation detail. If the user does not
+// confirm that RPH is equal on both devices, the process must be aborted.
 //
 // After confirmation, ED must stop displaying RPH and send a `Begin` message to
 // start the device join process.
@@ -120,6 +97,46 @@
 // ND may now either close the connection or leave it open to transition to the
 // History Exchange Protocol. Any further messages ED receives from ND will
 // transition into the History Exchange Protocol.
+//
+// ### Security
+//
+// The `url.DeviceGroupJoinRequestOrOffer` must be exchanged over a sufficiently
+// secure channel. A QR code is considered sufficiently secure in a _safe
+// space_. If this can be ensured by the user, ensuring that the Rendezvous Path
+// Hash (RPH) is equal on both devices is not strictly necessary.
+//
+// If an attacker is however able to capture the
+// `url.DeviceGroupJoinRequestOrOffer`, the security of the protocol relies on
+// the user ensuring that RPH is equal on both devices to ensure authentication
+// and mitigate the following attacks:
+//
+// - If ED started the protocol (offers to join the device group), comparing RPH
+//   is critical as otherwise the Client Key would become compromised if an
+//   attacker were able to make a connection faster than the victim's other
+//   device.
+// - If ND started the protocol (requests to join the device group), comparing
+//   RPH is not as critical yet still vital to mitigate a more sophisticated
+//   attack where the attacker makes it look as if the victim is connected to
+//   its device group. Until the victim finds out that it isn't its device group
+//   (because the process is stuck on ED), the victim may potentially leak
+//   sensitive information by adding a contact or sending a message, etc.
+// - An attacker who also controls the relay server used for connection between
+//   the victim's two devices could run a full MITM attack. Comparing RPH here
+//   is critical to ensure that the victim's two devices have established an
+//   end-to-end encrypted communication channel between each other.
+//
+// Letting ND start the protocol is considered more secure because of the above
+// implications.
+//
+// ED is always required to let the user confirm the equality of RPH on both
+// devices because it is ED who is to transmit the highly sensitive information.
+//
+// To prevent phishing attacks of a malicious web app claiming to be a Threema
+// App (typo squatting), the CORS `Access-Control-Allow-Origin` of any WebSocket
+// rendezvous relay server must be set to the bare minimum required by the use
+// case, so that a connection cannot be established. However, phishing
+// protection against a malicious non-web app claiming to be a Threema App is
+// not possible.
 
 import Foundation
 import SwiftProtobuf
@@ -323,12 +340,11 @@ struct Join_Begin {
 /// 7. Send a `Registered` message to ED.
 /// 8. Ask the user whether conversation history data should be requested from
 ///    ND:
-///    1. If the user wants to request conversation history data from ED, leave
-///       the connection running and start the History Exchange Protocol. Abort
-///       these steps.
-///    2. If the user does not want to request conversation history data, wait
+///    1. If the user does not want to request conversation history data, wait
 ///       until all buffered data on the connection has been written. Then, close
-///       the connection.
+///       the connection and abort these steps.
+///    2. If the user wants to request conversation history data from ED, leave
+///       the connection running and start the History Exchange Protocol.
 struct Join_EssentialData {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
@@ -380,6 +396,16 @@ struct Join_EssentialData {
   var hasSettings: Bool {return _storage._settings != nil}
   /// Clears the value of `settings`. Subsequent reads from it will return its default value.
   mutating func clearSettings() {_uniqueStorage()._settings = nil}
+
+  /// MDM parameters
+  var mdmParameters: Sync_MdmParameters {
+    get {return _storage._mdmParameters ?? Sync_MdmParameters()}
+    set {_uniqueStorage()._mdmParameters = newValue}
+  }
+  /// Returns true if `mdmParameters` has been explicitly set.
+  var hasMdmParameters: Bool {return _storage._mdmParameters != nil}
+  /// Clears the value of `mdmParameters`. Subsequent reads from it will return its default value.
+  mutating func clearMdmParameters() {_uniqueStorage()._mdmParameters = nil}
 
   var contacts: [Join_EssentialData.AugmentedContact] {
     get {return _storage._contacts}
@@ -511,13 +537,23 @@ struct Join_EssentialData {
 
     /// Unix-ish timestamp in milliseconds when the conversation with this
     /// contact was last updated.
-    var lastUpdateAt: UInt64 = 0
+    ///
+    /// Optional if no conversation exists for this contact.
+    var lastUpdateAt: UInt64 {
+      get {return _lastUpdateAt ?? 0}
+      set {_lastUpdateAt = newValue}
+    }
+    /// Returns true if `lastUpdateAt` has been explicitly set.
+    var hasLastUpdateAt: Bool {return self._lastUpdateAt != nil}
+    /// Clears the value of `lastUpdateAt`. Subsequent reads from it will return its default value.
+    mutating func clearLastUpdateAt() {self._lastUpdateAt = nil}
 
     var unknownFields = SwiftProtobuf.UnknownStorage()
 
     init() {}
 
     fileprivate var _contact: Sync_Contact? = nil
+    fileprivate var _lastUpdateAt: UInt64? = nil
   }
 
   /// Groups
@@ -787,11 +823,12 @@ extension Join_EssentialData: SwiftProtobuf.Message, SwiftProtobuf._MessageImple
     3: .standard(proto: "device_group_data"),
     4: .standard(proto: "user_profile"),
     5: .same(proto: "settings"),
-    6: .same(proto: "contacts"),
-    7: .same(proto: "groups"),
-    8: .standard(proto: "distribution_lists"),
-    9: .standard(proto: "csp_hashed_nonces"),
-    10: .standard(proto: "d2d_hashed_nonces"),
+    6: .standard(proto: "mdm_parameters"),
+    7: .same(proto: "contacts"),
+    8: .same(proto: "groups"),
+    9: .standard(proto: "distribution_lists"),
+    10: .standard(proto: "csp_hashed_nonces"),
+    11: .standard(proto: "d2d_hashed_nonces"),
   ]
 
   fileprivate class _StorageClass {
@@ -800,6 +837,7 @@ extension Join_EssentialData: SwiftProtobuf.Message, SwiftProtobuf._MessageImple
     var _deviceGroupData: Join_EssentialData.DeviceGroupData? = nil
     var _userProfile: Sync_UserProfile? = nil
     var _settings: Sync_Settings? = nil
+    var _mdmParameters: Sync_MdmParameters? = nil
     var _contacts: [Join_EssentialData.AugmentedContact] = []
     var _groups: [Join_EssentialData.AugmentedGroup] = []
     var _distributionLists: [Join_EssentialData.AugmentedDistributionList] = []
@@ -816,6 +854,7 @@ extension Join_EssentialData: SwiftProtobuf.Message, SwiftProtobuf._MessageImple
       _deviceGroupData = source._deviceGroupData
       _userProfile = source._userProfile
       _settings = source._settings
+      _mdmParameters = source._mdmParameters
       _contacts = source._contacts
       _groups = source._groups
       _distributionLists = source._distributionLists
@@ -844,11 +883,12 @@ extension Join_EssentialData: SwiftProtobuf.Message, SwiftProtobuf._MessageImple
         case 3: try { try decoder.decodeSingularMessageField(value: &_storage._deviceGroupData) }()
         case 4: try { try decoder.decodeSingularMessageField(value: &_storage._userProfile) }()
         case 5: try { try decoder.decodeSingularMessageField(value: &_storage._settings) }()
-        case 6: try { try decoder.decodeRepeatedMessageField(value: &_storage._contacts) }()
-        case 7: try { try decoder.decodeRepeatedMessageField(value: &_storage._groups) }()
-        case 8: try { try decoder.decodeRepeatedMessageField(value: &_storage._distributionLists) }()
-        case 9: try { try decoder.decodeRepeatedBytesField(value: &_storage._cspHashedNonces) }()
-        case 10: try { try decoder.decodeRepeatedBytesField(value: &_storage._d2DHashedNonces) }()
+        case 6: try { try decoder.decodeSingularMessageField(value: &_storage._mdmParameters) }()
+        case 7: try { try decoder.decodeRepeatedMessageField(value: &_storage._contacts) }()
+        case 8: try { try decoder.decodeRepeatedMessageField(value: &_storage._groups) }()
+        case 9: try { try decoder.decodeRepeatedMessageField(value: &_storage._distributionLists) }()
+        case 10: try { try decoder.decodeRepeatedBytesField(value: &_storage._cspHashedNonces) }()
+        case 11: try { try decoder.decodeRepeatedBytesField(value: &_storage._d2DHashedNonces) }()
         default: break
         }
       }
@@ -876,20 +916,23 @@ extension Join_EssentialData: SwiftProtobuf.Message, SwiftProtobuf._MessageImple
       try { if let v = _storage._settings {
         try visitor.visitSingularMessageField(value: v, fieldNumber: 5)
       } }()
+      try { if let v = _storage._mdmParameters {
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 6)
+      } }()
       if !_storage._contacts.isEmpty {
-        try visitor.visitRepeatedMessageField(value: _storage._contacts, fieldNumber: 6)
+        try visitor.visitRepeatedMessageField(value: _storage._contacts, fieldNumber: 7)
       }
       if !_storage._groups.isEmpty {
-        try visitor.visitRepeatedMessageField(value: _storage._groups, fieldNumber: 7)
+        try visitor.visitRepeatedMessageField(value: _storage._groups, fieldNumber: 8)
       }
       if !_storage._distributionLists.isEmpty {
-        try visitor.visitRepeatedMessageField(value: _storage._distributionLists, fieldNumber: 8)
+        try visitor.visitRepeatedMessageField(value: _storage._distributionLists, fieldNumber: 9)
       }
       if !_storage._cspHashedNonces.isEmpty {
-        try visitor.visitRepeatedBytesField(value: _storage._cspHashedNonces, fieldNumber: 9)
+        try visitor.visitRepeatedBytesField(value: _storage._cspHashedNonces, fieldNumber: 10)
       }
       if !_storage._d2DHashedNonces.isEmpty {
-        try visitor.visitRepeatedBytesField(value: _storage._d2DHashedNonces, fieldNumber: 10)
+        try visitor.visitRepeatedBytesField(value: _storage._d2DHashedNonces, fieldNumber: 11)
       }
     }
     try unknownFields.traverse(visitor: &visitor)
@@ -905,6 +948,7 @@ extension Join_EssentialData: SwiftProtobuf.Message, SwiftProtobuf._MessageImple
         if _storage._deviceGroupData != rhs_storage._deviceGroupData {return false}
         if _storage._userProfile != rhs_storage._userProfile {return false}
         if _storage._settings != rhs_storage._settings {return false}
+        if _storage._mdmParameters != rhs_storage._mdmParameters {return false}
         if _storage._contacts != rhs_storage._contacts {return false}
         if _storage._groups != rhs_storage._groups {return false}
         if _storage._distributionLists != rhs_storage._distributionLists {return false}
@@ -1064,7 +1108,7 @@ extension Join_EssentialData.AugmentedContact: SwiftProtobuf.Message, SwiftProto
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
       case 1: try { try decoder.decodeSingularMessageField(value: &self._contact) }()
-      case 2: try { try decoder.decodeSingularUInt64Field(value: &self.lastUpdateAt) }()
+      case 2: try { try decoder.decodeSingularUInt64Field(value: &self._lastUpdateAt) }()
       default: break
       }
     }
@@ -1078,15 +1122,15 @@ extension Join_EssentialData.AugmentedContact: SwiftProtobuf.Message, SwiftProto
     try { if let v = self._contact {
       try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
     } }()
-    if self.lastUpdateAt != 0 {
-      try visitor.visitSingularUInt64Field(value: self.lastUpdateAt, fieldNumber: 2)
-    }
+    try { if let v = self._lastUpdateAt {
+      try visitor.visitSingularUInt64Field(value: v, fieldNumber: 2)
+    } }()
     try unknownFields.traverse(visitor: &visitor)
   }
 
   static func ==(lhs: Join_EssentialData.AugmentedContact, rhs: Join_EssentialData.AugmentedContact) -> Bool {
     if lhs._contact != rhs._contact {return false}
-    if lhs.lastUpdateAt != rhs.lastUpdateAt {return false}
+    if lhs._lastUpdateAt != rhs._lastUpdateAt {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

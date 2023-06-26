@@ -76,7 +76,7 @@ class ContactStoreMock: NSObject, ContactStoreProtocol {
         onCompletion: @escaping (Data?) -> Void,
         onError: ((Error?) -> Void)? = nil
     ) {
-        if let errorHandler = errorHandler, let onError = onError {
+        if let errorHandler, let onError {
             onError(errorHandler)
         }
         else if callOnCompletion {

@@ -24,7 +24,7 @@ import Foundation
 
 extension TextMessage: QuoteMessageProvider {
     public var quoteMessage: QuoteMessage? {
-        guard let quotedMessageID = quotedMessageID else {
+        guard let quotedMessageID else {
             return nil
         }
         

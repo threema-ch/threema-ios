@@ -20,10 +20,10 @@
 
 import Foundation
 
-public extension FileMessageEntity {
+extension FileMessageEntity {
     
     /// Possible render types of a file message entity
-    enum RenderType {
+    public enum RenderType {
         /// An image represented though its thumbnail
         case imageMessage
         /// Like an image but no background
@@ -41,8 +41,9 @@ public extension FileMessageEntity {
     }
     
     /// How should this message be rendered?
-    /// When changing this you should also change `(NSArray *)filesMessagesFilteredForPhotoBrowserForConversation:(Conversation *)conversation` in `EntityFetcher`
-    var renderType: RenderType {
+    /// When changing this you should also change `(NSArray
+    /// *)filesMessagesFilteredForPhotoBrowserForConversation:(Conversation *)conversation` in `EntityFetcher`
+    public var renderType: RenderType {
         if UTIConverter.isImageMimeType(mimeType), UTIConverter.isRenderingImageMimeType(mimeType) {
             if type?.intValue == 1 {
                 return .imageMessage
@@ -81,7 +82,7 @@ public extension FileMessageEntity {
         return .fileMessage
     }
     
-    override var showRetryAndCancelButton: Bool {
+    override public var showRetryAndCancelButton: Bool {
         switch blobDisplayState {
         case .pending, .sendingError, .uploading:
             return true

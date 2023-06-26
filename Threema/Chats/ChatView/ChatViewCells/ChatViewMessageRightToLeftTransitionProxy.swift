@@ -51,7 +51,8 @@ final class ChatViewMessageRightToLeftTransitionProxy: NSObject {
         onEnded: (() -> Void)? = nil
     ) {
         // Required for smooth animations when swiping to and from details.
-        /// When swiping to details we want our handling, and when swiping back we want the default handling from navigationcontroller
+        /// When swiping to details we want our handling, and when swiping back we want the default handling from
+        /// navigationcontroller
         navigationController?.delegate = self
         defer { navigationController?.delegate = nil }
         

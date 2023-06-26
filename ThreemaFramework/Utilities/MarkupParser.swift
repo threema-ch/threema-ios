@@ -201,8 +201,8 @@ public class MarkupParser {
 
 // MARK: - Public functions
 
-public extension MarkupParser {
-    func markify(
+extension MarkupParser {
+    public func markify(
         attributedString: NSAttributedString,
         font: UIFont,
         parseURL: Bool = false,
@@ -239,7 +239,8 @@ public extension MarkupParser {
     /// Parse for URL's in the string
     /// - Parameter attributedString: NSMutableAttributedString to parse
     /// - Returns: NSMutableAttributedString with all URL attributes
-    func parseURLWithDataDetectorForLinks(attributedString: NSMutableAttributedString) -> NSMutableAttributedString {
+    public func parseURLWithDataDetectorForLinks(attributedString: NSMutableAttributedString)
+        -> NSMutableAttributedString {
         do {
             let dataDetector = try NSDataDetector(types: NSTextCheckingResult.CheckingType.link.rawValue)
             
@@ -261,12 +262,12 @@ public extension MarkupParser {
     
     /// Preview string of a string containing markup
     ///
-    /// This parses mentions to names and removes markup from a string containing both. Use if if you want just show a preview string instead
-    /// of a text containing formatting.
+    /// This parses mentions to names and removes markup from a string containing both. Use if if you want just show a
+    /// preview string instead of a text containing formatting.
     ///
     /// - Parameter string: String to parse
     /// - Returns: Preview string with all internal markup stripped
-    func previewString(for string: String, font: UIFont) -> NSAttributedString {
+    public func previewString(for string: String, font: UIFont) -> NSAttributedString {
         let parsedMarkups = NSMutableAttributedString(string: string)
         
         do {
@@ -287,7 +288,7 @@ public extension MarkupParser {
         return parsedAndRemovedMarkup
     }
     
-    func parseMentionNamesToMarkup(parsed: NSAttributedString) -> NSAttributedString {
+    public func parseMentionNamesToMarkup(parsed: NSAttributedString) -> NSAttributedString {
         let parsedWithMentionMarkups = NSMutableAttributedString(attributedString: parsed)
         
         parsedWithMentionMarkups.enumerateAttribute(NSAttributedString.Key.tokenType, in: NSRange(
@@ -329,7 +330,7 @@ public extension MarkupParser {
         return parsedWithMentionMarkups
     }
     
-    func removeMarkupsFromParse(parsed: NSAttributedString) -> NSAttributedString {
+    public func removeMarkupsFromParse(parsed: NSAttributedString) -> NSAttributedString {
         let parsedWithoutMarkups = NSMutableAttributedString(attributedString: parsed)
         parsedWithoutMarkups.enumerateAttribute(NSAttributedString.Key.tokenType, in: NSRange(
             location: 0,
@@ -345,7 +346,7 @@ public extension MarkupParser {
         return parsedWithoutMarkups
     }
     
-    func parseMentionNames(parsed: NSAttributedString) -> NSAttributedString {
+    public func parseMentionNames(parsed: NSAttributedString) -> NSAttributedString {
 
         let parsedWithMentionNames = NSMutableAttributedString(attributedString: parsed)
         
@@ -386,7 +387,10 @@ public extension MarkupParser {
         return parsedWithMentionNames
     }
     
-    func highlightOccurrences(of searchString: String, in originalString: NSAttributedString) -> NSAttributedString {
+    public func highlightOccurrences(
+        of searchString: String,
+        in originalString: NSAttributedString
+    ) -> NSAttributedString {
         let mutableOriginalString = NSMutableAttributedString(attributedString: originalString)
         let totalLength = mutableOriginalString.length
         let searchStringLength = NSString(string: searchString).length
@@ -417,7 +421,7 @@ public extension MarkupParser {
 
 // MARK: - private functions
 
-public extension MarkupParser {
+extension MarkupParser {
     private func tokenPresenceMap() -> [ParseTokenType: Bool] {
         var map = [ParseTokenType: Bool]()
         map.updateValue(false, forKey: .asterisk)
@@ -927,7 +931,7 @@ public extension MarkupParser {
     }
 }
 
-public extension NSAttributedString.Key {
-    static let tokenType: NSAttributedString.Key = .init("tokenType")
-    static let contact: NSAttributedString.Key = .init("contact")
+extension NSAttributedString.Key {
+    public static let tokenType: NSAttributedString.Key = .init("tokenType")
+    public static let contact: NSAttributedString.Key = .init("contact")
 }

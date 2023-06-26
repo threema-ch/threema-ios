@@ -73,11 +73,7 @@ extension VideoMessageEntity: VideoMessage {
     }
     
     public var durationTimeInterval: TimeInterval? {
-        guard let duration = duration else {
-            return nil
-        }
-        
-        return duration.doubleValue
+        duration.doubleValue
     }
     
     public func temporaryBlobDataURL() -> URL? {

@@ -65,7 +65,14 @@ public class BusinessInjector: NSObject, FrameworkInjectorProtocol {
 
     public lazy var licenseStore = LicenseStore.shared()
 
-    public lazy var messageSender: MessageSenderProtocol = MessageSender(TaskManager(frameworkInjector: self))
+    public lazy var messageSender: MessageSenderProtocol = MessageSender(
+        serverConnector: serverConnector,
+        myIdentityStore: myIdentityStore,
+        userSettings: userSettings,
+        groupManager: groupManager,
+        taskManager: TaskManager(frameworkInjector: self),
+        entityManager: entityManager
+    )
 
     public lazy var multiDeviceManager: MultiDeviceManagerProtocol =
         MultiDeviceManager(serverConnector: serverConnector)
@@ -118,7 +125,7 @@ public class BusinessInjector: NSObject, FrameworkInjectorProtocol {
             fsmpInstance = ForwardSecurityMessageProcessor(
                 dhSessionStore: dhSessionStore,
                 identityStore: myIdentityStore,
-                messageSender: MessageSenderAdapter()
+                messageSender: MessageSenderAdapter(businessInjector: self)
             )
             
             fsStatusSender = ForwardSecurityStatusSender(entityManager: entityManager)
@@ -139,8 +146,14 @@ public class BusinessInjector: NSObject, FrameworkInjectorProtocol {
     lazy var userNotificationCenterManager: UserNotificationCenterManagerProtocol = UserNotificationCenterManager()
 
     class MessageSenderAdapter: ForwardSecurityMessageSenderProtocol {
+        private let businessInjector: BusinessInjector
+
+        init(businessInjector: BusinessInjector) {
+            self.businessInjector = businessInjector
+        }
+
         func send(message: AbstractMessage) {
-            MessageSender.send(message, isPersistent: true)
+            businessInjector.messageSender.sendMessage(abstractMessage: message, isPersistent: true)
         }
     }
 }

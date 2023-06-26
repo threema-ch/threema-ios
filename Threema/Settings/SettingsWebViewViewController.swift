@@ -74,7 +74,7 @@ class SettingsWebViewViewController: UIViewController, WKNavigationDelegate {
             navigationController?.navigationBar.overrideUserInterfaceStyle = .dark
         }
         
-        guard let url = url else {
+        guard let url else {
             fatalError()
         }
         

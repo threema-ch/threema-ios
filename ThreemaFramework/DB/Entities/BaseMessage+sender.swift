@@ -20,15 +20,15 @@
 
 import Foundation
 
-public extension BaseMessage {
+extension BaseMessage {
     
     /// Readable name of the sender
-    var localizedSenderName: String {
+    public var localizedSenderName: String {
         if isOwnMessage {
             return BundleUtil.localizedString(forKey: "me")
         }
         else {
-            if let sender = sender {
+            if let sender {
                 return sender.displayName
             }
             else {
@@ -37,12 +37,12 @@ public extension BaseMessage {
         }
     }
     
-    var senderIDColor: UIColor {
+    public var senderIDColor: UIColor {
         if isOwnMessage {
             return MyIdentityStore.shared().idColor
         }
         else {
-            if let sender = sender {
+            if let sender {
                 return sender.idColor
             }
             else {

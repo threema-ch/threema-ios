@@ -32,10 +32,12 @@ protocol MessageVoiceMessageWaveformViewDelegate {
 /// Should be used in an UIStackView because otherwise the `intrinsicContentSize` might not make sense.
 /// Does *not* handle cleanup of created temporary files. Cleanup *must* be handled by the initializer.
 ///
-/// This view is a bit weird in that it lies about its intrinsicContentSize to grow as large as possible in the first layout pass.
+/// This view is a bit weird in that it lies about its intrinsicContentSize to grow as large as possible in the first
+/// layout pass.
 /// But then uses an image slightly smaller than its actual size to avoid triggering further layout passes that happen
 /// when this is embedded in a UIStackView with other views which are slightly larger than their intrinsicContentSize.
-/// An alternative approach to this problem is to assure that all other views in the UIStackView are exactly the size of their intrinsicContentSize.
+/// An alternative approach to this problem is to assure that all other views in the UIStackView are exactly the size of
+/// their intrinsicContentSize.
 final class MessageVoiceMessageWaveformView: UIView, UIGestureRecognizerDelegate {
     typealias config = ChatViewConfiguration.VoiceMessage.WaveformView
     
@@ -46,7 +48,7 @@ final class MessageVoiceMessageWaveformView: UIView, UIGestureRecognizerDelegate
         willSet {
             defer { lastBlobState = newValue?.blobDisplayState }
             
-            guard let newValue = newValue else {
+            guard let newValue else {
                 updateView(with: nil)
                 return
             }
@@ -70,11 +72,11 @@ final class MessageVoiceMessageWaveformView: UIView, UIGestureRecognizerDelegate
     
     var delegate: ChatViewTableViewVoiceMessageCellDelegateProtocol? {
         didSet {
-            guard let voiceMessage = voiceMessage else {
+            guard let voiceMessage else {
                 return
             }
             
-            guard let delegate = delegate else {
+            guard let delegate else {
                 return
             }
             
@@ -84,9 +86,11 @@ final class MessageVoiceMessageWaveformView: UIView, UIGestureRecognizerDelegate
     
     // MARK: - UIView Overrides
     
-    /// This does not return the real `intrinsicContentSize` but a value which works well in self-sizing cells / UIStackViews
+    /// This does not return the real `intrinsicContentSize` but a value which works well in self-sizing cells /
+    /// UIStackViews
     override var intrinsicContentSize: CGSize {
-        /// We do not return our real intrinsic content size here to avoid shrinking the message cell beyond the maximum width.
+        /// We do not return our real intrinsic content size here to avoid shrinking the message cell beyond the maximum
+        /// width.
         CGSize(width: UIScreen.main.bounds.width, height: config.waveformRenderHeight)
     }
     
@@ -265,7 +269,7 @@ final class MessageVoiceMessageWaveformView: UIView, UIGestureRecognizerDelegate
             return nil
         }
         
-        guard let voiceMessage = voiceMessage else {
+        guard let voiceMessage else {
             imageView.image = nil
             return silentAudioURL
         }
@@ -288,8 +292,10 @@ final class MessageVoiceMessageWaveformView: UIView, UIGestureRecognizerDelegate
         let viewWidth = viewSize.width
         
         let mod = config.singleBarWidth + config.barSpacing
-        /// We use the next lower multiple of the sum of the bar width and the spacing between two bars to avoid cutting off bars in our view.
-        /// Rounding up caused a weird behaviour where the imageview would increase in steps of the size of the difference
+        /// We use the next lower multiple of the sum of the bar width and the spacing between two bars to avoid cutting
+        /// off bars in our view.
+        /// Rounding up caused a weird behaviour where the imageview would increase in steps of the size of the
+        /// difference
         /// between original value and rounded up value until auto-layout found a new layout again. We thus round down.
         let targetWidth = viewWidth - mod + (viewWidth.truncatingRemainder(dividingBy: mod))
         return CGSize(width: targetWidth, height: viewSize.height)
@@ -313,7 +319,7 @@ final class MessageVoiceMessageWaveformView: UIView, UIGestureRecognizerDelegate
     override func layoutSubviews() {
         super.layoutSubviews()
         
-        guard let previousBoundsSize = previousBoundsSize else {
+        guard let previousBoundsSize else {
             return
         }
 

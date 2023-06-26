@@ -22,31 +22,35 @@
 #import <CoreData/CoreData.h>
 #import "BaseMessage.h"
 #import "FileData.h"
-#import "BlobData.h"
+#import "BlobOrigin.h"
 
 @class ImageData;
 
-@interface FileMessageEntity : BaseMessage <BlobData>
+@interface FileMessageEntity : BaseMessage
 
-@property (nonatomic, retain, nullable) NSData * encryptionKey;
-@property (nonatomic, retain, nullable) NSData * blobId NS_SWIFT_NAME(blobID);
-@property (nonatomic, retain, nullable) NSData * blobThumbnailId NS_SWIFT_NAME(blobThumbnailID);
-@property (nonatomic, retain, nullable) NSString * fileName;
-@property (nonatomic, retain, nullable) NSNumber * fileSize;
-@property (nonatomic, retain, nullable) NSNumber * progress;
-@property (nonatomic, retain, nullable) NSNumber * type;
-@property (nonatomic, retain, nullable) NSString * mimeType;
-@property (nonatomic, retain, nullable) FileData *data;
-@property (nonatomic, retain, nullable) ImageData *thumbnail;
-@property (nonatomic, retain, nullable) NSString * json;
+// Attributes
+@property (nullable, nonatomic, retain) NSData * blobId NS_SWIFT_NAME(blobID);
+@property (nullable, nonatomic, retain) NSData * blobThumbnailId NS_SWIFT_NAME(blobThumbnailID);
+@property (nullable, nonatomic, retain) NSData * encryptionKey;
+@property (nullable, nonatomic, retain) NSString * fileName;
+@property (nullable, nonatomic, retain) NSNumber * fileSize;
+@property (nullable, nonatomic, retain) NSString * json;
+@property (nullable, nonatomic, retain) NSString * mimeType;
+@property (nullable, nonatomic, retain) NSNumber * origin;
+@property (nullable, nonatomic, retain) NSNumber * progress;
+@property (nullable, nonatomic, retain) NSNumber * type;
 
-// not stored in core data
-@property (nonatomic, retain, nullable) NSString *caption;
-@property (nonatomic, retain, nullable) NSString *correlationId NS_SWIFT_NAME(correlationID);
-@property (nonatomic, retain, nullable) NSString *mimeTypeThumbnail;
-@property (nonatomic, retain, nullable) NSNumber *duration;
-@property (nonatomic, retain, nullable) NSNumber *height;
-@property (nonatomic, retain, nullable) NSNumber *width;
+// Relationships
+@property (nullable, nonatomic, retain) FileData *data;
+@property (nullable, nonatomic, retain) ImageData *thumbnail;
+
+// Not stored in core data
+@property (nullable, nonatomic, retain) NSString *caption;
+@property (nullable, nonatomic, retain) NSString *correlationId NS_SWIFT_NAME(correlationID);
+@property (nullable, nonatomic, retain) NSString *mimeTypeThumbnail;
+@property (nullable, nonatomic, retain) NSNumber *duration;
+@property (nullable, nonatomic, retain) NSNumber *height;
+@property (nullable, nonatomic, retain) NSNumber *width;
 
 - (nullable NSURL *)tmpURL:(nonnull NSString *)tmpFileName;
 

@@ -20,6 +20,8 @@
 
 import UIKit
 
+// MARK: - EditAvatarView.Configuration
+
 extension EditAvatarView {
     private struct Configuration: DetailsConfiguration {
         /// Spacing between buttons at the bottom
@@ -314,8 +316,8 @@ class EditAvatarView: UIStackView {
         // Quite a hack. Maybe generalize that in modal presenter?
         
         presentingRect = .zero
-        if let presentingViewController = presentingViewController,
-           let view = view {
+        if let presentingViewController,
+           let view {
             presentingRect = presentingViewController.view.convert(
                 view.frame,
                 from: view.superview
@@ -380,7 +382,7 @@ extension EditAvatarView: UINavigationControllerDelegate, UIImagePickerControlle
         guard let selectedImage = info[.originalImage] as? UIImage else {
             picker.dismiss(animated: true)
             
-            if let presentingViewController = presentingViewController {
+            if let presentingViewController {
                 UIAlertTemplate.showAlert(
                     owner: presentingViewController,
                     title: BundleUtil.localizedString(forKey: "edit_avatar_no_image_found_title"),

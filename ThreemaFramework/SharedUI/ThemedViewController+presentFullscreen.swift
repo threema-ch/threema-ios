@@ -20,10 +20,10 @@
 
 import Foundation
 
-public extension ThemedViewController {
+extension ThemedViewController {
     /// Present the provided image in a simple big view
     /// - Parameter image: Image to show in full screen
-    func presentFullscreen(image: UIImage) {
+    public func presentFullscreen(image: UIImage) {
         guard let fullscreenImageViewController = FullscreenImageViewController(for: image) else {
             return
         }

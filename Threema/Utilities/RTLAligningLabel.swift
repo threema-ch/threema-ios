@@ -24,7 +24,7 @@ import Foundation
 class RTLAligningLabel: UILabel {
     override public var text: String? {
         didSet {
-            guard let text = text,
+            guard let text,
                   !text.isEmpty else {
                 return
             }
@@ -34,7 +34,7 @@ class RTLAligningLabel: UILabel {
     
     override public var attributedText: NSAttributedString? {
         didSet {
-            guard let text = text,
+            guard let text,
                   !text.isEmpty else {
                 return
             }

@@ -26,9 +26,9 @@ enum EntityCreatorError: Error {
     case entityCreationFailed
 }
 
-public extension EntityCreator {
+extension EntityCreator {
     
-    func createFileMessageEntity(
+    public func createFileMessageEntity(
         for item: URLSenderItem,
         in conversation: Conversation,
         with origin: BlobOrigin,
@@ -50,7 +50,7 @@ public extension EntityCreator {
         // Assemble file message entity
         let entity = fileMessageEntity(for: conversation)
         
-        guard let entity = entity else {
+        guard let entity else {
             throw EntityCreatorError.entityCreationFailed
         }
         
@@ -64,7 +64,7 @@ public extension EntityCreator {
         entity.caption = item.caption
         entity.fileSize = NSNumber(integerLiteral: data.count)
         entity.fileName = item.getName() // We do not support web in the new file manager yet
-        entity.blobSetOrigin(origin)
+        entity.blobOrigin = origin
         
         if let renderType = item.renderType {
             entity.type = renderType

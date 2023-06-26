@@ -67,7 +67,7 @@ import ThreemaFramework
     // MARK: - keys and encryption
     
     func createKey(identity: String, password: String?) -> [UInt8]? {
-        guard let password = password,
+        guard let password,
               !password.isEmpty else {
             return nil
         }
@@ -244,7 +244,7 @@ import ThreemaFramework
         
         ServerInfoProviderFactory.makeServerInfoProvider().safeServer(ipv6: false) { safeServerInfo, error in
             DispatchQueue.global().async {
-                if let error = error {
+                if let error {
                     completion(.failure(error))
                 }
                 else {
@@ -265,7 +265,7 @@ import ThreemaFramework
     /// Compose URL like https://user:password@host.com
     /// - returns: Server URL with credentials
     @objc func composeSafeServerAuth(server: String?, user: String?, password: String?) -> URL? {
-        guard let server = server, !server.lowercased().starts(with: "http://") else {
+        guard let server, !server.lowercased().starts(with: "http://") else {
             return nil
         }
         
@@ -340,7 +340,8 @@ import ThreemaFramework
     // MARK: - back up and restore data
 
     /// Get all backup data.
-    /// - Parameter backupDeviceGroupKey: If false then DGK will not included in backup data (DGK must only included for device linking)
+    /// - Parameter backupDeviceGroupKey: If false then DGK will not included in backup data (DGK must only included for
+    /// device linking)
     /// - Returns: Backup data
     func backupData(backupDeviceGroupKey: Bool = false) -> [UInt8]? {
         // get identity
@@ -601,7 +602,8 @@ import ThreemaFramework
                     MyIdentityStore.shared().pushFromName = nickname
                 }
                 
-                // Use MDM configuration for linking ID, if exists. Otherwise get linking configuration from Threema Safe backup
+                // Use MDM configuration for linking ID, if exists. Otherwise get linking configuration from Threema
+                // Safe backup
                 let mdmSetup = MDMSetup(setup: true)!
                 if mdmSetup.existsMdmKey(MDM_KEY_LINKED_PHONE) || mdmSetup
                     .existsMdmKey(MDM_KEY_LINKED_EMAIL) || mdmSetup.readonlyProfile() {
@@ -772,12 +774,13 @@ import ThreemaFramework
                             return false
                         }) {
                             // Do not restore me as contact
-                            if let bContact = bContact,
+                            if let bContact,
                                let contactIdentity = bContact.identity,
                                contactIdentity.uppercased() != identity.uppercased() {
                             
                                 if let publicKey = publicKeys?[index] as? Data {
-                                    // check is contact already stored, could be when Threema MDM sync was running (it's a bug, should not before restore is finished)
+                                    // check is contact already stored, could be when Threema MDM sync was running (it's
+                                    // a bug, should not before restore is finished)
                                     if let contact = entityManager.entityFetcher.contact(for: bContact.identity) {
                                         entityManager.performSyncBlockAndSafe {
                                             contact.verificationLevel = Int32(bContact.verification ?? 0) as NSNumber
@@ -818,15 +821,15 @@ import ThreemaFramework
                                                 }
                                                 contact.publicKey = publicKey
                                             
-                                                if let featureMasks = featureMasks,
+                                                if let featureMasks,
                                                    let featureMask = featureMasks[index] as? Int {
                                                     contact.featureMask = NSNumber(integerLiteral: featureMask)
                                                 }
-                                                if let states = states,
+                                                if let states,
                                                    let state = states[index] as? Int {
                                                     contact.state = NSNumber(integerLiteral: state)
                                                 }
-                                                if let types = types,
+                                                if let types,
                                                    let type = types[index] as? Int {
                                                     if type == 1 {
                                                         ContactStore.shared()
@@ -871,7 +874,7 @@ import ThreemaFramework
                     completionHandler(nil)
                 }
             ) { error in
-                if let error = error {
+                if let error {
                     DDLogError("Safe error while request identities:\(error.localizedDescription)")
                     completionHandler(
                         SafeError
@@ -905,7 +908,7 @@ import ThreemaFramework
                         sourceCaller: .local
                     )
                     .done { group in
-                        guard let group = group else {
+                        guard let group else {
                             DDLogWarn("Safe restore group could not be created")
                             return
                         }

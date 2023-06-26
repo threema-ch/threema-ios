@@ -45,11 +45,11 @@ class ImageBlobDownloader {
             )
             let downloader = BlobDownloader(blobURL: blobURL)
             downloader.download(blobID: blob.id, origin: origin) { data, error in
-                if let error = error {
+                if let error {
                     DDLogError("An error occurred while downloading a blob: \(error.localizedDescription)")
                 }
 
-                if let data = data {
+                if let data {
                     if let imageData = NaClCrypto.shared()!.symmetricDecryptData(
                         data,
                         withKey: blob.key,

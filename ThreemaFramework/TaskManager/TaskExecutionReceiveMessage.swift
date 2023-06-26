@@ -71,7 +71,7 @@ class TaskExecutionReceiveMessage: TaskExecution, TaskExecutionProtocol {
             abstractMessageAndPFSSession: AbstractMessageAndPFSSession?,
             task: TaskDefinitionSendAbstractMessage?
         ) -> Promise<AbstractMessageAndPFSSession?> in
-            guard let abstractMessageAndPFSSession = abstractMessageAndPFSSession,
+            guard let abstractMessageAndPFSSession,
                   abstractMessageAndPFSSession.message != nil else {
                 // Message would not be processed (skip reflecting message)
                 return Promise { $0.fulfill(abstractMessageAndPFSSession) }

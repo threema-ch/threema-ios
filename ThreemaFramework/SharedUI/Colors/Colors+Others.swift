@@ -20,8 +20,8 @@
 
 import Foundation
 
-public extension Colors {
-    @objc class var hairLine: UIColor {
+extension Colors {
+    @objc public class var hairLine: UIColor {
         switch theme {
         case .light, .undefined:
             return Asset.SharedColors.gray400.color
@@ -30,11 +30,11 @@ public extension Colors {
         }
     }
     
-    @objc class var hairLineBallot: UIColor {
+    @objc public class var hairLineBallot: UIColor {
         Colors.backgroundNavigationController
     }
         
-    @objc class var qrCodeTint: UIColor {
+    @objc public class var qrCodeTint: UIColor {
         switch theme {
         case .light, .undefined:
             return Asset.SharedColors.black.color
@@ -43,15 +43,15 @@ public extension Colors {
         }
     }
     
-    @objc class var playButtonTint: UIColor {
+    @objc public class var playButtonTint: UIColor {
         Asset.SharedColors.white.color
     }
 }
 
 // MARK: Shadows
 
-public extension Colors {
-    @objc class var shadowNotification: UIColor {
+extension Colors {
+    @objc public class var shadowNotification: UIColor {
         switch theme {
         case .light, .undefined:
             return Asset.SharedColors.black.color
@@ -60,7 +60,7 @@ public extension Colors {
         }
     }
 
-    @objc class var shadowThemeChooser: UIColor {
+    @objc public class var shadowThemeChooser: UIColor {
         switch theme {
         case .light, .undefined:
             return Asset.SharedColors.black.color
@@ -72,8 +72,8 @@ public extension Colors {
 
 // MARK: URLs
 
-public extension Colors {
-    @objc class var licenseLogoURL: String? {
+extension Colors {
+    @objc public class var licenseLogoURL: String? {
         switch Colors.theme {
         case .light, .undefined:
             return MyIdentityStore.shared().licenseLogoLightURL

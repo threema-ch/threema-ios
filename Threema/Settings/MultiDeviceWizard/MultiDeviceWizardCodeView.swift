@@ -88,11 +88,11 @@ struct MultiDeviceWizardCodeView: View {
         .navigationBarBackButtonHidden()
         
         .onAppear {
-            self.animate = true
+            animate = true
             wizardVM.advanceState(.code)
         }
         .onDisappear {
-            self.animate = false
+            animate = false
         }
         .onChange(of: wizardVM.wizardState) { newValue in
             if newValue == .success {

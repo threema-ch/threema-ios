@@ -74,10 +74,12 @@ public actor BlobManager: BlobManagerProtocol {
     
     /// Initializes a BlobManager, **only** use for testing, otherwise use `BlobManager.shared`
     /// - Parameters:
-    ///   - entityManager: EntityManager to be used to fetch and save, default is `EntityManager(withChildContextForBackgroundProcess: true)`
+    ///   - entityManager: EntityManager to be used to fetch and save, default is
+    ///                    `EntityManager(withChildContextForBackgroundProcess: true)`
     ///   - sessionManager: URLSessionManager, default is `URLSessionManager.shared`
     ///   - serverConnector: ServerConnector, default is `ServerConnector.shared`
-    ///   - serverInfoProvider: ServerInfoProviderFactory, default is `ServerInfoProviderFactory.makeServerInfoProvider()`
+    ///   - serverInfoProvider: ServerInfoProviderFactory, default is
+    ///                         `ServerInfoProviderFactory.makeServerInfoProvider()`
     ///   - userSettings: UserSettingsProtocol, default is `UserSettings.shared()`
     ///   - blobMessageSender: BlobMessageSender, default is `BlobMessageSender.shared`
     init(
@@ -202,16 +204,17 @@ public actor BlobManager: BlobManagerProtocol {
     public func autoSyncBlobs(for objectID: NSManagedObjectID) async {
         var shouldSync = false
         
-        // We check if the message is of the right type, and if it is incoming since we do not want to automatically send failed messages again
+        // We check if the message is of the right type, and if it is incoming since we do not want to automatically
+        // send failed messages again
         let em = entityManager
         var messageID: String?
         
         em.performSyncBlockAndSafe {
             guard let message = em.entityFetcher.existingObject(with: objectID) as? FileMessageProvider,
-                  !message.blobIsOutgoing() else {
+                  !message.blobIsOutgoing else {
                 return
             }
-            messageID = message.blobGetID()?.hexString
+            messageID = message.blobIdentifier?.hexString
             
             switch message.fileMessageType {
             case .image, .sticker, .animatedImage, .animatedSticker, .voice:
@@ -279,17 +282,17 @@ public actor BlobManager: BlobManagerProtocol {
         var imageMessageEntity: ImageMessageEntity?
         em.performSyncBlockAndSafe {
             if let message = em.entityFetcher.existingObject(with: objectID) as? ImageMessageEntity {
-                message.blobSetError(false)
-                message.blobUpdateProgress(0)
+                message.blobError = false
+                message.blobProgress = 0
                 imageMessageEntity = message
             }
         }
         
         if let imageMessageEntity,
            let identityStore = MyIdentityStore.shared(),
-           imageMessageEntity.blobGetEncryptionKey() == nil,
+           imageMessageEntity.blobEncryptionKey == nil,
            let contact = imageMessageEntity.conversation.contact,
-           let blobID = imageMessageEntity.blobGetID() {
+           let blobID = imageMessageEntity.blobIdentifier {
             
             let processor = ImageMessageProcessor(
                 blobDownloader: blobDownloader,
@@ -302,7 +305,7 @@ public actor BlobManager: BlobManagerProtocol {
                 imageMessageID: imageMessageEntity.id,
                 in: imageMessageEntity.conversation.objectID,
                 imageBlobID: blobID,
-                origin: imageMessageEntity.blobGetOrigin(),
+                origin: imageMessageEntity.blobOrigin,
                 imageBlobEncryptionKey: imageMessageEntity.encryptionKey,
                 imageBlobNonce: imageMessageEntity.imageNonce,
                 senderPublicKey: contact.publicKey,
@@ -322,7 +325,7 @@ public actor BlobManager: BlobManagerProtocol {
             await BlobManager.state.removeActiveObjectIDAndProgress(for: objectID)
            
             // Update non isolated state tracker
-            if !(await BlobManager.state.hasActiveObjectIDs()) {
+            if await !(BlobManager.state.hasActiveObjectIDs()) {
                 BlobManager.activeState.hasActiveSyncs = false
             }
         }
@@ -331,7 +334,7 @@ public actor BlobManager: BlobManagerProtocol {
             await BlobManager.state.removeActiveObjectIDAndProgress(for: objectID)
             
             // Update non isolated state tracker
-            if !(await BlobManager.state.hasActiveObjectIDs()) {
+            if await !(BlobManager.state.hasActiveObjectIDs()) {
                 BlobManager.activeState.hasActiveSyncs = false
             }
             
@@ -351,12 +354,13 @@ public actor BlobManager: BlobManagerProtocol {
         }
         
         // Update non isolated state tracker
-        if !(await BlobManager.state.hasActiveObjectIDs()) {
+        if await !(BlobManager.state.hasActiveObjectIDs()) {
             BlobManager.activeState.hasActiveSyncs = false
         }
     }
     
-    /// Checks the non isolated state tracker if there are any active blob syncs. Might not return the correct value since it is not handled in actor isolation.
+    /// Checks the non isolated state tracker if there are any active blob syncs. Might not return the correct value
+    /// since it is not handled in actor isolation.
     /// - Returns: `True` if there are probably some active syncs.
     public nonisolated func hasActiveSyncs() -> Bool {
         BlobManager.activeState.hasActiveSyncs
@@ -413,7 +417,7 @@ public actor BlobManager: BlobManagerProtocol {
                     return
                 }
                 
-                blobData.blobUpdateProgress(nil)
+                blobData.blobProgress = nil
             }
             
             // Send the message
@@ -451,9 +455,9 @@ public actor BlobManager: BlobManagerProtocol {
                 return
             }
             blobData = bd
-            encryptionKey = bd.blobGetEncryptionKey()
-            thumbnailID = bd.blobGetThumbnailID()
-            origin = bd.blobGetOrigin()
+            encryptionKey = bd.blobEncryptionKey
+            thumbnailID = bd.blobThumbnailIdentifier
+            origin = bd.blobOrigin
         }
         
         guard let blobData else {
@@ -475,10 +479,10 @@ public actor BlobManager: BlobManagerProtocol {
         case .remote:
             em.performSyncBlockAndSafe {
                 // Note: This will also reset the error of the belonging incomingDataState
-                blobData.blobSetError(false)
-                if blobData.blobGetProgress() == nil {
+                blobData.blobError = false
+                if blobData.blobProgress == nil {
                     // If not already done, we set the progress to 0.0 to indicate work has started
-                    blobData.blobUpdateProgress(0.0)
+                    blobData.blobProgress = 0.0
                 }
             }
             
@@ -494,7 +498,7 @@ public actor BlobManager: BlobManagerProtocol {
             // This is save. Delegate calls will not result in another update of the progress as the
             // objectID is no-more in `activeObjectIDs`.
             em.performSyncBlockAndSafe {
-                blobData.blobSetThumbnail?(thumbnail)
+                blobData.blobThumbnail = thumbnail
             }
             
             try await markDownloadDone(for: thumbnailID, objectID: objectID, origin: origin)
@@ -533,9 +537,9 @@ public actor BlobManager: BlobManagerProtocol {
             }
             
             blobData = bd
-            encryptionKey = bd.blobGetEncryptionKey()
-            dataID = bd.blobGetID()
-            origin = bd.blobGetOrigin()
+            encryptionKey = bd.blobEncryptionKey
+            dataID = bd.blobIdentifier
+            origin = bd.blobOrigin
         }
         
         guard let blobData else {
@@ -556,10 +560,10 @@ public actor BlobManager: BlobManagerProtocol {
         switch state {
         case .remote:
             em.performSyncBlockAndSafe {
-                blobData.blobSetError(false)
-                if blobData.blobGetProgress() == nil {
+                blobData.blobError = false
+                if blobData.blobProgress == nil {
                     // If not already done, we set the progress to 0.0 to indicate work has started
-                    blobData.blobUpdateProgress(0.0)
+                    blobData.blobProgress = 0.0
                 }
             }
             
@@ -575,14 +579,14 @@ public actor BlobManager: BlobManagerProtocol {
             // This is save. Delegate calls will not result in another update of the progress as the
             // objectID is no-more in `activeObjectIDs`.
             em.performSyncBlockAndSafe {
-                blobData.blobSetData(data)
+                blobData.blobData = data
             }
             
             try await markDownloadDone(for: dataID, objectID: objectID, origin: origin)
             
             // Download succeeded, we reset the progress
             em.performSyncBlockAndSafe {
-                blobData.blobUpdateProgress(nil)
+                blobData.blobProgress = nil
             }
             
             autoSaveMedia(objectID: objectID)
@@ -639,7 +643,7 @@ public actor BlobManager: BlobManagerProtocol {
             isGroupMessage = fetchedMessage.isGroupMessage
         }
         
-        guard let isGroupMessage = isGroupMessage, !isGroupMessage else {
+        guard let isGroupMessage, !isGroupMessage else {
             DDLogInfo("[BlobManager] Do not mark downloads done for group messages")
             return
         }
@@ -711,10 +715,10 @@ public actor BlobManager: BlobManagerProtocol {
             }
             
             blobData = bd
-            thumbnailID = bd.blobGetThumbnailID()
-            thumbnailData = bd.blobGetThumbnail()
-            encryptionKey = bd.blobGetEncryptionKey()
-            origin = bd.blobGetOrigin()
+            thumbnailID = bd.blobThumbnailIdentifier
+            thumbnailData = bd.blobThumbnail
+            encryptionKey = bd.blobEncryptionKey
+            origin = bd.blobOrigin
         }
         
         guard let blobData else {
@@ -722,12 +726,12 @@ public actor BlobManager: BlobManagerProtocol {
             return
         }
         
-        guard let encryptionKey = encryptionKey else {
+        guard let encryptionKey else {
             DDLogNotice("[BlobManager] Encryption Key not found.")
             throw BlobManagerError.noEncryptionKey
         }
         
-        guard let origin = origin else {
+        guard let origin else {
             DDLogNotice("[BlobManager] There is no origin available for given blob.")
             throw BlobManagerError.noOrigin
         }
@@ -740,10 +744,10 @@ public actor BlobManager: BlobManagerProtocol {
 
             em.performSyncBlockAndSafe {
                 // Note: This will also reset the error of the belonging incomingDataState
-                blobData.blobSetError(false)
-                if blobData.blobGetProgress() == nil {
+                blobData.blobError = false
+                if blobData.blobProgress == nil {
                     // If not already done, we set the progress to 0.0 to indicate work has started
-                    blobData.blobUpdateProgress(0.0)
+                    blobData.blobProgress = 0.0
                 }
             }
 
@@ -759,13 +763,13 @@ public actor BlobManager: BlobManagerProtocol {
             // This is save. Delegate calls will not result in another update of the progress as the
             // objectID is no-more in `activeObjectIDs`.
             em.performSyncBlockAndSafe {
-                blobData.blobSetThumbnail?(thumbnail)
+                blobData.blobThumbnail = thumbnail
             }
 
             try await markDownloadDone(for: thumbnailID, objectID: objectID, origin: origin)
 
         case .pendingUpload:
-            guard let thumbnailData = thumbnailData else {
+            guard let thumbnailData else {
                 DDLogNotice("[BlobManager] Thumbnail has no data.")
                 // We return here to still upload data
                 return
@@ -773,10 +777,10 @@ public actor BlobManager: BlobManagerProtocol {
 
             em.performSyncBlockAndSafe {
                 // Note: This will also reset the error of the belonging outgoingDataState
-                blobData.blobSetError(false)
-                if blobData.blobGetProgress() == nil {
+                blobData.blobError = false
+                if blobData.blobProgress == nil {
                     // If not already done, we set the progress to 0.0 to indicate work has started
-                    blobData.blobUpdateProgress(0.0)
+                    blobData.blobProgress = 0.0
                 }
             }
             
@@ -790,13 +794,13 @@ public actor BlobManager: BlobManagerProtocol {
                 trackProgress: false
             )
             
-            guard let thumbnailID = thumbnailID else {
+            guard let thumbnailID else {
                 throw BlobManagerError.noID
             }
 
             // Assign ID to message & save
             em.performSyncBlockAndSafe {
-                blobData.blobSetThumbnailID?(thumbnailID)
+                blobData.blobThumbnailIdentifier = thumbnailID
             }
             
         case .noData:
@@ -816,7 +820,8 @@ public actor BlobManager: BlobManagerProtocol {
         with state: OutgoingBlobState
     ) async throws {
         
-        // If the data was uploaded successfully and we still reach this point, the message sending failed and we try to resend it, and return
+        // If the data was uploaded successfully and we still reach this point, the message sending failed and we try to
+        // resend it, and return
         guard state != .remote else {
             return
         }
@@ -836,11 +841,11 @@ public actor BlobManager: BlobManagerProtocol {
                 return
             }
 
-            blobID = bd.blobGetID()
+            blobID = bd.blobIdentifier
             blobData = bd
-            data = bd.blobGet()
-            encryptionKey = bd.blobGetEncryptionKey()
-            origin = bd.blobGetOrigin()
+            data = bd.blobData
+            encryptionKey = bd.blobEncryptionKey
+            origin = bd.blobOrigin
         }
         
         guard let blobData else {
@@ -848,12 +853,12 @@ public actor BlobManager: BlobManagerProtocol {
             return
         }
         
-        guard let encryptionKey = encryptionKey else {
+        guard let encryptionKey else {
             DDLogNotice("[BlobManager] Encryption Key not found.")
             throw BlobManagerError.noEncryptionKey
         }
 
-        guard let origin = origin else {
+        guard let origin else {
             DDLogNotice("[BlobManager] There is no origin available for given blob.")
             throw BlobManagerError.noOrigin
         }
@@ -865,10 +870,10 @@ public actor BlobManager: BlobManagerProtocol {
             }
 
             em.performSyncBlockAndSafe {
-                blobData.blobSetError(false)
-                if blobData.blobGetProgress() == nil {
+                blobData.blobError = false
+                if blobData.blobProgress == nil {
                     // If not already done, we set the progress to 0.0 to indicate work has started
-                    blobData.blobUpdateProgress(0.0)
+                    blobData.blobProgress = 0.0
                 }
             }
 
@@ -884,17 +889,17 @@ public actor BlobManager: BlobManagerProtocol {
             // This is save. Delegate calls will not result in another update of the progress as the
             // objectID is no-more in `activeObjectIDs`.
             em.performSyncBlockAndSafe {
-                blobData.blobSetData(data)
+                blobData.blobData = data
             }
 
             try await markDownloadDone(for: blobID, objectID: objectID, origin: origin)
 
             // Download succeeded, we reset the progress
             em.performSyncBlockAndSafe {
-                blobData.blobUpdateProgress(nil)
+                blobData.blobProgress = nil
             }
         case .pendingUpload:
-            guard let data = data else {
+            guard let data else {
                 DDLogNotice("[BlobManager] Data has no data.")
                 throw BlobManagerError.noData
             }
@@ -903,10 +908,10 @@ public actor BlobManager: BlobManagerProtocol {
             await BlobManager.state.removeProgress(for: objectID)
             
             em.performSyncBlockAndSafe {
-                blobData.blobSetError(false)
-                if blobData.blobGetProgress() == nil {
+                blobData.blobError = false
+                if blobData.blobProgress == nil {
                     // If not already done, we set the progress to 0.0 to indicate work has started
-                    blobData.blobUpdateProgress(0.0)
+                    blobData.blobProgress = 0.0
                 }
             }
         
@@ -920,13 +925,13 @@ public actor BlobManager: BlobManagerProtocol {
                 trackProgress: true
             )
             
-            guard let dataID = dataID else {
+            guard let dataID else {
                 throw BlobManagerError.noID
             }
             
             // Assign ID to message & save
             em.performSyncBlockAndSafe {
-                blobData.blobSetDataID(dataID)
+                blobData.blobIdentifier = dataID
             }
         case .noData:
             throw BlobManagerError.noData
@@ -983,12 +988,12 @@ public actor BlobManager: BlobManagerProtocol {
                 return
             }
             
-            if blob.blobGetProgress() != nil {
-                blob.blobUpdateProgress(nil)
+            if blob.blobProgress != nil {
+                blob.blobProgress = nil
             }
             
-            if blob.blobGetError() {
-                blob.blobSetError(false)
+            if blob.blobError {
+                blob.blobError = false
             }
         }
     }
@@ -1002,8 +1007,8 @@ public actor BlobManager: BlobManagerProtocol {
                 return
             }
             
-            blob.blobUpdateProgress(nil)
-            blob.blobSetError(true)
+            blob.blobProgress = nil
+            blob.blobError = true
         }
     }
     
@@ -1026,12 +1031,12 @@ public actor BlobManager: BlobManagerProtocol {
                 return
             }
             message.sent = true
-            message.blobSetError(false)
+            message.blobError = false
             message.progress = nil
-            message.blobSetDataID(ThreemaProtocol.nonUploadedBlobID)
+            message.blobIdentifier = ThreemaProtocol.nonUploadedBlobID
             
-            if message.blobGetThumbnail() != nil {
-                message.blobSetThumbnailID(ThreemaProtocol.nonUploadedBlobID)
+            if message.blobThumbnail != nil {
+                message.blobThumbnailIdentifier = ThreemaProtocol.nonUploadedBlobID
             }
             
             isNoteGroup = true
@@ -1065,7 +1070,7 @@ extension BlobManager: BlobManagerDelegate {
                 return
             }
 
-            blobData.blobUpdateProgress(NSNumber(value: progress.fractionCompleted))
+            blobData.blobProgress = NSNumber(value: progress.fractionCompleted)
         }
     }
 }

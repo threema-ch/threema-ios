@@ -131,7 +131,7 @@ class TaskExecutionSendBallotVoteMessageTests: XCTestCase {
             }
 
         waitForExpectations(timeout: 6) { error in
-            if let error = error {
+            if let error {
                 XCTFail(error.localizedDescription)
             }
             else {
@@ -222,7 +222,7 @@ class TaskExecutionSendBallotVoteMessageTests: XCTestCase {
             }
 
         waitForExpectations(timeout: 6) { error in
-            if let error = error {
+            if let error {
                 XCTFail(error.localizedDescription)
             }
             else {
@@ -341,7 +341,7 @@ class TaskExecutionSendBallotVoteMessageTests: XCTestCase {
             }
 
         waitForExpectations(timeout: 6) { error in
-            if let error = error {
+            if let error {
                 XCTFail(error.localizedDescription)
             }
             else {

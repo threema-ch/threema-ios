@@ -30,8 +30,8 @@ import ThreemaFramework
 /// 1. Add a new `AppMigrationVersion`. See its documentation for details
 /// 2. Add a new migrate function (`migrateToX_Y`)
 ///     - Document the function and describe what is migrated
-///     - Check if the migration is as fast as possible and reduces resource usage (e.g. memory): E.g. for Core Data operations use batch (`NSBatch...`)
-///       and try to load the least amount of Core Data-Objects possible.
+///     - Check if the migration is as fast as possible and reduces resource usage (e.g. memory): E.g. for Core Data
+///       operations use batch (`NSBatch...`) and try to load the least amount of Core Data-Objects possible.
 /// 3. Call the migration in `run()`
 ///
 /// ```swift
@@ -134,7 +134,8 @@ import ThreemaFramework
     /// Migrate to version 4.8:
     /// - Check protection on my identity store
     /// - Update all contacts to CNContact
-    /// - Update all work contacts the verfication level `kVerificationLevelWorkVerified` and `kVerificationLevelWorkFullyVerified` to flag `workContact`
+    /// - Update all work contacts the verfication level `kVerificationLevelWorkVerified` and
+    ///   `kVerificationLevelWorkFullyVerified` to flag `workContact`
     /// - Cleanup draft of all conversations
     /// - Add push settings for all group conversations
     /// - Mark all messages after latest readed message as read

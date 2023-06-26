@@ -139,7 +139,8 @@ class DeviceLinking: NSObject {
 
     /// Wait (timeout 900s) until desktop app is linked.
     /// Connection to Mediator server must be established without receiving any messages.
-    /// - Parameter currentLinkedDevicesCount: Is null waiting for desktop app otherwise waiting for next linked device desktop or iOS (`currentLinkedDevicesCount + 1`)
+    /// - Parameter currentLinkedDevicesCount: Is null waiting for desktop app otherwise waiting for next linked device
+    ///             desktop or iOS (`currentLinkedDevicesCount + 1`)
     func waitForLinkedDevice(currentLinkedDevicesCount: Int? = nil) async throws {
         let allowedPlatforms: [Platform] = currentLinkedDevicesCount != nil ? [.desktop, .ios] : [.desktop]
         let endTime = Date().addingTimeInterval(900)
@@ -176,7 +177,8 @@ class DeviceLinking: NSObject {
     /// Polling (every 2 seconds) till `pollingRequest` is fulfilled or until date is reached.
     /// - Parameters:
     ///   - until: Max date/time until polling stops
-    ///   - pollingRequest: Is function fulfilled than stops polling otherwise throw MessageReceiverError.responseTimeout
+    ///   - pollingRequest: Is function fulfilled than stops polling otherwise throw
+    ///                     MessageReceiverError.responseTimeout
     private func polling<T>(until: Date, _ pollingRequest: @escaping () -> Promise<T>) -> Promise<T> {
         func polling() -> Promise<T> {
             pollingRequest().recover { error -> Promise<T> in
@@ -270,7 +272,8 @@ class DeviceLinking: NSObject {
                             // Update feature mask to activate forward secrecy
                             FeatureMask.update()
 
-                            // In this case explicit disconnect is not necessary, because Mediator server makes a disconnect after dropping this device
+                            // In this case explicit disconnect is not necessary, because Mediator server makes a
+                            // disconnect after dropping this device
                             seal.fulfill(false)
                         }
                         .catch { error in
@@ -302,7 +305,8 @@ class DeviceLinking: NSObject {
         return when(fulfilled: drops)
     }
 
-    /// Connect to Chat (Mediator) server (waits until connection state has changed to logged in) without receiving any messages.
+    /// Connect to Chat (Mediator) server (waits until connection state has changed to logged in) without receiving any
+    /// messages.
     func connectWaitDoNotUnblockIncomingMessages() async throws {
         // swiftformat:disable:next all
         return try await withCheckedThrowingContinuation { continuation in

@@ -256,7 +256,7 @@ extension SetupTextField: UITextFieldDelegate {
                 // Replace lowercase character with uppercase character
                 textField.text = textField.text?.replacingCharacters(in: rangeCurrent, with: string.uppercased())
                 
-                if let selectedTextRangeCurrent = selectedTextRangeCurrent {
+                if let selectedTextRangeCurrent {
                     // Set current cursor position, if cursor position + 1 is valid
                     if let newPosition = textField.position(from: selectedTextRangeCurrent.start, offset: 1) {
                         textField.selectedTextRange = textField.textRange(from: newPosition, to: newPosition)

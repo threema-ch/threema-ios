@@ -1,4 +1,4 @@
-// # Group Calls
+// # Group Call Protocol
 //
 // Note that group calls are not necessarily bound to a Threema group. _Group_
 // refers to a group of call participants and is a way to distinguish from 1:1
@@ -18,20 +18,20 @@
 //
 // ## Terminology
 //
-// - GCK: Group Call Key, only used for key derivation
-// - GCKH: Group Call Key Hash
-// - GCNHAK: Group Call Normal Handshake Authentication Key
-// - GCHK: Group Call Handshake Key
-// - GCSK: Group Call State Key
-// - GCAK: Group Call Administrator Key, only used for key derivation
-// - GCAMK: Group Call Administrator Message Key
-// - PCK: Participant Call Key
-// - PCMK: Participant Call Media Key, only used for key derivation
-// - PCMK': Ratchet iteration of PCMK
-// - PCMFK: Participant Call Media Frame Key
-// - PCCK: Participant Call Cookie
-// - PCSN: Participant Call Sequence Number
-// - MFSN: Media Frame Sequence Number
+// - `GCK`: Group Call Key, only used for key derivation
+// - `GCKH`: Group Call Key Hash
+// - `GCNHAK`: Group Call Normal Handshake Authentication Key
+// - `GCHK`: Group Call Handshake Key
+// - `GCSK`: Group Call State Key
+// - `GCAK`: Group Call Administrator Key, only used for key derivation
+// - `GCAMK`: Group Call Administrator Message Key
+// - `PCK`: Participant Call Key
+// - `PCMK`: Participant Call Media Key, only used for key derivation
+// - `PCMK`': Ratchet iteration of PCMK
+// - `PCMFK`: Participant Call Media Frame Key
+// - `PCCK`: Participant Call Cookie
+// - `PCSN`: Participant Call Sequence Number
+// - `MFSN`: Media Frame Sequence Number
 //
 // ## Key Derivation
 //
@@ -53,7 +53,7 @@
 //
 // Endianness: All integers use little-endian encoding.
 //
-// Encryption format: An NaCl box with a 24 byte nonce.
+// Encryption cipher: XSalsa20-Poly1305, unless otherwise specified.
 //
 // Nonce format:
 //
@@ -429,8 +429,7 @@ message CallState {
 
   // Information for a single participant.
   message Participant {
-    // The participant's assigned ID.
-    uint32 participant_id = 1;
+    reserved 1;
 
     // A _normal_ participant, i.e. a Threema client.
     message Normal {
@@ -868,28 +867,31 @@ message ParticipantToParticipant {
     // 1. Let `inner-nonce` be a random nonce.
     // 2. Let `inner-data` be encrypted by:
     //
-    //        S = SharedSecret(<sender.CK>.secret, <receiver.CK>.public)
+    //        S = X25519HSalsa20(<sender.CK>.secret, <receiver.CK>.public)
     //        GCNHAK = Blake2b(
     //          key=S, salt='nha', personal='3ma-call', input=GCKH)
-    //
-    //        Box(GCNHAK)
-    //          .encrypt(
-    //            data=<AuthEnvelope(Auth)>, nonce=<inner-nonce>)
+    //        XSalsa20-Poly1305(
+    //          key=GCNHAK,
+    //          nonce=<inner-nonce>,
+    //          data=<AuthEnvelope(Auth)>,
+    //        )
     // 3. Let `outer-data` be encrypted by:
     //
-    //       Box(<sender.PCK>.secret, <receiver.PCK>.public)
-    //         .encrypt(
-    //           data=<inner-nonce><inner-data>,
-    //           nonce=<sender.PCCK><sender.PCSN+>)
+    //        XSalsa20-Poly1305(
+    //          key=X25519HSalsa20(<sender.PCK>.secret, <receiver.PCK>.public),
+    //          nonce=<sender.PCCK> || <sender.PCSN+>,
+    //          data=<inner-nonce> || <inner-data>,
+    //        )
     // 4. Return `outer-data`.
     //
     // If either side started the guest handshake, the second message is
     // encrypted by:
     //
-    //   Box(<sender.PCK>.secret, <receiver.PCK>.public)
-    //     .encrypt(
+    //     XSalsa20-Poly1305(
+    //       key=X25519HSalsa20(<sender.PCK>.secret, <receiver.PCK>.public),
+    //       nonce=<sender.PCCK> || <sender.PCSN+>,
     //       data=<AuthEnvelope(GuestAuth)>,
-    //       nonce=<sender.PCCK><sender.PCSN+>)
+    //     )
     //
     // When receiving this message:
     //
@@ -1073,17 +1075,18 @@ message ParticipantToParticipant {
   // After fulfilling either the (normal) handshake or the guest handshake, all
   // following messages are encoded in `Envelope` and encrypted by:
   //
-  //   Box(<sender.PCK>.secret, <receiver.PCK>.public)
-  //     .encrypt(data=<message>, nonce=<sender.PCCK><sender.PCSN+>)
+  //     XSalsa20-Poly1305(
+  //       key=X25519HSalsa20(<sender.PCK>.secret, <receiver.PCK>.public),
+  //       nonce=<sender.PCCK> || <sender.PCSN+>,
+  //     )
   //
   // Note: Since the guest handshake is TOFU, an attacker knowing `GCK` having
-  //       control over the SFU may apply a MITM attack between a guest
-  //       participant and another participant. The attacker would be able to
-  //       silently eavesdrop all media traffic between the two participants.
-  //       This is repeatable for all other participants and means the attacker
-  //       is able to silently eavesdrop the whole call. Therefore, if a call is
-  //       not open for guests, `GuestHello` (and `GuestAuth`) **must not** be
-  //       accepted.
+  // control over the SFU may apply a MITM attack between a guest participant
+  // and another participant. The attacker would be able to silently eavesdrop
+  // all media traffic between the two participants. This is repeatable for all
+  // other participants and means the attacker is able to silently eavesdrop the
+  // whole call. Therefore, if a call is not open for guests, `GuestHello` (and
+  // `GuestAuth`) **must not** be accepted.
   //
   // When receiving this message:
   //
@@ -1113,13 +1116,15 @@ message ParticipantToParticipant {
   message Admin {
     // Message from an administrator, encrypted by:
     //
-    //   Box(GCAMK.secret, <receiver.PCK>.public)
-    //     .encrypt(data=<Envelope>, nonce=<sender.PCCK><sender.PCSN+>)
+    //     XSalsa20-Poly1305(
+    //       key=X25519HSalsa20(GCAMK.secret, <receiver.PCK>.public),
+    //       nonce=<sender.PCCK> || <sender.PCSN+>,
+    //     )
     //
     // IMPORTANT: The `ParticipantToParticipant.Envelope` that encapsulates this
-    //            message shall be encrypted by the same `PCSN` as used for this
-    //            `Envelope`. The only difference is that the sender uses
-    //            `GCAMK` instead of its ephemeral `PCK`.
+    // message shall be encrypted by the same `PCSN` as used for this
+    // `Envelope`. The only difference is that the sender uses `GCAMK` instead
+    // of its ephemeral `PCK`.
     message Envelope {
       oneof content {
         ReportAsAdmin report_as_admin = 1;

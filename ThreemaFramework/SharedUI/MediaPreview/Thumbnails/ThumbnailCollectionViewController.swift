@@ -33,13 +33,13 @@ class ThumbnailCollectionViewController: NSObject, UICollectionViewDelegateFlowL
             return parent?.mediaData.count ?? 0
         }
         if section == 1 {
-            guard let parent = parent else {
+            guard let parent else {
                 return 0
             }
             return parent.disableAdd ? 0 : 1
         }
         if section == 2 {
-            guard let parent = parent else {
+            guard let parent else {
                 return 0
             }
             return parent.conversationDescription == nil ? 0 : 1
@@ -49,7 +49,7 @@ class ThumbnailCollectionViewController: NSObject, UICollectionViewDelegateFlowL
     
     func numberOfSections(in collectionView: UICollectionView) -> Int {
         var sections = 1
-        guard let parent = parent else {
+        guard let parent else {
             return sections
         }
         if !parent.disableAdd {
@@ -131,7 +131,7 @@ class ThumbnailCollectionViewController: NSObject, UICollectionViewDelegateFlowL
             return cell
         }
         if indexPath.section == 2 {
-            guard let parent = parent else {
+            guard let parent else {
                 fatalError("Cannot create cell due to missing parent")
             }
             guard let conversationDescription = parent.conversationDescription else {
@@ -154,7 +154,7 @@ class ThumbnailCollectionViewController: NSObject, UICollectionViewDelegateFlowL
         
         cell.identifier = indexPath
         
-        guard let parent = parent else {
+        guard let parent else {
             return cell
         }
         

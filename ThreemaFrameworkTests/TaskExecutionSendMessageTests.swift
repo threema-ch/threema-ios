@@ -98,7 +98,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
             }
 
         waitForExpectations(timeout: 6) { error in
-            if let error = error {
+            if let error {
                 XCTFail(error.localizedDescription)
             }
             else {
@@ -173,7 +173,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
             }
 
         waitForExpectations(timeout: 6) { error in
-            if let error = error {
+            if let error {
                 XCTFail(error.localizedDescription)
             }
             else {
@@ -243,11 +243,11 @@ class TaskExecutionSendMessageTests: XCTestCase {
             }
 
         waitForExpectations(timeout: 6) { error in
-            if let error = error {
+            if let error {
                 XCTFail(error.localizedDescription)
             }
             else {
-                if let expecError = expecError,
+                if let expecError,
                    case let TaskExecutionError.invalidContact(message: message) = expecError {
                     XCTAssertEqual(
                         message,
@@ -351,7 +351,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
             }
 
         waitForExpectations(timeout: 6) { error in
-            if let error = error {
+            if let error {
                 XCTFail(error.localizedDescription)
             }
             else {
@@ -491,7 +491,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
             }
 
         waitForExpectations(timeout: 6) { error in
-            if let error = error {
+            if let error {
                 XCTFail(error.localizedDescription)
             }
             else {
@@ -637,7 +637,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
             }
 
         waitForExpectations(timeout: 6) { error in
-            if let error = error {
+            if let error {
                 XCTFail(error.localizedDescription)
             }
             else {
@@ -785,7 +785,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
             }
 
         waitForExpectations(timeout: 6) { error in
-            if let error = error {
+            if let error {
                 XCTFail(error.localizedDescription)
             }
             else {
@@ -909,7 +909,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
             }
 
         waitForExpectations(timeout: 6) { error in
-            if let error = error {
+            if let error {
                 XCTFail(error.localizedDescription)
             }
             else {
@@ -1052,7 +1052,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
                 }
 
             waitForExpectations(timeout: 6) { error in
-                if let error = error {
+                if let error {
                     XCTFail(error.localizedDescription)
                 }
                 else {

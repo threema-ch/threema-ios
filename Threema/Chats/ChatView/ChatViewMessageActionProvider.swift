@@ -347,8 +347,8 @@ struct ChatViewMessageActionProvider {
     }
 }
 
-private extension UIResponder {
-    var parentViewController: UIViewController? {
+extension UIResponder {
+    fileprivate var parentViewController: UIViewController? {
         next as? UIViewController ?? next?.parentViewController
     }
 }

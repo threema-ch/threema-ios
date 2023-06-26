@@ -20,6 +20,7 @@
 
 #import <Foundation/Foundation.h>
 
+__deprecated_msg("Use MarkupParser instead")
 @interface UILabel (Markup)
 
 - (void)applyMarkup;

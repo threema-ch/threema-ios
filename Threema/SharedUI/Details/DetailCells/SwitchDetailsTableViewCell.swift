@@ -26,7 +26,7 @@ class SwitchDetailsTableViewCell: ThemedCodeStackTableViewCell {
     
     var action: Details.BooleanAction? {
         didSet {
-            guard let action = action else {
+            guard let action else {
                 return
             }
             

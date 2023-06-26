@@ -22,7 +22,8 @@ import UIKit
 
 /// Circle button with an vibrant icon in the center and a blurry background
 ///
-/// Use as-is and provide all configuration during initialization. Using `UIButton` methods might lead to unexpected side-effects.
+/// Use as-is and provide all configuration during initialization. Using `UIButton` methods might lead to unexpected
+/// side-effects.
 final class BlurCircleButton: ThemedCodeButton {
 
     private let blurCircleView: BlurCircleView

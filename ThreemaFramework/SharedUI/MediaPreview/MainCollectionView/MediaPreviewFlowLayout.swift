@@ -26,7 +26,7 @@ class MediaPreviewFlowLayout: UICollectionViewFlowLayout {
     /// - Parameter bounds: the bounds of the collectionView
     /// - Returns: Width of a cell in the collectionView
     func cellWidth(bounds: CGRect) -> CGFloat {
-        guard let collectionView = collectionView else {
+        guard let collectionView else {
             return 0
         }
         
@@ -45,7 +45,7 @@ class MediaPreviewFlowLayout: UICollectionViewFlowLayout {
     /// - Parameter bounds: the bounds of the collectionView
     /// - Returns: Height of a cell in the collectionView
     func cellHeight(bounds: CGRect) -> CGFloat {
-        guard let collectionView = collectionView else {
+        guard let collectionView else {
             return 0
         }
         
@@ -105,7 +105,7 @@ class MediaPreviewFlowLayout: UICollectionViewFlowLayout {
     override func shouldInvalidateLayout(forBoundsChange newBounds: CGRect) -> Bool {
         _ = super.shouldInvalidateLayout(forBoundsChange: newBounds)
         
-        guard let collectionView = collectionView else {
+        guard let collectionView else {
             return false
         }
         

@@ -49,52 +49,6 @@
 #pragma clang diagnostic pop
 }
 
-+ (BOOL)isSameDayWithDate1:(NSDate*)date1 date2:(NSDate*)date2 {
-    NSCalendar* calendar = [NSCalendar currentCalendar];
-    
-    unsigned unitFlags = [self unitFlags];
-    NSDateComponents* comp1 = [calendar components:unitFlags fromDate:date1];
-    NSDateComponents* comp2 = [calendar components:unitFlags fromDate:date2];
-    
-    return [comp1 day]   == [comp2 day] &&
-    [comp1 month] == [comp2 month] &&
-    [comp1 year]  == [comp2 year];
-}
-
-+ (NSError*)threemaError:(NSString*)message {
-    return [self threemaError:message withCode:kGeneralErrorCode];
-}
-
-+ (NSError*)threemaError:(NSString*)message withCode:(NSInteger)code {
-    NSDictionary *userDict = [NSDictionary dictionaryWithObject:message
-                                                         forKey:NSLocalizedDescriptionKey];
-    return [NSError errorWithDomain:@"ThreemaErrorDomain" code:code userInfo:userDict];
-}
-
-+ (NSString*)formatShortLastMessageDate:(NSDate*)date {
-    NSLocale *locale = [NSLocale currentLocale];
-    
-    NSCalendar *gregorian = [[NSCalendar alloc] initWithCalendarIdentifier:NSCalendarIdentifierGregorian];
-    NSDate *now = [[NSDate alloc] init];
-    NSDateComponents *components = [gregorian components:[self unitFlags] fromDate:now];
-    NSDate *midnight = [gregorian dateFromComponents:components];
-    
-    NSDateFormatter *df = [[NSDateFormatter alloc] init];
-    [df setLocale:locale];
-    
-    /* today? */
-    if ([date compare:midnight] == NSOrderedDescending) {
-        /* show only time */
-        df.dateStyle = NSDateFormatterNoStyle;
-        df.timeStyle = NSDateFormatterShortStyle;
-    } else {
-        df.doesRelativeDateFormatting = YES;
-        df.dateStyle = NSDateFormatterShortStyle;
-        df.timeStyle = NSDateFormatterNoStyle;
-    }
-    return [df stringFromDate:date];
-}
-
 + (void)reverseGeocodeNearLatitude:(double)latitude longitude:(double)longitude accuracy:(double)accuracy completion:(void (^)(NSString *label))completion onError:(void(^)(NSError *error))onError {
     CLGeocoder *geocoder = [[CLGeocoder alloc] init];
     CLLocation *location = [[CLLocation alloc] initWithCoordinate:CLLocationCoordinate2DMake(latitude, longitude) altitude:0 horizontalAccuracy:accuracy verticalAccuracy:-1 timestamp:[NSDate date]];
@@ -171,20 +125,6 @@
     }
 }
 
-+ (NSString *)stringFromContacts:(NSArray *)contacts {
-    NSMutableString *result = [NSMutableString string];
-    NSInteger count = [contacts count];
-    [contacts enumerateObjectsUsingBlock:^(ContactEntity *contact, NSUInteger idx, BOOL *stop) {
-        [result appendString:contact.displayName];
-        
-        if (idx < count - 1) {
-            [result appendString:@" / "];
-        }
-    }];
-    
-    return [result description];
-}
-
 + (BOOL)isValidEmail:(NSString *)email {
     // most basic verification: contains @ and .
     if (email.length < 2) {
@@ -195,19 +135,6 @@
     NSRegularExpression *regEx = [[NSRegularExpression alloc] initWithPattern:regExPattern options:NSRegularExpressionCaseInsensitive error:nil];
     NSUInteger regExMatches = [regEx numberOfMatchesInString:email options:0 range:NSMakeRange(0, [email length])];
     return regExMatches == 1;
-}
-
-+ (UIView *)view:(UIView *)view getSuperviewOfKind:(Class)sourceClass {
-    UIView *tmpView = view;
-    while (tmpView.superview) {
-        if ([tmpView isKindOfClass:sourceClass]) {
-            return tmpView;
-        }
-        
-        tmpView = tmpView.superview;
-    }
-    
-    return nil;
 }
 
 + (UIViewAnimationOptions)animationOptionsFor:(NSNotification *)notification animationDuration:(NSTimeInterval*)animationDuration {
@@ -279,14 +206,6 @@
         return [StyleKit houseIcon];
     } else {
         return [StyleKit workIcon];
-    }
-}
-
-+ (NSString *)threemaTypeIconAccessibilityLabel {
-    if ([LicenseStore requiresLicenseKey]) {
-        return [BundleUtil localizedStringForKey:@"threema_type_icon_private_accessibility_label"];
-    } else {
-        return [BundleUtil localizedStringForKey:@"threema_type_icon_work_accessibility_label"];
     }
 }
 

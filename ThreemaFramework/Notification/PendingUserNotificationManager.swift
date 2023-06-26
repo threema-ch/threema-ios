@@ -237,7 +237,7 @@ public class PendingUserNotificationManager: NSObject, PendingUserNotificationMa
                         // Donating
                         interaction.donate { error in
                             
-                            if let error = error {
+                            if let error {
                                 
                                 // Could not donate, we add a standard notification instead
                                 DDLogError("[Push] Could not donate Intent, error: \(error.localizedDescription)")
@@ -538,7 +538,7 @@ public class PendingUserNotificationManager: NSObject, PendingUserNotificationMa
     fileprivate static func savePendingUserNotifications() {
         if FileManager.default.fileExists(atPath: pathPendingUserNotifications) {
             FileManager.default.removeItem(at: pathPendingUserNotifications, completion: { _, error in
-                if let error = error {
+                if let error {
                     DDLogError(
                         "[Push] Unable to delete \(pathPendingUserNotifications) file: \(error.localizedDescription)"
                     )
@@ -558,7 +558,7 @@ public class PendingUserNotificationManager: NSObject, PendingUserNotificationMa
     private static func saveProcessedUserNotifications() {
         if FileManager.default.fileExists(atPath: pathProcessedUserNotifications) {
             FileManager.default.removeItem(at: pathProcessedUserNotifications, completion: { _, error in
-                if let error = error {
+                if let error {
                     DDLogError(
                         "[Push] Unable to delete \(pathProcessedUserNotifications) file: \(error.localizedDescription)"
                     )
@@ -613,8 +613,8 @@ public class PendingUserNotificationManager: NSObject, PendingUserNotificationMa
     }
 }
 
-public extension FileManager {
-    func removeItem(at path: String, completion: @escaping (Bool, Error?) -> Void) {
+extension FileManager {
+    public func removeItem(at path: String, completion: @escaping (Bool, Error?) -> Void) {
         DispatchQueue.global(qos: .utility).async {
             do {
                 try self.removeItem(atPath: path)

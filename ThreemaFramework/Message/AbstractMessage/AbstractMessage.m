@@ -128,15 +128,15 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     boxmsg.box = boxedData;
     
     /* Encrypt metadata (only include nickname for user-initiated messages) */
-    NSString *metadataNickname = nil;
+    NSString *nickname = nil;
     if (self.allowSendingProfile) {
-        metadataNickname = myIdentityStore.pushFromName;
+        nickname = myIdentityStore.pushFromName != nil && myIdentityStore.pushFromName.length > 0 ? myIdentityStore.pushFromName : myIdentityStore.identity;
         
         if ([boxmsg.toIdentity hasPrefix:@"*"]) {
-            boxmsg.pushFromName = myIdentityStore.pushFromName;
+            boxmsg.pushFromName = nickname;
         }
     }
-    MessageMetadata *metadata = [[MessageMetadata alloc] initWithNickname:metadataNickname messageID:self.messageId createdAt:self.date];
+    MessageMetadata *metadata = [[MessageMetadata alloc] initWithNickname:nickname messageID:self.messageId createdAt:self.date];
     boxmsg.metadataBox = [[MetadataCoder new] encodeWithMetadata:metadata nonce:nonce publicKey:toContact.publicKey];
 
     return boxmsg;

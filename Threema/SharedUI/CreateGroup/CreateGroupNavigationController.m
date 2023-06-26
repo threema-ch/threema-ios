@@ -26,7 +26,6 @@
 #import "Old_EditGroupViewController.h"
 #import "NaClCrypto.h"
 #import "MyIdentityStore.h"
-#import "MessageSender.h"
 #import "GroupPhotoSender.h"
 #import "ModalPresenter.h"
 #import "UserSettings.h"

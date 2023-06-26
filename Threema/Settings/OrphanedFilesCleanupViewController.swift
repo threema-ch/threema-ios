@@ -21,6 +21,7 @@
 import CocoaLumberjackSwift
 import Foundation
 import MBProgressHUD
+import SwiftUI
 
 class OrphanedFilesCleanupViewController: ThemedTableViewController {
     
@@ -104,7 +105,7 @@ class OrphanedFilesCleanupViewController: ThemedTableViewController {
         case 0:
             return ""
         case 1:
-            if let orphanedFiles = orphanedFiles,
+            if let orphanedFiles,
                !orphanedFiles.isEmpty {
                 
                 return String.localizedStringWithFormat(
@@ -118,7 +119,7 @@ class OrphanedFilesCleanupViewController: ThemedTableViewController {
                 return BundleUtil.localizedString(forKey: "settings_orphaned_files_footer_no_files")
             }
         case 2:
-            if let orphanedFilesInBin = orphanedFilesInBin,
+            if let orphanedFilesInBin,
                !orphanedFilesInBin.isEmpty {
                 
                 return String.localizedStringWithFormat(
@@ -277,7 +278,7 @@ class OrphanedFilesCleanupViewController: ThemedTableViewController {
     }
     
     private func moveToBin() {
-        guard let orphanedFiles = orphanedFiles else {
+        guard let orphanedFiles else {
             return
         }
         
@@ -363,5 +364,15 @@ class OrphanedFilesCleanupViewController: ThemedTableViewController {
         DispatchQueue.main.async {
             progress?.hide(animated: true, afterDelay: 1.5)
         }
+    }
+}
+
+struct OrphanedFilesCleanupViewControllerRepresentable: UIViewControllerRepresentable {
+    func updateUIViewController(_ uiViewController: UIViewControllerType, context: Context) { }
+    
+    func makeUIViewController(context: Context) -> some UIViewController {
+        let storyboard = UIStoryboard(name: "SettingsStoryboard", bundle: nil)
+        let vc = storyboard.instantiateViewController(identifier: "OrphanedFilesCleanupViewController")
+        return vc
     }
 }

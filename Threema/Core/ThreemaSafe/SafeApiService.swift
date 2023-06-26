@@ -132,13 +132,13 @@ import Foundation
     ) -> (data: Data?, errorMessage: String?) {
         var errorMessage: String?
         
-        if let error = error {
+        if let error {
             errorMessage = error.localizedDescription
             return (nil, errorMessage)
         }
         guard let response = response as? HTTPURLResponse else {
             errorMessage = "response is missing"
-            if let data = data {
+            if let data {
                 print("\(String(describing: String(data: data, encoding: .utf8)))")
             }
             return (nil, errorMessage)
@@ -146,13 +146,13 @@ import Foundation
         
         if !(200...299).contains(response.statusCode) {
             errorMessage = "response code \(response.statusCode)"
-            if let data = data {
+            if let data {
                 print("\(String(describing: String(data: data, encoding: .utf8)))")
             }
             return (nil, errorMessage)
         }
         
-        guard let data = data else {
+        guard let data else {
             errorMessage = "response data/config is missing"
             return (nil, errorMessage)
         }

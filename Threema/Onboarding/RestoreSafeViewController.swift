@@ -284,7 +284,7 @@ extension RestoreSafeViewController {
                     MBProgressHUD.hide(for: self.view, animated: true)
                     self.view.isUserInteractionEnabled = true
                 
-                    if let error = error {
+                    if let error {
                         switch error {
                         case let .restoreError(message):
                             DDLogError(message)

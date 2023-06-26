@@ -26,45 +26,49 @@ import UIKit
 ///
 /// # The Problem
 ///
-/// The profile view should appear at a fixed distance from the leading edge of the navigation bar (independent of the unread count next
-/// to the back button) and go as far to the trailing edge as possible. (i.e. if there is no right bar button item it should span all the way to
-/// the end offset by the margin.)
+/// The profile view should appear at a fixed distance from the leading edge of the navigation bar (independent of the
+/// unread count next to the back button) and go as far to the trailing edge as possible. (i.e. if there is no right bar
+/// button item it should span all the way to the end offset by the margin.)
 ///
-/// `UINavigationBar` allows a custom title view to be set through the front most `UINavigationItem`. In a normal setup (like
-/// this) where the navigation bar is handled by a `UINavigationViewController` this can configured in the `navigationItem`
-/// property of the front most view controller.
+/// `UINavigationBar` allows a custom title view to be set through the front most `UINavigationItem`. In a normal setup
+/// (like this) where the navigation bar is handled by a `UINavigationViewController` this can configured in the
+/// `navigationItem` property of the front most view controller.
 ///
-/// The problem with a navigation bar title view is that it is centered until ist spans the complete width and there is no direct public API to
-/// figure out the maximum width (or height for that matter) of the title view. Also no public API exists to access the width of left and
-/// right (back) bar button items (to deduct them form the full navigation bar width).
+/// The problem with a navigation bar title view is that it is centered until it spans the complete width and there is
+/// no direct public API to figure out the maximum width (or height for that matter) of the title view. Also no public
+/// API exists to access the width of left and right (back) bar button items (to deduct them form the full navigation
+/// bar width).
 ///
 /// Constraints as the time of writing: Needs to support iOS 12.
 ///
 /// # Solution chosen
 ///
-/// We set the profile view to a fixed width, based on the width of the whole navigation bar minus an offset on both ends
-/// (`combinedLeadingAndTrailingOffset` in `ChatViewConfiguration.Profile`). This offset is a compromise to stay at
-/// a fixed leading offset for all unread counts from none to 99. For more than 99 unread messages the profile is slightly pushed to the
-/// trailing edge and might change its offset on any unread count change.
+/// We set the profile view to a fixed width, based on the width of the whole navigation bar minus an offset on both
+/// ends (`combinedLeadingAndTrailingOffset` in `ChatViewConfiguration.Profile`). This offset is a compromise to stay at
+/// a fixed leading offset for all unread counts from none to 99. For more than 99 unread messages the profile is
+/// slightly pushed to the trailing edge and might change its offset on any unread count change.
 ///
-/// Limitation: This doesn't allow the view to span all the way to the trailing end. Otherwise the offset from the leading edge would change
-/// on every update of the unread count and minimize the space for the back button in general.
+/// Limitation: This doesn't allow the view to span all the way to the trailing end. Otherwise the offset from the
+/// leading edge would change on every update of the unread count and minimize the space for the back button in general.
 ///
 /// # Other solutions considered
 ///
-/// - **Custom right/left bar button item**: This would allow us to control the exact size including shown buttons on the trailing end.
-///     Unfortunately, the default animation of bar button items is just a fade in if they aren't already part of the navigation bar during
-///     transition (compared to the title view). It is unclear how hard it would be to replicate the default animation of the title view, but it
-///     might need adjustments on OS updates if the default animation gets tweaked.
+/// - **Custom right/left bar button item**: This would allow us to control the exact size including shown buttons on
+///   the trailing end. Unfortunately, the default animation of bar button items is just a fade in if they aren't
+///   already part of the navigation bar during transition (compared to the title view). It is unclear how hard it would
+///   be to replicate the default animation of the title view, but it might need adjustments on OS updates if the
+///   default animation gets tweaked.
 /// - **Use the full width available to the navigation bar title view**: This can be achieved by returning
-///     `UIView.layoutFittingExpandedSize` from this view's `intrinsicContentSize`. The tradeoff here is that
-///     on every unread count change the offset from the leading edge might change (especially if the number of digit changes) unless
-///     we control the width of the back button area (arrow & unread count) which seems to be not straight forward if possible at all.
+///   `UIView.layoutFittingExpandedSize` from this view's `intrinsicContentSize`. The tradeoff here is that
+///   on every unread count change the offset from the leading edge might change (especially if the number of digit
+///   changes) unless we control the width of the back button area (arrow & unread count) which seems to be not
+///   straight forward if possible at all.
 ///
 /// # Solutions that might be considered in the future
 ///
-/// - With the addition of `UINavigationBarAppearance` in iOS 13 there is more possibility to control the navigation bar appearance
-///     this might allow us to control the size of the back button area or at least set the back button text (unread count) to monospaced digits.
+/// - With the addition of `UINavigationBarAppearance` in iOS 13 there is more possibility to control the navigation bar
+///   appearance this might allow us to control the size of the back button area or at least set the back button text
+///   (unread count) to monospaced digits.
 /// - Workaround to get the right and left bar button items: https://stackoverflow.com/a/46965131
 final class ChatProfileView: UIStackView {
     
@@ -101,7 +105,8 @@ final class ChatProfileView: UIStackView {
     ).getGroup(conversation: conversation)
 
     // We need to hold on to the observers until the object is deallocated.
-    // `invalidate()` is automatically called on destruction of them (according to the `invalidate()` header documentation).
+    // `invalidate()` is automatically called on destruction of them (according to the `invalidate()` header
+    // documentation).
     private var observers = [NSKeyValueObservation]()
     private lazy var memberObservers = [NSKeyValueObservation]()
 
@@ -181,7 +186,8 @@ final class ChatProfileView: UIStackView {
     ///
     /// This might be truncated when displayed.
     ///
-    /// - Note: This should never be hidden or set to an empty text. Otherwise the height of `verificationAndGroupMembersListStack` collapses.
+    /// - Note: This should never be hidden or set to an empty text. Otherwise the height of
+    ///         `verificationAndGroupMembersListStack` collapses.
     private let groupMembersListLabel: UILabel = {
         let label = UILabel()
         
@@ -385,17 +391,18 @@ final class ChatProfileView: UIStackView {
             self?.verificationLevelImageView.image = self?.conversation.contact?.verificationLevelImageSmall()
         }
         
-        // Needed to get appropriate height for verification and description stack (see `verificationAndGroupMembersListStack`)
+        // Needed to get appropriate height for verification and description stack (see
+        // `verificationAndGroupMembersListStack`)
         groupMembersListLabel.text = " "
     }
     
     private func configureGroupChatObservers() {
-        guard let group = group else {
+        guard let group else {
             return
         }
         
         // No need to call on creation as we already do the update when calling `updateColors`
-        observe(group, \.photo, callOnCreation: false) { [weak self] in
+        observe(group, \.profilePicture, callOnCreation: false) { [weak self] in
             self?.updateAvatar()
         }
         
@@ -424,7 +431,7 @@ final class ChatProfileView: UIStackView {
     }
     
     private func addMemberObservers(for group: Group?) {
-        guard let group = group else {
+        guard let group else {
             return
         }
 
@@ -447,10 +454,10 @@ final class ChatProfileView: UIStackView {
     ///   - keyPath: Key path in `object` to observe
     ///   - callOnCreation: Should the handler be called during observer creation?
     ///   - changeHandler: Handler called on each observed change (and initially if `callOnCreation` is `true`).
-    ///                     Don't forget to capture `self` weakly! Dispatched on the main queue.
-    private func observe<Object: NSObject, Value>(
+    ///                    Don't forget to capture `self` weakly! Dispatched on the main queue.
+    private func observe<Object: NSObject>(
         _ object: Object,
-        _ keyPath: KeyPath<Object, Value>,
+        _ keyPath: KeyPath<Object, some Any>,
         callOnCreation: Bool = true,
         changeHandler: @escaping () -> Void
     ) {
@@ -480,7 +487,7 @@ final class ChatProfileView: UIStackView {
             size: ChatViewConfiguration.Profile.maxAvatarSize,
             masked: true
         ) { avatarImage, _ in
-            guard let avatarImage = avatarImage else {
+            guard let avatarImage else {
                 // We have a default avatar. No worries.
                 return
             }
@@ -531,7 +538,8 @@ final class ChatProfileView: UIStackView {
     
     /// Set name and verification description stack based on size class
     ///
-    /// This is due to the fact that the navigation bar height is smaller with a compact vertical size class (e.g. landscape on most iPhones).
+    /// This is due to the fact that the navigation bar height is smaller with a compact vertical size class (e.g.
+    /// landscape on most iPhones).
     private func updateNameAndVerificationDescriptionStack() {
         // Note: We cannot really adapt to any accessibility content size categories as they are not reported after
         // the view is added to a navigation bar `titleView`.

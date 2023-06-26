@@ -158,7 +158,7 @@ class CallViewController: UIViewController {
             object: nil,
             queue: .main
         ) { [weak self] n in
-            guard let self = self else {
+            guard let self else {
                 return
             }
             let currentRoute = AVAudioSession.sharedInstance().currentRoute
@@ -230,8 +230,8 @@ class CallViewController: UIViewController {
             object: nil,
             queue: .main
         ) { [unowned self] _ in
-            if !self.isNavigationVisible() {
-                self.localVideoViewConstraintBottom.isActive = true
+            if !isNavigationVisible() {
+                localVideoViewConstraintBottom.isActive = true
             }
         }
         
@@ -402,7 +402,11 @@ extension CallViewController {
         }
     }
     
-    func startDebugMode(connection: RTCPeerConnection) {
+    func startDebugMode(connection: RTCPeerConnection?) {
+        guard let connection else {
+            return
+        }
+
         let dict = ["connection": connection]
         statsTimer?.invalidate()
         statsTimer = nil
@@ -477,7 +481,7 @@ extension CallViewController {
         contactLabel.text = contact?.displayName
         
         backgroundImage.contentMode = contact!.isProfilePictureSet() ? .scaleAspectFill : .scaleAspectFit
-        if let contact = contact {
+        if let contact {
             setBackgroundForContact(contact: contact)
         }
         backgroundImage.backgroundColor = Colors.black
@@ -749,7 +753,7 @@ extension CallViewController {
         embedView(meImageView, into: localVideoView)
         
         let remoteImageView = UIImageView()
-        if let contact = contact {
+        if let contact {
             remoteImageView.image = AvatarMaker.shared()
                 .avatar(for: contact, size: remoteVideoView.frame.size.width, masked: false)
         }
@@ -1295,7 +1299,7 @@ extension CallViewController {
     }
     
     private func showInitiatorVideoCallInfo() {
-        if let contact = contact, contact.isVideoCallAvailable(), isNavigationVisible(), isCallInitiator,
+        if let contact, contact.isVideoCallAvailable(), isNavigationVisible(), isCallInitiator,
            UserSettings.shared().enableVideoCall, !UserSettings.shared().videoCallInfoShown, threemaVideoCallAvailable {
             presentInitiatorVideoCallMaterialShowcase()
         }

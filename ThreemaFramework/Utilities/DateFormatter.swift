@@ -42,7 +42,7 @@ public class DateFormatter: NSObject {
     /// - Returns: Localized short date and time string or empty string if `date` is nil
     @objc
     public static func shortStyleDateTime(_ date: Date?) -> String {
-        guard let date = date else {
+        guard let date else {
             return ""
         }
         
@@ -64,7 +64,7 @@ public class DateFormatter: NSObject {
     /// - Returns: Localized short date and medium time (with seconds) string or empty string if `date` is nil
     @objc
     public static func shortStyleDateTimeSeconds(_ date: Date?) -> String {
-        guard let date = date else {
+        guard let date else {
             return ""
         }
         
@@ -86,7 +86,7 @@ public class DateFormatter: NSObject {
     /// - Returns: Localized medium date and time (with seconds) string or empty string if `date` is nil
     @objc
     public static func mediumStyleDateTime(_ date: Date?) -> String {
-        guard let date = date else {
+        guard let date else {
             return ""
         }
         
@@ -123,9 +123,8 @@ public class DateFormatter: NSObject {
     ///
     /// - Parameter date: Date to format
     /// - Returns: Localized long date and time (with time zone) string or empty string if `date` is nil
-    @objc
     public static func longStyleDateTime(_ date: Date?) -> String {
-        guard let date = date else {
+        guard let date else {
             return ""
         }
         
@@ -144,7 +143,7 @@ public class DateFormatter: NSObject {
     /// - Returns: Localized short time (no seconds) string or empty string if `date` is nil
     @objc
     public static func shortStyleTimeNoDate(_ date: Date?) -> String {
-        guard let date = date else {
+        guard let date else {
             return ""
         }
         
@@ -207,7 +206,7 @@ public class DateFormatter: NSObject {
     /// - Returns: Localized short day, month and year string or empty string if `date` is nil
     @objc
     public static func getShortDate(_ date: Date?) -> String {
-        guard let date = date else {
+        guard let date else {
             return ""
         }
         
@@ -226,10 +225,11 @@ public class DateFormatter: NSObject {
     /// - sam. 01 févr. 2020 (fr_CH)
     ///
     /// - Parameter date: Date to format
-    /// - Returns: Localized short weekday, medium day, medium month and full year string or empty string if `date` is nil
+    /// - Returns: Localized short weekday, medium day, medium month and full year string or empty string if `date` is
+    ///            nil
     @objc
     public static func getDayMonthAndYear(_ date: Date?) -> String {
-        guard let date = date else {
+        guard let date else {
             return ""
         }
         
@@ -251,7 +251,6 @@ public class DateFormatter: NSObject {
     ///
     /// - Parameter date: Date to format
     /// - Returns: Localized short weekday, medium day and medium month
-    @objc
     private static func mediumWeekdayDayAndMonth(_ date: Date) -> String {
         if mediumWeekdayDayAndMonthDateFormatter == nil {
             mediumWeekdayDayAndMonthDateFormatter = dateFormatter(for: "EE dd MMM")
@@ -271,7 +270,6 @@ public class DateFormatter: NSObject {
     ///
     /// - Parameter date: Date to format
     /// - Returns: Localized short weekday, medium day and medium month
-    @objc
     private static func weekday(_ date: Date) -> String {
         if weekdayFormatter == nil {
             weekdayFormatter = dateFormatter(for: "EEEE")
@@ -288,10 +286,11 @@ public class DateFormatter: NSObject {
     /// - sam. 01 févr. 2020 à 13:14 (fr_CH)
     ///
     /// - Parameter date: Date to format
-    /// - Returns: Localized short weekday, medium day, medium month and long year string including short time or empty string if `date` is nil
+    /// - Returns: Localized short weekday, medium day, medium month and long year string including short time or empty
+    ///            string if `date` is nil
     @objc
     public static func getFullDate(for date: Date?) -> String {
-        guard let date = date else {
+        guard let date else {
             return ""
         }
         
@@ -306,9 +305,8 @@ public class DateFormatter: NSObject {
     ///
     /// - Parameter date: Date to format
     /// - Returns: Long year string or empty string if `date` is nil
-    @objc
     public static func getYear(for date: Date?) -> String {
-        guard let date = date else {
+        guard let date else {
             return ""
         }
         
@@ -408,7 +406,8 @@ public class DateFormatter: NSObject {
     
     /// Localized relative date
     ///
-    /// Localized text for today and yesterday, weekday, day and month for the rest of this calendar year. For previous years it also shows the year.
+    /// Localized text for today and yesterday, weekday, day and month for the rest of this calendar year. For previous
+    /// years it also shows the year.
     ///
     /// Examples in multiple locales:
     /// - Today, Yesterday, Sat, Feb 01, ..., Tue, Dec 31, 2019, Sat, Feb 01 2019 (en_US)
@@ -417,9 +416,8 @@ public class DateFormatter: NSObject {
     ///
     /// - Parameter date: Date to format
     /// - Returns: Localized relative date or empty string if `date` is nil
-    @objc
     public static func relativeMediumDate(for date: Date?) -> String {
-        guard let date = date else {
+        guard let date else {
             return ""
         }
         
@@ -465,7 +463,7 @@ public class DateFormatter: NSObject {
     /// - Returns: Localized date and time for accessibility or empty string if `date` is nil
     @objc
     public static func accessibilityDateTime(_ date: Date?) -> String {
-        guard let date = date else {
+        guard let date else {
             return ""
         }
         
@@ -484,10 +482,10 @@ public class DateFormatter: NSObject {
     /// - 1 février 2020 à 13:14 (fr_CH)
     ///
     /// - Parameter date: Date to format
-    /// - Returns: Localized date and time for accessibility using relative dates for recent days (e.g. today, yesterday) or empty string if `date` is nil
-    @objc
+    /// - Returns: Localized date and time for accessibility using relative dates for recent days (e.g. today,
+    ///            yesterday) or empty string if `date` is nil
     public static func accessibilityRelativeDayTime(_ date: Date?) -> String {
-        guard let date = date else {
+        guard let date else {
             return ""
         }
         
@@ -509,7 +507,7 @@ public class DateFormatter: NSObject {
     /// - Returns: Formatted date or empty string if `date` is nil
     @objc
     public static func getDateForWeb(_ date: Date?) -> String {
-        guard let date = date else {
+        guard let date else {
             return ""
         }
         
@@ -530,7 +528,7 @@ public class DateFormatter: NSObject {
     /// - Parameter date: Date to format
     /// - Returns: Formatted date or empty string if `date` is nil
     public static func getDateForExport(_ date: Date?) -> String {
-        guard let date = date else {
+        guard let date else {
             return ""
         }
         
@@ -543,7 +541,6 @@ public class DateFormatter: NSObject {
         return exportDateFormatter!.string(from: date)
     }
     
-    @objc
     public static func getNowDateString() -> String {
         if nowDateFormatter == nil {
             nowDateFormatter = Foundation.DateFormatter()
@@ -584,7 +581,6 @@ public class DateFormatter: NSObject {
     ///
     /// - Parameter totalSeconds: Seconds to transform
     /// - Returns: String of format "01:02:03" with hour omitted if it's zero
-    @objc
     public static func maybeNegativeTimeFormatted(_ totalSeconds: Int) -> String {
         let negativeOrNothing = totalSeconds < 0 ? "-" : ""
         

@@ -23,7 +23,8 @@ import Foundation
 
 /// Complicated constants that cannot easily be imported form Objective-C redefined for Swift
 ///
-/// For example non-trivial macros cannot be imported: <https://developer.apple.com/videos/play/wwdc2020/10680/?time=1801>
+/// For example non-trivial macros cannot be imported:
+/// <https://developer.apple.com/videos/play/wwdc2020/10680/?time=1801>
 ///
 /// When you add a new constant use the same name but remove the `k`. Add a comment with the name of the corresponding
 /// Objective-C constant.

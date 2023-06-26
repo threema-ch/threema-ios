@@ -24,7 +24,6 @@
 #import "MyIdentityStore.h"
 #import "ProtocolDefines.h"
 #import "NaClCrypto.h"
-#import "MessageSender.h"
 #import "UserSettings.h"
 #import "MediaConverter.h"
 #import "Threema-Swift.h"
@@ -46,7 +45,7 @@
     NSData *decryptedData = nil;
     
     @try {
-        NSData *encryptionKey = [message blobGetEncryptionKey];
+        NSData *encryptionKey = [message blobEncryptionKey];
         if (encryptionKey != nil) {
             decryptedData = [[NaClCrypto sharedCrypto] symmetricDecryptData:data withKey:encryptionKey nonce:[NSData dataWithBytesNoCopy:kNonce_1 length:sizeof(kNonce_1) freeWhenDone:NO]];
         } else {

@@ -865,7 +865,7 @@ class GroupManagerTests: XCTestCase {
             )
         )
 
-        XCTAssertNil(grp.photo)
+        XCTAssertNil(grp.profilePicture)
         
         let expecSetGroupPhoto = expectation(description: "Set group photo")
         
@@ -883,7 +883,7 @@ class GroupManagerTests: XCTestCase {
         
         waitForExpectations(timeout: 6)
 
-        XCTAssertTrue(grp.photo!.data!.elementsEqual(expectedPhoto))
+        XCTAssertTrue(grp.profilePicture!.elementsEqual(expectedPhoto))
         XCTAssertEqual(1, taskManagerMock.addedTasks.filter { $0 is TaskDefinitionSendGroupSetPhotoMessage }.count)
         
         let setTask = try XCTUnwrap(taskManagerMock.addedTasks.first as? TaskDefinitionSendGroupSetPhotoMessage)
@@ -916,7 +916,7 @@ class GroupManagerTests: XCTestCase {
         
         waitForExpectations(timeout: 6)
 
-        XCTAssertNil(grp.photo)
+        XCTAssertNil(grp.profilePicture)
         XCTAssertEqual(1, taskManagerMock.addedTasks.filter { $0 is TaskDefinitionSendGroupDeletePhotoMessage }.count)
         
         let deleteTask = try XCTUnwrap(
@@ -1190,7 +1190,8 @@ class GroupManagerTests: XCTestCase {
 
     // Spec: https://clients.pages.threema.dev/protocols/threema-protocols/structbuf/csp/#m:e2e:group-leave
     // Section: When receiving this message: 1.
-    //      -> In step 1 the group creator will be removed from the group. And a system message 'group is not mutable anymore' will be added.
+    //      -> In step 1 the group creator will be removed from the group. And a system message 'group is not mutable
+    //         anymore' will be added.
     //      -> Later in step 1 the group will be left. And system message 'group must be cloned' will be added.
     func testReceiveLeaveFromCreator() throws {
         let myIdentityStoreMock = MyIdentityStoreMock()

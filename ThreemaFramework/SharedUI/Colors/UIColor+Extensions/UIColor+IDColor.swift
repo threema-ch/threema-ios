@@ -20,9 +20,9 @@
 
 import Foundation
 
-public extension UIColor {
+extension UIColor {
     
-    enum IDColor {
+    public enum IDColor {
         // The mapping is in the order they are listed here
     
         /// Please don't access this directly except for testing & debugging

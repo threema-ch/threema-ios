@@ -21,6 +21,8 @@
 import ThreemaFramework
 import UIKit
 
+// MARK: - ConversationTableViewCell.Configuration
+
 extension ConversationTableViewCell {
     private enum Configuration {
         /// The size of the avatar
@@ -469,7 +471,7 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
     public func updateLastMessagePreview() {
         updateAccessibility()
         
-        guard let conversation = conversation else {
+        guard let conversation else {
             previewLabel.attributedText = nil
             dateDraftLabel.text = nil
             return
@@ -514,7 +516,7 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
     override func updateColors() {
         super.updateColors()
         
-        if let conversation = conversation,
+        if let conversation,
            !conversation.isGroup(),
            let contact = conversation.contact,
            let state = contact.state,
@@ -597,7 +599,7 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
     
     private func updateCell() {
         
-        guard let conversation = conversation else {
+        guard let conversation else {
             return
         }
         
@@ -625,9 +627,10 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
     }
     
     private func updateTitleLabel() {
-        guard let conversation = conversation,
+        guard let conversation,
               let displayName = conversation.displayName else {
-            // This should not occur, but we assign an empty string to make the firstBaseline alignment of dateDraftLabel work anyways.
+            // This should not occur, but we assign an empty string to make the firstBaseline alignment of
+            // dateDraftLabel work anyways.
             nameLabel.attributedText = NSAttributedString(string: " ")
             return
         }
@@ -670,8 +673,7 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
     }
     
     private func updateDisplayStateImage() {
-        guard let conversation = conversation,
-              let lastMessage = conversation.lastMessage else {
+        guard let conversation else {
             displayStateImageView.isHidden = true
             return
         }
@@ -710,11 +712,12 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
             return
         }
         
-        if let symbol = lastMessage.messageDisplayState.overviewSymbol(
-            with: Colors.grayCircleBackground,
-            ownMessage: lastMessage.isOwnMessage,
-            configuration: Configuration.displayStateConfiguration
-        ) {
+        if let lastMessage = conversation.lastMessage,
+           let symbol = lastMessage.messageDisplayState.overviewSymbol(
+               with: Colors.grayCircleBackground,
+               ownMessage: lastMessage.isOwnMessage,
+               configuration: Configuration.displayStateConfiguration
+           ) {
             displayStateImageView.isHidden = false
             displayStateImageView.image = symbol
             return
@@ -724,7 +727,7 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
     }
     
     private func updateBadge() {
-        guard let conversation = conversation else {
+        guard let conversation else {
             badgeCountView.isHidden = true
             return
         }
@@ -743,7 +746,7 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
     private func updateTypingIndicator() {
         var isTyping = false
         
-        if let conversation = conversation,
+        if let conversation,
            !conversation.isGroup(),
            conversation.conversationCategory != .private {
             isTyping = conversation.typing.boolValue
@@ -754,7 +757,7 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
     }
     
     private func updateDndImage() {
-        guard let conversation = conversation else {
+        guard let conversation else {
             dndImageView.image = nil
             dndImageView.isHidden = true
             updateIconStackView()
@@ -777,7 +780,7 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
     }
     
     private func updatePinImage() {
-        guard let conversation = conversation,
+        guard let conversation,
               conversation.conversationVisibility == .pinned else {
             pinImageView.isHidden = true
             updateIconStackView()
@@ -793,7 +796,7 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
     }
     
     private func updateAccessibility() {
-        guard let conversation = conversation else {
+        guard let conversation else {
             return
         }
         
@@ -862,7 +865,7 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
     }
     
     private func updateAccessibility(with draft: String, accessibilityString: String) {
-        guard let conversation = conversation else {
+        guard let conversation else {
             return
         }
         
@@ -899,7 +902,7 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
             }
             
             Task { @MainActor in
-                if let avatarImage = avatarImage {
+                if let avatarImage {
                     self.avatarImageView.image = avatarImage
                 }
                 else {
@@ -1033,7 +1036,7 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
             }
         }
 
-        if let conversation = conversation,
+        if let conversation,
            conversation.isGroup() {
             return
         }
@@ -1070,13 +1073,13 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
     ///   - callOnCreation: Should the handler be called during observer creation?
     ///   - changeHandler: Handler called on each observed change.
     ///                     Don't forget to capture `self` weakly! Dispatched on the main queue.
-    private func observeConversation<Value>(
-        _ keyPath: KeyPath<Conversation, Value>,
+    private func observeConversation(
+        _ keyPath: KeyPath<Conversation, some Any>,
         callOnCreation: Bool = true,
         changeHandler: @escaping () -> Void
     ) {
         
-        guard let conversation = conversation else {
+        guard let conversation else {
             return
         }
         let options: NSKeyValueObservingOptions = callOnCreation ? .initial : []
@@ -1099,9 +1102,9 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
     ///   - callOnCreation: Should the handler be called during observer creation?
     ///   - changeHandler: Handler called on each observed change.
     ///                     Don't forget to capture `self` weakly! Dispatched on the main queue.
-    private func observeLastMessage<Message: BaseMessage, Value>(
+    private func observeLastMessage<Message: BaseMessage>(
         _ lastMessage: Message,
-        keyPath: KeyPath<Message, Value>,
+        keyPath: KeyPath<Message, some Any>,
         callOnCreation: Bool = true,
         changeHandler: @escaping () -> Void
     ) {
@@ -1124,8 +1127,8 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
     ///   - callOnCreation: Should the handler be called during observer creation?
     ///   - changeHandler: Handler called on each observed change.
     ///                     Don't forget to capture `self` weakly! Dispatched on the main queue.
-    private func observeContact<Value>(
-        _ keyPath: KeyPath<ContactEntity, Value>,
+    private func observeContact(
+        _ keyPath: KeyPath<ContactEntity, some Any>,
         callOnCreation: Bool = true,
         changeHandler: @escaping () -> Void
     ) {

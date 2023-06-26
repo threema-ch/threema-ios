@@ -115,10 +115,11 @@ class VoIPCallService: NSObject {
     
     weak var delegate: VoIPCallServiceDelegate?
     
-    private var peerConnectionClient: VoIPCallPeerConnectionClient?
+    private var peerConnectionClient: VoIPCallPeerConnectionClientProtocol
     private var callKitManager: VoIPCallKitManager?
     private var threemaVideoCallAvailable = false
     private var callViewController: CallViewController?
+
     private var state: CallState = .idle {
         didSet {
             invalidateTimers(state: state)
@@ -168,7 +169,7 @@ class VoIPCallService: NSObject {
 
     private var shouldShowCellularCallWarning = false {
         didSet {
-            if let callViewController = callViewController {
+            if let callViewController {
                 DDLogDebug(
                     "VoipCallService: [cid=\(callID?.callID ?? 0)]: Should show cellular warning -> \(shouldShowCellularCallWarning)"
                 )
@@ -216,9 +217,16 @@ class VoIPCallService: NSObject {
     }
     
     private var audioRouteChangeObserver: NSObjectProtocol?
-    
-    override required init() {
-        self.voIPCallSender = VoIPCallSender(MyIdentityStore.shared())
+
+    required init(
+        businessInjector: BusinessInjectorProtocol,
+        peerConnectionClient: VoIPCallPeerConnectionClientProtocol
+    ) {
+        self.voIPCallSender = VoIPCallSender(
+            messageSender: businessInjector.messageSender,
+            myIdentityStore: businessInjector.myIdentityStore
+        )
+        self.peerConnectionClient = peerConnectionClient
         super.init()
         
         self.audioRouteChangeObserver = NotificationCenter.default.addObserver(
@@ -226,7 +234,7 @@ class VoIPCallService: NSObject {
             object: nil,
             queue: nil
         ) { [weak self] n in
-            guard let self = self else {
+            guard let self else {
                 return
             }
             if self.state != .idle {
@@ -285,6 +293,10 @@ class VoIPCallService: NSObject {
         if let observer = audioRouteChangeObserver {
             NotificationCenter.default.removeObserver(observer)
         }
+    }
+
+    override convenience init() {
+        self.init(businessInjector: BusinessInjector(), peerConnectionClient: VoIPCallPeerConnectionClient())
     }
 }
 
@@ -353,21 +365,21 @@ extension VoIPCallService {
                 action.completion?()
             case .speakerOn:
                 speakerActive = true
-                peerConnectionClient?.speakerOn()
+                peerConnectionClient.speakerOn()
                 delegate?.callServiceFinishedProcess()
                 action.completion?()
             case .speakerOff:
                 speakerActive = false
-                peerConnectionClient?.speakerOff()
+                peerConnectionClient.speakerOff()
                 delegate?.callServiceFinishedProcess()
                 action.completion?()
             case .muteAudio:
-                peerConnectionClient?.muteAudio(completion: {
+                peerConnectionClient.muteAudio(completion: {
                     self.delegate?.callServiceFinishedProcess()
                     action.completion?()
                 })
             case .unmuteAudio:
-                peerConnectionClient?.unmuteAudio(completion: {
+                peerConnectionClient.unmuteAudio(completion: {
                     self.delegate?.callServiceFinishedProcess()
                     action.completion?()
                 })
@@ -484,13 +496,16 @@ extension VoIPCallService {
     
     /// Configure the audio session and set RTC audio active
     func activateRTCAudio() {
-        peerConnectionClient?.activateRTCAudio(speakerActive: speakerActive)
+        peerConnectionClient.activateRTCAudio(speakerActive: speakerActive)
     }
     
     /// Reports a new call to CallKit with an unknown caller
-    /// - threemaID: Threema ID of the caller. If it's nil, it use the unkonwn caller string
-    func reportInitialCall(from identity: String, name: String?) {
-        if let callKitManager = callKitManager {
+    /// - Parameters:
+    ///   - identity: Threema ID of the caller
+    ///   - name: Name of the caller. If it's nil, it use the unknown caller string
+    ///   - completion: Completion handler returns true if call successfully reported to CallKit
+    func reportInitialCall(from identity: String, name: String?, completion: @escaping (Bool) -> Void) {
+        if let callKitManager {
             if callKitManager.currentUUID() != nil {
                 callKitManager.endCall()
             }
@@ -499,25 +514,18 @@ extension VoIPCallService {
             callKitManager = VoIPCallKitManager()
         }
         
-        guard let callKitManager = callKitManager else {
+        guard let callKitManager else {
             // CallKitManager must have been initialized before we continue execution
             fatalError()
         }
         
-        reportInitialCall(
-            from: identity,
-            contactName: name ?? BundleUtil.localizedString(forKey: "identity_not_found_title"),
-            on: callKitManager
-        )
-    }
-    
-    private func reportInitialCall(from identity: String, contactName: String, on callKitManager: VoIPCallKitManager) {
         VoIPCallStateManager.shared.preCallHandling = true
         
         callKitManager.reportIncomingCall(
             uuid: UUID(),
             contactIdentity: identity,
-            contactName: contactName
+            contactName: name ?? BundleUtil.localizedString(forKey: "identity_not_found_title"),
+            completion: completion
         )
     }
     
@@ -525,7 +533,7 @@ extension VoIPCallService {
     func startCaptureLocalVideo(renderer: RTCVideoRenderer, useBackCamera: Bool, switchCamera: Bool = false) {
         localRenderer = renderer
         videoActive = true
-        peerConnectionClient?.startCaptureLocalVideo(
+        peerConnectionClient.startCaptureLocalVideo(
             renderer: renderer,
             useBackCamera: useBackCamera,
             switchCamera: switchCamera
@@ -538,7 +546,7 @@ extension VoIPCallService {
             videoActive = false
         }
         if let renderer = localRenderer {
-            peerConnectionClient?.endCaptureLocalVideo(renderer: renderer, switchCamera: switchCamera)
+            peerConnectionClient.endCaptureLocalVideo(renderer: renderer, switchCamera: switchCamera)
             localRenderer = nil
         }
     }
@@ -551,13 +559,13 @@ extension VoIPCallService {
     /// Start render remote video
     func renderRemoteVideo(to renderer: RTCVideoRenderer) {
         remoteRenderer = renderer
-        peerConnectionClient?.renderRemoteVideo(to: renderer)
+        peerConnectionClient.renderRemoteVideo(to: renderer)
     }
     
     /// End remote video
     func endRemoteVideo() {
         if let renderer = remoteRenderer {
-            peerConnectionClient?.endRemoteVideo(renderer: renderer)
+            peerConnectionClient.endRemoteVideo(renderer: renderer)
             remoteRenderer = nil
         }
     }
@@ -569,19 +577,20 @@ extension VoIPCallService {
     
     /// Get peer video quality profile
     func remoteVideoQualityProfile() -> CallsignalingProtocol.ThreemaVideoCallQualityProfile? {
-        peerConnectionClient?.remoteVideoQualityProfile
+        peerConnectionClient.remoteVideoQualityProfile
     }
     
     /// Get peer is using turn server
     func networkIsRelayed() -> Bool {
-        peerConnectionClient?.networkIsRelayed ?? false
+        peerConnectionClient.networkIsRelayed
     }
 }
 
 extension VoIPCallService {
     // MARK: private functions
     
-    /// When the current call state is idle and the permission is granted to the microphone, it will create the peer client and add the offer.
+    /// When the current call state is idle and the permission is granted to the microphone, it will create the peer
+    /// client and add the offer.
     /// If the state is wrong, it will reject the call with the reason unknown.
     /// If the permission to the microphone is not granted, it will reject the call with the reason unknown.
     /// If Threema Calls are disabled, it will reject the call with the reason disabled.
@@ -639,7 +648,8 @@ extension VoIPCallService {
                     callKitManager = VoIPCallKitManager()
                 }
                 
-                // If a call was already reported, it was the initial call launched when the app was in background. So we update the caller.
+                // If a call was already reported, it was the initial call launched when the app was in background. So
+                // we update the caller.
                 if let uuid = callKitManager?.currentUUID() {
                     callKitManager?.updateReportedIncomingCall(
                         uuid: uuid,
@@ -650,7 +660,12 @@ extension VoIPCallService {
                     callKitManager?.reportIncomingCall(
                         uuid: UUID(),
                         contactIdentity: offer.contactIdentity!,
-                        contactName: nil
+                        contactName: nil,
+                        completion: { succeeded in
+                            if !succeeded {
+                                DDLogError("Report incoming call failed, call is starting anyway")
+                            }
+                        }
                     )
                 }
                 
@@ -668,7 +683,8 @@ extension VoIPCallService {
                         self.threemaVideoCallAvailable = offer.isVideoAvailable
                         self.startIncomingCallTimeoutTimer()
                         
-                        /// Make sure that the connection is not prematurely disconnected when the app is put into the background
+                        /// Make sure that the connection is not prematurely disconnected when the app is put into the
+                        /// background
                         ServerConnector.shared().connectWait(initiator: .threemaCall)
                         
                         // New Call
@@ -682,7 +698,8 @@ extension VoIPCallService {
                         
                         self.state = .incomingRinging
                         
-                        // Prefetch ICE/TURN servers so they're likely to be already available when the user accepts the call
+                        // Prefetch ICE/TURN servers so they're likely to be already available when the user accepts the
+                        // call
                         VoIPIceServerSource.prefetchIceServers()
                         
                         completion()
@@ -828,7 +845,8 @@ extension VoIPCallService {
         }
     }
     
-    /// Handle the answer message if the contact in the answer message is the same as in the call service and call state is ringing.
+    /// Handle the answer message if the contact in the answer message is the same as in the call service and call state
+    /// is ringing.
     /// Call will cancel if it's rejected and CallViewController will close.
     /// - parameter answer: VoIPCallAnswerMessage
     /// - parameter completion: Completion block
@@ -844,7 +862,7 @@ extension VoIPCallService {
         
         if let identity = contactIdentity {
             if callInitiator {
-                if let callID = callID, state == .sendOffer || state == .outgoingRinging,
+                if let callID, state == .sendOffer || state == .outgoingRinging,
                    identity == answer.contactIdentity, callID.isSame(answer.callID) {
                     state = .receivedAnswer
                     if answer.action == VoIPCallAnswerMessage.MessageAction.reject {
@@ -883,7 +901,7 @@ extension VoIPCallService {
                             callViewController?.disableThreemaVideoCall()
                         }
                         if let remoteSdp = answer.answer {
-                            peerConnectionClient?.set(remoteSdp: remoteSdp, completion: { error in
+                            peerConnectionClient.set(remoteSdp: remoteSdp, completion: { error in
                                 if error == nil {
                                     switch self.state {
                                     case .idle, .sendOffer, .receivedOffer, .outgoingRinging, .incomingRinging,
@@ -951,7 +969,8 @@ extension VoIPCallService {
         }
     }
     
-    /// Handle the ringing message if the contact in the answer message is the same as in the call service and call state is sendOffer.
+    /// Handle the ringing message if the contact in the answer message is the same as in the call service and call
+    /// state is sendOffer.
     /// CallViewController will play the ringing tone
     /// - parameter ringing: VoIPCallRingingMessage
     /// - parameter completion: Completion block
@@ -960,7 +979,7 @@ extension VoIPCallService {
             "VoipCallService: [cid=\(ringing.callID.callID)]: Call ringing message received from \(ringing.contactIdentity ?? "?")"
         )
         if let identity = contactIdentity {
-            if let callID = callID, identity == ringing.contactIdentity, callID.isSame(ringing.callID) {
+            if let callID, identity == ringing.contactIdentity, callID.isSame(ringing.callID) {
                 switch state {
                 case .sendOffer:
                     state = .outgoingRinging
@@ -994,20 +1013,22 @@ extension VoIPCallService {
             DDLogNotice("VoipCallService: [cid=\(ice.callID.callID)]: Incoming ICE candidate: \(candidate.sdp)")
         }
         if let identity = contactIdentity {
-            if let callID = callID, identity == ice.contactIdentity, callID.isSame(ice.callID) {
+            if let callID, identity == ice.contactIdentity, callID.isSame(ice.callID) {
                 switch state {
                 case .sendOffer, .outgoingRinging, .sendAnswer, .receivedAnswer, .initializing, .calling, .reconnecting:
                     if !ice.removed {
                         for candidate in ice.candidates {
                             if shouldAdd(candidate: candidate, local: false) == (true, nil) {
-                                peerConnectionClient?.set(addRemoteCandidate: candidate)
+                                peerConnectionClient.set(addRemoteCandidate: candidate)
                             }
                         }
                         completion()
                     }
                     else {
-                        // ICE candidate messages are currently allowed to have a "removed" flag. However, this is non-standard.
-                        // When receiving an VoIP ICE Candidate (0x62) message with removed set to true, discard the message
+                        // ICE candidate messages are currently allowed to have a "removed" flag. However, this is
+                        // non-standard.
+                        // When receiving an VoIP ICE Candidate (0x62) message with removed set to true, discard the
+                        // message
                         completion()
                     }
                 case .receivedOffer, .incomingRinging:
@@ -1038,8 +1059,10 @@ extension VoIPCallService {
         }
     }
     
-    /// Handle the hangup message if the contact in the answer message is the same as in the call service and call state is receivedOffer, ringing, sendAnswer, initializing, calling or reconnecting.
-    /// / If we receive a hangup message without having had a call with this callID in any state, we assume that it belonged to a missed call whose other messages were already dropped by the server.
+    /// Handle the hangup message if the contact in the answer message is the same as in the call service and call state
+    /// is receivedOffer, ringing, sendAnswer, initializing, calling or reconnecting.
+    /// / If we receive a hangup message without having had a call with this callID in any state, we assume that it
+    /// belonged to a missed call whose other messages were already dropped by the server.
     /// It will dismiss the CallViewController after the call was ended.
     /// - parameter hangup: VoIPCallHangupMessage
     /// - parameter completion: Completion block
@@ -1049,7 +1072,7 @@ extension VoIPCallService {
         )
         
         if let identity = contactIdentity {
-            if let callID = callID, identity == hangup.contactIdentity, callID.isSame(hangup.callID) {
+            if let callID, identity == hangup.contactIdentity, callID.isSame(hangup.callID) {
                 switch state {
                 case .receivedOffer, .outgoingRinging, .incomingRinging, .sendAnswer, .initializing, .calling,
                      .reconnecting:
@@ -1080,7 +1103,7 @@ extension VoIPCallService {
                     with: hangup,
                     on: businessInjector
                 ) { conversation, systemMessage in
-                    if let conversation = conversation, systemMessage != nil {
+                    if let conversation, systemMessage != nil {
                         ConversationActions(businessInjector: businessInjector).unarchive(conversation)
                         NotificationManager(businessInjector: businessInjector).updateUnreadMessagesCount()
                     }
@@ -1143,7 +1166,8 @@ extension VoIPCallService {
         }
     }
     
-    /// Accept a incoming call if state is ringing. Will send a answer message to initiator and update CallViewController.
+    /// Accept a incoming call if state is ringing. Will send a answer message to initiator and update
+    /// CallViewController.
     /// It will present the CallViewController.
     /// - parameter action: VoIPCallUserAction
     /// - parameter completion: Completion block
@@ -1151,12 +1175,13 @@ extension VoIPCallService {
         createPeerConnectionForIncomingCall {
             RTCAudioSession.sharedInstance().useManualAudio = true
             if self.state == .incomingRinging {
-                /// Make sure that the connection is not prematurely disconnected when the app is put into the background
+                /// Make sure that the connection is not prematurely disconnected when the app is put into the
+                /// background
                 ServerConnector.shared().connect(initiator: .threemaCall)
                 self.state = .sendAnswer
                 self.presentCallViewController()
                 
-                self.peerConnectionClient?.answer(completion: { sdp in
+                self.peerConnectionClient.answer(completion: { sdp in
                     if self.threemaVideoCallAvailable, UserSettings.shared().enableVideoCall {
                         self.threemaVideoCallAvailable = true
                         self.callViewController?.enableThreemaVideoCall()
@@ -1197,7 +1222,7 @@ extension VoIPCallService {
                             if !message.removed {
                                 for candidate in message.candidates {
                                     if self.shouldAdd(candidate: candidate, local: false) == (true, nil) {
-                                        self.peerConnectionClient?.set(addRemoteCandidate: candidate)
+                                        self.peerConnectionClient.set(addRemoteCandidate: candidate)
                                     }
                                 }
                             }
@@ -1227,10 +1252,10 @@ extension VoIPCallService {
     /// - parameter completion: Completion block
     private func createPeerConnectionForInitiator(action: VoIPCallUserAction, completion: @escaping (() -> Void)) {
         let entityManager = BusinessInjector().entityManager
-        
-        entityManager.performBlockAndWait {
+        entityManager.performBlock {
             guard let contactIdentity = self.contactIdentity,
                   let contact = entityManager.entityFetcher.contact(for: self.contactIdentity) else {
+                completion()
                 return
             }
             
@@ -1239,11 +1264,10 @@ extension VoIPCallService {
                 if unsupportedContacts!.isEmpty && UserSettings.shared().enableVideoCall {
                     self.threemaVideoCallAvailable = true
                 }
-                self.peerConnectionClient?.peerConnection.close()
-                self.peerConnectionClient = nil
+                self.peerConnectionClient.close()
                 let forceTurn: Bool = Int(truncating: contact.verificationLevel) == kVerificationLevelUnverified ||
                     UserSettings.shared()?.alwaysRelayCalls == true
-                let peerConnectionParameters = VoIPCallPeerConnectionClient.PeerConnectionParameters(
+                let peerConnectionParameters = PeerConnectionParameters(
                     isVideoCallAvailable: self.threemaVideoCallAvailable,
                     videoCodecHwAcceleration: self.threemaVideoCallAvailable,
                     forceTurn: forceTurn,
@@ -1275,38 +1299,35 @@ extension VoIPCallService {
                 if let userSettings = UserSettings.shared(), userSettings.alwaysRelayCalls == true {
                     DDLogNotice("VoipCallService: [cid=\(self.callID!.callID)]: Force TURN as requested by user")
                 }
-                
-                VoIPCallPeerConnectionClient.instantiate(
+
+                self.peerConnectionClient.initialize(
                     contactIdentity: contactIdentity,
                     callID: self.callID,
-                    peerConnectionParameters: peerConnectionParameters
-                ) { result in
-                    do {
-                        self.peerConnectionClient = try result.get()
-                    }
-                    catch {
+                    peerConnectionParameters: peerConnectionParameters,
+                    delegate: self
+                ) { error in
+                    if let error {
                         self.callID = nil
                         self.callCantCreateOffer(error: error)
                         return
                     }
-                    self.peerConnectionClient?.delegate = self
-                    
+
                     if self.callKitManager == nil {
                         self.callKitManager = VoIPCallKitManager()
                     }
-                    
-                    self.peerConnectionClient?.offer(completion: { sdp, sdpError in
+
+                    self.peerConnectionClient.offer(completion: { sdp, sdpError in
                         if let error = sdpError {
                             self.callID = nil
                             self.callCantCreateOffer(error: error)
                             return
                         }
-                        guard let sdp = sdp else {
+                        guard let sdp else {
                             self.callID = nil
                             self.callCantCreateOffer(error: nil)
                             return
                         }
-                        
+
                         let offerMessage = VoIPCallOfferMessage(
                             offer: sdp,
                             contactIdentity: self.contactIdentity,
@@ -1328,7 +1349,7 @@ extension VoIPCallService {
                                     ) {
                                         DispatchQueue.global(qos: .userInitiated).async {
                                             RTCAudioSession.sharedInstance().isAudioEnabled = false
-                                            
+
                                             if let callID = self.callID {
                                                 DDLogNotice("VoipCallService: [cid=\(callID)]: Call ringing timeout")
                                                 let hangupMessage = VoIPCallHangupMessage(
@@ -1342,14 +1363,14 @@ extension VoIPCallService {
                                                 assertionFailure("This should not have happened.")
                                                 DDLogError("VoipCallService: [cid=CID WAS NIL]: Call ringing timeout")
                                             }
-                                            
+
                                             self.state = .ended
                                             self.disconnectPeerConnection()
                                             DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(1)) {
                                                 self.dismissCallView(rejected: false, completion: {
                                                     self.callKitManager?.endCall()
                                                     self.invalidateInitCallTimeout()
-                                                    
+
                                                     let rootVC = UIApplication.shared.windows.first!.rootViewController!
                                                     UIAlertTemplate.showAlert(
                                                         owner: rootVC,
@@ -1387,12 +1408,11 @@ extension VoIPCallService {
     /// After this, it will present the CallViewController.
     /// - parameter action: VoIPCallUserAction
     /// - parameter completion: Completion block
-    private func createPeerConnectionForIncomingCall(completion: @escaping (() -> Void)) {
-        peerConnectionClient?.peerConnection.close()
-        peerConnectionClient = nil
-        
+    private func createPeerConnectionForIncomingCall(completion: @escaping () -> Void) {
+        peerConnectionClient.close()
+
         let entityManager = BusinessInjector().entityManager
-        entityManager.performBlockAndWait {
+        entityManager.performBlock {
             
             guard let offer = self.incomingOffer,
                   let identity = offer.contactIdentity,
@@ -1415,7 +1435,7 @@ extension VoIPCallService {
                 let forceTurn = Int(truncating: contact.verificationLevel) == kVerificationLevelUnverified ||
                     UserSettings
                     .shared().alwaysRelayCalls
-                let peerConnectionParameters = VoIPCallPeerConnectionClient.PeerConnectionParameters(
+                let peerConnectionParameters = PeerConnectionParameters(
                     isVideoCallAvailable: self.threemaVideoCallAvailable,
                     videoCodecHwAcceleration: self.threemaVideoCallAvailable,
                     forceTurn: forceTurn,
@@ -1423,27 +1443,22 @@ extension VoIPCallService {
                     allowIpv6: UserSettings.shared().enableIPv6,
                     isDataChannelAvailable: false
                 )
-                
-                VoIPCallPeerConnectionClient.instantiate(
+
+                self.peerConnectionClient.initialize(
                     contactIdentity: identity,
                     callID: offer.callID,
-                    peerConnectionParameters: peerConnectionParameters
-                ) { result in
-                    do {
-                        self.peerConnectionClient = try result.get()
+                    peerConnectionParameters: peerConnectionParameters,
+                    delegate: self
+                ) { error in
+                    if let error {
+                        DDLogError("Can't instantiate client: \(error)")
+                        return
                     }
-                    catch {
-                        print("Can't instantiate client: \(error)")
-                    }
-                    self.peerConnectionClient?.delegate = self
-                    
-                    self.peerConnectionClient?.set(remoteSdp: offer.offer!, completion: { error in
-                        if error == nil {
-                            completion()
-                        }
-                        else {
+
+                    self.peerConnectionClient.set(remoteSdp: offer.offer!, completion: { error in
+                        if let error {
                             // reject because we can't add offer
-                            print("We can't add the offer \(String(describing: error))")
+                            DDLogError("We can't add the offer \(error))")
                             let action = VoIPCallUserAction(
                                 action: .reject,
                                 contactIdentity: identity,
@@ -1452,6 +1467,8 @@ extension VoIPCallService {
                             )
                             self.rejectCall(action: action)
                         }
+
+                        completion()
                     })
                 }
             }
@@ -1463,8 +1480,7 @@ extension VoIPCallService {
         // remove peerConnection
         
         func reset() {
-            peerConnectionClient?.peerConnection.close()
-            peerConnectionClient = nil
+            peerConnectionClient.close()
             contactIdentity = nil
             callID = nil
             threemaVideoCallAvailable = false
@@ -1511,13 +1527,8 @@ extension VoIPCallService {
             }
         }
         
-        if peerConnectionClient != nil {
-            peerConnectionClient!.stopVideoCall()
-            peerConnectionClient?.logDebugEndStats {
-                reset()
-            }
-        }
-        else {
+        peerConnectionClient.stopVideoCall()
+        peerConnectionClient.logDebugEndStats {
             reset()
         }
     }
@@ -1594,7 +1605,8 @@ extension VoIPCallService {
             }
             callViewController!.modalPresentationStyle = .overFullScreen
             presentingVC?.present(callViewController!, animated: false, completion: {
-                // need to check is fresh start, then we have to set isReceivingRemotVideo again to show the video of the remote
+                // need to check is fresh start, then we have to set isReceivingRemotVideo again to show the video of
+                // the remote
                 if !viewWasHidden, !isCallInitiator {
                     self.callViewController!.isReceivingRemoteVideo = receivingVideo
                 }
@@ -1659,7 +1671,8 @@ extension VoIPCallService {
     /// Reject the call with the reason given in the action.
     /// Will end call and dismiss the CallViewController.
     /// - parameter action: VoIPCallUserAction with the given reject reason
-    /// - parameter closeCallView: Default is true. If set false, it will not disconnect the peer connection and will not close the call view
+    /// - parameter closeCallView: Default is true. If set false, it will not disconnect the peer connection and will
+    /// not close the call view
     private func rejectCall(action: VoIPCallUserAction, closeCallView: Bool? = true) {
         var reason: VoIPCallAnswerMessage.MessageRejectReason = .reject
         
@@ -1919,7 +1932,8 @@ extension VoIPCallService {
         transportExpectedStableTimer = nil
     }
     
-    /// Add icecandidate to local array if it's in the correct state. Start a timer to send candidates as packets all 0.05 seconds
+    /// Add icecandidate to local array if it's in the correct state. Start a timer to send candidates as packets all
+    /// 0.05 seconds
     /// - parameter candidate: RTCIceCandidate
     private func handleLocalIceCandidates(_ candidates: [RTCIceCandidate]) {
         func addCandidateToLocalArray(_ addedCadidates: [RTCIceCandidate]) {
@@ -2082,7 +2096,7 @@ extension VoIPCallService {
             entityManager.performSyncBlockAndSafe {
                 contact = entityManager.entityFetcher.contact(for: self.contactIdentity)
             }
-            guard let contact = contact else {
+            guard let contact else {
                 return
             }
             notification.userInfo = ["threema": ["cmd": "missedcall", "from": identity]]
@@ -2107,7 +2121,7 @@ extension VoIPCallService {
             
             if case .complete = notificationType,
                let interaction = IntentCreator(
-                   settingsStore: businessInjector.settingsStore,
+                   userSettings: businessInjector.userSettings,
                    entityManager: entityManager
                ).inSendMessageIntentInteraction(
                    for: identity,
@@ -2440,7 +2454,7 @@ extension VoIPCallService {
 // MARK: - VoIPCallPeerConnectionClientDelegate
 
 extension VoIPCallService: VoIPCallPeerConnectionClientDelegate {
-    func peerconnectionClient(_ client: VoIPCallPeerConnectionClient, startTransportExpectedStableTimer: Bool) {
+    func peerconnectionClient(_ client: VoIPCallPeerConnectionClientProtocol, startTransportExpectedStableTimer: Bool) {
         DispatchQueue.main.async {
             // Schedule to expect the transport to be 'stable' after 10s. This is a workaround
             // for intermittent FAILED states.
@@ -2462,7 +2476,7 @@ extension VoIPCallService: VoIPCallPeerConnectionClientDelegate {
         }
     }
     
-    func peerConnectionClient(_ client: VoIPCallPeerConnectionClient, removedCandidates: [RTCIceCandidate]) {
+    func peerConnectionClient(_ client: VoIPCallPeerConnectionClientProtocol, removedCandidates: [RTCIceCandidate]) {
         // ICE candidate messages are currently allowed to have a "removed" flag. However, this is non-standard.
         // Ignore generated ICE candidates with removed set to true coming from libwebrtc
         
@@ -2474,21 +2488,21 @@ extension VoIPCallService: VoIPCallPeerConnectionClientDelegate {
         }
     }
     
-    func peerConnectionClient(_ client: VoIPCallPeerConnectionClient, addedCandidate: RTCIceCandidate) {
+    func peerConnectionClient(_ client: VoIPCallPeerConnectionClientProtocol, addedCandidate: RTCIceCandidate) {
         if contactIdentity != nil {
             handleLocalIceCandidates([addedCandidate])
         }
     }
     
-    func peerConnectionClient(_ client: VoIPCallPeerConnectionClient, changeState: CallState) {
+    func peerConnectionClient(_ client: VoIPCallPeerConnectionClientProtocol, changeState: CallState) {
         state = changeState
     }
     
-    func peerConnectionClient(_ client: VoIPCallPeerConnectionClient, audioMuted: Bool) {
+    func peerConnectionClient(_ client: VoIPCallPeerConnectionClientProtocol, audioMuted: Bool) {
         self.audioMuted = audioMuted
     }
     
-    func peerConnectionClient(_ client: VoIPCallPeerConnectionClient, speakerActive: Bool) {
+    func peerConnectionClient(_ client: VoIPCallPeerConnectionClientProtocol, speakerActive: Bool) {
         self.speakerActive = speakerActive
         
         let audioSession = AVAudioSession.sharedInstance()
@@ -2506,18 +2520,18 @@ extension VoIPCallService: VoIPCallPeerConnectionClientDelegate {
         }
     }
     
-    func peerConnectionClient(_ client: VoIPCallPeerConnectionClient, receivingVideo: Bool) {
+    func peerConnectionClient(_ client: VoIPCallPeerConnectionClientProtocol, receivingVideo: Bool) {
         if isReceivingVideo != receivingVideo {
             isReceivingVideo = receivingVideo
         }
     }
     
-    func peerConnectionClient(_ client: VoIPCallPeerConnectionClient, shouldShowCellularCallWarning: Bool) {
+    func peerConnectionClient(_ client: VoIPCallPeerConnectionClientProtocol, shouldShowCellularCallWarning: Bool) {
         self.shouldShowCellularCallWarning = shouldShowCellularCallWarning
     }
     
     func peerConnectionClient(
-        _ client: VoIPCallPeerConnectionClient,
+        _ client: VoIPCallPeerConnectionClientProtocol,
         didChangeConnectionState state: RTCPeerConnectionState
     ) {
         let oldState = self.state
@@ -2526,10 +2540,9 @@ extension VoIPCallService: VoIPCallPeerConnectionClientDelegate {
         case .new:
             break
         case .connecting:
-            if self.state != .outgoingRinging, self.state != .incomingRinging {
+            if self.state != .sendOffer, self.state != .outgoingRinging, self.state != .incomingRinging {
                 self.state = .initializing
             }
-            
         case .connected:
             invalidateCallFailedTimer()
             invalidateTransportExpectedStableTimer()
@@ -2605,12 +2618,12 @@ extension VoIPCallService: VoIPCallPeerConnectionClientDelegate {
         }
     }
     
-    func peerConnectionClient(_ client: VoIPCallPeerConnectionClient, didReceiveData: Data) {
+    func peerConnectionClient(_ client: VoIPCallPeerConnectionClientProtocol, didReceiveData: Data) {
         let threemaVideoCallSignalingMessage = CallsignalingProtocol
             .decodeThreemaVideoCallSignalingMessage(didReceiveData)
         
         if let videoQualityProfile = threemaVideoCallSignalingMessage.videoQualityProfile {
-            peerConnectionClient?.remoteVideoQualityProfile = videoQualityProfile
+            peerConnectionClient.remoteVideoQualityProfile = videoQualityProfile
         }
         
         if let captureState = threemaVideoCallSignalingMessage.captureStateChange {
@@ -2618,9 +2631,9 @@ extension VoIPCallService: VoIPCallPeerConnectionClientDelegate {
             case .camera:
                 switch captureState.state {
                 case .off:
-                    peerConnectionClient?.isRemoteVideoActivated = false
+                    peerConnectionClient.isRemoteVideoActivated = false
                 case .on:
-                    peerConnectionClient?.isRemoteVideoActivated = true
+                    peerConnectionClient.isRemoteVideoActivated = true
                 }
             default: break
             }

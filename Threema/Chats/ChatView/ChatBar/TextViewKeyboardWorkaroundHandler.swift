@@ -23,10 +23,12 @@ import Foundation
 
 /// Workaround to approximate expected behavior in an input field
 ///
-/// Adds workarounds for issues not fixed in IOS-2560, notably we add approximations for the double tap space to add a period and removing spaces before punctuations
+/// Adds workarounds for issues not fixed in IOS-2560, notably we add approximations for the double tap space to add a
+/// period and removing spaces before punctuations
 /// marks entered after the previous word was auto corrected or auto completed.
 ///
-/// Behavior is consistent with what a correct implementation would offer as of iOS 15 but might drift from future iOS versions without manual checks.
+/// Behavior is consistent with what a correct implementation would offer as of iOS 15 but might drift from future iOS
+/// versions without manual checks.
 final class TextViewKeyboardWorkaroundHandler {
     private var debugPrinting = false
     
@@ -51,10 +53,12 @@ final class TextViewKeyboardWorkaroundHandler {
         let newChange: (range: NSRange, fullText: NSMutableAttributedString, newText: String)
 
         // Handle the case where we want to double tap the space bar to enter a period and then a space
-        /// This happens in two cases
-        /// 1: the last text change was a space, the current text change is a space and the time interval betwen the two is short
-        /// 2: the last text change was a space, the current text change is a space and the text before the previous was longer than one character i.e. most likely added through auto-correct (or copy-pasted)
-        if let lastTextChange = lastTextChange, lastTextChange.text == " ", text == " ",
+        // This happens in two cases
+        // 1. the last text change was a space, the current text change is a space and the time interval between the two
+        //    is short
+        // 2. the last text change was a space, the current text change is a space and the text before the previous was
+        //    longer than one character i.e. most likely added through auto-correct (or copy-pasted)
+        if let lastTextChange, lastTextChange.text == " ", text == " ",
            Date().timeIntervalSince(lastTextChange.date) < maxDiff ||
            prePreviousWordMightHaveBeenAutoCorrected || debugTiming,
            !prePreviousCharacterWasSpace {
@@ -81,7 +85,9 @@ final class TextViewKeyboardWorkaroundHandler {
             newChange = (adjustedRange, oldParsedText, actualText)
         }
         
-        // If the previous text was longer than one character or an emoji and the current text is a space we should not check the timing for double tap to space on the next invocation as the previous text was most likely entered through auto correct and the space was added by the system instead of the user.
+        // If the previous text was longer than one character or an emoji and the current text is a space we should not
+        // check the timing for double tap to space on the next invocation as the previous text was most likely entered
+        // through auto correct and the space was added by the system instead of the user.
         prePreviousWordMightHaveBeenAutoCorrected = text.count > 1 ||
             ((lastTextChange?.text.count ?? -1) > 1 && text == " ") ||
             lastTextChange?.text.isSingleEmoji ?? false
@@ -97,11 +103,10 @@ final class TextViewKeyboardWorkaroundHandler {
         
         if debugPrinting {
             DDLogVerbose("""
-                ((NSMakeRange(\(adjustedRange.location), \(adjustedRange
-                .length)), NSMutableAttributedString(string: "\(oldParsedText
-                .string)"), "\(text)"), (NSMakeRange(\(newChange.range.location), \(newChange.range
-                .length)), NSMutableAttributedString(string: "\(newChange.fullText.string)"), "\(newChange
-                .newText)")),
+                ((NSMakeRange(\(adjustedRange.location), \(adjustedRange.length)), \
+                NSMutableAttributedString(string: "\(oldParsedText.string)"), "\(text)"), \
+                (NSMakeRange(\(newChange.range.location), \(newChange.range.length)), \
+                NSMutableAttributedString(string: "\(newChange.fullText.string)"), "\(newChange.newText)")),
                 """)
         }
         

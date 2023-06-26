@@ -313,7 +313,7 @@ final class MessageAnimatedMediaTapView: UIView {
         }
         
         // We directly start animating if media is ready
-        if let animatedMediaData = thumbnailDisplayMessage?.blobGet() {
+        if let animatedMediaData = thumbnailDisplayMessage?.blobData {
             switch currentBlobDisplayState {
             case .pending, .uploading, .uploaded, .processed, .sendingError:
                 
@@ -335,7 +335,7 @@ final class MessageAnimatedMediaTapView: UIView {
                 break
             }
         }
-        else if let thumbnailData = thumbnailDisplayMessage?.blobGetThumbnail(),
+        else if let thumbnailData = thumbnailDisplayMessage?.blobThumbnail,
                 let image = UIImage(data: thumbnailData) {
             animatedMediaView.image = image
         }

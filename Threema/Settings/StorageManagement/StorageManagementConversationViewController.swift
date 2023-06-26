@@ -52,7 +52,7 @@ final class StorageManagementConversationViewController: ThemedCodeModernGrouped
     }
     
     private lazy var headerView: DetailsHeaderView? = {
-        guard let conversation = conversation else {
+        guard let conversation else {
             return nil
         }
 
@@ -188,7 +188,7 @@ final class StorageManagementConversationViewController: ThemedCodeModernGrouped
     override func viewLayoutMarginsDidChange() {
         super.viewLayoutMarginsDidChange()
         
-        guard let headerView = headerView else {
+        guard let headerView else {
             return
         }
         
@@ -230,7 +230,7 @@ extension StorageManagementConversationViewController {
     
     private func configureHeaderView() {
         
-        guard let headerView = headerView else {
+        guard let headerView else {
             tableView.tableHeaderView = nil
             return
         }
@@ -328,7 +328,7 @@ extension StorageManagementConversationViewController {
         var snapshot = NSDiffableDataSourceSnapshot<Section, Row>()
         
         snapshot.appendSections([.messages])
-        if let conversation = conversation {
+        if let conversation {
             snapshot.appendItems([.valueConversation(conversation: conversation, celltype: .messages)])
         }
         else {
@@ -344,7 +344,7 @@ extension StorageManagementConversationViewController {
         ))])
         
         snapshot.appendSections([.files])
-        if let conversation = conversation {
+        if let conversation {
             snapshot.appendItems([.valueConversation(conversation: conversation, celltype: .files)])
         }
         else {
@@ -496,8 +496,6 @@ extension StorageManagementConversationViewController {
         let destroyer = EntityDestroyer(managedObjectContext: dbContext.current)
         if let count = destroyer.deleteMedias(olderThan: olderThanDate(option), for: conversation) {
             DDLogNotice("[EntityDestroyer] \(count) media files deleted")
-            
-            Old_ChatViewControllerCache.clear()
         }
         
         DispatchQueue.main.async {
@@ -545,7 +543,7 @@ extension StorageManagementConversationViewController {
             for: conversation
         ) {
             
-            if let conversation = conversation {
+            if let conversation {
                 let unreadMessages = UnreadMessages(entityManager: entityManager)
                 unreadMessages.totalCount(doCalcUnreadMessagesCountOf: [conversation])
             }
@@ -560,8 +558,6 @@ extension StorageManagementConversationViewController {
             
             let notificationManager = NotificationManager()
             notificationManager.updateUnreadMessagesCount()
-            
-            Old_ChatViewControllerCache.clear()
         }
         
         DispatchQueue.main.async {

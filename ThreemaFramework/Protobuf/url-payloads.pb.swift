@@ -120,11 +120,7 @@ extension Url_GroupInvite.ConfirmationMode: CaseIterable {
 /// When receiving this message:
 ///
 /// 1. If `version` or `variant` is not supported, abort these steps.
-/// 2. Validate `psk_parameters` according to the field description of each
-///    `Argon2idParameters`. If they do not fulfill the minimum requirements,
-///    abort these steps.
-/// 3. Decrypt `encrypted_rendezvous_data`. If this fails, abort these steps.
-/// 4. Follow the description of `RendezvousInit` to continue.
+/// 2. Follow the description of `RendezvousInit` to continue.
 struct Url_DeviceGroupJoinRequestOrOffer {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
@@ -141,25 +137,15 @@ struct Url_DeviceGroupJoinRequestOrOffer {
   /// Clears the value of `variant`. Subsequent reads from it will return its default value.
   mutating func clearVariant() {self._variant = nil}
 
-  /// Parameters used for deriving the user's passphrase (`PSK`) as defined by
-  /// the Device Join Protocol.
-  var pskParameters: Url_DeviceGroupJoinRequestOrOffer.Argon2idParameters {
-    get {return _pskParameters ?? Url_DeviceGroupJoinRequestOrOffer.Argon2idParameters()}
-    set {_pskParameters = newValue}
+  /// Data necessary to initialise a 1:1 connection between two devices.
+  var rendezvousInit: Rendezvous_RendezvousInit {
+    get {return _rendezvousInit ?? Rendezvous_RendezvousInit()}
+    set {_rendezvousInit = newValue}
   }
-  /// Returns true if `pskParameters` has been explicitly set.
-  var hasPskParameters: Bool {return self._pskParameters != nil}
-  /// Clears the value of `pskParameters`. Subsequent reads from it will return its default value.
-  mutating func clearPskParameters() {self._pskParameters = nil}
-
-  /// Contains rendezvous data (`rendezvous.RendezvousInit`) encrypted by a
-  /// random nonce and the key derived from the user's passphrase (`PSK`) as
-  /// defined by the Device Join Protocol. The final result is encoded in an
-  /// `extra.crypto.encrypted-data-with-nonce-ahead` struct.
-  ///
-  ///     Box(PSK.secret)
-  ///       .encrypt(data=<rendezvous.RendezvousInit>, nonce=<random>)
-  var encryptedRendezvousData: Data = Data()
+  /// Returns true if `rendezvousInit` has been explicitly set.
+  var hasRendezvousInit: Bool {return self._rendezvousInit != nil}
+  /// Clears the value of `rendezvousInit`. Subsequent reads from it will return its default value.
+  mutating func clearRendezvousInit() {self._rendezvousInit = nil}
 
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
@@ -255,64 +241,10 @@ struct Url_DeviceGroupJoinRequestOrOffer {
     init() {}
   }
 
-  /// Argon2id parameters.
-  struct Argon2idParameters {
-    // SwiftProtobuf.Message conformance is added in an extension below. See the
-    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
-    // methods supported on all messages.
-
-    var version: Url_DeviceGroupJoinRequestOrOffer.Argon2idParameters.Argon2Version = .___
-
-    /// Random salt (16 bytes)
-    var salt: Data = Data()
-
-    /// Memory usage in bytes (≥ 128 MiB)
-    var memoryBytes: UInt32 = 0
-
-    /// Number of iterations (≥ 3)
-    var iterations: UInt32 = 0
-
-    /// Amount of parallelism (≥ 1, recommended to be 1)
-    var parallelism: UInt32 = 0
-
-    var unknownFields = SwiftProtobuf.UnknownStorage()
-
-    /// Version of Argon2
-    enum Argon2Version: SwiftProtobuf.Enum {
-      typealias RawValue = Int
-      case ___ // = 0
-      case version13 // = 19
-      case UNRECOGNIZED(Int)
-
-      init() {
-        self = .___
-      }
-
-      init?(rawValue: Int) {
-        switch rawValue {
-        case 0: self = .___
-        case 19: self = .version13
-        default: self = .UNRECOGNIZED(rawValue)
-        }
-      }
-
-      var rawValue: Int {
-        switch self {
-        case .___: return 0
-        case .version13: return 19
-        case .UNRECOGNIZED(let i): return i
-        }
-      }
-
-    }
-
-    init() {}
-  }
-
   init() {}
 
   fileprivate var _variant: Url_DeviceGroupJoinRequestOrOffer.Variant? = nil
-  fileprivate var _pskParameters: Url_DeviceGroupJoinRequestOrOffer.Argon2idParameters? = nil
+  fileprivate var _rendezvousInit: Rendezvous_RendezvousInit? = nil
 }
 
 #if swift(>=4.2)
@@ -321,14 +253,6 @@ extension Url_DeviceGroupJoinRequestOrOffer.Version: CaseIterable {
   // The compiler won't synthesize support with the UNRECOGNIZED case.
   static var allCases: [Url_DeviceGroupJoinRequestOrOffer.Version] = [
     .v10,
-  ]
-}
-
-extension Url_DeviceGroupJoinRequestOrOffer.Argon2idParameters.Argon2Version: CaseIterable {
-  // The compiler won't synthesize support with the UNRECOGNIZED case.
-  static var allCases: [Url_DeviceGroupJoinRequestOrOffer.Argon2idParameters.Argon2Version] = [
-    .___,
-    .version13,
   ]
 }
 
@@ -341,8 +265,6 @@ extension Url_DeviceGroupJoinRequestOrOffer: @unchecked Sendable {}
 extension Url_DeviceGroupJoinRequestOrOffer.Version: @unchecked Sendable {}
 extension Url_DeviceGroupJoinRequestOrOffer.Variant: @unchecked Sendable {}
 extension Url_DeviceGroupJoinRequestOrOffer.Variant.OneOf_Type: @unchecked Sendable {}
-extension Url_DeviceGroupJoinRequestOrOffer.Argon2idParameters: @unchecked Sendable {}
-extension Url_DeviceGroupJoinRequestOrOffer.Argon2idParameters.Argon2Version: @unchecked Sendable {}
 #endif  // swift(>=5.5) && canImport(_Concurrency)
 
 // MARK: - Code below here is support for the SwiftProtobuf runtime.
@@ -411,8 +333,7 @@ extension Url_DeviceGroupJoinRequestOrOffer: SwiftProtobuf.Message, SwiftProtobu
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "version"),
     2: .same(proto: "variant"),
-    3: .standard(proto: "psk_parameters"),
-    4: .standard(proto: "encrypted_rendezvous_data"),
+    3: .standard(proto: "rendezvous_init"),
   ]
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -423,8 +344,7 @@ extension Url_DeviceGroupJoinRequestOrOffer: SwiftProtobuf.Message, SwiftProtobu
       switch fieldNumber {
       case 1: try { try decoder.decodeSingularEnumField(value: &self.version) }()
       case 2: try { try decoder.decodeSingularMessageField(value: &self._variant) }()
-      case 3: try { try decoder.decodeSingularMessageField(value: &self._pskParameters) }()
-      case 4: try { try decoder.decodeSingularBytesField(value: &self.encryptedRendezvousData) }()
+      case 3: try { try decoder.decodeSingularMessageField(value: &self._rendezvousInit) }()
       default: break
       }
     }
@@ -441,20 +361,16 @@ extension Url_DeviceGroupJoinRequestOrOffer: SwiftProtobuf.Message, SwiftProtobu
     try { if let v = self._variant {
       try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
     } }()
-    try { if let v = self._pskParameters {
+    try { if let v = self._rendezvousInit {
       try visitor.visitSingularMessageField(value: v, fieldNumber: 3)
     } }()
-    if !self.encryptedRendezvousData.isEmpty {
-      try visitor.visitSingularBytesField(value: self.encryptedRendezvousData, fieldNumber: 4)
-    }
     try unknownFields.traverse(visitor: &visitor)
   }
 
   static func ==(lhs: Url_DeviceGroupJoinRequestOrOffer, rhs: Url_DeviceGroupJoinRequestOrOffer) -> Bool {
     if lhs.version != rhs.version {return false}
     if lhs._variant != rhs._variant {return false}
-    if lhs._pskParameters != rhs._pskParameters {return false}
-    if lhs.encryptedRendezvousData != rhs.encryptedRendezvousData {return false}
+    if lhs._rendezvousInit != rhs._rendezvousInit {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
@@ -534,67 +450,4 @@ extension Url_DeviceGroupJoinRequestOrOffer.Variant: SwiftProtobuf.Message, Swif
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
-}
-
-extension Url_DeviceGroupJoinRequestOrOffer.Argon2idParameters: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  static let protoMessageName: String = Url_DeviceGroupJoinRequestOrOffer.protoMessageName + ".Argon2idParameters"
-  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "version"),
-    2: .same(proto: "salt"),
-    3: .standard(proto: "memory_bytes"),
-    4: .same(proto: "iterations"),
-    5: .same(proto: "parallelism"),
-  ]
-
-  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
-    while let fieldNumber = try decoder.nextFieldNumber() {
-      // The use of inline closures is to circumvent an issue where the compiler
-      // allocates stack space for every case branch when no optimizations are
-      // enabled. https://github.com/apple/swift-protobuf/issues/1034
-      switch fieldNumber {
-      case 1: try { try decoder.decodeSingularEnumField(value: &self.version) }()
-      case 2: try { try decoder.decodeSingularBytesField(value: &self.salt) }()
-      case 3: try { try decoder.decodeSingularUInt32Field(value: &self.memoryBytes) }()
-      case 4: try { try decoder.decodeSingularUInt32Field(value: &self.iterations) }()
-      case 5: try { try decoder.decodeSingularUInt32Field(value: &self.parallelism) }()
-      default: break
-      }
-    }
-  }
-
-  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    if self.version != .___ {
-      try visitor.visitSingularEnumField(value: self.version, fieldNumber: 1)
-    }
-    if !self.salt.isEmpty {
-      try visitor.visitSingularBytesField(value: self.salt, fieldNumber: 2)
-    }
-    if self.memoryBytes != 0 {
-      try visitor.visitSingularUInt32Field(value: self.memoryBytes, fieldNumber: 3)
-    }
-    if self.iterations != 0 {
-      try visitor.visitSingularUInt32Field(value: self.iterations, fieldNumber: 4)
-    }
-    if self.parallelism != 0 {
-      try visitor.visitSingularUInt32Field(value: self.parallelism, fieldNumber: 5)
-    }
-    try unknownFields.traverse(visitor: &visitor)
-  }
-
-  static func ==(lhs: Url_DeviceGroupJoinRequestOrOffer.Argon2idParameters, rhs: Url_DeviceGroupJoinRequestOrOffer.Argon2idParameters) -> Bool {
-    if lhs.version != rhs.version {return false}
-    if lhs.salt != rhs.salt {return false}
-    if lhs.memoryBytes != rhs.memoryBytes {return false}
-    if lhs.iterations != rhs.iterations {return false}
-    if lhs.parallelism != rhs.parallelism {return false}
-    if lhs.unknownFields != rhs.unknownFields {return false}
-    return true
-  }
-}
-
-extension Url_DeviceGroupJoinRequestOrOffer.Argon2idParameters.Argon2Version: SwiftProtobuf._ProtoNameProviding {
-  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "_"),
-    19: .same(proto: "VERSION_1_3"),
-  ]
 }

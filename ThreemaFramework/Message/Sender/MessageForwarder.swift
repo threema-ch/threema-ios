@@ -19,10 +19,12 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import CocoaLumberjackSwift
+import CoreLocation
 import Foundation
 
 public final class MessageForwarder {
-    
+
+    private let businessInjector = BusinessInjector()
     private lazy var old_FileMessageSender = Old_FileMessageSender()
 
     // MARK: - Lifecycle
@@ -35,12 +37,13 @@ public final class MessageForwarder {
     /// - Parameters:
     ///   - message: Base message to be forwarded.
     ///   - conversation: Conversation which message should be forwarded to.
-    ///   - additionalText: Additional text to be send as caption for file messages, or as normal text message for other types.
+    ///   - additionalText: Additional text to be send as caption for file messages, or as normal text message for other
+    ///                     types.
     public func forward(_ message: BaseMessage, to conversation: Conversation, additionalText: String?) {
         
         switch message {
         case let textMessage as TextMessage:
-            MessageSender.sendMessage(textMessage.text, in: conversation, quickReply: false, requestID: nil)
+            businessInjector.messageSender.sendTextMessage(text: textMessage.text, in: conversation, quickReply: false)
             sendAdditionalText(additionalText, to: conversation)
             
         case let locationMessage as LocationMessage:
@@ -50,15 +53,14 @@ public final class MessageForwarder {
             )
             let accuracy = locationMessage.accuracy.doubleValue
             
-            MessageSender.sendLocation(
-                coordinates,
+            businessInjector.messageSender.sendLocationMessage(
+                coordinates: coordinates,
                 accuracy: accuracy,
                 poiName: locationMessage.poiName,
                 poiAddress: locationMessage.poiAddress,
                 in: conversation
-            ) { _ in
-                // Do nothing.
-            }
+            )
+
             sendAdditionalText(additionalText, to: conversation)
             
         case let fileMessage as FileMessageEntity:
@@ -67,7 +69,7 @@ public final class MessageForwarder {
             guard let item = URLSenderItem(
                 data: fileMessage.data?.data,
                 fileName: fileMessage.fileName,
-                type: fileMessage.blobGetUTI(),
+                type: fileMessage.blobUTTypeIdentifier,
                 renderType: renderType,
                 sendAsFile: true
             ) else {
@@ -79,57 +81,51 @@ public final class MessageForwarder {
                 item.caption = caption
             }
             
-            if UserSettings.shared().newChatViewActive {
-                Task {
-                    do {
-                        try await BlobManager.shared.createMessageAndSyncBlobs(for: item, in: conversation.objectID)
-                    }
-                    catch {
-                        DDLogError("[MessageForwarder] Could not send sender item, error: \(error)")
-                    }
+            Task {
+                do {
+                    try await BlobManager.shared.createMessageAndSyncBlobs(for: item, in: conversation.objectID)
                 }
-            }
-            else {
-                old_FileMessageSender.send(item, in: conversation, requestID: nil)
+                catch {
+                    DDLogError("[MessageForwarder] Could not send sender item, error: \(error)")
+                }
             }
             
         case let audioMessage as AudioMessageEntity:
             let type = kUTTypeAudio as String
             
-            guard let item = URLSenderItem(
-                data: audioMessage.audio.data,
-                fileName: audioMessage.audio.getFilename(),
-                type: type,
-                renderType: 1,
-                sendAsFile: true
-            ) else {
+            guard let audio = audioMessage.audio,
+                  let data = audio.data,
+                  let item = URLSenderItem(
+                      data: data,
+                      fileName: audio.getFilename(),
+                      type: type,
+                      renderType: 1,
+                      sendAsFile: true
+                  ) else {
                 DDLogError("[MessageForwarder] Could not create URLSenderItem.")
                 return
             }
             
-            if UserSettings.shared().newChatViewActive {
-                Task {
-                    do {
-                        try await BlobManager.shared.createMessageAndSyncBlobs(for: item, in: conversation.objectID)
-                    }
-                    catch {
-                        DDLogError("[MessageForwarder] Could not send sender item, error: \(error)")
-                    }
+            Task {
+                do {
+                    try await BlobManager.shared.createMessageAndSyncBlobs(for: item, in: conversation.objectID)
                 }
-            }
-            else {
-                old_FileMessageSender.send(item, in: conversation, requestID: nil)
+                catch {
+                    DDLogError("[MessageForwarder] Could not send sender item, error: \(error)")
+                }
             }
             sendAdditionalText(additionalText, to: conversation)
             
         case let imageMessage as ImageMessageEntity:
-            guard let item = URLSenderItem(
-                data: imageMessage.image.data,
-                fileName: imageMessage.image.getFilename(),
-                type: imageMessage.blobGetUTI(),
-                renderType: 1,
-                sendAsFile: true
-            ) else {
+            guard let image = imageMessage.image,
+                  let data = image.data,
+                  let item = URLSenderItem(
+                      data: data,
+                      fileName: image.getFilename(),
+                      type: imageMessage.blobUTTypeIdentifier,
+                      renderType: 1,
+                      sendAsFile: true
+                  ) else {
                 DDLogError("[MessageForwarder] Could not create URLSenderItem.")
                 return
             }
@@ -138,28 +134,25 @@ public final class MessageForwarder {
                 item.caption = caption
             }
             
-            if UserSettings.shared().newChatViewActive {
-                Task {
-                    do {
-                        try await BlobManager.shared.createMessageAndSyncBlobs(for: item, in: conversation.objectID)
-                    }
-                    catch {
-                        DDLogError("[MessageForwarder] Could not send sender item, error: \(error)")
-                    }
+            Task {
+                do {
+                    try await BlobManager.shared.createMessageAndSyncBlobs(for: item, in: conversation.objectID)
                 }
-            }
-            else {
-                old_FileMessageSender.send(item, in: conversation, requestID: nil)
+                catch {
+                    DDLogError("[MessageForwarder] Could not send sender item, error: \(error)")
+                }
             }
             
         case let videoMessage as VideoMessageEntity:
-            guard let item = URLSenderItem(
-                data: videoMessage.video.data,
-                fileName: videoMessage.video.getFilename(),
-                type: videoMessage.blobGetUTI(),
-                renderType: 1,
-                sendAsFile: true
-            ) else {
+            guard let video = videoMessage.video,
+                  let data = video.data,
+                  let item = URLSenderItem(
+                      data: data,
+                      fileName: video.getFilename(),
+                      type: videoMessage.blobUTTypeIdentifier,
+                      renderType: 1,
+                      sendAsFile: true
+                  ) else {
                 DDLogError("[MessageForwarder] Could not create URLSenderItem.")
                 return
             }
@@ -168,18 +161,13 @@ public final class MessageForwarder {
                 item.caption = caption
             }
             
-            if UserSettings.shared().newChatViewActive {
-                Task {
-                    do {
-                        try await BlobManager.shared.createMessageAndSyncBlobs(for: item, in: conversation.objectID)
-                    }
-                    catch {
-                        DDLogError("[MessageForwarder] Could not send sender item, error: \(error)")
-                    }
+            Task {
+                do {
+                    try await BlobManager.shared.createMessageAndSyncBlobs(for: item, in: conversation.objectID)
                 }
-            }
-            else {
-                old_FileMessageSender.send(item, in: conversation, requestID: nil)
+                catch {
+                    DDLogError("[MessageForwarder] Could not send sender item, error: \(error)")
+                }
             }
             
         default:
@@ -188,10 +176,10 @@ public final class MessageForwarder {
     }
     
     private func sendAdditionalText(_ text: String?, to conversation: Conversation) {
-        guard let text = text else {
+        guard let text else {
             return
         }
         
-        MessageSender.sendMessage(text, in: conversation, quickReply: false, requestID: nil)
+        businessInjector.messageSender.sendTextMessage(text: text, in: conversation, quickReply: false)
     }
 }

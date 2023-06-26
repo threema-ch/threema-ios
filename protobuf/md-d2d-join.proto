@@ -6,15 +6,6 @@
 //
 // - `ED`: Existing device
 // - `ND`: New device to be added
-// - `PSK`: Key derived from the passphrase
-//
-// ### Key Derivation
-//
-//     PSK = Argon2id(
-//       out-length=32,
-//       parameters=<see DeviceGroupJoinRequestOrOffer.Argon2idParameters>,
-//       password=<passphrase>,
-//     )
 //
 // ### Blobs
 //
@@ -33,20 +24,6 @@
 // _requesting to join the device group_. If ED starts the protocol it is
 // _offering to join the device group_.
 //
-// Whichever role is chosen, the one that starts the protocol must generate and
-// display or request an ephemeral passphrase from the user to encrypt the data
-// with.
-//
-// From that passphrase, derive the Passphrase Key (PSK) using a 16 byte random
-// salt and Argon2id parameters that target a ~2s key derivation performance
-// impact on the weaker device. For the time being, the following Argon2id
-// parameters are to be used:
-//
-// - Version: 1.3
-// - Memory: 128 MiB
-// - Iterations: 3
-// - Parallelism: 1
-//
 // If ED started the protocol:
 //
 // - `variant` must be set to _offer to join the device group_.
@@ -62,13 +39,12 @@
 // #### Connection Setup
 //
 // RID creates a `rendezvous.RendezvousInit` by following the Connection
-// Rendezvous Protocol. It encrypts the created `rendezvous.RendezvousInit` with
-// PSK, wraps it in a `url.DeviceGroupJoinRequestOrOffer` and offers it in form
-// of a URL or a QR code.
+// Rendezvous Protocol. It wraps it in a `url.DeviceGroupJoinRequestOrOffer` and
+// offers it in form of a URL or a QR code.
 //
 // RRD scans the QR code or decodes the URL and then parses the
-// `url.DeviceGroupJoinRequestOrOffer`. It will then use PSK to decrypt the
-// contained `rendezvous.RendezvousInit`. Once decrypted, the enclosed
+// `url.DeviceGroupJoinRequestOrOffer`. It will then receive the data over a
+// sufficiently secure channel (e.g. a QR code). Once decoded, the enclosed
 // `rendezvous.RendezvousInit` must be handled according to the Connection
 // Rendezvous Protocol.
 //
@@ -90,8 +66,9 @@
 // must calculate the Rendezvous Path Hash (RPH) as defined by the Rendezvous
 // Protocol and display it to the user.
 //
-// ED must ask the user for confirmation that RPH is visually equal on both
-// devices. If the user does not confirm, the process must be aborted.
+// ED must ask the user for confirmation that RPH is equal on both devices. The
+// exact comparison mechanism is an implementation detail. If the user does not
+// confirm that RPH is equal on both devices, the process must be aborted.
 //
 // After confirmation, ED must stop displaying RPH and send a `Begin` message to
 // start the device join process.
@@ -111,6 +88,46 @@
 // ND may now either close the connection or leave it open to transition to the
 // History Exchange Protocol. Any further messages ED receives from ND will
 // transition into the History Exchange Protocol.
+//
+// ### Security
+//
+// The `url.DeviceGroupJoinRequestOrOffer` must be exchanged over a sufficiently
+// secure channel. A QR code is considered sufficiently secure in a _safe
+// space_. If this can be ensured by the user, ensuring that the Rendezvous Path
+// Hash (RPH) is equal on both devices is not strictly necessary.
+//
+// If an attacker is however able to capture the
+// `url.DeviceGroupJoinRequestOrOffer`, the security of the protocol relies on
+// the user ensuring that RPH is equal on both devices to ensure authentication
+// and mitigate the following attacks:
+//
+// - If ED started the protocol (offers to join the device group), comparing RPH
+//   is critical as otherwise the Client Key would become compromised if an
+//   attacker were able to make a connection faster than the victim's other
+//   device.
+// - If ND started the protocol (requests to join the device group), comparing
+//   RPH is not as critical yet still vital to mitigate a more sophisticated
+//   attack where the attacker makes it look as if the victim is connected to
+//   its device group. Until the victim finds out that it isn't its device group
+//   (because the process is stuck on ED), the victim may potentially leak
+//   sensitive information by adding a contact or sending a message, etc.
+// - An attacker who also controls the relay server used for connection between
+//   the victim's two devices could run a full MITM attack. Comparing RPH here
+//   is critical to ensure that the victim's two devices have established an
+//   end-to-end encrypted communication channel between each other.
+//
+// Letting ND start the protocol is considered more secure because of the above
+// implications.
+//
+// ED is always required to let the user confirm the equality of RPH on both
+// devices because it is ED who is to transmit the highly sensitive information.
+//
+// To prevent phishing attacks of a malicious web app claiming to be a Threema
+// App (typo squatting), the CORS `Access-Control-Allow-Origin` of any WebSocket
+// rendezvous relay server must be set to the bare minimum required by the use
+// case, so that a connection cannot be established. However, phishing
+// protection against a malicious non-web app claiming to be a Threema App is
+// not possible.
 
 syntax = "proto3";
 
@@ -205,12 +222,11 @@ message Begin {}
 // 7. Send a `Registered` message to ED.
 // 8. Ask the user whether conversation history data should be requested from
 //    ND:
-//    1. If the user wants to request conversation history data from ED, leave
-//       the connection running and start the History Exchange Protocol. Abort
-//       these steps.
-//    2. If the user does not want to request conversation history data, wait
+//    1. If the user does not want to request conversation history data, wait
 //       until all buffered data on the connection has been written. Then, close
-//       the connection.
+//       the connection and abort these steps.
+//    2. If the user wants to request conversation history data from ED, leave
+//       the connection running and start the History Exchange Protocol.
 message EssentialData {
   // Mediator server public key and address
   message MediatorServer {
@@ -254,6 +270,9 @@ message EssentialData {
   // Shared settings
   sync.Settings settings = 5;
 
+  // MDM parameters
+  sync.MdmParameters mdm_parameters = 6;
+
   // Contacts
   message AugmentedContact {
     // The contact's data.
@@ -261,9 +280,11 @@ message EssentialData {
 
     // Unix-ish timestamp in milliseconds when the conversation with this
     // contact was last updated.
-    uint64 last_update_at = 2;
+    //
+    // Optional if no conversation exists for this contact.
+    optional uint64 last_update_at = 2;
   }
-  repeated AugmentedContact contacts = 6;
+  repeated AugmentedContact contacts = 7;
 
   // Groups
   message AugmentedGroup {
@@ -274,7 +295,7 @@ message EssentialData {
     // group was last updated.
     uint64 last_update_at = 2;
   }
-  repeated AugmentedGroup groups = 7;
+  repeated AugmentedGroup groups = 8;
 
   // Distribution lists
   message AugmentedDistributionList {
@@ -285,13 +306,13 @@ message EssentialData {
     // distribution list was last updated.
     uint64 last_update_at = 2;
   }
-  repeated AugmentedDistributionList distribution_lists = 8;
+  repeated AugmentedDistributionList distribution_lists = 9;
 
   // Hashed nonces that were used for CSP messages.
-  repeated bytes csp_hashed_nonces = 9;
+  repeated bytes csp_hashed_nonces = 10;
 
   // Hashed nonces thate were used for D2D messages.
-  repeated bytes d2d_hashed_nonces = 10;
+  repeated bytes d2d_hashed_nonces = 11;
 }
 
 // Lets ED know that ND has received all essential data and successfully

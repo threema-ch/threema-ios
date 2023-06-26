@@ -20,20 +20,20 @@
 
 import Foundation
 
-public extension Colors {
-    @objc class var backgroundViewController: UIColor {
+extension Colors {
+    @objc public class var backgroundViewController: UIColor {
         .systemBackground
     }
     
-    @objc class var backgroundGroupedViewController: UIColor {
+    @objc public class var backgroundGroupedViewController: UIColor {
         .systemGroupedBackground
     }
     
-    @objc class var backgroundNavigationController: UIColor {
+    @objc public class var backgroundNavigationController: UIColor {
         .systemBackground
     }
         
-    @objc class var backgroundToolbar: UIColor {
+    @objc public class var backgroundToolbar: UIColor {
         switch theme {
         case .light, .undefined:
             return Asset.SharedColors.white.color
@@ -42,7 +42,7 @@ public extension Colors {
         }
     }
     
-    @objc class var backgroundHeaderView: UIColor {
+    @objc public class var backgroundHeaderView: UIColor {
         switch theme {
         case .light, .undefined:
             return Asset.SharedColors.white.color
@@ -51,19 +51,19 @@ public extension Colors {
         }
     }
     
-    @objc class var backgroundView: UIColor {
+    @objc public class var backgroundView: UIColor {
         .systemGroupedBackground
     }
     
-    @objc class var backgroundAlertView: UIColor {
+    @objc public class var backgroundAlertView: UIColor {
         .secondarySystemBackground
     }
     
-    @objc class var backgroundInverted: UIColor {
+    @objc public class var backgroundInverted: UIColor {
         .systemFill
     }
     
-    @objc class var backgroundButton: UIColor {
+    @objc public class var backgroundButton: UIColor {
         switch theme {
         case .light, .undefined:
             return Asset.SharedColors.gray450.color
@@ -72,19 +72,19 @@ public extension Colors {
         }
     }
     
-    @objc class var backgroundChatBarButton: UIColor {
+    @objc public class var backgroundChatBarButton: UIColor {
         .systemGray
     }
     
-    @objc class var backgroundQuickActionButton: UIColor {
+    @objc public class var backgroundQuickActionButton: UIColor {
         backgroundTableViewCell
     }
     
-    @objc class var backgroundQuickActionButtonSelected: UIColor {
+    @objc public class var backgroundQuickActionButtonSelected: UIColor {
         .secondarySystemGroupedBackground
     }
     
-    @objc class var backgroundTextView: UIColor {
+    @objc public class var backgroundTextView: UIColor {
         switch theme {
         case .light, .undefined:
             return Asset.SharedColors.gray200.color
@@ -93,7 +93,7 @@ public extension Colors {
         }
     }
     
-    @objc class var backgroundQrCode: UIColor {
+    @objc public class var backgroundQrCode: UIColor {
         switch theme {
         case .light, .undefined:
             return Asset.SharedColors.white.color
@@ -102,19 +102,19 @@ public extension Colors {
         }
     }
     
-    @objc class var backgroundSafeImageCircle: UIColor {
+    @objc public class var backgroundSafeImageCircle: UIColor {
         Asset.SharedColors.gray250.color
     }
                 
-    @objc class var backgroundMaterialShowcasePrompt: UIColor {
+    @objc public class var backgroundMaterialShowcasePrompt: UIColor {
         Asset.SharedColors.gray750.color
     }
     
-    @objc class var backgroundWizard: UIColor {
+    @objc public class var backgroundWizard: UIColor {
         Asset.SharedColors.black.color
     }
     
-    @objc class var backgroundNotification: UIColor {
+    @objc public class var backgroundNotification: UIColor {
         switch theme {
         case .light, .undefined:
             return Asset.SharedColors.white.color
@@ -123,7 +123,7 @@ public extension Colors {
         }
     }
     
-    @objc class var backgroundUnreadMessageLine: UIColor {
+    @objc public class var backgroundUnreadMessageLine: UIColor {
         switch theme {
         case .light, .undefined:
             return Asset.SharedColors.black.color.withAlphaComponent(0.45)
@@ -132,7 +132,7 @@ public extension Colors {
         }
     }
     
-    @objc class var backgroundSegmentedControl: UIColor {
+    @objc public class var backgroundSegmentedControl: UIColor {
         switch theme {
         case .light, .undefined:
             return Asset.SharedColors.white.color
@@ -141,7 +141,7 @@ public extension Colors {
         }
     }
 
-    class var backgroundWizardBox: UIColor {
+    public class var backgroundWizardBox: UIColor {
         switch theme {
         case .light, .undefined:
             return Asset.SharedColors.gray500.color

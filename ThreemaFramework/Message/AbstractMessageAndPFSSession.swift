@@ -20,7 +20,8 @@
 
 import Foundation
 
-/// A helper object to facilitate communication / passing Swift objects between TaskExecutionReceiveMessage and MessageProcessor
+/// A helper object to facilitate communication / passing Swift objects between TaskExecutionReceiveMessage and
+/// MessageProcessor
 @objc class AbstractMessageAndPFSSession: NSObject {
     @objc let session: AnyObject? // Must be a DHSession
     @objc let message: AbstractMessage?

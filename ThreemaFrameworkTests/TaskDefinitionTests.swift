@@ -60,14 +60,14 @@ class TaskDefinitionTests: XCTestCase {
     }
 
     func testTaskDefinitionGroupDissolveEncodeDecode() throws {
-        let expectedGroupID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!
+        let expectedGroupID = MockData.generateGroupID()
         let expectedGroupCreator = "CREATOR01"
         let expectedMember = "MEMBER01"
 
         var group: Group!
         dbPreparer.save {
             let contact = dbPreparer.createContact(
-                publicKey: BytesUtility.generateRandomBytes(length: 32)!,
+                publicKey: MockData.generatePublicKey(),
                 identity: expectedGroupCreator,
                 verificationLevel: 0
             )
@@ -100,28 +100,39 @@ class TaskDefinitionTests: XCTestCase {
         XCTAssertTrue(result.toMembers.contains(expectedMember))
     }
 
-    func testTaskDefinitionSendIncomingMessageUpdateEncodeDecode() throws {
-        let messageID = BytesUtility.generateRandomBytes(length: Int(8))!
-        let messageReadDate = Date()
-        // swiftformat:disable:next all
-        var conversationID = D2d_ConversationId()
-        conversationID.contact = "SENDER01"
+    func testTaskDefinitionSendDeliveryReceiptsMessageEncodeDecode() throws {
+        let expectedFromIdentity = "CONTACT1"
+        let expectedToIdentity = "CONTACT2"
+        let expectedReceiptType = UInt8(DELIVERYRECEIPT_MSGREAD)
+        let expectedReceiptMessageIDs = [
+            MockData.generateMessageID(),
+            MockData.generateMessageID(),
+        ]
+        let expectedReceiptReadDates = [
+            Date(),
+            Date(),
+        ]
 
-        let task = TaskDefinitionSendIncomingMessageUpdate(
-            messageIDs: [messageID],
-            messageReadDates: [messageReadDate],
-            conversationID: conversationID
+        let task = TaskDefinitionSendDeliveryReceiptsMessage(
+            fromIdentity: expectedFromIdentity,
+            toIdentity: expectedToIdentity,
+            receiptType: expectedReceiptType,
+            receiptMessageIDs: expectedReceiptMessageIDs,
+            receiptReadDates: expectedReceiptReadDates
         )
 
         let encoder = JSONEncoder()
-        let data = try encoder.encode(task)
+        let data = try XCTUnwrap(encoder.encode(task))
         print(String(data: data, encoding: .utf8)!)
 
         let decoder = JSONDecoder()
-        let result = try decoder.decode(TaskDefinitionSendIncomingMessageUpdate.self, from: data)
-        XCTAssertTrue(result.messageIDs.contains(messageID))
-        XCTAssertTrue(result.messageReadDates.contains(messageReadDate))
-        XCTAssertEqual("SENDER01", result.conversationID.contact)
+        let result = try XCTUnwrap(decoder.decode(TaskDefinitionSendDeliveryReceiptsMessage.self, from: data))
+        XCTAssertNil(result.groupID)
+        XCTAssertEqual(expectedFromIdentity, result.fromIdentity)
+        XCTAssertEqual(expectedToIdentity, result.toIdentity)
+        XCTAssertEqual(expectedReceiptType, result.receiptType)
+        XCTAssertEqual(expectedReceiptMessageIDs, result.receiptMessageIDs)
+        XCTAssertEqual(expectedReceiptReadDates, result.receiptReadDates)
         XCTAssertTrue(result.isPersistent)
         XCTAssertFalse(result.retry)
     }
@@ -141,12 +152,12 @@ class TaskDefinitionTests: XCTestCase {
     }
 
     func testTaskDefinitionSendBallotVoteMessageEncodeDecode() throws {
-        let expectedBallotID = BytesUtility.generateRandomBytes(length: Int(8))!
+        let expectedBallotID = MockData.generateBallotID()
 
         var ballot: Ballot!
         dbPreparer.save {
             let contact = dbPreparer.createContact(
-                publicKey: BytesUtility.generateRandomBytes(length: 32)!,
+                publicKey: MockData.generatePublicKey(),
                 identity: "ECHOECHO",
                 verificationLevel: 0
             )
@@ -173,12 +184,12 @@ class TaskDefinitionTests: XCTestCase {
     }
 
     func testTaskDefinitionSendBallotVoteMessageCreate() {
-        let expectedBallotID = BytesUtility.generateRandomBytes(length: 8)!
+        let expectedBallotID = MockData.generateBallotID()
 
         var ballot: Ballot!
         dbPreparer.save {
             let contact = dbPreparer.createContact(
-                publicKey: BytesUtility.generateRandomBytes(length: 32)!,
+                publicKey: MockData.generatePublicKey(),
                 identity: "ECHOECHO",
                 verificationLevel: 0
             )
@@ -205,15 +216,15 @@ class TaskDefinitionTests: XCTestCase {
     }
 
     func testTaskDefinitionSendBaseMessageEncodeDecode() throws {
-        let expectedGroupID = BytesUtility.generateRandomBytes(length: 8)!
+        let expectedGroupID = MockData.generateGroupID()
         let expectedGroupCreator = "ADMIN007"
-        let expectedMessageID = BytesUtility.generateRandomBytes(length: 8)!
+        let expectedMessageID = MockData.generateMessageID()
 
         var message: TextMessage!
         var group: Group!
         dbPreparer.save {
             let contact = dbPreparer.createContact(
-                publicKey: BytesUtility.generateRandomBytes(length: 32)!,
+                publicKey: MockData.generatePublicKey(),
                 identity: expectedGroupCreator,
                 verificationLevel: 0
             )
@@ -267,16 +278,16 @@ class TaskDefinitionTests: XCTestCase {
     }
 
     func testTaskDefinitionSendBaseMessageCreate() {
-        let expectedGroupID = BytesUtility.generateRandomBytes(length: 8)!
+        let expectedGroupID = MockData.generateGroupID()
         let expectedGroupCreator = "ADMIN007"
-        let expectedMessageID = BytesUtility.generateRandomBytes(length: 8)!
+        let expectedMessageID = MockData.generateMessageID()
         let expectedMessageText = "Test text"
 
         var message: TextMessage!
         var group: Group!
         dbPreparer.save {
             let contact = dbPreparer.createContact(
-                publicKey: BytesUtility.generateRandomBytes(length: 32)!,
+                publicKey: MockData.generatePublicKey(),
                 identity: expectedGroupCreator,
                 verificationLevel: 0
             )
@@ -330,16 +341,16 @@ class TaskDefinitionTests: XCTestCase {
     }
 
     func testTaskDefinitionSendLocationMessageEncodeDecode() throws {
-        let expectedGroupID = BytesUtility.generateRandomBytes(length: 8)!
+        let expectedGroupID = MockData.generateGroupID()
         let expectedGroupCreator = "ADMIN007"
-        let expectedMessageID = BytesUtility.generateRandomBytes(length: 8)!
+        let expectedMessageID = MockData.generateMessageID()
         let expectedMessagePoiAddress = "poi address"
 
         var message: LocationMessage!
         var group: Group!
         dbPreparer.save {
             let contact = dbPreparer.createContact(
-                publicKey: BytesUtility.generateRandomBytes(length: 32)!,
+                publicKey: MockData.generatePublicKey(),
                 identity: expectedGroupCreator,
                 verificationLevel: 0
             )
@@ -390,17 +401,17 @@ class TaskDefinitionTests: XCTestCase {
     }
 
     func testTaskDefinitionSendVideoMessageEncodeDecode() throws {
-        let expectedGroupID = BytesUtility.generateRandomBytes(length: 8)!
+        let expectedGroupID = MockData.generateGroupID()
         let expectedGroupCreator = "ADMIN007"
-        let expectedMessageID = BytesUtility.generateRandomBytes(length: 8)!
-        let expectedThumbnailBlobID = BytesUtility.generateRandomBytes(length: 8)!
+        let expectedMessageID = MockData.generateMessageID()
+        let expectedThumbnailBlobID = MockData.generateBlobID()
         let expectedThumbnailSize = NSNumber(value: 1.0)
 
         var message: VideoMessageEntity!
         var group: Group!
         dbPreparer.save {
             let contact = dbPreparer.createContact(
-                publicKey: BytesUtility.generateRandomBytes(length: 32)!,
+                publicKey: MockData.generatePublicKey(),
                 identity: expectedGroupCreator,
                 verificationLevel: 0
             )
@@ -461,7 +472,7 @@ class TaskDefinitionTests: XCTestCase {
     }
 
     func testTaskDefinitionSendGroupCreateMessageEncodeDecode() throws {
-        let expectedGroupID = BytesUtility.generateRandomBytes(length: 8)!
+        let expectedGroupID = MockData.generateGroupID()
         let expectedGroupCreator = "CREATOR01"
         let expectedToMembers = ["MEMBER04", "MEMBER05"]
         let expectedRemovedMembers = ["MEMBER03", "MEMBER04"]
@@ -496,7 +507,7 @@ class TaskDefinitionTests: XCTestCase {
     }
 
     func testTaskDefinitionSendGroupDeletePhotoMessageEncodeDecode() throws {
-        let expectedGroupID = BytesUtility.generateRandomBytes(length: 8)!
+        let expectedGroupID = MockData.generateGroupID()
         let expectedGroupCreator = "CREATOR01"
         let expectedFromMember = "MEMBER01"
         let expectedToMembers = ["MEMBER03", "MEMBER04"]
@@ -528,7 +539,7 @@ class TaskDefinitionTests: XCTestCase {
     }
 
     func testTaskDefinitionSendGroupLeaveMessageEncodeDecode() throws {
-        let expectedGroupID = BytesUtility.generateRandomBytes(length: 8)!
+        let expectedGroupID = MockData.generateGroupID()
         let expectedGroupCreator = "CREATOR01"
         let expectedFromMember = "MEMBER01"
         let expectedToMembers = ["MEMBER03", "MEMBER04"]
@@ -558,7 +569,7 @@ class TaskDefinitionTests: XCTestCase {
     }
 
     func testTaskDefinitionSendGroupRenameMessageEncodeDecode() throws {
-        let expectedGroupID = BytesUtility.generateRandomBytes(length: 8)!
+        let expectedGroupID = MockData.generateGroupID()
         let expectedGroupCreator = "CREATOR01"
         let expectedFromMember = "MEMBER01"
         let expectedToMembers = ["MEMBER03", "MEMBER04"]
@@ -593,13 +604,13 @@ class TaskDefinitionTests: XCTestCase {
     }
 
     func testTaskDefinitionSendGroupSetPhotoMessageEncodeDecode() throws {
-        let expectedGroupID = BytesUtility.generateRandomBytes(length: 8)!
+        let expectedGroupID = MockData.generateGroupID()
         let expectedGroupCreator = "CREATOR01"
         let expectedFromMember = "MEMBER01"
         let expectedToMembers = ["MEMBER03", "MEMBER04"]
         let expectedSize: UInt32 = 10
-        let expectedBlobID = BytesUtility.generateRandomBytes(length: 8)!
-        let expectedEncryptionKey = BytesUtility.generateRandomBytes(length: 8)!
+        let expectedBlobID = MockData.generateBlobID()
+        let expectedEncryptionKey = MockData.generateBlobEncryptionKey()
         
         let task = TaskDefinitionSendGroupSetPhotoMessage(
             group: nil,
@@ -634,7 +645,7 @@ class TaskDefinitionTests: XCTestCase {
     }
 
     func testTaskDefinitionSendAbstractMessageEncodeDecode() throws {
-        let expectedMessageID = BytesUtility.generateRandomBytes(length: 8)!
+        let expectedMessageID = MockData.generateMessageID()
         let expectedText = "Test text"
         let expectedFromIdentity = "FROMID01"
         let expectedToIdentity = "ECHOECHO"
@@ -671,7 +682,7 @@ class TaskDefinitionTests: XCTestCase {
     func testAbstractMessageEncodeDecodeOverBoxedMessage() {
         let myIdentityStoreMock = MyIdentityStoreMock()
 
-        let expectedMessageID = BytesUtility.generateRandomBytes(length: 8)!
+        let expectedMessageID = MockData.generateMessageID()
         let expectedText = "Test text"
         let expectedFromIdentity = myIdentityStoreMock.identity
         let expectedToIdentity = "ECHOECHO"
@@ -679,7 +690,7 @@ class TaskDefinitionTests: XCTestCase {
         var contact: ContactEntity!
         dbPreparer.save {
             contact = dbPreparer.createContact(
-                publicKey: BytesUtility.generateRandomBytes(length: 32)!,
+                publicKey: MockData.generatePublicKey(),
                 identity: expectedToIdentity,
                 verificationLevel: 0
             )
@@ -705,7 +716,7 @@ class TaskDefinitionTests: XCTestCase {
         let unarchiver = NSKeyedUnarchiver(forReadingWith: Data(bytes: data.mutableBytes, count: data.count))
         let result: BoxedMessage? = try? unarchiver.decodeTopLevelObject() as? BoxedMessage
 
-        if let result = result {
+        if let result {
             XCTAssertNotNil(result.box)
             XCTAssertTrue(expectedMessageID.elementsEqual(result.messageID))
             XCTAssertEqual(expectedFromIdentity, result.fromIdentity)
@@ -745,7 +756,7 @@ class TaskDefinitionTests: XCTestCase {
             var sContact = Sync_Contact()
             sContact.identity = SwiftUtils.pseudoRandomString(length: 7)
             sContact.identityType = .regular
-            sContact.publicKey = BytesUtility.generateRandomBytes(length: 32)!
+            sContact.publicKey = MockData.generatePublicKey()
             sContact.verificationLevel = .serverVerified
             sContact.nickname = SwiftUtils.pseudoRandomString(length: Int.random(in: 0..<200))
             sContact.firstName = SwiftUtils.pseudoRandomString(length: Int.random(in: 0..<200))
@@ -819,14 +830,14 @@ class TaskDefinitionTests: XCTestCase {
     }
     
     func testTaskDefinitionSendGroupDeliveryReceiptsMessageEncodeDecode() throws {
-        let expectedGroupID = BytesUtility.generateRandomBytes(length: 8)!
+        let expectedGroupID = MockData.generateGroupID()
         let expectedGroupCreator = "CREATOR01"
         let expectedFromMember = "MEMBER01"
         let expectedToMembers = ["MEMBER03", "MEMBER04"]
         let expectedReceiptType = UInt8(GroupDeliveryReceipt.DeliveryReceiptType.acknowledged.rawValue)
         let expectedReceiptMessageIDs = [
-            BytesUtility.generateRandomBytes(length: 32)!,
-            BytesUtility.generateRandomBytes(length: 32)!,
+            MockData.generateMessageID(),
+            MockData.generateMessageID(),
         ]
         
         let task = TaskDefinitionSendGroupDeliveryReceiptsMessage(
@@ -835,7 +846,7 @@ class TaskDefinitionTests: XCTestCase {
             to: expectedToMembers,
             receiptType: expectedReceiptType,
             receiptMessageIDs: expectedReceiptMessageIDs,
-            sendContactProfilePicture: false
+            receiptReadDates: [Date]()
         )
         
         task.groupID = expectedGroupID

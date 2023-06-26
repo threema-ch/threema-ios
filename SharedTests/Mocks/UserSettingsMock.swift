@@ -22,7 +22,6 @@ import Foundation
 import ThreemaFramework
 
 class UserSettingsMock: NSObject, UserSettingsProtocol {
-    
     override init() {
         // no-op
     }
@@ -56,6 +55,12 @@ class UserSettingsMock: NSObject, UserSettingsProtocol {
     var sendReadReceipts = true
     
     var sendTypingIndicator = true
+    
+    var includeCallsInRecents = true
+    
+    var enableVideoCall = true
+    
+    var threemaVideoCallQualitySetting: ThreemaVideoCallQualitySetting = .init(0)
     
     var enableThreemaCall = true
     
@@ -105,5 +110,11 @@ class UserSettingsMock: NSObject, UserSettingsProtocol {
     
     var voiceMessagesShowTimeRemaining = false
     
-    var flippedTableView = true
+    var flippedTableView = false
+       
+    var disableProximityMonitoring = false
+    
+    var validationLogging = false
+    
+    var sentryAppDevice: String?
 }

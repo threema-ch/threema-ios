@@ -28,7 +28,8 @@ protocol ChatSearchControllerDelegate: AnyObject {
     
     /// Selected the message with the passed managed object ID
     ///
-    /// If another message is already selected this should have its selection removed. If the item is already selected it should stay selected.
+    /// If another message is already selected this should have its selection removed. If the item is already selected
+    /// it should stay selected.
     ///
     /// - Parameter messageObjectID: Managed object ID of message to select
     func chatSearchController(
@@ -61,9 +62,11 @@ protocol ChatSearchControllerDelegate: AnyObject {
 
 /// Controller to manage search in a chat
 ///
-/// Use the `searchBar` to show a search bar in the interface, activate the search  with `activateSearch()` and then use the delegate methods to observe any updates.
+/// Use the `searchBar` to show a search bar in the interface, activate the search  with `activateSearch()` and then use
+/// the delegate methods to observe any updates.
 ///
-/// - Note: You need the correct implementation of `definePresentationContext` for the search bar to work. See inline documentation for details.
+/// - Note: You need the correct implementation of `definePresentationContext` for the search bar to work. See inline
+///         documentation for details.
 ///
 /// ## `definePresentationContext` workaround
 ///
@@ -71,13 +74,15 @@ protocol ChatSearchControllerDelegate: AnyObject {
 ///
 /// ### Problem
 ///
-/// If you have view controller **A** with a `UISearchBar` managed by a `UISearchViewController` that shows view controller **B** also with a manage search bar
-/// on the same `UINavigationBar` it will work if you use `searchController` on the navigation item in both views, otherwise not. The search bar cannot become the
-/// first responder in **B**.
+/// If you have view controller **A** with a `UISearchBar` managed by a `UISearchViewController` that shows view
+/// controller **B** also with a manage search bar on the same `UINavigationBar` it will work if you use
+/// `searchController` on the navigation item in both views, otherwise not. The search bar cannot become the first
+/// responder in **B**.
 ///
 /// ### Solution
 ///
-/// You need to set `definePresentationContext` to `true` in `viewWillAppear` and to `false` in `viewWillDisappear` in **A** _and_ **B**.
+/// You need to set `definePresentationContext` to `true` in `viewWillAppear` and to `false` in `viewWillDisappear` in
+/// **A** _and_ **B**.
 ///
 /// ### Source
 ///
@@ -135,9 +140,9 @@ final class ChatSearchController: NSObject {
         didSet {
             // Ask delegate to select new item
             
-            guard let currentResultOffset = currentResultOffset else {
+            guard let currentResultOffset else {
                 // Remove previous selection if nothing is selected anymore
-                if let oldValue = oldValue,
+                if let oldValue,
                    oldValue < filteredMessageObjectIDs.count {
                     let messageObjectID = filteredMessageObjectIDs[oldValue]
                     delegate?.chatSearchController(removeSelectionFrom: messageObjectID)
@@ -173,7 +178,7 @@ final class ChatSearchController: NSObject {
         let hasMatches: Bool
         
         // Determinate who is active and what text is shown
-        if let currentResultOffset = currentResultOffset {
+        if let currentResultOffset {
             // Disable previous button if there are now previous items
             if currentResultOffset == 0 {
                 previousResultBarButtonItem.isEnabled = false
@@ -264,11 +269,11 @@ final class ChatSearchController: NSObject {
             .debounce(for: ChatViewConfiguration.SearchResultsFetching.debounceInputSeconds, scheduler: RunLoop.main)
             .receive(on: searchQueue)
             .sink { [weak self] searchText in
-                guard let self = self else {
+                guard let self else {
                     return
                 }
                 
-                guard let searchText = searchText else {
+                guard let searchText else {
                     return
                 }
                 
@@ -316,7 +321,7 @@ final class ChatSearchController: NSObject {
     // MARK: - Actions
     
     @objc private func previousResultBarButtonItemTapped() {
-        guard let currentResultOffset = currentResultOffset else {
+        guard let currentResultOffset else {
             DDLogVerbose("Failed to jump to next search result. No search result selected.")
             return
         }
@@ -327,7 +332,7 @@ final class ChatSearchController: NSObject {
     }
     
     @objc private func nextResultBarButtonItemTapped() {
-        guard let currentResultOffset = currentResultOffset else {
+        guard let currentResultOffset else {
             DDLogVerbose("Failed to jump to previous search result. No search result selected.")
             return
         }

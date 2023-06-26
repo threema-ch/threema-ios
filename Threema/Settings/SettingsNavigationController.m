@@ -36,4 +36,12 @@
     return self;
 }
 
+- (NSString *)title {
+    return [self.tabBarItem title];
+}
+
+- (void)setTitle:(NSString *)title {
+    self.navigationItem.title = title;
+}
+
 @end

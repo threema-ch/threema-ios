@@ -35,13 +35,6 @@ final class SingleDetailsViewController: ThemedCodeModernGroupedTableViewControl
             // Don't show quick actions in preview style
             quickActions = []
         }
-        
-        var mediaAndPollsActions = [QuickAction]()
-        
-        // TODO: (IOS-2860) Remove when new chat view released
-        if UserSettings.shared().newChatViewActive {
-            mediaAndPollsActions = mediaAndPollActions()
-        }
 
         return DetailsHeaderView(
             with: contact.contentConfiguration,
@@ -65,7 +58,7 @@ final class SingleDetailsViewController: ThemedCodeModernGroupedTableViewControl
                 strongSelf.presentFullscreen(image: avatarImage)
             },
             quickActions: quickActions,
-            mediaAndPollsQuickActions: mediaAndPollsActions
+            mediaAndPollsQuickActions: mediaAndPollActions()
         )
     }()
     
@@ -101,7 +94,6 @@ final class SingleDetailsViewController: ThemedCodeModernGroupedTableViewControl
     ///   - conversation: Conversation linked to a contact
     ///   - displayStyle: Appearance of the details
     ///   - delegate: Details delegate that is called on certain actions
-    @objc(initForConversation:displayStyle:delegate:)
     init(
         for conversation: Conversation,
         displayStyle: DetailsDisplayStyle = .default,
@@ -281,7 +273,7 @@ final class SingleDetailsViewController: ThemedCodeModernGroupedTableViewControl
     ///   - keyPath: Key path in `Contact` to observe
     ///   - changeHandler: Handler called on each observed change.
     ///                     Don't forget to capture `self` weakly! Dispatched on the main queue.
-    private func observeContact<Value>(_ keyPath: KeyPath<ContactEntity, Value>, changeHandler: @escaping () -> Void) {
+    private func observeContact(_ keyPath: KeyPath<ContactEntity, some Any>, changeHandler: @escaping () -> Void) {
 
         let observer = contact.observe(keyPath) { [weak self] _, _ in
             guard let strongSelf = self else {
@@ -662,7 +654,7 @@ extension SingleDetailsViewController: UITableViewDelegate {
 // Used for iOS 12 support
 extension SingleDetailsViewController {
     override var previewActionItems: [UIPreviewActionItem] {
-        guard let presentingViewController = presentingViewController else {
+        guard let presentingViewController else {
             return []
         }
         

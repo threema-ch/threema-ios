@@ -58,7 +58,7 @@ final class MessageReceiver {
             return Promise { $0.fulfill(self.mediatorMessageProtocol.encodeGetDeviceList()) }
         }
         .then { (getDevicesList: Data?) -> Promise<[DeviceInfo]> in
-            guard let getDevicesList = getDevicesList else {
+            guard let getDevicesList else {
                 throw MessageReceiverError.encodingFailed
             }
 
@@ -95,7 +95,7 @@ final class MessageReceiver {
                 throw MessageReceiverError.responseTimeout
             }
 
-            guard let devicesInfo = devicesInfo else {
+            guard let devicesInfo else {
                 throw MessageReceiverError.decodingFailed
             }
 
@@ -136,7 +136,7 @@ final class MessageReceiver {
             return Promise { $0.fulfill(devices) }
         }
         .ensure {
-            if let messageListener = messageListener {
+            if let messageListener {
                 self.serverConnector.unregisterMessageListenerDelegate(delegate: messageListener)
             }
         }
@@ -160,7 +160,7 @@ final class MessageReceiver {
             return Guarantee { $0(self.mediatorMessageProtocol.encodeDropDevice(deviceID: device.deviceID)) }
         }
         .then { (dropDevice: Data?) -> Promise<Void> in
-            guard let dropDevice = dropDevice else {
+            guard let dropDevice else {
                 throw MessageReceiverError.encodingFailed
             }
 
@@ -202,7 +202,7 @@ final class MessageReceiver {
             return Promise()
         }
         .ensure {
-            if let messageListener = messageListener {
+            if let messageListener {
                 self.serverConnector.unregisterMessageListenerDelegate(delegate: messageListener)
             }
         }

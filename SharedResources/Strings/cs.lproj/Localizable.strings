@@ -84,8 +84,6 @@
 "error_abort" = "Neopravitelná chyba";
 "qr_code" = "QR kód";
 "forward" = "Přeposlat";
-"showNext" = "Více možností";
-"showPrevious" = "Předchozí možnosti";
 "read" = "Přečteno";
 "unread" = "Nepřečteno";
 "settings" = "Nastavení";
@@ -283,7 +281,6 @@
 "messages_delete_all_confirm_message" = "Toto zahrnuje všechna média a dokumenty.";
 "messages_delete_selected_confirm" = "Smazat vybrané zprávy z tohoto zařízení?";
 "conversation_delete_confirm" = "Smazat tento chat z tohoto zařízení?";
-"delete_all" = "Smazat vše";
 "delete_n" = "Smazat (%d)";
 
 "message_cannot_play_movie" = "Video nelze přehrát.";
@@ -402,8 +399,6 @@
 "msg_unknown_group_request_sync_x_title" = "Přijetí zprávy v neznámé skupině";
 "msg_unknown_group_request_sync_x_message" = "Zpráva v neznámé skupině byla přijata. Od tvůrce skupiny (%@) byly vyžádány informace o skupině. Skupina se zobrazí, jakmile bude její tvůrce opět online.";
 
-"chat_search_label_format" = "%ld z %ld zpráv";
-"load_earlier_messages" = "Načítání dřívějších zpráv";
 "tap_to_cancel" = "Klepnutím zrušit";
 "previous" = "Předchozí";
 "tap_to_change" = "Klepnutím změnit";
@@ -439,17 +434,9 @@
 /* Settings */
 "show_stale_contacts_on" = "Neaktivní Threema ID (tj. ID, která nebyla použita alespoň tři měsíce) a zrušená ID jsou skrytá.";
 "show_stale_contacts_off" = "V seznamu kontaktů jsou uvedena všechna Threema ID.";
-"hide_voip_call_ip_off" = "Navazovat přímé spojení, je-li to možné, a přes servery Threema směrovat pouze hovory s neověřenými kontakty. Může dojít k zobrazení vaší IP adresy.";
-"hide_voip_call_ip_on" = "Směrovat hovory přes servery Threema kvůli ukrytí IP adresy před partnery v hovoru. Může ovlivnit kvalitu hovorů.";
-"onprem_hide_voip_call_ip_off" = "Navazovat přímé spojení, je-li to možné, a přes servery OnPrem směrovat pouze hovory s neověřenými kontakty. Může dojít k zobrazení vaší IP adresy.";
-"onprem_hide_voip_call_ip_on" = "Směrovat hovory přes servery OnPrem kvůli ukrytí IP adresy před partnery v hovoru. Může ovlivnit kvalitu hovorů.";
-"voip_include_call_in_recents_off" = "Hovory se zobrazují na uzamčené obrazovce, ale nejsou uvedeny v seznamu hovorů aplikace Telefon.";
-"voip_include_call_in_recents_on" = "Hovory se zobrazují na uzamčené obrazovce a vypisují se v seznamu hovorů aplikace Telefon. Je-li zapnutý iCloud Drive, synchronizuje se seznam hovorů z aplikace Telefon přes servery Apple.";
 
 "backgrounding_on" = "Aplikace zůstane připojená až 30 sekund od okamžiku jejího přesunutí na pozadí.";
 "backgrounding_off" = "Aplikace se odpojí okamžitě po přesunutí na pozadí.";
-"proximity_monitoring_off" = "Obrazovka se při zakrytí senzoru přiblížení nevypne.";
-"proximity_monitoring_on" = "Pokud dojde k zakrytí senzoru přiblížení během probíhajícího hovoru nebo záznamu či přehrávání hlasových zpráv, obrazovka se vypne.";
 "debug_log_clear" = "Smazat záznam";
 "log_empty_message" = "Záznam pro hledání chyb je prázdný.";
 "cannot_send_mail_message" = "Na tomto zařízení není nastavený žádný e-mailový účet.";
@@ -667,7 +654,6 @@
 "system_message_group_avatar_changed" = "Skupinový obrázek se změnil";
 
 /* accessibility labels */
-"send_media_or_location" = "Poslat médium nebo lokaci";
 "my_profilepicture" = "Váš profilový obrázek";
 "my_threema_id" = "Vaše Threema ID";
 "edit_profile" = "Upravit přezdívku a profilový obrázek";
@@ -681,7 +667,6 @@
 "go_to_position" = "v";
 "draft" = "Koncept";
 "new_message_accessibility" = "Nová zpráva: ";
-"scoll_down_text" = "Sjeďte dolů";
 "quote_interaction_hint" = "Přeskočí na citovanou zprávu";
 
 /* TTOpenInAppActivity */
@@ -754,9 +739,7 @@
 
 "call_voip_not_supported_title" = "Hovor Threema";
 "call_voip_not_supported_text" = "Váš kontakt nepodporuje hovory Threema";
-"call_contact_alert" = "Chcete zavolat uživateli %@?";
 "call_contact_not_reachable" = "S kontaktem se nelze spojit.";
-"already_in_call" = "V jednom okamžiku může být aktivní pouze jeden hovor.";
 
 "call_status_idle" = "Připraveno";
 "call_status_wait_ringing" = "Inicializovat";
@@ -776,7 +759,6 @@
 "call_threema_camera_disabled_info" = "Tento kontakt nepoužívá aktuální verzi aplikace nebo nedovoluje videohovory.";
 
 "call_threema_video_in_chat_info_title" = "Novinka: videohovory";
-"call_threema_video_in_chat_info_description" = "Kromě hlasových volání odolných proti odposlechu nyní %@ nabízí i videohovory šifrované end-to-end.";
 
 "call_threema_cellular_instead_of_wifi_title" = "Volání přes mobilní síť";
 "call_threema_cellular_instead_of_wifi_text" = "Varování: Toto volání využívá k přenosu data mobilní sítě.";
@@ -1021,7 +1003,138 @@
 "url_warning_title" = "Varování před phishingem";
 "url_warning_body" = "Název hostitele v odkazu, který se chystáte otevřít, je podezřelý:\n\nZobrazený název hostitele: %@\nSkutečný název hostitele: %@\n\nMůže se jednat o pokus přimět vás podvodem k otevření stránky, která se vydává za nějakou jinou.\n\nChcete přesto pokračovat?";
 
-// Storage Management
+
+// Settings
+"settings_navbar_title" = "Nastavení";
+"settings_list_privacy_title" = "Soukromí";
+"settings_list_appearance_title" = "Vzhled";
+"settings_list_notifications_title" = "Oznámení";
+"settings_list_chat_title" = "Chat";
+"settings_list_media_title" = "Média";
+"settings_list_storage_management_title" = "Správa úložiště";
+"settings_list_passcode_lock_title" = "Zamykání přístupovým kódem";
+"settings_threema_calls" = "Hovory Threema";
+"settings_list_threema_web_title" = "Desktop/web";
+
+"settings_list_network_title" = "Stav sítě";
+"settings_list_version_title" = "Verze";
+"settings_list_settings_license_username_title" = "Uživatelské jméno licence";
+
+"settings_list_invite_a_friend_title" = "Pozvat přítele";
+"settings_list_threema_channel_title" = "Kanál Threema";
+
+"settings_list_support_title" = "Podpora";
+"settings_list_privacy_policy_title" = "Zásady ochrany osobních údajů";
+"settings_list_license_title" = "Licence";
+"settings_advanced" = "Pokročilé";
+"settings_threema_work" = "Threema Work";
+"settings_threema_work_subtitle" = "Zabezpečené komunikační řešení pro firmy";
+"settings_feedback" = "Zpětná vazba beta verze";
+"settings_list_tos_title" = "Smluvní podmínky";
+
+"settings_md_sync_alert_title" = "Synchronizace se nezdařila";
+
+// Privacy Settings
+"settings_privacy_contacts_header" = "Kontakty";
+"settings_privacy_sync_contacts" = "Synchronizovat kontakty";
+"settings_privacy_exclusion_list" = "Seznam vyřazených";
+"settings_privacy_exclusion_list_alert_title" = "ID je příliš krátké";
+"settings_privacy_exclusion_list_alert_message" = "Zadejte ID, které bude dlouhé přesně 8 znaků.";
+"settings_privacy_block_unknown" = "Blokovat neznámé";
+"settings_privacy_block_unknown_footer_on"= "Zprávy vám mohou posílat pouze lidé z vašeho seznamu kontaktů.";
+"settings_privacy_block_unknown_foooter_off" = "Zprávy vám může posílat kdokoliv. Nové kontakty budou přidávány automaticky poté, co od nich obdržíte první zprávu.";
+
+"settings_privacy_os_header" = "Integrace do iOS";
+"settings_privacy_os_donate" = "Sdílet interakce";
+"settings_privacy_os_reset" = "Resetovat interakce";
+"settings_privacy_os_footer" = "Pokud je tato funkce zapnuta, budou se při sdílení obsahu v iOS nabízet kontakty Threema. Sdílení interakcí odhalí informace systému iOS.";
+
+"settings_privacy_chat_header" = "Chat";
+"settings_privacy_read_receipts" = "Potvrzení o přečtení";
+"settings_privacy_typing_indicator" = "Ukazatele psaní";
+
+"settings_privacy_TIRR_reset_all" = "Resetovat pro všechny kontakty";
+"settings_privacy_TIRR_reset_footer" = "Resetovat všechny kontakty do výchozího nastavení.";
+"settings_privacy_TIRR_reset_alert_title" = "Resetovat";
+"settings_privacy_TIRR_reset_alert_message" = "Resetovat všechny kontakty do výchozího nastavení. Akci nelze vzít zpět.";
+"settings_privacy_TIRR_reset_alert_action" = "Resetovat vše";
+
+"settings_privacy_choose_poi" = "Vybrat body zájmu";
+"settings_privacy_hide_private_chats" = "Skrýt soukromé chaty";
+"settings_privacy_hide_private_chats_footer" = "Skryje všechny soukromé chaty v přehledu chatů. Pro aktivaci tohoto nastavení je třeba nastavit přístupový kód.";
+
+// Appearance Settings
+"settings_appearance_theme_section" = "Vizuální motiv";
+"settings_appearance_light_theme" = "Světlý";
+"settings_appearance_dark_theme" = "Temný";
+"settings_appearance_system_theme" = "Systém";
+"settings_appearance_theme_selected" = "Téma %@ je aktivní";
+"settings_appearance_theme_active" = "Aktivní";
+"settings_appearance_hide_app_icon" = "Ikona aplikace";
+"settings_appicon_default_header" = "Výchozí ikona";
+"settings_appicon_legacy_header" = "Ikony Threema";
+"settings_appicon_special_header" = "Speciální ikony";
+"settings_appearance_hide_stale_contacts" = "Skrýt neaktivní ID";
+"settings_appearance_show_profile_pictures" = "Zobrazovat profilové obrázky";
+"settings_appearance_display_order" = "Pořadí zobrazení";
+"settings_appearance_show_gallery_preview" = "Zobrazovat náhled galerie";
+
+// Notification Settings
+"settings_notifications_inapp_section" = "V aplikaci";
+"settings_notifications_inapp_sounds" = "Zvuky v aplikaci";
+"settings_notifications_inapp_vibrate" = "Vibrace v aplikaci";
+"settings_notifications_inapp_preview" = "Zobrazit náhled zprávy";
+"settings_notifications_push_section" = "Nabízená oznámení";
+"settings_notifications_push_sound" = "Zvuk";
+"settings_notifications_push_groupsound" = "Zvuk skupiny";
+"settings_notifications_push_preview" = "Zobrazit náhled zprávy";
+"settings_notifications_masterDnd_section_header" = "Volba po pracovní době";
+"settings_notifications_masterDnd" = "Nerušit mimo pracovní dobu";
+"settings_notifications_masterDnd_section_footer" = "Deaktivovat oznámení a odmítat hovory mimo pracovní dobu.";
+"settings_notifications_masterDnd_workingDays" = "Pracovní dny";
+"settings_notifications_masterDnd_startTime" = "Začátek pracovní doby";
+"settings_notifications_masterDnd_endTime" = "Konec pracovní doby";
+"settings_notification_iOS_settings" = "Nastavení systému";
+
+"settings_notification_type_preview_title" = "Nabízená oznámení";
+"settings_notification_type_preview_description" = "Vyberte, které informace mají být zahrnuty do nabízených oznámení k příchozím zprávám Threema.";
+
+"settings_notification_type_preview_restrictive_title" = "Zobrazovat přezdívku";
+"settings_notification_type_preview_restrictive_description" = "Zobrazuje pouze přezdívku kontaktu.";
+"settings_notification_type_preview_restrictive_sender_name" = "~Jan";
+
+"settings_notification_type_preview_balanced_title" = "Zobrazovat jméno";
+"settings_notification_type_preview_balanced_description" = "Zobrazuje celé jméno kontaktu (výchozí nastavení).";
+"settings_notification_type_preview_balanced_sender_name" = "Jan Novák";
+
+"settings_notification_type_preview_complete_title" = "Zobrazovat jméno a profilový obrázek";
+"settings_notification_type_preview_complete_description" = "Zobrazuje celé jméno kontaktu a profilový obrázek. Některé informace související s interakcí jsou sdíleny s operačním systémem. [Zjistěte více…](%@)";
+"settings_notification_type_preview_complete_sender_name" = "Jan Novák";
+
+"settings_notification_type_preview_message_text" = "Ukázka zprávy...";
+"settings_notification_type_preview_no_button" = "Deaktivovat nabízená oznámení";
+
+// Chat Settings
+"settings_chat_wallpaper_title" = "Tapeta";
+"settings_chat_wallpaper_reset" = "Resetovat všechny tapety";
+"settings_chat_wallpaper_empty" = "Nic";
+"settings_chat_wallpaper_custom" = "Vlastní";
+"settings_chat_wallpaper_default" = "Výchozí";
+"settings_chat_wallpaper_reset_all_alert" = "Resetuje všechny tapety, které byly pro konverzaci přímo nastaveny výše uvedenou možností. Tato akce je nevratná.";
+
+"settings_chat_bigger_emojis" = "Větší emoji";
+/* Chat Settings */
+"settings_chat_send_message_feedback_label" = "Haptická odezva při odeslání";
+
+// Media Settings
+"settings_media_title" = "Média";
+"settings_media_image_size_title" = "Velikost obrázku";
+"settings_media_video_quality_title" = "Kvalita videa";
+"settings_media_autosave_title" = "Automaticky ukládat média do aplikace „Fotografie“";
+/* Media */
+"settings_media_autosave_private_footer" = "U médií obdržených v rámci soukromých chatů nedojde k automatickému uložení.";
+
+// Storage Management Settings
 "storage_management" = "Správa úložiště";
 "storage_total" = "Celkové místo v interním úložišti";
 "storage_total_in_use" = "Použito";
@@ -1062,97 +1175,51 @@
 "messages" = "Zprávy";
 "files" = "Soubory";
 
+// Call Settings
+"settings_threema_calls_enable_calls" = "Povolit hovory Threema";
+"settings_threema_calls_always_relay_calls" = "Vždy přesměrovávat hovory";
+"settings_threema_calls_callkit" = "Integrovat hovory do iOS";
+"settings_threema_calls_video_section" = "Videohovory";
+"settings_threema_calls_allow_video_calls" = "Povolit videohovory";
+"settings_threema_calls_video_quality_profile" = "Upřednostňovaná kvalita obrazu";
+"settings_threema_calls_video_quality_profile_low" = "Nízká spotřeba dat";
+"settings_threema_calls_video_quality_profile_max" = "Maximální kvalita";
+"settings_threema_calls_video_quality_profile_auto" = "Vyvážená (doporučeno)";
+"settings_threema_calls_video_quality_profile_low_description" = "Snížená kvalita obrazu pro nižší spotřebu dat";
+"settings_threema_calls_video_quality_profile_max_description" = "Pozor: Při provozu v mobilní síti může docházet k vysoké spotřebě dat!";
+"settings_threema_calls_video_quality_profile_auto_description" = "Vysoká kvalita obrazu na WLAN, snížená spotřeba dat v mobilní síti";
+"settings_threema_calls_video_quality_profile_footer" = "Aktuální kvalita obrazu se odvíjí od sítě a nastavení osoby, se kterou hovoříte.";
+"settings_threema_calls_call_sound" = "Zvuk";
+"settings_threema_calls_hide_voip_call_ip_footer_off" = "Navazovat přímé spojení, je-li to možné, a přes servery Threema směrovat pouze hovory s neověřenými kontakty. Může dojít k zobrazení vaší IP adresy.";
+"settings_threema_calls_hide_voip_call_ip_footer_on" = "Směrovat hovory přes servery Threema kvůli ukrytí IP adresy před partnery v hovoru. Může ovlivnit kvalitu hovorů.";
+"settings_threema_calls_onprem_hide_voip_call_ip_footer_off" = "Navazovat přímé spojení, je-li to možné, a přes servery OnPrem směrovat pouze hovory s neověřenými kontakty. Může dojít k zobrazení vaší IP adresy.";
+"settings_threema_calls_onprem_hide_voip_call_ip_footer_on" = "Směrovat hovory přes servery OnPrem kvůli ukrytí IP adresy před partnery v hovoru. Může ovlivnit kvalitu hovorů.";
+"settings_threema_voip_include_call_in_recents_footer_off" = "Hovory se zobrazují na uzamčené obrazovce, ale nejsou uvedeny v seznamu hovorů aplikace Telefon.";
+"settings_threema_voip_include_call_in_recents_footer_on" = "Hovory se zobrazují na uzamčené obrazovce a vypisují se v seznamu hovorů aplikace Telefon. Je-li zapnutý iCloud Drive, synchronizuje se seznam hovorů z aplikace Telefon přes servery Apple.";
 
-// Settings
-"settings_privacy" = "Soukromí";
-"settings_appearance" = "Vzhled";
-"settings_notification" = "Oznámení";
-"settings_chat" = "Chat";
-"settings_media" = "Média";
-"settings_storage_management" = "Správa úložiště";
-"settings_passcode_lock" = "Zamykání přístupovým kódem";
-"settings_threema_calls" = "Hovory Threema";
-"settings_threema_web" = "Desktop/web";
-"settings_network_status" = "Stav sítě";
-"settings_version" = "Verze";
-"settings_license_username" = "Uživatelské jméno licence";
-"settings_invite_a_friend" = "Pozvat přítele";
-"settings_threema_channel" = "Kanál Threema";
-"settings_support" = "Podpora";
-"settings_privacy_policy" = "Zásady ochrany osobních údajů";
-"settings_license" = "Licence";
-"settings_advanced" = "Pokročilé";
-"settings_threema_work" = "Threema Work";
-"settings_threema_work_subtitle" = "Zabezpečené komunikační řešení pro firmy";
-"settings_feedback" = "Zpětná vazba beta verze";
-"tos_cell_title" = "Smluvní podmínky";
+// Advanced Settings
+"settings_advanced_networking_section_header" = "Práce v síti";
+"settings_advanced_ipv6_title" = "IPv6";
 
-"settings_advanced_flush_message_queue" = "Pročistit frontu zpráv";
+"settings_advanced_proximity_monitoring_section_header" = "Senzor";
+"settings_advanced_proximity_monitoring_title" = "Sledování přiblížení";
+"settings_advanced_proximity_monitoring_section_footer_off" = "Obrazovka se při zakrytí senzoru přiblížení nevypne.";
+"settings_advanced_proximity_monitoring_section_footer_on" = "Pokud dojde k zakrytí senzoru přiblížení během probíhajícího hovoru nebo záznamu či přehrávání hlasových zpráv, obrazovka se vypne.";
+
+"settings_advanced_debug_log_section_header" = "Záznam pro hledání chyb";
+"settings_advanced_debug_log_title" = "Záznam pro hledání chyb";
+"settings_advanced_debug_log_size_title" = "Velikost záznamu";
+"settings_advanced_debug_log_share_title" = "Sdílet záznam";
+"settings_advanced_debug_log_clear_log_title" = "Smazat záznam";
+
+"settings_advanced_other_section_header" = "Ostatní";
+"settings_advanced_webrtc_diagnostics_title" = "Diagnostika WebRTC";
 "settings_advanced_orphaned_files_cleanup" = "Odstranit nepotřebné soubory";
+"settings_advanced_flush_message_queue" = "Pročistit frontu zpráv";
+
 "settings_advanced_reregister_push_notifications_header_title" = "Nabízená oznámení";
 "settings_advanced_reregister_push_notifications_footer_title" = "Pokud se vám příchozí zprávy nezobrazují mimo aplikaci jako oznámení, můžete si je znovu aktivovat.";
 "settings_advanced_reregister_notifications_label" = "Znovu aktivovat nabízená oznámení";
-
-"settings_md_sync_alert_title" = "Synchronizace se nezdařila";
-
-// Privacy
-"settings_privacy_contacts_header" = "Kontakty";
-"settings_privacy_sync_contacts" = "Synchronizovat kontakty";
-"settings_privacy_exclusion_list" = "Seznam vyřazených";
-"settings_privacy_exclusion_list_alert_title" = "ID je příliš krátké";
-"settings_privacy_exclusion_list_alert_message" = "Zadejte ID, které bude dlouhé přesně 8 znaků.";
-"settings_privacy_block_unknown" = "Blokovat neznámé";
-"settings_privacy_block_unknown_footer_on"= "Zprávy vám mohou posílat pouze lidé z vašeho seznamu kontaktů.";
-"settings_privacy_block_unknown_foooter_off" = "Zprávy vám může posílat kdokoliv. Nové kontakty budou přidávány automaticky poté, co od nich obdržíte první zprávu.";
-
-"settings_privacy_os_header" = "Integrace do iOS";
-"settings_privacy_os_donate" = "Sdílet interakce";
-"settings_privacy_os_reset" = "Resetovat interakce";
-"settings_privacy_os_footer" = "Pokud je tato funkce zapnuta, budou se při sdílení obsahu v iOS nabízet kontakty Threema. Sdílení interakcí odhalí informace systému iOS.";
-
-"settings_privacy_chat_header" = "Chat";
-"settings_privacy_read_receipts" = "Potvrzení o přečtení";
-"settings_privacy_typing_indicator" = "Ukazatele psaní";
-
-"settings_privacy_TIRR_reset_all" = "Resetovat pro všechny kontakty";
-"settings_privacy_TIRR_reset_footer" = "Resetovat všechny kontakty do výchozího nastavení.";
-"settings_privacy_TIRR_reset_alert_title" = "Resetovat";
-"settings_privacy_TIRR_reset_alert_message" = "Resetovat všechny kontakty do výchozího nastavení. Akci nelze vzít zpět.";
-"settings_privacy_TIRR_reset_alert_action" = "Resetovat vše";
-
-"settings_privacy_choose_poi" = "Vybrat body zájmu";
-"settings_privacy_hide_private_chats" = "Skrýt soukromé chaty";
-"settings_privacy_hide_private_chats_footer" = "Skryje všechny soukromé chaty v přehledu chatů. Pro aktivaci tohoto nastavení je třeba nastavit přístupový kód.";
-
-// Appearance
-"settings_appearance_theme_section" = "Vizuální motiv";
-"settings_appearance_light_theme" = "Světlý";
-"settings_appearance_dark_theme" = "Temný";
-"settings_appearance_system_theme" = "Systém";
-"settings_appearance_theme_selected" = "Téma %@ je aktivní";
-"settings_appearance_theme_active" = "Aktivní";
-"settings_appearance_hide_app_icon" = "Ikona aplikace";
-"settings_appicon_default_header" = "Výchozí ikona";
-"settings_appicon_legacy_header" = "Ikony Threema";
-"settings_appicon_special_header" = "Speciální ikony";
-"settings_appearance_hide_stale_contacts" = "Skrýt neaktivní ID";
-"settings_appearance_show_profile_pictures" = "Zobrazovat profilové obrázky";
-"settings_appearance_display_order" = "Pořadí zobrazení";
-"settings_appearance_show_gallery_preview" = "Zobrazovat náhled galerie";
-
-// Chat Settings
-"settings_chat_wallpaper_title" = "Tapeta";
-"settings_chat_wallpaper_reset" = "Resetovat všechny tapety";
-"settings_chat_wallpaper_empty" = "Nic";
-"settings_chat_wallpaper_custom" = "Vlastní";
-"settings_chat_wallpaper_default" = "Výchozí";
-"settings_chat_wallpaper_reset_all_alert" = "Resetuje všechny tapety, které byly pro konverzaci přímo nastaveny výše uvedenou možností. Tato akce je nevratná.";
-
-"settings_chat_bigger_emojis" = "Větší emoji";
-"settings_chat_send_message_feedback" = "Haptická odezva při odeslání";
-
-// Media
-"settings_media_autosave_private_footer" = "U médií obdržených v rámci soukromých chatů nedojde k automatickému uložení.";
 
 // Sentry
 "sentry_crash_send_title" = "%@ – Neočekávané ukončení";
@@ -1161,11 +1228,9 @@
 "sentry_crash_send_no" = "Neposílat";
 "sentry_crash_comment_placeholder" = "Chybová zpráva";
 
-
-
 // My profile
 "profile_share_id_text" = "Moje Threema ID";
-"my_profile_delete_cell_title" = "Smazat ID a data";
+"my_profile_delete_cell_title" = "Odstranit ID a data";
 
 // Delete & Revoke
 "my_profile_delete_bullet_id" = "Threema ID";
@@ -1174,74 +1239,36 @@
 "my_profile_delete_bullet_safe" = "Záloha Trezoru Threema";
 "my_profile_delete_bullet_linked" = "Propojená telefonní čísla a/nebo e-maily";
 
-"my_profile_delete_info_title" = "Smazat ID a data";
-"my_profile_delete_info_keep" = "Následující data budou dál využitelná a nebudou smazána:";
-"my_profile_delete_info_delete" = "Následující data budou z tohoto zařízení odstraněna:";
-"my_profile_delete_info_toggle" = "Smazat vše";
+"my_profile_delete_info_title" = "Odstranit ID a data";
+"my_profile_delete_info_keep" = "Vaše ID Threema nebude zrušeno. Pokud jste si vytvořili zálohu Threema Safe nebo exportovali své ID, můžete jej obnovit na jiném zařízení.";
+"my_profile_delete_info_delete" = "Všechna vaše data Threema budou z tohoto zařízení odstraněna:";
+"my_profile_delete_info_delete_server" = "Všechna vaše data Threema budou odstraněna také ze serveru:";
+"my_profile_delete_info_revoke" = "Vaše ID Threema bude zrušeno a nebude možné jej obnovit.";
+"my_profile_delete_info_toggle" = "Všechno nenávratně smazat";
 
-"my_profile_delete_info_button_data" = "Smazat data";
-"my_profile_delete_info_button_revoke" = "Smazat ID a data";
+"my_profile_delete_info_button" = "Odstranit ID a data";
 
-"my_profile_delete_identity_title" = "Smazat konverzace a profil?";
-"my_profile_delete_identity_keep" = "Ponecháte si:";
-"my_profile_delete_identity_remove" = "Chystáte se z tohoto zařízení odstranit:";
-"my_profile_delete_identity_delete" = "Smazat konverzace a profil";
+"my_profile_delete_info_alert_title" = "Pokud nemáte zálohu, ztratíte své Threema ID.";
+"my_profile_delete_info_alert_confirm" = "Odstranit data";
 
-"my_profile_delete_identity_view_alert_title" = "Tato akce je nevratná.\nOpravdu chcete pokračovat?";
-"my_profile_delete_identity_view_alert_confirm" = "Smazat data";
-
-"my_profile_revoke_identity_view_title" = "Smazat vše?";
-"my_profile_revoke_info_delete" = "Trvale smažete své:";
-"my_profile_revoke_identity_view_info" = "Upozornění: Tato akce je nevratná!";
+"my_profile_revoke_identity_view_title" = "Odstranit ID a data?";
+"my_profile_revoke_info_delete" = "Všechna vaše data Threema budou z tohoto zařízení odstraněna:";
+"my_profile_revoke_info_sever" = "Všechna vaše data Threema budou odstraněna také ze serveru:";
 "my_profile_revoke_identity_view_enter_id" = "Zadejte své Threema ID „%@“ a potvrďte, že chcete smazat vše:";
 "my_profile_revoke_identity_view_placeholder" = "Vaše Threema ID";
-"my_profile_revoke_identity_view_button_revoke" = "Smazat vše";
+"my_profile_revoke_identity_view_button_revoke" = "Odstranit ID a data";
 
-"my_profile_delete_identity_summary_view_delete_title" = "Konverzace a profil byly smazány";
-"my_profile_delete_identity_summary_view_revoke_title" = "Vše bylo smazáno";
-"my_profile_delete_identity_summary_view_delete_success" = "Úspěšně jste z tohoto zařízení odstranili:";
-"my_profile_delete_identity_summary_view_revoke_success" = "Úspěšně jste odstranili své:";
+"my_profile_delete_identity_summary_view_removed_title" = "ID a data odstraněna";
+"my_profile_delete_identity_summary_view_removed_success" = "Všechna vaše data Threema byla z tohoto zařízení odstraněna:";
+"my_profile_delete_identity_summary_view_removed_server_success" = "Všechna vaše data Threema byla odstraněna ze serveru:";
+"my_profile_delete_identity_summary_view_removed_threema_id" = "Vaše ID Threema bylo zrušeno";
 "my_profile_delete_identity_summary_view_restart" = "Restartujte aplikaci a pokračujte v jejím používání.";
+"my_profile_delete_identity_summary_view_restart_new" = "Restartováním aplikace vytvořte nové ID Threema.";
 "my_profile_delete_identity_summary_view_close" = "Zavřít aplikaci";
 
 // File message
 "optional_caption" = "Volitelný popisek";
 "send_as_file" = "Odeslat jako originál";
-
-// Notification settings
-"settings_notifications_inapp_section" = "V aplikaci";
-"settings_notifications_inapp_sounds" = "Zvuky v aplikaci";
-"settings_notifications_inapp_vibrate" = "Vibrace v aplikaci";
-"settings_notifications_inapp_preview" = "Zobrazit náhled zprávy";
-"settings_notifications_push_section" = "Nabízená oznámení";
-"settings_notifications_push_sound" = "Zvuk";
-"settings_notifications_push_groupsound" = "Zvuk skupiny";
-"settings_notifications_push_preview" = "Zobrazit náhled zprávy";
-"settings_notifications_masterDnd_section_header" = "Volba po pracovní době";
-"settings_notifications_masterDnd" = "Nerušit mimo pracovní dobu";
-"settings_notifications_masterDnd_section_footer" = "Deaktivovat oznámení a odmítat hovory mimo pracovní dobu.";
-"settings_notifications_masterDnd_workingDays" = "Pracovní dny";
-"settings_notifications_masterDnd_startTime" = "Začátek pracovní doby";
-"settings_notifications_masterDnd_endTime" = "Konec pracovní doby";
-"settings_notification_iOS_settings" = "Nastavení systému";
-
-"settings_notification_type_preview_title" = "Nabízená oznámení";
-"settings_notification_type_preview_description" = "Vyberte, které informace mají být zahrnuty do nabízených oznámení k příchozím zprávám Threema.";
-
-"settings_notification_type_preview_restrictive_title" = "Zobrazovat přezdívku";
-"settings_notification_type_preview_restrictive_description" = "Zobrazuje pouze přezdívku kontaktu.";
-"settings_notification_type_preview_restrictive_sender_name" = "~Jan";
-
-"settings_notification_type_preview_balanced_title" = "Zobrazovat jméno";
-"settings_notification_type_preview_balanced_description" = "Zobrazuje celé jméno kontaktu (výchozí nastavení).";
-"settings_notification_type_preview_balanced_sender_name" = "Jan Novák";
-
-"settings_notification_type_preview_complete_title" = "Zobrazovat jméno a profilový obrázek";
-"settings_notification_type_preview_complete_description" = "Zobrazuje celé jméno kontaktu a profilový obrázek. Některé informace související s interakcí jsou sdíleny s operačním systémem. [Zjistěte více…](%@)";
-"settings_notification_type_preview_complete_sender_name" = "Jan Novák";
-
-"settings_notification_type_preview_message_text" = "Ukázka zprávy...";
-"settings_notification_type_preview_no_button" = "Deaktivovat nabízená oznámení";
 
 // Orphaned files delete
 "settings_orphaned_files_description" = "Při mazání dat ve správě úložiště v předchozích verzích %@ se ve výjimečných případech mohlo stát, že (mediální) soubory nebyly odstraněny úplně, ale odebrány v %@.
@@ -1263,22 +1290,6 @@ Pokud vám v %@ nechybí žádné (mediální) soubory, vyprázdněte koš, abys
 "settings_orphaned_files_bin_delete_conformation" = "Chcete trvale odstranit osiřelé soubory? Tuto akci nelze vrátit zpět.";
 "settings_orphaned_files_log_title" = "SOUBORY ZÁZNAMŮ";
 "settings_orphaned_files_log_all_files_button" = "Soubory záznamů do protokolu ladění";
-
-// Threema calls settings
-"settings_threema_calls_enable_calls" = "Povolit hovory Threema";
-"settings_threema_calls_always_relay_calls" = "Vždy přesměrovávat hovory";
-"settings_threema_calls_callkit" = "Integrovat hovory do iOS";
-"settings_threema_calls_video_section" = "Videohovory";
-"settings_threema_calls_allow_video_calls" = "Povolit videohovory";
-"settings_threema_calls_video_quality_profile" = "Upřednostňovaná kvalita obrazu";
-"settings_threema_calls_video_quality_profile_low" = "Nízká spotřeba dat";
-"settings_threema_calls_video_quality_profile_max" = "Maximální kvalita";
-"settings_threema_calls_video_quality_profile_auto" = "Vyvážená (doporučeno)";
-"settings_threema_calls_video_quality_profile_low_description" = "Snížená kvalita obrazu pro nižší spotřebu dat";
-"settings_threema_calls_video_quality_profile_max_description" = "Pozor: Při provozu v mobilní síti může docházet k vysoké spotřebě dat!";
-"settings_threema_calls_video_quality_profile_auto_description" = "Vysoká kvalita obrazu na WLAN, snížená spotřeba dat v mobilní síti";
-"settings_threema_calls_video_quality_profile_footer" = "Aktuální kvalita obrazu se odvíjí od sítě a nastavení osoby, se kterou hovoříte.";
-"settings_threema_calls_call_sound" = "Zvuk";
 
 // Media Preview
 "loading_video_failed" = "Video se nepodařilo načíst. Restartujte aplikaci a zkuste to znovu.";
@@ -1311,8 +1322,6 @@ Pokud vám v %@ nechybí žádné (mediální) soubory, vyprázdněte koš, abys
 "sending_item" = "Odesílání položky";
 "send_as_file_title" = "Režim odesílání";
 "document" = "Dokument";
-"paste_create_file_failure_title" = "Vkládání se nezdařilo";
-"paste_create_file_failure_message" = "Soubor se nepodařilo vložit, zkuste to znovu.";
 "loading_files_takes_time_title" = "Vkládání médií";
 "loading_files_takes_time_description" = "Převádění videí může trvat několik minut.";
 "pasteErrorMessageTitle" = "Nelze vložit";
@@ -1358,8 +1367,6 @@ Pokud vám v %@ nechybí žádné (mediální) soubory, vyprázdněte koš, abys
 "ballot_allDay_switch" = "Celý den";
 
 "ballot_choose_title" = "Vybrat hlasování";
-"ballot_closed_cell_title" = "Výsledky hlasování";
-"ballot_new_cell_title" = "Nové hlasování";
 "ballot_description_intermediate" = "Zapnutím zviditelníte nasbírané hlasy všem účastníkům. Jinak budou výsledky tajné, dokud hlasování neskončí.";
 "ballot_description_multiplechoice" = "Určete, zda mohou účastníci vybrat jenom jednu odpověď, nebo více možností.";
 
@@ -1471,10 +1478,6 @@ Pokud vám v %@ nechybí žádné (mediální) soubory, vyprázdněte koš, abys
 
 // ChatDetailView
 "detailView_title" = "Podrobnosti zprávy";
-"detailView_sent" = "Odesláno";
-"detailView_delivered" = "Doručeno";
-"detailView_read" = "Přečteno";
-"detailView_ackd" = "Vzato na vědomí";
 "detailView_messageID" = "ID zprávy";
 "detailView_group_acknowledged" = "Souhlas (%d)";
 "detailView_group_declined" = "Nesouhlas (%d)";
@@ -1532,6 +1535,12 @@ Pokud vám v %@ nechybí žádné (mediální) soubory, vyprázdněte koš, abys
 "notification_caption_too_long" = "Titulek je příliš dlouhý";
 
 "notification_updateworkdata_failed" = "Synchronizace s poskytujícím serverem se nezdařila";
+
+"notification_empty_debug_log_success" = "Výpis pro ladění programu byl úspěšně vyprázdněn";
+
+"notification_flush_message_queue_succeeded" = "Fronta zpráv byla promazána";
+
+"notification_reregister_notifications_successed" = "Nabízená oznámení byla znovu zaregistrována";
 
 // Forward security status messages
 "forward_security_message_without" = "Byla přijata zpráva bez dopředné bezpečnosti. Ověřte, zda odesílatel záměrně vypnul funkci PFS.";
@@ -1681,3 +1690,7 @@ Pokud vám v %@ nechybí žádné (mediální) soubory, vyprázdněte koš, abys
 "alert_no_access_message_microphone" = "Otevřete Nastavení iOS a povolte přístup k mikrofonu.";
 
 "alert_no_access_open_settings" = "Otevřít nastavení";
+
+"alert_biometrics_changed_title_touch" = "Zjištěna možná změna TouchID";
+"alert_biometrics_changed_title_face" = "Zjištěna možná změna FaceID";
+"alert_biometrics_changed_message" = "Chcete-li dál odemykat Threema pomocí biometrického ověření, zadejte jednorázově svůj přístupový kód Threema.";

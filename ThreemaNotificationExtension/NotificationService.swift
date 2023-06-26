@@ -157,8 +157,9 @@ class NotificationService: UNNotificationServiceExtension {
                 )
                 
                 // Create pendingUserNotification only for message notifications, not for keep alive checks
-                // Keep alive check will connect to the server, because if the last connection was too long ago, the server sets the identity as inactive
-                if let threemaPushNotification = threemaPushNotification {
+                // Keep alive check will connect to the server, because if the last connection was too long ago, the
+                // server sets the identity as inactive
+                if let threemaPushNotification {
                     if threemaPushNotification.voip == false {
                         if let pendingUserNotification = pendingUserNotificationManager?
                             .pendingUserNotification(
@@ -258,7 +259,8 @@ class NotificationService: UNNotificationServiceExtension {
     
     override func serviceExtensionTimeWillExpire() {
         // Called just before the extension will be terminated by the system.
-        // Use this as an opportunity to deliver your "best attempt" at modified content, otherwise the original push payload will be used.
+        // Use this as an opportunity to deliver your "best attempt" at modified content, otherwise the original push
+        // payload will be used.
         DDLogWarn("[Push] Stopping processing incoming messages, because extension will expire!")
         exitIfAllTasksProcessed(force: true)
     }
@@ -270,7 +272,8 @@ class NotificationService: UNNotificationServiceExtension {
     ///
     /// - Parameters:
     ///   - bestAttemptContent: Best content for notification, is nil no notification will be showed
-    ///   - recalculateBadgeCount: If `true` count of unread messages will calculated for changed conversations (`NotificationService.conversationsChanged`)
+    ///   - recalculateBadgeCount: If `true` count of unread messages will calculated for changed conversations
+    ///                            (`NotificationService.conversationsChanged`)
     private func applyContent(
         _ bestAttemptContent: UNMutableNotificationContent? = nil,
         recalculateBadgeCount: Bool = true
@@ -307,7 +310,7 @@ class NotificationService: UNNotificationServiceExtension {
         AppGroup.setActive(false, for: AppGroupTypeNotificationExtension)
         NotificationService.isRunning = false
 
-        if let bestAttemptContent = bestAttemptContent {
+        if let bestAttemptContent {
             DDLogInfo("[Push] Notification showed!")
             DDLog.flushLog()
 
@@ -391,7 +394,8 @@ class NotificationService: UNNotificationServiceExtension {
     /// Exit Notification Extension if all tasks processed.
     /// - Parameters:
     ///   - force: Means last incoming task is processed, exit anyway
-    ///   - reportedCall: Exit due to Threema Call was reported to the App, `NotificationService.didJustReportCall` will be set to `true` for 5s
+    ///   - reportedCall: Exit due to Threema Call was reported to the App, `NotificationService.didJustReportCall` will
+    ///                   be set to `true` for 5s
     private func exitIfAllTasksProcessed(force: Bool = false, reportedCall: Bool = false) {
         let isMultiDeviceActivated = ServerConnector.shared().isMultiDeviceActivated
         if force ||
@@ -408,7 +412,7 @@ class NotificationService: UNNotificationServiceExtension {
             // Gives a little time to remove notification from notification center
             // or has pending group messages (waiting for possible "group sync request" answer)
             var delay: Double = 2
-            if let pendingUserNotificationManager = pendingUserNotificationManager,
+            if let pendingUserNotificationManager,
                pendingUserNotificationManager.hasPendingGroupUserNotifications() {
                 DDLogNotice("Push] Delay timeout for bc. has Pending notifications")
                 delay = 5
@@ -452,7 +456,7 @@ class NotificationService: UNNotificationServiceExtension {
         DDLogWarn("[Push] Show invalid license key notification")
         
         // We remove the pending notification if it exists
-        if let threemaPushNotification = threemaPushNotification,
+        if let threemaPushNotification,
            let pendingUserNotification = (
                pendingUserNotificationManager?
                    .pendingUserNotification(for: threemaPushNotification, stage: .initial)
@@ -482,15 +486,19 @@ class NotificationService: UNNotificationServiceExtension {
     ) {
         
         // Check if blocked
-        guard let identity = identity,
+        guard let identity,
               !businessInjector.userSettings.blacklist.contains(identity) else {
             onCompletion?(self)
             return
         }
         DDLogNotice("[Push] will Report Incoming VoIP Push Payload to OS.")
-        CXProvider.reportNewIncomingVoIPPushPayload(payload) { _ in
-            DDLogNotice("[Push] Incoming VoIP Push Payload reported, leaving now")
-
+        CXProvider.reportNewIncomingVoIPPushPayload(payload) { error in
+            if let error {
+                DDLogError("[Push] Incoming VoIP Push Payload, system disallow the call: \(error)")
+            }
+            else {
+                DDLogNotice("[Push] Incoming VoIP Push Payload reported, leaving now")
+            }
             self.exitIfAllTasksProcessed(force: true, reportedCall: true)
         }
     }
@@ -685,7 +693,7 @@ extension NotificationService: MessageProcessorDelegate {
         case is VoIPCallOfferMessage:
             let offerMessage = message as! VoIPCallOfferMessage
             
-            guard let identity = identity else {
+            guard let identity else {
                 DDLogError("No contact for processing VoIP call offer.")
                 onCompletion?(self)
                 return
@@ -712,7 +720,7 @@ extension NotificationService: MessageProcessorDelegate {
                     with: message,
                     on: businessInjector
                 ) { conversation, systemMessage in
-                    if let systemMessage = systemMessage, let conversation = conversation {
+                    if let systemMessage, let conversation {
                         let databaseManager = DatabaseManager()
                         databaseManager.addDirtyObject(conversation)
                         databaseManager.addDirtyObject(systemMessage)
@@ -731,7 +739,10 @@ extension NotificationService: MessageProcessorDelegate {
     /// Reject call because Threema Calls are disabled on this device
     /// - Parameter offer: VoIPCallOfferMessage
     private func rejectCall(offer: VoIPCallOfferMessage) {
-        let voIPCallSender = VoIPCallSender(businessInjector.myIdentityStore)
+        let voIPCallSender = VoIPCallSender(
+            messageSender: businessInjector.messageSender,
+            myIdentityStore: businessInjector.myIdentityStore
+        )
         let reason: VoIPCallAnswerMessage.MessageRejectReason = .disabled
         let answer = VoIPCallAnswerMessage(
             action: .reject,

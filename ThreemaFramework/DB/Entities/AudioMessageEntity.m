@@ -27,119 +27,24 @@
 
 @implementation AudioMessageEntity
 
-@dynamic duration;
-@dynamic encryptionKey;
-@dynamic progress;
 @dynamic audioBlobId;
 @dynamic audioSize;
+@dynamic encryptionKey;
+@dynamic duration;
+@dynamic progress;
+
 @dynamic audio;
 
 - (NSString*)logText {
     int seconds = self.duration.intValue;
     int minutes = seconds / 60;
     seconds -= minutes * 60;
-    return [NSString stringWithFormat:@"%@ (%02d:%02d, %@)", [BundleUtil localizedStringForKey:@"file_message_voice"], minutes, seconds, [self blobGetFilename]];
+    return [NSString stringWithFormat:@"%@ (%02d:%02d, %@)", [BundleUtil localizedStringForKey:@"file_message_voice"], minutes, seconds, [self blobFilename]];
 }
 
 - (NSString*)previewText {
     return [NSString stringWithFormat:@"%@ (%@)", [BundleUtil localizedStringForKey:@"file_message_voice"], [ThreemaUtilityObjC timeStringForSeconds:self.duration.integerValue]];
 }
-
-#pragma mark - BlobData
-
-- (BOOL)blobIsOutgoing {
-    if (self.isOwn) {
-        return self.isOwn.boolValue;
-    }
-    
-    return false;
-}
-
-- (NSData *)blobGetData {
-    if (self.audio) {
-        return self.audio.data;
-    }
-    
-    return nil;
-}
-
-- (NSData *)blobGetId {
-    return self.audioBlobId;
-}
-
-- (nullable NSData *)blobGetThumbnailId {
-    return nil;
-}
-
-- (NSData *)blobGetEncryptionKey {
-    return self.encryptionKey;
-}
-
-- (NSNumber *)blobGetSize {
-    return self.audioSize;
-}
-
-- (void)blobSetData:(NSData *)data {
-    AudioData *dbData = [NSEntityDescription
-              insertNewObjectForEntityForName:@"AudioData"
-              inManagedObjectContext:self.managedObjectContext];
-
-    dbData.data = data;
-    self.audio = dbData;
-}
-
-- (void)blobSetDataID:(NSData *)dataID {
-    self.audioBlobId = dataID;
-}
-
-- (NSData *)blobGetThumbnail {
-    return nil;
-}
-
-- (void)blobSetOrigin:(BlobOrigin)origin {
-    // no-op
-}
-
-- (BlobOrigin)blobGetOrigin {
-    return BlobOriginPublic;
-}
-
-- (NSString *)blobGetUTI {
-    return UTTYPE_AUDIO;
-}
-
-- (NSString *)blobGetFilename {
-    return [NSString stringWithFormat: @"%@.%@", [NSString stringWithHexData:self.id], MEDIA_EXTENSION_AUDIO];
-}
-
-- (NSString *)blobGetWebFilename {
-    return [NSString stringWithFormat: @"threema-%@-audio.%@", [DateFormatter getDateForWeb:self.date], MEDIA_EXTENSION_AUDIO];
-}
-
-- (void)blobUpdateProgress:(NSNumber *)progress {
-    self.progress = progress;
-}
-
-- (NSNumber *)blobGetProgress {
-    return self.progress;
-}
-
-- (NSString *)getExternalFilename {
-    return [[self audio] getFilename];
-}
-
-- (BOOL)blobGetError {
-    if (self.sendFailed) {
-        return self.sendFailed.boolValue;
-    }
-    
-    return false;
-}
-
-- (void)blobSetError:(BOOL)error {
-    self.sendFailed = [[NSNumber alloc] initWithBool:error];
-}
-
 
 #pragma mark - Misc
 

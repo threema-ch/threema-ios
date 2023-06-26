@@ -53,4 +53,12 @@
     public static var lateSessionSave: Bool {
         true
     }
+
+    /// Feature Flag for PFS by default
+    @objc public static var pfsByDefault: Bool {
+        if ThreemaApp.current == .red || ThreemaApp.current == .workRed {
+            return true
+        }
+        return false
+    }
 }

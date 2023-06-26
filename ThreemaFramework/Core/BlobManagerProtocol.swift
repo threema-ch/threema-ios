@@ -71,9 +71,9 @@ public protocol BlobManagerProtocol {
     func cancelBlobsSync(for objectID: NSManagedObjectID) async
 }
 
-public extension BlobManagerProtocol {
+extension BlobManagerProtocol {
     
-    func createMessageAndSyncBlobs(
+    public func createMessageAndSyncBlobs(
         for item: URLSenderItem,
         in conversationID: NSManagedObjectID,
         correlationID: String? = nil,

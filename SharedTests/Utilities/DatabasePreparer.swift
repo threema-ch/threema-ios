@@ -43,7 +43,15 @@ class DatabasePreparer {
             XCTFail("Could not generate test data: \(error)")
         }
     }
-    
+
+    func save<T>(_ block: () throws -> T) rethrows -> T {
+        try objCnx.performAndWait {
+            let result = try block()
+            try objCnx.save()
+            return result
+        }
+    }
+
     @discardableResult func createBallotMessage(conversation: Conversation, ballotID: Data) -> Ballot {
         let ballotMessage = createEntity(objectType: Ballot.self)
         ballotMessage.conversation = conversation
@@ -52,54 +60,33 @@ class DatabasePreparer {
     }
     
     @discardableResult func createContact(
-        publicKey: Data,
+        publicKey: Data = MockData.generatePublicKey(),
         identity: String,
-        verificationLevel: Int,
-        nickname: String?
+        verificationLevel: Int = 0,
+        nickname: String? = nil
     ) -> ContactEntity {
         let contact = createEntity(objectType: ContactEntity.self)
         contact.publicKey = publicKey
         contact.identity = identity
         contact.verificationLevel = NSNumber(integerLiteral: verificationLevel)
-        if let nickname = nickname {
+        if let nickname {
             contact.publicNickname = nickname
         }
         return contact
     }
     
-    @discardableResult func createContact(
-        publicKey: Data,
-        identity: String,
-        verificationLevel: Int
-    ) -> ContactEntity {
-        createContact(publicKey: publicKey, identity: identity, verificationLevel: verificationLevel, nickname: nil)
-    }
-    
     @discardableResult func createConversation(
-        typing: Bool,
-        unreadMessageCount: Int,
-        visibility: ConversationVisibility,
-        complete: ((Conversation) -> Void)?
+        contactEntity: ContactEntity? = nil,
+        groupID: Data? = nil,
+        typing: Bool = false,
+        unreadMessageCount: Int = 0,
+        category: ConversationCategory = .default,
+        visibility: ConversationVisibility = .default,
+        complete: ((Conversation) -> Void)? = nil
     ) -> Conversation {
         let conversation = createEntity(objectType: Conversation.self)
-        conversation.typing = NSNumber(booleanLiteral: typing)
-        conversation.unreadMessageCount = NSNumber(integerLiteral: unreadMessageCount)
-        conversation.conversationVisibility = visibility
-
-        if let complete = complete {
-            complete(conversation)
-        }
-        return conversation
-    }
-    
-    @discardableResult func createConversation(
-        typing: Bool,
-        unreadMessageCount: Int,
-        category: ConversationCategory,
-        visibility: ConversationVisibility,
-        complete: ((Conversation) -> Void)?
-    ) -> Conversation {
-        let conversation = createEntity(objectType: Conversation.self)
+        conversation.contact = contactEntity
+        conversation.groupID = groupID
         conversation.typing = NSNumber(booleanLiteral: typing)
         conversation.unreadMessageCount = NSNumber(integerLiteral: unreadMessageCount)
         conversation.conversationCategory = category
@@ -155,7 +142,7 @@ class DatabasePreparer {
         audioMessage.date = Date()
         audioMessage.delivered = NSNumber(booleanLiteral: true)
         audioMessage.read = NSNumber(booleanLiteral: false)
-        if let complete = complete {
+        if let complete {
             complete(audioMessage)
         }
         return audioMessage
@@ -189,14 +176,15 @@ class DatabasePreparer {
     
     @discardableResult func createTextMessage(
         conversation: Conversation,
-        text: String,
-        date: Date,
-        delivered: Bool,
-        id: Data,
+        text: String = "Test message",
+        date: Date = Date(),
+        delivered: Bool = true,
+        id: Data = MockData.generateMessageID(),
         isOwn: Bool,
-        read: Bool,
-        sent: Bool,
-        userack: Bool,
+        read: Bool = true,
+        readDate: Date? = nil,
+        sent: Bool = true,
+        userack: Bool = false,
         sender: ContactEntity?,
         remoteSentDate: Date? // can be set to nil for outgoing messages
     ) -> TextMessage {
@@ -208,6 +196,7 @@ class DatabasePreparer {
         textMessage.id = id
         textMessage.isOwn = NSNumber(booleanLiteral: isOwn)
         textMessage.read = NSNumber(booleanLiteral: read)
+        textMessage.readDate = readDate
         textMessage.sent = NSNumber(booleanLiteral: sent)
         textMessage.userack = NSNumber(booleanLiteral: userack)
         textMessage.sender = sender
@@ -227,7 +216,7 @@ class DatabasePreparer {
         videoMessage.conversation = conversation
         videoMessage.thumbnail = thumbnail
         videoMessage.video = videoData
-        if let complete = complete {
+        if let complete {
             complete(videoMessage)
         }
         return videoMessage

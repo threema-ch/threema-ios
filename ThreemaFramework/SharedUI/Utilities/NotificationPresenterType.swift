@@ -200,4 +200,16 @@ public struct NotificationPresenterType {
         notificationText: BundleUtil.localizedString(forKey: "notification_updateworkdata_failed"),
         notificationStyle: .error
     )
+    public static let emptyDebugLogSuccess = NotificationPresenterType(
+        notificationText: BundleUtil.localizedString(forKey: "notification_empty_debug_log_success"),
+        notificationStyle: .success
+    )
+    public static let flushMessageQueueSuccess = NotificationPresenterType(
+        notificationText: BundleUtil.localizedString(forKey: "notification_flush_message_queue_succeeded"),
+        notificationStyle: .success
+    )
+    public static let reregisterNotificationsSuccess = NotificationPresenterType(
+        notificationText: BundleUtil.localizedString(forKey: "notification_reregister_notifications_succeeded"),
+        notificationStyle: .success
+    )
 }

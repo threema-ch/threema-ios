@@ -20,9 +20,9 @@
 
 import Foundation
 
-public extension Conversation {
+extension Conversation {
     
-    func updateLastMessage(with entityManager: EntityManager) {
+    public func updateLastMessage(with entityManager: EntityManager) {
         entityManager.performSyncBlockAndSafe {
 
             let fetcher = MessageFetcher(for: self, with: entityManager)

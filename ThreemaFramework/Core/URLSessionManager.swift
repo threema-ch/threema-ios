@@ -40,7 +40,8 @@ public class URLSessionManager {
     
     // MARK: - Sessions
       
-    /// Returns the session for a given delegate if it exists. Otherwise it creates one and stores it if a delegate is provided.
+    /// Returns the session for a given delegate if it exists. Otherwise it creates one and stores it if a delegate is
+    /// provided.
     /// - Parameters:
     ///   - delegate: Optional URLSessionDelegate for created session
     ///   - createAsBackgroundSession: If created session is a background session
@@ -49,7 +50,7 @@ public class URLSessionManager {
         sessionStoreMutationLock.sync {
     
             // If no delegate is provided, we return a default session
-            guard let delegate = delegate else {
+            guard let delegate else {
                 return sessionProvider.defaultSession()
             }
             
@@ -60,7 +61,8 @@ public class URLSessionManager {
                 return storedSession
             }
             
-            // No session found, creating new one. If it is a background session we store it. Else we just return the default session
+            // No session found, creating new one. If it is a background session we store it. Else we just return the
+            // default session
             let createdSession: URLSession
             if createAsBackgroundSession {
                 createdSession = sessionProvider.backgroundSession(

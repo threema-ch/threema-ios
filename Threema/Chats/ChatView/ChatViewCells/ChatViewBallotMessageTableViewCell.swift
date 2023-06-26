@@ -31,18 +31,84 @@ final class ChatViewBallotMessageTableViewCell: ChatViewBaseTableViewCell, Measu
     /// Reset it when the message had any changes to update data shown in the views (e.g. date or status symbol).
     var ballotMessageAndNeighbors: (message: BallotMessage, neighbors: ChatViewDataSource.MessageNeighbors)? {
         didSet {
-            updateCell(for: ballotMessageAndNeighbors?.message)
-            observe(ballot: ballotMessageAndNeighbors?.message.ballot, oldBallot: oldValue?.message.ballot)
+            let block = {
+                self.updateCell(for: self.ballotMessageAndNeighbors?.message)
+                self.observe(
+                    ballot: self.ballotMessageAndNeighbors?.message.ballot,
+                    oldBallot: oldValue?.message.ballot
+                )
+                
+                super.setMessage(
+                    to: self.ballotMessageAndNeighbors?.message,
+                    with: self.ballotMessageAndNeighbors?.neighbors
+                )
+            }
             
-            super.setMessage(
-                to: ballotMessageAndNeighbors?.message,
-                with: ballotMessageAndNeighbors?.neighbors
-            )
+            if let oldValue, oldValue.message.objectID == ballotMessageAndNeighbors?.message.objectID {
+                UIView.animate(
+                    withDuration: ChatViewConfiguration.ChatBubble.bubbleSizeChangeAnimationDurationInSeconds,
+                    delay: 0.0,
+                    options: .curveEaseInOut
+                ) {
+                    block()
+                    self.layoutIfNeeded()
+                }
+            }
+            else {
+                block()
+            }
         }
     }
     
     override var shouldShowDateAndState: Bool {
         didSet {
+            // Both of these animations are typically covered within a bigger animation block
+            // or a block that doesn't animate at all. Both cases look good.
+            if shouldShowDateAndState {
+                
+                let block = {
+                    self.messageDateAndStateView.alpha = 1.0
+                    self.messageDateAndStateView.isHidden = false
+                }
+                
+                if !oldValue {
+                    // When adding the date and state view, this is an animation that doesn't look half bad since the
+                    // view will
+                    // animate in from the bottom.
+                    UIView.animate(
+                        withDuration: ChatViewConfiguration.ChatBubble.bubbleSizeChangeAnimationDurationInSeconds,
+                        delay: ChatViewConfiguration.ChatBubble.bubbleSizeChangeAnimationDurationInSeconds,
+                        options: .curveEaseInOut
+                    ) {
+                        block()
+                    } completion: { _ in
+                        // This is used to work around a bug where the ack symbols didn't have the correct baseline.
+                        UIView.performWithoutAnimation {
+                            self.messageDateAndStateView.setNeedsLayout()
+                            self.messageDateAndStateView.layoutIfNeeded()
+                        }
+                    }
+                }
+                else {
+                    UIView.performWithoutAnimation {
+                        block()
+                        
+                        // This is used to work around a bug where the ack symbols didn't have the correct baseline.
+                        // It is very unclear why this is needed in addition to
+                        self.messageDateAndStateView.setNeedsLayout()
+                        self.messageDateAndStateView.layoutIfNeeded()
+                    }
+                }
+            }
+            else {
+                // We don't use the same animation when hiding the date and state view because it'll animate out to the
+                // top
+                // and will cover the text which is still showing in the cell.
+                UIView.performWithoutAnimation {
+                    self.messageDateAndStateView.alpha = 0.0
+                }
+            }
+            
             messageDateAndStateView.isHidden = !shouldShowDateAndState
         }
     }
@@ -132,7 +198,8 @@ final class ChatViewBallotMessageTableViewCell: ChatViewBaseTableViewCell, Measu
     override func updateColors() {
         super.updateColors()
         
-        // We must change the icon based on the closing state and re-assign the attributed text for the icons to change color as well
+        // We must change the icon based on the closing state and re-assign the attributed text for the icons to change
+        // color as well
         if let ballotMessage = ballotMessageAndNeighbors?.message, !ballotMessage.willBeDeleted {
             if ballotMessage.isClosed() {
                 iconView.image = iconView.image?.withTintColor(Colors.textLight)
@@ -204,7 +271,7 @@ final class ChatViewBallotMessageTableViewCell: ChatViewBaseTableViewCell, Measu
             invalidateObservers()
         }
         
-        guard let ballot = ballot else {
+        guard let ballot else {
             return
         }
         

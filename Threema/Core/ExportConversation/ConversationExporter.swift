@@ -320,7 +320,7 @@ extension ConversationExporter {
     
     private func addMessage(message: BaseMessage) -> Bool {
         log.append(getMessageFrom(baseMessage: message))
-        if withMedia, let blobDataMessage = message as? BlobData, let blobData = blobDataMessage.blobGet() {
+        if withMedia, let blobDataMessage = message as? BlobData, let blobData = blobDataMessage.blobData {
             let storageNecessary = Int64(blobData.count)
             if !enoughFreeStorage(toStore: storageNecessary) {
                 return false
@@ -396,7 +396,7 @@ extension ConversationExporter {
                 return (false, -1)
             }
             let success = autoreleasepool { () -> Bool in
-                if let blobMessage = message as? BlobData, let blobSize = blobMessage.blobGet()?.count {
+                if let blobMessage = message as? BlobData, let blobSize = blobMessage.blobData?.count {
                     totalStorageNecessary += Int64(blobSize)
                 }
                 

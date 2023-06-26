@@ -57,8 +57,10 @@ class MarkupParsingTextStorage: NSTextStorage {
     // MARK: Required Functions
     
     override func attributes(at location: Int, effectiveRange range: NSRangePointer?) -> [NSAttributedString.Key: Any] {
-        // This workaround shouldn't be necessary. If `edited` is set correctly range is always smaller than the length of the backing store.
-        // However when typing inside a mention effectively deleting the mention and inserting one character this doesn't seem to hold.
+        // This workaround shouldn't be necessary. If `edited` is set correctly range is always smaller than the length
+        // of the backing store. However when typing inside a mention effectively deleting the mention and inserting one
+        // character this doesn't seem to hold.
+        //
         // It is unclear why this happens and it is likely that it is because of a bug in our code.
         // But this workaround fixes the crashes caused by it without introducing any obvious downsides.
         guard location <= backingStore.length else {
@@ -100,8 +102,10 @@ class MarkupParsingTextStorage: NSTextStorage {
         
     override func setAttributes(_ attrs: [NSAttributedString.Key: Any]?, range: NSRange) {
         // Workaround
-        /// This workaround shouldn't be necessary. If `edited` is set correctly range is always smaller than the length of the backing store.
-        /// However when typing inside a mention effectively deleting the mention and inserting one character this doesn't seem to hold.
+        /// This workaround shouldn't be necessary. If `edited` is set correctly range is always smaller than the length
+        /// of the backing store.
+        /// However when typing inside a mention effectively deleting the mention and inserting one character this
+        /// doesn't seem to hold.
         /// It is unclear why this happens and it is likely that it is because of a bug in our code.
         /// But this workaround fixes the crashes caused by it without introducing any obvious downsides.
         guard range.upperBound <= backingStore.length else {

@@ -72,7 +72,8 @@ import Foundation
             }
         }
                 
-        // We allow `contact.groupConversations` to be not empty as this will be properly handled by CoreData (nullify on delete of contact)
+        // We allow `contact.groupConversations` to be not empty as this will be properly handled by CoreData (nullify
+        // on delete of contact)
         
         super.delete(contact)
     }
@@ -98,7 +99,7 @@ import Foundation
         from contact: ContactEntity? = nil
     ) -> Bool {
         let fetchMessages = NSFetchRequest<NSFetchRequestResult>(entityName: "Message")
-        if let contact = contact {
+        if let contact {
             fetchMessages.predicate = NSPredicate(format: "conversation IN %@ && sender = %@", conversations, contact)
         }
         else {

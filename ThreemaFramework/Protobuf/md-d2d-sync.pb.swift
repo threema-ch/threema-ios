@@ -279,1252 +279,127 @@ extension Sync_ConversationCategory: CaseIterable {
 
 /// Mobile device management parameters shared across Threema Work devices.
 ///
-/// More detailed parameter information is available here:
-/// https://work.threema.ch/en/docs/mdm_configuration
-///
-/// [//]: # TODO(SE-223): Subject to change.
+/// See [mdm-parameters.md](./md-parameters.md) for documentation of possible
+/// parameter values and associated steps to apply when a parameter has been set
+/// for the first time, modified, or removed.
 struct Sync_MdmParameters {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  /// Username required for activation of the app.
-  /// References: `th_license_username`
-  var licenseUsername: String {
-    get {return _storage._licenseUsername ?? String()}
-    set {_uniqueStorage()._licenseUsername = newValue}
-  }
-  /// Returns true if `licenseUsername` has been explicitly set.
-  var hasLicenseUsername: Bool {return _storage._licenseUsername != nil}
-  /// Clears the value of `licenseUsername`. Subsequent reads from it will return its default value.
-  mutating func clearLicenseUsername() {_uniqueStorage()._licenseUsername = nil}
+  /// A map of MDM parameters, originating from an external MDM system. The map
+  /// key is the identifier of the MDM parameter (e.g. `th_nickname`).
+  var externalParameters: Dictionary<String,Sync_MdmParameters.Parameter> = [:]
 
-  /// Password required for activation of the app
-  /// References: `th_license_password`
-  var licensePassword: String {
-    get {return _storage._licensePassword ?? String()}
-    set {_uniqueStorage()._licensePassword = newValue}
-  }
-  /// Returns true if `licensePassword` has been explicitly set.
-  var hasLicensePassword: Bool {return _storage._licensePassword != nil}
-  /// Clears the value of `licensePassword`. Subsequent reads from it will return its default value.
-  mutating func clearLicensePassword() {_uniqueStorage()._licensePassword = nil}
+  /// A map of MDM parameters, originating from Threema App Configuration. The
+  /// map key is the identifier of the MDM parameter (e.g. `th_nickname`).
+  var threemaParameters: Dictionary<String,Sync_MdmParameters.Parameter> = [:]
 
-  /// Nickname to be used
-  /// References: `th_nickname`
-  var nickname: String {
-    get {return _storage._nickname ?? String()}
-    set {_uniqueStorage()._nickname = newValue}
-  }
-  /// Returns true if `nickname` has been explicitly set.
-  var hasNickname: Bool {return _storage._nickname != nil}
-  /// Clears the value of `nickname`. Subsequent reads from it will return its default value.
-  mutating func clearNickname() {_uniqueStorage()._nickname = nil}
-
-  /// First name of the user
-  /// References: `th_firstname`
-  var firstName: String {
-    get {return _storage._firstName ?? String()}
-    set {_uniqueStorage()._firstName = newValue}
-  }
-  /// Returns true if `firstName` has been explicitly set.
-  var hasFirstName: Bool {return _storage._firstName != nil}
-  /// Clears the value of `firstName`. Subsequent reads from it will return its default value.
-  mutating func clearFirstName() {_uniqueStorage()._firstName = nil}
-
-  /// Last name of the user
-  /// References: `th_lastname`
-  var lastName: String {
-    get {return _storage._lastName ?? String()}
-    set {_uniqueStorage()._lastName = newValue}
-  }
-  /// Returns true if `lastName` has been explicitly set.
-  var hasLastName: Bool {return _storage._lastName != nil}
-  /// Clears the value of `lastName`. Subsequent reads from it will return its default value.
-  mutating func clearLastName() {_uniqueStorage()._lastName = nil}
-
-  /// Customer specific identifier
-  /// References: `th_csi`
-  var customerSpecificID: String {
-    get {return _storage._customerSpecificID ?? String()}
-    set {_uniqueStorage()._customerSpecificID = newValue}
-  }
-  /// Returns true if `customerSpecificID` has been explicitly set.
-  var hasCustomerSpecificID: Bool {return _storage._customerSpecificID != nil}
-  /// Clears the value of `customerSpecificID`. Subsequent reads from it will return its default value.
-  mutating func clearCustomerSpecificID() {_uniqueStorage()._customerSpecificID = nil}
-
-  /// User category
-  /// References: `th_category`
-  var category: String {
-    get {return _storage._category ?? String()}
-    set {_uniqueStorage()._category = newValue}
-  }
-  /// Returns true if `category` has been explicitly set.
-  var hasCategory: Bool {return _storage._category != nil}
-  /// Clears the value of `category`. Subsequent reads from it will return its default value.
-  mutating func clearCategory() {_uniqueStorage()._category = nil}
-
-  /// Email address linked to the ID
-  /// References: `th_linked_email`
-  var linkedEmail: String {
-    get {return _storage._linkedEmail ?? String()}
-    set {_uniqueStorage()._linkedEmail = newValue}
-  }
-  /// Returns true if `linkedEmail` has been explicitly set.
-  var hasLinkedEmail: Bool {return _storage._linkedEmail != nil}
-  /// Clears the value of `linkedEmail`. Subsequent reads from it will return its default value.
-  mutating func clearLinkedEmail() {_uniqueStorage()._linkedEmail = nil}
-
-  /// Phone number linked to the ID
-  /// References: `th_linked_phone`
-  var linkedPhone: String {
-    get {return _storage._linkedPhone ?? String()}
-    set {_uniqueStorage()._linkedPhone = newValue}
-  }
-  /// Returns true if `linkedPhone` has been explicitly set.
-  var hasLinkedPhone: Bool {return _storage._linkedPhone != nil}
-  /// Clears the value of `linkedPhone`. Subsequent reads from it will return its default value.
-  mutating func clearLinkedPhone() {_uniqueStorage()._linkedPhone = nil}
-
-  /// Restore a Threema ID
-  /// References: `th_id_backup`
-  var identityRestore: String {
-    get {return _storage._identityRestore ?? String()}
-    set {_uniqueStorage()._identityRestore = newValue}
-  }
-  /// Returns true if `identityRestore` has been explicitly set.
-  var hasIdentityRestore: Bool {return _storage._identityRestore != nil}
-  /// Clears the value of `identityRestore`. Subsequent reads from it will return its default value.
-  mutating func clearIdentityRestore() {_uniqueStorage()._identityRestore = nil}
-
-  /// Password for restoring a Threema ID
-  /// References: `th_id_backup_password`
-  var identityRestorePassword: String {
-    get {return _storage._identityRestorePassword ?? String()}
-    set {_uniqueStorage()._identityRestorePassword = newValue}
-  }
-  /// Returns true if `identityRestorePassword` has been explicitly set.
-  var hasIdentityRestorePassword: Bool {return _storage._identityRestorePassword != nil}
-  /// Clears the value of `identityRestorePassword`. Subsequent reads from it will return its default value.
-  mutating func clearIdentityRestorePassword() {_uniqueStorage()._identityRestorePassword = nil}
-
-  var threemaSafePolicy: Sync_MdmParameters.ThreemaSafePolicy {
-    get {return _storage._threemaSafePolicy ?? .safeOptional}
-    set {_uniqueStorage()._threemaSafePolicy = newValue}
-  }
-  /// Returns true if `threemaSafePolicy` has been explicitly set.
-  var hasThreemaSafePolicy: Bool {return _storage._threemaSafePolicy != nil}
-  /// Clears the value of `threemaSafePolicy`. Subsequent reads from it will return its default value.
-  mutating func clearThreemaSafePolicy() {_uniqueStorage()._threemaSafePolicy = nil}
-
-  /// Threema Safe password (predefined)
-  /// References: `th_safe_password`
-  var threemaSafePassword: String {
-    get {return _storage._threemaSafePassword ?? String()}
-    set {_uniqueStorage()._threemaSafePassword = newValue}
-  }
-  /// Returns true if `threemaSafePassword` has been explicitly set.
-  var hasThreemaSafePassword: Bool {return _storage._threemaSafePassword != nil}
-  /// Clears the value of `threemaSafePassword`. Subsequent reads from it will return its default value.
-  mutating func clearThreemaSafePassword() {_uniqueStorage()._threemaSafePassword = nil}
-
-  /// Threema Safe password pattern
-  /// References: `th_safe_password_pattern`
-  var threemaSafePasswordPattern: String {
-    get {return _storage._threemaSafePasswordPattern ?? String()}
-    set {_uniqueStorage()._threemaSafePasswordPattern = newValue}
-  }
-  /// Returns true if `threemaSafePasswordPattern` has been explicitly set.
-  var hasThreemaSafePasswordPattern: Bool {return _storage._threemaSafePasswordPattern != nil}
-  /// Clears the value of `threemaSafePasswordPattern`. Subsequent reads from it will return its default value.
-  mutating func clearThreemaSafePasswordPattern() {_uniqueStorage()._threemaSafePasswordPattern = nil}
-
-  /// Threema Safe password pattern error (mismatch) message
-  /// References: `th_safe_password_message`
-  var threemaSafePasswordPatternErrorMessage: String {
-    get {return _storage._threemaSafePasswordPatternErrorMessage ?? String()}
-    set {_uniqueStorage()._threemaSafePasswordPatternErrorMessage = newValue}
-  }
-  /// Returns true if `threemaSafePasswordPatternErrorMessage` has been explicitly set.
-  var hasThreemaSafePasswordPatternErrorMessage: Bool {return _storage._threemaSafePasswordPatternErrorMessage != nil}
-  /// Clears the value of `threemaSafePasswordPatternErrorMessage`. Subsequent reads from it will return its default value.
-  mutating func clearThreemaSafePasswordPatternErrorMessage() {_uniqueStorage()._threemaSafePasswordPatternErrorMessage = nil}
-
-  /// Threema Safe server URL
-  /// References: `th_safe_server_url`
-  var threemaSafeServerURL: String {
-    get {return _storage._threemaSafeServerURL ?? String()}
-    set {_uniqueStorage()._threemaSafeServerURL = newValue}
-  }
-  /// Returns true if `threemaSafeServerURL` has been explicitly set.
-  var hasThreemaSafeServerURL: Bool {return _storage._threemaSafeServerURL != nil}
-  /// Clears the value of `threemaSafeServerURL`. Subsequent reads from it will return its default value.
-  mutating func clearThreemaSafeServerURL() {_uniqueStorage()._threemaSafeServerURL = nil}
-
-  /// Threema Safe server username for authentication
-  /// References: `th_safe_server_username`
-  var threemaSafeServerUsername: String {
-    get {return _storage._threemaSafeServerUsername ?? String()}
-    set {_uniqueStorage()._threemaSafeServerUsername = newValue}
-  }
-  /// Returns true if `threemaSafeServerUsername` has been explicitly set.
-  var hasThreemaSafeServerUsername: Bool {return _storage._threemaSafeServerUsername != nil}
-  /// Clears the value of `threemaSafeServerUsername`. Subsequent reads from it will return its default value.
-  mutating func clearThreemaSafeServerUsername() {_uniqueStorage()._threemaSafeServerUsername = nil}
-
-  /// Threema Safe server password for authentication
-  /// References: `th_safe_server_password`
-  var threemaSafeServerPassword: String {
-    get {return _storage._threemaSafeServerPassword ?? String()}
-    set {_uniqueStorage()._threemaSafeServerPassword = newValue}
-  }
-  /// Returns true if `threemaSafeServerPassword` has been explicitly set.
-  var hasThreemaSafeServerPassword: Bool {return _storage._threemaSafeServerPassword != nil}
-  /// Clears the value of `threemaSafeServerPassword`. Subsequent reads from it will return its default value.
-  mutating func clearThreemaSafeServerPassword() {_uniqueStorage()._threemaSafeServerPassword = nil}
-
-  var threemaSafeRestorePolicy: Sync_MdmParameters.ThreemaSafeRestorePolicy {
-    get {return _storage._threemaSafeRestorePolicy ?? .safeRestoreOptional}
-    set {_uniqueStorage()._threemaSafeRestorePolicy = newValue}
-  }
-  /// Returns true if `threemaSafeRestorePolicy` has been explicitly set.
-  var hasThreemaSafeRestorePolicy: Bool {return _storage._threemaSafeRestorePolicy != nil}
-  /// Clears the value of `threemaSafeRestorePolicy`. Subsequent reads from it will return its default value.
-  mutating func clearThreemaSafeRestorePolicy() {_uniqueStorage()._threemaSafeRestorePolicy = nil}
-
-  /// Threema ID to be restored from Threema Safe (required)
-  /// References: `th_safe_restore_id`
-  var threemaSafeRestoreIdentity: String {
-    get {return _storage._threemaSafeRestoreIdentity ?? String()}
-    set {_uniqueStorage()._threemaSafeRestoreIdentity = newValue}
-  }
-  /// Returns true if `threemaSafeRestoreIdentity` has been explicitly set.
-  var hasThreemaSafeRestoreIdentity: Bool {return _storage._threemaSafeRestoreIdentity != nil}
-  /// Clears the value of `threemaSafeRestoreIdentity`. Subsequent reads from it will return its default value.
-  mutating func clearThreemaSafeRestoreIdentity() {_uniqueStorage()._threemaSafeRestoreIdentity = nil}
-
-  var overridePolicy: Sync_MdmParameters.OverridePolicy {
-    get {return _storage._overridePolicy ?? .loose}
-    set {_uniqueStorage()._overridePolicy = newValue}
-  }
-  /// Returns true if `overridePolicy` has been explicitly set.
-  var hasOverridePolicy: Bool {return _storage._overridePolicy != nil}
-  /// Clears the value of `overridePolicy`. Subsequent reads from it will return its default value.
-  mutating func clearOverridePolicy() {_uniqueStorage()._overridePolicy = nil}
-
-  var contactSyncPolicy: Sync_MdmParameters.ContactSyncPolicy {
-    get {return _storage._contactSyncPolicy ?? .notSynced}
-    set {_uniqueStorage()._contactSyncPolicy = newValue}
-  }
-  /// Returns true if `contactSyncPolicy` has been explicitly set.
-  var hasContactSyncPolicy: Bool {return _storage._contactSyncPolicy != nil}
-  /// Clears the value of `contactSyncPolicy`. Subsequent reads from it will return its default value.
-  mutating func clearContactSyncPolicy() {_uniqueStorage()._contactSyncPolicy = nil}
-
-  var inactiveIdentityDisplayPolicy: Sync_MdmParameters.InactiveIdentityDisplayPolicy {
-    get {return _storage._inactiveIdentityDisplayPolicy ?? .showInactive}
-    set {_uniqueStorage()._inactiveIdentityDisplayPolicy = newValue}
-  }
-  /// Returns true if `inactiveIdentityDisplayPolicy` has been explicitly set.
-  var hasInactiveIdentityDisplayPolicy: Bool {return _storage._inactiveIdentityDisplayPolicy != nil}
-  /// Clears the value of `inactiveIdentityDisplayPolicy`. Subsequent reads from it will return its default value.
-  mutating func clearInactiveIdentityDisplayPolicy() {_uniqueStorage()._inactiveIdentityDisplayPolicy = nil}
-
-  var unknownContactPolicy: Sync_MdmParameters.UnknownContactPolicy {
-    get {return _storage._unknownContactPolicy ?? .allowUnknown}
-    set {_uniqueStorage()._unknownContactPolicy = newValue}
-  }
-  /// Returns true if `unknownContactPolicy` has been explicitly set.
-  var hasUnknownContactPolicy: Bool {return _storage._unknownContactPolicy != nil}
-  /// Clears the value of `unknownContactPolicy`. Subsequent reads from it will return its default value.
-  mutating func clearUnknownContactPolicy() {_uniqueStorage()._unknownContactPolicy = nil}
-
-  var autoSaveMediaPolicy: Sync_MdmParameters.AutoSaveMediaPolicy {
-    get {return _storage._autoSaveMediaPolicy ?? .allowAutoSave}
-    set {_uniqueStorage()._autoSaveMediaPolicy = newValue}
-  }
-  /// Returns true if `autoSaveMediaPolicy` has been explicitly set.
-  var hasAutoSaveMediaPolicy: Bool {return _storage._autoSaveMediaPolicy != nil}
-  /// Clears the value of `autoSaveMediaPolicy`. Subsequent reads from it will return its default value.
-  mutating func clearAutoSaveMediaPolicy() {_uniqueStorage()._autoSaveMediaPolicy = nil}
-
-  var screenshotPolicy: Sync_MdmParameters.ScreenshotPolicy {
-    get {return _storage._screenshotPolicy ?? .allowScreenshot}
-    set {_uniqueStorage()._screenshotPolicy = newValue}
-  }
-  /// Returns true if `screenshotPolicy` has been explicitly set.
-  var hasScreenshotPolicy: Bool {return _storage._screenshotPolicy != nil}
-  /// Clears the value of `screenshotPolicy`. Subsequent reads from it will return its default value.
-  mutating func clearScreenshotPolicy() {_uniqueStorage()._screenshotPolicy = nil}
-
-  var addContactPolicy: Sync_MdmParameters.AddContactPolicy {
-    get {return _storage._addContactPolicy ?? .allowAddContact}
-    set {_uniqueStorage()._addContactPolicy = newValue}
-  }
-  /// Returns true if `addContactPolicy` has been explicitly set.
-  var hasAddContactPolicy: Bool {return _storage._addContactPolicy != nil}
-  /// Clears the value of `addContactPolicy`. Subsequent reads from it will return its default value.
-  mutating func clearAddContactPolicy() {_uniqueStorage()._addContactPolicy = nil}
-
-  var chatExportPolicy: Sync_MdmParameters.ChatExportPolicy {
-    get {return _storage._chatExportPolicy ?? .allowChatExport}
-    set {_uniqueStorage()._chatExportPolicy = newValue}
-  }
-  /// Returns true if `chatExportPolicy` has been explicitly set.
-  var hasChatExportPolicy: Bool {return _storage._chatExportPolicy != nil}
-  /// Clears the value of `chatExportPolicy`. Subsequent reads from it will return its default value.
-  mutating func clearChatExportPolicy() {_uniqueStorage()._chatExportPolicy = nil}
-
-  var backupPolicy: Sync_MdmParameters.BackupPolicy {
-    get {return _storage._backupPolicy ?? .allowBackup}
-    set {_uniqueStorage()._backupPolicy = newValue}
-  }
-  /// Returns true if `backupPolicy` has been explicitly set.
-  var hasBackupPolicy: Bool {return _storage._backupPolicy != nil}
-  /// Clears the value of `backupPolicy`. Subsequent reads from it will return its default value.
-  mutating func clearBackupPolicy() {_uniqueStorage()._backupPolicy = nil}
-
-  var identityExportPolicy: Sync_MdmParameters.IdentityExportPolicy {
-    get {return _storage._identityExportPolicy ?? .allowIdentityExport}
-    set {_uniqueStorage()._identityExportPolicy = newValue}
-  }
-  /// Returns true if `identityExportPolicy` has been explicitly set.
-  var hasIdentityExportPolicy: Bool {return _storage._identityExportPolicy != nil}
-  /// Clears the value of `identityExportPolicy`. Subsequent reads from it will return its default value.
-  mutating func clearIdentityExportPolicy() {_uniqueStorage()._identityExportPolicy = nil}
-
-  var dataBackupPolicy: Sync_MdmParameters.DataBackupPolicy {
-    get {return _storage._dataBackupPolicy ?? .allowDataBackup}
-    set {_uniqueStorage()._dataBackupPolicy = newValue}
-  }
-  /// Returns true if `dataBackupPolicy` has been explicitly set.
-  var hasDataBackupPolicy: Bool {return _storage._dataBackupPolicy != nil}
-  /// Clears the value of `dataBackupPolicy`. Subsequent reads from it will return its default value.
-  mutating func clearDataBackupPolicy() {_uniqueStorage()._dataBackupPolicy = nil}
-
-  var systemBackupPolicy: Sync_MdmParameters.SystemBackupPolicy {
-    get {return _storage._systemBackupPolicy ?? .allowSystemBackup}
-    set {_uniqueStorage()._systemBackupPolicy = newValue}
-  }
-  /// Returns true if `systemBackupPolicy` has been explicitly set.
-  var hasSystemBackupPolicy: Bool {return _storage._systemBackupPolicy != nil}
-  /// Clears the value of `systemBackupPolicy`. Subsequent reads from it will return its default value.
-  mutating func clearSystemBackupPolicy() {_uniqueStorage()._systemBackupPolicy = nil}
-
-  var messagePreviewPolicy: Sync_MdmParameters.MessagePreviewPolicy {
-    get {return _storage._messagePreviewPolicy ?? .allowPreview}
-    set {_uniqueStorage()._messagePreviewPolicy = newValue}
-  }
-  /// Returns true if `messagePreviewPolicy` has been explicitly set.
-  var hasMessagePreviewPolicy: Bool {return _storage._messagePreviewPolicy != nil}
-  /// Clears the value of `messagePreviewPolicy`. Subsequent reads from it will return its default value.
-  mutating func clearMessagePreviewPolicy() {_uniqueStorage()._messagePreviewPolicy = nil}
-
-  var profilePictureSharePolicy: Sync_MdmParameters.ProfilePictureSharePolicy {
-    get {return _storage._profilePictureSharePolicy ?? .allowShare}
-    set {_uniqueStorage()._profilePictureSharePolicy = newValue}
-  }
-  /// Returns true if `profilePictureSharePolicy` has been explicitly set.
-  var hasProfilePictureSharePolicy: Bool {return _storage._profilePictureSharePolicy != nil}
-  /// Clears the value of `profilePictureSharePolicy`. Subsequent reads from it will return its default value.
-  mutating func clearProfilePictureSharePolicy() {_uniqueStorage()._profilePictureSharePolicy = nil}
-
-  var callPolicy: Sync_MdmParameters.CallPolicy {
-    get {return _storage._callPolicy ?? .allowCall}
-    set {_uniqueStorage()._callPolicy = newValue}
-  }
-  /// Returns true if `callPolicy` has been explicitly set.
-  var hasCallPolicy: Bool {return _storage._callPolicy != nil}
-  /// Clears the value of `callPolicy`. Subsequent reads from it will return its default value.
-  mutating func clearCallPolicy() {_uniqueStorage()._callPolicy = nil}
-
-  var setupWizardPolicy: Sync_MdmParameters.SetupWizardPolicy {
-    get {return _storage._setupWizardPolicy ?? .showWizard}
-    set {_uniqueStorage()._setupWizardPolicy = newValue}
-  }
-  /// Returns true if `setupWizardPolicy` has been explicitly set.
-  var hasSetupWizardPolicy: Bool {return _storage._setupWizardPolicy != nil}
-  /// Clears the value of `setupWizardPolicy`. Subsequent reads from it will return its default value.
-  mutating func clearSetupWizardPolicy() {_uniqueStorage()._setupWizardPolicy = nil}
-
-  var createGroupPolicy: Sync_MdmParameters.CreateGroupPolicy {
-    get {return _storage._createGroupPolicy ?? .allowCreateGroup}
-    set {_uniqueStorage()._createGroupPolicy = newValue}
-  }
-  /// Returns true if `createGroupPolicy` has been explicitly set.
-  var hasCreateGroupPolicy: Bool {return _storage._createGroupPolicy != nil}
-  /// Clears the value of `createGroupPolicy`. Subsequent reads from it will return its default value.
-  mutating func clearCreateGroupPolicy() {_uniqueStorage()._createGroupPolicy = nil}
-
-  var shareMediaPolicy: Sync_MdmParameters.ShareMediaPolicy {
-    get {return _storage._shareMediaPolicy ?? .allowShareMedia}
-    set {_uniqueStorage()._shareMediaPolicy = newValue}
-  }
-  /// Returns true if `shareMediaPolicy` has been explicitly set.
-  var hasShareMediaPolicy: Bool {return _storage._shareMediaPolicy != nil}
-  /// Clears the value of `shareMediaPolicy`. Subsequent reads from it will return its default value.
-  mutating func clearShareMediaPolicy() {_uniqueStorage()._shareMediaPolicy = nil}
+  /// The parameter precedence defines how to resolve conflicting parameters
+  /// between an external MDM and the Threema App Configuration.
+  var parameterPrecedence: Sync_MdmParameters.ParameterPrecedence = .threema
 
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  /// Threema Safe configuration (required)
-  /// References: `th_safe_enable`
-  enum ThreemaSafePolicy: SwiftProtobuf.Enum {
+  enum ParameterPrecedence: SwiftProtobuf.Enum {
     typealias RawValue = Int
 
-    /// Configurable by the user
-    case safeOptional // = 0
+    /// On conflict, parameters defined by Threema App Configuration take precedence
+    case threema // = 0
 
-    /// Forcibly enabled
-    case safeMandatory // = 1
-
-    /// Forcibly disabled
-    case safeDisabled // = 2
+    /// On conflict, parameters defined by an external MDM take precedence
+    case external // = 1
     case UNRECOGNIZED(Int)
 
     init() {
-      self = .safeOptional
+      self = .threema
     }
 
     init?(rawValue: Int) {
       switch rawValue {
-      case 0: self = .safeOptional
-      case 1: self = .safeMandatory
-      case 2: self = .safeDisabled
+      case 0: self = .threema
+      case 1: self = .external
       default: self = .UNRECOGNIZED(rawValue)
       }
     }
 
     var rawValue: Int {
       switch self {
-      case .safeOptional: return 0
-      case .safeMandatory: return 1
-      case .safeDisabled: return 2
+      case .threema: return 0
+      case .external: return 1
       case .UNRECOGNIZED(let i): return i
       }
     }
 
   }
 
-  /// Restore policy for restoring from a Threema Safe backup (required)
-  /// References: `th_safe_restore_enable`
-  enum ThreemaSafeRestorePolicy: SwiftProtobuf.Enum {
-    typealias RawValue = Int
+  /// A single MDM parameter.
+  struct Parameter {
+    // SwiftProtobuf.Message conformance is added in an extension below. See the
+    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+    // methods supported on all messages.
 
-    /// Choosable by the user
-    case safeRestoreOptional // = 0
+    var value: Sync_MdmParameters.Parameter.OneOf_Value? = nil
 
-    /// Automatic restore
-    case safeRestoreMandatory // = 1
-
-    /// Forcibly disabled
-    case safeRestoreDisabled // = 2
-    case UNRECOGNIZED(Int)
-
-    init() {
-      self = .safeRestoreOptional
-    }
-
-    init?(rawValue: Int) {
-      switch rawValue {
-      case 0: self = .safeRestoreOptional
-      case 1: self = .safeRestoreMandatory
-      case 2: self = .safeRestoreDisabled
-      default: self = .UNRECOGNIZED(rawValue)
+    /// String parameter
+    var stringValue: String {
+      get {
+        if case .stringValue(let v)? = value {return v}
+        return String()
       }
+      set {value = .stringValue(newValue)}
     }
 
-    var rawValue: Int {
-      switch self {
-      case .safeRestoreOptional: return 0
-      case .safeRestoreMandatory: return 1
-      case .safeRestoreDisabled: return 2
-      case .UNRECOGNIZED(let i): return i
+    /// Boolean parameter
+    var booleanValue: Bool {
+      get {
+        if case .booleanValue(let v)? = value {return v}
+        return false
       }
+      set {value = .booleanValue(newValue)}
     }
 
-  }
+    var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  /// Override policy in regards to MDM parameters (required)
-  /// References: `th_readonly_profile`
-  enum OverridePolicy: SwiftProtobuf.Enum {
-    typealias RawValue = Int
+    enum OneOf_Value: Equatable {
+      /// String parameter
+      case stringValue(String)
+      /// Boolean parameter
+      case booleanValue(Bool)
 
-    /// Allows the user to override some of the MDM parameter presets
-    case loose // = 0
-
-    /// The user may not override any MDM parameter presets
-    case strict // = 1
-    case UNRECOGNIZED(Int)
-
-    init() {
-      self = .loose
-    }
-
-    init?(rawValue: Int) {
-      switch rawValue {
-      case 0: self = .loose
-      case 1: self = .strict
-      default: self = .UNRECOGNIZED(rawValue)
+    #if !swift(>=4.1)
+      static func ==(lhs: Sync_MdmParameters.Parameter.OneOf_Value, rhs: Sync_MdmParameters.Parameter.OneOf_Value) -> Bool {
+        // The use of inline closures is to circumvent an issue where the compiler
+        // allocates stack space for every case branch when no optimizations are
+        // enabled. https://github.com/apple/swift-protobuf/issues/1034
+        switch (lhs, rhs) {
+        case (.stringValue, .stringValue): return {
+          guard case .stringValue(let l) = lhs, case .stringValue(let r) = rhs else { preconditionFailure() }
+          return l == r
+        }()
+        case (.booleanValue, .booleanValue): return {
+          guard case .booleanValue(let l) = lhs, case .booleanValue(let r) = rhs else { preconditionFailure() }
+          return l == r
+        }()
+        default: return false
+        }
       }
+    #endif
     }
 
-    var rawValue: Int {
-      switch self {
-      case .loose: return 0
-      case .strict: return 1
-      case .UNRECOGNIZED(let i): return i
-      }
-    }
-
-  }
-
-  /// Contact synchronisation policy (required)
-  /// References: `th_contact_sync`
-  enum ContactSyncPolicy: SwiftProtobuf.Enum {
-    typealias RawValue = Int
-
-    /// Not synced
-    case notSynced // = 0
-
-    /// Synced
-    case sync // = 1
-    case UNRECOGNIZED(Int)
-
-    init() {
-      self = .notSynced
-    }
-
-    init?(rawValue: Int) {
-      switch rawValue {
-      case 0: self = .notSynced
-      case 1: self = .sync
-      default: self = .UNRECOGNIZED(rawValue)
-      }
-    }
-
-    var rawValue: Int {
-      switch self {
-      case .notSynced: return 0
-      case .sync: return 1
-      case .UNRECOGNIZED(let i): return i
-      }
-    }
-
-  }
-
-  /// Inactive Threema ID display policy (required)
-  /// References: `th_hide_inactive_ids`
-  enum InactiveIdentityDisplayPolicy: SwiftProtobuf.Enum {
-    typealias RawValue = Int
-
-    /// Show inactive IDs
-    case showInactive // = 0
-
-    /// Hide inactive IDs
-    case hideInactive // = 1
-    case UNRECOGNIZED(Int)
-
-    init() {
-      self = .showInactive
-    }
-
-    init?(rawValue: Int) {
-      switch rawValue {
-      case 0: self = .showInactive
-      case 1: self = .hideInactive
-      default: self = .UNRECOGNIZED(rawValue)
-      }
-    }
-
-    var rawValue: Int {
-      switch self {
-      case .showInactive: return 0
-      case .hideInactive: return 1
-      case .UNRECOGNIZED(let i): return i
-      }
-    }
-
-  }
-
-  /// Unknown contacts policy (required)
-  /// References: `th_block_unknown`
-  enum UnknownContactPolicy: SwiftProtobuf.Enum {
-    typealias RawValue = Int
-
-    /// Allowed to contact the user
-    case allowUnknown // = 0
-
-    /// Will be blocked by the user
-    case blockUnknown // = 1
-    case UNRECOGNIZED(Int)
-
-    init() {
-      self = .allowUnknown
-    }
-
-    init?(rawValue: Int) {
-      switch rawValue {
-      case 0: self = .allowUnknown
-      case 1: self = .blockUnknown
-      default: self = .UNRECOGNIZED(rawValue)
-      }
-    }
-
-    var rawValue: Int {
-      switch self {
-      case .allowUnknown: return 0
-      case .blockUnknown: return 1
-      case .UNRECOGNIZED(let i): return i
-      }
-    }
-
-  }
-
-  /// Auto-save media policy (required)
-  /// References: `th_disable_save_to_gallery`
-  enum AutoSaveMediaPolicy: SwiftProtobuf.Enum {
-    typealias RawValue = Int
-
-    /// Allow auto-saving, configurable by the user
-    case allowAutoSave // = 0
-
-    /// Deny auto-saving
-    case denyAutoSave // = 1
-    case UNRECOGNIZED(Int)
-
-    init() {
-      self = .allowAutoSave
-    }
-
-    init?(rawValue: Int) {
-      switch rawValue {
-      case 0: self = .allowAutoSave
-      case 1: self = .denyAutoSave
-      default: self = .UNRECOGNIZED(rawValue)
-      }
-    }
-
-    var rawValue: Int {
-      switch self {
-      case .allowAutoSave: return 0
-      case .denyAutoSave: return 1
-      case .UNRECOGNIZED(let i): return i
-      }
-    }
-
-  }
-
-  /// Screenshot policy (required)
-  /// References: `th_disable_screenshots`
-  enum ScreenshotPolicy: SwiftProtobuf.Enum {
-    typealias RawValue = Int
-
-    /// Allow taking screenshots
-    case allowScreenshot // = 0
-
-    /// Deny taking screenshots, if possible
-    case denyScreenshot // = 1
-    case UNRECOGNIZED(Int)
-
-    init() {
-      self = .allowScreenshot
-    }
-
-    init?(rawValue: Int) {
-      switch rawValue {
-      case 0: self = .allowScreenshot
-      case 1: self = .denyScreenshot
-      default: self = .UNRECOGNIZED(rawValue)
-      }
-    }
-
-    var rawValue: Int {
-      switch self {
-      case .allowScreenshot: return 0
-      case .denyScreenshot: return 1
-      case .UNRECOGNIZED(let i): return i
-      }
-    }
-
-  }
-
-  /// Add contact policy (required)
-  /// References: `th_disable_add_contact`
-  enum AddContactPolicy: SwiftProtobuf.Enum {
-    typealias RawValue = Int
-
-    /// Allow manually adding contacts
-    case allowAddContact // = 0
-
-    /// Deny manually adding contacts
-    case denyAddContact // = 1
-    case UNRECOGNIZED(Int)
-
-    init() {
-      self = .allowAddContact
-    }
-
-    init?(rawValue: Int) {
-      switch rawValue {
-      case 0: self = .allowAddContact
-      case 1: self = .denyAddContact
-      default: self = .UNRECOGNIZED(rawValue)
-      }
-    }
-
-    var rawValue: Int {
-      switch self {
-      case .allowAddContact: return 0
-      case .denyAddContact: return 1
-      case .UNRECOGNIZED(let i): return i
-      }
-    }
-
-  }
-
-  /// Chat export policy (required)
-  /// References: `th_disable_export`
-  enum ChatExportPolicy: SwiftProtobuf.Enum {
-    typealias RawValue = Int
-
-    /// Allow exporting chats
-    case allowChatExport // = 0
-
-    /// Deny exporting of chats
-    case denyChatExport // = 1
-    case UNRECOGNIZED(Int)
-
-    init() {
-      self = .allowChatExport
-    }
-
-    init?(rawValue: Int) {
-      switch rawValue {
-      case 0: self = .allowChatExport
-      case 1: self = .denyChatExport
-      default: self = .UNRECOGNIZED(rawValue)
-      }
-    }
-
-    var rawValue: Int {
-      switch self {
-      case .allowChatExport: return 0
-      case .denyChatExport: return 1
-      case .UNRECOGNIZED(let i): return i
-      }
-    }
-
-  }
-
-  /// Backup policy (required)
-  /// References: `th_disable_backups`
-  enum BackupPolicy: SwiftProtobuf.Enum {
-    typealias RawValue = Int
-
-    /// Generally allow backups to be made
-    case allowBackup // = 0
-
-    /// Deny creating backups
-    case denyBackup // = 1
-    case UNRECOGNIZED(Int)
-
-    init() {
-      self = .allowBackup
-    }
-
-    init?(rawValue: Int) {
-      switch rawValue {
-      case 0: self = .allowBackup
-      case 1: self = .denyBackup
-      default: self = .UNRECOGNIZED(rawValue)
-      }
-    }
-
-    var rawValue: Int {
-      switch self {
-      case .allowBackup: return 0
-      case .denyBackup: return 1
-      case .UNRECOGNIZED(let i): return i
-      }
-    }
-
-  }
-
-  /// Threema ID export policy (required)
-  /// References: `th_disable_id_export`
-  enum IdentityExportPolicy: SwiftProtobuf.Enum {
-    typealias RawValue = Int
-
-    /// Allow exporting of the Threema ID
-    case allowIdentityExport // = 0
-
-    /// Deny exporting of the Threema ID
-    case denyIdentityExport // = 1
-    case UNRECOGNIZED(Int)
-
-    init() {
-      self = .allowIdentityExport
-    }
-
-    init?(rawValue: Int) {
-      switch rawValue {
-      case 0: self = .allowIdentityExport
-      case 1: self = .denyIdentityExport
-      default: self = .UNRECOGNIZED(rawValue)
-      }
-    }
-
-    var rawValue: Int {
-      switch self {
-      case .allowIdentityExport: return 0
-      case .denyIdentityExport: return 1
-      case .UNRECOGNIZED(let i): return i
-      }
-    }
-
-  }
-
-  /// Data backup policy (required)
-  /// References: `th_disable_data_backups`
-  enum DataBackupPolicy: SwiftProtobuf.Enum {
-    typealias RawValue = Int
-
-    /// Allow creating data backups
-    case allowDataBackup // = 0
-
-    /// Deny creating data backups
-    case denyDataBackup // = 1
-    case UNRECOGNIZED(Int)
-
-    init() {
-      self = .allowDataBackup
-    }
-
-    init?(rawValue: Int) {
-      switch rawValue {
-      case 0: self = .allowDataBackup
-      case 1: self = .denyDataBackup
-      default: self = .UNRECOGNIZED(rawValue)
-      }
-    }
-
-    var rawValue: Int {
-      switch self {
-      case .allowDataBackup: return 0
-      case .denyDataBackup: return 1
-      case .UNRECOGNIZED(let i): return i
-      }
-    }
-
-  }
-
-  /// System backup policy (required)
-  /// References: `th_disable_system_backups`
-  enum SystemBackupPolicy: SwiftProtobuf.Enum {
-    typealias RawValue = Int
-
-    /// The system may include app data
-    case allowSystemBackup // = 0
-
-    /// The system is denied from including app data
-    case denySystemBackup // = 1
-    case UNRECOGNIZED(Int)
-
-    init() {
-      self = .allowSystemBackup
-    }
-
-    init?(rawValue: Int) {
-      switch rawValue {
-      case 0: self = .allowSystemBackup
-      case 1: self = .denySystemBackup
-      default: self = .UNRECOGNIZED(rawValue)
-      }
-    }
-
-    var rawValue: Int {
-      switch self {
-      case .allowSystemBackup: return 0
-      case .denySystemBackup: return 1
-      case .UNRECOGNIZED(let i): return i
-      }
-    }
-
-  }
-
-  /// Message preview (required)
-  /// References: `th_disable_message_preview`
-  enum MessagePreviewPolicy: SwiftProtobuf.Enum {
-    typealias RawValue = Int
-
-    /// Allow showing a message preview
-    case allowPreview // = 0
-
-    /// Deny showing a message preview
-    case denyPreview // = 1
-    case UNRECOGNIZED(Int)
-
-    init() {
-      self = .allowPreview
-    }
-
-    init?(rawValue: Int) {
-      switch rawValue {
-      case 0: self = .allowPreview
-      case 1: self = .denyPreview
-      default: self = .UNRECOGNIZED(rawValue)
-      }
-    }
-
-    var rawValue: Int {
-      switch self {
-      case .allowPreview: return 0
-      case .denyPreview: return 1
-      case .UNRECOGNIZED(let i): return i
-      }
-    }
-
-  }
-
-  /// Profile picture sharing policy (required)
-  /// References: `th_disable_send_profile_picture`
-  enum ProfilePictureSharePolicy: SwiftProtobuf.Enum {
-    typealias RawValue = Int
-
-    /// Allow the profile picture to be shared with contacts
-    case allowShare // = 0
-
-    /// Denied from sharing the profile picture with contacts
-    case denyShare // = 1
-    case UNRECOGNIZED(Int)
-
-    init() {
-      self = .allowShare
-    }
-
-    init?(rawValue: Int) {
-      switch rawValue {
-      case 0: self = .allowShare
-      case 1: self = .denyShare
-      default: self = .UNRECOGNIZED(rawValue)
-      }
-    }
-
-    var rawValue: Int {
-      switch self {
-      case .allowShare: return 0
-      case .denyShare: return 1
-      case .UNRECOGNIZED(let i): return i
-      }
-    }
-
-  }
-
-  /// Threema Call policy (required)
-  /// References: `th_disable_calls`
-  enum CallPolicy: SwiftProtobuf.Enum {
-    typealias RawValue = Int
-
-    /// Allow creating/receiving Threema Calls
-    case allowCall // = 0
-
-    /// Denied from creating/receiving any Threema Calls
-    case denyCall // = 1
-    case UNRECOGNIZED(Int)
-
-    init() {
-      self = .allowCall
-    }
-
-    init?(rawValue: Int) {
-      switch rawValue {
-      case 0: self = .allowCall
-      case 1: self = .denyCall
-      default: self = .UNRECOGNIZED(rawValue)
-      }
-    }
-
-    var rawValue: Int {
-      switch self {
-      case .allowCall: return 0
-      case .denyCall: return 1
-      case .UNRECOGNIZED(let i): return i
-      }
-    }
-
-  }
-
-  /// Setup wizard policy (required)
-  /// References: `th_skip_wizard`
-  enum SetupWizardPolicy: SwiftProtobuf.Enum {
-    typealias RawValue = Int
-
-    /// Show the setup wizard
-    case showWizard // = 0
-
-    /// Skip the setup wizard (restores an ID or a backup and sets up the
-    /// profile automatically).
-    case skipWizard // = 1
-    case UNRECOGNIZED(Int)
-
-    init() {
-      self = .showWizard
-    }
-
-    init?(rawValue: Int) {
-      switch rawValue {
-      case 0: self = .showWizard
-      case 1: self = .skipWizard
-      default: self = .UNRECOGNIZED(rawValue)
-      }
-    }
-
-    var rawValue: Int {
-      switch self {
-      case .showWizard: return 0
-      case .skipWizard: return 1
-      case .UNRECOGNIZED(let i): return i
-      }
-    }
-
-  }
-
-  /// Group creation policy (required)
-  /// References: `th_disable_create_group`
-  enum CreateGroupPolicy: SwiftProtobuf.Enum {
-    typealias RawValue = Int
-
-    /// Allow manually creating groups
-    case allowCreateGroup // = 0
-
-    /// Deny manually creating groups
-    case denyCreateGroup // = 1
-    case UNRECOGNIZED(Int)
-
-    init() {
-      self = .allowCreateGroup
-    }
-
-    init?(rawValue: Int) {
-      switch rawValue {
-      case 0: self = .allowCreateGroup
-      case 1: self = .denyCreateGroup
-      default: self = .UNRECOGNIZED(rawValue)
-      }
-    }
-
-    var rawValue: Int {
-      switch self {
-      case .allowCreateGroup: return 0
-      case .denyCreateGroup: return 1
-      case .UNRECOGNIZED(let i): return i
-      }
-    }
-
-  }
-
-  /// Share media policy (required)
-  /// References: `th_disable_share_media`
-  enum ShareMediaPolicy: SwiftProtobuf.Enum {
-    typealias RawValue = Int
-
-    /// Allow unrestricted sharing of media
-    case allowShareMedia // = 0
-
-    /// Deny sharing of media outside of Threema, if possible
-    case denyOutsideApp // = 1
-    case UNRECOGNIZED(Int)
-
-    init() {
-      self = .allowShareMedia
-    }
-
-    init?(rawValue: Int) {
-      switch rawValue {
-      case 0: self = .allowShareMedia
-      case 1: self = .denyOutsideApp
-      default: self = .UNRECOGNIZED(rawValue)
-      }
-    }
-
-    var rawValue: Int {
-      switch self {
-      case .allowShareMedia: return 0
-      case .denyOutsideApp: return 1
-      case .UNRECOGNIZED(let i): return i
-      }
-    }
-
+    init() {}
   }
 
   init() {}
-
-  fileprivate var _storage = _StorageClass.defaultInstance
 }
 
 #if swift(>=4.2)
 
-extension Sync_MdmParameters.ThreemaSafePolicy: CaseIterable {
+extension Sync_MdmParameters.ParameterPrecedence: CaseIterable {
   // The compiler won't synthesize support with the UNRECOGNIZED case.
-  static var allCases: [Sync_MdmParameters.ThreemaSafePolicy] = [
-    .safeOptional,
-    .safeMandatory,
-    .safeDisabled,
-  ]
-}
-
-extension Sync_MdmParameters.ThreemaSafeRestorePolicy: CaseIterable {
-  // The compiler won't synthesize support with the UNRECOGNIZED case.
-  static var allCases: [Sync_MdmParameters.ThreemaSafeRestorePolicy] = [
-    .safeRestoreOptional,
-    .safeRestoreMandatory,
-    .safeRestoreDisabled,
-  ]
-}
-
-extension Sync_MdmParameters.OverridePolicy: CaseIterable {
-  // The compiler won't synthesize support with the UNRECOGNIZED case.
-  static var allCases: [Sync_MdmParameters.OverridePolicy] = [
-    .loose,
-    .strict,
-  ]
-}
-
-extension Sync_MdmParameters.ContactSyncPolicy: CaseIterable {
-  // The compiler won't synthesize support with the UNRECOGNIZED case.
-  static var allCases: [Sync_MdmParameters.ContactSyncPolicy] = [
-    .notSynced,
-    .sync,
-  ]
-}
-
-extension Sync_MdmParameters.InactiveIdentityDisplayPolicy: CaseIterable {
-  // The compiler won't synthesize support with the UNRECOGNIZED case.
-  static var allCases: [Sync_MdmParameters.InactiveIdentityDisplayPolicy] = [
-    .showInactive,
-    .hideInactive,
-  ]
-}
-
-extension Sync_MdmParameters.UnknownContactPolicy: CaseIterable {
-  // The compiler won't synthesize support with the UNRECOGNIZED case.
-  static var allCases: [Sync_MdmParameters.UnknownContactPolicy] = [
-    .allowUnknown,
-    .blockUnknown,
-  ]
-}
-
-extension Sync_MdmParameters.AutoSaveMediaPolicy: CaseIterable {
-  // The compiler won't synthesize support with the UNRECOGNIZED case.
-  static var allCases: [Sync_MdmParameters.AutoSaveMediaPolicy] = [
-    .allowAutoSave,
-    .denyAutoSave,
-  ]
-}
-
-extension Sync_MdmParameters.ScreenshotPolicy: CaseIterable {
-  // The compiler won't synthesize support with the UNRECOGNIZED case.
-  static var allCases: [Sync_MdmParameters.ScreenshotPolicy] = [
-    .allowScreenshot,
-    .denyScreenshot,
-  ]
-}
-
-extension Sync_MdmParameters.AddContactPolicy: CaseIterable {
-  // The compiler won't synthesize support with the UNRECOGNIZED case.
-  static var allCases: [Sync_MdmParameters.AddContactPolicy] = [
-    .allowAddContact,
-    .denyAddContact,
-  ]
-}
-
-extension Sync_MdmParameters.ChatExportPolicy: CaseIterable {
-  // The compiler won't synthesize support with the UNRECOGNIZED case.
-  static var allCases: [Sync_MdmParameters.ChatExportPolicy] = [
-    .allowChatExport,
-    .denyChatExport,
-  ]
-}
-
-extension Sync_MdmParameters.BackupPolicy: CaseIterable {
-  // The compiler won't synthesize support with the UNRECOGNIZED case.
-  static var allCases: [Sync_MdmParameters.BackupPolicy] = [
-    .allowBackup,
-    .denyBackup,
-  ]
-}
-
-extension Sync_MdmParameters.IdentityExportPolicy: CaseIterable {
-  // The compiler won't synthesize support with the UNRECOGNIZED case.
-  static var allCases: [Sync_MdmParameters.IdentityExportPolicy] = [
-    .allowIdentityExport,
-    .denyIdentityExport,
-  ]
-}
-
-extension Sync_MdmParameters.DataBackupPolicy: CaseIterable {
-  // The compiler won't synthesize support with the UNRECOGNIZED case.
-  static var allCases: [Sync_MdmParameters.DataBackupPolicy] = [
-    .allowDataBackup,
-    .denyDataBackup,
-  ]
-}
-
-extension Sync_MdmParameters.SystemBackupPolicy: CaseIterable {
-  // The compiler won't synthesize support with the UNRECOGNIZED case.
-  static var allCases: [Sync_MdmParameters.SystemBackupPolicy] = [
-    .allowSystemBackup,
-    .denySystemBackup,
-  ]
-}
-
-extension Sync_MdmParameters.MessagePreviewPolicy: CaseIterable {
-  // The compiler won't synthesize support with the UNRECOGNIZED case.
-  static var allCases: [Sync_MdmParameters.MessagePreviewPolicy] = [
-    .allowPreview,
-    .denyPreview,
-  ]
-}
-
-extension Sync_MdmParameters.ProfilePictureSharePolicy: CaseIterable {
-  // The compiler won't synthesize support with the UNRECOGNIZED case.
-  static var allCases: [Sync_MdmParameters.ProfilePictureSharePolicy] = [
-    .allowShare,
-    .denyShare,
-  ]
-}
-
-extension Sync_MdmParameters.CallPolicy: CaseIterable {
-  // The compiler won't synthesize support with the UNRECOGNIZED case.
-  static var allCases: [Sync_MdmParameters.CallPolicy] = [
-    .allowCall,
-    .denyCall,
-  ]
-}
-
-extension Sync_MdmParameters.SetupWizardPolicy: CaseIterable {
-  // The compiler won't synthesize support with the UNRECOGNIZED case.
-  static var allCases: [Sync_MdmParameters.SetupWizardPolicy] = [
-    .showWizard,
-    .skipWizard,
-  ]
-}
-
-extension Sync_MdmParameters.CreateGroupPolicy: CaseIterable {
-  // The compiler won't synthesize support with the UNRECOGNIZED case.
-  static var allCases: [Sync_MdmParameters.CreateGroupPolicy] = [
-    .allowCreateGroup,
-    .denyCreateGroup,
-  ]
-}
-
-extension Sync_MdmParameters.ShareMediaPolicy: CaseIterable {
-  // The compiler won't synthesize support with the UNRECOGNIZED case.
-  static var allCases: [Sync_MdmParameters.ShareMediaPolicy] = [
-    .allowShareMedia,
-    .denyOutsideApp,
+  static var allCases: [Sync_MdmParameters.ParameterPrecedence] = [
+    .threema,
+    .external,
   ]
 }
 
@@ -3124,6 +1999,19 @@ struct Sync_DistributionList {
 }
 
 /// App settings
+///
+/// When the user changes one or more settings:
+///
+/// 1. Begin a transaction (scope: `SETTINGS_SYNC`, precondition: none).
+/// 2. For each setting that has been modified, run the associated steps of the
+///    setting and include the modified settings.
+/// 3. Reflect this message and commit the transaction.
+/// 4. Apply the modified settings locally.
+///
+/// When reflected from another device:
+///
+/// 1. For each setting that is being included by this message, run the
+///    associated steps of the setting and apply the modified setting.
 struct Sync_Settings {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
@@ -3520,26 +2408,9 @@ extension Sync_NotificationSoundPolicy: @unchecked Sendable {}
 extension Sync_ConversationVisibility: @unchecked Sendable {}
 extension Sync_ConversationCategory: @unchecked Sendable {}
 extension Sync_MdmParameters: @unchecked Sendable {}
-extension Sync_MdmParameters.ThreemaSafePolicy: @unchecked Sendable {}
-extension Sync_MdmParameters.ThreemaSafeRestorePolicy: @unchecked Sendable {}
-extension Sync_MdmParameters.OverridePolicy: @unchecked Sendable {}
-extension Sync_MdmParameters.ContactSyncPolicy: @unchecked Sendable {}
-extension Sync_MdmParameters.InactiveIdentityDisplayPolicy: @unchecked Sendable {}
-extension Sync_MdmParameters.UnknownContactPolicy: @unchecked Sendable {}
-extension Sync_MdmParameters.AutoSaveMediaPolicy: @unchecked Sendable {}
-extension Sync_MdmParameters.ScreenshotPolicy: @unchecked Sendable {}
-extension Sync_MdmParameters.AddContactPolicy: @unchecked Sendable {}
-extension Sync_MdmParameters.ChatExportPolicy: @unchecked Sendable {}
-extension Sync_MdmParameters.BackupPolicy: @unchecked Sendable {}
-extension Sync_MdmParameters.IdentityExportPolicy: @unchecked Sendable {}
-extension Sync_MdmParameters.DataBackupPolicy: @unchecked Sendable {}
-extension Sync_MdmParameters.SystemBackupPolicy: @unchecked Sendable {}
-extension Sync_MdmParameters.MessagePreviewPolicy: @unchecked Sendable {}
-extension Sync_MdmParameters.ProfilePictureSharePolicy: @unchecked Sendable {}
-extension Sync_MdmParameters.CallPolicy: @unchecked Sendable {}
-extension Sync_MdmParameters.SetupWizardPolicy: @unchecked Sendable {}
-extension Sync_MdmParameters.CreateGroupPolicy: @unchecked Sendable {}
-extension Sync_MdmParameters.ShareMediaPolicy: @unchecked Sendable {}
+extension Sync_MdmParameters.ParameterPrecedence: @unchecked Sendable {}
+extension Sync_MdmParameters.Parameter: @unchecked Sendable {}
+extension Sync_MdmParameters.Parameter.OneOf_Value: @unchecked Sendable {}
 extension Sync_UserProfile: @unchecked Sendable {}
 extension Sync_UserProfile.ProfilePictureShareWith: @unchecked Sendable {}
 extension Sync_UserProfile.ProfilePictureShareWith.OneOf_Policy: @unchecked Sendable {}
@@ -3623,507 +2494,112 @@ extension Sync_ConversationCategory: SwiftProtobuf._ProtoNameProviding {
 extension Sync_MdmParameters: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".MdmParameters"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "license_username"),
-    2: .standard(proto: "license_password"),
-    3: .same(proto: "nickname"),
-    4: .standard(proto: "first_name"),
-    5: .standard(proto: "last_name"),
-    6: .standard(proto: "customer_specific_id"),
-    7: .same(proto: "category"),
-    8: .standard(proto: "linked_email"),
-    9: .standard(proto: "linked_phone"),
-    10: .standard(proto: "identity_restore"),
-    11: .standard(proto: "identity_restore_password"),
-    12: .standard(proto: "threema_safe_policy"),
-    13: .standard(proto: "threema_safe_password"),
-    14: .standard(proto: "threema_safe_password_pattern"),
-    15: .standard(proto: "threema_safe_password_pattern_error_message"),
-    16: .standard(proto: "threema_safe_server_url"),
-    17: .standard(proto: "threema_safe_server_username"),
-    18: .standard(proto: "threema_safe_server_password"),
-    19: .standard(proto: "threema_safe_restore_policy"),
-    20: .standard(proto: "threema_safe_restore_identity"),
-    21: .standard(proto: "override_policy"),
-    22: .standard(proto: "contact_sync_policy"),
-    23: .standard(proto: "inactive_identity_display_policy"),
-    24: .standard(proto: "unknown_contact_policy"),
-    25: .standard(proto: "auto_save_media_policy"),
-    26: .standard(proto: "screenshot_policy"),
-    27: .standard(proto: "add_contact_policy"),
-    28: .standard(proto: "chat_export_policy"),
-    29: .standard(proto: "backup_policy"),
-    30: .standard(proto: "identity_export_policy"),
-    31: .standard(proto: "data_backup_policy"),
-    32: .standard(proto: "system_backup_policy"),
-    33: .standard(proto: "message_preview_policy"),
-    34: .standard(proto: "profile_picture_share_policy"),
-    35: .standard(proto: "call_policy"),
-    36: .standard(proto: "setup_wizard_policy"),
-    37: .standard(proto: "create_group_policy"),
-    38: .standard(proto: "share_media_policy"),
+    1: .standard(proto: "external_parameters"),
+    2: .standard(proto: "threema_parameters"),
+    3: .standard(proto: "parameter_precedence"),
   ]
 
-  fileprivate class _StorageClass {
-    var _licenseUsername: String? = nil
-    var _licensePassword: String? = nil
-    var _nickname: String? = nil
-    var _firstName: String? = nil
-    var _lastName: String? = nil
-    var _customerSpecificID: String? = nil
-    var _category: String? = nil
-    var _linkedEmail: String? = nil
-    var _linkedPhone: String? = nil
-    var _identityRestore: String? = nil
-    var _identityRestorePassword: String? = nil
-    var _threemaSafePolicy: Sync_MdmParameters.ThreemaSafePolicy? = nil
-    var _threemaSafePassword: String? = nil
-    var _threemaSafePasswordPattern: String? = nil
-    var _threemaSafePasswordPatternErrorMessage: String? = nil
-    var _threemaSafeServerURL: String? = nil
-    var _threemaSafeServerUsername: String? = nil
-    var _threemaSafeServerPassword: String? = nil
-    var _threemaSafeRestorePolicy: Sync_MdmParameters.ThreemaSafeRestorePolicy? = nil
-    var _threemaSafeRestoreIdentity: String? = nil
-    var _overridePolicy: Sync_MdmParameters.OverridePolicy? = nil
-    var _contactSyncPolicy: Sync_MdmParameters.ContactSyncPolicy? = nil
-    var _inactiveIdentityDisplayPolicy: Sync_MdmParameters.InactiveIdentityDisplayPolicy? = nil
-    var _unknownContactPolicy: Sync_MdmParameters.UnknownContactPolicy? = nil
-    var _autoSaveMediaPolicy: Sync_MdmParameters.AutoSaveMediaPolicy? = nil
-    var _screenshotPolicy: Sync_MdmParameters.ScreenshotPolicy? = nil
-    var _addContactPolicy: Sync_MdmParameters.AddContactPolicy? = nil
-    var _chatExportPolicy: Sync_MdmParameters.ChatExportPolicy? = nil
-    var _backupPolicy: Sync_MdmParameters.BackupPolicy? = nil
-    var _identityExportPolicy: Sync_MdmParameters.IdentityExportPolicy? = nil
-    var _dataBackupPolicy: Sync_MdmParameters.DataBackupPolicy? = nil
-    var _systemBackupPolicy: Sync_MdmParameters.SystemBackupPolicy? = nil
-    var _messagePreviewPolicy: Sync_MdmParameters.MessagePreviewPolicy? = nil
-    var _profilePictureSharePolicy: Sync_MdmParameters.ProfilePictureSharePolicy? = nil
-    var _callPolicy: Sync_MdmParameters.CallPolicy? = nil
-    var _setupWizardPolicy: Sync_MdmParameters.SetupWizardPolicy? = nil
-    var _createGroupPolicy: Sync_MdmParameters.CreateGroupPolicy? = nil
-    var _shareMediaPolicy: Sync_MdmParameters.ShareMediaPolicy? = nil
-
-    static let defaultInstance = _StorageClass()
-
-    private init() {}
-
-    init(copying source: _StorageClass) {
-      _licenseUsername = source._licenseUsername
-      _licensePassword = source._licensePassword
-      _nickname = source._nickname
-      _firstName = source._firstName
-      _lastName = source._lastName
-      _customerSpecificID = source._customerSpecificID
-      _category = source._category
-      _linkedEmail = source._linkedEmail
-      _linkedPhone = source._linkedPhone
-      _identityRestore = source._identityRestore
-      _identityRestorePassword = source._identityRestorePassword
-      _threemaSafePolicy = source._threemaSafePolicy
-      _threemaSafePassword = source._threemaSafePassword
-      _threemaSafePasswordPattern = source._threemaSafePasswordPattern
-      _threemaSafePasswordPatternErrorMessage = source._threemaSafePasswordPatternErrorMessage
-      _threemaSafeServerURL = source._threemaSafeServerURL
-      _threemaSafeServerUsername = source._threemaSafeServerUsername
-      _threemaSafeServerPassword = source._threemaSafeServerPassword
-      _threemaSafeRestorePolicy = source._threemaSafeRestorePolicy
-      _threemaSafeRestoreIdentity = source._threemaSafeRestoreIdentity
-      _overridePolicy = source._overridePolicy
-      _contactSyncPolicy = source._contactSyncPolicy
-      _inactiveIdentityDisplayPolicy = source._inactiveIdentityDisplayPolicy
-      _unknownContactPolicy = source._unknownContactPolicy
-      _autoSaveMediaPolicy = source._autoSaveMediaPolicy
-      _screenshotPolicy = source._screenshotPolicy
-      _addContactPolicy = source._addContactPolicy
-      _chatExportPolicy = source._chatExportPolicy
-      _backupPolicy = source._backupPolicy
-      _identityExportPolicy = source._identityExportPolicy
-      _dataBackupPolicy = source._dataBackupPolicy
-      _systemBackupPolicy = source._systemBackupPolicy
-      _messagePreviewPolicy = source._messagePreviewPolicy
-      _profilePictureSharePolicy = source._profilePictureSharePolicy
-      _callPolicy = source._callPolicy
-      _setupWizardPolicy = source._setupWizardPolicy
-      _createGroupPolicy = source._createGroupPolicy
-      _shareMediaPolicy = source._shareMediaPolicy
-    }
-  }
-
-  fileprivate mutating func _uniqueStorage() -> _StorageClass {
-    if !isKnownUniquelyReferenced(&_storage) {
-      _storage = _StorageClass(copying: _storage)
-    }
-    return _storage
-  }
-
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
-    _ = _uniqueStorage()
-    try withExtendedLifetime(_storage) { (_storage: _StorageClass) in
-      while let fieldNumber = try decoder.nextFieldNumber() {
-        // The use of inline closures is to circumvent an issue where the compiler
-        // allocates stack space for every case branch when no optimizations are
-        // enabled. https://github.com/apple/swift-protobuf/issues/1034
-        switch fieldNumber {
-        case 1: try { try decoder.decodeSingularStringField(value: &_storage._licenseUsername) }()
-        case 2: try { try decoder.decodeSingularStringField(value: &_storage._licensePassword) }()
-        case 3: try { try decoder.decodeSingularStringField(value: &_storage._nickname) }()
-        case 4: try { try decoder.decodeSingularStringField(value: &_storage._firstName) }()
-        case 5: try { try decoder.decodeSingularStringField(value: &_storage._lastName) }()
-        case 6: try { try decoder.decodeSingularStringField(value: &_storage._customerSpecificID) }()
-        case 7: try { try decoder.decodeSingularStringField(value: &_storage._category) }()
-        case 8: try { try decoder.decodeSingularStringField(value: &_storage._linkedEmail) }()
-        case 9: try { try decoder.decodeSingularStringField(value: &_storage._linkedPhone) }()
-        case 10: try { try decoder.decodeSingularStringField(value: &_storage._identityRestore) }()
-        case 11: try { try decoder.decodeSingularStringField(value: &_storage._identityRestorePassword) }()
-        case 12: try { try decoder.decodeSingularEnumField(value: &_storage._threemaSafePolicy) }()
-        case 13: try { try decoder.decodeSingularStringField(value: &_storage._threemaSafePassword) }()
-        case 14: try { try decoder.decodeSingularStringField(value: &_storage._threemaSafePasswordPattern) }()
-        case 15: try { try decoder.decodeSingularStringField(value: &_storage._threemaSafePasswordPatternErrorMessage) }()
-        case 16: try { try decoder.decodeSingularStringField(value: &_storage._threemaSafeServerURL) }()
-        case 17: try { try decoder.decodeSingularStringField(value: &_storage._threemaSafeServerUsername) }()
-        case 18: try { try decoder.decodeSingularStringField(value: &_storage._threemaSafeServerPassword) }()
-        case 19: try { try decoder.decodeSingularEnumField(value: &_storage._threemaSafeRestorePolicy) }()
-        case 20: try { try decoder.decodeSingularStringField(value: &_storage._threemaSafeRestoreIdentity) }()
-        case 21: try { try decoder.decodeSingularEnumField(value: &_storage._overridePolicy) }()
-        case 22: try { try decoder.decodeSingularEnumField(value: &_storage._contactSyncPolicy) }()
-        case 23: try { try decoder.decodeSingularEnumField(value: &_storage._inactiveIdentityDisplayPolicy) }()
-        case 24: try { try decoder.decodeSingularEnumField(value: &_storage._unknownContactPolicy) }()
-        case 25: try { try decoder.decodeSingularEnumField(value: &_storage._autoSaveMediaPolicy) }()
-        case 26: try { try decoder.decodeSingularEnumField(value: &_storage._screenshotPolicy) }()
-        case 27: try { try decoder.decodeSingularEnumField(value: &_storage._addContactPolicy) }()
-        case 28: try { try decoder.decodeSingularEnumField(value: &_storage._chatExportPolicy) }()
-        case 29: try { try decoder.decodeSingularEnumField(value: &_storage._backupPolicy) }()
-        case 30: try { try decoder.decodeSingularEnumField(value: &_storage._identityExportPolicy) }()
-        case 31: try { try decoder.decodeSingularEnumField(value: &_storage._dataBackupPolicy) }()
-        case 32: try { try decoder.decodeSingularEnumField(value: &_storage._systemBackupPolicy) }()
-        case 33: try { try decoder.decodeSingularEnumField(value: &_storage._messagePreviewPolicy) }()
-        case 34: try { try decoder.decodeSingularEnumField(value: &_storage._profilePictureSharePolicy) }()
-        case 35: try { try decoder.decodeSingularEnumField(value: &_storage._callPolicy) }()
-        case 36: try { try decoder.decodeSingularEnumField(value: &_storage._setupWizardPolicy) }()
-        case 37: try { try decoder.decodeSingularEnumField(value: &_storage._createGroupPolicy) }()
-        case 38: try { try decoder.decodeSingularEnumField(value: &_storage._shareMediaPolicy) }()
-        default: break
-        }
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeMapField(fieldType: SwiftProtobuf._ProtobufMessageMap<SwiftProtobuf.ProtobufString,Sync_MdmParameters.Parameter>.self, value: &self.externalParameters) }()
+      case 2: try { try decoder.decodeMapField(fieldType: SwiftProtobuf._ProtobufMessageMap<SwiftProtobuf.ProtobufString,Sync_MdmParameters.Parameter>.self, value: &self.threemaParameters) }()
+      case 3: try { try decoder.decodeSingularEnumField(value: &self.parameterPrecedence) }()
+      default: break
       }
     }
   }
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    try withExtendedLifetime(_storage) { (_storage: _StorageClass) in
-      // The use of inline closures is to circumvent an issue where the compiler
-      // allocates stack space for every if/case branch local when no optimizations
-      // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
-      // https://github.com/apple/swift-protobuf/issues/1182
-      try { if let v = _storage._licenseUsername {
-        try visitor.visitSingularStringField(value: v, fieldNumber: 1)
-      } }()
-      try { if let v = _storage._licensePassword {
-        try visitor.visitSingularStringField(value: v, fieldNumber: 2)
-      } }()
-      try { if let v = _storage._nickname {
-        try visitor.visitSingularStringField(value: v, fieldNumber: 3)
-      } }()
-      try { if let v = _storage._firstName {
-        try visitor.visitSingularStringField(value: v, fieldNumber: 4)
-      } }()
-      try { if let v = _storage._lastName {
-        try visitor.visitSingularStringField(value: v, fieldNumber: 5)
-      } }()
-      try { if let v = _storage._customerSpecificID {
-        try visitor.visitSingularStringField(value: v, fieldNumber: 6)
-      } }()
-      try { if let v = _storage._category {
-        try visitor.visitSingularStringField(value: v, fieldNumber: 7)
-      } }()
-      try { if let v = _storage._linkedEmail {
-        try visitor.visitSingularStringField(value: v, fieldNumber: 8)
-      } }()
-      try { if let v = _storage._linkedPhone {
-        try visitor.visitSingularStringField(value: v, fieldNumber: 9)
-      } }()
-      try { if let v = _storage._identityRestore {
-        try visitor.visitSingularStringField(value: v, fieldNumber: 10)
-      } }()
-      try { if let v = _storage._identityRestorePassword {
-        try visitor.visitSingularStringField(value: v, fieldNumber: 11)
-      } }()
-      try { if let v = _storage._threemaSafePolicy {
-        try visitor.visitSingularEnumField(value: v, fieldNumber: 12)
-      } }()
-      try { if let v = _storage._threemaSafePassword {
-        try visitor.visitSingularStringField(value: v, fieldNumber: 13)
-      } }()
-      try { if let v = _storage._threemaSafePasswordPattern {
-        try visitor.visitSingularStringField(value: v, fieldNumber: 14)
-      } }()
-      try { if let v = _storage._threemaSafePasswordPatternErrorMessage {
-        try visitor.visitSingularStringField(value: v, fieldNumber: 15)
-      } }()
-      try { if let v = _storage._threemaSafeServerURL {
-        try visitor.visitSingularStringField(value: v, fieldNumber: 16)
-      } }()
-      try { if let v = _storage._threemaSafeServerUsername {
-        try visitor.visitSingularStringField(value: v, fieldNumber: 17)
-      } }()
-      try { if let v = _storage._threemaSafeServerPassword {
-        try visitor.visitSingularStringField(value: v, fieldNumber: 18)
-      } }()
-      try { if let v = _storage._threemaSafeRestorePolicy {
-        try visitor.visitSingularEnumField(value: v, fieldNumber: 19)
-      } }()
-      try { if let v = _storage._threemaSafeRestoreIdentity {
-        try visitor.visitSingularStringField(value: v, fieldNumber: 20)
-      } }()
-      try { if let v = _storage._overridePolicy {
-        try visitor.visitSingularEnumField(value: v, fieldNumber: 21)
-      } }()
-      try { if let v = _storage._contactSyncPolicy {
-        try visitor.visitSingularEnumField(value: v, fieldNumber: 22)
-      } }()
-      try { if let v = _storage._inactiveIdentityDisplayPolicy {
-        try visitor.visitSingularEnumField(value: v, fieldNumber: 23)
-      } }()
-      try { if let v = _storage._unknownContactPolicy {
-        try visitor.visitSingularEnumField(value: v, fieldNumber: 24)
-      } }()
-      try { if let v = _storage._autoSaveMediaPolicy {
-        try visitor.visitSingularEnumField(value: v, fieldNumber: 25)
-      } }()
-      try { if let v = _storage._screenshotPolicy {
-        try visitor.visitSingularEnumField(value: v, fieldNumber: 26)
-      } }()
-      try { if let v = _storage._addContactPolicy {
-        try visitor.visitSingularEnumField(value: v, fieldNumber: 27)
-      } }()
-      try { if let v = _storage._chatExportPolicy {
-        try visitor.visitSingularEnumField(value: v, fieldNumber: 28)
-      } }()
-      try { if let v = _storage._backupPolicy {
-        try visitor.visitSingularEnumField(value: v, fieldNumber: 29)
-      } }()
-      try { if let v = _storage._identityExportPolicy {
-        try visitor.visitSingularEnumField(value: v, fieldNumber: 30)
-      } }()
-      try { if let v = _storage._dataBackupPolicy {
-        try visitor.visitSingularEnumField(value: v, fieldNumber: 31)
-      } }()
-      try { if let v = _storage._systemBackupPolicy {
-        try visitor.visitSingularEnumField(value: v, fieldNumber: 32)
-      } }()
-      try { if let v = _storage._messagePreviewPolicy {
-        try visitor.visitSingularEnumField(value: v, fieldNumber: 33)
-      } }()
-      try { if let v = _storage._profilePictureSharePolicy {
-        try visitor.visitSingularEnumField(value: v, fieldNumber: 34)
-      } }()
-      try { if let v = _storage._callPolicy {
-        try visitor.visitSingularEnumField(value: v, fieldNumber: 35)
-      } }()
-      try { if let v = _storage._setupWizardPolicy {
-        try visitor.visitSingularEnumField(value: v, fieldNumber: 36)
-      } }()
-      try { if let v = _storage._createGroupPolicy {
-        try visitor.visitSingularEnumField(value: v, fieldNumber: 37)
-      } }()
-      try { if let v = _storage._shareMediaPolicy {
-        try visitor.visitSingularEnumField(value: v, fieldNumber: 38)
-      } }()
+    if !self.externalParameters.isEmpty {
+      try visitor.visitMapField(fieldType: SwiftProtobuf._ProtobufMessageMap<SwiftProtobuf.ProtobufString,Sync_MdmParameters.Parameter>.self, value: self.externalParameters, fieldNumber: 1)
+    }
+    if !self.threemaParameters.isEmpty {
+      try visitor.visitMapField(fieldType: SwiftProtobuf._ProtobufMessageMap<SwiftProtobuf.ProtobufString,Sync_MdmParameters.Parameter>.self, value: self.threemaParameters, fieldNumber: 2)
+    }
+    if self.parameterPrecedence != .threema {
+      try visitor.visitSingularEnumField(value: self.parameterPrecedence, fieldNumber: 3)
     }
     try unknownFields.traverse(visitor: &visitor)
   }
 
   static func ==(lhs: Sync_MdmParameters, rhs: Sync_MdmParameters) -> Bool {
-    if lhs._storage !== rhs._storage {
-      let storagesAreEqual: Bool = withExtendedLifetime((lhs._storage, rhs._storage)) { (_args: (_StorageClass, _StorageClass)) in
-        let _storage = _args.0
-        let rhs_storage = _args.1
-        if _storage._licenseUsername != rhs_storage._licenseUsername {return false}
-        if _storage._licensePassword != rhs_storage._licensePassword {return false}
-        if _storage._nickname != rhs_storage._nickname {return false}
-        if _storage._firstName != rhs_storage._firstName {return false}
-        if _storage._lastName != rhs_storage._lastName {return false}
-        if _storage._customerSpecificID != rhs_storage._customerSpecificID {return false}
-        if _storage._category != rhs_storage._category {return false}
-        if _storage._linkedEmail != rhs_storage._linkedEmail {return false}
-        if _storage._linkedPhone != rhs_storage._linkedPhone {return false}
-        if _storage._identityRestore != rhs_storage._identityRestore {return false}
-        if _storage._identityRestorePassword != rhs_storage._identityRestorePassword {return false}
-        if _storage._threemaSafePolicy != rhs_storage._threemaSafePolicy {return false}
-        if _storage._threemaSafePassword != rhs_storage._threemaSafePassword {return false}
-        if _storage._threemaSafePasswordPattern != rhs_storage._threemaSafePasswordPattern {return false}
-        if _storage._threemaSafePasswordPatternErrorMessage != rhs_storage._threemaSafePasswordPatternErrorMessage {return false}
-        if _storage._threemaSafeServerURL != rhs_storage._threemaSafeServerURL {return false}
-        if _storage._threemaSafeServerUsername != rhs_storage._threemaSafeServerUsername {return false}
-        if _storage._threemaSafeServerPassword != rhs_storage._threemaSafeServerPassword {return false}
-        if _storage._threemaSafeRestorePolicy != rhs_storage._threemaSafeRestorePolicy {return false}
-        if _storage._threemaSafeRestoreIdentity != rhs_storage._threemaSafeRestoreIdentity {return false}
-        if _storage._overridePolicy != rhs_storage._overridePolicy {return false}
-        if _storage._contactSyncPolicy != rhs_storage._contactSyncPolicy {return false}
-        if _storage._inactiveIdentityDisplayPolicy != rhs_storage._inactiveIdentityDisplayPolicy {return false}
-        if _storage._unknownContactPolicy != rhs_storage._unknownContactPolicy {return false}
-        if _storage._autoSaveMediaPolicy != rhs_storage._autoSaveMediaPolicy {return false}
-        if _storage._screenshotPolicy != rhs_storage._screenshotPolicy {return false}
-        if _storage._addContactPolicy != rhs_storage._addContactPolicy {return false}
-        if _storage._chatExportPolicy != rhs_storage._chatExportPolicy {return false}
-        if _storage._backupPolicy != rhs_storage._backupPolicy {return false}
-        if _storage._identityExportPolicy != rhs_storage._identityExportPolicy {return false}
-        if _storage._dataBackupPolicy != rhs_storage._dataBackupPolicy {return false}
-        if _storage._systemBackupPolicy != rhs_storage._systemBackupPolicy {return false}
-        if _storage._messagePreviewPolicy != rhs_storage._messagePreviewPolicy {return false}
-        if _storage._profilePictureSharePolicy != rhs_storage._profilePictureSharePolicy {return false}
-        if _storage._callPolicy != rhs_storage._callPolicy {return false}
-        if _storage._setupWizardPolicy != rhs_storage._setupWizardPolicy {return false}
-        if _storage._createGroupPolicy != rhs_storage._createGroupPolicy {return false}
-        if _storage._shareMediaPolicy != rhs_storage._shareMediaPolicy {return false}
-        return true
-      }
-      if !storagesAreEqual {return false}
-    }
+    if lhs.externalParameters != rhs.externalParameters {return false}
+    if lhs.threemaParameters != rhs.threemaParameters {return false}
+    if lhs.parameterPrecedence != rhs.parameterPrecedence {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
 }
 
-extension Sync_MdmParameters.ThreemaSafePolicy: SwiftProtobuf._ProtoNameProviding {
+extension Sync_MdmParameters.ParameterPrecedence: SwiftProtobuf._ProtoNameProviding {
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "SAFE_OPTIONAL"),
-    1: .same(proto: "SAFE_MANDATORY"),
-    2: .same(proto: "SAFE_DISABLED"),
+    0: .same(proto: "THREEMA"),
+    1: .same(proto: "EXTERNAL"),
   ]
 }
 
-extension Sync_MdmParameters.ThreemaSafeRestorePolicy: SwiftProtobuf._ProtoNameProviding {
+extension Sync_MdmParameters.Parameter: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = Sync_MdmParameters.protoMessageName + ".Parameter"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "SAFE_RESTORE_OPTIONAL"),
-    1: .same(proto: "SAFE_RESTORE_MANDATORY"),
-    2: .same(proto: "SAFE_RESTORE_DISABLED"),
+    1: .standard(proto: "string_value"),
+    2: .standard(proto: "boolean_value"),
   ]
-}
 
-extension Sync_MdmParameters.OverridePolicy: SwiftProtobuf._ProtoNameProviding {
-  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "LOOSE"),
-    1: .same(proto: "STRICT"),
-  ]
-}
+  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try {
+        var v: String?
+        try decoder.decodeSingularStringField(value: &v)
+        if let v = v {
+          if self.value != nil {try decoder.handleConflictingOneOf()}
+          self.value = .stringValue(v)
+        }
+      }()
+      case 2: try {
+        var v: Bool?
+        try decoder.decodeSingularBoolField(value: &v)
+        if let v = v {
+          if self.value != nil {try decoder.handleConflictingOneOf()}
+          self.value = .booleanValue(v)
+        }
+      }()
+      default: break
+      }
+    }
+  }
 
-extension Sync_MdmParameters.ContactSyncPolicy: SwiftProtobuf._ProtoNameProviding {
-  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "NOT_SYNCED"),
-    1: .same(proto: "SYNC"),
-  ]
-}
+  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
+    switch self.value {
+    case .stringValue?: try {
+      guard case .stringValue(let v)? = self.value else { preconditionFailure() }
+      try visitor.visitSingularStringField(value: v, fieldNumber: 1)
+    }()
+    case .booleanValue?: try {
+      guard case .booleanValue(let v)? = self.value else { preconditionFailure() }
+      try visitor.visitSingularBoolField(value: v, fieldNumber: 2)
+    }()
+    case nil: break
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
 
-extension Sync_MdmParameters.InactiveIdentityDisplayPolicy: SwiftProtobuf._ProtoNameProviding {
-  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "SHOW_INACTIVE"),
-    1: .same(proto: "HIDE_INACTIVE"),
-  ]
-}
-
-extension Sync_MdmParameters.UnknownContactPolicy: SwiftProtobuf._ProtoNameProviding {
-  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "ALLOW_UNKNOWN"),
-    1: .same(proto: "BLOCK_UNKNOWN"),
-  ]
-}
-
-extension Sync_MdmParameters.AutoSaveMediaPolicy: SwiftProtobuf._ProtoNameProviding {
-  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "ALLOW_AUTO_SAVE"),
-    1: .same(proto: "DENY_AUTO_SAVE"),
-  ]
-}
-
-extension Sync_MdmParameters.ScreenshotPolicy: SwiftProtobuf._ProtoNameProviding {
-  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "ALLOW_SCREENSHOT"),
-    1: .same(proto: "DENY_SCREENSHOT"),
-  ]
-}
-
-extension Sync_MdmParameters.AddContactPolicy: SwiftProtobuf._ProtoNameProviding {
-  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "ALLOW_ADD_CONTACT"),
-    1: .same(proto: "DENY_ADD_CONTACT"),
-  ]
-}
-
-extension Sync_MdmParameters.ChatExportPolicy: SwiftProtobuf._ProtoNameProviding {
-  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "ALLOW_CHAT_EXPORT"),
-    1: .same(proto: "DENY_CHAT_EXPORT"),
-  ]
-}
-
-extension Sync_MdmParameters.BackupPolicy: SwiftProtobuf._ProtoNameProviding {
-  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "ALLOW_BACKUP"),
-    1: .same(proto: "DENY_BACKUP"),
-  ]
-}
-
-extension Sync_MdmParameters.IdentityExportPolicy: SwiftProtobuf._ProtoNameProviding {
-  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "ALLOW_IDENTITY_EXPORT"),
-    1: .same(proto: "DENY_IDENTITY_EXPORT"),
-  ]
-}
-
-extension Sync_MdmParameters.DataBackupPolicy: SwiftProtobuf._ProtoNameProviding {
-  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "ALLOW_DATA_BACKUP"),
-    1: .same(proto: "DENY_DATA_BACKUP"),
-  ]
-}
-
-extension Sync_MdmParameters.SystemBackupPolicy: SwiftProtobuf._ProtoNameProviding {
-  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "ALLOW_SYSTEM_BACKUP"),
-    1: .same(proto: "DENY_SYSTEM_BACKUP"),
-  ]
-}
-
-extension Sync_MdmParameters.MessagePreviewPolicy: SwiftProtobuf._ProtoNameProviding {
-  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "ALLOW_PREVIEW"),
-    1: .same(proto: "DENY_PREVIEW"),
-  ]
-}
-
-extension Sync_MdmParameters.ProfilePictureSharePolicy: SwiftProtobuf._ProtoNameProviding {
-  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "ALLOW_SHARE"),
-    1: .same(proto: "DENY_SHARE"),
-  ]
-}
-
-extension Sync_MdmParameters.CallPolicy: SwiftProtobuf._ProtoNameProviding {
-  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "ALLOW_CALL"),
-    1: .same(proto: "DENY_CALL"),
-  ]
-}
-
-extension Sync_MdmParameters.SetupWizardPolicy: SwiftProtobuf._ProtoNameProviding {
-  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "SHOW_WIZARD"),
-    1: .same(proto: "SKIP_WIZARD"),
-  ]
-}
-
-extension Sync_MdmParameters.CreateGroupPolicy: SwiftProtobuf._ProtoNameProviding {
-  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "ALLOW_CREATE_GROUP"),
-    1: .same(proto: "DENY_CREATE_GROUP"),
-  ]
-}
-
-extension Sync_MdmParameters.ShareMediaPolicy: SwiftProtobuf._ProtoNameProviding {
-  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "ALLOW_SHARE_MEDIA"),
-    1: .same(proto: "DENY_OUTSIDE_APP"),
-  ]
+  static func ==(lhs: Sync_MdmParameters.Parameter, rhs: Sync_MdmParameters.Parameter) -> Bool {
+    if lhs.value != rhs.value {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
 }
 
 extension Sync_UserProfile: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {

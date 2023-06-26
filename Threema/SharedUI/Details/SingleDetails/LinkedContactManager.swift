@@ -27,10 +27,11 @@ import Foundation
 ///
 /// This class has four main functionalities. All of them handle also access rights to system contacts.
 /// 1. Observe linked contact changes
-/// 2. Manage linked contact. Choose a new one when none is linked or change it if there is an existing link. (`linkContact(in:of:)`)
+/// 2. Manage linked contact. Choose a new one when none is linked or change it if there is an existing link.
+///   (`linkContact(in:of:)`)
 /// 3. Get display text for the button managing the linking. (`linkedContactTitle` & `linkedContactDescription`)
 /// 4. Open the edit screen. The system contact edit screen when a linked contact exists, the provided screen otherwise.
-///     (`editContact(in:provider:)`)
+///   (`editContact(in:provider:)`)
 class LinkedContactManger: NSObject {
     
     // MARK: - Private properties
@@ -208,7 +209,7 @@ extension LinkedContactManger {
 
 // MARK: - Shared
 
-private extension LinkedContactManger {
+extension LinkedContactManger {
     private func requestAccess(authorized: @escaping () -> Void, denied: (() -> Void)? = nil) {
         cnContactStore.requestAccess(for: .contacts) { granted, error in
             if granted {
@@ -224,16 +225,16 @@ private extension LinkedContactManger {
                 }
             }
             
-            if let error = error {
+            if let error {
                 DDLogError("Error asking for CNContacts access: \(error.localizedDescription)")
             }
         }
     }
 }
 
-private extension CNContactViewController {
+extension CNContactViewController {
     // Some custom settings are needed to make `CNContactViewController` appear as expected.
-    func applyWorkarounds() {
+    fileprivate func applyWorkarounds() {
         // Enforce appearance to match app tint color
         view.tintColor = .primary
         
@@ -297,7 +298,8 @@ extension LinkedContactManger {
     
     /// Manage linking of contact to a `CNContact`
     ///
-    /// Complete flow to link new `CNContact` or  manage existing linking. This includes asking for permission if there's no access
+    /// Complete flow to link new `CNContact` or  manage existing linking. This includes asking for permission if
+    /// there's no access
     /// to contacts.
     ///
     /// (See implementation for flow documentation.)
@@ -440,7 +442,7 @@ extension LinkedContactManger {
     }
     
     private func presentCurrentCNContact(with viewController: UIViewController) {
-        guard let cnContact = cnContact else {
+        guard let cnContact else {
             DDLogError("CNContact not found")
             return
         }
@@ -555,7 +557,7 @@ extension LinkedContactManger {
             return "[unknown status]" // This should never be reached
         }
         
-        guard let contactDescription = contactDescription else {
+        guard let contactDescription else {
             return BundleUtil.localizedString(forKey: "[not found]")
         }
         
@@ -563,7 +565,7 @@ extension LinkedContactManger {
     }
     
     private var contactDescription: String? {
-        guard let cnContact = cnContact else {
+        guard let cnContact else {
             return nil
         }
         
@@ -641,8 +643,9 @@ extension LinkedContactManger {
     
     /// Edit contact managed by this contact
     ///
-    /// Complete flow to edit a contact. For accessible linked contacts the system contact edit sheet is shown. If not accessible an
-    /// alert is presented depending on the access settings. If no contact is linked the provided edit screen is presented.
+    /// Complete flow to edit a contact. For accessible linked contacts the system contact edit sheet is shown. If not
+    /// accessible an alert is presented depending on the access settings. If no contact is linked the provided edit
+    /// screen is presented.
     ///
     /// - Parameters:
     ///   - viewController: View Controller to present screens and alerts on
@@ -790,7 +793,7 @@ extension LinkedContactManger {
     }
 
     private func presentEditCNContact(with viewController: UIViewController) {
-        guard let cnContact = cnContact else {
+        guard let cnContact else {
             DDLogError("CNContact not found")
             return
         }
@@ -829,7 +832,7 @@ extension LinkedContactManger: CNContactViewControllerDelegate {
         // Hide view controller when editing of CNContact is completed ("Done" or "Cancel")
         viewController.dismiss(animated: true)
         // We need force relink the contact in order to import the changes from the address book again
-        if let contact = contact {
+        if let contact {
             ContactStore.shared().link(self.contact, toCnContactID: contact.identifier)
         }
     }

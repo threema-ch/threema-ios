@@ -24,7 +24,7 @@ import Foundation
     public var callID: UInt32
     
     public init(callID: UInt32?) {
-        guard let callID = callID else {
+        guard let callID else {
             self.callID = 0
             return
         }

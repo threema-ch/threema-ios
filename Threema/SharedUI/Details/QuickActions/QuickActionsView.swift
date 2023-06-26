@@ -21,6 +21,8 @@
 import CocoaLumberjackSwift
 import UIKit
 
+// MARK: - QuickActionsView.Configuration
+
 extension QuickActionsView {
     /// Configuration for a quick actions view
     struct Configuration {
@@ -30,7 +32,8 @@ extension QuickActionsView {
 
 /// Show a set of quick actions
 ///
-/// Show up to 4 quick action buttons. The arrangement is adapted dynamically based on the title length and dynamic font.
+/// Show up to 4 quick action buttons. The arrangement is adapted dynamically based on the title length and dynamic
+/// font.
 ///
 /// To change the actions shown change the `quickActions` property.
 class QuickActionsView: UIStackView {
@@ -75,7 +78,7 @@ class QuickActionsView: UIStackView {
         
         configureView()
         
-        if let quickActions = quickActions {
+        if let quickActions {
             self.quickActions = quickActions
             replaceQuickActions(with: quickActions)
         }

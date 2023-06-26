@@ -35,7 +35,7 @@ class ChatViewTypingIndicatorImageView: UIImageView {
                 return
             }
             
-            guard let drawFrame = drawFrame else {
+            guard let drawFrame else {
                 return
             }
             
@@ -85,14 +85,15 @@ class ChatViewTypingIndicatorImageView: UIImageView {
     
     func updateColors() {
         Task {
-            guard let drawFrame = drawFrame else {
+            guard let drawFrame else {
                 return
             }
             
             guard drawFrame.width > 0, drawFrame.height > 0 else {
                 return
             }
-            /// This is required to run on the main actor which in turn means that this task will also run on the main actor which limits its usefulness.
+            /// This is required to run on the main actor which in turn means that this task will also run on the main
+            /// actor which limits its usefulness.
             image = await updateImage(for: drawFrame)
         }
     }

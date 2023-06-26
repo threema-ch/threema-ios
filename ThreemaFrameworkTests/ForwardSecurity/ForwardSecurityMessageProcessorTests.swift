@@ -447,7 +447,8 @@ class ForwardSecurityMessageProcessorTests: XCTestCase {
         try sendTextMessage(message: ForwardSecurityMessageProcessorTests.aliceMessage6, senderContext: aliceContext)
         
         // Now Bob finally gets the initial messages from Alice, after he has already started his own session.
-        // The first decapsulated message should be the 2DH text message from Alice, and the second one should be in 4DH mode.
+        // The first decapsulated message should be the 2DH text message from Alice, and the second one should be in 4DH
+        // mode.
         let receivedMessages = try processReceivedMessages(senderContext: aliceContext, recipientContext: bobContext)
         XCTAssertEqual(receivedMessages.count, 2)
         XCTAssertEqual(

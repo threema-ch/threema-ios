@@ -43,10 +43,11 @@ class ConversationsViewControllerHelper {
         completion: @escaping () -> Void
     ) {
         
-        guard let indexPaths = indexPaths else {
+        guard let indexPaths else {
             return
         }
-        // Sort and reverse in order to edit conversations from bottom to top in tableView, because the indexPaths are given in order of selection
+        // Sort and reverse in order to edit conversations from bottom to top in tableView, because the indexPaths are
+        // given in order of selection
         for indexPath in indexPaths.sorted().reversed() {
             guard let conversation = fetchedResultsController.object(at: indexPath) as? Conversation else {
                 return
@@ -70,10 +71,11 @@ class ConversationsViewControllerHelper {
         completion: @escaping () -> Void
     ) {
         
-        guard let indexPaths = indexPaths else {
+        guard let indexPaths else {
             return
         }
-        // Sort and reverse in order to edit conversations from bottom to top in tableView, because the indexPaths are given in order of selection
+        // Sort and reverse in order to edit conversations from bottom to top in tableView, because the indexPaths are
+        // given in order of selection
         for indexPath in indexPaths.sorted().reversed() {
             guard let conversation = fetchedResultsController.object(at: indexPath) as? Conversation else {
                 return
@@ -97,10 +99,11 @@ class ConversationsViewControllerHelper {
         completion: @escaping () -> Void
     ) {
         
-        guard let indexPaths = indexPaths else {
+        guard let indexPaths else {
             return
         }
-        // Sort and reverse in order to edit conversations from bottom to top in tableView, because the indexPaths are given in order of selection
+        // Sort and reverse in order to edit conversations from bottom to top in tableView, because the indexPaths are
+        // given in order of selection
         for indexPath in indexPaths.sorted().reversed() {
             guard let conversation = fetchedResultsController.object(at: indexPath) as? Conversation else {
                 return
@@ -124,10 +127,11 @@ class ConversationsViewControllerHelper {
         completion: @escaping () -> Void
     ) {
         
-        guard let indexPaths = indexPaths else {
+        guard let indexPaths else {
             return
         }
-        // Sort and reverse in order to edit conversations from bottom to top in tableView, because the indexPaths are given in order of selection
+        // Sort and reverse in order to edit conversations from bottom to top in tableView, because the indexPaths are
+        // given in order of selection
         for indexPath in indexPaths.sorted().reversed() {
             guard let conversation = fetchedResultsController.object(at: indexPath) as? Conversation else {
                 return
@@ -150,7 +154,7 @@ class ConversationsViewControllerHelper {
         deleteHiddenContacts: Bool,
         entityManager: EntityManager
     ) {
-        if let group = group {
+        if let group {
             guard group.state != .active, group.state != .requestedSync else {
                 return
             }
@@ -270,7 +274,7 @@ class ConversationsViewControllerHelper {
         // if self is member show option to leave and leave + delete,
         // or i'm creator to dissolve (delete) or otherwise just delete
         if group.isSelfMember {
-            if let singleFunction = singleFunction {
+            if let singleFunction {
                 // Single function
                 if group.isOwnGroup {
                     switch singleFunction {

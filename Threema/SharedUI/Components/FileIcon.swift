@@ -20,6 +20,8 @@
 
 import UIKit
 
+// MARK: - FileIcon.Configuration
+
 extension FileIcon {
     enum Configuration {
         /// Offset of label or symbol from center of icon

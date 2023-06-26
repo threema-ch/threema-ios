@@ -20,6 +20,7 @@
 
 import CocoaLumberjackSwift
 import PromiseKit
+import SwiftUI
 import UIKit
 
 final class StorageManagementViewController: ThemedCodeModernGroupedTableViewController {
@@ -246,11 +247,21 @@ extension StorageManagementViewController: UITableViewDelegate {
                 conversation: conversation,
                 businessInjector: businessInjector
             )
-            self.navigationController?.pushViewController(storageManagementConversationViewController, animated: true)
+            navigationController?.pushViewController(storageManagementConversationViewController, animated: true)
         }
         if case .manageAllConversations = row {
             let storageManagementConversationViewController = StorageManagementConversationViewController()
-            self.navigationController?.pushViewController(storageManagementConversationViewController, animated: true)
+            navigationController?.pushViewController(storageManagementConversationViewController, animated: true)
         }
+    }
+}
+
+// MARK: - UIViewControllerRepresentable
+
+struct StorageManagementViewControllerRepresentable: UIViewControllerRepresentable {
+    func updateUIViewController(_ uiViewController: UIViewControllerType, context: Context) { }
+    
+    func makeUIViewController(context: Context) -> some UIViewController {
+        StorageManagementViewController()
     }
 }

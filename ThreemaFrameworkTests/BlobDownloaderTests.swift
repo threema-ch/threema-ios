@@ -49,7 +49,7 @@ class BlobDownloaderTests: XCTestCase {
         var resolvedURL: URL!
         
         blobURL.download(blobID: blobID, origin: .public) { url, _ in
-            guard let url = url else {
+            guard let url else {
                 XCTFail("URL is nil")
                 return
             }

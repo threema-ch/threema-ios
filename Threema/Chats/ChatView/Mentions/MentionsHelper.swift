@@ -32,7 +32,8 @@ class MentionsHelper {
             runLogger(text: text, location: location, currMention: currMention)
         } }
         
-        // 0. Check if we could be entering a new mention. This is the case if the last text did not find any matches and we have just entered an @ character
+        // 0. Check if we could be entering a new mention. This is the case if the last text did not find any matches
+        // and we have just entered an @ character
         // 1. Check if the newly inserted text and the current mention overlap
         // 1. a) If they do not overlap reset mentions
         // 1. b) If they overlap continue
@@ -79,7 +80,8 @@ class MentionsHelper {
         else {
             // There is no current mention. Check if we are adding another mention
             if text == "@" {
-                // We only allow interactive mentions when entering the at as a single character i.e. by entering it from the keyboard
+                // We only allow interactive mentions when entering the at as a single character i.e. by entering it
+                // from the keyboard
                 currentMentionRange = location
                 // Reset currMention
                 currMention = ""

@@ -27,9 +27,11 @@ import ThreemaFramework
 protocol ChatViewDataSourceDelegate: AnyObject {
     /// Called before a new snapshot is applied
     ///
-    /// This is always called on the main queue. This might be called multiple times before the corresponding `didApplySnapshot()` is called.
+    /// This is always called on the main queue. This might be called multiple times before the corresponding
+    /// `didApplySnapshot()` is called.
     ///
-    /// - Parameter currentDoesIncludeNewestMessage: Should the current snapshot include the newest message? (`false` if this is the first snapshot)
+    /// - Parameter currentDoesIncludeNewestMessage: Should the current snapshot include the newest message? (`false` if
+    ///                                              this is the first snapshot)
     /// - Returns: A block which should be executed together with `apply` in a single UIView.animate block.
     func willApplySnapshot(currentDoesIncludeNewestMessage: Bool) -> (() -> Void)?
     
@@ -47,8 +49,8 @@ protocol ChatViewDataSourceDelegate: AnyObject {
 
 /// Manage the table view data for a chat view
 ///
-/// The data sources uses a `MessageProvider` to load messages and `ChatViewCellProvider` for cell registration, loading and
-/// configuration.
+/// The data sources uses a `MessageProvider` to load messages and `ChatViewCellProvider` for cell registration, loading
+/// and configuration.
 class ChatViewDataSource: UITableViewDiffableDataSource<String, ChatViewDataSource.CellType> {
     typealias Config = ChatViewConfiguration.DataSource
     
@@ -142,7 +144,9 @@ class ChatViewDataSource: UITableViewDiffableDataSource<String, ChatViewDataSour
     private let flippedTableView = UserSettings.shared().flippedTableView
     
     /// Used for ensuring mutual exclusion between animated scrolling and applying new snapshots
-    /// `apply(_:animatingDifferences:)` will cancel in progress animations such as animated scrolling to the newest cell.
+    ///
+    /// `apply(_:animatingDifferences:)` will cancel in progress animations such as animated scrolling to the newest
+    /// cell.
     /// We therefore do not want to apply new snapshots while we're scrolling to the newest cell in `didApplySnapshot`.
     /// This may be used on other instances as well but be wary of deadlocks.
     let snapshotApplyLock = NSLock()
@@ -184,11 +188,12 @@ class ChatViewDataSource: UITableViewDiffableDataSource<String, ChatViewDataSour
         target: nil
     )
     
-    /// Depending on the orientation of the tableView `firstOrLastMessage` contains the first or the last message in the requested snapshot
+    /// Depending on the orientation of the tableView `firstOrLastMessage` contains the first or the last message in the
+    /// requested snapshot
     private var fetchRequestSnapshotApplyStore: (firstOrLastMessage: NSManagedObjectID?, seal: Resolver<Void>)?
     
     private var bottomIdentifier: NSManagedObjectID? {
-        guard let bottomIndexPath = bottomIndexPath else {
+        guard let bottomIndexPath else {
             return nil
         }
         
@@ -224,10 +229,12 @@ class ChatViewDataSource: UITableViewDiffableDataSource<String, ChatViewDataSour
     ///   - tableView: Table view that will display the messages
     ///   - delegate: `ChatViewDataSourceDelegate` that is informed about certain changes
     ///   - chatViewTableViewCellDelegate: `ChatViewTableViewCellDelegateProtocol` that is informed about cell delegates
-    ///   - chatViewTableViewVoiceMessageCellDelegate: `ChatViewTableViewVoiceMessageCellDelegate` that is informed about voice message changes
+    ///   - chatViewTableViewVoiceMessageCellDelegate: `ChatViewTableViewVoiceMessageCellDelegate` that is informed
+    ///                                                about voice message changes
     ///   - entityManager: Entity manager used to fetch messages from the object store
     ///   - date: Date to load messages around. If `nil` newest messages are loaded.
-    ///   - afterFirstSnapshotApply: Closure called only on first apply to data source snapshot (this will be called on the main queue)
+    ///   - afterFirstSnapshotApply: Closure called only on first apply to data source snapshot (this will be called on
+    ///                              the main queue)
     init(
         for conversation: Conversation,
         in tableView: UITableView,
@@ -376,7 +383,7 @@ class ChatViewDataSource: UITableViewDiffableDataSource<String, ChatViewDataSour
         DDLogVerbose("\(#function) dataSource.snapshotApplyLock.lock()")
         if !snapshotApplyLock.lock(before: Date().addingTimeInterval(5)) {
             let msg = "Could not take lock. This is a fatal error in strict mode. Continue in non-strict mode."
-            guard let delegate = delegate, !delegate.willDisappear else {
+            guard let delegate, !delegate.willDisappear else {
                 DDLogVerbose("Nevermind we have actually already disappeared")
                 return
             }
@@ -414,7 +421,7 @@ class ChatViewDataSource: UITableViewDiffableDataSource<String, ChatViewDataSour
         }
         
         if snapshotWillApplyDoneDispatchGroup.wait(timeout: .now() + .seconds(15)) == .timedOut {
-            guard let delegate = delegate, !delegate.willDisappear else {
+            guard let delegate, !delegate.willDisappear else {
                 DDLogVerbose("Nevermind we have actually already disappeared")
                 return
             }
@@ -448,10 +455,10 @@ class ChatViewDataSource: UITableViewDiffableDataSource<String, ChatViewDataSour
         defaultRowAnimation = snapshotInfo.rowAnimation
         
         // A fun observation on shouldAnimate. If we set `shouldAnimate` to false and add lots of messages at the top,
-        // then the UITableView will not detect the new contentOffset, which should increase by a lot because there are now many cells on top,
-        // and keeps it approximately at the current value.
-        // This causes our load at top detection to trigger again which in turn then makes the chat view jump to an unrelated scroll position
-        // further up.
+        // then the UITableView will not detect the new contentOffset, which should increase by a lot because there are
+        // now many cells on top, and keeps it approximately at the current value.
+        // This causes our load at top detection to trigger again which in turn then makes the chat view jump to an
+        // unrelated scroll position further up.
         let shouldAnimate = snapshotInfo.rowAnimation != .none
         
         // Block calling the apply function of the data source
@@ -478,12 +485,13 @@ class ChatViewDataSource: UITableViewDiffableDataSource<String, ChatViewDataSour
         // In non-flipped mode when sending two messages in quick succession we would observe the scroll
         // position to be incorrectly set when the first message would hide its date and state view.
         // Instead of keeping at the very bottom we would scroll up by about the height of the date and state view.
-        // It is unclear why this would happen, but we believe that this is coming from UITableView trying to keep a "good"
-        // scroll position but failing in this case since we want to be at the very bottom.
+        // It is unclear why this would happen, but we believe that this is coming from UITableView trying to keep a
+        // "good" scroll position but failing in this case since we want to be at the very bottom.
         //
-        // Simply adding an additional scroll to bottom call in didApplySnapshot of ChatViewController did result in a visible
-        // scroll up and then down animation. To avoid this we move the previous implementation of snapshot apply and a call to
-        // scrollToBottom (`snapshotApplyAnimateBlockBlock`) into a single UIView.animate animation block.
+        // Simply adding an additional scroll to bottom call in didApplySnapshot of ChatViewController did result in a
+        // visible scroll up and then down animation. To avoid this we move the previous implementation of snapshot
+        // apply and a call to scrollToBottom (`snapshotApplyAnimateBlockBlock`) into a single UIView.animate animation
+        // block.
         if flippedTableView {
             applyBlock()
         }
@@ -515,7 +523,7 @@ class ChatViewDataSource: UITableViewDiffableDataSource<String, ChatViewDataSour
         /// We should avoid any layout passes as much as possible in the chat view controller.
         let wait = snapshotApplyDoneDispatchGroup?.wait(timeout: .now() + .seconds(15))
         if wait == .timedOut {
-            guard let delegate = delegate, !delegate.willDisappear else {
+            guard let delegate, !delegate.willDisappear else {
                 DDLogVerbose("Nevermind we have actually already disappeared")
                 return
             }
@@ -534,14 +542,14 @@ class ChatViewDataSource: UITableViewDiffableDataSource<String, ChatViewDataSour
             return
         }
         
-        /// In order to signal the application of calls to `loadMessages` (see below) we check if the currently applied snapshot
-        /// has the same identifier as the last (not cancelled) call to one of the load messages methods.
+        /// In order to signal the application of calls to `loadMessages` (see below) we check if the currently applied
+        /// snapshot has the same identifier as the last (not cancelled) call to one of the load messages methods.
         ///
         /// If we cannot signal completion but have a fetch request waiting for application we cancel it.
         let firstOrLastMessage = flippedTableView ? snapshotInfo.snapshot.itemIdentifiers.first : snapshotInfo.snapshot
             .itemIdentifiers.last
         if case let .message(objectID) = firstOrLastMessage,
-           let fetchRequestSnapshotApplyStore = fetchRequestSnapshotApplyStore {
+           let fetchRequestSnapshotApplyStore {
             if fetchRequestSnapshotApplyStore.firstOrLastMessage == objectID {
                 fetchRequestSnapshotApplyStore.seal.fulfill_()
                 self.fetchRequestSnapshotApplyStore = nil
@@ -758,7 +766,8 @@ class ChatViewDataSource: UITableViewDiffableDataSource<String, ChatViewDataSour
         delegate?.didDeleteMessages()
     }
     
-    /// Call before deleting all message in this chat if you do the deletion yourself and don't call `deleteAllMessages()`
+    /// Call before deleting all message in this chat if you do the deletion yourself and don't call
+    /// `deleteAllMessages()`
     public func willDeleteAllMessages() {
         let messageObjectIDsInCurrentSnapshot: [NSManagedObjectID] = snapshot().itemIdentifiers.compactMap { cellType in
             guard case let CellType.message(objectID: messageObjectID) = cellType else {
@@ -810,12 +819,14 @@ class ChatViewDataSource: UITableViewDiffableDataSource<String, ChatViewDataSour
     
     // MARK: - Message Load Requests
     
-    /// For all message load requests the promise resolves as soon as a snapshot containing the same last message as the fetchRequest has been applied.
+    /// For all message load requests the promise resolves as soon as a snapshot containing the same last message as the
+    /// fetchRequest has been applied.
     /// It is either fulfilled or cancelled if the last message is different.
     /// If a newer fetchRequest has been added it either cancels earlier fetchRequests or cancels itself.
     ///
-    /// Additionally, the promise may be cancelled if the next applied fetch request does not contain the same last message.
-    /// The message may however be loaded nevertheless. Cancellation does *not* mean that the message is not present in the last, currently or next applied snapshot.
+    /// Additionally, the promise may be cancelled if the next applied fetch request does not contain the same last
+    /// message. The message may however be loaded nevertheless. Cancellation does *not* mean that the message is not
+    /// present in the last, currently or next applied snapshot.
     
     /// Load message
     /// - Parameter objectID: Object ID of message to load
@@ -828,7 +839,8 @@ class ChatViewDataSource: UITableViewDiffableDataSource<String, ChatViewDataSour
     ///
     /// Not every call leads to new messages as we don't start a new request if one is currently running.
     ///
-    /// - Returns: See comment at the top of the section about when exactly this promise is resolved. Approximate tl;dr fulfilled if this exact fetchRequest had its snapshot applied; cancelled otherwise
+    /// - Returns: See comment at the top of the section about when exactly this promise is resolved. Approximate tl;dr
+    ///            fulfilled if this exact fetchRequest had its snapshot applied; cancelled otherwise
     @discardableResult func loadMessagesAtTop() -> Promise<Void> {
         DDLogVerbose("Trying to load more messages at top...")
         return loadMessagesIfAllowed(with: messageProvider.loadMessagesAtTop)
@@ -838,7 +850,8 @@ class ChatViewDataSource: UITableViewDiffableDataSource<String, ChatViewDataSour
     ///
     /// Not every call leads to new messages as we don't start a new request for a while after a previous call.
     ///
-    /// - Returns: See comment at the top of the section about when exactly this promise is resolved. Approximate tl;dr fulfilled if this exact fetchRequest had its snapshot applied; cancelled otherwise
+    /// - Returns: See comment at the top of the section about when exactly this promise is resolved. Approximate tl;dr
+    ///            fulfilled if this exact fetchRequest had its snapshot applied; cancelled otherwise
     @discardableResult func loadMessagesAtBottom() -> Promise<Void> {
         DDLogVerbose("Trying to load more messages at bottom...")
         return loadMessagesIfAllowed(with: messageProvider.loadMessagesAtBottom)
@@ -849,7 +862,8 @@ class ChatViewDataSource: UITableViewDiffableDataSource<String, ChatViewDataSour
     /// This might replace already loaded messages.
     ///
     /// - Parameter date: Date to load messages around
-    /// - Returns: See comment at the top of the section about when exactly this promise is resolved. Approximate tl;dr fulfilled if this exact fetchRequest had its snapshot applied; cancelled otherwise
+    /// - Returns: See comment at the top of the section about when exactly this promise is resolved. Approximate tl;dr
+    ///            fulfilled if this exact fetchRequest had its snapshot applied; cancelled otherwise
     func loadMessages(around date: Date) -> Promise<Void> {
         DDLogVerbose("Trying to load more messages around \(date)...")
         return loadMessagesIfAllowed {
@@ -859,9 +873,11 @@ class ChatViewDataSource: UITableViewDiffableDataSource<String, ChatViewDataSour
         
     /// Load newest messages (at the bottom)
     ///
-    /// This also succeeds during setup. This might replace all already loaded messages. Use this to scroll all the way to the bottom.
+    /// This also succeeds during setup. This might replace all already loaded messages. Use this to scroll all the way
+    /// to the bottom.
     ///
-    /// - Returns: See comment at the top of the section about when exactly this promise is resolved. Approximate tl;dr fulfilled if this exact fetchRequest had its snapshot applied; cancelled otherwise
+    /// - Returns: See comment at the top of the section about when exactly this promise is resolved. Approximate tl;dr
+    ///            fulfilled if this exact fetchRequest had its snapshot applied; cancelled otherwise
     func loadNewestMessages() -> Promise<Void> {
         DDLogVerbose("Load newest messages...")
         return loadMessages(with: messageProvider.loadNewestMessages, cancellable: false)
@@ -869,7 +885,8 @@ class ChatViewDataSource: UITableViewDiffableDataSource<String, ChatViewDataSour
     
     /// Load oldest messages (at the top)
     ///
-    /// - Returns: See comment at the top of the section about when exactly this promise is resolved. Approximate tl;dr fulfilled if this exact fetchRequest had its snapshot applied; cancelled otherwise
+    /// - Returns: See comment at the top of the section about when exactly this promise is resolved. Approximate tl;dr
+    ///            fulfilled if this exact fetchRequest had its snapshot applied; cancelled otherwise
     func loadOldestMessages() -> Promise<Void> {
         DDLogVerbose("Load oldest messages...")
         return loadMessagesIfAllowed(with: messageProvider.loadOldestMessages, cancellable: false)
@@ -880,7 +897,8 @@ class ChatViewDataSource: UITableViewDiffableDataSource<String, ChatViewDataSour
     /// Execute `loadRequest` if no-one is running at this point
     ///
     /// - Parameter loadRequest: Load request that might be executed
-    /// - Returns: See comment at the top of the section about when exactly this promise is resolved. Approximate tl;dr fulfilled if this exact fetchRequest had its snapshot applied; cancelled otherwise
+    /// - Returns: See comment at the top of the section about when exactly this promise is resolved. Approximate tl;dr
+    ///            fulfilled if this exact fetchRequest had its snapshot applied; cancelled otherwise
     private func loadMessagesIfAllowed(
         with loadRequest: @escaping () -> Guarantee<NSManagedObjectID?>,
         cancellable: Bool = true
@@ -899,7 +917,8 @@ class ChatViewDataSource: UITableViewDiffableDataSource<String, ChatViewDataSour
     /// Execute load request
     ///
     /// - Parameter loadRequest: Load request to execute
-    /// - Returns: See comment at the top of the section about when exactly this promise is resolved. Approximate tl;dr fulfilled if this exact fetchRequest had its snapshot applied; cancelled otherwise
+    /// - Returns: See comment at the top of the section about when exactly this promise is resolved. Approximate tl;dr
+    ///            fulfilled if this exact fetchRequest had its snapshot applied; cancelled otherwise
     private func loadMessages(
         with loadRequest: @escaping () -> Guarantee<NSManagedObjectID?>,
         cancellable: Bool
@@ -910,7 +929,7 @@ class ChatViewDataSource: UITableViewDiffableDataSource<String, ChatViewDataSour
         }.then { (objectID: NSManagedObjectID?) -> Promise<Void> in
             defer { self.isLoadingNewMessages = false }
             
-            guard let objectID = objectID, self.initialSetupCompleted else {
+            guard let objectID, self.initialSetupCompleted else {
                 DDLogVerbose("No new messages loaded, fulfill immediately")
                 return Promise { $0.fulfill_() }
             }

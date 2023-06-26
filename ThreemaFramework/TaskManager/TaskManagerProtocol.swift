@@ -28,7 +28,8 @@ protocol TaskManagerProtocol: TaskManagerProtocolObjc {
     /// Add task definition
     /// - Parameters:
     ///   - taskDefinition: New task definition to add to queue
-    ///   - completionHandler: Called when the task is completed (NOT when adding is completed). This handler is not persisted!
+    ///   - completionHandler: Called when the task is completed (NOT when adding is completed). This handler is not
+    ///                        persisted!
     func add(taskDefinition: TaskDefinitionProtocol, completionHandler: @escaping TaskCompletionHandler)
     
     /// Add list of task definitions

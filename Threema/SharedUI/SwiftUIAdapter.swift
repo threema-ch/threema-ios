@@ -47,4 +47,11 @@ import SwiftUI
         hostingController.navigationItem.largeTitleDisplayMode = .never
         return hostingController
     }
+    
+    @objc static func createSettingsView() -> UIViewController {
+        let settingsView = SettingsView()
+        let hostingController = UIHostingController(rootView: settingsView)
+        hostingController.navigationItem.largeTitleDisplayMode = .never
+        return hostingController
+    }
 }

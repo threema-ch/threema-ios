@@ -238,31 +238,10 @@ final class ChatViewVoiceMessageTableViewCell: ChatViewBaseTableViewCell, Measur
         
         return stackView
     }()
-    
-    // TODO: (IOS-2860) Investigate before new chat view released
-    /// This used to contain a spacer for aligning the stateButton with the waveform view
-    /// In the current design this is no longer necessary, but we'll keep this around anyways in case we change our mind before the final release.
-    private lazy var leftSideStackView: UIStackView = {
-        let stackView = UIStackView(arrangedSubviews: [
-            stateButton,
-        ])
         
-        stackView.axis = .vertical
-        stackView.spacing = ChatViewConfiguration.Content.contentAndMetadataSpace
-        
-        if traitCollection.preferredContentSizeCategory.isAccessibilityCategory {
-            stackView.axis = .vertical
-            stackView.alignment = .center
-        }
-        
-        stackView.setContentCompressionResistancePriority(.required, for: .horizontal)
-        
-        return stackView
-    }()
-    
     private lazy var contentStack: DefaultMessageContentStackView = {
         let stackView = DefaultMessageContentStackView(arrangedSubviews: [
-            leftSideStackView,
+            stateButton,
             mainContentStack,
         ])
         
@@ -291,7 +270,8 @@ final class ChatViewVoiceMessageTableViewCell: ChatViewBaseTableViewCell, Measur
         )
         view.translatesAutoresizingMaskIntoConstraints = false
         
-        // If VoiceOver is running, we hide all internal components and rely on a gesture recognizer to play and pause and for speed change, and we add a custom a11y action below
+        // If VoiceOver is running, we hide all internal components and rely on a gesture recognizer to play and pause
+        // and for speed change, and we add a custom a11y action below
         if UIAccessibility.isVoiceOverRunning {
             let tapGestureRecognizer = UILongPressGestureRecognizer(target: self, action: #selector(handleTap(_:)))
             tapGestureRecognizer.minimumPressDuration = 0.0
@@ -415,7 +395,7 @@ final class ChatViewVoiceMessageTableViewCell: ChatViewBaseTableViewCell, Measur
     }
     
     func updateMessageMetadataFileSizeLabel(voiceMessage: VoiceMessage?) {
-        guard let voiceMessage = voiceMessage else {
+        guard let voiceMessage else {
             fileSizeLabel.text = ""
             return
         }
@@ -424,8 +404,8 @@ final class ChatViewVoiceMessageTableViewCell: ChatViewBaseTableViewCell, Measur
             fileSizeLabel.text = DateFormatter.timeFormatted(Int(duration))
             fileSizeSizingLabel.text = "\(timePrefix)\(DateFormatter.timeFormatted(Int(duration)))"
         }
-        else if let size = voiceMessage.blobGetSize()?.int64Value {
-            fileSizeLabel.text = ByteCountFormatter().string(fromByteCount: size)
+        else {
+            fileSizeLabel.text = ByteCountFormatter().string(fromByteCount: Int64(voiceMessage.blobSize))
         }
         
         switch voiceMessage.blobDisplayState {
@@ -480,7 +460,7 @@ final class ChatViewVoiceMessageTableViewCell: ChatViewBaseTableViewCell, Measur
         stateButton.voiceMessage = voiceMessage
         waveformView.voiceMessage = voiceMessage
         
-        if let message = voiceMessage, let voiceMessageCellDelegate = voiceMessageCellDelegate {
+        if let message = voiceMessage, let voiceMessageCellDelegate {
             waveformView.updateProgressWaveform(voiceMessageCellDelegate.getProgress(for: message))
         }
         
@@ -616,7 +596,7 @@ extension ChatViewVoiceMessageTableViewCell {
         
         isPlaying = false
         
-        guard let voiceMessageCellDelegate = voiceMessageCellDelegate else {
+        guard let voiceMessageCellDelegate else {
             return
         }
         
@@ -731,9 +711,10 @@ extension ChatViewVoiceMessageTableViewCell: ChatViewMessageAction {
         let shareItems = [MessageActivityItem(for: message)]
 
         // Copy
-        // In the new chat view we always copy the data, regardless if it has a caption because the text can be selected itself.
+        // In the new chat view we always copy the data, regardless if it has a caption because the text can be selected
+        // itself.
         let copyHandler = {
-            guard let data = message.blobGet(), let uti = message.blobGetUTI() else {
+            guard let data = message.blobData, let uti = message.blobUTTypeIdentifier else {
                 NotificationPresenterWrapper.shared.present(type: .copyError)
                 return
             }

@@ -145,7 +145,7 @@ class TaskExecutionUpdateContactSync: TaskExecutionBlobTransaction {
                 syncAction: deltaSyncContact.syncAction
             )
 
-            reflectResults.append(Promise<Void> { $0.fulfill(try reflectMessage(
+            reflectResults.append(Promise<Void> { try $0.fulfill(reflectMessage(
                 envelope: envelope,
                 ltReflect: self.taskContext.logReflectMessageToMediator,
                 ltAck: self.taskContext.logReceiveMessageAckFromMediator

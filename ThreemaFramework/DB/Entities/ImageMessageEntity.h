@@ -22,16 +22,19 @@
 #import <CoreData/CoreData.h>
 #import "BaseMessage.h"
 #import "ImageData.h"
-#import "BlobData.h"
+#import "BlobOrigin.h"
 
-@interface ImageMessageEntity : BaseMessage <BlobData>
+@interface ImageMessageEntity : BaseMessage
 
-@property (nonatomic, retain) ImageData *image;
-@property (nonatomic, retain) ImageData *thumbnail;
-@property (nonatomic, retain) NSData *imageBlobId NS_SWIFT_NAME(imageBlobID);
-@property (nonatomic, retain) NSData *imageNonce;
-@property (nonatomic, retain) NSNumber *imageSize;
-@property (nonatomic, retain) NSNumber *progress;
-@property (nonatomic, retain) NSData *encryptionKey;
+// Attributes
+@property (nullable, nonatomic, retain) NSData *encryptionKey;
+@property (nullable, nonatomic, retain) NSData *imageBlobId NS_SWIFT_NAME(imageBlobID);
+@property (nullable, nonatomic, retain) NSData *imageNonce;
+@property (nullable, nonatomic, retain) NSNumber *imageSize;
+@property (nullable, nonatomic, retain) NSNumber *progress;
+
+// Relationships
+@property (nullable, nonatomic, retain) ImageData *image;
+@property (nullable, nonatomic, retain) ImageData *thumbnail;
 
 @end

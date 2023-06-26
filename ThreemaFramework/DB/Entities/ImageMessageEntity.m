@@ -25,19 +25,21 @@
 
 @implementation ImageMessageEntity
 
-@dynamic image;
-@dynamic thumbnail;
+@dynamic encryptionKey;
 @dynamic imageBlobId;
 @dynamic imageNonce;
 @dynamic imageSize;
 @dynamic progress;
-@dynamic encryptionKey;
+
+@dynamic image;
+@dynamic thumbnail;
+
 
 - (NSString*)logText {
     if ([self.image getCaption] != nil) {
-        return [NSString stringWithFormat:@"%@ (%@) %@ %@", [BundleUtil localizedStringForKey:@"image"], [self blobGetFilename], [BundleUtil localizedStringForKey:@"caption"], [self.image getCaption]];
+        return [NSString stringWithFormat:@"%@ (%@) %@ %@", [BundleUtil localizedStringForKey:@"image"], [self blobFilename], [BundleUtil localizedStringForKey:@"caption"], [self.image getCaption]];
     }
-    return [NSString stringWithFormat:@"%@ (%@)", [BundleUtil localizedStringForKey:@"image"], [self blobGetFilename]];
+    return [NSString stringWithFormat:@"%@ (%@)", [BundleUtil localizedStringForKey:@"image"], [self blobFilename]];
 }
 
 - (NSString*)previewText {
@@ -58,126 +60,6 @@
         caption = self.previewText;
     }
     return caption;
-}
-
-#pragma mark - BlobData
-
-- (BOOL)blobIsOutgoing {
-    if (self.isOwn) {
-        return self.isOwn.boolValue;
-    }
-    
-    return false;
-}
-
-- (NSData *)blobGetData {
-    if (self.image) {
-        return self.image.data;
-    }
-    
-    return nil;
-}
-
-- (NSData *)blobGetId {
-    return self.imageBlobId;
-}
-
-- (void)blobSetDataID:(nonnull NSData *)dataID {
-    self.imageBlobId = dataID;
-}
-
-- (NSData *)blobGetThumbnailId {
-    return nil;
-}
-
-- (NSData *)blobGetEncryptionKey {
-    return self.encryptionKey;
-}
-
-- (NSNumber *)blobGetSize {
-    return self.imageSize;
-}
-
-- (void)blobSetData:(NSData *)data {
-    ImageData *dbData = [NSEntityDescription
-                        insertNewObjectForEntityForName:@"ImageData"
-                        inManagedObjectContext:self.managedObjectContext];
-    
-    dbData.data = data;
-    self.image = dbData;
-}
-
-- (void)blobSetThumbnail:(NSData *)data {
-    ImageData *dbData = [NSEntityDescription
-                        insertNewObjectForEntityForName:@"ImageData"
-                        inManagedObjectContext:self.managedObjectContext];
-    
-    dbData.data = data;
-    
-    // Load thumbnail image to get dimensions
-    UIImage *loadedThumbnail = [UIImage imageWithData:data];
-    if (loadedThumbnail) {
-        dbData.width = [NSNumber numberWithInt:loadedThumbnail.size.width];
-        dbData.height = [NSNumber numberWithInt:loadedThumbnail.size.height];
-    }
-    
-    self.thumbnail = dbData;
-}
-
-- (NSData *)blobGetThumbnail {
-    if (self.thumbnail) {
-        return self.thumbnail.data;
-    }
-    
-    return nil;
-}
-
-- (void)blobSetOrigin:(BlobOrigin)origin {
-    // no-op
-}
-
-- (BlobOrigin)blobGetOrigin {
-    return BlobOriginPublic;
-}
-
-- (NSString *)blobGetUTI {
-    return UTTYPE_IMAGE;
-}
-
-- (NSString *)blobGetFilename {
-    return [NSString stringWithFormat: @"%@.%@", [NSString stringWithHexData:self.id], MEDIA_EXTENSION_IMAGE];
-}
-
-- (NSString *)blobGetWebFilename {
-    return [NSString stringWithFormat: @"threema-%@-image.%@", [DateFormatter getDateForWeb:self.date], MEDIA_EXTENSION_IMAGE];
-}
-
-- (void)blobUpdateProgress:(NSNumber *)progress {
-    self.progress = progress;
-}
-
-- (NSNumber *)blobGetProgress {
-    return self.progress;
-}
-
-- (BOOL)blobGetError {
-    if (self.sendFailed) {
-        return self.sendFailed.boolValue;
-    }
-    
-    return false;
-}
-
-- (void)blobSetError:(BOOL)error {
-    self.sendFailed = [[NSNumber alloc] initWithBool:error];
-}
-
-- (NSString *)getExternalFilename {
-    return [[self image] getFilename];
-}
-
-- (NSString *)getExternalFilenameThumbnail {
-    return [[self thumbnail] getFilename];
 }
 
 #pragma mark - Misc

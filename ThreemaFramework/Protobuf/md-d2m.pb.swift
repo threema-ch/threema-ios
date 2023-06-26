@@ -224,10 +224,13 @@ struct D2m_ClientHello {
 
   /// Challenge response (72 bytes) for authentication.
   ///
-  /// The response is created using NaCl box encryption:
+  /// The response is created by encrypting the server's challenge in the
+  /// following way:
   ///
-  ///   Box(DGPK.secret, ESK.public)
-  ///    .encrypt(data=<challenge>, nonce=<random>)
+  ///     XSalsa20-Poly1305(
+  ///       key=X25519HSalsa20(DGPK.secret, ESK.public),
+  ///       nonce=<random>,
+  ///     )
   ///
   /// The nonce is then prefixed to the encrypted challenge.
   var response: Data = Data()
@@ -565,8 +568,9 @@ struct D2m_TransactionRejected {
   /// The device that currently holds the lock
   var deviceID: UInt64 = 0
 
-  /// The encrypted transaction scope associated with the currently locked
-  /// transaction
+  /// The encrypted transaction scope (`d2d.TransactionScope`) associated with
+  /// the currently locked transaction, encrypted by `DGTSK.secret` and prefixed
+  /// with a random nonce.
   var encryptedScope: Data = Data()
 
   var unknownFields = SwiftProtobuf.UnknownStorage()
@@ -591,8 +595,9 @@ struct D2m_TransactionEnded {
   /// The device that held the lock up until now
   var deviceID: UInt64 = 0
 
-  /// The encrypted transaction scope associated with the transaction that just
-  /// ended
+  /// The encrypted transaction scope (`d2d.TransactionScope`) associated with
+  /// the transaction that just ended, encrypted by `DGTSK.secret` and prefixed
+  /// with a random nonce.
   var encryptedScope: Data = Data()
 
   var unknownFields = SwiftProtobuf.UnknownStorage()

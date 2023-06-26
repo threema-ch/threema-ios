@@ -89,8 +89,8 @@ class LinkEmailViewController: ThemedTableViewController {
             email: emailTextField.text,
             onCompletion: { [self] linked in
                 
-                MBProgressHUD.hide(for: self.view, animated: true)
-                if let text = self.emailTextField.text, !text.isEmpty, !linked {
+                MBProgressHUD.hide(for: view, animated: true)
+                if let text = emailTextField.text, !text.isEmpty, !linked {
                     UIAlertTemplate.showAlert(
                         owner: self,
                         title: BundleUtil.localizedString(forKey: "link_email_sent_title"),
@@ -102,7 +102,7 @@ class LinkEmailViewController: ThemedTableViewController {
                     )
                 }
                 else {
-                    self.dismiss(animated: true, completion: nil)
+                    dismiss(animated: true, completion: nil)
                 }
                 
             }, onError: { _ in

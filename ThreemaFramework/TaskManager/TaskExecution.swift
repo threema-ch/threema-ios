@@ -234,7 +234,7 @@ class TaskExecution: NSObject {
 
                 // Check whether the message and the destination contact support forward security
                 if ThreemaUtility.supportsForwardSecurity, message.supportsForwardSecurity(),
-                   toContact.forwardSecurityEnabled.boolValue,
+                   toContact.forwardSecurityEnabled.boolValue || ThreemaEnvironment.pfsByDefault,
                    toContact.isForwardSecurityAvailable() {
                     do {
                         let fsContact = ForwardSecurityContact(
@@ -260,7 +260,7 @@ class TaskExecution: NSObject {
 
                 // Send message in own thread, because of possible network latency
                 DispatchQueue.global().async {
-                    if let auxMessage = auxMessage {
+                    if let auxMessage {
                         var boxAuxMsg: BoxedMessage?
                         // We have an auxiliary (control) message to send before the actual message
                         self.frameworkInjector.backgroundEntityManager.performBlockAndWait {
@@ -294,7 +294,8 @@ class TaskExecution: NSObject {
                         }
                     }
                     self.frameworkInjector.backgroundEntityManager.performBlock {
-                        // Save forward security mode in any case (could also be a message first sent with FS and then resent without)
+                        // Save forward security mode in any case (could also be a message first sent with FS and then
+                        // resent without)
                         self.frameworkInjector.backgroundEntityManager.setForwardSecurityMode(
                             message.messageID,
                             forwardSecurityMode: messageToSend.forwardSecurityMode
@@ -432,7 +433,8 @@ class TaskExecution: NSObject {
         }
     }
 
-    /// If group creator an gateway id and receiver and store-incoming-message is not set (group name without ☁), then the message (except leave and request sync) will not be send.
+    /// If group creator an gateway id and receiver and store-incoming-message is not set (group name without ☁), then
+    /// the message (except leave and request sync) will not be send.
     ///
     /// - Parameter groupCreatorIdentity: Group creator identity
     /// - Parameter groupName: Group name
@@ -482,7 +484,8 @@ class TaskExecution: NSObject {
     
     /// Create abstract message for base message (Core Data Entity).
     ///
-    /// - Parameter task: Task (TaskDefinitionSendBaseMessage or TaskDefinitionSendBallotVoteMessage) with Core Data Entity
+    /// - Parameter task: Task (TaskDefinitionSendBaseMessage or TaskDefinitionSendBallotVoteMessage) with Core Data
+    ///                   Entity
     /// - Parameter fromIdentity: Message sender identity
     /// - Parameter toIdentity: Message receiver identity
     /// - Returns: Abstract message or nil if could not create
@@ -587,7 +590,7 @@ class TaskExecution: NSObject {
                     
                     msg.blobID = message.imageBlobID
                     msg.encryptionKey = message.encryptionKey
-                    msg.size = UInt32(exactly: message.imageSize)!
+                    msg.size = UInt32(exactly: message.imageSize!)!
                     
                     msg.groupID = task.groupID
                     msg.groupCreator = task.groupCreatorIdentity
@@ -595,7 +598,7 @@ class TaskExecution: NSObject {
                 else if let msg = msg as? BoxImageMessage {
                     msg.blobID = message.imageBlobID
                     msg.imageNonce = message.imageNonce
-                    msg.size = UInt32(exactly: message.imageSize)!
+                    msg.size = UInt32(exactly: message.imageSize!)!
                 }
                 return msg
             }
@@ -610,7 +613,7 @@ class TaskExecution: NSObject {
                     
                     msg.audioBlobID = message.audioBlobID
                     msg.encryptionKey = message.encryptionKey
-                    msg.audioSize = UInt32(exactly: message.audioSize)!
+                    msg.audioSize = UInt32(exactly: message.audioSize!)!
                     msg.duration = UInt16(message.duration.floatValue)
 
                     msg.groupID = task.groupID
@@ -619,7 +622,7 @@ class TaskExecution: NSObject {
                 else if let msg = msg as? BoxAudioMessage {
                     msg.audioBlobID = message.audioBlobID
                     msg.encryptionKey = message.encryptionKey
-                    msg.audioSize = UInt32(exactly: message.audioSize)!
+                    msg.audioSize = UInt32(exactly: message.audioSize!)!
                     msg.duration = UInt16(message.duration.floatValue)
                 }
                 return msg
@@ -655,7 +658,7 @@ class TaskExecution: NSObject {
                     
                     msg.videoBlobID = message.videoBlobID
                     msg.encryptionKey = message.encryptionKey
-                    msg.videoSize = UInt32(exactly: message.videoSize)!
+                    msg.videoSize = UInt32(exactly: message.videoSize!)!
                     msg.duration = UInt16(message.duration.floatValue)
                     if let task = task as? TaskDefinitionSendVideoMessage {
                         msg.thumbnailBlobID = task.thumbnailBlobID
@@ -670,7 +673,7 @@ class TaskExecution: NSObject {
                 else if let msg = msg as? BoxVideoMessage {
                     msg.videoBlobID = message.videoBlobID
                     msg.encryptionKey = message.encryptionKey
-                    msg.videoSize = UInt32(exactly: message.videoSize)!
+                    msg.videoSize = UInt32(exactly: message.videoSize!)!
                     msg.duration = UInt16(message.duration.floatValue)
                     if let task = task as? TaskDefinitionSendVideoMessage {
                         msg.thumbnailBlobID = task.thumbnailBlobID
@@ -706,6 +709,26 @@ class TaskExecution: NSObject {
         }
         
         return nil
+    }
+
+    /// Create abstract message for delivery receipt.
+    ///
+    /// - Parameters:
+    /// - fromIdentity: Message sender identity
+    /// - toIdentity: Message receiver identity
+    /// - Returns: Abstract message
+    func getDeliveryReceiptMessage(
+        _ fromIdentity: String,
+        _ toIdentity: String,
+        _ receiptType: UInt8,
+        _ receiptMessageIDs: [Data]
+    ) -> DeliveryReceiptMessage {
+        let msg = DeliveryReceiptMessage()
+        msg.fromIdentity = fromIdentity
+        msg.toIdentity = toIdentity
+        msg.receiptType = receiptType
+        msg.receiptMessageIDs = receiptMessageIDs
+        return msg
     }
 
     /// Create abstract message for group create.

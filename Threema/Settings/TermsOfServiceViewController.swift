@@ -23,6 +23,6 @@ class TermsOfServiceViewController: SettingsWebViewViewController {
         super.viewDidLoad()
         url = "https://threema.ch/tos"
         
-        title = BundleUtil.localizedString(forKey: "tos_cell_title")
+        title = BundleUtil.localizedString(forKey: "settings_list_tos_title")
     }
 }

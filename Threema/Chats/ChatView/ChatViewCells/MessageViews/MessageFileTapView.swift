@@ -74,7 +74,12 @@ final class MessageFileTapView: UIView {
     
     // MARK: - Views
     
-    private lazy var fileIcon = FileIcon()
+    private lazy var fileIcon = {
+        let fileIcon = FileIcon()
+        fileIcon.setContentCompressionResistancePriority(.required, for: .horizontal)
+        return fileIcon
+    }()
+    
     private lazy var blobStateCircle = GrayCircleView(sfSymbolName: "person.fill.turn.down")
     
     private lazy var fileNameLabel: UILabel = {

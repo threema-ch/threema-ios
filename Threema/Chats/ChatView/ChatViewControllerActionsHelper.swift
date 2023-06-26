@@ -84,15 +84,6 @@ extension ChatViewControllerActionsHelper: ChatViewControllerActionsProtocol {
         }
     }
     
-    var chatBar: Old_ChatBar? {
-        get {
-            nil
-        }
-        set(chatBar) {
-            fatalError("\(#function) should not be called.")
-        }
-    }
-    
     var presentedViewController: UIViewController? {
         get {
             chatViewController?.presentedViewController
@@ -115,21 +106,21 @@ extension ChatViewControllerActionsHelper: ChatViewControllerActionsProtocol {
     }
     
     func present(_ viewControllerToPresent: UIViewController!, animated flag: Bool, completion: (() -> Void)!) {
-        guard let chatViewController = chatViewController else {
+        guard let chatViewController else {
             fatalError("\(#function) should not be called.")
         }
         chatViewController.present(viewControllerToPresent, animated: flag, completion: completion)
     }
     
     func present(_ viewControllerToPresent: UIViewController!, animated flag: Bool) {
-        guard let chatViewController = chatViewController else {
+        guard let chatViewController else {
             fatalError("\(#function) should not be called.")
         }
         chatViewController.present(viewControllerToPresent, animated: flag)
     }
     
     func dismissViewController(animated flag: Bool, completion: (() -> Void)!) {
-        guard let chatViewController = chatViewController else {
+        guard let chatViewController else {
             fatalError("\(#function) should not be called.")
         }
         chatViewController.dismiss(animated: flag, completion: completion)

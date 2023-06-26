@@ -74,7 +74,6 @@
 #import "GroupImageMessage.h"
 #import "BoxVideoMessage.h"
 #import "GroupVideoMessage.h"
-#import "MessageSender.h"
 #import "VoIPHelper.h"
 #import "PushPayloadDecryptor.h"
 #import "Threema-Swift.h"
@@ -86,6 +85,7 @@
 #import <UserNotifications/UserNotifications.h>
 #import <PushKit/PushKit.h>
 #import <Intents/Intents.h>
+#import <LocalAuthentication/LocalAuthentication.h>
 
 #ifdef DEBUG
 static const DDLogLevel ddLogLevel = DDLogLevelAll;
@@ -115,6 +115,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     IncomingMessageManager *incomingMessageManager;
     NotificationManager *notificationManager;
     DeviceLinking *deviceLinking;
+    NSData *evaluatedPolicyDomainState;
 }
 
 @synthesize window = _window;
@@ -641,6 +642,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 
         [self handlePresentingScreensWithForce:NO];
         shouldLoadUIForEnterForeground = false;
+        
     }
 }
 
@@ -1497,12 +1499,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
             [self.window.rootViewController dismissViewControllerAnimated:NO completion:nil];
         }
         
-        UINavigationController *nav;
-        if (SYSTEM_IS_IPAD) {
-            nav = [[UINavigationController alloc] initWithNavigationBarClass:[StatusNavigationBar class] toolbarClass:nil];
-        } else {
-            nav = [[UINavigationController alloc] initWithNavigationBarClass:[StatusNavigationBar class] toolbarClass:nil];
-        }
+        UINavigationController *nav = [[UINavigationController alloc] initWithNavigationBarClass:[StatusNavigationBar class] toolbarClass:nil];
         nav.navigationBarHidden = YES;
         [nav pushViewController:vc animated:NO];
         isAppLocked = YES;
@@ -1550,13 +1547,29 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
         startCheckBiometrics = true;
     }
     
-    [TouchIDAuthentication tryTouchIDAuthenticationCallback:^(BOOL success, NSError *error) {
+    [TouchIDAuthentication tryTouchIDAuthenticationCallback:^(BOOL success, NSError *error, NSData *evaluatePolicyStateData) {
         dispatch_async(dispatch_get_main_queue(), ^{
             if (success) {
                 DDLogVerbose(@"Authenticated using Touch ID.");
                 [self dismissPasscodeViewAnimated:YES];
             } else {
                 DDLogVerbose(@"Touch ID error: %@", error);
+                if ([[error domain] isEqual: @"ThreemaErrorDomain"]) {
+                    LAContext *context = [LAContext new];
+                    NSString* title = @"";
+                    if ([context canEvaluatePolicy:LAPolicyDeviceOwnerAuthenticationWithBiometrics error:nil]) {
+                        if (context.biometryType == LABiometryTypeFaceID) {
+                            title = [BundleUtil localizedStringForKey:@"alert_biometrics_changed_title_face"];
+                        } else {
+                            title = [BundleUtil localizedStringForKey:@"alert_biometrics_changed_title_touch"];
+                        }
+                    }
+                    
+                    evaluatedPolicyDomainState = evaluatePolicyStateData;
+                    [UIAlertTemplate showAlertWithOwner:_window.rootViewController title:title message:[BundleUtil localizedStringForKey:@"alert_biometrics_changed_message"] actionOk:^(UIAlertAction * _Nonnull) {
+                        return;
+                    }];
+                }
             }
         });
     }];
@@ -1583,6 +1596,11 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     } else if (pendingShortCutItem) {
         [URLHandler handleShortCutItem:pendingShortCutItem];
         pendingShortCutItem = nil;
+    }
+    
+    if (evaluatedPolicyDomainState != nil) {
+        [[UserSettings sharedUserSettings] setEvaluatedPolicyDomainStateApp:evaluatedPolicyDomainState];
+        evaluatedPolicyDomainState = nil;
     }
     
     if (rootToNotificationSettings) {
@@ -1710,7 +1728,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
         isAliveCheck) {
         
         NSString *appName = [BundleUtil localizedStringForKey: [ThreemaAppObjc currentName]];
-        [voIPCallStateManager startAndCancelCallFrom: appName completion:completion showWebNotification:false];
+        [voIPCallStateManager startAndCancelCallFrom: appName showWebNotification:false completion:completion];
         return;
     }
     
@@ -1723,28 +1741,31 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     [AppGroup setActive:NO forType:AppGroupTypeNotificationExtension];
     [AppGroup setActive:NO forType:AppGroupTypeShareExtension];
     
-    BOOL succeeded = [voIPCallStateManager startInitialIncomingCallWithDictionaryPayload: payload.dictionaryPayload completion: completion];
-    
-    if (succeeded) {
-        [notificationManager handleVoipPushWithPayload:payload.dictionaryPayload withCompletionHandler:^(BOOL isThreemaDict, NSDictionary * _Nullable handlerPayload) {
-            if (handlerPayload == nil) {
-                completion();
-                return;
-            }
-            
-            if (!isThreemaDict) {
-                [incomingMessageManager incomingPushWithPayloadDic:handlerPayload completion:completion];
-            }
-            else {
-                [incomingMessageManager incomingPushWithThreemaDic:handlerPayload completion:^{
-                    if (self.isAppInBackground) {
-                        [[ServerConnector sharedServerConnector] connectWait:ConnectionInitiatorThreemaCall];
-                    }
+    [voIPCallStateManager startInitialIncomingCallWithDictionaryPayload: payload.dictionaryPayload completion:^(BOOL succeeded) {
+        if (succeeded) {
+            [notificationManager handleVoipPushWithPayload:payload.dictionaryPayload withCompletionHandler:^(BOOL isThreemaDict, NSDictionary * _Nullable handlerPayload) {
+                if (handlerPayload == nil) {
                     completion();
-                }];
-            }
-        }];
-    }
+                    return;
+                }
+
+                if (!isThreemaDict) {
+                    [incomingMessageManager incomingPushWithPayloadDic:handlerPayload completion:completion];
+                }
+                else {
+                    [incomingMessageManager incomingPushWithThreemaDic:handlerPayload completion:^{
+                        if (self.isAppInBackground) {
+                            [[ServerConnector sharedServerConnector] connectWait:ConnectionInitiatorThreemaCall];
+                        }
+                        completion();
+                    }];
+                }
+            }];
+        }
+        else {
+            completion();
+        }
+    }];
 }
 
 

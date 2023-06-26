@@ -58,7 +58,7 @@ actor MediatorSyncableGroup {
 
         update(identity: identity, name: group.name)
 
-        update(identity: identity, profilePicture: group.photo?.data)
+        update(identity: identity, profilePicture: group.profilePicture)
 
         update(identity: identity, conversationCategory: group.conversationCategory)
 
@@ -98,7 +98,7 @@ actor MediatorSyncableGroup {
         }
 
         var sGroup = getSyncGroup(identity: identity)
-        if let name = name {
+        if let name {
             sGroup.name = name
         }
         else {
@@ -162,7 +162,7 @@ actor MediatorSyncableGroup {
     }
 
     func sync(syncAction: TaskDefinitionGroupSync.SyncAction) {
-        if let task = task {
+        if let task {
             task.syncAction = syncAction
             taskManager.add(taskDefinition: task)
         }
@@ -171,7 +171,7 @@ actor MediatorSyncableGroup {
     // MARK: Private functions
 
     private func getSyncGroup(identity: GroupIdentity) -> Sync_Group {
-        if let task = task,
+        if let task,
            task.syncGroup.groupIdentity.groupID == identity.id.convert(),
            task.syncGroup.groupIdentity.creatorIdentity == identity.creator {
             return task.syncGroup

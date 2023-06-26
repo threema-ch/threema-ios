@@ -20,9 +20,9 @@
 
 import Foundation
 
-public extension MessageDraftStore {
+extension MessageDraftStore {
     
-    static func previewForDraft(
+    public static func previewForDraft(
         for conversation: Conversation,
         textStyle: UIFont.TextStyle,
         tint: UIColor

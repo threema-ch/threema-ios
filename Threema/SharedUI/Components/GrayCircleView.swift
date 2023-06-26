@@ -20,6 +20,8 @@
 
 import UIKit
 
+// MARK: - GrayCircleView.Configuration
+
 extension GrayCircleView {
     private enum Configuration {
         /// Helper to scale font size

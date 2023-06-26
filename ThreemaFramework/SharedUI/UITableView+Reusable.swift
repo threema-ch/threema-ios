@@ -22,13 +22,13 @@ import UIKit
 
 // MARK: - Cells
 
-public extension UITableView {
+extension UITableView {
 
     /// Dequeue a new table view cell at the provided index path for the type provided
     ///
     /// - Parameter indexPath: Index path of cell
     /// - Returns: Cell of type `CellType`
-    func dequeueCell<CellType: UITableViewCell>(for indexPath: IndexPath) -> CellType where CellType: Reusable {
+    public func dequeueCell<CellType: UITableViewCell>(for indexPath: IndexPath) -> CellType where CellType: Reusable {
         let cell = dequeueReusableCell(withIdentifier: CellType.reuseIdentifier, for: indexPath)
         
         guard let castedCell = cell as? CellType else {
@@ -41,19 +41,19 @@ public extension UITableView {
     /// Register a new table view cell for reuse
     ///
     /// - Parameter : Table view cell conforming to `Reusable`
-    func registerCell<CellType: UITableViewCell>(_: CellType.Type) where CellType: Reusable {
+    public func registerCell<CellType: UITableViewCell>(_: CellType.Type) where CellType: Reusable {
         register(CellType.self, forCellReuseIdentifier: CellType.reuseIdentifier)
     }
 }
 
 // MARK: - Header and footer
 
-public extension UITableView {
+extension UITableView {
     
     /// Dequeue a new header footer view
     ///
     /// - Returns: Header footer view of type `HeaderFooterViewType` if dequeueing and casting was successful
-    func dequeueHeaderFooter<HeaderFooterViewType: UITableViewHeaderFooterView>()
+    public func dequeueHeaderFooter<HeaderFooterViewType: UITableViewHeaderFooterView>()
         -> HeaderFooterViewType? where HeaderFooterViewType: Reusable {
         
         dequeueReusableHeaderFooterView(withIdentifier: HeaderFooterViewType.reuseIdentifier)
@@ -63,7 +63,7 @@ public extension UITableView {
     /// Register a new header footer view for reuse
     ///
     /// - Parameter :  Header footer view conforming to `Reusable`
-    func registerHeaderFooter<HeaderFooterViewType: UITableViewHeaderFooterView>(_: HeaderFooterViewType.Type)
+    public func registerHeaderFooter<HeaderFooterViewType: UITableViewHeaderFooterView>(_: HeaderFooterViewType.Type)
         where HeaderFooterViewType: Reusable {
         register(HeaderFooterViewType.self, forHeaderFooterViewReuseIdentifier: HeaderFooterViewType.reuseIdentifier)
     }

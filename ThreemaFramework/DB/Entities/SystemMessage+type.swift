@@ -45,12 +45,12 @@ public struct VoteInfo: Codable {
 
 // MARK: - SystemMessage
 
-public extension SystemMessage {
+extension SystemMessage {
     
     // MARK: - SystemMessageType
     
     /// Type of the system message
-    enum SystemMessageType {
+    public enum SystemMessageType {
         case systemMessage(type: InfoType)
         case callMessage(type: CallType)
         case workConsumerInfo(type: WorkConsumerInfoType)
@@ -59,7 +59,7 @@ public extension SystemMessage {
     // MARK: - InfoType
     
     /// Types for messages not associated with calls
-    enum InfoType {
+    public enum InfoType {
         case groupRenamed(newName: String)
         case groupMemberLeft(name: String)
         case groupMemberAdded(name: String)
@@ -126,7 +126,7 @@ public extension SystemMessage {
                 return BundleUtil.localizedString(forKey: "group_member_creator_left")
                 
             case let .vote(info):
-                guard let info = info else {
+                guard let info else {
                     return BundleUtil.localizedString(forKey: "vote_system_message_default")
                 }
                 
@@ -200,7 +200,7 @@ public extension SystemMessage {
     // MARK: - CallType
     
     /// Types for messages associated with calls
-    enum CallType {
+    public enum CallType {
         // Ended with call time
         case endedIncomingSuccessful(duration: String)
         case endedOutgoingSuccessful(duration: String)
@@ -365,7 +365,7 @@ public extension SystemMessage {
     // MARK: - WorkConsumerInfoType
     
     /// Types for messages used to display consumer or private info
-    enum WorkConsumerInfoType {
+    public enum WorkConsumerInfoType {
         case work
         case consumer
         
@@ -400,7 +400,7 @@ public extension SystemMessage {
     // MARK: - systemMessageType
     
     /// Type of system message
-    var systemMessageType: SystemMessageType {
+    public var systemMessageType: SystemMessageType {
         guard let typeValue = type?.intValue else {
             return .systemMessage(type: .systemMessageUnsupportedType)
         }

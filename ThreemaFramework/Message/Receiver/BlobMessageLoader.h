@@ -21,7 +21,7 @@
 #import <Foundation/Foundation.h>
 #import "ThreemaFramework/ThreemaFramework-Swift.h"
 #import "BaseMessage.h"
-#import "BlobData.h"
+#import "BlobOrigin.h"
 
 @interface BlobMessageLoader : NSObject
 

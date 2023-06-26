@@ -214,7 +214,7 @@ class WebMessageObject: NSObject {
             objectDict.updateValue(voip!, forKey: "voip")
         }
         
-        if let reactions = reactions {
+        if let reactions {
             objectDict.updateValue(reactions, forKey: "reactions")
         }
         
@@ -289,16 +289,17 @@ class WebMessageObject: NSObject {
             return
         }
         else if imageMessageEntity.image == nil {
-            if imageMessageEntity.thumbnail.data == nil {
+            if imageMessageEntity.thumbnail?.data == nil {
                 return
             }
         }
         else if imageMessageEntity.thumbnail == nil {
-            if imageMessageEntity.image.data == nil {
+            if imageMessageEntity.image?.data == nil {
                 return
             }
         }
-        else if imageMessageEntity.image.data == nil, imageMessageEntity.thumbnail.data == nil {
+        else if imageMessageEntity.image?.data == nil,
+                imageMessageEntity.thumbnail?.data == nil {
             return
         }
         
@@ -510,35 +511,35 @@ struct WebBlob {
     var name: String
     
     init(imageMessageEntity: ImageMessageEntity) {
-        if imageMessageEntity.image.data != nil {
-            self.blob = imageMessageEntity.image.data
+        if let imageMessageData = imageMessageEntity.image?.data {
+            self.blob = imageMessageData
         }
-        self.name = imageMessageEntity.blobGetWebFilename()
+        self.name = imageMessageEntity.blobWebFilename
         self.type = "image/\(MEDIA_EXTENSION_IMAGE)"
     }
     
     init(videoMessageEntity: VideoMessageEntity) {
-        if videoMessageEntity.video.data != nil {
-            self.blob = videoMessageEntity.video.data
+        if let videoMessageData = videoMessageEntity.video?.data {
+            self.blob = videoMessageData
         }
-        self.name = videoMessageEntity.blobGetWebFilename()
+        self.name = videoMessageEntity.blobWebFilename
         self.type = "video/\(MEDIA_EXTENSION_VIDEO)"
     }
     
     init(audioMessageEntity: AudioMessageEntity) {
-        if audioMessageEntity.audio.data != nil {
-            self.blob = audioMessageEntity.audio.data
+        if let audioMessageData = audioMessageEntity.audio?.data {
+            self.blob = audioMessageData
         }
-        self.name = audioMessageEntity.blobGetWebFilename()
+        self.name = audioMessageEntity.blobWebFilename
         self.type = "audio/\(MEDIA_EXTENSION_VIDEO)"
     }
     
     init(fileMessageEntity: FileMessageEntity) {
-        if let fileMessageData = fileMessageEntity.data {
-            self.blob = fileMessageData.data
+        if let fileMessageData = fileMessageEntity.data?.data {
+            self.blob = fileMessageData
         }
-        self.name = fileMessageEntity.blobGetWebFilename()
-        if fileMessageEntity.renderFileAudioMessage() {
+        self.name = fileMessageEntity.blobWebFilename
+        if fileMessageEntity.renderType == .voiceMessage {
             self.type = "audio/\(MEDIA_EXTENSION_VIDEO)"
         }
         else {
@@ -604,7 +605,7 @@ struct WebThumbnail {
     }
     
     init(_ videoMessageEntity: VideoMessageEntity, onlyThumbnail: Bool) {
-        if let thumbnailData = videoMessageEntity.thumbnail.data,
+        if let thumbnailData = videoMessageEntity.thumbnail?.data,
            let tmpPreview = MediaConverter.getWebPreviewData(thumbnailData) {
             let size = MediaConverter.getWebThumbnailSize(forImageData: thumbnailData)
             self.height = Int(size.height)
@@ -654,7 +655,7 @@ struct WebVideo {
     
     init(_ videoMessageEntity: VideoMessageEntity) {
         self.duration = videoMessageEntity.duration.intValue
-        self.size = videoMessageEntity.videoSize.intValue
+        self.size = videoMessageEntity.videoSize?.intValue ?? 0
     }
     
     init(_ fileMessageEntity: FileMessageEntity) {
@@ -812,7 +813,9 @@ extension Data {
 extension Numeric {
     var makeData: Data {
         var source = self
-        // This will return 1 byte for 8-bit, 2 bytes for 16-bit, 4 bytes for 32-bit and 8 bytes for 64-bit binary integers. For floating point types it will return 4 bytes for single-precision, 8 bytes for double-precision and 16 bytes for extended precision.
+        // This will return 1 byte for 8-bit, 2 bytes for 16-bit, 4 bytes for 32-bit and 8 bytes for 64-bit binary
+        // integers. For floating point types it will return 4 bytes for single-precision, 8 bytes for double-precision
+        // and 16 bytes for extended precision.
         return Data(bytes: &source, count: MemoryLayout<Self>.size)
     }
 }

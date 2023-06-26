@@ -300,7 +300,7 @@ extension SendLocationMapDataSource {
         
         HTTPClient().downloadData(url: url, contentType: .json) { data, _, error in
             do {
-                guard let data = data else {
+                guard let data else {
                     DDLogError("Did not receive POI: \(error)")
                     return
                 }

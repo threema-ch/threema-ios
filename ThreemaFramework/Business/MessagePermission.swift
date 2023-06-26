@@ -89,7 +89,7 @@ public class MessagePermission: NSObject {
 
     @objc func canSend(to identity: String, reason: UnsafeMutablePointer<NSString?>?) -> Bool {
         let result = canSend(to: identity)
-        if let r = result.reason, let reason = reason {
+        if let r = result.reason, let reason {
             reason.pointee = r as NSString
         }
         return result.isAllowed
@@ -101,7 +101,7 @@ public class MessagePermission: NSObject {
         reason: UnsafeMutablePointer<NSString?>?
     ) -> Bool {
         let result = canSend(groudID: groupID, groupCreatorIdentity: groupCreatorIdentity)
-        if let r = result.reason, let reason = reason {
+        if let r = result.reason, let reason {
             reason.pointee = r as NSString
         }
         return result.isAllowed

@@ -20,7 +20,6 @@
 
 #import "ForwardTextActivity.h"
 #import "ContactGroupPickerViewController.h"
-#import "MessageSender.h"
 #import "BundleUtil.h"
 
 @interface ForwardTextActivity () <ContactGroupPickerDelegate, ModalNavigationControllerDelegate>
@@ -65,21 +64,19 @@
 }
 
 - (void)sendMessageToConversation:(Conversation *)conversation {
-    [MessageSender sendMessage:_text inConversation:conversation quickReply:NO requestId:nil onCompletion:^(BaseMessage *message) {
-        ;//nop
-    }];
+    MessageSender *messageSender = [[MessageSender alloc] initWithEntityManager:[[EntityManager alloc] init]];
+    [messageSender sendTextMessageWithText:_text in:conversation quickReply:NO requestID:nil completion:nil];
 }
 
 #pragma mark - ContactPickerDelegate
 
 - (void)contactPicker:(ContactGroupPickerViewController*)contactPicker didPickConversations:(NSSet *)conversations renderType:(NSNumber *)renderType sendAsFile:(BOOL)sendAsFile {
+    MessageSender *messageSender = [[MessageSender alloc] initWithEntityManager:[[EntityManager alloc] init]];
     for (Conversation *conversation in conversations) {
         [self sendMessageToConversation:conversation];
         
         if (contactPicker.additionalTextToSend) {
-            [MessageSender sendMessage:contactPicker.additionalTextToSend inConversation:conversation quickReply:NO requestId:nil onCompletion:^(BaseMessage *message) {
-                ;//nop
-            }];
+            [messageSender sendTextMessageWithText:contactPicker.additionalTextToSend in:conversation quickReply:NO requestID:nil completion:nil];
         }
     }
     

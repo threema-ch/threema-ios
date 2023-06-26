@@ -29,11 +29,11 @@ public class IntentCreator {
         case createIntentFailed(message: String)
     }
     
-    private let settingsStore: SettingsStoreProtocol
+    private let userSettings: UserSettingsProtocol
     private let entityManager: EntityManager
     
-    public init(settingsStore: SettingsStoreProtocol, entityManager: EntityManager) {
-        self.settingsStore = settingsStore
+    public init(userSettings: UserSettingsProtocol, entityManager: EntityManager) {
+        self.userSettings = userSettings
         self.entityManager = entityManager
     }
     
@@ -45,13 +45,13 @@ public class IntentCreator {
     ) -> INInteraction? {
         
         if direction == .outgoing,
-           !settingsStore.allowOutgoingDonations {
+           !userSettings.allowOutgoingDonations {
             DDLogVerbose("Donations for outgoing interactions are disabled by the user")
             return nil
         }
         
         if direction == .incoming {
-            guard case NotificationType.complete = settingsStore.notificationType else {
+            guard case NotificationType.complete.userSettingsValue = userSettings.notificationType.intValue else {
                 DDLogVerbose("Donations for incoming interactions are disabled by the user")
                 return nil
             }
@@ -83,7 +83,7 @@ public class IntentCreator {
         var sender: INPerson?
         
         entityManager.performBlockAndWait {
-            guard let fetchedContact = fetchedContact else {
+            guard let fetchedContact else {
                 return
             }
             
@@ -91,13 +91,14 @@ public class IntentCreator {
             contact = fetchedContact.inPerson
         }
         
-        guard let conversationIdentifier = conversationIdentifier,
-              let contact = contact else {
+        guard let conversationIdentifier,
+              let contact else {
             return nil
         }
         
         if direction == .incoming {
-            // Because this communication is incoming, we can infer that the current user is a recipient. Don't include the current user when initializing the intent.
+            // Because this communication is incoming, we can infer that the current user is a recipient. Don't include
+            // the current user when initializing the intent.
             sender = contact
         }
         else if direction == .outgoing {
@@ -129,13 +130,13 @@ public class IntentCreator {
     ) -> INInteraction? {
         
         if direction == .outgoing,
-           !settingsStore.allowOutgoingDonations {
+           !userSettings.allowOutgoingDonations {
             DDLogVerbose("Donations for outgoing interactions are disabled by the user")
             return nil
         }
         
         if direction == .incoming {
-            guard case NotificationType.complete = settingsStore.notificationType else {
+            guard case NotificationType.complete.userSettingsValue = userSettings.notificationType.intValue else {
                 DDLogVerbose("Donations for incoming interactions are disabled by the user")
                 return nil
             }
@@ -180,7 +181,7 @@ public class IntentCreator {
         entityManager.performBlockAndWait {
             contact = fetchedContact?.inPerson ?? nil
 
-            guard let groupConversation = groupConversation else {
+            guard let groupConversation else {
                 return
             }
             
@@ -196,8 +197,8 @@ public class IntentCreator {
             }
         }
         
-        guard let conversationIdentifier = conversationIdentifier,
-              let groupName = groupName else {
+        guard let conversationIdentifier,
+              let groupName else {
             return nil
         }
         
@@ -205,7 +206,8 @@ public class IntentCreator {
         groupMemberCount.recipientCount = recipientCount
 
         if direction == .incoming {
-            // Because this communication is incoming, we can infer that the current user is a recipient. Don't include the current user when initializing the intent.
+            // Because this communication is incoming, we can infer that the current user is a recipient. Don't include
+            // the current user when initializing the intent.
             sender = contact
         }
         
@@ -223,7 +225,7 @@ public class IntentCreator {
         intent.donationMetadata = groupMemberCount
         
         // Set groupImage; this is needed to be displayed as group communication notification
-        if let groupImage = groupImage {
+        if let groupImage {
             intent.setImage(groupImage, forParameterNamed: \.speakableGroupName)
         }
         
@@ -248,7 +250,7 @@ extension IntentCreator {
             }
             
             interaction.donate { error in
-                if let error = error {
+                if let error {
                     DDLogError("An error has occurred when donating an interaction \(error.localizedDescription)")
                     seal.reject(error)
                 }
@@ -268,7 +270,7 @@ extension IntentCreator {
             }
             
             interaction.donate { error in
-                if let error = error {
+                if let error {
                     DDLogError("An error has occurred when donating an interaction \(error.localizedDescription)")
                     seal.reject(error)
                 }

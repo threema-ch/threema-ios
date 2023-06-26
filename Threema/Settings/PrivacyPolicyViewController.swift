@@ -23,7 +23,7 @@ class PrivacyPolicyViewController: SettingsWebViewViewController {
         super.viewDidLoad()
         url = "https://threema.ch/privacy_policy/"
         
-        title = BundleUtil.localizedString(forKey: "settings_privacy_policy")
+        title = BundleUtil.localizedString(forKey: "settings_list_privacy_policy_title")
     }
 }
 

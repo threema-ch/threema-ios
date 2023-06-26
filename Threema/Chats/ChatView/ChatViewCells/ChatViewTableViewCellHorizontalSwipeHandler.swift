@@ -75,7 +75,8 @@ class ChatViewTableViewCellHorizontalSwipeHandler: NSObject {
     
     private func configure(with cell: UITableViewCell) {
         // Add images for quote interaction
-        // They might not be needed but at this point the message might not have been set yet. And the message might not be quotable after all.
+        // They might not be needed but at this point the message might not have been set yet. And the message might not
+        // be quotable after all.
         quoteSymbolView.translatesAutoresizingMaskIntoConstraints = false
         
         cell.contentView.addSubview(quoteSymbolView)
@@ -153,11 +154,11 @@ class ChatViewTableViewCellHorizontalSwipeHandler: NSObject {
             prevDisplacement = displacement.x
         }
         
-        guard let originalCellCenter = originalCellCenter else {
+        guard let originalCellCenter else {
             return
         }
         
-        guard let cell = cell else {
+        guard let cell else {
             return
         }
         
@@ -197,11 +198,12 @@ class ChatViewTableViewCellHorizontalSwipeHandler: NSObject {
     private func swipeEnded() {
         resetViewPositionAndTransformations()
         
-        if activated, let delegate = delegate, delegate.canQuote {
+        if activated, let delegate, delegate.canQuote {
             delegate.showQuoteView()
         }
 
-        // Reset center after gesture to fix cell overlap that might have occurred when a snapshot was applied during swipe
+        // Reset center after gesture to fix cell overlap that might have occurred when a snapshot was applied during
+        // swipe
         if let cell = cell as? ChatViewBaseTableViewCell,
            let originalCellCenter {
             cell.center = CGPoint(x: originalCellCenter.x, y: originalCellCenter.y)
@@ -214,7 +216,7 @@ class ChatViewTableViewCellHorizontalSwipeHandler: NSObject {
     }
     
     private func performActivationAnimation() {
-        guard let delegate = delegate else {
+        guard let delegate else {
             return
         }
         
@@ -251,7 +253,7 @@ class ChatViewTableViewCellHorizontalSwipeHandler: NSObject {
     }
     
     private func resetViewPositionAndTransformations() {
-        guard let originalCellCenter = originalCellCenter else {
+        guard let originalCellCenter else {
             return
         }
         
@@ -279,7 +281,7 @@ class ChatViewTableViewCellHorizontalSwipeHandler: NSObject {
 
 extension ChatViewTableViewCellHorizontalSwipeHandler: UIGestureRecognizerDelegate {
     public func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
-        guard let delegate = delegate else {
+        guard let delegate else {
             return false
         }
         

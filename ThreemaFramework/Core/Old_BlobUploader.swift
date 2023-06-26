@@ -95,7 +95,7 @@ class Old_BlobUploader: NSObject {
                 data: data,
                 delegate: self
             ) { task, data, response, error in
-                if let error = error {
+                if let error {
                     DDLogError(String(format: "Upload failed with error: %@", error.localizedDescription))
                     self.delegate.uploadFailed()
                     return
@@ -197,7 +197,7 @@ extension Old_BlobUploader: URLSessionTaskDelegate {
     }
     
     func urlSession(_ session: URLSession, didBecomeInvalidWithError error: Error?) {
-        if let error = error {
+        if let error {
             DDLogError(String(format: "Upload session invalid with error: %@", error.localizedDescription))
         }
 

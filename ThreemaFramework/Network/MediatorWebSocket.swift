@@ -77,14 +77,14 @@ import Starscream
     }
     
     public func write(data: Data) {
-        guard let socket = socket, socket.isConnected else {
+        guard let socket, socket.isConnected else {
             return
         }
         socket.write(data: data)
     }
     
     @objc func connect() -> Bool {
-        if let socket = socket,
+        if let socket,
            !socket.isConnected {
             
             socket.connect()
@@ -93,7 +93,7 @@ import Starscream
     }
     
     @objc func disconnect() {
-        if let socket = socket,
+        if let socket,
            socket.isConnected {
             
             socket.disconnect()
@@ -116,7 +116,7 @@ extension MediatorWebSocket: WebSocketDelegate {
                 "Disconnect from mediator server with error: \(error.localizedDescription). Error code: \(error.code); Error Message: \(error.message)"
             )
         }
-        else if let error = error {
+        else if let error {
             DDLogError("Disconnect from mediator server with error: \(error)")
         }
         

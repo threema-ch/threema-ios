@@ -78,8 +78,9 @@ class ConversationActions: NSObject {
     /// This is a workaround implemented specifically for `ChatViewController`.
     /// - Parameters:
     ///   - conversationObjectID: The conversation to which the messages below
-    ///   - messages: messages which will be marked as read
-    /// - Returns: a promise which is fulfilled after all messages were marked as read containing the number of messages that were marked as read or 0 if none were marked as read.
+    ///   - messages: Messages which will be marked as read
+    /// - Returns: A promise which is fulfilled after all messages were marked as read containing the number of messages
+    ///            that were marked as read or 0 if none were marked as read.
     func read(
         _ conversationObjectID: NSManagedObjectID,
         messages: [BaseMessage]
@@ -116,21 +117,12 @@ class ConversationActions: NSObject {
                         }
                     }
                 }
-
+                
                 self.notificationManager.updateUnreadMessagesCount()
-
+                
                 seal(markedAsRead)
             }
         }
-    }
-
-    @objc
-    @discardableResult
-    func readObjc(
-        _ conversation: Conversation,
-        isAppInBackground: Bool = AppDelegate.shared().isAppInBackground()
-    ) -> AnyPromise {
-        AnyPromise(read(conversation, isAppInBackground: isAppInBackground))
     }
 
     func unread(_ conversation: Conversation) {
@@ -154,7 +146,7 @@ class ConversationActions: NSObject {
         notificationManager.updateUnreadMessagesCount()
     }
     
-    @objc func unarchive(_ conversation: Conversation) {
+    func unarchive(_ conversation: Conversation) {
         var doUpdateUnreadMessagesCount = false
 
         businessInjector.entityManager.performBlockAndWait {

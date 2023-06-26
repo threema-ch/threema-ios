@@ -134,18 +134,22 @@ typedef NS_ENUM(NSInteger, ThreemaAudioMessagePlaySpeed) {
 @synthesize enableVideoCall;
 @synthesize threemaVideoCallQualitySetting;
 
-@synthesize newChatViewActive;
 @synthesize flippedTableView;
+@synthesize newSettingsActive;
 
 @synthesize unknownGroupAlertList;
+
+@synthesize evaluatedPolicyDomainStateApp;
+@synthesize evaluatedPolicyDomainStateShareExtension;
 
 @synthesize hidePrivateChats;
 @synthesize blockCommunication;
 @synthesize voiceMessagesShowTimeRemaining;
 
 /// Deprecated Keys, please add keys if they are removed:
-/// featureFlagEnableNoMIMETypeFileMessagesFilter
-/// PushShowNickname
+/// - `featureFlagEnableNoMIMETypeFileMessagesFilter`
+/// - `PushShowNickname`
+/// - `NewChatViewActive`
 
 static UserSettings *instance;
 
@@ -252,8 +256,8 @@ static UserSettings *instance;
                                         @"08:00", @"MasterDNDStartTime",
                                         @"17:00", @"MasterDNDEndTime",
                                         [NSNumber numberWithBool:YES], @"EnableVideoCall",
-                                        [NSNumber numberWithBool:YES], @"NewChatViewActive",
                                         [NSNumber numberWithBool:NO], @"flippedTableView",
+                                        [NSNumber numberWithBool:NO], @"NewSettingsActive",
                                         [NSNumber numberWithInt:ThreemaVideoCallQualitySettingAuto], @"ThreemaVideoCallQualitySetting",
                                         @"", @"SentryAppDevice",
                                         [NSMutableArray array], @"UnknownGroupAlertList",
@@ -262,9 +266,9 @@ static UserSettings *instance;
                                         [NSNumber numberWithBool:NO], @"BlockCommunication",
                                         [NSNumber numberWithBool:NO], @"VoiceMessagesShowTimeRemaining",
                                      nil];
+                                     //Keys `EvaluatedPolicyDomainStateApp` and `EvaluatedPolicyDomainStateShareExtension` are intentionally not set, since we need them to be `nil` the first time.
         
         [defaults registerDefaults:appDefaults];
-        
         
         [self initFromUserDefaults];
     }
@@ -348,6 +352,8 @@ static UserSettings *instance;
 
     safeConfig = [defaults dataForKey:@"SafeConfig"];
     safeIntroShown = [defaults boolForKey:@"SafeIntroShown"];
+    evaluatedPolicyDomainStateApp = [defaults dataForKey:@"EvaluatedPolicyDomainStateApp"];
+    evaluatedPolicyDomainStateShareExtension = [defaults dataForKey:@"EvaluatedPolicyDomainStateShareExtension"];
     
     workInfoShown = [defaults boolForKey:@"WorkInfoShown"];
     videoCallInChatInfoShown = [defaults boolForKey:@"VideoCallInChatInfoShown"];
@@ -380,9 +386,8 @@ static UserSettings *instance;
     blockCommunication = [defaults boolForKey:@"BlockCommunication"];
     voiceMessagesShowTimeRemaining = [defaults boolForKey:@"VoiceMessagesShowTimeRemaining"];
     
-    // TODO: (IOS-2860) Remove
-    newChatViewActive = YES;
     flippedTableView = [defaults boolForKey:@"flippedTableView"];
+    newSettingsActive = [defaults boolForKey:@"NewSettingsActive"];
 }
 
 - (void)pushSettingsMigration:(NSOrderedSet *)tmpNoPushIdentities {
@@ -531,13 +536,6 @@ static UserSettings *instance;
     autoSaveMedia = newAutoSaveMedia;
     [defaults setBool:autoSaveMedia forKey:@"AutoSaveMedia"];
     [defaults synchronize];
-}
-
-// TODO: (IOS-2860) Remove
-- (float)chatFontSize {
-    UIFontDescriptor *fontDescriptor = [UIFontDescriptor preferredFontDescriptorWithTextStyle:UIFontTextStyleBody];
-    CGFloat size = fontDescriptor.pointSize;
-    return size;
 }
 
 - (void)setDarkTheme:(BOOL)newDarkTheme {
@@ -776,6 +774,18 @@ static UserSettings *instance;
     [defaults synchronize];
 }
 
+- (void)setEvaluatedPolicyDomainStateApp:(NSData *)newEvaluatedPolicyDomainState {
+    evaluatedPolicyDomainStateApp = newEvaluatedPolicyDomainState;
+    [defaults setObject:newEvaluatedPolicyDomainState forKey:@"EvaluatedPolicyDomainStateApp"];
+    [defaults synchronize];
+}
+
+- (void)setEvaluatedPolicyDomainStateShareExtension:(NSData *)newEvaluatedPolicyDomainState {
+    evaluatedPolicyDomainStateShareExtension = newEvaluatedPolicyDomainState;
+    [defaults setObject:newEvaluatedPolicyDomainState forKey:@"EvaluatedPolicyDomainStateShareExtension"];
+    [defaults synchronize];
+}
+
 - (void)setWorkInfoShown:(BOOL)newWorkInfoShown {
     workInfoShown = newWorkInfoShown;
     [defaults setBool:workInfoShown forKey:@"WorkInfoShown"];
@@ -845,6 +855,11 @@ static UserSettings *instance;
 - (void)setFlippedTableView:(BOOL)newFlippedTableView {
     flippedTableView = newFlippedTableView;
     [defaults setBool:flippedTableView forKey:@"flippedTableView"];
+    [defaults synchronize];
+}
+- (void)setNewSettingsActive:(BOOL)newNewSettingsActive {
+    newSettingsActive = newNewSettingsActive;
+    [defaults setBool:newSettingsActive forKey:@"NewSettingsActive"];
     [defaults synchronize];
 }
 

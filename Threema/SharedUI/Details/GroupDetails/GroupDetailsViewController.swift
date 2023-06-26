@@ -37,28 +37,21 @@ final class GroupDetailsViewController: ThemedCodeModernGroupedTableViewControll
             actions = []
         }
         
-        var mediaAndPollsActions = [QuickAction]()
-        
-        // TODO: (IOS-2860) Remove when new chat view released
-        if UserSettings.shared().newChatViewActive {
-            mediaAndPollsActions = mediaAndPollActions()
-        }
-        
         return DetailsHeaderView(
             with: group.contentConfiguration,
             avatarImageTapped: { [weak self] in
                 guard let strongSelf = self else {
                     return
                 }
-                guard let groupPhotoData = strongSelf.group.photo?.data,
-                      let groupPhoto = UIImage(data: groupPhotoData) else {
+                guard let groupProfilePictureData = strongSelf.group.profilePicture,
+                      let profilePicture = UIImage(data: groupProfilePictureData) else {
                     return
                 }
                 
-                strongSelf.presentFullscreen(image: groupPhoto)
+                strongSelf.presentFullscreen(image: profilePicture)
             },
             quickActions: actions,
-            mediaAndPollsQuickActions: mediaAndPollsActions
+            mediaAndPollsQuickActions: mediaAndPollActions()
         )
     }()
     
@@ -92,7 +85,8 @@ final class GroupDetailsViewController: ThemedCodeModernGroupedTableViewControll
     ///   - group: Group to show details for
     ///   - displayMode: Mode the group is shown in
     ///   - displayStyle: Appearance of the group details
-    ///   - delegate: Details delegate that is called on certain actions. This should be set when `displayMode` is `conversation`.
+    ///   - delegate: Details delegate that is called on certain actions. This should be set when `displayMode` is
+    /// `conversation`.
     @objc init(
         for group: Group,
         displayMode: GroupDetailsDisplayMode = .default,
@@ -168,7 +162,7 @@ final class GroupDetailsViewController: ThemedCodeModernGroupedTableViewControll
             // will be handled in group object
         }
                 
-        observeGroup(\.photo) { [weak self] in
+        observeGroup(\.profilePicture) { [weak self] in
             self?.updateHeader(animated: false)
         }
 
@@ -207,8 +201,8 @@ final class GroupDetailsViewController: ThemedCodeModernGroupedTableViewControll
     ///   - keyPath: Key path in `Group` to observe
     ///   - changeHandler: Handler called on each observed change.
     ///                     Don't forget to capture `self` weakly! Dispatched on the main queue.
-    private func observeGroup<Value>(
-        _ keyPath: KeyPath<Group, Value>,
+    private func observeGroup(
+        _ keyPath: KeyPath<Group, some Any>,
         changeHandler: @escaping () -> Void
     ) {
         let observer = group.observe(keyPath) { [weak self] _, _ in
@@ -228,7 +222,8 @@ final class GroupDetailsViewController: ThemedCodeModernGroupedTableViewControll
                 return
             }
 
-            // It's important to call change handler on main thread, because Group object can update itself in the background
+            // It's important to call change handler on main thread, because Group object can update itself in the
+            // background
             DispatchQueue.main.async {
                 changeHandler()
             }
@@ -545,7 +540,7 @@ extension GroupDetailsViewController: UITableViewDelegate {
 // Used for iOS 12 support
 extension GroupDetailsViewController {
     override var previewActionItems: [UIPreviewActionItem] {
-        guard let presentingViewController = presentingViewController else {
+        guard let presentingViewController else {
             return []
         }
         

@@ -175,7 +175,7 @@ final class ChatSearchResultsTableViewCell: ThemedCodeStackTableViewCell {
     }
     
     private func updateCel(for message: BaseMessage?) {
-        guard let message = message else {
+        guard let message else {
             nameLabel.text = nil
             dateLabel.text = nil
             messagePreviewTextLabel.text = nil
@@ -186,7 +186,8 @@ final class ChatSearchResultsTableViewCell: ThemedCodeStackTableViewCell {
         dateLabel.text = DateFormatter.relativeTimeTodayAndMediumDateOtherwise(for: message.sectionDate)
         
         // TODO: (IOS-2906) Replace this by a generic preview string for all messages
-        // For now we only search text messages, ballot titles and file names (see `-[EntityFetcher messagesContaining:inConversation:]`)
+        // For now we only search text messages, ballot titles and file names (see `-[EntityFetcher
+        // messagesContaining:inConversation:]`)
         switch message {
         case let textMessage as TextMessage:
             messagePreviewTextLabel.attributedText = markupParser.previewString(

@@ -85,7 +85,7 @@ import PromiseKit
     public func syncAndSave(_ profile: Profile) -> Promise<Void> {
         Promise { seal in
             if serverConnector.isMultiDeviceActivated,
-               let taskManager = taskManager {
+               let taskManager {
                 var syncUserProfile = Sync_UserProfile()
 
                 if myIdentityStore.profilePicture?["ProfilePicture"] as? Data != profile.profileImage {
@@ -132,7 +132,7 @@ import PromiseKit
                 )
 
                 taskManager.add(taskDefinition: task) { _, error in
-                    if let error = error {
+                    if let error {
                         seal.reject(error)
                         return
                     }

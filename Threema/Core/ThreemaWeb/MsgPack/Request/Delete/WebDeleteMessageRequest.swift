@@ -68,7 +68,6 @@ class WebDeleteMessageRequest: WebAbstractMessage {
             return
         }
         
-        var chatViewController: Old_ChatViewController?
         let entityManager = EntityManager()
         
         guard let message = entityManager.entityFetcher.message(with: messageID, conversation: conversation) else {
@@ -81,7 +80,6 @@ class WebDeleteMessageRequest: WebAbstractMessage {
         
         entityManager.performSyncBlockAndSafe {
             if message.isKind(of: BaseMessage.self) {
-                message.conversation = nil
                 entityManager.entityDestroyer.deleteObject(object: message)
             }
             if message.isKind(of: SystemMessage.self) {
@@ -91,13 +89,9 @@ class WebDeleteMessageRequest: WebAbstractMessage {
             if let conversation = self.conversation {
                 let messageFetcher = MessageFetcher(for: conversation, with: entityManager)
                 conversation.lastMessage = messageFetcher.lastMessage()
-                chatViewController = Old_ChatViewControllerCache.controller(for: conversation)
-                chatViewController?.updateConversationLastMessage()
             }
         }
-        DispatchQueue.main.async {
-            chatViewController?.updateConversation()
-        }
+        
         ack!.success = true
     }
 }

@@ -23,20 +23,19 @@
 #import "BaseMessage.h"
 #import "ImageData.h"
 #import "VideoData.h"
-#import "BlobData.h"
+#import "BlobOrigin.h"
 
-@interface VideoMessageEntity : BaseMessage <BlobData>
+@interface VideoMessageEntity : BaseMessage
 
-@property (nonatomic, retain) NSNumber *progress;
-@property (nonatomic, retain) NSData *videoBlobId NS_SWIFT_NAME(videoBlobID);
-@property (nonatomic, retain) NSData *encryptionKey;
-@property (nonatomic, retain) NSNumber *videoSize;
-@property (nonatomic, retain) VideoData *video;
-@property (nonatomic, retain) ImageData *thumbnail;
-@property (nonatomic, retain) NSNumber *duration;
+// Attributes
+@property (nonnull, nonatomic, retain) NSNumber *duration; // Non-optional; default is 0.
+@property (nullable, nonatomic, retain) NSData *encryptionKey;
+@property (nullable, nonatomic, retain) NSNumber *progress;
+@property (nullable, nonatomic, retain) NSData *videoBlobId NS_SWIFT_NAME(videoBlobID);
+@property (nullable, nonatomic, retain) NSNumber *videoSize;
 
-#pragma mark - own methods & properties
-
-@property (readonly) UIImage *thumbnailWithPlayOverlay;
+// Relationships
+@property (nullable, nonatomic, retain) ImageData *thumbnail;
+@property (nullable, nonatomic, retain) VideoData *video;
 
 @end

@@ -28,7 +28,8 @@ class SendLocationViewController: ThemedViewController {
     
     // MARK: - Properties
     
-    // Special POIs (These are placed here since both of the datasources need to access them, possible point for improving in future)
+    // Special POIs (These are placed here since both of the datasources need to access them, possible point for
+    // improving in future)
     var currentLocationPOI = PointOfInterest(
         type: .currentLocationPOI,
         name: BundleUtil.localizedString(forKey: "poi_current_location"),
@@ -621,14 +622,13 @@ extension SendLocationViewController {
         if poi.type != .currentLocationPOI, poi.type != .markedLocationPOI {
             name = poi.name
         }
-        
-        MessageSender.sendLocation(
-            poi.location.coordinate,
+
+        BusinessInjector().messageSender.sendLocationMessage(
+            coordinates: poi.location.coordinate,
             accuracy: poi == currentLocationPOI ? currentLocationPOI.location.horizontalAccuracy : 0.0,
             poiName: name,
             poiAddress: poi.address,
-            in: conversation,
-            onCompletion: { _ in }
+            in: conversation
         )
         
         dismiss(animated: true, completion: nil)

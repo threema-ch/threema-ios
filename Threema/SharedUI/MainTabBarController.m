@@ -24,18 +24,18 @@
 #import "StatusNavigationBar.h"
 
 #import "ContactsViewController.h"
-#import "Old_ChatViewController.h"
 
 #import "ModalNavigationController.h"
 #import "MyIdentityViewController.h"
 #import "PortraitNavigationController.h"
 
-#import "Old_ChatViewControllerCache.h"
 #import "MWPhotoBrowser.h"
 
 #import "AppGroup.h"
 #import "AvatarMaker.h"
 #import "JKLLockScreenViewController.h"
+
+#import "PreviewImageViewController.h"
 
 #ifdef DEBUG
 static const DDLogLevel ddLogLevel = DDLogLevelVerbose;
@@ -44,7 +44,6 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 #endif
 @interface MainTabBarController () <ModalNavigationControllerDelegate>
 
-@property Old_ChatViewController *old_ChatViewController;
 @property SingleDetailsViewController *singleDetailViewController;
 @property GroupDetailsViewController *groupDetailViewController;
 
@@ -83,8 +82,6 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(deletedContact:) name:kNotificationDeletedContact object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(showSafeSetup:) name:kSafeSetupUI object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(colorThemeChanged:) name:kNotificationColorThemeChanged object:nil];
-    // TODO: (IOS-2860) Remove next two
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(chatFontSizeChanged:) name:UIContentSizeCategoryDidChangeNotification object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(applicationDidReceiveMemoryWarning:) name:UIApplicationDidReceiveMemoryWarningNotification object:nil];
     
     [Colors updateWithTabBar:self.tabBar];
@@ -93,6 +90,16 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     _coverView.backgroundColor = [Colors backgroundView];
     _coverView.frame = self.view.bounds;
     _coverView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+    
+    if (UserSettings.sharedUserSettings.newSettingsActive) {
+        NSMutableArray *vcs = [[NSMutableArray alloc]initWithArray:self.viewControllers];
+        [vcs removeLastObject];
+        UIViewController *settingsVC = SwiftUIAdapter.createSettingsView;
+        settingsVC.tabBarItem.title = @"Settings";
+        settingsVC.tabBarItem.image = [UIImage systemImageNamed:@"gear"];
+        [vcs addObject:settingsVC];
+        self.viewControllers = vcs;
+    }
 }
 
 - (void)viewWillAppear:(BOOL)animated {
@@ -110,7 +117,6 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 - (void)dealloc {
     [[NSNotificationCenter defaultCenter] removeObserver:self];
     
-    _old_ChatViewController = nil;
     _singleDetailViewController = nil;
     _groupDetailViewController = nil;
     
@@ -220,60 +226,26 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 - (void)switchConversation:(Conversation *)conversation notification:(NSNotification *) notification{
     
     // New ChatView iPad
-    if([[UserSettings sharedUserSettings] newChatViewActive]) {
-        ChatViewController *chatViewController = nil;
-        Conversation *conv = conversation;
-        if (conversation == nil) {
-            conv = _conversationsViewController.selectedConversation ? _conversationsViewController.selectedConversation : [_conversationsViewController getFirstConversation];
-        }
-        
-        if (conv) {
-            ShowConversationInformation* info = [ShowConversationInformation createInfoFor:notification];
-            chatViewController = [[ChatViewController alloc]initWithConversation: conv showConversationInformation: info];
-        }
-        
-        if (chatViewController && conv.willBeDeleted == NO) {
-            if ([chatViewController conversation].conversationCategory == ConversationCategoryPrivate && !AppDelegate.sharedAppDelegate.isAppLocked){
-                [self presentPasscodeView];
-                
-            }else{
-                [self removeCoverView];
-                UINavigationController *navigationController = self.viewControllers[kChatTabBarIndex];
-                [navigationController setViewControllers:@[chatViewController]];
-                [_conversationsViewController setSelectionFor: chatViewController.conversation];
-                
-                if ([_conversationsNavigationController.topViewController isKindOfClass:[ArchivedConversationsViewController class]]) {
-                    [_conversationsViewController removeSelectedConversation];
-                }
-            }
-            
-        } else {
-            [self clearNavigationControllerAt:kChatTabBarIndex];
-        }
-        [super setSelectedIndex:kChatTabBarIndex];
-
-        return;
+    ChatViewController *chatViewController = nil;
+    Conversation *conv = conversation;
+    if (conversation == nil) {
+        conv = _conversationsViewController.selectedConversation ? _conversationsViewController.selectedConversation : [_conversationsViewController getFirstConversation];
     }
     
-    // TODO: (IOS-2860) Remove when new chat view released
-    // Old ChatView iPad
-    if (_old_ChatViewController == nil) {
-        Conversation *conv = [_conversationsViewController getFirstConversation];
-        if (conv) {
-            _old_ChatViewController = [Old_ChatViewControllerCache controllerForConversation:conv];
-        }
+    if (conv) {
+        ShowConversationInformation* info = [ShowConversationInformation createInfoFor:notification];
+        chatViewController = [[ChatViewController alloc]initWithConversation: conv showConversationInformation: info];
     }
     
-    if (_old_ChatViewController) {
-        if ([_old_ChatViewController conversation].conversationCategory == ConversationCategoryPrivate && !AppDelegate.sharedAppDelegate.isAppLocked){
+    if (chatViewController && conv.willBeDeleted == NO) {
+        if ([chatViewController conversation].conversationCategory == ConversationCategoryPrivate && !AppDelegate.sharedAppDelegate.isAppLocked){
             [self presentPasscodeView];
             
-        }else{
+        } else {
             [self removeCoverView];
             UINavigationController *navigationController = self.viewControllers[kChatTabBarIndex];
-            _old_ChatViewController.delegate = _conversationsViewController;
-            [navigationController setViewControllers:@[_old_ChatViewController]];
-            [_conversationsViewController setSelectionFor: _old_ChatViewController.conversation];
+            [navigationController setViewControllers:@[chatViewController]];
+            [_conversationsViewController setSelectionFor: chatViewController.conversation];
             
             if ([_conversationsNavigationController.topViewController isKindOfClass:[ArchivedConversationsViewController class]]) {
                 [_conversationsViewController removeSelectedConversation];
@@ -283,7 +255,6 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     } else {
         [self clearNavigationControllerAt:kChatTabBarIndex];
     }
-    
     [super setSelectedIndex:kChatTabBarIndex];
 }
 
@@ -321,6 +292,11 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 }
 
 - (void)showSettings {
+    if (UserSettings.sharedUserSettings.newSettingsActive) {
+        [self showModal: SwiftUIAdapter.createSettingsView];
+        return;
+    }
+    
     if (_settingsViewController == nil) {
         _settingsViewController = (SettingsViewController *)[self loadSettingsControllerNamed:@"settingsViewController"];
     }
@@ -340,6 +316,10 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 }
 
 - (UIViewController *)loadSettingsControllerNamed:(NSString *)viewControllerName {
+    if (UserSettings.sharedUserSettings.newSettingsActive) {
+        return SwiftUIAdapter.createSettingsView;
+    }
+    
     UIStoryboard *storyboard = [AppDelegate getSettingsStoryboard];
     return [storyboard instantiateViewControllerWithIdentifier:viewControllerName];
 }
@@ -361,7 +341,6 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 }
 
 - (void)applicationDidReceiveMemoryWarning:(NSNotification*)notification {
-    _old_ChatViewController = nil;
     _conversationsViewController = nil;
     _conversationsNavigationController = nil;
 }
@@ -462,91 +441,52 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 
 - (void)selectedConversation:(NSNotification*)notification {
     [self hideModal];
-    if(![[UserSettings sharedUserSettings] newChatViewActive]) {
-        _old_ChatViewController = [Old_ChatViewControllerCache controllerForNotificationInfo:notification.userInfo];
-        if (_old_ChatViewController == nil) {
-            // return if the conversation doesn't exists
-            DDLogWarn(@"Unable to load chat view for selected conversation.");
-            return;
-        }
-    }
-    
+        
     if (SYSTEM_IS_IPAD) {
         if (self.selectedIndex == kChatTabBarIndex) {
-            Conversation *conv = [Old_ChatViewControllerCache getConversationForNotificationInfo:notification.userInfo createIfNotExisting:YES];
+            Conversation *conv = [self getConversationForNotificationInfo:notification.userInfo];
             [self switchConversation: conv notification:notification];
         } else {
             [self setSelectedIndex:kChatTabBarIndex];
-            Conversation *conv = [Old_ChatViewControllerCache getConversationForNotificationInfo:notification.userInfo createIfNotExisting:YES];
+            Conversation *conv = [self getConversationForNotificationInfo:notification.userInfo];
             [self switchConversation: conv notification:notification];
         }
     } else {
         // New ChatView iPhone
-        if ([[UserSettings sharedUserSettings] newChatViewActive]) {
-            if (_conversationsViewController == nil) {
-                _conversationsNavigationController = self.viewControllers[kChatTabBarIndex];
-            }
-            ShowConversationInformation* info = [ShowConversationInformation createInfoFor:notification];
-            Conversation *conv = [Old_ChatViewControllerCache getConversationForNotificationInfo:notification.userInfo createIfNotExisting:YES];
-            ChatViewController *chatViewController = [[ChatViewController alloc]initWithConversation:conv showConversationInformation:info];
-            
-            if ([_conversationsNavigationController.topViewController isKindOfClass:[ArchivedConversationsViewController class]]) {
-                _archivedConversationsViewController = (ArchivedConversationsViewController *) _conversationsNavigationController.topViewController;
-                [_archivedConversationsViewController displayChatWithChatViewController: chatViewController animated:YES];
-                [self setSelectedViewController:_conversationsNavigationController];
-                
-            } else if ([_conversationsNavigationController.topViewController isKindOfClass:[ConversationsViewController class]]) {
-                _conversationsViewController = (ConversationsViewController *)_conversationsNavigationController.topViewController;
-                [_conversationsViewController displayChatWithChatViewController: chatViewController animated:YES];
-                [self setSelectedViewController:_conversationsNavigationController];
-            }
-            else {
-                // Check if open chat is same we want to open
-                if ([_conversationsNavigationController.topViewController isKindOfClass:[ChatViewController class]]) {
-                    ChatViewController * topChatViewController = (ChatViewController *) _conversationsNavigationController.topViewController;
-                    if (topChatViewController.conversation == chatViewController.conversation && notification == nil) {
-                        return;
-                    }
-                }
-                
-                [_conversationsNavigationController popToRootViewControllerAnimated:NO];
-                _conversationsViewController = (ConversationsViewController *)_conversationsNavigationController.viewControllers.firstObject;
-                [_conversationsViewController displayChatWithChatViewController: chatViewController animated:YES];
-                [self setSelectedViewController:_conversationsNavigationController];
-            }
-            
-            return;
-        }
-        
-        // TODO: (IOS-2860) Remove when new chat view released
-        // Old ChatView iPhone
         if (_conversationsViewController == nil) {
             _conversationsNavigationController = self.viewControllers[kChatTabBarIndex];
         }
+        Conversation *conv = [self getConversationForNotificationInfo:notification.userInfo];
+        if (conv == nil) {
+            DDLogError(@"Unable to show chat because conversation is nil");
+            return;
+        }
+        ShowConversationInformation *info = [ShowConversationInformation createInfoFor:notification];
+
+        ChatViewController *chatViewController = [[ChatViewController alloc]initWithConversation:conv showConversationInformation:info];
         
         if ([_conversationsNavigationController.topViewController isKindOfClass:[ArchivedConversationsViewController class]]) {
             _archivedConversationsViewController = (ArchivedConversationsViewController *) _conversationsNavigationController.topViewController;
-            [_archivedConversationsViewController displayOldChatWithOldChatViewController: _old_ChatViewController animated:YES];
+            [_archivedConversationsViewController displayChatWithChatViewController: chatViewController animated:YES];
             [self setSelectedViewController:_conversationsNavigationController];
             
         } else if ([_conversationsNavigationController.topViewController isKindOfClass:[ConversationsViewController class]]) {
             _conversationsViewController = (ConversationsViewController *)_conversationsNavigationController.topViewController;
-            [_conversationsViewController displayOldChatWithOldChatViewController: _old_ChatViewController animated:YES];
+            [_conversationsViewController displayChatWithChatViewController: chatViewController animated:YES];
             [self setSelectedViewController:_conversationsNavigationController];
         }
         else {
-            
             // Check if open chat is same we want to open
-            if ([_conversationsNavigationController.topViewController isKindOfClass:[Old_ChatViewController class]]) {
-                Old_ChatViewController * topChatViewController = (Old_ChatViewController *) _conversationsNavigationController.topViewController;
-                if (topChatViewController.conversation == _old_ChatViewController.conversation) {
+            if ([_conversationsNavigationController.topViewController isKindOfClass:[ChatViewController class]]) {
+                ChatViewController * topChatViewController = (ChatViewController *) _conversationsNavigationController.topViewController;
+                if (topChatViewController.conversation == chatViewController.conversation && notification == nil) {
                     return;
                 }
             }
             
             [_conversationsNavigationController popToRootViewControllerAnimated:NO];
-            _conversationsViewController = (ConversationsViewController *)_conversationsNavigationController.viewControllers.firstObject;
-            [_conversationsViewController displayOldChatWithOldChatViewController: _old_ChatViewController animated:YES];
+            _conversationsViewController = (ConversationsViewController *)_conversationsNavigationController.topViewController;
+            [_conversationsViewController displayChatWithChatViewController: chatViewController animated:YES];
             [self setSelectedViewController:_conversationsNavigationController];
         }
     }
@@ -554,10 +494,9 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 
 - (void)deletedConversation:(NSNotification*)notification {
     if (SYSTEM_IS_IPAD) {
-        Conversation *deletedConversation = [Old_ChatViewControllerCache getConversationForNotificationInfo:notification.userInfo createIfNotExisting:NO];
+        Conversation *deletedConversation = notification.userInfo[kKeyConversation];
         Conversation *selectedConversation = [_conversationsViewController selectedConversation];
         if (selectedConversation == deletedConversation) {
-            _old_ChatViewController = nil;
             if (self.selectedIndex == kChatTabBarIndex) {
                 [self switchConversation: nil notification:notification];
             }
@@ -572,6 +511,22 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     }
 }
 
+- (Conversation *)getConversationForNotificationInfo:(NSDictionary *)info {
+    __block Conversation *conversation = [info objectForKey:kKeyConversation];
+    __block ContactEntity *notificationContact = [info objectForKey:kKeyContact];
+    if (conversation == nil) {
+        EntityManager *entityManager = [[EntityManager alloc] init];
+        [entityManager performSyncBlockAndSafe:^{
+            ContactEntity *contact = (ContactEntity *)[entityManager.entityFetcher getManagedObjectById:notificationContact.objectID];
+            if (contact) {
+                conversation = [entityManager conversationForContact:contact createIfNotExisting:YES];
+            }
+        }];
+    }
+    
+    return conversation;
+}
+
 - (void)deletedContact:(NSNotification*)notification {
     if (SYSTEM_IS_IPAD) {
         ContactEntity *deletedContact = [notification.userInfo objectForKey:kKeyContact];
@@ -582,19 +537,11 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
             }
         }
         
-        if([[UserSettings sharedUserSettings] newChatViewActive]) {
-            UINavigationController *navigationController = self.viewControllers[kChatTabBarIndex];
-            ChatViewController *chatViewController = navigationController.viewControllers.firstObject;
-            if (chatViewController.conversation.willBeDeleted) {
-                _conversationsViewController.selectedConversation = nil;
-                [self switchConversation:nil notification:nil];
-            }
-        }
-        else {
-            if (!_old_ChatViewController.conversation.isGroup && _old_ChatViewController.conversation.contact == nil) {
-                _old_ChatViewController = nil;
-                [self switchConversation:nil notification:nil];
-            }
+        UINavigationController *navigationController = self.viewControllers[kChatTabBarIndex];
+        ChatViewController *chatViewController = navigationController.viewControllers.firstObject;
+        if (chatViewController.conversation.willBeDeleted) {
+            _conversationsViewController.selectedConversation = nil;
+            [self switchConversation:nil notification:nil];
         }
     }
 }
@@ -638,7 +585,9 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 
 - (void)wallpaperChanged:(NSNotification*)notification {
     DDLogInfo(@"Wallpaper changed, removing cached chat view controllers");
-    [self resetChats];
+    // On iPad the wallpaper for an open chat only changes when the settings are dismissed if we don't call this
+    // On iPhone there is no way to change the wallpaper without leaving the chat
+    [self resetDisplayedChat];
 }
 
 - (void)colorThemeChanged:(NSNotification*)notification {
@@ -648,9 +597,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     [Colors updateWithWindow:[[AppDelegate sharedAppDelegate] window]];
     [Colors updateWithNavigationBar:self.selectedViewController.navigationController.navigationBar];
     [Colors updateWithTabBar:self.tabBar];
-    
-    [Old_ChatViewControllerCache refresh];
-    
+        
     [self setNeedsStatusBarAppearanceUpdate];
     
     if (SYSTEM_IS_IPAD) {
@@ -667,10 +614,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         
         [_conversationsViewController refresh];
         [Colors updateWithNavigationBar:_conversationsViewController.navigationController.navigationBar];
-        
-        [Colors updateWithNavigationBar:_old_ChatViewController.navigationController.navigationBar];
-        [_old_ChatViewController refresh];
-        
+                
         for (UIViewController *vc in _conversationsNavigationController.viewControllers) {
             [Colors updateWithNavigationBar:vc.navigationController.navigationBar];
         }
@@ -679,35 +623,10 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     }
 }
 
-// TODO: (IOS-2860) Remove
-- (void)chatFontSizeChanged:(NSNotification*)notification {
-    if ([[UserSettings sharedUserSettings] newChatViewActive]) {
-        return;
-    }
-    DDLogInfo(@"Chat font size changed, removing cached chat view controllers");
-    [self resetChats];
-}
-
-// TODO: (IOS-2860) Investigate if still needed
-- (void)resetChats {
-    [Old_ChatViewControllerCache clearCache];
-    
-    [self resetDisplayedChat];
-}
-
 - (void)resetDisplayedChat {
     if (SYSTEM_IS_IPAD) {
-        if([[UserSettings sharedUserSettings] newChatViewActive]) {
-            Conversation *selectedConversation = [_conversationsViewController selectedConversation];
-            [self switchConversation:selectedConversation notification:nil];
-        }
-        else {
-            if (_old_ChatViewController) {
-                Conversation *conversation = _old_ChatViewController.conversation;
-                _old_ChatViewController = [Old_ChatViewControllerCache controllerForConversation:conversation];
-                [self switchConversation: nil notification:nil];
-            }
-        }
+        Conversation *selectedConversation = [_conversationsViewController selectedConversation];
+        [self switchConversation:selectedConversation notification:nil];
     } else {
         if (self.selectedIndex == kChatTabBarIndex) {
             [_conversationsNavigationController popToRootViewControllerAnimated:true];
@@ -739,30 +658,24 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
             }
         }
     }
-    
-    if ([[UserSettings sharedUserSettings] newChatViewActive]) {
-        return;
-    }
-    
-    if (previousTraitCollection.preferredContentSizeCategory != self.traitCollection.preferredContentSizeCategory) {
-        [self resetChats];
-    }
 }
 
 
 # pragma mark - JKLLockscreen Delegate
 // Used for private chats on iPad
 - (void) presentPasscodeView{
+    
+    // If we restored from safe and no password is set, we inform the user that he needs to set one and present them the set password screen
+    if(![[KKPasscodeLock sharedLock] isPasscodeRequired]) {
+        [self presentPasscodeViewWithUserInfoAlert];
+        return;
+    }
+    
     JKLLockScreenViewController *vc = [[JKLLockScreenViewController alloc] initWithNibName:NSStringFromClass([JKLLockScreenViewController class]) bundle:[BundleUtil frameworkBundle]];
     vc.dataSource = self;
     vc.delegate = self;
-    if([[KKPasscodeLock sharedLock] isPasscodeRequired]) {
-        vc.lockScreenMode = LockScreenModeExtension;
-    }
-    else {
-        vc.lockScreenMode = LockScreenModeNew;
-    }
-    
+    vc.lockScreenMode = LockScreenModeExtension;
+
     [self.viewControllers[kChatTabBarIndex].view addSubview: _coverView];
     
     ModalNavigationController *navigationController = [[ModalNavigationController alloc] init];
@@ -773,25 +686,42 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     navigationController.modalDelegate = self;
     
     [navigationController pushViewController:vc animated:NO];
-    
     [self.viewControllers[kChatTabBarIndex] presentViewController:navigationController animated:NO completion:nil];
+    
+}
+
+- (void) presentPasscodeViewWithUserInfoAlert{
+    JKLLockScreenViewController *vc = [[JKLLockScreenViewController alloc] initWithNibName:NSStringFromClass([JKLLockScreenViewController class]) bundle:[BundleUtil frameworkBundle]];
+    vc.dataSource = self;
+    vc.delegate = self;
+    vc.lockScreenMode = LockScreenModeNew;
+
+    [UIAlertTemplate showAlertWithOwner:self.viewControllers[kChatTabBarIndex] title:[BundleUtil localizedStringForKey:@"privateChat_alert_title"] message:[BundleUtil localizedStringForKey:@"privateChat_setup_alert_message"] titleOk:[BundleUtil localizedStringForKey:@"privateChat_code_alert_confirm"] actionOk:^(UIAlertAction * _Nonnull action) {
+        
+        [self.viewControllers[kChatTabBarIndex].view addSubview: _coverView];
+        
+        ModalNavigationController *navigationController = [[ModalNavigationController alloc] init];
+        navigationController.showFullScreenOnIPad = NO;
+        navigationController.showDoneButton = NO;
+        navigationController.navigationBar.hidden = YES;
+        navigationController.dismissOnTapOutside = NO;
+        navigationController.modalDelegate = self;
+        
+        [navigationController pushViewController:vc animated:NO];
+        [self.viewControllers[kChatTabBarIndex] presentViewController:navigationController animated:NO completion:nil];
+    } titleCancel:nil actionCancel:^(UIAlertAction * _Nonnull action) {
+        return;
+    }];
 }
 
 - (void)didPasscodeEnteredCorrectly:(JKLLockScreenViewController *)viewController{
     [self removeCoverView];
     UINavigationController *navigationController = self.viewControllers[kChatTabBarIndex];
     
-    if([[UserSettings sharedUserSettings] newChatViewActive]) {
-        Conversation *conversation = [_conversationsViewController getFirstConversation];
-        ChatViewController *chatViewController = [[ChatViewController alloc]initWithConversation: conversation showConversationInformation:nil];
-        [navigationController setViewControllers:@[chatViewController]];
-        [_conversationsViewController setSelectionFor: conversation];
-        
-    } else {
-        _old_ChatViewController.delegate = _conversationsViewController;
-        [navigationController setViewControllers:@[_old_ChatViewController]];
-        [_conversationsViewController setSelectionFor: _old_ChatViewController.conversation];
-    }
+    Conversation *conversation = [_conversationsViewController getFirstConversation];
+    ChatViewController *chatViewController = [[ChatViewController alloc]initWithConversation: conversation showConversationInformation:nil];
+    [navigationController setViewControllers:@[chatViewController]];
+    [_conversationsViewController setSelectionFor: conversation];    
     
     if ([_conversationsNavigationController.topViewController isKindOfClass:[ArchivedConversationsViewController class]]) {
         [_conversationsViewController removeSelectedConversation];

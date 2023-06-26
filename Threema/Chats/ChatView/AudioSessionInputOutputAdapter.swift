@@ -24,7 +24,7 @@ import Foundation
 enum AudioSessionInputOutputAdapter {
     static func proximityStateChanged(for audioPlayer: AVAudioPlayer?, onError: ((NSError) -> Void)? = nil) {
         let currentRoute = AVAudioSession.sharedInstance().currentRoute
-        if !currentRoute.outputs.isEmpty, let audioPlayer = audioPlayer, audioPlayer.isPlaying,
+        if !currentRoute.outputs.isEmpty, let audioPlayer, audioPlayer.isPlaying,
            let firstOutput = currentRoute.outputs.first,
            firstOutput.portType == .builtInSpeaker || firstOutput.portType == .builtInReceiver {
             AudioSessionInputOutputAdapter.adaptToProximityState(for: currentRoute, onError: onError)
@@ -120,7 +120,7 @@ enum AudioSessionInputOutputAdapter {
     }
     
     static func resetAudioSession(to category: AVAudioSession.Category?) {
-        guard let category = category else {
+        guard let category else {
             return
         }
 

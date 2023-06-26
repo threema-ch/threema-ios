@@ -53,7 +53,7 @@ class TaskQueueTests: XCTestCase {
     
     func testInterrupt() {
         let msg = BoxTextMessage()
-        msg.messageID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.messageIDLength)
+        msg.messageID = MockData.generateMessageID()
 
         let task = TaskDefinitionSendAbstractMessage(message: msg, doOnlyReflect: false, isPersistent: false)
 
@@ -95,7 +95,7 @@ class TaskQueueTests: XCTestCase {
 
         databasePreparer.save {
             databasePreparer.createContact(
-                publicKey: BytesUtility.generateRandomBytes(length: 32)!,
+                publicKey: MockData.generatePublicKey(),
                 identity: expectedReceiver,
                 verificationLevel: 0
             )
@@ -150,7 +150,7 @@ class TaskQueueTests: XCTestCase {
         let expectedError = NSError(domain: "Test domain", code: 1, userInfo: nil)
 
         databasePreparer.createContact(
-            publicKey: BytesUtility.generateRandomBytes(length: 32)!,
+            publicKey: MockData.generatePublicKey(),
             identity: expectedReceiver,
             verificationLevel: 0
         )
@@ -180,7 +180,7 @@ class TaskQueueTests: XCTestCase {
             )
 
             let message = BoxedMessage()
-            message.messageID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.messageIDLength)
+            message.messageID = MockData.generateMessageID()
             message.fromIdentity = "TESTER01"
             message.toIdentity = expectedReceiver
 
@@ -415,7 +415,7 @@ class TaskQueueTests: XCTestCase {
         var expectedConversation: Conversation!
         databasePreparer.save {
             expectedContact = databasePreparer.createContact(
-                publicKey: BytesUtility.generateRandomBytes(length: 32)!,
+                publicKey: MockData.generatePublicKey(),
                 identity: "ECHOECHO",
                 verificationLevel: 0
             )
@@ -435,7 +435,7 @@ class TaskQueueTests: XCTestCase {
                 TaskDefinitionSendAbstractMessage.self,
                 TaskDefinitionSendBallotVoteMessage.self,
                 TaskDefinitionSendBaseMessage.self,
-                TaskDefinitionSendIncomingMessageUpdate.self,
+                TaskDefinitionSendDeliveryReceiptsMessage.self,
                 TaskDefinitionSendLocationMessage.self,
                 TaskDefinitionSendVideoMessage.self,
                 TaskDefinitionSendGroupCreateMessage.self,
@@ -456,7 +456,7 @@ class TaskQueueTests: XCTestCase {
         )
 
         // Add TaskDefinitionGroupDissolve
-        let expectedGroupDissolveGroupID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!
+        let expectedGroupDissolveGroupID = MockData.generateGroupID()
         let expectedGroupDissolveGroupCreator = "CREATOR01"
         let expectedGroupDissolveToMember = "MEMBER07"
 
@@ -474,7 +474,7 @@ class TaskQueueTests: XCTestCase {
                 complete: nil
             )
             conversation.contact = databasePreparer.createContact(
-                publicKey: BytesUtility.generateRandomBytes(length: 32)!,
+                publicKey: MockData.generatePublicKey(),
                 identity: expectedGroupDissolveGroupCreator,
                 verificationLevel: 0
             )
@@ -493,7 +493,7 @@ class TaskQueueTests: XCTestCase {
         try! tq.enqueue(task: taskGroupDissolve, completionHandler: nil)
 
         // Add TaskDefinitionSendAbstractMessage
-        let expectedAbstractMessageID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.messageIDLength)!
+        let expectedAbstractMessageID = MockData.generateMessageID()
         let expectedAbstractText = "test 123!!!"
 
         let expectedAbstractMessage = BoxTextMessage()
@@ -505,7 +505,7 @@ class TaskQueueTests: XCTestCase {
         try! tq.enqueue(task: taskAbstract, completionHandler: nil)
 
         // Add TaskDefinitionSendBallotVoteMessage
-        let expectedBallotVoteBallotID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.ballotIDLength)!
+        let expectedBallotVoteBallotID = MockData.generateBallotID()
         var expectedBallotVoteBallot: Ballot!
         databasePreparer.save {
             expectedBallotVoteBallot = databasePreparer.createBallotMessage(
@@ -522,12 +522,12 @@ class TaskQueueTests: XCTestCase {
         try! tq.enqueue(task: taskBallotVote, completionHandler: nil)
 
         // Add TaskDefinitionSendBaseMessage
-        let expectedBaseGroupID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!
+        let expectedBaseGroupID = MockData.generateGroupID()
         let expectedBaseGroupCreatorIdentity = "ADMIN007"
         let expectedBaseGroupName = "Test group name"
         let expectedBaseAllGroupMembers: Set<String> = ["MEMBER01", "MEMBER01", "MEMBER01"]
         let expectedBaseIsNoteGroup = false
-        let expectedBaseMessageID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.messageIDLength)!
+        let expectedBaseMessageID = MockData.generateMessageID()
         var expectedBaseMessage: TextMessage!
         databasePreparer.save {
             expectedBaseMessage = databasePreparer.createTextMessage(
@@ -557,21 +557,31 @@ class TaskQueueTests: XCTestCase {
         taskBase.isNoteGroup = expectedBaseIsNoteGroup
         try! tq.enqueue(task: taskBase, completionHandler: nil)
 
-        // Add TaskDefinitionSendIncomingMessageUpdate
-        let expectedMessageID = BytesUtility.generateRandomBytes(length: Int(8))!
-        let expectedMessageReadDate = Date()
-        // swiftformat:disable:next all
-        var expectedConversationID = D2d_ConversationId()
-        expectedConversationID.contact = "SENDER01"
-        let taskIncomingMessageUpdate = TaskDefinitionSendIncomingMessageUpdate(
-            messageIDs: [expectedMessageID],
-            messageReadDates: [expectedMessageReadDate],
-            conversationID: expectedConversationID
+        // Add TaskDefinitionSendGroupDeliveryReceiptMessage
+        let expectedReceiptFromIdentity = "CONTACT1"
+        let expectedReceiptToIdentity = "CONTACT2"
+        let expectedReceiptType = UInt8(DELIVERYRECEIPT_MSGREAD)
+        let expectedReceiptMessageIDs = [
+            MockData.generateMessageID(),
+            MockData.generateMessageID(),
+        ]
+        let expectedReceiptReadDates = [
+            Date(),
+            Date(),
+        ]
+
+        let taskDeliveryReceipt = TaskDefinitionSendDeliveryReceiptsMessage(
+            fromIdentity: expectedReceiptFromIdentity,
+            toIdentity: expectedReceiptToIdentity,
+            receiptType: expectedReceiptType,
+            receiptMessageIDs: expectedReceiptMessageIDs,
+            receiptReadDates: expectedReceiptReadDates
         )
-        try! tq.enqueue(task: taskIncomingMessageUpdate, completionHandler: nil)
+
+        try! tq.enqueue(task: taskDeliveryReceipt, completionHandler: nil)
 
         // Add TaskDefinitionSendLocationMessage
-        let expectedLocationMessageID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.messageIDLength)!
+        let expectedLocationMessageID = MockData.generateMessageID()
         let expectedLocationPoiAddress = "poi address"
         var expectedLocationMessage: LocationMessage!
         databasePreparer.save {
@@ -594,7 +604,7 @@ class TaskQueueTests: XCTestCase {
         try! tq.enqueue(task: taskLocation, completionHandler: nil)
 
         // Add TaskDefinitionSendVideoMessage
-        let expectedVideoMessageID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.messageIDLength)!
+        let expectedVideoMessageID = MockData.generateMessageID()
         var expectedVideoMessage: VideoMessageEntity!
         databasePreparer.save {
             let imageData = databasePreparer.createImageData(data: Data([1]), height: 1, width: 1)
@@ -661,8 +671,8 @@ class TaskQueueTests: XCTestCase {
         
         // Add TaskDefinitionSendGroupSetPhotoMessage
         let expectedGroupSetPhotoSize: UInt32 = 10
-        let expectedGroupSetPhotoBlobID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.blobIDLength)!
-        let expectedGroupSetPhotoEncryptionKey = BytesUtility.generateRandomBytes(length: Int(kBlobKeyLen))!
+        let expectedGroupSetPhotoBlobID = MockData.generateBlobID()
+        let expectedGroupSetPhotoEncryptionKey = MockData.generateBlobEncryptionKey()
         
         let taskGroupSetPhoto = TaskDefinitionSendGroupSetPhotoMessage(
             group: nil,
@@ -687,19 +697,19 @@ class TaskQueueTests: XCTestCase {
         try! tq.enqueue(task: taskGroupDeletePhoto, completionHandler: nil)
         
         // Add TaskDefinitionSendGroupDeliveryReceiptMessage
-        let expectedReceiptType = UInt8(GroupDeliveryReceipt.DeliveryReceiptType.acknowledged.rawValue)
-        let expectedReceiptMessageIDs = [
-            BytesUtility.generateRandomBytes(length: 32)!,
-            BytesUtility.generateRandomBytes(length: 32)!,
+        let expectedGroupReceiptType = UInt8(GroupDeliveryReceipt.DeliveryReceiptType.acknowledged.rawValue)
+        let expectedGroupReceiptMessageIDs = [
+            MockData.generateMessageID(),
+            MockData.generateMessageID(),
         ]
         
         let taskGroupDeliveryReceipt = TaskDefinitionSendGroupDeliveryReceiptsMessage(
             group: nil,
             from: expectedFromMember,
             to: expectedToMembers,
-            receiptType: expectedReceiptType,
-            receiptMessageIDs: expectedReceiptMessageIDs,
-            sendContactProfilePicture: false
+            receiptType: expectedGroupReceiptType,
+            receiptMessageIDs: expectedGroupReceiptMessageIDs,
+            receiptReadDates: [Date]()
         )
         
         try! tq.enqueue(task: taskGroupDeliveryReceipt, completionHandler: nil)
@@ -774,7 +784,7 @@ class TaskQueueTests: XCTestCase {
         // Add TaskDefinitionReceiveReflectedMessage
         let expectedTimestamp = Date()
         let taskReceiveReflectedMessage = TaskDefinitionReceiveReflectedMessage(
-            reflectID: BytesUtility.generateRandomBytes(length: ThreemaProtocol.messageIDLength)!,
+            reflectID: MockData.generateReflectID(),
             message: D2d_Envelope(),
             mediatorTimestamp: expectedTimestamp,
             receivedAfterInitialQueueSend: false,
@@ -912,11 +922,13 @@ class TaskQueueTests: XCTestCase {
             XCTFail()
         }
 
-        if let task = tq.list[4].taskDefinition as? TaskDefinitionSendIncomingMessageUpdate {
+        if let task = tq.list[4].taskDefinition as? TaskDefinitionSendDeliveryReceiptsMessage {
             XCTAssertEqual(.interrupted, task.state)
-            XCTAssertTrue(task.messageIDs.contains(expectedMessageID))
-            XCTAssertTrue(task.messageReadDates.contains(expectedMessageReadDate))
-            XCTAssertEqual(expectedConversationID, task.conversationID)
+            XCTAssertEqual(expectedReceiptFromIdentity, task.fromIdentity)
+            XCTAssertEqual(expectedReceiptToIdentity, task.toIdentity)
+            XCTAssertEqual(expectedReceiptType, task.receiptType)
+            XCTAssertEqual(expectedReceiptMessageIDs, task.receiptMessageIDs)
+            XCTAssertEqual(expectedReceiptReadDates, task.receiptReadDates)
             XCTAssertFalse(task.retry)
         }
         else {
@@ -1000,8 +1012,8 @@ class TaskQueueTests: XCTestCase {
             XCTAssertEqual(.interrupted, task.state)
             XCTAssertEqual(expectedFromMember, task.fromMember)
             XCTAssertEqual(expectedToMembers, task.toMembers)
-            XCTAssertEqual(expectedReceiptType, task.receiptType)
-            XCTAssertEqual(expectedReceiptMessageIDs, task.receiptMessageIDs)
+            XCTAssertEqual(expectedGroupReceiptType, task.receiptType)
+            XCTAssertEqual(expectedGroupReceiptMessageIDs, task.receiptMessageIDs)
             XCTAssertFalse(task.retry)
         }
         else {

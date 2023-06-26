@@ -7,7 +7,7 @@
 // For information on using the generated types, please see the documentation:
 //   https://github.com/apple/swift-protobuf/
 
-// # Group Calls
+// # Group Call Protocol
 //
 // Note that group calls are not necessarily bound to a Threema group. _Group_
 // refers to a group of call participants and is a way to distinguish from 1:1
@@ -27,20 +27,20 @@
 //
 // ## Terminology
 //
-// - GCK: Group Call Key, only used for key derivation
-// - GCKH: Group Call Key Hash
-// - GCNHAK: Group Call Normal Handshake Authentication Key
-// - GCHK: Group Call Handshake Key
-// - GCSK: Group Call State Key
-// - GCAK: Group Call Administrator Key, only used for key derivation
-// - GCAMK: Group Call Administrator Message Key
-// - PCK: Participant Call Key
-// - PCMK: Participant Call Media Key, only used for key derivation
-// - PCMK': Ratchet iteration of PCMK
-// - PCMFK: Participant Call Media Frame Key
-// - PCCK: Participant Call Cookie
-// - PCSN: Participant Call Sequence Number
-// - MFSN: Media Frame Sequence Number
+// - `GCK`: Group Call Key, only used for key derivation
+// - `GCKH`: Group Call Key Hash
+// - `GCNHAK`: Group Call Normal Handshake Authentication Key
+// - `GCHK`: Group Call Handshake Key
+// - `GCSK`: Group Call State Key
+// - `GCAK`: Group Call Administrator Key, only used for key derivation
+// - `GCAMK`: Group Call Administrator Message Key
+// - `PCK`: Participant Call Key
+// - `PCMK`: Participant Call Media Key, only used for key derivation
+// - `PCMK`': Ratchet iteration of PCMK
+// - `PCMFK`: Participant Call Media Frame Key
+// - `PCCK`: Participant Call Cookie
+// - `PCSN`: Participant Call Sequence Number
+// - `MFSN`: Media Frame Sequence Number
 //
 // ## Key Derivation
 //
@@ -62,7 +62,7 @@
 //
 // Endianness: All integers use little-endian encoding.
 //
-// Encryption format: An NaCl box with a 24 byte nonce.
+// Encryption cipher: XSalsa20-Poly1305, unless otherwise specified.
 //
 // Nonce format:
 //
@@ -454,9 +454,6 @@ struct Groupcall_CallState {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
-
-    /// The participant's assigned ID.
-    var participantID: UInt32 = 0
 
     /// Type-specific information.
     var participant: Groupcall_CallState.Participant.OneOf_Participant? = nil
@@ -1510,28 +1507,31 @@ struct Groupcall_ParticipantToParticipant {
     /// 1. Let `inner-nonce` be a random nonce.
     /// 2. Let `inner-data` be encrypted by:
     ///
-    ///        S = SharedSecret(<sender.CK>.secret, <receiver.CK>.public)
+    ///        S = X25519HSalsa20(<sender.CK>.secret, <receiver.CK>.public)
     ///        GCNHAK = Blake2b(
     ///          key=S, salt='nha', personal='3ma-call', input=GCKH)
-    ///
-    ///        Box(GCNHAK)
-    ///          .encrypt(
-    ///            data=<AuthEnvelope(Auth)>, nonce=<inner-nonce>)
+    ///        XSalsa20-Poly1305(
+    ///          key=GCNHAK,
+    ///          nonce=<inner-nonce>,
+    ///          data=<AuthEnvelope(Auth)>,
+    ///        )
     /// 3. Let `outer-data` be encrypted by:
     ///
-    ///       Box(<sender.PCK>.secret, <receiver.PCK>.public)
-    ///         .encrypt(
-    ///           data=<inner-nonce><inner-data>,
-    ///           nonce=<sender.PCCK><sender.PCSN+>)
+    ///        XSalsa20-Poly1305(
+    ///          key=X25519HSalsa20(<sender.PCK>.secret, <receiver.PCK>.public),
+    ///          nonce=<sender.PCCK> || <sender.PCSN+>,
+    ///          data=<inner-nonce> || <inner-data>,
+    ///        )
     /// 4. Return `outer-data`.
     ///
     /// If either side started the guest handshake, the second message is
     /// encrypted by:
     ///
-    ///   Box(<sender.PCK>.secret, <receiver.PCK>.public)
-    ///     .encrypt(
+    ///     XSalsa20-Poly1305(
+    ///       key=X25519HSalsa20(<sender.PCK>.secret, <receiver.PCK>.public),
+    ///       nonce=<sender.PCCK> || <sender.PCSN+>,
     ///       data=<AuthEnvelope(GuestAuth)>,
-    ///       nonce=<sender.PCCK><sender.PCSN+>)
+    ///     )
     ///
     /// When receiving this message:
     ///
@@ -1794,17 +1794,18 @@ struct Groupcall_ParticipantToParticipant {
   /// After fulfilling either the (normal) handshake or the guest handshake, all
   /// following messages are encoded in `Envelope` and encrypted by:
   ///
-  ///   Box(<sender.PCK>.secret, <receiver.PCK>.public)
-  ///     .encrypt(data=<message>, nonce=<sender.PCCK><sender.PCSN+>)
+  ///     XSalsa20-Poly1305(
+  ///       key=X25519HSalsa20(<sender.PCK>.secret, <receiver.PCK>.public),
+  ///       nonce=<sender.PCCK> || <sender.PCSN+>,
+  ///     )
   ///
   /// Note: Since the guest handshake is TOFU, an attacker knowing `GCK` having
-  ///       control over the SFU may apply a MITM attack between a guest
-  ///       participant and another participant. The attacker would be able to
-  ///       silently eavesdrop all media traffic between the two participants.
-  ///       This is repeatable for all other participants and means the attacker
-  ///       is able to silently eavesdrop the whole call. Therefore, if a call is
-  ///       not open for guests, `GuestHello` (and `GuestAuth`) **must not** be
-  ///       accepted.
+  /// control over the SFU may apply a MITM attack between a guest participant
+  /// and another participant. The attacker would be able to silently eavesdrop
+  /// all media traffic between the two participants. This is repeatable for all
+  /// other participants and means the attacker is able to silently eavesdrop the
+  /// whole call. Therefore, if a call is not open for guests, `GuestHello` (and
+  /// `GuestAuth`) **must not** be accepted.
   ///
   /// When receiving this message:
   ///
@@ -1910,13 +1911,15 @@ struct Groupcall_ParticipantToParticipant {
 
     /// Message from an administrator, encrypted by:
     ///
-    ///   Box(GCAMK.secret, <receiver.PCK>.public)
-    ///     .encrypt(data=<Envelope>, nonce=<sender.PCCK><sender.PCSN+>)
+    ///     XSalsa20-Poly1305(
+    ///       key=X25519HSalsa20(GCAMK.secret, <receiver.PCK>.public),
+    ///       nonce=<sender.PCCK> || <sender.PCSN+>,
+    ///     )
     ///
     /// IMPORTANT: The `ParticipantToParticipant.Envelope` that encapsulates this
-    ///            message shall be encrypted by the same `PCSN` as used for this
-    ///            `Envelope`. The only difference is that the sender uses
-    ///            `GCAMK` instead of its ephemeral `PCK`.
+    /// message shall be encrypted by the same `PCSN` as used for this
+    /// `Envelope`. The only difference is that the sender uses `GCAMK` instead
+    /// of its ephemeral `PCK`.
     struct Envelope {
       // SwiftProtobuf.Message conformance is added in an extension below. See the
       // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
@@ -2606,7 +2609,6 @@ extension Groupcall_CallState: SwiftProtobuf.Message, SwiftProtobuf._MessageImpl
 extension Groupcall_CallState.Participant: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = Groupcall_CallState.protoMessageName + ".Participant"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "participant_id"),
     2: .same(proto: "threema"),
     3: .same(proto: "guest"),
   ]
@@ -2617,7 +2619,6 @@ extension Groupcall_CallState.Participant: SwiftProtobuf.Message, SwiftProtobuf.
       // allocates stack space for every case branch when no optimizations are
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
-      case 1: try { try decoder.decodeSingularUInt32Field(value: &self.participantID) }()
       case 2: try {
         var v: Groupcall_CallState.Participant.Normal?
         var hadOneofValue = false
@@ -2654,9 +2655,6 @@ extension Groupcall_CallState.Participant: SwiftProtobuf.Message, SwiftProtobuf.
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
     // https://github.com/apple/swift-protobuf/issues/1182
-    if self.participantID != 0 {
-      try visitor.visitSingularUInt32Field(value: self.participantID, fieldNumber: 1)
-    }
     switch self.participant {
     case .threema?: try {
       guard case .threema(let v)? = self.participant else { preconditionFailure() }
@@ -2672,7 +2670,6 @@ extension Groupcall_CallState.Participant: SwiftProtobuf.Message, SwiftProtobuf.
   }
 
   static func ==(lhs: Groupcall_CallState.Participant, rhs: Groupcall_CallState.Participant) -> Bool {
-    if lhs.participantID != rhs.participantID {return false}
     if lhs.participant != rhs.participant {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true

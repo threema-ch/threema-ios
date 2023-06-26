@@ -267,6 +267,12 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
             contact.identity = identity;
             contact.publicKey = publicKey;
             contact.featureMask = featureMask;
+            
+            if (ThreemaUtility.supportsForwardSecurity &&
+                 [contact isForwardSecurityAvailable]) {
+                contact.forwardSecurityEnabled = [NSNumber numberWithBool:YES];
+            }
+            
             if (state != nil) {
                 contact.state = state;
             }
@@ -1102,24 +1108,33 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
 
  @param identity: Identity of contact to change nickname
  @param nickname: Nickname to update
- @param shouldReflect: True nickname will be synced if multi device activated
  */
-- (void)updateNickname:(nonnull NSString *)identity nickname:(NSString *)nickname shouldReflect:(BOOL)shouldReflect {
+- (void)updateNickname:(nonnull NSString *)identity nickname:(NSString *)nickname {
     MediatorSyncableContacts *mediatorSyncableContacts = [[MediatorSyncableContacts alloc] init];
 
     [entityManager performSyncBlockAndSafe:^{
         ContactEntity *contact = [entityManager.entityFetcher contactForId:identity];
 
         if (contact) {
-            if (nickname && nickname.length > 0 && ![contact.identity isEqualToString:nickname] && ![contact.publicNickname isEqualToString:nickname]) {
+            BOOL hasChanged = NO;
+
+            if (nickname && nickname.length > 0 && ![contact.publicNickname isEqualToString:nickname]) {
                 contact.publicNickname = nickname;
+                hasChanged = YES;
+            }
+            else if (nickname == nil && ![contact.publicNickname isEqualToString:contact.identity]) {
+                contact.publicNickname = contact.identity;
+                hasChanged = YES;
+            }
+
+            if (hasChanged) {
                 [mediatorSyncableContacts updateNicknameWithIdentity:contact.identity value:contact.publicNickname];
                 [[NSNotificationCenter defaultCenter] postNotificationName:kNotificationRefreshContactSortIndices object:nil];
             }
         }
     }];
 
-    if ([[ServerConnector sharedServerConnector] isMultiDeviceActivated] && shouldReflect) {
+    if ([[ServerConnector sharedServerConnector] isMultiDeviceActivated]) {
         [mediatorSyncableContacts syncAsync];
     }
 }
@@ -1156,7 +1171,7 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
     
     if ([[ServerConnector sharedServerConnector] isMultiDeviceActivated] && shouldReflect) {
         MediatorSyncableContacts *mediatorSyncableContacts = [[MediatorSyncableContacts alloc] init];
-        [mediatorSyncableContacts setContactProfileUpdateTypeWithIdentity:contact.identity value:MediatorSyncableContacts.deltaUpdateTypeUpdated];
+        [mediatorSyncableContacts setContactProfileUpdateTypeWithIdentity:identity value:MediatorSyncableContacts.deltaUpdateTypeUpdated];
         [mediatorSyncableContacts syncAsync];
     }
     
@@ -1655,6 +1670,10 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
                         NSString *identityString = [identities objectAtIndex:i];
                         ContactEntity *contact = [entityManager.entityFetcher contactForId: identityString];
                         contact.featureMask = featureMask;
+                        if (ThreemaUtility.supportsForwardSecurity &&
+                            [contact isForwardSecurityAvailable]) {
+                            contact.forwardSecurityEnabled = [NSNumber numberWithBool:YES];
+                        }
                         [mediatorSyncableContacts updateFeatureMaskWithIdentity:contact.identity value:contact.featureMask];
                     }
                 }
@@ -1763,6 +1782,10 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
                 if (![featureMask isEqual:[NSNull null]]) {
                     if (![contact.featureMask isEqualToNumber:featureMask]) {
                         contact.featureMask = featureMask;
+                        if (ThreemaUtility.supportsForwardSecurity &&
+                            [contact isForwardSecurityAvailable]) {
+                            contact.forwardSecurityEnabled = [NSNumber numberWithBool:YES];
+                        }
                         [mediatorSyncableContacts updateFeatureMaskWithIdentity:contact.identity value:contact.featureMask];
                     }
                 }

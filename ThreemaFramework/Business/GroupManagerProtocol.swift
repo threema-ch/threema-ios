@@ -46,28 +46,28 @@ public protocol GroupManagerProtocol: GroupManagerProtocolObjc {
 }
 
 // Define "default" arguments for certains protocol methods
-public extension GroupManagerProtocol {
-    func setName(groupID: Data, creator: String, name: String?, systemMessageDate: Date) -> Promise<Void> {
+extension GroupManagerProtocol {
+    public func setName(groupID: Data, creator: String, name: String?, systemMessageDate: Date) -> Promise<Void> {
         setName(groupID: groupID, creator: creator, name: name, systemMessageDate: systemMessageDate, send: true)
     }
     
-    func setName(group: Group, name: String?) -> Promise<Void> {
+    public func setName(group: Group, name: String?) -> Promise<Void> {
         setName(group: group, name: name, systemMessageDate: Date(), send: true)
     }
     
-    func setPhoto(groupID: Data, creator: String, imageData: Data, sentDate: Date) -> Promise<Void> {
+    public func setPhoto(groupID: Data, creator: String, imageData: Data, sentDate: Date) -> Promise<Void> {
         setPhoto(groupID: groupID, creator: creator, imageData: imageData, sentDate: sentDate, send: true)
     }
     
-    func setPhoto(group: Group, imageData: Data, sentDate: Date) -> Promise<Void> {
+    public func setPhoto(group: Group, imageData: Data, sentDate: Date) -> Promise<Void> {
         setPhoto(group: group, imageData: imageData, sentDate: sentDate, send: true)
     }
     
-    func deletePhoto(groupID: Data, creator: String, sentDate: Date) -> Promise<Void> {
+    public func deletePhoto(groupID: Data, creator: String, sentDate: Date) -> Promise<Void> {
         deletePhoto(groupID: groupID, creator: creator, sentDate: sentDate, send: true)
     }
     
-    func sync(group: Group) -> Promise<Void> {
+    public func sync(group: Group) -> Promise<Void> {
         sync(group: group, to: nil, withoutCreateMessage: false)
     }
 }
@@ -112,8 +112,8 @@ public extension GroupManagerProtocol {
 }
 
 // Define "default" arguments for certain protocol methods
-public extension GroupManagerProtocolObjc {
-    func createOrUpdateObjc(
+extension GroupManagerProtocolObjc {
+    public func createOrUpdateObjc(
         groupID: Data,
         creator: String,
         members: Set<String>,
@@ -130,15 +130,15 @@ public extension GroupManagerProtocolObjc {
         )
     }
     
-    func leave(groupID: Data, creator: String, toMembers: [String]?) {
+    public func leave(groupID: Data, creator: String, toMembers: [String]?) {
         leave(groupID: groupID, creator: creator, toMembers: toMembers, systemMessageDate: Date())
     }
 
-    func dissolve(groupID: Data, to identities: Set<String>?) {
+    public func dissolve(groupID: Data, to identities: Set<String>?) {
         dissolve(groupID: groupID, to: identities)
     }
     
-    func sendSyncRequest(groupID: Data, creator: String) {
+    public func sendSyncRequest(groupID: Data, creator: String) {
         sendSyncRequest(groupID: groupID, creator: creator, force: false)
     }
 }

@@ -44,12 +44,28 @@ final class ChatViewStickerMessageTableViewCell: ChatViewBaseTableViewCell, Meas
     /// Reset it when the message had any changes to update data shown in the views (e.g. date or status symbol).
     var stickerMessageAndNeighbors: (message: StickerMessage, neighbors: ChatViewDataSource.MessageNeighbors)? {
         didSet {
-            updateCell(for: stickerMessageAndNeighbors?.message)
+            let block = {
+                self.updateCell(for: self.stickerMessageAndNeighbors?.message)
+                
+                super.setMessage(
+                    to: self.stickerMessageAndNeighbors?.message,
+                    with: self.stickerMessageAndNeighbors?.neighbors
+                )
+            }
             
-            super.setMessage(
-                to: stickerMessageAndNeighbors?.message,
-                with: stickerMessageAndNeighbors?.neighbors
-            )
+            if let oldValue, oldValue.message.objectID == stickerMessageAndNeighbors?.message.objectID {
+                UIView.animate(
+                    withDuration: ChatViewConfiguration.ChatBubble.bubbleSizeChangeAnimationDurationInSeconds,
+                    delay: 0.0,
+                    options: .curveEaseInOut
+                ) {
+                    block()
+                    self.layoutIfNeeded()
+                }
+            }
+            else {
+                block()
+            }
         }
     }
     
@@ -135,7 +151,8 @@ extension ChatViewStickerMessageTableViewCell: ChatViewMessageAction {
         let shareItems = [MessageActivityItem(for: message)]
         
         // Copy
-        // In the new chat view we always copy the data, regardless if it has a caption because the text can be selected itself.
+        // In the new chat view we always copy the data, regardless if it has a caption because the text can be selected
+        // itself.
         let copyHandler = {
             guard !MDMSetup(setup: false).disableShareMedia() else {
                 DDLogWarn(
@@ -146,7 +163,7 @@ extension ChatViewStickerMessageTableViewCell: ChatViewMessageAction {
             
             switch message.fileMessageType {
             case .sticker, .animatedSticker:
-                guard let data = message.blobGet(),
+                guard let data = message.blobData,
                       let image = UIImage(data: data) else {
                     DDLogError("[CV CxtMenu] Could not copy sticker")
                     NotificationPresenterWrapper.shared.present(type: .copyError)
@@ -246,7 +263,8 @@ extension ChatViewStickerMessageTableViewCell: ChatViewMessageAction {
                     await BlobManager.shared.syncBlobs(for: message.objectID)
                 }
             }
-            // Download action is inserted before default action, depending if ack/dec is possible at a different position
+            // Download action is inserted before default action, depending if ack/dec is possible at a different
+            // position
             if message.isUserAckEnabled {
                 menuItems.insert(downloadAction, at: 2)
             }

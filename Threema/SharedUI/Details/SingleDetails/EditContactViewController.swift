@@ -88,7 +88,7 @@ final class EditContactViewController: ThemedCodeModernGroupedTableViewControlle
             strongSelf.avatarImageData = newImageData
             
             // Return default initials avatar if no data is available or readable
-            guard let newImageData = newImageData,
+            guard let newImageData,
                   let newImage = UIImage(data: newImageData) else {
                 
                 let newAvatarImage = AvatarMaker.shared().initialsAvatar(

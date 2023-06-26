@@ -66,7 +66,7 @@ class TaskExecutionTransaction: TaskExecution, TaskExecutionProtocol {
             guard try self.checkPreconditions() else {
                 throw TaskExecutionTransactionError.preconditionFailed
             }
-            guard !(try self.shouldSkip()) else {
+            guard try !(self.shouldSkip()) else {
                 throw TaskExecutionTransactionError.shouldSkip
             }
 

@@ -36,11 +36,19 @@ public protocol UnreadMessagesProtocol: UnreadMessagesProtocolObjc {
 }
 
 @objc public class UnreadMessages: NSObject, UnreadMessagesProtocol {
-    
+    private let messageSender: MessageSenderProtocol
     private let entityManager: EntityManager
     
-    @objc public init(entityManager: EntityManager) {
+    public required init(messageSender: MessageSenderProtocol, entityManager: EntityManager) {
+        self.messageSender = messageSender
         self.entityManager = entityManager
+    }
+
+    @objc public convenience init(entityManager: EntityManager) {
+        self.init(
+            messageSender: MessageSender(entityManager: entityManager),
+            entityManager: entityManager
+        )
     }
 
     /// Unread messages count of conversation and recalculate `Conversation.unreadMessageCount`.
@@ -63,7 +71,8 @@ public protocol UnreadMessagesProtocol: UnreadMessagesProtocolObjc {
         totalCount(doCalcUnreadMessagesCountOf: Set<Conversation>())
     }
 
-    /// Unread messages count of all conversations, and recalculate `Conversation.unreadMessageCount` for given conversations.
+    /// Unread messages count of all conversations, and recalculate `Conversation.unreadMessageCount` for given
+    /// conversations.
     /// - Parameter doCalcUnreadMessagesCountOf: Recalculate unread messages count for this conversations
     /// - Returns: Unread messages count of all conversations
     @discardableResult
@@ -178,16 +187,22 @@ public protocol UnreadMessagesProtocol: UnreadMessagesProtocolObjc {
                     id: groupEntity.groupID,
                     creator: groupEntity.groupCreator ?? MyIdentityStore.shared().identity
                 )
-                MessageSender.reflectReadReceipt(messages: unreadMessages, senderGroupIdentity: groupIdentity)
+                // Send (reflect) read receipt
+                let unreadMessagesLocal = unreadMessages
+                Task { @MainActor in
+                    await messageSender.sendReadReceipt(for: unreadMessagesLocal, toGroupIdentity: groupIdentity)
+                }
             }
         }
         else if let contact = conversation.contact {
             // Send read receipt
-            MessageSender.sendReadReceipt(
-                forMessages: unreadMessages,
-                toIdentity: contact.identity,
-                onCompletion: nil
-            )
+            let unreadMessagesLocal = unreadMessages
+            Task { @MainActor in
+                await messageSender.sendReadReceipt(
+                    for: unreadMessagesLocal,
+                    toIdentity: contact.identity
+                )
+            }
         }
         
         return unreadMessages.count

@@ -36,10 +36,10 @@ class MessageProcessorMock: NSObject, MessageProcessorProtocol {
     ) -> AnyPromise! {
         processIncomingMessageCalls.append(boxmsg)
 
-        if let abstractMessage = abstractMessage {
+        if let abstractMessage {
             return AnyPromise(Promise { $0.fulfill(AbstractMessageAndPFSSession(message: abstractMessage)) })
         }
-        else if let error = error {
+        else if let error {
             return AnyPromise(Promise<AbstractMessage>(error: error))
         }
         return AnyPromise(Promise())

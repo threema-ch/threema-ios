@@ -28,7 +28,8 @@ import Foundation
         .appendingPathComponent("validation_log.txt")
     @objc public static let debugLogFile: URL? = FileUtility.appDataDirectory?.appendingPathComponent("debug_log.txt")
     
-    /// Log levels definition for Swift. Includes new Notice Log level at the end, to not break the standard Log levels like in <CocoaLumberjack/DDLog.h>
+    /// Log levels definition for Swift. Includes new Notice Log level at the end, to not break the standard Log levels
+    /// like in <CocoaLumberjack/DDLog.h>
     public enum DDLogLevelCustom: UInt {
         case err = 0b0000001
         case warn = 0b0000010
@@ -57,7 +58,7 @@ import Foundation
     }
 
     @objc public static func addFileLogger(_ logFile: URL?) {
-        guard let logFile = logFile else {
+        guard let logFile else {
             return
         }
         
@@ -70,7 +71,7 @@ import Foundation
     }
     
     @objc public static func removeFileLogger(_ logFile: URL?) {
-        guard let logFile = logFile else {
+        guard let logFile else {
             return
         }
         
@@ -87,7 +88,7 @@ import Foundation
     }
     
     @objc public static func logFileSize(_ logFile: URL?) -> Int64 {
-        guard let logFile = logFile else {
+        guard let logFile else {
             return 0
         }
         
@@ -116,7 +117,7 @@ import Foundation
     ///
     /// - Returns: Array of file loggers
     private static func findFileLogger(_ logFile: URL?) -> [DDLogger]? {
-        guard let logFile = logFile else {
+        guard let logFile else {
             return nil
         }
         

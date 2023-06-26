@@ -21,7 +21,7 @@
 import Foundation
 @testable import ThreemaFramework
 
-class TaskManagerMock: TaskManagerProtocol {
+class TaskManagerMock: NSObject, TaskManagerProtocol {
     
     typealias TaskAddedCallback = () -> Void
     

@@ -39,7 +39,7 @@ protocol MediaPreviewItemProtocol: PreviewItemProtocol {
     open var filename: String?
     
     open var uti: String? {
-        guard let itemURL = itemURL else {
+        guard let itemURL else {
             return nil
         }
         return UTIConverter.uti(forFileURL: itemURL)

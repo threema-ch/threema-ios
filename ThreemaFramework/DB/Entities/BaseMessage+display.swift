@@ -21,10 +21,10 @@
 import CocoaLumberjackSwift
 import Foundation
 
-public extension BaseMessage {
+extension BaseMessage {
     
     /// State to display in UI for this message
-    enum DisplayState {
+    public enum DisplayState {
         case none
         
         // Common states
@@ -229,7 +229,7 @@ public extension BaseMessage {
     
     // MARK: - ack images
     
-    var userThumbsUpImage: UIImage? {
+    public var userThumbsUpImage: UIImage? {
         var imageName = "hand.thumbsup"
         if userackDate != nil, userack.boolValue {
             imageName = "hand.thumbsup.fill"
@@ -238,7 +238,7 @@ public extension BaseMessage {
             .withTintColor(Colors.thumbUp, renderingMode: .alwaysOriginal)
     }
     
-    var userThumbsDownImage: UIImage? {
+    public var userThumbsDownImage: UIImage? {
         var imageName = "hand.thumbsdown"
         if userackDate != nil, !userack.boolValue {
             imageName = "hand.thumbsdown.fill"
@@ -250,7 +250,7 @@ public extension BaseMessage {
     // MARK: - messageDisplayState
     
     /// Display state for this message. Use this to show symbols in UI.
-    var messageDisplayState: DisplayState {
+    public var messageDisplayState: DisplayState {
         
         // We don't show state in system messages
         if self is SystemMessage {
@@ -315,7 +315,7 @@ public extension BaseMessage {
     /// Display date of this message
     ///
     /// Use this to show a formatted date (maybe just time) in the UI.
-    @objc var displayDate: Date {
+    @objc public var displayDate: Date {
         // If user delete a message, the conversation property in the message is nil
         // We have to use the date if it's on state willBeDeleted
         if willBeDeleted {
@@ -327,7 +327,7 @@ public extension BaseMessage {
             return date
         }
 
-        if let userackDate = userackDate {
+        if let userackDate {
             return userackDate
         }
             
@@ -357,10 +357,10 @@ public extension BaseMessage {
     private var displayDateForSingleMessage: Date {
         // Date is independent of fail state!
         if isOwnMessage {
-            if read.boolValue, let readDate = readDate {
+            if read.boolValue, let readDate {
                 return readDate
             }
-            else if delivered.boolValue, let deliveryDate = deliveryDate {
+            else if delivered.boolValue, let deliveryDate {
                 return deliveryDate
             }
             // Sent and everything else
@@ -380,11 +380,12 @@ public extension BaseMessage {
     
     /// Date associated with a certain state
     ///
-    /// This is "independent" of the current message state. I.e. if the message is not actually delivered, but a `deliveryDate` is set this will be returned.
+    /// This is "independent" of the current message state. I.e. if the message is not actually delivered, but a
+    /// `deliveryDate` is set this will be returned.
     ///
     /// - Parameter state: State go get date for
     /// - Returns: Date if there is any for this state
-    func date(for state: DisplayState) -> Date? {
+    public func date(for state: DisplayState) -> Date? {
         switch state {
         case .none:
             return nil

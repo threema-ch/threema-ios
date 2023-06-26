@@ -20,7 +20,6 @@
 
 #import "ForwardURLActivity.h"
 #import "ContactGroupPickerViewController.h"
-#import "MessageSender.h"
 #import "ModalNavigationController.h"
 #import "UTIConverter.h"
 #import "Old_FileMessageSender.h"

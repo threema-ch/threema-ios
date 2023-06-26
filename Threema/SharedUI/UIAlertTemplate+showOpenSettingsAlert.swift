@@ -30,8 +30,8 @@ import UIKit
     case microphone
 }
 
-private extension NoAccessAlertType {
-    var localizedTitle: String {
+extension NoAccessAlertType {
+    fileprivate var localizedTitle: String {
         switch self {
         case .camera:
             return BundleUtil.localizedString(forKey: "alert_no_access_title_camera")
@@ -46,7 +46,7 @@ private extension NoAccessAlertType {
         }
     }
     
-    var localizedMessage: String {
+    fileprivate var localizedMessage: String {
         switch self {
         case .camera:
             return BundleUtil.localizedString(forKey: "alert_no_access_message_camera")
@@ -63,16 +63,17 @@ private extension NoAccessAlertType {
 }
 
 // This is in the app targets, because `UIApplication.shared.open(_:)` cannot be called in app extensions
-public extension UIAlertTemplate {
+extension UIAlertTemplate {
 
-    /// Shows an alert which informs the user that some access is not granted, and gives them the option to open settings
+    /// Shows an alert which informs the user that some access is not granted, and gives them the option to open
+    /// settings
     ///
     /// - Parameters:
     ///   - owner: UIViewController to present the alert on
     ///   - noAccessAlertType: Type of missing access
     ///   - openSettingsCompletion: Closure called after settings are opened
     ///   - actionCancel: Closure called when cancel is selected
-    static func showOpenSettingsAlert(
+    public static func showOpenSettingsAlert(
         owner: UIViewController,
         noAccessAlertType: NoAccessAlertType,
         openSettingsCompletion: (() -> Void)? = nil,
@@ -108,13 +109,14 @@ public extension UIAlertTemplate {
         owner.present(alert, animated: true)
     }
     
-    /// Shows an alert which informs the user that some access is not granted, and gives them the option to open settings
+    /// Shows an alert which informs the user that some access is not granted, and gives them the option to open
+    /// settings
     ///
     /// - Parameters:
     ///   - owner: UIViewController to present the alert on
     ///   - noAccessAlertType: Type of missing access
     @available(*, deprecated, message: "Only use this from obj-c.")
-    @objc static func showOpenSettingsAlert(
+    @objc public static func showOpenSettingsAlert(
         owner: UIViewController,
         noAccessAlertType: NoAccessAlertType
     ) {

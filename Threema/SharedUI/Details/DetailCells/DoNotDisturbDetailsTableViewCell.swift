@@ -31,7 +31,7 @@ class DoNotDisturbDetailsTableViewCell: ThemedCodeStackTableViewCell {
     
     var action: Details.Action? {
         didSet {
-            guard let action = action else {
+            guard let action else {
                 return
             }
             
@@ -41,7 +41,7 @@ class DoNotDisturbDetailsTableViewCell: ThemedCodeStackTableViewCell {
     
     var type: PushSettingType? {
         didSet {
-            guard let type = type else {
+            guard let type else {
                 return
             }
             
@@ -56,7 +56,7 @@ class DoNotDisturbDetailsTableViewCell: ThemedCodeStackTableViewCell {
     
     private var pushSetting: PushSetting? {
         didSet {
-            guard let pushSetting = pushSetting else {
+            guard let pushSetting else {
                 return
             }
             

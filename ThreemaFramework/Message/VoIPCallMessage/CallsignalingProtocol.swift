@@ -107,11 +107,11 @@ public enum CallsignalingProtocol {
     }
 }
 
-public extension CallsignalingProtocol {
+extension CallsignalingProtocol {
     
     // MARK: Encode / Decode
     
-    static func encodeMute(_ isMicrophoneMuted: Bool) -> Data? {
+    public static func encodeMute(_ isMicrophoneMuted: Bool) -> Data? {
         var envelop = Callsignaling_Envelope()
         var captureState = Callsignaling_CaptureState()
         captureState.device = .microphone
@@ -120,7 +120,7 @@ public extension CallsignalingProtocol {
         return try? envelop.serializedData()
     }
     
-    static func encodeVideoCapture(_ isCapture: Bool) -> Data? {
+    public static func encodeVideoCapture(_ isCapture: Bool) -> Data? {
         var envelop = Callsignaling_Envelope()
         var captureState = Callsignaling_CaptureState()
         captureState.device = .camera
@@ -129,7 +129,7 @@ public extension CallsignalingProtocol {
         return try? envelop.serializedData()
     }
     
-    static func encodeVideoQuality(_ profile: ThreemaVideoCallQualityProfiles) -> Data? {
+    public static func encodeVideoQuality(_ profile: ThreemaVideoCallQualityProfiles) -> Data? {
         let threemaVideoCallQualityProfile = profile.qualityProfile()
         var envelop = Callsignaling_Envelope()
         var videoQualityProfile = Callsignaling_VideoQualityProfile()
@@ -148,7 +148,7 @@ public extension CallsignalingProtocol {
         return try? envelop.serializedData()
     }
     
-    static func decodeThreemaVideoCallSignalingMessage(_ data: Data) -> ThreemaVideoCallSignalingMessage {
+    public static func decodeThreemaVideoCallSignalingMessage(_ data: Data) -> ThreemaVideoCallSignalingMessage {
         var threemaVideoCallQualityProfile: ThreemaVideoCallQualityProfile?
         var threemaVideoCallCaputreState: ThreemaVideoCallCaputreState?
         
@@ -180,15 +180,15 @@ public extension CallsignalingProtocol {
     }
 }
 
-public extension CallsignalingProtocol {
+extension CallsignalingProtocol {
     
     // MARK: Public static functions
     
-    static func currentThreemaVideoCallQualitySettingTitle() -> String {
+    public static func currentThreemaVideoCallQualitySettingTitle() -> String {
         threemaVideoCallQualitySettingTitle(for: UserSettings.shared().threemaVideoCallQualitySetting)
     }
     
-    static func threemaVideoCallQualitySettingTitle(for setting: ThreemaVideoCallQualitySetting) -> String {
+    public static func threemaVideoCallQualitySettingTitle(for setting: ThreemaVideoCallQualitySetting) -> String {
         switch setting {
         case ThreemaVideoCallQualitySettingAuto:
             return BundleUtil.localizedString(forKey: "settings_threema_calls_video_quality_profile_auto")
@@ -201,7 +201,7 @@ public extension CallsignalingProtocol {
         }
     }
     
-    static func threemaVideoCallQualitySettingSubtitle(for setting: ThreemaVideoCallQualitySetting) -> String {
+    public static func threemaVideoCallQualitySettingSubtitle(for setting: ThreemaVideoCallQualitySetting) -> String {
         switch setting {
         case ThreemaVideoCallQualitySettingAuto:
             return BundleUtil.localizedString(forKey: "settings_threema_calls_video_quality_profile_auto_description")
@@ -214,19 +214,19 @@ public extension CallsignalingProtocol {
         }
     }
     
-    static func threemaVideoCallQualitySettingCount() -> Int {
+    public static func threemaVideoCallQualitySettingCount() -> Int {
         3
     }
     
-    static func isThreemaVideoCallQualitySettingAuto() -> Bool {
+    public static func isThreemaVideoCallQualitySettingAuto() -> Bool {
         UserSettings.shared()?.threemaVideoCallQualitySetting == ThreemaVideoCallQualitySettingAuto
     }
     
-    static func threemaVideoCallQualitySettingSelected(for setting: ThreemaVideoCallQualitySetting) -> Bool {
+    public static func threemaVideoCallQualitySettingSelected(for setting: ThreemaVideoCallQualitySetting) -> Bool {
         UserSettings.shared()?.threemaVideoCallQualitySetting == setting
     }
     
-    static func localCaptureQualityProfile() -> ThreemaVideoCallQualityProfile {
+    public static func localCaptureQualityProfile() -> ThreemaVideoCallQualityProfile {
         if UserSettings.shared()?.threemaVideoCallQualitySetting == ThreemaVideoCallQualitySettingMaximumQuality {
             return ThreemaVideoCallQualityProfiles.max.qualityProfile()
         }
@@ -234,7 +234,7 @@ public extension CallsignalingProtocol {
         return ThreemaVideoCallQualityProfiles.high.qualityProfile()
     }
     
-    static func localPeerQualityProfile() -> ThreemaVideoCallQualityProfile {
+    public static func localPeerQualityProfile() -> ThreemaVideoCallQualityProfile {
         let reachability = Reachability.forInternetConnection()
         switch UserSettings.shared()?.threemaVideoCallQualitySetting {
         case ThreemaVideoCallQualitySettingAuto:
@@ -253,7 +253,7 @@ public extension CallsignalingProtocol {
         return ThreemaVideoCallQualityProfiles.low.qualityProfile()
     }
     
-    static func findCommonProfile(
+    public static func findCommonProfile(
         remoteProfile: ThreemaVideoCallQualityProfile?,
         networkIsRelayed: Bool,
         _ localProfile: ThreemaVideoCallQualityProfile? = nil
@@ -296,7 +296,7 @@ public extension CallsignalingProtocol {
         )
     }
     
-    static func printDebugQualityProfiles(
+    public static func printDebugQualityProfiles(
         remoteProfile: ThreemaVideoCallQualityProfile?,
         networkIsRelayed: Bool
     ) -> String {

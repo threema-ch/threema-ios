@@ -201,8 +201,8 @@ class ConversationOverviewSMTableViewCell: ThemedCodeStackTableViewCell {
             
             AvatarMaker.shared()
                 .avatar(for: conversation, size: 40, masked: true) { avatarImage, objectID in
-                    guard let avatarImage = avatarImage,
-                          let objectID = objectID else {
+                    guard let avatarImage,
+                          let objectID else {
                         // Show placeholder
                         self.avatarImageView.image = AvatarMaker.shared().unknownPersonImage()
                         return

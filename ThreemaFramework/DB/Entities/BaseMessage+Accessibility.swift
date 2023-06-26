@@ -20,9 +20,9 @@
 
 import Foundation
 
-public extension BaseMessage {
+extension BaseMessage {
     /// Contains the sender and message type
-    var accessibilitySenderAndMessageTypeText: String {
+    public var accessibilitySenderAndMessageTypeText: String {
         
         var text = ""
         
@@ -54,7 +54,7 @@ public extension BaseMessage {
     }
 
     /// Contains the status and the message date.
-    var accessibilityDateAndState: String {
+    public var accessibilityDateAndState: String {
         
         let dateString = DateFormatter.relativeLongStyleDateShortStyleTime(displayDate)
         
@@ -68,13 +68,13 @@ public extension BaseMessage {
     }
     
     /// Contains the sender.
-    var accessibilityMessageSender: String? {
+    public var accessibilityMessageSender: String? {
         guard !isOwnMessage else {
             return BundleUtil.localizedString(forKey: "me")
         }
         
         if isGroupMessage {
-            if let sender = sender {
+            if let sender {
                 return sender.displayName
             }
             return nil

@@ -101,7 +101,7 @@ let tmpDirectory = "tmpImages/"
     }
     
     func didSelectAssets(assets: [DKAsset]) {
-        guard let pickerController = pickerController else {
+        guard let pickerController else {
             return
         }
         completion(assets, pickerController)
@@ -169,7 +169,8 @@ extension PhotosAccessHelper: PHPickerViewControllerDelegate {
             let sema = DispatchSemaphore(value: 0)
             
             for result in results {
-                // Looping live photos have three type identifiers, but in iOS 15.5. only the movie identifier can be loaded.
+                // Looping live photos have three type identifiers, but in iOS 15.5. only the movie identifier can be
+                // loaded.
                 if result.itemProvider.hasItemConformingToTypeIdentifier(UTType.movie.identifier) {
                     DispatchQueue.main.async {
                         hud?.detailsLabel.text = BundleUtil
@@ -228,7 +229,7 @@ extension PhotosAccessHelper: PHPickerViewControllerDelegate {
     }
     
     func loadVideo(from url: URL?) -> Any {
-        guard let url = url else {
+        guard let url else {
             return PhotosPickerError.fileNotFound
         }
         
@@ -254,7 +255,7 @@ extension PhotosAccessHelper: PHPickerViewControllerDelegate {
     }
     
     func loadImage(from url: URL?) -> Any {
-        guard let url = url else {
+        guard let url else {
             return PhotosPickerError.fileNotFound
         }
         let tmpDirURL = PhotosAccessHelper.getTempDir()

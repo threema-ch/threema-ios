@@ -131,7 +131,7 @@ extension Ballot {
         let attributedString = NSMutableAttributedString(string: text)
 
         // Symbol
-        if let symbol = stateSymbol, let configuration = configuration {
+        if let symbol = stateSymbol, let configuration {
             
             let configuredSymbol = symbol.withConfiguration(configuration)
             

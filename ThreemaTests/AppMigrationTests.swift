@@ -49,7 +49,8 @@ class AppMigrationTests: XCTestCase {
     func testRunMigrationToLatestVersion() throws {
         setupDataForMigrationVersion4_8()
         
-        // Verify that the migration was started by `doMigrate` and not some other function accidentally accessing the database before the proper migration was initialized.
+        // Verify that the migration was started by `doMigrate` and not some other function accidentally accessing the
+        // database before the proper migration was initialized.
         DatabaseManager.db().doMigrateDB()
         
         // Setup mocks

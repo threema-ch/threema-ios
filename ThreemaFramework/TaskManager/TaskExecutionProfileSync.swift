@@ -74,7 +74,7 @@ class TaskExecutionProfileSync: TaskExecutionBlobTransaction {
             userProfile: task.syncUserProfile
         )
         
-        return [Promise<Void> { $0.fulfill(try reflectMessage(
+        return [Promise<Void> { try $0.fulfill(reflectMessage(
             envelope: envelope,
             ltReflect: self.taskContext.logReflectMessageToMediator,
             ltAck: self.taskContext.logReceiveMessageAckFromMediator

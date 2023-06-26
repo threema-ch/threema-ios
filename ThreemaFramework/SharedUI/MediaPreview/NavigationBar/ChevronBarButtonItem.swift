@@ -20,6 +20,8 @@
 
 import UIKit
 
+// MARK: - ChevronBarButtonItem.Configuration
+
 extension ChevronBarButtonItem {
     struct Configuration {
         let minimumTouchTargetWidth: CGFloat = 44
@@ -36,8 +38,8 @@ class ChevronBarButtonItem: UIButton {
     
     /// Ready to use left bar button item to use as a button in a navigation bar
     ///
-    /// To align the button correctly as an right bar button item in a navigation bar some tweaks are need such that the button appears
-    /// like a default bat button item.
+    /// To align the button correctly as an right bar button item in a navigation bar some tweaks are need such that the
+    /// button appears like a default bat button item.
     ///
     /// - Returns: Ready to use right bar button items array
     func asLeftBarButtonItem() -> [UIBarButtonItem] {

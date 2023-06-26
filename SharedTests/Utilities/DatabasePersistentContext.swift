@@ -68,8 +68,8 @@ class DatabasePersistentContext {
     ) {
         var modelURL = BundleUtil.url(forResource: "ThreemaData", withExtension: "momd")
         let coreDataModelVersion = BundleUtil.object(forInfoDictionaryKey: "ThreemaCoreDataVersion") as! String
-        modelURL = modelURL?
-            .appendingPathComponent("ThreemaDataV\(coreDataModelVersion).mom") // Hack, because of could not load omo file?!?!
+        // Hack, because of could not load omo file?!?!
+        modelURL = modelURL?.appendingPathComponent("ThreemaDataV\(coreDataModelVersion).mom")
         let managedObjectModel = NSManagedObjectModel(contentsOf: modelURL!)
         let container = NSPersistentContainer(name: "TestData", managedObjectModel: managedObjectModel!)
         container.persistentStoreDescriptions[0].url = URL(fileURLWithPath: "/dev/null")

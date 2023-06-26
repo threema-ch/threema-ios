@@ -22,9 +22,11 @@ import CocoaLumberjackSwift
 import Foundation
 
 public class VoIPCallSender {
-    let myIdentityStore: MyIdentityStoreProtocol
+    private let messageSender: MessageSenderProtocol
+    private let myIdentityStore: MyIdentityStoreProtocol
     
-    public init(_ myIdentityStore: MyIdentityStoreProtocol) {
+    public init(messageSender: MessageSenderProtocol, myIdentityStore: MyIdentityStoreProtocol) {
+        self.messageSender = messageSender
         self.myIdentityStore = myIdentityStore
     }
     
@@ -39,7 +41,7 @@ public class VoIPCallSender {
                 "VoipCallService: [cid=\(offer.callID.callID)]: Call offer enqueued to \(offer.contactIdentity ?? "?")"
             )
             
-            MessageSender.send(msg, isPersistent: false, onCompletion: nil)
+            messageSender.sendMessage(abstractMessage: msg, isPersistent: false)
         }
         catch {
             DDLogError(
@@ -60,7 +62,7 @@ public class VoIPCallSender {
                 "VoipCallService: [cid=\(answer.callID.callID)]: Call answer enqueued to \(answer.contactIdentity ?? "?")"
             )
 
-            MessageSender.send(msg, isPersistent: false, onCompletion: nil)
+            messageSender.sendMessage(abstractMessage: msg, isPersistent: false)
         }
         catch {
             DDLogError(
@@ -86,7 +88,7 @@ public class VoIPCallSender {
                 )
             }
 
-            MessageSender.send(msg, isPersistent: false, onCompletion: nil)
+            messageSender.sendMessage(abstractMessage: msg, isPersistent: false)
         }
         catch {
             DDLogError(
@@ -117,12 +119,13 @@ public class VoIPCallSender {
                 var dispatchGroup: DispatchGroup? = DispatchGroup()
                 dispatchGroup?.enter()
                 
-                MessageSender.send(msg, isPersistent: false, onCompletion: {
+                messageSender.sendMessage(abstractMessage: msg, isPersistent: false, completion: {
                     dispatchGroup?.leave()
                     dispatchGroup = nil
                 })
                 
-                // We only wait when there is a connection, or if it is being built up. Otherwise the UI freezes and one cannot escape the situation.
+                // We only wait when there is a connection, or if it is being built up. Otherwise the UI freezes and one
+                // cannot escape the situation.
                 let state = ServerConnector.shared().connectionState
                 let wait: Int
                 
@@ -140,7 +143,7 @@ public class VoIPCallSender {
                 }
             }
             else {
-                MessageSender.send(msg, isPersistent: false, onCompletion: nil)
+                messageSender.sendMessage(abstractMessage: msg, isPersistent: false)
             }
         }
         catch {
@@ -161,7 +164,7 @@ public class VoIPCallSender {
                 "VoipCallService: [cid=\(ringingMessage.callID.callID)]: Call ringing message enqueued to \(ringingMessage.contactIdentity ?? "?")"
             )
 
-            MessageSender.send(msg, isPersistent: false, onCompletion: nil)
+            messageSender.sendMessage(abstractMessage: msg, isPersistent: false)
         }
         catch {
             DDLogError(

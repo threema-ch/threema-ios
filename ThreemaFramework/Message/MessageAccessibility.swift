@@ -29,16 +29,16 @@ public protocol MessageAccessibility: BaseMessage {
     var accessibilityMessageTypeDescription: String { get }
 }
 
-public extension MessageAccessibility {
-    var customAccessibilityValue: String? {
+extension MessageAccessibility {
+    public var customAccessibilityValue: String? {
         nil
     }
 
-    var customAccessibilityHint: String? {
+    public var customAccessibilityHint: String? {
         nil
     }
 
-    var customAccessibilityTrait: UIAccessibilityTraits {
+    public var customAccessibilityTrait: UIAccessibilityTraits {
         .none
     }
 }

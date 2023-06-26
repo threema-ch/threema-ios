@@ -153,7 +153,7 @@ import Foundation
         
         var audioRate = 0
         
-        if let audioTrack = audioTrack {
+        if let audioTrack {
             audioRate = Int(audioTrack.estimatedDataRate)
         }
         
@@ -255,7 +255,8 @@ import Foundation
             return nil
         }
         
-        // Video conversation fails if the 3.1 profile was chosen for a video bigger than 720p. We suspect that this is because of the contradictory video size information but couldn't conform this.
+        // Video conversation fails if the 3.1 profile was chosen for a video bigger than 720p. We suspect that this is
+        // because of the contradictory video size information but couldn't conform this.
         // The error code given was error -12900 without any message
         let profileLevelKey = rate
             .isOriginal ? AVVideoProfileLevelH264BaselineAutoLevel : AVVideoProfileLevelH264Baseline31
@@ -289,14 +290,15 @@ import Foundation
     
     // MARK: - Helper Functions
     
-    /// Respecting the user settings returns the highest possible bitrate for a video of duration `d` with given audio and video bitrates
-    /// or nil if the video cannot fit within the global file size limit.
+    /// Respecting the user settings returns the highest possible bitrate for a video of duration `d` with given audio
+    /// and video bitrates or nil if the video cannot fit within the global file size limit.
     /// - Parameters:
     ///   - duration: Duration of the video in seconds
     ///   - audioBitrate: original estimated audio bitrate of the video
     ///   - videoBitrate: original estimated video bitrate of the video
     ///   - videoSize: original video size in pixels
-    /// - Returns: The highest possible video bitrate which fits in the global file size limit or the maximum allowed by the user or nil if
+    /// - Returns: The highest possible video bitrate which fits in the global file size limit or the maximum allowed by
+    ///            the user or nil if
     /// the video cannot fit into the global file size limit.
     private static func getHighestPossibleBitrate(
         duration: Int,
@@ -337,8 +339,10 @@ import Foundation
         
         let userChosenMovieRate = VideoConversionHelper.possibleRatesForUserSetting.first!
         
-        // If it is possible to send the video in its original bitrate and the user has chosen original we choose the original bitrate
-        // If the user configured bitrate is higher than the one used in the video and the video fits in the max file size we also use the original bit rate to avoid increasing video file size
+        // If it is possible to send the video in its original bitrate and the user has chosen original we choose the
+        // original bitrate
+        // If the user configured bitrate is higher than the one used in the video and the video fits in the max file
+        // size we also use the original bit rate to avoid increasing video file size
         if originalSize <= kMaxFileSize,
            VideoConversionHelper.videoQualitySetting == .original ||
            (userChosenMovieRate.videoRate > videoBitrate && userChosenMovieRate.audioRate > audioBitrate) {

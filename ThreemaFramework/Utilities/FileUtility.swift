@@ -144,7 +144,7 @@ import Foundation
         var newFilename = filename
         
         var fileURL = directoryURL.appendingPathComponent(filename)
-        if let pathExtension = pathExtension {
+        if let pathExtension {
             fileURL = fileURL.appendingPathExtension(pathExtension)
         }
         
@@ -152,7 +152,7 @@ import Foundation
         while FileUtility.isExists(fileURL: fileURL) {
             newFilename = filename.appending("-\(i)")
             fileURL = directoryURL.appendingPathComponent(newFilename)
-            if let pathExtension = pathExtension {
+            if let pathExtension {
                 fileURL = fileURL.appendingPathExtension(pathExtension)
             }
             i += 1
@@ -167,7 +167,7 @@ import Foundation
     }
     
     @objc public static func isExists(fileURL: URL?) -> Bool {
-        guard let fileURL = fileURL else {
+        guard let fileURL else {
             return false
         }
         
@@ -176,7 +176,7 @@ import Foundation
     }
     
     @objc public static func dir(pathURL: URL?) -> [String]? {
-        guard let pathURL = pathURL else {
+        guard let pathURL else {
             return nil
         }
     
@@ -240,7 +240,7 @@ import Foundation
     }
 
     public static func write(fileURL: URL?, text: String) -> Bool {
-        guard let fileURL = fileURL else {
+        guard let fileURL else {
             return false
         }
         
@@ -248,7 +248,7 @@ import Foundation
     }
     
     @discardableResult public static func write(fileURL: URL?, contents: Data?) -> Bool {
-        guard let fileURL = fileURL else {
+        guard let fileURL else {
             return false
         }
         
@@ -257,7 +257,7 @@ import Foundation
     }
     
     public static func read(fileURL: URL?) -> Data? {
-        guard let fileURL = fileURL else {
+        guard let fileURL else {
             return nil
         }
         
@@ -281,7 +281,7 @@ import Foundation
     ///    - filePath: path to appending file
     ///    - text: content to addend
     public static func append(fileURL: URL?, text: String) -> Bool {
-        guard let fileURL = fileURL else {
+        guard let fileURL else {
             return false
         }
         

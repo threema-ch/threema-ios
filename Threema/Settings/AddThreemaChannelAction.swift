@@ -18,6 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import CocoaLumberjackSwift
 import Foundation
 
 struct AddThreemaChannelAction {
@@ -47,7 +48,7 @@ struct AddThreemaChannelAction {
             with: threemaChannelIdentity,
             verificationLevel: Int32(kVerificationLevelUnverified),
             onCompletion: { contact, _ in
-                guard let contact = contact else {
+                guard let contact else {
                     UIAlertTemplate.showAlert(
                         owner: viewController,
                         title: BundleUtil.localizedString(forKey: "threema_channel_failed"),
@@ -60,7 +61,7 @@ struct AddThreemaChannelAction {
                 showConversation(for: info)
                 
                 let initialMessages = createInitialMessages()
-                dispatchInitialMessages(messages: initialMessages, with: info)
+                dispatchInitialMessages(messages: initialMessages, with: contact)
                 
             }, onError: { error in
                 UIAlertTemplate.showAlert(
@@ -105,23 +106,23 @@ struct AddThreemaChannelAction {
         return initialMessages
     }
     
-    private static func dispatchInitialMessages(messages: [String], with notificationInfo: [AnyHashable: Any]) {
-        guard let conversation = Old_ChatViewControllerCache.getConversationForNotificationInfo(
-            notificationInfo,
-            createIfNotExisting: true
-        ) else {
-            return
-        }
-        
-        for (index, message) in messages.enumerated() {
-            DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(index)) {
-                MessageSender.sendMessage(
-                    message,
-                    in: conversation,
-                    quickReply: false,
-                    requestID: nil,
-                    completion: nil
-                )
+    private static func dispatchInitialMessages(messages: [String], with contact: ContactEntity) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(100)) {
+            let businessInjector = BusinessInjector()
+
+            guard let conversation = businessInjector.entityManager.entityFetcher.conversation(for: contact) else {
+                DDLogWarn("Unable to add initial messages to Threema Channel. Reason: conversation not found.")
+                return
+            }
+            
+            for (index, message) in messages.enumerated() {
+                DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(index)) {
+                    businessInjector.messageSender.sendTextMessage(
+                        text: message,
+                        in: conversation,
+                        quickReply: false
+                    )
+                }
             }
         }
     }

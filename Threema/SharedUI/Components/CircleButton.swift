@@ -20,6 +20,8 @@
 
 import UIKit
 
+// MARK: - CircleButton.Configuration
+
 extension CircleButton {
     struct Configuration {
         /// Diameter of circular button adjusted for current content size
@@ -32,7 +34,8 @@ extension CircleButton {
 
 /// Circle button with an icon in the center and a background
 ///
-/// Use as-is and provide all configuration during initialization. Using `UIButton` methods might lead to unexpected side-effects.
+/// Use as-is and provide all configuration during initialization. Using `UIButton` methods might lead to unexpected
+/// side-effects.
 final class CircleButton: ThemedCodeButton {
     
     // Potential future improvements:

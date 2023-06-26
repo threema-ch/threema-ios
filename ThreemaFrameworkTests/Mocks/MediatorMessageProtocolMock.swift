@@ -78,7 +78,7 @@ class MediatorMessageProtocolMock: MediatorMessageProtocolProtocol {
     }
 
     func encodeEnvelope(envelope: D2d_Envelope) -> (reflectID: Data?, reflectMessage: Data?) {
-        return nextReturnValue()
+        nextReturnValue()
     }
 
     func encodeGetDeviceList() -> Data? {

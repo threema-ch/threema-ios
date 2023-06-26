@@ -209,7 +209,7 @@ final class ChatBarContainerView: UIView {
         
         catchTapOnDisabledView = newCatchTapOnDisabledView
         
-        guard let catchTapOnDisabledView = catchTapOnDisabledView else {
+        guard let catchTapOnDisabledView else {
             return
         }
         
@@ -244,7 +244,7 @@ final class ChatBarContainerView: UIView {
     // MARK: Updates for Coordinator
     
     func updateMentionsTableViewHeight(overwriteHeight: CGFloat? = nil, onCompletion: ((Bool) -> Void)? = nil) {
-        guard let mentionsTableView = mentionsTableView else {
+        guard let mentionsTableView else {
             DDLogError("Should not call updateMentionsTableViewHeight without mentionsTableView")
             return
         }

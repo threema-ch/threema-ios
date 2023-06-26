@@ -34,7 +34,7 @@ class WebContactDetailResponse: WebAbstractMessage {
         
         var tmpData: [AnyHashable: Any?]? = ["receiver": []]
         
-        if let contact = contact {
+        if let contact {
             self.contact = contact
             
             let emails: [Any]? = ContactStore.shared().cnContactEmails(for: contact)

@@ -113,6 +113,283 @@ extension Common_CspFeatureMaskFlag: CaseIterable {
 
 #endif  // swift(>=4.2)
 
+/// E2E message type as defined by the Chat Server Protocol.
+enum Common_CspE2eMessageType: SwiftProtobuf.Enum {
+  typealias RawValue = Int
+
+  /// Invalid message type
+  case ___ // = 0
+
+  /// [`text`](ref:e2e.text)
+  case text // = 1
+
+  /// [`deprecated-image`](ref:e2e.deprecated-image)
+  case deprecatedImage // = 2
+
+  /// [`location`](ref:e2e.location)
+  case location // = 16
+
+  /// [`deprecated-audio`](ref:e2e.deprecated-audio)
+  case deprecatedAudio // = 20
+
+  /// [`deprecated-video`](ref:e2e.deprecated-video)
+  case deprecatedVideo // = 19
+
+  /// [`file`](ref:e2e.file)
+  case file // = 23
+
+  /// [`poll-setup`](ref:e2e.poll-setup)
+  case pollSetup // = 21
+
+  /// [`poll-vote`](ref:e2e.poll-vote)
+  case pollVote // = 22
+
+  /// [`call-offer`](ref:e2e.call-offer)
+  case callOffer // = 96
+
+  /// [`call-answer`](ref:e2e.call-answer)
+  case callAnswer // = 97
+
+  /// [`call-ice-candidate`](ref:e2e.call-ice-candidate)
+  case callIceCandidate // = 98
+
+  /// [`call-hangup`](ref:e2e.call-hangup)
+  case callHangup // = 99
+
+  /// [`call-ringing`](ref:e2e.call-ringing)
+  case callRinging // = 100
+
+  /// [`delivery-receipt`](ref:e2e.delivery-receipt)
+  case deliveryReceipt // = 128
+
+  /// [`typing-indicator`](ref:e2e.typing-indicator)
+  case typingIndicator // = 144
+
+  /// [`set-profile-picture`](ref:e2e.set-profile-picture) of a contact
+  case contactSetProfilePicture // = 24
+
+  /// [`delete-profile-picture`](ref:e2e.delete-profile-picture) of a contact
+  case contactDeleteProfilePicture // = 25
+
+  /// [`contact-request-profile-picture`](ref:e2e.contact-request-profile-picture)
+  case contactRequestProfilePicture // = 26
+
+  /// `csp-e2e.GroupJoinRequest`
+  case groupJoinRequest // = 77
+
+  /// `csp-e2e.GroupJoinResponse`
+  case groupJoinResponse // = 78
+
+  /// [`group-setup`](ref:e2e.group-setup) wrapped by
+  /// [`group-creator-container`](ref:e2e.group-creator-container)
+  case groupSetup // = 74
+
+  /// [`group-name`](ref:e2e.group-name) wrapped by
+  /// [`group-creator-container`](ref:e2e.group-creator-container)
+  case groupName // = 75
+
+  /// [`group-leave`](ref:e2e.group-leave) wrapped by
+  /// [`group-member-container`](ref:e2e.group-member-container)
+  case groupLeave // = 76
+
+  /// [`set-profile-picture`](ref:e2e.set-profile-picture) wrapped by
+  /// [`group-creator-container`](ref:e2e.group-creator-container)
+  case groupSetProfilePicture // = 80
+
+  /// [`delete-profile-picture`](ref:e2e.delete-profile-picture) wrapped by
+  /// [`group-creator-container`](ref:e2e.group-creator-container)
+  case groupDeleteProfilePicture // = 84
+
+  /// [`group-sync-request`](ref:e2e.group-sync-request) wrapped by
+  /// [`group-creator-container`](ref:e2e.group-creator-container)
+  case groupSyncRequest // = 81
+
+  /// `csp-e2e.GroupCallStart` wrapped by
+  /// [`group-member-container`](ref:e2e.group-member-container)
+  case groupCallStart // = 79
+
+  /// `0x41`: [`text`](ref:e2e.text) wrapped by
+  /// [`group-member-container`](ref:e2e.group-member-container)
+  case groupText // = 65
+
+  /// [`location`](ref:e2e.location) wrapped by
+  /// [`group-member-container`](ref:e2e.group-member-container)
+  case groupLocation // = 66
+
+  /// [`deprecated-group-image`](ref:e2e.deprecated-group-image) wrapped by
+  /// [`group-member-container`](ref:e2e.group-member-container)
+  case groupImage // = 67
+
+  /// [`deprecated-audio`](ref:e2e.deprecated-audio) wrapped by
+  /// [`group-member-container`](ref:e2e.group-member-container)
+  case groupAudio // = 69
+
+  /// [`deprecated-video`](ref:e2e.deprecated-video) wrapped by
+  /// [`group-member-container`](ref:e2e.group-member-container)
+  case groupVideo // = 68
+
+  /// [`file`](ref:e2e.file) wrapped by
+  /// [`group-member-container`](ref:e2e.group-member-container)
+  case groupFile // = 70
+
+  /// [`poll-setup`](ref:e2e.poll-setup) wrapped by
+  /// [`group-member-container`](ref:e2e.group-member-container)
+  case groupPollSetup // = 82
+
+  /// [`poll-vote`](ref:e2e.poll-vote) wrapped by
+  /// [`group-member-container`](ref:e2e.group-member-container)
+  case groupPollVote // = 83
+
+  /// [`delivery-receipt`](ref:e2e.delivery-receipt) wrapped by
+  /// [`group-member-container`](ref:e2e.group-member-container)
+  case groupDeliveryReceipt // = 129
+
+  /// `csp-e2e-fs.ForwardSecurityEnvelope`
+  case forwardSecurityEnvelope // = 160
+  case UNRECOGNIZED(Int)
+
+  init() {
+    self = .___
+  }
+
+  init?(rawValue: Int) {
+    switch rawValue {
+    case 0: self = .___
+    case 1: self = .text
+    case 2: self = .deprecatedImage
+    case 16: self = .location
+    case 19: self = .deprecatedVideo
+    case 20: self = .deprecatedAudio
+    case 21: self = .pollSetup
+    case 22: self = .pollVote
+    case 23: self = .file
+    case 24: self = .contactSetProfilePicture
+    case 25: self = .contactDeleteProfilePicture
+    case 26: self = .contactRequestProfilePicture
+    case 65: self = .groupText
+    case 66: self = .groupLocation
+    case 67: self = .groupImage
+    case 68: self = .groupVideo
+    case 69: self = .groupAudio
+    case 70: self = .groupFile
+    case 74: self = .groupSetup
+    case 75: self = .groupName
+    case 76: self = .groupLeave
+    case 77: self = .groupJoinRequest
+    case 78: self = .groupJoinResponse
+    case 79: self = .groupCallStart
+    case 80: self = .groupSetProfilePicture
+    case 81: self = .groupSyncRequest
+    case 82: self = .groupPollSetup
+    case 83: self = .groupPollVote
+    case 84: self = .groupDeleteProfilePicture
+    case 96: self = .callOffer
+    case 97: self = .callAnswer
+    case 98: self = .callIceCandidate
+    case 99: self = .callHangup
+    case 100: self = .callRinging
+    case 128: self = .deliveryReceipt
+    case 129: self = .groupDeliveryReceipt
+    case 144: self = .typingIndicator
+    case 160: self = .forwardSecurityEnvelope
+    default: self = .UNRECOGNIZED(rawValue)
+    }
+  }
+
+  var rawValue: Int {
+    switch self {
+    case .___: return 0
+    case .text: return 1
+    case .deprecatedImage: return 2
+    case .location: return 16
+    case .deprecatedVideo: return 19
+    case .deprecatedAudio: return 20
+    case .pollSetup: return 21
+    case .pollVote: return 22
+    case .file: return 23
+    case .contactSetProfilePicture: return 24
+    case .contactDeleteProfilePicture: return 25
+    case .contactRequestProfilePicture: return 26
+    case .groupText: return 65
+    case .groupLocation: return 66
+    case .groupImage: return 67
+    case .groupVideo: return 68
+    case .groupAudio: return 69
+    case .groupFile: return 70
+    case .groupSetup: return 74
+    case .groupName: return 75
+    case .groupLeave: return 76
+    case .groupJoinRequest: return 77
+    case .groupJoinResponse: return 78
+    case .groupCallStart: return 79
+    case .groupSetProfilePicture: return 80
+    case .groupSyncRequest: return 81
+    case .groupPollSetup: return 82
+    case .groupPollVote: return 83
+    case .groupDeleteProfilePicture: return 84
+    case .callOffer: return 96
+    case .callAnswer: return 97
+    case .callIceCandidate: return 98
+    case .callHangup: return 99
+    case .callRinging: return 100
+    case .deliveryReceipt: return 128
+    case .groupDeliveryReceipt: return 129
+    case .typingIndicator: return 144
+    case .forwardSecurityEnvelope: return 160
+    case .UNRECOGNIZED(let i): return i
+    }
+  }
+
+}
+
+#if swift(>=4.2)
+
+extension Common_CspE2eMessageType: CaseIterable {
+  // The compiler won't synthesize support with the UNRECOGNIZED case.
+  static var allCases: [Common_CspE2eMessageType] = [
+    .___,
+    .text,
+    .deprecatedImage,
+    .location,
+    .deprecatedAudio,
+    .deprecatedVideo,
+    .file,
+    .pollSetup,
+    .pollVote,
+    .callOffer,
+    .callAnswer,
+    .callIceCandidate,
+    .callHangup,
+    .callRinging,
+    .deliveryReceipt,
+    .typingIndicator,
+    .contactSetProfilePicture,
+    .contactDeleteProfilePicture,
+    .contactRequestProfilePicture,
+    .groupJoinRequest,
+    .groupJoinResponse,
+    .groupSetup,
+    .groupName,
+    .groupLeave,
+    .groupSetProfilePicture,
+    .groupDeleteProfilePicture,
+    .groupSyncRequest,
+    .groupCallStart,
+    .groupText,
+    .groupLocation,
+    .groupImage,
+    .groupAudio,
+    .groupVideo,
+    .groupFile,
+    .groupPollSetup,
+    .groupPollVote,
+    .groupDeliveryReceipt,
+    .forwardSecurityEnvelope,
+  ]
+}
+
+#endif  // swift(>=4.2)
+
 /// A unit that may be used in a `oneof` option without any values.
 /// Note: We're using this to simulate tagged unions.
 struct Common_Unit {
@@ -356,6 +633,7 @@ struct Common_Resolution {
 
 #if swift(>=5.5) && canImport(_Concurrency)
 extension Common_CspFeatureMaskFlag: @unchecked Sendable {}
+extension Common_CspE2eMessageType: @unchecked Sendable {}
 extension Common_Unit: @unchecked Sendable {}
 extension Common_Blob: @unchecked Sendable {}
 extension Common_BlobData: @unchecked Sendable {}
@@ -384,6 +662,49 @@ extension Common_CspFeatureMaskFlag: SwiftProtobuf._ProtoNameProviding {
     32: .same(proto: "O2O_VIDEO_CALL_SUPPORT"),
     64: .same(proto: "FORWARD_SECURITY_SUPPORT"),
     128: .same(proto: "GROUP_CALL_SUPPORT"),
+  ]
+}
+
+extension Common_CspE2eMessageType: SwiftProtobuf._ProtoNameProviding {
+  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    0: .same(proto: "_"),
+    1: .same(proto: "TEXT"),
+    2: .same(proto: "DEPRECATED_IMAGE"),
+    16: .same(proto: "LOCATION"),
+    19: .same(proto: "DEPRECATED_VIDEO"),
+    20: .same(proto: "DEPRECATED_AUDIO"),
+    21: .same(proto: "POLL_SETUP"),
+    22: .same(proto: "POLL_VOTE"),
+    23: .same(proto: "FILE"),
+    24: .same(proto: "CONTACT_SET_PROFILE_PICTURE"),
+    25: .same(proto: "CONTACT_DELETE_PROFILE_PICTURE"),
+    26: .same(proto: "CONTACT_REQUEST_PROFILE_PICTURE"),
+    65: .same(proto: "GROUP_TEXT"),
+    66: .same(proto: "GROUP_LOCATION"),
+    67: .same(proto: "GROUP_IMAGE"),
+    68: .same(proto: "GROUP_VIDEO"),
+    69: .same(proto: "GROUP_AUDIO"),
+    70: .same(proto: "GROUP_FILE"),
+    74: .same(proto: "GROUP_SETUP"),
+    75: .same(proto: "GROUP_NAME"),
+    76: .same(proto: "GROUP_LEAVE"),
+    77: .same(proto: "GROUP_JOIN_REQUEST"),
+    78: .same(proto: "GROUP_JOIN_RESPONSE"),
+    79: .same(proto: "GROUP_CALL_START"),
+    80: .same(proto: "GROUP_SET_PROFILE_PICTURE"),
+    81: .same(proto: "GROUP_SYNC_REQUEST"),
+    82: .same(proto: "GROUP_POLL_SETUP"),
+    83: .same(proto: "GROUP_POLL_VOTE"),
+    84: .same(proto: "GROUP_DELETE_PROFILE_PICTURE"),
+    96: .same(proto: "CALL_OFFER"),
+    97: .same(proto: "CALL_ANSWER"),
+    98: .same(proto: "CALL_ICE_CANDIDATE"),
+    99: .same(proto: "CALL_HANGUP"),
+    100: .same(proto: "CALL_RINGING"),
+    128: .same(proto: "DELIVERY_RECEIPT"),
+    129: .same(proto: "GROUP_DELIVERY_RECEIPT"),
+    144: .same(proto: "TYPING_INDICATOR"),
+    160: .same(proto: "FORWARD_SECURITY_ENVELOPE"),
   ]
 }
 

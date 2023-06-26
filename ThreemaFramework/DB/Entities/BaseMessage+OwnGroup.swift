@@ -21,9 +21,9 @@
 import CocoaLumberjackSwift
 import Foundation
 
-public extension BaseMessage {
+extension BaseMessage {
     /// Is this a message I sent?
-    var isOwnMessage: Bool {
+    public var isOwnMessage: Bool {
         guard let isOwn = isOwn?.boolValue else {
             return false
         }
@@ -31,7 +31,7 @@ public extension BaseMessage {
         return isOwn
     }
     
-    var isGroupMessage: Bool {
+    public var isGroupMessage: Bool {
         guard let isGroup = conversation?.isGroup() else {
             DDLogError("Conversation is nil so we report that this message is now group")
             return false

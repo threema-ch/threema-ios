@@ -76,7 +76,7 @@ class DocumentPreviewCell: ScreenWidthSizedCell, QLPreviewControllerDelegate {
     }
     
     func imageWithBorder(from source: UIImage?) -> UIImage? {
-        guard let source = source else {
+        guard let source else {
             return nil
         }
         let sourceSize = source.size
@@ -148,19 +148,19 @@ class DocumentPreviewCell: ScreenWidthSizedCell, QLPreviewControllerDelegate {
     func loadDocument(_ newItem: DocumentPreviewItem) {
         item = newItem
         _ = item?.generateLargeThumbnail(with: bounds.size).done { [self] thumbnail in
-            self.loadingView.isHidden = true
-            self.previewContentView.isHidden = false
-            self.smallPreviewContentView.isHidden = true
+            loadingView.isHidden = true
+            previewContentView.isHidden = false
+            smallPreviewContentView.isHidden = true
             
-            self.largePreviewImageView.image = self.imageWithBorder(from: thumbnail)
-            self.largePreviewImageView.isHidden = false
+            largePreviewImageView.image = imageWithBorder(from: thumbnail)
+            largePreviewImageView.isHidden = false
             
-            self.addTapGestureRecognizer(view: self.largePreviewImageView)
+            addTapGestureRecognizer(view: largePreviewImageView)
             
-            self.documentNameLabel.text = self.item?.originalFilename
-            self.descriptionLabel.text = self.getDescription(for: self.item)
+            documentNameLabel.text = item?.originalFilename
+            descriptionLabel.text = getDescription(for: item)
             
-            self.layoutSubviews()
+            layoutSubviews()
         }.recover { _ in
             DispatchQueue.main.async {
                 self.loadingView.isHidden = true

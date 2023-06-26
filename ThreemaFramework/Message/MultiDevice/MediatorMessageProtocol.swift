@@ -22,7 +22,7 @@ import CocoaLumberjackSwift
 import Foundation
 
 enum MediatorMessageProtocolError: Error {
-    case noAbstractMessageType(for: D2d_MessageType)
+    case noAbstractMessageType(for: Common_CspE2eMessageType)
 }
 
 @objc class MediatorMessageProtocol: NSObject, MediatorMessageProtocolProtocol {
@@ -139,7 +139,7 @@ enum MediatorMessageProtocolError: Error {
             mt == .groupPollSetup ||
             mt == .groupPollVote ||
             mt == .groupName ||
-            mt == .groupRequestSync ||
+            mt == .groupSyncRequest ||
             mt == .groupSetProfilePicture ||
             mt == .groupText ||
             mt == .groupVideo
@@ -361,7 +361,8 @@ enum MediatorMessageProtocolError: Error {
 
     /// Decode mediator message (type reflected).
     /// - Parameter message: Mediator message
-    /// - Returns: `reflectID` and `envelopeData` encrypted envelope data of reflected message and `timestamp` mediator timestamp
+    /// - Returns: `reflectID` and `envelopeData` encrypted envelope data of reflected message and `timestamp` mediator
+    ///            timestamp
     static func decodeReflected(_ message: Data) -> (reflectID: Data, envelopeData: Data, timestamp: Date) {
         let reflectedPayload = message.subdata(in: MEDIATOR_COMMON_HEADER_LENGTH..<message.count)
 
@@ -493,7 +494,7 @@ enum MediatorMessageProtocolError: Error {
     ) -> D2d_Envelope {
         var incomigMessage = D2d_IncomingMessage()
         incomigMessage.type = MediatorMessageProtocol.getMultiDeviceMessageType(for: type)
-        if let body = body {
+        if let body {
             incomigMessage.body = body
         }
         incomigMessage.messageID = messageID
@@ -598,7 +599,7 @@ enum MediatorMessageProtocolError: Error {
     ) -> D2d_Envelope {
         var outgoingMessage = D2d_OutgoingMessage()
         outgoingMessage.type = MediatorMessageProtocol.getMultiDeviceMessageType(for: type)
-        if let body = body {
+        if let body {
             outgoingMessage.body = body
         }
         outgoingMessage.messageID = messageID
@@ -723,7 +724,7 @@ enum MediatorMessageProtocolError: Error {
 
     // MARK: Misc
     
-    static func getAbstractMessageType(for type: D2d_MessageType) throws -> Int32 {
+    static func getAbstractMessageType(for type: Common_CspE2eMessageType) throws -> Int32 {
         switch type {
         case .deprecatedAudio:
             return MSGTYPE_AUDIO
@@ -757,7 +758,7 @@ enum MediatorMessageProtocolError: Error {
             return MSGTYPE_GROUP_LOCATION
         case .groupName:
             return MSGTYPE_GROUP_RENAME
-        case .groupRequestSync:
+        case .groupSyncRequest:
             return MSGTYPE_GROUP_REQUEST_SYNC
         case .groupSetProfilePicture:
             return MSGTYPE_GROUP_SET_PHOTO
@@ -791,14 +792,15 @@ enum MediatorMessageProtocolError: Error {
             return MSGTYPE_CONTACT_REQUEST_PHOTO
         case .typingIndicator:
             return MSGTYPE_TYPING_INDICATOR
-        case .invalid:
-            throw MediatorMessageProtocolError.noAbstractMessageType(for: .invalid)
-        default:
+        case .___: // Invalid message type
+            throw MediatorMessageProtocolError.noAbstractMessageType(for: type)
+        // Not supported types
+        case .groupJoinRequest, .groupJoinResponse, .groupCallStart, .forwardSecurityEnvelope, .UNRECOGNIZED:
             throw MediatorMessageProtocolError.noAbstractMessageType(for: type)
         }
     }
 
-    static func getMultiDeviceMessageType(for type: Int32) -> D2d_MessageType {
+    static func getMultiDeviceMessageType(for type: Int32) -> Common_CspE2eMessageType {
         switch type {
         case MSGTYPE_AUDIO:
             return .deprecatedAudio
@@ -833,7 +835,7 @@ enum MediatorMessageProtocolError: Error {
         case MSGTYPE_GROUP_RENAME:
             return .groupName
         case MSGTYPE_GROUP_REQUEST_SYNC:
-            return .groupRequestSync
+            return .groupSyncRequest
         case MSGTYPE_GROUP_SET_PHOTO:
             return .groupSetProfilePicture
         case MSGTYPE_GROUP_TEXT:
@@ -867,7 +869,7 @@ enum MediatorMessageProtocolError: Error {
         case MSGTYPE_TYPING_INDICATOR:
             return .typingIndicator
         default:
-            return .invalid
+            return .___
         }
     }
 
@@ -888,12 +890,12 @@ enum MediatorMessageProtocolError: Error {
     }
 }
 
-public extension Date {
-    var millisecondsSince1970: UInt64 {
+extension Date {
+    public var millisecondsSince1970: UInt64 {
         UInt64((timeIntervalSince1970 * 1000.0).rounded())
     }
 
-    init(milliseconds: UInt64) {
+    public init(milliseconds: UInt64) {
         self = Date(timeIntervalSince1970: TimeInterval(milliseconds) / 1000)
     }
 }

@@ -38,11 +38,6 @@ static const DDLogLevel ddLogLevel = DDLogLevelAll;
 static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 #endif
 
-@interface AdvancedSettingsViewController ()
-@property NSInteger advancedNewChatViewSection;
-@property BOOL showAdvancedNewChatViewSection;
-@end
-
 @implementation AdvancedSettingsViewController
 
 
@@ -164,9 +159,9 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 - (NSString *)tableView:(UITableView *)tableView titleForFooterInSection:(NSInteger)section {
     if (section == 1) {
         if ([UserSettings sharedUserSettings].disableProximityMonitoring) {
-            return [BundleUtil localizedStringForKey:@"proximity_monitoring_off"];
+            return [BundleUtil localizedStringForKey:@"settings_advanced_proximity_monitoring_section_footer_off"];
         } else {
-            return [BundleUtil localizedStringForKey:@"proximity_monitoring_on"];
+            return [BundleUtil localizedStringForKey:@"settings_advanced_proximity_monitoring_section_footer_on"];
         }
     }
     

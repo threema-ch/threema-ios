@@ -27,7 +27,7 @@ class MultiDeviceCell: ThemedCodeStackTableViewCell {
     
     var deviceInfo: DeviceInfo? {
         didSet {
-            guard let deviceInfo = deviceInfo else {
+            guard let deviceInfo else {
                 return
             }
 

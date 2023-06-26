@@ -85,8 +85,11 @@ class ChatViewTableView: DebugTableView {
         DDLogVerbose("\(#function) \(String(describing: newWindow))")
         
         /// Part of the workaround for the passcode lock screen.
-        /// Chat view controller receives the correct willEnterForeground callback but isn't actually in the foreground because it is hidden by the pass code lock. The pass code lock works essentially by replacing the main window with itself. This sets view.window to nil in chat view controller.
-        /// We use this to determine whether chat view controller is actually visible and if not, delay jumping to the unread message line until we are visible i.e. have a non-nil window again.
+        /// Chat view controller receives the correct willEnterForeground callback but isn't actually in the foreground
+        /// because it is hidden by the pass code lock. The pass code lock works essentially by replacing the main
+        /// window with itself. This sets view.window to nil in chat view controller.
+        /// We use this to determine whether chat view controller is actually visible and if not, delay jumping to the
+        /// unread message line until we are visible i.e. have a non-nil window again.
         /// Additionally we do not mark messages as read when passcode lock is hiding the chat view.
         
         chatViewDelegate?.willMoveToNonNilWindow = newWindow != nil

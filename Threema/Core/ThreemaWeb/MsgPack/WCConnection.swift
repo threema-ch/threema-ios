@@ -395,6 +395,11 @@ extension WCConnection {
             )
                 
             delegate.currentWebClientSession()!.isConnecting = false
+            
+            if connect_success != UInt8(CONNECT_OK.rawValue) {
+                WCSessionManager.shared.removeWCSessionFromRunning(delegate.currentWCSession())
+            }
+            
             context?.cancelTimer()
             let errorString = "[Threema Web] Connection ended with exit code \(connect_success)"
             connectionStatus = .disconnected

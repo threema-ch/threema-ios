@@ -91,7 +91,7 @@ class VoIPSoundViewController: ThemedTableViewController {
         
         playVoIPSound(voIPSoundName: voIPSounds[indexPath.row])
         
-        if let selectedIndexPath = selectedIndexPath {
+        if let selectedIndexPath {
             tableView.cellForRow(at: selectedIndexPath)?.accessoryType = .none
         }
         tableView.cellForRow(at: indexPath)?.accessoryType = .checkmark

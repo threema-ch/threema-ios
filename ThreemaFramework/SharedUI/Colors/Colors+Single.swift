@@ -20,28 +20,28 @@
 
 import Foundation
 
-public extension Colors {
-    @objc class var black: UIColor {
+extension Colors {
+    @objc public class var black: UIColor {
         Asset.SharedColors.black.color
     }
 
-    @objc class var white: UIColor {
+    @objc public class var white: UIColor {
         Asset.SharedColors.white.color
     }
         
-    @objc class var red: UIColor {
+    @objc public class var red: UIColor {
         Asset.SharedColors.red.color
     }
     
-    @objc class var orange: UIColor {
+    @objc public class var orange: UIColor {
         Asset.SharedColors.orange.color
     }
     
-    @objc class var green: UIColor {
+    @objc public class var green: UIColor {
         color(for: Asset.SharedColors.green)
     }
     
-    @objc class var gray: UIColor {
+    @objc public class var gray: UIColor {
         switch theme {
         case .light, .undefined:
             return Asset.SharedColors.gray400.color
@@ -50,7 +50,7 @@ public extension Colors {
         }
     }
     
-    @objc class var blue: UIColor {
+    @objc public class var blue: UIColor {
         color(for: Asset.SharedColors.blue)
     }
 }

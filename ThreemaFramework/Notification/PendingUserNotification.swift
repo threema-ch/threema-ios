@@ -119,14 +119,14 @@ public class PendingUserNotification: NSObject, NSCoding {
     }
     
     public var senderIdentity: String? {
-        if let threemaPushNotification = threemaPushNotification {
+        if let threemaPushNotification {
             return threemaPushNotification.from
         }
-        if let abstractMessage = abstractMessage,
+        if let abstractMessage,
            let from = abstractMessage.fromIdentity {
             return from
         }
-        if let baseMessage = baseMessage {
+        if let baseMessage {
             return baseMessage.sender?.identity
         }
         
@@ -137,14 +137,14 @@ public class PendingUserNotification: NSObject, NSCoding {
 extension PendingUserNotification {
     
     var interaction: INInteraction? {
-        guard let senderIdentity = senderIdentity,
+        guard let senderIdentity,
               stage == .final else {
             return nil
         }
 
         let businessInjector = BusinessInjector()
         let intentCreator = IntentCreator(
-            settingsStore: businessInjector.settingsStore,
+            userSettings: businessInjector.userSettings,
             entityManager: businessInjector.backgroundEntityManager
         )
 

@@ -22,16 +22,16 @@ import Foundation
 
 // MARK: - NSRecursiveLock + Helpers
 
-public extension NSRecursiveLock {
+extension NSRecursiveLock {
     
-    func withLock<T>(_ body: () -> T) -> T {
+    public func withLock<T>(_ body: () -> T) -> T {
         lock()
         defer { self.unlock() }
         
         return body()
     }
     
-    func withLockGet<T>(_ body: @autoclosure () -> T) -> T {
+    public func withLockGet<T>(_ body: @autoclosure () -> T) -> T {
         lock()
         defer { self.unlock() }
         

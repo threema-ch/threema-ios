@@ -25,7 +25,7 @@ import PromiseKit
 
 public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol, ObservableObject {
     
-    // MARK: Private Attributes
+    // MARK: Public Attributes
     
     public var wallpaperStore = WallpaperStore.shared
 
@@ -90,9 +90,27 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
         self.useBigEmojis = !userSettings.disableBigEmojis
         self.sendMessageFeedback = userSettings.sendMessageFeedback
 
+        // Media
+        self.imageSize = userSettings.imageSize
+        self.videoQuality = userSettings.videoQuality
+        self.autoSaveMedia = userSettings.autoSaveMedia
+        
         // Threema Calls
         self.enableThreemaCall = userSettings.enableThreemaCall
         self.alwaysRelayCalls = userSettings.alwaysRelayCalls
+        self.includeCallsInRecents = userSettings.includeCallsInRecents
+        self.enableVideoCall = userSettings.enableVideoCall
+        self.threemaVideoCallQualitySetting = userSettings.threemaVideoCallQualitySetting
+        self.voIPSound = userSettings.voIPSound
+
+        // Advanced
+        self.enableIPv6 = userSettings.enableIPv6
+        self.disableProximityMonitoring = userSettings.disableProximityMonitoring
+        self.validationLogging = userSettings.validationLogging
+        self.sentryAppDevice = userSettings.sentryAppDevice
+        
+        // Multi Device
+        self.isMultiDeviceEnabled = userSettings.enableMultiDevice
         
         NotificationCenter.default.addObserver(
             self,
@@ -345,6 +363,35 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
             updateUserSettings()
         }
     }
+    
+    // MARK: - Media
+
+    @Published public var imageSize: String {
+        didSet {
+            guard userSettings.imageSize != imageSize else {
+                return
+            }
+            updateUserSettings()
+        }
+    }
+
+    @Published public var videoQuality: String {
+        didSet {
+            guard userSettings.videoQuality != videoQuality else {
+                return
+            }
+            updateUserSettings()
+        }
+    }
+
+    @Published public var autoSaveMedia: Bool {
+        didSet {
+            guard userSettings.autoSaveMedia != autoSaveMedia else {
+                return
+            }
+            updateUserSettings()
+        }
+    }
 
     // MARK: Threema Calls
     
@@ -366,7 +413,99 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
         }
     }
     
+    @Published public var includeCallsInRecents: Bool {
+        didSet {
+            guard userSettings.includeCallsInRecents != includeCallsInRecents else {
+                return
+            }
+            updateUserSettings()
+        }
+    }
+    
+    @Published public var enableVideoCall: Bool {
+        didSet {
+            guard userSettings.enableVideoCall != enableVideoCall else {
+                return
+            }
+            updateUserSettings()
+        }
+    }
+    
+    @Published public var threemaVideoCallQualitySetting: ThreemaVideoCallQualitySetting {
+        didSet {
+            guard userSettings.threemaVideoCallQualitySetting != threemaVideoCallQualitySetting else {
+                return
+            }
+            updateUserSettings()
+        }
+    }
+    
+    @Published public var voIPSound: String {
+        didSet {
+            guard userSettings.voIPSound != voIPSound else {
+                return
+            }
+            updateUserSettings()
+        }
+    }
+    
+    // MARK: Multi Device
+    
+    @Published public var isMultiDeviceEnabled: Bool {
+        didSet {
+            guard userSettings.enableMultiDevice != isMultiDeviceEnabled else {
+                return
+            }
+        }
+    }
+            
+    // MARK: - Advanced
+    
+    @Published public var enableIPv6: Bool {
+        didSet {
+            guard userSettings.enableIPv6 != enableIPv6 else {
+                return
+            }
+            updateUserSettings()
+        }
+    }
+    
+    @Published public var disableProximityMonitoring: Bool {
+        didSet {
+            guard userSettings.disableProximityMonitoring != disableProximityMonitoring else {
+                return
+            }
+            updateUserSettings()
+        }
+    }
+    
+    @Published public var validationLogging: Bool {
+        didSet {
+            guard userSettings.validationLogging != validationLogging else {
+                return
+            }
+            updateUserSettings()
+        }
+    }
+    
+    @Published public var sentryAppDevice: String? {
+        didSet {
+            guard userSettings.sentryAppDevice != sentryAppDevice else {
+                return
+            }
+            updateUserSettings()
+        }
+    }
+    
     // MARK: - Public Functions
+    
+    public func flushMessageQueue() {
+        DDLogWarn("Manually flushing outgoing task queue")
+        TaskManager.flush(queueType: .outgoing)
+        let tm = TaskManager()
+        tm.spool()
+        NotificationPresenterWrapper.shared.present(type: .flushMessageQueueSuccess)
+    }
     
     /// Saves changed `Sync_Settings` to UserSettings and updates the SettingsStore
     /// - Parameter syncSettings: Delta updates of user settings
@@ -425,7 +564,8 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
     
     /// Saves made changes
     /// 1. Multi-Device disabled: Just updates UserSettings
-    /// 2. Multi-Device enabled: Syncs all settings and updates UserSettings if sync succeeds, rejects if sync fails and does not update UserSettings, shows alert
+    /// 2. Multi-Device enabled: Syncs all settings and updates UserSettings if sync succeeds, rejects if sync fails and
+    ///   does not update UserSettings, shows alert
     public func syncAndSave() {
             
         guard serverConnector.isMultiDeviceActivated else {
@@ -615,9 +755,27 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
         compareAndAssign(&userSettings.disableBigEmojis, !useBigEmojis)
         compareAndAssign(&userSettings.sendMessageFeedback, sendMessageFeedback)
 
+        // Media
+        compareAndAssign(&userSettings.imageSize, imageSize)
+        compareAndAssign(&userSettings.videoQuality, videoQuality)
+        compareAndAssign(&userSettings.autoSaveMedia, autoSaveMedia)
+        
         // Threema Calls
         compareAndAssign(&userSettings.enableThreemaCall, enableThreemaCall)
         compareAndAssign(&userSettings.alwaysRelayCalls, alwaysRelayCalls)
+        compareAndAssign(&userSettings.includeCallsInRecents, includeCallsInRecents)
+        compareAndAssign(&userSettings.enableVideoCall, enableVideoCall)
+        compareAndAssign(&userSettings.threemaVideoCallQualitySetting, threemaVideoCallQualitySetting)
+        compareAndAssign(&userSettings.voIPSound, voIPSound)
+
+        // Advanced
+        compareAndAssign(&userSettings.enableIPv6, enableIPv6)
+        compareAndAssign(&userSettings.disableProximityMonitoring, disableProximityMonitoring)
+        compareAndAssign(&userSettings.validationLogging, validationLogging)
+        compareAndAssign(&userSettings.sentryAppDevice, sentryAppDevice)
+        
+        // Multi Device
+        compareAndAssign(&userSettings.enableMultiDevice, isMultiDeviceEnabled)
         
         // Inform other SettingsStores
         NotificationCenter.default.post(
@@ -654,9 +812,27 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
         compareAndAssign(&useBigEmojis, !userSettings.disableBigEmojis)
         compareAndAssign(&sendMessageFeedback, userSettings.sendMessageFeedback)
 
+        // Media
+        compareAndAssign(&userSettings.imageSize, imageSize)
+        compareAndAssign(&userSettings.videoQuality, videoQuality)
+        compareAndAssign(&userSettings.autoSaveMedia, autoSaveMedia)
+        
         // Threema Calls
         compareAndAssign(&enableThreemaCall, userSettings.enableThreemaCall)
         compareAndAssign(&alwaysRelayCalls, userSettings.alwaysRelayCalls)
+        compareAndAssign(&includeCallsInRecents, userSettings.includeCallsInRecents)
+        compareAndAssign(&enableVideoCall, userSettings.enableVideoCall)
+        compareAndAssign(&threemaVideoCallQualitySetting, userSettings.threemaVideoCallQualitySetting)
+        compareAndAssign(&voIPSound, userSettings.voIPSound)
+        
+        // Multi Device
+        compareAndAssign(&isMultiDeviceEnabled, userSettings.enableMultiDevice)
+        
+        // Advanced
+        compareAndAssign(&enableIPv6, userSettings.enableIPv6)
+        compareAndAssign(&disableProximityMonitoring, userSettings.disableProximityMonitoring)
+        compareAndAssign(&validationLogging, userSettings.validationLogging)
+        compareAndAssign(&sentryAppDevice, userSettings.sentryAppDevice)
     }
     
     private func compareAndAssign<T: Equatable>(_ valueToUpdate: inout T, _ comparing: T) {
@@ -666,7 +842,6 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
     }
     
     private func preFillWorkingDays() -> Set<Int> {
-        let first = Calendar.current.firstWeekday
         var days = Set<Int>()
         
         for index in 2...6 {

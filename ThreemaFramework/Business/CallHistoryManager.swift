@@ -21,8 +21,10 @@
 import CocoaLumberjackSwift
 import Foundation
 
-/// Keeps track of CallIDs for calls that happened in the past two weeks to allow distinguishing between late arriving hangup messages and hangup messages for actually missed calls.
-/// Actually missed calls can be identified by never having received or sent a call offer message for the CallID associated with the call.
+/// Keeps track of CallIDs for calls that happened in the past two weeks to allow distinguishing between late arriving
+/// hangup messages and hangup messages for actually missed calls.
+/// Actually missed calls can be identified by never having received or sent a call offer message for the CallID
+/// associated with the call.
 @objc public class CallHistoryManager: NSObject {
     private let identity: String
     private let businessInjector: BusinessInjectorProtocol
@@ -71,18 +73,18 @@ import Foundation
     }
 }
 
-public extension CallHistoryManager {
-    @objc static func removeCallsOlderThanChatServerTimeout() {
+extension CallHistoryManager {
+    @objc public static func removeCallsOlderThanChatServerTimeout() {
         removeCallsOlderThanChatServerTimeout(businessInjector: BusinessInjector())
     }
     
-    static func removeCallsOlderThanChatServerTimeout(businessInjector: BusinessInjectorProtocol) {
+    public static func removeCallsOlderThanChatServerTimeout(businessInjector: BusinessInjectorProtocol) {
         businessInjector.backgroundEntityManager.performAsyncBlockAndSafe {
             businessInjector.backgroundEntityManager.entityDestroyer.deleteMissedCallsCacheOlderThanTwoWeeks()
         }
     }
     
-    static func removeCallsOlderThanChatServerTimeout(businessInjector: BusinessInjectorProtocol) async {
+    public static func removeCallsOlderThanChatServerTimeout(businessInjector: BusinessInjectorProtocol) async {
         await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
             businessInjector.entityManager.performAsyncBlockAndSafe {
                 businessInjector.entityManager.entityDestroyer.deleteMissedCallsCacheOlderThanTwoWeeks()

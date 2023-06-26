@@ -54,7 +54,7 @@ class ZipFileContainer: NSObject {
     }
     
     func addMediaData(mediaData: BlobData) -> Bool {
-        guard let blobData = mediaData.blobGet(), let blobFilename = mediaData.blobGetFilename() else {
+        guard let blobData = mediaData.blobData, let blobFilename = mediaData.blobFilename else {
             return false
         }
         

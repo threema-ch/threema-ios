@@ -42,7 +42,8 @@ public struct ThreemaPOI: Decodable {
         self.lon = try container.decode(Double.self, forKey: CodingKeys.lon)
         self.dist = try container.decode(Int.self, forKey: CodingKeys.dist)
         
-        // The POIs category gets sent as key in JSON and changes for each received POI, therefore decoding is not straightforward
+        // The POIs category gets sent as key in JSON and changes for each received POI, therefore decoding is not
+        // straightforward
         let receivedCategory = container.allKeys.first(where: { key in
             POICategory.allCases.contains { $0.rawValue == key.stringValue }
         }) ?? .other

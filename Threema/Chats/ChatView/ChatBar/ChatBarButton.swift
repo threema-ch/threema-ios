@@ -20,6 +20,8 @@
 
 import UIKit
 
+// MARK: - ChatBarButton.Configuration
+
 extension ChatBarButton {
     struct Configuration {
         var size: CGFloat = ChatViewConfiguration.ChatBarButton.defaultSize
@@ -55,7 +57,7 @@ class ChatBarButton: ThemedCodeButton {
         
         super.init(frame: initFrame, action: action)
         
-        if let customScalableSize = customScalableSize {
+        if let customScalableSize {
             buttonConfiguration.size = customScalableSize
         }
         

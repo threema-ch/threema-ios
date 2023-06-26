@@ -45,7 +45,7 @@ import Foundation
     override func encode(with coder: NSCoder) {
         do {
             super.encode(with: coder)
-            coder.encode(try data.toProtobuf(), forKey: "data")
+            try coder.encode(data.toProtobuf(), forKey: "data")
         }
         catch {
             NSException(name: NSExceptionName("EncodeFailedException"), reason: "Error: \(error)").raise()

@@ -211,7 +211,7 @@ static NSString *fieldFeatureLevel = @"featureLevel";
     // and the multi device beta.
     // This is tracked as part of SE-267
     if ([self.conversations count] > 0) {
-        if ([self forwardSecurityEnabled].boolValue) {
+        if ([self forwardSecurityEnabled].boolValue || ThreemaEnvironment.pfsByDefault) {
             if ((FEATURE_MASK_FORWARD_SECURITY & [self.featureMask intValue])) {
                 // Old value had forward security
                 if (!(FEATURE_MASK_FORWARD_SECURITY & [featureMask intValue])) {

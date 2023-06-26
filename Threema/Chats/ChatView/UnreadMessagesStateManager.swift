@@ -47,7 +47,7 @@ final class UnreadMessagesStateManager {
     /// The current unread message state
     @Published var unreadMessagesState: UnreadMessagesState? {
         didSet {
-            if let unreadMessagesState = unreadMessagesState {
+            if let unreadMessagesState {
                 DDLogVerbose("New unread message count \(unreadMessagesState.numberOfUnreadMessages)")
             }
         }
@@ -179,12 +179,12 @@ final class UnreadMessagesStateManager {
             updateQueue.async { [self] in
                 let shouldMarkAsRead = threadSafeDelegateShouldMarkMessagesAsRead
                 
-                let (unreadMessages, newestUnreadMessage) = self.currentUnreadDBState
+                let (unreadMessages, newestUnreadMessage) = currentUnreadDBState
                 
                 if !unreadMessages.isEmpty, newestUnreadMessage == nil {
                     fatalError("Illegal unread message state")
                 }
-                if let firstUnreadMessage = unreadMessages.last, let newestUnreadMessage = newestUnreadMessage,
+                if let firstUnreadMessage = unreadMessages.last, let newestUnreadMessage,
                    firstUnreadMessage.objectID != newestUnreadMessage.objectID {
                     fatalError("Illegal unread message state")
                 }
@@ -192,7 +192,7 @@ final class UnreadMessagesStateManager {
                 let previousCount: Int
                 let oldestConsecutiveUnreadMessage: NSManagedObjectID?
                 
-                if let unreadMessagesState = unreadMessagesState, unreadMessagesState.numberOfUnreadMessages > 0 {
+                if let unreadMessagesState, unreadMessagesState.numberOfUnreadMessages > 0 {
                     previousCount = unreadMessagesState.numberOfUnreadMessages
                     oldestConsecutiveUnreadMessage = unreadMessagesState.oldestConsecutiveUnreadMessage
                 }
@@ -212,7 +212,7 @@ final class UnreadMessagesStateManager {
                 }
                 
                 if willStayAtBottomOfView,
-                   let unreadMessagesState = unreadMessagesState,
+                   let unreadMessagesState,
                    unreadMessagesState.numberOfUnreadMessages == 0,
                    unreadMessagesState.oldestConsecutiveUnreadMessage == nil {
                     

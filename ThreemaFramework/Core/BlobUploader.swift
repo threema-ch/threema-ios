@@ -68,12 +68,12 @@ class BlobUploader: NSObject {
         try await withCheckedThrowingContinuation { continuation in
             blobURL.upload(origin: origin, completionHandler: { uploadURL, authorization, error in
                 
-                if let error = error {
+                if let error {
                     continuation.resume(throwing: error)
                     return
                 }
                 
-                guard let uploadURL = uploadURL else {
+                guard let uploadURL else {
                     continuation.resume(throwing: BlobUploaderError.invalidUploadURL)
                     return
                 }
@@ -82,10 +82,10 @@ class BlobUploader: NSObject {
                     .startUpload(for: uploadURL, and: blobData, authorization: authorization) { data, error in
                         
                         // Upload was completed
-                        if let error = error {
+                        if let error {
                             continuation.resume(throwing: error)
                         }
-                        else if let data = data {
+                        else if let data {
                             // We got data, so we create the ID for it
                             guard let blobIDHex = String(bytes: data, encoding: .ascii),
                                   let blobID = BytesUtility.toBytes(hexString: blobIDHex) else {
@@ -136,7 +136,7 @@ class BlobUploader: NSObject {
             
                 var uploadError: Error?
             
-                if let error = error {
+                if let error {
                     uploadError = error
                 }
                 else {

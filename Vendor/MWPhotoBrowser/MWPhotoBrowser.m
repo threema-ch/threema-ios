@@ -24,7 +24,6 @@
 #import "ForwardMultipleURLActivity.h"
 #import "AppGroup.h"
 #import "ThreemaUtilityObjC.h"
-#import "ChatViewHeader.h"
 #import "Threema-Swift.h"
 #import "ActivityUtil.h"
 #import "ContactGroupPickerViewController.h"
@@ -848,7 +847,7 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
             [self.delegate photoBrowser:self photoAtIndex:index selectedChanged:selected];
         }
         if ([self.delegate respondsToSelector:@selector(mediaSelectionCount)]) {
-            NSUInteger selectionCount = [((ChatViewHeader *)self.delegate) mediaSelectionCount];
+            NSUInteger *selectionCount = [self.delegate mediaSelectionCount];
             _deleteMultipleButton.enabled = selectionCount > 0;
             _actionMultipleButton.enabled = selectionCount > 0;
         }

@@ -45,10 +45,10 @@ import UIKit
             return true
         }
         
-        return (legalHostnamePattern.numberOfMatches(
+        return legalHostnamePattern.numberOfMatches(
             in: strippedHost,
             range: NSRange(location: 0, length: strippedHost.utf16.count)
-        ) > 0)
+        ) > 0
     }
     
     class func isLegalURL(url: URL, viewController: UIViewController) -> Bool {

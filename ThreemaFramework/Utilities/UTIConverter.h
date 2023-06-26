@@ -78,10 +78,6 @@
 
 + (BOOL)isArchiveMimeType:(NSString *)mimeType;
 
-+ (BOOL)isPublicContentMimeType:(NSString *)mimeType;
-
-+ (BOOL)isPublicCompositeContentMimeType:(NSString *)mimeType;
-
 + (BOOL)isWordMimeType:(NSString *)mimeType;
 
 + (BOOL)isPowerpointMimeType:(NSString *)mimeType;
@@ -99,7 +95,5 @@
 + (BOOL)conformsToImageType:(NSString *)mimeType;
 
 + (UIImage *)getDefaultThumbnailForMimeType:(NSString *)mimeType;
-
-+ (NSString *)localizedDescriptionForMimeType:(NSString *)mimeType;
 
 @end

@@ -20,7 +20,7 @@
 
 import Foundation
 
-public extension Colors {
+extension Colors {
     private class var backgroundMention: UIColor {
         switch theme {
         case .light, .undefined:
@@ -48,7 +48,7 @@ public extension Colors {
         }
     }
     
-    @objc class var backgroundMentionMe: UIColor {
+    @objc public class var backgroundMentionMe: UIColor {
         switch theme {
         case .light, .undefined:
             return Asset.SharedColors.gray600.color
@@ -57,7 +57,7 @@ public extension Colors {
         }
     }
     
-    @objc class var backgroundMentionMeOwnMessage: UIColor {
+    @objc public class var backgroundMentionMeOwnMessage: UIColor {
         switch theme {
         case .light, .undefined:
             return Asset.SharedColors.gray600.color
@@ -66,7 +66,7 @@ public extension Colors {
         }
     }
     
-    @objc class var backgroundMentionMeOverviewMessage: UIColor {
+    @objc public class var backgroundMentionMeOverviewMessage: UIColor {
         switch theme {
         case .light, .undefined:
             return Asset.SharedColors.gray600.color
@@ -75,7 +75,7 @@ public extension Colors {
         }
     }
     
-    @objc class func backgroundMention(messageInfo: TextStyleUtilsMessageInfo) -> UIColor {
+    @objc public class func backgroundMention(messageInfo: TextStyleUtilsMessageInfo) -> UIColor {
         switch messageInfo {
         case TextStyleUtilsMessageInfoReceivedMessage:
             return backgroundMention
@@ -88,7 +88,7 @@ public extension Colors {
         }
     }
     
-    @objc class func backgroundMentionMe(messageInfo: TextStyleUtilsMessageInfo) -> UIColor {
+    @objc public class func backgroundMentionMe(messageInfo: TextStyleUtilsMessageInfo) -> UIColor {
         switch messageInfo {
         case TextStyleUtilsMessageInfoReceivedMessage:
             return backgroundMentionMe
@@ -101,7 +101,7 @@ public extension Colors {
         }
     }
     
-    @objc class func textMentionMe(messageInfo: TextStyleUtilsMessageInfo) -> UIColor {
+    @objc public class func textMentionMe(messageInfo: TextStyleUtilsMessageInfo) -> UIColor {
         switch messageInfo {
         case TextStyleUtilsMessageInfoReceivedMessage:
             return textMentionMe

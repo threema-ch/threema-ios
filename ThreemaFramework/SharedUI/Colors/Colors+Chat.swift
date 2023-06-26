@@ -21,17 +21,9 @@
 import Foundation
 import UIKit
 
-public extension Colors {
-    @objc class var backgroundChat: UIColor {
-        switch theme {
-        case .light, .undefined:
-            return Asset.SharedColors.white.color
-        case .dark:
-            return Asset.SharedColors.black.color
-        }
-    }
+extension Colors {
     
-    @objc class var backgroundChatLines: UIColor {
+    public class var backgroundChatLines: UIColor {
         switch theme {
         case .light, .undefined:
             return Asset.SharedColors.gray500.color
@@ -40,7 +32,7 @@ public extension Colors {
         }
     }
     
-    @objc class var chatBubbleReceived: UIColor {
+    public class var chatBubbleReceived: UIColor {
         switch theme {
         case .light, .undefined:
             return Asset.SharedColors.gray250.color
@@ -49,7 +41,7 @@ public extension Colors {
         }
     }
     
-    @objc class var chatBubbleReceivedSelected: UIColor {
+    public class var chatBubbleReceivedSelected: UIColor {
         switch theme {
         case .light, .undefined:
             return Asset.SharedColors.gray350.color
@@ -58,7 +50,7 @@ public extension Colors {
         }
     }
     
-    @objc class var backgroundChatBar: UIColor {
+    public class var backgroundChatBar: UIColor {
         switch theme {
         case .light, .undefined:
             return Asset.SharedColors.gray100.color
@@ -67,7 +59,7 @@ public extension Colors {
         }
     }
     
-    @objc class var chatBarInput: UIColor {
+    public class var chatBarInput: UIColor {
         switch theme {
         case .light, .undefined:
             return Asset.SharedColors.white.color
@@ -76,28 +68,19 @@ public extension Colors {
         }
     }
         
-    @objc class var thumbUp: UIColor {
+    public class var thumbUp: UIColor {
         Colors.green
     }
     
-    @objc class var thumbDown: UIColor {
+    public class var thumbDown: UIColor {
         Asset.SharedColors.orange.color
     }
     
-    class var messageFailed: UIColor {
+    public class var messageFailed: UIColor {
         .systemRed
     }
     
-    @objc class var backgroundChatSectionHeaderView: UIColor {
-        switch theme {
-        case .light, .undefined:
-            return Asset.SharedColors.gray80.color
-        case .dark:
-            return Asset.SharedColors.black.color
-        }
-    }
-    
-    @objc class var backgroundAudioPlayer: UIColor {
+    @objc public class var backgroundAudioPlayer: UIColor {
         switch theme {
         case .light, .undefined:
             return Asset.SharedColors.gray100.color
@@ -106,7 +89,7 @@ public extension Colors {
         }
     }
     
-    @objc class var backgroundAudioPlayerButton: UIColor {
+    @objc public class var backgroundAudioPlayerButton: UIColor {
         switch theme {
         case .light, .undefined:
             return Asset.SharedColors.gray200.color
@@ -115,7 +98,7 @@ public extension Colors {
         }
     }
     
-    @objc class var backgroundSpeedButton: UIColor {
+    @objc public class var backgroundSpeedButton: UIColor {
         switch theme {
         case .light, .undefined:
             return Asset.SharedColors.gray300.color
@@ -124,29 +107,11 @@ public extension Colors {
         }
     }
     
-    @objc class var backgroundPopupMenu: UIColor {
-        switch theme {
-        case .light, .undefined:
-            return Asset.SharedColors.black.color
-        case .dark:
-            return Asset.SharedColors.gray700.color
-        }
-    }
-    
-    @objc class var popupMenuHighlight: UIColor {
-        switch theme {
-        case .light, .undefined:
-            return Asset.SharedColors.gray750.color
-        case .dark:
-            return Asset.SharedColors.gray500.color
-        }
-    }
-    
-    @objc class var ballotHighestVote: UIColor {
+    @objc public class var ballotHighestVote: UIColor {
         .primary
     }
     
-    @objc class var ballotRowLight: UIColor {
+    @objc public class var ballotRowLight: UIColor {
         switch theme {
         case .light, .undefined:
             return Asset.SharedColors.gray200.color
@@ -155,7 +120,7 @@ public extension Colors {
         }
     }
     
-    @objc class var ballotRowDark: UIColor {
+    @objc public class var ballotRowDark: UIColor {
         switch theme {
         case .light, .undefined:
             return Asset.SharedColors.gray300.color
@@ -164,15 +129,11 @@ public extension Colors {
         }
     }
     
-    @objc class var backgroundQuoteBar: UIColor {
-        .primary
-    }
-    
-    @objc class var backgroundPinChat: UIColor {
+    public class var backgroundPinChat: UIColor {
         Asset.SharedColors.pin.color
     }
     
-    @objc class var backgroundThumbnailCollectionView: UIColor {
+    public class var backgroundThumbnailCollectionView: UIColor {
         switch theme {
         case .light, .undefined:
             return Asset.SharedColors.white.color
@@ -181,7 +142,7 @@ public extension Colors {
         }
     }
     
-    @objc class var backgroundPreviewCollectionViewCell: UIColor {
+    public class var backgroundPreviewCollectionViewCell: UIColor {
         switch theme {
         case .light, .undefined:
             return Asset.SharedColors.gray200.color
@@ -190,16 +151,7 @@ public extension Colors {
         }
     }
     
-    @objc class var backgroundSystemMessage: UIColor {
-        switch theme {
-        case .light, .undefined:
-            return Asset.SharedColors.gray300.color
-        case .dark:
-            return Asset.SharedColors.gray700.color
-        }
-    }
-    
-    @objc class var newSystemMessageBackground: UIColor {
+    public class var systemMessageBackground: UIColor {
         switch theme {
         case .light, .undefined:
             return Asset.SharedColors.gray150.color
@@ -208,7 +160,7 @@ public extension Colors {
         }
     }
 
-    class var thumbnailProgressViewColor: UIColor {
+    public class var thumbnailProgressViewColor: UIColor {
         switch theme {
         case .light, .undefined:
             return Asset.SharedColors.gray30.color

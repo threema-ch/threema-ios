@@ -209,11 +209,13 @@ import UserNotifications
     }
     
     /// Starts an incoming call when app is in background
+    /// - Parameters:
+    ///   - dictionaryPayload: VoIP push payload (can be also a deprecated VoIP push)
+    ///   - completion: Completion handler returns true if call successfully reported to CallKit
     @objc func startInitialIncomingCall(
         dictionaryPayload: [AnyHashable: Any],
-        completion: @escaping () -> Void
-    ) -> Bool {
-        
+        completion: @escaping (Bool) -> Void
+    ) {
         // VoIP notification from Threema Web
         // Other invalid VoIP push payloads
         guard dictionaryPayload["3mw"] == nil,
@@ -221,25 +223,30 @@ import UserNotifications
             DDLogError("Received invalid push payload with dictionary \(dictionaryPayload)")
             startAndCancelCall(
                 from: BundleUtil.localizedString(forKey: ThreemaApp.currentName),
-                completion: completion,
                 showWebNotification: true
-            )
-            return false
+            ) {
+                completion(false)
+            }
+            return
         }
         
-        // Due to changes in the iOS 15 SDK, the app crashed because we took too long to report an incoming call to call kit when the app was in background. Therefore we start an initial call which then gets updated later, when the offer message is received from the server.
+        // Due to changes in the iOS 15 SDK, the app crashed because we took too long to report an incoming call to call
+        // kit when the app was in background. Therefore we start an initial call which then gets updated later, when
+        // the offer message is received from the server.
         // This must not fail to report a call.
         callService.reportInitialCall(
             from: callerIdentity,
-            name: dictionaryPayload["NotificationExtensionCallerName"] as? String
+            name: dictionaryPayload["NotificationExtensionCallerName"] as? String,
+            completion: completion
         )
-        return true
     }
-    
+
+    /// Start and cancel call (for deprecated/invalid VoIP pushes) over CallKit, because for any VoIP push must called
+    /// CallKit!
     @objc public func startAndCancelCall(
         from localizedName: String,
-        completion: @escaping () -> Void,
-        showWebNotification: Bool
+        showWebNotification: Bool,
+        completion: @escaping () -> Void
     ) {
         let callUpdate = CXCallUpdate()
         callUpdate.remoteHandle = CXHandle(type: .generic, value: localizedName)
@@ -278,6 +285,8 @@ import UserNotifications
             provider.reportCall(with: uuid, endedAt: Date(), reason: .failed)
             completion()
         })
+
+        // Prevent ringing
         provider.reportCall(with: uuid, endedAt: Date(), reason: .failed)
     }
     

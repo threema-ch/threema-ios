@@ -24,6 +24,8 @@ import MBProgressHUD
 import PromiseKit
 import ThreemaFramework
 
+// MARK: - SingleDetailsDataSource.Configuration
+
 extension SingleDetailsDataSource {
     struct Configuration {
         /// Number of groups shown directly in details
@@ -486,7 +488,7 @@ extension SingleDetailsDataSource {
                         )
                         VoIPCallStateManager.shared.processUserAction(action)
                     }
-                    else if let viewController = viewController {
+                    else if let viewController {
                         // Calls not supported for this contact
                         UIAlertTemplate.showAlert(
                             owner: viewController,
@@ -641,7 +643,7 @@ extension SingleDetailsDataSource {
             ) { [weak self, weak singleDetailsViewController, weak conversation] view in
                 guard let strongSelf = self,
                       let strongSingleDetailsViewController = singleDetailsViewController,
-                      let conversation = conversation
+                      let conversation
                 else {
                     return
                 }
@@ -693,7 +695,7 @@ extension SingleDetailsDataSource {
             ) { [weak self, weak singleDetailsViewController, weak conversation] _ in
                 guard let strongSelf = self,
                       let strongSingleDetailsViewController = singleDetailsViewController,
-                      let conversation = conversation
+                      let conversation
                 else {
                     return
                 }
@@ -1120,9 +1122,9 @@ extension SingleDetailsDataSource {
         let forwardSecurityBooleanAction = Details.BooleanAction(
             title: BundleUtil.localizedString(forKey: "forward_security"),
             destructive: false,
-            disabled: !contact.isForwardSecurityAvailable(),
+            disabled: !contact.isForwardSecurityAvailable() || ThreemaEnvironment.pfsByDefault,
             boolProvider: { [weak self] in
-                (self?.contact.forwardSecurityEnabled.boolValue ?? false) &&
+                ((self?.contact.forwardSecurityEnabled.boolValue ?? false) || ThreemaEnvironment.pfsByDefault) &&
                     (self?.contact.isForwardSecurityAvailable() ?? false)
             }, action: { [weak self] isEnabled in
                 guard let strongSelf = self else {
@@ -1244,8 +1246,8 @@ extension SingleDetailsDataSource: MWPhotoBrowserWrapperDelegate {
 
 // MARK: - Contact+ProfilePicture & Contact+block
 
-private extension ContactEntity {
-    var canBePickedAsProfilePictureRecipient: Bool {
+extension ContactEntity {
+    fileprivate var canBePickedAsProfilePictureRecipient: Bool {
         guard !(isEchoEcho() || isGatewayID()) else {
             return false
         }
@@ -1253,7 +1255,7 @@ private extension ContactEntity {
         return UserSettings.shared().sendProfilePicture == SendProfilePictureContacts
     }
     
-    var isProfilePictureRecipient: Bool {
+    fileprivate var isProfilePictureRecipient: Bool {
         guard !(isEchoEcho() || isGatewayID()) else {
             return false
         }
@@ -1288,10 +1290,10 @@ private extension ContactEntity {
 
 // MARK: - Custom sorting for (group) conversations
 
-private extension Array where Element: Conversation {
+extension Array where Element: Conversation {
     /// Sort by last updated date of conversation (descending)
     /// - Returns: Sorted `Conversation` array
-    func sortedDescendingByLastUpdatedDate() -> Array {
+    fileprivate func sortedDescendingByLastUpdatedDate() -> Array {
         sorted { firstConversation, secondConversation in
             let firstOptionalDate = firstConversation.lastUpdate
             let secondOptionalDate = secondConversation.lastUpdate

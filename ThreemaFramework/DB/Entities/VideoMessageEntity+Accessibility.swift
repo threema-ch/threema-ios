@@ -24,7 +24,7 @@ extension VideoMessageEntity: MessageAccessibility {
     public var customAccessibilityLabel: String {
         var text = ""
         
-        if let caption = caption {
+        if let caption {
             text =
                 "\(String.localizedStringWithFormat(BundleUtil.localizedString(forKey: "accessibility_caption"), caption))."
         }

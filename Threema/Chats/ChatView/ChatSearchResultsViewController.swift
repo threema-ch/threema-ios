@@ -86,7 +86,7 @@ final class ChatSearchResultsViewController: ThemedViewController {
                 searchResultsCell.message = baseMessage
             }
             
-            guard let baseMessage = baseMessage else {
+            guard let baseMessage else {
                 DDLogWarn(
                     "Unable to fetch message (\(messageObjectID.uriRepresentation().absoluteString)) for search result"
                 )

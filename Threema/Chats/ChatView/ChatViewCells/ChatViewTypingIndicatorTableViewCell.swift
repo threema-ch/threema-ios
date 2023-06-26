@@ -22,7 +22,8 @@ import CocoaLumberjackSwift
 import Foundation
 import UIKit
 
-/// Cell for showing the typing indicator. It is modeled after the `ChatViewTextMessageTableViewCell` and adapts it's height to a single line height text message cell.
+/// Cell for showing the typing indicator. It is modeled after the `ChatViewTextMessageTableViewCell` and adapts it's
+/// height to a single line height text message cell.
 final class ChatViewTypingIndicatorTableViewCell: ThemedCodeTableViewCell {
     private typealias Config = ChatViewConfiguration.TypingIndicator.View
     
@@ -233,7 +234,8 @@ final class ChatViewTypingIndicatorTableViewCell: ThemedCodeTableViewCell {
     }
     
     override func prepareForReuse() {
-        // This is necessary on iOS 15 (maybe in other versions as well) because otherwise the animation would stop on reuse.
+        // This is necessary on iOS 15 (maybe in other versions as well) because otherwise the animation would stop on
+        // reuse.
         // It looks like UIImageView with an animated image isn't meant to be used in UITableView.
         typingIndicatorImageView.animationRepeatCount = 0
         

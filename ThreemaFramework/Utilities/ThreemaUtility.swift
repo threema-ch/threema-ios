@@ -167,7 +167,7 @@ public final class ThreemaUtility: NSObject {
     @available(*, deprecated, message: "Use ContactEntity.showOtherThreemaTypeIcon instead")
     public static func shouldHideOtherTypeIcon(for contact: ContactEntity?) -> Bool {
         
-        guard let contact = contact else {
+        guard let contact else {
             return true
         }
         
@@ -211,7 +211,7 @@ public final class ThreemaUtility: NSObject {
             
             CLGeocoder().reverseGeocodeLocation(location, preferredLocale: Locale.current) { placemarks, error in
                 
-                if let error = error {
+                if let error {
                     DDLogError("Reverse geocoding failed: \(error)")
                     seal(coordinates)
                     return
@@ -248,7 +248,7 @@ public final class ThreemaUtility: NSObject {
         notification.body = body
         notification.badge = NSNumber(integerLiteral: badge)
         
-        if let userInfo = userInfo {
+        if let userInfo {
             notification.userInfo = userInfo
         }
         
@@ -284,7 +284,8 @@ public final class ThreemaUtility: NSObject {
     public static func trimCharacters(in string: String) -> String {
         // Remove text attachments from the string we want to send.
         // If we do not remove this we'll be able to send "empty" messages.
-        // This character usually gets inserted when showing the microphone icon in the text field when using dictation from iOS.
+        // This character usually gets inserted when showing the microphone icon in the text field when using dictation
+        // from iOS.
         // https://stackoverflow.com/questions/41564176/remove-u-0000fffc-unicode-scalar-from-string/45058555#45058555
         // https://www.fileformat.info/info/unicode/char/fffc/index.htm
         let sanitized = string.trimmingCharacters(in: ["\u{fffc}"])

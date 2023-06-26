@@ -179,7 +179,7 @@ extension SendLocationSearchDataSource {
         
         HTTPClient().downloadData(url: url, contentType: .json) { data, _, error in
             do {
-                guard let data = data else {
+                guard let data else {
                     return
                 }
                 // Decode Data

@@ -406,7 +406,7 @@ open class MediaPreviewViewController: UIViewController, UIGestureRecognizerDele
     }
     
     @objc func resetMediaTo(dataArray: [Any], reloadData: Bool) {
-        guard let itemDelegate = itemDelegate else {
+        guard let itemDelegate else {
             fatalError("ItemDelegate must be set")
         }
         
@@ -432,7 +432,7 @@ open class MediaPreviewViewController: UIViewController, UIGestureRecognizerDele
             items
         )
         
-        if let itemDelegate = itemDelegate, itemDelegate.memoryConstrained,
+        if let itemDelegate, itemDelegate.memoryConstrained,
            errorList.contains(where: { $0 == .fileTooLargeForShareExtension }) {
             title = BundleUtil.localizedString(forKey: "could_not_add_all_items_memory_constrained_title")
             message = BundleUtil.localizedString(forKey: "could_not_add_all_items_memory_constrained_message")
@@ -757,7 +757,7 @@ open class MediaPreviewViewController: UIViewController, UIGestureRecognizerDele
                 bottomLayoutConstraint?.constant = 0.0
             }
             else {
-                if let endFrame = endFrame {
+                if let endFrame {
                     let safeInset: CGFloat = view.safeAreaInsets.bottom
                     let convertedEndframe = view.convert(endFrame, from: UIScreen.main.coordinateSpace)
                     let intersection = view.frame.intersection(convertedEndframe).height

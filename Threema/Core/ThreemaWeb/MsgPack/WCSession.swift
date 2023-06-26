@@ -168,38 +168,38 @@ extension WCSession {
     }
 }
 
-public extension WCSession {
+extension WCSession {
     // MARK: Requested lists
     
-    func requestedConversations(contains conversationID: String) -> Bool {
+    public func requestedConversations(contains conversationID: String) -> Bool {
         requestedConversations.contains(conversationID)
     }
     
-    func addRequestedConversation(conversationID: String) {
+    public func addRequestedConversation(conversationID: String) {
         if !requestedConversations(contains: conversationID) {
             requestedConversations.append(conversationID)
         }
     }
     
-    func requestedThumbnails(contains messageID: Data) -> Bool {
+    public func requestedThumbnails(contains messageID: Data) -> Bool {
         requestedThumbnails.contains(messageID)
     }
     
-    func addRequestedThumbnail(messageID: Data) {
+    public func addRequestedThumbnail(messageID: Data) {
         if !requestedThumbnails(contains: messageID) {
             requestedThumbnails.append(messageID)
         }
     }
     
-    func lastLoadedMessageIndexes(contains messageID: Data) -> Int? {
+    public func lastLoadedMessageIndexes(contains messageID: Data) -> Int? {
         lastLoadedMessageIndexes[messageID]
     }
     
-    func addLastLoadedMessageIndex(messageID: Data, index: Int) {
+    public func addLastLoadedMessageIndex(messageID: Data, index: Int) {
         lastLoadedMessageIndexes[messageID] = index
     }
     
-    func clearAllRequestedLists() {
+    public func clearAllRequestedLists() {
         requestedConversations.removeAll()
         requestedThumbnails.removeAll()
         lastLoadedMessageIndexes.removeAll()

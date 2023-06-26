@@ -41,7 +41,8 @@ final class ChatViewSnapshotProvider {
     
     struct SnapshotInfo {
         let snapshot: ChatViewDiffableDataSourceSnapshot
-        // Changing this has various implications on the whole snapshot apply and UITableView state after applying the snapshot
+        // Changing this has various implications on the whole snapshot apply and UITableView state after applying the
+        // snapshot
         // if you change this, make sure to test extensively and check the comment in `ChatViewDataSource` line 448
         let rowAnimation: UITableView.RowAnimation
         let mustWaitForApply: Bool
@@ -137,7 +138,7 @@ final class ChatViewSnapshotProvider {
                 latest: true
             )
             .sink { [weak self] isTyping in
-                guard let self = self else {
+                guard let self else {
                     return
                 }
                 
@@ -161,7 +162,7 @@ final class ChatViewSnapshotProvider {
                     return
                 }
                 
-                if let unreadMessagesState = unreadMessagesState, unreadMessagesState.numberOfUnreadMessages <= 0 {
+                if let unreadMessagesState, unreadMessagesState.numberOfUnreadMessages <= 0 {
                     self?.removeUnreadMessageLine()
                 }
                 else {
@@ -174,11 +175,11 @@ final class ChatViewSnapshotProvider {
         messageProvider.$currentMessages
             .receive(on: snapshotProviderQueue)
             .sink { [weak self] messages in
-                guard let self = self else {
+                guard let self else {
                     return
                 }
                 
-                guard let messages = messages else {
+                guard let messages else {
                     return
                 }
                 
@@ -230,7 +231,8 @@ final class ChatViewSnapshotProvider {
                 previousSnapshot: strongSelf.previousSnapshotInfo,
                 nextSnap: snapshot
             )
-            // If you change this, you should first read the fun observation on `shouldAnimate` in ChatViewDataSource line 448
+            // If you change this, you should first read the fun observation on `shouldAnimate` in ChatViewDataSource
+            // line 448
             let defaultAnimation: UITableView.RowAnimation = strongSelf.flippedTableView ? .top : .fade
             
             let newSnapshotInfo = SnapshotInfo(
@@ -302,14 +304,19 @@ final class ChatViewSnapshotProvider {
         }
         
         // Handle Typing Indicator
-        /// If we receive a new message from our contact, we receive the new message and immediately *after* the typing indicator is removed.
-        /// This will result in a weird animation because we scroll up to show both the new message and the typing indicator only to immediately remove the typing indicator.
-        /// To avoid this we check if the last cell type in the current snapshot is the typing indicator. If this is true and the last cell containing an actual message
-        /// in the current and next snapshot contain the same message, then we have not added a new message and continue to show the typing indicator.
-        /// (Note that the cell immediately before the typing indicator always contains a message if it contains more than one item.)
-        /// With this check in place we may still incorrectly remove the typing indicator when sending a message ourselves while our contact is still typing. We thus
-        /// additionally check if the last cell was the typing indicator and  the last message in the new snapshot is ours, then we continue to show the typing indicator
-        if let delegate = delegate {
+        /// If we receive a new message from our contact, we receive the new message and immediately *after* the typing
+        /// indicator is removed.
+        /// This will result in a weird animation because we scroll up to show both the new message and the typing
+        /// indicator only to immediately remove the typing indicator.
+        /// To avoid this we check if the last cell type in the current snapshot is the typing indicator. If this is
+        /// true and the last cell containing an actual message in the current and next snapshot contain the same
+        /// message, then we have not added a new message and continue to show the typing indicator.
+        /// (Note that the cell immediately before the typing indicator always contains a message if it contains more
+        /// than one item.)
+        /// With this check in place we may still incorrectly remove the typing indicator when sending a message
+        /// ourselves while our contact is still typing. We thus additionally check if the last cell was the typing
+        /// indicator and  the last message in the new snapshot is ours, then we continue to show the typing indicator
+        if let delegate {
             let isTypingDuringInitialSetup = isCurrentlyTyping(conversation: conversation) &&
                 !delegate.initialSetupCompleted
             let lastMessageIsOurs: Bool
@@ -331,7 +338,8 @@ final class ChatViewSnapshotProvider {
                     .itemIdentifiers[max(0, currentIdentifierCount - 2)]
                 let prePreviousMessage = flippedTableView ? flippedPrePreviousMessage : regularPrePreviousMessage
                 
-                // Did we previously show the typing indicator and this is just some snapshot that isn't adding any more items?
+                // Did we previously show the typing indicator and this is just some snapshot that isn't adding any more
+                // items?
                 let flippedPreviousMessage = currentSnapshot.numberOfItems == 0 ? nil : currentSnapshot
                     .itemIdentifiers[min(1, max(currentSnapshot.numberOfItems - 1, 0))]
                 let regularPreviousMessage = currentSnapshot.numberOfItems == 0 ? nil : currentSnapshot
@@ -414,7 +422,8 @@ final class ChatViewSnapshotProvider {
     
     // MARK: - Snapshot Update Helper Functions
     
-    /// Gets the current snapshot , removes the unread message line if it is displayed and immediately applies the new snapshot
+    /// Gets the current snapshot , removes the unread message line if it is displayed and immediately applies the new
+    /// snapshot
     func removeUnreadMessageLine() {
         snapshotProviderQueue.async { [weak self] in
             guard let strongSelf = self else {
@@ -597,10 +606,14 @@ final class ChatViewSnapshotProvider {
     
     // MARK: - Snapshot Property Detection Helper Functions
     
-    /// *Approximately* determines whether the next snapshot should animate or not to avoid flickering cells when animating the application of snapshots that only reload cells
-    /// Approximately means that flickering may still occur if a cell updates it state in the same snapshot as another one is added.
-    /// This should currently not happen as we save often and a new snapshot should be applied after every safe. If these assumptions change we have to be more careful when determining the animation property.
-    /// Ideally however we would determine this when creating snapshots and perhaps split a snapshot into animateable and non-animateable subsnapshots.
+    /// *Approximately* determines whether the next snapshot should animate or not to avoid flickering cells when
+    /// animating the application of snapshots that only reload cells
+    /// Approximately means that flickering may still occur if a cell updates it state in the same snapshot as another
+    /// one is added.
+    /// This should currently not happen as we save often and a new snapshot should be applied after every safe. If
+    /// these assumptions change we have to be more careful when determining the animation property.
+    /// Ideally however we would determine this when creating snapshots and perhaps split a snapshot into animateable
+    /// and non-animateable subsnapshots.
     /// - Parameters:
     ///   - currSnap: The last snap applied on the dataSource
     ///   - nextSnap: The next snap that will be applied on the dataSource
@@ -617,7 +630,7 @@ final class ChatViewSnapshotProvider {
         
         /// Do not animate before first snapshot has been applied
         /// This is in practice equivalent to the statement above
-        guard let currSnap = currSnap else {
+        guard let currSnap else {
             return false
         }
                 
@@ -632,7 +645,8 @@ final class ChatViewSnapshotProvider {
     /// - Parameters:
     ///   - previousSnapshot: Snapshot A
     ///   - nextSnap: Snapshot B
-    /// - Returns: The last item identifier of snapshots A and B if they have identical last item identifiers and nil otherwise
+    /// - Returns: The last item identifier of snapshots A and B if they have identical last item identifiers and nil
+    ///            otherwise
     private static func checkSnapshotChanged(
         previousSnapshot: SnapshotInfo?,
         nextSnap: ChatViewDiffableDataSourceSnapshot,
@@ -658,7 +672,8 @@ final class ChatViewSnapshotProvider {
 extension ChatViewSnapshotProvider {
     /// Batches two snapshots together retaining all relevant information.
     /// The two snapshots must have equal values for `rowAnimations` otherwise the output is undefined.
-    /// The items from `snapshotB` will be used and merged with the reconfigured / reloaded item identifiers from the previous `snapshotA`.
+    /// The items from `snapshotB` will be used and merged with the reconfigured / reloaded item identifiers from the
+    /// previous `snapshotA`.
     /// - Parameters:
     ///   - snapshotA: Older snapshot
     ///   - snapshotB: Newer snapshot

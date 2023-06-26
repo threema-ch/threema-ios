@@ -31,14 +31,78 @@ final class ChatViewLocationMessageTableViewCell: ChatViewBaseTableViewCell, Mea
     /// Reset it when the message had any changes to update data shown in the views (e.g. date or status symbol).
     var locationMessageAndNeighbors: (message: LocationMessage, neighbors: ChatViewDataSource.MessageNeighbors)? {
         didSet {
-            updateCell(for: locationMessageAndNeighbors?.message)
+            let block = {
+                self.updateCell(for: self.locationMessageAndNeighbors?.message)
+                
+                super.setMessage(
+                    to: self.locationMessageAndNeighbors?.message,
+                    with: self.locationMessageAndNeighbors?.neighbors
+                )
+            }
             
-            super.setMessage(to: locationMessageAndNeighbors?.message, with: locationMessageAndNeighbors?.neighbors)
+            if let oldValue, oldValue.message.objectID == locationMessageAndNeighbors?.message.objectID {
+                UIView.animate(
+                    withDuration: ChatViewConfiguration.ChatBubble.bubbleSizeChangeAnimationDurationInSeconds,
+                    delay: 0.0,
+                    options: .curveEaseInOut
+                ) {
+                    block()
+                    self.layoutIfNeeded()
+                }
+            }
+            else {
+                block()
+            }
         }
     }
     
     override var shouldShowDateAndState: Bool {
         didSet {
+            // Both of these animations are typically covered within a bigger animation block
+            // or a block that doesn't animate at all. Both cases look good.
+            if shouldShowDateAndState {
+                
+                let block = {
+                    self.messageDateAndStateView.alpha = 1.0
+                    self.messageDateAndStateView.isHidden = false
+                }
+                
+                if !oldValue {
+                    // When adding the date and state view, this is an animation that doesn't look half bad since the
+                    // view will animate in from the bottom.
+                    UIView.animate(
+                        withDuration: ChatViewConfiguration.ChatBubble.bubbleSizeChangeAnimationDurationInSeconds,
+                        delay: ChatViewConfiguration.ChatBubble.bubbleSizeChangeAnimationDurationInSeconds,
+                        options: .curveEaseInOut
+                    ) {
+                        block()
+                    } completion: { _ in
+                        // This is used to work around a bug where the ack symbols didn't have the correct baseline.
+                        UIView.performWithoutAnimation {
+                            self.messageDateAndStateView.setNeedsLayout()
+                            self.messageDateAndStateView.layoutIfNeeded()
+                        }
+                    }
+                }
+                else {
+                    UIView.performWithoutAnimation {
+                        block()
+                        
+                        // This is used to work around a bug where the ack symbols didn't have the correct baseline.
+                        // It is very unclear why this is needed in addition to
+                        self.messageDateAndStateView.setNeedsLayout()
+                        self.messageDateAndStateView.layoutIfNeeded()
+                    }
+                }
+            }
+            else {
+                // We don't use the same animation when hiding the date and state view because it'll animate out to the
+                // top and will cover the text which is still showing in the cell.
+                UIView.performWithoutAnimation {
+                    self.messageDateAndStateView.alpha = 0.0
+                }
+            }
+            
             messageDateAndStateView.isHidden = !shouldShowDateAndState
         }
     }
@@ -107,7 +171,7 @@ final class ChatViewLocationMessageTableViewCell: ChatViewBaseTableViewCell, Mea
         // By accepting an optional the data is automatically reset when the text message is set to `nil`
         
         // Clear cache for cell, if address was newly added
-        if let locationMessage = locationMessage,
+        if let locationMessage,
            messageTextView.text != nil,
            messageSecondaryTextLabel.text == nil {
             chatViewTableViewCellDelegate?.clearCellHeightCache(for: locationMessage.objectID)

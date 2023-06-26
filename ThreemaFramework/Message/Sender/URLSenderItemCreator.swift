@@ -41,7 +41,7 @@ import Foundation
         }
         else if UTIConverter.conforms(toImageType: uti) {
             let creator: ImageURLSenderItemCreator
-            if let maxSize = maxSize {
+            if let maxSize {
                 creator = ImageURLSenderItemCreator(with: maxSize)
             }
             else {
@@ -55,7 +55,8 @@ import Foundation
         return item
     }
     
-    /// Will return a sender item for the file at url. The file will be transcoded or scaled and its metadata will be removed
+    /// Will return a sender item for the file at url. The file will be transcoded or scaled and its metadata will be
+    /// removed
     /// if it conforms to isMovieMimeType or isImageMimeType.
     /// - Parameter url: The url at which the file is stored
     /// - Returns: An url sender item if one can be created

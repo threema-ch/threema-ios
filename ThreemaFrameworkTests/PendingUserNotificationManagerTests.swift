@@ -109,7 +109,7 @@ class PendingUserNotificationManagerTests: XCTestCase {
             }
         
         waitForExpectations(timeout: 3) { error in
-            if let error = error {
+            if let error {
                 print(error.localizedDescription)
                 XCTFail()
             }
@@ -166,7 +166,7 @@ class PendingUserNotificationManagerTests: XCTestCase {
         wait(for: [expect], timeout: 3)
 
         XCTAssertTrue(result)
-        XCTAssertTrue(userNotificationCenterManagerMock.removeCalls.contains(try XCTUnwrap(pendingNotification?.key)))
+        XCTAssertTrue(try userNotificationCenterManagerMock.removeCalls.contains(XCTUnwrap(pendingNotification?.key)))
         XCTAssertEqual("\(expectedFromIdentity)\(expectedMessageID.hexString)", pendingNotification?.key)
         XCTAssertNotNil(pendingNotification?.abstractMessage)
         XCTAssertEqual(UserNotificationStage.abstract, pendingNotification?.stage)

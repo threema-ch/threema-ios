@@ -20,50 +20,50 @@
 
 import Foundation
 
-@objc public extension UIFont {
-    func withTraits(traits: UIFontDescriptor.SymbolicTraits) -> UIFont {
+@objc extension UIFont {
+    public func withTraits(traits: UIFontDescriptor.SymbolicTraits) -> UIFont {
         let descriptor = fontDescriptor.withSymbolicTraits(traits)
         return UIFont(descriptor: descriptor!, size: 0) // size 0 means keep the size as it is
     }
 
-    func bold() -> UIFont {
+    public func bold() -> UIFont {
         withTraits(traits: .traitBold)
     }
 
-    func italic() -> UIFont {
+    public func italic() -> UIFont {
         withTraits(traits: .traitItalic)
     }
     
-    func traits() -> UIFontDescriptor.SymbolicTraits {
+    public func traits() -> UIFontDescriptor.SymbolicTraits {
         fontDescriptor.symbolicTraits
     }
 
-    func isBold() -> Bool {
+    public func isBold() -> Bool {
         let traits = fontDescriptor.symbolicTraits
         return traits.contains(.traitBold) && !traits.contains(.traitItalic)
     }
     
-    func isItalic() -> Bool {
+    public func isItalic() -> Bool {
         let traits = fontDescriptor.symbolicTraits
         return traits.contains(.traitItalic) && !traits.contains(.traitBold)
     }
     
-    func isBoldItalic() -> Bool {
+    public func isBoldItalic() -> Bool {
         let traits = fontDescriptor.symbolicTraits
         return traits.contains(.traitBold) && traits.contains(.traitItalic)
     }
 
-    class func systemFont(fontSize: CGFloat, traits: UIFontDescriptor.SymbolicTraits) -> UIFont? {
+    public class func systemFont(fontSize: CGFloat, traits: UIFontDescriptor.SymbolicTraits) -> UIFont? {
         UIFont.systemFont(ofSize: fontSize).including(traits: traits)
     }
 
-    func including(traits: UIFontDescriptor.SymbolicTraits) -> UIFont? {
+    public func including(traits: UIFontDescriptor.SymbolicTraits) -> UIFont? {
         var _traits = fontDescriptor.symbolicTraits
         _traits.update(with: traits)
         return withOnly(traits: _traits)
     }
 
-    func withOnly(traits: UIFontDescriptor.SymbolicTraits) -> UIFont? {
+    public func withOnly(traits: UIFontDescriptor.SymbolicTraits) -> UIFont? {
         guard let fontDescriptor = fontDescriptor.withSymbolicTraits(traits) else {
             return nil
         }

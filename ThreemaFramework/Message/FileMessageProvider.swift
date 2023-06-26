@@ -87,7 +87,8 @@ public enum FileMessageType {
 
 /// This message can be represented as a `FileMessageType`
 ///
-/// A definition for the abstraction interface of any message that contains blob data (e.g. `FileMessage`, `ImageMessage`, ...)
+/// A definition for the abstraction interface of any message that contains blob data (e.g. `FileMessage`,
+/// `ImageMessage`, ...)
 public protocol FileMessageProvider: BlobData {
     /// File message type representation of this object with a blob
     var fileMessageType: FileMessageType { get }
@@ -117,9 +118,9 @@ public protocol CommonFileMessageMetadata: BlobData {
     func temporaryBlobDataURL() -> URL?
 }
 
-public extension CommonFileMessageMetadata {
+extension CommonFileMessageMetadata {
     // We normally inline date and state if there is no caption
-    var showDateAndStateInline: Bool {
+    public var showDateAndStateInline: Bool {
         caption == nil
     }
 }
@@ -139,16 +140,16 @@ public protocol ThumbnailDisplayMessage: BaseMessage & FileMessageProvider & Com
     func createSaveMediaItem(forAutosave: Bool) -> AlbumManager.SaveMediaItem?
 }
 
-public extension ThumbnailDisplayMessage {
-    var readableFileName: String {
+extension ThumbnailDisplayMessage {
+    public var readableFileName: String {
         
-        let mimeType = UTIConverter.mimeType(fromUTI: blobGetUTI())
+        let mimeType = UTIConverter.mimeType(fromUTI: blobUTTypeIdentifier)
         let ext = UTIConverter.preferredFileExtension(forMimeType: mimeType)
         
         return "\(ThreemaApp.currentName.replacingOccurrences(of: " ", with: "_"))_\(DateFormatter.getDateForExport(date)).\(ext ?? "")"
     }
     
-    func createSaveMediaItem() -> AlbumManager.SaveMediaItem? {
+    public func createSaveMediaItem() -> AlbumManager.SaveMediaItem? {
         createSaveMediaItem(forAutosave: false)
     }
 }

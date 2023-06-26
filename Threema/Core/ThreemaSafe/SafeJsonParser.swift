@@ -35,7 +35,8 @@ class SafeJsonParser {
         
         class User: Codable {
             var privatekey: String
-            var temporaryDeviceGroupKeyTodoRemove: String? // Temporary field for manual pairing of ios and desktop multi device clients
+            // Temporary field for manual pairing of ios and desktop multi device clients
+            var temporaryDeviceGroupKeyTodoRemove: String?
             var nickname: String?
             var profilePic: String?
             var profilePicRelease: [String?]?
@@ -122,7 +123,7 @@ class SafeJsonParser {
         let encoder = JSONEncoder()
         if let data = try? encoder.encode(from) {
             return data.withUnsafeBytes {
-                return Array($0)
+                Array($0)
             }
         }
         return nil

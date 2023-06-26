@@ -17,8 +17,10 @@
 
 # Format options
 
+--asynccapturing XCTAssertThrowsAsyncError
 --elseposition next-line
 --emptybraces spaced
+--extensionacl on-declarations
 --groupedextension "MARK: - %c"
 --importgrouping testable-last
 --indentstrings true

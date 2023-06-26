@@ -21,6 +21,7 @@
 import CocoaLumberjackSwift
 import Foundation
 import Intents
+import LocalAuthentication
 import PromiseKit
 import ThreemaFramework
 
@@ -40,6 +41,8 @@ class RootNavigationController: UINavigationController {
     weak var picker: ContactGroupPickerViewController?
     weak var progressViewController: ProgressViewController?
     var textPreview: TextPreviewViewController?
+    
+    private var evaluatedPolicyDomainState: Data?
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -72,7 +75,7 @@ class RootNavigationController: UINavigationController {
                 if let contact = managedObject as? ContactEntity,
                    let conversation = EntityManager().entityFetcher.conversation(for: contact) {
                     self.selectedIdentity = conversation
-                    if var recipientConversations = recipientConversations {
+                    if var recipientConversations {
                         recipientConversations.insert(conversation)
                     }
                     else {
@@ -82,7 +85,7 @@ class RootNavigationController: UINavigationController {
                 }
                 else if let group = managedObject as? Conversation {
                     self.selectedIdentity = group
-                    if var recipientConversations = recipientConversations {
+                    if var recipientConversations {
                         recipientConversations.insert(group)
                     }
                     else {
@@ -117,7 +120,7 @@ class RootNavigationController: UINavigationController {
         
         _ = loadItemsFromContext()
         
-        if let selectedIdentity = selectedIdentity {
+        if let selectedIdentity {
             recipientConversations = Set<Conversation>()
             recipientConversations?.insert(selectedIdentity)
             presentMediaOrTextPreview()
@@ -144,10 +147,9 @@ class RootNavigationController: UINavigationController {
             return true
         }
         let uti = UTIConverter.uti(forFileURL: urlItem)
-        return (
+        return
             UTIConverter.type(uti, conformsTo: UTType.image.identifier) || UTIConverter
                 .type(uti, conformsTo: UTType.movie.identifier)
-        )
     }
     
     private func presentMediaPreview(with data: [Any]) {
@@ -157,7 +159,7 @@ class RootNavigationController: UINavigationController {
         previewViewController = sb
             .instantiateViewController(withIdentifier: "MediaShareController") as? MediaPreviewViewController
         
-        guard let previewViewController = previewViewController else {
+        guard let previewViewController else {
             let err = "Could not create preview view controller!"
             DDLogError(err)
             fatalError(err)
@@ -169,7 +171,7 @@ class RootNavigationController: UINavigationController {
         previewViewController.optionsEnabled = optionsEnabled(itemCount: data.count, item: data.first)
         previewViewController.memoryConstrained = true
         
-        if let recipientConversations = recipientConversations {
+        if let recipientConversations {
             previewViewController.conversationDescription = ShareExtensionHelpers
                 .getDescription(for: Array(recipientConversations).compactMap { $0 })
         }
@@ -223,7 +225,7 @@ class RootNavigationController: UINavigationController {
         }
         
         picker = pickerController.topViewController as? ContactGroupPickerViewController
-        guard let picker = picker else {
+        guard let picker else {
             let err = "Could not create Contact Picker"
             DDLogError(err)
             fatalError(err)
@@ -284,7 +286,7 @@ class RootNavigationController: UINavigationController {
         }
         
         picker = pickerController.topViewController as? ContactGroupPickerViewController
-        guard let picker = picker else {
+        guard let picker else {
             let err = "Could not create Contact Picker"
             DDLogError(err)
             fatalError(err)
@@ -322,7 +324,8 @@ class RootNavigationController: UINavigationController {
         super.viewDidAppear(animated)
     }
     
-    /// This takes the left and right bar button items and sets the tintColor and titleTextAttributes back to something that is legible in our share extension
+    /// This takes the left and right bar button items and sets the tintColor and titleTextAttributes back to something
+    /// that is legible in our share extension
     private func recolorBarButtonItems() {
         for viewController in children {
             let navItem = viewController.navigationItem
@@ -344,7 +347,7 @@ class RootNavigationController: UINavigationController {
     private func presentTextPreview(previewText: String?, selectedText: NSRange?, conversations: [Conversation?]?) {
         var selectedConversations: [Conversation]?
         
-        if let conversations = conversations {
+        if let conversations {
             selectedConversations = conversations.compactMap { $0 }
         }
         
@@ -354,7 +357,7 @@ class RootNavigationController: UINavigationController {
             selectedConversations: selectedConversations
         )
         
-        guard let textPreview = textPreview else {
+        guard let textPreview else {
             return
         }
         
@@ -379,7 +382,7 @@ class RootNavigationController: UINavigationController {
     }
     
     @objc private func sendText() {
-        guard let textPreview = textPreview else {
+        guard let textPreview else {
             return
         }
         
@@ -456,7 +459,30 @@ class RootNavigationController: UINavigationController {
     }
     
     private func tryTouchIDAuthentication() {
-        TouchIDAuthentication.tryCallback { success, _ in
+        TouchIDAuthentication.tryCallback { success, error, data in
+            if let error = error as? NSError, error.domain == "ThreemaErrorDomain",
+               let vc = self.presentedViewController {
+                
+                self.evaluatedPolicyDomainState = data
+                
+                Task { @MainActor in
+                    let title: String!
+                    
+                    if LAContext().unlockType() == .faceID {
+                        title = BundleUtil.localizedString(forKey: "alert_biometrics_changed_title_face")
+                    }
+                    else {
+                        title = BundleUtil.localizedString(forKey: "alert_biometrics_changed_title_touch")
+                    }
+                    UIAlertTemplate.showAlert(
+                        owner: vc,
+                        title: title,
+                        message: BundleUtil.localizedString(forKey: "alert_biometrics_changed_message")
+                    ) { _ in
+                    }
+                }
+            }
+            
             if success {
                 DispatchQueue.main.async {
                     self.showExtension()
@@ -555,7 +581,8 @@ class RootNavigationController: UINavigationController {
         itemSender.delegate = self
         
         // We theoretically accept multiple input items, but this is only to allow the share extension to show up
-        // when sharing a pdf from Safari. In all other tested cases only one inputItem and multiple attachments are provided.
+        // when sharing a pdf from Safari. In all other tested cases only one inputItem and multiple attachments are
+        // provided.
         // In the case of a pdf from Safari, we are only interested in the pdf and not the url anyways.
         if let item = extensionContext!.inputItems.first as? NSExtensionItem {
             for case let itemProvider in item.attachments! {
@@ -660,7 +687,8 @@ class RootNavigationController: UINavigationController {
     }
     
     /// The share extension lives in a process which will be reused when the share extension is launched multiple times.
-    /// Since we cannot clear all state, some leftover memory (around 15MB per launch of the SE) will always exist causing issues when large images are shared.
+    /// Since we cannot clear all state, some leftover memory (around 15MB per launch of the SE) will always exist
+    /// causing issues when large images are shared.
     private func forceExit() {
         DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 1.5) {
             DDLogNotice("Force exiting the share extension")
@@ -752,6 +780,12 @@ extension RootNavigationController: JKLLockScreenViewControllerDelegate {
     }
     
     func didPasscodeEnteredCorrectly(_ viewController: JKLLockScreenViewController!) {
+        
+        if let evaluatedPolicyDomainState {
+            UserSettings.shared().evaluatedPolicyDomainStateShareExtension = evaluatedPolicyDomainState
+            self.evaluatedPolicyDomainState = nil
+        }
+        
         isAuthorized = true
     }
     

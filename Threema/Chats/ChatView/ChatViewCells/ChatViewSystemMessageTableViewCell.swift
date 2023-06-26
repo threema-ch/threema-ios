@@ -132,7 +132,7 @@ final class ChatViewSystemMessageTableViewCell: ThemedCodeTableViewCell, Measura
         
         systemMessageLabel.textColor = Colors.textLight
         systemMessageLabel.highlightedTextColor = Colors.textLight
-        systemMessageBackgroundView.backgroundColor = Colors.newSystemMessageBackground
+        systemMessageBackgroundView.backgroundColor = Colors.systemMessageBackground
     }
     
     private func updateCell(for systemMessage: SystemMessage?) {

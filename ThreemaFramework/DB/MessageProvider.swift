@@ -25,12 +25,6 @@ import OSLog
 import PromiseKit
 import UIKit
 
-// Used to instrument new ChatView
-// TODO: (IOS-2860) Remove when new chat view released
-private class PointsOfInterestSignpost: NSObject {
-    static let log = OSLog(subsystem: "ch.threema.iapp.newChatView", category: .pointsOfInterest)
-}
-
 /// Variables to try different message loading configurations
 ///
 /// This can probably be removed before the public release
@@ -46,8 +40,8 @@ private protocol Configuration {
     var backgroundFetching: Bool { get }
 }
 
-private extension MessageProvider {
-    struct TestConfiguration: Configuration {
+extension MessageProvider {
+    fileprivate struct TestConfiguration: Configuration {
         fileprivate let limitEnabled = true
         fileprivate let isFixedWindowEnabled = false
         
@@ -56,7 +50,7 @@ private extension MessageProvider {
         fileprivate let backgroundFetching = true
     }
     
-    struct ProductionConfiguration: Configuration {
+    fileprivate struct ProductionConfiguration: Configuration {
         fileprivate let limitEnabled = true
         fileprivate let isFixedWindowEnabled = false // Makes the scroll bar less jumpy
         
@@ -75,7 +69,8 @@ public final class MessageProvider: NSObject {
         public let messageCount: Int
     }
     
-    /// A snapshot of the currently loaded messages and an indication if the previous snapshot contained the most recent messages
+    /// A snapshot of the currently loaded messages and an indication if the previous snapshot contained the most recent
+    /// messages
     public struct MessagesSnapshot {
         /// Snapshot to be used by the data source
         public let snapshot: NSDiffableDataSourceSnapshot<String, NSManagedObjectID>
@@ -138,8 +133,8 @@ public final class MessageProvider: NSObject {
     
     /// Create a new messages provider
     ///
-    /// This abstracts away the loading of messages from Core Data by providing an updating snapshot of the current set of messages. To load more messages below
-    /// or above use the provided methods for that.
+    /// This abstracts away the loading of messages from Core Data by providing an updating snapshot of the current set
+    /// of messages. To load more messages below or above use the provided methods for that.
     ///
     /// - Parameters:
     ///   - conversation: Messages from this conversation will be fetched and provided
@@ -173,8 +168,8 @@ public final class MessageProvider: NSObject {
     
     /// Convenience init should be used everywhere except in tests.
     /// See the comment for convenience init above for more information.
-    /// `context` is the context on which the `NSFetchedResultsController` is run. This is necessary due to how db access is currently
-    /// setup where most requests run on the main thread.
+    /// `context` is the context on which the `NSFetchedResultsController` is run. This is necessary due to how db
+    /// access is currently setup where most requests run on the main thread.
     public init(
         for conversation: Conversation,
         around date: Date?,
@@ -205,7 +200,8 @@ public final class MessageProvider: NSObject {
         
         // TODO: (IOS-2014)
         // - In my analysis this was not called on a background context on an iPhone 7 with iOS 13. Why?
-        // - Can we improve speed if we create a derived property for it? (Maybe only possible if we drop iOS 12 support)
+        // - Can we improve speed if we create a derived property for it? (Maybe only possible if we drop iOS 12
+        //   support)
         self.numberOfMessages = localMessageFetcher.count()
         
         super.init()
@@ -273,7 +269,7 @@ public final class MessageProvider: NSObject {
     
     /// Workaround when using a direct background context which might miss updates through the NSE
     @objc private func resetAndReload() {
-        guard let lastWillResignActiveNotification = lastWillResignActiveNotification else {
+        guard let lastWillResignActiveNotification else {
             return
         }
         
@@ -296,7 +292,7 @@ public final class MessageProvider: NSObject {
         // Needed for sectioning (BaseMessage.sectionDateString)
         fetchedResultsController.fetchRequest.propertiesToFetch = BaseMessage.sectioningKeyPaths
         
-        if let date = date {
+        if let date {
             configureLoadingMessages(around: date)
         }
         else {
@@ -332,7 +328,8 @@ public final class MessageProvider: NSObject {
         
         if MessageProvider.configuration.backgroundFetching {
             return Guarantee { seal in
-                // As this is probably happening on a background context we need to dispatch the fetch correctly (is this true?)
+                // As this is probably happening on a background context we need to dispatch the fetch correctly (is
+                // this true?)
                 fetchedResultsController.managedObjectContext.perform {
                     do {
                         let prevFetchedObjs = self.fetchedResultsController.fetchedObjects
@@ -353,7 +350,7 @@ public final class MessageProvider: NSObject {
                             return seal(nil)
                         }
                         
-                        if let prevFetchedObjs = prevFetchedObjs {
+                        if let prevFetchedObjs {
                             guard !prevFetchedObjs.isEmpty,
                                   let prevArr = prevFetchedObjs as NSArray?,
                                   let prevLastObj = prevArr[max(0, prevArr.count - 1)] as? BaseMessage,
@@ -633,8 +630,9 @@ extension MessageProvider: NSFetchedResultsControllerDelegate {
     
     /// Convert and filter the snapshot
     ///
-    /// We never want to reload cells because otherwise we might reuse a cell with different content when just updating the delivery state of our message causing
-    /// weird flickering. Reconfigure always dequeues the *exact* same cell which means no weird flickering 🥳
+    /// We never want to reload cells because otherwise we might reuse a cell with different content when just updating
+    /// the delivery state of our message causing weird flickering. Reconfigure always dequeues the *exact* same cell
+    /// which means no weird flickering 🥳
     private func convert(
         _ snapshot: NSDiffableDataSourceSnapshot<String, NSManagedObjectID>
     ) -> NSDiffableDataSourceSnapshot<String, NSManagedObjectID> {

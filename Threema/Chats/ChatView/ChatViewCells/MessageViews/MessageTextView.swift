@@ -102,15 +102,15 @@ final class MessageTextView: RTLAligningTextView {
                 case .textChanged:
                     // This only happens when searching
                     //
-                    // If the search text has changed we need to do a full markify round because we don't know what exactly has changed
-                    // and then highlight the text again.
+                    // If the search text has changed we need to do a full markify round because we don't know what
+                    // exactly has changed and then highlight the text again.
                     setAttributedText(to: markify(newValue), maybeHighlighting: currentSearchText)
                 case .textUnchanged:
                     // This only happens when searching
                     //
                     // Even if both text and search text are unchanged we need to re-markify this text because
-                    // of Colors overwriting our previously set colors. See `updateColors` of this class for the other part of the workaround
-                    // where we set text to the same value again.
+                    // of Colors overwriting our previously set colors. See `updateColors` of this class for the other
+                    // part of the workaround where we set text to the same value again.
                     setAttributedText(to: attributedText, maybeHighlighting: currentSearchText)
                 }
             case .textChanged:
@@ -439,7 +439,7 @@ extension MessageTextView: UITextViewDelegate {
             if interaction == .invokeDefaultAction {
                 let threemaID = String(URL.absoluteString.suffix(8))
                 
-                guard let messageTextViewDelegate = messageTextViewDelegate else {
+                guard let messageTextViewDelegate else {
                     let msg = "messageTextViewDelegate is unexpectedly nil"
                     assertionFailure(msg)
                     DDLogError(msg)

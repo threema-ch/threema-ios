@@ -31,7 +31,8 @@ public class WallpaperStore {
     
     // MARK: - Public Functions
     
-    /// Creates a unique filename and saves it with the conversationID as key in AppDefaults. The wallpaper is saved as NSData in the filesystem.
+    /// Creates a unique filename and saves it with the conversationID as key in AppDefaults. The wallpaper is saved as
+    /// NSData in the filesystem.
     /// - Parameters:
     ///   - conversationID: ID of the conversation which is used as the key for saving the reference to the wallpaper
     ///   - wallpaperData: The data of the wallpaper
@@ -94,7 +95,7 @@ public class WallpaperStore {
     public func deleteWallpaper(for conversationID: NSManagedObjectID) {
         let key = conversationID.uriRepresentation().absoluteString
         let wallpapers = AppGroup.userDefaults().dictionary(forKey: Constants.wallpaperKey)
-        if var wallpapers = wallpapers, let filename = wallpapers[key] as? String {
+        if var wallpapers, let filename = wallpapers[key] as? String {
             let wallpaperPath = wallpaperPath(filename: filename)
             FileUtility.delete(at: wallpaperPath)
             wallpapers.removeValue(forKey: key)

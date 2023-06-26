@@ -20,8 +20,8 @@
 
 import Foundation
 
-public extension MyIdentityStore {
-    var idColor: UIColor {
+extension MyIdentityStore {
+    public var idColor: UIColor {
         IDColor.forData(Data(identity.utf8))
     }
 }

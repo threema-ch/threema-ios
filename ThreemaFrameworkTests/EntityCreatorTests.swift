@@ -207,7 +207,7 @@ class EntityCreatorTests: XCTestCase {
         correlationID: String,
         webRequestID: String
     ) {
-        XCTAssertEqual(fileMessageEntity.blobGet(), senderItem.getData())
+        XCTAssertEqual(fileMessageEntity.blobData, senderItem.getData())
         XCTAssertEqual(fileMessageEntity.mimeType, senderItem.getMimeType())
         XCTAssertEqual(fileMessageEntity.caption, senderItem.caption)
         XCTAssertEqual(fileMessageEntity.fileName, senderItem.getName())

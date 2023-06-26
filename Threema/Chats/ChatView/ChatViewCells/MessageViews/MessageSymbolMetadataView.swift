@@ -30,7 +30,7 @@ final class MessageSymbolMetadataView: UIView {
                 return
             }
             
-            if let symbolName = symbolName {
+            if let symbolName {
                 var image = UIImage(systemName: symbolName)
                 
                 if image == nil {
@@ -54,7 +54,7 @@ final class MessageSymbolMetadataView: UIView {
                 return
             }
             
-            if let metadataString = metadataString {
+            if let metadataString {
                 metadataLabel.text = metadataString
                 showMetadataLabel()
             }
@@ -75,7 +75,8 @@ final class MessageSymbolMetadataView: UIView {
     }()
     
     private lazy var metadataLabelLeadingInset: CGFloat = {
-        // The metadata label is as far away from the symbol center as its center is form the trailing end plus the space
+        // The metadata label is as far away from the symbol center as its center is form the trailing end plus the
+        // space
         let offset = 2 * symbolXCenterLeadingDistance // This is already scaled
         let scaledSpace = constantScaler.scaledValue(
             for: ChatViewConfiguration.MessageMetadata.defaultLabelAndSymbolSpace

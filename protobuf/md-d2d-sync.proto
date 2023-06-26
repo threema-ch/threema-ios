@@ -80,287 +80,37 @@ enum ConversationCategory {
 
 // Mobile device management parameters shared across Threema Work devices.
 //
-// More detailed parameter information is available here:
-// https://work.threema.ch/en/docs/mdm_configuration
-//
-// [//]: # TODO(SE-223): Subject to change.
+// See [mdm-parameters.md](./md-parameters.md) for documentation of possible
+// parameter values and associated steps to apply when a parameter has been set
+// for the first time, modified, or removed.
 message MdmParameters {
-  // Username required for activation of the app.
-  // References: `th_license_username`
-  optional string license_username = 1;
-
-  // Password required for activation of the app
-  // References: `th_license_password`
-  optional string license_password = 2;
-
-  // Nickname to be used
-  // References: `th_nickname`
-  optional string nickname = 3;
-
-  // First name of the user
-  // References: `th_firstname`
-  optional string first_name = 4;
-
-  // Last name of the user
-  // References: `th_lastname`
-  optional string last_name = 5;
-
-  // Customer specific identifier
-  // References: `th_csi`
-  optional string customer_specific_id = 6;
-
-  // User category
-  // References: `th_category`
-  optional string category = 7;
-
-  // Email address linked to the ID
-  // References: `th_linked_email`
-  optional string linked_email = 8;
-
-  // Phone number linked to the ID
-  // References: `th_linked_phone`
-  optional string linked_phone = 9;
-
-  // Restore a Threema ID
-  // References: `th_id_backup`
-  optional string identity_restore = 10;
-
-  // Password for restoring a Threema ID
-  // References: `th_id_backup_password`
-  optional string identity_restore_password = 11;
-
-  // Threema Safe configuration (required)
-  // References: `th_safe_enable`
-  enum ThreemaSafePolicy {
-    // Configurable by the user
-    SAFE_OPTIONAL = 0;
-    // Forcibly enabled
-    SAFE_MANDATORY = 1;
-    // Forcibly disabled
-    SAFE_DISABLED = 2;
+  // A single MDM parameter.
+  message Parameter {
+    oneof value {
+      // String parameter
+      string string_value = 1;
+      // Boolean parameter
+      bool boolean_value = 2;
+    }
   }
-  optional ThreemaSafePolicy threema_safe_policy = 12;
 
-  // Threema Safe password (predefined)
-  // References: `th_safe_password`
-  optional string threema_safe_password = 13;
+  // A map of MDM parameters, originating from an external MDM system. The map
+  // key is the identifier of the MDM parameter (e.g. `th_nickname`).
+  map<string, Parameter> external_parameters = 1;
 
-  // Threema Safe password pattern
-  // References: `th_safe_password_pattern`
-  optional string threema_safe_password_pattern = 14;
+  // A map of MDM parameters, originating from Threema App Configuration. The
+  // map key is the identifier of the MDM parameter (e.g. `th_nickname`).
+  map<string, Parameter> threema_parameters = 2;
 
-  // Threema Safe password pattern error (mismatch) message
-  // References: `th_safe_password_message`
-  optional string threema_safe_password_pattern_error_message = 15;
-
-  // Threema Safe server URL
-  // References: `th_safe_server_url`
-  optional string threema_safe_server_url = 16;
-
-  // Threema Safe server username for authentication
-  // References: `th_safe_server_username`
-  optional string threema_safe_server_username = 17;
-
-  // Threema Safe server password for authentication
-  // References: `th_safe_server_password`
-  optional string threema_safe_server_password = 18;
-
-  // Restore policy for restoring from a Threema Safe backup (required)
-  // References: `th_safe_restore_enable`
-  enum ThreemaSafeRestorePolicy {
-    // Choosable by the user
-    SAFE_RESTORE_OPTIONAL = 0;
-    // Automatic restore
-    SAFE_RESTORE_MANDATORY = 1;
-    // Forcibly disabled
-    SAFE_RESTORE_DISABLED = 2;
+  enum ParameterPrecedence {
+    // On conflict, parameters defined by Threema App Configuration take precedence
+    THREEMA = 0;
+    // On conflict, parameters defined by an external MDM take precedence
+    EXTERNAL = 1;
   }
-  optional ThreemaSafeRestorePolicy threema_safe_restore_policy = 19;
-
-  // Threema ID to be restored from Threema Safe (required)
-  // References: `th_safe_restore_id`
-  optional string threema_safe_restore_identity = 20;
-
-  // Override policy in regards to MDM parameters (required)
-  // References: `th_readonly_profile`
-  enum OverridePolicy {
-    // Allows the user to override some of the MDM parameter presets
-    LOOSE = 0;
-    // The user may not override any MDM parameter presets
-    STRICT = 1;
-  }
-  optional OverridePolicy override_policy = 21;
-
-  // Contact synchronisation policy (required)
-  // References: `th_contact_sync`
-  enum ContactSyncPolicy {
-    // Not synced
-    NOT_SYNCED = 0;
-    // Synced
-    SYNC = 1;
-  }
-  optional ContactSyncPolicy contact_sync_policy = 22;
-
-  // Inactive Threema ID display policy (required)
-  // References: `th_hide_inactive_ids`
-  enum InactiveIdentityDisplayPolicy {
-    // Show inactive IDs
-    SHOW_INACTIVE = 0;
-    // Hide inactive IDs
-    HIDE_INACTIVE = 1;
-  }
-  optional InactiveIdentityDisplayPolicy inactive_identity_display_policy = 23;
-
-  // Unknown contacts policy (required)
-  // References: `th_block_unknown`
-  enum UnknownContactPolicy {
-    // Allowed to contact the user
-    ALLOW_UNKNOWN = 0;
-    // Will be blocked by the user
-    BLOCK_UNKNOWN = 1;
-  }
-  optional UnknownContactPolicy unknown_contact_policy = 24;
-
-  // Auto-save media policy (required)
-  // References: `th_disable_save_to_gallery`
-  enum AutoSaveMediaPolicy {
-    // Allow auto-saving, configurable by the user
-    ALLOW_AUTO_SAVE = 0;
-    // Deny auto-saving
-    DENY_AUTO_SAVE = 1;
-  }
-  optional AutoSaveMediaPolicy auto_save_media_policy = 25;
-
-  // Screenshot policy (required)
-  // References: `th_disable_screenshots`
-  enum ScreenshotPolicy {
-    // Allow taking screenshots
-    ALLOW_SCREENSHOT = 0;
-    // Deny taking screenshots, if possible
-    DENY_SCREENSHOT = 1;
-  }
-  optional ScreenshotPolicy screenshot_policy = 26;
-
-  // Add contact policy (required)
-  // References: `th_disable_add_contact`
-  enum AddContactPolicy {
-    // Allow manually adding contacts
-    ALLOW_ADD_CONTACT = 0;
-    // Deny manually adding contacts
-    DENY_ADD_CONTACT = 1;
-  }
-  optional AddContactPolicy add_contact_policy = 27;
-
-  // Chat export policy (required)
-  // References: `th_disable_export`
-  enum ChatExportPolicy {
-    // Allow exporting chats
-    ALLOW_CHAT_EXPORT = 0;
-    // Deny exporting of chats
-    DENY_CHAT_EXPORT = 1;
-  }
-  optional ChatExportPolicy chat_export_policy = 28;
-
-  // Backup policy (required)
-  // References: `th_disable_backups`
-  enum BackupPolicy {
-    // Generally allow backups to be made
-    ALLOW_BACKUP = 0;
-    // Deny creating backups
-    DENY_BACKUP = 1;
-  }
-  optional BackupPolicy backup_policy = 29;
-
-  // Threema ID export policy (required)
-  // References: `th_disable_id_export`
-  enum IdentityExportPolicy {
-    // Allow exporting of the Threema ID
-    ALLOW_IDENTITY_EXPORT = 0;
-    // Deny exporting of the Threema ID
-    DENY_IDENTITY_EXPORT = 1;
-  }
-  optional IdentityExportPolicy identity_export_policy = 30;
-
-  // Data backup policy (required)
-  // References: `th_disable_data_backups`
-  enum DataBackupPolicy {
-    // Allow creating data backups
-    ALLOW_DATA_BACKUP = 0;
-    // Deny creating data backups
-    DENY_DATA_BACKUP = 1;
-  }
-  optional DataBackupPolicy data_backup_policy = 31;
-
-  // System backup policy (required)
-  // References: `th_disable_system_backups`
-  enum SystemBackupPolicy {
-    // The system may include app data
-    ALLOW_SYSTEM_BACKUP = 0;
-    // The system is denied from including app data
-    DENY_SYSTEM_BACKUP = 1;
-  }
-  optional SystemBackupPolicy system_backup_policy = 32;
-
-  // Message preview (required)
-  // References: `th_disable_message_preview`
-  enum MessagePreviewPolicy {
-    // Allow showing a message preview
-    ALLOW_PREVIEW = 0;
-    // Deny showing a message preview
-    DENY_PREVIEW = 1;
-  }
-  optional MessagePreviewPolicy message_preview_policy = 33;
-
-  // Profile picture sharing policy (required)
-  // References: `th_disable_send_profile_picture`
-  enum ProfilePictureSharePolicy {
-    // Allow the profile picture to be shared with contacts
-    ALLOW_SHARE = 0;
-    // Denied from sharing the profile picture with contacts
-    DENY_SHARE = 1;
-  }
-  optional ProfilePictureSharePolicy profile_picture_share_policy = 34;
-
-  // Threema Call policy (required)
-  // References: `th_disable_calls`
-  enum CallPolicy {
-    // Allow creating/receiving Threema Calls
-    ALLOW_CALL = 0;
-    // Denied from creating/receiving any Threema Calls
-    DENY_CALL = 1;
-  }
-  optional CallPolicy call_policy = 35;
-
-  // Setup wizard policy (required)
-  // References: `th_skip_wizard`
-  enum SetupWizardPolicy {
-    // Show the setup wizard
-    SHOW_WIZARD = 0;
-    // Skip the setup wizard (restores an ID or a backup and sets up the
-    // profile automatically).
-    SKIP_WIZARD = 1;
-  }
-  optional SetupWizardPolicy setup_wizard_policy = 36;
-
-  // Group creation policy (required)
-  // References: `th_disable_create_group`
-  enum CreateGroupPolicy {
-    // Allow manually creating groups
-    ALLOW_CREATE_GROUP = 0;
-    // Deny manually creating groups
-    DENY_CREATE_GROUP = 1;
-  }
-  optional CreateGroupPolicy create_group_policy = 37;
-
-  // Share media policy (required)
-  // References: `th_disable_share_media`
-  enum ShareMediaPolicy {
-    // Allow unrestricted sharing of media
-    ALLOW_SHARE_MEDIA = 0;
-    // Deny sharing of media outside of Threema, if possible
-    DENY_OUTSIDE_APP = 1;
-  }
-  optional ShareMediaPolicy share_media_policy = 38;
+  // The parameter precedence defines how to resolve conflicting parameters
+  // between an external MDM and the Threema App Configuration.
+  ParameterPrecedence parameter_precedence = 3;
 }
 
 // The user's profile.
@@ -851,6 +601,19 @@ message DistributionList {
 }
 
 // App settings
+//
+// When the user changes one or more settings:
+//
+// 1. Begin a transaction (scope: `SETTINGS_SYNC`, precondition: none).
+// 2. For each setting that has been modified, run the associated steps of the
+//    setting and include the modified settings.
+// 3. Reflect this message and commit the transaction.
+// 4. Apply the modified settings locally.
+//
+// When reflected from another device:
+//
+// 1. For each setting that is being included by this message, run the
+//    associated steps of the setting and apply the modified setting.
 message Settings {
   // Contact synchronisation policy
   //

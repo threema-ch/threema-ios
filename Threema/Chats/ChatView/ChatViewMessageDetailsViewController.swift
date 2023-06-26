@@ -286,7 +286,7 @@ final class ChatViewMessageDetailsViewController: ThemedCodeModernGroupedTableVi
     ///   - keyPath: Key path in `BaseMessage` to observe
     ///   - changeHandler: Handler called on each observed change.
     ///                     Don't forget to capture `self` weakly! Dispatched on the main queue.
-    private func observeMessage<Value>(_ keyPath: KeyPath<BaseMessage, Value>, changeHandler: @escaping () -> Void) {
+    private func observeMessage(_ keyPath: KeyPath<BaseMessage, some Any>, changeHandler: @escaping () -> Void) {
         guard let message else {
             return
         }

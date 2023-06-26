@@ -91,15 +91,8 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
             item = [URLSenderItemCreator getSenderItemFor:_url];
         }
         for (Conversation *conv in conversations) {
-            if ([UserSettings sharedUserSettings].newChatViewActive) {
-                BlobManagerObjcWrapper *manager = [[BlobManagerObjcWrapper alloc] init];
-                [manager createMessageAndSyncBlobsFor:item in:conversation correlationID:nil webRequestID:nil];
-            }
-            else {
-                Old_FileMessageSender *sender = [[Old_FileMessageSender alloc] init];
-                [sender sendItem:item inConversation:conv];
-                sender.uploadProgressDelegate = self;
-            }
+            BlobManagerObjcWrapper *manager = [[BlobManagerObjcWrapper alloc] init];
+            [manager createMessageAndSyncBlobsFor:item in:conversation correlationID:nil webRequestID:nil completion:nil];
         }
     } else {
         DDLogError(@"No URL provided, can't share anything");

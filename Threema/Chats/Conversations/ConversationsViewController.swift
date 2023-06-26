@@ -104,8 +104,6 @@ class ConversationsViewController: ThemedTableViewController {
     private var lastAppearance = Date()
     private var viewLoadedInBackground = AppDelegate.shared().isAppInBackground()
     
-    private var oldChatViewController: Old_ChatViewController?
-    private var oldChatViewCompletionBlock: Old_ChatViewControllerCompletionBlock?
     private weak var previousNavigationControllerDelegate: UINavigationControllerDelegate?
     
     private lazy var lockScreen = LockScreen(isLockScreenController: false)
@@ -178,12 +176,6 @@ class ConversationsViewController: ThemedTableViewController {
         // child view controller using the same navigation bar. See ChatSearchController for details.
         definesPresentationContext = false
     }
-        
-    override func didReceiveMemoryWarning() {
-        DDLogWarn("Memory warning, removing cached chat view controllers")
-        Old_ChatViewControllerCache.clear()
-        super.didReceiveMemoryWarning()
-    }
 }
 
 // MARK: - StoryBoard Button Actions
@@ -241,9 +233,6 @@ extension ConversationsViewController {
     }
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        os_signpost(.begin, log: PointsOfInterestSignpost.log, name: "showChat")
-        os_signpost(.event, log: PointsOfInterestSignpost.log, name: "didSelectRowAt")
-
         // Disables Entering Chats when in Edit-Mode
         if isEditing {
             tableView.selectRow(at: indexPath, animated: true, scrollPosition: .none)
@@ -769,7 +758,7 @@ extension ConversationsViewController {
     }
     
     @objc func setSelection(for conversation: Conversation?) {
-        guard let conversation = conversation,
+        guard let conversation,
               let newRow = fetchedResultsController.indexPath(forObject: conversation) else {
             return
         }
@@ -835,17 +824,39 @@ extension ConversationsViewController {
         }
         
         if chatViewController.conversation.conversationCategory == .private {
-            
-            lockScreen.presentLockScreenView(
-                viewController: self,
-                enteredCorrectly: {
-                    guard let navigationController = self.navigationController else {
-                        return
+            // If we restored from safe and no password is set, we inform the user that he needs to set one and present
+            // them the set password screen
+            if !KKPasscodeLock.shared().isPasscodeRequired() {
+                UIAlertTemplate.showAlert(
+                    owner: self,
+                    title: BundleUtil.localizedString(forKey: "privateChat_alert_title"),
+                    message: BundleUtil.localizedString(forKey: "privateChat_setup_alert_message"),
+                    titleOk: BundleUtil.localizedString(forKey: "privateChat_code_alert_confirm"), actionOk: { _ in
+                        self.lockScreen.presentLockScreenView(
+                            viewController: self,
+                            enteredCorrectly: {
+                                guard let navigationController = self.navigationController else {
+                                    return
+                                }
+                                navigationController.popToViewController(self, animated: false)
+                                navigationController.pushViewController(chatViewController, animated: false)
+                            }
+                        )
                     }
-                    navigationController.popToViewController(self, animated: false)
-                    navigationController.pushViewController(chatViewController, animated: false)
-                }
-            )
+                )
+            }
+            else {
+                lockScreen.presentLockScreenView(
+                    viewController: self,
+                    enteredCorrectly: {
+                        guard let navigationController = self.navigationController else {
+                            return
+                        }
+                        navigationController.popToViewController(self, animated: false)
+                        navigationController.pushViewController(chatViewController, animated: false)
+                    }
+                )
+            }
         }
         else {
             navigationController?.popToViewController(self, animated: false)
@@ -859,52 +870,6 @@ extension ConversationsViewController {
         }
         else {
             setSelection(for: chatViewController.conversation)
-        }
-    }
-    
-    @objc func displayOldChat(oldChatViewController: Old_ChatViewController, animated: Bool) {
-        
-        // Chat is already displayed
-        if navigationController?.topViewController == oldChatViewController {
-            return
-        }
-        
-        // In the view hierarchy, there is already a view for the chat, pop overlaying VC's to it
-        if navigationController?.viewControllers.contains(oldChatViewController) ?? false {
-            if (navigationController?.topViewController?.presentedViewController) != nil {
-                return
-            }
-            navigationController?.popToViewController(oldChatViewController, animated: animated)
-            return
-        }
-        
-        if oldChatViewController.isPrivateConversation() {
-            self.oldChatViewController = oldChatViewController
-            
-            lockScreen.presentLockScreenView(
-                viewController: self,
-                enteredCorrectly: {
-                    guard let chatViewController = self.oldChatViewController,
-                          let navigationController = self.navigationController else {
-                        return
-                    }
-                    navigationController.popToViewController(self, animated: false)
-                    navigationController.pushViewController(chatViewController, animated: false)
-                }
-            )
-        }
-        else {
-            navigationController?.popToViewController(self, animated: false)
-            navigationController?.pushViewController(oldChatViewController, animated: animated)
-        }
-        
-        if UIDevice.current.userInterfaceIdiom != .pad,
-           let conversation = selectedConversation,
-           let selectedRow = fetchedResultsController.indexPath(forObject: conversation) {
-            tableView.deselectRow(at: selectedRow, animated: false)
-        }
-        else {
-            setSelection(for: oldChatViewController.conversation)
         }
     }
     
@@ -1041,7 +1006,7 @@ extension ConversationsViewController {
     }
     
     @objc private func updateDraftForCell() {
-        guard let selectedConversation = selectedConversation,
+        guard let selectedConversation,
               let indexPath = fetchedResultsController.indexPath(forObject: selectedConversation),
               let cell = tableView.cellForRow(at: indexPath) as? ConversationTableViewCell else {
             return
@@ -1062,7 +1027,6 @@ extension ConversationsViewController {
     
     @objc private func addressBookSynchronized() {
         DispatchQueue.main.async {
-            Old_ChatViewControllerCache.clear()
             self.tableView.reloadData()
         }
     }
@@ -1084,29 +1048,6 @@ extension ConversationsViewController {
             fetchedResultsController.fetchRequest.predicate = archivedPredicate
         }
         refreshData()
-    }
-}
-
-// MARK: - UINavigationControllerDelegate
-
-extension ConversationsViewController: UINavigationControllerDelegate {
-    
-    func navigationController(
-        _ navigationController: UINavigationController,
-        didShow viewController: UIViewController,
-        animated: Bool
-    ) {
-        
-        guard let chatViewCompBlock = oldChatViewCompletionBlock,
-              let oldViewController = viewController as? Old_ChatViewController else {
-            return
-        }
-        
-        oldViewController.showContentAfterForceTouch()
-        chatViewCompBlock(oldViewController)
-        oldChatViewCompletionBlock = nil
-        
-        navigationController.delegate = previousNavigationControllerDelegate
     }
 }
 
@@ -1137,15 +1078,13 @@ extension ConversationsViewController: NSFetchedResultsControllerDelegate {
             }
             
         case .delete:
-            guard let indexPath = indexPath,
-                  let conversation = anObject as? Conversation else {
+            guard let indexPath else {
                 return
             }
-            Old_ChatViewControllerCache.clear(conversation)
             tableView.deleteRows(at: [indexPath], with: .automatic)
         case .move:
-            if let indexPath = indexPath,
-               let newIndexPath = newIndexPath {
+            if let indexPath,
+               let newIndexPath {
                 tableView.moveRow(at: indexPath, to: newIndexPath)
             }
         case .update:
@@ -1170,23 +1109,5 @@ extension ConversationsViewController: NSFetchedResultsControllerDelegate {
         default:
             break
         }
-    }
-}
-
-// MARK: - Old_ChatViewControllerDelegate
-
-extension ConversationsViewController: Old_ChatViewControllerDelegate {
-    
-    func present(_ chatViewController: Old_ChatViewController!, onCompletion: Old_ChatViewControllerCompletionBlock!) {
-        previousNavigationControllerDelegate = navigationController?.delegate
-        navigationController?.delegate = self
-        
-        chatViewController.showContentAfterForceTouch()
-        oldChatViewCompletionBlock = onCompletion
-        displayOldChat(oldChatViewController: chatViewController, animated: false)
-    }
-    
-    @objc func pushSettingChanged(_ conversation: Conversation) {
-        // do nothing, because cell is observe this by it self
     }
 }

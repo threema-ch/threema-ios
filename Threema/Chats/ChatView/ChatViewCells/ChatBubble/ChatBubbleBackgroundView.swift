@@ -64,8 +64,8 @@ final class ChatBubbleBackgroundView: UIView {
                 
             let morph = CABasicAnimation(keyPath: "path")
                 
-            // If we are already animating, which will happen for example when adding the date and state view (where we first get taller and then wider)
-            // we already have an animation in progress when starting the next one.
+            // If we are already animating, which will happen for example when adding the date and state view (where we
+            // first get taller and then wider) we already have an animation in progress when starting the next one.
             // This gets the current position of our bubble and starts the next animation from it
             if let presentationLayer = backgroundLayer.presentation(),
                let currentPresentationLayerValue = presentationLayer.path {
@@ -85,7 +85,8 @@ final class ChatBubbleBackgroundView: UIView {
             morph.timingFunction = CAMediaTimingFunction(name: CAMediaTimingFunctionName.easeInEaseOut)
                 
             // Set value that the path should have after the animation
-            // Use this instead of `.fillMode`and `isRemovedOnCompletion` because those will keep the animation "running"
+            // Use this instead of `.fillMode`and `isRemovedOnCompletion` because those will keep the animation
+            // "running"
             backgroundLayer.path = backgroundPath.cgPath
                 
             backgroundLayer.add(morph, forKey: nil)
@@ -140,7 +141,7 @@ final class ChatBubbleBackgroundView: UIView {
     // of our custom layers.
     override var backgroundColor: UIColor? {
         set {
-            guard let newValue = newValue else {
+            guard let newValue else {
                 return
             }
             

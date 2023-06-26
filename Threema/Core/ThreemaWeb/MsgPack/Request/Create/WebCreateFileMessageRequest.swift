@@ -269,7 +269,7 @@ public class WebCreateFileMessageRequest: WebAbstractMessage {
         ServerConnectorHelper.connectAndWaitUntilConnected(initiator: .threemaWeb, timeout: 10) {
             sender.send(item, in: conversation, requestID: self.requestID)
             completion()
-            if let conversation = conversation,
+            if let conversation,
                conversation.conversationVisibility == .archived {
                 conversation.conversationVisibility = .default
             }

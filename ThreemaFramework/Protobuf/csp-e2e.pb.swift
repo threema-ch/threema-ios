@@ -37,8 +37,10 @@ struct CspE2e_MessageMetadata {
   /// is at least 16 bytes. May be empty if the nickname is long enough.
   var padding: Data = Data()
 
-  /// The nickname associated to the sender's Threema ID. Recommended to not
-  /// exceed 32 grapheme clusters.
+  /// Optional nickname associated to the sender's Threema ID.
+  ///
+  /// Recommended to not exceed 32 grapheme clusters. Should not contain
+  /// whitespace characters at the beginning or the end of string.
   var nickname: String = String()
 
   /// Unique message ID. Must match the message ID of the outer struct
@@ -75,8 +77,8 @@ struct CspE2e_MessageMetadata {
 ///
 /// When receiving this message:
 ///
-/// 1. Run the [_Common Group Receive Steps_](ref:e2e#receiving). If the received
-///    message has been discarded, abort these steps.
+/// 1. Run the [_Common Group Receive Steps_](ref:e2e#receiving). If the message
+///    has been discarded, abort these steps.
 /// 2. If the hostname of `sfu_base_url` does not use the scheme `https` or does
 ///    not end with one of the set of _Allowed SFU Hostname Suffixes_, log a
 ///    warning, discard the message and abort these steps.
@@ -85,13 +87,14 @@ struct CspE2e_MessageMetadata {
 /// 4. If another call with the same GCK exists in `running`, log a warning,
 ///    discard the message and abort these steps.
 /// 5. Add the received call to the list of group calls that are currently
-///    considered running (even if `protocol_version` is unsupported; this is to
-///    allow the user to join an ongoing call after an app update where support
-///    for `protocol_version` has been added).
-/// 6. Run the _Group Call Refresh Steps_.[^1]
+///    considered running (even if `protocol_version` is unsupported¹).
+/// 6. Start a task to run the _Group Call Refresh Steps_.²
 ///
-/// [^1]: This ensures that the user automatically switches to the chosen call if
-/// it is currently participating in a group call of this group.
+/// ¹: Adding unsupported `protocol_version`s allows the user to join an ongoing
+///    call after an app update where support for `protocol_version` has been
+///    added.
+/// ²: This ensures that the user automatically switches to the chosen call if it
+///    is currently participating in a group call of this group.
 struct CspE2e_GroupCallStart {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
@@ -137,24 +140,24 @@ struct CspE2e_GroupCallStart {
 /// 2. If the group invitation could not be found, discard the message and abort
 ///    these steps.
 /// 3. If the sender is already part of the group, send an accept response and
-///    then respond as if the sender had sent a `group-sync-request` (i.e. send
-///    a `group-setup`, `group-name`, etc.). Finally, abort these steps.
+///    then respond as if the sender had sent a `group-sync-request` (i.e. send a
+///    `group-setup`, `group-name`, etc.). Finally, abort these steps.
 /// 4. If the group name does not match the name in the originally sent group
 ///    invitation, discard the message and abort these steps.
 /// 5. If the group invitation has expired, send the respective response and
 ///    abort these steps.
 /// 6. If the group invitation requires the admin to accept the request, show
 ///    this information in the user interface and pause these steps until the
-///    admin manually confirmed of rejected the request. Note that the date of
-///    the decision is allowed to extend beyond the expiration date of the
-///    group invitation. Continue with the following sub-steps once the admin
-///    made a decision on the request:
-///     1. If the admin manually rejected the request, send the respective
+///    user manually confirmed of rejected the request. Note that the date of the
+///    decision is allowed to extend beyond the expiration date of the group
+///    invitation. Continue with the following sub-steps once the user made a
+///    decision on the request:
+///     1. If the user manually rejected the request, send the respective
 ///        response and abort these steps.
 /// 7. If the group is full, send the respective response and abort these steps.
 /// 8. Send an accept response.
-/// 9. Add the sender of the group invitation request to the group and follow
-///    the group protocol from there.
+/// 9. Add the sender of the group invitation request to the group and follow the
+///    group protocol from there.
 struct CspE2e_GroupJoinRequest {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
@@ -312,8 +315,9 @@ struct CspE2e_GroupJoinResponse {
       // methods supported on all messages.
 
       /// Group ID (little-endian) as chosen by the group creator
-      /// Note: Combined with the Threema ID of the administrator, this forms
-      ///       the `GroupIdentity`.
+      ///
+      /// Note: Combined with the Threema ID of the administrator, this forms the
+      /// `GroupIdentity`.
       var groupID: UInt64 = 0
 
       var unknownFields = SwiftProtobuf.UnknownStorage()

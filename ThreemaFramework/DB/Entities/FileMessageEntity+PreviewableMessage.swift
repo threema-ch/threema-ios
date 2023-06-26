@@ -57,7 +57,7 @@ extension FileMessageEntity: PreviewableMessage {
     
     public var mediaPreview: (thumbnail: UIImage, isPlayable: Bool)? {
         
-        guard let thumbnailImage = thumbnailImage else {
+        guard let thumbnailImage else {
             return nil
         }
         

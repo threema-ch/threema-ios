@@ -62,7 +62,7 @@ public class BlobMessageSender {
             }
         }
         
-        guard let fileMessage = fileMessage else {
+        guard let fileMessage else {
             DDLogError("[BlobMessageSender]: Unable to load message as FileMessage for object ID: \(objectID)")
             throw BlobManagerError.sendingFailed
         }
@@ -88,7 +88,8 @@ public class BlobMessageSender {
     // MARK: - Private Functions
 
     private func isMessageReadyToSend(with objectID: NSManagedObjectID) -> Bool {
-        // Due to the business injector entity manager having outdated info about the object belonging to the ID passed in here, we create a new one.
+        // Due to the business injector entity manager having outdated info about the object belonging to the ID passed
+        // in here, we create a new one.
         let entityManager = EntityManager(withChildContextForBackgroundProcess: true)
         var isReady = false
         
@@ -97,21 +98,21 @@ public class BlobMessageSender {
                 return
             }
             
-            guard fileMessage.blobGetID() != nil,
-                  fileMessage.blobGetProgress() == nil else {
+            guard fileMessage.blobIdentifier != nil,
+                  fileMessage.blobProgress == nil else {
                 return
             }
             
-            if fileMessage.blobGetThumbnail() != nil,
-               fileMessage.blobGetThumbnailID() == nil {
+            if fileMessage.blobThumbnail != nil,
+               fileMessage.blobThumbnailIdentifier == nil {
                 return
             }
             
             // If we have a a blobID, and possibly a thumbnail and its ID, this means that the upload has succeeded
             // and just the sending of the message must have failed, so we reset the error and mark it as ready
-            if fileMessage.blobGetError() == true {
+            if fileMessage.blobError {
                 entityManager.performSyncBlockAndSafe {
-                    fileMessage.blobSetError(false)
+                    fileMessage.blobError = false
                 }
             }
             

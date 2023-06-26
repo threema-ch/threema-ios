@@ -19,7 +19,6 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import "GroupMessageProcessor.h"
-#import "MessageSender.h"
 #import "GroupCreateMessage.h"
 #import "GroupLeaveMessage.h"
 #import "GroupRequestSyncMessage.h"

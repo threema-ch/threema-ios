@@ -27,22 +27,68 @@ import ThreemaFramework
 import WebRTC
 
 protocol VoIPCallPeerConnectionClientDelegate: AnyObject {
-    func peerConnectionClient(_ client: VoIPCallPeerConnectionClient, changeState: VoIPCallService.CallState)
-    func peerConnectionClient(_ client: VoIPCallPeerConnectionClient, audioMuted: Bool)
-    func peerConnectionClient(_ client: VoIPCallPeerConnectionClient, speakerActive: Bool)
-    func peerConnectionClient(_ client: VoIPCallPeerConnectionClient, removedCandidates: [RTCIceCandidate])
-    func peerConnectionClient(_ client: VoIPCallPeerConnectionClient, addedCandidate: RTCIceCandidate)
+    func peerConnectionClient(_ client: VoIPCallPeerConnectionClientProtocol, changeState: VoIPCallService.CallState)
+    func peerConnectionClient(_ client: VoIPCallPeerConnectionClientProtocol, audioMuted: Bool)
+    func peerConnectionClient(_ client: VoIPCallPeerConnectionClientProtocol, speakerActive: Bool)
+    func peerConnectionClient(_ client: VoIPCallPeerConnectionClientProtocol, removedCandidates: [RTCIceCandidate])
+    func peerConnectionClient(_ client: VoIPCallPeerConnectionClientProtocol, addedCandidate: RTCIceCandidate)
     func peerConnectionClient(
-        _ client: VoIPCallPeerConnectionClient,
+        _ client: VoIPCallPeerConnectionClientProtocol,
         didChangeConnectionState state: RTCPeerConnectionState
     )
-    func peerConnectionClient(_ client: VoIPCallPeerConnectionClient, receivingVideo: Bool)
-    func peerConnectionClient(_ client: VoIPCallPeerConnectionClient, didReceiveData: Data)
-    func peerConnectionClient(_ client: VoIPCallPeerConnectionClient, shouldShowCellularCallWarning: Bool)
-    func peerconnectionClient(_ client: VoIPCallPeerConnectionClient, startTransportExpectedStableTimer: Bool)
+    func peerConnectionClient(_ client: VoIPCallPeerConnectionClientProtocol, receivingVideo: Bool)
+    func peerConnectionClient(_ client: VoIPCallPeerConnectionClientProtocol, didReceiveData: Data)
+    func peerConnectionClient(_ client: VoIPCallPeerConnectionClientProtocol, shouldShowCellularCallWarning: Bool)
+    func peerconnectionClient(_ client: VoIPCallPeerConnectionClientProtocol, startTransportExpectedStableTimer: Bool)
 }
 
-final class VoIPCallPeerConnectionClient: NSObject {
+protocol VoIPCallPeerConnectionClientProtocol {
+    var delegate: VoIPCallPeerConnectionClientDelegate? { get set }
+    var peerConnection: RTCPeerConnection? { get }
+    var remoteVideoQualityProfile: CallsignalingProtocol.ThreemaVideoCallQualityProfile? { get set }
+    var isRemoteVideoActivated: Bool { get set }
+    var networkIsRelayed: Bool { get }
+
+    func initialize(
+        contactIdentity: String,
+        callID: VoIPCallID?,
+        peerConnectionParameters: PeerConnectionParameters,
+        delegate: VoIPCallPeerConnectionClientDelegate,
+        completion: @escaping (Error?) -> Void
+    )
+    func close()
+
+    func muteAudio(completion: @escaping () -> Void)
+    func unmuteAudio(completion: @escaping () -> Void)
+    func activateRTCAudio(speakerActive: Bool)
+    func speakerOff()
+    func speakerOn()
+
+    func startCaptureLocalVideo(renderer: RTCVideoRenderer, useBackCamera: Bool, switchCamera: Bool)
+    func endCaptureLocalVideo(renderer: RTCVideoRenderer, switchCamera: Bool)
+    func renderRemoteVideo(to renderer: RTCVideoRenderer)
+    func endRemoteVideo(renderer: RTCVideoRenderer)
+    func stopVideoCall()
+
+    func offer(completion: @escaping (_ sdp: RTCSessionDescription?, _ error: VoIPCallSdpPatcher.SdpError?) -> Void)
+    func answer(completion: @escaping (_ sdp: RTCSessionDescription) -> Void)
+    func set(remoteSdp: RTCSessionDescription, completion: @escaping (Error?) -> Void)
+    func set(addRemoteCandidate: RTCIceCandidate)
+
+    func logDebugEndStats(completion: @escaping () -> Void)
+}
+
+struct PeerConnectionParameters {
+    public var isVideoCallAvailable = true
+    public var videoCodecHwAcceleration = true
+    public var forceTurn = false
+    public var gatherContinually = false
+    public var allowIpv6 = true
+
+    internal var isDataChannelAvailable = false
+}
+
+final class VoIPCallPeerConnectionClient: NSObject, VoIPCallPeerConnectionClientProtocol {
     
     // The `RTCPeerConnectionFactory` is in charge of creating new RTCPeerConnection instances.
     // A new RTCPeerConnection should be created every new call, but the factory is shared.
@@ -56,8 +102,7 @@ final class VoIPCallPeerConnectionClient: NSObject {
     }()
         
     weak var delegate: VoIPCallPeerConnectionClientDelegate?
-    let peerConnection: RTCPeerConnection
-    
+
     var remoteVideoQualityProfile: CallsignalingProtocol.ThreemaVideoCallQualityProfile? {
         didSet {
             let newProfile = CallsignalingProtocol.findCommonProfile(
@@ -79,8 +124,9 @@ final class VoIPCallPeerConnectionClient: NSObject {
         }
     }
     
-    private var peerConnectionParameters: PeerConnectionParameters
-    
+    var peerConnection: RTCPeerConnection?
+    private var peerConnectionParameters: PeerConnectionParameters?
+
     private let rtcAudioSession = RTCAudioSession.sharedInstance()
     private let audioQueue = DispatchQueue(label: "VoIPCallAudioQueue")
     
@@ -122,88 +168,18 @@ final class VoIPCallPeerConnectionClient: NSObject {
     private var videoCallQualityObserver: NSObjectProtocol?
     
     private let webrtcLogger = RTCCallbackLogger()
-    
-    public struct PeerConnectionParameters {
-        public var isVideoCallAvailable = true
-        public var videoCodecHwAcceleration = true
-        public var forceTurn = false
-        public var gatherContinually = false
-        public var allowIpv6 = true
-        
-        internal var isDataChannelAvailable = false
+
+    enum VoIPCallPeerConnectionClientError: Error {
+        case peerConnectionIsNotInitialized
     }
     
-    static func instantiate(
-        contactIdentity: String,
-        callID: VoIPCallID?,
-        peerConnectionParameters: PeerConnectionParameters,
-        completion: @escaping (Swift.Result<VoIPCallPeerConnectionClient, Error>) -> Void
-    ) {
-        VoIPCallPeerConnectionClient
-            .defaultRTCConfiguration(peerConnectionParameters: peerConnectionParameters) { result in
-                do {
-                    let client = VoIPCallPeerConnectionClient(
-                        contactIdentity: contactIdentity,
-                        callID: callID,
-                        peerConnectionParameters: peerConnectionParameters,
-                        config: try result.get()
-                    )
-                    completion(.success(client))
-                }
-                catch let e {
-                    completion(.failure(e))
-                }
-            }
-    }
-    
-    /// Init new peer connection with a contact
-    /// - parameter contact: Call contact
-    required init(
-        contactIdentity: String,
-        callID: VoIPCallID?,
-        peerConnectionParameters: PeerConnectionParameters,
-        config: RTCConfiguration
-    ) {
+    override init() {
         webrtcLogger.severity = .warning
         webrtcLogger.start { message in
             let trimmed = message.trimmingCharacters(in: .newlines)
             DDLogNotice("libwebrtc: \(trimmed)")
         }
-        self.peerConnectionParameters = peerConnectionParameters
-        let constraints = VoIPCallPeerConnectionClient.defaultPeerConnectionConstraints()
-        self.peerConnection = VoIPCallPeerConnectionClient.factory.peerConnection(
-            with: config,
-            constraints: constraints,
-            delegate: nil
-        )!
-        self.contactIdentity = contactIdentity
-        self.callID = callID
         super.init()
-        createMediaSenders()
-        configureAudioSession()
-        peerConnection.delegate = self
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(networkStatusDidChange),
-            name: NSNotification.Name.reachabilityChanged,
-            object: nil
-        )
-        self.videoCallQualityObserver = NotificationCenter.default.addObserver(
-            forName: Notification.Name(kThreemaVideoCallsQualitySettingChanged),
-            object: nil,
-            queue: nil
-        ) { [weak self] _ in
-            guard let self = self else {
-                return
-            }
-            self.setQualityProfileForVideoSource()
-        }
-        if let protobufMessage = CallsignalingProtocol
-            .encodeVideoQuality(CallsignalingProtocol.localPeerQualityProfile().profile!) {
-            sendDataToRemote(protobufMessage)
-        }
-        internetReachability.startNotifier()
-        self.lastInternetStatus = internetReachability.currentReachabilityStatus()
     }
     
     deinit {
@@ -214,6 +190,69 @@ final class VoIPCallPeerConnectionClient: NSObject {
             NotificationCenter.default.removeObserver(observer)
         }
         webrtcLogger.stop()
+    }
+
+    /// Init new peer connection with a contact
+    /// - parameter contact: Call contact
+    func initialize(
+        contactIdentity: String,
+        callID: VoIPCallID?,
+        peerConnectionParameters: PeerConnectionParameters,
+        delegate: VoIPCallPeerConnectionClientDelegate,
+        completion: @escaping (Error?) -> Void
+    ) {
+        self.peerConnectionParameters = peerConnectionParameters
+        self.delegate = delegate
+
+        VoIPCallPeerConnectionClient
+            .defaultRTCConfiguration(peerConnectionParameters: peerConnectionParameters) { result in
+                do {
+                    let constraints = VoIPCallPeerConnectionClient.defaultPeerConnectionConstraints()
+                    self.peerConnection = try VoIPCallPeerConnectionClient.factory.peerConnection(
+                        with: result.get(),
+                        constraints: constraints,
+                        delegate: nil
+                    )!
+                    self.contactIdentity = contactIdentity
+                    self.callID = callID
+
+                    self.createMediaSenders()
+                    self.configureAudioSession()
+                    self.peerConnection?.delegate = self
+                    NotificationCenter.default.addObserver(
+                        self,
+                        selector: #selector(self.networkStatusDidChange),
+                        name: NSNotification.Name.reachabilityChanged,
+                        object: nil
+                    )
+                    self.videoCallQualityObserver = NotificationCenter.default.addObserver(
+                        forName: Notification.Name(kThreemaVideoCallsQualitySettingChanged),
+                        object: nil,
+                        queue: nil
+                    ) { [weak self] _ in
+                        guard let self else {
+                            return
+                        }
+                        self.setQualityProfileForVideoSource()
+                    }
+                    if let protobufMessage = CallsignalingProtocol
+                        .encodeVideoQuality(CallsignalingProtocol.localPeerQualityProfile().profile!) {
+                        self.sendDataToRemote(protobufMessage)
+                    }
+                    self.internetReachability.startNotifier()
+                    self.lastInternetStatus = self.internetReachability.currentReachabilityStatus()
+
+                    completion(nil)
+                }
+                catch {
+                    completion(error)
+                }
+            }
+    }
+
+    func close() {
+        peerConnection?.close()
+        peerConnection = nil
     }
 }
 
@@ -243,7 +282,7 @@ extension VoIPCallPeerConnectionClient {
     /// Activate RTC audio
     func activateRTCAudio(speakerActive: Bool) {
         audioQueue.async { [weak self] in
-            guard let self = self else {
+            guard let self else {
                 return
             }
             self.rtcAudioSession.lockForConfiguration()
@@ -268,7 +307,7 @@ extension VoIPCallPeerConnectionClient {
     /// Disable the speaker for the rtc session
     func speakerOff() {
         audioQueue.async { [weak self] in
-            guard let self = self else {
+            guard let self else {
                 return
             }
                         
@@ -294,7 +333,7 @@ extension VoIPCallPeerConnectionClient {
     /// Enable the speaker for the rtc session
     func speakerOn() {
         audioQueue.async { [weak self] in
-            guard let self = self else {
+            guard let self else {
                 return
             }
             
@@ -319,6 +358,11 @@ extension VoIPCallPeerConnectionClient {
     
     /// Set the audio track for the peer connection
     private func setAudioEnabled(_ isEnabled: Bool) {
+        guard let peerConnection else {
+            assertionFailure("\(VoIPCallPeerConnectionClientError.peerConnectionIsNotInitialized)")
+            DDLogWarn("\(VoIPCallPeerConnectionClientError.peerConnectionIsNotInitialized)")
+            return
+        }
         
         let audioTracks = peerConnection.transceivers.compactMap { $0.sender.track as? RTCAudioTrack }
         audioTracks.forEach { $0.isEnabled = isEnabled }
@@ -505,6 +549,12 @@ extension VoIPCallPeerConnectionClient {
     
     /// Create an audio and video track and add it as local stream to the peer connection
     private func createMediaSenders() {
+        guard let peerConnection, let peerConnectionParameters else {
+            assertionFailure("\(VoIPCallPeerConnectionClientError.peerConnectionIsNotInitialized)")
+            DDLogWarn("\(VoIPCallPeerConnectionClientError.peerConnectionIsNotInitialized)")
+            return
+        }
+
         let streamID = "3MACALL"
         
         // Audio
@@ -548,6 +598,12 @@ extension VoIPCallPeerConnectionClient {
     
     /// Create a data channel and add it to the peer connection
     private func createDataChannel() -> RTCDataChannel? {
+        guard let peerConnection else {
+            assertionFailure("\(VoIPCallPeerConnectionClientError.peerConnectionIsNotInitialized)")
+            DDLogWarn("\(VoIPCallPeerConnectionClientError.peerConnectionIsNotInitialized)")
+            return nil
+        }
+
         let config = RTCDataChannelConfiguration()
         config.channelId = 0
         config.isNegotiated = true
@@ -646,6 +702,12 @@ extension VoIPCallPeerConnectionClient {
     }
 
     private func sendDataToRemote(_ data: Data) {
+        guard let peerConnectionParameters else {
+            assertionFailure("\(VoIPCallPeerConnectionClientError.peerConnectionIsNotInitialized)")
+            DDLogWarn("\(VoIPCallPeerConnectionClientError.peerConnectionIsNotInitialized)")
+            return
+        }
+
         if peerConnectionParameters.isDataChannelAvailable {
             sendCachedDataChannelDataToRemote()
             let buffer = RTCDataBuffer(data: data, isBinary: true)
@@ -693,10 +755,16 @@ extension VoIPCallPeerConnectionClient {
     // MARK: Signaling
 
     func offer(completion: @escaping (_ sdp: RTCSessionDescription?, _ error: VoIPCallSdpPatcher.SdpError?) -> Void) {
+        guard let peerConnection, let peerConnectionParameters else {
+            assertionFailure("\(VoIPCallPeerConnectionClientError.peerConnectionIsNotInitialized)")
+            DDLogWarn("\(VoIPCallPeerConnectionClientError.peerConnectionIsNotInitialized)")
+            return
+        }
+
         let constrains = VoIPCallPeerConnectionClient
             .mediaConstrains(isVideoCallAvailable: peerConnectionParameters.isVideoCallAvailable)
         peerConnection.offer(for: constrains) { sdp, _ in
-            guard let sdp = sdp else {
+            guard let sdp else {
                 return
             }
             
@@ -709,7 +777,7 @@ extension VoIPCallPeerConnectionClient {
                     let patchedSdpString = try VoIPCallSdpPatcher(extensionConfig)
                         .patch(type: .LOCAL_OFFER, sdp: sdp.sdp)
                     let patchedSdp = RTCSessionDescription(type: sdp.type, sdp: patchedSdpString)
-                    self.peerConnection.setLocalDescription(patchedSdp, completionHandler: { _ in
+                    peerConnection.setLocalDescription(patchedSdp, completionHandler: { _ in
                         completion(patchedSdp, nil)
                     })
                 }
@@ -721,25 +789,43 @@ extension VoIPCallPeerConnectionClient {
     }
     
     func answer(completion: @escaping (_ sdp: RTCSessionDescription) -> Void) {
+        guard let peerConnection, let peerConnectionParameters else {
+            assertionFailure("\(VoIPCallPeerConnectionClientError.peerConnectionIsNotInitialized)")
+            DDLogWarn("\(VoIPCallPeerConnectionClientError.peerConnectionIsNotInitialized)")
+            return
+        }
+
         let constrains = VoIPCallPeerConnectionClient
             .mediaConstrains(isVideoCallAvailable: peerConnectionParameters.isVideoCallAvailable)
         peerConnection.answer(for: constrains) { sdp, _ in
-            guard let sdp = sdp else {
+            guard let sdp else {
                 return
             }
             
-            self.peerConnection.setLocalDescription(sdp, completionHandler: { _ in
+            peerConnection.setLocalDescription(sdp, completionHandler: { _ in
                 completion(sdp)
             })
         }
     }
     
     func set(remoteSdp: RTCSessionDescription, completion: @escaping (Error?) -> Void) {
+        guard let peerConnection else {
+            assertionFailure("\(VoIPCallPeerConnectionClientError.peerConnectionIsNotInitialized)")
+            DDLogWarn("\(VoIPCallPeerConnectionClientError.peerConnectionIsNotInitialized)")
+            return
+        }
+
         delegate?.peerconnectionClient(self, startTransportExpectedStableTimer: true)
         peerConnection.setRemoteDescription(remoteSdp, completionHandler: completion)
     }
     
     func set(addRemoteCandidate: RTCIceCandidate) {
+        guard let peerConnection else {
+            assertionFailure("\(VoIPCallPeerConnectionClientError.peerConnectionIsNotInitialized)")
+            DDLogWarn("\(VoIPCallPeerConnectionClientError.peerConnectionIsNotInitialized)")
+            return
+        }
+
         peerConnection.add(addRemoteCandidate) { error in
             if error != nil {
                 DDLogNotice(
@@ -751,6 +837,12 @@ extension VoIPCallPeerConnectionClient {
     }
     
     func set(removeRemoteCandidates: [RTCIceCandidate]) {
+        guard let peerConnection else {
+            assertionFailure("\(VoIPCallPeerConnectionClientError.peerConnectionIsNotInitialized)")
+            DDLogWarn("\(VoIPCallPeerConnectionClientError.peerConnectionIsNotInitialized)")
+            return
+        }
+
         peerConnection.remove(removeRemoteCandidates)
     }
 }
@@ -779,6 +871,11 @@ extension VoIPCallPeerConnectionClient: RTCPeerConnectionDelegate {
     }
     
     func peerConnection(_ peerConnection: RTCPeerConnection, didChange newState: RTCPeerConnectionState) {
+        guard let peerConnectionParameters else {
+            assertionFailure("Peer connection is not initialized")
+            return
+        }
+
         DDLogNotice(
             "VoipCallService: [cid=\(callID?.callID ?? 0)]: Peer connection state change to \(newState.debugDescription)"
         )
@@ -857,7 +954,13 @@ extension VoIPCallPeerConnectionClient: RTCDataChannelDelegate {
     // MARK: RTCDataChannelDelegate
 
     func dataChannelDidChangeState(_ dataChannel: RTCDataChannel) {
-        peerConnectionParameters.isDataChannelAvailable = dataChannel.readyState == .open
+        guard peerConnectionParameters != nil else {
+            assertionFailure("\(VoIPCallPeerConnectionClientError.peerConnectionIsNotInitialized)")
+            DDLogWarn("\(VoIPCallPeerConnectionClientError.peerConnectionIsNotInitialized)")
+            return
+        }
+
+        peerConnectionParameters?.isDataChannelAvailable = dataChannel.readyState == .open
         sendCachedDataChannelDataToRemote()
     }
     
@@ -870,6 +973,12 @@ extension VoIPCallPeerConnectionClient {
     // MARK: VoIP Stats
     
     func schedulePeriodStats(options: VoIPStatsOptions, period: TimeInterval) {
+        guard let peerConnection else {
+            assertionFailure("\(VoIPCallPeerConnectionClientError.peerConnectionIsNotInitialized)")
+            DDLogWarn("\(VoIPCallPeerConnectionClientError.peerConnectionIsNotInitialized)")
+            return
+        }
+
         // check on main thread for statsTimer
         DispatchQueue.main.async {
             if self.statsTimer != nil {
@@ -941,6 +1050,11 @@ extension VoIPCallPeerConnectionClient {
     }
     
     func logDebugStats(dict: [AnyHashable: Any]) {
+        guard let peerConnectionParameters else {
+            assertionFailure("Peer connection is not initialized")
+            return
+        }
+
         let connection = dict["connection"] as! RTCPeerConnection
         let options = dict["options"] as! VoIPStatsOptions
                 
@@ -960,7 +1074,7 @@ extension VoIPCallPeerConnectionClient {
             DDLogNotice("VoipCallService: [cid=\(self.callID?.callID ?? 0)]: Stats: \n \(statsString)")
             
             // this is only needed if video calls are not available
-            if !self.peerConnectionParameters.isVideoCallAvailable {
+            if !peerConnectionParameters.isVideoCallAvailable {
                 self.checkIsSelectedCandidatePairCellular(stats: stats)
             }
 

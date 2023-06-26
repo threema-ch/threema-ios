@@ -28,6 +28,8 @@ extension Publisher {
     }
 }
 
+// MARK: - Publishers.SnapshotDebouncer
+
 extension Publishers {
     struct SnapshotDebouncer<Upstream: Publisher, Context: Scheduler>: Publisher
         where Upstream.Output == ChatViewSnapshotProvider.SnapshotInfo {
@@ -53,6 +55,8 @@ extension Publishers {
         }
     }
 }
+
+// MARK: - Publishers.SnapshotDebouncer.SnapshotDebounceSub
 
 extension Publishers.SnapshotDebouncer {
     private final class SnapshotDebounceSub<S>: Subscription,
@@ -121,7 +125,8 @@ extension Publishers.SnapshotDebouncer {
             guard state.isRelaying else {
                 return .none
             }
-            // If one of the snapshots doesn't have any animations at all, we assume that taking the animation from the other will look good
+            // If one of the snapshots doesn't have any animations at all, we assume that taking the animation from the
+            // other will look good
             if let newest = inputs.last,
                (newest.rowAnimation == input.rowAnimation) || newest.rowAnimation == .none || input
                .rowAnimation == .none {
@@ -144,7 +149,7 @@ extension Publishers.SnapshotDebouncer {
         
         private func sendValuesIfDemanded() {
             scheduler.schedule { [self] in
-                DDLogVerbose("CombineSnapshot \(#function) demand \(self.demand)")
+                DDLogVerbose("CombineSnapshot \(#function) demand \(demand)")
                 
                 lock.lock()
                 guard state.isRelaying else {

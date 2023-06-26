@@ -42,7 +42,8 @@ class UserNotificationCenterManager: UserNotificationCenterManagerProtocol {
     ///
     /// - Parameters:
     ///    - key: Key of notification
-    ///    - stage: Stage of incoming message, if not equals 'final' set trigger date (30s) to fire (show) notification otherwise fire notification right now
+    ///    - stage: Stage of incoming message, if not equals 'final' set trigger date (30s) to fire (show) notification
+    ///             otherwise fire notification right now
     ///    - notification: Notification for adding/replacing
     /// - Returns: Date when notification will be showed
     func add(
@@ -66,11 +67,12 @@ class UserNotificationCenterManager: UserNotificationCenterManagerProtocol {
             )
             
             UNUserNotificationCenter.current().add(notificationRequest) { error in
-                if let error = error {
+                if let error {
                     if let error = error as? UNError, error.code == .attachmentInvalidURL {
                         // As of iOS 16.4 there is an issue where we can't always add notifications with attachments.
                         // In that case we just remove the attachment and post the notification without it.
-                        // This is not great but still gives us quicker notifications (rather than waiting for the 30s timeout)
+                        // This is not great but still gives us quicker notifications (rather than waiting for the 30s
+                        // timeout)
                         // and keeps rich communication notifications donations.
                         guard !notification.attachments.isEmpty else {
                             seal.reject(

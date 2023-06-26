@@ -140,14 +140,6 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     return [self isKind:UTTypeArchive.identifier mimeType:mimeType];
 }
 
-+ (BOOL)isPublicContentMimeType:(NSString *)mimeType {
-    return [self isKind:UTTypeContent.identifier mimeType:mimeType];
-}
-
-+ (BOOL)isPublicCompositeContentMimeType:(NSString *)mimeType {
-    return [self isKind:UTTypeCompositeContent.identifier mimeType:mimeType];
-}
-
 + (BOOL)isWordMimeType:(NSString *)mimeType {
     if ([mimeType hasPrefix:@"application/vnd.openxmlformats-officedocument.wordprocessingml"]) {
         return YES;
@@ -252,11 +244,6 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     
     // fallback
     return [BundleUtil imageNamed:@"ThumbFile"];
-}
-
-+ (NSString *)localizedDescriptionForMimeType:(NSString *)mimeType {
-    UTType* utType = [UTType typeWithTag:mimeType tagClass:UTTagClassMIMEType conformingToType:nil];
-    return  utType.localizedDescription;
 }
 
 @end

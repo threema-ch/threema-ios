@@ -462,7 +462,7 @@ extension EntityDestroyerTests {
             XCTAssert(!ultimatelyDeletedMessageIDs.contains(message.id))
         }
         
-        if var varExistingMessageIDs = varExistingMessageIDs {
+        if var varExistingMessageIDs {
             for message in allMessages {
                 XCTAssertNotNil(varExistingMessageIDs.remove(message.id))
             }

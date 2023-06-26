@@ -21,6 +21,8 @@
 import CocoaLumberjackSwift
 import UIKit
 
+// MARK: - DetailsHeaderProfileView.Configuration
+
 extension DetailsHeaderProfileView {
     struct Configuration: DetailsConfiguration {
         /// Show debug background colors
@@ -300,7 +302,7 @@ final class DetailsHeaderProfileView: UIStackView {
     
     private func updateContent() {
         contentConfiguration.avatarImageProvider { avatarImage in
-            if let avatarImage = avatarImage {
+            if let avatarImage {
                 self.avatarImageView.image = avatarImage
             }
             else {

@@ -23,7 +23,7 @@ import Foundation
 import SDWebImage
 import UIKit
 
-@objc public class BrandingUtils: NSObject {
+public class BrandingUtils: NSObject {
     
     // Constants
     @objc public static let compactNavBarHeight: CGFloat = 44
@@ -37,8 +37,8 @@ import UIKit
 
     @objc public static func updateTitleLogo(of navItem: UINavigationItem?, in navController: UINavigationController?) {
         
-        guard let navItem = navItem,
-              let navController = navController else {
+        guard let navItem,
+              let navController else {
             return
         }
         
@@ -53,7 +53,7 @@ import UIKit
             
             // Load Image and assign it
             helperImageView.sd_setImage(with: logoURL) { image, error, _, _ in
-                if let error = error {
+                if let error {
                     DDLogError("Loading logo failed: \(error)")
                     return
                 }
@@ -74,7 +74,7 @@ import UIKit
         defaultLogo: Bool
     ) {
         
-        guard let logo = logo else {
+        guard let logo else {
             return
         }
     

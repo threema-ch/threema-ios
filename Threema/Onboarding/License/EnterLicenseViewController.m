@@ -296,6 +296,10 @@
 
 - (void)confirmLicenseCheck {
     dispatch_async(dispatch_get_main_queue(), ^{
+        // While we was not conneted to the server, in background the notification extension could be started
+        [AppGroup setActive:NO forType:AppGroupTypeNotificationExtension];
+        [AppGroup setActive:NO forType:AppGroupTypeShareExtension];
+        
         [self showSuccessMessage:[BundleUtil localizedStringForKey:@"ok"]];
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1000 * NSEC_PER_MSEC)), dispatch_get_main_queue(), ^{
             [_delegate licenseConfirmed];

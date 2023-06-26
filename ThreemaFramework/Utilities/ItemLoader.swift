@@ -166,7 +166,8 @@ import PromiseKit
     
     /// Adds the strings or urls from reversed results
     /// - Parameter results: An array of containing String and/or URL
-    /// - Returns: The strings and/or URls in a single String and the start position of the second item; or -1 if there is no second item
+    /// - Returns: The strings and/or URls in a single String and the start position of the second item; or -1 if there
+    ///            is no second item
     public func markTextContent(_ results: [Any]) -> (text: String, startPosition: Int) {
         var text = ""
         var startPosition = -1
@@ -239,7 +240,7 @@ import PromiseKit
                     .hasItemConformingToTypeIdentifier(kUTTypeContent as String)
                 if (isFileItem && isContent) || forceLoadFileURLItem {
                     intermediateItem.itemProvider.loadFileRepresentation(forTypeIdentifier: type) { item, error in
-                        if let error = error {
+                        if let error {
                             seal.reject(error)
                         }
                         if let urlItem = item, urlItem.scheme == "file" {
@@ -257,7 +258,7 @@ import PromiseKit
     
     private func loadDataRepresentation(_ intermediateItem: IntermediateItem, type: String, seal: Resolver<Any>) {
         intermediateItem.itemProvider.loadDataRepresentation(forTypeIdentifier: type) { item, error in
-            if let error = error {
+            if let error {
                 seal.reject(error)
             }
             if let dataItem = item {
@@ -278,7 +279,7 @@ import PromiseKit
             forTypeIdentifier: type,
             options: nil,
             completionHandler: { item, error in
-                if let error = error {
+                if let error {
                     seal.reject(error)
                 }
                 if let urlItem = item as? URL, urlItem.scheme == "file" {
@@ -290,7 +291,7 @@ import PromiseKit
                 if UTIConverter.type(type, conformsTo: kUTTypeImage as String), let imageItem = item as? UIImage {
                     self.loadImageItem(imageItem: imageItem, seal: seal)
                 }
-                if let item = item {
+                if let item {
                     seal.fulfill(item)
                 }
                 else {

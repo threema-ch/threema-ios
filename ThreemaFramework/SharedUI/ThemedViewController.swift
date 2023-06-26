@@ -94,7 +94,8 @@ open class ThemedViewController: UIViewController {
         
         // Update navigation controllers view controllers view when height changes
         /// Fixes incorrect content offset after the navigation bar updates its height
-        /// We only noticed this in chat view controller but other views in general should suffer from similar issues. Thus we don't check specifically for chat view controller.
+        /// We only noticed this in chat view controller but other views in general should suffer from similar issues.
+        /// Thus we don't check specifically for chat view controller.
         navigationController?.viewControllers.forEach { $0.view.setNeedsLayout() }
     }
 }

@@ -42,14 +42,13 @@ import PromiseKit
         userSettings: UserSettingsProtocol,
         entityManager: EntityManager
     ) {
-        
         self.blobDownloader = blobDownloader
         self.serverConnector = serverConnector
         self.myIdentityStore = myIdentityStore
         self.userSettings = userSettings
         self.entityManager = entityManager
     }
-    
+
     @objc func downloadImage(
         imageMessageID: Data,
         in conversationManagedObjectID: NSManagedObjectID,
@@ -115,7 +114,7 @@ import PromiseKit
     ) -> Promise<Void> {
         Promise { seal in
             blobDownloader.download(blobID: imageBlobID, origin: origin) { data, error in
-                if let error = error {
+                if let error {
                     seal.reject(
                         ImageMessageProcessorError
                             .downloadFailed(message: "Download image failed with error: \(error)")
@@ -123,7 +122,7 @@ import PromiseKit
                     return
                 }
                 
-                guard let data = data else {
+                guard let data else {
                     seal.reject(ImageMessageProcessorError.downloadFailed(message: "Download image missing"))
                     return
                 }
@@ -136,14 +135,14 @@ import PromiseKit
                         
                 // Decrypt blob
                 var imageData: Data?
-                if let imageBlobEncryptionKey = imageBlobEncryptionKey {
+                if let imageBlobEncryptionKey {
                     imageData = NaClCrypto.shared()!.symmetricDecryptData(
                         data,
                         withKey: imageBlobEncryptionKey,
                         nonce: ThreemaProtocol.nonce01
                     )
                 }
-                else if let imageBlobNonce = imageBlobNonce {
+                else if let imageBlobNonce {
                     imageData = self.myIdentityStore.decryptData(
                         data,
                         withNonce: imageBlobNonce,
@@ -151,10 +150,10 @@ import PromiseKit
                     )
                 }
                 
-                if let imageData = imageData {
+                if let imageData {
                     let image = UIImage(data: imageData)
                     var thumbnailImage: UIImage?
-                    if let image = image {
+                    if let image {
                         thumbnailImage = MediaConverter.getThumbnailFor(image)
                     }
                     
@@ -175,7 +174,7 @@ import PromiseKit
                             return
                         }
                         message = msg
-                        msg.blobSetData(imageData)
+                        msg.blobData = imageData
 
                         let thumbnail = self.entityManager.entityCreator.imageData()
                         thumbnail?.data = thumbnailData
@@ -188,19 +187,22 @@ import PromiseKit
                         
                         msg.thumbnail = thumbnail
 
-                        // Mark blob as done, if is group message and Multi Device is activated then always on `local` origin
-                        if !msg.isGroupMessage {
-                            MessageSender.markBlobAsDone(blobID: msg.imageBlobID, origin: msg.blobGetOrigin())
+                        // Mark blob as done, if is group message and Multi Device is activated then always on `local`
+                        // origin
+                        if !msg.isGroupMessage,
+                           let id = msg.imageBlobID {
+                            self.blobDownloader.markDownloadDone(for: id, origin: msg.blobOrigin)
                         }
-                        else if self.serverConnector.isMultiDeviceActivated {
-                            MessageSender.markBlobAsDone(blobID: msg.imageBlobID, origin: .local)
+                        else if let id = msg.imageBlobID,
+                                self.serverConnector.isMultiDeviceActivated {
+                            self.blobDownloader.markDownloadDone(for: id, origin: .local)
                         }
 
                         seal.fulfill_()
                     }
 
                     // Add to photo library
-                    if let image = image, self.userSettings.autoSaveMedia,
+                    if let image, self.userSettings.autoSaveMedia,
                        let message,
                        message.conversation.conversationCategory != .private {
                         AlbumManager.shared.save(image: image)

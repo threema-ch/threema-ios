@@ -22,7 +22,8 @@ import XCTest
 @testable import Threema
 
 /// Performance test for the formatting done in ChatTextView.
-/// The baseline average was done on MacBook Pro (16-inch, 2019) with an 2.6 GHz 6-Core Intel Core i7 and 16 GB 2667 MHz DDR4 memory. No other applications except Xcode and the simulator were run.
+/// The baseline average was done on MacBook Pro (16-inch, 2019) with an 2.6 GHz 6-Core Intel Core i7 and 16 GB 2667 MHz
+/// DDR4 memory. No other applications except Xcode and the simulator were run.
 class ChatTextViewPerformanceTest: XCTestCase {
     var mySema = DispatchSemaphore(value: 0)
     

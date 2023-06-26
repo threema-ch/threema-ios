@@ -60,7 +60,8 @@ public class UserNotificationManager: UserNotificationManagerProtocol {
     /// Get the best infos for user notification on the basis of the threema push, abstract or base (DB) message.
     ///
     /// - Parameter pendingUserNotification: Incoming processing message
-    /// - Returns User notification content or NULL if should no user notification should be shown or if the user notification is handled otherwise
+    /// - Returns: User notification content or NULL if should no user notification should be shown or if the user
+    ///            notification is handled otherwise
     public func userNotificationContent(_ pendingUserNotification: PendingUserNotification)
         -> UserNotificationContent? {
         
@@ -98,7 +99,8 @@ public class UserNotificationManager: UserNotificationManagerProtocol {
             return nil
         }
 
-        // If the notification is for a group, we check if it is for a group I did not leave. If so we don't show a notification.
+        // If the notification is for a group, we check if it is for a group I did not leave. If so we don't show a
+        // notification.
         if pendingUserNotification.isGroupMessage ?? false,
            let groupMessage = pendingUserNotification.abstractMessage as? AbstractGroupMessage {
             guard let group = groupManager.getGroup(groupMessage.groupID, creator: groupMessage.groupCreator),
@@ -185,7 +187,7 @@ public class UserNotificationManager: UserNotificationManagerProtocol {
                         image = (baseMessage as? ImageMessageEntity)?.image
                     }
                         
-                    if let image = image,
+                    if let image,
                        let attachment = saveAttachment(
                            image,
                            baseMessage.id.hexString,

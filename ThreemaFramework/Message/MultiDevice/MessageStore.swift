@@ -94,7 +94,7 @@ class MessageStore: MessageStoreProtocol {
                     }
 
                     if !isOutgoing {
-                        if let msg = msg {
+                        if let msg {
                             self.messageProcessorDelegate.incomingMessageChanged(
                                 msg,
                                 fromIdentity: conversationIdentity
@@ -162,7 +162,7 @@ class MessageStore: MessageStoreProtocol {
             origin: .local
         )
         .then { (data: Data?) -> Promise<Void> in
-            guard let data = data else {
+            guard let data else {
                 throw MediatorReflectedProcessorError.downloadFailed(message: "Blob download failed, no data.")
             }
 
@@ -214,7 +214,8 @@ class MessageStore: MessageStoreProtocol {
                                 messageReadConversations.insert(msg.conversation)
                             }
 
-                            // If it is a read receipt of a reflected incoming message, then remove all notifications of this message
+                            // If it is a read receipt of a reflected incoming message, then remove all notifications of
+                            // this message
                             if isOutgoing {
                                 if let key = PendingUserNotificationKey.key(
                                     identity: deliveryReceiptMessage.toIdentity,
@@ -314,7 +315,7 @@ class MessageStore: MessageStoreProtocol {
                 }
             }
         }
-        if let internalError = internalError {
+        if let internalError {
             return Promise(error: internalError)
         }
 
@@ -407,7 +408,7 @@ class MessageStore: MessageStoreProtocol {
                     }
 
                     if !isOutgoing {
-                        if let msg = msg {
+                        if let msg {
                             self.messageProcessorDelegate.incomingMessageChanged(msg, fromIdentity: senderIdentity)
                         }
 
@@ -487,8 +488,8 @@ class MessageStore: MessageStoreProtocol {
                 senderPublicKey = sender.publicKey
                 messageID = msg.id
                 conversationObjectID = conversation.objectID
-                blobID = msg.blobGetID()
-                blobOrigin = msg.blobGetOrigin()
+                blobID = msg.blobIdentifier
+                blobOrigin = msg.blobOrigin
                 encryptionKey = msg.encryptionKey
                 nonce = msg.imageNonce
             }
@@ -619,12 +620,12 @@ class MessageStore: MessageStoreProtocol {
             msg.date = timestamp
             msg.isOwn = NSNumber(booleanLiteral: isOutgoing)
         }
-        if let err = err {
+        if let err {
             throw err
         }
 
         if !isOutgoing {
-            if let msg = msg {
+            if let msg {
                 messageProcessorDelegate.incomingMessageChanged(msg, fromIdentity: senderIdentity)
             }
 
@@ -641,7 +642,7 @@ class MessageStore: MessageStoreProtocol {
                     .messageDecodeFailed(message: groupBallotVoteMessage.loggingDescription)
             }
         }
-        if let err = err {
+        if let err {
             throw err
         }
 
@@ -651,7 +652,7 @@ class MessageStore: MessageStoreProtocol {
     func save(groupSetPhotoMessage amsg: GroupSetPhotoMessage) -> Promise<Void> {
         syncLoadBlob(blobID: amsg.blobID, encryptionKey: amsg.encryptionKey, origin: .public)
             .then { (data: Data?) -> Promise<Void> in
-                guard let data = data else {
+                guard let data else {
                     throw MediatorReflectedProcessorError.downloadFailed(message: "Blob download failed, no data.")
                 }
 
@@ -724,7 +725,7 @@ class MessageStore: MessageStoreProtocol {
                     }
                 }
 
-                if let err = err {
+                if let err {
                     throw err
                 }
             }
@@ -830,12 +831,13 @@ class MessageStore: MessageStoreProtocol {
 
                 conversationObjectID = conversation.objectID
                 messageID = msg.id
-                blobOrigin = msg.blobGetOrigin()
+                blobOrigin = msg.blobOrigin
             }
 
             self.messageProcessorDelegate.incomingMessageChanged(msg, fromIdentity: senderIdentity)
 
-            // A VideoMessage never has a local blob because all note group cabable devices send everything as FileMessage (-> localOrigin: false)
+            // A VideoMessage never has a local blob because all note group cabable devices send everything as
+            // FileMessage (-> localOrigin: false)
             // Download, decrypt and save blob of thumbnail
             let downloadQueue = DispatchQueue.global(qos: .default)
             let videoProcessor = VideoMessageProcessor(
@@ -942,7 +944,7 @@ class MessageStore: MessageStoreProtocol {
             msg.date = timestamp
             msg.isOwn = NSNumber(booleanLiteral: isOutgoing)
         }
-        if let err = err {
+        if let err {
             throw err
         }
 
@@ -961,7 +963,7 @@ class MessageStore: MessageStoreProtocol {
                     .messageDecodeFailed(message: ballotVoteMessage.loggingDescription)
             }
         }
-        if let err = err {
+        if let err {
             throw err
         }
 
@@ -975,7 +977,7 @@ class MessageStore: MessageStoreProtocol {
     private func setPoiAddress(message: LocationMessage?) -> Promise<Void> {
         Promise { seal in
             self.frameworkInjector.backgroundEntityManager.performBlockAndWait {
-                if let message = message,
+                if let message,
                    let msg = self.frameworkInjector.backgroundEntityManager.entityFetcher
                    .getManagedObject(by: message.objectID) as? LocationMessage,
                    msg.poiAddress == nil,

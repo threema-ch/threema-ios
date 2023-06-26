@@ -23,16 +23,16 @@ import Foundation
 import Intents
 import IntentsUI
 
-public extension ContactEntity {
+extension ContactEntity {
     /// Is this contact blocked?
-    var isBlocked: Bool {
+    public var isBlocked: Bool {
         // User settings should only be used for fast access to this settings. Use `SettingsStore`
         // otherwise to automatically synchronize the setting when multi-device is enabled.
         UserSettings.shared().blacklist.contains(identity as Any)
     }
     
     /// INPerson used for Intents
-    var inPerson: INPerson {
+    public var inPerson: INPerson {
         var handles = handles
         let mainHandle = handles.remove(at: 0)
         

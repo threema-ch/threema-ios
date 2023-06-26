@@ -27,7 +27,7 @@ final class MessageGroupReactionStackView: UIStackView {
     /// Reset to update with current message information.
     var message: BaseMessage? {
         didSet {
-            guard let message = message else {
+            guard let message else {
                 return
             }
                     

@@ -41,7 +41,7 @@ class ImageAssetPreviewItem: ImagePreviewItem {
     }
     
     var newUti: Promise<String> {
-        if let internalUTI = internalUTI {
+        if let internalUTI {
             return Promise { $0.fulfill(internalUTI) }
         }
 
@@ -79,7 +79,7 @@ class ImageAssetPreviewItem: ImagePreviewItem {
     
     private var internalOriginalAsset: Promise<Asset> {
         Promise { seal in
-            if let filename = filename, let uti = uti, let image = internalImageData {
+            if let filename, let uti, let image = internalImageData {
                 seal.fulfill((filename: filename, uti: uti, imageData: image))
                 return
             }
@@ -114,12 +114,12 @@ class ImageAssetPreviewItem: ImagePreviewItem {
                         orgFilename = originalFilename
                     }
                     
-                    guard let dataUTI = dataUTI else {
+                    guard let dataUTI else {
                         seal.reject(MediaPreviewItem.LoadError.unknown)
                         return
                     }
 
-                    guard let data = data else {
+                    guard let data else {
                         seal.reject(MediaPreviewItem.LoadError.unknown)
                         return
                     }

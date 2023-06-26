@@ -250,7 +250,7 @@ BOOL doMigrateInProgress = false;
                 
             // Verify that the migration was started by `doMigrate` and not some other function accidentally accessing the database before the proper migration was initialized.
             #ifdef DEBUG
-                assert(doMigrateInProgress);
+               assert(doMigrateInProgress);
             #endif
                 
                 // Migration is required - check if a store backup file (.bak) exists. If so, the last migration attempt has

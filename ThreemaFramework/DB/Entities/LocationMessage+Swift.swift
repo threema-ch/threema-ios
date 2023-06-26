@@ -20,8 +20,8 @@
 
 import Foundation
 
-public extension LocationMessage {
-    var formattedCoordinates: String {
+extension LocationMessage {
+    public var formattedCoordinates: String {
         guard let latitude = latitude as? Double, let longitude = longitude as? Double else {
             return BundleUtil.localizedString(forKey: "location")
         }

@@ -48,32 +48,35 @@ class TaskDefinitionSendGroupDeliveryReceiptsMessage: TaskDefinitionSendMessage 
         "<\(type(of: self))>"
     }
 
-    let fromMember: String
-    let toMembers: [String]
-    @objc let receiptType: UInt8
-    @objc let receiptMessageIDs: [Data]
+    let fromMember: ThreemaIdentity
+    let toMembers: [ThreemaIdentity]
+    let receiptType: UInt8
+    let receiptMessageIDs: [Data]
+    let receiptReadDates: [Date]
 
     private enum CodingKeys: String, CodingKey {
         case fromMember
         case toMembers
         case receiptType
         case receiptMessageIDs
+        case receiptReadDates
     }
     
     @objc init(
         group: Group?,
-        from: String,
-        to: [String],
+        from: ThreemaIdentity,
+        to: [ThreemaIdentity],
         receiptType: UInt8,
         receiptMessageIDs: [Data],
-        sendContactProfilePicture: Bool
+        receiptReadDates: [Date]
     ) {
         self.fromMember = from
         self.toMembers = to
         self.receiptType = receiptType
         self.receiptMessageIDs = receiptMessageIDs
+        self.receiptReadDates = receiptReadDates
         
-        super.init(group: group, sendContactProfilePicture: sendContactProfilePicture)
+        super.init(group: group, sendContactProfilePicture: false)
     }
 
     required init(from decoder: Decoder) throws {
@@ -82,6 +85,7 @@ class TaskDefinitionSendGroupDeliveryReceiptsMessage: TaskDefinitionSendMessage 
         self.toMembers = try container.decode([String].self, forKey: .toMembers)
         self.receiptType = try container.decode(UInt8.self, forKey: .receiptType)
         self.receiptMessageIDs = try container.decode([Data].self, forKey: .receiptMessageIDs)
+        self.receiptReadDates = try container.decode([Date].self, forKey: .receiptReadDates)
         
         let superdecoder = try container.superDecoder()
         try super.init(from: superdecoder)
@@ -93,6 +97,7 @@ class TaskDefinitionSendGroupDeliveryReceiptsMessage: TaskDefinitionSendMessage 
         try container.encode(toMembers, forKey: .toMembers)
         try container.encode(receiptType, forKey: .receiptType)
         try container.encode(receiptMessageIDs, forKey: .receiptMessageIDs)
+        try container.encode(receiptReadDates, forKey: .receiptReadDates)
 
         let superencoder = container.superEncoder()
         try super.encode(to: superencoder)

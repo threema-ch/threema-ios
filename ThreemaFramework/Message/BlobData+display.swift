@@ -113,9 +113,9 @@ public enum BlobDisplayState: CustomStringConvertible, Equatable {
     }
 }
 
-public extension BlobData {
+extension BlobData {
     /// Current display state
-    var blobDisplayState: BlobDisplayState {
+    public var blobDisplayState: BlobDisplayState {
         if case let .incoming(incomingThumbnailState) = thumbnailState,
            case let .incoming(incomingDataState) = dataState {
             return incomingBlobDisplayState(for: incomingThumbnailState, and: incomingDataState)
@@ -150,7 +150,7 @@ public extension BlobData {
         case .downloading, .processing:
             switch incomingThumbnailState {
             case .remote, .processed, .noData(.noThumbnail), .fatalError:
-                return .downloading(progress: blobGetProgress()?.floatValue ?? 0)
+                return .downloading(progress: blobProgress?.floatValue ?? 0)
             default:
                 return error("Unknown thumbnail state: \(thumbnailState.description)")
             }
@@ -184,21 +184,21 @@ public extension BlobData {
         case .pendingDownload:
             return .pending
         case .downloading:
-            return .downloading(progress: blobGetProgress()?.floatValue ?? 0)
+            return .downloading(progress: blobProgress?.floatValue ?? 0)
         case .pendingUpload:
             switch outgoingThumbnailState {
             case .pendingUpload, .remote, .noData(.noThumbnail):
                 return .pending
             case .uploading:
                 // In the current implementation of BlobDataState this is not really reachable
-                return .uploading(progress: blobGetProgress()?.floatValue ?? 0)
+                return .uploading(progress: blobProgress?.floatValue ?? 0)
             default:
                 return error("Unknown thumbnail state: \(thumbnailState.description)")
             }
         case .uploading:
             switch outgoingThumbnailState {
             case .pendingUpload, .uploading, .remote, .noData(.noThumbnail):
-                return .uploading(progress: blobGetProgress()?.floatValue ?? 0)
+                return .uploading(progress: blobProgress?.floatValue ?? 0)
             default:
                 return error("Unknown thumbnail state: \(thumbnailState.description)")
             }
@@ -207,13 +207,13 @@ public extension BlobData {
             case .pendingDownload:
                 return .pending
             case .pendingUpload, .remote, .noData(.noThumbnail):
-                if blobGetError() {
+                if blobError {
                     return .sendingError
                 }
                 return .uploaded
                 
             case .uploading:
-                return .uploading(progress: blobGetProgress()?.floatValue ?? 0)
+                return .uploading(progress: blobProgress?.floatValue ?? 0)
             default:
                 return error("Unknown thumbnail state: \(thumbnailState.description)")
             }

@@ -53,7 +53,7 @@ class HttpClientUploadSafeTests: XCTestCase {
                     URL(string: "https://safe.threema.ch/backups/\(BytesUtility.toHexString(bytes: backupID))")
                 let client = HTTPClient()
                 client.uploadData(url: backupURL!, data: Data(encryptedData)) { data, response, error in
-                    if let error = error {
+                    if let error {
                         print("http client upload error: \(error)")
                         XCTAssert(false)
                         return
@@ -61,7 +61,7 @@ class HttpClientUploadSafeTests: XCTestCase {
                     guard let response = response as? HTTPURLResponse,
                           (200...299).contains(response.statusCode) else {
                         print("http client download wrong state")
-                        if let data = data {
+                        if let data {
                             print("http client upload failed: \(String(data: data, encoding: .utf8)!)")
                         }
                         XCTAssert(false)
@@ -146,7 +146,7 @@ extension HttpClientUploadSafeTests: URLSessionDataDelegate {
     
     func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
         DispatchQueue.main.async {
-            if let error = error {
+            if let error {
                 print("http client upload error \(error)")
                 XCTAssert(false)
             }

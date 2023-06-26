@@ -20,6 +20,8 @@
 
 import UIKit
 
+// MARK: - DetailsHeaderView.Configuration
+
 extension DetailsHeaderView {
     struct Configuration {
         /// Show debug background colors

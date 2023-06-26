@@ -109,7 +109,8 @@ protocol ForwardSecurityMessageSenderProtocol {
     
     /// Wrap a message in a forward security envelope.
     ///
-    /// - Returns: the wrapped `message`, optionally an auxiliary control message (`auxMessage`) that should be sent *before* the actual message, and the ID of a new session (if one had to be created)
+    /// - Returns: the wrapped `message`, optionally an auxiliary control message (`auxMessage`) that should be sent
+    /// *before* the actual message, and the ID of a new session (if one had to be created)
     func makeMessage(
         contact: ForwardSecurityContact,
         innerMessage: AbstractMessage
@@ -193,7 +194,7 @@ protocol ForwardSecurityMessageSenderProtocol {
         let sendAuxFailure = {
             // If sending the aux (init) message fails, delete the session again, as the peer won't
             // know about it, and we should create a new session with a new init when we retry.
-            if let newSessionID = newSessionID {
+            if let newSessionID {
                 _ = try? self.dhSessionStore.deleteDHSession(
                     myIdentity: self.identityStore.identity,
                     peerIdentity: contact.identity,
@@ -535,9 +536,11 @@ protocol ForwardSecurityMessageSenderProtocol {
         return (innerMsg, session)
     }
     
-    /// This is the counterpart to `processEnvelopeMessage(sender:envelopeMessage)` storing the changes made to the ratchet after the message was processed
+    /// This is the counterpart to `processEnvelopeMessage(sender:envelopeMessage)` storing the changes made to the
+    /// ratchet after the message was processed
     /// This needs to be called after the message was stored in the DB as it cannot be decrypted anymore after that.
-    /// This needs to be called before the next message starts processing because we only keep track of one partially processed session.
+    /// This needs to be called before the next message starts processing because we only keep track of one partially
+    /// processed session.
     /// - Parameters:
     ///   - sender: The sender of `envelopeMessage` and the sender of the last message that was processed
     ///   - envelopeMessage: The last `envelopeMessage` that was processed

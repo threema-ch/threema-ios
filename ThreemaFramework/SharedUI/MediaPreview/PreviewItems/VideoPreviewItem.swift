@@ -38,7 +38,7 @@ open class VideoPreviewItem: MediaPreviewItem, MediaPreviewItemProtocol {
     
     open var internalOriginalAsset: Promise<AVAsset> {
         Promise { seal in
-            guard let itemURL = itemURL else {
+            guard let itemURL else {
                 seal.reject(MediaPreviewItem.LoadError.unknown)
                 return
             }
@@ -118,7 +118,7 @@ open class VideoPreviewItem: MediaPreviewItem, MediaPreviewItemProtocol {
             autoreleasepool {
                 isConverting = true
                 MediaConverter.convertVideo(with: exportSession) { url in
-                    guard let url = url else {
+                    guard let url else {
                         seal.reject(MediaPreviewItem.LoadError.unknown)
                         return
                     }
@@ -130,7 +130,7 @@ open class VideoPreviewItem: MediaPreviewItem, MediaPreviewItemProtocol {
                     
                     seal.fulfill(url)
                 } onError: { error in
-                    guard let error = error else {
+                    guard let error else {
                         seal.reject(MediaPreviewItem.LoadError.unknown)
                         return
                     }

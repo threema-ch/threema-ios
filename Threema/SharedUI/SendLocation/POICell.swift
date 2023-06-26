@@ -26,7 +26,7 @@ class POICell: ThemedCodeTableViewCell, Reusable {
     
     var poi: PointOfInterest? {
         didSet {
-            guard let poi = poi else {
+            guard let poi else {
                 return
             }
             

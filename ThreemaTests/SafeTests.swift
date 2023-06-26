@@ -206,7 +206,8 @@ class SafeTests: XCTestCase {
     //    var identity: String?
     //
     //    let api = ServerAPIConnector()
-    //    api.fetchBulkIdentityInfo(["ECHOECHO"], onCompletion: { (identities, publicKeys, featureLevels, featureMasks, states, types) in
+    //    api.fetchBulkIdentityInfo(["ECHOECHO"], onCompletion: { (identities, publicKeys, featureLevels, featureMasks,
+    //    states, types) in
     //
     //        if let identities = identities as? [String] {
     //            print(identities.count)

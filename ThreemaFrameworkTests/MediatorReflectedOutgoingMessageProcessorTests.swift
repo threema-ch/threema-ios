@@ -383,7 +383,7 @@ class MediatorReflectedOutgoingMessageProcessorTests: XCTestCase {
     private func setUpMocks(group: Group?)
         -> (frameworkInjectorMock: BusinessInjectorMock, messageStoreMock: MessageStoreMock) {
 
-        if let group = group {
+        if let group {
             let backgroundGroupManagerMock = GroupManagerMock()
             backgroundGroupManagerMock.getGroupReturns = group
 

@@ -26,6 +26,7 @@
 // - `ETK`: Ephemeral Transport Key
 // - `STK`: Shared Transport Key
 // - `PID`: Path ID
+// - `RPH`: Rendevous Path Hash
 // - `RIDAK`: RID's Authentication Key
 // - `RRDAK`: RRD's Authentication Key
 // - `RIDTK`: RID's Transport Key
@@ -41,7 +42,7 @@
 //     STK = BLAKE2b(
 //       key=
 //           AK.secret
-//        || X25519HSalsa20(<local.ETK>.secret, <remote.ETK>.secret)
+//        || X25519HSalsa20(<local.ETK>.secret, <remote.ETK>.public)
 //       salt='st',
 //       personal='3ma-rendezvous'
 //     )

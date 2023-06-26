@@ -110,7 +110,6 @@
 #import <ThreemaFramework/MessageListenerDelegate.h>
 #import <ThreemaFramework/MessageProcessorDelegate.h>
 #import <ThreemaFramework/MessageProcessor.h>
-#import <ThreemaFramework/MessageSender.h>
 #import <ThreemaFramework/MDMSetup.h>
 #import <ThreemaFramework/MyIdentityStore.h>
 #import <ThreemaFramework/ProtocolDefines.h>
@@ -146,7 +145,6 @@
 #import <ThreemaFramework/ContactGroupPickerViewController.h>
 #import <ThreemaFramework/KKPasscodeLock.h>
 #import <ThreemaFramework/TouchIdAuthentication.h>
-#import <ThreemaFramework/MessageSender.h>
 #import <ThreemaFramework/TextStyleUtils.h>
 #import <ThreemaFramework/UIImage+ColoredImage.h>
 #import <ThreemaFramework/JKLLockScreenViewController.h>
@@ -161,6 +159,7 @@
 #import <ThreemaFramework/ThemedTableViewController.h>
 #import <ThreemaFramework/MessageDraftStore.h>
 #import <ThreemaFramework/CallEntity.h>
+#import <ThreemaFramework/ThreemaError.h>
 
 //! Project version number for ThreemaFramework.
 FOUNDATION_EXPORT double ThreemaFrameworkVersionNumber;

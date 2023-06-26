@@ -179,14 +179,14 @@ public final class ConversationStore: NSObject, ConversationStoreInternalProtoco
 
     // MARK: Private functions
 
-    private func saveAndSync<T>(_ attribute: T, of conversation: Conversation) {
+    private func saveAndSync(_ attribute: some Any, of conversation: Conversation) {
         let identities = save(attribute, of: conversation)
         sync(attribute, contactIdentity: identities.contactIdentity, groupIdentity: identities.groupIdentity)
     }
 
     @discardableResult
-    private func save<T>(
-        _ attribute: T,
+    private func save(
+        _ attribute: some Any,
         of conversation: Conversation
     ) -> (contactIdentity: String?, groupIdentity: GroupIdentity?) {
         assert(attribute is ConversationCategory || attribute is ConversationVisibility)
@@ -217,7 +217,7 @@ public final class ConversationStore: NSObject, ConversationStoreInternalProtoco
         return (contactIdentity, groupIdentity)
     }
 
-    private func sync<T>(_ attribute: T, contactIdentity: String?, groupIdentity: GroupIdentity?) {
+    private func sync(_ attribute: some Any, contactIdentity: String?, groupIdentity: GroupIdentity?) {
         guard let taskManager else {
             DDLogWarn("Sync not possible, task manager is missing")
             return

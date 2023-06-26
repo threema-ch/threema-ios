@@ -41,7 +41,8 @@ final class IconMessageContentView: UIView {
     
     /// Offset of text label from leading side
     private lazy var textStackViewLeadingDistance: CGFloat = {
-        // The text stack view is as far away from the symbol center as its center is form the leading edge plus the space
+        // The text stack view is as far away from the symbol center as its center is form the leading edge plus the
+        // space
         let offset = 2 * iconXCenterLeadingDistance // This is already scaled
         let scaledSpace = UIFontMetrics.default.scaledValue(
             for: ChatViewConfiguration.Content.defaultIconAndTextSpace

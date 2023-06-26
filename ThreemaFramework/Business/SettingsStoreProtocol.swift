@@ -46,9 +46,27 @@ public protocol SettingsStoreProtocol {
     var useBigEmojis: Bool { get set }
     var sendMessageFeedback: Bool { get set }
 
+    // Media
+    var imageSize: String { get set }
+    var videoQuality: String { get set }
+    var autoSaveMedia: Bool { get set }
+    
     // Calls
     var enableThreemaCall: Bool { get set }
     var alwaysRelayCalls: Bool { get set }
+    var includeCallsInRecents: Bool { get set }
+    var enableVideoCall: Bool { get set }
+    var threemaVideoCallQualitySetting: ThreemaVideoCallQualitySetting { get set }
+    var voIPSound: String { get set }
+	
+    // Multi Device
+    var isMultiDeviceEnabled: Bool { get set }
+
+    // Advanced
+    var enableIPv6: Bool { get set }
+    var disableProximityMonitoring: Bool { get set }
+    var validationLogging: Bool { get set }
+    var sentryAppDevice: String? { get set }
 }
 
 protocol SettingsStoreInternalProtocol {

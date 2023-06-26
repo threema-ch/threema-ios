@@ -370,7 +370,7 @@ import Foundation
                         }
                         do {
                             attachmentURL = URL(fileURLWithPath: path)
-                            if let imageData = imageData, let imageDataData = imageData.data {
+                            if let imageData, let imageDataData = imageData.data {
                                 try imageDataData.write(
                                     to: attachmentURL!,
                                     options: .completeFileProtectionUntilFirstUserAuthentication
@@ -458,7 +458,7 @@ import Foundation
                             if FileManager.default.fileExists(atPath: path) == true {
                                 try FileManager.default.removeItem(at: attachmentURL!)
                             }
-                            if let imageData = imageData, let imageDataData = imageData.data {
+                            if let imageData, let imageDataData = imageData.data {
                                 try imageDataData.write(
                                     to: attachmentURL!,
                                     options: .completeFileProtectionUntilFirstUserAuthentication
@@ -581,7 +581,7 @@ import Foundation
     /// Remove notification if is there already one
     /// This function must be called on the removalQueue
     private func removeNotifications(stages: [NotificationStage]? = nil, except: String? = nil) {
-        if let stages = stages {
+        if let stages {
             ValidationLogger.shared()?.logString("Push: Adding stages as removable \(stages)")
             for stage in stages {
                 let currKey = key.appending("-\(stage)")
@@ -635,7 +635,7 @@ import Foundation
             }
         }
         
-        if stage == .final, let attachmentName = attachmentName, let attachmentURL = attachmentURL, processed {
+        if stage == .final, let attachmentName, let attachmentURL, processed {
             do {
                 let attachment = try UNNotificationAttachment(
                     identifier: attachmentName,
@@ -683,11 +683,11 @@ import Foundation
             notification.threadIdentifier = "SINGLE-\(senderID)"
         }
         else if categoryIdentifier == "GROUP" {
-            if let groupID = groupID {
+            if let groupID {
                 notification.threadIdentifier = "GROUP-\(groupID)"
                 
                 if #available(iOS 12, *) {
-                    if let fromName = fromName {
+                    if let fromName {
                         notification.summaryArgument = fromName
                     }
                 }
@@ -698,7 +698,7 @@ import Foundation
         let notificationRequest = UNNotificationRequest(identifier: currKey, content: notification, trigger: trigger)
         let center = UNUserNotificationCenter.current()
         center.add(notificationRequest, withCompletionHandler: { error in
-            if let error = error {
+            if let error {
                 DDLogNotice(
                     "Push: Adding notification for message \(self.messageID) was not successful. Error: \(error.localizedDescription)"
                 )

@@ -140,6 +140,12 @@ final class ChatBarCoordinator {
         fatalError("init(coder:) has not been implemented")
     }
     
+    deinit {
+        if let sentMessageSoundID {
+            AudioServicesDisposeSystemSoundID(sentMessageSoundID)
+        }
+    }
+    
     // MARK: - Updates
     
     func updateSettings() {
@@ -216,7 +222,7 @@ extension ChatBarCoordinator {
             mentions: mentionableMembers
         )
         
-        guard let mentionsTableViewController = mentionsTableViewController else {
+        guard let mentionsTableViewController else {
             DDLogError("mentionsTableViewController was improperly initialized")
             return
         }
@@ -274,7 +280,7 @@ extension ChatBarCoordinator: MentionsTableViewDelegate {
             addMentionsView()
         }
         
-        guard let mentionsTableViewController = mentionsTableViewController else {
+        guard let mentionsTableViewController else {
             DDLogError("mentionsTableViewController was improperly initialized")
             return false
         }
@@ -338,7 +344,7 @@ extension ChatBarCoordinator: ChatBarViewDelegate {
     }
     
     func showAssetsSelector() {
-        guard let chatViewController = chatViewController else {
+        guard let chatViewController else {
             DDLogError("chatViewController should not be nil when calling \(#function)")
             return
         }
@@ -481,11 +487,11 @@ extension ChatBarCoordinator: ChatBarViewDelegate {
                 
         var sendableRawText = rawText
         
-        if let quoteMessage = quoteMessage {
+        if let quoteMessage {
             sendableRawText = QuoteUtil.generateText(rawText, with: quoteMessage.id)
         }
                 
-        MessageSender.sanitizeAndSendText(sendableRawText, in: conversation)
+        businessInjector.messageSender.sanitizeAndSendText(sendableRawText, in: conversation)
         
         MessageDraftStore.deleteDraft(for: conversation)
         
@@ -527,12 +533,13 @@ extension ChatBarCoordinator: ChatBarViewDelegate {
     
     func sendTypingIndicator(startTyping: Bool) {
         // Only send typing indicator in groups
-        // Only send typing indicator if the conversation has a contact (equivalent to being a group but we want the identity to not be optional)
+        // Only send typing indicator if the conversation has a contact (equivalent to being a group but we want the
+        // identity to not be optional)
         // Do not send false twice in a row
         if !conversation.isGroup(), let identity = conversation.contact?.identity,
            (!startTyping && lastTypingIndicatorState) || startTyping {
             DDLogVerbose("Send typing indicator \(startTyping)")
-            MessageSender.sendTypingIndicatorMessage(startTyping, toIdentity: identity)
+            businessInjector.messageSender.sendTypingIndicator(typing: startTyping, toIdentity: identity)
             lastTypingIndicatorState = startTyping
         }
     }
@@ -600,7 +607,7 @@ extension ChatBarCoordinator: PPAssetsActionHelperDelegate {
             assertionFailure(message)
             return
         }
-        guard let chatViewController = chatViewController else {
+        guard let chatViewController else {
             DDLogError("chatViewController should not be nil when calling \(#function)")
             return
         }
@@ -615,7 +622,7 @@ extension ChatBarCoordinator: PPAssetsActionHelperDelegate {
             assertionFailure(message)
             return
         }
-        guard let chatViewController = chatViewController else {
+        guard let chatViewController else {
             DDLogError("chatViewController should not be nil when calling \(#function)")
             return
         }
@@ -632,7 +639,7 @@ extension ChatBarCoordinator: PPAssetsActionHelperDelegate {
     }
     
     func assetsActionHelperDidSelectLiveCameraCell(_ picker: PPAssetsActionHelper) {
-        guard let chatViewController = chatViewController else {
+        guard let chatViewController else {
             DDLogError("chatViewController should not be nil when calling \(#function)")
             return
         }
@@ -659,7 +666,7 @@ extension ChatBarCoordinator: PPAssetsActionHelperDelegate {
             assertionFailure(message)
             return
         }
-        guard let chatViewController = chatViewController else {
+        guard let chatViewController else {
             DDLogError("chatViewController should not be nil when calling \(#function)")
             return
         }
@@ -668,7 +675,7 @@ extension ChatBarCoordinator: PPAssetsActionHelperDelegate {
     }
     
     func assetsActionHelperDidSelectRecordAudio(_ picker: PPAssetsActionHelper) {
-        guard let chatViewController = chatViewController else {
+        guard let chatViewController else {
             DDLogError("chatViewController should not be nil when calling \(#function)")
             return
         }
@@ -677,7 +684,7 @@ extension ChatBarCoordinator: PPAssetsActionHelperDelegate {
     }
     
     func assetsActionHelperDidSelectCreateBallot(_ picker: PPAssetsActionHelper) {
-        guard let chatViewController = chatViewController else {
+        guard let chatViewController else {
             DDLogError("chatViewController should not be nil when calling \(#function)")
             return
         }
@@ -692,7 +699,7 @@ extension ChatBarCoordinator: PPAssetsActionHelperDelegate {
             assertionFailure(message)
             return
         }
-        guard let chatViewController = chatViewController else {
+        guard let chatViewController else {
             DDLogError("chatViewController should not be nil when calling \(#function)")
             return
         }
@@ -744,7 +751,7 @@ extension ChatBarCoordinator {
     }
     
     @objc func showMessagePermissionNotGranted() {
-        guard let chatViewController = chatViewController else {
+        guard let chatViewController else {
             DDLogError("Cannot show alert for unable to send text because chatViewController is nil.")
             return
         }

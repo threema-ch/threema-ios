@@ -96,13 +96,13 @@
 "UsC-dS-qae.title" = "進階";
 
 /* Class = "UITableViewSection"; headerTitle = "Validation logging"; ObjectID = "VzU-Hf-fg5"; */
-"VzU-Hf-fg5.headerTitle" = "調試日誌";
+"VzU-Hf-fg5.headerTitle" = "偵錯記錄";
 
 /* Class = "UILabel"; text = "Sync Contacts"; ObjectID = "Wdo-iP-Jy2"; */
 "Wdo-iP-Jy2.text" = "同步聯絡人";
 
 /* Class = "UILabel"; text = "Validation Logging"; ObjectID = "WeM-6s-Xpj"; */
-"WeM-6s-Xpj.text" = "調試日誌";
+"WeM-6s-Xpj.text" = "偵錯記錄";
 
 /* Class = "UILabel"; text = "Group Notifications"; ObjectID = "XNU-cf-XDO"; */
 "XNU-cf-XDO.text" = "群組通知";

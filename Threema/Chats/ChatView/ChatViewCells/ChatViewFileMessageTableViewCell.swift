@@ -210,11 +210,11 @@ extension ChatViewFileMessageTableViewCell: ChatViewMessageAction {
         
         // Copy
         let copyHandler = {
-            guard let data = message.blobGet() else {
+            guard let data = message.blobData else {
                 NotificationPresenterWrapper.shared.present(type: .copyError)
                 return
             }
-            UIPasteboard.general.setData(data, forPasteboardType: message.blobGetUTI()!)
+            UIPasteboard.general.setData(data, forPasteboardType: message.blobUTTypeIdentifier!)
             NotificationPresenterWrapper.shared.present(type: .copySuccess)
         }
         

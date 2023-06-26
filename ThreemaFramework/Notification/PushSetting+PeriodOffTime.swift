@@ -36,10 +36,10 @@ extension PeriodOffTime: CaseIterable {
     ]
 }
 
-public extension PeriodOffTime {
+extension PeriodOffTime {
     
     /// Get a localized string for each `PeriodOffTime` case
-    var localizedString: String {
+    public var localizedString: String {
         switch self {
         case .time1Hour:
             return BundleUtil.localizedString(forKey: "doNotDisturb_onPeriod_1Hour")

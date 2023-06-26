@@ -20,6 +20,7 @@
 
 import CocoaLumberjackSwift
 import Foundation
+import SwiftUI
 
 class MultiDeviceViewController: ThemedTableViewController {
     
@@ -248,5 +249,17 @@ extension MultiDeviceViewController {
     @objc func refreshTableView(refreshControl: UIRefreshControl) {
         load()
         refreshControl.endRefreshing()
+    }
+}
+
+// MARK: - UIViewControllerRepresentable
+
+struct MultiDeviceViewControllerRepresentable: UIViewControllerRepresentable {
+    func updateUIViewController(_ uiViewController: UIViewControllerType, context: Context) { }
+    
+    func makeUIViewController(context: Context) -> some UIViewController {
+        let storyboard = UIStoryboard(name: "SettingsStoryboard", bundle: nil)
+        let vc = storyboard.instantiateViewController(identifier: "MultiDeviceViewController")
+        return vc
     }
 }

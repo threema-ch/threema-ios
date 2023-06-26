@@ -34,7 +34,7 @@ final class MessageQuoteStackView: UIStackView {
     /// Reset it when the message had any changes to update the displayed quote
     var quoteMessage: QuoteMessage? {
         didSet {
-            guard let quoteMessage = quoteMessage else {
+            guard let quoteMessage else {
                 return
             }
             
@@ -42,7 +42,8 @@ final class MessageQuoteStackView: UIStackView {
         }
     }
     
-    /// If set to `.spaced` the `MessageQuoteStackView` will use the maximum allowed width for space between name / text and thumbnail for this cell
+    /// If set to `.spaced` the `MessageQuoteStackView` will use the maximum allowed width for space between name / text
+    /// and thumbnail for this cell
     /// Don't use this if there is no thumbnail.
     /// Defaults to no spacing.
     var thumbnailDistribution: ThumbnailDistribution = .fill {
@@ -205,7 +206,7 @@ final class MessageQuoteStackView: UIStackView {
     
     private func updateContent() {
         
-        guard let quoteMessage = quoteMessage else {
+        guard let quoteMessage else {
             return
         }
         

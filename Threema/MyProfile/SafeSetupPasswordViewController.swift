@@ -164,7 +164,7 @@ class SafeSetupPasswordViewController: ThemedTableViewController {
                 maxBackupBytes: self.maxBackupBytes != nil ? NSNumber(integerLiteral: self.maxBackupBytes!) : nil,
                 retentionDays: self.retentionDays != nil ? NSNumber(integerLiteral: self.retentionDays!) : nil
             ) { error in
-                if let error = error {
+                if let error {
                     DispatchQueue.main.async {
                         UIAlertTemplate.showAlert(
                             owner: self,

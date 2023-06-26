@@ -21,26 +21,34 @@
 import CocoaLumberjackSwift
 import Foundation
 
-@objc class NotificationResponse: NSObject {
+class NotificationResponse: NSObject {
 
-    @objc var threemaDict: [AnyHashable: Any]?
-    @objc var categoryIdentifier: String
-    @objc var actionIdentifier: String
-    @objc var userText: String?
-    @objc var identity: String?
-    @objc var messageID: String?
-    
-    @objc var userInfo: [AnyHashable: Any]
+    private let businessInjector: BusinessInjectorProtocol
+    private let notificationManager: NotificationManager
 
-    @objc var notificationIdentifier: String
-    @objc var completionHandler: () -> Void
-    
-    private let notificationManager = NotificationManager()
-    private lazy var entityManager = EntityManager()
-    
+    private let threemaDict: [AnyHashable: Any]?
+    private let categoryIdentifier: String
+    private let actionIdentifier: String
+    private var userText: String?
+    private var identity: String?
+    private var messageID: String?
+
+    private let userInfo: [AnyHashable: Any]
+
+    private let notificationIdentifier: String
+    private let completionHandler: () -> Void
+
     private var conversation: Conversation?
 
-    @objc init(response: UNNotificationResponse, completion: @escaping (() -> Void)) {
+    required init(
+        businessInjector: BusinessInjectorProtocol,
+        notificationManager: NotificationManager,
+        response: UNNotificationResponse,
+        completion: @escaping (() -> Void)
+    ) {
+        self.businessInjector = businessInjector
+        self.notificationManager = notificationManager
+
         if let tmpThreemaDict = response.notification.request.content.userInfo["threema"] as? [AnyHashable: Any] {
             self.threemaDict = PushPayloadDecryptor.decryptPushPayload(tmpThreemaDict)
             self.categoryIdentifier = response.notification.request.content.categoryIdentifier
@@ -54,9 +62,9 @@ import Foundation
             else {
                 self.notificationIdentifier = kAppPushReplyBackgroundTask
             }
-            
+
             let entityManager = EntityManager()
-            
+
             if let threemaDict, let groupIDString = threemaDict["groupId"] as? String,
                let groupCreator = threemaDict["groupCreator"] as? String,
                let groupID = Data(base64Encoded: groupIDString) {
@@ -68,9 +76,9 @@ import Foundation
             else {
                 DDLogError("Could not find conversation for push notification")
             }
-            
+
             self.identity = response.notification.request.identifier
-            
+
             if let replyText = (response as? UNTextInputNotificationResponse)?.userText {
                 self.userText = replyText
             }
@@ -83,6 +91,16 @@ import Foundation
             self.notificationIdentifier = kAppPushReplyBackgroundTask
             self.completionHandler = completion
         }
+    }
+
+    @objc convenience init(response: UNNotificationResponse, completion: @escaping (() -> Void)) {
+        let businessInjector = BusinessInjector()
+        self.init(
+            businessInjector: businessInjector,
+            notificationManager: NotificationManager(businessInjector: businessInjector),
+            response: response,
+            completion: completion
+        )
     }
 
     @objc func handleNotificationResponse() {
@@ -107,19 +125,19 @@ import Foundation
             AppGroup.setActive(false, for: AppGroupTypeShareExtension)
 
             if actionIdentifier == "THUMB_UP" {
-                ServerConnector.shared().connect(initiator: .notificationHandler)
+                businessInjector.serverConnector.connect(initiator: .notificationHandler)
                 handleThumbUp()
             }
             else if actionIdentifier == "THUMB_DOWN" {
-                ServerConnector.shared().connect(initiator: .notificationHandler)
+                businessInjector.serverConnector.connect(initiator: .notificationHandler)
                 handleThumbDown()
             }
             else if actionIdentifier == "REPLY_MESSAGE" {
-                ServerConnector.shared().connect(initiator: .notificationHandler)
+                businessInjector.serverConnector.connect(initiator: .notificationHandler)
                 handleReplyMessage()
             }
             else {
-                ServerConnector.shared().connect(initiator: .app)
+                businessInjector.serverConnector.connect(initiator: .app)
                 notificationManager.handleThreemaNotification(
                     payload: userInfo,
                     receivedWhileRunning: AppDelegate.shared().active
@@ -172,9 +190,8 @@ import Foundation
 
     private func handleThumbUp() {
         ServerConnectorHelper.waitUntilConnected(timeout: 20, onConnect: {
-            let entityManager = EntityManager()
             guard let messageID = self.messageID, let conversation = self.conversation,
-                  let baseMessage = entityManager.entityFetcher.message(
+                  let baseMessage = self.businessInjector.entityManager.entityFetcher.message(
                       with: messageID.decodeHex(),
                       conversation: conversation
                   ),
@@ -193,19 +210,21 @@ import Foundation
                     self.finishResponse()
                     return
                 }
-                let groupManager = GroupManager(entityManager: entityManager)
-                let group = groupManager.getGroup(conversation: conversation)
 
-                self.sendUserAck(
-                    for: baseMessage,
-                    conversation: conversation,
-                    contact: nil,
-                    group: group,
-                    entityManager: entityManager
-                )
+                if let group = self.businessInjector.groupManager.getGroup(conversation: conversation) {
+                    Task {
+                        await self.businessInjector.messageSender.sendReadReceipt(
+                            for: [baseMessage],
+                            toGroupIdentity: group.groupIdentity
+                        )
+                        await self.businessInjector.messageSender.sendUserAck(for: baseMessage, toGroup: group)
+                        self.updateMessageAsRead(for: baseMessage)
+                        self.finishResponse()
+                    }
+                }
             }
             else {
-                guard let contact = conversation.contact else {
+                guard let identity = conversation.contact?.identity else {
                     self.sendThumbUpError()
                     self.finishResponse()
                     return
@@ -215,14 +234,11 @@ import Foundation
                     self.finishResponse()
                     return
                 }
-                MessageSender.sendReadReceipt(forMessages: [baseMessage], toIdentity: contact.identity) {
-                    self.sendUserAck(
-                        for: baseMessage,
-                        conversation: conversation,
-                        contact: contact,
-                        group: nil,
-                        entityManager: entityManager
-                    )
+                Task {
+                    await self.businessInjector.messageSender.sendReadReceipt(for: [baseMessage], toIdentity: identity)
+                    await self.businessInjector.messageSender.sendUserAck(for: baseMessage, toIdentity: identity)
+                    self.updateMessageAsRead(for: baseMessage)
+                    self.finishResponse()
                 }
             }
             
@@ -232,42 +248,6 @@ import Foundation
         }
     }
     
-    private func sendUserAck(
-        for baseMessage: BaseMessage,
-        conversation: Conversation,
-        contact: ContactEntity?,
-        group: Group?,
-        entityManager: EntityManager
-    ) {
-        updateMessageAsRead(for: baseMessage, entityManager: entityManager)
-        
-        MessageSender.sendUserAck(
-            forMessages: [baseMessage],
-            toIdentity: contact?.identity,
-            group: group,
-            onCompletion: {
-                entityManager.performSyncBlockAndSafe {
-                    if conversation.isGroup() {
-                        let groupDeliveryReceipt = GroupDeliveryReceipt(
-                            identity: MyIdentityStore.shared().identity,
-                            deliveryReceiptType: .acknowledged,
-                            date: Date()
-                        )
-                        baseMessage.add(groupDeliveryReceipt: groupDeliveryReceipt)
-                    }
-                    else {
-                        baseMessage.userack = NSNumber(value: true)
-                        baseMessage.userackDate = Date()
-                    }
-                    if baseMessage.id == conversation.lastMessage?.id {
-                        conversation.lastMessage = baseMessage
-                    }
-                }
-                self.finishResponse()
-            }
-        )
-    }
-
     private func sendThumbUpError() {
         ThreemaUtilityObjC.sendErrorLocalNotification(
             BundleUtil.localizedString(forKey: "send_notification_message_error_title"),
@@ -278,9 +258,8 @@ import Foundation
 
     private func handleThumbDown() {
         ServerConnectorHelper.waitUntilConnected(timeout: 20, onConnect: {
-            let entityManager = EntityManager()
             guard let messageID = self.messageID, let conversation = self.conversation,
-                  let baseMessage = entityManager.entityFetcher.message(
+                  let baseMessage = self.businessInjector.entityManager.entityFetcher.message(
                       with: messageID.decodeHex(),
                       conversation: conversation
                   ),
@@ -298,16 +277,17 @@ import Foundation
                     return
                 }
                 
-                let groupManager = GroupManager(entityManager: entityManager)
-                let group = groupManager.getGroup(conversation: conversation)
-
-                self.sendUserDecline(
-                    for: baseMessage,
-                    conversation: conversation,
-                    contact: nil,
-                    group: group,
-                    entityManager: entityManager
-                )
+                if let group = self.businessInjector.groupManager.getGroup(conversation: conversation) {
+                    Task {
+                        await self.businessInjector.messageSender.sendReadReceipt(
+                            for: [baseMessage],
+                            toGroupIdentity: group.groupIdentity
+                        )
+                        await self.businessInjector.messageSender.sendUserDecline(for: baseMessage, toGroup: group)
+                        self.updateMessageAsRead(for: baseMessage)
+                        self.finishResponse()
+                    }
+                }
             }
             else {
                 guard let contact = conversation.contact else {
@@ -320,20 +300,19 @@ import Foundation
                     self.finishResponse()
                     return
                 }
-                
-                MessageSender.sendReadReceipt(
-                    forMessages: [baseMessage],
-                    toIdentity: contact.identity,
-                    onCompletion: {
-                        self.sendUserDecline(
-                            for: baseMessage,
-                            conversation: conversation,
-                            contact: contact,
-                            group: nil,
-                            entityManager: entityManager
-                        )
-                    }
-                )
+
+                Task {
+                    await self.businessInjector.messageSender.sendReadReceipt(
+                        for: [baseMessage],
+                        toIdentity: contact.identity
+                    )
+                    await self.businessInjector.messageSender.sendUserDecline(
+                        for: baseMessage,
+                        toIdentity: contact.identity
+                    )
+                    self.updateMessageAsRead(for: baseMessage)
+                    self.finishResponse()
+                }
             }
         }) {
             self.sendThumbDownError()
@@ -341,41 +320,6 @@ import Foundation
         }
     }
     
-    private func sendUserDecline(
-        for baseMessage: BaseMessage,
-        conversation: Conversation,
-        contact: ContactEntity?,
-        group: Group?,
-        entityManager: EntityManager
-    ) {
-        updateMessageAsRead(for: baseMessage, entityManager: entityManager)
-        MessageSender.sendUserDecline(
-            forMessages: [baseMessage],
-            toIdentity: contact?.identity,
-            group: group,
-            onCompletion: {
-                entityManager.performSyncBlockAndSafe {
-                    if conversation.isGroup() {
-                        let groupDeliveryReceipt = GroupDeliveryReceipt(
-                            identity: MyIdentityStore.shared().identity,
-                            deliveryReceiptType: .declined,
-                            date: Date()
-                        )
-                        baseMessage.add(groupDeliveryReceipt: groupDeliveryReceipt)
-                    }
-                    else {
-                        baseMessage.userack = NSNumber(value: false)
-                        baseMessage.userackDate = Date()
-                    }
-                    if baseMessage.id == conversation.lastMessage?.id {
-                        conversation.lastMessage = baseMessage
-                    }
-                }
-                self.finishResponse()
-            }
-        )
-    }
-
     private func sendThumbDownError() {
         ThreemaUtilityObjC.sendErrorLocalNotification(
             BundleUtil.localizedString(forKey: "send_notification_message_error_title"),
@@ -386,10 +330,10 @@ import Foundation
 
     private func handleReplyMessage() {
         ServerConnectorHelper.waitUntilConnected(timeout: 20, onConnect: {
-            let entityManager = EntityManager()
+            let businessInjector = BusinessInjector()
             
             if let messageID = self.messageID, let conversation = self.conversation,
-               let baseMessage = entityManager.entityFetcher.message(
+               let baseMessage = businessInjector.entityManager.entityFetcher.message(
                    with: messageID.decodeHex(),
                    conversation: conversation
                ),
@@ -397,22 +341,21 @@ import Foundation
 
                 if !baseMessage.isGroupMessage,
                    let contact = conversation.contact {
-                    MessageSender.sendReadReceipt(
-                        forMessages: [baseMessage],
-                        toIdentity: contact.identity,
-                        onCompletion: {
-                            self.updateMessageAsRead(for: baseMessage, entityManager: entityManager)
-                            MessageSender.reflectReadReceipt(messages: [baseMessage], senderIdentity: contact.identity)
-                            self.sendUserText(
-                                text: self.userText,
-                                conversation: conversation,
-                                isConnectionEstablished: true
-                            )
-                        }
-                    )
+                    Task { @MainActor in
+                        await self.businessInjector.messageSender.sendReadReceipt(
+                            for: [baseMessage],
+                            toIdentity: contact.identity
+                        )
+                        self.updateMessageAsRead(for: baseMessage)
+                        self.sendUserText(
+                            text: self.userText,
+                            conversation: conversation,
+                            isConnectionEstablished: true
+                        )
+                    }
                 }
                 else {
-                    self.updateMessageAsRead(for: baseMessage, entityManager: entityManager)
+                    self.updateMessageAsRead(for: baseMessage)
                     self.sendUserText(text: self.userText, conversation: conversation, isConnectionEstablished: true)
                 }
             }
@@ -421,15 +364,14 @@ import Foundation
                 self.finishResponse()
             }
         }) {
-            let entityManager = EntityManager()
             if let messageID = self.messageID, let conversation = self.conversation,
-               let baseMessage = entityManager.entityFetcher.message(
+               let baseMessage = self.businessInjector.entityManager.entityFetcher.message(
                    with: messageID.decodeHex(),
                    conversation: conversation
                ),
                let conversation = baseMessage.conversation {
                 
-                self.updateMessageAsRead(for: baseMessage, entityManager: entityManager)
+                self.updateMessageAsRead(for: baseMessage)
                 self.sendUserText(text: self.userText, conversation: conversation, isConnectionEstablished: false)
             }
             else {
@@ -450,17 +392,23 @@ import Foundation
                 return
             }
 
-            MessageSender.sendMessage(text, in: conversation, quickReply: true, requestID: nil, completion: { _ in
-                if !isConnectionEstablished {
-                    self.sendReplyError()
+            businessInjector.messageSender.sendTextMessage(
+                text: text,
+                in: conversation,
+                quickReply: true,
+                requestID: nil,
+                completion: { _ in
+                    if !isConnectionEstablished {
+                        self.sendReplyError()
+                    }
+                    self.finishResponse()
                 }
-                self.finishResponse()
-            })
+            )
         }
         else {
             for (index, object) in trimmedMessages!.enumerated() {
-                MessageSender.sendMessage(
-                    object,
+                businessInjector.messageSender.sendTextMessage(
+                    text: object,
                     in: conversation,
                     quickReply: true,
                     requestID: nil,
@@ -488,8 +436,7 @@ import Foundation
 
     private func handleCallMessage() {
         ServerConnectorHelper.waitUntilConnected(timeout: 20, onConnect: {
-            let entityManager = EntityManager()
-            if let contact = entityManager.entityFetcher.contact(for: self.identity!) {
+            if let contact = self.businessInjector.entityManager.entityFetcher.contact(for: self.identity!) {
                 var callID: VoIPCallID?
                 if let threemaDict = self.threemaDict {
                     if let tmpCallID = threemaDict["callId"] {
@@ -518,8 +465,7 @@ import Foundation
 
     private func handleAcceptCall() {
         ServerConnectorHelper.waitUntilConnected(timeout: 20, onConnect: {
-            let entityManager = EntityManager()
-            if let contact = entityManager.entityFetcher.contact(for: self.identity!) {
+            if let contact = self.businessInjector.entityManager.entityFetcher.contact(for: self.identity!) {
                 var callID: VoIPCallID?
                 if let threemaDict = self.threemaDict {
                     if let tmpCallID = threemaDict["callId"] {
@@ -547,8 +493,7 @@ import Foundation
 
     private func handleRejectCall() {
         ServerConnectorHelper.waitUntilConnected(timeout: 20, onConnect: {
-            let entityManager = EntityManager()
-            if let contact = entityManager.entityFetcher.contact(for: self.identity!) {
+            if let contact = self.businessInjector.entityManager.entityFetcher.contact(for: self.identity!) {
                 var callID: VoIPCallID?
                 if let threemaDict = self.threemaDict {
                     if let tmpCallID = threemaDict["callId"] {
@@ -593,8 +538,8 @@ import Foundation
 
     /// Update message read.
     /// - Parameter message: Message to set read true
-    private func updateMessageAsRead(for message: BaseMessage, entityManager: EntityManager) {
-        entityManager.performSyncBlockAndSafe {
+    private func updateMessageAsRead(for message: BaseMessage) {
+        businessInjector.entityManager.performSyncBlockAndSafe {
             message.read = NSNumber(booleanLiteral: true)
             message.readDate = Date()
         }

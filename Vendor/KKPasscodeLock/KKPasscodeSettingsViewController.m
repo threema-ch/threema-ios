@@ -137,6 +137,10 @@
     } else {
         _touchIdOn = NO;
         [KKKeychain setString:@"NO" forKey:@"touch_id_on"];
+        // Threema edit begin
+        [[UserSettings sharedUserSettings] setEvaluatedPolicyDomainStateApp:nil];
+        [[UserSettings sharedUserSettings] setEvaluatedPolicyDomainStateShareExtension:nil];
+        // Threema edit end
     }
 }
 

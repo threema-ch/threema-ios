@@ -74,10 +74,10 @@ struct MultiDeviceWizardPreparationView: View {
         
         .onAppear {
             wizardVM.advanceState(.preparation)
-            self.animate = true
+            animate = true
         }
         .onDisappear {
-            self.animate = false
+            animate = false
         }
         .onChange(of: wizardVM.wizardState) { newValue in
             if newValue == .identity {

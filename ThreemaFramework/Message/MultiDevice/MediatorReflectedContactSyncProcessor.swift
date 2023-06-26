@@ -97,7 +97,7 @@ class MediatorReflectedContactSyncProcessor {
             self.frameworkInjector.backgroundEntityManager.entityDestroyer.deleteObject(object: contact)
         }
 
-        if let internalError = internalError {
+        if let internalError {
             return Promise(error: internalError)
         }
         return Promise()
@@ -167,7 +167,8 @@ class MediatorReflectedContactSyncProcessor {
 
     /// Download profile picture and update contact.
     /// - Parameter with: Contact to sync
-    /// - Throws: `MediatorReflectedProcessorError.messageNotProcessed`, `MediatorReflectedProcessorError.contactNotFound`
+    /// - Throws: `MediatorReflectedProcessorError.messageNotProcessed`,
+    /// `MediatorReflectedProcessorError.contactNotFound`
     private func update(with syncContact: Sync_Contact) -> Promise<Void> {
         var contactDefinedProfilePicture: Data?
         var contactDefinedProfilePictureIndex: Int?
@@ -211,7 +212,7 @@ class MediatorReflectedContactSyncProcessor {
             .then { (userDefinedProfilePicture: Data?, contactDefinedProfilePicture: Data?) -> Promise<Void> in
                 Promise { seal in
                     self.frameworkInjector.backgroundEntityManager.performSyncBlockAndSafe { [self] in
-                        guard let contact = self.frameworkInjector.backgroundEntityManager.entityFetcher
+                        guard let contact = frameworkInjector.backgroundEntityManager.entityFetcher
                             .contact(for: syncContact.identity) else {
                             seal.reject(MediatorReflectedProcessorError.contactNotFound(identity: syncContact.identity))
                             return
@@ -233,7 +234,7 @@ class MediatorReflectedContactSyncProcessor {
                             case .removed:
                                 contact.contactImage = nil
                             case .updated:
-                                let dbImageData = self.frameworkInjector.backgroundEntityManager.entityCreator
+                                let dbImageData = frameworkInjector.backgroundEntityManager.entityCreator
                                     .imageData()
                                 contact.contactImage = dbImageData
                                 contact.contactImage?.data = contactDefinedProfilePicture
@@ -267,7 +268,7 @@ class MediatorReflectedContactSyncProcessor {
                             case .regular:
                                 break
                             case .work:
-                                self.frameworkInjector.contactStore
+                                frameworkInjector.contactStore
                                     .addAsWork(identities: NSOrderedSet(array: [contact.identity]), contactSyncer: nil)
                             case .UNRECOGNIZED:
                                 break
@@ -297,8 +298,9 @@ class MediatorReflectedContactSyncProcessor {
                             contact.isContactHidden = syncContact.acquaintanceLevel == .group
                         }
 
-                        // Save on main thread (main DB context), otherwise observer of `Conversation` will not be called
-                        self.frameworkInjector.conversationStoreInternal.updateConversation(withContact: syncContact)
+                        // Save on main thread (main DB context), otherwise observer of `Conversation` will not be
+                        // called
+                        frameworkInjector.conversationStoreInternal.updateConversation(withContact: syncContact)
                     }
 
                     seal.fulfill_()

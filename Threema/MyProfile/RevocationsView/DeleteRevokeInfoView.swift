@@ -26,10 +26,11 @@ struct DeleteRevokeInfoView: View {
     @State var revokeToggleIsOn = false
     @State var showRevoke = false
     @State var showDelete = false
+    @State var deleteConfirmed = false
         
     var body: some View {
         NavigationView {
-            VStack {
+            ScrollView {
                 VStack(spacing: 16) {
                     Text(BundleUtil.localizedString(forKey: "my_profile_delete_info_title"))
                         .bold()
@@ -46,16 +47,36 @@ struct DeleteRevokeInfoView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .fixedSize(horizontal: false, vertical: true)
                     
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(BundleUtil.localizedString(forKey: "my_profile_delete_info_keep"))
-                            .font(.headline)
-                        BulletText(string: BundleUtil.localizedString(forKey: "my_profile_delete_bullet_id"))
-                        BulletText(string: BundleUtil.localizedString(forKey: "my_profile_delete_bullet_safe"))
-                        BulletText(string: BundleUtil.localizedString(forKey: "my_profile_delete_bullet_linked"))
+                    if revokeToggleIsOn {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(BundleUtil.localizedString(forKey: "my_profile_delete_info_delete_server"))
+                                .font(.headline)
+                            BulletText(string: BundleUtil.localizedString(forKey: "my_profile_delete_bullet_id"))
+                            BulletText(string: BundleUtil.localizedString(forKey: "my_profile_delete_bullet_safe"))
+                            BulletText(string: BundleUtil.localizedString(forKey: "my_profile_delete_bullet_linked"))
+                        }
+                        .multilineTextAlignment(.leading)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .fixedSize(horizontal: false, vertical: true)
+                        
+                        Label {
+                            Text(BundleUtil.localizedString(forKey: "my_profile_delete_info_revoke"))
+                                .font(.headline)
+                                .foregroundColor(Colors.red.color)
+                        } icon: {
+                            Image(systemName: "exclamationmark.triangle.fill")
+                                .foregroundColor(Colors.orange.color)
+                        }
+                        .fixedSize(horizontal: false, vertical: true)
                     }
-                    .multilineTextAlignment(.leading)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .fixedSize(horizontal: false, vertical: true)
+                    else {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(BundleUtil.localizedString(forKey: "my_profile_delete_info_keep"))
+                        }
+                        .multilineTextAlignment(.leading)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .fixedSize(horizontal: false, vertical: true)
+                    }
                                         
                     VStack(alignment: .leading, spacing: 2) {
                         Toggle(
@@ -86,22 +107,13 @@ struct DeleteRevokeInfoView: View {
                                 showDelete = true
                             }
                         }, label: {
-                            if revokeToggleIsOn {
-                                Label {
-                                    Text(BundleUtil.localizedString(forKey: "my_profile_delete_info_button_revoke"))
-                                } icon: {
-                                    Image(systemName: "chevron.forward")
-                                }
-                                .labelStyle(TrailingLabelStyle())
+                            Label {
+                                Text(BundleUtil.localizedString(forKey: "my_profile_delete_info_button"))
+                            } icon: {
+                                Image(systemName: "chevron.forward")
                             }
-                            else {
-                                Label {
-                                    Text(BundleUtil.localizedString(forKey: "my_profile_delete_info_button_data"))
-                                } icon: {
-                                    Image(systemName: "chevron.forward")
-                                }
-                                .labelStyle(TrailingLabelStyle())
-                            }
+                            .labelStyle(TrailingLabelStyle())
+                            .fixedSize(horizontal: false, vertical: true)
                         })
                         .buttonStyle(.bordered)
                     }
@@ -121,10 +133,10 @@ struct DeleteRevokeInfoView: View {
                         EmptyView()
                     }
                 )
-                
+                                
                 NavigationLink(
-                    isActive: $showDelete,
-                    destination: { DeleteIdentityInfoView() },
+                    isActive: $deleteConfirmed,
+                    destination: { DeleteRevokeSummaryView(type: .delete) },
                     label: {
                         EmptyView()
                     }
@@ -139,6 +151,23 @@ struct DeleteRevokeInfoView: View {
             .navigationBarBackButtonHidden(true)
             .animation(.linear(duration: 0.1), value: revokeToggleIsOn)
         }
+        
+        .alert(
+            BundleUtil.localizedString(forKey: "my_profile_delete_info_alert_title"),
+            isPresented: $showDelete,
+            actions: {
+                Button(
+                    BundleUtil.localizedString(forKey: "my_profile_delete_info_alert_confirm"),
+                    role: .destructive
+                ) {
+                    DeleteRevokeIdentityManager.deleteLocalData()
+                    deleteConfirmed = true
+                }
+                Button(BundleUtil.localizedString(forKey: "cancel"), role: .cancel) {
+                    // do nothing
+                }
+            }
+        )
     }
 }
 

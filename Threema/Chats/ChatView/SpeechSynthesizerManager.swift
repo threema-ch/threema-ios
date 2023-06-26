@@ -20,11 +20,12 @@
 
 import Foundation
 
-/// This exists to avoid an issue where `AVSpeechSynthesizer` wouldn't speak anything because it was immediately deallocated in iOS 16.0 and later after the function exits
-@objc class SpeechSynthesizerManger: NSObject {
+/// This exists to avoid an issue where `AVSpeechSynthesizer` wouldn't speak anything because it was immediately
+/// deallocated in iOS 16.0 and later after the function exits
+class SpeechSynthesizerManger: NSObject {
     private var synth: AVSpeechSynthesizer?
     
-    @objc func speak(_ text: String) {
+    func speak(_ text: String) {
         let utterance = AVSpeechUtterance(string: text)
         synth = AVSpeechSynthesizer()
         synth?.delegate = self

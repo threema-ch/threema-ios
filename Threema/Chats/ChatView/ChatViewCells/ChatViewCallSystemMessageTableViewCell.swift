@@ -78,16 +78,15 @@ final class ChatViewCallSystemMessageTableViewCell: ChatViewBaseTableViewCell, M
     private lazy var iconMessageContentView = IconMessageContentView(iconView: iconView, arrangedSubviews: [
         messageTextView,
         metaDataStackView,
-    ]) {
-        [weak self] in
-            guard let strongSelf = self else {
-                return
-            }
+    ]) { [weak self] in
+        guard let strongSelf = self else {
+            return
+        }
         
-            strongSelf.chatViewTableViewCellDelegate?.didTap(
-                message: strongSelf.callMessageAndNeighbors?.message,
-                in: strongSelf
-            )
+        strongSelf.chatViewTableViewCellDelegate?.didTap(
+            message: strongSelf.callMessageAndNeighbors?.message,
+            in: strongSelf
+        )
     }
     
     // MARK: - Configuration
@@ -127,7 +126,8 @@ final class ChatViewCallSystemMessageTableViewCell: ChatViewBaseTableViewCell, M
         messageTextView.text = call.localizedMessage
         stateAndDateView.message = callMessage
         
-        // We remove the duration label if there is no call time, OR statements are not possible with if case, so we use else if
+        // We remove the duration label if there is no call time, OR statements are not possible with if case, so we use
+        // else if
         if case let .endedIncomingSuccessful(duration: timeString) = call {
             metaDataLabel.attributedText = duration(callTime: timeString)
             metaDataStackView.insertArrangedSubview(metaDataLabel, at: 0)
@@ -152,7 +152,7 @@ final class ChatViewCallSystemMessageTableViewCell: ChatViewBaseTableViewCell, M
     /// - Returns: Attributed string
     private func duration(callTime: String?) -> NSMutableAttributedString? {
         
-        guard let callTime = callTime else {
+        guard let callTime else {
             return nil
         }
        
@@ -165,7 +165,7 @@ final class ChatViewCallSystemMessageTableViewCell: ChatViewBaseTableViewCell, M
         // Combine String
         let duration = NSMutableAttributedString(string: callTime)
         
-        if let icon = icon {
+        if let icon {
             let timerImage = NSTextAttachment()
             timerImage.image = icon
             let timerString = NSAttributedString(attachment: timerImage)

@@ -27,8 +27,8 @@ public protocol Reusable {
 }
 
 // Default implementation of `Reusable` for all UIView decedents
-public extension Reusable where Self: UIView {
-    static var reuseIdentifier: String {
+extension Reusable where Self: UIView {
+    public static var reuseIdentifier: String {
         String(describing: self)
     }
 }

@@ -41,7 +41,7 @@ import Foundation
         sendContactProfilePicture: Bool
     ) {
         self.thumbnailBlobID = thumbnailBlobID
-        if let thumbnailSize = thumbnailSize {
+        if let thumbnailSize {
             self.thumbnailSizeCurrent = thumbnailSize.doubleValue
             self.thumbnailSize = thumbnailSize
         }
@@ -56,7 +56,7 @@ import Foundation
         sendContactProfilePicture: Bool
     ) {
         self.thumbnailBlobID = thumbnailBlobID
-        if let thumbnailSize = thumbnailSize {
+        if let thumbnailSize {
             self.thumbnailSizeCurrent = thumbnailSize.doubleValue
             self.thumbnailSize = thumbnailSize
         }
@@ -70,7 +70,7 @@ import Foundation
 
         self.thumbnailBlobID = try? container.decode(Data.self, forKey: .thumbnailBlobID)
         self.thumbnailSizeCurrent = try? container.decode(Double.self, forKey: .thumbnailSizeCurrent)
-        if let thumbnailSizeCurrent = thumbnailSizeCurrent {
+        if let thumbnailSizeCurrent {
             self.thumbnailSize = NSNumber(value: thumbnailSizeCurrent)
         }
     }

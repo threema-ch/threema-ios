@@ -93,7 +93,7 @@ open class ImagePreviewItem: MediaPreviewItem {
                 return
             }
             
-            guard let itemURL = itemURL else {
+            guard let itemURL else {
                 seal.reject(MediaPreviewItem.LoadError.unknown)
                 return
             }

@@ -119,7 +119,8 @@ class MediatorReflectedIncomingMessageUpdateProcessor {
                     readMessageConversations.insert(message.conversation)
                 }
 
-                // If it is a read receipt of a reflected incoming message, then remove all notifications of this message
+                // If it is a read receipt of a reflected incoming message, then remove all notifications of this
+                // message
                 let identity: ThreemaIdentity? = message.sender?.identity ?? message.conversation.contact?.identity
                 if let key = PendingUserNotificationKey.key(identity: identity, messageID: message.id) {
                     self.frameworkInjector.userNotificationCenterManager.remove(
@@ -135,7 +136,7 @@ class MediatorReflectedIncomingMessageUpdateProcessor {
             messageProcessorDelegate.readMessage(inConversations: readMessageConversations)
         }
 
-        if let internalError = internalError {
+        if let internalError {
             throw internalError
         }
     }

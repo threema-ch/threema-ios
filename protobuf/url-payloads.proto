@@ -15,6 +15,7 @@ option java_package = "ch.threema.protobuf.url_payloads";
 option java_multiple_files = true;
 
 import "common.proto";
+import "md-d2d-rendezvous.proto";
 
 // Group invitation containing information to request joining a group.
 //
@@ -61,11 +62,7 @@ message GroupInvite {
 // When receiving this message:
 //
 // 1. If `version` or `variant` is not supported, abort these steps.
-// 2. Validate `psk_parameters` according to the field description of each
-//    `Argon2idParameters`. If they do not fulfill the minimum requirements,
-//    abort these steps.
-// 3. Decrypt `encrypted_rendezvous_data`. If this fails, abort these steps.
-// 4. Follow the description of `RendezvousInit` to continue.
+// 2. Follow the description of `RendezvousInit` to continue.
 message DeviceGroupJoinRequestOrOffer {
   enum Version {
     // Initial version.
@@ -89,38 +86,6 @@ message DeviceGroupJoinRequestOrOffer {
   }
   Variant variant = 2;
 
-  // Argon2id parameters.
-  message Argon2idParameters {
-    // Version of Argon2
-    enum Argon2Version {
-      _ = 0x00;
-      VERSION_1_3 = 0x13;
-    }
-    Argon2Version version = 1;
-
-    // Random salt (16 bytes)
-    bytes salt = 2;
-
-    // Memory usage in bytes (≥ 128 MiB)
-    uint32 memory_bytes = 3;
-
-    // Number of iterations (≥ 3)
-    uint32 iterations = 4;
-
-    // Amount of parallelism (≥ 1, recommended to be 1)
-    uint32 parallelism = 5;
-  }
-
-  // Parameters used for deriving the user's passphrase (`PSK`) as defined by
-  // the Device Join Protocol.
-  Argon2idParameters psk_parameters = 3;
-
-  // Contains rendezvous data (`rendezvous.RendezvousInit`) encrypted by a
-  // random nonce and the key derived from the user's passphrase (`PSK`) as
-  // defined by the Device Join Protocol. The final result is encoded in an
-  // `extra.crypto.encrypted-data-with-nonce-ahead` struct.
-  //
-  //     Box(PSK.secret)
-  //       .encrypt(data=<rendezvous.RendezvousInit>, nonce=<random>)
-  bytes encrypted_rendezvous_data = 4;
+  // Data necessary to initialise a 1:1 connection between two devices.
+  rendezvous.RendezvousInit rendezvous_init = 3;
 }

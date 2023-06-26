@@ -30,7 +30,8 @@ class DBLoadTests: XCTestCase {
         AppGroup.setGroupID("group.ch.threema") // THREEMA_GROUP_IDENTIFIER @"group.ch.threema"
     }
 
-    /// Print out shell commands to copy database and external data form simulator. To prepare database before, run methods in this file like 'testDbLoad'.
+    /// Print out shell commands to copy database and external data form simulator. To prepare database before, run
+    /// methods in this file like 'testDbLoad'.
     func testCopyOldVersionOfDatabase() {
         
         let databasePath = FileUtility.appDataDirectory?.path
@@ -466,7 +467,7 @@ class DBLoadTests: XCTestCase {
             }
         }
         
-        if let fileMessageCreationError = fileMessageCreationError {
+        if let fileMessageCreationError {
             XCTFail(fileMessageCreationError.localizedDescription)
         }
         
@@ -979,7 +980,7 @@ class DBLoadTests: XCTestCase {
         for index in 0..<times {
             if showCaptions {
                 // Add a caption if given or to every eighth message
-                if let caption = caption {
+                if let caption {
                     senderItem.caption = caption
                 }
                 else if index % 8 == 0 {
@@ -1015,7 +1016,7 @@ class DBLoadTests: XCTestCase {
                 }
             }
             
-            if let fileMessageCreationError = fileMessageCreationError {
+            if let fileMessageCreationError {
                 XCTFail(fileMessageCreationError.localizedDescription)
             }
         }
@@ -1249,7 +1250,7 @@ class DBLoadTests: XCTestCase {
             }
         }
         
-        if let fileMessageCreationError = fileMessageCreationError {
+        if let fileMessageCreationError {
             XCTFail(fileMessageCreationError.localizedDescription)
         }
     }
@@ -1340,7 +1341,7 @@ class DBLoadTests: XCTestCase {
             
             message.quotedMessageID = quoteID
             
-            if let sender = sender {
+            if let sender {
                 message.isOwn = false
                 message.sender = sender
             }

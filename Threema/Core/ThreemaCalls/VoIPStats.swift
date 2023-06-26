@@ -137,7 +137,7 @@ internal enum CodecMimeTypePrimary {
         public func getShortRepresentation() -> String {
             var result = "tx="
             
-            if let sent = sent {
+            if let sent {
                 result += "\(toHumanReadableByteCount(sent))"
             }
             else {
@@ -145,7 +145,7 @@ internal enum CodecMimeTypePrimary {
             }
             
             result += ", rx="
-            if let received = received {
+            if let received {
                 result += "\(toHumanReadableByteCount(received))"
             }
             else {
@@ -175,7 +175,7 @@ internal enum CodecMimeTypePrimary {
         
         public func getShortRepresentation() -> String {
             var result = "\(address ?? "?.?.?.?") \(type ?? "n/a") \(protocol_ ?? "n/a")"
-            if let network = network {
+            if let network {
                 result += " " + network
             }
             return result
@@ -183,7 +183,7 @@ internal enum CodecMimeTypePrimary {
         
         public func getRepresentation() -> String {
             var result = "address=\(address ?? "?.?.?.?"), type=\(type ?? "n/a"), protocol=\(protocol_ ?? "n/a")"
-            if let network = network {
+            if let network {
                 result += ", network=\(network)"
             }
             return result
@@ -311,10 +311,10 @@ internal enum CodecMimeTypePrimary {
         }
         
         private static func usesRelay(_ entry: RTCStatistics, local: Candidate?, remote: Candidate?) -> Bool {
-            if let local = local, local.type == "relay" {
+            if let local, local.type == "relay" {
                 return true
             }
-            else if let remote = remote, remote.type == "relay" {
+            else if let remote, remote.type == "relay" {
                 return true
             }
             return false
@@ -322,7 +322,7 @@ internal enum CodecMimeTypePrimary {
             
         public func getShortRepresentation() -> String {
             var result = "pair=\(state) "
-            if let nominated = nominated, nominated == true {
+            if let nominated, nominated == true {
                 result += " nominated"
             }
             result += "\n"
@@ -1154,7 +1154,7 @@ internal enum CodecMimeTypePrimary {
                     let kind = entry.values["kind"] as? String
                     let inbound = entry.values["remoteSource"] as? NSNumber
                     if kind == "video",
-                       let inbound = inbound, inbound.boolValue {
+                       let inbound, inbound.boolValue {
                         let track = Track(entry)
                         if track.totalFramesReceived != nil, track.areFramesReceived() {
                             if totalFramesReceived == nil {
@@ -1188,7 +1188,7 @@ internal enum CodecMimeTypePrimary {
         }
         
         // Sort candidate pairs by priority
-        if let candidatePairs = candidatePairs {
+        if let candidatePairs {
             self.candidatePairs = candidatePairs.sorted(by: { $0.priority > $1.priority })
         }
         
@@ -1201,44 +1201,44 @@ internal enum CodecMimeTypePrimary {
     
     @objc public func getShortRepresentation() -> String {
         var result = ""
-        if let transport = transport, options.transport {
+        if let transport, options.transport {
             result += "\(transport.getShortRepresentation())\n"
         }
-        if let crypto = crypto, options.crypto {
+        if let crypto, options.crypto {
             result += "\(crypto.getShortRepresentation())\n"
         }
-        if let candidatePairs = candidatePairs,
+        if let candidatePairs,
            options.candidatePairsFlag.rawValue & CandidatePairVariant.OVERVIEW.rawValue != 0 {
             result += "pairs(\(candidatePairs.count))=\(candidatePairs.map { $0.getStatusChar() }.joined())\n"
         }
-        if let selectedCandidatePair = selectedCandidatePair {
+        if let selectedCandidatePair {
             result += "\(selectedCandidatePair.getShortRepresentation())\n"
         }
         result += "\n"
         
-        if let inboundRtpAudio = inboundRtpAudio {
+        if let inboundRtpAudio {
             result += "in: \(inboundRtpAudio.getShortRepresentation())\n"
         }
-        if let inboundRtpVideo = inboundRtpVideo {
+        if let inboundRtpVideo {
             result += "in: \(inboundRtpVideo.getShortRepresentation())\n"
         }
-        if let outboundRtpAudio = outboundRtpAudio {
+        if let outboundRtpAudio {
             result += "out: \(outboundRtpAudio.getShortRepresentation())\n"
         }
-        if let outboundRtpVideo = outboundRtpVideo {
+        if let outboundRtpVideo {
             result += "out: \(outboundRtpVideo.getShortRepresentation())\n"
         }
         result += "\n"
         
-        if let inboundTrackVideo = inboundTrackVideo {
+        if let inboundTrackVideo {
             result += "in/track- \(inboundTrackVideo.getShortRepresentation())\n"
         }
-        if let outboundTrackVideo = outboundTrackVideo {
+        if let outboundTrackVideo {
             result += "out/track- \(outboundTrackVideo.getShortRepresentation())\n"
         }
 
         if options.codecs {
-            if let inboundCodecs = inboundCodecs {
+            if let inboundCodecs {
                 result += "in/codecs "
                 for codec in inboundCodecs.values {
                     result += codec.getShortRepresentation()
@@ -1247,7 +1247,7 @@ internal enum CodecMimeTypePrimary {
                 result += "\n"
             }
             
-            if let outboundCodecs = outboundCodecs {
+            if let outboundCodecs {
                 result += "out/codecs "
                 for codec in outboundCodecs.values {
                     result += codec.getShortRepresentation()
@@ -1257,7 +1257,7 @@ internal enum CodecMimeTypePrimary {
             }
         }
         
-        if let rtpTransceivers = rtpTransceivers {
+        if let rtpTransceivers {
             result += "\n"
             for transceiver in rtpTransceivers {
                 result += "transceiver \(transceiver.getShortRepresentation())\n"
@@ -1265,7 +1265,7 @@ internal enum CodecMimeTypePrimary {
             result += "\n"
         }
         
-        if let candidatePairs = candidatePairs,
+        if let candidatePairs,
            options.candidatePairsFlag.rawValue & CandidatePairVariant.DETAILED.rawValue != 0 {
             result += "\(candidatePairs.map { $0.getShortRepresentation() }.joined(separator: "\n"))\n"
         }
@@ -1277,58 +1277,58 @@ internal enum CodecMimeTypePrimary {
     
     @objc public func getRepresentation() -> String {
         var result = ""
-        if let transport = transport {
+        if let transport {
             result += "Transport: \(transport.getRepresentation())\n"
         }
-        if let crypto = crypto {
+        if let crypto {
             result += "Crypto: \(crypto.getRepresentation())\n"
         }
-        if let candidatePairs = candidatePairs,
+        if let candidatePairs,
            options.candidatePairsFlag.rawValue & CandidatePairVariant.OVERVIEW.rawValue != 0 {
             result +=
                 "Candidate Pairs Overview (\(candidatePairs.count)): \(candidatePairs.map { $0.getStatusChar() }.joined())\n"
         }
-        if let selectedCandidatePair = selectedCandidatePair {
+        if let selectedCandidatePair {
             result += "Selected Candidate Pair: \(selectedCandidatePair.getRepresentation())\n"
         }
-        if let inboundRtpAudio = inboundRtpAudio {
+        if let inboundRtpAudio {
             result += "Inbound RTP Audio: \(inboundRtpAudio.getRepresentation())\n"
         }
-        if let inboundRtpVideo = inboundRtpVideo {
+        if let inboundRtpVideo {
             result += "Inbound RTP Video: \(inboundRtpVideo.getRepresentation())\n"
         }
-        if let outboundRtpAudio = outboundRtpAudio {
+        if let outboundRtpAudio {
             result += "Outbound RTP Audio: \(outboundRtpAudio.getRepresentation())\n"
         }
-        if let outboundRtpVideo = outboundRtpVideo {
+        if let outboundRtpVideo {
             result += "Outbound RTP Video: \(outboundRtpVideo.getRepresentation())\n"
         }
-        if let inboundTrackVideo = inboundTrackVideo {
+        if let inboundTrackVideo {
             result += "Inbound Track Video: \(inboundTrackVideo.getRepresentation())\n"
         }
-        if let outboundTrackVideo = outboundTrackVideo {
+        if let outboundTrackVideo {
             result += "Outbound Track Video: \(outboundTrackVideo.getRepresentation())\n"
         }
-        if let inboundCodecs = inboundCodecs {
+        if let inboundCodecs {
             result += "Inbound Codecs (\(inboundCodecs.count))\n"
             for codec in inboundCodecs.values {
                 result += "- \(codec.getShortRepresentation())\n"
             }
         }
-        if let outboundCodecs = outboundCodecs {
+        if let outboundCodecs {
             result += "Outbound Codecs (\(outboundCodecs.count))\n"
             for codec in outboundCodecs.values {
                 result += "- \(codec.getShortRepresentation())\n"
             }
         }
-        if let rtpTransceivers = rtpTransceivers {
+        if let rtpTransceivers {
             result += "Transceivers (\(rtpTransceivers.count))\n"
             for transceiver in rtpTransceivers {
                 result += "- \(transceiver.getRepresentation())"
             }
             result += "\n"
         }
-        if let candidatePairs = candidatePairs,
+        if let candidatePairs,
            options.candidatePairsFlag.rawValue & CandidatePairVariant.DETAILED.rawValue != 0 {
             result += "Candidate Pairs (\(candidatePairs.count))\n"
             result += candidatePairs.map { "- \($0.getRepresentation())\n" }.joined()

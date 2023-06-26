@@ -105,7 +105,7 @@ public enum AppIcon: CaseIterable {
         case .anniversary10:
             image = UIImage(named: "icon_10_years_full")
         }
-        guard let image = image else {
+        guard let image else {
             return UIImage(systemName: "questionmark.square.dashed")!
         }
         return image

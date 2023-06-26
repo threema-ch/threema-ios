@@ -30,7 +30,8 @@ import ThreemaFramework
     /// Using as main (context) configured manager (will be used when messages are processed in main thread)
     private let pendingUserNotificationManager: PendingUserNotificationManagerProtocol
 
-    /// Using as background (context) configured manager (will be used when messages are processed in background, see: MessageProcessorDelegate)
+    /// Using as background (context) configured manager (will be used when messages are processed in background, see:
+    /// MessageProcessorDelegate)
     private let backgroundPendingUserNotificationManager: PendingUserNotificationManagerProtocol
 
     private let businessInjector: BusinessInjectorProtocol
@@ -324,7 +325,7 @@ extension IncomingMessageManager: MessageProcessorDelegate {
     }
     
     func readMessage(inConversations: Set<Conversation>?) {
-        if let inConversations = inConversations, !inConversations.isEmpty {
+        if let inConversations, !inConversations.isEmpty {
             businessInjector.backgroundUnreadMessages.totalCount(doCalcUnreadMessagesCountOf: inConversations)
         }
 
@@ -412,7 +413,7 @@ extension IncomingMessageManager: MessageProcessorDelegate {
     ) {
         switch message {
         case is VoIPCallOfferMessage:
-            guard let identity = identity else {
+            guard let identity else {
                 DDLogError("No contact for processing VoIP call offer.")
                 break
             }
@@ -421,7 +422,7 @@ extension IncomingMessageManager: MessageProcessorDelegate {
                 onCompletion?(self)
             }
         case is VoIPCallAnswerMessage:
-            guard let identity = identity else {
+            guard let identity else {
                 DDLogError("No contact for processing VoIP call answer.")
                 break
             }
@@ -433,7 +434,7 @@ extension IncomingMessageManager: MessageProcessorDelegate {
                 onCompletion?(self)
             }
         case is VoIPCallIceCandidatesMessage:
-            guard let identity = identity else {
+            guard let identity else {
                 DDLogError("No contact for processing VoIP call ice candidates.")
                 break
             }

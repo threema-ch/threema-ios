@@ -220,7 +220,8 @@ extension ChatViewThumbnailDisplayMessageTableViewCell: ChatViewMessageAction {
         let shareItems = [MessageActivityItem(for: message)]
 
         // Copy
-        // In the new chat view we always copy the data, regardless if it has a caption because the text can be selected itself.
+        // In the new chat view we always copy the data, regardless if it has a caption because the text can be selected
+        // itself.
         let copyHandler = {
             guard !MDMSetup(setup: false).disableShareMedia() else {
                 DDLogWarn(
@@ -229,7 +230,7 @@ extension ChatViewThumbnailDisplayMessageTableViewCell: ChatViewMessageAction {
                 return
             }
             
-            guard let data = message.blobGet() else {
+            guard let data = message.blobData else {
                 NotificationPresenterWrapper.shared.present(type: .copyError)
                 return
             }
@@ -240,7 +241,7 @@ extension ChatViewThumbnailDisplayMessageTableViewCell: ChatViewMessageAction {
                 NotificationPresenterWrapper.shared.present(type: .copySuccess)
                 
             case .video:
-                guard let uti = message.blobGetUTI() else {
+                guard let uti = message.blobUTTypeIdentifier else {
                     NotificationPresenterWrapper.shared.present(type: .copyError)
                     break
                 }
@@ -338,7 +339,8 @@ extension ChatViewThumbnailDisplayMessageTableViewCell: ChatViewMessageAction {
                     await BlobManager.shared.syncBlobs(for: message.objectID)
                 }
             }
-            // Download action is inserted before default action, depending if ack/dec is possible at a different position
+            // Download action is inserted before default action, depending if ack/dec is possible at a different
+            // position
             if message.isUserAckEnabled {
                 menuItems.insert(downloadAction, at: 2)
             }

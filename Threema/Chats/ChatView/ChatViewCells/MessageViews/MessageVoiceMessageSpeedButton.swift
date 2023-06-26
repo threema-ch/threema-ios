@@ -101,7 +101,8 @@ final class MessageVoiceMessageSpeedButton: ThemedCodeButton {
         )
         setImage(image, for: .normal)
         
-        /// We redispatch this on the main thread to avoid layouting too early causing temporary constraints due to a call to layoutIfNeeded when accessing the imageview of UIButton.
+        /// We redispatch this on the main thread to avoid layouting too early causing temporary constraints due to a
+        /// call to layoutIfNeeded when accessing the imageview of UIButton.
         DispatchQueue.main.async {
             self.toggleOrUpdateView(animated: false)
         }
@@ -110,7 +111,7 @@ final class MessageVoiceMessageSpeedButton: ThemedCodeButton {
     // MARK: - Update Functions
     
     func toggleOrUpdateView(animated: Bool = true) {
-        if let isPlaying = isPlaying, !isPlaying || self.isPlaying == nil {
+        if let isPlaying, !isPlaying || self.isPlaying == nil {
             hideSpeedButton(animated: animated)
         }
         else {

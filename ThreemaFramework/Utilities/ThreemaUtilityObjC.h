@@ -21,12 +21,8 @@
 #import <Foundation/Foundation.h>
 #import "ContactEntity.h"
 
-__attribute__((deprecated("Use ThreemaUtility instead")))
+__deprecated_msg("Use ThreemaUtility instead")
 @interface ThreemaUtilityObjC : NSObject
-
-+ (BOOL)isSameDayWithDate1:(NSDate*)date1 date2:(NSDate*)date2 __deprecated_msg("Use Calendar.current.isDate(date1, inSameDayAs: date2)");
-
-+ (NSString*)formatShortLastMessageDate:(NSDate*)date;
 
 + (void)reverseGeocodeNearLatitude:(double)latitude longitude:(double)longitude accuracy:(double)accuracy completion:(void (^)(NSString *label))completion onError:(void(^)(NSError *error))onError __deprecated_msg("Use fetchAddress() instead");
 
@@ -40,11 +36,7 @@ __attribute__((deprecated("Use ThreemaUtility instead")))
 
 + (NSString *)formatDataLength:(CGFloat)numBytes;
 
-+ (NSString *)stringFromContacts:(NSArray *)contacts;
-
 + (BOOL)isValidEmail:(NSString *)email;
-
-+ (UIView *)view:(UIView *)view getSuperviewOfKind:(Class)sourceClass;
 
 + (UIViewAnimationOptions)animationOptionsFor:(NSNotification *)notification animationDuration:(NSTimeInterval*)animationDuration;
 
@@ -55,8 +47,6 @@ __attribute__((deprecated("Use ThreemaUtility instead")))
 + (BOOL)hideThreemaTypeIconForContact:(ContactEntity *)contact __deprecated_msg("Use ContactEntity.showOtherThreemaTypeIcon instead");
 
 + (UIImage *)threemaTypeIcon __deprecated_msg("Use ThreemaUtility.otherThreemaTypeIcon or OtherThreemaTypeImageView instead");
-
-+ (NSString *)threemaTypeIconAccessibilityLabel __deprecated_msg("Use ThreemaUtility.otherThreemaTypeAccessibilityLabel or OtherThreemaTypeImageView instead");
 
 + (NSArray *)getTrimmedMessages:(NSString *)message;
 

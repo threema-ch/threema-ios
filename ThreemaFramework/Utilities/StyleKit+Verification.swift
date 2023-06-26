@@ -20,8 +20,8 @@
 
 import Foundation
 
-public extension StyleKit {
-    static func verificationImage(for level: Int) -> UIImage {
+extension StyleKit {
+    public static func verificationImage(for level: Int) -> UIImage {
         switch level {
         case 0:
             return StyleKit.verification0
@@ -39,7 +39,7 @@ public extension StyleKit {
         }
     }
     
-    static func verificationImageBig(for level: Int) -> UIImage {
+    public static func verificationImageBig(for level: Int) -> UIImage {
         switch level {
         case 0:
             return StyleKit.verificationBig0

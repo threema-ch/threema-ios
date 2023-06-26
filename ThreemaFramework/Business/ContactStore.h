@@ -117,7 +117,7 @@ NS_ASSUME_NONNULL_BEGIN
     NS_SWIFT_NAME(upgrade(_:toVerificationLevel:));
 - (void)setWorkContact:(nullable ContactEntity *)contact workContact:(BOOL)workContact;
 
-- (void)updateNickname:(nonnull NSString *)identity nickname:(NSString *)nickname shouldReflect:(BOOL)shouldReflect;
+- (void)updateNickname:(nonnull NSString *)identity nickname:(NSString *)nickname;
 
 /* manage profile picture request list */
 - (BOOL)existsProfilePictureRequestForIdentity:(nullable NSString *)identity

@@ -96,15 +96,15 @@ public class SQLDHSessionStore: DHSessionStoreProtocol {
                 myIdentityColumn <- session.myIdentity,
                 peerIdentityColumn <- session.peerIdentity,
                 sessionIDColumn <- session.id.value,
-                myCurrentChainKey2DHColumn <- try self.keyWrapper.wrap(key: session.myRatchet2DH?.currentChainKey),
+                myCurrentChainKey2DHColumn <- self.keyWrapper.wrap(key: session.myRatchet2DH?.currentChainKey),
                 myCounter2DHColumn <- uInt64ToInt64(value: session.myRatchet2DH?.counter),
-                myCurrentChainKey4DHColumn <- try self.keyWrapper.wrap(key: session.myRatchet4DH?.currentChainKey),
+                myCurrentChainKey4DHColumn <- self.keyWrapper.wrap(key: session.myRatchet4DH?.currentChainKey),
                 myCounter4DHColumn <- uInt64ToInt64(value: session.myRatchet4DH?.counter),
-                peerCurrentChainKey2DHColumn <- try self.keyWrapper.wrap(key: session.peerRatchet2DH?.currentChainKey),
+                peerCurrentChainKey2DHColumn <- self.keyWrapper.wrap(key: session.peerRatchet2DH?.currentChainKey),
                 peerCounter2DHColumn <- uInt64ToInt64(value: session.peerRatchet2DH?.counter),
-                peerCurrentChainKey4DHColumn <- try self.keyWrapper.wrap(key: session.peerRatchet4DH?.currentChainKey),
+                peerCurrentChainKey4DHColumn <- self.keyWrapper.wrap(key: session.peerRatchet4DH?.currentChainKey),
                 peerCounter4DHColumn <- uInt64ToInt64(value: session.peerRatchet4DH?.counter),
-                myEphemeralPrivateKeyColumn <- try self.keyWrapper.wrap(key: session.myEphemeralPrivateKey),
+                myEphemeralPrivateKeyColumn <- self.keyWrapper.wrap(key: session.myEphemeralPrivateKey),
                 myEphemeralPublicKeyColumn <- session.myEphemeralPublicKey!
             ))
         }
@@ -119,25 +119,31 @@ public class SQLDHSessionStore: DHSessionStoreProtocol {
                         peerIdentity: session.peerIdentity,
                         sessionID: session.id,
                         // To avoid accidentally returning the ratchet counters to an earlier state we check
-                        // for session with only counters that are lower than what we have in the session we want to update to.
+                        // for session with only counters that are lower than what we have in the session we want to
+                        // update to.
                         //
-                        // We only update the session if the ratchets are further along than what is currently stored in the DB.
+                        // We only update the session if the ratchets are further along than what is currently stored in
+                        // the DB.
                         //
-                        // This resolves an issue where we would go back to a previous session state if we process a message in the app and
-                        // before we are able to send the read receipt (which we wait for in TaskExecutionReceiveMessage) we would close the app
-                        // disconnect from the server and thus won't be able to send the read receipt keeping the task alive. (All other tasks will be removed from the queue.)
-                        // This then causes the server to send out a push as we haven't acked the message, which launches the notification extension which then processes
-                        // the message. If n additional messages are received before we open the app again, the ratchets are further along than what we have in the session in the
-                        // task in the app. Launching the app will then cause the read receipt to be sent, and the session to be "updated" to the previous state.
-                        // The next received message will cause an error message to appear claiming that n messages were lost since receiving the last message when in fact no messages were lost.
+                        // This resolves an issue where we would go back to a previous session state if we process a
+                        // message in the app and before we are able to send the read receipt (which we wait for in
+                        // TaskExecutionReceiveMessage) we would close the app disconnect from the server and thus won't
+                        // be able to send the read receipt keeping the task alive. (All other tasks will be removed
+                        // from the queue.) This then causes the server to send out a push as we haven't acked the
+                        // message, which launches the notification extension which then processes the message. If n
+                        // additional messages are received before we open the app again, the ratchets are further along
+                        // than what we have in the session in the task in the app. Launching the app will then cause
+                        // the read receipt to be sent, and the session to be "updated" to the previous state. The next
+                        // received message will cause an error message to appear claiming that n messages were lost
+                        // since receiving the last message when in fact no messages were lost.
                         peerCounter2DH: uInt64ToInt64(value: session.peerRatchet2DH?.counter),
                         peerCounter4DH: uInt64ToInt64(value: session.peerRatchet4DH?.counter)
                     )
                     .update(
-                        peerCurrentChainKey2DHColumn <- try self.keyWrapper
+                        peerCurrentChainKey2DHColumn <- self.keyWrapper
                             .wrap(key: session.peerRatchet2DH?.currentChainKey),
                         peerCounter2DHColumn <- uInt64ToInt64(value: session.peerRatchet2DH?.counter),
-                        peerCurrentChainKey4DHColumn <- try self.keyWrapper
+                        peerCurrentChainKey4DHColumn <- self.keyWrapper
                             .wrap(key: session.peerRatchet4DH?.currentChainKey),
                         peerCounter4DHColumn <- uInt64ToInt64(value: session.peerRatchet4DH?.counter)
                     )
@@ -150,15 +156,16 @@ public class SQLDHSessionStore: DHSessionStoreProtocol {
                         peerIdentity: session.peerIdentity,
                         sessionID: session.id,
                         // To avoid accidentally returning the ratchet counters to an earlier state we check
-                        // for session with only counters that are lower than what we have in the session we want to update to.
+                        // for session with only counters that are lower than what we have in the session we want to
+                        // update to.
                         myCounter2DH: uInt64ToInt64(value: session.myRatchet2DH?.counter),
                         myCounter4DH: uInt64ToInt64(value: session.myRatchet4DH?.counter)
                     )
                     .update(
-                        myCurrentChainKey2DHColumn <- try self.keyWrapper
+                        myCurrentChainKey2DHColumn <- self.keyWrapper
                             .wrap(key: session.myRatchet2DH?.currentChainKey),
                         myCounter2DHColumn <- uInt64ToInt64(value: session.myRatchet2DH?.counter),
-                        myCurrentChainKey4DHColumn <- try self.keyWrapper
+                        myCurrentChainKey4DHColumn <- self.keyWrapper
                             .wrap(key: session.myRatchet4DH?.currentChainKey),
                         myCounter4DHColumn <- uInt64ToInt64(value: session.myRatchet4DH?.counter)
                     )
@@ -276,28 +283,28 @@ public class SQLDHSessionStore: DHSessionStoreProtocol {
     
     private func dhSessionFromRow(row: Row) throws -> DHSession? {
         do {
-            return DHSession(
-                id: try DHSessionID(value: try row.get(sessionIDColumn)),
-                myIdentity: try row.get(myIdentityColumn),
-                peerIdentity: try row.get(peerIdentityColumn),
-                myEphemeralPrivateKey: try keyWrapper.unwrap(key: row.get(myEphemeralPrivateKeyColumn)),
-                myEphemeralPublicKey: try row.get(myEphemeralPublicKeyColumn),
-                myRatchet2DH: try ratchetFromRow(
+            return try DHSession(
+                id: DHSessionID(value: row.get(sessionIDColumn)),
+                myIdentity: row.get(myIdentityColumn),
+                peerIdentity: row.get(peerIdentityColumn),
+                myEphemeralPrivateKey: keyWrapper.unwrap(key: row.get(myEphemeralPrivateKeyColumn)),
+                myEphemeralPublicKey: row.get(myEphemeralPublicKeyColumn),
+                myRatchet2DH: ratchetFromRow(
                     row: row,
                     keyColumn: myCurrentChainKey2DHColumn,
                     counterColumn: myCounter2DHColumn
                 ),
-                myRatchet4DH: try ratchetFromRow(
+                myRatchet4DH: ratchetFromRow(
                     row: row,
                     keyColumn: myCurrentChainKey4DHColumn,
                     counterColumn: myCounter4DHColumn
                 ),
-                peerRatchet2DH: try ratchetFromRow(
+                peerRatchet2DH: ratchetFromRow(
                     row: row,
                     keyColumn: peerCurrentChainKey2DHColumn,
                     counterColumn: peerCounter2DHColumn
                 ),
-                peerRatchet4DH: try ratchetFromRow(
+                peerRatchet4DH: ratchetFromRow(
                     row: row,
                     keyColumn: peerCurrentChainKey4DHColumn,
                     counterColumn: peerCounter4DHColumn
@@ -327,7 +334,7 @@ public class SQLDHSessionStore: DHSessionStoreProtocol {
         guard let key = try row.get(keyColumn), let counter = try row.get(counterColumn) else {
             return nil
         }
-        return KDFRatchet(counter: UInt64(counter), initialChainKey: try keyWrapper.unwrap(key: key)!)
+        return try KDFRatchet(counter: UInt64(counter), initialChainKey: keyWrapper.unwrap(key: key)!)
     }
     
     private func excludeFromBackup(path: String) {
@@ -338,7 +345,7 @@ public class SQLDHSessionStore: DHSessionStoreProtocol {
     }
     
     private func uInt64ToInt64(value: UInt64?) throws -> Int64? {
-        guard let value = value else {
+        guard let value else {
             return nil
         }
         guard value <= UInt64(Int64.max) else {

@@ -32,24 +32,24 @@ public protocol PreviewableMessage: BaseMessage {
     var mediaPreview: (thumbnail: UIImage, isPlayable: Bool)? { get }
 }
 
-public extension PreviewableMessage {
+extension PreviewableMessage {
     
-    var previewSymbolName: String? {
+    public var previewSymbolName: String? {
         nil
     }
     
-    var previewSymbolTintColor: UIColor? {
+    public var previewSymbolTintColor: UIColor? {
         nil
     }
     
-    var mediaPreview: (thumbnail: UIImage, isPlayable: Bool)? {
+    public var mediaPreview: (thumbnail: UIImage, isPlayable: Bool)? {
         nil
     }
     
     /// Returns the symbol with the name specified in `previewSymbolName`
     /// - Returns: Optional UIImage if the`previewSymbolName` could be resolved
-    var previewSymbol: UIImage? {
-        guard let previewSymbolName = previewSymbolName else {
+    public var previewSymbol: UIImage? {
+        guard let previewSymbolName else {
             return nil
         }
         
@@ -66,7 +66,8 @@ public extension PreviewableMessage {
     /// Creates an attributed string with a leading icon to be used in defined place
     /// - Parameter type: Place where attributed string will be used
     /// - Returns: NSAttributedString containing the preview text and optionally a Symbol
-    func previewAttributedText(for configuration: PreviewableMessageConfiguration = .default) -> NSAttributedString {
+    public func previewAttributedText(for configuration: PreviewableMessageConfiguration = .default)
+        -> NSAttributedString {
         // Trim text as Swift string to prevent emoji cropping
         let trimmedString = String(previewText.prefix(configuration.trimmingCount))
         

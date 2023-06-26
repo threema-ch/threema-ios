@@ -63,8 +63,6 @@ static const int MAX_BYTES_TO_DECRYPT_NOTIFICATION_EXTENSION = 500000;
     NSData *serverAltKeyPub;
     NSData *tempKeyHash;
     
-    NSString *mediatorServerURL;
-
     dispatch_queue_t sendPushTokenQueue;
     dispatch_queue_t removeVoIPPushTokenQueue;
     BOOL isRemovedVoIPPushToken;
@@ -194,8 +192,6 @@ struct pktExtension {
 {
     self = [super init];
     if (self) {
-        mediatorServerURL = [BundleUtil objectForInfoDictionaryKey:@"ThreemaMediatorServerURL"];
-        
         sendPushTokenQueue = dispatch_queue_create("ch.threema.ServerConnector.sendPushTokenQueue", NULL);
         removeVoIPPushTokenQueue = dispatch_queue_create("ch.threema.ServerConnector.removeVoIPPushTokenQueue", NULL);
         isRemovedVoIPPushToken = NO;
@@ -432,7 +428,7 @@ struct pktExtension {
             } else {
                 // don't show license warning for connection errors
                 DDLogNotice(@"License check failed: %@", licenseStore.error);
-                if ([licenseStore.error.domain hasPrefix:@"NSURL"] == NO && licenseStore.error.code != 256) {
+                if ([licenseStore.error.domain hasPrefix:@"NSURL"] == NO && licenseStore.error.code != 256) {                    
                     // License check failed permanently; need to inform user and ask for new license username/password
                     [[NSNotificationCenter defaultCenter] postNotificationName:kNotificationLicenseMissing object:nil];
                 } else {
@@ -868,18 +864,21 @@ struct pktExtension {
 
 - (void)failedProcessingMessage:(BoxedMessage *)boxmsg error:(NSError *)err {
     if (err.code == kBlockUnknownContactErrorCode) {
-        DDLogVerbose(@"Message processing error due to block contacts - acking anyway");
+        DDLogVerbose(@"Message %@ processing error due to block contacts - acking anyway", [NSString stringWithHexData:boxmsg.messageId]);
         [self ackMessage:boxmsg.messageId fromIdentity:boxmsg.fromIdentity];
     } else if (err.code == kBadMessageErrorCode) {
-        DDLogVerbose(@"Message processing error due to bad message format or decryption failure - acking anyway");
+        DDLogVerbose(@"Message %@ processing error due to bad message format or decryption failure - acking anyway", [NSString stringWithHexData:boxmsg.messageId]);
         [self ackMessage:boxmsg.messageId fromIdentity:boxmsg.fromIdentity];
     } else if (err.code == kMessageAlreadyProcessedErrorCode) {
-        DDLogVerbose(@"Message processing error due to message is already in DB. Probably processed by Notification Extension - acking anyway");
+        DDLogVerbose(@"Message %@ processing error due to message is already in DB. Probably processed by Notification Extension - acking anyway", [NSString stringWithHexData:boxmsg.messageId]);
+        [self ackMessage:boxmsg.messageId fromIdentity:boxmsg.fromIdentity];
+    } else if (err.code == kMessageBlobDecryptionErrorCode) {
+        DDLogVerbose(@"Message %@ processing error due blob decryption failure - acking anyway", [NSString stringWithHexData:boxmsg.messageId]);
         [self ackMessage:boxmsg.messageId fromIdentity:boxmsg.fromIdentity];
     } else if (err.code == kMessageProcessingErrorCode) {
-        DDLogError(@"Message processing error due to being unable to handle message: %@", err);
+        DDLogError(@"Message %@ processing error due to being unable to handle message: %@", [NSString stringWithHexData:boxmsg.messageId], err);
    } else {
-        DDLogInfo(@"Could not process incoming message: %@", err);
+        DDLogInfo(@"Could not process incoming message %@: %@", [NSString stringWithHexData:boxmsg.messageId], err);
     }
 }
 

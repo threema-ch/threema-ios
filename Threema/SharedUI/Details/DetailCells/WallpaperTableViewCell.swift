@@ -27,7 +27,7 @@ class WallpaperTableViewCell: ThemedCodeStackTableViewCell {
     
     var action: Details.Action? {
         didSet {
-            guard let action = action else {
+            guard let action else {
                 return
             }
             titleLabel.text = action.title
@@ -38,7 +38,7 @@ class WallpaperTableViewCell: ThemedCodeStackTableViewCell {
     
     var isDefault: Bool? {
         didSet {
-            guard let isDefault = isDefault else {
+            guard let isDefault else {
                 return
             }
             if isDefault {

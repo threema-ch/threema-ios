@@ -80,7 +80,7 @@ class TaskExecutionGroupSync: TaskExecutionBlobTransaction {
 
         switch task.profilePicture {
         case .updated:
-            if let profilePictureBlob = profilePictureBlob {
+            if let profilePictureBlob {
                 var commonImage = Common_Image()
                 commonImage.blob = profilePictureBlob
                 task.syncGroup.profilePicture.updated = commonImage
@@ -113,8 +113,8 @@ class TaskExecutionGroupSync: TaskExecutionBlobTransaction {
         )
 
         return [
-            Promise<Void> { $0.fulfill(
-                try reflectMessage(
+            Promise<Void> { try $0.fulfill(
+                reflectMessage(
                     envelope: envelope,
                     ltReflect: self.taskContext.logReflectMessageToMediator,
                     ltAck: self.taskContext.logReceiveMessageAckFromMediator
@@ -162,16 +162,16 @@ class TaskExecutionGroupSync: TaskExecutionBlobTransaction {
             ((
                 task.profilePicture == .updated
                     || task.profilePicture == .unchanged
-            ) && group.photo != nil)
+            ) && group.profilePicture != nil)
                 ||
                 ((
                     task.profilePicture == .removed
                         || task.profilePicture == .unchanged
-                ) && group.photo == nil)
+                ) && group.profilePicture == nil)
         )
 
         var sameImage = false
-        if let image = group.photo?.data {
+        if let image = group.profilePicture {
             sameImage = task.profilePicture == .updated ? task
                 .image == image : task.profilePicture == .unchanged
         }

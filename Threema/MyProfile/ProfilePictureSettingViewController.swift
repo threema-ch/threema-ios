@@ -61,7 +61,7 @@ class ProfilePictureSettingViewController: ThemedTableViewController {
         pickContactsVC?.editProfileVC = editProfileVC
         let indexPath = IndexPath(row: 0, section: 1)
         let cell = tableView.cellForRow(at: indexPath)
-        if let vc = pickContactsVC, let cell = cell {
+        if let vc = pickContactsVC, let cell {
             let navigationVC = ThemedNavigationController(rootViewController: vc)
             ModalPresenter.present(navigationVC, on: self, from: cell.frame, in: view)
         }

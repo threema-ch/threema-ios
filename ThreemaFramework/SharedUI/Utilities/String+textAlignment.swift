@@ -21,8 +21,8 @@
 import Foundation
 import NaturalLanguage
 
-public extension String {
-    var textAlignment: NSTextAlignment {
+extension String {
+    public var textAlignment: NSTextAlignment {
         if let lang = NLLanguageRecognizer.dominantLanguage(for: self)?.rawValue {
             let direction = NSLocale.characterDirection(forLanguage: lang)
 

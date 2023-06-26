@@ -22,7 +22,6 @@
 #import "BallotCreateTableCell.h"
 #import "BallotChoice.h"
 #import "Ballot.h"
-#import "MessageSender.h"
 #import "AppDelegate.h"
 #import "NaClCrypto.h"
 #import "ProtocolDefines.h"
@@ -34,6 +33,7 @@
 #import "FeatureMask.h"
 #import "BundleUtil.h"
 #import "ThreemaFramework.h"
+#import <ThreemaFramework/ThreemaFramework-Swift.h>
 
 #define MIN_NUMBER_CHARACTERS 0
 #define MIN_NUMBER_CHOICES 2
@@ -349,11 +349,10 @@
     
     
     [_entityManager performSyncBlockAndSafe:nil];
-    
-    [_entityManager performBlockAndWait:^{
-        [MessageSender sendCreateMessageForBallot:_ballot];
-    }];
-    
+
+    MessageSender *messageSender = [[MessageSender alloc] initWithEntityManager:_entityManager];
+    [messageSender sendBallotMessageFor:_ballot];
+
     [self.navigationController dismissViewControllerAnimated:YES completion:nil];
 }
 

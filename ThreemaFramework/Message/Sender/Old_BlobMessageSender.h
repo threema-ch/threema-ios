@@ -20,12 +20,13 @@
 
 #import <Foundation/Foundation.h>
 #import "BaseMessage.h"
-#import "BlobData.h"
+#import "BlobOrigin.h"
 #import "ExternalStorageInfo.h"
 #import "UploadProgressDelegate.h"
 #import "Old_BlobUploadDelegate.h"
 #import "URLSenderItem.h"
 
+@protocol BlobData;
 @interface Old_BlobMessageSender : NSObject <Old_BlobUploadDelegate>
 
 @property BaseMessage<BlobData> *message;

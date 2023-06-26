@@ -18,6 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import SwiftUI
 import ThreemaFramework
 import UIKit
 import WebRTC
@@ -474,5 +475,15 @@ struct CandidateData {
         self.relAddr = theRelAddr
         self.relPort = theRelPort
         self.extensions = theExtensions
+    }
+}
+
+struct CallDiagnosticViewControllerRepresentable: UIViewControllerRepresentable {
+    func updateUIViewController(_ uiViewController: UIViewControllerType, context: Context) { }
+    
+    func makeUIViewController(context: Context) -> some UIViewController {
+        let storyboard = UIStoryboard(name: "CallDiagnostic", bundle: nil)
+        let vc = storyboard.instantiateInitialViewController()
+        return vc!
     }
 }

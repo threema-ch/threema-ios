@@ -22,7 +22,8 @@ import Foundation
 
 protocol ChatViewMessageAction: ChatViewBaseTableViewCell {
     
-    /// Creates an array of ChatViewMessageActionProvider.MessageAction used to create context menus and accessibility custom actions
+    /// Creates an array of ChatViewMessageActionProvider.MessageAction used to create context menus and accessibility
+    /// custom actions
     /// - Returns: Array of ChatViewMessageActionProvider.MessageAction
     func messageActions() -> [ChatViewMessageActionProvider.MessageAction]?
     

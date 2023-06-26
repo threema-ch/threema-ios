@@ -20,12 +20,12 @@
 
 import Foundation
 
-extension Collection where Element == Contact {
+extension Collection<Contact> {
     
     /// Sort a collection of `Contact`s
     ///
-    /// All contacts that have a first name, last name or nickname come before all IDs. The first and second part are both
-    /// sorted locale aware based on the passed `userSettings`. For sorting details see the implementation.
+    /// All contacts that have a first name, last name or nickname come before all IDs. The first and second part are
+    /// both sorted locale aware based on the passed `userSettings`. For sorting details see the implementation.
     ///
     /// - Parameter userSettings: Optional user settings injection
     /// - Returns: An array of sorted `Contact`s
@@ -159,8 +159,8 @@ extension Collection where Element == Contact {
 
 // MARK: Helper for sorting
 
-private extension Contact {
-    typealias SortProperties = (
+extension Contact {
+    fileprivate typealias SortProperties = (
         sortNameFirst: String,
         sortNameSecond: String,
         hasFirstName: Bool,
@@ -168,8 +168,8 @@ private extension Contact {
     )
     
     /// Is there a non-empty first name
-    var hasFirstName: Bool {
-        guard let firstName = firstName else {
+    fileprivate var hasFirstName: Bool {
+        guard let firstName else {
             return false
         }
         
@@ -177,8 +177,8 @@ private extension Contact {
     }
     
     /// Is there a non-empty last name
-    var hasLastName: Bool {
-        guard let lastName = lastName else {
+    fileprivate var hasLastName: Bool {
+        guard let lastName else {
             return false
         }
         
@@ -186,8 +186,8 @@ private extension Contact {
     }
     
     /// Is there a non-empty nickname
-    var hasPublicNickname: Bool {
-        guard let publicNickname = publicNickname else {
+    fileprivate var hasPublicNickname: Bool {
+        guard let publicNickname else {
             return false
         }
         
@@ -198,7 +198,7 @@ private extension Contact {
     ///
     /// - Parameter userSettings: User settings used to define the sorting order
     /// - Returns: Two sorting names and two bools if first and second name exist
-    func sortProperties(for userSettings: UserSettingsProtocol) -> SortProperties {
+    fileprivate func sortProperties(for userSettings: UserSettingsProtocol) -> SortProperties {
         var first = firstName
         var second = lastName
         var hasFirstNameLocal = hasFirstName

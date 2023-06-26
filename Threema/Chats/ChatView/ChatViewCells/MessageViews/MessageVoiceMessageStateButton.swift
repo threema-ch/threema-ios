@@ -55,7 +55,7 @@ final class MessageVoiceMessageStateButton: ThemedCodeButton {
     ///   - voiceMessage: used to determine the blob state
     ///   - isPlaying: used to determine the playback state
     private func updateView(with voiceMessage: VoiceMessage?, isPlaying: Bool = false) {
-        guard let voiceMessage = voiceMessage else {
+        guard let voiceMessage else {
             setBackgroundImage(nil, for: .normal)
             return
         }

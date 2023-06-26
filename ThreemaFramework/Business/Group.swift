@@ -92,14 +92,16 @@ public class Group: NSObject {
     private var conversationContact: Contact?
 
     /// Initialize Group properties, subscribe GroupEntity and Conversation on EntityObserver for updates.
-    /// Note: Group properties will be only refreshed if it's ContactEntity and Conversation object already saved in Core Data.
+    /// Note: Group properties will be only refreshed if it's ContactEntity and Conversation object already saved in
+    /// Core Data.
     ///
     /// - Parameters:
     ///   - myIdentityStore: MyIdentityStore
     ///   - userSettings: UserSettings
     ///   - groupEntity: Core Data object
     ///   - conversation: Core Data object
-    ///   - lastSyncRequest: From Core Data object `LastGroupSyncRequest.lastSyncRequest` (TODO: should be Core Data itself and subscribe on EntityObserver too)
+    ///   - lastSyncRequest: From Core Data object `LastGroupSyncRequest.lastSyncRequest` (TODO: should be Core Data
+    /// itself and subscribe on EntityObserver too)
     init(
         myIdentityStore: MyIdentityStoreProtocol,
         userSettings: UserSettingsProtocol,
@@ -127,8 +129,9 @@ public class Group: NSObject {
         )
         self.state = GroupState(rawValue: groupEntity.state.intValue)!
         self.name = conversation.groupName
-        self.photo = conversation.groupImage
+        self.profilePicture = conversation.groupImage?.data
         self.lastSyncRequest = lastSyncRequest
+        self.lastUpdate = conversation.lastUpdate
         self.lastMessageDate = conversation.lastMessage?.date
         self.conversationCategory = conversation.conversationCategory
         self.conversationVisibility = conversation.conversationVisibility
@@ -215,8 +218,11 @@ public class Group: NSObject {
                     if self?.name != conversation.groupName {
                         self?.name = conversation.groupName
                     }
-                    if self?.photo?.data != conversation.groupImage?.data {
-                        self?.photo = conversation.groupImage
+                    if self?.profilePicture != conversation.groupImage?.data {
+                        self?.profilePicture = conversation.groupImage?.data
+                    }
+                    if self?.lastUpdate != conversation.lastUpdate {
+                        self?.lastUpdate = conversation.lastUpdate
                     }
                     if self?.lastMessageDate != conversation.lastMessage?.date {
                         self?.lastMessageDate = conversation.lastMessage?.date
@@ -256,6 +262,7 @@ public class Group: NSObject {
     @objc public private(set) dynamic var state: GroupState
     @objc public private(set) dynamic var members: Set<Contact>
     public private(set) var lastSyncRequest: Date?
+    public private(set) var lastUpdate: Date?
     public private(set) var lastMessageDate: Date?
 
     @objc func isMember(identity: String) -> Bool {
@@ -367,7 +374,7 @@ public class Group: NSObject {
     }
     
     public var localizedRelativeLastMessageDate: String {
-        guard let lastMessageDate = lastMessageDate else {
+        guard let lastMessageDate else {
             return ""
         }
 
@@ -375,9 +382,10 @@ public class Group: NSObject {
     }
     
     @objc public private(set) dynamic var name: String?
+        
+    /// Profile picture of group if there is any
+    @objc public private(set) dynamic var profilePicture: Data?
     
-    @objc public private(set) dynamic var photo: ImageData?
-
     @objc public var isNoteGroup: Bool {
         allMemberIdentities.count == 1 && isSelfMember
     }
@@ -416,7 +424,8 @@ public class Group: NSObject {
     
     private(set) var lastPeriodicSync: Date?
 
-    /// The order is as follows: creator (always), me (if I'm in the group and not the creator), all other members sorted (w/o creator)
+    /// The order is as follows: creator (always), me (if I'm in the group and not the creator), all other members
+    /// sorted (w/o creator)
     ///
     /// - Returns: Sorted group members list
     private func allSortedMembers() -> [Member] {
@@ -454,7 +463,8 @@ public class Group: NSObject {
             conversationGroupMyIdentity == object.conversationGroupMyIdentity &&
             conversationContact == object.conversationContact &&
             name == object.name &&
-            photo?.data == object.photo?.data &&
+            profilePicture == object.profilePicture &&
+            lastUpdate == object.lastUpdate &&
             lastMessageDate == object.lastMessageDate &&
             conversationCategory == object.conversationCategory &&
             conversationVisibility == object.conversationVisibility &&

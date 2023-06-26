@@ -584,8 +584,8 @@ public class VoIPCallSdpPatcher: NSObject {
     }
 }
 
-public extension String {
-    var linesArray: [String] {
+extension String {
+    public var linesArray: [String] {
         var result: [String] = []
         enumerateLines { line, _ in
             result.append(line)

@@ -81,8 +81,6 @@ class ArchivedConversationsViewController: ThemedTableViewController {
     private var lastAppearance = Date()
     private var viewLoadedInBackground = AppDelegate.shared().isAppInBackground()
     
-    private var oldChatViewController: Old_ChatViewController?
-    private var oldChatViewCompletionBlock: Old_ChatViewControllerCompletionBlock?
     private weak var previousNavigationControllerDelegate: UINavigationControllerDelegate?
     
     private lazy var lockScreen = LockScreen(isLockScreenController: false)
@@ -527,7 +525,7 @@ extension ArchivedConversationsViewController: UISearchResultsUpdating, UISearch
 
 extension ArchivedConversationsViewController {
     @objc func setSelection(for conversation: Conversation?) {
-        guard let conversation = conversation,
+        guard let conversation,
               let newRow = fetchedResultsController.indexPath(forObject: conversation) else {
             return
         }
@@ -600,52 +598,6 @@ extension ArchivedConversationsViewController {
         }
         else {
             setSelection(for: chatViewController.conversation)
-        }
-    }
-    
-    @objc func displayOldChat(oldChatViewController: Old_ChatViewController, animated: Bool) {
-        
-        setSelection(for: oldChatViewController.conversation)
-
-        if navigationController?.topViewController == oldChatViewController {
-            return
-        }
-        
-        if navigationController?.viewControllers.contains(oldChatViewController) ?? false {
-            if (navigationController?.topViewController?.presentedViewController) != nil {
-                return
-            }
-            navigationController?.popToViewController(oldChatViewController, animated: animated)
-            return
-        }
-                
-        if oldChatViewController.conversation.conversationCategory == .private {
-            self.oldChatViewController = oldChatViewController
-            
-            lockScreen.presentLockScreenView(
-                viewController: self,
-                enteredCorrectly: {
-                    guard let chatVC = self.oldChatViewController,
-                          let navigationController = self.navigationController else {
-                        return
-                    }
-                    navigationController.popToViewController(self, animated: true)
-                    navigationController.pushViewController(chatVC, animated: true)
-                }
-            )
-        }
-        else {
-            navigationController?.popToViewController(self, animated: true)
-            navigationController?.pushViewController(oldChatViewController, animated: animated)
-        }
-        
-        if UIDevice.current.userInterfaceIdiom != .pad,
-           let conversation = selectedConversation,
-           let selectedRow = fetchedResultsController.indexPath(forObject: conversation) {
-            tableView.deselectRow(at: selectedRow, animated: false)
-        }
-        else {
-            setSelection(for: oldChatViewController.conversation)
         }
     }
 }
@@ -726,7 +678,7 @@ extension ArchivedConversationsViewController {
     }
     
     @objc private func updateDraftForCell() {
-        guard let selectedConversation = selectedConversation,
+        guard let selectedConversation,
               let indexPath = fetchedResultsController.indexPath(forObject: selectedConversation),
               let cell = tableView.cellForRow(at: indexPath) as? ConversationTableViewCell else {
             return
@@ -747,7 +699,6 @@ extension ArchivedConversationsViewController {
     
     @objc private func addressBookSynchronized() {
         DispatchQueue.main.async {
-            Old_ChatViewControllerCache.clear()
             self.tableView.reloadData()
         }
     }
@@ -767,26 +718,6 @@ extension ArchivedConversationsViewController {
             fetchedResultsController.fetchRequest.predicate = archivedPredicate
         }
         refreshData()
-    }
-}
-
-// MARK: - UINavigationControllerDelegate
-
-extension ArchivedConversationsViewController: UINavigationControllerDelegate {
-    func navigationController(
-        _ navigationController: UINavigationController,
-        didShow viewController: UIViewController,
-        animated: Bool
-    ) {
-        guard let chatViewCompBlock = oldChatViewCompletionBlock,
-              let oldViewController = viewController as? Old_ChatViewController else {
-            return
-        }
-        oldViewController.showContentAfterForceTouch()
-        chatViewCompBlock(oldViewController)
-        oldChatViewCompletionBlock = nil
-        
-        navigationController.delegate = previousNavigationControllerDelegate
     }
 }
 
@@ -816,11 +747,9 @@ extension ArchivedConversationsViewController: NSFetchedResultsControllerDelegat
             }
             
         case .delete:
-            guard let indexPath = indexPath,
-                  let conversation = anObject as? Conversation else {
+            guard let indexPath else {
                 return
             }
-            Old_ChatViewControllerCache.clear(conversation)
             tableView.deleteRows(at: [indexPath], with: .automatic)
             
             guard let obj = fetchedResultsController.fetchedObjects else {
@@ -834,8 +763,8 @@ extension ArchivedConversationsViewController: NSFetchedResultsControllerDelegat
             break
             
         case .move:
-            if let indexPath = indexPath,
-               let newIndexPath = newIndexPath {
+            if let indexPath,
+               let newIndexPath {
                 tableView.deleteRows(at: [indexPath], with: .automatic)
                 tableView.insertRows(at: [newIndexPath], with: .automatic)
             }
@@ -843,23 +772,5 @@ extension ArchivedConversationsViewController: NSFetchedResultsControllerDelegat
         @unknown default:
             DDLogInfo("Unknown default called on controller() in ArchivedConversationsVC")
         }
-    }
-}
-
-// MARK: - Old_ChatViewControllerDelegate
-
-extension ArchivedConversationsViewController: Old_ChatViewControllerDelegate {
-    
-    func present(_ chatViewController: Old_ChatViewController!, onCompletion: Old_ChatViewControllerCompletionBlock!) {
-        previousNavigationControllerDelegate = navigationController?.delegate
-        navigationController?.delegate = self
-        
-        chatViewController.showContentAfterForceTouch()
-        oldChatViewCompletionBlock = onCompletion
-        displayOldChat(oldChatViewController: chatViewController, animated: true)
-    }
-    
-    func pushSettingChanged(_ conversation: Conversation) {
-        // do nothing, because cell is observe this by it self
     }
 }

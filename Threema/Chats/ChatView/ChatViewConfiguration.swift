@@ -123,9 +123,11 @@ enum ChatViewConfiguration {
     
     /// Configuration for background of message cells
     enum ChatBubble {
-        /// Default corner radius for all bubbles with default and larger `preferredContentSizeCategory`s (i.e. `>= .large`)
+        /// Default corner radius for all bubbles with default and larger `preferredContentSizeCategory`s (i.e. `>=
+        /// .large`)
         static let cornerRadius = 16.5
-        /// Default corner radius for all bubbles with smaller than default `preferredContentSizeCategory`s (i.e. `< .large`)
+        /// Default corner radius for all bubbles with smaller than default `preferredContentSizeCategory`s (i.e. `<
+        /// .large`)
         static let smallerContentSizeConfigurationCornerRadius = 15.5
         
         /// Default top and bottom space between chat bubbles (4 means 8 in total)
@@ -144,13 +146,13 @@ enum ChatViewConfiguration {
         static let voiceMessageCellMaxWidthRatio: CGFloat = 0.85
         
         /// Duration in seconds of the size change animation if subviews are added to or removed from the chatBubbleView
-        /// Should in general be less than or equal to the row height change animation of the table view because otherwise
-        /// you will get overlapping cells which doesn't look nice.
+        /// Should in general be less than or equal to the row height change animation of the table view because
+        /// otherwise you will get overlapping cells which doesn't look nice.
         static let bubbleSizeChangeAnimationDurationInSeconds: CGFloat = 0.25
         
         /// Duration in seconds of the show/hide animation of the date and state view for every message
-        /// Should in general be less than or equal to the row height change animation of the table view because otherwise
-        /// you will get overlapping view which doesn't look nice.
+        /// Should in general be less than or equal to the row height change animation of the table view because
+        /// otherwise you will get overlapping view which doesn't look nice.
         static let dateAndStateViewShowAndHideAnimationDurationInSeconds: CGFloat = 0.25
         
         enum SwipeInteraction {
@@ -159,11 +161,14 @@ enum ChatViewConfiguration {
             /// Duration for the scaling animation when the swipe to quote action was activated
             static let startQuoteIconAnimationDuration = 0.075
             /// Scale factor for the scaling animation when the swipe to quote action as activated.
-            /// Should be chosen such that the multiplicative inverse is a rational number representable with the same type.
+            /// Should be chosen such that the multiplicative inverse is a rational number representable with the same
+            /// type.
             static let startQuoteAnimationScaleFactor = 1.25
-            ///  Factor by which the cell moves slower than the finger on the screen after the swipe to quote action was activated
+            /// Factor by which the cell moves slower than the finger on the screen after the swipe to quote action was
+            /// activated
             static let bubbleSlowdownFactorQuote: Double = 1 / 8
-            ///  Factor by which the cell moves slower than the finger on the screen after the swipe to details action was activated
+            /// Factor by which the cell moves slower than the finger on the screen after the swipe to details action
+            /// was activated
             static let bubbleSlowdownFactorDetails: Double = 1 / 4
             /// Number of pixels to swipe before the action activates
             static let swipeActionOffsetThreshold: Double = 55
@@ -221,7 +226,8 @@ enum ChatViewConfiguration {
     }
     
     enum CellGrouping {
-        /// The maximum amount of time to have passed between two messages for them to still be grouped together in seconds
+        /// The maximum amount of time to have passed between two messages for them to still be grouped together in
+        /// seconds
         static let maxDurationForGroupingTogether = 0.5 * 60 * 60
         
         /// Enable date and state grouping (if both are identical)
@@ -280,7 +286,8 @@ enum ChatViewConfiguration {
             /// Duration of the animation
             static let animationDuration = 1.25
             
-            /// Total frames for one transition. In total there will be `3 * (totalFrames + 1)` frames used in the whole animation
+            /// Total frames for one transition. In total there will be `3 * (totalFrames + 1)` frames used in the whole
+            /// animation
             static let totalFrames: Double = 60
             
             /// Offset into the color progression where  `i` of `offseti` indicates the i-th bubble from the left
@@ -290,7 +297,9 @@ enum ChatViewConfiguration {
         }
         
         enum View {
-            /// Inset from leadingAnchor of the cells `contentView`. Set to `abs(SmallBubble.xOffset)` for aligning the left most pixel to the other bubbles and to zero for aligning the left most point of the bubble ignoring arrows and bubbles.
+            /// Inset from leadingAnchor of the cells `contentView`. Set to `abs(SmallBubble.xOffset)` for aligning the
+            /// left most pixel to the other bubbles and to zero for aligning the left most point of the bubble ignoring
+            /// arrows and bubbles.
             static let leadingInsetConstant: CGFloat = ChatBubble.defaultLeadingTrailingInset
         }
     }
@@ -431,7 +440,8 @@ enum ChatViewConfiguration {
         /// UIStackView spacing between the speed button / mic icon and the waveform view
         static let waveformSpeedIconStackViewSpacing: CGFloat = 2.0
         
-        /// TimeInterval in which progress is reported by the voice message cell delegate back to the relevant voice message cell
+        /// TimeInterval in which progress is reported by the voice message cell delegate back to the relevant voice
+        /// message cell
         static let progressCallbackInterval: CGFloat = 0.01
         
         /// Button showing either a mic symbol or the current playback speed when playing a voice message
@@ -474,7 +484,8 @@ enum ChatViewConfiguration {
             /// The spacing between two bars in the waveform view
             static let barSpacing: CGFloat = 2
             
-            /// Height of the rendered waveform image. Ideally this is the height of the waveform's parent view minus two times the insets
+            /// Height of the rendered waveform image. Ideally this is the height of the waveform's parent view minus
+            /// two times the insets
             static let waveformRenderHeight: CGFloat = 35
         }
         
@@ -520,7 +531,8 @@ enum ChatViewConfiguration {
         /// Font point size for `font`
         static let fontPointSize = {
             /// This must be equal to the font used in `font`
-            /// We cannot use `font` directly because otherwise the size doesn't change when updating the font size while the app is running
+            /// We cannot use `font` directly because otherwise the size doesn't change when updating the font size
+            /// while the app is running
             UIFont.preferredFont(forTextStyle: .caption1).pointSize
         }
 
@@ -558,7 +570,8 @@ enum ChatViewConfiguration {
         static let plusButtonSize: CGFloat = 21
         /// Spacing between the camera and microphone icons
         static let cameraMicSpacing: CGFloat = 18.0
-        /// Spacing between the attachment add button and the textInputView and the textInputView and the microphone / camera / send button
+        /// Spacing between the attachment add button and the textInputView and the textInputView and the microphone /
+        /// camera / send button
         static let textInputButtonSpacing: CGFloat = 12
         /// Vertical distance between border of ChatBar and text view
         static let verticalChatBarTextViewDistance: CGFloat = 7
@@ -568,7 +581,7 @@ enum ChatViewConfiguration {
         static let maxNumberOfLinesLandscape = 3
         /// The default value for the height of a single line
         static let defaultSingleLineHeight: CGFloat = 33.5
-        /// The minimum spacing betwenn the ChatBar and the top of the tableView
+        /// The minimum spacing between the ChatBar and the top of the tableView
         static let tableViewChatBarMinSpacing: CGFloat = 60.0
         /// Animation configuration for hiding / showing the send button
         enum ShowHideSendButtonAnimation {
@@ -632,7 +645,8 @@ enum ChatViewConfiguration {
             weight: .bold
         )
         
-        /// Maximum time in milliseconds before the unread message line disappears when the user scrolls to the bottom of the chat view
+        /// Maximum time in milliseconds before the unread message line disappears when the user scrolls to the bottom
+        /// of the chat view
         /// Might be shorter than this if the data source applies a snapshot before
         static let timeBeforeDisappear = 1500
         
@@ -667,8 +681,8 @@ enum ChatViewConfiguration {
         /// This can be increased to multiple hundreds of ms if we actually do snapshot batching
         static let currentMessageSnapshotDelay = 500
         
-        /// Duration in s of the custom animation block applied when only the state but not the number of messages changes
-        /// and we are staying at the bottom of the chat view.
+        /// Duration in s of the custom animation block applied when only the state but not the number of messages
+        /// changes and we are staying at the bottom of the chat view.
         static let animationDuration: TimeInterval = 0.25
     }
     
@@ -697,11 +711,13 @@ enum ChatViewConfiguration {
     }
     
     enum ScrollCompletionBehavior {
-        /// Whether to use `scrollToRow(at:at:animated:)` or`UIView.animate` with `animated` always set to false in `scrollToRow(at:at:animated:)`
+        /// Whether to use `scrollToRow(at:at:animated:)` or`UIView.animate` with `animated` always set to false in
+        /// `scrollToRow(at:at:animated:)`
         /// `UIView.animate` seems to be more stable but might have not yet discovered side effects.
         static let useCustomViewAnimationBlock = true
         static let animationDuration = 0.25
-        /// Delay in ms before the `scrollCompletion` block is called to signal that the scrolling animation has completed
+        /// Delay in ms before the `scrollCompletion` block is called to signal that the scrolling animation has
+        /// completed
         static let completionBlockCallDelay = 50
     }
     
@@ -719,7 +735,8 @@ enum ChatViewConfiguration {
         
         /// We need some non-zero additional space above the content height of newly added cells when checking
         /// whether we can adjust the content offset or must scroll down to avoid glitches
-        /// You can find a more detailed description of the workaround in `willApplySnapshot(currentDoesIncludeNewestMessage:)` of `ChatViewController`
+        /// You can find a more detailed description of the workaround in
+        /// `willApplySnapshot(currentDoesIncludeNewestMessage:)` of `ChatViewController`
         static let newCellsContentHeightLeeway = 1.0
     }
 }

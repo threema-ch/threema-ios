@@ -494,7 +494,7 @@ extension CompanyDirectoryViewController: UITableViewDelegate {
             )
             .done { contact in
                 // show chat
-                if let contact = contact {
+                if let contact {
                     self.navigationController?.dismiss(animated: true, completion: {
                         let info = [kKeyContact: contact, kKeyForceCompose: true] as [String: Any]
                         NotificationCenter.default.post(
@@ -516,7 +516,8 @@ extension CompanyDirectoryViewController: UITableViewDelegate {
 
 extension CompanyDirectoryViewController: UISearchBarDelegate {
     func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
-        // here you should call the function which will update your data source and reload table view (or other UI that you have)
+        // here you should call the function which will update your data source and reload table view (or other UI that
+        // you have)
         performSearch()
     }
     

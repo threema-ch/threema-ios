@@ -40,7 +40,7 @@ public class ForwardSecuritySessionTerminator {
             let message = ForwardSecurityEnvelopeMessage(data: terminate)
             message.toIdentity = contact.identity
             
-            MessageSender.send(message, isPersistent: true)
+            businessInjector.messageSender.sendMessage(abstractMessage: message, isPersistent: true)
             
             if try store.deleteDHSession(
                 myIdentity: businessInjector.myIdentityStore.identity,

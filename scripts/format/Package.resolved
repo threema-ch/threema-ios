@@ -1,16 +1,14 @@
 {
-  "object": {
-    "pins": [
-      {
-        "package": "SwiftFormat",
-        "repositoryURL": "https://github.com/nicklockwood/SwiftFormat",
-        "state": {
-          "branch": null,
-          "revision": "2dcce7fe2d6c245d8d669d394d5be5fe45d582fc",
-          "version": "0.49.8"
-        }
+  "pins" : [
+    {
+      "identity" : "swiftformat",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/nicklockwood/SwiftFormat",
+      "state" : {
+        "revision" : "29c5053c803d2f58716aa5028f6ef5e9fd397168",
+        "version" : "0.51.11"
       }
-    ]
-  },
-  "version": 1
+    }
+  ],
+  "version" : 2
 }

@@ -116,10 +116,6 @@
     }
 }
 
-- (NSArray *)messagesContaining:(NSString *)searchText inConversation:(Conversation *)conversation {
-    return [self messagesContaining:searchText inConversation:conversation fetchLimit:0];
-}
-
 /// Returns all text, ballot and file messages containing the text in search text.
 /// Check the exact implementation on how text is matched for ballot and file messages
 ///

@@ -117,8 +117,7 @@ final class ConversationStoreTests: XCTestCase {
         conversationStore.makePrivate(conversation)
 
         let loadedConversation = try XCTUnwrap(
-            entityManager
-                .conversation(forContact: try XCTUnwrap(conversation.contact), createIfNotExisting: false)
+            entityManager.conversation(forContact: XCTUnwrap(conversation.contact), createIfNotExisting: false)
         )
 
         XCTAssertEqual(loadedConversation.conversationCategory, .private, "Conversation should be private.")
@@ -135,8 +134,7 @@ final class ConversationStoreTests: XCTestCase {
         conversationStore.makeNotPrivate(conversation)
 
         let loadedConversation = try XCTUnwrap(
-            entityManager
-                .conversation(forContact: try XCTUnwrap(conversation.contact), createIfNotExisting: false)
+            entityManager.conversation(forContact: XCTUnwrap(conversation.contact), createIfNotExisting: false)
         )
 
         XCTAssertEqual(loadedConversation.conversationCategory, .default, "Conversation should not be private.")
@@ -153,8 +151,7 @@ final class ConversationStoreTests: XCTestCase {
         conversationStore.makeNotPrivate(conversation)
 
         let loadedConversation = try XCTUnwrap(
-            entityManager
-                .conversation(forContact: try XCTUnwrap(conversation.contact), createIfNotExisting: false)
+            entityManager.conversation(forContact: XCTUnwrap(conversation.contact), createIfNotExisting: false)
         )
 
         XCTAssertEqual(loadedConversation.conversationCategory, .default, "Conversation should not be private.")
@@ -171,8 +168,7 @@ final class ConversationStoreTests: XCTestCase {
         conversationStore.makePrivate(conversation)
 
         let loadedConversation = try XCTUnwrap(
-            entityManager
-                .conversation(forContact: try XCTUnwrap(conversation.contact), createIfNotExisting: false)
+            entityManager.conversation(forContact: XCTUnwrap(conversation.contact), createIfNotExisting: false)
         )
 
         XCTAssertEqual(loadedConversation.conversationCategory, .private, "Conversation should not private.")

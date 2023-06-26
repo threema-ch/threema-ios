@@ -191,8 +191,10 @@ public class ImageURLSenderItemCreator: NSObject {
     }
     
     /// Create an URLSenderItem from an image represented by an URL.
-    /// The image may be converted to jpeg if it is not of a valid type e.g. HEIC will be converted to jpg. PNG will never be converted to jpg.
-    /// - Parameter url: The URL pointing to a valid image in any format readable by UIImage and convertable by UIImage.jpegData.
+    /// The image may be converted to jpeg if it is not of a valid type e.g. HEIC will be converted to jpg. PNG will
+    /// never be converted to jpg.
+    /// - Parameter url: The URL pointing to a valid image in any format readable by UIImage and convertable by
+    /// UIImage.jpegData.
     /// - Returns: An URLSenderItem for the image
     @objc public func senderItem(from url: URL) -> URLSenderItem? {
         guard let scheme = url.scheme else {
@@ -376,7 +378,7 @@ public class ImageURLSenderItemCreator: NSObject {
         case .small, .medium, .large, .extraLarge:
             maxSize = userSettingsImageSize.resolution
         case .original:
-            if let image = image {
+            if let image {
                 maxSize = max(image.size.width, image.size.height) * image.scale
             }
             else {
@@ -401,7 +403,7 @@ public class ImageURLSenderItemCreator: NSObject {
     
     @objc public func stickerThumbnailMaxSize(_ image: UIImage?) -> CGFloat {
         let maxStickerSize: CGFloat = 400
-        if let image = image,
+        if let image,
            image.size.width < maxStickerSize,
            image.size.height < maxStickerSize {
             return max(image.size.width, image.size.height)

@@ -32,7 +32,7 @@ class TaskExecutionSettingsSync: TaskExecutionTransaction {
         let envelope = frameworkInjector.mediatorMessageProtocol
             .getEnvelopeForSettingsUpdate(settings: task.syncSettings)
         
-        return [Promise { $0.fulfill(try reflectMessage(
+        return [Promise { try $0.fulfill(reflectMessage(
             envelope: envelope,
             ltReflect: self.taskContext.logReflectMessageToMediator,
             ltAck: self.taskContext.logReceiveMessageAckFromMediator

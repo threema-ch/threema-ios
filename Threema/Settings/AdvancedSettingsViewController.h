@@ -36,6 +36,5 @@
 - (IBAction)enableIPv6Changed:(id)sender;
 - (IBAction)validationLoggingChanged:(id)sender;
 - (IBAction)proximityMonitoringChanged:(id)sender;
-- (IBAction)newChatViewSwitchChanged:(id)sender;
 
 @end

@@ -25,7 +25,8 @@ open class ThemedCodeStackTableViewCell: ThemedCodeTableViewCell {
     
     /// Container for all views of this cell
     ///
-    /// Use this instead of the `contentView` for all your content. It automatically adapts to a vertical style for accessibility
+    /// Use this instead of the `contentView` for all your content. It automatically adapts to a vertical style for
+    /// accessibility
     /// preferred content sizes.
     public lazy var contentStack: UIStackView = {
         let stackView = UIStackView()

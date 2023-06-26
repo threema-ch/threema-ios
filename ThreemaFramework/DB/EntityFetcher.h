@@ -63,8 +63,6 @@ typedef enum : NSUInteger {
 
 - (NSArray *)quoteMessagesContaining:(NSString *)searchText message:(BaseMessage *)message inConversation:(Conversation *)conversation;
 
-- (NSArray *)messagesContaining:(NSString *)searchText inConversation:(Conversation *)conversation;
-
 - (NSArray *)messagesContaining:(NSString *)searchText inConversation:(Conversation *)conversation fetchLimit:(NSInteger)fetchLimit;
 
 - (NSArray *)textMessagesContaining:(NSString *)searchText inConversation:(Conversation *)conversation fetchLimit:(NSInteger)fetchLimit;

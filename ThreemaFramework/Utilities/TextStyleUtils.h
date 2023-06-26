@@ -27,7 +27,7 @@ enum TextStyleUtilsMessageInfo {
     TextStyleUtilsMessageInfoOverview
 };
 
-
+__deprecated_msg("Use MarkupParser instead")
 @interface TextStyleUtils : NSObject
 
 + (NSAttributedString*)makeAttributedStringFromString:(NSString*)string withFont:(UIFont*)font textColor:(UIColor *)textColor isOwn:(BOOL)isOwn application:(UIApplication *)application;

@@ -151,8 +151,12 @@ class TaskQueue {
                 item.taskDefinition.state = .executing
                 
                 // Caution:
-                // - Use `self.frameworkInjector` only for testing reason! For every task to execute must be a new instance, because of using EntityManager in background (means it works on private DB context)!
-                // - Do not use `self.frameworkInjector` for incoming message tasks `TaskDefinitionReceiveMessage` and `TaskDefinitionReceiveReflectedMessage`! Must be a new instance because when is running in Notification Extension process (see `NotificationService`) the database context is reseted and than the `EntityManager` could be invalid.
+                // - Use `self.frameworkInjector` only for testing reason! For every task to execute must be a new
+                //   instance, because of using EntityManager in background (means it works on private DB context)!
+                // - Do not use `self.frameworkInjector` for incoming message tasks `TaskDefinitionReceiveMessage` and
+                //   `TaskDefinitionReceiveReflectedMessage`! Must be a new instance because when is running in
+                //   Notification Extension process (see `NotificationService`) the database context is reseted and than
+                //   the `EntityManager` could be invalid.
                 let injector: FrameworkInjectorProtocol = renewFrameworkInjector ? BusinessInjector() :
                     frameworkInjector
                 
@@ -168,7 +172,8 @@ class TaskQueue {
                         if (error as NSError).code == kBlockUnknownContactErrorCode ||
                             (error as NSError).code == kBadMessageErrorCode ||
                             (error as NSError).code == kUnknownMessageTypeErrorCode ||
-                            (error as NSError).code == kMessageAlreadyProcessedErrorCode {
+                            (error as NSError).code == kMessageAlreadyProcessedErrorCode ||
+                            (error as NSError).code == kMessageBlobDecryptionErrorCode {
                             if let task = item.taskDefinition as? TaskDefinitionReceiveMessage {
                                 self.frameworkInjector.serverConnector.failedProcessingMessage(
                                     task.message,
@@ -284,9 +289,9 @@ class TaskQueue {
                             TaskDefinitionSendBaseMessage.self,
                             forKey: "\(className)_\(i)"
                         )
-                    case String(describing: type(of: TaskDefinitionSendIncomingMessageUpdate.self)):
+                    case String(describing: type(of: TaskDefinitionSendDeliveryReceiptsMessage.self)):
                         taskDefinition = unarchiver.decodeDecodable(
-                            TaskDefinitionSendIncomingMessageUpdate.self,
+                            TaskDefinitionSendDeliveryReceiptsMessage.self,
                             forKey: "\(className)_\(i)"
                         )
                     case String(describing: type(of: TaskDefinitionSendLocationMessage.self)):
@@ -346,7 +351,7 @@ class TaskQueue {
                     
                     taskDefinition?.state = .interrupted
                     
-                    if let taskDefinition = taskDefinition {
+                    if let taskDefinition {
                         queue.enqueue(QueueItem(taskDefinition: taskDefinition, completionHandler: nil))
                     }
                 }

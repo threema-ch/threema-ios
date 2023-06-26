@@ -52,9 +52,9 @@ class MediatorReflectedIncomingMessageProcessor {
     /// - Parameters:
     ///     - incomingMessage: Reflected incoming message from mediator
     ///     - abstractMessage: Incoming abstract message (decoded from `D2d_IncomingMessage.body`)
-    func process<T: AbstractMessage>(
+    func process(
         incomingMessage imsg: D2d_IncomingMessage,
-        abstractMessage amsg: T
+        abstractMessage amsg: some AbstractMessage
     ) throws -> Promise<Void> {
         switch amsg.self {
         case is BoxAudioMessage:
@@ -137,7 +137,7 @@ class MediatorReflectedIncomingMessageProcessor {
     ) throws -> Promise<Void> {
         try messageStore.save(
             audioMessage: amsg,
-            conversationIdentity: try getSenderIdentity(for: imsg),
+            conversationIdentity: getSenderIdentity(for: imsg),
             createdAt: imsg.createdAt,
             timestamp: timestamp
         )
@@ -153,7 +153,7 @@ class MediatorReflectedIncomingMessageProcessor {
 
         try messageStore.save(
             ballotCreateMessage: amsg,
-            conversationIdentity: try getSenderIdentity(for: imsg),
+            conversationIdentity: getSenderIdentity(for: imsg),
             createdAt: imsg.createdAt,
             timestamp: timestamp,
             isOutgoing: false
@@ -176,9 +176,9 @@ class MediatorReflectedIncomingMessageProcessor {
         incomingMessage imsg: D2d_IncomingMessage,
         fileMessage amsg: BoxFileMessage
     ) throws -> Promise<Void> {
-        messageStore.save(
+        try messageStore.save(
             fileMessage: amsg,
-            conversationIdentity: try getSenderIdentity(for: imsg),
+            conversationIdentity: getSenderIdentity(for: imsg),
             createdAt: imsg.createdAt,
             timestamp: timestamp,
             isOutgoing: false,
@@ -192,7 +192,7 @@ class MediatorReflectedIncomingMessageProcessor {
     ) throws -> Promise<Void> {
         try messageStore.save(
             imageMessage: amsg,
-            senderIdentity: try getSenderIdentity(for: imsg),
+            senderIdentity: getSenderIdentity(for: imsg),
             createdAt: imsg.createdAt,
             timestamp: timestamp,
             maxBytesToDecrypt: maxBytesToDecrypt
@@ -205,7 +205,7 @@ class MediatorReflectedIncomingMessageProcessor {
     ) throws -> Promise<Void> {
         try messageStore.save(
             locationMessage: amsg,
-            conversationIdentity: try getSenderIdentity(for: imsg),
+            conversationIdentity: getSenderIdentity(for: imsg),
             createdAt: imsg.createdAt,
             timestamp: timestamp,
             isOutgoing: false
@@ -219,7 +219,7 @@ class MediatorReflectedIncomingMessageProcessor {
     ) throws -> Promise<Void> {
         try messageStore.save(
             textMessage: amsg,
-            conversationIdentity: try getSenderIdentity(for: imsg),
+            conversationIdentity: getSenderIdentity(for: imsg),
             createdAt: imsg.createdAt,
             timestamp: timestamp,
             isOutgoing: false
@@ -233,7 +233,7 @@ class MediatorReflectedIncomingMessageProcessor {
     ) throws -> Promise<Void> {
         try messageStore.save(
             videoMessage: amsg,
-            senderIdentity: try getSenderIdentity(for: imsg),
+            senderIdentity: getSenderIdentity(for: imsg),
             createdAt: imsg.createdAt,
             timestamp: timestamp,
             maxBytesToDecrypt: maxBytesToDecrypt
@@ -333,7 +333,7 @@ class MediatorReflectedIncomingMessageProcessor {
         try getGroup(for: amsg)
         try messageStore.save(
             groupAudioMessage: amsg,
-            senderIdentity: try getSenderIdentity(for: imsg),
+            senderIdentity: getSenderIdentity(for: imsg),
             createdAt: imsg.createdAt,
             timestamp: timestamp
         )
@@ -347,7 +347,7 @@ class MediatorReflectedIncomingMessageProcessor {
         try getGroup(for: amsg)
         try messageStore.save(
             groupBallotCreateMessage: amsg,
-            senderIdentity: try getSenderIdentity(for: imsg),
+            senderIdentity: getSenderIdentity(for: imsg),
             createdAt: imsg.createdAt,
             timestamp: timestamp,
             isOutgoing: false
@@ -372,9 +372,9 @@ class MediatorReflectedIncomingMessageProcessor {
         groupFileMessage amsg: GroupFileMessage
     ) throws -> Promise<Void> {
         try getGroup(for: amsg)
-        return messageStore.save(
+        return try messageStore.save(
             groupFileMessage: amsg,
-            senderIdentity: try getSenderIdentity(for: imsg),
+            senderIdentity: getSenderIdentity(for: imsg),
             createdAt: imsg.createdAt,
             timestamp: timestamp,
             isOutgoing: false,
@@ -389,7 +389,7 @@ class MediatorReflectedIncomingMessageProcessor {
         try getGroup(for: amsg)
         return try messageStore.save(
             imageMessage: amsg,
-            senderIdentity: try getSenderIdentity(for: imsg),
+            senderIdentity: getSenderIdentity(for: imsg),
             createdAt: imsg.createdAt,
             timestamp: timestamp,
             maxBytesToDecrypt: maxBytesToDecrypt
@@ -403,7 +403,7 @@ class MediatorReflectedIncomingMessageProcessor {
         try getGroup(for: amsg)
         try messageStore.save(
             groupLocationMessage: amsg,
-            senderIdentity: try getSenderIdentity(for: imsg),
+            senderIdentity: getSenderIdentity(for: imsg),
             createdAt: imsg.createdAt,
             timestamp: timestamp,
             isOutgoing: false
@@ -418,7 +418,7 @@ class MediatorReflectedIncomingMessageProcessor {
         try getGroup(for: amsg)
         try messageStore.save(
             groupTextMessage: amsg,
-            senderIdentity: try getSenderIdentity(for: imsg),
+            senderIdentity: getSenderIdentity(for: imsg),
             messageID: NSData.convertBytes(imsg.messageID),
             createdAt: imsg.createdAt,
             timestamp: timestamp,
@@ -434,7 +434,7 @@ class MediatorReflectedIncomingMessageProcessor {
         try getGroup(for: amsg)
         return try messageStore.save(
             videoMessage: amsg,
-            senderIdentity: try getSenderIdentity(for: imsg),
+            senderIdentity: getSenderIdentity(for: imsg),
             createdAt: imsg.createdAt,
             timestamp: timestamp,
             maxBytesToDecrypt: maxBytesToDecrypt

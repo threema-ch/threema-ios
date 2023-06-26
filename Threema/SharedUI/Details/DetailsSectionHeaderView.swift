@@ -45,7 +45,7 @@ final class DetailsSectionHeaderView: ThemedCodeTableViewHeaderFooterView {
             // the `titleLabel` and thus we would get different heights for the `containerStack`. To keep it
             // adaptive to text size, but to get a constant height for this header we never hide the button.
             
-            guard let action = action else {
+            guard let action else {
                 actionButton.setTitle("", for: .normal)
                 actionButton.isUserInteractionEnabled = false
                 actionButton.isAccessibilityElement = false

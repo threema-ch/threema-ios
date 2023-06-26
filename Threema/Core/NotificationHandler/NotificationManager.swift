@@ -170,7 +170,7 @@ public protocol NotificationManagerProtocol {
                         }
                     }
                     
-                    if let info = info {
+                    if let info {
                         DispatchQueue.main.async {
                             if !self.firstPushHandled {
                                 NotificationCenter.default.post(
@@ -190,7 +190,7 @@ public protocol NotificationManagerProtocol {
             }
             else if let key = payload["key"] as? String,
                     key == "safe-backup-notification",
-                    let notification = notification {
+                    let notification {
                 UIAlertTemplate.showAlert(
                     owner: AppDelegate.shared().currentTopViewController(),
                     title: notification.request.content.title,
@@ -221,6 +221,7 @@ public protocol NotificationManagerProtocol {
             // The keychain is locked; we cannot proceed. The UI will show the ProtectedDataUnavailable screen
             // at this point. To prevent this screen from appearing when the user unlocks their device after we
             // have processed the push, we exit now so that the process will restart after the device is unlocked.
+            completionHandler(false, nil)
             return
         }
         if payload["NotificationExtensionOffer"] != nil {
@@ -262,8 +263,8 @@ public protocol NotificationManagerProtocol {
         if ServerConnector.shared().connectionState == .disconnected {
             ServerConnector.shared().isAppInBackground = AppDelegate.shared().isAppInBackground()
             ServerConnector.shared().connectWait(initiator: .threemaCall)
-            completionHandler(true, threemaPayload)
         }
+        completionHandler(true, threemaPayload)
     }
     
     func playReceivedMessageSound() {
@@ -367,7 +368,7 @@ extension NotificationManager {
             currentSession = WebClientSessionStore.shared.webClientSessionForHash(hash)
         }
         
-        guard let currentSession = currentSession else {
+        guard let currentSession else {
             ValidationLogger.shared().logString("[ThreemaWeb] Unknown session try to connect; Session blocked")
             completionHandler?([])
             return
@@ -375,7 +376,7 @@ extension NotificationManager {
         
         let protocolVersion = webPayload[webClientVersionKey] as? Int
         
-        guard let protocolVersion = protocolVersion,
+        guard let protocolVersion,
               let sessionVersion = currentSession.version,
               sessionVersion.intValue >= protocolVersion else {
             NotificationManager.showThreemaWebError(

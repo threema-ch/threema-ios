@@ -62,7 +62,8 @@ extension ChatViewTableViewCellDelegateProtocol {
     }
 }
 
-/// Implements ChatViewTableViewCellDelegateProtocol to allow communication between cells and ChatViewController instances
+/// Implements ChatViewTableViewCellDelegateProtocol to allow communication between cells and ChatViewController
+/// instances
 final class ChatViewTableViewCellDelegate: NSObject, ChatViewTableViewCellDelegateProtocol {
     // MARK: - Private Properties
     
@@ -107,7 +108,7 @@ final class ChatViewTableViewCellDelegate: NSObject, ChatViewTableViewCellDelega
         swipeMessageTableViewCell: ChatViewBaseTableViewCell,
         recognizer: UIPanGestureRecognizer
     ) {
-        guard let tableView = tableView else {
+        guard let tableView else {
             DDLogError("tableView should not be nil")
             return
         }
@@ -148,7 +149,7 @@ final class ChatViewTableViewCellDelegate: NSObject, ChatViewTableViewCellDelega
             swipeGestureRecognizer.require(toFail: interactivePopGestureRecognizer)
         }
         
-        if let tableView = tableView {
+        if let tableView {
             swipeGestureRecognizer.canPrevent(tableView.panGestureRecognizer)
             tableView.panGestureRecognizer.require(toFail: swipeGestureRecognizer)
         }
@@ -196,8 +197,8 @@ final class ChatViewTableViewCellDelegate: NSObject, ChatViewTableViewCellDelega
     
     func didTap(message: BaseMessage?, in cell: ChatViewBaseTableViewCell?, customDefaultAction: (() -> Void)?) {
         
-        guard let message = message,
-              let cell = cell else {
+        guard let message,
+              let cell else {
             DDLogWarn("Tapped chat cell that does not exist or that has no message attached")
             return
         }
@@ -230,20 +231,14 @@ final class ChatViewTableViewCellDelegate: NSObject, ChatViewTableViewCellDelega
     }
     
     func resendMessage(withID messageID: NSManagedObjectID) {
-        var message: BaseMessage?
-        
-        let entityManager = EntityManager()
-        entityManager.performSyncBlockAndSafe {
-            guard let fetchedMessage = entityManager.entityFetcher.existingObject(with: messageID) as? BaseMessage,
-                  let newID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.messageIDLength)
-            else {
-                return
-            }
-            fetchedMessage.id = newID
-            message = fetchedMessage
-        }
-        
-        guard let message else {
+        let businessInjector = BusinessInjector()
+        guard let message = businessInjector.entityManager.performAndWait({
+            let fetchedMessage = businessInjector.entityManager.entityFetcher
+                .existingObject(with: messageID) as? BaseMessage
+            fetchedMessage?.id = BytesUtility.generateRandomBytes(length: ThreemaProtocol.messageIDLength)
+            return fetchedMessage
+        })
+        else {
             DDLogError("Message to be re-sent could not be loaded.")
             return
         }
@@ -254,7 +249,7 @@ final class ChatViewTableViewCellDelegate: NSObject, ChatViewTableViewCellDelega
                 await BlobManager.shared.syncBlobs(for: messageID)
             }
         default:
-            MessageSender.send(message)
+            businessInjector.messageSender.sendMessage(baseMessage: message)
         }
     }
     
@@ -306,19 +301,19 @@ final class ChatViewTableViewCellDelegate: NSObject, ChatViewTableViewCellDelega
     
     ///  Processes sending thumbsUp or thumbsDown
     private static func sendAck(message: BaseMessage, ack: Bool) {
-        let entityManager = EntityManager()
+        let businessInjector = BusinessInjector()
         
-        guard let entityMessage = entityManager.entityFetcher.existingObject(with: message.objectID) as? BaseMessage,
-              let conversation = entityMessage.conversation else {
+        guard let baseMessage = businessInjector.entityManager.entityFetcher
+            .existingObject(with: message.objectID) as? BaseMessage,
+            let conversation = baseMessage.conversation else {
             return
         }
         
-        let groupManager = GroupManager(entityManager: entityManager)
-        let group = groupManager.getGroup(conversation: conversation)
+        let group = businessInjector.groupManager.getGroup(conversation: conversation)
         var contact: ContactEntity?
         
         if conversation.isGroup() {
-            if entityMessage.isMyReaction(ack ? .acknowledged : .declined) {
+            if baseMessage.isMyReaction(ack ? .acknowledged : .declined) {
                 return
             }
         }
@@ -328,56 +323,29 @@ final class ChatViewTableViewCellDelegate: NSObject, ChatViewTableViewCellDelega
             }
             contact = c
             // Only send changed acks
-            if entityMessage.userackDate != nil, let currentAck = entityMessage.userack, currentAck.boolValue == ack {
+            if baseMessage.userackDate != nil, let currentAck = baseMessage.userack, currentAck.boolValue == ack {
                 return
             }
         }
-        
-        if ack {
-            MessageSender.sendUserAck(
-                forMessages: [message],
-                toIdentity: contact?.identity,
-                group: group,
-                onCompletion: {
-                    entityManager.performSyncBlockAndSafe {
-                        if conversation.isGroup() {
-                            let groupDeliveryReceipt = GroupDeliveryReceipt(
-                                identity: MyIdentityStore.shared().identity,
-                                deliveryReceiptType: .acknowledged,
-                                date: Date()
-                            )
-                            message.add(groupDeliveryReceipt: groupDeliveryReceipt)
-                        }
-                        else {
-                            message.userack = NSNumber(booleanLiteral: ack)
-                            message.userackDate = Date()
-                        }
-                    }
+        let identity = contact?.identity
+
+        Task { @MainActor in
+            if ack {
+                if let group {
+                    await businessInjector.messageSender.sendUserAck(for: baseMessage, toGroup: group)
                 }
-            )
-        }
-        else {
-            MessageSender.sendUserDecline(
-                forMessages: [message],
-                toIdentity: contact?.identity,
-                group: group,
-                onCompletion: {
-                    entityManager.performSyncBlockAndSafe {
-                        if conversation.isGroup() {
-                            let groupDeliveryReceipt = GroupDeliveryReceipt(
-                                identity: MyIdentityStore.shared().identity,
-                                deliveryReceiptType: .declined,
-                                date: Date()
-                            )
-                            message.add(groupDeliveryReceipt: groupDeliveryReceipt)
-                        }
-                        else {
-                            message.userack = NSNumber(booleanLiteral: ack)
-                            message.userackDate = Date()
-                        }
-                    }
+                else if let identity {
+                    await businessInjector.messageSender.sendUserAck(for: baseMessage, toIdentity: identity)
                 }
-            )
+            }
+            else {
+                if let group {
+                    await businessInjector.messageSender.sendUserDecline(for: baseMessage, toGroup: group)
+                }
+                else if let identity {
+                    await businessInjector.messageSender.sendUserDecline(for: baseMessage, toIdentity: identity)
+                }
+            }
         }
     }
 }

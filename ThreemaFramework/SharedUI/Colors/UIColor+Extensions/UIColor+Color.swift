@@ -21,9 +21,9 @@
 import Foundation
 import SwiftUI
 
-public extension UIColor {
+extension UIColor {
     /// For use in SwiftUI
-    var color: Color {
+    public var color: Color {
         Color(self)
     }
 }

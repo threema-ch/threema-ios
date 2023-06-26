@@ -30,7 +30,7 @@ import Foundation
     private var cachedWrappingKey: Data?
     
     func wrap(key: Data?) throws -> Data? {
-        guard let key = key else {
+        guard let key else {
             return nil
         }
         
@@ -51,7 +51,7 @@ import Foundation
     }
     
     func unwrap(key: Data?) throws -> Data? {
-        guard let key = key else {
+        guard let key else {
             return nil
         }
         

@@ -37,17 +37,20 @@ static NSString *fieldOrigin = @"origin";
 
 @implementation FileMessageEntity
 
-@dynamic encryptionKey;
 @dynamic blobId;
 @dynamic blobThumbnailId;
+@dynamic encryptionKey;
 @dynamic fileName;
 @dynamic fileSize;
-@dynamic progress;
-@dynamic type;
+@dynamic json;
 @dynamic mimeType;
+@dynamic progress;
+@dynamic origin;
+@dynamic type;
+
 @dynamic data;
 @dynamic thumbnail;
-@dynamic json;
+
 @synthesize caption = _caption;
 @synthesize correlationId = _correlationId;
 @synthesize mimeTypeThumbnail = _mimeTypeThumbnail;
@@ -65,8 +68,8 @@ static NSString *fieldOrigin = @"origin";
 }
 
 - (NSString*)logFileName {
-    NSString *name = [self blobGetFilename];
-    if ([self blobGetData] == nil) {
+    NSString *name = [self blobFilename];
+    if ([self blobData] == nil) {
         name = [name stringByAppendingFormat:@" %@", [NSString stringWithFormat:@" %@", [BundleUtil localizedStringForKey:@"fileNotDownloaded"]]];
     }
     return name;
@@ -120,145 +123,6 @@ static NSString *fieldOrigin = @"origin";
         }
     }
     return nil;
-}
-
-#pragma mark - BlobData
-
-- (BOOL)blobIsOutgoing {
-    if (self.isOwn) {
-        return self.isOwn.boolValue;
-    }
-    
-    return false;
-}
-
-- (NSData *)blobGetData {
-    if (self.data) {
-        return self.data.data;
-    }
-    
-    return nil;
-}
-
-- (NSData *)blobGetId {
-    return self.blobId;
-}
-
-- (NSData *)blobGetThumbnailId {
-    return self.blobThumbnailId;
-}
-
-- (NSData *)blobGetEncryptionKey {
-    return self.encryptionKey;
-}
-
-- (NSNumber *)blobGetSize {
-    return self.fileSize;
-}
-
-- (void)blobSetData:(NSData *)data {
-    FileData *dbData = [NSEntityDescription
-                        insertNewObjectForEntityForName:@"FileData"
-                        inManagedObjectContext:self.managedObjectContext];
-    
-    dbData.data = data;
-    self.data = dbData;
-}
-
-- (void)blobSetDataID:(NSData *)dataID {
-    self.blobId = dataID;
-}
-
-- (void)blobSetThumbnail:(NSData *)data {
-    ImageData *dbData = [NSEntityDescription
-                        insertNewObjectForEntityForName:@"ImageData"
-                        inManagedObjectContext:self.managedObjectContext];
-    
-    dbData.data = data;
-    
-    // Load thumbnail image to get dimensions
-    UIImage *loadedThumbnail = [UIImage imageWithData:data];
-    if (loadedThumbnail) {
-        dbData.width = [NSNumber numberWithInt:loadedThumbnail.size.width];
-        dbData.height = [NSNumber numberWithInt:loadedThumbnail.size.height];
-    }
-    
-    self.thumbnail = dbData;
-}
-
-- (void)blobSetThumbnailID:(NSData *)data {
-    self.blobThumbnailId = data;
-}
-- (NSData *)blobGetThumbnail {
-    if (self.thumbnail) {
-        return self.thumbnail.data;
-    }
-    
-    return nil;
-}
-
-- (void)blobSetOrigin:(BlobOrigin)origin {
-    [self willChangeValueForKey:fieldOrigin];
-    [self setPrimitiveValue:[NSNumber numberWithInt:(int)origin] forKey:fieldOrigin];
-    [self didChangeValueForKey:fieldOrigin];
-}
-
-- (BlobOrigin)blobGetOrigin {
-    if ([self valueForKey:fieldOrigin] != nil) {
-        switch ([[self valueForKey:fieldOrigin] intValue]) {
-            case BlobOriginLocal:
-                return BlobOriginLocal;
-            default:
-                return BlobOriginPublic;
-        }
-    }
-    return BlobOriginPublic;
-}
-
-- (NSString *)blobGetUTI {
-    return [UTIConverter utiFromMimeType:self.mimeType];
-}
-
-- (NSString *)blobGetFilename {
-    return [NSString stringWithFormat:@"%@-%@", [NSString stringWithHexData:self.id], self.fileName];
-}
-
-- (NSString *)blobGetWebFilename {
-    NSString *tempFileName = self.fileName;
-    if (tempFileName) {
-        return tempFileName;
-    }
-    
-    // Needed to make this non-null
-    return @"unknown-file-name";
-}
-
-- (void)blobUpdateProgress:(NSNumber *)progress {
-    self.progress = progress;
-}
-
-- (NSNumber *)blobGetProgress {
-    return self.progress;
-}
-
-- (BOOL)blobGetError {
-    if (self.sendFailed) {
-        return self.sendFailed.boolValue;
-    }
-    
-    return false;
-}
-
-- (void)blobSetError:(BOOL)error {
-    self.sendFailed = [[NSNumber alloc] initWithBool:error];
-}
-
-- (NSString *)getExternalFilename {
-    return [[self data] getFilename];
-}
-
-- (NSString *)getExternalFilenameThumbnail {
-    return [[self thumbnail] getFilename];
 }
 
 #pragma mark - Misc
@@ -321,7 +185,7 @@ static NSString *fieldOrigin = @"origin";
 /// Exports the data for this message to url. Will overwrite any data at that URL
 /// @param url 
 - (void)exportDataToURL:(nullable NSURL *)url {
-    NSData *data = [self blobGetData];
+    NSData *data = [self blobData];
     if (![data writeToURL:url atomically:NO]) {
         DDLogWarn(@"Writing file data to temporary file failed");
     }
@@ -548,11 +412,11 @@ static NSString *fieldOrigin = @"origin";
 }
 
 - (BOOL)thumbnailDownloaded {
-    return [self blobGetThumbnail] != nil;
+    return [self blobThumbnail] != nil;
 }
 
 - (BOOL)dataDownloaded {
-    return [self blobGetData] != nil;
+    return [self blobData] != nil;
 }
 
 #ifdef DEBUG

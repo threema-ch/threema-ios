@@ -64,7 +64,7 @@ class AppearanceSettingsViewController: ThemedTableViewController {
             object: nil,
             queue: nil
         ) { [weak self] _ in
-            guard let self = self else {
+            guard let self else {
                 return
             }
             self.systemThemeButton.layer.shadowColor = Colors.shadowThemeChooser.cgColor
@@ -358,5 +358,15 @@ extension AppearanceSettingsViewController {
             sender.value
         )
         UserSettings.shared()?.previewLimit = sender.value
+    }
+}
+
+struct AppearanceSettingsViewControllerRepresentable: UIViewControllerRepresentable {
+    func updateUIViewController(_ uiViewController: UIViewControllerType, context: Context) { }
+    
+    func makeUIViewController(context: Context) -> some UIViewController {
+        let storyboard = UIStoryboard(name: "SettingsStoryboard", bundle: nil)
+        let vc = storyboard.instantiateViewController(identifier: "AppearanceSettingsViewController")
+        return vc
     }
 }

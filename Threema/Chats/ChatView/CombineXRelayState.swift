@@ -21,7 +21,8 @@
 import Combine
 import Foundation
 
-// RelayState was copied from CombineX (https://github.com/cx-org/CombineX) by Quentin Jin. It is licensed under the MIT License.
+// RelayState was copied from CombineX (https://github.com/cx-org/CombineX) by Quentin Jin. It is licensed under the MIT
+// License.
 //
 //
 // MIT License

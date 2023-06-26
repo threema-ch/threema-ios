@@ -22,42 +22,24 @@ import SwiftUI
 
 public enum DeleteRevokeType {
     case delete, revoke
-    
-    var title: String {
-        switch self {
-        case .delete:
-            return BundleUtil.localizedString(forKey: "my_profile_delete_identity_summary_view_delete_title")
-        case .revoke:
-            return BundleUtil.localizedString(forKey: "my_profile_delete_identity_summary_view_revoke_title")
-        }
-    }
 }
 
 struct DeleteRevokeSummaryView: View {
     var type: DeleteRevokeType
     
     var body: some View {
-        VStack {
+        ScrollView {
             VStack(spacing: 16) {
-                Text(type.title)
+                Text(BundleUtil.localizedString(forKey: "my_profile_delete_identity_summary_view_removed_title"))
                     .bold()
                     .font(.title2)
                 
                 VStack(alignment: .leading, spacing: 4) {
-                    if type == .revoke {
-                        Text(
-                            BundleUtil
-                                .localizedString(forKey: "my_profile_delete_identity_summary_view_revoke_success")
-                        )
-                        .font(.headline)
-                    }
-                    else {
-                        Text(
-                            BundleUtil
-                                .localizedString(forKey: "my_profile_delete_identity_summary_view_delete_success")
-                        )
-                        .font(.headline)
-                    }
+                    Text(
+                        BundleUtil
+                            .localizedString(forKey: "my_profile_delete_identity_summary_view_removed_success")
+                    )
+                    .font(.headline)
                     
                     BulletText(
                         string: BundleUtil.localizedString(forKey: "my_profile_delete_bullet_id"),
@@ -68,28 +50,64 @@ struct DeleteRevokeSummaryView: View {
                         showIcon: true
                     )
                     BulletText(
-                        string: BundleUtil.localizedString(forKey: "my_profile_delete_bullet_linked"),
+                        string: BundleUtil.localizedString(forKey: "my_profile_delete_bullet_picture"),
                         showIcon: true
                     )
-
-                    if type == .revoke {
+                }
+                .multilineTextAlignment(.leading)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .fixedSize(horizontal: false, vertical: true)
+                
+                if type == .revoke {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(
+                            BundleUtil
+                                .localizedString(
+                                    forKey: "my_profile_delete_identity_summary_view_removed_server_success"
+                                )
+                        )
+                        .font(.headline)
+                        
                         BulletText(
                             string: BundleUtil.localizedString(forKey: "my_profile_delete_bullet_safe"),
                             showIcon: true
                         )
                         BulletText(
-                            string: BundleUtil.localizedString(forKey: "my_profile_delete_bullet_picture"),
+                            string: BundleUtil.localizedString(forKey: "my_profile_delete_bullet_linked"),
                             showIcon: true
                         )
                     }
+                    .multilineTextAlignment(.leading)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .fixedSize(horizontal: false, vertical: true)
+                    
+                    VStack(alignment: .leading, spacing: 4) {
+                        Label {
+                            Text(
+                                BundleUtil
+                                    .localizedString(
+                                        forKey: "my_profile_delete_identity_summary_view_removed_threema_id"
+                                    )
+                            )
+                            .bold()
+                        } icon: {
+                            Image(systemName: "checkmark.circle.fill")
+                                .foregroundColor(UIColor.primary.color)
+                        }
+                        .labelStyle(TrailingLabelStyle())
+                    }
+                    .multilineTextAlignment(.leading)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .fixedSize(horizontal: false, vertical: true)
                 }
-                .multilineTextAlignment(.leading)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                
-                if type == .delete {
+                     
+                switch type {
+                case .delete:
                     Text(BundleUtil.localizedString(forKey: "my_profile_delete_identity_summary_view_restart"))
+                case .revoke:
+                    Text(BundleUtil.localizedString(forKey: "my_profile_delete_identity_summary_view_restart_new"))
                 }
-                
+                                
                 Button {
                     exit(1)
                 } label: {

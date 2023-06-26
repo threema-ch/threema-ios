@@ -25,6 +25,7 @@ struct NotificationTypeSelectionView: View {
 
     @State var showPreview: Bool
     @State var selectedType: NotificationType
+    let disablePreviewToggle = MDMSetup(setup: false).existsMdmKey(MDM_KEY_DISABLE_MESSAGE_PREVIEW)
     @ObservedObject var settingsStore: SettingsStore
     
     private let cornerRadius = 20.0
@@ -79,6 +80,15 @@ struct NotificationTypeSelectionView: View {
                 .background(UIColor.secondarySystemGroupedBackground.color)
                 .cornerRadius(16)
                 .frame(maxWidth: .infinity, alignment: .topLeading)
+                .disabled(disablePreviewToggle)
+                
+                if disablePreviewToggle {
+                    Text(BundleUtil.localizedString(forKey: "disabled_by_device_policy"))
+                        .font(.footnote)
+                        .padding(.horizontal)
+                        .padding(.vertical, 4)
+                        .frame(maxWidth: .infinity, alignment: .topLeading)
+                }
                 
                 VStack(spacing: 16) {
                     Button {

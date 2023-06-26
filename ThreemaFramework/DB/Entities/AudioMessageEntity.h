@@ -22,15 +22,16 @@
 #import <CoreData/CoreData.h>
 #import "BaseMessage.h"
 #import "AudioData.h"
-#import "BlobData.h"
 
-@interface AudioMessageEntity : BaseMessage <BlobData>
+@interface AudioMessageEntity : BaseMessage
+// Attributes
+@property (nullable, nonatomic, retain) NSData * audioBlobId NS_SWIFT_NAME(audioBlobID);
+@property (nullable, nonatomic, retain) NSNumber * audioSize;
+@property (nonnull, nonatomic, retain) NSNumber * duration; // Non-optional; default is 0.
+@property (nullable, nonatomic, retain) NSData * encryptionKey;
+@property (nullable, nonatomic, retain) NSNumber * progress;
 
-@property (nonatomic, retain) NSNumber * duration;
-@property (nonatomic, retain) NSData * encryptionKey;
-@property (nonatomic, retain) NSNumber * progress;
-@property (nonatomic, retain) NSData * audioBlobId NS_SWIFT_NAME(audioBlobID);
-@property (nonatomic, retain) NSNumber * audioSize;
-@property (nonatomic, retain) AudioData *audio;
+// Relationships
+@property (nullable, nonatomic, retain) AudioData *audio;
 
 @end

@@ -296,7 +296,8 @@ final class ChatBarView: UIView {
             ])
         }
 
-        // Buttons should be centered next to a single line text field. To achieve this we dynamically update the centerYAnchor constraint for these buttons whenever the height of the text field changes
+        // Buttons should be centered next to a single line text field. To achieve this we dynamically update the
+        // centerYAnchor constraint for these buttons whenever the height of the text field changes
         
         // Plus button
 
@@ -569,7 +570,7 @@ extension ChatBarView: ChatTextViewDelegate {
         chatTextView.inputDelegate?.selectionWillChange(chatTextView)
         chatTextView.inputDelegate?.selectionDidChange(chatTextView)
         
-        guard let chatBarViewDelegate = chatBarViewDelegate else {
+        guard let chatBarViewDelegate else {
             assertionFailure("chatBarViewDelegate must not be nil when sending a text")
             return
         }

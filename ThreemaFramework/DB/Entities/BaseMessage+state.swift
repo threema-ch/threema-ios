@@ -20,10 +20,10 @@
 
 import Foundation
 
-public extension BaseMessage {
+extension BaseMessage {
     
     /// State of this message
-    enum State {
+    public enum State {
         // Common
         case read
         case userAcknowledged
@@ -41,8 +41,9 @@ public extension BaseMessage {
     
     /// Current state of this message
     ///
-    /// This only considers acks and the state bools and doesn't differentiate between single chats, gateway ids and groups
-    var messageState: State {
+    /// This only considers acks and the state bools and doesn't differentiate between single chats, gateway ids and
+    /// groups
+    public var messageState: State {
         if isOwnMessage {
             return ownMessageState
         }
@@ -51,7 +52,7 @@ public extension BaseMessage {
         }
     }
     
-    var isUserAckEnabled: Bool {
+    public var isUserAckEnabled: Bool {
         // single chats can't ack their own messages
         if isOwnMessage,
            !isGroupMessage {
@@ -68,14 +69,14 @@ public extension BaseMessage {
         return true
     }
     
-    @objc var showRetryAndCancelButton: Bool {
+    @objc public var showRetryAndCancelButton: Bool {
         messageState == .failed
     }
     
     // MARK: - Private helper
     
     private var ownMessageState: State {
-        if let userAckState = userAckState {
+        if let userAckState {
             return userAckState
         }
                 
@@ -96,7 +97,7 @@ public extension BaseMessage {
     }
     
     private var otherMessageState: State {
-        if let userAckState = userAckState {
+        if let userAckState {
             return userAckState
         }
         

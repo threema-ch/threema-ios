@@ -45,8 +45,8 @@ class MediatorReflectedMessageDecoder {
         incomingMessage imsg: D2d_IncomingMessage,
         receivedAfterInitialQueueSend: Bool
     ) throws -> T {
-        guard let amsg = MessageDecoder.decode(
-            try MediatorMessageProtocol.getAbstractMessageType(for: imsg.type),
+        guard let amsg = try MessageDecoder.decode(
+            MediatorMessageProtocol.getAbstractMessageType(for: imsg.type),
             body: imsg.body
         ) as? T else {
             throw MediatorReflectedProcessorError.messageDecodeFailed(message: imsg.loggingDescription)
@@ -83,8 +83,8 @@ class MediatorReflectedMessageDecoder {
     /// - Returns: Decoded incoming abstract message
     /// - Throws: MediatorReflectedProcessorError.messageDecodeFailed
     func decode<T: AbstractMessage>(outgoingMessage omsg: D2d_OutgoingMessage) throws -> T {
-        guard let amsg = MessageDecoder.decode(
-            try MediatorMessageProtocol.getAbstractMessageType(for: omsg.type),
+        guard let amsg = try MessageDecoder.decode(
+            MediatorMessageProtocol.getAbstractMessageType(for: omsg.type),
             body: omsg.body
         ) as? T else {
             throw MediatorReflectedProcessorError.messageDecodeFailed(message: omsg.loggingDescription)

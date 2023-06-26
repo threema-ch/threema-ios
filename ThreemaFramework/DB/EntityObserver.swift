@@ -209,7 +209,8 @@ class EntityObserver: NSObject {
 
 extension EntityObserver: NSFetchedResultsControllerDelegate {
 
-    /// Get changes of Core Data managed objects. Has temporary object ID changed to a permanent object ID, than replace the subscription.
+    /// Get changes of Core Data managed objects. Has temporary object ID changed to a permanent object ID, than replace
+    /// the subscription.
     func controller(
         _ controller: NSFetchedResultsController<NSFetchRequestResult>,
         didChangeContentWith diff: CollectionDifference<NSManagedObjectID>

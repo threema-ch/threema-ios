@@ -23,6 +23,10 @@ import Foundation
 
 class MockData {
 
+    static func generateBallotID() -> Data {
+        BytesUtility.generateRandomBytes(length: ThreemaProtocol.ballotIDLength)!
+    }
+
     static func generateBlobID() -> Data {
         BytesUtility.generateRandomBytes(length: ThreemaProtocol.blobIDLength)!
     }

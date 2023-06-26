@@ -127,9 +127,12 @@ struct WebConversation {
         if let lastMessage = conversation.lastMessage, lastMessage.conversation != nil {
             // This is a workaround for an issue that was introduced with IOS-3233 / IOS-3212
             // We would previously only ever set lastMessage on conversation for file messages after fileName was set.
-            // With the new changes we first create the base message, set lastMessage on conversation and then decode the file message (setting fileName).
-            // These changes caused a crash when using web client because we force unwrap `fileName`, `fileSize` and `mimeType` when creating a `WebFile` struct.
-            // As we're sunsetting the web client we just avoid the crash (the message will be updated later anyways so the user impact is low) instead of fixing it properly.
+            // With the new changes we first create the base message, set lastMessage on conversation and then decode
+            // the file message (setting fileName).
+            // These changes caused a crash when using web client because we force unwrap `fileName`, `fileSize` and
+            // `mimeType` when creating a `WebFile` struct.
+            // As we're sunsetting the web client we just avoid the crash (the message will be updated later anyways so
+            // the user impact is low) instead of fixing it properly.
             if !lastMessage.isKind(of: FileMessageEntity.self) || (
                 (lastMessage as? FileMessageEntity)?.fileName != nil
                     && (lastMessage as? FileMessageEntity)?

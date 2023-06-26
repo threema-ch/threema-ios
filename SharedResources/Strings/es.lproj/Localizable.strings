@@ -84,8 +84,6 @@
 "error_abort" = "Error irrecuperable";
 "qr_code" = "Código QR";
 "forward" = "Reenviar";
-"showNext" = "Más opciones";
-"showPrevious" = "Opciones anteriores";
 "read" = "Leídos";
 "unread" = "Sin leer";
 "settings" = "Configuración";
@@ -283,7 +281,6 @@
 "messages_delete_all_confirm_message" = "Esto incluye todos los medios y documentos.";
 "messages_delete_selected_confirm" = "¿Eliminar los mensajes seleccionados de este dispositivo?";
 "conversation_delete_confirm" = "¿Eliminar este chat de este dispositivo?";
-"delete_all" = "Eliminar todos";
 "delete_n" = "Eliminar (%d)";
 
 "message_cannot_play_movie" = "No se puede reproducir el vídeo.";
@@ -402,8 +399,6 @@
 "msg_unknown_group_request_sync_x_title" = "Mensaje recibido en un grupo desconocido";
 "msg_unknown_group_request_sync_x_message" = "Se ha recibido un mensaje en un grupo desconocido. El creador del grupo (%@) ha solicitado información sobre el grupo. El grupo aparece nada más conectarse el creador.";
 
-"chat_search_label_format" = "%ld de %ld mensajes";
-"load_earlier_messages" = "Cargando mensajes anteriores";
 "tap_to_cancel" = "Tocar para cancelar";
 "previous" = "Anterior";
 "tap_to_change" = "Tocar para cambiar";
@@ -439,17 +434,9 @@
 /* Settings */
 "show_stale_contacts_on" = "Los ID de Threema inactivos (los que no han sido utilizados durante al menos tres meses) y los revovados están ocultos.";
 "show_stale_contacts_off" = "Todos los ID de Threema figuran en la lista de contactos.";
-"hide_voip_call_ip_off" = "Establecer una conexión directa y, si es posible, transmitir llamadas a contactos no verificados solo a través de los servidores de Threema. Su dirección IP puede quedar al descubierto.";
-"hide_voip_call_ip_on" = "Forzar la transmisión de todas las llamadas a través de los servidores de Threema, protegiendo su dirección IP. Puede afectar a la calidad de la llamada.";
-"onprem_hide_voip_call_ip_off" = "Establecer una conexión directa y, si es posible, transmitir llamadas a contactos no verificados solo a través de los servidores de OnPrem. Su dirección IP puede quedar al descubierto.";
-"onprem_hide_voip_call_ip_on" = "Forzar la transmisión de todas las llamadas a través de los servidores de OnPrem, protegiendo su dirección IP. Puede afectar a la calidad de la llamada.";
-"voip_include_call_in_recents_off" = "Las llamadas se muestran en la pantalla de bloqueo pero no aparecen en la lista de llamadas de la aplicación Teléfono.";
-"voip_include_call_in_recents_on" = "Las llamadas se muestran en la pantalla de bloqueo y aparecen en la lista de llamadas de la aplicación Teléfono. Si iCloud Drive está activado, la lista de llamadas de la app Teléfono se sincroniza a través de los servidores de Apple.";
 
 "backgrounding_on" = "La aplicación seguirá ejecutándose en segundo plano durante un máximo de 30 segundos.";
 "backgrounding_off" = "La aplicación se desconectará inmediatamente en segundo plano.";
-"proximity_monitoring_off" = "No se apagará la pantalla al cubrir el sensor de proximidad.";
-"proximity_monitoring_on" = "Durante una llamada de voz y al grabar o reproducir mensajes de voz, la pantalla se apaga si se cubre el sensor de proximidad.";
 "debug_log_clear" = "Borrar registro";
 "log_empty_message" = "El registro de depuración está vacío.";
 "cannot_send_mail_message" = "No se ha configurado ninguna cuenta de correo electrónico en este dispositivo.";
@@ -667,7 +654,6 @@
 "system_message_group_avatar_changed" = "Imagen de grupo cambiada";
 
 /* accessibility labels */
-"send_media_or_location" = "Enviar elementos multimedia o ubicación";
 "my_profilepicture" = "Su foto de perfil";
 "my_threema_id" = "Su ID de Threema";
 "edit_profile" = "Editar apodo y foto de perfil";
@@ -677,11 +663,10 @@
 "seconds" = "segundos";
 "duration" = "duration";
 "current_position" = "position";
-"in_reply_to" = "in reply to";
+"in_reply_to" = "en respuesta a";
 "go_to_position" = "at";
 "draft" = "Borrador";
 "new_message_accessibility" = "Nuevo mensaje: ";
-"scoll_down_text" = "Scroll down";
 "quote_interaction_hint" = "Salta al mensaje citado";
 
 /* TTOpenInAppActivity */
@@ -754,9 +739,7 @@
 
 "call_voip_not_supported_title" = "Threema Voz";
 "call_voip_not_supported_text" = "Este contacto todavía no puede recibir llamadas Threema.";
-"call_contact_alert" = "¿Quiere llamar a %@?";
 "call_contact_not_reachable" = "No se puede comunicar con el contacto...";
-"already_in_call" = "Solo puede haber una llamada activa al mismo tiempo.";
 
 "call_status_idle" = "Listo";
 "call_status_wait_ringing" = "Inicializar";
@@ -776,7 +759,6 @@
 "call_threema_camera_disabled_info" = "Este contacto no usa una versión actual de la aplicación o no permite videollamadas.";
 
 "call_threema_video_in_chat_info_title" = "Nuevo: videollamadas ";
-"call_threema_video_in_chat_info_description" = "Además de las llamadas a prueba de toques accidentales, ahora %@ ofrece videollamadas cifradas de extremo a extremo.";
 
 "call_threema_cellular_instead_of_wifi_title" = "Llamar a través de red móvil";
 "call_threema_cellular_instead_of_wifi_text" = "Aviso: esto llamada causa transferencia de datos en la red móvil.";
@@ -1021,7 +1003,138 @@
 "url_warning_title" = "Aviso de suplantación";
 "url_warning_body" = "El nombre de host del enlace que va a abrir es sospechoso:\n\nNombre de host mostrado: %@\nNombre de host real: %@\n\nEsto podría ser un intento de engaño para que abra un sitio fingiendo ser otro.\n\n¿Quiere continuar de todos modos?";
 
-// Storage Management
+
+// Settings
+"settings_navbar_title" = "Configuración";
+"settings_list_privacy_title" = "Esfera privada";
+"settings_list_appearance_title" = "Apariencia";
+"settings_list_notifications_title" = "Notificaciones";
+"settings_list_chat_title" = "Pantalla de chat";
+"settings_list_media_title" = "Elementos multimedia";
+"settings_list_storage_management_title" = "Gestión del almacenamiento";
+"settings_list_passcode_lock_title" = "Bloqueo con código";
+"settings_threema_calls" = "Threema Voz";
+"settings_list_threema_web_title" = "Escritorio/Web";
+
+"settings_list_network_title" = "Estado de la red";
+"settings_list_version_title" = "Versión";
+"settings_list_settings_license_username_title" = "Nombre de usuario de licencia";
+
+"settings_list_invite_a_friend_title" = "Invitar amigos";
+"settings_list_threema_channel_title" = "Threema Channel";
+
+"settings_list_support_title" = "Soporte";
+"settings_list_privacy_policy_title" = "Política de privacidad";
+"settings_list_license_title" = "Licencia";
+"settings_advanced" = "Avanzado";
+"settings_threema_work" = "Threema Work";
+"settings_threema_work_subtitle" = "La solución de comunicación segura para empresas";
+"settings_feedback" = "Comentarios sobre la versión beta";
+"settings_list_tos_title" = "Términos del servicio";
+
+"settings_md_sync_alert_title" = "Error de sincronización";
+
+// Privacy Settings
+"settings_privacy_contacts_header" = "Contactos";
+"settings_privacy_sync_contacts" = "Sincronizar contactos";
+"settings_privacy_exclusion_list" = "Lista de exclusión";
+"settings_privacy_exclusion_list_alert_title" = "ID demasiado corta";
+"settings_privacy_exclusion_list_alert_message" = "Introduzca una ID con una longitud de exactamente 8 caracteres.";
+"settings_privacy_block_unknown" = "Bloquear desconocidos";
+"settings_privacy_block_unknown_footer_on"= "Solo pueden enviarle mensajes las personas de su lista de contactos.";
+"settings_privacy_block_unknown_foooter_off" = "Cualquier persona puede enviarle un mensaje. Los contactos nuevos se añadirán automáticamente cuando llegue su primer mensaje.";
+
+"settings_privacy_os_header" = "Integración de iOS";
+"settings_privacy_os_donate" = "Compartir interacciones";
+"settings_privacy_os_reset" = "Restablecer interacciones";
+"settings_privacy_os_footer" = "Si la opción está activada, se sugerirán contactos de Threema al compartir contenido en iOS. Compartir interacciones expone información a iOS.";
+
+"settings_privacy_chat_header" = "Chat";
+"settings_privacy_read_receipts" = "Confirmaciones de lectura";
+"settings_privacy_typing_indicator" = "Indicadores de escritura";
+
+"settings_privacy_TIRR_reset_all" = "Restablecer todos los contactos";
+"settings_privacy_TIRR_reset_footer" = "Restablecer todos los contactos a la configuración predeterminada.";
+"settings_privacy_TIRR_reset_alert_title" = "Restablecer";
+"settings_privacy_TIRR_reset_alert_message" = "Restablecer todos los contactos a la configuración predeterminada. Esta acción no se puede deshacer.";
+"settings_privacy_TIRR_reset_alert_action" = "Restablecer todo";
+
+"settings_privacy_choose_poi" = "Elegir POI";
+"settings_privacy_hide_private_chats" = "Ocultar chats privados";
+"settings_privacy_hide_private_chats_footer" = "Oculta todos los chats privados en el resumen de chats. Tiene que establecer un código para activar este ajuste.";
+
+// Appearance Settings
+"settings_appearance_theme_section" = "Tema";
+"settings_appearance_light_theme" = "Claro";
+"settings_appearance_dark_theme" = "Oscuro";
+"settings_appearance_system_theme" = "Sistema";
+"settings_appearance_theme_selected" = "%@ tema activo";
+"settings_appearance_theme_active" = "Activo";
+"settings_appearance_hide_app_icon" = "Icono de la app";
+"settings_appicon_default_header" = "Icono predeterminado";
+"settings_appicon_legacy_header" = "Iconos de Threema";
+"settings_appicon_special_header" = "Iconos especiales";
+"settings_appearance_hide_stale_contacts" = "Ocultar ID inactivos";
+"settings_appearance_show_profile_pictures" = "Mostrar las fotos de perfil";
+"settings_appearance_display_order" = "Mostrar como";
+"settings_appearance_show_gallery_preview" = "Vista previa de la galería";
+
+// Notification Settings
+"settings_notifications_inapp_section" = "En la aplicación";
+"settings_notifications_inapp_sounds" = "Tonos en la app";
+"settings_notifications_inapp_vibrate" = "Vibraciones en la app";
+"settings_notifications_inapp_preview" = "Mostrar vista previa del mensaje";
+"settings_notifications_push_section" = "Notificaciones push";
+"settings_notifications_push_sound" = "Tono";
+"settings_notifications_push_groupsound" = "Tono de grupo";
+"settings_notifications_push_preview" = "Mostrar vista previa del mensaje";
+"settings_notifications_masterDnd_section_header" = "Política fuera de horario";
+"settings_notifications_masterDnd" = "No molestar durante las horas libres";
+"settings_notifications_masterDnd_section_footer" = "Deshabilite las notificaciones y rechace llamadas fuera del horario laborable.";
+"settings_notifications_masterDnd_workingDays" = "Días laborables";
+"settings_notifications_masterDnd_startTime" = "Inicio de horas laborables";
+"settings_notifications_masterDnd_endTime" = "Fin de horas laborables";
+"settings_notification_iOS_settings" = "Ajustes del sistema";
+
+"settings_notification_type_preview_title" = "Notificaciones automáticas";
+"settings_notification_type_preview_description" = "Indique qué información debe incluirse en las notificaciones automáticas para los mensajes entrantes de Threema.";
+
+"settings_notification_type_preview_restrictive_title" = "Mostrar apodo";
+"settings_notification_type_preview_restrictive_description" = "Solo se muestra el apodo del contacto.";
+"settings_notification_type_preview_restrictive_sender_name" = "~Perico";
+
+"settings_notification_type_preview_balanced_title" = "Mostrar nombre";
+"settings_notification_type_preview_balanced_description" = "Se muestra el nombre completo del contacto (ajuste predeterminado).";
+"settings_notification_type_preview_balanced_sender_name" = "Perico de los Palotes";
+
+"settings_notification_type_preview_complete_title" = "Mostrar nombre y foto de perfil";
+"settings_notification_type_preview_complete_description" = "Se muestra el nombre completo y la foto de perfil del contacto. Se comparte alguna información relacionada con las interacciones con el sistema operativo. [Más información...](%@)";
+"settings_notification_type_preview_complete_sender_name" = "Perico de los Palotes";
+
+"settings_notification_type_preview_message_text" = "Mensaje de ejemplo...";
+"settings_notification_type_preview_no_button" = "Desactivar notificaciones automáticas";
+
+// Chat Settings
+"settings_chat_wallpaper_title" = "Fondo de pantalla";
+"settings_chat_wallpaper_reset" = "Restablecer todos los fondos de pantalla";
+"settings_chat_wallpaper_empty" = "Ninguno";
+"settings_chat_wallpaper_custom" = "Personalizado";
+"settings_chat_wallpaper_default" = "Predeterminado";
+"settings_chat_wallpaper_reset_all_alert" = "Restablece todos los fondos de pantalla configurados específicamente para un chat a la opción seleccionada anteriormente. No se puede deshacer.";
+
+"settings_chat_bigger_emojis" = "Emojis más grandes";
+/* Chat Settings */
+"settings_chat_send_message_feedback_label" = "Comentarios hápticos al enviar";
+
+// Media Settings
+"settings_media_title" = "Elementos multimedia";
+"settings_media_image_size_title" = "Tamaño de la imagen";
+"settings_media_video_quality_title" = "Calidad de vídeo";
+"settings_media_autosave_title" = "Guardar elementos multimedia de forma automática en la aplicación \"Fotos\"";
+/* Media */
+"settings_media_autosave_private_footer" = "Los archivos multimedia recibidos en chats privados no se guardarán automáticamente.";
+
+// Storage Management Settings
 "storage_management" = "Gestión del almacenamiento";
 "storage_total" = "Espacio total en el disco";
 "storage_total_in_use" = "Usados";
@@ -1062,97 +1175,51 @@
 "messages" = "Mensajes";
 "files" = "Archivos";
 
+// Call Settings
+"settings_threema_calls_enable_calls" = "Activar Threema Voz";
+"settings_threema_calls_always_relay_calls" = "Transmitir llamadas siempre";
+"settings_threema_calls_callkit" = "Integrar llamadas en iOS";
+"settings_threema_calls_video_section" = "Videollamadas ";
+"settings_threema_calls_allow_video_calls" = "Permitir videollamadas";
+"settings_threema_calls_video_quality_profile" = "Calidad de imagen preferida";
+"settings_threema_calls_video_quality_profile_low" = "Consumo de datos bajo";
+"settings_threema_calls_video_quality_profile_max" = "Calidad máxima";
+"settings_threema_calls_video_quality_profile_auto" = "Equilibrado (recomendado)";
+"settings_threema_calls_video_quality_profile_low_description" = "Calidad de imagen reducida para menor consumo de datos";
+"settings_threema_calls_video_quality_profile_max_description" = "Atención: ¡puede causar un consumo de datos alto en la red móvil!";
+"settings_threema_calls_video_quality_profile_auto_description" = "Calidad de imagen alta en WLAN, consumo de datos reducido en la red móvil";
+"settings_threema_calls_video_quality_profile_footer" = "La calidad de imagen real depende de la red y de los ajustes que tenga la persona con la que está hablando.";
+"settings_threema_calls_call_sound" = "Tono";
+"settings_threema_calls_hide_voip_call_ip_footer_off" = "Establecer una conexión directa y, si es posible, transmitir llamadas a contactos no verificados solo a través de los servidores de Threema. Su dirección IP puede quedar al descubierto.";
+"settings_threema_calls_hide_voip_call_ip_footer_on" = "Forzar la transmisión de todas las llamadas a través de los servidores de Threema, protegiendo su dirección IP. Puede afectar a la calidad de la llamada.";
+"settings_threema_calls_onprem_hide_voip_call_ip_footer_off" = "Establecer una conexión directa y, si es posible, transmitir llamadas a contactos no verificados solo a través de los servidores de OnPrem. Su dirección IP puede quedar al descubierto.";
+"settings_threema_calls_onprem_hide_voip_call_ip_footer_on" = "Forzar la transmisión de todas las llamadas a través de los servidores de OnPrem, protegiendo su dirección IP. Puede afectar a la calidad de la llamada.";
+"settings_threema_voip_include_call_in_recents_footer_off" = "Las llamadas se muestran en la pantalla de bloqueo pero no aparecen en la lista de llamadas de la aplicación Teléfono.";
+"settings_threema_voip_include_call_in_recents_footer_on" = "Las llamadas se muestran en la pantalla de bloqueo y aparecen en la lista de llamadas de la aplicación Teléfono. Si iCloud Drive está activado, la lista de llamadas de la app Teléfono se sincroniza a través de los servidores de Apple.";
 
-// Settings
-"settings_privacy" = "Esfera privada";
-"settings_appearance" = "Apariencia";
-"settings_notification" = "Notificaciones";
-"settings_chat" = "Pantalla de chat";
-"settings_media" = "Elementos multimedia";
-"settings_storage_management" = "Gestión del almacenamiento";
-"settings_passcode_lock" = "Bloqueo con código";
-"settings_threema_calls" = "Threema Voz";
-"settings_threema_web" = "Escritorio/Web";
-"settings_network_status" = "Estado de la red";
-"settings_version" = "Versión";
-"settings_license_username" = "Nombre de usuario de licencia";
-"settings_invite_a_friend" = "Invitar amigos";
-"settings_threema_channel" = "Threema Channel";
-"settings_support" = "Soporte";
-"settings_privacy_policy" = "Política de privacidad";
-"settings_license" = "Licencia";
-"settings_advanced" = "Avanzado";
-"settings_threema_work" = "Threema Work";
-"settings_threema_work_subtitle" = "La solución de comunicación segura para empresas";
-"settings_feedback" = "Comentarios sobre la versión beta";
-"tos_cell_title" = "Términos del servicio";
+// Advanced Settings
+"settings_advanced_networking_section_header" = "Resolución de problemas";
+"settings_advanced_ipv6_title" = "IPv6";
 
+"settings_advanced_proximity_monitoring_section_header" = "Sensor";
+"settings_advanced_proximity_monitoring_title" = "Control de la proximidad";
+"settings_advanced_proximity_monitoring_section_footer_off" = "No se apagará la pantalla al cubrir el sensor de proximidad.";
+"settings_advanced_proximity_monitoring_section_footer_on" = "Durante una llamada de voz y al grabar o reproducir mensajes de voz, la pantalla se apaga si se cubre el sensor de proximidad.";
+
+"settings_advanced_debug_log_section_header" = "Registro de depuración";
+"settings_advanced_debug_log_title" = "Registro de depuración";
+"settings_advanced_debug_log_size_title" = "Tamaño";
+"settings_advanced_debug_log_share_title" = "Enviar registro";
+"settings_advanced_debug_log_clear_log_title" = "Eliminar registro";
+
+"settings_advanced_other_section_header" = "Otro";
+"settings_advanced_webrtc_diagnostics_title" = "WebRTC Diagnostics";
+"settings_advanced_orphaned_files_cleanup" = "Supprimer les fichiers orphelins";
 "settings_advanced_flush_message_queue" = "Vaciar cola de mensajes";
-"settings_advanced_orphaned_files_cleanup" = "Eliminar archivos huérfanos";
+
 "settings_advanced_reregister_push_notifications_header_title" = "Notificaciones automáticas";
 "settings_advanced_reregister_push_notifications_footer_title" = "Si los mensajes entrantes no se muestran fuera de la app como notificaciones, puede volver a registrar las notificaciones.";
 "settings_advanced_reregister_notifications_label" = "Volver a registrar las notificaciones automáticas";
-
-"settings_md_sync_alert_title" = "Error de sincronización";
-
-// Privacy
-"settings_privacy_contacts_header" = "Contactos";
-"settings_privacy_sync_contacts" = "Sincronizar contactos";
-"settings_privacy_exclusion_list" = "Lista de exclusión";
-"settings_privacy_exclusion_list_alert_title" = "ID demasiado corta";
-"settings_privacy_exclusion_list_alert_message" = "Introduzca una ID con una longitud de exactamente 8 caracteres.";
-"settings_privacy_block_unknown" = "Bloquear desconocidos";
-"settings_privacy_block_unknown_footer_on"= "Solo pueden enviarle mensajes las personas de su lista de contactos.";
-"settings_privacy_block_unknown_foooter_off" = "Cualquier persona puede enviarle un mensaje. Los contactos nuevos se añadirán automáticamente cuando llegue su primer mensaje.";
-
-"settings_privacy_os_header" = "Integración de iOS";
-"settings_privacy_os_donate" = "Compartir interacciones";
-"settings_privacy_os_reset" = "Restablecer interacciones";
-"settings_privacy_os_footer" = "Si la opción está activada, se sugerirán contactos de Threema al compartir contenido en iOS. Compartir interacciones expone información a iOS.";
-
-"settings_privacy_chat_header" = "Chat";
-"settings_privacy_read_receipts" = "Confirmaciones de lectura";
-"settings_privacy_typing_indicator" = "Indicadores de escritura";
-
-"settings_privacy_TIRR_reset_all" = "Restablecer todos los contactos";
-"settings_privacy_TIRR_reset_footer" = "Restablecer todos los contactos a la configuración predeterminada.";
-"settings_privacy_TIRR_reset_alert_title" = "Restablecer";
-"settings_privacy_TIRR_reset_alert_message" = "Restablecer todos los contactos a la configuración predeterminada. Esta acción no se puede deshacer.";
-"settings_privacy_TIRR_reset_alert_action" = "Restablecer todo";
-
-"settings_privacy_choose_poi" = "Elegir POI";
-"settings_privacy_hide_private_chats" = "Ocultar chats privados";
-"settings_privacy_hide_private_chats_footer" = "Oculta todos los chats privados en el resumen de chats. Tiene que establecer un código para activar este ajuste.";
-
-// Appearance
-"settings_appearance_theme_section" = "Tema";
-"settings_appearance_light_theme" = "Claro";
-"settings_appearance_dark_theme" = "Oscuro";
-"settings_appearance_system_theme" = "Sistema";
-"settings_appearance_theme_selected" = "%@ tema activo";
-"settings_appearance_theme_active" = "Activo";
-"settings_appearance_hide_app_icon" = "Icono de la app";
-"settings_appicon_default_header" = "Icono predeterminado";
-"settings_appicon_legacy_header" = "Iconos de Threema";
-"settings_appicon_special_header" = "Iconos especiales";
-"settings_appearance_hide_stale_contacts" = "Ocultar ID inactivos";
-"settings_appearance_show_profile_pictures" = "Mostrar las fotos de perfil";
-"settings_appearance_display_order" = "Mostrar como";
-"settings_appearance_show_gallery_preview" = "Vista previa de la galería";
-
-// Chat Settings
-"settings_chat_wallpaper_title" = "Fondo de pantalla";
-"settings_chat_wallpaper_reset" = "Restablecer todos los fondos de pantalla";
-"settings_chat_wallpaper_empty" = "Ninguno";
-"settings_chat_wallpaper_custom" = "Personalizado";
-"settings_chat_wallpaper_default" = "Predeterminado";
-"settings_chat_wallpaper_reset_all_alert" = "Restablece todos los fondos de pantalla configurados específicamente para un chat a la opción seleccionada anteriormente. No se puede deshacer.";
-
-"settings_chat_bigger_emojis" = "Emojis más grandes";
-"settings_chat_send_message_feedback" = "Comentarios hápticos al enviar";
-
-// Media
-"settings_media_autosave_private_footer" = "Los archivos multimedia recibidos en chats privados no se guardarán automáticamente.";
 
 // Sentry
 "sentry_crash_send_title" = "%@ salió de forma inesperada";
@@ -1160,8 +1227,6 @@
 "sentry_crash_send_yes" = "Enviar informe anónimo";
 "sentry_crash_send_no" = "No enviar";
 "sentry_crash_comment_placeholder" = "Informe de fallo";
-
-
 
 // My profile
 "profile_share_id_text" = "Mi ID de Threema";
@@ -1175,73 +1240,35 @@
 "my_profile_delete_bullet_linked" = "Número de teléfono y/o enlaces de correo electrónico";
 
 "my_profile_delete_info_title" = "Eliminar ID y datos";
-"my_profile_delete_info_keep" = "Los siguientes datos siguen siendo utilizables y no se eliminarán:";
-"my_profile_delete_info_delete" = "Los siguientes datos se eliminarán de este dispositivo:";
-"my_profile_delete_info_toggle" = "Eliminar todo";
+"my_profile_delete_info_keep" = "Tu ID de Threema no será revocado. Si has creado una copia de seguridad en Threema Safe o has exportado tu ID, puedes restablecerlo en otro dispositivo.";
+"my_profile_delete_info_delete" = "Todos tus datos de Threema se eliminarán de este dispositivo:";
+"my_profile_delete_info_delete_server" = "Todos tus datos de Threema se eliminarán también del servidor:";
+"my_profile_delete_info_revoke" = "Tu ID de Threema será revocado y no podrás restablecerlo.";
+"my_profile_delete_info_toggle" = "Eliminar todo irrevocablemente";
 
-"my_profile_delete_info_button_data" = "Eliminar datos";
-"my_profile_delete_info_button_revoke" = "Eliminar ID y datos";
+"my_profile_delete_info_button" = "Eliminar ID y datos";
 
-"my_profile_delete_identity_title" = "¿Eliminar chats y perfil?";
-"my_profile_delete_identity_keep" = "Mantendrás:";
-"my_profile_delete_identity_remove" = "Está a punto de eliminar de este dispositivo:";
-"my_profile_delete_identity_delete" = "Eliminar chats y perfil";
+"my_profile_delete_info_alert_title" = "Perderás tu ID de Threema si no tienes una copia de seguridad.";
+"my_profile_delete_info_alert_confirm" = "Eliminar datos";
 
-"my_profile_delete_identity_view_alert_title" = "Esta acción no se puede deshacer.\n¿Seguro que quiere continuar?";
-"my_profile_delete_identity_view_alert_confirm" = "Eliminar datos";
-
-"my_profile_revoke_identity_view_title" = "¿Eliminar todo?";
-"my_profile_revoke_info_delete" = "Eliminará permanentemente su:";
-"my_profile_revoke_identity_view_info" = "Aviso: Esta acción no se puede deshacer.";
+"my_profile_revoke_identity_view_title" = "¿Eliminar ID y datos?";
+"my_profile_revoke_info_delete" = "Todos tus datos de Threema se eliminarán de este dispositivo:";
+"my_profile_revoke_info_sever" = "Todos tus datos de Threema se eliminarán también del servidor:";
 "my_profile_revoke_identity_view_enter_id" = "Introduzca su ID de Threema \"%@\" para eliminarlo todo definitivamente:";
 "my_profile_revoke_identity_view_placeholder" = "Su ID de Threema";
-"my_profile_revoke_identity_view_button_revoke" = "Eliminar todo";
+"my_profile_revoke_identity_view_button_revoke" = "Eliminar ID y datos";
 
-"my_profile_delete_identity_summary_view_delete_title" = "Chats y perfil eliminados";
-"my_profile_delete_identity_summary_view_revoke_title" = "Se ha eliminado todo";
-"my_profile_delete_identity_summary_view_delete_success" = "Ha eliminado correctamente de este dispositivo:";
-"my_profile_delete_identity_summary_view_revoke_success" = "Ha eliminado correctamente su:";
+"my_profile_delete_identity_summary_view_removed_title" = "ID y datos eliminados";
+"my_profile_delete_identity_summary_view_removed_success" = "Se han eliminado todos tus datos de Threema de este dispositivo:";
+"my_profile_delete_identity_summary_view_removed_server_success" = "Se han eliminado todos tus datos de Threema del servidor:";
+"my_profile_delete_identity_summary_view_removed_threema_id" = "Tu ID de Threema ha sido revocado";
 "my_profile_delete_identity_summary_view_restart" = "Reinicie la app para continuar usándola.";
+"my_profile_delete_identity_summary_view_restart_new" = "Reinicia la aplicación para crear un nuevo ID de Threema.";
 "my_profile_delete_identity_summary_view_close" = "Cerrar app";
 
 // File message
 "optional_caption" = "Título caption";
 "send_as_file" = "Enviar como original";
-
-// Notification settings
-"settings_notifications_inapp_section" = "En la aplicación";
-"settings_notifications_inapp_sounds" = "Tonos en la app";
-"settings_notifications_inapp_vibrate" = "Vibraciones en la app";
-"settings_notifications_inapp_preview" = "Mostrar vista previa del mensaje";
-"settings_notifications_push_section" = "Notificaciones push";
-"settings_notifications_push_sound" = "Tono";
-"settings_notifications_push_groupsound" = "Tono de grupo";
-"settings_notifications_push_preview" = "Mostrar vista previa del mensaje";
-"settings_notifications_masterDnd_section_header" = "Política fuera de horario";
-"settings_notifications_masterDnd" = "No molestar durante las horas libres";
-"settings_notifications_masterDnd_section_footer" = "Deshabilite las notificaciones y rechace llamadas fuera del horario laborable.";
-"settings_notifications_masterDnd_workingDays" = "Días laborables";
-"settings_notifications_masterDnd_startTime" = "Inicio de horas laborables";
-"settings_notifications_masterDnd_endTime" = "Fin de horas laborables";
-"settings_notification_iOS_settings" = "Ajustes del sistema";
-
-"settings_notification_type_preview_title" = "Notificaciones automáticas";
-"settings_notification_type_preview_description" = "Indique qué información debe incluirse en las notificaciones automáticas para los mensajes entrantes de Threema.";
-
-"settings_notification_type_preview_restrictive_title" = "Mostrar apodo";
-"settings_notification_type_preview_restrictive_description" = "Solo se muestra el apodo del contacto.";
-"settings_notification_type_preview_restrictive_sender_name" = "~Perico";
-
-"settings_notification_type_preview_balanced_title" = "Mostrar nombre";
-"settings_notification_type_preview_balanced_description" = "Se muestra el nombre completo del contacto (ajuste predeterminado).";
-"settings_notification_type_preview_balanced_sender_name" = "Perico de los Palotes";
-
-"settings_notification_type_preview_complete_title" = "Mostrar nombre y foto de perfil";
-"settings_notification_type_preview_complete_description" = "Se muestra el nombre completo y la foto de perfil del contacto. Se comparte alguna información relacionada con las interacciones con el sistema operativo. [Más información...](%@)";
-"settings_notification_type_preview_complete_sender_name" = "Perico de los Palotes";
-
-"settings_notification_type_preview_message_text" = "Mensaje de ejemplo...";
-"settings_notification_type_preview_no_button" = "Desactivar notificaciones automáticas";
 
 // Orphaned files delete
 "settings_orphaned_files_description" = "Al eliminar datos en la gestión de almacenamiento de versiones anteriores de %@, existe una pequeña posibilidad de que algunos archivos (multimedia) no se borraran correctamente pero se eliminaran en %@.
@@ -1263,22 +1290,6 @@ Si no faltan archivos (multimedia) en %@, vacíe la papelera de reciclaje para e
 "settings_orphaned_files_bin_delete_conformation" = "¿Seguro que quieres eliminar permanentemente los archivos huérfanos? Esta acción no se puede deshacer.";
 "settings_orphaned_files_log_title" = "ARCHIVOS DE REGISTRO";
 "settings_orphaned_files_log_all_files_button" = "Archivos de registro en el registro de depuración";
-
-// Threema calls settings
-"settings_threema_calls_enable_calls" = "Activar Threema Voz";
-"settings_threema_calls_always_relay_calls" = "Transmitir llamadas siempre";
-"settings_threema_calls_callkit" = "Integrar llamadas en iOS";
-"settings_threema_calls_video_section" = "Videollamadas ";
-"settings_threema_calls_allow_video_calls" = "Permitir videollamadas";
-"settings_threema_calls_video_quality_profile" = "Calidad de imagen preferida";
-"settings_threema_calls_video_quality_profile_low" = "Consumo de datos bajo";
-"settings_threema_calls_video_quality_profile_max" = "Calidad máxima";
-"settings_threema_calls_video_quality_profile_auto" = "Equilibrado (recomendado)";
-"settings_threema_calls_video_quality_profile_low_description" = "Calidad de imagen reducida para menor consumo de datos";
-"settings_threema_calls_video_quality_profile_max_description" = "Atención: ¡puede causar un consumo de datos alto en la red móvil!";
-"settings_threema_calls_video_quality_profile_auto_description" = "Calidad de imagen alta en WLAN, consumo de datos reducido en la red móvil";
-"settings_threema_calls_video_quality_profile_footer" = "La calidad de imagen real depende de la red y de los ajustes que tenga la persona con la que está hablando.";
-"settings_threema_calls_call_sound" = "Tono";
 
 // Media Preview
 "loading_video_failed" = "No se ha podido cargar el vídeo. Reinicia la aplicación y vuelve a intentarlo.";
@@ -1311,8 +1322,6 @@ Si no faltan archivos (multimedia) en %@, vacíe la papelera de reciclaje para e
 "sending_item" = "Enviando elemento";
 "send_as_file_title" = "Modo de envío";
 "document" = "Documento";
-"paste_create_file_failure_title" = "Error al pegar";
-"paste_create_file_failure_message" = "No se pudo pegar el archivo. Vuelve a intentarlo.";
 "loading_files_takes_time_title" = "Cargando medios";
 "loading_files_takes_time_description" = "Convertir vídeos puede tardar unos minutos.";
 "pasteErrorMessageTitle" = "No se pudo pegar";
@@ -1358,8 +1367,6 @@ Si no faltan archivos (multimedia) en %@, vacíe la papelera de reciclaje para e
 "ballot_allDay_switch" = "Todo el día";
 
 "ballot_choose_title" = "Elegir sondeo";
-"ballot_closed_cell_title" = "Resultados del sondeo";
-"ballot_new_cell_title" = "Nuevo sondeo";
 "ballot_description_intermediate" = "Active la opción para que todos los participantes puedan ver los votos recibidos acumulados. De lo contrario, los resultados se mantendrán en secreto hasta el cierre del sondeo.";
 "ballot_description_multiplechoice" = "Elija si los participantes podrán seleccionar una única elección o varias.";
 
@@ -1471,10 +1478,6 @@ Si no faltan archivos (multimedia) en %@, vacíe la papelera de reciclaje para e
 
 // ChatDetailView
 "detailView_title" = "Detalles del mensaje";
-"detailView_sent" = "Enviado";
-"detailView_delivered" = "Entregado";
-"detailView_read" = "Leído";
-"detailView_ackd" = "Recibido";
 "detailView_messageID" = "ID del mensaje";
 "detailView_group_acknowledged" = "Conforme (%d)";
 "detailView_group_declined" = "No conforme (%d)";
@@ -1532,6 +1535,12 @@ Si no faltan archivos (multimedia) en %@, vacíe la papelera de reciclaje para e
 "notification_caption_too_long" = "El subtítulo es demasiado largo";
 
 "notification_updateworkdata_failed" = "Error en la sincronización con el servidor de aprovisionamiento";
+
+"notification_empty_debug_log_success" = "El registro de depuración se ha vaciado correctamente";
+
+"notification_flush_message_queue_succeeded" = "La cola de mensajes se ha borrado";
+
+"notification_reregister_notifications_successed" = "Se han vuelto a registrar las notificaciones push";
 
 // Forward security status messages
 "forward_security_message_without" = "Se ha recibido un mensaje sin Secreto perfecto hacia adelante (PFS). Compruebe que el remitente haya desactivado PFS intencionadamente.";
@@ -1682,3 +1691,7 @@ Si no faltan archivos (multimedia) en %@, vacíe la papelera de reciclaje para e
 "alert_no_access_message_microphone" = "Abra los Ajustes de iOS y conceda acceso al Micrófono.";
 
 "alert_no_access_open_settings" = "Abrir Ajustes";
+
+"alert_biometrics_changed_title_touch" = "Se ha detectado un posible cambio en TouchID";
+"alert_biometrics_changed_title_face" = "Se ha detectado un posible cambio en FaceID";
+"alert_biometrics_changed_message" = "Introduzca su código de acceso de Threema una vez para continuar utilizando la autenticación biométrica para desbloquear Threema.";

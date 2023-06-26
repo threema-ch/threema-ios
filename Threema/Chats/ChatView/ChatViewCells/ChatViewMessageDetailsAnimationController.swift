@@ -20,7 +20,8 @@
 
 import UIKit
 
-/// Implements UIViewControllerAnimatedTransitioning to allow the DetailsViewController to appear with a percentage driven animation when swiping on the cells
+/// Implements UIViewControllerAnimatedTransitioning to allow the DetailsViewController to appear with a percentage
+/// driven animation when swiping on the cells
 final class ChatViewMessageDetailsAnimationController: NSObject, UIViewControllerAnimatedTransitioning {
     typealias Config = ChatViewConfiguration.ChatBubble.MessageDetailsInteraction
     

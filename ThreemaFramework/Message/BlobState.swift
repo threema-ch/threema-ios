@@ -77,7 +77,8 @@ public enum IncomingBlobState: CustomStringConvertible, Equatable {
 public enum OutgoingBlobState: CustomStringConvertible, Equatable {
     // TODO: Maybe add processing states (pendingProcessing & processing) in the future
 
-    /// Blob is waiting for download (for reflected outgoing file message). If download failed an `error` should be reported.
+    /// Blob is waiting for download (for reflected outgoing file message). If download failed an `error` should be
+    /// reported.
     case pendingDownload(error: BlobStateError?)
     /// Blob is downloading (for reflected outgoing file message).
     case downloading

@@ -48,7 +48,7 @@ class IntroQuestionViewHelper: NSObject, IntroQuestionDelegate {
             
             parent.view.addSubview(alert!)
         }
-        if let title = title {
+        if let title {
             alert?.title = title
         }
         alert?.questionLabel.text = text
@@ -79,7 +79,7 @@ class IntroQuestionViewHelper: NSObject, IntroQuestionDelegate {
     
     private func answer(_ sender: IntroQuestionView, answer: Answer) {
         parent.hideMessageView(sender)
-        if let onAnswer = onAnswer {
+        if let onAnswer {
             onAnswer(sender, answer)
         }
     }

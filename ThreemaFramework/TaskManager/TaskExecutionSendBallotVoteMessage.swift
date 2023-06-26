@@ -182,7 +182,7 @@ class TaskExecutionSendBallotVoteMessage: TaskExecution, TaskExecutionProtocol {
                 msg != nil
             }) {
                 // Send profile picture to all message receiver
-                if let sentMessage = sentMessage,
+                if let sentMessage,
                    let sendContactProfilePicture = task.sendContactProfilePicture,
                    sendContactProfilePicture {
                     // TODO: Inject for testing

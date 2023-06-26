@@ -224,7 +224,7 @@ import Foundation
     }
 }
 
-private extension UIAlertTemplate {
+extension UIAlertTemplate {
     private static func resolveCancelTitle(with optionalTitle: String?) -> String {
         optionalTitle ?? BundleUtil.localizedString(forKey: "cancel")
     }

@@ -121,22 +121,6 @@ public class MessageFetcher: NSObject {
         return fetchRequest
     }()
     
-    private lazy var newestUnreadMessageFetchRequest: NSFetchRequest<NSFetchRequestResult> = {
-        let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: entityName)
-        fetchRequest.predicate = conversationUnreadPredicate
-        fetchRequest.sortDescriptors = sortDescriptors(ascending: false)
-        fetchRequest.fetchLimit = 1
-        return fetchRequest
-    }()
-    
-    private lazy var oldestUnreadMessageFetchRequest: NSFetchRequest<NSFetchRequestResult> = {
-        let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: entityName)
-        fetchRequest.predicate = conversationUnreadPredicate
-        fetchRequest.fetchLimit = 1
-        fetchRequest.sortDescriptors = sortDescriptors(ascending: true)
-        return fetchRequest
-    }()
-    
     private lazy var lastMessagesFetchRequest: NSFetchRequest<NSFetchRequestResult> = {
         let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: entityName)
         fetchRequest.predicate = conversationPredicate
@@ -200,7 +184,7 @@ public class MessageFetcher: NSObject {
     // MARK: - Public methods
     
     /// Number of messages in the conversation
-    @objc public func count() -> Int {
+    public func count() -> Int {
         // This might be 0 before the first save after the migration to V35
         entityManager.entityFetcher.executeCount(countFetchRequest)
     }
@@ -226,8 +210,10 @@ public class MessageFetcher: NSObject {
     
     /// Number of messages in conversation after the passed date
     /// - Parameter date: All messages with a `date` or `remoteSentDate` newer than this are counted
-    /// - Returns: Number of messages in this conversation after the passed date or zero if an error occurred during execution
-    /// This is consistent with the behavior of the standard `numberOfMessages` where `executeCount` returns 0 if the fetch request failed
+    /// - Returns: Number of messages in this conversation after the passed date or zero if an error occurred during
+    /// execution
+    /// This is consistent with the behavior of the standard `numberOfMessages` where `executeCount` returns 0 if the
+    /// fetch request failed
     public func numberOfMessages(after date: Date) -> Guarantee<Int> {
         Guarantee { seal in
             let fetchRequest = dateFetchRequest
@@ -256,7 +242,7 @@ public class MessageFetcher: NSObject {
     ///   - offset: Offset of first message to load
     ///   - count: Maximum number of messages to load
     /// - Returns: Up to `count` messages. This is empty if there are no messages.
-    @objc public func messages(at offset: Int, count: Int) -> [BaseMessage] {
+    public func messages(at offset: Int, count: Int) -> [BaseMessage] {
         oldMessagesFetchRequest.fetchOffset = offset
         oldMessagesFetchRequest.fetchLimit = count
         
@@ -286,24 +272,6 @@ public class MessageFetcher: NSObject {
         return result
     }
     
-    /// Newest Unread Message
-    public func newestUnreadMessage() -> BaseMessage? {
-        guard let result = entityManager.entityFetcher.execute(newestUnreadMessageFetchRequest) as? [BaseMessage] else {
-            return nil
-        }
-        
-        return result.first
-    }
-    
-    /// Oldest Unread Message
-    public func oldestUnreadMessage() -> BaseMessage? {
-        guard let result = entityManager.entityFetcher.execute(oldestUnreadMessageFetchRequest) as? [BaseMessage] else {
-            return nil
-        }
-        
-        return result.first
-    }
-    
     /// Most recent message
     @objc public func lastMessage() -> BaseMessage? {
         lastMessagesFetchRequest.fetchLimit = 1
@@ -316,7 +284,7 @@ public class MessageFetcher: NSObject {
     }
     
     /// Number of media messages in the conversation
-    @objc public func mediaCount() -> Int {
+    public func mediaCount() -> Int {
         var mediaCount = 0
         mediaCount += entityManager.entityFetcher.executeCount(countFileMessagesFetchRequest)
         mediaCount += entityManager.entityFetcher.executeCount(countImageMessagesFetchRequest)
@@ -327,7 +295,8 @@ public class MessageFetcher: NSObject {
     }
     
     /// Object IDs of file messages with a `nil` MIME typ. They have no particular order.
-    /// - Parameter managedObjectContext: Context to execute fetch request on. If you use the main context you might deadlock
+    /// - Parameter managedObjectContext: Context to execute fetch request on. If you use the main context you might
+    /// deadlock
     /// - Returns: Object IDs of file messages with a `nil` MIME typ
     func fileMessagesWithNoMIMEType(using managedObjectContext: NSManagedObjectContext) -> [NSManagedObjectID] {
         fileMessagesWithNoMIMETypeFetchRequest.resultType = .managedObjectIDResultType
@@ -344,18 +313,6 @@ public class MessageFetcher: NSObject {
             catch {
                 DDLogError("Unable to fetch file messages with no MIME type")
             }
-        }
-        
-        return result
-    }
-    
-    /// Most recent 20 messages
-    @available(*, deprecated, message: "This will be removed with Old_ChatViewController")
-    @objc public func old_last20Messages() -> [BaseMessage] {
-        lastMessagesFetchRequest.fetchLimit = 20
-        
-        guard let result = entityManager.entityFetcher.execute(lastMessagesFetchRequest) as? [BaseMessage] else {
-            return []
         }
         
         return result

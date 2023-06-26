@@ -23,7 +23,8 @@ import Foundation
 
 /// Default interaction for messages
 ///
-/// Depending on the message type different things might happen: e.g. a video playing inline or a photo shown in the photo browser
+/// Depending on the message type different things might happen: e.g. a video playing inline or a photo shown in the
+/// photo browser
 class ChatViewDefaultMessageTapActionProvider: NSObject {
     
     private weak var chatViewController: ChatViewController?
@@ -38,7 +39,8 @@ class ChatViewDefaultMessageTapActionProvider: NSObject {
         delegate: self
     )
     
-    /// Temporary file that might have ben used to show/play the cell content and should be deleted when it is not shown anymore
+    /// Temporary file that might have ben used to show/play the cell content and should be deleted when it is not shown
+    /// anymore
     private var temporaryFileToCleanUp: URL?
     
     // Video playing state

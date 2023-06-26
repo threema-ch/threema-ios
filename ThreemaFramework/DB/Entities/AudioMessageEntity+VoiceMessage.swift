@@ -55,15 +55,11 @@ extension AudioMessageEntity: VoiceMessage {
     }
     
     public var durationTimeInterval: TimeInterval? {
-        guard let duration = duration else {
-            return nil
-        }
-        
-        return duration.doubleValue
+        duration.doubleValue
     }
     
     public func temporaryBlobDataURL() -> URL? {
-        guard let audio = audio,
+        guard let audio,
               let audioData = audio.data else {
             return nil
         }

@@ -181,7 +181,7 @@ import UIKit
 
             // store custom safe backup server
             let safeConfigManager = SafeConfigManager()
-            if let server = server {
+            if let server {
                 safeConfigManager.setServer(server)
                 safeConfigManager.setCustomServer(customServer)
                 safeConfigManager.setMaxBackupBytes(maxBackupBytes)

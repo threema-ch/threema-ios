@@ -31,28 +31,56 @@ struct RevokeIdentityInfoView: View {
     let identity = MyIdentityStore.shared().identity!
     
     var body: some View {
-        VStack {
+        ScrollView {
             VStack(spacing: 16) {
                 Text(BundleUtil.localizedString(forKey: "my_profile_revoke_identity_view_title"))
                     .bold()
                     .font(.title2)
+
                 VStack(alignment: .leading, spacing: 4) {
                     Text(BundleUtil.localizedString(forKey: "my_profile_revoke_info_delete"))
                         .bold()
                     BulletText(string: BundleUtil.localizedString(forKey: "my_profile_delete_bullet_id"))
                     BulletText(string: BundleUtil.localizedString(forKey: "my_profile_delete_bullet_chats"))
+                    BulletText(string: BundleUtil.localizedString(forKey: "my_profile_delete_bullet_picture"))
+                }
+                .multilineTextAlignment(.leading)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .fixedSize(horizontal: false, vertical: true)
+                
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(BundleUtil.localizedString(forKey: "my_profile_revoke_info_sever"))
+                        .bold()
+                    BulletText(string: BundleUtil.localizedString(forKey: "my_profile_delete_bullet_id"))
                     BulletText(string: BundleUtil.localizedString(forKey: "my_profile_delete_bullet_safe"))
                     BulletText(string: BundleUtil.localizedString(forKey: "my_profile_delete_bullet_linked"))
                 }
                 .multilineTextAlignment(.leading)
                 .frame(maxWidth: .infinity, alignment: .leading)
+                .fixedSize(horizontal: false, vertical: true)
+                
+                Label {
+                    if textIsSameAsID {
+                        Text(BundleUtil.localizedString(forKey: "my_profile_delete_info_revoke"))
+                            .foregroundColor(Colors.red.color)
+                            .bold()
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    else {
+                        Text(BundleUtil.localizedString(forKey: "my_profile_delete_info_revoke"))
+                            .foregroundColor(Colors.red.color)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                } icon: {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .foregroundColor(Colors.orange.color)
+                }
                     
                 VStack(alignment: .leading, spacing: 8) {
                     Text(String.localizedStringWithFormat(
                         BundleUtil.localizedString(forKey: "my_profile_revoke_identity_view_enter_id"),
                         identity
                     ))
-                    .fixedSize(horizontal: false, vertical: true)
                     .multilineTextAlignment(.leading)
                     .frame(maxWidth: .infinity, alignment: .leading)
                                             
@@ -74,15 +102,8 @@ struct RevokeIdentityInfoView: View {
                         }
                     }
                 }
-                
-                if textIsSameAsID {
-                    Text(BundleUtil.localizedString(forKey: "my_profile_revoke_identity_view_info"))
-                        .bold()
-                        .underline()
-                        .font(.title3)
-                        .foregroundColor(Color(uiColor: Colors.red))
-                }
-                
+                .fixedSize(horizontal: false, vertical: true)
+                                
                 HStack {
                     Button {
                         dismiss()
@@ -122,7 +143,6 @@ struct RevokeIdentityInfoView: View {
                 .padding(.vertical)
             }
             .padding()
-            .frame(maxWidth: .infinity)
             .background(.white)
             .cornerRadius(16)
             .padding()

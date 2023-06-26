@@ -92,7 +92,6 @@ class TextPreviewViewController: UIViewController, UITextViewDelegate {
             conversationDescriptionHeightConstraint?.isActive = false
         }
 
-        print("\(textPreviewView.contentSize.height)")
         if textPreviewView.intrinsicContentSize.height >= (view.frame.height - conversationDescriptionViewHeight) {
             textPreviewHeightConstraint = textPreviewView.heightAnchor
                 .constraint(equalToConstant: view.frame.height - conversationDescriptionViewHeight)
@@ -108,9 +107,6 @@ class TextPreviewViewController: UIViewController, UITextViewDelegate {
     
     private lazy var textPreviewView: UITextView = {
         let textView = UITextView()
-        if let fontSize = UserSettings.shared()?.chatFontSize {
-            textView.font = UIFont.systemFont(ofSize: CGFloat(fontSize))
-        }
         
         textView.text = previewText
 
@@ -123,13 +119,14 @@ class TextPreviewViewController: UIViewController, UITextViewDelegate {
         textView.textContainerInset = UIEdgeInsets(top: 6.5, left: 13, bottom: 0, right: 13)
         textView.translatesAutoresizingMaskIntoConstraints = false
         textView.isScrollEnabled = false
+        textView.font = UIFont.preferredFont(forTextStyle: .body)
         
         return textView
     }()
     
     private lazy var conversationDescriptionView: UITextView? = {
         
-        guard let selectedConversations = selectedConversations else {
+        guard let selectedConversations else {
             return nil
         }
 
@@ -144,6 +141,7 @@ class TextPreviewViewController: UIViewController, UITextViewDelegate {
         textView.font = UIFont.preferredFont(forTextStyle: .subheadline)
         textView.isScrollEnabled = false
         textView.translatesAutoresizingMaskIntoConstraints = false
+        textView.isUserInteractionEnabled = false
         
         return textView
     }()
@@ -179,7 +177,7 @@ class TextPreviewViewController: UIViewController, UITextViewDelegate {
         conversationDescriptionView?.setContentHuggingPriority(.required, for: .vertical)
         conversationDescriptionView?.setContentCompressionResistancePriority(.defaultHigh, for: .vertical)
         
-        if let conversationDescriptionView = conversationDescriptionView {
+        if let conversationDescriptionView {
             contentStackView.addArrangedSubview(conversationDescriptionView)
             contentStackView.addArrangedSubview(hairlineView)
         }
@@ -202,7 +200,7 @@ class TextPreviewViewController: UIViewController, UITextViewDelegate {
             contentStackView.trailingAnchor.constraint(equalTo: textPreviewView.trailingAnchor),
         ])
         
-        if let conversationDescriptionView = conversationDescriptionView {
+        if let conversationDescriptionView {
             NSLayoutConstraint.activate([
                 contentStackView.leadingAnchor.constraint(
                     equalTo: conversationDescriptionView.leadingAnchor,
@@ -244,7 +242,7 @@ class TextPreviewViewController: UIViewController, UITextViewDelegate {
                 bottomLayoutConstraint?.constant = 0.0
             }
             else {
-                if let endFrame = endFrame {
+                if let endFrame {
                     let safeInset: CGFloat = view.safeAreaInsets.bottom
                     let convertedEndframe = view.convert(endFrame, from: UIScreen.main.coordinateSpace)
                     let intersection = view.frame.intersection(convertedEndframe).height

@@ -312,8 +312,6 @@ extension DeleteContactAction {
             self.entityManager.entityDestroyer.deleteObject(object: self.contact)
         }
         
-        Old_ChatViewControllerCache.clear()
-        
         // Recalculate the unread count
         let notificationManager = NotificationManager()
         notificationManager.updateUnreadMessagesCount()
@@ -354,7 +352,7 @@ extension DeleteContactAction {
         ContactStore.shared().reflectDeleteContact(contactIdentity)
         
         // Handle any potential exclusion
-        if let exclude = exclude {
+        if let exclude {
             if exclude {
                 excludeContact(with: contactIdentity)
             }

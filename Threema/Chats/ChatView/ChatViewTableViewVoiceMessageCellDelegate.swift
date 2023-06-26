@@ -52,7 +52,8 @@ protocol ChatViewTableViewVoiceMessageCellDelegateProtocol: NSObject {
 }
 
 /// Handles the interaction between voice message cells and the AVAudioPlayer handling the playback
-/// Cells which are reloaded should call `startPlaying` upon being reloaded in order to receive playback progress and finished callbacks
+/// Cells which are reloaded should call `startPlaying` upon being reloaded in order to receive playback progress and
+/// finished callbacks
 final class ChatViewTableViewVoiceMessageCellDelegate: NSObject, ChatViewTableViewVoiceMessageCellDelegateProtocol {
     typealias config = ChatViewConfiguration.VoiceMessage
 
@@ -121,7 +122,7 @@ final class ChatViewTableViewVoiceMessageCellDelegate: NSObject, ChatViewTableVi
     }
     
     private func showAlert(for error: NSError) {
-        guard let chatViewController = chatViewController else {
+        guard let chatViewController else {
             DDLogError(
                 "Could not get chatViewController to display error message on. Error \(error.code) \(error.localizedDescription)"
             )
@@ -147,7 +148,7 @@ final class ChatViewTableViewVoiceMessageCellDelegate: NSObject, ChatViewTableVi
     }
     
     private func handleSimultaneousPlayIfNecessary(for newMessage: VoiceMessage, with exportedDataAtURL: URL) {
-        if let currentlyPlaying = currentlyPlaying, currentlyPlaying.objectID != newMessage.objectID {
+        if let currentlyPlaying, currentlyPlaying.objectID != newMessage.objectID {
             audioPlayer?.stop()
             audioPlayer = nil
             
@@ -158,14 +159,14 @@ final class ChatViewTableViewVoiceMessageCellDelegate: NSObject, ChatViewTableVi
     }
     
     private func createPlaybackProgressTimer() {
-        guard let audioPlayer = audioPlayer else {
+        guard let audioPlayer else {
             let msg = "AudioPlayer is unexpectedly nil"
             assertionFailure(msg)
             DDLogError(msg)
             return
         }
         
-        guard let progressCallback = progressCallback else {
+        guard let progressCallback else {
             let msg = "ProgressCallback is unexpectedly nil"
             assertionFailure(msg)
             DDLogError(msg)
@@ -186,7 +187,8 @@ final class ChatViewTableViewVoiceMessageCellDelegate: NSObject, ChatViewTableVi
     private func cleanupTemporaryFiles() {
         /// Clean up exported file for playback
         /// This can occur often if a user plays back the same voice messages lots of times
-        /// If this fails, the temporary directory is cleaned up regularly by the app and on deinit of the ChatViewController
+        /// If this fails, the temporary directory is cleaned up regularly by the app and on deinit of the
+        /// ChatViewController
         FileUtility.delete(at: currentlyPlayingURL)
     }
     
@@ -211,7 +213,7 @@ final class ChatViewTableViewVoiceMessageCellDelegate: NSObject, ChatViewTableVi
         // Start playback with new URL or continue to use the existing audio player
         initializeAudioPlayerIfNeeded(url: url)
         
-        guard let audioPlayer = audioPlayer else {
+        guard let audioPlayer else {
             let msg = "Couldn't create audioPlayer from audio message"
             assertionFailure(msg)
             DDLogError(msg)
@@ -249,7 +251,7 @@ final class ChatViewTableViewVoiceMessageCellDelegate: NSObject, ChatViewTableVi
         pauseCallback: @escaping () -> Void,
         finishedCallback: @escaping (Bool) -> Void
     ) {
-        guard let currentlyPlaying = currentlyPlaying, currentlyPlaying.objectID == message.objectID else {
+        guard let currentlyPlaying, currentlyPlaying.objectID == message.objectID else {
             let msg =
                 "Currently playing message and message passed in for reregistering are different. This may happen if you're very unlucky with timing and we have just switched to the next message"
             DDLogWarn(msg)
@@ -262,13 +264,13 @@ final class ChatViewTableViewVoiceMessageCellDelegate: NSObject, ChatViewTableVi
     }
     
     func currentTimeForward(for voiceMessage: VoiceMessage) {
-        if let audioPlayer = audioPlayer, let currentlyPlaying = currentlyPlaying, voiceMessage == currentlyPlaying {
+        if let audioPlayer, let currentlyPlaying, voiceMessage == currentlyPlaying {
             audioPlayer.currentTime += 10
         }
     }
     
     func currentTimeRewind(for voiceMessage: VoiceMessage) {
-        if let audioPlayer = audioPlayer, let currentlyPlaying = currentlyPlaying, voiceMessage == currentlyPlaying {
+        if let audioPlayer, let currentlyPlaying, voiceMessage == currentlyPlaying {
             audioPlayer.currentTime -= 10
         }
     }
@@ -276,7 +278,7 @@ final class ChatViewTableViewVoiceMessageCellDelegate: NSObject, ChatViewTableVi
     func pausePlaying() {
         playTimer?.invalidate()
         
-        if let audioPlayer = audioPlayer, let currentlyPlaying = currentlyPlaying {
+        if let audioPlayer, let currentlyPlaying {
             let progress = CGFloat(audioPlayer.currentTime / audioPlayer.duration)
             progressDictionary[currentlyPlaying.objectID] = progress
         }
@@ -290,7 +292,7 @@ final class ChatViewTableViewVoiceMessageCellDelegate: NSObject, ChatViewTableVi
     }
     
     func getProgress(for voiceMessage: VoiceMessage) -> CGFloat {
-        if let audioPlayer = audioPlayer, let currentlyPlaying = currentlyPlaying, voiceMessage == currentlyPlaying {
+        if let audioPlayer, let currentlyPlaying, voiceMessage == currentlyPlaying {
             return CGFloat(audioPlayer.currentTime / audioPlayer.duration)
         }
         
@@ -309,7 +311,7 @@ final class ChatViewTableViewVoiceMessageCellDelegate: NSObject, ChatViewTableVi
         
         progressDictionary[voiceMessage.objectID] = progress
 
-        guard let audioPlayer = audioPlayer else {
+        guard let audioPlayer else {
             return
         }
         
@@ -328,7 +330,7 @@ final class ChatViewTableViewVoiceMessageCellDelegate: NSObject, ChatViewTableVi
     /// - Parameter message: Message to check (optional)
     /// - Returns: Is the parameter message (or some message) currently playing
     func isMessageCurrentlyPlaying(_ message: BaseMessage?) -> Bool {
-        guard let currentlyPlaying = currentlyPlaying else {
+        guard let currentlyPlaying else {
             return false
         }
         
@@ -336,7 +338,7 @@ final class ChatViewTableViewVoiceMessageCellDelegate: NSObject, ChatViewTableVi
             return false
         }
         
-        guard let message = message else {
+        guard let message else {
             return true
         }
         
@@ -349,9 +351,9 @@ final class ChatViewTableViewVoiceMessageCellDelegate: NSObject, ChatViewTableVi
     /// - Parameter cancel: Whether we should continue playing with the next continuous voice message if it exists
     /// or cancel playback.
     func stopPlayingAndDoCleanup(cancel: Bool = false) {
-        if let audioPlayer = audioPlayer {
+        if let audioPlayer {
             let progress = CGFloat(audioPlayer.currentTime / audioPlayer.duration)
-            if let currentlyPlaying = currentlyPlaying {
+            if let currentlyPlaying {
                 if progress < 0.98 {
                     progressDictionary[currentlyPlaying.objectID] = progress
                 }

@@ -108,7 +108,7 @@ class HeaderView: UIView {
         
         if tapAction != nil {
             optionsLabel = UILabel()
-            guard let optionsLabel = optionsLabel else {
+            guard let optionsLabel else {
                 DDLogError("OptionsLabel was nil")
                 return
             }
@@ -185,7 +185,7 @@ class HeaderView: UIView {
     }
     
     @objc private func viewTapped() {
-        if let tapAction = tapAction {
+        if let tapAction {
             tapAction()
         }
     }

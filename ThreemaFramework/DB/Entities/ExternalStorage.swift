@@ -54,7 +54,7 @@ import Foundation
     }
     
     private static func convertCfTypeToString(cfValue: Unmanaged<AnyObject>?) -> String? {
-        if let cfValue = cfValue {
+        if let cfValue {
             let value = Unmanaged.fromOpaque(cfValue.toOpaque()).takeUnretainedValue() as CFString
             if CFGetTypeID(value) == CFStringGetTypeID() {
                 return value as String

@@ -22,7 +22,7 @@ import Foundation
 @testable import ThreemaFramework
 
 class SettingsStoreMock: SettingsStoreProtocol, SettingsStoreInternalProtocol {
-
+    
     var syncContacts = true
     
     var blacklist = Set<String>()
@@ -59,9 +59,33 @@ class SettingsStoreMock: SettingsStoreProtocol, SettingsStoreInternalProtocol {
     
     var sendMessageFeedback = false
     
+    var imageSize: String = ImageSenderItemSize.original.rawValue
+
+    var videoQuality: String = VideoSenderItemQuality.original.rawValue
+
+    var autoSaveMedia = false
+    
     var enableThreemaCall = true
     
     var alwaysRelayCalls = false
+    
+    var includeCallsInRecents = true
+    
+    var enableVideoCall = true
+    
+    var threemaVideoCallQualitySetting = ThreemaVideoCallQualitySetting(2)
+    
+    var voIPSound = "Test Sound"
+
+    var isMultiDeviceEnabled = false
+    
+    var enableIPv6 = true
+    
+    var disableProximityMonitoring = false
+    
+    var validationLogging = false
+    
+    var sentryAppDevice: String?
     
     func updateSettingsStore(with syncSettings: Sync_Settings) {
         // Noop

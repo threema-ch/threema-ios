@@ -202,7 +202,6 @@ import UIKit
     
     // MARK: - Deprecated
 
-    // TODO: (IOS-2860) Check what can be removed when new chat view released and old is removed
     let successMessage = "[AlbumManager] Successfully saved image to Camera Roll."
     let permissionNotGrantedMessage = "[AlbumManager] Permission to save images not granted"
     let writeErrorMessage = "[AlbumManager] Error writing to image library:"

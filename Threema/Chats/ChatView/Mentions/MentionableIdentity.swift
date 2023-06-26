@@ -84,7 +84,7 @@ class MentionableIdentity: Hashable {
     }()
     
     init(identity: String? = nil, entityFetcher: EntityFetcher = EntityManager().entityFetcher) {
-        if let identity = identity {
+        if let identity {
             self.contactKind = .contact(identity)
         }
         else {

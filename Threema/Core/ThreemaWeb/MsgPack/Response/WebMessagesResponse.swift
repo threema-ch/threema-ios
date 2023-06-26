@@ -46,7 +46,7 @@ class WebMessagesResponse: WebAbstractMessage {
             conversation = entityManager.entityFetcher.legacyConversation(for: requestMessage.id.hexadecimal())
         }
         
-        if let conversation = conversation {
+        if let conversation {
             let messageFetcher = MessageFetcher(for: conversation, with: entityManager)
             messageFetcher.orderAscending = false
     

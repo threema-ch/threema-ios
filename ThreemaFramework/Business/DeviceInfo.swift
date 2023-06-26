@@ -47,13 +47,48 @@ public enum Platform: Int {
         case .web: return 4
         }
     }
+    
+    public var systemSymbolName: String {
+        switch self {
+        case .ios, .android:
+            return "iphone"
+        case .desktop, .web, .unspecified:
+            return "desktopcomputer"
+        }
+    }
 }
 
 public struct DeviceInfo {
-    let deviceID: UInt64
+    public let deviceID: UInt64
     public let label: String
     public let lastLoginAt: Date
     public let badge: String?
     public let platform: Platform
     public let platformDetails: String?
+    
+    public init(
+        deviceID: UInt64,
+        label: String,
+        lastLoginAt: Date,
+        badge: String?,
+        platform: Platform,
+        platformDetails: String?
+    ) {
+        self.deviceID = deviceID
+        self.label = label
+        self.lastLoginAt = lastLoginAt
+        self.badge = badge
+        self.platform = platform
+        self.platformDetails = platformDetails
+    }
+}
+
+// MARK: - Identifiable
+
+extension DeviceInfo: Identifiable {
+    public typealias ID = UInt64
+
+    public var id: UInt64 {
+        deviceID
+    }
 }

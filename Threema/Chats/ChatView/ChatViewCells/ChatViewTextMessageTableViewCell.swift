@@ -60,21 +60,46 @@ final class ChatViewTextMessageTableViewCell: ChatViewBaseTableViewCell, Measura
             // Both of these animations are typically covered within a bigger animation block
             // or a block that doesn't animate at all. Both cases look good.
             if shouldShowDateAndState {
-                // When adding the date and state view, this is an animation that doesn't look half bad since the view will
-                // animate in from the bottom.
-                UIView.animate(
-                    withDuration: ChatViewConfiguration.ChatBubble.bubbleSizeChangeAnimationDurationInSeconds,
-                    delay: ChatViewConfiguration.ChatBubble.bubbleSizeChangeAnimationDurationInSeconds,
-                    options: .curveEaseInOut
-                ) {
-                    self.messageDateAndStateView.alpha = 1
+                
+                let block = {
+                    self.messageDateAndStateView.alpha = 1.0
+                    self.messageDateAndStateView.isHidden = false
+                }
+                
+                if !oldValue {
+                    // When adding the date and state view, this is an animation that doesn't look half bad since the
+                    // view will animate in from the bottom.
+                    UIView.animate(
+                        withDuration: ChatViewConfiguration.ChatBubble.bubbleSizeChangeAnimationDurationInSeconds,
+                        delay: ChatViewConfiguration.ChatBubble.bubbleSizeChangeAnimationDurationInSeconds,
+                        options: .curveEaseInOut
+                    ) {
+                        block()
+                    } completion: { _ in
+                        // This is used to work around a bug where the ack symbols didn't have the correct baseline.
+                        UIView.performWithoutAnimation {
+                            self.messageDateAndStateView.setNeedsLayout()
+                            self.messageDateAndStateView.layoutIfNeeded()
+                        }
+                    }
+                }
+                else {
+                    UIView.performWithoutAnimation {
+                        block()
+                        
+                        // This is used to work around a bug where the ack symbols didn't have the correct baseline.
+                        // It is very unclear why this is needed in addition to
+                        self.messageDateAndStateView.setNeedsLayout()
+                        self.messageDateAndStateView.layoutIfNeeded()
+                    }
                 }
             }
             else {
-                // We don't use the same animation when hiding the date and state view because it'll animate out to the top
+                // We don't use the same animation when hiding the date and state view because it'll animate out to the
+                // top
                 // and will cover the text which is still showing in the cell.
                 UIView.performWithoutAnimation {
-                    self.messageDateAndStateView.alpha = 0
+                    self.messageDateAndStateView.alpha = 0.0
                 }
             }
             

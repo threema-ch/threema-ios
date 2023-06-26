@@ -26,7 +26,6 @@
 #import "ModalPresenter.h"
 #import "UIDefines.h"
 #import "UIImage+Resize.h"
-#import "MessageSender.h"
 #import "GroupPhotoSender.h"
 #import "CreateGroupNavigationController.h"
 #import "ContactStore.h"
@@ -97,8 +96,8 @@
     
     _groupName = _group.name;
     
-    if (_group.photo) {
-        _avatarImageData = _group.photo.data;
+    if (_group.profilePicture) {
+        _avatarImageData = _group.profilePicture;
     }
 }
 
@@ -126,7 +125,7 @@
 }
 
 - (BOOL)changedImage {
-    if (_group.photo.data == _avatarImageData) {
+    if (_group.profilePicture == _avatarImageData) {
         return NO;
     }
     
@@ -156,7 +155,7 @@
      
         _nameTextField.text = _groupName;
         
-        if (_group.photo) {
+        if (_group.profilePicture) {
             _avatarView.imageData = _avatarImageData;
         }
     } else {

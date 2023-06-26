@@ -64,7 +64,6 @@
 #import "ContactGroupPhotoLoader.h"
 #import "ValidationLogger.h"
 #import "BallotMessageDecoder.h"
-#import "MessageSender.h"
 #import "GroupMessageProcessor.h"
 #import "ThreemaError.h"
 #import "DatabaseManager.h"
@@ -246,14 +245,16 @@ static NSMutableOrderedSet *pendingGroupMessages;
         return;
     }
 
-    /* Update public nickname in contact, if necessary */
-    [[ContactStore sharedContactStore] updateNickname:amsg.fromIdentity nickname:amsg.pushFromName shouldReflect:YES];
-
     DDLogVerbose(@"Process incoming message: %@", amsg);
     
     [messageProcessorDelegate incomingMessageStarted:amsg];
     
     void(^processAbstractMessageBlock)(AbstractMessage *, NSObject *) = ^void(AbstractMessage *amsg, NSObject *pfsSession) {
+        /* Update public nickname in contact, if necessary */
+        if (amsg.allowSendingProfile == YES) {
+            [[ContactStore sharedContactStore] updateNickname:amsg.fromIdentity nickname:amsg.pushFromName];
+        }
+
         [self processIncomingMessage:(AbstractMessage *)amsg onCompletion:^(id<MessageProcessorDelegate> _Nullable delegate) {
             if (delegate) {
                 [delegate incomingMessageFinished:amsg isPendingGroup:false];
@@ -297,6 +298,11 @@ static NSMutableOrderedSet *pendingGroupMessages;
                 onError(nil); // drop message
             }
         } else if ([amsg isKindOfClass:[AbstractGroupMessage class]]) {
+            /* Update public nickname in contact, if necessary */
+            if (amsg.allowSendingProfile == YES) {
+                [[ContactStore sharedContactStore] updateNickname:amsg.fromIdentity nickname:amsg.pushFromName];
+            }
+
             [self processIncomingGroupMessage:(AbstractGroupMessage *)amsg onCompletion:^{
                 [messageProcessorDelegate incomingMessageFinished:amsg isPendingGroup:false];
                 onCompletion(amsg, nil);
@@ -606,7 +612,7 @@ Process incoming message.
         } else if (message.forwardSecurityMode.intValue == kForwardSecurityModeFourDH &&
                    conversation.contact.forwardSecurityState.intValue == kForwardSecurityStateOff) {
             // Contact has sent the first 4DH message
-            systemMessageType = conversation.contact.forwardSecurityEnabled.boolValue ? kSystemMessageFsSessionEstablished : kSystemMessageFsSessionEstablishedRcvd;
+            systemMessageType = conversation.contact.forwardSecurityEnabled.boolValue || ThreemaEnvironment.pfsByDefault ? kSystemMessageFsSessionEstablished : kSystemMessageFsSessionEstablishedRcvd;
             contactForwardSecurityState = [NSNumber numberWithInt:kForwardSecurityStateOn];
         }
 

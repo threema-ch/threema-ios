@@ -22,11 +22,11 @@ import UIKit
 
 /// Show and change `PushSetting` for a conversation or contact
 ///
-/// It is only optimized to be shown modally. Please wrap it into a `ThemedNavigationController` when doing so. It will dismiss
-/// itself.
+/// It is only optimized to be shown modally. Please wrap it into a `ThemedNavigationController` when doing so. It will
+/// dismiss itself.
 ///
-/// Don't change the settings of the same conversation or contact at another place the same time. Otherwise they changes will be
-/// overridden when the controller dismisses itself.
+/// Don't change the settings of the same conversation or contact at another place the same time. Otherwise they changes
+/// will be overridden when the controller dismisses itself.
 final class DoNotDisturbViewController: ThemedCodeModernGroupedTableViewController {
 
     // MARK: - Private types
@@ -198,8 +198,10 @@ final class DoNotDisturbViewController: ThemedCodeModernGroupedTableViewControll
     /// New DND view controller for a conversation
     ///
     /// - Parameters:
-    ///   - conversation: The settings of this conversation are shown and can be changed (usable for single chats and groups)
-    ///   - willDismiss: This closure will be called with the final `PushSetting` just before the view controller is dismissed
+    ///   - conversation: The settings of this conversation are shown and can be changed (usable for single chats and
+    ///                   groups)
+    ///   - willDismiss: This closure will be called with the final `PushSetting` just before the view controller is
+    ///                  dismissed
     @objc init(for conversation: Conversation, willDismiss: ((PushSetting) -> Void)? = nil) {
         self.pushSetting = PushSetting(for: conversation)
         self.willDismiss = willDismiss
@@ -213,7 +215,8 @@ final class DoNotDisturbViewController: ThemedCodeModernGroupedTableViewControll
     ///
     /// - Parameters:
     ///   - contact: The settings of this contact are shown and can be changed
-    ///   - willDismiss: This closure will be called with the final `PushSetting` just before the view controller is dismissed
+    ///   - willDismiss: This closure will be called with the final `PushSetting` just before the view controller is
+    ///                  dismissed
     init(for contact: ContactEntity, willDismiss: ((PushSetting) -> Void)? = nil) {
         self.pushSetting = PushSetting(for: contact)
         self.willDismiss = willDismiss
@@ -225,7 +228,8 @@ final class DoNotDisturbViewController: ThemedCodeModernGroupedTableViewControll
     ///
     /// - Parameters:
     ///   - group: The settings of this group are shown and can be changed
-    ///   - willDismiss: This closure will be called with the final `PushSetting` just before the view controller is dismissed
+    ///   - willDismiss: This closure will be called with the final `PushSetting` just before the view controller is
+    ///                  dismissed
     convenience init(for group: Group, willDismiss: ((PushSetting) -> Void)? = nil) {
         self.init(for: group.conversation, willDismiss: willDismiss)
     }
@@ -426,7 +430,7 @@ extension DoNotDisturbViewController {
     }
     
     private func localizedFormattedTime(for timeString: String?) -> String? {
-        guard let timeString = timeString,
+        guard let timeString,
               let date = DateFormatter.getDate(from: timeString) else {
             return nil
         }

@@ -22,10 +22,10 @@ import Foundation
 
 extension LocationMessage: PreviewableMessage {
     public var previewText: String {
-        if let poiName = poiName {
+        if let poiName {
             return poiName
         }
-        else if let poiAddress = poiAddress {
+        else if let poiAddress {
             return poiAddress
         }
         else {

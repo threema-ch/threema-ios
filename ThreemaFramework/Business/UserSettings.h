@@ -26,6 +26,12 @@ enum SendProfilePicture {
     SendProfilePictureContacts
 };
 
+enum ThreemaVideoCallQualitySetting {
+    ThreemaVideoCallQualitySettingAuto = 0,
+    ThreemaVideoCallQualitySettingLowDataConsumption,
+    ThreemaVideoCallQualitySettingMaximumQuality
+};
+
 @protocol UserSettingsProtocol <NSObject>
 
 @property (nonatomic, readwrite) NSInteger appMigratedToVersion;
@@ -39,6 +45,9 @@ enum SendProfilePicture {
 @property (nonatomic, readwrite) BOOL sendTypingIndicator;
 @property (nonatomic, readwrite) BOOL enableThreemaCall;
 @property (nonatomic, readwrite) BOOL alwaysRelayCalls;
+@property (nonatomic, readwrite) BOOL includeCallsInRecents;
+@property (nonatomic, readwrite) BOOL enableVideoCall;
+@property (nonatomic, readwrite) enum ThreemaVideoCallQualitySetting threemaVideoCallQualitySetting;
 @property (nonatomic, strong) NSOrderedSet *blacklist;
 @property (nonatomic, strong) NSArray *syncExclusionList;
 @property (nonatomic, strong) NSData *wallpaper;
@@ -50,7 +59,6 @@ enum SendProfilePicture {
 @property (nonatomic, readwrite) BOOL inAppPreview;
 
 @property (nonatomic, readwrite) BOOL sortOrderFirstName;
-@property (nonatomic, readwrite) float chatFontSize;
 @property (nonatomic, strong) NSString *imageSize;
 @property (nonatomic, strong) NSString *videoQuality;
 @property (nonatomic, strong) NSString *voIPSound;
@@ -59,7 +67,6 @@ enum SendProfilePicture {
 @property (nonatomic, readwrite) NSNumber *notificationType;
 @property (nonatomic, readwrite) BOOL pushDecrypt;
 @property (nonatomic, strong) NSOrderedSet *pushSettingsList;
-@property (nonatomic, readwrite) BOOL enableIPv6;
 @property (nonatomic, readwrite) BOOL hidePrivateChats;
 @property (nonatomic, readwrite) BOOL voiceMessagesShowTimeRemaining;
 
@@ -79,6 +86,11 @@ enum SendProfilePicture {
 @property (nonatomic, strong) NSArray *profilePictureRequestList;
 @property (nonatomic, readwrite) BOOL blockCommunication;
 
+@property (nonatomic, readwrite) BOOL enableIPv6;
+@property (nonatomic, readwrite) BOOL disableProximityMonitoring;
+@property (nonatomic, readwrite) BOOL validationLogging;
+@property (nonatomic, strong) NSString *sentryAppDevice;
+
 @property (nonatomic, readwrite) BOOL flippedTableView;
 
 @end
@@ -91,52 +103,25 @@ enum AcceptPrivacyPolicyVariant {
     AcceptPrivacyPolicyVariantUpdate
 };
 
-enum ThreemaVideoCallQualitySetting {
-    ThreemaVideoCallQualitySettingAuto = 0,
-    ThreemaVideoCallQualitySettingLowDataConsumption,
-    ThreemaVideoCallQualitySettingMaximumQuality
-};
-
-@property (nonatomic, readwrite) BOOL sendReadReceipts;
-@property (nonatomic, readwrite) BOOL syncContacts;
-@property (nonatomic, strong) NSArray *syncExclusionList;
-@property (nonatomic, strong) NSOrderedSet *blacklist;
-@property (nonatomic, readwrite) BOOL sendTypingIndicator;
-@property (nonatomic, readwrite) BOOL blockUnknown;
-@property (nonatomic, readwrite) BOOL enablePoi;
 @property (nonatomic, readwrite) BOOL hideStaleContacts;
 
-@property (nonatomic, strong) NSString *imageSize;
-@property (nonatomic, strong) NSString *videoQuality;
 
-@property (nonatomic, readwrite) float chatFontSize;
 @property (nonatomic, readwrite) BOOL darkTheme;
 @property (nonatomic, readwrite) BOOL useSystemTheme;
 @property (nonatomic, readwrite) BOOL showProfilePictures;
 
-@property (nonatomic, readwrite) BOOL sortOrderFirstName;
 @property (nonatomic, readwrite) BOOL displayOrderFirstName;
-
-@property (nonatomic, readwrite) BOOL validationLogging;
 
 @property (nonatomic, readwrite) BOOL companyDirectory;
 
 @property (nonatomic, readwrite) BOOL askedForPushDecryption;
 
-@property (nonatomic, readwrite) enum SendProfilePicture sendProfilePicture;
-@property (nonatomic, strong) NSArray *profilePictureContactList;
 @property (nonatomic, readwrite) BOOL showGalleryPreview;
-@property (nonatomic, readwrite) BOOL disableProximityMonitoring;
-@property (nonatomic, readwrite) BOOL enableThreemaCall;
-@property (nonatomic, readwrite) BOOL alwaysRelayCalls;
-@property (nonatomic, readwrite) BOOL includeCallsInRecents;
 
 @property (nonatomic, readwrite) float previewLimit;
 
 @property (nonatomic, strong) NSDate *acceptedPrivacyPolicyDate;
 @property (nonatomic, readwrite) enum AcceptPrivacyPolicyVariant acceptedPrivacyPolicyVariant;
-
-@property (nonatomic, strong) NSString *voIPSound;
 
 @property (nonatomic, readonly) NSInteger largeTitleDisplayMode;
 
@@ -150,24 +135,15 @@ enum ThreemaVideoCallQualitySetting {
 
 @property (nonatomic, readwrite) NSData *safeConfig;
 @property (nonatomic, readwrite) BOOL safeIntroShown;
+@property (nonatomic, readwrite) NSData *evaluatedPolicyDomainStateApp;
+@property (nonatomic, readwrite) NSData *evaluatedPolicyDomainStateShareExtension;
 
 @property (nonatomic, readwrite) BOOL workInfoShown;
 @property (nonatomic, readwrite) BOOL videoCallInChatInfoShown;
 @property (nonatomic, readwrite) BOOL videoCallInfoShown;
 @property (nonatomic, readwrite) BOOL videoCallSpeakerInfoShown;
 
-@property (nonatomic, strong) NSString *sentryAppDevice;
-
-@property (nonatomic, readwrite) BOOL enableVideoCall;
-@property (nonatomic, readwrite) enum ThreemaVideoCallQualitySetting threemaVideoCallQualitySetting;
-
-@property (nonatomic, readwrite) BOOL newChatViewActive;
-@property (nonatomic, readwrite) BOOL flippedTableView;
-
-@property (nonatomic, readwrite) BOOL hidePrivateChats;
-@property (nonatomic, readwrite) BOOL voiceMessagesShowTimeRemaining;
-
-@property (nonatomic, strong) NSMutableArray *unknownGroupAlertList;
+@property (nonatomic, readwrite) BOOL newSettingsActive;
 
 + (UserSettings*)sharedUserSettings;
 - (instancetype) __unavailable init;

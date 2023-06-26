@@ -41,8 +41,8 @@ final class ChatTextView: CustomResponderTextView {
     
     override var textAlignment: NSTextAlignment {
         didSet {
-            // This is to work around an issue where the cursor position would switch back to left (even though we explicitly set it to right) after
-            // sending a few messages.
+            // This is to work around an issue where the cursor position would switch back to left (even though we
+            // explicitly set it to right) after sending a few messages.
             textViewDidChange(self)
         }
     }
@@ -215,7 +215,7 @@ final class ChatTextView: CustomResponderTextView {
         delegate = self
             
         // Set precomposed text
-        if let precomposedText = precomposedText {
+        if let precomposedText {
             customTextStorage?.replaceAndParse(precomposedText)
             sizeToFit()
         }
@@ -264,8 +264,10 @@ final class ChatTextView: CustomResponderTextView {
         resizeTextView(forceHeightCheck: !isDummy)
     }
     
-    /// Resizes the text view according to the minimum size that fits the content while respecting the configured maximum size
-    /// - Parameter forceHeightCheck: If true the initial sanity check. This is required to properly scroll drafts that have not yet fully loaded. (There might be a race condition hiding behind this.)
+    /// Resizes the text view according to the minimum size that fits the content while respecting the configured
+    /// maximum size
+    /// - Parameter forceHeightCheck: If true the initial sanity check. This is required to properly scroll drafts that
+    ///                               have not yet fully loaded. (There might be a race condition hiding behind this.)
     private func resizeTextView(forceHeightCheck: Bool = false) {
         guard forceHeightCheck || prevSingleLineHeight != 0.0 || numberOfLines > 1 else {
             setNeedsLayout()
@@ -275,7 +277,7 @@ final class ChatTextView: CustomResponderTextView {
         let maxSize = CGSize(width: bounds.size.width, height: .greatestFiniteMagnitude)
         var height = max(sizeThatFits(maxSize).height, minHeight)
         
-        isScrollEnabled = height > maxHeight || height > frame.size.height
+        isScrollEnabled = height > maxHeight
         
         // Constrain maximum height
         height = min(height, maxHeight)
@@ -287,8 +289,8 @@ final class ChatTextView: CustomResponderTextView {
             heightConstraint.constant = height
             
             UIView.performWithoutAnimation {
-                /// Calling layoutIfNeeded while we're not in the view causes temporary constraints to be added to our view
-                /// which then need to be broken once the real layout is ready.
+                /// Calling layoutIfNeeded while we're not in the view causes temporary constraints to be added to our
+                /// view which then need to be broken once the real layout is ready.
                 /// We just won't animate as long as we're not added to the view hierarchy.
                 guard self.window != nil else {
                     return
@@ -602,11 +604,15 @@ extension ChatTextView: UITextViewDelegate {
     
     /// This implements shouldChangeTextIn from UITextViewDelegate
     ///
-    /// It was originally intended to live format the text and return false. However due to an issue with auto capitalization
-    /// when programmatically changing the text in here, the changes are added to a queue and processed in order in textViewDidChange.
-    /// When programmatically changing the text with auto capitalization turned on arbitrary letters would get auto capitalized even when not at the beginning of a sentence.
-    /// This behavior seems to have changed two years ago and none of the fixes in https://stackoverflow.com/q/58425591 work for us.
-    /// Additionally we only allow inserting characters that can actually be sent. E.g. leading newlines or spaces are not allowed.
+    /// It was originally intended to live format the text and return false. However due to an issue with auto
+    /// capitalization when programmatically changing the text in here, the changes are added to a queue and processed
+    /// in order in textViewDidChange. When programmatically changing the text with auto capitalization turned on
+    /// arbitrary letters would get auto capitalized even when not at the beginning of a sentence. This behavior seems
+    /// to have changed two years ago and none of the fixes in https://stackoverflow.com/q/58425591 work for us.
+    ///
+    /// Additionally we only allow inserting characters that can actually be sent. E.g. leading newlines or spaces are
+    /// not allowed.
+    ///
     /// - Parameters:
     ///   - textView: Text view that called delegate
     ///   - range: Range of change
@@ -633,13 +639,21 @@ extension ChatTextView: UITextViewDelegate {
     
     /// Implements textViewDidChange from UITextViewDelegate
     ///
-    /// See the documentation for shouldChangeTextIn for more information about why we have this queue and are formatting the text in here.
-    /// For each append of the queue there is one call to textViewDidChange. So the while-loop is not strictly necessary.
-    /// Please do all expensive formatting changes in formattedString and performance test them with ChatTextViewPerformanceTest. Tests are not executed automatically. They need to be enabled manually.
+    /// See the documentation for shouldChangeTextIn for more information about why we have this queue and are
+    /// formatting the text in here.
+    ///
+    /// For each append of the queue there is one call to textViewDidChange. So the while-loop is not strictly
+    /// necessary.
+    ///
+    /// Please do all expensive formatting changes in formattedString and performance test them with
+    /// ChatTextViewPerformanceTest. Tests are not executed automatically. They need to be enabled manually.
+    ///
     /// - Parameter textView: Text view that called delegate
     internal func textViewDidChange(_ textView: UITextView) {
-        /// Marked text is provisionally inserted text that requires user confirmation. It occurs in multistage text input, e.g. when entering ¨ and u to get a combined ü
-        /// We keep track of provisionally inserted text and combine the marked and shouldChangeTextIn ranges in func textView(_ textView: UITextView, shouldChangeTextIn range: NSRange, replacementText text: String) -> Bool above.
+        /// Marked text is provisionally inserted text that requires user confirmation. It occurs in multistage text
+        /// input, e.g. when entering ¨ and u to get a combined ü We keep track of provisionally inserted text and
+        /// combine the marked and shouldChangeTextIn ranges in `func textView(_ textView: UITextView,
+        /// shouldChangeTextIn range: NSRange, replacementText text: String) -> Bool` above.
         if textView.markedTextRange != nil {
             updatePlaceholder()
             setNeedsDisplay()
@@ -672,7 +686,7 @@ extension ChatTextView: UITextViewDelegate {
                 textRange = self.textRange(from: cursorLocation, to: cursorLocation)
             }
 
-            if let textRange = textRange {
+            if let textRange {
                 selectedTextRange = textRange
             }
         }
@@ -704,7 +718,7 @@ extension ChatTextView: UITextViewDelegate {
             if interaction == .invokeDefaultAction {
                 let threemaID = String(URL.absoluteString.suffix(8))
                 
-                guard let chatTextViewDelegate = chatTextViewDelegate else {
+                guard let chatTextViewDelegate else {
                     let msg = "chatTextViewDelegate is unexpectedly nil"
                     assertionFailure(msg)
                     DDLogError(msg)
@@ -760,7 +774,7 @@ extension ChatTextView: UITextViewDelegate {
 
 extension ChatTextView {
     override func qrScannerViewController(_ controller: QRScannerViewController, didScanResult result: String?) {
-        if let result = result {
+        if let result {
             insertText(result)
         }
         controller.dismiss(animated: true)

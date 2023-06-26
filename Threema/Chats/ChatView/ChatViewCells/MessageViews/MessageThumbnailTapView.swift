@@ -307,9 +307,9 @@ final class MessageThumbnailTapView: UIView {
         // Thumbnail
         var didSetImage = false
         if thumbnailDisplayMessage is ImageMessage || thumbnailDisplayMessage is StickerMessage,
-           thumbnailDisplayMessage?.blobGetSize()?.intValue ?? 0 <= ChatViewConfiguration.Thumbnail
+           thumbnailDisplayMessage?.blobSize ?? 0 <= ChatViewConfiguration.Thumbnail
            .maximumBytesForFullPreview {
-            if let blobData = thumbnailDisplayMessage?.blobGet(), let image = UIImage(data: blobData) {
+            if let blobData = thumbnailDisplayMessage?.blobData, let image = UIImage(data: blobData) {
                 thumbnailImageView.image = image
                 didSetImage = true
             }

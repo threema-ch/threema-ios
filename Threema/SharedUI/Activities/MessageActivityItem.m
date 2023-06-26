@@ -170,8 +170,8 @@
 - (NSString *)activityViewController:(UIActivityViewController *)activityViewController dataTypeIdentifierForActivityType:(NSString *)activityType {
     if ([_message isKindOfClass:[TextMessage class]]) {
         return UTTYPE_PLAIN_TEXT;
-    } else if ([_message respondsToSelector:@selector(blobGetUTI)]) {
-        return [((id<BlobData>)self.message) blobGetUTI];
+    } else if ([_message respondsToSelector:@selector(blobUTTypeIdentifier)]) {
+        return ((id<BlobData>)self.message).blobUTTypeIdentifier;
     }
 
     return nil;

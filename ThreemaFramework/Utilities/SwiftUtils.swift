@@ -40,7 +40,7 @@ public enum SwiftUtils {
     public static func pseudoRandomStringUpperCaseOnly(length: Int, exclude: [Character]?) -> String {
         var letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
-        if let exclude = exclude {
+        if let exclude {
             letters.removeAll { character in
                 exclude.contains(character)
             }

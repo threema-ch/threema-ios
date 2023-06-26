@@ -110,7 +110,7 @@ public class DHSession: CustomStringConvertible, Equatable {
         peerPublicKey: Data,
         identityStore: MyIdentityStoreProtocol
     ) throws {
-        guard let myEphemeralPrivateKey = myEphemeralPrivateKey else {
+        guard let myEphemeralPrivateKey else {
             throw DHSessionError.missingEphemeralPrivateKey
         }
         

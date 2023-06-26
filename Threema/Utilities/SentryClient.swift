@@ -179,7 +179,8 @@ import Sentry
         return linesArray.joined(separator: "\n")
     }
     
-    /// Is Sentry enabled or not dependent on is file "SENTRY_NOT_ENABLED" exists in App documents directory. When the App crashes on start because of Sentry start handler, can the file adding per iTunes to disable it.
+    /// Is Sentry enabled or not dependent on is file "SENTRY_NOT_ENABLED" exists in App documents directory. When the
+    /// App crashes on start because of Sentry start handler, can the file adding per iTunes to disable it.
     ///
     /// - Returns: true -> start Sentry crash handler
     private static func isEnabled() -> Bool {

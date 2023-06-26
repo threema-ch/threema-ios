@@ -20,8 +20,8 @@
 
 import Foundation
 
-public extension Colors {
-    @objc class var text: UIColor {
+extension Colors {
+    @objc public class var text: UIColor {
         switch theme {
         case .light, .undefined:
             return Asset.SharedColors.black.color
@@ -30,7 +30,7 @@ public extension Colors {
         }
     }
     
-    @objc class var textLight: UIColor {
+    @objc public class var textLight: UIColor {
         
         // We respect the increase contrast setting
         if UIAccessibility.isDarkerSystemColorsEnabled {
@@ -45,7 +45,7 @@ public extension Colors {
         }
     }
     
-    @objc class var textVeryLight: UIColor {
+    @objc public class var textVeryLight: UIColor {
         
         // We respect the increase contrast setting
         if UIAccessibility.isDarkerSystemColorsEnabled {
@@ -60,23 +60,23 @@ public extension Colors {
         }
     }
     
-    @objc class var textPlaceholder: UIColor {
+    @objc public class var textPlaceholder: UIColor {
         Asset.SharedColors.gray400.color
     }
     
-    @objc class var textSetup: UIColor {
+    @objc public class var textSetup: UIColor {
         Asset.SharedColors.white.color
     }
     
-    @objc class var textLockScreen: UIColor {
+    @objc public class var textLockScreen: UIColor {
         Asset.SharedColors.white.color
     }
     
-    @objc class var textMaterialShowcase: UIColor {
+    @objc public class var textMaterialShowcase: UIColor {
         Asset.SharedColors.white.color
     }
     
-    @objc class var textInverted: UIColor {
+    @objc public class var textInverted: UIColor {
         switch theme {
         case .light, .undefined:
             return Asset.SharedColors.white.color
@@ -85,11 +85,11 @@ public extension Colors {
         }
     }
     
-    @objc class var textLink: UIColor {
+    @objc public class var textLink: UIColor {
         .primary
     }
         
-    @objc class var textQuoteID: UIColor {
+    @objc public class var textQuoteID: UIColor {
         switch theme {
         case .light, .undefined:
             return Asset.SharedColors.gray700.color
@@ -98,7 +98,7 @@ public extension Colors {
         }
     }
     
-    @objc class var textQuote: UIColor {
+    @objc public class var textQuote: UIColor {
         switch theme {
         case .light, .undefined:
             return Asset.SharedColors.gray600.color
@@ -107,23 +107,23 @@ public extension Colors {
         }
     }
     
-    @objc class var textMentionMe: UIColor {
+    @objc public class var textMentionMe: UIColor {
         textInverted
     }
     
-    @objc class var textMentionMeOwnMessage: UIColor {
+    @objc public class var textMentionMeOwnMessage: UIColor {
         textInverted
     }
     
-    @objc class var textMentionMeOverviewMessage: UIColor {
+    @objc public class var textMentionMeOverviewMessage: UIColor {
         textInverted
     }
     
-    @objc class var textWizardLink: UIColor {
+    @objc public class var textWizardLink: UIColor {
         primaryWizard
     }
     
-    @objc class var textChatDateCustomImage: UIColor {
+    @objc public class var textChatDateCustomImage: UIColor {
         switch theme {
         case .light, .undefined:
             return Asset.SharedColors.gray650.color

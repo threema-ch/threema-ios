@@ -58,13 +58,14 @@ final class ChatViewUnreadMessageLineCell: ThemedCodeTableViewCell {
         return label
     }()
     
-    /// Pill Shape containing the text; Only visible if delegate returns `true` for `chatViewHasCustomBackground` or `debugColors` is activated
+    /// Pill Shape containing the text; Only visible if delegate returns `true` for `chatViewHasCustomBackground` or
+    /// `debugColors` is activated
     private lazy var textRound: UIView = {
         let roundView = UIView()
         roundView.translatesAutoresizingMaskIntoConstraints = false
         roundView.layer.cornerRadius = Config.pillRadius
         
-        if let chatViewTableViewCellDelegate = chatViewTableViewCellDelegate,
+        if let chatViewTableViewCellDelegate,
            chatViewTableViewCellDelegate.chatViewHasCustomBackground || debugColors {
             let blurEffect = UIBlurEffect(style: Config.pillBlurEffectStyle)
             
@@ -116,7 +117,7 @@ final class ChatViewUnreadMessageLineCell: ThemedCodeTableViewCell {
 
         isUserInteractionEnabled = false
         
-        if let text = text {
+        if let text {
             self.text = text
         }
         

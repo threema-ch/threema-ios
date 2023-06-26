@@ -45,10 +45,10 @@ import Foundation
     }
     
     @objc override func copy(_ sender: Any?) {
-        if let textForCopying = textForCopying {
+        if let textForCopying {
             UIPasteboard.general.string = textForCopying
         }
-        else if let text = text {
+        else if let text {
             UIPasteboard.general.string = text
         }
     }
@@ -58,7 +58,7 @@ import Foundation
     }
 
     @objc func handleTap(_ recognizer: UIGestureRecognizer?) {
-        guard let superview = superview else {
+        guard let superview else {
             DDLogError("Could not handle tap because superview was nil")
             return
         }

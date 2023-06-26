@@ -58,7 +58,7 @@ class VideoAssetPreviewItem: VideoPreviewItem {
                 manager.requestAVAsset(forVideo: asset, options: options, resultHandler: {
                     avasset, _, _ in
                     
-                    guard let avasset = avasset else {
+                    guard let avasset else {
                         seal.reject(MediaPreviewItem.LoadError.unknown)
                         return
                     }

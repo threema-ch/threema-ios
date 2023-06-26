@@ -45,7 +45,7 @@ public final class GroupCell: ThemedCodeTableViewCell {
     /// Group to show
     @objc public var group: Group? {
         didSet {
-            guard let group = group else {
+            guard let group else {
                 return
             }
             
@@ -214,7 +214,7 @@ public final class GroupCell: ThemedCodeTableViewCell {
                     return
                 }
 
-                guard let avatarImage = avatarImage else {
+                guard let avatarImage else {
                     // Show placeholder
                     self.avatarImageView.image = AvatarMaker.shared().unknownGroupImage()
                     return
@@ -230,7 +230,7 @@ public final class GroupCell: ThemedCodeTableViewCell {
         nameLabel.font = configuration.nameLabelFont
         containerStack.spacing = configuration.horizontalSpacing
         
-        if let group = group {
+        if let group {
             updateAvatar(for: group.conversation)
         }
         

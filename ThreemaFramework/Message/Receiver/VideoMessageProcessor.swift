@@ -97,7 +97,7 @@ import PromiseKit
         Promise { seal in
             // Download thumbnail
             self.blobDownloader.download(blobID: thumbnailBlobID, origin: origin) { data, error in
-                if let error = error {
+                if let error {
                     seal.reject(
                         VideoMessageProcessorError
                             .downloadFailed(message: "Download video thumbnail failed with error: \(error)")
@@ -105,7 +105,7 @@ import PromiseKit
                     return
                 }
 
-                guard let data = data else {
+                guard let data else {
                     seal.reject(VideoMessageProcessorError.downloadFailed(message: "Download video thumbnail missing."))
                     return
                 }
@@ -138,24 +138,26 @@ import PromiseKit
                         nonce: ThreemaProtocol.nonce02
                     )
 
-                    if let thumbnailData = thumbnailData,
+                    if let thumbnailData,
                        let thumbnailImage = UIImage(data: thumbnailData) {
                         let thumbnailJpegData = thumbnailImage.jpegData(compressionQuality: 1.0)
-
-                        let thumbnail: ImageData = msg.thumbnail == nil ? self.entityManager.entityCreator
+                        
+                        let thumbnail: ImageData? = msg.thumbnail == nil ? self.entityManager.entityCreator
                             .imageData() : msg.thumbnail
-                        thumbnail.data = thumbnailJpegData
-                        thumbnail.width = NSNumber(value: Float(thumbnailImage.size.width))
-                        thumbnail.height = NSNumber(value: Float(thumbnailImage.size.height))
+                        
+                        thumbnail?.data = thumbnailJpegData
+                        thumbnail?.width = NSNumber(value: Float(thumbnailImage.size.width))
+                        thumbnail?.height = NSNumber(value: Float(thumbnailImage.size.height))
 
                         msg.thumbnail = thumbnail
 
-                        // Mark blob as done, if is group message and Multi Device is activated then always on `local` origin
+                        // Mark blob as done, if is group message and Multi Device is activated then always on `local`
+                        // origin
                         if !msg.isGroupMessage {
-                            MessageSender.markBlobAsDone(blobID: thumbnailBlobID, origin: msg.blobGetOrigin())
+                            self.blobDownloader.markDownloadDone(for: thumbnailBlobID, origin: msg.blobOrigin)
                         }
                         else if self.serverConnector.isMultiDeviceActivated {
-                            MessageSender.markBlobAsDone(blobID: thumbnailBlobID, origin: .local)
+                            self.blobDownloader.markDownloadDone(for: thumbnailBlobID, origin: .local)
                         }
 
                         seal.fulfill_()

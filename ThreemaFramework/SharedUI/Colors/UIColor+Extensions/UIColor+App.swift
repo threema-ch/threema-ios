@@ -20,7 +20,7 @@
 
 import Foundation
 
-public extension UIColor {
+extension UIColor {
     
     /// The color below serves as an example for future implementations
     private static let dynamicTestColor = UIColor { (traitCollection: UITraitCollection) -> UIColor in
@@ -34,7 +34,7 @@ public extension UIColor {
         }
     }
     
-    @objc static let primary = UIColor { _ in
+    @objc public static let primary = UIColor { _ in
         switch ThreemaApp.current {
         case .threema:
             return Asset.TargetColors.Threema.primary.color

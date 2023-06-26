@@ -20,9 +20,9 @@
 
 import Foundation
 
-public extension BaseMessage {
+extension BaseMessage {
     /// State of this message
-    enum GroupReactionsState {
+    public enum GroupReactionsState {
         // Common
         case none
         case acknowledged
@@ -30,7 +30,7 @@ public extension BaseMessage {
         case acknowledgedAndDeclined
     }
     
-    var messageGroupReactionState: GroupReactionsState {
+    public var messageGroupReactionState: GroupReactionsState {
         
         // We don't show state in system messages
         if self is SystemMessage {
@@ -57,7 +57,7 @@ public extension BaseMessage {
         return .none
     }
     
-    var groupReactionsThumbsUpImage: UIImage? {
+    public var groupReactionsThumbsUpImage: UIImage? {
         if isMyReaction(.acknowledged) {
             return UIImage(systemName: "hand.thumbsup.fill")?
                 .withTintColor(Colors.thumbUp, renderingMode: .alwaysOriginal)
@@ -66,7 +66,7 @@ public extension BaseMessage {
             .withTintColor(Colors.thumbUp, renderingMode: .alwaysOriginal)
     }
     
-    var groupReactionsThumbsDownImage: UIImage? {
+    public var groupReactionsThumbsDownImage: UIImage? {
         if isMyReaction(.declined) {
             return UIImage(systemName: "hand.thumbsdown.fill")?
                 .withTintColor(Colors.thumbDown, renderingMode: .alwaysOriginal)
@@ -75,7 +75,7 @@ public extension BaseMessage {
             .withTintColor(Colors.thumbDown, renderingMode: .alwaysOriginal)
     }
     
-    @objc func add(groupDeliveryReceipt: GroupDeliveryReceipt) {
+    @objc public func add(groupDeliveryReceipt: GroupDeliveryReceipt) {
         if groupDeliveryReceipts == nil {
             groupDeliveryReceipts = [GroupDeliveryReceipt]()
         }
@@ -90,7 +90,7 @@ public extension BaseMessage {
         }
     }
     
-    func groupReactionsCount(of type: GroupDeliveryReceipt.DeliveryReceiptType) -> Int {
+    public func groupReactionsCount(of type: GroupDeliveryReceipt.DeliveryReceiptType) -> Int {
         guard let deliveryReceipts = groupDeliveryReceipts as? [GroupDeliveryReceipt] else {
             return 0
         }
@@ -99,21 +99,21 @@ public extension BaseMessage {
         return ackGroupDeliveryReceipts.count
     }
     
-    func isMyReaction(_ type: GroupDeliveryReceipt.DeliveryReceiptType) -> Bool {
+    public func isMyReaction(_ type: GroupDeliveryReceipt.DeliveryReceiptType) -> Bool {
         if let myReaction = reaction(for: MyIdentityStore.shared().identity) {
             return myReaction.deliveryReceiptType() == type
         }
         return false
     }
     
-    func reaction(for identity: String) -> GroupDeliveryReceipt? {
+    public func reaction(for identity: String) -> GroupDeliveryReceipt? {
         if let deliveryReceipts = groupDeliveryReceipts as? [GroupDeliveryReceipt] {
             return deliveryReceipts.first(where: { $0.identity == identity })
         }
         return nil
     }
     
-    func groupReactions(for type: GroupDeliveryReceipt.DeliveryReceiptType) -> [GroupDeliveryReceipt] {
+    public func groupReactions(for type: GroupDeliveryReceipt.DeliveryReceiptType) -> [GroupDeliveryReceipt] {
         guard let deliveryReceipts = groupDeliveryReceipts as? [GroupDeliveryReceipt] else {
             return []
         }
@@ -121,7 +121,7 @@ public extension BaseMessage {
         return deliveryReceipts.filter { $0.deliveryReceiptType() == type }
     }
     
-    func groupReactionsDictForWeb() -> [AnyHashable: [String]] {
+    public func groupReactionsDictForWeb() -> [AnyHashable: [String]] {
         [
             "ack": groupReactionsIdentityList(for: .acknowledged),
             "dec": groupReactionsIdentityList(for: .declined),
@@ -134,24 +134,5 @@ public extension BaseMessage {
             deliveryIdentityList.append(delvieryReceipt.identity)
         }
         return deliveryIdentityList
-    }
-}
-
-@objc public extension BaseMessage {
-    func old_reactionForMyIdentity() -> GroupDeliveryReceipt? {
-        if let deliveryReceipts = groupDeliveryReceipts as? [GroupDeliveryReceipt],
-           let index = deliveryReceipts.firstIndex(where: { $0.identity == MyIdentityStore.shared().identity }) {
-            return deliveryReceipts[index]
-        }
-        return nil
-    }
-    
-    func old_groupReactionsCount(of type: GroupDeliveryReceipt.DeliveryReceiptType) -> Int {
-        guard let deliveryReceipts = groupDeliveryReceipts as? [GroupDeliveryReceipt] else {
-            return 0
-        }
-
-        let ackGroupDeliveryReceipts = deliveryReceipts.filter { $0.deliveryReceiptType() == type }
-        return ackGroupDeliveryReceipts.count
     }
 }

@@ -238,7 +238,7 @@ static dispatch_queue_t backgroundQueue;
         EntityManager *entityManager = [[EntityManager alloc] init];
         [entityManager performAsyncBlockAndSafe:^{
             _message.sendFailed = [NSNumber numberWithBool:YES];
-            [_message blobUpdateProgress:nil];
+            _message.blobProgress = nil;
         }];
     }
     
@@ -252,7 +252,7 @@ static dispatch_queue_t backgroundQueue;
         EntityManager *entityManager = [[EntityManager alloc] init];
         [entityManager performSyncBlockAndSafe:^{
             _message.sent = [NSNumber numberWithBool:YES];
-            [_message blobUpdateProgress:nil];
+            _message.blobProgress = nil;
         }];
     }
     [_uploadProgressDelegate blobMessageSender:self uploadSucceededForMessage:_message];
@@ -265,7 +265,7 @@ static dispatch_queue_t backgroundQueue;
     
     EntityManager *entityManager = [[EntityManager alloc] init];
     [entityManager performSyncBlockAndSafe:^{
-        [_message blobUpdateProgress:progress];
+        _message.blobProgress = progress;
     }];
     [_uploadProgressDelegate blobMessageSender:self uploadProgress:progress forMessage:_message];
 }
@@ -279,7 +279,7 @@ static dispatch_queue_t backgroundQueue;
             
             if (messageObject.objectID == self.message.objectID) {
                 [_message removeObserver:self forKeyPath:@"sent"];
-                [_message blobUpdateProgress:nil];
+                _message.blobProgress = nil;
                 [_uploadProgressDelegate blobMessageSender:self uploadSucceededForMessage:_message];
             }
         } @catch (NSException *exception) {

@@ -22,8 +22,6 @@
 #import "EntityFetcher.h"
 #import "BallotListTableCell.h"
 #import "BallotDispatcher.h"
-#import "Old_ChatViewController.h"
-#import "Old_ChatViewControllerCache.h"
 #import "BundleUtil.h"
 
 #define BALLOT_LIST_TABLE_CELL_ID @"BallotListTableCellId"
@@ -164,7 +162,7 @@
     [tableView deselectRowAtIndexPath:indexPath animated:YES];
 }
 
-#pragma mark - Table view delegae
+#pragma mark - Table view delegate
 
 - (BOOL)tableView:(UITableView *)tableView canEditRowAtIndexPath:(NSIndexPath *)indexPath
 {
@@ -179,11 +177,6 @@
                 [[_entityManager entityDestroyer] deleteObjectWithObject:message];
             }
             [[_entityManager entityDestroyer] deleteObjectWithObject:ballot];
-            Old_ChatViewController *chatViewController = [Old_ChatViewControllerCache controllerForConversation:_conversation];
-            if (chatViewController != nil) {
-                [chatViewController updateConversationLastMessage];
-                [chatViewController updateConversation];
-            }
         }];
 
         [self loadData];

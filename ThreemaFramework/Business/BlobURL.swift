@@ -100,7 +100,7 @@ import Foundation
         try await withCheckedThrowingContinuation { continuation in
             self.done(blobID: blobID, origin: origin) { url, error in
                 
-                guard error == nil, let url = url else {
+                guard error == nil, let url else {
                     continuation.resume(throwing: error!)
                     return
                 }
@@ -165,7 +165,7 @@ import Foundation
     }
     
     private func substituteBlobID(url: String, blobID: Data?) -> URL {
-        if let blobID = blobID {
+        if let blobID {
             let idHex = getBlobIDHex(blobID)
             return URL(
                 string: url.replacingOccurrences(of: "{blobIdPrefix}", with: idHex.blobFirstByteHex)

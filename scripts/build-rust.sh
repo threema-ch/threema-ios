@@ -65,10 +65,10 @@ for arch in $ARCHS; do
     arm64)
       if [ $IS_SIMULATOR -eq 0 ]; then
         # Hardware iOS targets
-        $HOME/.cargo/bin/cargo +$TOOLCHAIN_VERSION-aarch64-apple-darwin build --locked -p $FFI_TARGET --lib $RELFLAG --target aarch64-apple-ios
+        $HOME/.cargo/bin/cargo +$TOOLCHAIN_VERSION build --locked -p $FFI_TARGET --lib $RELFLAG --target aarch64-apple-ios
       else
         # M1 iOS simulator
-        $HOME/.cargo/bin/cargo +$TOOLCHAIN_VERSION-aarch64-apple-darwin build --locked -p $FFI_TARGET --lib $RELFLAG --target aarch64-apple-ios-sim
+        $HOME/.cargo/bin/cargo +$TOOLCHAIN_VERSION build --locked -p $FFI_TARGET --lib $RELFLAG --target aarch64-apple-ios-sim
       fi
   esac
 done

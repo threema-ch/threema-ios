@@ -20,6 +20,7 @@
 
 import CocoaLumberjackSwift
 import PromiseKit
+import SwiftUI
 import ThreemaFramework
 import UIKit
 
@@ -353,7 +354,7 @@ extension ThreemaWebViewController: QRScannerViewControllerDelegate {
             AudioServicesPlayAlertSound(kSystemSoundID_Vibrate)
         }
         
-        guard let result = result, let qrCodeData = Data(base64Encoded: result) else {
+        guard let result, let qrCodeData = Data(base64Encoded: result) else {
             ValidationLogger.shared().logString("[Threema Web] Can't read qr code")
             let message = String.localizedStringWithFormat(
                 BundleUtil.localizedString(forKey: "webClientSession_add_wrong_qr_message"),
@@ -444,13 +445,13 @@ extension ThreemaWebViewController: QRScannerViewControllerDelegate {
             session.updateValue(a[98] as! Int, forKey: "saltyRTCPort")
             session.updateValue(a[99] as! NSString, forKey: "saltyRTCHost")
             
-            if let overrideSaltyRtcHost = overrideSaltyRtcHost {
+            if let overrideSaltyRtcHost {
                 DDLogNotice(
                     "[Threema Web] override SaltyRtcHost from \(session["saltyRTCHost"] ?? "?") to \(overrideSaltyRtcHost)"
                 )
                 session.updateValue(overrideSaltyRtcHost, forKey: "saltyRTCHost")
             }
-            if let overrideSaltyRtcPort = overrideSaltyRtcPort {
+            if let overrideSaltyRtcPort {
                 DDLogNotice(
                     "[Threema Web] override SaltyRtcPort from \(session["saltyRTCPort"] ?? "?") to \(overrideSaltyRtcPort)"
                 )
@@ -529,5 +530,17 @@ extension ThreemaWebViewController: NSFetchedResultsControllerDelegate {
         
     public func controllerDidChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
         tableView.reloadData()
+    }
+}
+
+// MARK: - UIViewControllerRepresentable
+
+struct ThreemaWebViewControllerRepresentable: UIViewControllerRepresentable {
+    func updateUIViewController(_ uiViewController: UIViewControllerType, context: Context) { }
+    
+    func makeUIViewController(context: Context) -> some UIViewController {
+        let storyboard = UIStoryboard(name: "SettingsStoryboard", bundle: nil)
+        let vc = storyboard.instantiateViewController(identifier: "ThreemaWeb")
+        return vc
     }
 }

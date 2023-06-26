@@ -241,7 +241,7 @@ extension WCSessionManager {
                         }
                     }
                                       
-                    if let session = session, let wca = wca,
+                    if let session, let wca,
                        let connectionWca = session.connectionWca(),
                        wca.elementsEqual(connectionWca) {
                         // same wca, ignore this request
@@ -283,7 +283,7 @@ extension WCSessionManager {
             if isValid == true {
                 var session: WCSession? = self.sessions[webClientSession.initiatorPermanentPublicKey!]
                 
-                if let session = session, let wca = wca,
+                if let session, let wca,
                    let connectionWca = session.connectionWca(),
                    wca.elementsEqual(connectionWca) {
                     // same wca, ignore this request
@@ -770,9 +770,13 @@ extension WCSessionManager {
                 updateContact(managedObject as! ContactEntity, dirtyObjects: dirtyObjects)
             case is BaseMessage:
                 // This is a workaround for an issue that was introduced with IOS-3233 / IOS-3212
-                // With the new changes we do not insert new file messages immediately but wait until they are properly decoded (we check if the mimeType has changed/been set) and only then insert them into the web client.
-                // These changes caused a crash when using web client because we force unwrap `fileName`, `fileSize` and `mimeType` when creating a `WebFile` struct.
-                // As we're sunsetting the web client we just avoid the crash (the message will be updated later anyways so the user impact is low) instead of fixing it properly.
+                // With the new changes we do not insert new file messages immediately but wait until they are properly
+                // decoded (we check if the mimeType has changed/been set) and only then insert them into the web
+                // client.
+                // These changes caused a crash when using web client because we force unwrap `fileName`, `fileSize` and
+                // `mimeType` when creating a `WebFile` struct.
+                // As we're sunsetting the web client we just avoid the crash (the message will be updated later anyways
+                // so the user impact is low) instead of fixing it properly.
                 if let fileMessageEntity = managedObject as? FileMessageEntity,
                    fileMessageEntity.changedValues().keys.contains("mimeType") {
                     insertBaseMessage(managedObject as! BaseMessage)
@@ -1120,7 +1124,7 @@ extension WCSessionManager {
                     objectMode: objectMode
                 )
             }
-            if let identity = identity, !conv.isGroup() {
+            if let identity, !conv.isGroup() {
                 let objectMode: WebMessagesUpdate.ObjectMode = .removed
                 responseUpdateMessage(
                     with: identity,

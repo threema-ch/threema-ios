@@ -104,7 +104,8 @@ class ItemSender: NSObject {
                                 correlationID: self.correlationIDs[j]
                             )
                         }
-                        // We do no longer call refreshDirtyObjects(false) since it lead to some changes not being saved correctly, and thus have higher memory usage in the share extension.
+                        // We do no longer call refreshDirtyObjects(false) since it lead to some changes not being saved
+                        // correctly, and thus have higher memory usage in the share extension.
                     }
                     senderItem = nil
                 }
@@ -132,7 +133,7 @@ class ItemSender: NSObject {
             }
             senderItem = item
         }
-        if let caption = caption, !caption.isEmpty {
+        if let caption, !caption.isEmpty {
             senderItem.caption = caption
         }
         return senderItem
@@ -206,11 +207,13 @@ class ItemSender: NSObject {
             let trimmedMessage = ThreemaUtility.trimCharacters(in: message)
             if !(trimmedMessage == "" || trimmedMessage == "\u{fffc}") {
                 let messages = ThreemaUtilityObjC.getTrimmedMessages(trimmedMessage)
-                
-                if let messages = messages {
+
+                let businessInjector = BusinessInjector()
+
+                if let messages {
                     for m in messages {
-                        MessageSender.sendMessage(
-                            m as? String,
+                        businessInjector.messageSender.sendTextMessage(
+                            text: m as? String,
                             in: toConversation,
                             quickReply: false,
                             requestID: nil,
@@ -219,8 +222,8 @@ class ItemSender: NSObject {
                     }
                 }
                 else {
-                    MessageSender.sendMessage(
-                        trimmedMessage,
+                    businessInjector.messageSender.sendTextMessage(
+                        text: trimmedMessage,
                         in: toConversation,
                         quickReply: false,
                         requestID: nil,

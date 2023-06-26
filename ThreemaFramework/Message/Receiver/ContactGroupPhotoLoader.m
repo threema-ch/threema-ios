@@ -115,7 +115,7 @@
     NSData *imageData = [[NaClCrypto sharedCrypto] symmetricDecryptData:receivedData withKey:encryptionKey nonce:[NSData dataWithBytesNoCopy:kNonce_1 length:sizeof(kNonce_1) freeWhenDone:NO]];
     
     if (imageData == nil) {
-        onError([ThreemaError threemaError:@"Image blob decryption failed"]);
+        onError([ThreemaError threemaError:@"Image blob decryption failed" withCode:kMessageBlobDecryptionErrorCode]);
         return;
     }
     

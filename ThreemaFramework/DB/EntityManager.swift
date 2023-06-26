@@ -107,13 +107,41 @@ public class EntityManager: NSObject {
             block?()
         }
     }
-    
+
     @objc public func performBlockAndWait(_ block: (() -> Void)?) {
         dbContext.current.performAndWait {
             block?()
         }
     }
     
+    public func performAndWaitSave<T>(_ block: @escaping () throws -> T) rethrows -> T {
+        try dbContext.current.performAndWait {
+            let returnValue = try block()
+            self.internalSave()
+            return returnValue
+        }
+    }
+
+    public func performSave<T>(_ block: @escaping () throws -> T) async rethrows -> T {
+        try await dbContext.current.perform(schedule: .immediate) {
+            let returnValue = try block()
+            self.internalSave()
+            return returnValue
+        }
+    }
+
+    public func performAndWait<T>(_ block: @escaping () throws -> T) rethrows -> T {
+        try dbContext.current.performAndWait {
+            try block()
+        }
+    }
+
+    public func perform<T>(_ block: @escaping () throws -> T) async rethrows -> T {
+        try await dbContext.current.perform(schedule: .immediate) {
+            try block()
+        }
+    }
+
     @objc public func rollback() {
         dbContext.current.rollback()
     }
@@ -223,7 +251,7 @@ public class EntityManager: NSObject {
     /// - Parameter object: NSManagedObject
     /// - Parameter mergeChanges: Bool
     public func refresh(_ object: NSManagedObject?, mergeChanges: Bool) {
-        guard let object = object else {
+        guard let object else {
             return
         }
         
@@ -235,7 +263,7 @@ public class EntityManager: NSObject {
     
 // MARK: Private functions
 
-private extension EntityManager {
+extension EntityManager {
     private func internalSave() {
         guard dbContext.current.hasChanges else {
             return

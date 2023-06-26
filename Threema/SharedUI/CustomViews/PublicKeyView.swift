@@ -170,7 +170,7 @@ final class PublicKeyView: UIView {
             okButton.heightAnchor.constraint(greaterThanOrEqualToConstant: 44.0),
         ])
         
-        if let contact = contact {
+        if let contact {
             // Configure identity label
             identityTextView.text = String.localizedStringWithFormat(
                 BundleUtil.localizedString(forKey: "public_key_of"),
@@ -178,8 +178,8 @@ final class PublicKeyView: UIView {
             )
             formatAndSetPublicKey(publicKey: contact.publicKey.hexEncodedString())
         }
-        else if let identity = identity,
-                let publicKey = publicKey {
+        else if let identity,
+                let publicKey {
             identityTextView.text = String.localizedStringWithFormat(
                 BundleUtil.localizedString(forKey: "public_key_of"),
                 identity

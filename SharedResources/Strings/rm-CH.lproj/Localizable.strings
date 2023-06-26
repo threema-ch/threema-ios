@@ -84,8 +84,6 @@
 "error_abort" = "Grev errur";
 "qr_code" = "Code QR";
 "forward" = "Renviar";
-"showNext" = "Ulteriuras opziuns";
-"showPrevious" = "Opziuns precedentas";
 "read" = "Legì";
 "unread" = "Betg legì";
 "settings" = "Configuraziuns";
@@ -283,7 +281,6 @@
 "messages_delete_all_confirm_message" = "Quai vul dir era tut las medias e tut ils documents.";
 "messages_delete_selected_confirm" = "Vuls ti propi stizzar ils messadis tschernids sin quest apparat?";
 "conversation_delete_confirm" = "Es ti segir che ti vuls stizzar quest chat sin quest apparat?";
-"delete_all" = "Stizzar tuts";
 "delete_n" = "Stizzar (%d)";
 
 "message_cannot_play_movie" = "Il film na po betg vegnir mussà.";
@@ -402,8 +399,6 @@
 "msg_unknown_group_request_sync_x_title" = "Survegnì in messadi en ina gruppa nunenconuschenta";
 "msg_unknown_group_request_sync_x_message" = "Ti has survegnì in messadi en ina gruppa nunenconuschenta. Igl è vegnì dumandà il creader da la gruppa (%@) per las infurmaziuns davart la gruppa. La gruppa cumpara, uschespert ch'il creader è puspè online.";
 
-"chat_search_label_format" = "%ld da %ld messadis";
-"load_earlier_messages" = "Chargiar messadis pli vegls";
 "tap_to_cancel" = "Tippar per interrumper";
 "previous" = "Precedents";
 "tap_to_change" = "Tippar per modifitgar";
@@ -439,17 +434,9 @@
 /* Settings */
 "show_stale_contacts_on" = "Contacts nunvalaivels e contacts ch’èn stads inactivs pli ditg che 3 mais, vegnan zuppentads.";
 "show_stale_contacts_off" = "Tut ils contacts vegnan mussads.";
-"hide_voip_call_ip_off" = "Utilisar, sche pussaivel, la colliaziun directa e telefonar mo a contacts betg verifitgads sur il server da Threema. Po tradir tia adressa IP.";
-"hide_voip_call_ip_on" = "Adina telefonar sur il server da Threema. Quai protegia tia adressa IP, ma la qualitad dal telefonat po esser mendra.";
-"onprem_hide_voip_call_ip_off" = "Utilisar, sche pussaivel, la colliaziun directa e telefonar mo a contacts betg verifitgads sur il server dad OnPrem. Po tradir tia adressa IP.";
-"onprem_hide_voip_call_ip_on" = "Adina telefonar sur il server dad OnPrem. Quai protegia tia adressa IP, ma la qualitad dal telefonat po esser mendra.";
-"voip_include_call_in_recents_off" = "Telefonats vegnan mussads sin il visur bloccà, dentant betg enumerads sin la glista da telefonats da l'app «telefon».";
-"voip_include_call_in_recents_on" = "Telefonats vegnan mussads sin il visur bloccà ed enumerads sin la glista da telefonats da l'app «telefon». Sche iCloude Drive è activà, vegn sincronisada la glista da telefonats da l'app «telefon» sur il server dad Apple.";
 
 "backgrounding_on" = "Davosvart resta l'app colliada fin 30 secundas.";
 "backgrounding_off" = "L'app interrumpa immediat la colliaziun davosvart.";
-"proximity_monitoring_off" = "Display activà, cura ch’il sensur è cuvert.";
-"proximity_monitoring_on" = "Display deactivà, cura ch’il sensur è cuvert.";
 "debug_log_clear" = "Stizzar il protocol";
 "log_empty_message" = "Il protocol da validaziun è per il mument vid.";
 "cannot_send_mail_message" = "Nagin conto dad e-mail è configurà sin quest apparat.";
@@ -656,7 +643,6 @@ Endatescha p.pl. tias datas d’access. Contactescha tes administratur, sche ti 
 "group_member_self_left" = "Ti has bandunà la gruppa.";
 "group_member_creator_left" = "*Questa gruppa è orfna*\nLa persuna che ha creà la gruppa l'ha bandunà. Ella n'è betg pli administrabla. Ina commembra u in commember da la gruppa restant duai clonar la gruppa (via detagls da la gruppa) per daventar la nova administratura resp. il nov administratur.";
 /* accessibility labels */
-"send_media_or_location" = "Trametter medias u il lieu";
 "my_profilepicture" = "Tes maletg da profil";
 "my_threema_id" = "Tia ID da Threema";
 "edit_profile" = "Elavurar il surnum ed il maletg da profil";
@@ -670,7 +656,6 @@ Endatescha p.pl. tias datas d’access. Contactescha tes administratur, sche ti 
 "go_to_position" = "tar";
 "draft" = "Sboz";
 "new_message_accessibility" = "Nov messadi: ";
-"scoll_down_text" = "Scroll down";
 "quote_interaction_hint" = "Tippar per ir al messadi cità.";
 
 /* TTOpenInAppActivity */
@@ -741,9 +726,7 @@ Endatescha p.pl. tias datas d’access. Contactescha tes administratur, sche ti 
 "call_no_wifi" = "Telefon sur la rait per telefonia mobila. Leger dapli ...";
 "call_voip_not_supported_title" = "Telefonats da Threema";
 "call_voip_not_supported_text" = "Quest contact na sustegna anc nagins telefonats da Threema.";
-"call_contact_alert" = "Vuls ti telefonar a %@?";
 "call_contact_not_reachable" = "Il contact n’è actualmain betg disponibel.";
-"already_in_call" = "I n'è betg pussaivel da far plirs telefonats il medem mument.";
 
 "call_status_idle" = "Pront";
 "call_status_wait_ringing" = "Inizialisar";
@@ -763,7 +746,6 @@ Endatescha p.pl. tias datas d’access. Contactescha tes administratur, sche ti 
 "call_threema_camera_disabled_info" = "Quest contact utilisescha ina versiun da Threema betg actuala u na permetta nagins videotelefonats.";
 
 "call_threema_video_in_chat_info_title" = "Nov: videotelefonats";
-"call_threema_video_in_chat_info_description" = "Cun %@ pos ti uss era far ultra da telefonats segirs videotelefonats cun codaziun end-to-end.";
 
 "call_threema_cellular_instead_of_wifi_title" = "Telefonat sur la rait per telefonia mobila";
 "call_threema_cellular_instead_of_wifi_text" = "Attenziun: quest telefonat chaschuna in transfer da datas en la rait per telefonia mobila.";
@@ -1004,7 +986,41 @@ Endatescha p.pl. tias datas d’access. Contactescha tes administratur, sche ti 
 "url_warning_title" = "Avertiment da phishing";
 "url_warning_body" = "La pagina-web che ti vuls avrir è dubiusa:\n\nNum dal host inditgà: %@\nNum dal host effectiv: %@\n\nQuai pudess esser in’emprova da manar tai sin ina pagina-web falsifitgada.\n\nVuls ti tuttina cuntinuar?";
 
-// Storage Management
+
+"settings_threema_calls" = "Telefonats da Threema";
+"settings_advanced" = "Extendì";
+"settings_threema_work" = "Threema Work";
+"settings_feedback" = "Feedback Beta";
+// Appearance Settings
+"settings_appearance_theme_section" = "Stil dal design";
+"settings_appearance_light_theme" = "Cler";
+"settings_appearance_dark_theme" = "Stgir";
+"settings_appearance_system_theme" = "Sistem";
+"settings_appearance_theme_selected" = "Stil dal design %@ activ";
+"settings_appearance_theme_active" = "Activ";
+"settings_appearance_hide_stale_contacts" = "Zuppentar IDs inactivas";
+"settings_appearance_show_profile_pictures" = "Mussar maletgs da profil";
+"settings_appearance_display_order" = "Successiun";
+"settings_appearance_show_gallery_preview" = "Mussar prevista da la gallaria";
+
+// Notification Settings
+"settings_notifications_inapp_section" = "En l’app";
+"settings_notifications_inapp_sounds" = "Tuns";
+"settings_notifications_inapp_vibrate" = "Vibraziuns";
+"settings_notifications_inapp_preview" = "Prevista";
+"settings_notifications_push_section" = "Avis da push";
+"settings_notifications_push_sound" = "Tun";
+"settings_notifications_push_groupsound" = "Tun da las gruppas";
+"settings_notifications_push_preview" = "Prevista";
+"settings_notifications_masterDnd_section_header" = "Regulaziun dal temp da paus";
+"settings_notifications_masterDnd" = "Betg disturbar durant il temp da paus";
+"settings_notifications_masterDnd_section_footer" = "Na mussar nagins messadis e refusar telefonats ordaifer il temp da lavur.";
+"settings_notifications_masterDnd_workingDays" = "Dis da lavur";
+"settings_notifications_masterDnd_startTime" = "Cumenzament da la lavur";
+"settings_notifications_masterDnd_endTime" = "Fin da la lavur";
+"settings_notification_iOS_settings" = "Configuraziuns dal sistem";
+
+// Storage Management Settings
 "storage_management" = "Management da l’arcun";
 "storage_total" = "Capacitad da memorisar interna";
 "storage_total_in_use" = "Vegn utilisà";
@@ -1039,42 +1055,23 @@ Endatescha p.pl. tias datas d’access. Contactescha tes administratur, sche ti 
 "file_not_found_title" = "Betg chattà la datoteca";
 
 "messages" = "Messadis";
-// Settings
-"settings_privacy" = "Sfera privata";
-"settings_appearance" = "Cumparsa";
-"settings_notification" = "Avis";
-"settings_chat" = "Chat";
-"settings_media" = "Medias";
-"settings_storage_management" = "Management da l’arcun";
-"settings_passcode_lock" = "Bloccada da code";
-"settings_threema_calls" = "Telefonats da Threema";
-"settings_threema_web" = "Desktop/web";
-"settings_network_status" = "Status da la rait";
-"settings_version" = "Versiun";
-"settings_license_username" = "Num d'utilisader da licenza";
-"settings_invite_a_friend" = "Envidar amis";
-"settings_threema_channel" = "Threema Channel";
-"settings_support" = "Support";
-"settings_privacy_policy" = "Decleraziun davart la protecziun da datas";
-"settings_license" = "Licenza";
-"settings_advanced" = "Extendì";
-"settings_threema_work" = "Threema Work";
-"settings_feedback" = "Feedback Beta";
-"tos_cell_title" = "Cundiziuns d'utilisaziun";
-
-"settings_advanced_flush_message_queue" = "Stizzar la colonna da spetga da messadis";
+// Call Settings
+"settings_threema_calls_enable_calls" = "Activar telefonats da Threema";
+"settings_threema_calls_always_relay_calls" = "Telefonats adina sur il server";
+"settings_threema_calls_callkit" = "Integrar telefonats en iOS";
+"settings_threema_calls_video_section" = "Videotelefonats da Threema";
+"settings_threema_calls_allow_video_calls" = "Acceptar videotelefonats";
+"settings_threema_calls_video_quality_profile" = "Qualitad dal maletg preferida";
+"settings_threema_calls_video_quality_profile_low" = "Pitschen consum da datas";
+"settings_threema_calls_video_quality_profile_max" = "Qualitad maximala";
+"settings_threema_calls_video_quality_profile_auto" = "Equilibrà (recumandà)";
+"settings_threema_calls_video_quality_profile_low_description" = "Qualitad dal maletg reducida per sbassar il consum da datas";
+"settings_threema_calls_video_quality_profile_max_description" = "Attenziun: po chaschunar in grond consum da datas er en la rait mobila!";
+"settings_threema_calls_video_quality_profile_auto_description" = "Auta qualitad dal maletg cun WLAN, consum da datas reducì en la rait mobila";
+"settings_threema_calls_video_quality_profile_footer" = "La qualitad dal maletg effectiva dependa da la rait e da las configuraziuns dal partenari da discurs.";
+"settings_threema_calls_call_sound" = "Tun";
 "settings_advanced_orphaned_files_cleanup" = "Stizzar datotecas orfnas";
-// Appearance
-"settings_appearance_theme_section" = "Stil dal design";
-"settings_appearance_light_theme" = "Cler";
-"settings_appearance_dark_theme" = "Stgir";
-"settings_appearance_system_theme" = "Sistem";
-"settings_appearance_theme_selected" = "Stil dal design %@ activ";
-"settings_appearance_theme_active" = "Activ";
-"settings_appearance_hide_stale_contacts" = "Zuppentar IDs inactivas";
-"settings_appearance_show_profile_pictures" = "Mussar maletgs da profil";
-"settings_appearance_display_order" = "Successiun";
-"settings_appearance_show_gallery_preview" = "Mussar prevista da la gallaria";
+"settings_advanced_flush_message_queue" = "Stizzar la colonna da spetga da messadis";
 
 // Sentry
 "sentry_crash_send_title" = "%@ è vegnì terminà nunspetgadamain.";
@@ -1083,30 +1080,11 @@ Endatescha p.pl. tias datas d’access. Contactescha tes administratur, sche ti 
 "sentry_crash_send_no" = "Betg trametter";
 "sentry_crash_comment_placeholder" = "Rapport da collaps";
 
-
-
 // My profile
 "profile_share_id_text" = "Mia ID da Threema";
 // File message
 "optional_caption" = "Text opziunal";
 "send_as_file" = "Trametter sco datoteca";
-
-// Notification settings
-"settings_notifications_inapp_section" = "En l’app";
-"settings_notifications_inapp_sounds" = "Tuns";
-"settings_notifications_inapp_vibrate" = "Vibraziuns";
-"settings_notifications_inapp_preview" = "Prevista";
-"settings_notifications_push_section" = "Avis da push";
-"settings_notifications_push_sound" = "Tun";
-"settings_notifications_push_groupsound" = "Tun da las gruppas";
-"settings_notifications_push_preview" = "Prevista";
-"settings_notifications_masterDnd_section_header" = "Regulaziun dal temp da paus";
-"settings_notifications_masterDnd" = "Betg disturbar durant il temp da paus";
-"settings_notifications_masterDnd_section_footer" = "Na mussar nagins messadis e refusar telefonats ordaifer il temp da lavur.";
-"settings_notifications_masterDnd_workingDays" = "Dis da lavur";
-"settings_notifications_masterDnd_startTime" = "Cumenzament da la lavur";
-"settings_notifications_masterDnd_endTime" = "Fin da la lavur";
-"settings_notification_iOS_settings" = "Configuraziuns dal sistem";
 
 // Orphaned files delete
 "settings_orphaned_files_description" = "En versiuns da %@ precedentas pudevi darar capitar che medias e/u datas che vegnivan stizzadas en l’administraziun da la memoria, vegnivan allontanadas da %@, ma betg stizzadas cumplettamain.
@@ -1128,22 +1106,6 @@ Svida il chanaster da palpiri, sche naginas medias e/u datotecas na mancan per s
 "settings_orphaned_files_bin_delete_conformation" = "Vuls ti stizzar definitivamain las datotecas orfnas? Questa acziun na pon ins betg revocar.";
 "settings_orphaned_files_log_title" = "REGISTRAR DATOTECAS";
 "settings_orphaned_files_log_all_files_button" = "Registrar datotecas en debug-log";
-
-// Threema calls settings
-"settings_threema_calls_enable_calls" = "Activar telefonats da Threema";
-"settings_threema_calls_always_relay_calls" = "Telefonats adina sur il server";
-"settings_threema_calls_callkit" = "Integrar telefonats en iOS";
-"settings_threema_calls_video_section" = "Videotelefonats da Threema";
-"settings_threema_calls_allow_video_calls" = "Acceptar videotelefonats";
-"settings_threema_calls_video_quality_profile" = "Qualitad dal maletg preferida";
-"settings_threema_calls_video_quality_profile_low" = "Pitschen consum da datas";
-"settings_threema_calls_video_quality_profile_max" = "Qualitad maximala";
-"settings_threema_calls_video_quality_profile_auto" = "Equilibrà (recumandà)";
-"settings_threema_calls_video_quality_profile_low_description" = "Qualitad dal maletg reducida per sbassar il consum da datas";
-"settings_threema_calls_video_quality_profile_max_description" = "Attenziun: po chaschunar in grond consum da datas er en la rait mobila!";
-"settings_threema_calls_video_quality_profile_auto_description" = "Auta qualitad dal maletg cun WLAN, consum da datas reducì en la rait mobila";
-"settings_threema_calls_video_quality_profile_footer" = "La qualitad dal maletg effectiva dependa da la rait e da las configuraziuns dal partenari da discurs.";
-"settings_threema_calls_call_sound" = "Tun";
 
 // Media Preview
 "loading_video_failed" = "Betg stà pussaivel da chargiar il video. P.pl. reaviar l’app ed empruvar anc ina giada.";
@@ -1176,8 +1138,6 @@ Svida il chanaster da palpiri, sche naginas medias e/u datotecas na mancan per s
 "sending_item" = "Trametter l’element";
 "send_as_file_title" = "Modus";
 "document" = "Datoteca";
-"paste_create_file_failure_title" = "Betg reussì d’encollar";
-"paste_create_file_failure_message" = "I n’è betg reussì d’encollar la datoteca. P.pl. empruvar anc ina giada.";
 "loading_files_takes_time_title" = "Chargiar medias or da la biblioteca da medias";
 "loading_files_takes_time_description" = "I po durar in mument fin ch’il video è convertì";
 "pasteErrorMessageTitle" = "Betg reussì d’encollar";
@@ -1221,8 +1181,6 @@ Svida il chanaster da palpiri, sche naginas medias e/u datotecas na mancan per s
 "ballot_allDay_switch" = "L'entir di";
 
 "ballot_choose_title" = "Tscherner in'enquista";
-"ballot_closed_cell_title" = "Resultat da l'enquista";
-"ballot_new_cell_title" = "Nova enquista";
 "ballot_description_intermediate" = "Decida, sch'ils resultats intermediars accumulads èn visibels per tut ils participants. Uschiglio vegnan ils resultats mussads pir suenter che l'enquista è terminada.";
 "ballot_description_multiplechoice" = "Decida, sch'ils participants pon selectar ina u pliras opziuns.";
 

@@ -30,7 +30,7 @@ final class MessageDateAndStateView: UIView {
     /// Reset to update with current message information.
     var message: BaseMessage? {
         didSet {
-            guard let message = message else {
+            guard let message else {
                 return
             }
             
@@ -215,10 +215,13 @@ final class MessageDateAndStateView: UIView {
         }
         
         UIView.performWithoutAnimation { [self] in
-            statusSymbolImageView.isHidden = false
-            
             NSLayoutConstraint.activate(statusSymbolImageViewConstraints)
             dateLabelNoGroupReactionsInsetConstraint.constant = -dateLabelTrailingInset
+            
+            // Avoids a slide in from the left
+            layoutIfNeeded()
+            
+            statusSymbolImageView.isHidden = false
         }
     }
     

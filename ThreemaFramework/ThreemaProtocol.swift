@@ -51,8 +51,8 @@ public enum ThreemaProtocol {
     static let nonUploadedBlobID = Data(BytesUtility.padding([], pad: 0, length: blobIDLength))
 }
 
-public extension ForwardSecurityMode {
-    var localizedLabel: String {
+extension ForwardSecurityMode {
+    public var localizedLabel: String {
         switch self {
         case .none:
             return BundleUtil.localizedString(forKey: "forward_security_none")

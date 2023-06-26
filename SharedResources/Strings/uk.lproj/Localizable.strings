@@ -84,8 +84,6 @@
 "error_abort" = "Невиправна помилка";
 "qr_code" = "QR-код";
 "forward" = "Назад";
-"showNext" = "Більше налаштувань";
-"showPrevious" = "Попередні налаштування";
 "read" = "Прочитане";
 "unread" = "Непрочитане";
 "settings" = "Налаштування";
@@ -283,7 +281,6 @@
 "messages_delete_all_confirm_message" = "Це включає усі медіа та документи.";
 "messages_delete_selected_confirm" = "Видалити вибрані повідомлення із цього пристрою?";
 "conversation_delete_confirm" = "Видалити діалог з пристрою?";
-"delete_all" = "Видалити усі";
 "delete_n" = "Видалити (%d)";
 
 "message_cannot_play_movie" = "Не вдається програти відео.";
@@ -402,8 +399,6 @@
 "msg_unknown_group_request_sync_x_title" = "Повідомлення отримано у невідомій групі";
 "msg_unknown_group_request_sync_x_message" = "Отримано повідомлення в невідомій групі. Інформацію про групу запитано в автора групи (%@). Група з'явиться щойно її автор буде в мережі.";
 
-"chat_search_label_format" = "%ld з %ld повідомлень";
-"load_earlier_messages" = "Завантаження попередніх повідомлень";
 "tap_to_cancel" = "Торкніться для скасування";
 "previous" = "Попередні";
 "tap_to_change" = "Торкніться для зміни";
@@ -439,17 +434,9 @@
 /* Settings */
 "show_stale_contacts_on" = "Неактивні Threema ID (тобто такі, що не використовувались протягом щонайменше трьох місяців) та видалені ID приховано.";
 "show_stale_contacts_off" = "Усі Threema ID перелічені у списку контактів.";
-"hide_voip_call_ip_off" = "Встановіть пряме з’єднання, якщо це можливо, і переадресуйте виклики лише неперевіреним контактам через сервери Threema. Це може розкрити вашу IP-адресу.";
-"hide_voip_call_ip_on" = "Переадресуйте всі виклики через сервери Threema, щоб приховати IP-адресу від партнерів по виклику. Це може вплинути на якість викликів.";
-"onprem_hide_voip_call_ip_off" = "Встановіть пряме з’єднання, якщо це можливо, і переадресуйте виклики лише неперевіреним контактам через ваші сервери OnPrem. Це може розкрити вашу IP-адресу.";
-"onprem_hide_voip_call_ip_on" = "Ретранслюйте всі виклики через ваші сервери OnPrem, щоб приховати IP-адресу від партнерів по виклику. Це може вплинути на якість викликів.";
-"voip_include_call_in_recents_off" = "Виклики показуються на заблокованому екрані, але не перелічені в списку викликів програми Телефон.";
-"voip_include_call_in_recents_on" = "Виклики показуються на заблокованому екрані та перелічені в списку викликів програми Телефон. Якщо iCloud Drive активовано, список викликів програми Телефон синхронізується через сервери Apple.";
 
 "backgrounding_on" = "Застосунок залишатиметься у мережі до 30 секунд після переходу у фоновий режим.";
 "backgrounding_off" = "При переході до фонового режиму застосунок негайно відключається від мережі.";
-"proximity_monitoring_off" = "Екран не вимикається, якщо датчик наближення закритий.";
-"proximity_monitoring_on" = "Під час голосових викликів та під час запису чи відтворення голосових повідомлень екран вимикається, якщо датчик наближення закритий.";
 "debug_log_clear" = "Очистити журнал";
 "log_empty_message" = "Журнал відладки порожній.";
 "cannot_send_mail_message" = "На цьому пристрої не налаштовано обліковий запис електронної пошти.";
@@ -667,7 +654,6 @@
 "system_message_group_avatar_changed" = "Групове зображення змінено";
 
 /* accessibility labels */
-"send_media_or_location" = "Надіслати медіа або місцеперебування";
 "my_profilepicture" = "Зображення вашого профілю";
 "my_threema_id" = "Ваш Threema ID";
 "edit_profile" = "Редагувати прізвисько та зображення профілю";
@@ -681,7 +667,6 @@
 "go_to_position" = "на";
 "draft" = "Чернетка";
 "new_message_accessibility" = "Нове повідомлення: ";
-"scoll_down_text" = "Гортати донизу";
 "quote_interaction_hint" = "Переходить до цитованого повідомлення.";
 
 /* TTOpenInAppActivity */
@@ -754,9 +739,7 @@
 
 "call_voip_not_supported_title" = "Виклики Threema";
 "call_voip_not_supported_text" = "Пристрій співрозмовника не підтримує виклики Threema";
-"call_contact_alert" = "Бажаєте викликати %@?";
 "call_contact_not_reachable" = "Неможливо зв'язатись зі співрозмовником...";
-"already_in_call" = "Можливо здійснювати лише один виклик одночасно.";
 
 "call_status_idle" = "Готовий";
 "call_status_wait_ringing" = "Ініціалізація";
@@ -776,7 +759,6 @@
 "call_threema_camera_disabled_info" = "Цей контакт не використовує поточну версію застосунку або не дозволив відеовиклики.";
 
 "call_threema_video_in_chat_info_title" = "Нове: Відеовиклики";
-"call_threema_video_in_chat_info_description" = "На додаток до голосових викликів із захистом від дотику, відтепер %@ пропонує наскрізно зашифровані відеовиклики.";
 
 "call_threema_cellular_instead_of_wifi_title" = "Виклик через стільник";
 "call_threema_cellular_instead_of_wifi_text" = "Увага: цей виклик передає дані у стільниковій мережі.";
@@ -1022,7 +1004,139 @@
 "url_warning_title" = "Попередження про фішинг";
 "url_warning_body" = "Ім’я хоста посилання, яке ви збираєтеся відкрити, підозріле:\n\nПоказане ім'я хоста: %@\nСправжнє ім'я: %@\n\nЦе може бути спробою змусити вас відкрити сайт, прикидаючись іншим сайтом.\n\nВсе одно бажаєте продовжити?";
 
-// Storage Management
+
+// Settings
+"settings_navbar_title" = "Налаштування";
+"settings_list_privacy_title" = "Приватність";
+"settings_list_appearance_title" = "Вигляд";
+"settings_list_notifications_title" = "Сповіщення";
+"settings_list_chat_title" = "Діалог";
+"settings_list_media_title" = "Медіа";
+"settings_list_storage_management_title" = "Керування сховищем";
+"settings_list_passcode_lock_title" = "Блокування за
+допомогою пароля";
+"settings_threema_calls" = "Виклики Threema";
+"settings_list_threema_web_title" = "Застосунок / Вебверсія";
+
+"settings_list_network_title" = "Стан мережі";
+"settings_list_version_title" = "Версія";
+"settings_list_settings_license_username_title" = "Ім'я користувача ліцензії";
+
+"settings_list_invite_a_friend_title" = "Запросити друга";
+"settings_list_threema_channel_title" = "Канал Threema";
+
+"settings_list_support_title" = "Підтримка";
+"settings_list_privacy_policy_title" = "Політика конфіденційності";
+"settings_list_license_title" = "Ліцензія";
+"settings_advanced" = "Розширені";
+"settings_threema_work" = "Threema Робота";
+"settings_threema_work_subtitle" = "Надійне рішення для забезпечення комунікації в компанії";
+"settings_feedback" = "Відгук про бета-версію";
+"settings_list_tos_title" = "Умови використання";
+
+"settings_md_sync_alert_title" = "Помилка синхронізації";
+
+// Privacy Settings
+"settings_privacy_contacts_header" = "Контакти";
+"settings_privacy_sync_contacts" = "Синхронізація контактів";
+"settings_privacy_exclusion_list" = "Список виключень";
+"settings_privacy_exclusion_list_alert_title" = "ID занадто короткий";
+"settings_privacy_exclusion_list_alert_message" = "Будь ласка, введіть ідентифікатор довжиною рівно 8 символів.";
+"settings_privacy_block_unknown" = "Блокувати невідомих";
+"settings_privacy_block_unknown_footer_on"= "Лише люди з вашого списку контактів можуть надсилати вам повідомлення.";
+"settings_privacy_block_unknown_foooter_off" = "Будь-хто може надіслати вам повідомлення. Нові контакти будуть додані автоматично, коли надійде перше повідомлення.";
+
+"settings_privacy_os_header" = "Інтеграція iOS";
+"settings_privacy_os_donate" = "Поділитися взаємодіями";
+"settings_privacy_os_reset" = "Скинути взаємодії";
+"settings_privacy_os_footer" = "Якщо цю опцію буде ввімкнено, контакти Threema будуть пропонуватися, коли ви поширюватимете контент в iOS. Ця дія робить інформацію доступною для iOS.";
+
+"settings_privacy_chat_header" = "Чат";
+"settings_privacy_read_receipts" = "Звіти про прочитання";
+"settings_privacy_typing_indicator" = "Індикатори набору тексту";
+
+"settings_privacy_TIRR_reset_all" = "Скидання для всіх контактів";
+"settings_privacy_TIRR_reset_footer" = "Скинути всі контакти до налаштувань за замовчуванням.";
+"settings_privacy_TIRR_reset_alert_title" = "Скинути";
+"settings_privacy_TIRR_reset_alert_message" = "Reset all contacts to the default setting. Action cannot be undone.";
+"settings_privacy_TIRR_reset_alert_action" = "Скинути все";
+
+"settings_privacy_choose_poi" = "Вибрати ОСІ";
+"settings_privacy_hide_private_chats" = "Приховати приватні чати";
+"settings_privacy_hide_private_chats_footer" = "Приховує всі приватні чати в огляді чатів. Вам потрібно встановити пароль, щоб активувати це налаштування.";
+
+// Appearance Settings
+"settings_appearance_theme_section" = "Тема";
+"settings_appearance_light_theme" = "Світла";
+"settings_appearance_dark_theme" = "Темна";
+"settings_appearance_system_theme" = "Системна";
+"settings_appearance_theme_selected" = "Обрана тема %@";
+"settings_appearance_theme_active" = "Активна";
+"settings_appearance_hide_app_icon" = "Значок застосунку";
+"settings_appicon_default_header" = "Значок за замовчуванням";
+"settings_appicon_legacy_header" = "Значки Threema";
+"settings_appicon_special_header" = "Спеціальні значки";
+"settings_appearance_hide_stale_contacts" = "Сховати неактивні ID";
+"settings_appearance_show_profile_pictures" = "Показувати зображення профілю";
+"settings_appearance_display_order" = "Порядок показування";
+"settings_appearance_show_gallery_preview" = "Попередній перегляд галереї";
+
+// Notification Settings
+"settings_notifications_inapp_section" = "У застосунку";
+"settings_notifications_inapp_sounds" = "Звуки в застосунку";
+"settings_notifications_inapp_vibrate" = "Вібрація в застосунку";
+"settings_notifications_inapp_preview" = "Попередній перегляд повідомлення";
+"settings_notifications_push_section" = "Push-сповіщення";
+"settings_notifications_push_sound" = "Звук";
+"settings_notifications_push_groupsound" = "Звук групи";
+"settings_notifications_push_preview" = "Попередній перегляд повідомлення";
+"settings_notifications_masterDnd_section_header" = "Політика годин тиші";
+"settings_notifications_masterDnd" = "Не турбувати під час годин тиші";
+"settings_notifications_masterDnd_section_footer" = "Заблокувати сповіщення та відхиляти дзвінки не у робочий час.";
+"settings_notifications_masterDnd_workingDays" = "Робочі дні";
+"settings_notifications_masterDnd_startTime" = "Початок робочого дня";
+"settings_notifications_masterDnd_endTime" = "Кінец робочого дня";
+"settings_notification_iOS_settings" = "Системні налаштування";
+
+"settings_notification_type_preview_title" = "Push-сповіщення";
+"settings_notification_type_preview_description" = "Укажіть, яку інформацію потрібно включати в push-сповіщення для вхідних повідомлень Threema.";
+
+"settings_notification_type_preview_restrictive_title" = "Показувати прізвисько";
+"settings_notification_type_preview_restrictive_description" = "Показується лише прізвисько контакта.";
+"settings_notification_type_preview_restrictive_sender_name" = "~Джон";
+
+"settings_notification_type_preview_balanced_title" = "Показувати ім’я";
+"settings_notification_type_preview_balanced_description" = "Показується повне ім’я контакта (параметр за замовчуванням).";
+"settings_notification_type_preview_balanced_sender_name" = "Джон Сміт";
+
+"settings_notification_type_preview_complete_title" = "Показувати ім’я і зображення профілю";
+"settings_notification_type_preview_complete_description" = "Показується повне ім’я і зображення профілю контакта. Операційній системі надається певна інформація, що стосується взаємодії. [Докладніше…](%@)";
+"settings_notification_type_preview_complete_sender_name" = "Джон Сміт";
+
+"settings_notification_type_preview_message_text" = "Приклад повідомлення…";
+"settings_notification_type_preview_no_button" = "Вимкнути push-сповіщення";
+
+// Chat Settings
+"settings_chat_wallpaper_title" = "Шпалери";
+"settings_chat_wallpaper_reset" = "Скинути всі шпалери";
+"settings_chat_wallpaper_empty" = "Немає";
+"settings_chat_wallpaper_custom" = "Користувацькі";
+"settings_chat_wallpaper_default" = "За замовчуванням";
+"settings_chat_wallpaper_reset_all_alert" = "Скидає всі шпалери, які було встановлено для діалогу, до вищезазначеного параметра. Цю дію скасувати не можна.";
+
+"settings_chat_bigger_emojis" = "Великі емодзі";
+/* Chat Settings */
+"settings_chat_send_message_feedback_label" = "Тактильний зворотний зв’язок після надсилання";
+
+// Media Settings
+"settings_media_title" = "Медіа";
+"settings_media_image_size_title" = "Розмір зображення";
+"settings_media_video_quality_title" = "Якість відео";
+"settings_media_autosave_title" = "Автоматично зберігати медіа до застосунку Фотографії";
+/* Media */
+"settings_media_autosave_private_footer" = "Медіафайли отримані в приватних чатах не будуть зберігатися автоматично.";
+
+// Storage Management Settings
 "storage_management" = "Керування сховищем";
 "storage_total" = "Загальний розмір диска";
 "storage_total_in_use" = "Використано";
@@ -1063,98 +1177,51 @@
 "messages" = "Повідомлення";
 "files" = "Файли";
 
+// Call Settings
+"settings_threema_calls_enable_calls" = "Увімкнути виклики Threema";
+"settings_threema_calls_always_relay_calls" = "Завжди ретранслювати виклики";
+"settings_threema_calls_callkit" = "Показувати виклики у iOS";
+"settings_threema_calls_video_section" = "Відеовиклики";
+"settings_threema_calls_allow_video_calls" = "Дозволити відеовиклики";
+"settings_threema_calls_video_quality_profile" = "Бажана якість відео";
+"settings_threema_calls_video_quality_profile_low" = "Низьке споживання даних";
+"settings_threema_calls_video_quality_profile_max" = "Максимальна якість";
+"settings_threema_calls_video_quality_profile_auto" = "Збалансовано (рекомендується)";
+"settings_threema_calls_video_quality_profile_low_description" = "Зменшена якість відео для низького споживання даних";
+"settings_threema_calls_video_quality_profile_max_description" = "Увага: може викликати високе споживання даних, зокрема у стільниковій мережі!";
+"settings_threema_calls_video_quality_profile_auto_description" = "Висока якість відео у Wi-Fi мережі, зменшене споживання даних у стільниковій мережі";
+"settings_threema_calls_video_quality_profile_footer" = "Фактична якість відео залежить від мережі та налаштувань вашого співрозмовника.";
+"settings_threema_calls_call_sound" = "Звук";
+"settings_threema_calls_hide_voip_call_ip_footer_off" = "Встановіть пряме з’єднання, якщо це можливо, і переадресуйте виклики лише неперевіреним контактам через сервери Threema. Це може розкрити вашу IP-адресу.";
+"settings_threema_calls_hide_voip_call_ip_footer_on" = "Переадресуйте всі виклики через сервери Threema, щоб приховати IP-адресу від партнерів по виклику. Це може вплинути на якість викликів.";
+"settings_threema_calls_onprem_hide_voip_call_ip_footer_off" = "Встановіть пряме з’єднання, якщо це можливо, і переадресуйте виклики лише неперевіреним контактам через ваші сервери OnPrem. Це може розкрити вашу IP-адресу.";
+"settings_threema_calls_onprem_hide_voip_call_ip_footer_on" = "Ретранслюйте всі виклики через ваші сервери OnPrem, щоб приховати IP-адресу від партнерів по виклику. Це може вплинути на якість викликів.";
+"settings_threema_voip_include_call_in_recents_footer_off" = "Виклики показуються на заблокованому екрані, але не перелічені в списку викликів програми Телефон.";
+"settings_threema_voip_include_call_in_recents_footer_on" = "Виклики показуються на заблокованому екрані та перелічені в списку викликів програми Телефон. Якщо iCloud Drive активовано, список викликів програми Телефон синхронізується через сервери Apple.";
 
-// Settings
-"settings_privacy" = "Приватність";
-"settings_appearance" = "Вигляд";
-"settings_notification" = "Сповіщення";
-"settings_chat" = "Діалог";
-"settings_media" = "Медіа";
-"settings_storage_management" = "Керування сховищем";
-"settings_passcode_lock" = "Блокування за
-допомогою пароля";
-"settings_threema_calls" = "Виклики Threema";
-"settings_threema_web" = "Застосунок / Вебверсія";
-"settings_network_status" = "Стан мережі";
-"settings_version" = "Версія";
-"settings_license_username" = "Ім'я користувача ліцензії";
-"settings_invite_a_friend" = "Запросити друга";
-"settings_threema_channel" = "Канал Threema";
-"settings_support" = "Підтримка";
-"settings_privacy_policy" = "Політика конфіденційності";
-"settings_license" = "Ліцензія";
-"settings_advanced" = "Розширені";
-"settings_threema_work" = "Threema Робота";
-"settings_threema_work_subtitle" = "Надійне рішення для забезпечення комунікації в компанії";
-"settings_feedback" = "Відгук про бета-версію";
-"tos_cell_title" = "Умови використання";
+// Advanced Settings
+"settings_advanced_networking_section_header" = "Мережа";
+"settings_advanced_ipv6_title" = "IPv6";
 
-"settings_advanced_flush_message_queue" = "Очистити чергу повідомлень";
+"settings_advanced_proximity_monitoring_section_header" = "Сенсор";
+"settings_advanced_proximity_monitoring_title" = "Контроль наближення";
+"settings_advanced_proximity_monitoring_section_footer_off" = "Екран не вимикається, якщо датчик наближення закритий.";
+"settings_advanced_proximity_monitoring_section_footer_on" = "Під час голосових викликів та під час запису чи відтворення голосових повідомлень екран вимикається, якщо датчик наближення закритий.";
+
+"settings_advanced_debug_log_section_header" = "Журнал відладки";
+"settings_advanced_debug_log_title" = "Журнал відладки";
+"settings_advanced_debug_log_size_title" = "Розмір журналу";
+"settings_advanced_debug_log_share_title" = "Поділитись журналом";
+"settings_advanced_debug_log_clear_log_title" = "Очистити журнал";
+
+"settings_advanced_other_section_header" = "Інше";
+"settings_advanced_webrtc_diagnostics_title" = "Діагностика WebRTC";
 "settings_advanced_orphaned_files_cleanup" = "Видалити загублені файли";
+"settings_advanced_flush_message_queue" = "Очистити чергу повідомлень";
+
 "settings_advanced_reregister_push_notifications_header_title" = "Push-сповіщення";
 "settings_advanced_reregister_push_notifications_footer_title" = "Якщо вхідні повідомлення не з’являються за межами застосунку як сповіщення, ви можете зареєструватися для отримання сповіщень.";
 "settings_advanced_reregister_notifications_label" = "Повторно зареєструватися для отримання push-сповіщень";
-
-"settings_md_sync_alert_title" = "Помилка синхронізації";
-
-// Privacy
-"settings_privacy_contacts_header" = "Контакти";
-"settings_privacy_sync_contacts" = "Синхронізація контактів";
-"settings_privacy_exclusion_list" = "Список виключень";
-"settings_privacy_exclusion_list_alert_title" = "ID занадто короткий";
-"settings_privacy_exclusion_list_alert_message" = "Будь ласка, введіть ідентифікатор довжиною рівно 8 символів.";
-"settings_privacy_block_unknown" = "Блокувати невідомих";
-"settings_privacy_block_unknown_footer_on"= "Лише люди з вашого списку контактів можуть надсилати вам повідомлення.";
-"settings_privacy_block_unknown_foooter_off" = "Будь-хто може надіслати вам повідомлення. Нові контакти будуть додані автоматично, коли надійде перше повідомлення.";
-
-"settings_privacy_os_header" = "Інтеграція iOS";
-"settings_privacy_os_donate" = "Поділитися взаємодіями";
-"settings_privacy_os_reset" = "Скинути взаємодії";
-"settings_privacy_os_footer" = "Якщо цю опцію буде ввімкнено, контакти Threema будуть пропонуватися, коли ви поширюватимете контент в iOS. Ця дія робить інформацію доступною для iOS.";
-
-"settings_privacy_chat_header" = "Чат";
-"settings_privacy_read_receipts" = "Звіти про прочитання";
-"settings_privacy_typing_indicator" = "Індикатори набору тексту";
-
-"settings_privacy_TIRR_reset_all" = "Скидання для всіх контактів";
-"settings_privacy_TIRR_reset_footer" = "Скинути всі контакти до налаштувань за замовчуванням.";
-"settings_privacy_TIRR_reset_alert_title" = "Скинути";
-"settings_privacy_TIRR_reset_alert_message" = "Reset all contacts to the default setting. Action cannot be undone.";
-"settings_privacy_TIRR_reset_alert_action" = "Скинути все";
-
-"settings_privacy_choose_poi" = "Вибрати ОСІ";
-"settings_privacy_hide_private_chats" = "Приховати приватні чати";
-"settings_privacy_hide_private_chats_footer" = "Приховує всі приватні чати в огляді чатів. Вам потрібно встановити пароль, щоб активувати це налаштування.";
-
-// Appearance
-"settings_appearance_theme_section" = "Тема";
-"settings_appearance_light_theme" = "Світла";
-"settings_appearance_dark_theme" = "Темна";
-"settings_appearance_system_theme" = "Системна";
-"settings_appearance_theme_selected" = "Обрана тема %@";
-"settings_appearance_theme_active" = "Активна";
-"settings_appearance_hide_app_icon" = "Значок застосунку";
-"settings_appicon_default_header" = "Значок за замовчуванням";
-"settings_appicon_legacy_header" = "Значки Threema";
-"settings_appicon_special_header" = "Спеціальні значки";
-"settings_appearance_hide_stale_contacts" = "Сховати неактивні ID";
-"settings_appearance_show_profile_pictures" = "Показувати зображення профілю";
-"settings_appearance_display_order" = "Порядок показування";
-"settings_appearance_show_gallery_preview" = "Попередній перегляд галереї";
-
-// Chat Settings
-"settings_chat_wallpaper_title" = "Шпалери";
-"settings_chat_wallpaper_reset" = "Скинути всі шпалери";
-"settings_chat_wallpaper_empty" = "Немає";
-"settings_chat_wallpaper_custom" = "Користувацькі";
-"settings_chat_wallpaper_default" = "За замовчуванням";
-"settings_chat_wallpaper_reset_all_alert" = "Скидає всі шпалери, які було встановлено для діалогу, до вищезазначеного параметра. Цю дію скасувати не можна.";
-
-"settings_chat_bigger_emojis" = "Великі емодзі";
-"settings_chat_send_message_feedback" = "Тактильний зворотний зв’язок після надсилання";
-
-// Media
-"settings_media_autosave_private_footer" = "Медіафайли отримані в приватних чатах не будуть зберігатися автоматично.";
 
 // Sentry
 "sentry_crash_send_title" = "Аварійне завершення роботи %@";
@@ -1162,8 +1229,6 @@
 "sentry_crash_send_yes" = "Надіслати анонімний звіт";
 "sentry_crash_send_no" = "Не надсилати";
 "sentry_crash_comment_placeholder" = "Звіт про аварійне завершення роботи";
-
-
 
 // My profile
 "profile_share_id_text" = "Мій Threema ID";
@@ -1177,73 +1242,22 @@
 "my_profile_delete_bullet_linked" = "Прив’язані номер телефону та / або електронна пошта";
 
 "my_profile_delete_info_title" = "Видалити ID і дані";
-"my_profile_delete_info_keep" = "Нижчезазначені дані придатні для використання, і не будуть видалені:";
-"my_profile_delete_info_delete" = "Нижчезазначені дані буде видалено із цього пристрою:";
-"my_profile_delete_info_toggle" = "Видалити все";
+"my_profile_delete_info_keep" = "Ваш ідентифікатор Threema не буде відкликано. Якщо ви створили резервну копію Threema Safe або експортували свій ідентифікатор, ви можете відновити його на іншому пристрої.";
+"my_profile_delete_info_delete" = "Усі ваші дані Threema буде видалено з цього пристрою:";
+"my_profile_delete_info_toggle" = "Видалити все остаточно";
 
-"my_profile_delete_info_button_data" = "Видалити дані";
-"my_profile_delete_info_button_revoke" = "Видалити ID і дані";
-
-"my_profile_delete_identity_title" = "Видалити діалоги й профіль?";
-"my_profile_delete_identity_keep" = "Ви збережете:";
-"my_profile_delete_identity_remove" = "Це видалить із цього пристрою таке:";
-"my_profile_delete_identity_delete" = "Видалити діалоги й профіль";
-
-"my_profile_delete_identity_view_alert_title" = "Цю дію неможливо скасувати. Справді продовжити?";
-"my_profile_delete_identity_view_alert_confirm" = "Видалити дані";
-
-"my_profile_revoke_identity_view_title" = "Видалити все?";
-"my_profile_revoke_info_delete" = "Ви назавжди видалите таке:";
-"my_profile_revoke_identity_view_info" = "Попередження! Цю дію не можна скасувати!";
+"my_profile_revoke_identity_view_title" = "Видалити ID і дані?";
+"my_profile_revoke_info_delete" = "Усі ваші дані Threema буде видалено з цього пристрою:";
 "my_profile_revoke_identity_view_enter_id" = "Введіть свій Threema ID \"%@\", щоб підтвердити видалення всього:";
 "my_profile_revoke_identity_view_placeholder" = "Ваш Threema ID";
-"my_profile_revoke_identity_view_button_revoke" = "Видалити все";
+"my_profile_revoke_identity_view_button_revoke" = "Видалити ID і дані";
 
-"my_profile_delete_identity_summary_view_delete_title" = "Діалоги й профіль видалено";
-"my_profile_delete_identity_summary_view_revoke_title" = "Усе видалено";
-"my_profile_delete_identity_summary_view_delete_success" = "Ви видалили таке із цього пристрою:";
-"my_profile_delete_identity_summary_view_revoke_success" = "Ви видалили таке:";
 "my_profile_delete_identity_summary_view_restart" = "Перезапустіть застосунок, щоб продовжити використовувати його.";
 "my_profile_delete_identity_summary_view_close" = "Закрити застосунок";
 
 // File message
 "optional_caption" = "Підпис за бажанням";
 "send_as_file" = "Надіслати в оригінальному стані";
-
-// Notification settings
-"settings_notifications_inapp_section" = "У застосунку";
-"settings_notifications_inapp_sounds" = "Звуки в застосунку";
-"settings_notifications_inapp_vibrate" = "Вібрація в застосунку";
-"settings_notifications_inapp_preview" = "Попередній перегляд повідомлення";
-"settings_notifications_push_section" = "Push-сповіщення";
-"settings_notifications_push_sound" = "Звук";
-"settings_notifications_push_groupsound" = "Звук групи";
-"settings_notifications_push_preview" = "Попередній перегляд повідомлення";
-"settings_notifications_masterDnd_section_header" = "Політика годин тиші";
-"settings_notifications_masterDnd" = "Не турбувати під час годин тиші";
-"settings_notifications_masterDnd_section_footer" = "Заблокувати сповіщення та відхиляти дзвінки не у робочий час.";
-"settings_notifications_masterDnd_workingDays" = "Робочі дні";
-"settings_notifications_masterDnd_startTime" = "Початок робочого дня";
-"settings_notifications_masterDnd_endTime" = "Кінец робочого дня";
-"settings_notification_iOS_settings" = "Системні налаштування";
-
-"settings_notification_type_preview_title" = "Push-сповіщення";
-"settings_notification_type_preview_description" = "Укажіть, яку інформацію потрібно включати в push-сповіщення для вхідних повідомлень Threema.";
-
-"settings_notification_type_preview_restrictive_title" = "Показувати прізвисько";
-"settings_notification_type_preview_restrictive_description" = "Показується лише прізвисько контакта.";
-"settings_notification_type_preview_restrictive_sender_name" = "~Джон";
-
-"settings_notification_type_preview_balanced_title" = "Показувати ім’я";
-"settings_notification_type_preview_balanced_description" = "Показується повне ім’я контакта (параметр за замовчуванням).";
-"settings_notification_type_preview_balanced_sender_name" = "Джон Сміт";
-
-"settings_notification_type_preview_complete_title" = "Показувати ім’я і зображення профілю";
-"settings_notification_type_preview_complete_description" = "Показується повне ім’я і зображення профілю контакта. Операційній системі надається певна інформація, що стосується взаємодії. [Докладніше…](%@)";
-"settings_notification_type_preview_complete_sender_name" = "Джон Сміт";
-
-"settings_notification_type_preview_message_text" = "Приклад повідомлення…";
-"settings_notification_type_preview_no_button" = "Вимкнути push-сповіщення";
 
 // Orphaned files delete
 "settings_orphaned_files_description" = "Під час видалення даних через Керування сховищем у попередніх версіях %@, траплялись рідкі випадки того, що файли не видалялись, а переміщувались до %@.
@@ -1265,22 +1279,6 @@
 "settings_orphaned_files_bin_delete_conformation" = "Бажаєте остаточно видалити загублені файли? Цю дію неможливо скасувати.";
 "settings_orphaned_files_log_title" = "ФАЙЛИ ЖУРНАЛІВ";
 "settings_orphaned_files_log_all_files_button" = "Внести файли до журналу відладки";
-
-// Threema calls settings
-"settings_threema_calls_enable_calls" = "Увімкнути виклики Threema";
-"settings_threema_calls_always_relay_calls" = "Завжди ретранслювати виклики";
-"settings_threema_calls_callkit" = "Показувати виклики у iOS";
-"settings_threema_calls_video_section" = "Відеовиклики";
-"settings_threema_calls_allow_video_calls" = "Дозволити відеовиклики";
-"settings_threema_calls_video_quality_profile" = "Бажана якість відео";
-"settings_threema_calls_video_quality_profile_low" = "Низьке споживання даних";
-"settings_threema_calls_video_quality_profile_max" = "Максимальна якість";
-"settings_threema_calls_video_quality_profile_auto" = "Збалансовано (рекомендується)";
-"settings_threema_calls_video_quality_profile_low_description" = "Зменшена якість відео для низького споживання даних";
-"settings_threema_calls_video_quality_profile_max_description" = "Увага: може викликати високе споживання даних, зокрема у стільниковій мережі!";
-"settings_threema_calls_video_quality_profile_auto_description" = "Висока якість відео у Wi-Fi мережі, зменшене споживання даних у стільниковій мережі";
-"settings_threema_calls_video_quality_profile_footer" = "Фактична якість відео залежить від мережі та налаштувань вашого співрозмовника.";
-"settings_threema_calls_call_sound" = "Звук";
 
 // Media Preview
 "loading_video_failed" = "Не вдалось завантажити відео. Будь ласка, перезапустіть застосунок та спробуйте знов.";
@@ -1313,8 +1311,6 @@
 "sending_item" = "Надсилання елементу";
 "send_as_file_title" = "Тип надсилання";
 "document" = "Документ";
-"paste_create_file_failure_title" = "Не вдалось вставити";
-"paste_create_file_failure_message" = "Не вдалось вставити файл. Будь ласка, спробуйте знов.";
 "loading_files_takes_time_title" = "Завантаження медіа";
 "loading_files_takes_time_description" = "Конвертація відео може зайняти декілька хвилин.";
 "pasteErrorMessageTitle" = "Не вдалось вставити";
@@ -1360,8 +1356,6 @@
 "ballot_allDay_switch" = "Увесь день";
 
 "ballot_choose_title" = "Обрати опитування";
-"ballot_closed_cell_title" = "Результати опитування";
-"ballot_new_cell_title" = "Нове опитування";
 "ballot_description_intermediate" = "Увімкніть можливість усім учасникам бачити результати незавершеного опитування. В іншому випадку результати не показуватимуться допоки опитування не завершене.";
 "ballot_description_multiplechoice" = "Вкажіть, чи зможуть учасники опитування обирати один варіант або декілька.";
 
@@ -1473,10 +1467,6 @@
 
 // ChatDetailView
 "detailView_title" = "Деталі повідомлення";
-"detailView_sent" = "Надіслано";
-"detailView_delivered" = "Доставлено";
-"detailView_read" = "Прочитано";
-"detailView_ackd" = "Підтверджено";
 "detailView_messageID" = "Ідентифікатор повідомлення";
 "detailView_group_acknowledged" = "Прийнято (%d)";
 "detailView_group_declined" = "Не прийнято (%d)";
@@ -1534,6 +1524,12 @@
 "notification_caption_too_long" = "Підпис задовгий";
 
 "notification_updateworkdata_failed" = "Не вдалося синхроніхуватись із сервером";
+
+"notification_empty_debug_log_success" = "Журнал налагодження очищено";
+
+"notification_flush_message_queue_succeeded" = "Чергу повідомлень очищено";
+
+"notification_reregister_notifications_successed" = "Push-сповіщення зареєстровано повторно";
 
 // Forward security status messages
 "forward_security_message_without" = "Отримано повідомлення без функції «Цілковита пряма секретність» (PFS). Перевірте, чи одержувач навмисно вимкнув PFS.";
@@ -1683,3 +1679,7 @@
 "alert_no_access_message_microphone" = "Відкрийте налаштування iOS і надайте доступ до мікрофона.";
 
 "alert_no_access_open_settings" = "Відкрийте налаштування";
+
+"alert_biometrics_changed_title_touch" = "Виявлено можливу зміну в TouchID";
+"alert_biometrics_changed_title_face" = "Виявлено можливу зміну в FaceID";
+"alert_biometrics_changed_message" = "Введіть свій код доступу Threema один раз, щоб і надалі використовувати біометричну автентифікацію для розблокування Threema.";

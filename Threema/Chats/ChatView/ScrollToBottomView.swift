@@ -99,8 +99,9 @@ final class ScrollToBottomView: UIView {
         
         if let unreadMessagesState = unreadMessagesSnapshot.unreadMessagesState,
            unreadMessagesState.numberOfUnreadMessages == 0 {
-            // This avoids a weird animation where the width of the view will change. It is caused by the the subscription to `unreadMessagesSnapshot.$unreadMessagesState` which
-            // will get the state only after the view was initially shown.
+            // This avoids a weird animation where the width of the view will change. It is caused by the the
+            // subscription to `unreadMessagesSnapshot.$unreadMessagesState` which will get the state only after the
+            // view was initially shown.
             hideUnreadCount(animated: false)
         }
         
@@ -108,10 +109,10 @@ final class ScrollToBottomView: UIView {
             .debounce(for: .milliseconds(Config.dataUpdateDebounce), scheduler: processingQueue)
             .receive(on: DispatchQueue.main)
             .sink { [weak self] unreadMessagesState in
-                if let unreadMessagesState = unreadMessagesState, unreadMessagesState.numberOfUnreadMessages <= 0 {
+                if let unreadMessagesState, unreadMessagesState.numberOfUnreadMessages <= 0 {
                     self?.hideUnreadCount()
                 }
-                else if let unreadMessagesState = unreadMessagesState {
+                else if let unreadMessagesState {
                     self?.unreadCountLabel.text = "\(unreadMessagesState.numberOfUnreadMessages)"
                     self?.showUnreadCount()
                 }

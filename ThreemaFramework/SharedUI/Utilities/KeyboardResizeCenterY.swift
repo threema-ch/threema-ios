@@ -82,7 +82,7 @@ public class KeyboardResizeCenterY {
     }
     
     @objc func keyboardWillHide(notification: NSNotification) {
-        if let offsetCenterY = offsetCenterY {
+        if let offsetCenterY {
             parentView.removeConstraint(offsetCenterY)
         }
         parentView.addConstraint(defaultCenterY)

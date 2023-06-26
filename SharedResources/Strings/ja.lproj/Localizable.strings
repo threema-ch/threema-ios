@@ -84,8 +84,6 @@
 "error_abort" = "重大なエラー";
 "qr_code" = "QRコード";
 "forward" = "転送";
-"showNext" = "その他の選択肢";
-"showPrevious" = "前方の選択肢";
 "read" = "既読";
 "unread" = "未読";
 "settings" = "設定";
@@ -283,7 +281,6 @@
 "messages_delete_all_confirm_message" = "これにはすべての写真と動画、文書が含まれます。";
 "messages_delete_selected_confirm" = "この端末から選択したメッセージを削除しますか？";
 "conversation_delete_confirm" = "この端末からこのトークを削除しますか？";
-"delete_all" = "すべて削除";
 "delete_n" = "削除 (%d)";
 
 "message_cannot_play_movie" = "動画の再生ができません。";
@@ -402,8 +399,6 @@
 "msg_unknown_group_request_sync_x_title" = "未知のグループからメッセージがあります";
 "msg_unknown_group_request_sync_x_message" = "未知のグループのメッセージを受信しました。グループの情報は、グループ作成者（%@）に要求されています。グループは作成者が再びオンラインになり次第、表示されます。";
 
-"chat_search_label_format" = "%ld件（全%ld件）のメッセージ";
-"load_earlier_messages" = "前のメッセージの読み込み";
 "tap_to_cancel" = "タップしてキャンセル";
 "previous" = "前";
 "tap_to_change" = "タップして変更";
@@ -439,17 +434,9 @@
 /* Settings */
 "show_stale_contacts_on" = "非アクティブなThreema ID（3ヶ月以上使用されていないID）や失効したIDは非表示になります。";
 "show_stale_contacts_off" = "すべてのThreema IDがコンタクトリストに表示されます。";
-"hide_voip_call_ip_off" = "可能であれば直接接続し、検証されていない連絡先への電話はThreemaサーバーを介してのみ中継してください。これにより、IPアドレスが公開される可能性があります。";
-"hide_voip_call_ip_on" = "全ての通話をThreemaサーバーに中継し、IPアドレスを保護します。これは通話品質に影響を与える可能性があります。";
-"onprem_hide_voip_call_ip_off" = "可能であれば直接接続し、検証されていない連絡先への電話はOnPremサーバーを介してのみ中継してください。これにより、IPアドレスが公開される可能性があります。";
-"onprem_hide_voip_call_ip_on" = "全ての通話をOnPremサーバーに中継し、IPアドレスを保護します。これは通話品質に影響を与える可能性があります。";
-"voip_include_call_in_recents_off" = "通話はロック画面に表示されますが、電話アプリの通話リストには表示されません。";
-"voip_include_call_in_recents_on" = "通話はロック画面に表示され、電話アプリの通話リストに表示されます。iCloud Driveが有効な場合、電話アプリの通話リストはAppleのサーバーを介して同期されます。";
 
 "backgrounding_on" = "アプリがバックグラウンドに移動した後、最大30秒間接続されたままになります。";
 "backgrounding_off" = "バックグラウンドに移動するとすぐにアプリが切断されます。";
-"proximity_monitoring_off" = "近接センサーが覆われているとき、画面が暗くなりません。";
-"proximity_monitoring_on" = "音声通話中や音声メッセージの録音・再生時には、近接センサーが被ると画面が暗くなります。";
 "debug_log_clear" = "ログを消去";
 "log_empty_message" = "デバグログは空です。";
 "cannot_send_mail_message" = "この端末にはメールアカウントが設定されていません。";
@@ -667,7 +654,6 @@
 "system_message_group_avatar_changed" = "グループ写真が変更されました";
 
 /* accessibility labels */
-"send_media_or_location" = "メディアか位置情報を送信";
 "my_profilepicture" = "あなたのプロフィール画像";
 "my_threema_id" = "あなたのThreema ID";
 "edit_profile" = "ニックネームとプロフィール画像の変更";
@@ -681,7 +667,6 @@
 "go_to_position" = "で";
 "draft" = "下書き";
 "new_message_accessibility" = "新規メッセージ: ";
-"scoll_down_text" = "スクロールダウン";
 "quote_interaction_hint" = "引用されたメッセージへ飛ぶ";
 
 /* TTOpenInAppActivity */
@@ -754,9 +739,7 @@
 
 "call_voip_not_supported_title" = "Threema通話";
 "call_voip_not_supported_text" = "あなたの連絡先はThreema通話に対応していません";
-"call_contact_alert" = "%@ と通話しますか？";
 "call_contact_not_reachable" = "連絡が取れません...";
-"already_in_call" = "同時にアクティブにできる通話は1つだけです。";
 
 "call_status_idle" = "準備完了";
 "call_status_wait_ringing" = "初期化";
@@ -776,7 +759,6 @@
 "call_threema_camera_disabled_info" = "この連絡先は、最新のアプリのバージョンを使用していないか、ビデオ通話を許可していません。";
 
 "call_threema_video_in_chat_info_title" = "新規: ビデオ通話";
-"call_threema_video_in_chat_info_description" = "盗聴防止機能付きの音声通話に加え、%@はエンドツーエンドで暗号化されたビデオ通話も提供できるようになりました。";
 
 "call_threema_cellular_instead_of_wifi_title" = "モバイル回線経由での通話";
 "call_threema_cellular_instead_of_wifi_text" = "警告: この通話は、モバイルデータ通信で行われます。";
@@ -1021,7 +1003,138 @@
 "url_warning_title" = "フィッシングの警告";
 "url_warning_body" = "開こうとしているリンクのホスト名が不審です。\n\n表示されたホスト名: %@\n本当のホスト名: %@\n\nこれは、別のサイトを装ってあなたを騙そうとしている可能性があります。\n\nとにかく続けてみますか？";
 
-// Storage Management
+
+// Settings
+"settings_navbar_title" = "設定";
+"settings_list_privacy_title" = "プライバシー管理";
+"settings_list_appearance_title" = "外観";
+"settings_list_notifications_title" = "通知";
+"settings_list_chat_title" = "トーク";
+"settings_list_media_title" = "写真・動画";
+"settings_list_storage_management_title" = "ストレージ管理";
+"settings_list_passcode_lock_title" = "パスコードロック";
+"settings_threema_calls" = "Threema通話";
+"settings_list_threema_web_title" = "デスクトップ／ウェブ";
+
+"settings_list_network_title" = "ネットワークステータス";
+"settings_list_version_title" = "バージョン";
+"settings_list_settings_license_username_title" = "ライセンスユーザーネーム";
+
+"settings_list_invite_a_friend_title" = "友だちに紹介";
+"settings_list_threema_channel_title" = "Threemaチャンネル";
+
+"settings_list_support_title" = "サポート（英語）";
+"settings_list_privacy_policy_title" = "プライバシーポリシー";
+"settings_list_license_title" = "ライセンス";
+"settings_advanced" = "上級者向け";
+"settings_threema_work" = "Threema Work";
+"settings_threema_work_subtitle" = "企業向けの安全なコミュニケーションソリューション";
+"settings_feedback" = "ベータ•フィードバック";
+"settings_list_tos_title" = "利用規約";
+
+"settings_md_sync_alert_title" = "同期が失敗しました";
+
+// Privacy Settings
+"settings_privacy_contacts_header" = "連絡先";
+"settings_privacy_sync_contacts" = "連絡先を同期";
+"settings_privacy_exclusion_list" = "除外リスト";
+"settings_privacy_exclusion_list_alert_title" = "IDが短すぎます";
+"settings_privacy_exclusion_list_alert_message" = "IDを8文字以上にしてください";
+"settings_privacy_block_unknown" = "未知の連絡先をブロック";
+"settings_privacy_block_unknown_footer_on"= "あなたの連絡先リストに登録されている人だけが、あなたにメッセージを送ることができます。";
+"settings_privacy_block_unknown_foooter_off" = "誰でもあなたにメッセージを送ることができます。新しい連絡先は、最初のメッセージが届いたときに自動的に追加されます。";
+
+"settings_privacy_os_header" = "iOSインテグレーション";
+"settings_privacy_os_donate" = "インタラクションを共有";
+"settings_privacy_os_reset" = "インタラクションをリセット";
+"settings_privacy_os_footer" = "オンにすると、iOSでコンテンツを共有する際にThreemaの連絡先が提案されるようになります。インタラクションを共有することで、iOSに情報が公開されます。";
+
+"settings_privacy_chat_header" = "トーク";
+"settings_privacy_read_receipts" = "既読";
+"settings_privacy_typing_indicator" = "入力中アイコン";
+
+"settings_privacy_TIRR_reset_all" = "すべての連絡先をリセット";
+"settings_privacy_TIRR_reset_footer" = "すべての連絡先をデフォルト設定にリセットします。";
+"settings_privacy_TIRR_reset_alert_title" = "リセット";
+"settings_privacy_TIRR_reset_alert_message" = "すべての連絡先をデフォルト設定にリセットします。この操作は元に戻すことができません。";
+"settings_privacy_TIRR_reset_alert_action" = "すべてリセット";
+
+"settings_privacy_choose_poi" = "POIsを選ぶ";
+"settings_privacy_hide_private_chats" = "プライベートトークを隠す";
+"settings_privacy_hide_private_chats_footer" = "トークの概要ですべてのプライベートトークを非表示にします。この設定を有効にするには、パスコードを設定する必要があります。";
+
+// Appearance Settings
+"settings_appearance_theme_section" = "デザインテーマ";
+"settings_appearance_light_theme" = "ライト";
+"settings_appearance_dark_theme" = "ダーク";
+"settings_appearance_system_theme" = "システム";
+"settings_appearance_theme_selected" = "%@テーマがアクティブ";
+"settings_appearance_theme_active" = "アクティブ";
+"settings_appearance_hide_app_icon" = "アプリアイコン";
+"settings_appicon_default_header" = "デフォルトのアイコン";
+"settings_appicon_legacy_header" = "Threemaのアイコン";
+"settings_appicon_special_header" = "特別なアイコン";
+"settings_appearance_hide_stale_contacts" = "有効でないIDを非表示にする";
+"settings_appearance_show_profile_pictures" = "プロフィール写真を表示";
+"settings_appearance_display_order" = "表示順序";
+"settings_appearance_show_gallery_preview" = "ショーギャラリープレビュー";
+
+// Notification Settings
+"settings_notifications_inapp_section" = "アプリ内";
+"settings_notifications_inapp_sounds" = "アプリ内のサウンド";
+"settings_notifications_inapp_vibrate" = "アプリ内のバイブレーション";
+"settings_notifications_inapp_preview" = "メッセージのプレビューを表示";
+"settings_notifications_push_section" = "プッシュ通知";
+"settings_notifications_push_sound" = "通知音";
+"settings_notifications_push_groupsound" = "グループ通知音";
+"settings_notifications_push_preview" = "メッセージのプレビューを表示";
+"settings_notifications_masterDnd_section_header" = "営業時間外ポリシー";
+"settings_notifications_masterDnd" = "営業時間外のDo Not Disturb";
+"settings_notifications_masterDnd_section_footer" = "通知を無効にして、勤務時間外の電話を拒否することができます。";
+"settings_notifications_masterDnd_workingDays" = "営業日";
+"settings_notifications_masterDnd_startTime" = "労働時間の開始";
+"settings_notifications_masterDnd_endTime" = "就業時間の終了";
+"settings_notification_iOS_settings" = "システム設定";
+
+"settings_notification_type_preview_title" = "プッシュ通知";
+"settings_notification_type_preview_description" = "Threemaのメッセージ受信時のプッシュ通知に含める情報を選択します。";
+
+"settings_notification_type_preview_restrictive_title" = "ニックネームを表示";
+"settings_notification_type_preview_restrictive_description" = "連絡先のニックネームのみを表示します。";
+"settings_notification_type_preview_restrictive_sender_name" = "~John";
+
+"settings_notification_type_preview_balanced_title" = "氏名を表示";
+"settings_notification_type_preview_balanced_description" = "連絡先のフルネームを表示します（デフォルト）。";
+"settings_notification_type_preview_balanced_sender_name" = "John Smith";
+
+"settings_notification_type_preview_complete_title" = "氏名とプロフィール画像を表示";
+"settings_notification_type_preview_complete_description" = "連絡先のフルネームとプロフィール画像を表示します。インタラクションに関する一部の情報は、オペレーティングシステムと共有されます。［詳細…］（%@）";
+"settings_notification_type_preview_complete_sender_name" = "John Smith";
+
+"settings_notification_type_preview_message_text" = "メッセージの例...";
+"settings_notification_type_preview_no_button" = "プッシュ通知を無効にする";
+
+// Chat Settings
+"settings_chat_wallpaper_title" = "壁紙";
+"settings_chat_wallpaper_reset" = "壁紙をすべてリセット";
+"settings_chat_wallpaper_empty" = "なし";
+"settings_chat_wallpaper_custom" = "カスタム";
+"settings_chat_wallpaper_default" = "デフォルト";
+"settings_chat_wallpaper_reset_all_alert" = "チャットに個別で設定した壁紙をすべて上で選択したものに変更します。元に戻すことはできません。";
+
+"settings_chat_bigger_emojis" = "絵文字を大きく表示";
+/* Chat Settings */
+"settings_chat_send_message_feedback_label" = "送信時の触覚フィードバック";
+
+// Media Settings
+"settings_media_title" = "写真・動画";
+"settings_media_image_size_title" = "画像サイズ";
+"settings_media_video_quality_title" = "動画画質";
+"settings_media_autosave_title" = "\"写真 \"アプリでメディアを自動保存";
+/* Media */
+"settings_media_autosave_private_footer" = "プライベートチャットで受信したメディアは、自動保存されません。";
+
+// Storage Management Settings
 "storage_management" = "ストレージ管理";
 "storage_total" = "ディスクの総容量";
 "storage_total_in_use" = "使用済み";
@@ -1063,97 +1176,51 @@
 "messages" = "トーク";
 "files" = "データ";
 
+// Call Settings
+"settings_threema_calls_enable_calls" = "Threema通話を有効にする";
+"settings_threema_calls_always_relay_calls" = "常にサーバーを経由して通話する";
+"settings_threema_calls_callkit" = "iOSに通話を組み込む";
+"settings_threema_calls_video_section" = "ビデオ通話";
+"settings_threema_calls_allow_video_calls" = "ビデオ通話を有効にする";
+"settings_threema_calls_video_quality_profile" = "優先する画質";
+"settings_threema_calls_video_quality_profile_low" = "少ないデータの消費";
+"settings_threema_calls_video_quality_profile_max" = "最大の画質";
+"settings_threema_calls_video_quality_profile_auto" = "いい塩梅に(おすすめ)";
+"settings_threema_calls_video_quality_profile_low_description" = "画質を落としてデータ消費量を削減";
+"settings_threema_calls_video_quality_profile_max_description" = "注意: 多くのデータ消費量がモバイルデータ通信で起きる可能性があります！";
+"settings_threema_calls_video_quality_profile_auto_description" = "Wi-Fiでは高画質、モバイル通信でデータ消費量削減";
+"settings_threema_calls_video_quality_profile_footer" = "実際の画質は、ネットワークや相手の設定によって異なります。";
+"settings_threema_calls_call_sound" = "通知音";
+"settings_threema_calls_hide_voip_call_ip_footer_off" = "可能であれば直接接続し、検証されていない連絡先への電話はThreemaサーバーを介してのみ中継してください。これにより、IPアドレスが公開される可能性があります。";
+"settings_threema_calls_hide_voip_call_ip_footer_on" = "全ての通話をThreemaサーバーに中継し、IPアドレスを保護します。これは通話品質に影響を与える可能性があります。";
+"settings_threema_calls_onprem_hide_voip_call_ip_footer_off" = "可能であれば直接接続し、検証されていない連絡先への電話はOnPremサーバーを介してのみ中継してください。これにより、IPアドレスが公開される可能性があります。";
+"settings_threema_calls_onprem_hide_voip_call_ip_footer_on" = "全ての通話をOnPremサーバーに中継し、IPアドレスを保護します。これは通話品質に影響を与える可能性があります。";
+"settings_threema_voip_include_call_in_recents_footer_off" = "通話はロック画面に表示されますが、電話アプリの通話リストには表示されません。";
+"settings_threema_voip_include_call_in_recents_footer_on" = "通話はロック画面に表示され、電話アプリの通話リストに表示されます。iCloud Driveが有効な場合、電話アプリの通話リストはAppleのサーバーを介して同期されます。";
 
-// Settings
-"settings_privacy" = "プライバシー管理";
-"settings_appearance" = "外観";
-"settings_notification" = "通知";
-"settings_chat" = "トーク";
-"settings_media" = "写真・動画";
-"settings_storage_management" = "ストレージ管理";
-"settings_passcode_lock" = "パスコードロック";
-"settings_threema_calls" = "Threema通話";
-"settings_threema_web" = "デスクトップ／ウェブ";
-"settings_network_status" = "ネットワークステータス";
-"settings_version" = "バージョン";
-"settings_license_username" = "ライセンスユーザーネーム";
-"settings_invite_a_friend" = "友だちに紹介";
-"settings_threema_channel" = "Threemaチャンネル";
-"settings_support" = "サポート（英語）";
-"settings_privacy_policy" = "プライバシーポリシー";
-"settings_license" = "ライセンス";
-"settings_advanced" = "上級者向け";
-"settings_threema_work" = "Threema Work";
-"settings_threema_work_subtitle" = "企業向けの安全なコミュニケーションソリューション";
-"settings_feedback" = "ベータ•フィードバック";
-"tos_cell_title" = "利用規約";
+// Advanced Settings
+"settings_advanced_networking_section_header" = "ネットワーキング";
+"settings_advanced_ipv6_title" = "IPv6";
 
-"settings_advanced_flush_message_queue" = "メッセージキューのフラッシュ処理";
+"settings_advanced_proximity_monitoring_section_header" = "センサー";
+"settings_advanced_proximity_monitoring_title" = "プロキシミティモニタリング";
+"settings_advanced_proximity_monitoring_section_footer_off" = "近接センサーが覆われているとき、画面が暗くなりません。";
+"settings_advanced_proximity_monitoring_section_footer_on" = "音声通話中や音声メッセージの録音・再生時には、近接センサーが被ると画面が暗くなります。";
+
+"settings_advanced_debug_log_section_header" = "デバグログ";
+"settings_advanced_debug_log_title" = "デバッグログ";
+"settings_advanced_debug_log_size_title" = "ログサイズ";
+"settings_advanced_debug_log_share_title" = "ログを共有";
+"settings_advanced_debug_log_clear_log_title" = "ログをクリア";
+
+"settings_advanced_other_section_header" = "その他";
+"settings_advanced_webrtc_diagnostics_title" = "WebRTC診断機能";
 "settings_advanced_orphaned_files_cleanup" = "オーファンファイルの削除";
+"settings_advanced_flush_message_queue" = "メッセージキューのフラッシュ処理";
+
 "settings_advanced_reregister_push_notifications_header_title" = "プッシュ通知";
 "settings_advanced_reregister_push_notifications_footer_title" = "受信したメッセージがアプリ外に通知として表示されない場合は、通知を再登録することができます。";
 "settings_advanced_reregister_notifications_label" = "プッシュ通知を再登録";
-
-"settings_md_sync_alert_title" = "同期が失敗しました";
-
-// Privacy
-"settings_privacy_contacts_header" = "連絡先";
-"settings_privacy_sync_contacts" = "連絡先を同期";
-"settings_privacy_exclusion_list" = "除外リスト";
-"settings_privacy_exclusion_list_alert_title" = "IDが短すぎます";
-"settings_privacy_exclusion_list_alert_message" = "IDを8文字以上にしてください";
-"settings_privacy_block_unknown" = "未知の連絡先をブロック";
-"settings_privacy_block_unknown_footer_on"= "あなたの連絡先リストに登録されている人だけが、あなたにメッセージを送ることができます。";
-"settings_privacy_block_unknown_foooter_off" = "誰でもあなたにメッセージを送ることができます。新しい連絡先は、最初のメッセージが届いたときに自動的に追加されます。";
-
-"settings_privacy_os_header" = "iOSインテグレーション";
-"settings_privacy_os_donate" = "インタラクションを共有";
-"settings_privacy_os_reset" = "インタラクションをリセット";
-"settings_privacy_os_footer" = "オンにすると、iOSでコンテンツを共有する際にThreemaの連絡先が提案されるようになります。インタラクションを共有することで、iOSに情報が公開されます。";
-
-"settings_privacy_chat_header" = "トーク";
-"settings_privacy_read_receipts" = "既読";
-"settings_privacy_typing_indicator" = "入力中アイコン";
-
-"settings_privacy_TIRR_reset_all" = "すべての連絡先をリセット";
-"settings_privacy_TIRR_reset_footer" = "すべての連絡先をデフォルト設定にリセットします。";
-"settings_privacy_TIRR_reset_alert_title" = "リセット";
-"settings_privacy_TIRR_reset_alert_message" = "すべての連絡先をデフォルト設定にリセットします。この操作は元に戻すことができません。";
-"settings_privacy_TIRR_reset_alert_action" = "すべてリセット";
-
-"settings_privacy_choose_poi" = "POIsを選ぶ";
-"settings_privacy_hide_private_chats" = "プライベートトークを隠す";
-"settings_privacy_hide_private_chats_footer" = "トークの概要ですべてのプライベートトークを非表示にします。この設定を有効にするには、パスコードを設定する必要があります。";
-
-// Appearance
-"settings_appearance_theme_section" = "デザインテーマ";
-"settings_appearance_light_theme" = "ライト";
-"settings_appearance_dark_theme" = "ダーク";
-"settings_appearance_system_theme" = "システム";
-"settings_appearance_theme_selected" = "%@テーマがアクティブ";
-"settings_appearance_theme_active" = "アクティブ";
-"settings_appearance_hide_app_icon" = "アプリアイコン";
-"settings_appicon_default_header" = "デフォルトのアイコン";
-"settings_appicon_legacy_header" = "Threemaのアイコン";
-"settings_appicon_special_header" = "特別なアイコン";
-"settings_appearance_hide_stale_contacts" = "有効でないIDを非表示にする";
-"settings_appearance_show_profile_pictures" = "プロフィール写真を表示";
-"settings_appearance_display_order" = "表示順序";
-"settings_appearance_show_gallery_preview" = "ショーギャラリープレビュー";
-
-// Chat Settings
-"settings_chat_wallpaper_title" = "壁紙";
-"settings_chat_wallpaper_reset" = "壁紙をすべてリセット";
-"settings_chat_wallpaper_empty" = "なし";
-"settings_chat_wallpaper_custom" = "カスタム";
-"settings_chat_wallpaper_default" = "デフォルト";
-"settings_chat_wallpaper_reset_all_alert" = "チャットに個別で設定した壁紙をすべて上で選択したものに変更します。元に戻すことはできません。";
-
-"settings_chat_bigger_emojis" = "絵文字を大きく表示";
-"settings_chat_send_message_feedback" = "送信時の触覚フィードバック";
-
-// Media
-"settings_media_autosave_private_footer" = "プライベートチャットで受信したメディアは、自動保存されません。";
 
 // Sentry
 "sentry_crash_send_title" = "%@ 予期せずに終了";
@@ -1161,8 +1228,6 @@
 "sentry_crash_send_yes" = "匿名レポートを送信";
 "sentry_crash_send_no" = "送信しない";
 "sentry_crash_comment_placeholder" = "クラッシュレポート";
-
-
 
 // My profile
 "profile_share_id_text" = "自分のThreema ID";
@@ -1180,69 +1245,18 @@
 "my_profile_delete_info_delete" = "以下のデータは削除されます。";
 "my_profile_delete_info_toggle" = "すべて削除";
 
-"my_profile_delete_info_button_data" = "データを削除";
-"my_profile_delete_info_button_revoke" = "IDとデータを削除";
-
-"my_profile_delete_identity_title" = "トーク履歴とプロフィールを削除しますか？";
-"my_profile_delete_identity_keep" = "次のデータは残ります。";
-"my_profile_delete_identity_remove" = "このデバイスから消去しようとしています：";
-"my_profile_delete_identity_delete" = "トーク履歴とプロフィールを削除";
-
-"my_profile_delete_identity_view_alert_title" = "この操作を元に戻すことはできません。\n続行してもよろしいですか？";
-"my_profile_delete_identity_view_alert_confirm" = "データを削除";
-
 "my_profile_revoke_identity_view_title" = "すべて削除しますか？";
 "my_profile_revoke_info_delete" = "永久に削除します：";
-"my_profile_revoke_identity_view_info" = "警告：この操作を元に戻すことはできません。";
 "my_profile_revoke_identity_view_enter_id" = "すべて確実に削除するために、Threema ID「%@」を入力してください：";
 "my_profile_revoke_identity_view_placeholder" = "あなたのThreema ID";
 "my_profile_revoke_identity_view_button_revoke" = "すべて削除";
 
-"my_profile_delete_identity_summary_view_delete_title" = "トーク履歴とプロフィールを削除しました";
-"my_profile_delete_identity_summary_view_revoke_title" = "すべて削除されました";
-"my_profile_delete_identity_summary_view_delete_success" = "このデバイスから正常に消去しました：";
-"my_profile_delete_identity_summary_view_revoke_success" = "正常に削除しました：";
 "my_profile_delete_identity_summary_view_restart" = "引き続き使用するには、アプリを再起動してください。";
 "my_profile_delete_identity_summary_view_close" = "アプリを閉じる";
 
 // File message
 "optional_caption" = "キャプションの追加（任意）";
 "send_as_file" = "元のファイルを送信";
-
-// Notification settings
-"settings_notifications_inapp_section" = "アプリ内";
-"settings_notifications_inapp_sounds" = "アプリ内のサウンド";
-"settings_notifications_inapp_vibrate" = "アプリ内のバイブレーション";
-"settings_notifications_inapp_preview" = "メッセージのプレビューを表示";
-"settings_notifications_push_section" = "プッシュ通知";
-"settings_notifications_push_sound" = "通知音";
-"settings_notifications_push_groupsound" = "グループ通知音";
-"settings_notifications_push_preview" = "メッセージのプレビューを表示";
-"settings_notifications_masterDnd_section_header" = "営業時間外ポリシー";
-"settings_notifications_masterDnd" = "営業時間外のDo Not Disturb";
-"settings_notifications_masterDnd_section_footer" = "通知を無効にして、勤務時間外の電話を拒否することができます。";
-"settings_notifications_masterDnd_workingDays" = "営業日";
-"settings_notifications_masterDnd_startTime" = "労働時間の開始";
-"settings_notifications_masterDnd_endTime" = "就業時間の終了";
-"settings_notification_iOS_settings" = "システム設定";
-
-"settings_notification_type_preview_title" = "プッシュ通知";
-"settings_notification_type_preview_description" = "Threemaのメッセージ受信時のプッシュ通知に含める情報を選択します。";
-
-"settings_notification_type_preview_restrictive_title" = "ニックネームを表示";
-"settings_notification_type_preview_restrictive_description" = "連絡先のニックネームのみを表示します。";
-"settings_notification_type_preview_restrictive_sender_name" = "~John";
-
-"settings_notification_type_preview_balanced_title" = "氏名を表示";
-"settings_notification_type_preview_balanced_description" = "連絡先のフルネームを表示します（デフォルト）。";
-"settings_notification_type_preview_balanced_sender_name" = "John Smith";
-
-"settings_notification_type_preview_complete_title" = "氏名とプロフィール画像を表示";
-"settings_notification_type_preview_complete_description" = "連絡先のフルネームとプロフィール画像を表示します。インタラクションに関する一部の情報は、オペレーティングシステムと共有されます。［詳細…］（%@）";
-"settings_notification_type_preview_complete_sender_name" = "John Smith";
-
-"settings_notification_type_preview_message_text" = "メッセージの例...";
-"settings_notification_type_preview_no_button" = "プッシュ通知を無効にする";
 
 // Orphaned files delete
 "settings_orphaned_files_description" = "以前のバージョンの%@では、ストレージ管理でデータを削除する際に、まれにメディアファイルが正しく削除されずに%@で削除されてしまうことがありました。
@@ -1264,22 +1278,6 @@ iTunesのバックアップを作成してから行ってください。";
 "settings_orphaned_files_bin_delete_conformation" = "orphanedとなったファイルを永久に削除したいですか？この操作は元に戻すことはできません。";
 "settings_orphaned_files_log_title" = "ログファイル";
 "settings_orphaned_files_log_all_files_button" = "ファイルをデバグログに記録";
-
-// Threema calls settings
-"settings_threema_calls_enable_calls" = "Threema通話を有効にする";
-"settings_threema_calls_always_relay_calls" = "常にサーバーを経由して通話する";
-"settings_threema_calls_callkit" = "iOSに通話を組み込む";
-"settings_threema_calls_video_section" = "ビデオ通話";
-"settings_threema_calls_allow_video_calls" = "ビデオ通話を有効にする";
-"settings_threema_calls_video_quality_profile" = "優先する画質";
-"settings_threema_calls_video_quality_profile_low" = "少ないデータの消費";
-"settings_threema_calls_video_quality_profile_max" = "最大の画質";
-"settings_threema_calls_video_quality_profile_auto" = "いい塩梅に(おすすめ)";
-"settings_threema_calls_video_quality_profile_low_description" = "画質を落としてデータ消費量を削減";
-"settings_threema_calls_video_quality_profile_max_description" = "注意: 多くのデータ消費量がモバイルデータ通信で起きる可能性があります！";
-"settings_threema_calls_video_quality_profile_auto_description" = "Wi-Fiでは高画質、モバイル通信でデータ消費量削減";
-"settings_threema_calls_video_quality_profile_footer" = "実際の画質は、ネットワークや相手の設定によって異なります。";
-"settings_threema_calls_call_sound" = "通知音";
 
 // Media Preview
 "loading_video_failed" = "動画を読み込めませんでした。アプリを再起動して再度お試しください。";
@@ -1312,8 +1310,6 @@ iTunesのバックアップを作成してから行ってください。";
 "sending_item" = "アイテムを送信中";
 "send_as_file_title" = "送信モード";
 "document" = "文書";
-"paste_create_file_failure_title" = "貼り付けに失敗しました";
-"paste_create_file_failure_message" = "ファイルの貼り付けができませんでした、もう一度試してください。";
 "loading_files_takes_time_title" = "メディアを読込中";
 "loading_files_takes_time_description" = "動画の変換には数分かかります。";
 "pasteErrorMessageTitle" = "貼り付けできませんでした";
@@ -1359,8 +1355,6 @@ iTunesのバックアップを作成してから行ってください。";
 "ballot_allDay_switch" = "終日";
 
 "ballot_choose_title" = "投票を選択";
-"ballot_closed_cell_title" = "投票結果";
-"ballot_new_cell_title" = "新しい投票";
 "ballot_description_intermediate" = "投票の中間結果を参加者全員に表示するかどうかを選択します。そうしない場合、投票が終了した後にしか結果が表示されません。";
 "ballot_description_multiplechoice" = "参加者が1つ、または複数の選択肢を選べるかどうかを決める。";
 
@@ -1472,10 +1466,6 @@ iTunesのバックアップを作成してから行ってください。";
 
 // ChatDetailView
 "detailView_title" = "メッセージ詳細";
-"detailView_sent" = "送信済み";
-"detailView_delivered" = "配信済み";
-"detailView_read" = "既読";
-"detailView_ackd" = "承認済み";
 "detailView_messageID" = "メッセージID";
 "detailView_group_acknowledged" = "同意（%d）";
 "detailView_group_declined" = "反対（%d）";
@@ -1533,6 +1523,12 @@ iTunesのバックアップを作成してから行ってください。";
 "notification_caption_too_long" = "キャプションが長すぎます";
 
 "notification_updateworkdata_failed" = "プロビジョニングサーバーとの同期に失敗しました";
+
+"notification_empty_debug_log_success" = "デバッグログが正常に空になりました";
+
+"notification_flush_message_queue_succeeded" = "メッセージキューを消去しました";
+
+"notification_reregister_notifications_successed" = "プッシュ通知を再登録しました";
 
 // Forward security status messages
 "forward_security_message_without" = "Perfect Forward Secrecyのないメッセージを受信しました。送信者がPerfect Forward Secrecyを意図的に無効にしていることを確認してください。";
@@ -1682,3 +1678,7 @@ iTunesのバックアップを作成してから行ってください。";
 "alert_no_access_message_microphone" = "端末の「設定」を開き、マイクへのアクセスを許可してください";
 
 "alert_no_access_open_settings" = "設定を開く";
+
+"alert_biometrics_changed_title_touch" = "TouchIDの変更の可能性が検出されました";
+"alert_biometrics_changed_title_face" = "FaceIDの変更の可能性が検出されました";
+"alert_biometrics_changed_message" = "生体認証によるThreemaのロック解除を継続するため、Threemaのパスコードを一度入力してください。";

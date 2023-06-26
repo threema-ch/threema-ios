@@ -31,29 +31,31 @@ import UIKit
 /// Additional features:
 /// - Badge value updates when `openBallotsCount` is updated
 ///
-/// Changing the appearance of the button and badge while tapping requires to create a container that reacts to the user interaction.
-/// We chose a UIButton subclass because it's supposed to be a button. This requires us to imitate the appearance of a `.system`
-/// `UIButton`, because we cannot subclass such a button. We imitate the appearance of a system button by applying a custom
-/// symbol configuration to the button's `imageView` and adding a custom alpha animation when highlighted (tweak by observing
-/// the behavior of default `UIBarButtonItems`). These might deviate from OS behavior in the future.
+/// Changing the appearance of the button and badge while tapping requires to create a container that reacts to the user
+/// interaction. We chose a UIButton subclass because it's supposed to be a button. This requires us to imitate the
+/// appearance of a `.system` `UIButton`, because we cannot subclass such a button. We imitate the appearance of a
+/// system button by applying a custom symbol configuration to the button's `imageView` and adding a custom alpha
+/// animation when highlighted (tweak by observing the behavior of default `UIBarButtonItems`). These might deviate from
+/// OS behavior in the future.
 ///
-/// If we have a navigation bar with custom right bar button items and the most right item uses a custom view the inset is twice of the
-/// default. This seems to be an issue since many years (at least iOS 6). This view applies a workaround when the array from
-/// `asRightBarButtonItems()` is used as `rightBarButtonItems` on the view controller's `navigationItem`. The
-/// workaround uses the fact that a standard `UIBarButtonItem` as most right item reduces the inset and a fixed spacer of 8 always
-/// leads to a space of 8 (what we want). By defining the same inset in `alignmentRectInsets` and setting
-/// `intrinsicContentSize` to our `ChatViewConfiguration.Profile.BallotButton.minimumTouchTargetWidth`
-/// minus the alignment offset our item behaves like a standard `UIBarButtonItem`.
+/// If we have a navigation bar with custom right bar button items and the most right item uses a custom view the inset
+/// is twice of the default. This seems to be an issue since many years (at least iOS 6). This view applies a workaround
+/// when the array from `asRightBarButtonItems()` is used as `rightBarButtonItems` on the view controller's
+/// `navigationItem`. The workaround uses the fact that a standard `UIBarButtonItem` as most right item reduces the
+/// inset and a fixed spacer of 8 always leads to a space of 8 (what we want). By defining the same inset in
+/// `alignmentRectInsets` and setting `intrinsicContentSize` to our
+/// `ChatViewConfiguration.Profile.BallotButton.minimumTouchTargetWidth` minus the alignment offset our item behaves
+/// like a standard `UIBarButtonItem`.
 ///
 /// **Note: This might break at any time as it depends on the behavior of spacer `UIBarButtonItem`s.**
 ///
 /// Our workaround is based on this [blogpost](https://www.matrixprojects.net/p/uibarbuttonitem-ios11/) and
 /// works at least until iOS 15.6.
 ///
-/// Alternatively a `UIView` could be used as a container for the `UIButton` and badge view. This would us allow to use the system
-/// button with its default styling. Touches could be observed adding targets to the button for the needed events. However, we found no
-/// way to synchronize the animation of the button with the badge view and the same workaround for `UIBarButtonItem`s with custom
-/// views would have to be applied.
+/// Alternatively a `UIView` could be used as a container for the `UIButton` and badge view. This would us allow to use
+/// the system button with its default styling. Touches could be observed adding targets to the button for the needed
+/// events. However, we found no way to synchronize the animation of the button with the badge view and the same
+/// workaround for `UIBarButtonItem`s with custom views would have to be applied.
 ///
 /// Another alternative could be a direct subclass of `UIControl`. This was not further investigated.
 ///
@@ -76,8 +78,8 @@ class BallotWithOpenCountButton: ThemedCodeButton {
     
     /// Ready to use right bar button items
     ///
-    /// To align the button correctly as a right bar button item in a navigation bar some tweaks are need such that the button appears
-    /// like a default bar button item.
+    /// To align the button correctly as a right bar button item in a navigation bar some tweaks are need such that the
+    /// button appears like a default bar button item.
     ///
     /// Based on [this workaround](https://www.matrixprojects.net/p/uibarbuttonitem-ios11/).
     var rightBarButtonItems: [UIBarButtonItem] {

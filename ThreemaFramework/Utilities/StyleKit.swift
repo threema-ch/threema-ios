@@ -28,7 +28,7 @@ import UIKit
 /// 2. Add generated code at the bottom
 /// 3. Create computed class variable and add it to cache after first access
 /// 4. Add variable to `debugStackView`
-@objc open class StyleKit: NSObject {
+open class StyleKit: NSObject {
     // MARK: Cache
     
     private enum Cache {
@@ -57,15 +57,13 @@ import UIKit
         static var houseIcon: UIImage?
         
         static var finger: UIImage?
-        
-        static var scrollDownButtonIcon: UIImage?
-        
+                
         static var checkedBackground: UIImage?
     }
     
     // MARK: Cache functions
     
-    @objc public class func resetCache() {
+    public class func resetCache() {
         Cache.verificationSmall0 = nil
         Cache.verificationSmall1 = nil
         Cache.verificationSmall2 = nil
@@ -91,9 +89,7 @@ import UIKit
         Cache.houseIcon = nil
         
         Cache.finger = nil
-        
-        Cache.scrollDownButtonIcon = nil
-        
+                
         Cache.checkedBackground = nil
     }
     
@@ -103,7 +99,6 @@ import UIKit
     @objc public class func resetThemedCache() {
         Cache.workIcon = nil
         Cache.houseIcon = nil
-        Cache.scrollDownButtonIcon = nil
         Cache.checkedBackground = nil
     }
         
@@ -134,7 +129,6 @@ import UIKit
             UIImageView(image: StyleKit.workIcon),
             UIImageView(image: StyleKit.houseIcon),
             UIImageView(image: StyleKit.finger),
-            UIImageView(image: StyleKit.scrollDownButtonIcon),
             UIImageView(image: StyleKit.checkedBackground),
             // Add new images above this comment
         ])
@@ -499,25 +493,6 @@ import UIKit
         UIGraphicsEndImageContext()
         
         return Cache.finger!
-    }
-    
-    // MARK: Icon for scroll to bottom button
-    
-    /// Icon for scroll to bottom button (39 x 39 pt)
-    @objc public dynamic class var scrollDownButtonIcon: UIImage {
-        if let cachedIcon = Cache.scrollDownButtonIcon {
-            return cachedIcon
-        }
-        
-        let dimensions = 39
-        UIGraphicsBeginImageContextWithOptions(CGSize(width: dimensions, height: dimensions), false, 0)
-        StyleKit.drawScrollDownButtonIcon(frame: CGRect(x: 0, y: 0, width: dimensions, height: dimensions))
-        
-        Cache.scrollDownButtonIcon = UIGraphicsGetImageFromCurrentImageContext()!
-            .resizableImage(withCapInsets: .zero, resizingMode: .stretch)
-        UIGraphicsEndImageContext()
-        
-        return Cache.scrollDownButtonIcon!
     }
     
     // MARK: Selection image for image picker
@@ -1404,166 +1379,6 @@ import UIKit
         bezier5Path.fill()
         
         context.restoreGState()
-    }
-    
-    /// Draw image for scroll back to bottom icon
-    ///
-    /// - Parameter frame: Frame of the image
-    @objc public dynamic class func drawScrollDownButtonIcon(frame: CGRect = CGRect(
-        x: 0,
-        y: 0,
-        width: 39,
-        height: 39
-    )) {
-        //// General Declarations
-        // This non-generic function dramatically improves compilation times of complex expressions.
-        func fastFloor(_ x: CGFloat) -> CGFloat { floor(x) }
-
-        //// Color Declarations
-        let chatBarBackground: UIColor = Colors.backgroundChatBar
-        let chatBarBorder: UIColor = Colors.hairLine
-        let main: UIColor = .primary
-
-        //// Subframes
-        let fullImage = CGRect(
-            x: frame.minX + fastFloor(frame.width * 0.02564 + 0.5),
-            y: frame.minY + fastFloor(frame.height * 0.02564 + 0.5),
-            width: fastFloor(frame.width * 0.97436 + 0.5) - fastFloor(frame.width * 0.02564 + 0.5),
-            height: fastFloor(frame.height * 0.97436 + 0.5) - fastFloor(frame.height * 0.02564 + 0.5)
-        )
-
-        //// fullImage
-        //// circle Drawing
-        let circlePath = UIBezierPath(ovalIn: CGRect(
-            x: fullImage.minX + fastFloor(fullImage.width * 0.00000 + 0.5),
-            y: fullImage.minY + fastFloor(fullImage.height * 0.00000 + 0.5),
-            width: fastFloor(fullImage.width * 1.00000 + 0.5) - fastFloor(fullImage.width * 0.00000 + 0.5),
-            height: fastFloor(fullImage.height * 1.00000 + 0.5) - fastFloor(fullImage.height * 0.00000 + 0.5)
-        ))
-        chatBarBackground.setFill()
-        circlePath.fill()
-        chatBarBorder.setStroke()
-        circlePath.lineWidth = 0.3
-        circlePath.stroke()
-
-        //// chevronDown Drawing
-        let chevronDownPath = UIBezierPath()
-        chevronDownPath
-            .move(to: CGPoint(
-                x: fullImage.minX + 0.50332 * fullImage.width,
-                y: fullImage.minY + 0.70531 * fullImage.height
-            ))
-        chevronDownPath.addCurve(
-            to: CGPoint(x: fullImage.minX + 0.52567 * fullImage.width, y: fullImage.minY + 0.69566 * fullImage.height),
-            controlPoint1: CGPoint(
-                x: fullImage.minX + 0.51166 * fullImage.width,
-                y: fullImage.minY + 0.70531 * fullImage.height
-            ),
-            controlPoint2: CGPoint(
-                x: fullImage.minX + 0.52000 * fullImage.width,
-                y: fullImage.minY + 0.70198 * fullImage.height
-            )
-        )
-        chevronDownPath
-            .addLine(to: CGPoint(
-                x: fullImage.minX + 0.78385 * fullImage.width,
-                y: fullImage.minY + 0.43189 * fullImage.height
-            ))
-        chevronDownPath.addCurve(
-            to: CGPoint(x: fullImage.minX + 0.79286 * fullImage.width, y: fullImage.minY + 0.41060 * fullImage.height),
-            controlPoint1: CGPoint(
-                x: fullImage.minX + 0.78952 * fullImage.width,
-                y: fullImage.minY + 0.42623 * fullImage.height
-            ),
-            controlPoint2: CGPoint(
-                x: fullImage.minX + 0.79286 * fullImage.width,
-                y: fullImage.minY + 0.41892 * fullImage.height
-            )
-        )
-        chevronDownPath.addCurve(
-            to: CGPoint(x: fullImage.minX + 0.76250 * fullImage.width, y: fullImage.minY + 0.38000 * fullImage.height),
-            controlPoint1: CGPoint(
-                x: fullImage.minX + 0.79286 * fullImage.width,
-                y: fullImage.minY + 0.39330 * fullImage.height
-            ),
-            controlPoint2: CGPoint(
-                x: fullImage.minX + 0.77985 * fullImage.width,
-                y: fullImage.minY + 0.38000 * fullImage.height
-            )
-        )
-        chevronDownPath.addCurve(
-            to: CGPoint(x: fullImage.minX + 0.74082 * fullImage.width, y: fullImage.minY + 0.38865 * fullImage.height),
-            controlPoint1: CGPoint(
-                x: fullImage.minX + 0.75416 * fullImage.width,
-                y: fullImage.minY + 0.38000 * fullImage.height
-            ),
-            controlPoint2: CGPoint(
-                x: fullImage.minX + 0.74649 * fullImage.width,
-                y: fullImage.minY + 0.38333 * fullImage.height
-            )
-        )
-        chevronDownPath
-            .addLine(to: CGPoint(
-                x: fullImage.minX + 0.50332 * fullImage.width,
-                y: fullImage.minY + 0.63080 * fullImage.height
-            ))
-        chevronDownPath
-            .addLine(to: CGPoint(
-                x: fullImage.minX + 0.26548 * fullImage.width,
-                y: fullImage.minY + 0.38865 * fullImage.height
-            ))
-        chevronDownPath.addCurve(
-            to: CGPoint(x: fullImage.minX + 0.24380 * fullImage.width, y: fullImage.minY + 0.38000 * fullImage.height),
-            controlPoint1: CGPoint(
-                x: fullImage.minX + 0.26015 * fullImage.width,
-                y: fullImage.minY + 0.38333 * fullImage.height
-            ),
-            controlPoint2: CGPoint(
-                x: fullImage.minX + 0.25247 * fullImage.width,
-                y: fullImage.minY + 0.38000 * fullImage.height
-            )
-        )
-        chevronDownPath.addCurve(
-            to: CGPoint(x: fullImage.minX + 0.21345 * fullImage.width, y: fullImage.minY + 0.41060 * fullImage.height),
-            controlPoint1: CGPoint(
-                x: fullImage.minX + 0.22645 * fullImage.width,
-                y: fullImage.minY + 0.38000 * fullImage.height
-            ),
-            controlPoint2: CGPoint(
-                x: fullImage.minX + 0.21345 * fullImage.width,
-                y: fullImage.minY + 0.39330 * fullImage.height
-            )
-        )
-        chevronDownPath.addCurve(
-            to: CGPoint(x: fullImage.minX + 0.22245 * fullImage.width, y: fullImage.minY + 0.43222 * fullImage.height),
-            controlPoint1: CGPoint(
-                x: fullImage.minX + 0.21345 * fullImage.width,
-                y: fullImage.minY + 0.41892 * fullImage.height
-            ),
-            controlPoint2: CGPoint(
-                x: fullImage.minX + 0.21678 * fullImage.width,
-                y: fullImage.minY + 0.42623 * fullImage.height
-            )
-        )
-        chevronDownPath
-            .addLine(to: CGPoint(
-                x: fullImage.minX + 0.48064 * fullImage.width,
-                y: fullImage.minY + 0.69566 * fullImage.height
-            ))
-        chevronDownPath.addCurve(
-            to: CGPoint(x: fullImage.minX + 0.50332 * fullImage.width, y: fullImage.minY + 0.70531 * fullImage.height),
-            controlPoint1: CGPoint(
-                x: fullImage.minX + 0.48697 * fullImage.width,
-                y: fullImage.minY + 0.70198 * fullImage.height
-            ),
-            controlPoint2: CGPoint(
-                x: fullImage.minX + 0.49465 * fullImage.width,
-                y: fullImage.minY + 0.70531 * fullImage.height
-            )
-        )
-        chevronDownPath.close()
-        main.setFill()
-        chevronDownPath.fill()
     }
 
     /// Draw image for image selection background

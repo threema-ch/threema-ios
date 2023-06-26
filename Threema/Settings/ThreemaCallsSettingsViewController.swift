@@ -114,17 +114,18 @@ class ThreemaCallsSettingsViewController: ThemedTableViewController {
             case 2:
                 if ThreemaApp.current == .onPrem {
                     return alwaysRelayThreemaCallsSwitch.isOn ? BundleUtil
-                        .localizedString(forKey: "onprem_hide_voip_call_ip_on") : BundleUtil
-                        .localizedString(forKey: "onprem_hide_voip_call_ip_off")
+                        .localizedString(forKey: "settings_threema_calls_onprem_hide_voip_call_ip_footer_on") :
+                        BundleUtil
+                        .localizedString(forKey: "settings_threema_calls_onprem_hide_voip_call_ip_footer_off")
                 }
                 
                 return alwaysRelayThreemaCallsSwitch.isOn ? BundleUtil
-                    .localizedString(forKey: "hide_voip_call_ip_on") : BundleUtil
-                    .localizedString(forKey: "hide_voip_call_ip_off")
+                    .localizedString(forKey: "settings_threema_calls_hide_voip_call_ip_footer_on") : BundleUtil
+                    .localizedString(forKey: "settings_threema_calls_hide_voip_call_ip_footer_off")
             case 3:
                 return includeCallsInRecentsSwitch.isOn ? BundleUtil
-                    .localizedString(forKey: "voip_include_call_in_recents_on") : BundleUtil
-                    .localizedString(forKey: "voip_include_call_in_recents_off")
+                    .localizedString(forKey: "settings_threema_voip_include_call_in_recents_footer_on") : BundleUtil
+                    .localizedString(forKey: "settings_threema_voip_include_call_in_recents_footer_off")
             case 4:
                 return enableVideoSwitch.isOn ? BundleUtil
                     .localizedString(forKey: "settings_threema_calls_video_quality_profile_footer") : nil
@@ -136,7 +137,7 @@ class ThreemaCallsSettingsViewController: ThemedTableViewController {
     }
 }
 
-private extension ThreemaCallsSettingsViewController {
+extension ThreemaCallsSettingsViewController {
     // MARK: Private functions
     
     private func setupCells() {
@@ -182,22 +183,22 @@ private extension ThreemaCallsSettingsViewController {
     
     // MARK: IBActions
     
-    @IBAction func enableThreemaCallSwitchChanged(sender: UISwitch) {
+    @IBAction private func enableThreemaCallSwitchChanged(sender: UISwitch) {
         settingsStore.enableThreemaCall = sender.isOn
         updateView()
     }
     
-    @IBAction func alwaysRelayCallsSwitchChanged(sender: UISwitch) {
+    @IBAction private func alwaysRelayCallsSwitchChanged(sender: UISwitch) {
         settingsStore.alwaysRelayCalls = sender.isOn
     }
     
-    @IBAction func includeCallsInRecentsSwitchChanged(sender: UISwitch) {
+    @IBAction private func includeCallsInRecentsSwitchChanged(sender: UISwitch) {
         UserSettings.shared().includeCallsInRecents = sender.isOn
         setupSwitches()
         tableView.reloadData()
     }
     
-    @IBAction func enableVideoCallSwitchChanged(sender: UISwitch) {
+    @IBAction private func enableVideoCallSwitchChanged(sender: UISwitch) {
         UserSettings.shared().enableVideoCall = sender.isOn
         setupSwitches()
         tableView.reloadData()

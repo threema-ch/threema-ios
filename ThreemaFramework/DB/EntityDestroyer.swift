@@ -92,8 +92,8 @@ import Foundation
         do {
             let mediaMetaInfo = try getMediaMetaInfo(messageType: messageType)
 
-            if let olderThan = olderThan {
-                if let conversation = conversation {
+            if let olderThan {
+                if let conversation {
                     mediaMetaInfo.fetchMessages.predicate = NSPredicate(
                         format: "%K != nil AND date < %@ AND conversation == %@",
                         mediaMetaInfo.relationship,
@@ -110,7 +110,7 @@ import Foundation
                 }
             }
             else {
-                if let conversation = conversation {
+                if let conversation {
                     mediaMetaInfo.fetchMessages.predicate = NSPredicate(
                         format: "%K != nil AND conversation == %@",
                         mediaMetaInfo.relationship,
@@ -175,7 +175,8 @@ import Foundation
                             objCnx.performAndWait {
                                 var updated = false
                                 
-                                // Update data reference to nil (if it failed to to be deleted when the object was deleted)
+                                // Update data reference to nil (if it failed to to be deleted when the object was
+                                // deleted)
                                 if updateMessage.value(forKey: mediaMetaInfo.relationship) != nil {
                                     updateMessage.setValue(nil, forKey: mediaMetaInfo.relationship)
                                     updated = true
@@ -231,8 +232,8 @@ import Foundation
     public func deleteMessages(olderThan: Date?, for conversation: Conversation? = nil) -> Int? {
         let fetchMessages = NSFetchRequest<NSFetchRequestResult>(entityName: "Message")
         
-        if let conversation = conversation {
-            if let olderThan = olderThan {
+        if let conversation {
+            if let olderThan {
                 fetchMessages.predicate = NSPredicate(
                     format: "date < %@ && conversation == %@",
                     olderThan as NSDate,
@@ -244,7 +245,7 @@ import Foundation
             }
         }
         else {
-            if let olderThan = olderThan {
+            if let olderThan {
                 fetchMessages.predicate = NSPredicate(format: "date < %@", olderThan as NSDate)
             }
         }
@@ -439,8 +440,8 @@ import Foundation
     
     // MARK: - Private helper methods
     
-    private func getMediaMetaInfo<T: Any>(
-        messageType: T
+    private func getMediaMetaInfo(
+        messageType: (some Any)
             .Type
     ) throws -> (fetchMessages: NSFetchRequest<NSManagedObject>, relationship: String, blobIDField: String) {
         
@@ -520,11 +521,11 @@ import Foundation
                 }
 
                 // Get external file name
-                if let filename = blobData.getExternalFilename() {
+                if let filename = blobData.blobExternalFilename {
                     externalFilenames.append(filename)
                 }
                 if includeThumbnail,
-                   let thumbnailname = blobData.getExternalFilenameThumbnail?() {
+                   let thumbnailname = blobData.blobThumbnailExternalFilename {
                     
                     externalFilenames.append(thumbnailname)
                 }

@@ -22,9 +22,10 @@ import Foundation
 
 /// Default implementation of BlobData for `thumbnailState` and `dataState`
 ///
-/// This an approximation of the information `BlobData` provides to the states of `BlobState` we'd love to observe. All information was collected from state handling
+/// This an approximation of the information `BlobData` provides to the states of `BlobState` we'd love to observe. All
+/// information was collected from state handling
 /// in the existing code.
-public extension BlobData {
+extension BlobData {
     
     // Note: This implementation only decides on states based on the information available in `BlobData`. Thus we cannot
     //       differentiate if a certain implementation of `BlobData` has a more nuanced view on these states (e.g. a
@@ -38,8 +39,8 @@ public extension BlobData {
     /// Please note that certain states cannot be reached at this point.
     /// - Incoming: `downloading`, `processing` & `noData(deleted)`
     /// - Outgoing: `noData(deleted)` & `fatalError`
-    var thumbnailState: BlobState {
-        if !blobIsOutgoing() {
+    public var thumbnailState: BlobState {
+        if !blobIsOutgoing {
             return .incoming(incomingThumbnailState)
         }
         else {
@@ -50,20 +51,20 @@ public extension BlobData {
     // This only supports: remote, processed and fatalError
     // (i.e. downloading, processing and deleted are note supported)
     private var incomingThumbnailState: IncomingBlobState {
-        if blobGetThumbnail() != nil {
+        if blobThumbnail != nil {
             return .processed
         }
         
         // We have no local thumbnail...
         
-        if blobGetThumbnailID() == nil {
+        if blobThumbnailIdentifier == nil {
             // There is no thumbnail to download (e.g. for a documents such as a PDF)
             // Alternatively it might have been deleted by the user...
             return .noData(.noThumbnail)
         }
         
         // There is only one encryption key for both blobs
-        if blobGetEncryptionKey() == nil {
+        if blobEncryptionKey == nil {
             return .fatalError(.noEncryptionKey)
         }
         
@@ -74,33 +75,33 @@ public extension BlobData {
     // delete state is not supported and there is no fatalError
     private var outgoingThumbnailState: OutgoingBlobState {
         // If is blob ID set, than must be an reflected outgoing message
-        if blobGetThumbnailID() != nil {
+        if blobThumbnailIdentifier != nil {
             // The blob for reflected outgoing file message must be downloaded
-            if blobGetThumbnail() == nil {
+            if blobThumbnail == nil {
                 return .pendingDownload(error: nil)
             }
         }
 
-        guard blobGetThumbnailID() == nil else {
+        guard blobThumbnailIdentifier == nil else {
             return .remote
         }
         
         // We have no thumbnail blob ID...
         
-        guard blobGetThumbnail() != nil else {
+        guard blobThumbnail != nil else {
             return .noData(.noThumbnail)
         }
         
         // We have a local thumbnail...
         
         // We expect the error to be reset whenever a new upload is initiated
-        if !blobGetError(), blobGetProgress() != nil {
+        if !blobError, blobProgress != nil {
             return .uploading
         }
         
         // This error might not be correctly set if app was terminated while uploading.
         // This will be resolved in `BlobManager`
-        if blobGetError() {
+        if blobError {
             return .pendingUpload(error: .uploadFailed)
         }
         
@@ -115,8 +116,8 @@ public extension BlobData {
     /// Please note that certain states cannot be reached at this point.
     /// - Incoming: `noData(.noThumbnail)`
     /// - Outgoing: `noData(.noThumbnail)`, `fatalError`
-    var dataState: BlobState {
-        if !blobIsOutgoing() {
+    public var dataState: BlobState {
+        if !blobIsOutgoing {
             return .incoming(incomingDataState)
         }
         else {
@@ -125,14 +126,14 @@ public extension BlobData {
     }
     
     private var incomingDataState: IncomingBlobState {
-        if blobGet() != nil {
+        if blobData != nil {
             return .processed
         }
         
         // We have no local data...
         
         // We expect the error to be reset whenever a new download is initiated
-        if !blobGetError(), let progress = blobGetProgress() {
+        if !blobError, let progress = blobProgress {
             if progress.floatValue < 1 {
                 return .downloading
             }
@@ -141,15 +142,15 @@ public extension BlobData {
             }
         }
         
-        if blobGetEncryptionKey() == nil, !(self is ImageMessageEntity) {
+        if blobEncryptionKey == nil, !(self is ImageMessageEntity) {
             return .fatalError(.noEncryptionKey)
         }
         
-        if blobGetError() {
+        if blobError {
             return .remote(error: .downloadFailed) // or (less likely) fatalError
         }
         
-        if blobGetID() == nil {
+        if blobIdentifier == nil {
             // Blob id is set to `nil` when media is deleted (see `EntityDestroyer`)
             return .noData(.deleted)
             // or maybe .fatalError media_file_not_found
@@ -161,36 +162,36 @@ public extension BlobData {
     // So far this has no fatalError
     private var outgoingDataState: OutgoingBlobState {
         // If is blob ID set, than must be an reflected outgoing message
-        if blobGetID() != nil {
+        if blobIdentifier != nil {
             // The blob for reflected outgoing file message must be downloaded
-            if blobGet() == nil, !blobGetError(), blobGetProgress() != nil {
+            if blobData == nil, !blobError, blobProgress != nil {
                 return .downloading
             }
 
-            guard blobGet() != nil else {
-                return .pendingDownload(error: blobGetError() ? .downloadFailed : nil)
+            guard blobData != nil else {
+                return .pendingDownload(error: blobError ? .downloadFailed : nil)
             }
         }
 
-        guard blobGetID() == nil else {
+        guard blobIdentifier == nil else {
             return .remote
         }
 
         // We have no blob ID...
                 
         // We expect the error to be reset whenever a new upload is initiated
-        if !blobGetError(), blobGetProgress() != nil {
+        if !blobError, blobProgress != nil {
             return .uploading
         }
         
         // This error might not be correctly set if app was terminated while uploading.
         // This will be resolved in `BlobManager`
-        if blobGetError() {
+        if blobError {
             return .pendingUpload(error: .uploadFailed)
         }
         
         // This might be the not persisted error
-        if blobGet() != nil {
+        if blobData != nil {
             return .pendingUpload(error: .uploadFailed)
         }
         else {

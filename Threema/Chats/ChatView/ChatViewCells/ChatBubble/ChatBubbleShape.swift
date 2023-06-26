@@ -41,8 +41,8 @@ enum ChatBubbleShape {
     
     /// Leading arrow in `frame`
     ///
-    /// This should be combined with a `roundedRect(for:)` in the same frame. Note that this overlaps the frame by ~1 pt on the leading edge so it looks visually better
-    /// when combined with the rounded rect.
+    /// This should be combined with a `roundedRect(for:)` in the same frame. Note that this overlaps the frame by ~1 pt
+    /// on the leading edge so it looks visually better when combined with the rounded rect.
     ///
     /// - Parameter frame: Frame to draw arrow for
     /// - Returns: Bezier path of arrow
@@ -104,8 +104,8 @@ enum ChatBubbleShape {
     
     /// Trailing arrow in `frame`
     ///
-    /// This should be combined with a `roundedRect(for:)` in the same frame. Note that this overlaps the frame by ~1 pt on the trailing edge so it looks visually better
-    /// when combined with the rounded rect.
+    /// This should be combined with a `roundedRect(for:)` in the same frame. Note that this overlaps the frame by ~1 pt
+    /// on the trailing edge so it looks visually better when combined with the rounded rect.
     ///
     /// - Parameter frame: Frame to draw arrow for
     /// - Returns: Bezier path of arrow

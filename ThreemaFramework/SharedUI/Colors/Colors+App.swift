@@ -20,9 +20,9 @@
 
 import Foundation
 
-public extension Colors {
+extension Colors {
     
-    @objc class var primaryWizard: UIColor {
+    @objc public class var primaryWizard: UIColor {
         switch ThreemaApp.current {
         case .threema:
             return darkColor(for: Asset.TargetColors.Threema.primary)
@@ -35,7 +35,7 @@ public extension Colors {
         }
     }
     
-    @objc class var secondary: UIColor {
+    @objc public class var secondary: UIColor {
         switch ThreemaApp.current {
         case .threema:
             return color(for: Asset.TargetColors.Threema.secondary)
@@ -48,7 +48,7 @@ public extension Colors {
         }
     }
     
-    @objc class var chatBubbleSent: UIColor {
+    @objc public class var chatBubbleSent: UIColor {
         switch ThreemaApp.current {
         case .threema:
             return color(for: Asset.TargetColors.Threema.chatBubbleSent)
@@ -61,7 +61,7 @@ public extension Colors {
         }
     }
     
-    @objc class var chatBubbleSentSelected: UIColor {
+    @objc public class var chatBubbleSentSelected: UIColor {
         switch ThreemaApp.current {
         case .threema:
             return color(for: Asset.TargetColors.Threema.chatBubbleSentSelected)
@@ -74,7 +74,7 @@ public extension Colors {
         }
     }
     
-    @objc class var chatCallButtonBubble: UIColor {
+    @objc public class var chatCallButtonBubble: UIColor {
         switch ThreemaApp.current {
         case .threema:
             return color(for: Asset.TargetColors.Threema.primary)
@@ -87,7 +87,7 @@ public extension Colors {
         }
     }
     
-    @objc class var navigationBarCall: UIColor {
+    @objc public class var navigationBarCall: UIColor {
         switch ThreemaApp.current {
         case .threema:
             return color(for: Asset.TargetColors.Threema.navigationBarCall)
@@ -100,7 +100,7 @@ public extension Colors {
         }
     }
     
-    @objc class var navigationBarWeb: UIColor {
+    @objc public class var navigationBarWeb: UIColor {
         switch ThreemaApp.current {
         case .threema:
             return color(for: Asset.TargetColors.Threema.navigationBarWeb)
@@ -113,7 +113,7 @@ public extension Colors {
         }
     }
     
-    @objc class var threemaLogo: UIImage? {
+    @objc public class var threemaLogo: UIImage? {
         var flavor = ""
         switch ThreemaApp.current {
         case .threema, .red, .workRed:
@@ -132,7 +132,7 @@ public extension Colors {
         }
     }
     
-    @objc class var backgroundContactInfoSystemMessage: UIColor {
+    @objc public class var backgroundContactInfoSystemMessage: UIColor {
         switch ThreemaApp.current {
         case .threema:
             return Colors.blue
@@ -147,7 +147,7 @@ public extension Colors {
         }
     }
     
-    @objc class var backgroundCircleButton: UIColor {
+    @objc public class var backgroundCircleButton: UIColor {
         switch theme {
         case .light, .undefined:
             switch ThreemaApp.current {
@@ -165,11 +165,11 @@ public extension Colors {
         }
     }
     
-    class var grayCircleBackground: UIColor {
+    public class var grayCircleBackground: UIColor {
         Colors.textLight
     }
     
-    class var grayCircleSymbol: UIColor {
+    public class var grayCircleSymbol: UIColor {
         switch theme {
         case .light, .undefined:
             return Asset.SharedColors.white.color
@@ -178,11 +178,11 @@ public extension Colors {
         }
     }
     
-    @objc class var threemaConsumerColor: UIColor {
+    @objc public class var threemaConsumerColor: UIColor {
         color(for: Asset.TargetColors.Threema.primary)
     }
     
-    @objc class var threemaWorkColor: UIColor {
+    @objc public class var threemaWorkColor: UIColor {
         color(for: Asset.TargetColors.ThreemaWork.primary)
     }
 }

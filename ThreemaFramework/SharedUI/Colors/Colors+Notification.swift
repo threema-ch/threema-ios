@@ -20,8 +20,8 @@
 
 import Foundation
 
-public extension Colors {
-    class var pillBackground: UIColor {
+extension Colors {
+    public class var pillBackground: UIColor {
         switch theme {
         case .light, .undefined:
             return Asset.SharedColors.white.color
@@ -30,7 +30,7 @@ public extension Colors {
         }
     }
     
-    class var pillShadow: UIColor {
+    public class var pillShadow: UIColor {
         switch theme {
         case .light, .undefined:
             return Colors.black.withAlphaComponent(0.3)
@@ -39,7 +39,7 @@ public extension Colors {
         }
     }
     
-    class var successGreen: UIColor {
+    public class var successGreen: UIColor {
         color(for: Asset.TargetColors.Threema.primary)
     }
 }

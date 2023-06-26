@@ -86,8 +86,8 @@ extension Colors {
 }
 
 // MARK: - Manual updates
-public extension Colors {
-    @objc class func updateKeyboardAppearance(for textInputTraits: UITextInputTraits) {
+extension Colors {
+    @objc public class func updateKeyboardAppearance(for textInputTraits: UITextInputTraits) {
         if let textField = textInputTraits as? UITextField {
             switch theme {
             case .light, .undefined:
@@ -122,12 +122,12 @@ public extension Colors {
         }
     }
     
-    @objc class func update(tableView: UITableView) {
+    @objc public class func update(tableView: UITableView) {
         tableView.sectionIndexColor = .primary
         tableView.separatorInsetReference = .fromAutomaticInsets
     }
     
-    @objc class func update(cell: UITableViewCell, setBackgroundColor: Bool = true) {
+    @objc public class func update(cell: UITableViewCell, setBackgroundColor: Bool = true) {
         var textColor = Colors.text
         var detailTextColor = Colors.textLight
         
@@ -154,7 +154,7 @@ public extension Colors {
     
     /// Check if a call or web session is active and return the correct appearance
     /// - Returns: Transparent or default UINavigationBarAppearance
-    class func transparentNavigationBarAppearance() -> UINavigationBarAppearance {
+    public class func transparentNavigationBarAppearance() -> UINavigationBarAppearance {
         guard !VoIPHelper.shared().isCallActiveInBackground,
               !WCSessionHelper.isWCSessionConnected else {
             let defaultAppearance = defaultNavigationBarAppearance()
@@ -167,14 +167,14 @@ public extension Colors {
         return appearance
     }
 
-    @objc class func defaultNavigationBarAppearance() -> UINavigationBarAppearance {
+    @objc public class func defaultNavigationBarAppearance() -> UINavigationBarAppearance {
         let appearance = UINavigationBarAppearance()
         appearance.configureWithDefaultBackground()
         appearance.backgroundColor = colorForNavigationBackground()
         return appearance
     }
     
-    @objc class func colorForNavigationBackground() -> UIColor? {
+    @objc public class func colorForNavigationBackground() -> UIColor? {
         if VoIPHelper.shared().isCallActiveInBackground {
             return Colors.navigationBarCall
         }
@@ -184,7 +184,7 @@ public extension Colors {
         return nil
     }
     
-    @objc class func colorForBarTint() -> UIColor? {
+    @objc public class func colorForBarTint() -> UIColor? {
         if VoIPHelper.shared().isCallActiveInBackground {
             return Colors.navigationBarCall
         }
@@ -194,7 +194,7 @@ public extension Colors {
         return Colors.backgroundNavigationController
     }
             
-    @objc class func update(navigationBar: UINavigationBar) {
+    @objc public class func update(navigationBar: UINavigationBar) {
         navigationBar.tintColor = .primary
         navigationBar.barTintColor = colorForBarTint()
 
@@ -208,7 +208,7 @@ public extension Colors {
         navigationBar.scrollEdgeAppearance = transparentNavigationBarAppearance()
     }
         
-    @objc class func update(tabBar: UITabBar) {
+    @objc public class func update(tabBar: UITabBar) {
         tabBar.tintColor = .primary
         tabBar.isTranslucent = true
         tabBar.isOpaque = false
@@ -225,12 +225,12 @@ public extension Colors {
         tabBar.scrollEdgeAppearance = tabBar.standardAppearance
     }
     
-    @objc class func update(toolBar: UIToolbar) {
+    @objc public class func update(toolBar: UIToolbar) {
         toolBar.tintColor = .primary
         toolBar.barTintColor = Colors.backgroundToolbar
     }
     
-    @objc class func update(window: UIWindow) {
+    @objc public class func update(window: UIWindow) {
         window.tintColor = .primary
         
         if !UserSettings.shared().useSystemTheme, window.overrideUserInterfaceStyle == .unspecified {
@@ -243,7 +243,7 @@ public extension Colors {
         }
     }
     
-    @objc class func update(searchBar: UISearchBar) {
+    @objc public class func update(searchBar: UISearchBar) {
         updateKeyboardAppearance(for: searchBar)
         
         switch theme {
@@ -262,11 +262,11 @@ public extension Colors {
         searchBar.searchTextField.textColor = Colors.text
     }
     
-    @objc class func update(switchAppearance: UISwitch) {
+    @objc public class func update(switchAppearance: UISwitch) {
         switchAppearance.onTintColor = .primary
     }
         
-    @objc class func setTextColor(_ color: UIColor, in parentView: UIView) {
+    @objc public class func setTextColor(_ color: UIColor, in parentView: UIView) {
         for view in parentView.subviews {
             
             if view is ContactNameLabel || view is UIButton {
@@ -291,16 +291,16 @@ public extension Colors {
         }
     }
     
-    @objc class func setTextColor(_ color: UIColor, label: UILabel) {
+    @objc public class func setTextColor(_ color: UIColor, label: UILabel) {
         label.textColor = color
         label.highlightedTextColor = color
     }
     
-    @objc class func setTextColor(_ color: UIColor, textView: UITextView) {
+    @objc public class func setTextColor(_ color: UIColor, textView: UITextView) {
         textView.textColor = color
     }
     
-    @objc class func setTextColor(_ color: UIColor, textField: UITextField) {
+    @objc public class func setTextColor(_ color: UIColor, textField: UITextField) {
         textField.textColor = color
         textField.colorizeClearButton()
         

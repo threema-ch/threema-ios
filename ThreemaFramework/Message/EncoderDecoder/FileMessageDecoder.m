@@ -174,7 +174,7 @@ typedef void (^ErrorBlock)(NSError *err);
     __block BlobOrigin blobOrigin;
     [entityManager performBlockAndWait:^{
         blobID = fileMessageEntity.blobThumbnailId;
-        blobOrigin = fileMessageEntity.blobGetOrigin;
+        blobOrigin = fileMessageEntity.blobOrigin;
     }];
 
     if (blobID) {
@@ -194,7 +194,7 @@ typedef void (^ErrorBlock)(NSError *err);
             isNotGroupMessage = localfileMessageEntity.conversation.groupId == nil;
             
             if (isNotGroupMessage) {
-                blobOriginOrNil = localfileMessageEntity.blobGetOrigin;
+                blobOriginOrNil = localfileMessageEntity.blobOrigin;
             }
         }];
         
@@ -212,10 +212,10 @@ typedef void (^ErrorBlock)(NSError *err);
                 }
 
                 if (isNotGroupMessage) {
-                    [MessageSender markBlobAsDoneWithBlobID:blobID origin:blobOriginOrNil];
+                    [downloader markDownloadDoneFor:blobID origin:blobOriginOrNil];
                 }
                 else if ([[ServerConnector sharedServerConnector] isMultiDeviceActivated]) {
-                    [MessageSender markBlobAsDoneWithBlobID:blobID origin:BlobOriginLocal];
+                    [downloader markDownloadDoneFor:blobID origin:BlobOriginLocal];
                 }
             }
             else {
@@ -259,7 +259,7 @@ typedef void (^ErrorBlock)(NSError *err);
 
         // Blob origin for download
         BOOL isLocalOrigin = (group && group.isNoteGroup) || (isReflectedMessage && isOutgoingMessage);
-        [fileMessageEntity blobSetOrigin:isLocalOrigin ? BlobOriginLocal : BlobOriginPublic];
+        fileMessageEntity.blobOrigin = isLocalOrigin ? BlobOriginLocal : BlobOriginPublic;
 
         NSString *blobHex = [_json objectForKey: JSON_FILE_KEY_FILE_BLOB];
         fileMessageEntity.blobId = [blobHex decodeHex];

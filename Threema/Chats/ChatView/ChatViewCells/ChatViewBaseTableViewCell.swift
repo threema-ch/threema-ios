@@ -27,32 +27,33 @@ import UIKit
 ///
 /// You should subclass this. If you use this directly it will only show a chat bubble.
 ///
-/// When subclassing call `addContent(rootView:)` once to add the root view of your content views to the cell and set `setMessage(to:)`
-/// whenever your message changes.
+/// When subclassing call `addContent(rootView:)` once to add the root view of your content views to the cell and set
+/// `setMessage(to:)` whenever your message changes.
 ///
 /// View hierarchy:
-///                                        +-----------+
-///                                        |contentView|
-///                                        +-----^-----+
+///
+///                                         +-----------+
+///                                         |contentView|
+///                                         +-----^-----+
+///                                               |
+///                                               |
+///                +------------------------------+-------------------------------+
+///                |                              |                               |
+///                |                              |                               |
+///                |                              |                               |
+///  +-------------+-----------+          +-------+------+               +--------+-------+
+///  | chatBubbleBackgroundView|          |chatBubbleView|               |avatarImageView |
+///  +-------------------------+          +------^-------+               +----------------+
 ///                                              |
 ///                                              |
-///               +------------------------------+-------------------------------+
-///               |                              |                               |
-///               |                              |                               |
-///               |                              |                               |
-/// +-------------+-----------+          +-------+------+               +--------+-------+
-/// | chatBubbleBackgroundView|          |chatBubbleView|               |avatarImageView |
-/// +-------------------------+          +------^-------+               +----------------+
-///                                             |
-///                                             |
-///                                             |
-///                                             +-------------------------------+
-///                                             |                               |
-///                                             |                               |
-///                                             |                               |
-///                                       +-----+----+                      +---+----+
-///                                       | nameLabel|                      |rootView|
-///                                       +----------+                      +--------+
+///                                              |
+///                                              +-------------------------------+
+///                                              |                               |
+///                                              |                               |
+///                                              |                               |
+///                                        +-----+----+                      +---+----+
+///                                        | nameLabel|                      |rootView|
+///                                        +----------+                      +--------+
 ///
 class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
     
@@ -65,7 +66,8 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
     
     /// Suggestion if the cell should show date and state
     ///
-    /// This is set after `setMessage(to:)` is called. Observe this value change (`didSet`) and adjust the visibility accordingly.
+    /// This is set after `setMessage(to:)` is called. Observe this value change (`didSet`) and adjust the visibility
+    /// accordingly.
     var shouldShowDateAndState = true
     
     /// Override this if you want to set a non-default width ratio
@@ -151,8 +153,8 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
     
     /// Top spacing constraint
     ///
-    /// Set the `constant` to another value if you don't want the default spacing used in the chat view. This might be overridden again after updating the
-    /// message or its neighbors.
+    /// Set the `constant` to another value if you don't want the default spacing used in the chat view. This might be
+    /// overridden again after updating the message or its neighbors.
     private(set) lazy var bubbleTopSpacingConstraint = chatBubbleView.topAnchor.constraint(
         equalTo: contentView.topAnchor,
         constant: ChatViewConfiguration.ChatBubble.defaultTopBottomInset
@@ -160,8 +162,8 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
     
     /// Bottom spacing constraint
     ///
-    /// Set the `constant` to another value if you don't want the default spacing used in the chat view. This might be overridden again after updating the
-    /// message or its neighbors.
+    /// Set the `constant` to another value if you don't want the default spacing used in the chat view. This might be
+    /// overridden again after updating the message or its neighbors.
     private(set) lazy var bubbleBottomSpacingConstraint = chatBubbleView.bottomAnchor.constraint(
         equalTo: contentView.bottomAnchor,
         constant: -ChatViewConfiguration.ChatBubble.defaultTopBottomInset
@@ -179,8 +181,8 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
             
             if let oldMessage = oldValue.message, let newMessage = messageAndNeighbors.message,
                oldMessage.objectID == newMessage.objectID {
-                // We are reconfiguring this cell (or conveniently reusing our own cell) which means animations will look good
-                // i.e. elements won't come flying in from the side
+                // We are reconfiguring this cell (or conveniently reusing our own cell) which means animations will
+                // look good i.e. elements won't come flying in from the side
                 chatBubbleBackgroundView.animate = true
             }
             else {
@@ -314,7 +316,8 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
         ),
     ]
 
-    /// Handles all horizontal swipe interactions including cancelling other swipe actions via `ChatViewTableViewCellDelegateProtocol`
+    /// Handles all horizontal swipe interactions including cancelling other swipe actions via
+    /// `ChatViewTableViewCellDelegateProtocol`
     private var swipeHandler: ChatViewTableViewCellHorizontalSwipeHandler?
     
     // MARK: - Configuration
@@ -461,7 +464,8 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
     /// The message bubble will adapt to it.
     ///
     /// - Parameter message: Message that is shown in this cell. Set to `nil` to reset the cell.
-    /// - Parameter neighbors: The messages that immediately preceded and succeeded `message` when the conversations messages are sorted as displayed in the chat. Should be `nil` if `message` is `nil`.
+    /// - Parameter neighbors: The messages that immediately preceded and succeeded `message` when the conversations
+    ///                        messages are sorted as displayed in the chat. Should be `nil` if `message` is `nil`.
     func setMessage(to message: BaseMessage?, with neighbors: ChatViewDataSource.MessageNeighbors?) {
         if message == nil, neighbors != nil {
             DDLogWarn("Neighbors should have a message")
@@ -778,7 +782,7 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
             size: ChatViewConfiguration.GroupCells.maxAvatarSize,
             masked: true
         ) { avatarImage, identity in
-            guard let avatarImage = avatarImage else {
+            guard let avatarImage else {
                 // We have a default avatar. No worries.
                 DispatchQueue.main.async {
                     self.avatarImageView.image = AvatarMaker.shared().unknownPersonImage()
@@ -1114,7 +1118,7 @@ extension ChatViewBaseTableViewCell {
 
 extension ChatViewBaseTableViewCell {
     var currentSearchText: String? {
-        guard let chatViewTableViewCellDelegate = chatViewTableViewCellDelegate else {
+        guard let chatViewTableViewCellDelegate else {
             return nil
         }
         return chatViewTableViewCellDelegate.currentSearchText

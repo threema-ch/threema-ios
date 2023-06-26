@@ -65,7 +65,8 @@ class MediatorMessageProcessor: NSObject {
     /// - Parameters:
     ///     - message: Mediator message
     ///     - messageType: Message type, inout parameter objc style
-    ///     - receivedAfterInitialQueueSend: True indicates the message was received before mediator server message queue is dry (abstract message will be marked with this flag, to control in app notification)
+    ///     - receivedAfterInitialQueueSend: True indicates the message was received before mediator server message
+    ///                   queue is dry (abstract message will be marked with this flag, to control in app notification)
     /// - Returns: Response data for mediator server or for further processing to clients
     @objc func process(
         message: Data,

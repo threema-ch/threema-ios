@@ -19,11 +19,8 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import CallKit
+import CocoaLumberjackSwift
 import Foundation
-
-protocol VoIPCallKitManagerDelegate: AnyObject {
-    func callFailed()
-}
 
 final class VoIPCallKitManager: NSObject {
     
@@ -32,8 +29,6 @@ final class VoIPCallKitManager: NSObject {
     private var uuid: UUID?
     private(set) var callerName: String?
     private var answerAction: CXAnswerCallAction?
-    
-    weak var delegate: VoIPCallKitManagerDelegate?
     
     override init() {
         self.provider = CXProvider(configuration: VoIPCallKitManager.providerConfiguration(for: nil))
@@ -78,7 +73,18 @@ extension VoIPCallKitManager {
         uuid
     }
     
-    func reportIncomingCall(uuid: UUID, contactIdentity: String, contactName: String?) {
+    /// Report new incoming call to CallKit.
+    /// - Parameters:
+    ///   - uuid: CallKit UUID
+    ///   - contactIdentity: Caller identity
+    ///   - contactName: Caller name
+    ///   - completion: Completion handler returns true if call successfully reported to CallKit
+    func reportIncomingCall(
+        uuid: UUID,
+        contactIdentity: String,
+        contactName: String?,
+        completion: @escaping (Bool) -> Void
+    ) {
         self.uuid = uuid
         callerName = contactName ?? contactIdentity
         provider.configuration = VoIPCallKitManager.providerConfiguration(for: contactIdentity)
@@ -101,8 +107,12 @@ extension VoIPCallKitManager {
         VoIPCallKitManager.configureAudioSession()
         
         provider.reportNewIncomingCall(with: uuid, update: update) { error in
-            if error != nil {
-                self.delegate?.callFailed()
+            if let error {
+                DDLogError("Report new incoming call failed (CallKit UUID: \(uuid): \(error)")
+                completion(false)
+            }
+            else {
+                completion(true)
             }
         }
     }
@@ -141,8 +151,8 @@ extension VoIPCallKitManager {
         let startCallAction = CXStartCallAction(call: uuid!, handle: handle)
         let transaction = CXTransaction(action: startCallAction)
         callController.request(transaction, completion: { error in
-            if error != nil {
-                self.delegate?.callFailed()
+            if let error {
+                DDLogError("Start call action failed (CallKit UUID: \(self.uuid!): \(error)")
             }
             let update = CXCallUpdate()
             update.remoteHandle = CXHandle(type: .generic, value: contactIdentity)
@@ -178,11 +188,13 @@ extension VoIPCallKitManager {
     }
     
     func endCall() {
-        if let callID = uuid {
-            let action = CXEndCallAction(call: callID)
+        if let uuid {
+            let action = CXEndCallAction(call: uuid)
             let transaction = CXTransaction(action: action)
-            callController.request(transaction, completion: { _ in
-                // do noting
+            callController.request(transaction, completion: { error in
+                if let error {
+                    DDLogError("End call action failed (CallKit UUID: \(uuid): \(error)")
+                }
             })
         }
         uuid = nil
@@ -190,11 +202,13 @@ extension VoIPCallKitManager {
     }
     
     func timeoutCall() {
-        if let id = uuid {
-            let action = CXEndCallAction(call: id)
+        if let uuid {
+            let action = CXEndCallAction(call: uuid)
             let transaction = CXTransaction(action: action)
-            callController.request(transaction, completion: { _ in
-                // do noting
+            callController.request(transaction, completion: { error in
+                if let error {
+                    DDLogError("Timeout call action failed (CallKit UUID: \(uuid): \(error)")
+                }
             })
         }
         uuid = nil
@@ -202,11 +216,13 @@ extension VoIPCallKitManager {
     }
 
     func rejectCall() {
-        if let id = uuid {
-            let action = CXEndCallAction(call: id)
+        if let uuid {
+            let action = CXEndCallAction(call: uuid)
             let transaction = CXTransaction(action: action)
-            callController.request(transaction, completion: { _ in
-                // do noting
+            callController.request(transaction, completion: { error in
+                if let error {
+                    DDLogError("Reject call action failed (CallKit UUID: \(uuid): \(error)")
+                }
             })
         }
         uuid = nil
@@ -224,7 +240,7 @@ extension VoIPCallKitManager {
             try audioSession.setActive(true)
         }
         catch {
-            print(error.localizedDescription)
+            DDLogError("Set audio session failed: \(error)")
         }
     }
 }

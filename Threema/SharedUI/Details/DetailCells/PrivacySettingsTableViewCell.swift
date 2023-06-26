@@ -32,13 +32,13 @@ class PrivacySettingsTableViewCell: ThemedCodeStackTableViewCell {
     
     var action: Details.Action? {
         didSet {
-            guard let action = action else {
+            guard let action else {
                 return
             }
             
             labelLabel.text = action.title
             
-            guard let contact = contact else {
+            guard let contact else {
                 return
             }
             

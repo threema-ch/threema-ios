@@ -20,7 +20,7 @@
 
 import UIKit
 
-public extension UIViewPropertyAnimator {
+extension UIViewPropertyAnimator {
     /// Animator for `view` imitating the behavior of a highlighted `UIBarButtonItem`
     ///
     /// The animator changed the `alpha` of the passed view.
@@ -51,7 +51,7 @@ public extension UIViewPropertyAnimator {
     ///
     /// - Parameter view: View that the animation should be applied to
     /// - Returns: Animator to be called when a view is highlighted
-    static func barButtonHighlightAnimator(for view: UIView) -> UIViewPropertyAnimator {
+    public static func barButtonHighlightAnimator(for view: UIView) -> UIViewPropertyAnimator {
         // Configuration defined by observation (last update iOS 14.2)
         let highlightAnimationDuration: TimeInterval = 0.1
         let highlightAlpha: CGFloat = 0.3

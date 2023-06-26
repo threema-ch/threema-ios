@@ -279,7 +279,8 @@ class VoIPCallSdpPatcherTests: XCTestCase {
         }
     }
     
-    /// When local answer or remote SDP, in one-byte header mode, RTP header extension IDs should not be reassigned and more than 14 header extensions will be accepted, too.
+    /// When local answer or remote SDP, in one-byte header mode, RTP header extension IDs should not be reassigned and
+    /// more than 14 header extensions will be accepted, too.
     func testPatchWithRtpOneByteModeHeaderMoreThan14AnswerOrRemote() {
         let sdp = "v=0\r\n" +
             "m=audio 9 UDP/TLS/RTP/SAVPF 111\r\n" +
@@ -307,7 +308,8 @@ class VoIPCallSdpPatcherTests: XCTestCase {
         )
     }
     
-    /// When local offer, in two-byte (mixed) header mode, RTP header extension IDs should be reassigned in the range from 1-14 and 16-255.
+    /// When local offer, in two-byte (mixed) header mode, RTP header extension IDs should be reassigned in the range
+    /// from 1-14 and 16-255.
     func testPatchWithRtpMixedModeHeaderIDsReassigned() {
         var actual = "v=0\r\n" +
             "m=audio 9 UDP/TLS/RTP/SAVPF 111\r\n" +

@@ -220,7 +220,8 @@ public class WebAbstractMessage: NSObject {
                         return
                     }
                     else {
-                        if imageMessageEntity.image != nil, imageMessageEntity.image.data == nil {
+                        if let image = imageMessageEntity.image,
+                           image.data == nil {
                             let confirmResponse = WebConfirmResponse(
                                 message: requestThumbnail,
                                 success: false,
@@ -230,7 +231,7 @@ public class WebAbstractMessage: NSObject {
                             completionHandler(confirmResponse.messagePack(), false)
                             return
                         }
-                        else if imageMessageEntity.thumbnail != nil, imageMessageEntity.thumbnail.data == nil {
+                        else if let thumbnail = imageMessageEntity.thumbnail, thumbnail.data == nil {
                             let confirmResponse = WebConfirmResponse(
                                 message: requestThumbnail,
                                 success: false,
@@ -289,16 +290,17 @@ public class WebAbstractMessage: NSObject {
             case "ack"?:
                 let requestAck = WebAckRequest(message: self)
                 var conversation: Conversation?
-                var entityManager = EntityManager()
+                let businessInjector = BusinessInjector()
                 
                 if requestAck.type == "contact" {
-                    conversation = entityManager.entityFetcher.conversation(forIdentity: requestAck.id)
+                    conversation = businessInjector.entityManager.entityFetcher.conversation(forIdentity: requestAck.id)
                 }
                 else {
-                    conversation = entityManager.entityFetcher.legacyConversation(for: requestAck.id.hexadecimal())
+                    conversation = businessInjector.entityManager.entityFetcher
+                        .legacyConversation(for: requestAck.id.hexadecimal())
                 }
                 
-                guard let conversation, let baseMessage = entityManager.entityFetcher.message(
+                guard let conversation, let baseMessage = businessInjector.entityManager.entityFetcher.message(
                     with: requestAck.messageID,
                     conversation: conversation
                 ), conversation.objectID == baseMessage.conversation.objectID else {
@@ -313,7 +315,7 @@ public class WebAbstractMessage: NSObject {
                 }
                 
                 updateAckForMessage(
-                    entityManager: entityManager,
+                    businessInjector: businessInjector,
                     requestMessage: requestAck,
                     baseMessage: baseMessage
                 )
@@ -750,7 +752,7 @@ public class WebAbstractMessage: NSObject {
     }
     
     private func updateAckForMessage(
-        entityManager: EntityManager,
+        businessInjector: BusinessInjectorProtocol,
         requestMessage: WebAckRequest,
         baseMessage: BaseMessage!
     ) {
@@ -760,8 +762,7 @@ public class WebAbstractMessage: NSObject {
                 return
             }
             
-            let groupManager = GroupManager(entityManager: entityManager)
-            let group = groupManager.getGroup(conversation: conversation)
+            let group = businessInjector.groupManager.getGroup(conversation: conversation)
             var contact: ContactEntity?
             
             if conversation.isGroup() {
@@ -782,53 +783,26 @@ public class WebAbstractMessage: NSObject {
                     return
                 }
             }
-            
+            let contactEntity = contact
+
             ServerConnectorHelper.connectAndWaitUntilConnected(initiator: .threemaWeb, timeout: 10) {
-                if requestMessage.acknowledged {
-                    MessageSender.sendUserAck(
-                        forMessages: [baseMessage],
-                        toIdentity: contact?.identity,
-                        group: group,
-                        onCompletion: {
-                            entityManager.performSyncBlockAndSafe {
-                                if conversation.isGroup() {
-                                    let groupDeliveryReceipt = GroupDeliveryReceipt(
-                                        identity: MyIdentityStore.shared().identity,
-                                        deliveryReceiptType: .acknowledged,
-                                        date: Date()
-                                    )
-                                    baseMessage.add(groupDeliveryReceipt: groupDeliveryReceipt)
-                                }
-                                else {
-                                    baseMessage.userack = NSNumber(booleanLiteral: requestMessage.acknowledged)
-                                    baseMessage.userackDate = Date()
-                                }
-                            }
+                Task {
+                    if requestMessage.acknowledged {
+                        if let group {
+                            await businessInjector.messageSender.sendUserAck(for: baseMessage, toGroup: group)
                         }
-                    )
-                }
-                else {
-                    MessageSender.sendUserDecline(
-                        forMessages: [baseMessage],
-                        toIdentity: contact?.identity,
-                        group: group,
-                        onCompletion: {
-                            entityManager.performSyncBlockAndSafe {
-                                if conversation.isGroup() {
-                                    let groupDeliveryReceipt = GroupDeliveryReceipt(
-                                        identity: MyIdentityStore.shared().identity,
-                                        deliveryReceiptType: .declined,
-                                        date: Date()
-                                    )
-                                    baseMessage.add(groupDeliveryReceipt: groupDeliveryReceipt)
-                                }
-                                else {
-                                    baseMessage.userack = NSNumber(booleanLiteral: requestMessage.acknowledged)
-                                    baseMessage.userackDate = Date()
-                                }
-                            }
+                        else if let identity = contactEntity?.identity {
+                            await businessInjector.messageSender.sendUserAck(for: baseMessage, toIdentity: identity)
                         }
-                    )
+                    }
+                    else {
+                        if let group {
+                            await businessInjector.messageSender.sendUserDecline(for: baseMessage, toGroup: group)
+                        }
+                        else if let identity = contactEntity?.identity {
+                            await businessInjector.messageSender.sendUserDecline(for: baseMessage, toIdentity: identity)
+                        }
+                    }
                 }
             } onTimeout: {
                 DDLogError("[Threema Web] Sending user ack/decline message timed out")

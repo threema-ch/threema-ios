@@ -27,7 +27,8 @@ class TestSessionProvider: URLSessionProvider {
     
     /// Provides a standard ephemeral session
     func defaultSession(delegate: URLSessionDelegate?) -> URLSession {
-        // We first need to create the configuration. Changes made to a session after its initialization are not respected.
+        // We first need to create the configuration. Changes made to a session after its initialization are not
+        // respected.
         let configuration = URLSessionConfiguration.ephemeral
         configuration.protocolClasses = [URLProtocolMock.self]
         
@@ -57,7 +58,8 @@ class TestSessionProvider: URLSessionProvider {
     ///   - delegate: Delegate for session
     /// - Returns: Created URLSession
     func backgroundSession(identifier: String, delegate: URLSessionDelegate) -> URLSession {
-        // We first need to create the configuration. Changes made to a session after its initialization are not respected.
+        // We first need to create the configuration. Changes made to a session after its initialization are not
+        // respected.
         let configuration = URLSessionConfiguration.background(withIdentifier: identifier)
         configuration.protocolClasses = [URLProtocolMock.self]
         

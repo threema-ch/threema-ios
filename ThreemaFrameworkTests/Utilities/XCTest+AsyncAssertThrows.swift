@@ -22,8 +22,8 @@ import Foundation
 import XCTest
 
 extension XCTest {
-    func XCTAssertThrowsAsyncError<T: Sendable>(
-        _ expression: @autoclosure () async throws -> T,
+    func XCTAssertThrowsAsyncError(
+        _ expression: @autoclosure () async throws -> some Sendable,
         _ message: @autoclosure () -> String = "",
         file: StaticString = #filePath,
         line: UInt = #line,

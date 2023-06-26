@@ -21,7 +21,6 @@
 #import "BlobMessageLoader.h"
 #import "ProtocolDefines.h"
 #import "NaClCrypto.h"
-#import "MessageSender.h"
 #import "ThreemaError.h"
 #import "PinnedHTTPSURLLoader.h"
 #import "UserSettings.h"
@@ -58,20 +57,20 @@
 - (void)startWithMessage:(BaseMessage<BlobData> *)message onCompletion:(void (^)(BaseMessage<BlobData> *loadedMessage))onCompletion onError:(void (^)(NSError *error))onError {
     self->messageObjectID = message.objectID;
 
-    NSData *blobData = [message blobGetData];
+    NSData *blobData = [message blobData];
     if (blobData != nil) {
         onCompletion(message);
         return;
     }
     
-    NSData *blobId = [message blobGetId];
+    NSData *blobId = [message blobIdentifier];
     if (blobId == nil) {
         DDLogWarn(@"Missing blob ID or encryption key!");
         onError([ThreemaError threemaError:[BundleUtil localizedStringForKey:@"media_file_not_found"]]);
         return;
     }
 
-    NSData *encryptionKey = [message blobGetEncryptionKey];
+    NSData *encryptionKey = [message blobEncryptionKey];
 
     if (encryptionKey == nil) {
         // handle image message backward compatibility
@@ -86,7 +85,7 @@
         }
     }
 
-    NSNumber *progress = [message blobGetProgress];
+    NSNumber *progress = [message blobProgress];
     if (progress != nil) {
         DDLogWarn(@"Blob download already in progress");
         return;
@@ -98,10 +97,10 @@
     // Set progress to 0 before starting the request to be sure this request will not called multiple times
     [_entityManager performSyncBlockAndSafe:^{
         BaseMessage<BlobData> *bmsg = [_entityManager.entityFetcher getManagedObjectById:messageObjectID];
-        [bmsg blobUpdateProgress:[NSNumber numberWithFloat:0]];
+        bmsg.blobProgress = [NSNumber numberWithFloat:0];
     }];
     
-    [loader startWithBlobId:blobId origin:message.blobGetOrigin onCompletion:^(NSData *data) {
+    [loader startWithBlobId:blobId origin:message.blobOrigin onCompletion:^(NSData *data) {
         [_entityManager performSyncBlockAndSafe:^{
             BaseMessage<BlobData> *msg = [_entityManager.entityFetcher getManagedObjectById:messageObjectID];
 
@@ -112,7 +111,7 @@
             NSData *decryptedData = [self decryptData:data forMessage:msg];
             if (decryptedData == nil) {
                 msg.sendFailed = [NSNumber numberWithBool:YES];
-                [msg blobUpdateProgress:nil];
+                msg.blobProgress = nil;
 
                 onError([ThreemaError threemaError:@"Blob data decryption failed"]);
                 return;
@@ -120,11 +119,15 @@
 
             [self updateDBObject:msg with:decryptedData];
 
+            dispatch_queue_t downloadQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+            BlobURL *blobUrl = [[BlobURL alloc] initWithServerConnector:[ServerConnector sharedServerConnector] userSettings:[UserSettings sharedUserSettings] queue:downloadQueue];
+            BlobDownloader *blobDownloader = [[BlobDownloader alloc] initWithBlobURL:blobUrl queue:downloadQueue];
+
             if (msg.conversation.groupId == nil) {
-                [MessageSender markBlobAsDoneWithBlobID:blobId origin:msg.blobGetOrigin];
+                [blobDownloader markDownloadDoneFor:blobId origin:msg.blobOrigin];
             }
             else if ([[ServerConnector sharedServerConnector] isMultiDeviceActivated]) {
-                [MessageSender markBlobAsDoneWithBlobID:blobId origin:BlobOriginLocal];
+                [blobDownloader markDownloadDoneFor:blobId origin:BlobOriginLocal];
             }
 
             DDLogInfo(@"Blob successfully downloaded (%lu bytes)", (unsigned long)data.length);
@@ -138,10 +141,10 @@
             BaseMessage<BlobData> *msg = [_entityManager.entityFetcher getManagedObjectById:messageObjectID];
             if ([msg wasDeleted] == NO) {
                 // Only set failed state if blobData is nil
-                if (msg.blobGetData == nil) {
-                    [msg blobSetError:YES];
+                if (msg.blobData == nil) {
+                    msg.blobError = YES;
                 }
-                [msg blobUpdateProgress:nil];
+                msg.blobProgress = nil;
             }
         }];
 
@@ -154,7 +157,7 @@
     NSData *decryptedData = nil;
     
     @try {
-        decryptedData = [[NaClCrypto sharedCrypto] symmetricDecryptData:data withKey:[message blobGetEncryptionKey] nonce:[NSData dataWithBytesNoCopy:kNonce_1 length:sizeof(kNonce_1) freeWhenDone:NO]];
+        decryptedData = [[NaClCrypto sharedCrypto] symmetricDecryptData:data withKey:[message blobEncryptionKey] nonce:[NSData dataWithBytesNoCopy:kNonce_1 length:sizeof(kNonce_1) freeWhenDone:NO]];
     } @catch (NSException *exception) {
         DDLogError(@"Blob decryption failed: %@", [exception description]);
     }
@@ -163,8 +166,8 @@
 }
 
 - (void)updateDBObject:(BaseMessage<BlobData> *)message with:(NSData *)data {
-    [message blobSetData:data];
-    [message blobUpdateProgress:nil];
+    message.blobData = data;
+    message.blobProgress = nil;
     message.sendFailed = [NSNumber numberWithBool:NO];
 
     /* Add to photo library */
@@ -214,7 +217,7 @@
             return;
         }
 
-        [msg blobUpdateProgress:[NSNumber numberWithFloat:totalData.length / [msg blobGetSize].floatValue]];
+        msg.blobProgress = [NSNumber numberWithFloat:totalData.length / msg.blobSize];
     }];
 }
 

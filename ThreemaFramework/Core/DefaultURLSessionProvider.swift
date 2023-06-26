@@ -22,7 +22,8 @@ import Foundation
 
 class DefaultURLSessionProvider: URLSessionProvider {
     func defaultSession(delegate: URLSessionDelegate?) -> URLSession {
-        // We first need to create the configuration. Changes made to a session after its initialization are not respected.
+        // We first need to create the configuration. Changes made to a session after its initialization are not
+        // respected.
         let configuration = URLSessionConfiguration.ephemeral
 
         // General
@@ -48,7 +49,8 @@ class DefaultURLSessionProvider: URLSessionProvider {
     }
 
     func backgroundSession(identifier: String, delegate: URLSessionDelegate) -> URLSession {
-        // We first need to create the configuration. Changes made to a session after its initialization are not respected.
+        // We first need to create the configuration. Changes made to a session after its initialization are not
+        // respected.
         let configuration = URLSessionConfiguration.background(withIdentifier: identifier)
 
         // General

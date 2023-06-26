@@ -24,7 +24,8 @@ import Foundation
 actor BlobManagerState {
     
     /// Set containing all objectIDs that are currently being processed
-    /// Note: The objectD of a thumbnail and its data is the same, since the processing is done in sequence, this will not lead to any conflicts
+    /// Note: The objectD of a thumbnail and its data is the same, since the processing is done in sequence, this will
+    /// not lead to any conflicts
     private var activeObjectIDs = Set<NSManagedObjectID>()
 
     // We track progress to limit progress updates

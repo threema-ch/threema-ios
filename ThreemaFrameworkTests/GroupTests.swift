@@ -97,7 +97,7 @@ class GroupTests: XCTestCase {
         XCTAssertNil(group.lastPeriodicSync)
         XCTAssertEqual(group.allMemberIdentities.count, 3)
         XCTAssertNil(group.name)
-        XCTAssertNil(group.photo)
+        XCTAssertNil(group.profilePicture)
         XCTAssertEqual(group.conversationCategory, .default)
         XCTAssertEqual(group.conversationVisibility, .default)
         XCTAssertNil(group.lastMessageDate)
@@ -129,7 +129,7 @@ class GroupTests: XCTestCase {
         XCTAssertEqual(group.lastPeriodicSync, dateNow)
         XCTAssertEqual(group.allMemberIdentities.count, 4)
         XCTAssertEqual(group.name, "Test group 123")
-        XCTAssertNotNil(group.photo)
+        XCTAssertNotNil(group.profilePicture)
         XCTAssertEqual(group.conversationCategory, .private)
         XCTAssertEqual(group.conversationVisibility, .archived)
         XCTAssertEqual(group.lastMessageDate, dateNow)
@@ -493,7 +493,7 @@ class GroupTests: XCTestCase {
 
         wait(for: [expec], timeout: 3)
 
-        guard let group = group else {
+        guard let group else {
             XCTFail("Group create failed")
             return
         }

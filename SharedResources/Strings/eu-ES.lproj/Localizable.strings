@@ -84,8 +84,6 @@
 "error_abort" = "Errore berreskuraezina";
 "qr_code" = "QR kodea";
 "forward" = "Birbidali";
-"showNext" = "Aukera gehiago";
-"showPrevious" = "Aurreko aukerak";
 "read" = "Irakurri";
 "unread" = "Irakurri gabe";
 "settings" = "Hobespenak";
@@ -283,7 +281,6 @@
 "messages_delete_all_confirm_message" = "Horrek barne hartzen ditu bitarteko eta dokumentu guztiak.";
 "messages_delete_selected_confirm" = "Gailu honetatik hautatutako mezuak ezabatu nahi dituzu?";
 "conversation_delete_confirm" = "Txat hau gailu honetatik kendu nahi duzu?";
-"delete_all" = "Ezabatu guztiak";
 "delete_n" = "Ezabatu (%d)";
 
 "message_cannot_play_movie" = "Ezin da bideoa erreproduzitu.";
@@ -402,8 +399,6 @@
 "msg_unknown_group_request_sync_x_title" = "Talde ezezagun batean jasotako mezua";
 "msg_unknown_group_request_sync_x_message" = "Talde ezezagun batean mezu bat jaso da. Taldearen sortzaileak (%@) taldeari buruzko informazioa eskatu du. Taldea sortzailea konektatu bezain laster agertuko da.";
 
-"chat_search_label_format" = "%ld-ren %ld mezu";
-"load_earlier_messages" = "Aurreko mezuak kargatzen";
 "tap_to_cancel" = "Sakatu bertan behera uzteko";
 "previous" = "Aurrekoa";
 "tap_to_change" = "Sakatu aldatzeko";
@@ -439,17 +434,9 @@
 /* Settings */
 "show_stale_contacts_on" = "Threemaren ID ez-aktiboak (gutxienez hiru hilabetean erabili ez direnak) eta birlandatuak ezkutuan daude.";
 "show_stale_contacts_off" = "Threemaren ID guztiak kontaktuen zerrendan daude.";
-"hide_voip_call_ip_off" = "Zuzeneko konexio bat ezartzea eta, ahal bada, egiaztatu gabeko kontaktuetara deiak igortzea Threemaren zerbitzarien bidez bakarrik. Zure IP helbidea agerian gera daiteke.";
-"hide_voip_call_ip_on" = "Dei guztien transmisioa behartzea Threemaren zerbitzarien bidez, zure IP helbidea babestuz. Deiaren kalitateari eragin diezaioke.";
-"onprem_hide_voip_call_ip_off" = "Ezarri zuzeneko konexio bat ahal bada, eta soilik transmititu deiak egiaztatu gabeko kontaktuetara zure OnPrem zerbitzarien bidez. Zure IP helbidea erakuts dezakezu.";
-"onprem_hide_voip_call_ip_on" = "Bidali dei guztiak zure OnPrem zerbitzarien bidez, dei-bazkideen IP helbidea ezkutatzeko. Deiaren kalitatean eragina izan dezake.";
-"voip_include_call_in_recents_off" = "Deiak blokeo-pantailan agertzen dira, baina ez dira agertzen Telefono aplikazioko deien zerrendan.";
-"voip_include_call_in_recents_on" = "Deiak blokeo-pantailan agertzen dira, eta Telefono aplikazioko deien zerrendan zerrendatzen dira. ICloud Drive aktibatuta badago, Telefono aplikazioaren deien zerrenda Appleren zerbitzarien bidez sinkronizatzen da.";
 
 "backgrounding_on" = "Aplikazioa bigarren mailan exekutatuko da gehienez ere 30 segundoz.";
 "backgrounding_off" = "Aplikazioa berehala bigarren maila batera deskonektatuko da.";
-"proximity_monitoring_off" = "Hurbiltasun-sentsorea estaltzean ez da pantaila itzaliko.";
-"proximity_monitoring_on" = "Ahots-dei batean eta ahots-mezuak grabatu edo erreproduzitzean, pantaila itzaliko da hurbiltasun-sentsorea estaltzen bada.";
 "debug_log_clear" = "Erregistroa ezabatu";
 "log_empty_message" = "Arazketa-erregistroa hutsik dago.";
 "cannot_send_mail_message" = "Gailu honetan ez da posta elektronikoko konturik konfiguratu.";
@@ -667,7 +654,6 @@
 "system_message_group_avatar_changed" = "Taldearen irudia aldatu da";
 
 /* accessibility labels */
-"send_media_or_location" = "Multimedia-elementuak edo kokapena bidali";
 "my_profilepicture" = "Zure profilaren argazkia";
 "my_threema_id" = "Zure Threemaren IDa";
 "edit_profile" = "Editatu ezizena eta profilaren argazkia";
@@ -681,7 +667,6 @@
 "go_to_position" = "-tan";
 "draft" = "Zirriborroa";
 "new_message_accessibility" = "Mezu berria: ";
-"scoll_down_text" = "Joan behera";
 "quote_interaction_hint" = "Joan aipatutako mezura";
 
 /* TTOpenInAppActivity */
@@ -754,9 +739,7 @@
 
 "call_voip_not_supported_title" = "Threema ahotsa";
 "call_voip_not_supported_text" = "Kontaktu honek ezin du oraindik Threema deirik jaso.";
-"call_contact_alert" = "%@-ri deitu nahi diozu?";
 "call_contact_not_reachable" = "Ezin izan zen kontaktuarekin harremanetan jarri...";
-"already_in_call" = "Dei aktibo bakarra egon daiteke aldi berean.";
 
 "call_status_idle" = "Eginda";
 "call_status_wait_ringing" = "Hasieratu";
@@ -776,7 +759,6 @@
 "call_threema_camera_disabled_info" = "Kontaktu horrek ez du aplikazioaren egungo bertsiorik erabiltzen edo ez du bideodeirik onartzen.";
 
 "call_threema_video_in_chat_info_title" = "Berria: bideo-deiak";
-"call_threema_video_in_chat_info_description" = "Nahi gabe dei bat egitearen babesa edukiaz gain, %@ muturretik muturrerako bideo-dei zifratuak eskaintzen ditu orain.";
 
 "call_threema_cellular_instead_of_wifi_title" = "Sare mugikorraren bidez deitzea";
 "call_threema_cellular_instead_of_wifi_text" = "Oharra: dei honek sare mugikorrean datu-transferentzia eragiten du.";
@@ -1021,7 +1003,132 @@
 "url_warning_title" = "Ordezpen abisua";
 "url_warning_body" = "Irekiko duzun estekaren ostatuaren izena susmagarria da:\n\nErakutsitako ostatuaren izena: %@\nBenetako ostatuaren izena: %@\n\nHau engainu-saio bat izan liteke, leku bat ireki dezan beste baten itxurak eginez.\n\nJarraitu nahi duzu?";
 
-// Storage Management
+
+// Settings
+"settings_navbar_title" = "Konfigurazioa";
+"settings_list_privacy_title" = "Eremu pribatua";
+"settings_list_appearance_title" = "Itxura";
+"settings_list_notifications_title" = "Jakinarazpenak";
+"settings_list_chat_title" = "Txataren pantaila";
+"settings_list_media_title" = "Multimedia elementuak";
+"settings_list_storage_management_title" = "Biltegiratzearen kudeaketa";
+"settings_list_passcode_lock_title" = "Kodigoarekin blokeatu";
+"settings_threema_calls" = "Threema ahotsa";
+"settings_list_threema_web_title" = "Mahaigaina/Webgunea";
+
+"settings_list_network_title" = "Sarearen egoera";
+"settings_list_version_title" = "Bertsioa";
+"settings_list_settings_license_username_title" = "Lizentzia erabiltzailearen izena";
+
+"settings_list_invite_a_friend_title" = "Lagunak gonbidatu";
+"settings_list_threema_channel_title" = "Threemaren kanala";
+
+"settings_list_support_title" = "Laguntza";
+"settings_list_privacy_policy_title" = "Pribatutasun-politika";
+"settings_list_license_title" = "Lizentzia";
+"settings_advanced" = "Hobetua";
+"settings_threema_work" = "Threema Work";
+"settings_threema_work_subtitle" = "Enpresentzako komunikazio-irtenbide segurua";
+"settings_feedback" = "Beta Feedback";
+"settings_list_tos_title" = "Zerbitzu-baldintzak";
+
+"settings_md_sync_alert_title" = "Sinkronizazio-errorea";
+
+// Privacy Settings
+"settings_privacy_contacts_header" = "Kontaktuak";
+"settings_privacy_sync_contacts" = "Kontaktuak sinkronizatu";
+"settings_privacy_exclusion_list" = "Baztertuen zerrenda";
+"settings_privacy_exclusion_list_alert_title" = "ID laburregia";
+"settings_privacy_exclusion_list_alert_message" = "Sartu 8 karaktereko luzera duen ID bat.";
+"settings_privacy_block_unknown" = "Ezezagunak blokeatu";
+"settings_privacy_block_unknown_footer_on"= "Zure kontaktu-zerrendako pertsonek bakarrik bidal ditzakete mezuak.";
+"settings_privacy_block_unknown_foooter_off" = "Edonork bidal diezaioke mezu bat. Kontaktu berriak automatikoki gehituko dira lehen mezua iristen denean.";
+
+"settings_privacy_os_header" = "iOSen integrazioa";
+"settings_privacy_os_donate" = "Elkarrekintzak partekatu";
+"settings_privacy_os_reset" = "Elkarrekintzak berrezartu";
+"settings_privacy_os_footer" = "Aukera aktibatuta badago, iOSen edukia partekatzean Threemako kontaktuak gomendatuko dira. Elkarrekintzak partekatzeak iOSi informazioa erakusten dio.";
+
+"settings_privacy_chat_header" = "Txata";
+"settings_privacy_read_receipts" = "Irakurketaren korfirmazioa";
+"settings_privacy_typing_indicator" = "Idazketa adierazleak";
+
+"settings_privacy_TIRR_reset_all" = "Kontaktu guztiak berrezarri";
+"settings_privacy_TIRR_reset_footer" = "Kontaktu guztiak lehengoratu aurrez zehaztutako konfiguraziora.";
+"settings_privacy_TIRR_reset_alert_title" = "Berrezarri";
+"settings_privacy_TIRR_reset_alert_message" = "Kontaktu guztiak lehengoratu aurrez zehaztutako konfiguraziora. Ekintza hori ezin da desegin.";
+"settings_privacy_TIRR_reset_alert_action" = "Berrezarri dena";
+
+"settings_privacy_choose_poi" = "POI aukeratu";
+"settings_privacy_hide_private_chats" = "Txat pribatuak ezkutatu";
+"settings_privacy_hide_private_chats_footer" = "Ezkutatu txat pribatu guztiak txaten laburpenean. Doikuntza hori aktibatzeko kode bat ezarri behar duzu.";
+
+// Appearance Settings
+"settings_appearance_theme_section" = "Gaia";
+"settings_appearance_light_theme" = "Argia";
+"settings_appearance_dark_theme" = "Iluna";
+"settings_appearance_system_theme" = "Sistema";
+"settings_appearance_theme_selected" = "%@ gaia aktibatuta";
+"settings_appearance_theme_active" = "Aktibatuta";
+"settings_appearance_hide_app_icon" = "App ikonoa";
+"settings_appicon_default_header" = "Ikono lehenetsia";
+"settings_appicon_legacy_header" = "Threema ikonoak";
+"settings_appicon_special_header" = "Ikono bereziak";
+"settings_appearance_hide_stale_contacts" = "Ezkutatu ID ez aktiboak";
+"settings_appearance_show_profile_pictures" = "Bistaratu profil argazkiak";
+"settings_appearance_display_order" = "Erakutsi honela";
+"settings_appearance_show_gallery_preview" = "Galeriaren aurrebista";
+
+// Notification Settings
+"settings_notifications_inapp_section" = "Aplikazioan";
+"settings_notifications_inapp_sounds" = "Tonuak aplikazioan";
+"settings_notifications_inapp_vibrate" = "Bibrazioak aplikazioan";
+"settings_notifications_inapp_preview" = "Erakutsi mezuaren aurretiko ikuspegia";
+"settings_notifications_push_section" = "Push jakinarazpenak";
+"settings_notifications_push_sound" = "Tonua";
+"settings_notifications_push_groupsound" = "Talde tonua";
+"settings_notifications_push_preview" = "Erakutsi mezuaren aurretiko ikuspegia";
+"settings_notifications_masterDnd_section_header" = "Ordutegitik kanpoko politika";
+"settings_notifications_masterDnd" = "Ez molestatu ordu libretan";
+"settings_notifications_masterDnd_section_footer" = "Jakinarazpenak desgaitu eta lanorduetatik kanpoko deiak errefusatzen ditu.";
+"settings_notifications_masterDnd_workingDays" = "Lanegunak";
+"settings_notifications_masterDnd_startTime" = "Lanorduen hasiera";
+"settings_notifications_masterDnd_endTime" = "Lanorduen amaiera";
+"settings_notification_iOS_settings" = "Sistemaren ezarpenak";
+
+"settings_notification_type_preview_title" = "Jakinarazpen automatikoak";
+"settings_notification_type_preview_description" = "Adierazi zer informazio sartu behar den jakinarazpen automatikoetan Threeman sartzen diren mezuetarako.";
+
+"settings_notification_type_preview_restrictive_title" = "Ezizena erakutsi";
+"settings_notification_type_preview_restrictive_description" = "Kontaktuaren ezizena baino ez da agertzen.";
+"settings_notification_type_preview_restrictive_sender_name" = "~Negu";
+
+"settings_notification_type_preview_balanced_title" = "Izena erakutsi";
+"settings_notification_type_preview_balanced_description" = "Kontaktuaren izen osoa erakusten da (doikuntza lehenetsia).";
+"settings_notification_type_preview_balanced_sender_name" = "Xabier Durruti";
+
+"settings_notification_type_preview_complete_title" = "Erakutsi izena eta profileko argazkia";
+"settings_notification_type_preview_complete_description" = "Kontaktuaren izen osoa eta profilaren argazkia agertuko dira. Sistema eragilearekiko elkarreraginei buruzko informazioren bat partekatzen da. [Informazio gehiago...](%@)";
+"settings_notification_type_preview_complete_sender_name" = "Xabier Durruti";
+
+"settings_notification_type_preview_message_text" = "Adibide-mezua...";
+"settings_notification_type_preview_no_button" = "Jakinarazpen automatikoak desaktibatu";
+
+// Chat Settings
+"settings_chat_wallpaper_title" = "Horma-papera";
+"settings_chat_wallpaper_reset" = "Pantailaren atzeko planoa berrezarri";
+"settings_chat_wallpaper_empty" = "Bat ere ez";
+"settings_chat_wallpaper_custom" = "Pertsonalizatua";
+"settings_chat_wallpaper_default" = "Lehenetsia";
+"settings_chat_wallpaper_reset_all_alert" = "Txat baterako berariaz konfiguratutako pantaila-fondo guztiak lehen hautatutako aukerara lehengoratzen ditu. Ezin da desegin.";
+
+/* Chat Settings */
+"settings_chat_send_message_feedback_label" = "Ohar haptikoak bidaltzean";
+
+/* Media */
+"settings_media_autosave_private_footer" = "Txat pribatuetan jasotako multimediak ez dira automatikoki gordeko.";
+
+// Storage Management Settings
 "storage_management" = "Biltegiratzearen kudeaketa";
 "storage_total" = "Diskoaren espazio osoa";
 "storage_total_in_use" = "Erabilitakoak";
@@ -1062,85 +1169,27 @@
 "messages" = "Mezuak";
 "files" = "Artxiboak";
 
-
-// Settings
-"settings_privacy" = "Eremu pribatua";
-"settings_appearance" = "Itxura";
-"settings_notification" = "Jakinarazpenak";
-"settings_chat" = "Txataren pantaila";
-"settings_media" = "Multimedia elementuak";
-"settings_storage_management" = "Biltegiratzearen kudeaketa";
-"settings_passcode_lock" = "Kodigoarekin blokeatu";
-"settings_threema_calls" = "Threema ahotsa";
-"settings_threema_web" = "Mahaigaina/Webgunea";
-"settings_network_status" = "Sarearen egoera";
-"settings_version" = "Bertsioa";
-"settings_license_username" = "Lizentzia erabiltzailearen izena";
-"settings_invite_a_friend" = "Lagunak gonbidatu";
-"settings_threema_channel" = "Threemaren kanala";
-"settings_support" = "Laguntza";
-"settings_privacy_policy" = "Pribatutasun politika";
-"settings_license" = "Lizentzia";
-"settings_advanced" = "Hobetua";
-"settings_threema_work" = "Threema Work";
-"settings_feedback" = "Beta Feedback";
-"tos_cell_title" = "Zerbitzu-baldintzak";
-
-"settings_advanced_flush_message_queue" = "Mezu ilara hustu";
+// Call Settings
+"settings_threema_calls_enable_calls" = "Threema ahotsa aktibatu";
+"settings_threema_calls_always_relay_calls" = "Transmititu deia beti";
+"settings_threema_calls_callkit" = "Integratu deiak iOSen";
+"settings_threema_calls_video_section" = "Bideo-deiak";
+"settings_threema_calls_allow_video_calls" = "Bideo-deiak baimendu";
+"settings_threema_calls_video_quality_profile" = "Irudi-kalitate gogokoena";
+"settings_threema_calls_video_quality_profile_low" = "Datuen kontsumo baxua";
+"settings_threema_calls_video_quality_profile_max" = "Kalitate maximoa";
+"settings_threema_calls_video_quality_profile_auto" = "Orekatua (Gomendatua)";
+"settings_threema_calls_video_quality_profile_low_description" = "Irudi kalitatea murriztu datuen kontsumo txikiagoa izateko";
+"settings_threema_calls_video_quality_profile_max_description" = "Arreta: datu kontsumo handia eragin dezake sare mugikorrean ere!";
+"settings_threema_calls_video_quality_profile_auto_description" = "Irudi-kalitate handia WLANen, datu-kontsumo txikia sare mugikorrean";
+"settings_threema_calls_video_quality_profile_footer" = "Benetako irudiaren kalitatea sarearen eta hitz egiten ari den pertsonak dituen doikuntzen araberakoa da.";
+"settings_threema_calls_call_sound" = "Tonua";
 "settings_advanced_orphaned_files_cleanup" = "Artxibo bakartiak ezabatu";
+"settings_advanced_flush_message_queue" = "Mezu ilara hustu";
+
 "settings_advanced_reregister_push_notifications_header_title" = "Push jakinarazpenak";
 "settings_advanced_reregister_push_notifications_footer_title" = "Sartzen diren mezuak ez badira aplikaziotik kanpo agertzen jakinarazpen gisa, berriro erregistra zaitezke jakinarazpenak jasotzeko.";
 "settings_advanced_reregister_notifications_label" = "Berriro erregistratu push jakinarazpenak";
-
-"settings_md_sync_alert_title" = "Sinkronizazio-errorea";
-
-// Privacy
-"settings_privacy_contacts_header" = "Kontaktuak";
-"settings_privacy_sync_contacts" = "Kontaktuak sinkronizatu";
-"settings_privacy_exclusion_list" = "Baztertuen zerrenda";
-"settings_privacy_exclusion_list_alert_title" = "ID laburregia";
-"settings_privacy_exclusion_list_alert_message" = "Sartu 8 karaktereko luzera duen ID bat.";
-"settings_privacy_block_unknown" = "Ezezagunak blokeatu";
-"settings_privacy_block_unknown_footer_on"= "Zure kontaktu-zerrendako pertsonek bakarrik bidal ditzakete mezuak.";
-"settings_privacy_block_unknown_foooter_off" = "Edonork bidal diezaioke mezu bat. Kontaktu berriak automatikoki gehituko dira lehen mezua iristen denean.";
-
-"settings_privacy_os_header" = "iOSen integrazioa";
-"settings_privacy_os_donate" = "Elkarrekintzak partekatu";
-"settings_privacy_os_reset" = "Elkarrekintzak berrezartu";
-"settings_privacy_os_footer" = "Aukera aktibatuta badago, iOSen edukia partekatzean Threemako kontaktuak gomendatuko dira. Elkarrekintzak partekatzeak iOSi informazioa erakusten dio.";
-
-"settings_privacy_chat_header" = "Txata";
-"settings_privacy_read_receipts" = "Irakurketaren korfirmazioa";
-"settings_privacy_typing_indicator" = "Idazketa adierazleak";
-
-"settings_privacy_TIRR_reset_all" = "Kontaktu guztiak berrezarri";
-"settings_privacy_TIRR_reset_footer" = "Kontaktu guztiak lehengoratu aurrez zehaztutako konfiguraziora.";
-"settings_privacy_TIRR_reset_alert_title" = "Berrezarri";
-"settings_privacy_TIRR_reset_alert_message" = "Kontaktu guztiak lehengoratu aurrez zehaztutako konfiguraziora. Ekintza hori ezin da desegin.";
-"settings_privacy_TIRR_reset_alert_action" = "Berrezarri dena";
-
-"settings_privacy_choose_poi" = "POI aukeratu";
-"settings_privacy_hide_private_chats" = "Txat pribatuak ezkutatu";
-"settings_privacy_hide_private_chats_footer" = "Ezkutatu txat pribatu guztiak txaten laburpenean. Doikuntza hori aktibatzeko kode bat ezarri behar duzu.";
-
-// Appearance
-"settings_appearance_theme_section" = "Gaia";
-"settings_appearance_light_theme" = "Argia";
-"settings_appearance_dark_theme" = "Iluna";
-"settings_appearance_system_theme" = "Sistema";
-"settings_appearance_theme_selected" = "%@ gaia aktibatuta";
-"settings_appearance_theme_active" = "Aktibatuta";
-"settings_appearance_hide_app_icon" = "App ikonoa";
-"settings_appicon_default_header" = "Ikono lehenetsia";
-"settings_appicon_legacy_header" = "Threema ikonoak";
-"settings_appicon_special_header" = "Ikono bereziak";
-"settings_appearance_hide_stale_contacts" = "Ezkutatu ID ez aktiboak";
-"settings_appearance_show_profile_pictures" = "Bistaratu profil argazkiak";
-"settings_appearance_display_order" = "Erakutsi honela";
-"settings_appearance_show_gallery_preview" = "Galeriaren aurrebista";
-
-// Media
-"settings_media_autosave_private_footer" = "Txat pribatuetan jasotako multimediak ez dira automatikoki gordeko.";
 
 // Sentry
 "sentry_crash_send_title" = "%@ ustekabean irten da";
@@ -1149,48 +1198,11 @@
 "sentry_crash_send_no" = "Ez bidali";
 "sentry_crash_comment_placeholder" = "Arazoaren Txostena";
 
-
-
 // My profile
 "profile_share_id_text" = "Nire Threemaren IDa";
 // File message
 "optional_caption" = "Izenburua";
 "send_as_file" = "Bidali jatorrizkotzat";
-
-// Notification settings
-"settings_notifications_inapp_section" = "Aplikazioan";
-"settings_notifications_inapp_sounds" = "Tonuak aplikazioan";
-"settings_notifications_inapp_vibrate" = "Bibrazioak aplikazioan";
-"settings_notifications_inapp_preview" = "Erakutsi mezuaren aurretiko ikuspegia";
-"settings_notifications_push_section" = "Push jakinarazpenak";
-"settings_notifications_push_sound" = "Tonua";
-"settings_notifications_push_groupsound" = "Talde tonua";
-"settings_notifications_push_preview" = "Erakutsi mezuaren aurretiko ikuspegia";
-"settings_notifications_masterDnd_section_header" = "Ordutegitik kanpoko politika";
-"settings_notifications_masterDnd" = "Ez molestatu ordu libretan";
-"settings_notifications_masterDnd_section_footer" = "Jakinarazpenak desgaitu eta lanorduetatik kanpoko deiak errefusatzen ditu.";
-"settings_notifications_masterDnd_workingDays" = "Lanegunak";
-"settings_notifications_masterDnd_startTime" = "Lanorduen hasiera";
-"settings_notifications_masterDnd_endTime" = "Lanorduen amaiera";
-"settings_notification_iOS_settings" = "Sistemaren ezarpenak";
-
-"settings_notification_type_preview_title" = "Jakinarazpen automatikoak";
-"settings_notification_type_preview_description" = "Adierazi zer informazio sartu behar den jakinarazpen automatikoetan Threeman sartzen diren mezuetarako.";
-
-"settings_notification_type_preview_restrictive_title" = "Ezizena erakutsi";
-"settings_notification_type_preview_restrictive_description" = "Kontaktuaren ezizena baino ez da agertzen.";
-"settings_notification_type_preview_restrictive_sender_name" = "~Negu";
-
-"settings_notification_type_preview_balanced_title" = "Izena erakutsi";
-"settings_notification_type_preview_balanced_description" = "Kontaktuaren izen osoa erakusten da (doikuntza lehenetsia).";
-"settings_notification_type_preview_balanced_sender_name" = "Xabier Durruti";
-
-"settings_notification_type_preview_complete_title" = "Erakutsi izena eta profileko argazkia";
-"settings_notification_type_preview_complete_description" = "Kontaktuaren izen osoa eta profilaren argazkia agertuko dira. Sistema eragilearekiko elkarreraginei buruzko informazioren bat partekatzen da. [Informazio gehiago...](%@)";
-"settings_notification_type_preview_complete_sender_name" = "Xabier Durruti";
-
-"settings_notification_type_preview_message_text" = "Adibide-mezua...";
-"settings_notification_type_preview_no_button" = "Jakinarazpen automatikoak desaktibatu";
 
 // Orphaned files delete
 "settings_orphaned_files_description" = "Threemaren aurreko bertsioen biltegiratze-kudeaketan datuak ezabatzean, gerta daiteke fitxategi batzuk (multimedia) ondo ez ezabatzea, baina %@ bai ezabatuko dira.
@@ -1212,22 +1224,6 @@ Fitxategi bakartiak zakarrontzira mugitu, eta %@ fitxategirik (multimedia) ez fa
 "settings_orphaned_files_bin_delete_conformation" = "Ziur zaude fitxategi bakartiak betiko ezabatu nahi dituzula? Ekintza hau ezin da desegin.";
 "settings_orphaned_files_log_title" = "REGISTRO FITXATEGIAK";
 "settings_orphaned_files_log_all_files_button" = "Erregistratu fitxategiak Arazte-erregistroan";
-
-// Threema calls settings
-"settings_threema_calls_enable_calls" = "Threema ahotsa aktibatu";
-"settings_threema_calls_always_relay_calls" = "Transmititu deia beti";
-"settings_threema_calls_callkit" = "Integratu deiak iOSen";
-"settings_threema_calls_video_section" = "Bideo-deiak";
-"settings_threema_calls_allow_video_calls" = "Bideo-deiak baimendu";
-"settings_threema_calls_video_quality_profile" = "Irudi-kalitate gogokoena";
-"settings_threema_calls_video_quality_profile_low" = "Datuen kontsumo baxua";
-"settings_threema_calls_video_quality_profile_max" = "Kalitate maximoa";
-"settings_threema_calls_video_quality_profile_auto" = "Orekatua (Gomendatua)";
-"settings_threema_calls_video_quality_profile_low_description" = "Irudi kalitatea murriztu datuen kontsumo txikiagoa izateko";
-"settings_threema_calls_video_quality_profile_max_description" = "Arreta: datu kontsumo handia eragin dezake sare mugikorrean ere!";
-"settings_threema_calls_video_quality_profile_auto_description" = "Irudi-kalitate handia WLANen, datu-kontsumo txikia sare mugikorrean";
-"settings_threema_calls_video_quality_profile_footer" = "Benetako irudiaren kalitatea sarearen eta hitz egiten ari den pertsonak dituen doikuntzen araberakoa da.";
-"settings_threema_calls_call_sound" = "Tonua";
 
 // Media Preview
 "loading_video_failed" = "Ezin izan da bideoa kargatu. Berrabiarazi aplikazioa eta saiatu berriro.";
@@ -1260,8 +1256,6 @@ Fitxategi bakartiak zakarrontzira mugitu, eta %@ fitxategirik (multimedia) ez fa
 "sending_item" = "Itema bidaltzen";
 "send_as_file_title" = "Bidaltzeko era";
 "document" = "Dokumentua";
-"paste_create_file_failure_title" = "Itsasteak huts egin du";
-"paste_create_file_failure_message" = "Ezin izan da fitxategia itsatsi. Saiatu berriro.";
 "loading_files_takes_time_title" = "Media kargatzen";
 "loading_files_takes_time_description" = "Baliteke minutu batzuk behar izatea bideoak bihurtzeko.";
 "pasteErrorMessageTitle" = "Ezin izan da itsatsi";
@@ -1307,8 +1301,6 @@ Fitxategi bakartiak zakarrontzira mugitu, eta %@ fitxategirik (multimedia) ez fa
 "ballot_allDay_switch" = "Egun osoa";
 
 "ballot_choose_title" = "Inkesta Aukeratu";
-"ballot_closed_cell_title" = "Inkestaren emaitzak";
-"ballot_new_cell_title" = "Inkesta berria";
 "ballot_description_intermediate" = "Piztu sarrerako metatutako botoak partaide guztientzat ikusgai izateko. Bestela, emaitzak sekretuan gordeko dira inkesta itxi arte.";
 "ballot_description_multiplechoice" = "Aukeratu parte-hartzaileek aukera bakarra edo aukera anitzak bakarrik aukeratu ditzaketen.";
 
@@ -1418,10 +1410,6 @@ Fitxategi bakartiak zakarrontzira mugitu, eta %@ fitxategirik (multimedia) ez fa
 
 // ChatDetailView
 "detailView_title" = "Mezuaren xehetasunak";
-"detailView_sent" = "Bidalita";
-"detailView_delivered" = "Entregatuta";
-"detailView_read" = "Irakurrita";
-"detailView_ackd" = "Jasota";
 "detailView_messageID" = "Mezuaren IDa";
 "detailView_group_acknowledged" = "Ados (%d)";
 "detailView_group_declined" = "Ez ados (%d)";

@@ -42,35 +42,308 @@ class MessageSenderTests: XCTestCase {
         DDTTYLogger.sharedInstance?.logFormatter = LogFormatterCustom()
         DDLog.add(ddLoggerMock)
     }
-    
-    func testNotAllwedDonateInteractionForOutgoingMessage() throws {
-        
-        let settingsStoreMock = SettingsStoreMock()
-        settingsStoreMock.allowOutgoingDonations = false
-        
-        let businessInjectorMock = BusinessInjectorMock(
-            backgroundEntityManager: EntityManager(databaseContext: dbBackgroundCnx),
-            entityManager: EntityManager(databaseContext: dbMainCnx),
-            groupManager: GroupManagerMock(),
-            licenseStore: LicenseStore.shared(),
-            messageSender: MessageSenderMock(),
-            multiDeviceManager: MultiDeviceManagerMock(),
+
+    func testSendReadReceipt() async throws {
+        let expectedThreemaIdentity = "ECHOECHO"
+        let expectedMessageID = MockData.generateMessageID()
+        let expectedReadDate = Date()
+
+        let message = dbPreparer.save {
+            let contactEntity = dbPreparer.createContact(identity: expectedThreemaIdentity)
+
+            let conversation = dbPreparer.createConversation(contactEntity: contactEntity)
+            return dbPreparer.createTextMessage(
+                conversation: conversation,
+                id: expectedMessageID,
+                isOwn: false,
+                readDate: expectedReadDate,
+                sender: contactEntity,
+                remoteSentDate: Date()
+            )
+        }
+
+        let taskManagerMock = TaskManagerMock()
+
+        let messageSender = MessageSender(
+            serverConnector: ServerConnectorMock(),
             myIdentityStore: MyIdentityStoreMock(),
             userSettings: UserSettingsMock(),
-            settingsStore: settingsStoreMock,
-            serverConnector: ServerConnectorMock(),
-            mediatorMessageProtocol: MediatorMessageProtocolMock(),
-            messageProcessor: MessageProcessorMock()
+            groupManager: GroupManagerMock(),
+            taskManager: taskManagerMock,
+            entityManager: EntityManager(databaseContext: dbMainCnx)
         )
-        
+
+        await messageSender.sendReadReceipt(for: [message], toIdentity: expectedThreemaIdentity)
+
+        XCTAssertFalse(taskManagerMock.addedTasks.isEmpty)
+        XCTAssertEqual(
+            1,
+            taskManagerMock.addedTasks.filter { task in
+                guard let task = task as? TaskDefinitionSendDeliveryReceiptsMessage else {
+                    return false
+                }
+                return task.receiptType == UInt8(DELIVERYRECEIPT_MSGREAD) &&
+                    task.toIdentity == expectedThreemaIdentity &&
+                    task.receiptMessageIDs.contains(expectedMessageID) &&
+                    task.receiptReadDates.contains(expectedReadDate)
+            }.count
+        )
+    }
+
+    func testSendReadReceiptDefaultNoReadReceipt() async throws {
+        let expectedThreemaIdentity = "ECHOECHO"
+
+        let message = dbPreparer.save {
+            let contactEntity = dbPreparer.createContact(identity: expectedThreemaIdentity)
+            let conversation = dbPreparer.createConversation(contactEntity: contactEntity)
+            return dbPreparer.createTextMessage(
+                conversation: conversation,
+                isOwn: false,
+                sender: contactEntity,
+                remoteSentDate: Date()
+            )
+        }
+
+        let userSettings = UserSettingsMock()
+        userSettings.sendReadReceipts = false
+
+        let taskManagerMock = TaskManagerMock()
+
+        let messageSender = MessageSender(
+            serverConnector: ServerConnectorMock(),
+            myIdentityStore: MyIdentityStoreMock(),
+            userSettings: userSettings,
+            groupManager: GroupManagerMock(),
+            taskManager: taskManagerMock,
+            entityManager: EntityManager(databaseContext: dbMainCnx)
+        )
+
+        await messageSender.sendReadReceipt(for: [message], toIdentity: expectedThreemaIdentity)
+
+        XCTAssertTrue(taskManagerMock.addedTasks.isEmpty)
+    }
+
+    func testSendReadReceiptContactNoReadReceipt() async throws {
+        let expectedThreemaIdentity = "ECHOECHO"
+
+        let message = dbPreparer.save {
+            let contactEntity = dbPreparer.createContact(identity: expectedThreemaIdentity)
+            contactEntity.readReceipt = .doNotSend
+
+            let conversation = dbPreparer.createConversation(contactEntity: contactEntity)
+            return dbPreparer.createTextMessage(
+                conversation: conversation,
+                isOwn: false,
+                sender: contactEntity,
+                remoteSentDate: Date()
+            )
+        }
+
+        let taskManagerMock = TaskManagerMock()
+
+        let messageSender = MessageSender(
+            serverConnector: ServerConnectorMock(),
+            myIdentityStore: MyIdentityStoreMock(),
+            userSettings: UserSettingsMock(),
+            groupManager: GroupManagerMock(),
+            taskManager: taskManagerMock,
+            entityManager: EntityManager(databaseContext: dbMainCnx)
+        )
+
+        await messageSender.sendReadReceipt(for: [message], toIdentity: expectedThreemaIdentity)
+
+        XCTAssertTrue(taskManagerMock.addedTasks.isEmpty)
+    }
+
+    func testSendReadReceiptContactNoReadReceiptButMultiDeviceActivated() async throws {
+        let expectedThreemaIdentity = "ECHOECHO"
+        let expectedMessageID = MockData.generateMessageID()
+        let expectedReadDate = Date()
+
+        let message = dbPreparer.save {
+            let contactEntity = dbPreparer.createContact(identity: expectedThreemaIdentity)
+            contactEntity.readReceipt = .doNotSend
+
+            let conversation = dbPreparer.createConversation(contactEntity: contactEntity)
+            return dbPreparer.createTextMessage(
+                conversation: conversation,
+                id: expectedMessageID,
+                isOwn: false,
+                readDate: expectedReadDate,
+                sender: contactEntity,
+                remoteSentDate: Date()
+            )
+        }
+
+        let serverConnectorMock = ServerConnectorMock(
+            connectionState: .loggedIn,
+            deviceID: MockData.deviceID,
+            deviceGroupKeys: MockData.deviceGroupKeys
+        )
+        let taskManagerMock = TaskManagerMock()
+
+        let messageSender = MessageSender(
+            serverConnector: serverConnectorMock,
+            myIdentityStore: MyIdentityStoreMock(),
+            userSettings: UserSettingsMock(),
+            groupManager: GroupManagerMock(),
+            taskManager: taskManagerMock,
+            entityManager: EntityManager(databaseContext: dbMainCnx)
+        )
+
+        await messageSender.sendReadReceipt(for: [message], toIdentity: expectedThreemaIdentity)
+
+        XCTAssertFalse(taskManagerMock.addedTasks.isEmpty)
+        XCTAssertEqual(
+            1,
+            taskManagerMock.addedTasks.filter { task in
+                guard let task = task as? TaskDefinitionSendDeliveryReceiptsMessage else {
+                    return false
+                }
+                return task.receiptType == UInt8(DELIVERYRECEIPT_MSGREAD) &&
+                    task.toIdentity == expectedThreemaIdentity &&
+                    task.receiptMessageIDs.contains(expectedMessageID) &&
+                    task.receiptReadDates.contains(expectedReadDate)
+            }.count
+        )
+    }
+
+    func testSendReadReceiptGroup() async throws {
+        let expectedGroupIdentity = GroupIdentity(id: MockData.generateGroupID(), creator: "ECHOECHO")
+        let expectedThreemaIdentity = "ECHOECHO"
+
+        let (groupEntity, message) = dbPreparer.save {
+            let contactEntity = dbPreparer.createContact(identity: expectedThreemaIdentity)
+
+            let groupEntity = dbPreparer.createGroupEntity(
+                groupID: expectedGroupIdentity.id,
+                groupCreator: nil
+            )
+
+            let conversation = dbPreparer.createConversation(groupID: groupEntity.groupID)
+            return (groupEntity, dbPreparer.createTextMessage(
+                conversation: conversation,
+                isOwn: false,
+                sender: contactEntity,
+                remoteSentDate: Date()
+            ))
+        }
+
+        let groupManagerMock = GroupManagerMock()
+        groupManagerMock.getGroupReturns = Group(
+            myIdentityStore: MyIdentityStoreMock(),
+            userSettings: UserSettingsMock(),
+            groupEntity: groupEntity,
+            conversation: message.conversation,
+            lastSyncRequest: nil
+        )
+        let taskManagerMock = TaskManagerMock()
+
+        let messageSender = MessageSender(
+            serverConnector: ServerConnectorMock(),
+            myIdentityStore: MyIdentityStoreMock(),
+            userSettings: UserSettingsMock(),
+            groupManager: groupManagerMock,
+            taskManager: taskManagerMock,
+            entityManager: EntityManager(databaseContext: dbMainCnx)
+        )
+
+        await messageSender.sendReadReceipt(for: [message], toGroupIdentity: expectedGroupIdentity)
+
+        XCTAssertTrue(taskManagerMock.addedTasks.isEmpty)
+    }
+
+    func testSendReadReceiptGroupButMultiDeviceActivated() async throws {
+        let expectedGroupIdentity = GroupIdentity(id: MockData.generateGroupID(), creator: "ECHOECHO")
+        let expectedThreemaIdentity = "ECHOECHO"
+        let expectedMessageID = MockData.generateMessageID()
+        let expectedReadDate = Date()
+
+        let (groupEntity, message) = dbPreparer.save {
+            let contactEntity = dbPreparer.createContact(identity: expectedThreemaIdentity)
+
+            let groupEntity = dbPreparer.createGroupEntity(
+                groupID: expectedGroupIdentity.id,
+                groupCreator: nil
+            )
+
+            let conversation = dbPreparer.createConversation(groupID: groupEntity.groupID)
+            return (groupEntity, dbPreparer.createTextMessage(
+                conversation: conversation,
+                id: expectedMessageID,
+                isOwn: false,
+                readDate: expectedReadDate,
+                sender: contactEntity,
+                remoteSentDate: Date()
+            ))
+        }
+
+        let serverConnectorMock = ServerConnectorMock(
+            connectionState: .loggedIn,
+            deviceID: MockData.deviceID,
+            deviceGroupKeys: MockData.deviceGroupKeys
+        )
+        let groupManagerMock = GroupManagerMock()
+        groupManagerMock.getGroupReturns = Group(
+            myIdentityStore: MyIdentityStoreMock(),
+            userSettings: UserSettingsMock(),
+            groupEntity: groupEntity,
+            conversation: message.conversation,
+            lastSyncRequest: nil
+        )
+        let taskManagerMock = TaskManagerMock()
+
+        let messageSender = MessageSender(
+            serverConnector: serverConnectorMock,
+            myIdentityStore: MyIdentityStoreMock(),
+            userSettings: UserSettingsMock(),
+            groupManager: groupManagerMock,
+            taskManager: taskManagerMock,
+            entityManager: EntityManager(databaseContext: dbMainCnx)
+        )
+
+        await messageSender.sendReadReceipt(for: [message], toGroupIdentity: expectedGroupIdentity)
+
+        XCTAssertFalse(taskManagerMock.addedTasks.isEmpty)
+        XCTAssertEqual(
+            1,
+            taskManagerMock.addedTasks.filter { task in
+                guard let task = task as? TaskDefinitionSendGroupDeliveryReceiptsMessage else {
+                    return false
+                }
+                print(task.groupID == expectedGroupIdentity.id)
+                print(task.groupCreatorIdentity == expectedGroupIdentity.creator)
+                print(task.receiptMessageIDs.contains(expectedMessageID))
+
+                return task.receiptType == UInt8(DELIVERYRECEIPT_MSGREAD) &&
+                    task.groupID == expectedGroupIdentity.id &&
+                    task.receiptMessageIDs.contains(expectedMessageID) &&
+                    task.receiptReadDates.contains(expectedReadDate)
+            }.count
+        )
+    }
+
+    func testNotAllwedDonateInteractionForOutgoingMessage() throws {
+        let userSettingsMock = UserSettingsMock()
+        userSettingsMock.allowOutgoingDonations = false
+
         var objectID: NSManagedObjectID!
         dbPreparer.createConversation(typing: false, unreadMessageCount: 100, visibility: .default) { conversation in
             conversation.groupID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!
             objectID = conversation.objectID
         }
         let expectation = XCTestExpectation()
-        
-        MessageSender.donateInteractionForOutgoingMessage(in: objectID, with: businessInjectorMock).done { success in
+
+        let messageSender = MessageSender(
+            serverConnector: ServerConnectorMock(),
+            myIdentityStore: MyIdentityStoreMock(),
+            userSettings: userSettingsMock,
+            groupManager: GroupManagerMock(),
+            taskManager: TaskManagerMock(),
+            entityManager: EntityManager(databaseContext: dbMainCnx)
+        )
+
+        messageSender.donateInteractionForOutgoingMessage(in: objectID).done { success in
             if success {
                 XCTFail("Donations are not allowed")
             }
@@ -86,24 +359,9 @@ class MessageSenderTests: XCTestCase {
     }
     
     func testDoNotDonateInteractionForOutgoingMessageIfConversationIsPrivate() throws {
-        let settingsStoreMock = SettingsStoreMock()
-        settingsStoreMock.allowOutgoingDonations = true
-        
-        let businessInjectorMock = BusinessInjectorMock(
-            backgroundEntityManager: EntityManager(databaseContext: dbBackgroundCnx),
-            entityManager: EntityManager(databaseContext: dbMainCnx),
-            groupManager: GroupManagerMock(),
-            licenseStore: LicenseStore.shared(),
-            messageSender: MessageSenderMock(),
-            multiDeviceManager: MultiDeviceManagerMock(),
-            myIdentityStore: MyIdentityStoreMock(),
-            userSettings: UserSettingsMock(),
-            settingsStore: settingsStoreMock,
-            serverConnector: ServerConnectorMock(),
-            mediatorMessageProtocol: MediatorMessageProtocolMock(),
-            messageProcessor: MessageProcessorMock()
-        )
-        
+        let userSettingsMock = UserSettingsMock()
+        userSettingsMock.allowOutgoingDonations = true
+
         var objectID: NSManagedObjectID!
         dbPreparer.createConversation(typing: false, unreadMessageCount: 100, visibility: .default) { conversation in
             conversation.groupID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!
@@ -112,7 +370,19 @@ class MessageSenderTests: XCTestCase {
         }
         let expectation = XCTestExpectation()
         
-        MessageSender.donateInteractionForOutgoingMessage(in: objectID, with: businessInjectorMock).done { success in
+        let messageSender = MessageSender(
+            serverConnector: ServerConnectorMock(),
+            myIdentityStore: MyIdentityStoreMock(),
+            userSettings: userSettingsMock,
+            groupManager: GroupManagerMock(),
+            taskManager: TaskManagerMock(),
+            entityManager: EntityManager(databaseContext: dbMainCnx)
+        )
+
+        messageSender.donateInteractionForOutgoingMessage(
+            in: objectID,
+            backgroundEntityManager: EntityManager(databaseContext: dbBackgroundCnx)
+        ).done { success in
             if success {
                 XCTFail("Donations are not allowed")
             }
@@ -128,25 +398,9 @@ class MessageSenderTests: XCTestCase {
     }
     
     func testAllowedDonateInteractionForOutgoingMessage() throws {
-        
-        let settingsStoreMock = SettingsStoreMock()
-        settingsStoreMock.allowOutgoingDonations = true
-        
-        let businessInjectorMock = BusinessInjectorMock(
-            backgroundEntityManager: EntityManager(databaseContext: dbBackgroundCnx),
-            entityManager: EntityManager(databaseContext: dbMainCnx),
-            groupManager: GroupManagerMock(),
-            licenseStore: LicenseStore.shared(),
-            messageSender: MessageSenderMock(),
-            multiDeviceManager: MultiDeviceManagerMock(),
-            myIdentityStore: MyIdentityStoreMock(),
-            userSettings: UserSettingsMock(),
-            settingsStore: settingsStoreMock,
-            serverConnector: ServerConnectorMock(),
-            mediatorMessageProtocol: MediatorMessageProtocolMock(),
-            messageProcessor: MessageProcessorMock()
-        )
-        
+        let userSettingsMock = UserSettingsMock()
+        userSettingsMock.allowOutgoingDonations = true
+
         var objectID: NSManagedObjectID!
         dbPreparer.createConversation(typing: false, unreadMessageCount: 100, visibility: .default) { conversation in
             conversation.groupID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!
@@ -155,10 +409,24 @@ class MessageSenderTests: XCTestCase {
         
         let expectation = XCTestExpectation()
         
-        MessageSender.donateInteractionForOutgoingMessage(in: objectID, with: businessInjectorMock).done { _ in
+        let messageSender = MessageSender(
+            serverConnector: ServerConnectorMock(),
+            myIdentityStore: MyIdentityStoreMock(),
+            userSettings: userSettingsMock,
+            groupManager: GroupManagerMock(),
+            taskManager: TaskManagerMock(),
+            entityManager: EntityManager(databaseContext: dbMainCnx)
+        )
+
+        messageSender.donateInteractionForOutgoingMessage(
+            in: objectID,
+            backgroundEntityManager: EntityManager(
+                databaseContext: dbBackgroundCnx
+            )
+        ).done { _ in
             // We don't care about success here and only check the absence of a certain log message below
             // because we don't have enabled all entitlements in all targets
-            
+
             expectation.fulfill()
         }
         
@@ -166,5 +434,18 @@ class MessageSenderTests: XCTestCase {
         
         DDLog.sharedInstance.flushLog()
         XCTAssertFalse(ddLoggerMock.exists(message: "Donations are disabled by the user"))
+    }
+
+    func testDoSendReadReceiptToContactEntityIsNil() throws {
+        let messageSender = MessageSender(
+            serverConnector: ServerConnectorMock(),
+            myIdentityStore: MyIdentityStoreMock(),
+            userSettings: UserSettingsMock(),
+            groupManager: GroupManagerMock(),
+            taskManager: TaskManagerMock(),
+            entityManager: EntityManager(databaseContext: dbMainCnx)
+        )
+
+        XCTAssertFalse(messageSender.doSendReadReceipt(to: nil))
     }
 }

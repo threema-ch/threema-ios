@@ -416,7 +416,7 @@ class MessageDecoderTests: XCTestCase {
         XCTAssertEqual(result?.text, "Muttis diweiss")
         XCTAssertNil(result?.quotedMessageID)
         XCTAssertEqual(
-            String(data: try XCTUnwrap(result?.quotedBody()), encoding: .utf8),
+            try String(data: XCTUnwrap(result?.quotedBody()), encoding: .utf8),
             "Muttis diweiss"
         )
     }
@@ -435,7 +435,7 @@ class MessageDecoderTests: XCTestCase {
         XCTAssertEqual(result?.text, "Muttis diweiss")
         XCTAssertEqual(result?.quotedMessageID, expectedQuotedMessageID)
         XCTAssertEqual(
-            String(data: try XCTUnwrap((try XCTUnwrap(result) as QuotedMessageProtocol).quotedBody()), encoding: .utf8),
+            try String(data: XCTUnwrap((XCTUnwrap(result) as QuotedMessageProtocol).quotedBody()), encoding: .utf8),
             expectedQuotedText
         )
     }
@@ -742,7 +742,7 @@ class MessageDecoderTests: XCTestCase {
         XCTAssertEqual(result?.text, msg.text)
         XCTAssertNil(result?.quotedMessageID)
         XCTAssertEqual(
-            String(data: try XCTUnwrap(result?.quotedBody()), encoding: .utf8),
+            try String(data: XCTUnwrap(result?.quotedBody()), encoding: .utf8),
             "TESTID1244444444Test text"
         )
     }
@@ -764,7 +764,7 @@ class MessageDecoderTests: XCTestCase {
         XCTAssertEqual(result?.text, "Test text")
         XCTAssertEqual(result?.quotedMessageID, expectedQuotedMessageID)
         XCTAssertEqual(
-            String(data: try XCTUnwrap((try XCTUnwrap(result) as QuotedMessageProtocol).quotedBody()), encoding: .utf8),
+            try String(data: XCTUnwrap((XCTUnwrap(result) as QuotedMessageProtocol).quotedBody()), encoding: .utf8),
             "TESTID1244444444\(expectedQuotedText)"
         )
     }

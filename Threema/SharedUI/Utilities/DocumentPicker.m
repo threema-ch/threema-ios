@@ -130,17 +130,9 @@ static DocumentPicker *pickerStrongReference;
         if (captionTextField.text.length > 0) {
             item.caption = captionTextField.text;
         }
-        if ([UserSettings sharedUserSettings].newChatViewActive) {
-            BlobManagerObjcWrapper *manager = [[BlobManagerObjcWrapper alloc] init];
-            [manager createMessageAndSyncBlobsFor:item in:_conversation correlationID:nil webRequestID:nil];
-            
-        } else {
-            [MBProgressHUD showHUDAddedTo:_presentingViewController.view animated:YES];
-            Old_FileMessageSender *sender = [[Old_FileMessageSender alloc] init];
-            sender.uploadProgressDelegate = self;
-            [sender sendItem:item inConversation:_conversation];
-        }
         
+        BlobManagerObjcWrapper *manager = [[BlobManagerObjcWrapper alloc] init];
+        [manager createMessageAndSyncBlobsFor:item in:_conversation correlationID:nil webRequestID:nil completion:nil];
     }];
     [alertController addAction:defaultAction];
     

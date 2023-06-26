@@ -93,7 +93,7 @@ extension FileMessageEntity: VideoMessage, VoiceMessage {
    
     // Info: This will always return 0 on simulators, last tested Xcode 14.1
     public var durationTimeInterval: TimeInterval? {
-        guard let duration = duration else {
+        guard let duration else {
             return nil
         }
         
@@ -105,7 +105,7 @@ extension FileMessageEntity: VideoMessage, VoiceMessage {
             return nil
         }
 
-        guard var mimeType = mimeType else {
+        guard var mimeType else {
             return nil
         }
         

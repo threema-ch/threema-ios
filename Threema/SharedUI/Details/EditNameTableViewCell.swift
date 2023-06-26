@@ -32,7 +32,7 @@ protocol EditNameTableViewCellDelegate: AnyObject {
     func editNameTableViewCell(_ editNameTableViewCell: EditNameTableViewCell, didChangeTextTo newText: String?)
 }
 
-// MARK: - Configuration
+// MARK: - EditNameTableViewCell.Configuration
 
 extension EditNameTableViewCell {
     private struct Configuration: DetailsConfiguration { }
@@ -155,7 +155,7 @@ extension EditNameTableViewCell: UITextFieldDelegate {
         replacementString string: String
     ) -> Bool {
         // Limit number of UTF-8 bytes if there is any limit
-        guard let maxNumberOfUTF8Bytes = maxNumberOfUTF8Bytes else {
+        guard let maxNumberOfUTF8Bytes else {
             return true
         }
         

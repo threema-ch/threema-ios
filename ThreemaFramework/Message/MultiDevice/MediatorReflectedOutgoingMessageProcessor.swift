@@ -58,9 +58,9 @@ class MediatorReflectedOutgoingMessageProcessor {
     ///     - outgoingMessage: Reflected outgoing message from mediator
     ///     - abstractMessage: Outgoing abstract message (decoded from `D2d_OutgoingMessage.body`)
     /// - Throws: MediatorReflectedProcessorError.outgoingMessageTypeIsDeprecated
-    func process<T: AbstractMessage>(
+    func process(
         outgoingMessage omsg: D2d_OutgoingMessage,
-        abstractMessage amsg: T
+        abstractMessage amsg: some AbstractMessage
     ) throws -> Promise<Void> {
         switch amsg.self {
         case is BoxAudioMessage:
@@ -146,7 +146,7 @@ class MediatorReflectedOutgoingMessageProcessor {
 
         try messageStore.save(
             ballotCreateMessage: amsg,
-            conversationIdentity: try getReceiverIdentity(for: omsg),
+            conversationIdentity: getReceiverIdentity(for: omsg),
             createdAt: omsg.createdAt,
             timestamp: timestamp,
             isOutgoing: true
@@ -168,9 +168,9 @@ class MediatorReflectedOutgoingMessageProcessor {
         outgoingMessage omsg: D2d_OutgoingMessage,
         fileMessage amsg: BoxFileMessage
     ) throws -> Promise<Void> {
-        messageStore.save(
+        try messageStore.save(
             fileMessage: amsg,
-            conversationIdentity: try getReceiverIdentity(for: omsg),
+            conversationIdentity: getReceiverIdentity(for: omsg),
             createdAt: omsg.createdAt,
             timestamp: timestamp,
             isOutgoing: true,
@@ -184,7 +184,7 @@ class MediatorReflectedOutgoingMessageProcessor {
     ) throws -> Promise<Void> {
         try messageStore.save(
             locationMessage: amsg,
-            conversationIdentity: try getReceiverIdentity(for: omsg),
+            conversationIdentity: getReceiverIdentity(for: omsg),
             createdAt: omsg.createdAt,
             timestamp: timestamp,
             isOutgoing: true
@@ -198,7 +198,7 @@ class MediatorReflectedOutgoingMessageProcessor {
     ) throws -> Promise<Void> {
         try messageStore.save(
             textMessage: amsg,
-            conversationIdentity: try getReceiverIdentity(for: omsg),
+            conversationIdentity: getReceiverIdentity(for: omsg),
             createdAt: omsg.createdAt,
             timestamp: timestamp,
             isOutgoing: true

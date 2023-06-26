@@ -36,7 +36,7 @@ class RestoreSafeForgotIDChooseViewController: IDCreationPageViewController {
         
         cancelButton.setTitle(BundleUtil.localizedString(forKey: "cancel"), for: .normal)
         
-        if let ids = ids {
+        if let ids {
             var index = 1
             for id in ids {
                 print(id)

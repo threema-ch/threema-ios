@@ -141,13 +141,13 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
             systemMessageDate: systemMessageDate,
             sourceCaller: .local
         ).then { group -> Promise<(Group, Set<String>?)> in
-            guard let group = group else {
+            guard let group else {
                 return Promise(error: GroupError.groupNotFound)
             }
 
             var newMembers: Set<String>?
             self.entityManager.performBlockAndWait {
-                if let oldMembers = oldMembers,
+                if let oldMembers,
                    let conversation = self
                    .getConversation(for: GroupIdentity(id: group.groupID, creator: group.groupCreatorIdentity)) {
                     newMembers = Set(
@@ -311,7 +311,7 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
                         if groupEntity.state != NSNumber(value: GroupState.active.rawValue) {
                             groupEntity.state = NSNumber(value: GroupState.active.rawValue)
 
-                            if let systemMessageDate = systemMessageDate {
+                            if let systemMessageDate {
                                 self.postSystemMessage(
                                     in: conversation,
                                     type: kSystemMessageGroupSelfAdded,
@@ -321,7 +321,8 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
                             }
                         }
 
-                        // My ID should be set on active group conversation (could be an old ID e.g. after restored a backup)
+                        // My ID should be set on active group conversation (could be an old ID e.g. after restored a
+                        // backup)
                         if let groupMyIdentity = conversation.groupMyIdentity,
                            !groupMyIdentity.elementsEqual(self.myIdentityStore.identity) {
                             conversation.groupMyIdentity = self.myIdentityStore.identity
@@ -336,7 +337,7 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
                             if let memberContact = self.entityManager.entityFetcher.contact(for: memberIdentity) {
                                 conversation.removeMembersObject(memberContact)
 
-                                if let systemMessageDate = systemMessageDate {
+                                if let systemMessageDate {
                                     self.postSystemMessage(
                                         in: conversation,
                                         member: memberContact,
@@ -384,7 +385,7 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
 
                             conversation.addMembersObject(contact)
 
-                            if let systemMessageDate = systemMessageDate {
+                            if let systemMessageDate {
                                 self.postSystemMessage(
                                     in: conversation,
                                     member: contact,
@@ -430,7 +431,7 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
                         )
                     }
 
-                    if let internalError = internalError {
+                    if let internalError {
                         return Promise(error: internalError)
                     }
 
@@ -456,7 +457,7 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
                             for: groupID,
                             creator: creator
                         ) {
-                            if addSystemMessage, let systemMessageDate = systemMessageDate {
+                            if addSystemMessage, let systemMessageDate {
                                 self.postSystemMessage(
                                     in: conversation,
                                     type: kSystemMessageGroupSelfRemoved,
@@ -506,7 +507,8 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
         ))
     }
     
-    /// Individually fetches the contacts with the listed identities from the database or requests them individually from the directory server.
+    /// Individually fetches the contacts with the listed identities from the database or requests them individually
+    /// from the directory server.
     /// Use `fetchContacts` to fetch multiple contacts
     /// - Parameter identities: identities to fetch from the database or directory server
     /// - Returns: The fetched contact or an error
@@ -644,7 +646,8 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
         return setPhoto(group: grp, imageData: imageData, sentDate: sentDate, send: send)
     }
     
-    /// Update group photo and upload photo and send group set photo message (`GroupSetPhotoMessage`) to members, if I'm the creator.
+    /// Update group photo and upload photo and send group set photo message (`GroupSetPhotoMessage`) to members, if I'm
+    /// the creator.
     ///
     /// - Parameters:
     ///   - group: Group to update photo
@@ -659,10 +662,17 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
         sentDate: Date,
         send: Bool
     ) -> Promise<Void> {
-        guard let conversation = entityManager.entityFetcher.conversation(
-            for: group.groupID,
-            creator: group.groupCreatorIdentity
-        ) else {
+
+        let (conversationObjectID, conversationGroupImageSetDate, conversationGroupImageData) = entityManager
+            .performAndWait {
+                let conversation = self.entityManager.entityFetcher.conversation(
+                    for: group.groupID,
+                    creator: group.groupCreatorIdentity
+                )
+                return (conversation?.objectID, conversation?.groupImageSetDate, conversation?.groupImage?.data)
+            }
+
+        guard let conversationObjectID else {
             return Promise(error: GroupError.groupConversationNotFound)
         }
 
@@ -671,36 +681,46 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
         // Check if this message is older than the last set date. This ensures that we're using
         // the latest image in case multiple images arrive for the same conversation in short succession.
         // Must do the check here (main thread) to avoid race condition.
-        if let imageSetDate = conversation.groupImageSetDate,
+        if let imageSetDate = conversationGroupImageSetDate,
            imageSetDate.compare(sentDate) == .orderedDescending {
             
             DDLogInfo("Ignoring older group set photo message")
-            imageDataSend = conversation.groupImage?.data
+            imageDataSend = conversationGroupImageData
         }
         else if let image = UIImage(data: imageData) {
-            entityManager.performSyncBlockAndSafe {
-                var dbImage: ImageData? = conversation.groupImage
-                if dbImage == nil {
-                    dbImage = self.entityManager.entityCreator.imageData()
-                }
-                
-                guard dbImage?.data != imageData else {
-                    return
-                }
-                
-                dbImage?.data = imageData
-                dbImage?.width = NSNumber(floatLiteral: Double(image.size.width))
-                dbImage?.height = NSNumber(floatLiteral: Double(image.size.height))
+            do {
+                try entityManager.performAndWaitSave {
+                    guard let conversation = self.entityManager.entityFetcher
+                        .existingObject(with: conversationObjectID) as? Conversation else {
+                        throw GroupError.groupConversationNotFound
+                    }
 
-                conversation.groupImageSetDate = sentDate
-                conversation.groupImage = dbImage
-                
-                self.postSystemMessage(
-                    in: conversation,
-                    type: kSystemMessageGroupAvatarChanged,
-                    arg: nil,
-                    date: Date()
-                )
+                    var dbImage: ImageData? = conversation.groupImage
+                    if dbImage == nil {
+                        dbImage = self.entityManager.entityCreator.imageData()
+                    }
+
+                    guard dbImage?.data != imageData else {
+                        return
+                    }
+
+                    dbImage?.data = imageData
+                    dbImage?.width = NSNumber(floatLiteral: Double(image.size.width))
+                    dbImage?.height = NSNumber(floatLiteral: Double(image.size.height))
+
+                    conversation.groupImageSetDate = sentDate
+                    conversation.groupImage = dbImage
+
+                    self.postSystemMessage(
+                        in: conversation,
+                        type: kSystemMessageGroupAvatarChanged,
+                        arg: nil,
+                        date: Date()
+                    )
+                }
+            }
+            catch {
+                return Promise(error: error)
             }
 
             imageDataSend = imageData
@@ -710,7 +730,7 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
         }
         
         if send, group.isOwnGroup,
-           let imageDataSend = imageDataSend {
+           let imageDataSend {
             return sendPhoto(
                 to: group,
                 imageData: imageDataSend,
@@ -735,7 +755,8 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
     
     // MARK: - Delete photo
     
-    /// Delete group photo and send group delete photo message (`GroupDeletePhotoMessage`) to members, if I'm the creator.
+    /// Delete group photo and send group delete photo message (`GroupDeletePhotoMessage`) to members, if I'm the
+    /// creator.
     ///
     /// - Parameters:
     ///   - groupID: ID (8 bytes) of the group, unique with creator
@@ -776,7 +797,7 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
                 )
             }
         }
-        if let internalError = internalError {
+        if let internalError {
             return Promise(error: internalError)
         }
         
@@ -943,7 +964,7 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
 
                 // Add task to kick all active members (and reflect left group), and left the group
                 let task = TaskDefinitionGroupDissolve(group: group)
-                if let identities = identities {
+                if let identities {
                     task.toMembers = Array(identities)
                 }
                 else {
@@ -963,13 +984,14 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
                 }
             }
             else {
-                // Group not found (means conversation was deleted), kick identities except me if I'm group creator and has left the group
+                // Group not found (means conversation was deleted), kick identities except me if I'm group creator and
+                // has left the group
                 guard let groupEntity = self.entityManager.entityFetcher.groupEntity(
                     for: groupID,
                     with: nil
                 ),
                     groupEntity.didLeave(),
-                    let identities = identities
+                    let identities
                 else {
                     return
                 }
@@ -998,7 +1020,8 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
     
     /// Sync group information to identities.
     ///
-    /// Send group create, rename and set photo message to each identity that is a member. Send a group create to non-members with an empty
+    /// Send group create, rename and set photo message to each identity that is a member. Send a group create to
+    /// non-members with an empty
     /// members list.
     ///
     /// - Parameters:
@@ -1016,7 +1039,7 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
             return Promise(error: GroupError.notCreator)
         }
         
-        guard let identities = identities else {
+        guard let identities else {
             // Sync to all members
             return sync(
                 group: group,
@@ -1088,8 +1111,13 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
                     DDLogError("Could not send group request sync, because of missing group creator \(creator) contact")
                 }
             }
-        ) { _ in
-            DDLogError("Could not fetch public key for \(creator)")
+        ) { error in
+            if let error = error as? NSError {
+                DDLogError("Could not fetch public key for \(creator); Error: \(error.description) \(error.code) ")
+            }
+            else {
+                DDLogError("Could not fetch public key for \(creator)")
+            }
         }
     }
     
@@ -1134,7 +1162,7 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
         taskManager.add(taskDefinition: sendNameTask)
         
         // 7. If the group has no profile picture, send a `delete-profile-picture` group control message to the sender.
-        if group.photo?.data == nil {
+        if group.profilePicture == nil {
             let deletePhotoTask = createDeletePhotoTask(for: group, to: toMembers)
             taskManager.add(taskDefinition: deletePhotoTask)
         }
@@ -1153,8 +1181,8 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
         // don't guarantee it to be sent out before the a group message is sent
         
         // 6. If the group has a profile picture, send a `set-profile-picture` group control message to the sender.
-        if let photoData = group.photo?.data {
-            sendPhoto(to: group, imageData: photoData, toMembers: toMembers)
+        if let profilePicture = group.profilePicture {
+            sendPhoto(to: group, imageData: profilePicture, toMembers: toMembers)
                 .catch { error in
                     // Note: This might never be called if the task was persisted at some point in
                     // the meantime
@@ -1352,12 +1380,12 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
         }
         
         func runGroupPhotoTask() -> Promise<Void> {
-            var photoData: Data?
+            var profilePicture: Data?
             entityManager.performBlockAndWait {
-                photoData = group.photo?.data
+                profilePicture = group.profilePicture
             }
 
-            guard let data = photoData else {
+            guard let data = profilePicture else {
                 // 7. If the group has no profile picture, send a `delete-profile-picture` group
                 // control message to the sender.
                 let task = createDeletePhotoTask(for: group, to: toMembers)
@@ -1421,23 +1449,21 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
                 withImageData: imageData,
                 isNoteGroup: group.isNoteGroup
             ) { blobID, encryptionKey in
-                guard let blobID = blobID, let encryptionKey = encryptionKey else {
+                guard let blobID, let encryptionKey else {
                     seal.reject(GroupError.blobIDOrKeyMissing)
                     return
                 }
-
-                self.entityManager.performBlockAndWait {
-                    let task = TaskDefinitionSendGroupSetPhotoMessage(
-                        group: self.getGroup(groupID, creator: groupCreatorIdentity),
-                        from: self.myIdentityStore.identity,
-                        to: toMembers,
-                        size: UInt32(imageData.count),
-                        blobID: blobID,
-                        encryptionKey: encryptionKey
-                    )
-
-                    seal.fulfill(task)
-                }
+                
+                let task = TaskDefinitionSendGroupSetPhotoMessage(
+                    group: self.getGroup(groupID, creator: groupCreatorIdentity),
+                    from: self.myIdentityStore.identity,
+                    to: toMembers,
+                    size: UInt32(imageData.count),
+                    blobID: blobID,
+                    encryptionKey: encryptionKey
+                )
+                
+                seal.fulfill(task)
             } onError: { _ in
                 seal.reject(GroupError.photoUploadFailed)
             }
@@ -1526,7 +1552,7 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
             return
         }
         
-        guard let members = members,
+        guard let members,
               !members.isEmpty,
               let ballots = conversation.ballots else {
             return

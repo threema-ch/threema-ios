@@ -89,7 +89,7 @@ final class EditGroupViewController: ThemedCodeModernGroupedTableViewController 
             strongSelf.avatarImageData = newImageData
             
             // Return default group avatar if no data is available or readable
-            guard let newImageData = newImageData,
+            guard let newImageData,
                   let newImage = UIImage(data: newImageData) else {
                 
                 let newAvatarImage = AvatarMaker.shared().unknownGroupImage()
@@ -120,7 +120,7 @@ final class EditGroupViewController: ThemedCodeModernGroupedTableViewController 
         
         self.group = group
         
-        self.avatarImageData = group.photo?.data
+        self.avatarImageData = group.profilePicture
         self.groupName = group.name
         
         super.init()
@@ -226,7 +226,7 @@ final class EditGroupViewController: ThemedCodeModernGroupedTableViewController 
     
     private func updateSaveButtonState(for newName: String?) {
         // Deactivate save button if name is empty
-        guard let newName = newName, !newName.isEmpty else {
+        guard let newName, !newName.isEmpty else {
             navigationItem.rightBarButtonItem?.isEnabled = false
             return
         }
@@ -300,7 +300,7 @@ extension EditGroupViewController {
     }
     
     private var avatarImageDidChange: Bool {
-        group.photo?.data != avatarImageData
+        group.profilePicture != avatarImageData
     }
     
     private func saveGroupName() {
@@ -319,7 +319,7 @@ extension EditGroupViewController {
             return
         }
         
-        if let avatarImageData = avatarImageData {
+        if let avatarImageData {
             groupManager.setPhoto(
                 group: group,
                 imageData: avatarImageData,

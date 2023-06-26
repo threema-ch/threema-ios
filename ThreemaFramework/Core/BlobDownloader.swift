@@ -22,7 +22,8 @@ import CocoaLumberjackSwift
 import Foundation
 import PromiseKit
 
-/// Used to keep track of URLSessionTasks and their progress. Should not be called directly but rather through BlobManager.
+/// Used to keep track of URLSessionTasks and their progress. Should not be called directly but rather through
+/// BlobManager.
 class BlobDownloader: NSObject {
     
     enum BlobDownloaderError: Error {
@@ -75,22 +76,22 @@ class BlobDownloader: NSObject {
         try await withCheckedThrowingContinuation { continuation in
             
             blobURL.download(blobID: blobID, origin: origin) { downloadURL, error in
-                if let error = error {
+                if let error {
                     continuation.resume(throwing: error)
                     return
                 }
                 
-                guard let downloadURL = downloadURL else {
+                guard let downloadURL else {
                     continuation.resume(throwing: BlobDownloaderError.invalidDownloadURL)
                     return
                 }
 
                 let task = self.startDownload(for: downloadURL) { data, error in
                     // Download was completed
-                    if let error = error {
+                    if let error {
                         continuation.resume(throwing: error)
                     }
-                    else if let data = data {
+                    else if let data {
                         continuation.resume(returning: data)
                     }
                     else {
@@ -118,12 +119,34 @@ class BlobDownloader: NSObject {
  
     @objc func download(blobID: Data, origin: BlobOrigin, completion: @escaping (Data?, Error?) -> Void) {
         blobURL.download(blobID: blobID, origin: origin) { downloadURL, _ in
-            guard let downloadURL = downloadURL else {
+            guard let downloadURL else {
                 completion(nil, BlobDownloaderError.invalidDownloadURL)
                 return
             }
             
             self.startDownload(for: downloadURL, completion: completion)
+        }
+    }
+
+    @objc func markDownloadDone(for blobID: Data, origin: BlobOrigin) {
+        blobURL.done(
+            blobID: blobID,
+            origin: origin
+        ) { doneURL, error in
+            if let error {
+                DDLogError("Marking blob ID \(blobID.hexString) failed: \(error)")
+                return
+            }
+
+            guard let doneURL else {
+                DDLogWarn("Download done URL for blob ID \(blobID.hexString) missing")
+                return
+            }
+
+            Task {
+                let httpClient = HTTPClient(sessionManager: self.urlSessionManager)
+                try await httpClient.sendDone(url: doneURL)
+            }
         }
     }
     
@@ -133,7 +156,7 @@ class BlobDownloader: NSObject {
         let task = httpClient.downloadData(url: url, contentType: .octetStream) { data, response, error in
             var downloadError: Error?
             
-            if let error = error {
+            if let error {
                 downloadError = error
             }
             else {

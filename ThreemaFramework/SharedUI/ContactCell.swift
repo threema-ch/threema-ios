@@ -18,6 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import CocoaLumberjackSwift
 import UIKit
 
 /// Cell to represent any contact shown in a list
@@ -49,7 +50,7 @@ public final class ContactCell: ThemedCodeTableViewCell {
     /// Contact to show
     public var content: Content? {
         didSet {
-            guard let content = content else {
+            guard let content else {
                 return
             }
             
@@ -64,7 +65,8 @@ public final class ContactCell: ThemedCodeTableViewCell {
         }
     }
     
-    /// Only use with Obj-C. It's here for backward compatibility and should be removed if no more Obj-C code uses this cell.
+    /// Only use with Obj-C. It's here for backward compatibility and should be removed if no more Obj-C code uses this
+    /// cell.
     /// Use `content` from Swift.
     @objc var _contact: ContactEntity? {
         didSet {
@@ -296,31 +298,40 @@ public final class ContactCell: ThemedCodeTableViewCell {
     
     private func configureContactCell(for contact: Contact) {
         let em = BusinessInjector().entityManager
-        let contactEntity = em.entityFetcher.contact(for: contact.identity)
         em.performBlock {
-            AvatarMaker.shared()
-                .avatar(
-                    for: contactEntity,
-                    size: self.configuration.maxAvatarSize,
-                    masked: true
-                ) { avatarImage, identity in
-                    guard let avatarImage = avatarImage,
-                          let identity = identity else {
-                        // Show placeholder
-                        self.avatarImageView.image = AvatarMaker.shared().unknownPersonImage()
-                        return
-                    }
+            if let contactEntity = em.entityFetcher.contact(for: contact.identity) {
+                AvatarMaker.shared()
+                    .avatar(
+                        for: contactEntity,
+                        size: self.configuration.maxAvatarSize,
+                        masked: true
+                    ) { avatarImage, identity in
+                        guard let avatarImage,
+                              let identity else {
+                            // Show placeholder
+                            self.avatarImageView.image = AvatarMaker.shared().unknownPersonImage()
+                            return
+                        }
 
-                    if identity == contact.identity {
-                        DispatchQueue.main.async {
-                            self.avatarImageView.image = avatarImage
+                        if identity == contact.identity {
+                            DispatchQueue.main.async {
+                                self.avatarImageView.image = avatarImage
+                            }
                         }
                     }
-                }
 
-            self.otherThreemaTypeIcon.isHidden = !contactEntity!.showOtherThreemaTypeIcon
+                self.otherThreemaTypeIcon.isHidden = !contactEntity.showOtherThreemaTypeIcon
 
-            self.nameLabel.contact = contactEntity
+                self.nameLabel.contact = contactEntity
+            }
+            else {
+                DDLogError(
+                    "Can't find contact entity to set the avatar, type icon and name. It will show 'me' as contact name"
+                )
+                self.avatarImageView.image = AvatarMaker.shared().unknownPersonImage()
+                self.otherThreemaTypeIcon.isHidden = true
+                self.nameLabel.contact = nil
+            }
         }
 
         verificationLevelImageView.image = contact.verificationLevelImageSmall

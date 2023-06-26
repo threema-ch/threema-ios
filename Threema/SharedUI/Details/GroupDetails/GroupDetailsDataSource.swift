@@ -22,6 +22,8 @@ import CocoaLumberjackSwift
 import MBProgressHUD
 import UIKit
 
+// MARK: - GroupDetailsDataSource.Configuration
+
 extension GroupDetailsDataSource {
     struct Configuration {
         /// Number of members shown directly in details
@@ -217,7 +219,8 @@ final class GroupDetailsDataSource: UITableViewDiffableDataSource<GroupDetails.S
     
     // MARK: - Update content
     
-    /// Freshly load the all the row items in the provided sections (and remove the section if there are no rows to show)
+    /// Freshly load the all the row items in the provided sections (and remove the section if there are no rows to
+    /// show)
     ///
     /// If the you just want to refresh the items call `refresh(sections:)`.
     ///
@@ -738,7 +741,7 @@ extension GroupDetailsDataSource {
         }
         
         // Only allow cloning if not disabled by mdm
-        if let mdmSetup = mdmSetup, !mdmSetup.disableCreateGroup() {
+        if let mdmSetup, !mdmSetup.disableCreateGroup() {
             let localizedCloneGroupTitle = BundleUtil.localizedString(forKey: "group_clone_button")
             let cloneGroupAction = Details.Action(
                 title: localizedCloneGroupTitle,

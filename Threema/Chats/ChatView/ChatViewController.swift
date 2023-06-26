@@ -23,11 +23,6 @@ import OSLog
 import ThreemaFramework
 import UIKit
 
-// TODO: IOS-2860 Remove before release. Used to instrument new ChatView
-class PointsOfInterestSignpost: NSObject {
-    @objc static let log = OSLog(subsystem: "ch.threema.iapp.newChatView", category: .pointsOfInterest)
-}
-
 /// The chat view!
 ///
 /// TODO: Describe "architecture/dependencies"
@@ -49,15 +44,18 @@ final class ChatViewController: ThemedViewController {
     /// Resetting the keyboard may cause animations to be cancelled which is not great when new messages are added
     var isResettingKeyboard = false
     
-    /// True if the last time `willEnterForeground` was called the window of `view` was nil and we have not yet executed the checks for the unread message line.
+    /// True if the last time `willEnterForeground` was called the window of `view` was nil and we have not yet executed
+    /// the checks for the unread message line.
     /// False otherwise; will be set to false after executing the checks for the unread message line.
-    //// Part of the workaround for the passcode lock screen. See `ChatViewTableView` for additional info
+    /// Part of the workaround for the passcode lock screen. See `ChatViewTableView` for additional info
     var didEnterForegroundWithNilWindow = false
     
     // MARK: - Model
     
     /// Conversation shown in this chat view
-    /// This should not be accessed outside of this class. It will be marked as private as soon as ChatViewControllerActions have been refactor to incorporate this.
+    ///
+    /// This should not be accessed outside of this class. It will be marked as private as soon as
+    /// ChatViewControllerActions have been refactor to incorporate this.
     @available(
         iOS,
         deprecated: 0.0,
@@ -79,10 +77,12 @@ final class ChatViewController: ThemedViewController {
     // MARK: - UI
     
     /// A serial queue used for queueing scrollToRow when initiating scroll to bottom from `didApplySnapshot`.
-    /// The queue is needed since we're need to wait until snapshot apply is done before actually programmatically scrolling.
+    /// The queue is needed since we're need to wait until snapshot apply is done before actually programmatically
+    /// scrolling.
     private let scrollToQueue = DispatchQueue(label: "ch.threema.chatView.scrollQueue", qos: .userInteractive)
     
-    /// Scroll state used to update contentOffset between `willApplySnapshot(currentDoesIncludeNewestMessage:)` and `didApplySnapshot(delegateScrollCompletion:)`
+    /// Scroll state used to update contentOffset between `willApplySnapshot(currentDoesIncludeNewestMessage:)` and
+    /// `didApplySnapshot(delegateScrollCompletion:)`
     private var currentScrollState: ChatViewScrollState?
     
     /// Mode the chat view user interface is in
@@ -246,7 +246,8 @@ final class ChatViewController: ThemedViewController {
         
         tableView.alpha = 0.0
         
-        // This fixes an issue, where voice over selected a random cell after scrolling to bottom when opening the chat view the first time.
+        // This fixes an issue, where voice over selected a random cell after scrolling to bottom when opening the chat
+        // view the first time.
         // We set the animations to true again, after we set the alpha back to 1.0
         if UIAccessibility.isVoiceOverRunning {
             UIView.setAnimationsEnabled(false)
@@ -286,12 +287,15 @@ final class ChatViewController: ThemedViewController {
         unreadMessagesSnapshot: unreadMessagesSnapshot
     )
     
-    /// Coordinates the number of unread messages that should be displayed and whether the unread message line should be shown at all
-    /// The chatViewDataSource uses this through its delegate to check whether a new snapshot should include the unread message line or not.
+    /// Coordinates the number of unread messages that should be displayed and whether the unread message line should be
+    /// shown at all
+    /// The chatViewDataSource uses this through its delegate to check whether a new snapshot should include the unread
+    /// message line or not.
     ///
     /// The unread message line is displayed if the chat is opened and there are unread messages in it or
     /// if the scroll position is not at the very bottom and new messages are received.
-    /// It is hidden if the user manually scrolls to the bottom of the chat view either through the scroll to bottom button or by dragging the scrollView.
+    /// It is hidden if the user manually scrolls to the bottom of the chat view either through the scroll to bottom
+    /// button or by dragging the scrollView.
     private lazy var unreadMessagesSnapshot = UnreadMessagesStateManager(
         conversation: self.conversation,
         businessInjector: self.businessInjector,
@@ -342,12 +346,12 @@ final class ChatViewController: ThemedViewController {
     private lazy var scrollToBottomButton = ScrollToBottomView(
         unreadMessagesSnapshot: unreadMessagesSnapshot
     ) { [weak self] in
-        guard let self = self else {
+        guard let self else {
             return
         }
         
-        // We cannot do a layout pass during scrolling (otherwise scrolling might be stopped when updating content insets)
-        // Thus we do one now
+        // We cannot do a layout pass during scrolling (otherwise scrolling might be stopped when updating content
+        // insets). Thus we do one now
         self.view.layoutIfNeeded()
         
         // If the unread message line is currently visible, we scroll to the very bottom of the view
@@ -443,8 +447,9 @@ final class ChatViewController: ThemedViewController {
     private var willEnterForeGroundCompletionTimer: Timer?
     
     /// Upon reentering foreground we might want to scroll the unread message line but it might not be loaded
-    /// This allows us to add a task which is then executed either immediately if the unread message line is already showing
-    /// or on next `didApplySnapshot`.
+    ///
+    /// This allows us to add a task which is then executed either immediately if the unread message line is already
+    /// showing or on next `didApplySnapshot`.
     private var willEnterForegroundCompletion: (((() -> Void)?) -> Void)? {
         didSet {
             if willEnterForegroundCompletion == nil {
@@ -471,7 +476,8 @@ final class ChatViewController: ThemedViewController {
     private var isJumping = false
     
     private var isScrolling = false
-    /// This is true while we are programmatically scrolling to bottom or when the scrolling was cancelled and we are not scrolling anymore
+    /// This is true while we are programmatically scrolling to bottom or when the scrolling was cancelled and we are
+    /// not scrolling anymore
     /// Before setting `isProgrammaticallyScrollingToBottom` `isScrolling` must always been set to true
     private var isProgrammaticallyScrollingToBottom = false {
         didSet {
@@ -481,7 +487,8 @@ final class ChatViewController: ThemedViewController {
         }
     }
     
-    /// When the keyboard was shown before the ContextMenu opened, we need to block inset updates. Otherwise the layout will break when we enter the multi select mode through it.
+    /// When the keyboard was shown before the ContextMenu opened, we need to block inset updates. Otherwise the layout
+    /// will break when we enter the multi select mode through it.
     private var insetUpdatesBlockedByContextMenu = false
     
     /// True between `willApplySnapshot` and `didApplySnapshot`
@@ -775,7 +782,8 @@ final class ChatViewController: ThemedViewController {
         ])
                 
         if UIDevice.current.userInterfaceIdiom == .pad {
-            // This removes a small gap that would open up between the chat bar and the keyboard accessory view if an iPad is used with an external keyboard
+            // This removes a small gap that would open up between the chat bar and the keyboard accessory view if an
+            // iPad is used with an external keyboard
             NSLayoutConstraint.activate([
                 chatBarCoordinator.chatBarContainerView.blurEffectView.bottomAnchor
                     .constraint(equalTo: view.bottomAnchor),
@@ -832,10 +840,13 @@ final class ChatViewController: ThemedViewController {
         }
         
         /// This immediately starts loading cells at the very bottom even before we call `didApplySnapshot`.
-        /// As a nice side-effect to preloading the cells at the bottom of the view; we also get the effect that cells only appear after the scroll position has been correctly set.
+        /// As a nice side-effect to preloading the cells at the bottom of the view; we also get the effect that cells
+        /// only appear after the scroll position has been correctly set.
         ///
-        /// Unfortunately this loads cells at the bottom even when restoring the scroll position later somewhere else in the chat view, these cells are never displayed and thus go to waste.
-        /// Calling `setContentOffset` and setting the content offset immediately to the approximately correct value of the scroll position still gives a jumpy animation on slow devices.
+        /// Unfortunately this loads cells at the bottom even when restoring the scroll position later somewhere else in
+        /// the chat view, these cells are never displayed and thus go to waste.
+        /// Calling `setContentOffset` and setting the content offset immediately to the approximately correct value of
+        /// the scroll position still gives a jumpy animation on slow devices.
         /// We thus accept this limitation and waste a few cells on each scroll position restore.
         ///
         /// This workaround is also present in `updateContentInsets(force:retry:)`
@@ -1036,8 +1047,8 @@ extension ChatViewController {
     ///
     /// If count goes to 0 it disappears or if goes above 0 it (re)appears
     ///
-    /// As it is complicated to observe ballot changes we just call this function on every instance creation of the view or new (ballot)
-    /// message received.
+    /// As it is complicated to observe ballot changes we just call this function on every instance creation of the view
+    /// or new (ballot) message received.
     private func updateOpenBallotsButton() {
         guard conversation.isGroup(), userInterfaceMode == .default else {
             return
@@ -1201,8 +1212,10 @@ extension ChatViewController {
     // MARK: Scroll
     
     /// Scrolls to the bottom of the tableView
-    /// *The animation and the scroll may be cancelled if the tableView is updated with new data, the view layouts its subviews in an unfortunate way or the contentOffset is changed.
-    /// The caller must make sure that the animation isn't cancelled by such updates.*
+    ///
+    /// *The animation and the scroll may be cancelled if the tableView is updated with new data, the view layouts its
+    /// subviews in an unfortunate way or the contentOffset is changed. The caller must make sure that the animation
+    /// isn't cancelled by such updates.*
     ///
     /// Use `jumpToBottom` if the messages at the bottom are not guaranteed to be already loaded.
     ///
@@ -1277,9 +1290,13 @@ extension ChatViewController {
         }
     }
     
-    /// Calls `tableView.scrollToRow(at:at:animated:)` but protects against scrolling being not successful due to changing cell sizes after scrolling
+    /// Calls `tableView.scrollToRow(at:at:animated:)` but protects against scrolling being not successful due to
+    /// changing cell sizes after scrolling
+    ///
     /// In general you will not need this. Use `jump(to:animated:highlight:))` or `scrollToBottom(animated:)` instead.
+    ///
     /// For more information see comment below
+    ///
     /// - Parameters:
     ///   - indexPath: Identifies the row to scroll to
     ///   - scrollPosition: final scroll position
@@ -1306,16 +1323,22 @@ extension ChatViewController {
         
         // At this point we are at the correct contentOffset for showing the cell at the very bottom
         // however the tableView might change its contentSize due to newly rendered cells whose exact height
-        // (which was previously determined as automatic) is only now known causing the new contentOffset to be incorrect
-        // To alleviate this issue we do another layout pass on tableView (which in general should do nothing) and scroll to bottom again.
+        // (which was previously determined as automatic) is only now known causing the new contentOffset to be
+        // incorrect
         //
-        // In non-flipped mode this is especially noticeable because when opening chat view at the very bottom, the bottommost cell will be slightly cut
+        // To alleviate this issue we do another layout pass on tableView (which in general should do nothing) and
+        // scroll to bottom again.
+        //
+        // In non-flipped mode this is especially noticeable because when opening chat view at the very bottom, the
+        // bottommost cell will be slightly cut
         // off if this layout pass isn't present.
         tableView.layoutIfNeeded()
         
-        // If we are already approximately at `indexPath` (i.e. it is visible on screen) we might loose the correct scroll position for unknown reasons.
-        /// `setContentOffset` called from UITableView `scrollToRow` is incorrect on the second invocation of `scrollToRow`. It is unclear why but causes
-        /// the scroll position to jump up by ca. 400 points. This avoids this issue.
+        // If we are already approximately at `indexPath` (i.e. it is visible on screen) we might loose the correct
+        // scroll position for unknown reasons.
+        // `setContentOffset` called from UITableView `scrollToRow` is incorrect on the second invocation of
+        // `scrollToRow`. It is unclear why but causes the scroll position to jump up by ca. 400 points. This avoids
+        // this issue.
         guard scrollToIndexPathIsVisible else {
             tableView.scrollToRow(at: indexPath, at: scrollPosition, animated: animated)
             return
@@ -1324,18 +1347,20 @@ extension ChatViewController {
 
     // MARK: Jump
     
-    /// Jumps to the given messageID, the jump can either scroll in an animated way or be abrupt and highlight the jumped to cell for a short amount of time (will set highlight and unset highlight after a short time interval).
+    /// Jumps to the given messageID, the jump can either scroll in an animated way or be abrupt and highlight the
+    /// jumped to cell for a short amount of time (will set highlight and unset highlight after a short time interval).
     /// - Parameters:
     ///   - messageID: A valid messageID
     ///   - animated: whether the jump is scrolled/animated
-    ///   - highlight: whether the cell should be highlighted for a short amount of time after jumping has been approximately completed
+    ///   - highlight: whether the cell should be highlighted for a short amount of time after jumping has been
+    ///                approximately completed
     func jump(to messageID: Data, animated: Bool, highlight: Bool = false) {
         jump(to: messageID, animated: animated) { message in
             guard highlight else {
                 return
             }
             
-            guard let message = message else {
+            guard let message else {
                 DDLogError("Message was unexpectedly nil")
                 return
             }
@@ -1515,7 +1540,8 @@ extension ChatViewController {
         
         dataSource.loadMessages(around: messageDate).done {
             // TODO: This is a workaround that will be resolved with IOS-2720
-            /// With a one second delay we aim to be more sure that the loaded messages have been actually applied in the tableView
+            // With a one second delay we aim to be more sure that the loaded messages have been actually applied in
+            // the tableView
             DispatchQueue.main.async {
                 if let indexPath = self.dataSource
                     .indexPath(for: ChatViewDataSource.CellType.message(objectID: message.objectID)) {
@@ -1705,9 +1731,7 @@ extension ChatViewController: UITableViewDelegate {
             }
         }
         
-        // TODO: IOS-2860 Just for measuring speed. Remove after completion
         if !firstCellShown {
-            os_signpost(.end, log: PointsOfInterestSignpost.log, name: "showChat")
             firstCellShown = true
             let endTime = CACurrentMediaTime()
             DDLogVerbose("ChatViewController duration init to first cell shown \(endTime - initTime) s")
@@ -1932,8 +1956,8 @@ extension ChatViewController: UITableViewDelegate {
         parameters.backgroundColor = .clear
         
         // This translates the shadow of the preview from an offset to the position of `chatBubbleView`.
-        // It's very unclear why this is necessary, but it looks like the shadow's position is relative to the visible path
-        // causing it to be offset by the cell offset from the leftmost position.
+        // It's very unclear why this is necessary, but it looks like the shadow's position is relative to the visible
+        // path causing it to be offset by the cell offset from the leftmost position.
         // This is particularly noticeable for incoming messages.
         let translate = CGAffineTransform(
             translationX: -cell.chatBubbleBorderPath.bounds.minX,
@@ -1962,12 +1986,15 @@ extension ChatViewController: ChatViewDataSourceDelegate {
             return nil
         }
         
-        // When entering a chat after tapping on a notification we might show the passcode lock screen first. In that case our own view has the correct size but the tableView below isn't correctly sized.
+        // When entering a chat after tapping on a notification we might show the passcode lock screen first. In that
+        // case our own view has the correct size but the tableView below isn't correctly sized.
         // Note that despite this, just calling `layoutIfNeeded` on `tableView` is **not** enough.
-        // This will cause a crash because the tableView to attempt to initialize an ordered set with capacity 18446744073709551615, causing a crash with the following error:
+        // This will cause a crash because the tableView to attempt to initialize an ordered set with capacity
+        // 18446744073709551615, causing a crash with the following error:
         // -[__NSPlaceholderOrderedSet initWithCapacity:]: capacity (18446744073709551615) is ridiculous'
         //
-        // In the regular case this shouldn't change anything because we're not animating at this point and the layout should be stable.
+        // In the regular case this shouldn't change anything because we're not animating at this point and the layout
+        // should be stable.
         view.layoutIfNeeded()
         
         if ChatViewConfiguration.ScrollBehavior.overrideDefaultTableViewBehavior {
@@ -1977,20 +2004,43 @@ extension ChatViewController: ChatViewDataSourceDelegate {
             // Fix bad `contentOffset` updates that happen when we our scroll position is near the very top
             /// We have found that UITableView has two (three) modes when new cells are added at the very top.
             
-            /// If we are relatively far down in the table view newly added cells will not influence the currently visible cells. UITableView will automatically update the `contentOffset` such that our scroll position stays the same.
+            /// If we are relatively far down in the table view newly added cells will not influence the currently
+            /// visible cells. UITableView will automatically update the `contentOffset` such that our scroll position
+            /// stays the same.
 
-            /// If we are relatively high up in the table view to opposite thing occurs and we keep the value of our `contentOffset` and the new cells will now be visible. This might make sense if we want the user to be aware of the new cells but is not what we want in our case.
-            /// Relatively high up in this context means that the `contentOffset` is set to a value larger than the height of the newly added cells. Even weirder it doesn't seem to adjust for `contentInsets`. I.e. if the `contentOffset` is `-100` if we are at the very top. We still need to be at a value of  `200` if our newly added cells / content has height 200.
+            /// If we are relatively high up in the table view to opposite thing occurs and we keep the value of our
+            /// `contentOffset` and the new cells will now be visible. This might make sense if we want the user to be
+            /// aware of the new cells but is not what we want in our case.
+            /// Relatively high up in this context means that the `contentOffset` is set to a value larger than the
+            /// height of the newly added cells. Even weirder it doesn't seem to adjust for `contentInsets`. I.e. if the
+            /// `contentOffset` is `-100` if we are at the very top. We still need to be at a value of  `200` if our
+            /// newly added cells / content has height 200.
 
-            /// The third case occurs if we are not quite far enough down to have the newly added cells not influence our scroll position but also not quite high up enough for the cells to come into view. In this case UITableView weirdly glitches down by the height of the newly added cells and then back up. This very well might be an implementation mistake on our side that we weren't able to identify but is something we are still working around.
+            /// The third case occurs if we are not quite far enough down to have the newly added cells not influence
+            /// our scroll position but also not quite high up enough for the cells to come into view. In this case
+            /// UITableView weirdly glitches down by the height of the newly added cells and then back up. This very
+            /// well might be an implementation mistake on our side that we weren't able to identify but is something we
+            /// are still working around.
 
-            /// To avoid this we sneakily override `contentOffset` in `ChatViewTableView` in such a way that we can control (using `lockContentOffset`) whether it can be updated or not. This way we can not update it between `willApplySnapshot(currentDoesIncludeNewestMessage:)` and `didApplySnapshot(delegateScrollCompletion:)` and then manually set the correct `contentOffset`.
+            /// To avoid this we sneakily override `contentOffset` in `ChatViewTableView` in such a way that we can
+            /// control (using `lockContentOffset`) whether it can be updated or not. This way we can not update it
+            /// between `willApplySnapshot(currentDoesIncludeNewestMessage:)` and
+            /// `didApplySnapshot(delegateScrollCompletion:)` and then manually set the correct `contentOffset`.
 
-            /// We don't need to manually handle the first case, but it doesn't matter if we do because we set `contentOffset` to the correct value anyways. We set it to the correct value for the third case, avoiding the glitch.
-            /// We cannot properly handle the second case and thus scroll down to the very bottom if we believe the first case to occur.
+            /// We don't need to manually handle the first case, but it doesn't matter if we do because we set
+            /// `contentOffset` to the correct value anyways. We set it to the correct value for the third case,
+            /// avoiding the glitch.
+            /// We cannot properly handle the second case and thus scroll down to the very bottom if we believe the
+            /// first case to occur.
 
-            /// The workaround for the third case looks like it should work for the second case as well but we have found it to not work. There is one frame in which the `contentOffset` is bad which still looks glitchy.
-            /// We have tried to avoid this by setting a convenient `CATransaction` sometime around applying the snapshot. However this only works for non-animated snapshot applies. In the case of snapshot applies with an animation the animation apparently cannot complete before the transaction is committed causing the completion block of snapshot apply to never be called. We could use a well estimated dispatch-async-after to work around this but that seems too finicky (and we're way into finicky already). (In cursory tests we have found such an estimate to be around 200 ms.)
+            /// The workaround for the third case looks like it should work for the second case as well but we have
+            /// found it to not work. There is one frame in which the `contentOffset` is bad which still looks glitchy.
+            /// We have tried to avoid this by setting a convenient `CATransaction` sometime around applying the
+            /// snapshot. However this only works for non-animated snapshot applies. In the case of snapshot applies
+            /// with an animation the animation apparently cannot complete before the transaction is committed causing
+            /// the completion block of snapshot apply to never be called. We could use a well estimated
+            /// dispatch-async-after to work around this but that seems too finicky (and we're way into finicky
+            /// already). (In cursory tests we have found such an estimate to be around 200 ms.)
             
             tableView.lockContentOffset = dataSource.initialSetupCompleted
             
@@ -2056,11 +2106,13 @@ extension ChatViewController: ChatViewDataSourceDelegate {
         /// ## Determining whether we can scroll after knowing whether we should
         ///
         /// `shouldScrollToBottomAfterNextSnapshotApply` cannot actually determine whether we are able to scroll here.
-        /// Determining the ability to scroll is important for the `scrollCompletion` callback because it is only called if we actually scroll
-        /// and not if we request to scroll with `scrollToBottom` but do not scroll because we are still at the bottom
+        /// Determining the ability to scroll is important for the `scrollCompletion` callback because it is only called
+        /// if we actually scroll and not if we request to scroll with `scrollToBottom` but do not scroll because we are
+        /// still at the bottom
         ///
-        /// If we indeed need to scroll then the offset to the bottom has changed enough after applying the last snapshot
-        ///  (i.e. between `willApplySnapshot` and `didApplySnapshot`) such that we are not at the bottom anymore (as a new cell has been added).
+        /// If we indeed need to scroll then the offset to the bottom has changed enough after applying the last
+        /// snapshot (i.e. between `willApplySnapshot` and `didApplySnapshot`) such that we are not at the bottom
+        /// anymore (as a new cell has been added).
         /// We use this to determine whether we will scroll on calling `scrollToBottom` and only scroll in that case.
         let hasNewlyAddedCellsInThisSnapshot = !isAtBottomOfView && willEnterForegroundCompletion == nil
         
@@ -2078,7 +2130,8 @@ extension ChatViewController: ChatViewDataSourceDelegate {
                 let diff = currentScrollState.cellRect.maxY - newRect.maxY
                 
                 let newOffset = currentScrollState.contentOffsetY - diff
-                // Using the exact height of contentOffset does not work, we need some leeway and have found values between 1.0 and 25.0 to work
+                // Using the exact height of contentOffset does not work, we need some leeway and have found values
+                // between 1.0 and 25.0 to work
                 // We have not tried values other than 0.0.
                 let leeway = ChatViewConfiguration.ScrollBehavior.newCellsContentHeightLeeway
                 
@@ -2095,9 +2148,11 @@ extension ChatViewController: ChatViewDataSourceDelegate {
                     forceScrollDown = false
                     
                     if !isUserInteractiveScroll {
-                        // If we are user interactive scrolling we must not set the content offset explicitly because otherwise we'll cancel the users scroll.
-                        // This is not great because we might skip up or down a bit, but in practice we expect this to happen most often when loading content
-                        // on top or at bottom due to the scroll interaction where the content offset issue should not appear at all.
+                        // If we are user interactive scrolling we must not set the content offset explicitly because
+                        // otherwise we'll cancel the users scroll.
+                        // This is not great because we might skip up or down a bit, but in practice we expect this to
+                        // happen most often when loading content on top or at bottom due to the scroll interaction
+                        // where the content offset issue should not appear at all.
                         tableView.lockContentOffset = false
                         tableView.setContentOffset(CGPoint(x: tableView.contentOffset.x, y: newOffset), animated: false)
                         tableView.lockContentOffset = true
@@ -2202,10 +2257,11 @@ extension ChatViewController: ChatViewDataSourceDelegate {
 
 // MARK: - Scroll position restoration
 
-private extension ChatViewController {
+extension ChatViewController {
     /// Save current scroll position
     ///
-    /// Store the offset from top of a visible cell from the content offset (positive if the cell top is in the visible area).
+    /// Store the offset from top of a visible cell from the content offset (positive if the cell top is in the visible
+    /// area).
     private func saveCurrentScrollPosition() {
         chatScrollPositionProvider.removeSavedPosition(for: conversation)
         
@@ -2431,7 +2487,8 @@ extension ChatViewController: UIScrollViewDelegate {
             insetAdjustedTopOffset = scrollView.contentOffset.y + scrollView.adjustedContentInset.top
         }
         
-        // If we are at the very bottom we never want to load messages at the top since we have chosen `topOffsetThreshold` and the number of messages that are loaded appropriately.
+        // If we are at the very bottom we never want to load messages at the top since we have chosen
+        // `topOffsetThreshold` and the number of messages that are loaded appropriately.
         if insetAdjustedTopOffset < topOffsetThreshold, !isAtBottomOfView {
             isLoading = true
             
@@ -2519,9 +2576,10 @@ extension ChatViewController: UIScrollViewDelegate {
                     }
                     
                     // In flipped mode the contentSize might not be very accurate when we're at the very bottom
-                    // the first scroll up might thus lead to a jump because the heightDiff is not zero when it should be.
-                    // We avoid this by just skipping this if we have the newest messages loaded anyways and don't need to
-                    // load anything at the bottom.
+                    // the first scroll up might thus lead to a jump because the heightDiff is not zero when it should
+                    // be.
+                    // We avoid this by just skipping this if we have the newest messages loaded anyways and don't need
+                    // to load anything at the bottom.
                     guard !self.dataSource.previouslyNewestMessagesLoaded else {
                         return
                     }
@@ -2561,7 +2619,8 @@ extension ChatViewController: UIScrollViewDelegate {
         }
     }
     
-    // The functions below are used to detect when the scroll view is scrolling, we must not update content insets during this.
+    // The functions below are used to detect when the scroll view is scrolling, we must not update content insets
+    // during this.
     func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
         DDLogVerbose("[UIScrollViewDelegate] \(#function)")
         isScrolling = true
@@ -2626,7 +2685,8 @@ extension ChatViewController: UIScrollViewDelegate {
         
         isUserInteractiveScroll = isDragging
         
-        // We do this immediately after scrolling is done to avoid cells resizing themselves in the meantime causing animation glitches
+        // We do this immediately after scrolling is done to avoid cells resizing themselves in the meantime causing
+        // animation glitches
         updateContentInsets()
         
         // We keep a slight delay before unlocking the lock and calling scrollCompletion
@@ -2651,7 +2711,8 @@ extension ChatViewController: UIScrollViewDelegate {
     override func viewSafeAreaInsetsDidChange() {
         DDLogVerbose("\(view.safeAreaInsets)")
         
-        // This fixes an issue where the offset was reported wrongly after a half dismiss swipe causing the chat bar to have incorrect height.
+        // This fixes an issue where the offset was reported wrongly after a half dismiss swipe causing the chat bar to
+        // have incorrect height.
         DispatchQueue.main.async {
             self.updateContentInsets(force: true)
         }

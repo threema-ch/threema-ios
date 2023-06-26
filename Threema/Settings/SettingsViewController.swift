@@ -124,7 +124,8 @@ class SettingsViewController: ThemedTableViewController {
     
     @objc func colorThemeChanged(notification: Notification) {
         BrandingUtils.updateTitleLogo(of: navigationItem, in: navigationController)
-        // set large title color for settingsviewcontroller; it will not automaticly change the color when set new appearance
+        // set large title color for settingsviewcontroller; it will not automaticly change the color when set new
+        // appearance
         navigationController?.navigationBar
             .largeTitleTextAttributes = [NSAttributedString.Key.foregroundColor: Colors.text]
     }
@@ -153,22 +154,23 @@ extension SettingsViewController {
         
         let suffix = Colors.theme == .dark ? "Dark" : "Light"
         
-        privacyCell.textLabel?.text = BundleUtil.localizedString(forKey: "settings_privacy")
+        privacyCell.textLabel?.text = BundleUtil.localizedString(forKey: "settings_list_privacy_title")
         privacyCell.imageView?.image = BundleUtil.imageNamed("Privacy\(suffix)")
         
-        appearanceCell.textLabel?.text = BundleUtil.localizedString(forKey: "settings_appearance")
+        appearanceCell.textLabel?.text = BundleUtil.localizedString(forKey: "settings_list_appearance_title")
         appearanceCell.imageView?.image = BundleUtil.imageNamed("Appearance\(suffix)")
         
-        notificationCell.textLabel?.text = BundleUtil.localizedString(forKey: "settings_notification")
+        notificationCell.textLabel?.text = BundleUtil.localizedString(forKey: "settings_list_notifications_title")
         notificationCell.imageView?.image = BundleUtil.imageNamed("Notifications\(suffix)")
         
-        chatCell.textLabel?.text = BundleUtil.localizedString(forKey: "settings_chat")
+        chatCell.textLabel?.text = BundleUtil.localizedString(forKey: "settings_list_chat_title")
         chatCell.imageView?.image = BundleUtil.imageNamed("Chat\(suffix)")
         
-        mediaCell.textLabel?.text = BundleUtil.localizedString(forKey: "settings_media")
+        mediaCell.textLabel?.text = BundleUtil.localizedString(forKey: "settings_list_media_title")
         mediaCell.imageView?.image = BundleUtil.imageNamed("Media\(suffix)")
         
-        storageManagementCell.textLabel?.text = BundleUtil.localizedString(forKey: "settings_storage_management")
+        storageManagementCell.textLabel?.text = BundleUtil
+            .localizedString(forKey: "settings_list_storage_management_title")
         storageManagementCell.imageView?.image = BundleUtil.imageNamed("StorageManagement\(suffix)")
         
         feedbackCell.textLabel?.text = BundleUtil.localizedString(forKey: "settings_feedback")
@@ -177,45 +179,45 @@ extension SettingsViewController {
         devModeCell.textLabel?.text = "Developer Settings"
         devModeCell.imageView?.image = BundleUtil.imageNamed("DevMode\(suffix)")
         
-        passcodeLockCell.textLabel?.text = BundleUtil.localizedString(forKey: "settings_passcode_lock")
+        passcodeLockCell.textLabel?.text = BundleUtil.localizedString(forKey: "settings_list_passcode_lock_title")
         passcodeLockCell.imageView?.image = BundleUtil.imageNamed("PasscodeLock\(suffix)")
         passcodeLockCell.accessibilityIdentifier = "SettingsPasscodeCell"
 
         threemaCallsCell.textLabel?.text = BundleUtil.localizedString(forKey: "settings_threema_calls")
         threemaCallsCell.imageView?.image = BundleUtil.imageNamed("ThreemaCallsSettings\(suffix)")
         
-        threemaWebCell.textLabel?.text = BundleUtil.localizedString(forKey: "settings_threema_web")
+        threemaWebCell.textLabel?.text = BundleUtil.localizedString(forKey: "settings_list_threema_web_title")
         threemaWebCell.imageView?.image = BundleUtil.imageNamed("ThreemaWeb\(suffix)")
         
         multiDeviceCell.textLabel?.text = BundleUtil.localizedString(forKey: "multi_device_linked_devices_title")
         multiDeviceCell.imageView?.image = BundleUtil.imageNamed("ThreemaWeb\(suffix)")
         
-        networkStatusCell.textLabel?.text = BundleUtil.localizedString(forKey: "settings_network_status")
+        networkStatusCell.textLabel?.text = BundleUtil.localizedString(forKey: "settings_list_network_title")
         
-        versionCell.textLabel?.text = BundleUtil.localizedString(forKey: "settings_version")
+        versionCell.textLabel?.text = BundleUtil.localizedString(forKey: "settings_list_version_title")
         
-        usernameCellLabel.text = BundleUtil.localizedString(forKey: "settings_license_username")
+        usernameCellLabel.text = BundleUtil.localizedString(forKey: "settings_list_settings_license_username_title")
         
-        inviteAFriendCell.textLabel?.text = BundleUtil.localizedString(forKey: "settings_invite_a_friend")
+        inviteAFriendCell.textLabel?.text = BundleUtil.localizedString(forKey: "settings_list_invite_a_friend_title")
         inviteAFriendCell.imageView?.image = BundleUtil.imageNamed("InviteAFriend\(suffix)")
         
-        threemaChannelCell.textLabel?.text = BundleUtil.localizedString(forKey: "settings_threema_channel")
+        threemaChannelCell.textLabel?.text = BundleUtil.localizedString(forKey: "settings_list_threema_channel_title")
         threemaChannelCell.imageView?.image = BundleUtil.imageNamed("ThreemaChannel\(suffix)")
         
         threemaWorkCell.textLabel?.text = BundleUtil.localizedString(forKey: "settings_threema_work")
         threemaWorkCell.detailTextLabel?.text = BundleUtil.localizedString(forKey: "settings_threema_work_subtitle")
         threemaWorkCell.imageView?.image = BundleUtil.imageNamed("ThreemaWorkSettings")
         
-        supportCell.textLabel?.text = BundleUtil.localizedString(forKey: "settings_support")
+        supportCell.textLabel?.text = BundleUtil.localizedString(forKey: "settings_list_support_title")
         supportCell.imageView?.image = BundleUtil.imageNamed("Support\(suffix)")
         
-        privacyPolicyCell.textLabel?.text = BundleUtil.localizedString(forKey: "settings_privacy_policy")
+        privacyPolicyCell.textLabel?.text = BundleUtil.localizedString(forKey: "settings_list_privacy_policy_title")
         privacyPolicyCell.imageView?.image = BundleUtil.imageNamed("PrivacyPolicy\(suffix)")
         
-        tosCell.textLabel?.text = BundleUtil.localizedString(forKey: "tos_cell_title")
+        tosCell.textLabel?.text = BundleUtil.localizedString(forKey: "settings_list_tos_title")
         tosCell.imageView?.image = BundleUtil.imageNamed("TOS\(suffix)")
         
-        licenseCell.textLabel?.text = BundleUtil.localizedString(forKey: "settings_license")
+        licenseCell.textLabel?.text = BundleUtil.localizedString(forKey: "settings_list_license_title")
         licenseCell.imageView?.image = BundleUtil.imageNamed("License\(suffix)")
         
         advancedCell.textLabel?.text = BundleUtil.localizedString(forKey: "settings_advanced")
@@ -428,7 +430,7 @@ extension SettingsViewController {
         
         // For the target OnPrem are "Privacy Policy" and "Terms of Service" hidden
         if LicenseStore.isOnPrem(),
-           indexPath.section == 5,
+           indexPath.section == 6,
            indexPath.row == 1 || indexPath.row == 2 {
             return 0.0
         }
@@ -477,7 +479,7 @@ extension SettingsViewController {
                     with: Constants.betaFeedbackIdentity,
                     verificationLevel: Int32(kVerificationLevelUnverified)
                 ) { contact, _ in
-                    guard let contact = contact else {
+                    guard let contact else {
                         DDLogError("Can't add \(Constants.betaFeedbackIdentity) as contact")
                         return
                     }

@@ -42,7 +42,7 @@ enum MediatorReflectedProcessorError: Error {
     case messageNotProcessed(message: String)
     case messageWontProcessed(message: String)
     case missingPublicKey(identity: String)
-    case outgoingMessageTypeIsDeprecated(type: D2d_MessageType)
+    case outgoingMessageTypeIsDeprecated(type: Common_CspE2eMessageType)
     case outgoingMessageReceiverNotFound(message: String)
     case receiverNotFound(identity: String)
     case senderNotFound(identity: String)
@@ -78,8 +78,10 @@ protocol MediatorReflectedProcessorProtocol {
     /// - Parameters:
     ///   - envelope: Reflected data
     ///   - timestamp: Date of reflected message given Mediator Server
-    ///   - receivedAfterInitialQueueSend: True indicates the message was received before mediator server message queue is dry (abstract message will be marked with this flag, to control in app notification)
-    ///   - maxBytesToDecrypt: When e.g. downloaded blob within Notification Extention, then only limited memory available to decrypt data
+    ///   - receivedAfterInitialQueueSend: True indicates the message was received before mediator server message queue
+    ///                     is dry (abstract message will be marked with this flag, to control in app notification)
+    ///   - maxBytesToDecrypt: When e.g. downloaded blob within Notification Extention, then only limited memory
+    ///                     available to decrypt data
     ///   - timeoutDownloadThumbnail: Timeout for downloading blob (0 = infinity)
     func process(
         envelope: D2d_Envelope,
@@ -91,6 +93,7 @@ protocol MediatorReflectedProcessorProtocol {
 
         switch envelope.content {
         case .distributionListSync:
+            DDLogWarn("Distribution list sync not implemented")
             return Promise()
         case let .groupSync(groupSync):
             let processor = MediatorReflectedGroupSyncProcessor(
@@ -109,7 +112,7 @@ protocol MediatorReflectedProcessorProtocol {
         case let .outgoingMessage(outgoingMessage):
             return Promise<AbstractMessage> { seal in
                 let decoder = MediatorReflectedMessageDecoder(frameworkBusinessInjector: frameworkInjector)
-                seal.fulfill(try decoder.decode(outgoingMessage: outgoingMessage))
+                try seal.fulfill(decoder.decode(outgoingMessage: outgoingMessage))
             }
             .then { abstractMessage -> Promise<Void> in
                 let processor = MediatorReflectedOutgoingMessageProcessor(
@@ -129,14 +132,12 @@ protocol MediatorReflectedProcessorProtocol {
         case let .incomingMessage(incomingMessage):
             return Promise<AbstractMessage> { seal in
                 let decoder = MediatorReflectedMessageDecoder(frameworkBusinessInjector: frameworkInjector)
-                seal
-                    .fulfill(
-                        try decoder
-                            .decode(
-                                incomingMessage: incomingMessage,
-                                receivedAfterInitialQueueSend: receivedAfterInitialQueueSend
-                            )
+                try seal.fulfill(
+                    decoder.decode(
+                        incomingMessage: incomingMessage,
+                        receivedAfterInitialQueueSend: receivedAfterInitialQueueSend
                     )
+                )
             }
             .then { abstractMessage -> Promise<Void> in
                 let processor = MediatorReflectedIncomingMessageProcessor(
@@ -168,6 +169,9 @@ protocol MediatorReflectedProcessorProtocol {
                 frameworkInjector: frameworkInjector
             )
             return processor.process(settingsSync: settingsSync)
+        case .mdmParameterSync:
+            DDLogWarn("MDM parameter sync not implemented")
+            return Promise()
         case .none:
             return Promise()
         }

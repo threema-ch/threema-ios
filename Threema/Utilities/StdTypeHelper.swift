@@ -20,30 +20,10 @@
 
 import Foundation
 
-public extension Bool {
-    // Create a boolean from an optional string
-    init?(_ value: String?) {
-        guard let value = value else {
-            return nil
-        }
-        self.init(value)
-    }
-}
-
-public extension Double {
+extension Double {
     // Create a double from an optional string
-    init?(_ value: String?) {
-        guard let value = value else {
-            return nil
-        }
-        self.init(value)
-    }
-}
-
-public extension UInt64 {
-    // Create a uint64 from an optional string
-    init?(_ value: String?) {
-        guard let value = value else {
+    public init?(_ value: String?) {
+        guard let value else {
             return nil
         }
         self.init(value)

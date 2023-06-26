@@ -128,8 +128,9 @@ public class WebCreateTextMessageRequest: WebAbstractMessage {
 
     private func sendMessage(conversation: Conversation, completion: @escaping () -> Void) {
         ServerConnectorHelper.connectAndWaitUntilConnected(initiator: .threemaWeb, timeout: 10) {
-            MessageSender.sendMessage(
-                self.text,
+            let businessInjector = BusinessInjector()
+            businessInjector.messageSender.sendTextMessage(
+                text: self.text,
                 in: conversation,
                 quickReply: false,
                 requestID: self.requestID,

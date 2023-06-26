@@ -36,12 +36,28 @@ final class ChatViewAnimatedStickerMessageTableViewCell: ChatViewBaseTableViewCe
         neighbors: ChatViewDataSource.MessageNeighbors
     )? {
         didSet {
-            updateCell(for: animatedStickerMessageAndNeighbors?.message)
+            let block = {
+                self.updateCell(for: self.animatedStickerMessageAndNeighbors?.message)
+                
+                super.setMessage(
+                    to: self.animatedStickerMessageAndNeighbors?.message,
+                    with: self.animatedStickerMessageAndNeighbors?.neighbors
+                )
+            }
             
-            super.setMessage(
-                to: animatedStickerMessageAndNeighbors?.message,
-                with: animatedStickerMessageAndNeighbors?.neighbors
-            )
+            if let oldValue, oldValue.message.objectID == animatedStickerMessageAndNeighbors?.message.objectID {
+                UIView.animate(
+                    withDuration: ChatViewConfiguration.ChatBubble.bubbleSizeChangeAnimationDurationInSeconds,
+                    delay: 0.0,
+                    options: .curveEaseInOut
+                ) {
+                    block()
+                    self.layoutIfNeeded()
+                }
+            }
+            else {
+                block()
+            }
         }
     }
     
@@ -229,7 +245,8 @@ extension ChatViewAnimatedStickerMessageTableViewCell: ChatViewMessageAction {
         let shareItems = [MessageActivityItem(for: message)]
 
         // Copy
-        // In the new chat view we always copy the data, regardless if it has a caption because the text can be selected itself.
+        // In the new chat view we always copy the data, regardless if it has a caption because the text can be selected
+        // itself.
         let copyHandler = {
             guard !MDMSetup(setup: false).disableShareMedia() else {
                 DDLogWarn(
@@ -238,8 +255,8 @@ extension ChatViewAnimatedStickerMessageTableViewCell: ChatViewMessageAction {
                 return
             }
             
-            guard let data = message.blobGet(),
-                  let uti = message.blobGetUTI() else {
+            guard let data = message.blobData,
+                  let uti = message.blobUTTypeIdentifier else {
                 NotificationPresenterWrapper.shared.present(type: .copyError)
                 return
             }
@@ -333,7 +350,8 @@ extension ChatViewAnimatedStickerMessageTableViewCell: ChatViewMessageAction {
                     await BlobManager.shared.syncBlobs(for: message.objectID)
                 }
             }
-            // Download action is inserted before default action, depending if ack/dec is possible at a different position
+            // Download action is inserted before default action, depending if ack/dec is possible at a different
+            // position
             if message.isUserAckEnabled {
                 menuItems.insert(downloadAction, at: 2)
             }

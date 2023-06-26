@@ -24,7 +24,6 @@
 #import "SystemMessage.h"
 #import "Conversation.h"
 #import "ContactEntity.h"
-#import "Old_ChatViewController.h"
 #import "AppDelegate.h"
 #import "UIDefines.h"
 #import "AvatarMaker.h"
@@ -49,7 +48,6 @@
         
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(newMessageReceived:) name:IncomingMessageManager.inAppNotificationNewMessage object:nil];
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(conversationOpened:) name:@"ThreemaConversationOpened" object:nil];
-        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(screenRotated:) name:UIApplicationDidChangeStatusBarOrientationNotification object:nil];
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(didBecomeActive:) name:UIApplicationDidBecomeActiveNotification object:nil];
     }
     return self;
@@ -99,14 +97,6 @@
             }
             UINavigationController *chatNavVc = [[mainTabBar viewControllers] objectAtIndex:kChatTabBarIndex];
             
-            DDLogVerbose(@"curNavController: %@", chatNavVc);
-            if ([chatNavVc.topViewController isKindOfClass:[Old_ChatViewController class]]) {
-                Old_ChatViewController *curChatVc = (Old_ChatViewController*)chatNavVc.topViewController;
-                if (curChatVc.conversation.objectID == message.conversation.objectID ||
-                    [message.read boolValue])
-                    return;
-            }
-            
             if ([chatNavVc.topViewController isKindOfClass:[ChatViewController class]]) {
                 ChatViewController *curChatVc = (ChatViewController*)chatNavVc.topViewController;
                 if (curChatVc.conversation.objectID == message.conversation.objectID) {
@@ -128,11 +118,6 @@
     if (conversation != nil) {
         [NotificationBannerHelper dismissAllNotificationsFor:conversation];
     }
-}
-
-- (void)screenRotated:(NSNotification*)notification {
-    DDLogVerbose(@"screenRotated");
-    [NotificationBannerHelper dismissAllNotifications];
 }
 
 - (void)didBecomeActive:(NSNotification*)notification {

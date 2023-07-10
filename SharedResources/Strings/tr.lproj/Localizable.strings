@@ -1231,7 +1231,7 @@ Threema Safe'i kullanırken, cihazınıza erişiminizi kaybetmeniz durumunda Thr
 
 // My profile
 "profile_share_id_text" = "Threema kimliğim";
-"my_profile_delete_cell_title" = "Kimliği ve Verileri Kaldır";
+"my_profile_delete_cell_title" = "Kimliği ve Verileri Sil";
 
 // Delete & Revoke
 "my_profile_delete_bullet_id" = "Threema Kimliği";

@@ -1232,7 +1232,7 @@ V prípade, že stratíte prístup k vašemu zariadeniu, pomocou Trezoru Threema
 
 // My profile
 "profile_share_id_text" = "Moje Threema ID";
-"my_profile_delete_cell_title" = "Odstráiť ID a údaje";
+"my_profile_delete_cell_title" = "Odstrániť ID a údaje";
 
 // Delete & Revoke
 "my_profile_delete_bullet_id" = "Threema ID";

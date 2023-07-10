@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2022 Threema GmbH
+// Copyright (c) 2023 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -18,8 +18,18 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-// Configuration settings file format documentation can be found at:
-// https://help.apple.com/xcode/#/dev745c5c974
+import CocoaLumberjackSwift
+import Foundation
+import SQLite
 
-VERSION_NUMBER=5.3.1
-BUILD_NUMBER=5353
+extension SQLDHSessionStore {
+    static func upgradeToV1(_ db: Connection) {
+        assert(db.userVersion == 0 || db.userVersion == nil)
+        
+        defer { assert(db.userVersion == 1) }
+        
+        DDLogVerbose("Upgrade from \(String(describing: db.userVersion)) to 1")
+        
+        db.userVersion = 1
+    }
+}

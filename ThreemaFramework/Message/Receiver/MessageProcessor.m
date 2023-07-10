@@ -882,17 +882,17 @@ Process incoming message.
     
     /* Create Message in DB */
     BallotMessageDecoder *decoder = [[BallotMessageDecoder alloc] initWith:entityManager];
-    if ([decoder decodeVoteFromGroupBox: msg] == NO) {
-        onError([ThreemaError threemaError:@"Error processing ballot vote"]);
-        return;
-    }
     
-    //persist decoded data
-    [entityManager performAsyncBlockAndSafe:nil];
-    
-    [self changedBallotWithID:msg.ballotId];
+    [entityManager performAsyncBlockAndSafe:^{
+        if ([decoder decodeVoteFromGroupBox: msg] == NO) {
+            onError([ThreemaError threemaError:@"Error processing ballot vote"]);
+            return;
+        }
 
-    onCompletion();
+        [self changedBallotWithID:msg.ballotId];
+
+        onCompletion();
+    }];
 }
 
 - (void)processIncomingBallotVoteMessage:(BoxBallotVoteMessage*)msg onCompletion:(void(^)(void))onCompletion onError:(void(^)(NSError *err))onError {

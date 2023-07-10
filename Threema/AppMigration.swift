@@ -100,6 +100,15 @@ import ThreemaFramework
     @objc static func isMigrationRequired(userSettings: UserSettingsProtocol) -> Bool {
         AppMigrationVersion.isMigrationRequired(userSettings: userSettings)
     }
+    
+    @objc static func migrateSQLDHSessionStoreIfRequired() {
+        do {
+            try SQLDHSessionStore().executeNull()
+        }
+        catch {
+            DDLogError("An error occurred when attempting to migrate SQLDHSessionStore \(error)")
+        }
+    }
 
     /// Runs all necessary migrations
     @objc func run() {
@@ -121,6 +130,10 @@ import ThreemaFramework
             if migratedTo < .v5_2 {
                 try migrateTo5_2()
                 migratedTo = .v5_2
+            }
+            if migratedTo < .v5_3_1 {
+                try migrateTo5_3_1()
+                migratedTo = .v5_3_1
             }
             // Add here a check if migration is necessary for a particular version...
         }
@@ -282,5 +295,18 @@ import ThreemaFramework
         }
         os_signpost(.end, log: osPOILog, name: "5.2 migration")
         DDLogNotice("[AppMigration] App migration to version 5.2 successfully finished")
+    }
+    
+    /// Migrate to version 5.3.1:
+    /// - Update the FS session data base to database version 1
+    /// This only changes the userVersion field or allows downgrading from version 5.4
+    private func migrateTo5_3_1() throws {
+        DDLogNotice("[AppMigration] App migration to version 5.3.1 started")
+        os_signpost(.begin, log: osPOILog, name: "5.3.1 migration")
+        
+        try BusinessInjector().dhSessionStore.executeNull()
+        
+        os_signpost(.end, log: osPOILog, name: "5.3.1 migration")
+        DDLogNotice("[AppMigration] App migration to version 5.3.1 successfully finished")
     }
 }

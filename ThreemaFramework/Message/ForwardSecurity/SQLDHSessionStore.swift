@@ -18,6 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import CocoaLumberjackSwift
 import Foundation
 import SQLite
 
@@ -40,6 +41,8 @@ public class SQLDHSessionStore: DHSessionStoreProtocol {
     let myEphemeralPrivateKeyColumn = Expression<Data?>("myEphemeralPrivateKey")
     let myEphemeralPublicKeyColumn = Expression<Data>("myEphemeralPublicKey")
     
+    fileprivate let dbVersion: Int32 = 1
+    
     var db: Connection
     let dbQueue: DispatchQueue
     let keyWrapper: KeyWrapperProtocol
@@ -52,15 +55,60 @@ public class SQLDHSessionStore: DHSessionStoreProtocol {
         try db.execute("PRAGMA journal_mode = DELETE;")
         try db.execute("PRAGMA secure_delete = true;")
         try createSessionTable()
+        
         excludeFromBackup(path: path)
     }
     
-    convenience init() throws {
+    public convenience init() throws {
         try self
             .init(
                 path: (FileUtility.appDataDirectory?.appendingPathComponent(SQLDHSessionStore.databaseName).path)!,
                 keyWrapper: KeychainKeyWrapper()
             )
+    }
+    
+    func upgradeIfNecessary() throws {
+        let currentVersion = db.userVersion ?? 0
+        if currentVersion != dbVersion {
+            try db.transaction {
+                if currentVersion < dbVersion {
+                    try onUpgrade(
+                        db: self.db,
+                        oldVersion: currentVersion,
+                        newVersion: dbVersion
+                    )
+                }
+                else if currentVersion > dbVersion {
+                    try onDowngrade(
+                        db: self.db,
+                        oldVersion: currentVersion,
+                        newVersion: dbVersion
+                    )
+                }
+            }
+        }
+    }
+    
+    func onUpgrade(db: Connection, oldVersion: Int32, newVersion: Int32) throws {
+        if oldVersion < 1, newVersion >= 1 {
+            SQLDHSessionStore.upgradeToV1(db)
+        }
+    }
+    
+    func onDowngrade(db: Connection, oldVersion: Int32, newVersion: Int32) throws {
+        if oldVersion > 1, newVersion <= 1 {
+            try downgradeFromV2(db)
+        }
+        
+        if oldVersion > 0, newVersion <= 0 {
+            SQLDHSessionStore.downgradeFromV1(db)
+        }
+    }
+    
+    public func executeNull() throws {
+        try dbQueue.sync {
+            try upgradeIfNecessary()
+        }
     }
     
     public func exactDHSession(myIdentity: String, peerIdentity: String, sessionID: DHSessionID?) throws -> DHSession? {
@@ -216,6 +264,22 @@ public class SQLDHSessionStore: DHSessionStoreProtocol {
     // MARK: Private functions
     
     private func createSessionTable() throws {
+        /// When creating a new table, we set it to the current user version otherwise we'll try to upgrade to a version
+        /// we already use on the next run.
+        ///
+        /// If the table doesn't exist, an error is thrown https://github.com/stephencelis/SQLite.swift/issues/693
+        do {
+            if try !(db.scalar(sessionTable.exists)) {
+                db.userVersion = dbVersion
+            }
+        }
+        catch {
+            DDLogVerbose("DB doesn't exist yet.")
+            // Ignore errors
+
+            db.userVersion = dbVersion
+        }
+        
         try db.run(sessionTable.create(ifNotExists: true) { t in
             t.column(myIdentityColumn)
             t.column(peerIdentityColumn)

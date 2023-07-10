@@ -35,6 +35,8 @@ class SQLDHSessionStoreTests: XCTestCase {
         continueAfterFailure = false
         storePath = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString + ".db").path
         store = try SQLDHSessionStore(path: storePath!, keyWrapper: DummyKeyWrapper())
+        
+        try store?.executeNull()
     }
     
     override func tearDownWithError() throws {

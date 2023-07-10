@@ -1230,7 +1230,7 @@
 
 // My profile
 "profile_share_id_text" = "Мой Threema ID";
-"my_profile_delete_cell_title" = "Удалить ID и данные";
+"my_profile_delete_cell_title" = "Удалить данные и ID";
 
 // Delete & Revoke
 "my_profile_delete_bullet_id" = "Threema ID";

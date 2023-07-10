@@ -34,4 +34,5 @@ public protocol DHSessionStoreProtocol {
         excludeSessionID: DHSessionID,
         fourDhOnly: Bool
     ) throws -> Int
+    func executeNull() throws
 }

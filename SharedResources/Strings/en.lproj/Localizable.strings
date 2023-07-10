@@ -1231,7 +1231,7 @@ When using Threema Safe, your can restore your Threema ID, contacts ,and groups 
 
 // My profile
 "profile_share_id_text" = "My Threema ID";
-"my_profile_delete_cell_title" = "Delete ID and Data";
+"my_profile_delete_cell_title" = "Remove ID and Data";
 
 // Delete & Revoke
 "my_profile_delete_bullet_id" = "Threema ID";
@@ -1240,7 +1240,7 @@ When using Threema Safe, your can restore your Threema ID, contacts ,and groups 
 "my_profile_delete_bullet_safe" = "Threema Safe backup";
 "my_profile_delete_bullet_linked" = "Phone number and/or email links";
 
-"my_profile_delete_info_title" = "Remove ID and data";
+"my_profile_delete_info_title" = "Remove ID And Data";
 "my_profile_delete_info_keep" = "Your Threema ID won’t be revoked. If you have created a Threema Safe backup or exported your ID, you can restore it on another device.";
 "my_profile_delete_info_delete" = "All of your Threema data will be removed from this device:";
 "my_profile_delete_info_delete_server" = "All of your Threema data will be removed also from the server:";

@@ -129,4 +129,8 @@ class InMemoryDHSessionStore: DHSessionStoreProtocol {
         dhSessionList = newDhSessionList
         return numDeleted
     }
+    
+    func executeNull() throws {
+        // Noop
+    }
 }

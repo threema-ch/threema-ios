@@ -7,11 +7,11 @@
 
 // General
 "quotation_mark_start" = "”";
-"quotation_mark_end" = "”";
+"quotation_mark_end" = "“";
 
 /* Tabbar and title for list with all conversations */
 "chats_title" = "トーク";
-"chats_pinned" = "ピン留め";
+"chats_pinned" = "ピン";
 
 "SortOrder_Firstname" = "名/姓";
 "SortOrder_Lastname" = "姓/名";
@@ -1241,17 +1241,30 @@
 "my_profile_delete_bullet_linked" = "電話番号とメールアドレスの紐付け";
 
 "my_profile_delete_info_title" = "IDとデータを消去する";
-"my_profile_delete_info_keep" = "以下のデータは削除されません。";
-"my_profile_delete_info_delete" = "以下のデータは削除されます。";
-"my_profile_delete_info_toggle" = "すべて削除";
+"my_profile_delete_info_keep" = "あなたのThreema IDは失効しません。Threema Safeバックアップを作成した場合、またはIDをエクスポートした場合は、別のデバイスで復元できます。";
+"my_profile_delete_info_delete" = "あなたのThreemaデータはこのデバイスから消去されます：";
+"my_profile_delete_info_delete_server" = "あなたのThreemaデータはすべてサーバーからも消去されます：";
+"my_profile_delete_info_revoke" = "あなたのThreema IDは失効し、復元することはできなくなります。";
+"my_profile_delete_info_toggle" = "失効しない方法ですべてを削除する";
 
-"my_profile_revoke_identity_view_title" = "すべて削除しますか？";
-"my_profile_revoke_info_delete" = "永久に削除します：";
+"my_profile_delete_info_button" = "IDとデータを消去する";
+
+"my_profile_delete_info_alert_title" = "バックアップがなければThreema IDが失われます。";
+"my_profile_delete_info_alert_confirm" = "データを消去する";
+
+"my_profile_revoke_identity_view_title" = "IDとデータを消去しますか？";
+"my_profile_revoke_info_delete" = "あなたのThreemaデータはすべてこのデバイスから消去されます：";
+"my_profile_revoke_info_sever" = "あなたのThreemaデータはすべてサーバーからも消去されます：";
 "my_profile_revoke_identity_view_enter_id" = "すべて確実に削除するために、Threema ID「%@」を入力してください：";
 "my_profile_revoke_identity_view_placeholder" = "あなたのThreema ID";
-"my_profile_revoke_identity_view_button_revoke" = "すべて削除";
+"my_profile_revoke_identity_view_button_revoke" = "IDとデータを消去する";
 
+"my_profile_delete_identity_summary_view_removed_title" = "IDとデータを消去しました";
+"my_profile_delete_identity_summary_view_removed_success" = "あなたのThreemaデータはすべてこのデバイスから消去されました：";
+"my_profile_delete_identity_summary_view_removed_server_success" = "あなたのThreemaデータはすべてサーバーから削除されました：";
+"my_profile_delete_identity_summary_view_removed_threema_id" = "あなたのThreema IDは失効しました";
 "my_profile_delete_identity_summary_view_restart" = "引き続き使用するには、アプリを再起動してください。";
+"my_profile_delete_identity_summary_view_restart_new" = "新しいThreema IDを作成するには、アプリを再起動してください。";
 "my_profile_delete_identity_summary_view_close" = "アプリを閉じる";
 
 // File message

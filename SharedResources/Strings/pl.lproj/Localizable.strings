@@ -1241,17 +1241,30 @@
 "my_profile_delete_bullet_linked" = "Numer telefonu i/lub łącza e-mail";
 
 "my_profile_delete_info_title" = "Usuń identyfikator i dane";
-"my_profile_delete_info_keep" = "Pozostałe dane pozostają użyteczne i nie będą usunięte:";
-"my_profile_delete_info_delete" = "Następujące dane zostaną usunięte z urządzenia:";
-"my_profile_delete_info_toggle" = "Usuń wszystko";
+"my_profile_delete_info_keep" = "Twój identyfikator Threema nie zostanie unieważniony. Jeśli utworzono kopię zapasową Threema Safe lub wyeksportowano Twój identyfikator, możesz przywrócić go na innym urządzeniu.";
+"my_profile_delete_info_delete" = "Wszystkie Twoje dane Threema zostaną usunięte z tego urządzenia:";
+"my_profile_delete_info_delete_server" = "Wszystkie Twoje dane Threema zostaną również usunięte z serwera:";
+"my_profile_delete_info_revoke" = "Twój identyfikator Threema zostanie unieważniony i nie będzie możliwości jego przywrócenia.";
+"my_profile_delete_info_toggle" = "Usuń wszystko bezpowrotnie";
 
-"my_profile_revoke_identity_view_title" = "Usunąć wszystko?";
-"my_profile_revoke_info_delete" = "Usuniesz na stałe następujące dane:";
+"my_profile_delete_info_button" = "Usuń identyfikator i dane";
+
+"my_profile_delete_info_alert_title" = "Jeśli nie masz kopii zapasowej, utracisz swój identyfikator Threema.";
+"my_profile_delete_info_alert_confirm" = "Usuń dane";
+
+"my_profile_revoke_identity_view_title" = "Usunąć identyfikator i dane?";
+"my_profile_revoke_info_delete" = "Wszystkie Twoje dane Threema zostaną usunięte z tego urządzenia:";
+"my_profile_revoke_info_sever" = "Wszystkie Twoje dane Threema zostaną również usunięte z serwera:";
 "my_profile_revoke_identity_view_enter_id" = "Wpisz swój identyfikator Three „%@”, aby rzeczywiście wszystko usunąć:";
 "my_profile_revoke_identity_view_placeholder" = "Twój identyfikator Threema";
-"my_profile_revoke_identity_view_button_revoke" = "Usuń wszystko";
+"my_profile_revoke_identity_view_button_revoke" = "Usuń identyfikator i dane";
 
+"my_profile_delete_identity_summary_view_removed_title" = "Usunięto identyfikator i dane";
+"my_profile_delete_identity_summary_view_removed_success" = "Wszystkie Twoje dane Threema zostały usunięte z tego urządzenia:";
+"my_profile_delete_identity_summary_view_removed_server_success" = "Wszystkie Twoje dane Threema zostały usunięte z serwera:";
+"my_profile_delete_identity_summary_view_removed_threema_id" = "Twój identyfikator Threema został unieważniony";
 "my_profile_delete_identity_summary_view_restart" = "Ponownie uruchom aplikację i dalej jej używaj.";
+"my_profile_delete_identity_summary_view_restart_new" = "Uruchom ponownie aplikację, aby utworzyć nowy identyfikator Threema.";
 "my_profile_delete_identity_summary_view_close" = "Zamknij aplikację";
 
 // File message

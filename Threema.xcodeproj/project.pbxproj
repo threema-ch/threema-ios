@@ -2369,6 +2369,8 @@
 		4AC9D56B29196543001AAB23 /* CombineXRelayState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4ACAE6CB291955E100B4F934 /* CombineXRelayState.swift */; };
 		4ACAE6CC291955E100B4F934 /* CombineXRelayState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4ACAE6CB291955E100B4F934 /* CombineXRelayState.swift */; };
 		4ACAE6CE29195A9800B4F934 /* NSRecursiveLock+Helpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4ACAE6CD29195A9800B4F934 /* NSRecursiveLock+Helpers.swift */; };
+		4AD333372A56DAAE00EB4429 /* SQLDHSessionStore+Upgrades.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AD333362A56DAAE00EB4429 /* SQLDHSessionStore+Upgrades.swift */; };
+		4AD333392A56DAB500EB4429 /* SQLDHSessionStore+Downgrade.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AD333382A56DAB500EB4429 /* SQLDHSessionStore+Downgrade.swift */; };
 		4AD35017288839F0002B37C8 /* ChatViewVoiceMessageTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AD35016288839F0002B37C8 /* ChatViewVoiceMessageTableViewCell.swift */; };
 		4AD35018288839F0002B37C8 /* ChatViewVoiceMessageTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AD35016288839F0002B37C8 /* ChatViewVoiceMessageTableViewCell.swift */; };
 		4AD35019288839F0002B37C8 /* ChatViewVoiceMessageTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AD35016288839F0002B37C8 /* ChatViewVoiceMessageTableViewCell.swift */; };
@@ -6127,6 +6129,8 @@
 		4ACAE6CB291955E100B4F934 /* CombineXRelayState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CombineXRelayState.swift; sourceTree = "<group>"; };
 		4ACAE6CD29195A9800B4F934 /* NSRecursiveLock+Helpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NSRecursiveLock+Helpers.swift"; sourceTree = "<group>"; };
 		4ACFB15B2805D93700A5E55F /* VersionBuildInfo.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = VersionBuildInfo.xcconfig; sourceTree = "<group>"; };
+		4AD333362A56DAAE00EB4429 /* SQLDHSessionStore+Upgrades.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "SQLDHSessionStore+Upgrades.swift"; sourceTree = "<group>"; };
+		4AD333382A56DAB500EB4429 /* SQLDHSessionStore+Downgrade.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "SQLDHSessionStore+Downgrade.swift"; sourceTree = "<group>"; };
 		4AD35016288839F0002B37C8 /* ChatViewVoiceMessageTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatViewVoiceMessageTableViewCell.swift; sourceTree = "<group>"; };
 		4AD3501D28885F13002B37C8 /* MessageVoiceMessageStateButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageVoiceMessageStateButton.swift; sourceTree = "<group>"; };
 		4AD350232888645D002B37C8 /* MessageVoiceMessageWaveformView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageVoiceMessageWaveformView.swift; sourceTree = "<group>"; };
@@ -10982,6 +10986,8 @@
 				4D9D5459294B5B1A00F6399C /* KeyWrapperProtocol.swift */,
 				4D9D545B294B5B5D00F6399C /* KeyWrappingError.swift */,
 				4DDCC49128B6434D00FFD5EE /* SQLDHSessionStore.swift */,
+				4AD333362A56DAAE00EB4429 /* SQLDHSessionStore+Upgrades.swift */,
+				4AD333382A56DAB500EB4429 /* SQLDHSessionStore+Downgrade.swift */,
 				4AB4EAB9295457040057E416 /* ForwardSecuritySessionTerminator.swift */,
 			);
 			path = ForwardSecurity;
@@ -13832,6 +13838,7 @@
 				248046F729937EAA00B790CC /* BlobData+isDataAvailable.swift in Sources */,
 				CE60A0D5260DD1E9009ED400 /* smult_donna-c64.c in Sources */,
 				CE540097260DCE1200B7DA8C /* TaskExecutionUpdateContactSync.swift in Sources */,
+				4AD333392A56DAB500EB4429 /* SQLDHSessionStore+Downgrade.swift in Sources */,
 				2DAC3F142608E09900075A60 /* UserNotificationContent.swift in Sources */,
 				CE66FF8A232117A800338E22 /* StyleKit.swift in Sources */,
 				7E697F162876DC3D003BE925 /* AppMigrationVersion.swift in Sources */,
@@ -14226,6 +14233,7 @@
 				0A3864151C6256A900924A29 /* keypair.c in Sources */,
 				24B6EF3628F44610006C0E46 /* ImageMessageEntity+PreviewableMessage.swift in Sources */,
 				CE846F181E9CFD6B0068E8BF /* ContactDeletePhotoMessage.m in Sources */,
+				4AD333372A56DAAE00EB4429 /* SQLDHSessionStore+Upgrades.swift in Sources */,
 				245274192907BC2F00BDF5CA /* BaseMessage+Accessibility.swift in Sources */,
 				E1B91F352714599200B9B11C /* ImageSenderItemSize.swift in Sources */,
 				4A01A58325EFDECF005367D7 /* TaskDefinitionUpdateContactSync.swift in Sources */,
